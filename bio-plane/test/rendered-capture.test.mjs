@@ -32,9 +32,16 @@
  *   - The D-98 task the rendered arm enqueues when its authority is undetermined:
  *     the enqueue condition changed, and no read in this suite drives the task
  *     consumer, so that change is asserted by nothing here.
- *   - An UNATTENDED caller that asks for a render: capture_requests carries no
- *     render request, so the drain never asks. The deferral is driven here through
- *     the op, by a member; the sweep's own path to it is not built.
+ *   - CORRECTED 2026-09-24 BY D-491 / IC-276, NOT EXEMPTED. This read: *"An
+ *     UNATTENDED caller that asks for a render: capture_requests carries no render
+ *     request, so the drain never asks."* That was true when it was written and is
+ *     now false in its premise: `capture_requests.render` exists, the door reads
+ *     `render: true`, and the drain asks op=acquire for the render through the ROW
+ *     (never through its two-field body). The sweep's path to the DEFERRAL is
+ *     driven in `capturerequests.test.mjs` block 7c, whose fixture binds a renderer
+ *     and a zero allowance. WHAT IS STILL NOT DRIVEN ANYWHERE, and what this bullet
+ *     now means: an unattended render that SUCCEEDS. No instance has a renderer
+ *     (2.rendered), and this suite's success arms are a member's, through the op.
  *   - Promotion of the pair into a bundle and the catalogue's C-18.1 over it.
  */
 import "./stdio.mjs";                 /* D-282 */

@@ -2725,7 +2725,31 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- column existed was never woken -- nothing existed to wake it -- and the
   -- consumer's own predicate requires the run to still be running, so a request
   -- belonging to a run that has already ended is never woken retroactively.
-  run_woken_at      TEXT
+  run_woken_at      TEXT,
+  -- D-491 / IC-276 / CLIENT-RENDERED.md, BOB #32 item 3: DOES THIS REQUEST ASK
+  -- FOR THE PAGE AS A VISITOR SAW IT. 0 is the served document, captured exactly
+  -- as every request before this column was. 1 asks the drain for the rendered
+  -- pair, and BOB #32 item 3 is what makes that askable at all -- an unattended
+  -- sweep MAY render, within the allowance and through the host governor.
+  --
+  -- NOT NULL DEFAULT 0, AND THAT IS THE HONEST DEFAULT HERE WHERE IT WOULD NOT
+  -- BE ON THE TWO COLUMNS ABOVE. lead_inquiry and run_woken_at are nullable
+  -- because a legacy row had an unstated value that a default would invent. This
+  -- column has no unstated value to invent: a request written before it existed
+  -- could not ask for a render, because no door read the flag and no drain could
+  -- have honoured one, so 0 states what was true of it rather than guessing.
+  --
+  -- IT IS THE ROW AND NOT THE CALL THAT CARRIES IT, for the reason address,
+  -- purpose and ua_mode are on the row: op=acquire reads it through
+  -- captureRequestDraining, so what this instance renders is what the drain
+  -- judged. The drain still sends two fields and nothing else.
+  --
+  -- WHEN THE RENDER CANNOT HAPPEN THE ROW IS HELD, never captured: op=acquire
+  -- answers a named C-83 refusal before anything is fetched, the drain records
+  -- that code and leaves the row in requested, and the served shell is NEVER
+  -- filed as though it were the content. That sentence is the whole of C-83 and
+  -- the reason this column cannot be read as advisory.
+  render            INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);

@@ -2732,7 +2732,31 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- column existed was never woken -- nothing existed to wake it -- and the
   -- consumer's own predicate requires the run to still be running, so a request
   -- belonging to a run that has already ended is never woken retroactively.
-  run_woken_at      TEXT
+  run_woken_at      TEXT,
+  -- D-491 / IC-276 / CLIENT-RENDERED.md, BOB #32 item 3: DOES THIS REQUEST ASK
+  -- FOR THE PAGE AS A VISITOR SAW IT. 0 is the served document, captured exactly
+  -- as every request before this column was. 1 asks the drain for the rendered
+  -- pair, and BOB #32 item 3 is what makes that askable at all -- an unattended
+  -- sweep MAY render, within the allowance and through the host governor.
+  --
+  -- NOT NULL DEFAULT 0, AND THAT IS THE HONEST DEFAULT HERE WHERE IT WOULD NOT
+  -- BE ON THE TWO COLUMNS ABOVE. lead_inquiry and run_woken_at are nullable
+  -- because a legacy row had an unstated value that a default would invent. This
+  -- column has no unstated value to invent: a request written before it existed
+  -- could not ask for a render, because no door read the flag and no drain could
+  -- have honoured one, so 0 states what was true of it rather than guessing.
+  --
+  -- IT IS THE ROW AND NOT THE CALL THAT CARRIES IT, for the reason address,
+  -- purpose and ua_mode are on the row: op=acquire reads it through
+  -- captureRequestDraining, so what this instance renders is what the drain
+  -- judged. The drain still sends two fields and nothing else.
+  --
+  -- WHEN THE RENDER CANNOT HAPPEN THE ROW IS HELD, never captured: op=acquire
+  -- answers a named C-83 refusal before anything is fetched, the drain records
+  -- that code and leaves the row in requested, and the served shell is NEVER
+  -- filed as though it were the content. That sentence is the whole of C-83 and
+  -- the reason this column cannot be read as advisory.
+  render            INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
@@ -10664,6 +10688,26 @@ var CAPTURE_REQUEST_CHECKS = {
     check: "C-28.15",
     where: "src/store.mjs captureRequest > is-capture-request",
     translation: "This names the same question twice \u2014 the one being worked, and the one the document supposedly bears on. Evidence for the question you are already working is just evidence for it, and flagging it as belonging somewhere else would put a note in front of you saying a document you just asked for is about something other than what you asked."
+  },
+  /* D-491 / IC-276 — THE RENDER FLAG AT THE DOOR, AND IT IS C-83.1's ARGUMENT
+       ONE LAYER UP. op=acquire refuses a `render` that is present and not `true`
+       rather than reading it as absent, because a `render: "yes"` answered with the
+       plain capture files the served shell as the content — the one outcome the
+       whole C-83 family exists to prevent. The same value arriving at THIS door is
+       the same defect with a delay on it, and worse in one respect: the row
+       outlives the call, so the drain fetches under a flag nobody can see was
+       dropped and the request reads afterwards as one that never asked.
+  
+       IN THIS FAMILY AND NOT IN C-83, on PL-15's precedent (its two lead rows) and
+       for PL-15's reason: it is enforced inside `is-capture-request`, which is THIS
+       family's governed span, so a row filed under C-83 would leave a code in a
+       region whose rows do not name it and arm C would report a site it could not
+       judge. C-28.16 — C-28.5 and C-28.12 stay UNALLOCATED, because reusing a
+       number this file records as deleted would make its own history unreadable. */
+  CAPTURE_REQUEST_RENDER_MALFORMED: {
+    check: "C-28.16",
+    where: "src/store.mjs captureRequest > is-capture-request",
+    translation: "This asked for the page as a visitor would see it in a form this instance does not recognise. It reads render: true, or nothing at all for the document as the site serves it, so a request for the rendered page is never quietly turned into a request for the page's empty frame. Nothing was queued."
   }
 };
 var AI_CREDENTIAL_CHECKS = {
@@ -29950,6 +29994,18 @@ var Store = class _Store extends DurableObject {
          nobody delivered, which on THIS column would mean a wake that never
          happened reading as one that did. */
       ["capture_requests", "run_woken_at", "TEXT"],
+      /* D-491 / IC-276: does this request ask for the page as a visitor saw it
+         (CLIENT-RENDERED.md, BOB #32 item 3). THE ONE COLUMN IN THIS LIST THAT
+         IS NOT NULLABLE, and the distinction is the point rather than an
+         exception: every column above is nullable because a legacy row carried
+         an unstated value that a default would INVENT. This one has no unstated
+         value to invent. A request written before the column existed could not
+         ask for a render — no door read the flag, and no drain could have
+         honoured one — so 0 states what was true of that row, and a NULL here
+         would mean "we do not know whether this asked for a render" about a row
+         that demonstrably could not have. Backfilled by the ALTER so a migrated
+         store and a fresh install present the same table. */
+      ["capture_requests", "render", "INTEGER NOT NULL DEFAULT 0"],
       /* CASE-1 / DEC-72: the member finding's PINNED VERSION and the publisher's
          AUTHORED ROLE for it. Additive and nullable for the reason every column
          above is, and here NULL carries two facts this item exists to keep
@@ -66116,6 +66172,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60).`,
         { fields: brought }
       );
+    const renderRaw = args.render ?? null;
+    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)
+      return refusal7(
+        "CAPTURE_REQUEST_RENDER_MALFORMED",
+        `render=${JSON.stringify(renderRaw).slice(0, 40)} is not a value this door reads. Send render: true for the page as a visitor saw it, or nothing for the document as the site serves it.`,
+        { render: null }
+      );
+    const render = renderRaw === true ? 1 : 0;
     const purpose = String(args.purpose ?? "").trim();
     const uaMode = String(args.ua_mode ?? args.uaMode ?? "civicos").trim();
     const callerPlane = String(args.caller ?? "").trim();
@@ -66123,9 +66187,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const now = _Store.#aiIso(nowMs);
     const request = String(args.request ?? "").trim() || `CR-${now.replace(/[-:TZ]/g, "")}-${_Store.#rand(6)}`;
     const standing = this.#one(
-      `SELECT * FROM capture_requests WHERE run=? AND address=? AND state IN ('requested','draining','captured')`,
+      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
       run,
-      address
+      address,
+      render
     );
     if (standing)
       return {
@@ -66142,6 +66207,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            echoing the caller's field back would report a lead nothing
            stored — the answer disagreeing with the row it stands for. */
         lead_inquiry: standing.lead_inquiry ?? null,
+        /* D-491: the STANDING row's flag, on the identical reasoning the
+           lead above carries — and here it cannot disagree with the call,
+           because the flag is part of the key this row was found by. */
+        render: standing.render === 1,
         state: standing.state,
         requested: false,
         already: true,
@@ -66149,8 +66218,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       };
     this.sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?)`,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
       request,
       run,
       target,
@@ -66163,7 +66232,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       now,
       now,
       _Store.#aiIso(nowMs + _Store.CAPTURE_REQUEST_TTL_MS),
-      lead || null
+      lead || null,
+      render
     );
     return {
       ok: true,
@@ -66175,6 +66245,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       purpose,
       ua_mode: uaMode,
       lead_inquiry: lead || null,
+      /* D-491: the flag AS THE ROW WAS WRITTEN — the same `render` the
+         INSERT bound, not the field the caller sent, so an answer saying
+         `render: true` cannot disagree with the value the drain will
+         read. It is not a re-read of the row, and this comment says so
+         rather than letting the next reader assume one. */
+      render: render === 1,
       state: "requested",
       requested: true,
       already: false,
@@ -66319,6 +66395,40 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
             grade: r.grade ?? null,
             attribution: verdict.attribution
           });
+        } else if (r.renderCode) {
+          const renderRow2 = RENDER_CAPTURE_CHECKS[r.renderCode];
+          const why = String(r.detail || r.reason || "").slice(0, 400);
+          hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));
+          this.sql.exec(
+            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
+            r.renderCode,
+            why,
+            at,
+            q.request
+          );
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document",
+            subjectKind: "address",
+            subject: q.address,
+            state: "LOOKED_INDETERMINATE",
+            governed: true,
+            detail: `${renderRow2.check} ${r.renderCode}: the render was deferred and nothing was filed \u2014 ${why || "no detail was carried"}`
+          }, at, 0);
+          held.push({
+            request: q.request,
+            address: q.address,
+            host: q.host,
+            code: r.renderCode,
+            check: renderRow2.check,
+            translation: renderRow2.translation,
+            /* THE TICK'S OWN WORD FOR IT, in op=acquire's vocabulary so
+               a reader needs no second one: the content is UNDETERMINED
+               and says so, which is what keeps a deferral out of the
+               coverage a captured row would imply. */
+            render: { state: "deferred", content: "undetermined" },
+            detail: why
+          });
         } else {
           this.sql.exec(
             `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
@@ -66447,11 +66557,18 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  already live, and this consumer only DECIDES and INVOKES.
    *
    *  IT SENDS TWO FIELDS AND NOTHING ELSE — `via` and `request`. The address,
-   *  the purpose and the agent are read by op=acquire FROM THE ROW, through
-   *  `captureRequestDraining`, so what leaves this instance is exactly what the
-   *  conduct check judged. Passing them in the body would have made the check an
-   *  assertion about a value the sender could still differ from, which is the
-   *  "checked one thing, sent another" gap in its smallest form. */
+   *  the purpose, the agent and (D-491) WHETHER TO RENDER are read by op=acquire
+   *  FROM THE ROW, through `captureRequestDraining`, so what leaves this instance
+   *  is exactly what the conduct check judged. Passing them in the body would
+   *  have made the check an assertion about a value the sender could still differ
+   *  from, which is the "checked one thing, sent another" gap in its smallest
+   *  form. D-491 did NOT add a third field for the render, and that is why.
+   *
+   *  WHAT COMES BACK OUT, D-491: a refused render is named. op=acquire decides
+   *  every way a render cannot happen BEFORE it fetches anything and answers a
+   *  C-83 code; this returns that code as `renderCode` so the drain can hold the
+   *  row under it instead of reporting a fetch that was never attempted. `reason`
+   *  is unchanged for every other failure. */
   async #fireCaptureRequest(q) {
     const token = await this.#monitorToken();
     if (!token) return { ok: false, reason: _Store.MONITOR_NO_LIVE_CREDENTIAL };
@@ -66470,7 +66587,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         sha: doc.capture && doc.capture.sha256,
         grade: doc.capture && doc.capture.grade
       };
-      return { ok: false, reason: out && (out.reason || out.error) || `http ${res.status}` };
+      const reason = out && (out.reason || out.error) || `http ${res.status}`;
+      const renderCode = q.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
+      return {
+        ok: false,
+        reason,
+        renderCode,
+        detail: renderCode ? String(out && out.detail || "").slice(0, 400) : null
+      };
     } catch (e) {
       return { ok: false, reason: "the fetch did not complete and this plane did not record why" };
     }
@@ -66495,7 +66619,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         address: null,
         purpose: null,
         ua_mode: null,
-        agent: null
+        agent: null,
+        /* D-491: FALSE on a row that does not exist, and that is the
+           fail-closed direction — an absent row asks for no render, so a
+           silence here can never turn into a render nobody requested. */
+        render: false
       };
     const agent = r.ua_mode === "member-browser" ? this.#captureRequestMemberAgent(r.target) : civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, r.purpose);
     return {
@@ -66507,6 +66635,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       purpose: r.purpose,
       ua_mode: r.ua_mode,
       agent: agent || null,
+      /* D-491 / IC-276: WHETHER THIS ROW ASKED FOR THE RENDERED PAGE, on
+         the identical reasoning the three fields above it carry. op=acquire
+         takes it FROM HERE and never from the request body, so what this
+         instance renders is what the drain's conduct check judged — a value
+         a caller can supply is a value a caller can differ from what was
+         checked, and a render is a second load of the page. */
+      render: r.render === 1,
       run: r.run,
       target: r.target
     };
@@ -66583,6 +66718,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          those are the two states this one field distinguishes. Additive, on
          PL-15's precedent: no existing reader's shape moves. */
       run_woken_at: r.run_woken_at ?? null,
+      /* D-491 / IC-276: WHAT THIS REQUEST ASKED FOR, and it is published for the
+         reason the two fields above it are — this projection is explicit, so a
+         column omitted here is a column NO caller can see. It is the field that
+         makes a held row legible: a row sitting at `requested` under C-83.3 with
+         no `render` beside it reads as a fetch that keeps failing, when what it
+         is is a render this instance cannot yet do. A run cannot otherwise read
+         back what it asked, and an operator cannot tell the two apart. */
+      render: r.render === 1,
       /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
          drain used. A row whose principals cannot both be named answers with the
          refusal rather than with a half attribution — the read cannot state less
@@ -77296,7 +77439,12 @@ async function captureRequestArm(env, storeName, body, cls) {
     silent: false,
     locator: d.address,
     purpose: d.purpose,
-    agent: d.ua_mode === "member-browser" ? d.agent : null
+    agent: d.ua_mode === "member-browser" ? d.agent : null,
+    /* D-491 / IC-276: WHETHER THE ROW ASKED FOR THE RENDERED PAGE, read
+       from the row exactly as the three fields beside it are. `=== true`
+       rather than truthiness: the read answers a boolean, and a store that
+       answered something else must not become a render. */
+    render: d.render === true
   };
 }
 var storeSilent = (op) => json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
@@ -79404,6 +79552,8 @@ var index_default = {
         body2.locator = arm.locator;
         crPurpose = arm.purpose;
         crAgent = arm.agent;
+        if (arm.render) body2.render = true;
+        else delete body2.render;
       }
       let driveCapture = null, driveHopRecorded = null;
       {

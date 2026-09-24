@@ -153,6 +153,14 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             can only agree by coincidence. */
          CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
          civicosUserAgent,
+         /* D-491 / IC-276: C-83's rows, imported READ-ONLY and for ONE purpose —
+            the drain asks whether the code op=acquire sent belongs to the render
+            family, so a render refused can be held under its own name instead of
+            reported as a fetch that failed. The family is DECLARED in index.mjs's
+            span (`is-render-admit`) and every code is minted there; nothing here
+            refuses with one, which is why this import cannot conscript this file
+            into that family's governed span. */
+         RENDER_CAPTURE_CHECKS,
          /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The MINT's
             three and the REVOKE's two live here; the gate's four live in
             index.mjs, because what a scope may REACH is a question only the OPS
@@ -1040,6 +1048,18 @@ export class Store extends DurableObject {
          nobody delivered, which on THIS column would mean a wake that never
          happened reading as one that did. */
       ["capture_requests", "run_woken_at", "TEXT"],
+      /* D-491 / IC-276: does this request ask for the page as a visitor saw it
+         (CLIENT-RENDERED.md, BOB #32 item 3). THE ONE COLUMN IN THIS LIST THAT
+         IS NOT NULLABLE, and the distinction is the point rather than an
+         exception: every column above is nullable because a legacy row carried
+         an unstated value that a default would INVENT. This one has no unstated
+         value to invent. A request written before the column existed could not
+         ask for a render — no door read the flag, and no drain could have
+         honoured one — so 0 states what was true of that row, and a NULL here
+         would mean "we do not know whether this asked for a render" about a row
+         that demonstrably could not have. Backfilled by the ALTER so a migrated
+         store and a fresh install present the same table. */
+      ["capture_requests", "render", "INTEGER NOT NULL DEFAULT 0"],
       /* CASE-1 / DEC-72: the member finding's PINNED VERSION and the publisher's
          AUTHORED ROLE for it. Additive and nullable for the reason every column
          above is, and here NULL carries two facts this item exists to keep
@@ -40284,6 +40304,29 @@ export class Store extends DurableObject {
         + `not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's `
         + `structural gate, DEC-60).`, { fields: brought });
 
+    /* D-491 / IC-276 — THE RENDER FLAG, AND IT IS READ STRICTLY BECAUSE READING
+       IT LOOSELY IS THE DEFECT. `render: true` asks the drain for the page as a
+       visitor saw it (CLIENT-RENDERED.md, BOB #32 item 3: an unattended sweep MAY
+       render). Absent, null and `false` are the document as the site serves it —
+       a caller saying "no render" is ANSWERED and not refused, because a fence
+       tighter than its rule is an undeclared interface change wearing the costume
+       of caution.
+
+       ANY OTHER VALUE IS REFUSED BY NAME. That is C-83.1's argument at this door:
+       a `render: "yes"` normalised to 0 queues a plain capture, and the served
+       shell is then filed as the content — the one outcome the C-83 family exists
+       to prevent. It is worse here than at op=acquire by exactly the row's
+       lifetime: the call that dropped the flag is gone, the drain fetches under a
+       flag nobody can see was dropped, and the request reads afterwards as one
+       that never asked for a render. */
+    const renderRaw = args.render ?? null;
+    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)
+      return refusal("CAPTURE_REQUEST_RENDER_MALFORMED",
+        `render=${JSON.stringify(renderRaw).slice(0, 40)} is not a value this door reads. Send `
+        + `render: true for the page as a visitor saw it, or nothing for the document as the site `
+        + `serves it.`, { render: null });
+    const render = renderRaw === true ? 1 : 0;
+
     /* END DEC-49 REGION is-capture-request */
 
     /* BOTH PRINCIPALS ARE COPIED FROM THE RUN AND NEVER FROM THE CALLER — a
@@ -40319,13 +40362,23 @@ export class Store extends DurableObject {
     const request = String(args.request ?? "").trim()
       || `CR-${now.replace(/[-:TZ]/g, "")}-${Store.#rand(6)}`;
 
-    /* IDEMPOTENT ON (run, address). A run that asks twice for the same document
-       has asked once: the second ask returns the standing row rather than
-       queueing a second fetch at somebody else's server. That is DEC-47's rate
-       rule arriving at the door as arithmetic rather than as politeness. */
+    /* IDEMPOTENT ON (run, address, render). A run that asks twice for the same
+       document has asked once: the second ask returns the standing row rather
+       than queueing a second fetch at somebody else's server. That is DEC-47's
+       rate rule arriving at the door as arithmetic rather than as politeness.
+
+       `render` JOINED THE KEY WITH D-491, AND NOT AS A CONVENIENCE. The rendered
+       page and the served document are NOT the same document — that is D-64's
+       founding claim, and the plane files them under two digests and calls the
+       rendered one the primary. A key of (run, address) alone would answer a
+       render ask with a standing plain row, `already: true`, and a render nobody
+       ever performed: the run's ask silently unmet, and the answer agreeing with
+       a row that says something else. Two rows is the honest shape, and DEC-47's
+       politeness is not spent by it — the drain admits ONE request per host per
+       tick, so the second lands in a later tick either way. */
     const standing = this.#one(
-      `SELECT * FROM capture_requests WHERE run=? AND address=? AND state IN ('requested','draining','captured')`,
-      run, address);
+      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
+      run, address, render);
     if (standing)
       return { ok: true, request: standing.request, run, target: standing.target, address,
                host: standing.host, purpose: standing.purpose, ua_mode: standing.ua_mode,
@@ -40334,18 +40387,28 @@ export class Store extends DurableObject {
                   echoing the caller's field back would report a lead nothing
                   stored — the answer disagreeing with the row it stands for. */
                lead_inquiry: standing.lead_inquiry ?? null,
+               /* D-491: the STANDING row's flag, on the identical reasoning the
+                  lead above carries — and here it cannot disagree with the call,
+                  because the flag is part of the key this row was found by. */
+               render: standing.render === 1,
                state: standing.state, requested: false, already: true,
                principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
 
     this.sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?)`,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
       request, run, target, address, host, purpose, uaMode,
       callerPlane, runRow.principal_claude,
-      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS), lead || null);
+      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS), lead || null, render);
     return { ok: true, request, run, target, address, host, purpose, ua_mode: uaMode,
              lead_inquiry: lead || null,
+             /* D-491: the flag AS THE ROW WAS WRITTEN — the same `render` the
+                INSERT bound, not the field the caller sent, so an answer saying
+                `render: true` cannot disagree with the value the drain will
+                read. It is not a re-read of the row, and this comment says so
+                rather than letting the next reader assume one. */
+             render: render === 1,
              state: "requested", requested: true, already: false,
              principals: { plane: callerPlane, claude: runRow.principal_claude },
              detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
@@ -40481,6 +40544,76 @@ export class Store extends DurableObject {
           }, at, 0);
           captured.push({ request: q.request, address: q.address, sha: r.sha || null,
                           grade: r.grade ?? null, attribution: verdict.attribution });
+        } else if (r.renderCode) {
+          /* D-491 / IC-276 — A RENDER THIS INSTANCE COULD NOT DO IS DEFERRED, AND
+             THE SERVED SHELL IS NEVER FILED IN ITS PLACE (CLIENT-RENDERED.md, BOB
+             #32 item 3: *"the tick records the render as DEFERRED (undetermined).
+             It never records the shell as though it were the content."*).
+             op=acquire decides every way a render cannot happen before it fetches
+             anything, so there is nothing to fall back TO — and that is the
+             property, not a convenience: a fallback here would file the frame of
+             a page as the page, which is the whole of C-83 undone by its own
+             consumer.
+
+             THE ROW IS HELD, NOT REFUSED, and `requested` is what holds it. Every
+             C-83 admission refusal names a condition that can change without the
+             request changing — a renderer gets bound, the allowance rolls over at
+             midnight UTC, a cooling-off host comes back — so the next tick asks
+             again. A terminal `refused` would make an instance's CURRENT inability
+             a permanent fact about the ask. The row's own `expires` bounds the
+             hold, so this is not an unbounded retry.
+
+             THE CODE IS THE ONE THE PLANE SENT, never collapsed into a single
+             deferral word. C-83.3's sentence and C-83.4's are different sentences
+             — one says this instance cannot render at all, the other says it can
+             and has spent today's allowance, and only the second may tell a member
+             to ask again after midnight. Recording either under the other's
+             translation would be the record saying more than it can support. */
+          const renderRow = RENDER_CAPTURE_CHECKS[r.renderCode];
+          const why = String(r.detail || r.reason || "").slice(0, 400);
+          /* THE HOST'S SLOT IS GIVEN BACK, AND THIS IS A DEFECT D-491 WOULD HAVE
+             INTRODUCED RATHER THAN A TIDY-UP. The per-host count is taken before
+             the fire, which is right for every other outcome because every other
+             outcome SENT something — CONDUCT 3's own sentence is *"this tick has
+             already fetched from <host> once"*. A deferred render fetched nothing.
+             Left counted, the oldest row wins the host's one slot every tick and
+             defers again, so a plain request behind a render this instance cannot
+             do would be answered CAPTURE_CONDUCT_TICK_SPENT until the render row
+             expired 24 hours later: starvation caused by a request that never
+             touched the host. Driven in `capturerequests.test.mjs` block 7c, where
+             a plain request for the SAME host is captured in the same tick as the
+             deferral. It is a rollback and not a re-ordering: nothing else about
+             the rate rule moves, and a render that DOES load the page spends the
+             slot exactly as any other fetch. */
+          hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));
+          this.sql.exec(
+            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
+            r.renderCode, why, at, q.request);
+          /* GOVERNED, AND ON D-104's OWN REASONING RATHER THAN BY ANALOGY: every
+             one of these is a fact about US — our allowance, our per-host pacing,
+             our missing renderer — and none of them is the source failing or even
+             being asked. Writing this as an ungoverned indeterminate would put
+             "we looked and could not tell" against an address nothing was sent
+             to, and the archive fallback reads exactly that counter (D-104). No
+             `condition` is named: the queue's vocabulary has no kind for a
+             deferred render, and `client-rendered-shell` would claim a shell was
+             captured when nothing was fetched at all. Inventing a kind is an
+             interface change to another surface's roster and is NOT taken here. */
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document", subjectKind: "address", subject: q.address,
+            state: "LOOKED_INDETERMINATE", governed: true,
+            detail: `${renderRow.check} ${r.renderCode}: the render was deferred and nothing was `
+                  + `filed — ${why || "no detail was carried"}`,
+          }, at, 0);
+          held.push({ request: q.request, address: q.address, host: q.host,
+                      code: r.renderCode, check: renderRow.check, translation: renderRow.translation,
+                      /* THE TICK'S OWN WORD FOR IT, in op=acquire's vocabulary so
+                         a reader needs no second one: the content is UNDETERMINED
+                         and says so, which is what keeps a deferral out of the
+                         coverage a captured row would imply. */
+                      render: { state: "deferred", content: "undetermined" },
+                      detail: why });
         } else {
           this.sql.exec(
             `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
@@ -40629,11 +40762,18 @@ export class Store extends DurableObject {
    *  already live, and this consumer only DECIDES and INVOKES.
    *
    *  IT SENDS TWO FIELDS AND NOTHING ELSE — `via` and `request`. The address,
-   *  the purpose and the agent are read by op=acquire FROM THE ROW, through
-   *  `captureRequestDraining`, so what leaves this instance is exactly what the
-   *  conduct check judged. Passing them in the body would have made the check an
-   *  assertion about a value the sender could still differ from, which is the
-   *  "checked one thing, sent another" gap in its smallest form. */
+   *  the purpose, the agent and (D-491) WHETHER TO RENDER are read by op=acquire
+   *  FROM THE ROW, through `captureRequestDraining`, so what leaves this instance
+   *  is exactly what the conduct check judged. Passing them in the body would
+   *  have made the check an assertion about a value the sender could still differ
+   *  from, which is the "checked one thing, sent another" gap in its smallest
+   *  form. D-491 did NOT add a third field for the render, and that is why.
+   *
+   *  WHAT COMES BACK OUT, D-491: a refused render is named. op=acquire decides
+   *  every way a render cannot happen BEFORE it fetches anything and answers a
+   *  C-83 code; this returns that code as `renderCode` so the drain can hold the
+   *  row under it instead of reporting a fetch that was never attempted. `reason`
+   *  is unchanged for every other failure. */
   async #fireCaptureRequest(q) {
     const token = await this.#monitorToken();
     /* D-334: refuse BY NAME rather than spend a credential the gate refuses. */
@@ -40648,7 +40788,18 @@ export class Store extends DurableObject {
       const doc = out && out.ok && out.document;
       if (doc) return { ok: true, sha: doc.capture && doc.capture.sha256,
                         grade: doc.capture && doc.capture.grade };
-      return { ok: false, reason: (out && (out.reason || out.error)) || `http ${res.status}` };
+      const reason = (out && (out.reason || out.error)) || `http ${res.status}`;
+      /* D-491: A RENDER REFUSED IS NOT A FETCH THAT FAILED, and the discriminator
+         is read off the CATALOGUE rather than off a spelling this method invents
+         — the code the plane sent is looked up in the family that owns it, so a
+         row added to C-83 later is recognised here without a second list to keep
+         in step. `q.render` is asked as well, so a code arriving on a row that
+         asked for no render is treated as the ordinary failure it must be. */
+      const renderCode = q.render === 1 && typeof reason === "string"
+        && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
+      return { ok: false, reason,
+               renderCode,
+               detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
     } catch (e) {
       /* D-205: the message is the plane's own, never the exception's, because a
          thrown error can carry a query string and a query string can carry a
@@ -40672,12 +40823,23 @@ export class Store extends DurableObject {
       : null;
     if (!r)
       return { request: request || null, found: false, state: null, draining: false,
-               address: null, purpose: null, ua_mode: null, agent: null };
+               address: null, purpose: null, ua_mode: null, agent: null,
+               /* D-491: FALSE on a row that does not exist, and that is the
+                  fail-closed direction — an absent row asks for no render, so a
+                  silence here can never turn into a render nobody requested. */
+               render: false };
     const agent = r.ua_mode === "member-browser"
       ? this.#captureRequestMemberAgent(r.target)
       : civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, r.purpose);
     return { request: r.request, found: true, state: r.state, draining: r.state === "draining",
              address: r.address, purpose: r.purpose, ua_mode: r.ua_mode, agent: agent || null,
+             /* D-491 / IC-276: WHETHER THIS ROW ASKED FOR THE RENDERED PAGE, on
+                the identical reasoning the three fields above it carry. op=acquire
+                takes it FROM HERE and never from the request body, so what this
+                instance renders is what the drain's conduct check judged — a value
+                a caller can supply is a value a caller can differ from what was
+                checked, and a render is a second load of the page. */
+             render: r.render === 1,
              run: r.run, target: r.target };
   }
 
@@ -40734,6 +40896,14 @@ export class Store extends DurableObject {
          those are the two states this one field distinguishes. Additive, on
          PL-15's precedent: no existing reader's shape moves. */
       run_woken_at: r.run_woken_at ?? null,
+      /* D-491 / IC-276: WHAT THIS REQUEST ASKED FOR, and it is published for the
+         reason the two fields above it are — this projection is explicit, so a
+         column omitted here is a column NO caller can see. It is the field that
+         makes a held row legible: a row sitting at `requested` under C-83.3 with
+         no `render` beside it reads as a fetch that keeps failing, when what it
+         is is a render this instance cannot yet do. A run cannot otherwise read
+         back what it asked, and an operator cannot tell the two apart. */
+      render: r.render === 1,
       /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
          drain used. A row whose principals cannot both be named answers with the
          refusal rather than with a half attribution — the read cannot state less

@@ -8956,6 +8956,29 @@ export const CAPTURE_REQUEST_CHECKS = {
       + 'evidence for it, and flagging it as belonging somewhere else would put a note in front of '
       + 'you saying a document you just asked for is about something other than what you asked.',
   },
+  /* D-491 / IC-276 — THE RENDER FLAG AT THE DOOR, AND IT IS C-83.1's ARGUMENT
+     ONE LAYER UP. op=acquire refuses a `render` that is present and not `true`
+     rather than reading it as absent, because a `render: "yes"` answered with the
+     plain capture files the served shell as the content — the one outcome the
+     whole C-83 family exists to prevent. The same value arriving at THIS door is
+     the same defect with a delay on it, and worse in one respect: the row
+     outlives the call, so the drain fetches under a flag nobody can see was
+     dropped and the request reads afterwards as one that never asked.
+
+     IN THIS FAMILY AND NOT IN C-83, on PL-15's precedent (its two lead rows) and
+     for PL-15's reason: it is enforced inside `is-capture-request`, which is THIS
+     family's governed span, so a row filed under C-83 would leave a code in a
+     region whose rows do not name it and arm C would report a site it could not
+     judge. C-28.16 — C-28.5 and C-28.12 stay UNALLOCATED, because reusing a
+     number this file records as deleted would make its own history unreadable. */
+  CAPTURE_REQUEST_RENDER_MALFORMED: {
+    check: 'C-28.16',
+    where: 'src/store.mjs captureRequest > is-capture-request',
+    translation: 'This asked for the page as a visitor would see it in a form this instance does not '
+      + 'recognise. It reads render: true, or nothing at all for the document as the site serves it, so a '
+      + 'request for the rendered page is never quietly turned into a request for the page\'s empty frame. '
+      + 'Nothing was queued.',
+  },
 };
 
 /* =========================================================================
