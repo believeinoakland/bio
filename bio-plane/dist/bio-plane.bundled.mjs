@@ -73375,6 +73375,7 @@ var index_default = {
       const MAX = 256 * 1024 * 1024;
       const whole = createSha256();
       const parts = [];
+      const partHeldBefore = [];
       let total = 0, held = [], heldBytes = 0, oversize = false;
       const flush = async () => {
         if (!heldBytes) return;
@@ -73388,9 +73389,11 @@ var index_default = {
         heldBytes = 0;
         const d = await crypto.subtle.digest("SHA-256", buf);
         const psha = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
-        if (!await env.CAPTURES.head(`${storeName}/captures/${psha}`))
+        const heldBefore = !!await env.CAPTURES.head(`${storeName}/captures/${psha}`);
+        if (!heldBefore)
           await env.CAPTURES.put(`${storeName}/captures/${psha}`, buf, { sha256: d });
         parts.push({ sha256: psha, bytes: buf.length });
+        partHeldBefore.push(heldBefore);
       };
       const driveHead = driveCapture ? new Uint8Array(1024) : null;
       let driveHeadBytes = 0;
@@ -73471,7 +73474,7 @@ var index_default = {
             detail: "the incremental hash and the block hash of the same bytes differ"
           }, 500);
         }
-        existed = !!await env.CAPTURES.head(`${storeName}/captures/${sha}`);
+        existed = partHeldBefore[0];
       }
       const ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
       const responseHeaders = [];

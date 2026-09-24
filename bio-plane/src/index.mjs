@@ -6993,6 +6993,12 @@ export default {
       const MAX = 256 * 1024 * 1024;
       const whole = createSha256();
       const parts = [];
+      /* D-469: whether the store held each part BEFORE this call wrote it, in
+         step with `parts`. The head() below is the write guard and the only
+         moment the answer is true: asked after the put, it finds the object this
+         same call just wrote, and a first-time capture said `existed: true`. Kept
+         off `parts` itself so nothing new reaches the wire through it. */
+      const partHeldBefore = [];
       let total = 0, held = [], heldBytes = 0, oversize = false;
 
       const flush = async () => {
@@ -7002,9 +7008,11 @@ export default {
         held = []; heldBytes = 0;
         const d = await crypto.subtle.digest("SHA-256", buf);
         const psha = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
-        if (!(await env.CAPTURES.head(`${storeName}/captures/${psha}`)))
+        const heldBefore = !!(await env.CAPTURES.head(`${storeName}/captures/${psha}`));
+        if (!heldBefore)
           await env.CAPTURES.put(`${storeName}/captures/${psha}`, buf, { sha256: d });
         parts.push({ sha256: psha, bytes: buf.length });
+        partHeldBefore.push(heldBefore);
       };
 
       /* CAP-8: the first kibibyte of a DRIVE export, kept so the shell can be
@@ -7110,8 +7118,15 @@ export default {
           return json({ ok: false, reason: "HASH_DISAGREEMENT",
                         detail: "the incremental hash and the block hash of the same bytes differ" }, 500);
         }
-        existed = !!(await env.CAPTURES.head(`${storeName}/captures/${sha}`));
+        /* D-469: the answer flush() took BEFORE it wrote the one part, which for
+           one part is the whole. Re-asking here would find this call's own write. */
+        existed = partHeldBefore[0];
       }
+      /* D-469, THE MULTI-PART CASE: `existed` stays false and is NOT asked. The
+         whole is never stored under its own hash, and part boundaries follow the
+         stream's chunking, so "every part was already held" is not the same claim
+         as "this document was already held". False here under-claims a re-fetch;
+         it never over-claims a first one. */
 
       const ct = (res.headers.get("content-type") || "").split(";")[0].trim();
 
