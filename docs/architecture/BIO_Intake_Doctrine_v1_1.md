@@ -1,6 +1,6 @@
 # BIO Intake Doctrine
 
-**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name — BUILT 2026-09-23 (D-179: `op=promote` refuses it before any write, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13).** as of 2026-09-23.
+**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name — BUILT 2026-09-23 (D-179: `op=promote` refuses it before any write, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13).** as of 2026-09-24.
 
 **Place in the system** · Owns construct 2 of `BIO_System_Design.md` §3 (intake, capture and provenance) and half of construct 10 (standing intent): "the State Rules specification governs bundle shape; this doctrine governs admission to the store." `BIO_State_Rules_Consistency_v1_5.md` realises it as the intake provenance register, I-18's ratification fence and drafted I-19; `BIO_Membership_Architecture_v2.md` §1 borrows its who-issued/how-captured split; the plane's C-18 rules and the sweep floor cite it.
 
@@ -647,6 +647,12 @@ is unchanged, and bytes whose home was purged register afresh. BUILT 2026-09-23 
 refuses it before any write (`#testimonyFence > is-register-home`, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13),
 driven through the op by `bio-plane/test/d179onehome.test.mjs`, which reads the first bundle's register row
 back from the store and finds it byte-identical after the refusal.
+
+**RULED 2026-09-24 by BOB #32 (REC-190's census gap): A HOME IS FIXED BY THE FIRST REGISTRATION.** Registering is the
+record's act. A bundle that carried bytes without registering them never made a home, so a later bundle that registered
+the same bytes IS their home. Only a register row MOVED by the pre-fence UPSERT (D-179's residue) is a defect. The census
+cannot tell the two apart, so a repair touches ONLY rows the record itself proves were moved (register history, or a
+surviving prior row). Every other row stays STATED as undetermined between the two, and is never repaired by guess.
 
 # 9. Creation authority boundaries (added v1.1)
 
