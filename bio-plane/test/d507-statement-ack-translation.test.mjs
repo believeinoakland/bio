@@ -194,12 +194,22 @@ for (const [code, , region] of SIX) {
      in for it — and the body is floored, because a slice that missed would make every test below
      vacuous. */
   const from = store.indexOf("  acknowledgeStatement({ draft = null");
-  /* CORRECTED at c20-batch23 (CONDUCT #20), not exempted: 12000 -> 24000. REC-212 grew this body (the case
-     document's stated-UNDETERMINED writer and the publisher's second exclusion, both inside the same regions), so
-     the seventh refusal now sits past the old window and the floor below failed on a slice that missed, not on the
-     subject. The window only has to CONTAIN the body; the floor and the seven-refusal check still say it does. */
-  const body = from < 0 ? "" : store.slice(from, from + 24000);
-  t("acknowledgeStatement's body was found and is long enough to hold all seven refusals",
+  /* CORRECTED TWICE IN ONE DAY BY TWO LANDINGS THAT NEVER SAW EACH OTHER, and that is the whole argument
+     for the resolution taken here. The slice was a FIXED 12,000 characters from the method's opening.
+     c20-batch23 (CONDUCT #20) raised it to 24,000 because REC-212 grew the body past it; REC-194 grew the
+     body past it independently, with ~2.5 kB of comment for §3 rule 13's one-case-identity narrowing.
+     Neither landing was wrong and neither could have known about the other — what is wrong is the
+     MEASURE: a fixed-width window is not a method's body, and a constant that has already failed twice in
+     a day will fail again the next time somebody writes a comment. So the window now ENDS AT THE LAST
+     GOVERNED REGION'S OWN END MARKER and tracks the method instead of a byte count. The floor below is
+     unchanged and still fails if the slice misses, which is what caught both landings rather than letting
+     the arms under it go vacuous while reading true — the arm working, both times. Kept from the other
+     resolution: its finding, recorded above, since the two together are what show the constant was the
+     defect. */
+  const bodyEnd = store.indexOf("END DEC-49 REGION is-statement-ack-documents-bound", from);
+  const body = from < 0 || bodyEnd < 0 ? "" : store.slice(from, bodyEnd);
+  t("acknowledgeStatement's body was found, reaches its LAST governed region, and is long enough to hold "
+  + "all seven refusals",
     body.length > 6000 && body.includes("STATEMENT_ACK_DOCUMENTS_OVER_BOUND"), true);
   const helperAt = body.indexOf("const refusal = (code, detail, extra)");
   t("the `refusal` helper is declared EXACTLY ONCE in that body", body.split("const refusal = (code, detail, extra)").length - 1, 1);

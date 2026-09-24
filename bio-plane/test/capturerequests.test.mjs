@@ -10,6 +10,13 @@
    (7a) THE PURGE (D-113), against hygiene.test.mjs. Remove BOTH `DELETE FROM capture_requests` lines -> hygiene FAILS naming it: `72 of 73 tables covered by purge or a stated exemption (uncovered: ["capture_requests"])`.
    (7b) THE HALF hygiene CANNOT SEE. Remove ONLY the whole-store DELETE -> hygiene stays GREEN at 467/467 while a purge reporting scope ALL leaves the outbound queue standing; this suite drops to 94 pass, 3 FAIL naming it. MEASURED AND REPORTED: the D-113 check derives its covered set from `DELETE FROM <table>` anywhere in the purge METHOD, so one arm satisfies it. Delegated to whoever owns hygiene rather than fixed here.
    (8) THE COMPLETION NOTIFICATION. Remove `...this.#conditionsCaptureRequested(viewer, now),` from #queueConditions -> 93 pass, 4 FAIL: a completed capture is silent and the run waits on something that already happened.
+   D-491 / IC-276 ADDED SIX ARMS (10)-(15), RUN 2026-09-24 on base origin/main 58293bf3 plus this item, ALL SIX AS DECLARED (`15 arms run, 0 behaved differently from their declaration`), baseline 116/0 before each and every restore verified by sha256 AND by content.
+   (10) THE CARRY. In src/index.mjs's capture-request arm replace `if (arm.render) body.render = true;` with `if (false) …` -> 109 pass, 7 FAIL: the drain asks for a plain capture of a page it was told to render, the served frame is filed as the document, and NOTHING in the record says the render was not performed. THIS IS THE DEFECT D-491 CLOSES, reached from the other side.
+   (11) THE CARRY ONE LAYER DOWN. Answer `render: false` from `captureRequestDraining` -> 109 pass, 7 FAIL, the same seven. Both are armed because a column that exists and a read that drops it is indistinguishable, from the record's side, from no column at all.
+   (12) THE DOOR'S STRICTNESS (C-28.16). Neuter the malformed-flag refusal -> 107 pass, 9 FAIL. TWO FAILURES BEYOND ITS OWN ARM AND BOTH WERE DECLARED IN THE HARNESS'S PROSE AS "a dropped flag does not stay in its own lane": the swallowed `render: "yes"` row is queued at the SAME host, so it takes that host's one slot for the tick and the deferral is answered CAPTURE_CONDUCT_TICK_SPENT instead — and it also becomes the standing row the later PLAIN ask is answered with, so idempotence reports a capture of the served document that nobody performed. The DEC-49 floor fails with them: the code becomes undrivable.
+   (13) THE HOLD. Let a refused render fall through to the ordinary fetch-failure path -> 109 pass, 7 FAIL: the row carries CAPTURE_FETCH_FAILED over a fetch never attempted and the run's log says the source could not be reached when nothing was sent to it, which is D-104's split inverted.
+   (14) OVER-STRICTNESS, and it breaks ONLY correct work: make the door refuse `render: false` too -> 114 pass, 2 FAIL, both naming the plain-capture arms, and every deferral arm STAYS GREEN. A fence that refuses a caller saying "no render" is an undeclared interface change wearing the costume of caution.
+   (15) THE HOST'S SLOT. Remove the rollback the deferral does and a render that fetched nothing keeps the host's one fetch per tick, starving a plain request behind it until the render row expires 24h later -> 113 pass, 3 FAIL, its two declared arms among them. **AN ANOMALY, RECORDED RATHER THAN SMOOTHED: the third failure is the ROW-carries-the-deferral arm, which this arm's edit does not reach (it reads the row after the FIRST drain, where only one row of that host is in the tick). 31 hand re-runs of the byte-identical armed tree — serial, five and six concurrent, with and without a probe line — gave 114/2 every time and never reproduced it.** The candidates are named and neither is asserted: another worker's battery on this shared machine during that one run, or something in the harness's own `execFileSync` environment. What is established is that both DECLARED failures fired on every measurement.
    (9) OVER-STRICTNESS, and these PASS rather than fail: a document under a robots.txt `Disallow` path CAPTURES (BOB-3); a RECORDED member-browser agent CAPTURES and its agent leaves verbatim; a second request for the same address from the same run is the standing row and not a second fetch; and a `purpose: acquire` request captures exactly as `investigate` does. A fence that refuses correct work is a defect in the fence.
  * ========================================================================= */
 /* IS-BUILD-PLAN PL-4 / IS-4 / SWEEP §4b.1 — `capture_requests`, DRAINED BY THE DAEMON.
@@ -36,6 +43,11 @@
  *     recorded member-browser agent is permitted — both DRIVEN, because a rule
  *     that is absent by decision needs an arm proving the absence is real.
  *  8. DEC-49: the driven code set EQUALS the registry, floor as well as ceiling.
+ *  9. D-491: THE ROW CAN ASK FOR THE RENDERED PAGE (`render`), the flag rides the
+ *     ROW and not the drain's body, and a render this instance cannot do is
+ *     DEFERRED by name with nothing fetched and nothing filed — the served shell
+ *     is never recorded as though it were the content (BOB #32 item 3). Block 7c,
+ *     which runs before the purge block because it needs a live run.
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -45,7 +57,12 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES,
-         userAgentIsLegible, civicosUserAgent, isMachineIdentity } from "../checks/bio-checks.mjs";
+         userAgentIsLegible, civicosUserAgent, isMachineIdentity,
+         /* D-491: read in block 7c so the C-number a DEFERRED render carries is
+            compared against the family that MINTED it (C-83, index.mjs's
+            `is-render-admit`) rather than against a number typed into this file —
+            a hand copy agrees with its author for free. */
+         RENDER_CAPTURE_CHECKS } from "../checks/bio-checks.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -82,6 +99,7 @@ const BODY = new Uint8Array(4096).map((_, i) => (i * 31 + 7) % 256);
    against the row the drain judged — the "checked one thing, sent another" gap
    is only closed by looking at what arrived. */
 const SEEN = [];
+let RENDER_CALLS = 0;   /* D-491: see the RENDERER binding below */
 let MF;
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC("index.mjs"),
@@ -96,8 +114,23 @@ const mf = new Miniflare({
               /* Pinned far out of the test window so only the hand-driven drain
                  runs and the assertions are deterministic (the task-drain
                  suite's trick, carried by the archive monitor). */
-              CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000" },
-  serviceBindings: { SELF: async (request) => MF.dispatchFetch(request) },
+              CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000",
+              /* D-491: TODAY'S RENDER ALLOWANCE IS ZERO IN THIS FIXTURE, and that
+                 is the instrument rather than a corner case. With a renderer bound
+                 (below) the plane's render admission reaches its LAST gate and
+                 defers by name (C-83.4), which is the state block 7c drives; with
+                 no renderer bound it would stop one gate earlier at C-83.3 and the
+                 row's accepts-when could not be driven at all. Nothing else in
+                 this suite asks for a render, so no other arm can see this value. */
+              RENDER_DAILY_ALLOWANCE_MS: "0" },
+  serviceBindings: { SELF: async (request) => MF.dispatchFetch(request),
+    /* D-491: A RENDERER THAT MUST NEVER BE REACHED. Miniflare has no browser, and
+       this fixture does not need one: the allowance above defers before anything
+       is fetched or rendered, so this binding exists to make the plane BELIEVE a
+       renderer is available and it counts its own calls. Block 7c asserts the
+       count is ZERO — a render that ran would mean the deferral gate did not
+       fire and the arm proved nothing about the deferral. */
+    RENDERER: async () => { RENDER_CALLS++; return Response.json({ ok: false, error: "never reached" }); } },
   outboundService(request) {
     SEEN.push({ url: request.url, agent: request.headers.get("user-agent") });
     return new Response(BODY, { headers: { "content-type": "application/pdf" } });
@@ -667,6 +700,149 @@ console.log("\n--- 7b. OVER-STRICTNESS: `acquire` is a truthful purpose too ---"
     d.captured.map((c) => c.request), [r.request]);
   t("and the agent it sent says `acquire`, not `investigate`",
     SEEN.slice(before).map((s) => s.agent.includes("acquire")), [true]);
+}
+
+/* ====================================================================== 7c
+ * D-491 / IC-276 — THE SWEEP CAN ASK FOR A RENDER, AND A RENDER IT CANNOT DO IS
+ * DEFERRED RATHER THAN ANSWERED WITH THE FRAME OF THE PAGE.
+ *
+ * `capture_requests.render` is the column D-64 left absent, and its absence was
+ * the reason D-64's own suite has to say that *"an UNATTENDED caller that asks
+ * for a render: capture_requests carries no render request, so the drain never
+ * asks"*. That sentence is corrected in `rendered-capture.test.mjs` by this item,
+ * never exempted.
+ *
+ * WHAT THIS BLOCK CAN SEE: the flag written at the door, carried on the ROW and
+ * never in the drain's two-field body, read back by op=acquire through
+ * `capturerequestdraining`, and the deferral the tick records — BOB #32 item 3's
+ * *"the tick records the render as DEFERRED (undetermined). It never records the
+ * shell as though it were the content."*
+ *
+ * WHAT IT CANNOT SEE: a render that SUCCEEDS through the drain. The allowance in
+ * this fixture is zero, so the pair, the `render.*` fields and the authority rule
+ * are `rendered-capture.test.mjs`'s subject and are asserted by nothing here; and
+ * no instance has a renderer at all (2.rendered), so the LIVE behaviour of either
+ * path is undetermined until DIST deploys one.
+ *
+ * THE TWO REQUEST IDS BELOW ARE LITERAL, AND THAT IS THE INSTRUMENT. The drain
+ * orders a tick `ORDER BY requested_at, request`, `requested_at` is stamped to the
+ * SECOND, and a minted id ends in six random characters — so two requests made in
+ * the same second are drained in an order the DRAW decides. The host-slot arm at
+ * the foot of this block reads which of two same-host rows the tick reached first,
+ * so a random order would make it pass or fail by luck. Naming the ids fixes the
+ * order. If the drain's ORDER BY ever changes, THIS block is what must be
+ * re-derived, and that is cheaper than an arm nobody can trust.
+ * ====================================================================== */
+console.log("\n--- 7c. a request can ask for the RENDERED page, and a render this instance cannot do is DEFERRED ---");
+{
+  const RENDERABLE = "https://oaklandca.opengov.com/portal/agendas-2026";
+  /* THE TWIN IS ON THE SAME HOST DELIBERATELY. CONDUCT 3 admits ONE fetch per
+     host per tick, and a deferred render fetched nothing — so the twin captured
+     in the SAME tick as the deferral is what proves the drain gives the host's
+     slot back. Left counted, the oldest row would win that slot every tick and
+     defer again, starving the plain request until the render row expired. */
+  const PLAIN_TWIN = "https://oaklandca.opengov.com/portal/agendas-2026-twin";
+  const ID_RENDER = "CR-D491-1-RENDER", ID_PLAIN = "CR-D491-2-PLAIN";
+
+  /* THE DOOR READS THE FLAG STRICTLY. A value that is neither true nor absent is
+     refused BY NAME rather than normalised to "no render": normalising it would
+     queue a plain capture and file the served shell as the content, which is
+     C-83.1's argument arriving one layer up — and worse there, because the row
+     outlives the call that dropped the flag. */
+  const bad = drive(await request({ address: RENDERABLE, render: "yes" }));
+  t("a render flag that is neither true nor absent is REFUSED BY NAME, and nothing is queued for it",
+    [bad.ok, codeOf(bad), bad.check], [false, "CAPTURE_REQUEST_RENDER_MALFORMED", "C-28.16"]);
+  t("and its canned translation is the registry's, read off the wire rather than typed here",
+    bad.translation === CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_RENDER_MALFORMED.translation, true);
+
+  const rq = await request({ address: RENDERABLE, render: true, request: ID_RENDER });
+  t("a request for the page as a visitor saw it is QUEUED, and the answer says what the row asked",
+    [rq.ok, rq.requested, rq.render, rq.request], [true, true, true, ID_RENDER]);
+  {
+    const rows = await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`);
+    const row = rows.requests.find((r) => r.request === ID_RENDER);
+    t("the flag is PUBLISHED on the read — a column no projection names is a column no caller can "
+    + "see, and without it a held render reads as a fetch that keeps failing",
+      [row && row.render, row && row.state], [true, "requested"]);
+  }
+
+  /* THE ACCEPTS-WHEN. The drain asks op=acquire for the render, op=acquire's
+     admission reaches the daily allowance (zero in this fixture), and the request
+     SURVIVES the drain as RENDER_DEFERRED. */
+  const seenBefore = SEEN.length, renderedBefore = RENDER_CALLS;
+  const d = await drain();
+  const heldRow = (d.held || []).find((h) => h.request === ID_RENDER);
+  t("THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED, carrying C-83.4 and "
+  + "the tick's own word for it — deferred, content undetermined (BOB #32 item 3)",
+    heldRow && [heldRow.code, heldRow.check, heldRow.render],
+    ["RENDER_DEFERRED", "C-83.4", { state: "deferred", content: "undetermined" }]);
+  t("it is HELD and not REFUSED: the allowance rolls over at midnight UTC, so the ask is still live, "
+  + "and a terminal refusal would make this instance's inability today a permanent fact about the ask",
+    (d.refused || []).map((r) => r.request).includes(ID_RENDER), false);
+  t("and the render request was never captured", (d.captured || []).map((c) => c.request).includes(ID_RENDER), false);
+  t("NOTHING LEFT THIS INSTANCE FOR IT, and the renderer was never reached: the deferral is decided "
+  + "BEFORE the fetch, so there is no served shell lying around to be filed as the content",
+    [SEEN.length - seenBefore, RENDER_CALLS - renderedBefore], [0, 0]);
+  {
+    const rows = await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`);
+    const row = rows.requests.find((r) => r.request === ID_RENDER);
+    t("the ROW carries the deferral by name and holds NO capture: `requested` again, C-83.4's code, "
+    + "and a null sha — the frame of the page is never filed in the render's place",
+      [row && row.state, row && row.code, row && row.capture_sha, row && row.render],
+      ["requested", "RENDER_DEFERRED", null, true]);
+    t("and the code the row carries is the one the plane SENT, not a single deferral word every "
+    + "render refusal collapses into — C-83.3 and C-83.4 are different sentences, and only one of "
+    + "them may tell a member to ask again after midnight",
+      row && row.code === "RENDER_DEFERRED"
+        && RENDER_CAPTURE_CHECKS[row.code].check === "C-83.4", true);
+  }
+  {
+    /* THE RUN IS TOLD, IN THE RECORD'S OWN VOCABULARY, AND GOVERNED. D-104's
+       split: our allowance holding a render is a fact about US, so the look is
+       LOOKED_INDETERMINATE and `governed` — writing it ungoverned would put "we
+       looked and could not tell" against an address nothing was sent to, and the
+       archive fallback reads exactly that counter. */
+    const log = await GET(`op=airunlog&token=${RUTH}&run=${RUN}`);
+    const line = (log.entries || []).filter((e) => e.subject === RENDERABLE).pop();
+    t("the run's log carries the deferral as a GOVERNED indeterminate naming C-83.4 — our own "
+    + "allowance is a fact about us and never the source failing (D-104)",
+      line && [line.state, line.governed, /C-83\.4 RENDER_DEFERRED/.test(line.detail || "")],
+      ["LOOKED_INDETERMINATE", true, true]);
+  }
+
+  const again = await request({ address: RENDERABLE, render: true });
+  t("asking for the same render twice is asking once: the STANDING row comes back, and its answer "
+  + "reports the flag the row holds", [again.already, again.request, again.render],
+    [true, ID_RENDER, true]);
+
+  /* OVER-STRICTNESS. `render: false` and an absent flag are the plain capture,
+     answered and not refused — a fence tighter than its rule is an undeclared
+     interface change wearing the costume of caution. */
+  const off = await request({ address: PLAIN_TWIN, render: false, request: ID_PLAIN });
+  t("`render: false` is a request for the document as the site serves it, not a malformed flag",
+    [off.ok, off.render, off.request], [true, false, ID_PLAIN]);
+  const d2 = await drain();
+  t("and it CAPTURES, exactly as every request before this column did",
+    [(d2.captured || []).map((c) => c.address).includes(PLAIN_TWIN),
+     (d2.held || []).map((h) => h.request).includes(ID_PLAIN)], [true, false]);
+  t("the render request is STILL queued behind it, and the tick that captured the plain one deferred "
+  + "the render again rather than quietly capturing the shell in its place",
+    (d2.held || []).find((h) => h.request === ID_RENDER)?.code, "RENDER_DEFERRED");
+  t("AND THE DEFERRAL GAVE THE HOST'S SLOT BACK: both rows are on the same host, the render was "
+  + "reached first and fetched nothing, so the plain one is not answered CAPTURE_CONDUCT_TICK_SPENT "
+  + "behind a render this instance cannot do — the rate rule paces LOADS, and a render that never ran "
+  + "is not one", (d2.held || []).find((h) => h.request === ID_PLAIN)?.code ?? null, null);
+
+  /* IDEMPOTENCE KEYS ON THE FLAG, because a rendered page and the document a site
+     serves are not one document — that is D-64's founding claim, and the plane
+     files them under two digests. Asked LAST and never drained: what is asserted
+     is the DOOR's answer, and a third row on this host would only add a
+     tick-ordering dependency the arms above have already paid for. */
+  const plainSame = await request({ address: RENDERABLE });
+  t("a PLAIN request for the address the render named is a SECOND row, not the render's: answering "
+  + "it with the standing render would report a capture of the served document that nobody performed",
+    [plainSame.ok, plainSame.already === true, plainSame.request === ID_RENDER, plainSame.render],
+    [true, false, false, false]);
 }
 
 /* ====================================================================== 8

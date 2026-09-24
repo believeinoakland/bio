@@ -41,6 +41,11 @@
  * label arm failing with `got ["bio-plane/test/textchain.test.mjs"]` — BY NAME, which is what the row asked for. Every
  * restore sha256-MATCH and cmp-IDENTICAL against a uniquely-named per-arm pristine copy with its byte count floored
  * (textchain.test.mjs 04dd39b6…, 68,985 B).
+ * RE-RUN 2026-09-24 by the M0-169 worker after that item moved `UNITS_CEILING` from 45 to 46 for its own new
+ * suite, because a ceiling move is a change to this suite's subject and a control not re-run after one is a
+ * control nobody has: driver 23 pass, 0 fail, all three arms exactly as declared, every restore byte-identical
+ * again. The driver matches its arms by the SUBSTRING "selects at most" rather than by the number, so it
+ * survives a ceiling move by design — which is the property this re-run establishes rather than assumes.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -147,6 +152,7 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    left and came BACK, because it really does load `tools/pushguard.mjs` — through `join(REPO, "tools",
    "pushguard.mjs")`, whose literal spelling lived only in a comment — and §2b now reads that assembled spelling too.
    A CEILING IS NOT A RATCHET: left at the printed figure, with no slack bought for a future landing. */
+  /* M0-169 side, kept as history: UNITS_CEILING 46 on its own branch; the c20-batch25 union's figure is re-read from the print. */
 /* MOVED 45 -> 42 by M0-165 (2026-09-24), from the figure THIS SUITE PRINTED on its own clone of this tree
    (`42 unit(s) of 427 selected · 27 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`), never by subtracting
    from the old number. THE REASON, and it is a narrowing rather than slack: four suites carried the PROVENANCE
@@ -162,7 +168,8 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    doc-facing unit any `docs/` change — prose is never checked more narrowly than DOCS checks it. It was in that
    set before this item too, verified in a clone of the unchanged tree. A CEILING IS NOT A RATCHET: left at the
    printed figure, with no slack bought for a future landing. */
-const UNITS_CEILING = 42;
+/* CONDUCT #20 at c20-batch25: 42 -> 43, READ from this suite's print on the merged tree (`43 unit(s) of 431 selected`): M0-165's 42 plus M0-169's plane:moduleclosure.test.mjs, the edge M0-169 attributed (its closure names tools/gates.mjs). */
+const UNITS_CEILING = 43;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

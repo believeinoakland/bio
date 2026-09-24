@@ -437,11 +437,16 @@ console.log("\n--- C · the content-level writer at promote, through the op ---"
 
 const HEAD = new Map();
 let snapSeq = 0;
-const doc = (id, title) => `---\nobject_type: information\ngroup: believe-in-oakland\n`
+/* CORRECTED 2026-09-24 BY D-510, NEVER EXEMPTED: this wrote `object_type: information` into EVERY document
+   while `meta.object_type` carried the caller's `type`, so the project and inquiry fixtures below sent bytes
+   saying one thing under an envelope saying another. `promote` believed the envelope, which is the defect
+   D-510 closes — and the fixture is the shape that defect let through, so it is corrected rather than
+   exempted: a document now says what it is. Nothing this suite asserts is about the type. */
+const doc = (id, title, type = "information") => `---\nobject_type: ${type}\ngroup: believe-in-oakland\n`
   + `title: ${title}\ncurrent_state: collected\n---\n\n# ${title}\n`;
 const promote = async (id, { type = "information", reading = null, captureSha = null,
                             register = [], author = undefined } = {}) => {
-  const text = doc(id, `Bundle ${id}`);
+  const text = doc(id, `Bundle ${id}`, type);
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
     const prov = JSON.stringify({ documents: [{ capture: { sha256: captureSha, encoding: "binary",

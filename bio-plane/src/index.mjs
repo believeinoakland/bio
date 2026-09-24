@@ -3643,7 +3643,12 @@ async function captureRequestArm(env, storeName, body, cls) {
   }
   /* END DEC-49 REGION is-capture-request-arm */
   return { ok: true, silent: false, locator: d.address, purpose: d.purpose,
-           agent: d.ua_mode === "member-browser" ? d.agent : null };
+           agent: d.ua_mode === "member-browser" ? d.agent : null,
+           /* D-491 / IC-276: WHETHER THE ROW ASKED FOR THE RENDERED PAGE, read
+              from the row exactly as the three fields beside it are. `=== true`
+              rather than truthiness: the read answers a boolean, and a store that
+              answered something else must not become a render. */
+           render: d.render === true };
 }
 
 /* 502 rather than 500: the control plane is intact and reachable — what failed
@@ -5362,14 +5367,35 @@ export default {
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     /* REC-163 / IC-174: the page names whose record this is — the group ITS record records, read when the page is
-       SERVED, through the one public read (`publicInstanceGroup`), pinned to `bio`: the instance's own record, as
-       op=verify's is. `setupPage` puts the slug in the served bytes, or says in words that none is recorded, or —
-       when the record did not answer — says THAT, never "none" and never a name. `no-store`, because the bytes now
-       carry a fact the record can change: a page kept from before a seed would go on saying none is recorded. */
+       SERVED, through the one public read (`publicInstanceGroup`). `setupPage` puts the slug in the served bytes,
+       or says in words that none is recorded, or — when the record did not answer — says THAT, never "none" and
+       never a name. `no-store`, because the bytes now carry a fact the record can change: a page kept from before a
+       seed would go on saying none is recorded.
+
+       D-475 — AND THE NAMESPACE IS THE CALLER'S TO NAME HERE, because NOTHING BELOW CAN REACH THIS ROUTE. This is an
+       HTML route: it answers before `path` and `op` exist, so D-456's `namespaceGate` and D-461's
+       `pinnedNamespaceGate`, both of which run at the op front door a few lines down, never see it. MEASURED: the
+       read was written `publicInstanceGroup(env, "bio")`, so `/?store=scratch` served `bio`'s slug as this copy's
+       own — a live verification whose whole no-write guarantee is naming its namespace (CLAUDE.md §5, D-325) read
+       production while believing it was in scratch — and `/?store=nonsense` did the same, which is D-456's own
+       defect surviving at the one route D-456 did not reach. Found by D-461's worker.
+
+       THE RULE IS op=instancegroup's, NOT A NEW ONE, and that is the decision rather than a convenience: this page
+       and that op are ONE READER (`publicInstanceGroup` — its own header says so) shown to a stranger, so a
+       namespace that does not exist is refused BY NAME through the very gate every other caller meets,
+       `store=scratch` reads scratch, and everything else reads `bio`. The page is deliberately NOT added to
+       D-461's pinned set: pinning one of two surfaces over one reader would make `store=scratch` mean two things on
+       the same copy — refused on the page, honoured on the op — and the op is exempt because it reads `store=`
+       itself, which is now exactly what the page does. `/version` and `/sign` are left alone on purpose: they
+       address no namespace, and a gate on a route that reads no record would be a fence tighter than its rule. */
     if (req.method === "GET" && !url.pathname.startsWith("/api")
-        && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
-      return new Response(setupPage(await publicInstanceGroup(env, "bio")),
+        && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
+      const pageNamespace = namespaceGate(url);
+      if (pageNamespace) return pageNamespace;
+      const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
+      return new Response(setupPage(await publicInstanceGroup(env, pageStore)),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+    }
 
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
@@ -7221,6 +7247,17 @@ export default {
         body.locator = arm.locator;
         crPurpose = arm.purpose;
         crAgent = arm.agent;
+        /* D-491 / IC-276 — THE RENDER FLAG COMES FROM THE ROW, and the body's own
+           is OVERWRITTEN rather than merged, exactly as `body.locator` above is.
+           The drain sends `via` and `request` and nothing else, so the only way a
+           `render` could be on this body is a caller that is not the drain — and
+           such a caller never reaches this line, because the arm admits a row in
+           `draining` and nothing else. Setting it here rather than refusing it
+           keeps ONE rule for the whole arm: what decides what leaves this instance
+           is the row the conduct check judged. The render admission below reads
+           `body.render` and is unchanged by this. */
+        if (arm.render) body.render = true;
+        else delete body.render;
       }
       /* CAP-8 — THE GOOGLE DRIVE HOST STACK, sited HERE for the same reason the
          archive arm is sited where it is: the recognition, the composition and
@@ -7367,10 +7404,18 @@ export default {
         if (typeof renderer.render !== "function")
           return json({ ok: false, reason: "RENDER_NO_RENDERER", ...renderRow("RENDER_NO_RENDERER"),
             op, renderer: renderer.kind,
+            /* D-490 CORRECTED THIS SENTENCE, and the correction is the point: D-64's
+               words said the in-plane driver was not built, which was true of every
+               instance and is no longer true of any. What this branch can still mean
+               is NARROWER — BROWSER bound to something with no `fetch`, so there is
+               no endpoint to open a devtools session on. Saying the old sentence now
+               would be the record claiming less than it can support, which is the
+               same defect as claiming more. */
             detail: renderer.kind === "browser-binding-without-driver"
-              ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built "
-                + "(D-64 shipped the seam and the record, not a CDP client). Nothing was fetched."
-              : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched." }, 501);
+              ? "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no "
+                + "endpoint to open a devtools session on. Nothing was fetched."
+              : "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). "
+                + "Nothing was fetched." }, 501);
         /* THROUGH THE HOST GOVERNOR: the render is a second load of the page. */
         let rHost = null;
         try { rHost = new URL(locator).host; } catch { rHost = null; }
@@ -7679,6 +7724,9 @@ export default {
       /* One part and small enough to be a plain capture: store the whole under
          its own hash so the ordinary single-file shape still applies. */
       let existed = false, multipart = parts.length > 1;
+      /* D-476: the sentence that goes out BESIDE a `null` `existed`, and the only
+         thing that ever sets it. It is present exactly when `existed` is null. */
+      let existedUndetermined = null;
       if (!multipart) {
         const only = parts[0];
         if (only.sha256 !== sha) {
@@ -7691,12 +7739,57 @@ export default {
         /* D-469: the answer flush() took BEFORE it wrote the one part, which for
            one part is the whole. Re-asking here would find this call's own write. */
         existed = partHeldBefore[0];
+      } else {
+        /* D-476, THE MULTI-PART CASE, AND THE CORRECTION OF D-469's OWN NOTE.
+           D-469 left this `false` and said so at this site: the whole is never
+           stored under its own hash, part boundaries follow the stream's
+           chunking, so "every part was already held" is not the claim "this
+           document was already held", and a `false` here only UNDER-claims a
+           re-fetch. THAT LAST SENTENCE WAS WRONG, and it is the defect this item
+           closes: `existed: false` is not the absence of a claim, it is the
+           positive claim THESE BYTES ARE NEW, made on a question nobody asked.
+           Every re-fetch of a held multi-part document said it - and the whole
+           product is the trustworthiness of the record, which ranks a false
+           claim below a missing answer.
+           *
+           * SO THE QUESTION THAT CAN BE ASKED IS ASKED, and it is the record's
+           * own rather than R2's: `register` is keyed by `capture_sha`, the
+           * identity of the bytes across the whole system, and one capture has
+           * one home (D-179; Intake Doctrine section 8). ONE bounded read, and it
+           * cannot find this call's own write the way D-469's head() did, because
+           * `op=acquire` writes no register row at all - `op=promote` does. That
+           * is why the lookup is preferred here over a second guess at the bytes.
+           *
+           * AND A MISS IS STATED, NEVER SCORED FALSE. The register answers for
+           * documents the record REGISTERED; an earlier acquire that was never
+           * promoted leaves its parts in the store and no register row, so a miss
+           * does not establish that these bytes are new. `null` with the sentence
+           * below is the honest answer, and the sentence carries the part tally as
+           * an OBSERVATION - what this fetch's own chunking found already held -
+           * never as the answer, for the chunking reason above. */
+        const heldOut = await doAnswer(stGov.fetch(
+          `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+        const reg = heldOut.answered ? heldOut.result : null;
+        const heldParts = partHeldBefore.filter(Boolean).length;
+        if (reg && reg.registered === true) existed = true;
+        else {
+          existed = null;
+          existedUndetermined = reg
+            ? `this document was captured in ${parts.length} parts, so the store holds no object under its `
+              + `whole hash for the question a single-part capture asks, and the record's register - which `
+              + `does answer by the whole hash - holds no row for these bytes under a bundle that still `
+              + `exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never `
+              + `promoted leaves its parts in the store and no register row, and part boundaries follow the `
+              + `stream's chunking, so this fetch's parts need not be the parts an earlier one made. `
+              + `Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were `
+              + `already held before it wrote them.`
+            : `this document was captured in ${parts.length} parts, so the store holds no object under its `
+              + `whole hash for the question a single-part capture asks, and the record's register could not `
+              + `be consulted. Nothing here is a statement about the record, and in particular it is not a `
+              + `claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's `
+              + `${parts.length} parts were already held before it wrote them.`;
+        }
       }
-      /* D-469, THE MULTI-PART CASE: `existed` stays false and is NOT asked. The
-         whole is never stored under its own hash, and part boundaries follow the
-         stream's chunking, so "every part was already held" is not the same claim
-         as "this document was already held". False here under-claims a re-fetch;
-         it never over-claims a first one. */
 
       let ct = (res.headers.get("content-type") || "").split(";")[0].trim();
 
@@ -7801,6 +7894,10 @@ export default {
             body: JSON.stringify({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null }) }); }
           catch { /* an unrecorded outcome is not a failed render */ }
         }
+        /* D-476: `existedUndetermined` is not cleared here and does not need to be.
+           It is set only on the multi-part branch, and this region's first refusal
+           (RENDER_NOT_A_PAGE) has already returned for a multi-part body, so a
+           render always arrives with it null. */
         sha = rsha; total = rbytes.length; ct = "text/html"; existed = renderedExisted;
       }
 
@@ -8934,6 +9031,10 @@ export default {
          know it and cannot get it subtly wrong. */
       return json({
         ok: true, existed,
+        /* D-476: the stated reason, present exactly when `existed` is null and
+           absent otherwise - so the single-part answer is byte-identical to what
+           every caller reads today, and a null is never bare. */
+        ...(existedUndetermined ? { existed_undetermined: existedUndetermined } : {}),
         document: {
           file: `snapshots/${name}`,
           locator, retrieved,
@@ -9302,13 +9403,81 @@ export default {
         return json({ ok: false, reason: "NO_LOCATOR",
                       detail: "monitoring needs a public https locator in source.locator" }, 409);
 
+      /* D-472 — A TICK ON A DRIVE-LINKED DOCUMENT WATCHES THE EXPORT, NEVER THE PAGE.
+       *
+       * THE DEFECT THIS ENDS. `op=acquire` routes a Drive link through
+       * `readDriveAddress` and captures the OpenDocument export (CAP-8, Bob's
+       * ruling of 2026-09-14); this tick fetched `source.locator` ITSELF, which
+       * for a Drive document is Google's client-rendered APPLICATION SHELL. Its
+       * bytes are rebuilt per render, so the comparison ran raw against an
+       * OpenDocument baseline and read `modified` EVERY TICK: a monitor crying
+       * wolf on a document nobody had touched, which is the record claiming more
+       * than it can support (CLAUDE.md §2) rather than a missing feature.
+       *
+       * The BASELINE needs no translation: acquire files a Drive capture under
+       * the DOCUMENT address (`documentAddress`), which is the address the bundle
+       * carries and the address this tick looks up and logs its look against. Only
+       * the FETCH moves, exactly as it does in acquire.
+       *
+       * THE SHAPES THAT ARE NOT DOCUMENTS ARE NAMED, NEVER SKIPPED — the whole of
+       * CAP-8's rule, and the reason these are refusals with codes rather than a
+       * fall-through to the ordinary fetch. A tick on a folder address would
+       * compare Google's LISTING page, whose bytes move on every render, and
+       * announce a change to a member on every visit. `published` is recognised
+       * in order to be LEFT ALONE: it serves static HTML that is already an honest
+       * document, so it takes the ordinary path here as it does in acquire. */
+      const driveTick = readDriveAddress(locator);
+      if (driveTick && driveTick.shape === "folder")
+        return json({ ok: false, reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
+          ...driveRow("DRIVE_FOLDER_NOT_A_DOCUMENT"), op, bundleId,
+          drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
+          locator: driveTick.address,
+          detail: driveTick.why + " Watching it is the same question one step on: a tick would compare "
+                + "Google's listing page, whose bytes are rebuilt on every render, and report a change "
+                + "nobody made." }, 422);
+      if (driveTick && driveTick.shape === "file")
+        return json({ ok: false, reason: "DRIVE_KIND_UNDETERMINED",
+          ...driveRow("DRIVE_KIND_UNDETERMINED"), op, bundleId,
+          drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false,
+                   ...(driveTick.fileId ? { file_id: driveTick.fileId } : {}) },
+          locator: driveTick.address,
+          detail: driveTick.why + " No export address can be composed, so there is nothing this tick "
+                + "could compare but the application page." }, 422);
+      if (driveTick && driveTick.shape === "unknown")
+        return json({ ok: false, reason: "DRIVE_SHAPE_UNRECOGNISED",
+          ...driveRow("DRIVE_SHAPE_UNRECOGNISED"), op, bundleId,
+          drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
+          locator: driveTick.address,
+          detail: driveTick.why + " A shape this instance cannot read is a shape it cannot promise to "
+                + "be watching." }, 422);
+      /* The address the tick FETCHES, which is the export for a harvestable Drive
+         document and the locator itself for everything else. The document address
+         stays `locator` throughout — the baseline, the observation log's subject
+         and the answer all key on it. */
+      const tickAddress = driveTick && driveTick.harvestable ? driveTick.exportAddress : locator;
+
       /* The baseline is whatever the provenance register says was captured from
          this locator. Without one there is nothing to compare against, and the
          tick says so rather than guessing at a status. */
       let baseline = null, baselineProfile = null, baselineAt = null;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
-        const match = (reg.documents || []).find((d) => d && d.locator === locator);
+        const rows = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
+        /* D-472, AND IT IS A MEASURED PROPERTY OF THE REGISTER RATHER THAN A
+           GUESS. `op=acquire` answers `document.locator` as the address it
+           FETCHED — for a Drive capture the export address it composed, the same
+           way an archive capture answers the replay URL — while the capture is
+           FILED under the document address. A caller builds `data/provenance.json`
+           out of that answer (the shape C-18.1 requires), so the register row for a
+           Drive document names the EXPORT address and a lookup on the bundle's own
+           `source.locator` finds nothing and the tick reports "no captured
+           baseline" forever. The export row is preferred over a document-address
+           row because it is the one whose bytes are comparable with what this tick
+           now fetches: a pre-CAP-8 capture at the document address holds the
+           application shell. */
+        const match = (driveTick && driveTick.harvestable
+            ? rows.find((d) => d.locator === driveTick.exportAddress) : null)
+          || rows.find((d) => d.locator === locator);
         baseline = match?.capture?.sha256 || null;
         baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
         baselineProfile = (match && match.profile && typeof match.profile === "object") ? match.profile : null;
@@ -9326,20 +9495,111 @@ export default {
         /* D-95: a monitor tick is a document fetch and paces like one. A
            governed refusal is a tick outcome with a name, not an error: the
            check simply did not run, and saying so beats a fabricated status. */
-        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), locator, "monitor");
+        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), tickAddress, "monitor");
         if (g.refusedByGovernor) {
           /* D-65: a governed tick is still a look, and §4.1 says so with `governed = 1`. */
           const observation = await monitorLook({ outcome: "governed", reason: g.reason });
           return json({ ok: false, reason: "HOST_COOLING_OFF",
                         detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
-                        retry_in_ms: g.retry_in_ms || 0, locator, observation }, 429);
+                        retry_in_ms: g.retry_in_ms || 0, locator,
+                        /* D-472: the governed host is the EXPORT's when a Drive document is
+                           watched, and `docs.google.com` is not the host the bundle names. */
+                        ...(driveTick && driveTick.harvestable ? { fetched_address: tickAddress } : {}),
+                        observation }, 429);
         }
         const res = g.res;
         httpStatus = res.status;
-        if (res.status === 404 || res.status === 410) { status = "removed"; note = `the source answered ${res.status}`; }
-        else if (!res.ok) { note = `the source answered ${res.status}`; unreachable = note; }
+        /* D-472: WHICH ADDRESS ANSWERED. For a Drive document that is the export
+           address this instance composed, and a note naming the document address
+           for a status the export returned would misattribute it. */
+        const answered = driveTick && driveTick.harvestable
+          ? `the OpenDocument export address ${driveTick.exportAddress} answered ${res.status}`
+          : `the source answered ${res.status}`;
+        /* DEC-49 REGION is-drive-tick-export
+         *
+         * THE SPAN `DRIVE_TICK_EXPORT_IS_THE_SHELL` names (C-48.8), and nothing
+         * else. Google answers the export address with `text/html` — a sign-in
+         * page, an error page, the app — when the file is no longer shared with
+         * anyone who has the link, and it answers 200 while doing it, so the
+         * status branch below cannot see it.
+         *
+         * WHAT A TICK DOES WITH IT, AND IT IS NOT WHAT `op=acquire` DOES. Acquire
+         * refuses a CAPTURE; here there is nothing to file and everything to
+         * misreport. The shell's bytes are not the document, so comparing them
+         * against the captured document would answer `modified` on this visit and
+         * every later one. The check simply did not run, which is a tick outcome
+         * with a name (D-95's rule for a governed refusal, one condition over):
+         * the LOOK is recorded as `unreachable` with the reason, the document's
+         * own `source_status` and `last_checked` are left exactly as they were,
+         * and the refusal says which address answered and how. */
+        if (driveTick && driveTick.harvestable && res.ok) {
+          /* THE PREDICATE IS NAMED HERE RATHER THAN SPELLED AS `op=acquire`'s TWIN,
+             and that is a property of this estate rather than a style choice:
+             `test/drive.control.mjs` arms acquire's declared-type check (arm 4a) by
+             quoting its line VERBATIM and patching the single occurrence. A second
+             byte-identical copy in this same file makes that exactly-once patch
+             ambiguous and silently arms the wrong site — WORKER.md's "anchor
+             occurred twice" receipt, which `test/m025-arm-anchor-witness.test.mjs`
+             A5 catches. Measured: it caught this file's first draft. */
+          const declaredType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+          const servedAsPage = declaredType === "text/html" || declaredType === "application/xhtml+xml";
+          if (servedAsPage) {
+            try { await res.body?.cancel?.(); } catch { /* the source may already be gone */ }
+            const observation = await monitorLook({ outcome: "unreachable",
+              reason: `the Drive export address answered \`${declaredType}\`, which is the application shell` });
+            return json({ ok: false, reason: "DRIVE_TICK_EXPORT_IS_THE_SHELL",
+              ...driveRow("DRIVE_TICK_EXPORT_IS_THE_SHELL"), op, bundleId, status: res.status,
+              locator: driveTick.address, export_address: driveTick.exportAddress,
+              declared_content_type: declaredType, refused_on: "the declared content type",
+              drive: { host: driveTick.host, shape: driveTick.shape, kind: driveTick.kind,
+                       file_id: driveTick.fileId, export_format: driveTick.format },
+              observation,
+              detail: `the OpenDocument export address answered with \`${declaredType}\`, which is the Google Drive `
+                    + `APPLICATION — a client-rendered shell whose bytes carry no document (framework Part I `
+                    + `§6's UNWATCHABLE case). It is not compared against the capture: its bytes are rebuilt on `
+                    + `every render, so a comparison would report this document changed today and on every `
+                    + `later visit. Nothing about the record moved, and the look is logged as indeterminate. `
+                    + `Google serves this when the file is no longer shared with anyone who has the link.` }, 502);
+          }
+        }
+        /* END DEC-49 REGION is-drive-tick-export */
+        if (res.status === 404 || res.status === 410) { status = "removed"; note = answered; }
+        else if (!res.ok) { note = answered; unreachable = note; }
         else {
           const bytes = new Uint8Array(await res.arrayBuffer());
+          /* DEC-49 REGION is-drive-tick-bytes
+           *
+           * THE SPAN `DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL` names (C-48.9), and
+           * nothing else. C-48.7's reasoning one op over: detection is BYTES-FIRST
+           * and certain (COFF-1's registry doctrine), so Google's declared type
+           * need not be trusted at all, and a shell arriving under a LYING content
+           * type is the more serious finding and carries its own code. Both arms
+           * are drivable — the declared-type one from the header, this one from the
+           * first kibibyte — which is the whole of PL-4's rule. */
+          if (driveTick && driveTick.harvestable) {
+            /* `sniffed`, not `sniff`, for the reason named at the declared-type arm
+               above: acquire's twin line is a control driver's anchor. */
+            const sniffed = detectFormat(bytes.subarray(0, Math.min(bytes.length, 1024)), null);
+            const servedType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+            if (sniffed.format === "html") {
+              const observation = await monitorLook({ outcome: "unreachable",
+                reason: `the Drive export address served HTML under \`${servedType || "no content type"}\`` });
+              return json({ ok: false, reason: "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL",
+                ...driveRow("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"), op, bundleId, status: res.status,
+                locator: driveTick.address, export_address: driveTick.exportAddress,
+                declared_content_type: servedType || null,
+                refused_on: "the bytes", detected: sniffed,
+                drive: { host: driveTick.host, shape: driveTick.shape, kind: driveTick.kind,
+                         file_id: driveTick.fileId, export_format: driveTick.format },
+                observation,
+                detail: `the OpenDocument export address served bytes that are HTML — ${sniffed.signals.join("; ")} `
+                      + `— while declaring otherwise. That is the Google Drive APPLICATION, not the document, and `
+                      + `the declared type did not say so. It is not compared against the capture: the shell is `
+                      + `rebuilt on every render, so the comparison would report a change nobody made. Nothing `
+                      + `about the record moved, and the look is logged as indeterminate.` }, 502);
+            }
+          }
+          /* END DEC-49 REGION is-drive-tick-bytes */
           const d = await crypto.subtle.digest("SHA-256", bytes);
           seen = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
           fetchedBytes = bytes;
@@ -9451,7 +9711,14 @@ export default {
       /* The Session Log is the one body surface a mechanical writer may add to,
          and C-13.2 requires an entry whenever last_updated moves. */
       const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked")
-        + (compared ? ` (compared ${compared})` : "") + "\n";
+        + (compared ? ` (compared ${compared})` : "")
+        /* D-472: the durable record says WHICH bytes were compared. A Drive tick
+           reads Google's export, not the page at the document's own address, and
+           a Session Log that does not say so leaves a reader to assume the page. */
+        + (driveTick && driveTick.harvestable
+            ? ` — fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed `
+              + `from the Drive ${driveTick.kind} in ${driveTick.address}`
+            : "") + "\n";
       const at = text.indexOf("## Session Log");
       if (at < 0) text += "\n## Session Log\n\n" + entry;
       else {
@@ -9515,6 +9782,14 @@ export default {
            and the look as the observation log recorded it. */
         assessment: graded.assessment, assessment_basis: graded.basis,
         cadence, observation,
+        /* D-472: for a Drive-linked document, which address this tick actually
+           fetched and the three facts the plane derived to compose it. Absent for
+           every other document, where the locator is the address. */
+        ...(driveTick && driveTick.harvestable
+          ? { drive: { document_address: driveTick.address, export_address: driveTick.exportAddress,
+                       kind: driveTick.kind, file_id: driveTick.fileId, export_format: driveTick.format },
+              fetched_address: tickAddress }
+          : {}),
         reeval_raised: flags,
         ...(promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail }),
         note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
@@ -11338,6 +11613,39 @@ export default {
            caller, set only here. A verified replay is a replay: `replay` is set with it, so no creation-time stamp
            (D-436's group) rewrites the bytes the provenance lists. Anything failing (1) or (2) falls through to the
            ordinary creation unchanged. */
+        /* D-511 (§11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", RULED 2026-09-24 by BOB #33 on
+           D-505's finding), STEP (1), THE FENCE. `replay` exempts a promotion from every SHAPE fence `promote` has —
+           the gathering grammar, the inquiry and action basis arms, the correspondence arms, the bias arm, the
+           creation-time group stamp, and C-32.19's rule that no machine writes a member's `risk_tier`. The exemption
+           is right for what it is FOR: a replay re-states the record's own past verbatim, and that past predates the
+           fences. But the flag ARRIVED IN THE REQUEST BODY and nothing removed it, so any caller could hand itself
+           the exemption. MEASURED by D-505 through op=promote (`risk-tier.test.mjs` §7 arm (ix), now INVERTED): a
+           MEMBER-class deploy token sending `replay: true` landed `risk_tier: 1` — "file freely" — on an action
+           nobody assessed, and `op=projection` published it. A provenance hop a caller can hand us is one a caller
+           can invent (`CLAUDE.md` §5), which is the reasoning `migrationReplay` below already answers one field over.
+           THE CONDITION IS THE ADMIN CLASS WITH NO SESSION, AND BOTH HALVES ARE LOAD-BEARING. Admin is the only class
+           `migrate.mjs` uses (it narrowed to admin at REC-173, and refuses to run under any other), so the migration
+           is untouched. `!viaSession` is there because the session block above sets `cls = kind` from
+           `sess.role === "admin"`, and the FOUNDER'S OWN SESSION — the one whose stored role is the literal `admin`
+           (`Store.ROOT_ADMIN`, `rootOfTrust: true`), minted by `op=claim` and `op=login` — therefore arrives as
+           `cls === "admin"` exactly as the deploy token does. A person signed in at a browser is not the root of
+           trust, which is the distinction `op=export` draws in this file in the same words. MEASURED, because the
+           first draft of this comment said an ADMIN-ROLE MEMBER's session arrives that way too and that is FALSE:
+           a member login stores `member:<id>`, so her class is `member` and `m.role === "admin"` decides only her
+           capabilities (`Store#sessionRights`). `risk-tier.test.mjs` §8's REACH arm asks `op=whoami` for all four
+           callers rather than asserting any of it, and this section's control caught the error. Everything else
+           — a member session, a member, probe or `ai` token, and any class added later — has the flag removed BEFORE
+           the store sees it, so every fence applies to it. It is a DELETE and not a refusal: the caller asked for an
+           exemption it may not have, and the honest answer is the promotion judged as what it IS, which then refuses
+           by the fence's own name (C-32.19 for the measured case) rather than by a name about the flag.
+           DELETED BEFORE the `migrationReplay` block below, which sets `b.replay` as the SERVER's word on a verified
+           migration replay — the only writer of it that remains.
+           RESIDUE, STATED RATHER THAN LEFT TO BE FOUND: until step (2) is built (every replayed promotion, of any
+           type and any revision, names a drive-provenance capture the plane verifies, as `migrationReplayOf` already
+           does for a creation) an ADMIN-class caller can still ASSERT a replay it cannot show. The record does not
+           model the root of trust's honesty (Membership §DEC-2, deferred). Step (1) closes the measured hole; it does
+           not close that one, and BOB #33 keeps step (1)'s class test as a second condition when step (2) lands. */
+        if (viaSession || cls !== "admin") delete b.replay;
         delete b.migrationReplay;
         const replayed = (!viaSession && cls === "admin" && b.base === null && b.meta
                           && normalizeType(b.meta.object_type) === "inquiry")

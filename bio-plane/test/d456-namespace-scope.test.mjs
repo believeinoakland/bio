@@ -221,6 +221,11 @@ console.log("\n--- 4 · every site in src/index.mjs that reads the `store` param
       const f = lines[i].match(/^(?:async\s+)?function\s+(\w+)\s*\(/); if (f) return f[1];
       const o = lines[i].match(/if \(op === "(\w+)"\)/); if (o && i > n - 40) return `op=${o[1]}`;
       if (/if \(spec\.classes === null\)/.test(lines[i]) && i > n - 40) return "unauthenticated-block";
+      /* ADDED 2026-09-24 by D-475. The `/` setup page reads `store` too, and it is not in a named function and
+         not in an `op ===` branch — it is an HTML route in the default export's own `fetch`, answered before
+         `op` exists. Without this line the backward walk ran PAST it to the nearest function declared above and
+         named that one, so the census would have reported a real reader under a false owner. */
+      if (/url\.pathname === "\/"/.test(lines[i]) && i > n - 40) return "setup-page";
     }
     return "?";
   };
@@ -230,10 +235,21 @@ console.log("\n--- 4 · every site in src/index.mjs that reads the `store` param
      `store=scratch` on the public ops that always answer from `bio` (C-78.2), and
      `test/d461-pinned-namespace.test.mjs` drives it. The old set was right for its day, not wrong.
      c19-batch11 union: `op=groupidentity` (C-82/IC-246, from c19-unionfix) is carried beside it. */
-  const KNOWN = new Set(["scopeFor", "namespaceGate", "pinnedNamespaceGate", "unauthenticated-block", "op=instancegroup", "op=groupidentity"]);
+  /* CORRECTED AGAIN 2026-09-24 by D-475: `setup-page` is a seventh reader, added on purpose. `/` is an HTML
+     route answered before `op` and `spec` exist, so neither gate below could reach it and its read was pinned to
+     `bio` by a literal; it now takes op=instancegroup's rule and runs `namespaceGate` itself, and
+     `test/d475-page-namespace.test.mjs` drives it through the route (18 assertions) with `test/nc-d475.mjs` as its
+     negative control. The old set was right for its day, not wrong. */
+  const KNOWN = new Set(["scopeFor", "namespaceGate", "pinnedNamespaceGate", "unauthenticated-block", "op=instancegroup", "op=groupidentity", "setup-page"]);
   t("the sweep found readers (a sweep over nothing is not a sweep)", found.length >= 4, true);
-  t("every reader of `store` is one this suite drives (a new one must be added here, by name)",
-    sites.map(owner).filter((o) => !KNOWN.has(o)), []);
+  /* THE LABEL CORRECTED 2026-09-24 by D-475, not exempted. It read "one this suite drives", which stopped being
+     true at D-461 — `pinnedNamespaceGate` is driven by `d461-pinned-namespace.test.mjs` and was admitted here with
+     that suite named at the site — and is untrue of `setup-page` too. What this assertion actually enforces, and
+     all it ever could, is that NO reader of `store` is unnamed: a new one fails here until somebody adds it and
+     says, at the site, which suite drives it. Stating that is what keeps the next reader from being waved through
+     on the strength of a label nobody could satisfy. */
+  t("every reader of `store` is NAMED here, with the suite that drives it recorded at the site (a new one must be "
+    + "added, by name, and never waved through)", sites.map(owner).filter((o) => !KNOWN.has(o)), []);
   t("the front-door gate runs before any credential is classified",
     src.indexOf("const unknownNamespace = namespaceGate(url);") > 0
       && src.indexOf("const unknownNamespace = namespaceGate(url);") < src.indexOf("let cls = await classify("), true);

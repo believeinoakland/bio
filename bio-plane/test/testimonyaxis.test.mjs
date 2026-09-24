@@ -351,7 +351,24 @@ t("…and each axis reports BOTH branches, one of them unrated on that axis",
    the write's shape checks by design, so the record may hold a testimony leg at
    a stronger letter than any write would admit. It is read at D and says so. */
 const QREP = "INQ-2026-5302-replayed";
-const rep = await promoteQ(QREP, [{ target: OBS, grade: "B", axis: "testimony", source: "testimony" }], [], RUTH, { replay: true });
+/* CORRECTED 2026-09-24 by D-511, never exempted, and it moved TWO things. (1) THE CREDENTIAL: this replayed
+   under RUTH'S SESSION and landed, because the exemption was the CALLER'S to claim. BOB #33 ruled `replay` the
+   SERVER'S word (INVESTIGATIVE-SESSION.md §11 item 5) and the plane now deletes a caller's flag unless the call
+   arrives under the ADMIN class with NO SESSION — the one class `migrate.mjs` uses. (2) THE SHAPE, which makes
+   the arm what its own label says: it was a CREATION, and an admin-class creation of a question is asked for its
+   surfacing run (REC-171, C-66.1), so moving the credential alone would have measured that instead. A REVISION is
+   asked for none. The question is seeded under ruth at the letter the write admits and the root of trust then
+   replays the stronger historical letter over it. `surfaced_by` is carried forward verbatim because a revision may
+   neither supply nor drop an origin (REC-179, C-66.5) — D-78 stamped `human` on ruth's creation, so the replayed
+   bytes say `human` too, and `replay` is no exemption from that rule. */
+const repSeed = await promoteQ(QREP, [{ target: OBS, grade: TESTIMONY_GRADE, axis: "testimony", source: "testimony" }]);
+const repMd = qMd(QREP, [{ target: OBS, grade: "B", axis: "testimony", source: "testimony" }])
+  .replace("surfaced_by: agent", "surfaced_by: human");
+const rep = await post("promote", { bundleId: QREP, base: repSeed && repSeed.bundleSha, snapKey: snapKey(),
+  replay: true,
+  meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
+          current_state: "open", created: NOW, last_updated: NOW },
+  files: [fileOf("bundle.md", repMd)] }, "adm-mk2");
 const sRep = await strength(QREP);
 t("A REPLAYED revision holding testimony B is admitted (history is append-only) — and READ at D, saying why",
   [rep && rep.ok, sRep && sRep.testimony && sRep.testimony.grade,

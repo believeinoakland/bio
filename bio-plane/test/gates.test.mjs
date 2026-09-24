@@ -62,6 +62,22 @@
  * All seventeen as declared, driver 123 pass / 0 fail, baseline and closing 78 / 0. On the REAL estate the same break
  * (16) takes a MEASUREMENTS-only TARGETED plant from 85 selected units back to 109 (`MEASUREMENTS.md` M-106).
  *
+ * NEGATIVE CONTROL: RAN 2026-09-24 by the M0-173 worker, same driver, arm G22 ALONE (`node
+ * bio-plane/test/gates.control.mjs G22`), driver 13 pass / 0 fail, exit 0, `gates.mjs` restored byte-identically:
+ *   (22) THE COORD PIN NOT SET — `gates.mjs` §0b's `process.env.BIO_COORD_REF = sha` replaced by `void sha`, so every
+ *       unit reads the moving `origin/coord` again, which is the state CONDUCT #20 measured red on the hour ->
+ *       baseline 110 pass / 0 fail, armed 106 / 4, and the four are EXACTLY the declared ones: "every unit of one run
+ *       read the SAME coord commit and the SAME state", the battery's read AFTER its own fetch, the gate's printed
+ *       PINNED line and the RECORD's `coord` field. Closing 110 / 0.
+ *       THE PRINTED LINE AND THE RECORD BREAKING IS THE FINDING, and it was DESIGNED IN after the arm's first
+ *       reading: with `pinned` hardcoded true they went on claiming a pin over units reading the moved ref — a
+ *       mechanism believed on its existence rather than its behaviour. They are now read back from the variable the
+ *       children are actually given, so a gate that fails to pin cannot report that it did.
+ *       MUST NOT, and did not: the mid-run fetch still MOVES the ref (the arm is armed), the same reader unpinned
+ *       still reads the moved state (the identity costs something), a PLANTED override is still kept, and a checkout
+ *       with no `origin/coord` still says NOT PINNED.
+ *       RE-RUN 2026-09-24 after the fixture was SEALED from the outer run's own pin (see the section): the same
+ *       four, baseline and closing 110 / 0, driver exit 0.
  * NEGATIVE CONTROL: RAN 2026-09-24 by the M0-143 worker, same driver, arms G17-G19 each ALONE, baseline and closing
  * 96 pass / 0 fail, driver 30 pass / 0 fail, both subjects restored sha256- and cmp-identical at 86,802 and 94,212
  * bytes after every arm:
@@ -166,7 +182,7 @@
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, existsSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -207,7 +223,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 11;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1; M0-153: +1 */
+const SECTIONS = 12;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1; M0-153: +1; M0-173 (the coord snapshot): +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -225,6 +241,7 @@ const out1 = (args, cwd) => git(args, cwd).stdout.trim();
  * no stub's SOURCE names a fixture file: a stub that did would read, to MENTION, as a unit reading it. */
 const stub = (name) => [
   `import { appendFileSync, writeFileSync } from "node:fs";`,
+  `import { spawnSync } from "node:child_process";`,
   `const name = ${JSON.stringify(name)};`,
   `if (process.env.GATES_FIXTURE_LOG) appendFileSync(process.env.GATES_FIXTURE_LOG, name + " " + process.argv.slice(2).join(" ") + "\\n");`,
   `if (name === "battery" && process.env.GATES_FIXTURE_DIRTY) writeFileSync(new URL("../../" + process.env.GATES_FIXTURE_DIRTY, import.meta.url), "dirtied mid-run\\n");`,
@@ -233,6 +250,25 @@ const stub = (name) => [
      124 and writes NOTHING — a 124 the gate must not take on trust. The unit arrives by environment, as above. */
   `if (name === "battery" && process.env.GATES_FIXTURE_TIMEOUT && process.env.BIO_BATTERY_VERDICT) { writeFileSync(process.env.BIO_BATTERY_VERDICT, JSON.stringify({ v: 1, verdict: "NOT MEASURED", exit: 124, failed: [], notMeasured: [{ unit: process.env.GATES_FIXTURE_TIMEOUT, timeouts: ["a planted expiry"] }] })); process.exit(124); }`,
   `if (name === "battery" && process.env.GATES_FIXTURE_BARE124) process.exit(124);`,
+  /* M0-173: THE COORD READER, and the MOVE. Told GATES_FIXTURE_COORDREAD=<state path> and COORDMOD=<absolute path of
+     the fixture's real `tools/coord.mjs`>, a stub logs what the REAL reading layer answers for that path — the ref it
+     resolved and the state's first line — so a run's readings can be held against each other and against the state the
+     ref held when the gate began. Told GATES_FIXTURE_COORDFETCH, the battery stub then FETCHES `coord` and reads AGAIN:
+     a lane's write arriving mid-gate the way it really arrives, through this checkout's own fetch (`mintid` ran 31 in
+     one pass, measured 2026-09-23). Both paths arrive by environment, as GATES_FIXTURE_DIRTY does and for the same
+     reason. The cache is reset before each read: two reads in one process are two reads. */
+  `const coordRead = async (tag) => {`,
+  `  const C = await import("file://" + process.env.GATES_FIXTURE_COORDMOD);`,
+  `  C.resetCoordCache();`,
+  `  const w = C.whereReads(C.ROOT);`,
+  `  const st = String(C.readState(C.ROOT, process.env.GATES_FIXTURE_COORDREAD) ?? "ABSENT").trim().split("\\n")[0];`,
+  `  appendFileSync(process.env.GATES_FIXTURE_LOG, [name, tag, (w.sha || "none").slice(0, 8), st].join(" ") + "\\n");`,
+  `};`,
+  `if (process.env.GATES_FIXTURE_COORDREAD && process.env.GATES_FIXTURE_COORDMOD) await coordRead("coord");`,
+  `if (name === "battery" && process.env.GATES_FIXTURE_COORDFETCH) {`,
+  `  spawnSync("git", ["fetch", "-q", "origin", "+refs/heads/coord:refs/remotes/origin/coord"], { cwd: process.cwd() });`,
+  `  if (process.env.GATES_FIXTURE_COORDREAD && process.env.GATES_FIXTURE_COORDMOD) await coordRead("coord-after");`,
+  `}`,
   /* BOB #29: GATES_FIXTURE_REDSUITE=<unit> behaves as a real battery that ran every suite and names ONE failure: it
      writes the verdict file with `failed: [<unit>]` and exits 1. GATES_FIXTURE_LEAK adds `leaking: true` — a finding
      that is the run's, not a suite's. */
@@ -351,6 +387,19 @@ const commitAll = (root, msg) => { git(["add", "-A"], root); return git([...ID, 
    subject is the gate and the D-293 record, not who lands `main` — MODELS the other side's landing below the hook:
    the remote's creation and each upstream move are a landing already made, exactly what `origin/main` moving means. */
 const landMain = (root) => git(["push", "-q", "--no-verify", "origin", "main"], root);
+/* M0-173: a commit on the fixture's `coord` branch, built through a TEMPORARY INDEX — no checkout, no touch of the
+   working tree, nothing of this repository's index — holding one state file at `rel`, which is the shape
+   `tools/coord.mjs` reads (M0-110). Returns its sha. */
+const coordCommit = (root, rel, text, parent) => {
+  const idx = join(SANDBOX, "coord.index");
+  try { unlinkSync(idx); } catch { /* the first call */ }
+  const env = { ...process.env, GIT_INDEX_FILE: idx };
+  const run = (args, input) => spawnSync("git", args, { cwd: root, encoding: "utf8", env, input }).stdout.trim();
+  const blob = run(["hash-object", "-w", "--stdin"], text);
+  run(["update-index", "--add", "--cacheinfo", `100644,${blob},${rel}`]);
+  const tree = run(["write-tree"]);
+  return run([...ID, "commit-tree", tree, ...(parent ? ["-p", parent] : []), "-m", `coord: ${rel}`]);
+};
 
 function fixture(name) {
   const root = join(SANDBOX, name);
@@ -836,6 +885,93 @@ section("THE VERDICT RULE, driven over the module the guard imports");
   const eff = effectiveVerdict(runsFor(F.root, tree));
   t("the GREEN tree's record reads GREEN through the guard's own verdict rule", eff.verdict, "GREEN");
   t("a tree with no run reads NO verdict — not GREEN", effectiveVerdict(runsFor(F.root, "0".repeat(40))).verdict, null);
+}
+
+/* ========================================================================== */
+section("M0-173 · THE COORD SNAPSHOT — ONE commit for the whole run, whatever a lane writes mid-gate");
+/* THE DEFECT, MEASURED by CONDUCT #20 on 2026-09-24: a train's gate read `planning-hygiene` 75 pass / 1 fail at
+   ~17:1xZ and the IDENTICAL tree, re-run by hand, read 76 / 0. That suite holds its OWN read of the plan against the
+   figure a separately-spawned `plancheck` printed — two reads of `origin/coord`, a LIVE remote-tracking ref this very
+   checkout moves when a unit's CLI fetches it — so the verdict moved with the hour rather than with the tree.
+   The mechanism is driven END TO END here: the REAL reading layer (`tools/coord.mjs` in the fixture), a REAL remote
+   `coord`, and a REAL fetch by the battery step mid-run. What is asserted is what the units READ. */
+{
+  const CX = fixture("coord-fx");
+  const STATE = "docs/development/QUEUE.md";                 /* the switch file and the state read (M0-110) */
+  const STATE_A = "### A-1 · the plan as this gate began";
+  const STATE_B = "### B-1 · a row a lane wrote while the gate ran";
+  const MOD = join(CX.root, "tools/coord.mjs");
+  const readings = (g, tag = null) => g.ran.filter((l) => / coord(-after)? [0-9a-f]{8}| coord(-after)? none /.test(l))
+    .filter((l) => tag === null || l.includes(` ${tag} `));
+  const stateOf = (l) => l.split(" ").slice(3).join(" ");
+  const shaOf = (l) => l.split(" ")[2];
+  /* SEALED FROM THE OUTER RUN. This suite runs UNDER a gate, which pins `BIO_COORD_REF` for its whole run (§0b) — and
+     that pin names a commit of the REAL repository, which this fixture does not hold. MEASURED 2026-09-24: with the
+     variable inherited, five of this section's assertions fail and the state reads ABSENT, so the suite would have
+     turned the gate red on its own fix. Every fixture gate below is therefore run with the variable CLEARED (empty is
+     unset to both readers), except the arm that plants one deliberately. */
+  const env = { GATES_FIXTURE_COORDMOD: MOD, GATES_FIXTURE_COORDREAD: STATE, BIO_COORD_REF: "" };
+
+  /* (1) BEFORE there is a `coord` at all: a clone that never fetched it is told so, and nothing is pinned. (No coord
+     environment here: the fixture does not carry the reading layer yet, and a stub told to import a module that is not
+     there would fail the step — measured on this arm's first run.) */
+  const none = gates(CX.root, ["--full"], { BIO_COORD_REF: "" });
+  t("a checkout where origin/coord does not resolve says NOT PINNED and names the fetch",
+    [/^gates: coord NOT PINNED — origin\/coord does not resolve in this checkout/m.test(none.out), none.status], [true, 0]);
+
+  /* The real reading layer, so a unit's read is the estate's own read and not a model of it; and THE SWITCH — the
+     state file on disk is the one-line pointer, so `readState` answers from the ref (M0-110). */
+  for (const f of ["coord.mjs", "statepaths.mjs"]) put(CX.root, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
+  const { pointerText } = await import(`file://${MOD}`);
+  put(CX.root, STATE, pointerText(STATE));
+  commitAll(CX.root, "coord-fx: the real coord layer, and a switched state file");
+  landMain(CX.root);
+  git(["fetch", "-q", "origin"], CX.root);
+
+  /* A is what `origin/coord` holds when the gate begins; B is the lane's write, pushed but NOT yet fetched here. */
+  const A = coordCommit(CX.root, STATE, `${STATE_A}\n`, null);
+  git(["push", "-q", "--no-verify", "origin", `${A}:refs/heads/coord`], CX.root);
+  git(["fetch", "-q", "origin", "+refs/heads/coord:refs/remotes/origin/coord"], CX.root);
+  const B = coordCommit(CX.root, STATE, `${STATE_B}\n`, A);
+  git(["push", "-q", "--no-verify", "origin", `${B}:refs/heads/coord`], CX.root);
+  /* A PUSH ALSO MOVES THE PUSHER'S OWN REMOTE-TRACKING REF — measured on this arm's first run, which read B
+     everywhere and looked exactly like a broken pin. The state being modelled is the lane's write landed ON THE
+     REMOTE and NOT YET FETCHED here, which is what a lane's write looks like to another clone, so the ref goes back. */
+  git(["update-ref", "refs/remotes/origin/coord", A], CX.root);
+  t("the fixture is SWITCHED and reads A, with B pushed and not yet fetched (else the arms below cost nothing)",
+    [out1(["rev-parse", "origin/coord"], CX.root) === A, A !== B, out1(["rev-parse", "refs/heads/coord"], CX.remote) === B],
+    [true, true, true]);
+
+  /* (2) THE RUN, with the lane's write arriving mid-gate through the battery's own fetch. */
+  const tree = treeAt(CX.root);
+  const g = gates(CX.root, ["--full"], { ...env, GATES_FIXTURE_COORDFETCH: "1" });
+  const reads = readings(g);
+  t("the gate PINNED the commit origin/coord held when it began, and SAYS so",
+    [new RegExp(`^gates: coord PINNED at ${A.slice(0, 8)} —`, "m").test(g.out), g.status], [true, 0]);
+  t("the fetch mid-run really MOVED origin/coord (the arm armed: a pin over a ref that never moves proves nothing)",
+    out1(["rev-parse", "origin/coord"], CX.root), B);
+  t("every unit of one run read the SAME coord commit and the SAME state — the snapshot, never the moving ref",
+    [reads.length > 3, [...new Set(reads.map(shaOf))], [...new Set(reads.map(stateOf))]],
+    [true, [A.slice(0, 8)], [STATE_A]]);
+  t("...including the battery's own read AFTER its fetch, which is where the move would have landed",
+    readings(g, "coord-after").map((l) => `${shaOf(l)} ${stateOf(l)}`), [`${A.slice(0, 8)} ${STATE_A}`]);
+  const run = runsFor(CX.root, tree).slice(-1)[0];
+  t("...and the RECORD names the pinned coord commit, so a verdict says which state it rests on",
+    [run && run.coord, run && run.coordPinned, run && run.verdict], [A, true, "GREEN"]);
+
+  /* (3) THE IDENTITY MUST COST SOMETHING: the same reader, unpinned, sees the move. */
+  const bare = spawnSync(process.execPath, [join(CX.root, "tools/plancheck.mjs")],
+    { cwd: CX.root, encoding: "utf8", env: { ...process.env, ...env, GATES_FIXTURE_LOG: LOG, BIO_COORD_REF: "" } });
+  const unpinned = readFileSync(LOG, "utf8").split("\n").filter((l) => / coord [0-9a-f]{8} /.test(l)).slice(-1)[0] || "";
+  t("the SAME reader with no pin reads the MOVED state (else the identity above costs nothing)",
+    [bare.status, shaOf(unpinned), stateOf(unpinned)], [0, B.slice(0, 8), STATE_B]);
+
+  /* (4) A PLANT IS NEVER OVERRIDDEN: an override already in the environment is a fixture's or a driver's, and this
+     run reads what it names — `origin/coord` now being B. */
+  const planted = gates(CX.root, ["--full"], { ...env, BIO_COORD_REF: A });
+  t("an override already set when the gate began is kept, and the gate says it is not its own pin",
+    [/^gates: coord NOT PINNED — BIO_COORD_REF was already set when the gate began/m.test(planted.out),
+     [...new Set(readings(planted).map(stateOf))]], [true, [STATE_A]]);
 }
 
 /* ========================================================================== */

@@ -39,8 +39,9 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");
-const post = async (op, body) => (await mf.dispatchFetch("http://x/api/?op=" + op + "&token=mem-gath",
+const postAs = async (token, op, body) => (await mf.dispatchFetch("http://x/api/?op=" + op + "&token=" + token,
   { method: "POST", body: JSON.stringify(body) })).json();
+const post = (op, body) => postAs("mem-gath", op, body);
 const get = async (qs) => (await mf.dispatchFetch("http://x/api/?token=mem-gath&" + qs)).json();
 
 const NOW = "2026-07-24T00:00:00Z";
@@ -174,9 +175,52 @@ console.log("\n--- replay carries the past, and says that it did ---");
     register: [], ...extra,
   });
   t("authored, the legacy queue is refused", (await post("promote", mk({}))).result.reason, "GATHERING_REFUSED");
-  t("replayed, it lands", (await post("promote", mk({ replay: true }))).result.ok, true);
-  const man = JSON.parse((await get(`op=image&id=${RID}`)).result["_history/manifest.json"]);
-  t("and the history says it was a replay, not authorship", man.entries[0].kind, "promotion-replay");
+  /* CORRECTED 2026-09-24 by D-511, never exempted. This arm sent `replay: true` under the MEMBER deploy token
+     (`mem-gath`) and passed, because the exemption was the CALLER'S to claim. BOB #33 ruled that `replay` is the
+     SERVER'S word (INVESTIGATIVE-SESSION.md §11 item 5), and the plane now deletes a caller's flag unless the call
+     arrives under the ADMIN class with no session — the one class `migrate.mjs` uses. The old assertion was wrong
+     about WHO may replay and right about WHAT a replay does, so the CREDENTIAL is what moves and nothing else. */
+  t("replayed BY THE ROOT OF TRUST, it lands — the exemption survives for the one class the migration uses",
+    (await postAs("adm-gath", "promote", mk({ replay: true }))).result.ok, true);
+  /* Read defensively rather than destructured: before D-511 a failure of the arm above left `result` null and the
+     next line died on a TypeError, which goes through NO assertion at all and ends the module while its tally reads
+     clean (WORKER.md). A missing manifest now FAILS the arm below by name. */
+  const manRaw = (await get(`op=image&id=${RID}`))?.result?.["_history/manifest.json"] ?? null;
+  const man = typeof manRaw === "string" ? JSON.parse(manRaw) : null;
+  t("and the history says it was a replay, not authorship", man?.entries?.[0]?.kind ?? null, "promotion-replay");
+  /* D-511'S OWN ARMS, here because this is the replay exemption's home suite and the gathering grammar is the
+     exemption's oldest consumer. The MEMBER deploy token and a MEMBER SESSION are two different callers and both
+     are now judged: the token is the machine half of the rule, the session is the half `!viaSession` exists for —
+     ruth is an ADMIN-ROLE member, so `cls` reads `admin` for her session and only the session test tells her
+     browser apart from the root of trust. */
+  const RID2 = "INFO-2026-0502-member-token-asserts-replay";
+  const body2 = md(1).replace(ID, RID2);
+  const mk2 = (id, text, extra) => ({
+    bundleId: id, base: null, snapKey: "20260724T090000Z_ffff777" + (id === RID2 ? "7" : "8"), author: "drive-migration",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Standing intent",
+            current_state: "collected", created: NOW, last_updated: "2026-07-24T01:00:00Z" },
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+            { path: "data/gathering.json", text: legacy, bytes: legacy.length, sha256: sha(legacy) }],
+    register: [], ...extra,
+  });
+  t("D-511: the MEMBER deploy token asserting `replay: true` over the same legacy queue is REFUSED — the flag is "
+    + "deleted before the store sees it, so the grammar judges the promotion as what it is",
+    (await postAs("mem-gath", "promote", mk2(RID2, body2, { replay: true }))).result.reason, "GATHERING_REFUSED");
+  t("D-511: and NOTHING landed — no bundle of that id exists to image",
+    (await get(`op=image&id=${RID2}`))?.result?.["bundle.md"] ?? null, null);
+  const RID3 = "INFO-2026-0503-probe-token-asserts-replay";
+  const body3 = md(1).replace(ID, RID3);
+  t("D-511: the PROBE deploy token's assertion is refused too — the condition is the ADMIN class, never a list of "
+    + "two the next class added would fall outside",
+    (await postAs("prb-gath", "promote", mk2(RID3, body3, { replay: true }))).result.reason, "GATHERING_REFUSED");
+  /* OVER-STRICTNESS, the direction that matters: the exemption belongs to the FLAG, not to the class. The root of
+     trust promoting the same legacy queue WITHOUT `replay` must still be refused, or D-511 would have handed the
+     admin token a standing exemption from the grammar. */
+  const RID4 = "INFO-2026-0504-root-of-trust-no-replay";
+  const body4 = md(1).replace(ID, RID4);
+  t("D-511 OVER-STRICTNESS: the ADMIN class promoting the same legacy queue with NO `replay` is refused exactly as "
+    + "before — the exemption is the flag's and not the class's",
+    (await postAs("adm-gath", "promote", mk2(RID4, body4, {}))).result.reason, "GATHERING_REFUSED");
 }
 
 await mf.dispose();

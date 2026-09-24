@@ -56,7 +56,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, rmSync, statSync, openSync, readSync, closeSync, unlinkSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -91,7 +91,20 @@ export const placementPointer = () =>
   `${PLACEMENT_HEADING}\n\n${POINTER_TAG} this section lives on the branch \`coord\` as \`${PLACEMENT}\` — read it with `
   + `\`node tools/coord.mjs read ${PLACEMENT}\` (docs/development/TREE-SHARING.md §1, BOB #28's ruling 3; M0-110).\n`;
 
-export const coordRef = () => process.env.BIO_COORD_REF || DEFAULT_REF;
+/* THE OVERRIDE NAMES A COMMIT IN *THIS* REPOSITORY (M0-173, 2026-09-24). `BIO_COORD_REF` is how a suite plants a
+   ref and how a gate pins the coord snapshot its whole run reads (`tools/gates.mjs` §0b), and it travels to every
+   child through the environment — so a read of ANOTHER repository, a fixture clone a suite builds and fetches
+   `coord` into, would have resolved a sha that is not an object there and answered ABSENT. MEASURED 2026-09-24:
+   with `BIO_COORD_REF` set to `origin/coord`'s tip, `coord.test.mjs` THREW at §2 ("docs/development/CLAIMS.md
+   could not be read (working tree or coord) — an unreadable register is not an empty one"), where it reads 95/0
+   with the variable unset. So the override governs reads of the repository this module lives in, and a read of any
+   other repository resolves THAT repository's own `origin/coord`. `freshen` is deliberately NOT scoped this way: a
+   set override still means no fetch anywhere, because a library call must never reach the network. */
+const thisRepo = (repo) => {            /* an argument `resolve` cannot read is treated as THIS repository: the
+                                           historical behaviour, never a silent switch to the live ref. */
+  try { return resolve(repo) === resolve(ROOT); } catch { return true; }
+};
+export const coordRef = (repo = ROOT) => (thisRepo(repo) ? process.env.BIO_COORD_REF || DEFAULT_REF : DEFAULT_REF);
 
 /* ------------------------------------------------------------------------------------- git */
 
@@ -117,7 +130,7 @@ const shaCache = new Map();   /* `${repo}\0${ref}` -> sha or null */
 const blobCache = new Map();  /* `${sha}\0${rel}` -> text or null */
 export function resetCoordCache() { shaCache.clear(); blobCache.clear(); }
 
-export function refSha(repo, ref = coordRef()) {
+export function refSha(repo, ref = coordRef(repo)) {
   const k = `${repo}\0${ref}`;
   if (!shaCache.has(k)) {
     const r = git(repo, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`]);
@@ -126,7 +139,7 @@ export function refSha(repo, ref = coordRef()) {
   return shaCache.get(k);
 }
 
-function fromRef(repo, rel, ref = coordRef()) {
+function fromRef(repo, rel, ref = coordRef(repo)) {
   const sha = refSha(repo, ref);
   if (!sha) return null;
   const k = `${sha}\0${rel}`;
@@ -209,8 +222,10 @@ export function blameRev(repo, rel) {
 /** Where this tree's readers read from, for a CLI to print. */
 export function whereReads(repo = ROOT) {
   const switched = isSwitched(repo);
-  const ref = coordRef(), sha = refSha(repo, ref);
-  return { switched, ref, sha, from: switched ? (sha ? `${ref} @ ${sha.slice(0, 8)}` : `${ref} — ABSENT (fetch it)`) : "the working tree (not switched)" };
+  const ref = coordRef(repo), sha = refSha(repo, ref);
+  /* M0-173: when the ref IS a commit id — a gate's pin, or a suite's — say so instead of printing the sha twice. */
+  const at = sha === ref ? `the pinned commit ${String(sha).slice(0, 8)}` : `${ref} @ ${String(sha).slice(0, 8)}`;
+  return { switched, ref, sha, from: switched ? (sha ? at : `${ref} — ABSENT (fetch it)`) : "the working tree (not switched)" };
 }
 
 /** Best-effort fetch of `coord`, for a CLI about to read it. Never for a library call (a suite must not reach the
@@ -230,7 +245,7 @@ export function readRemote(rel, { repo = ROOT, fetch = true } = {}) {
     git(repo, ["fetch", "-q", REMOTE]);
     resetCoordCache();
   }
-  const ref = coordRef();
+  const ref = coordRef(repo);
   if (refSha(repo, ref)) return { ref, sha: refSha(repo, ref), text: fromRef(repo, rel, ref) };
   const main = `${REMOTE}/main`;
   const ms = refSha(repo, main);
