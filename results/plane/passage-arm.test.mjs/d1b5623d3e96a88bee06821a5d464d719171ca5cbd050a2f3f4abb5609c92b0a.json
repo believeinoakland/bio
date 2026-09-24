@@ -1,0 +1,16 @@
+{
+ "unit": "plane:passage-arm.test.mjs",
+ "inputHash": "d1b5623d3e96a88bee06821a5d464d719171ca5cbd050a2f3f4abb5609c92b0a",
+ "verdict": "PASS",
+ "run": "cf5df17b18eeefee15cc4d330e27d957a30e984a.1790224682990.7215.json",
+ "tree": "cf5df17b18eeefee15cc4d330e27d957a30e984a",
+ "head": "54415fcb2667e17bf931bf271741a8414774d10e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "cb3a7d68-e752-56b0-9700-f97e19b6d5dc",
+ "at": "2026-09-24T04:38:03.004Z"
+}
