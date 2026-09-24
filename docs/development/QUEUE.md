@@ -411,6 +411,46 @@ scope: pass the store through `publicInstanceGroup`, or refuse `store=scratch` o
 accepts-when: `/?store=scratch` reads scratch's slug or is refused by name. NEGATIVE CONTROL: ignore the parameter again, and that arm reads `bio`'s slug and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### M0-179 · queued — **`origin/gate-results` HAD ITS HISTORY REWRITTEN (`gates.mjs`: "1d02a4d9 does not descend from the remote tip 78f2412e"), though TREE-SHARING §3a makes it append-only; and `gates.mjs` still REUSES from a tip it does not descend from, failing only the write.** REC-211's worker's measurement at its hour, unverified by CONDUCT (via CONDUCT #20 18:57Z). — owner M0.
+order: at the backlog head, after D-519: a gate that reuses verdicts from a rewritten cache can report green on a record nobody can trace (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/TREE-SHARING.md` §3a (the gate-results branch is append-only), with `docs/development/VERIFICATION.md`.
+depends-on: none.
+scope: (a) establish which push rewrote the branch (reflog, the pushing session) and restore the descent, stating what was lost; (b) `gates.mjs` refuses REUSE from a gate-results tip its local record does not descend from, by name.
+accepts-when: the branch descends again, and a non-descending tip is refused for reuse by name (the measured failure it moves: reuse proceeding past "does not descend"). NEGATIVE CONTROL: plant a non-descending tip in a fixture and the reuse arm refuses it by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-180 · queued — **`kickoffs/WORKER.md`'s construct-status step does not say a probe reads CODE with comments blanked (since M0-155), so branches cut before e9b21be6 still write probes on comment text: D-507's and D-508's "DEC-49 REGION …" probes drifted at the union (CONDUCT repointed them in batch22).** Found by CONDUCT #20 (18:57Z). — owner M0 (BOB reviews the WORKER.md line).
+order: after M0-179, AHEAD of the product rows: each stale branch costs a red round at integration (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a check that cannot fail is worse than none), with M0-155's comment-blanked probes.
+depends-on: none.
+scope: one line in WORKER.md's construct-status step: probes read code with comments blanked, so point a probe at code, never at a region marker or comment.
+accepts-when: the line is on main and names M0-155 (the measured failure it moves: two probes on comment text drifting at batch22's union). NEGATIVE CONTROL: none (prose).
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-183 · queued — **A WORKER'S /tmp SCRATCHPAD CAN LOSE FILES MID-SESSION (cause not established; REC-194's worker), and `kickoffs/WORKER.md` does not say where durable scratch goes; the practice that held was the harness's `tasks/<id>.output`.** Found by REC-194's worker (F6). — owner M0 (BOB reviews the WORKER.md line).
+order: after M0-181, AHEAD of the product rows: a worker losing its own evidence mid-session costs a re-run (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (measure; do not recall: a figure needs its artifact to survive).
+depends-on: none.
+scope: one line in WORKER.md beside the name-collision receipt: capture evidence under the harness's task output (or commit it to the worktree), never only in /tmp; state that the vanishing's cause is UNDETERMINED.
+accepts-when: the line is on main (the measured failure it moves: REC-194's scratch files vanishing mid-session). NEGATIVE CONTROL: none (prose).
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### D-478 · queued — **`pdf-worker` AND `ocr-worker` ACCEPT ANY `store` TOKEN AND ANSWER AN UNKNOWN NAMESPACE WITH NOT_FOUND: nothing is written (IC-237 measured it), but "not found" reads as the capture's ABSENCE when the truth is that the namespace does not exist.** Found by D-462's worker. — owner CONTENT-PDF.
+order: last of the namespace guards, low: read-only, no write; placed because *not found* is not *absent* (CLAUDE.md §1) (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
+milestone: M0 (the members' side of the guard)
+interface: I6 — a named refusal on the members' routes; the integrator mints and classifies the IC.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5, D-325).
+depends-on: D-462 (finished; rides the train after c19-batch9).
+scope: the same NAMESPACES set and a NAMESPACE_UNKNOWN refusal in `pdf-worker/src` and `ocr-worker/src`.
+accepts-when: `store=biosmoke` is refused NAMESPACE_UNKNOWN by name by both members. NEGATIVE CONTROL: accept the token again, and the arm reads NOT_FOUND and fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
