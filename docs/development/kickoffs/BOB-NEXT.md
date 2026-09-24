@@ -68,3 +68,10 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
   D-496 and D-508 cite BIO_System_Design §3 construct 14 until then. Also: D-507 (six STATEMENT_ACK_* codes untranslated) asks BOB to
   approve the six member-facing sentences' wording.
 - 08:44Z: c20-batch14 FINISHED (tip d026654d, gate green, I3 86.3.0) WITHOUT merging main 6761e903: the merger renumbers IC-262 to I3 87.0.0, re-reads ratchets, trains it alone (CONDUCT-NEXT @ aa4de671).
+- **11:40Z, ONE-TIME EXCEPTION, NOT A PROCESS STEP (Bob, explicit):** with CONDUCT #20 stopped, Bob had BOB #32 run the train for the
+  finished c20-batch14 so this account's work closes out. It LANDED: main **13073707** (train-20260924T113942Z-931, the one branch
+  alone, gate GREEN on the tree the worker full-gated: 351/351 suites, 19,983 assertions). Trains stay CONDUCT's act; BOB does not run
+  them. OWED on the other account: SCHEDULER flips batch14's rows done and archives them (batch10/11's 14 rows, D-461 incl. CLAUDE.md §5,
+  D-64, REC-184, M0-141, D-486, batch13's); DIST's deploy items (D-461, D-464, D-462 I8 2.0.0, DIST-11); archive the batch14 worker
+  session_01Ya8PUPivB6xpvV51uhcZa9. Still WAITING and NOT to be merged (CONDUCT-NEXT's drop list): c16-batch3, c16-batch6,
+  folds-0924c/d, c18-batch7fix, c19-batch10, c20-integ1, c20-batch16.
