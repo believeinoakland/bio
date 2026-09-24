@@ -68,7 +68,10 @@ DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the
   declares BROWSER, newgroup binds it (install + every update). **DIST-13 · BUILT, `land/dist/DIST-13` @ `82b5bf71`** (on DIST-11):
   battery guard `newgroup-bundle-fresh.test.mjs` byte-compares the committed installer bundle with a fresh build — it now FAILS
   any gate where `newgroup/src` changed without `cd newgroup && npm run build`. Both handed to CONDUCT #20 (19:34Z) for the train.
-- **DIST-7 · queued, BACKLOG**: installer uploads carry `limits.subrequests` from the signed release (depends on D-54).
+- **DIST-7 · BUILT (NARROWED), `land/dist/DIST-7` @ `c1cc9d90`** (GREEN 340/340 · 19329): the installer sends PLANE_LIMITS
+  (subrequests 10000) on install and update, pinned to wrangler.jsonc; 15.subrequest-limit BUILT. NOT BUILT: carrying it at
+  runtime from the signed release (a release-format decision — a separately signed field, or a /3 fleet statement older
+  installers skip); routed to SCHEDULER #20 23:07Z. **Release HELD by Bob (22:30Z, via BOB #34): cut only when he types the ask here.**
 - **DIST-9 · LANDED on main** (in train `135abf3b`, c20-batch15, with IC-261; verified 06:47Z: `41c195d5` is an
   ancestor of origin/main). Install/update CARRY an operator-supplied `INSTANCE_AI_TOKEN`, never generate one;
   `15.instance-ai-secret` BUILT. Reaches groups only with the next release.
