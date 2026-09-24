@@ -61,6 +61,12 @@
  * the measurement as an instrument assertion so the next reader is told rather
  * than left to rediscover it.
  *
+ * D-528, RUN 2026-09-24: twenty arms, 20 as declared, 0 not, exit 0; every
+ * restore verified by sha256 AND cmp; baseline 88 pass, 0 fail. ARM 17 (read
+ * `assignee` alone again, `recipients` never read) RED at "§7 D-528 · THE NAMED
+ * RECIPIENT IS RENDERED" and the not-told-nobody arm beside it; every earlier
+ * arm unchanged in its verdict.
+ *
  * UI-86, RUN 2026-09-24: sixteen arms, 16 as declared, 0 not, exit 0; every
  * restore verified by sha256 AND cmp. ARM 12 (restore the CONDITION-only filter)
  * RED at "§2 a FINDING is offered a mute" and the case-form arm beside it; ARM 13
@@ -291,6 +297,18 @@ const ARMS = [
       if (t.split(a).length - 1 !== 1) return null;
       return t.replace(a, '    const parts = ["on the run ", `<span class="mono">${esc(s.id||"")}</span>`, where];\n'
         + '    return `<span class="q-on">` + parts.join("") + `</span>` + note;');
+    } },
+
+  /* D-528's arm. `queueAssigneeHtml` reads `assignee` alone again — the surface as
+     it shipped before D-528, when every named recipient of a bias-debt obligation was
+     told it was addressed to nobody. The real-plane half of this control is
+     `queue-recipients.control.mjs`; this arm is the fixture suite's reach into it. */
+  { id: "17-recipients-unread", file: APP, mustFail: true, says: "THE NAMED RECIPIENT IS RENDERED",
+    what: "READ `assignee` ALONE AGAIN — `recipients` never read, so the obligation the plane addressed to m_alice tells her it is addressed to nobody (D-528's named control)",
+    patch: (t) => {
+      const a = '  const named = (it && Array.isArray(it.recipients)) ? it.recipients.filter(m => typeof m === "string" && m) : [];';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '  const named = [];');
     } },
 
   { id: "11-baseline", file: APP, mustFail: false,
