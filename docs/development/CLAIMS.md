@@ -20097,3 +20097,27 @@ D-491's/D-492's ground — my landing changes only what `rendererFor` RETURNS, w
 `bio-plane/src/schema.mjs`, `bio-plane/wrangler.jsonc` (the `browser` binding line is **DIST-11's**, and this landing
 is ordered behind it), `newgroup/**`, `civicos-ui/**`.
 **open as of 2026-09-24** — claimed at the start of the item.
+
+## CLAIM 2026-09-24 UI (UI-99 — a declared flow's revision shows its BASIS beside its version, and a set-aside finding says which version of that flow it judged, or that the record does not say)
+
+session: WORKER UI-99 spawned 2026-09-24 by CONDUCT #20 (cloud session), worktree `/home/user/bio`,
+branch `land/worker/UI-99`, from `origin/main` @ `e9b21be6`.
+authority: `QUEUE.md` `### UI-99 · running`; design `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2,
+"The declared flow, and its revisions" (D-128's revision basis; REC-184's `definition_version` and its
+`not recorded`). I3 CONSUMER only — no op changes, no interface change.
+paths, BY SITE:
+  - `civicos-ui/app.html`, the PROGRESSIONS screen: NEW helpers `progVersionsHtml` / `progVersionBasisHtml`
+    directly above `renderProgressionRead`, and the two call sites `progLoad` and `progPaintInstance`.
+  - `civicos-ui/app.html`, the QUEUE screen: NEW helpers `queueDisposedRecordHtml` / `disposedFlowVersionHtml`
+    directly below `notifDisposedHtml`, and ONE line in `queuePaint`'s `host.innerHTML` composition.
+    NOT touched: `notifDisposedHtml` and `notifRememberDisposition` (the session-local block stays as it is),
+    `queueSubjectHtml` (D-86's open delegation), `queueItemHtml`, `queueGroupHtml`, `notifAbsenceHtml`,
+    `progReviseHtml` / `progDefineDraft` / `progDefineGo` (UI-83's act path), every `SURFACES` key, every
+    `DEC-49 REGION` marker, every act dialog, the published case page (REC-212's open delegation).
+  - NEW `civicos-ui/test/declared-flow-surface.test.mjs` and `civicos-ui/test/declared-flow-surface.control.mjs`.
+  - `docs/development/CIVICOS_UI_STATE.md` (prepend one entry).
+  - `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 and its front matter — the construct's home document,
+    whose §8.2 front-matter entry says the member surface for a revision's basis is NOT BUILT.
+  - `docs/architecture/construct-status.json` only if a construct's state moves.
+
+**open as of 2026-09-24** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
