@@ -11612,6 +11612,21 @@ export default {
     if (op === "promote" && passBody) {
       try {
         const b = JSON.parse(passBody);
+        /* D-526 (`BIO_Case_Making_v0_1.md` §2; D-510, C-86.1): WHAT THIS PROMOTION IS, derived ONCE from the bytes
+           the caller sent — the document's own `object_type` through the catalogue's `normalizeType`, the envelope's
+           only where the document states none — exactly as `promote` derives it in the store. The three gates below
+           that ask it (the migration-replay admission, `create_projects`, D-78's `surfaced_by` restamp) asked the
+           ENVELOPE, and an envelope is legal with no type at all: measured on 8bdf20e6, a member without
+           `create_projects` created a project by leaving the type out, and a member's question kept the
+           `surfaced_by: agent` its bytes claimed. A contradicting envelope is still refused, by the store
+           (ENVELOPE_TYPE_DISAGREES); here it only stops deciding which gate a caller meets. */
+        const promotedType = (() => {
+          const md = Array.isArray(b.files) ? b.files.find((f) => f && f.path === "bundle.md") : null;
+          const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+          const said = fm && typeof fm === "object" ? fm.object_type : undefined;
+          if (typeof said === "string" && said.trim() !== "") return normalizeType(said);
+          return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : undefined;
+        })();
         delete b.ownerMemberId;
         /* Who is ACTING, for the 7.11 owner check on deactivation and
            reactivation. Deleted first and stamped only for a session, like every
@@ -11707,7 +11722,7 @@ export default {
         if (viaSession || cls !== "admin") delete b.replay;
         delete b.migrationReplay;
         const replayed = (!viaSession && cls === "admin" && b.base === null && b.meta
-                          && normalizeType(b.meta.object_type) === "inquiry")
+                          && promotedType === "inquiry")
           ? await migrationReplayOf(env, storeName, b) : null;
         if (replayed) { b.migrationReplay = replayed; b.replay = true; }
         delete b.assistantPrincipal;
@@ -11717,7 +11732,7 @@ export default {
            carries no stamp for `#surfacingGate` to ask. Written as its own line after REC-171's stamp, which stands
            byte-for-byte for every other caller. */
         if (replayed) delete b.assistantPrincipal;
-        if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
+        if (b.base === null && b.meta && promotedType === "project" && viaSession) {
           /* **THE SECOND SITE OF `NOT_CAPABLE`, AND REC-79 IS SAYING SO RATHER
              THAN HIDING IT.** C-38.5's `where` names the admission region above;
              this condition is the same refusal minted a second time, here,
@@ -11761,7 +11776,7 @@ export default {
                `inquiry` spelling and both legacy spellings all get the D-78
                restamp — hand-listed spellings here is how the last rename
                made a check silently stop firing. */
-            && normalizeType(b.meta.object_type) === "inquiry"
+            && promotedType === "inquiry"
             && Array.isArray(b.files)) {
           const bm = b.files.find((f) => f && f.path === "bundle.md" && typeof f.text === "string");
           if (bm) {

@@ -1713,6 +1713,9 @@ export class Store extends DurableObject {
        assumed. */
     const rp = fm.reeval_pending;
     const rpObj = rp && typeof rp === "object" && !Array.isArray(rp);
+    /* D-526: "is this an action" through the catalogue's `normalizeType` (C-2.5), the one membership question
+       every other type test in this file asks — never the raw key, which a future alias of `action` would miss. */
+    const isAction = normalizeType(fm.object_type) === "action";
     return {
       schema_id: s(fm.schema),
       produced_mode: s(nested("produced_by", "mode")),
@@ -1731,12 +1734,12 @@ export class Store extends DurableObject {
       reeval_source: rpObj ? s(rp.source) : null,
       /* REC-24 (e). Only an ACTION projects these; every other type leaves them
          NULL, which is what "this bundle is not an action" says in a column. */
-      action_kind: fm.object_type === "action" ? s(fm.action_kind) : null,
-      action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier) : null,
-      action_counterparty_state: fm.object_type === "action" ? s(nested("counterparty", "state")) : null,
-      action_resolution: fm.object_type === "action" ? s(fm.resolution) : null,
-      action_clock_next: fm.object_type === "action" ? Store.actionClockNext(fm) : null,
-      action_clock_overdue: fm.object_type === "action"
+      action_kind: isAction ? s(fm.action_kind) : null,
+      action_risk_tier: isAction ? num(fm.risk_tier) : null,
+      action_counterparty_state: isAction ? s(nested("counterparty", "state")) : null,
+      action_resolution: isAction ? s(fm.resolution) : null,
+      action_clock_next: isAction ? Store.actionClockNext(fm) : null,
+      action_clock_overdue: isAction
         ? (Store.actionOverdue(fm, nowMs) ? 1 : 0) : null,
       fm_json: JSON.stringify(fm),
     };
@@ -16558,9 +16561,29 @@ export class Store extends DurableObject {
        bytes are hashed and registered, so the sha it returns is the sha of what it holds; a document that
        already carries a top-level `id:` is refused (the catalog's own parser decides what one is, so a
        nested key or a body line is not one). Every other type still names its own id, unchanged. */
+    /* ===== D-526 (`BIO_Case_Making_v0_1.md` §2; D-510, C-86.1) — THE PROMOTED TYPE IS DERIVED ONCE, HERE, BEFORE
+       EVERY FENCE THAT ASKS IT. D-510 made the DOCUMENT's own `object_type` the record's word on what a promotion
+       IS and refused an envelope that contradicts it (ENVELOPE_TYPE_DISAGREES) — but it parsed `bundle.md` below
+       the fences, so REC-141's mint decision, D-85's surfacing gate, REC-173's migration stamp, the project name
+       scan (NAME_TAKEN), REC-181's `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward still read the
+       CALLER'S envelope. Nothing wrong could land (D-510's fence is still ahead of the first write), but WHICH
+       refusal a caller met depended on a label D-510 ruled untrusted: an action filed under an `information`
+       envelope met ENVELOPE_TYPE_DISAGREES where the same action correctly labelled met GOVERNING_LAWS_REWRITTEN.
+       So every fence reads `promotedType`: the document's type through the catalogue's `normalizeType`, the
+       envelope only as the FALLBACK where the bytes state none (a blob-held or type-less bundle.md), exactly as
+       D-510's projections already read it. Read from the bytes the caller SENT: REC-141's mint and D-436's group
+       stamp below rewrite `id:` and `group:`, never `object_type`. D-510's refusal itself stays where it was, so a
+       disagreement no fence speaks to still meets it, by name, before the first write. ===== */
+    const typeStated = (v) => (typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null);
+    const sentMd = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
+    const sentFm = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
+    const documentType = sentFm && typeof sentFm === "object" ? typeStated(sentFm.object_type) : null;
+    const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
+    const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);
+    /* ===== END D-526 derivation ===== */
     const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object"
-      && (normalizeType(meta.object_type) === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
+      && (promotedType === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
     const refusal = (code, detail) => {
       const row = PROJECT_ID_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
@@ -16666,7 +16689,7 @@ export class Store extends DurableObject {
        bound's consumption are written inside the transaction below, on the creation's own success path. Only a
        creation carrying the `ai`-only `assistantPrincipal` stamp is asked; a member's is untouched. */
     let surfacing = null;
-    if (base === null && meta && typeof meta === "object" && normalizeType(meta.object_type) === "inquiry"
+    if (base === null && meta && typeof meta === "object" && promotedType === "inquiry"
         && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()) {
       const refusedSurface = this.#surfacingGate(pkg);
       if (refusedSurface) return refusedSurface;
@@ -16678,7 +16701,7 @@ export class Store extends DurableObject {
        was not asked; the fact is recorded in the creation's own transaction below, so the question's read can say
        WHY no run is recorded. A stamp with no capture is not one. */
     const migration = (base === null && !surfacing && meta && typeof meta === "object"
-        && normalizeType(meta.object_type) === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
+        && promotedType === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
         && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture)
       ? { capture: pkg.migrationReplay.capture,
           promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null }
@@ -16816,7 +16839,7 @@ export class Store extends DurableObject {
        * unique index, which needs a backfill and would not catch collisions
        * against projects promoted before the column existed. Projects are few
        * relative to Information and this runs only for them. */
-      if (meta.object_type === "project") {
+      if (promotedType === "project") {
         const key = Store.projectNameKey(meta.title);
         if (!key)
           return { ok: false, reason: "NO_TITLE",
@@ -16900,7 +16923,7 @@ export class Store extends DurableObject {
          code and the same offenders' shape. Only a move INTO retired: an edit of an item ALREADY
          retired changes no state, and a leg that predates this rule stays untouched (D-168 §3). */
       if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired")
-          && (cur ? cur.object_type : normalizeType(meta.object_type)) === "information") {
+          && (cur ? cur.object_type : promotedType) === "information") {
         const citedBy = this.#retirementCitedBy(bundleId);
         if (citedBy.length)
           return { ok: false, reason: "CITED", to: "retired", offenders: [{ id: bundleId, citedBy }],
@@ -16955,7 +16978,7 @@ export class Store extends DurableObject {
          are one state, undetermined. Every other writer in this file splices other keys and carries the block
          forward byte-for-byte. */
       if (!pkg[LAWS_ACT] && ((cur && normalizeType(cur.object_type) === "action")
-                             || (!cur && normalizeType(meta.object_type) === "action"))) {
+                             || (!cur && promotedType === "action"))) {
         const lawsOf = (text) => {
           if (typeof text !== "string") return "unreadable";
           const fm = parseFrontmatter(text).data;
@@ -17071,17 +17094,12 @@ export class Store extends DurableObject {
        * basis and correspondence projected, rather than as mislabelled information. That exemption is
        * CALLER-ASSERTED, which is D-505's declared residue and D-511's subject, and nothing here closes it.
        *
-       * WHAT IS ABOVE THIS LINE AND STILL READS THE ENVELOPE, stated rather than left to be found: the project
-       * name scan, the `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward run before `bundle.md` is
-       * parsed, so a divergent envelope reaches them on the envelope's word. Nothing they let through can LAND
-       * — this refusal is still ahead of the first write, and REC-180's rollback is the net under it — so the
-       * only thing undecided is WHICH refusal a caller meets when both apply. Moving them would mean parsing
-       * the document at the top of `act`, which is a bigger change than this row, and `isAction` (D-505) stays
-       * a UNION for the same reason it was built as one: a union can only add refusals, and it is still
-       * reachable where the envelope states no type at all. ===== */
-      const typeStated = (v) => (typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null);
-      const documentType = docFmW && typeof docFmW === "object" ? typeStated(docFmW.object_type) : null;
-      const envelopeType = typeStated(meta.object_type);
+       * WHAT IS ABOVE THIS LINE NO LONGER READS THE ENVELOPE (D-526): D-510 left the project name scan, the
+       * `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward reading it, so WHICH refusal a caller met
+       * depended on the label. `documentType`, `envelopeType` and `promotedType` are now derived ONCE at the top
+       * of `promote`, from the bytes the caller sent, and every fence above reads `promotedType`; this refusal
+       * still speaks for a disagreement no earlier fence answers. `isAction` (D-505) stays a UNION: a union can
+       * only add refusals, and it is still reachable where the envelope states no type at all. ===== */
       /* DEC-49 REGION is-promoted-type-disagrees */
       if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {
         const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES;
@@ -17096,10 +17114,9 @@ export class Store extends DurableObject {
                        + `the document names, or change the document first. Nothing was written.` };
       }
       /* END DEC-49 REGION is-promoted-type-disagrees */
-      /* The one value every projection below reads. The envelope is the FALLBACK and not the authority: a
-         bundle.md held as a blob, or one stating no type, leaves the record nothing else to go on, and that
-         case is byte-identical to what this line did before D-510. */
-      const promotedType = documentType ?? normalizeType(meta.object_type);
+      /* `promotedType` (D-526, derived at the top of `promote`) is the one value every projection below reads. The
+         envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
+         the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
       const isInquiry = promotedType === "inquiry";
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis)
@@ -17602,6 +17619,9 @@ export class Store extends DurableObject {
          the one place they live.
          The replay exemption is the gathering check's, for the gathering check's
          reason: the record's own history must be holdable verbatim. */
+      /* D-526: the gate below asks the DOCUMENT's type (`promotedType`) as well as the envelope's: a UNION, D-505's
+         shape, so a bias document under another envelope meets BIAS_REFUSED as it would correctly labelled, and
+         nothing refused before is let through. */
       /* DEC-49 REGION bias-set-refusal
        *
        * THE SPAN `BIAS_CHECKS.BIAS_REFUSED`'s `where` NAMES (REC-71), on the same
@@ -17627,7 +17647,7 @@ export class Store extends DurableObject {
        * `checkObservation`, `checkCondition` and `checkBound` in `airun.mjs`. It is
        * not true of `promote`, and it is unlikely ever to be true of any function
        * that both validates and writes. */
-      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+      if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {
         const bf = [];
         checkBiasExtension({ fm: docFmW, files: new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
         const errs = bf.filter((x) => x.severity === "error");
@@ -18359,7 +18379,9 @@ export class Store extends DurableObject {
          reassign it, which is why this hangs off `!cur`. */
       const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
       let owner = null;
-      if (!cur && ownerMemberId && meta.object_type === "project") {
+      /* D-526: `promotedType`, the document's type, as the control plane's `create_projects` gate that stamped
+         `ownerMemberId` now asks it: keyed on the raw envelope, an unlabelled creation landed owned by nobody. */
+      if (!cur && ownerMemberId && promotedType === "project") {
         const ts = new Date().toISOString();
         this.sql.exec(
           `INSERT OR REPLACE INTO project_participants

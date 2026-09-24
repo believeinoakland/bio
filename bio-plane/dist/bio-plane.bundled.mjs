@@ -31301,6 +31301,7 @@ var Store = class _Store extends DurableObject {
     const num2 = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
     const rp = fm.reeval_pending;
     const rpObj = rp && typeof rp === "object" && !Array.isArray(rp);
+    const isAction = normalizeType(fm.object_type) === "action";
     return {
       schema_id: s(fm.schema),
       produced_mode: s(nested("produced_by", "mode")),
@@ -31319,12 +31320,12 @@ var Store = class _Store extends DurableObject {
       reeval_source: rpObj ? s(rp.source) : null,
       /* REC-24 (e). Only an ACTION projects these; every other type leaves them
          NULL, which is what "this bundle is not an action" says in a column. */
-      action_kind: fm.object_type === "action" ? s(fm.action_kind) : null,
-      action_risk_tier: fm.object_type === "action" ? num2(fm.risk_tier) : null,
-      action_counterparty_state: fm.object_type === "action" ? s(nested("counterparty", "state")) : null,
-      action_resolution: fm.object_type === "action" ? s(fm.resolution) : null,
-      action_clock_next: fm.object_type === "action" ? _Store.actionClockNext(fm) : null,
-      action_clock_overdue: fm.object_type === "action" ? _Store.actionOverdue(fm, nowMs) ? 1 : 0 : null,
+      action_kind: isAction ? s(fm.action_kind) : null,
+      action_risk_tier: isAction ? num2(fm.risk_tier) : null,
+      action_counterparty_state: isAction ? s(nested("counterparty", "state")) : null,
+      action_resolution: isAction ? s(fm.resolution) : null,
+      action_clock_next: isAction ? _Store.actionClockNext(fm) : null,
+      action_clock_overdue: isAction ? _Store.actionOverdue(fm, nowMs) ? 1 : 0 : null,
       fm_json: JSON.stringify(fm)
     };
   }
@@ -45359,8 +45360,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         reason: "BASIS_IN_PAYLOAD",
         detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field"
       };
+    const typeStated = (v) => typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null;
+    const sentMd = Array.isArray(files) ? files.find((f2) => f2 && f2.path === "bundle.md") : null;
+    const sentFm = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
+    const documentType = sentFm && typeof sentFm === "object" ? typeStated(sentFm.object_type) : null;
+    const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
+    const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : void 0);
     const idSupplied = bundleId !== void 0 && bundleId !== null && bundleId !== "";
-    const creatingProject = base === null && !!meta && typeof meta === "object" && (normalizeType(meta.object_type) === "project" || typeof bundleId === "string" && /^PROJ-/.test(bundleId));
+    const creatingProject = base === null && !!meta && typeof meta === "object" && (promotedType === "project" || typeof bundleId === "string" && /^PROJ-/.test(bundleId));
     const refusal7 = (code, detail) => {
       const row = PROJECT_ID_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
@@ -45422,12 +45429,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
     }
     let surfacing = null;
-    if (base === null && meta && typeof meta === "object" && normalizeType(meta.object_type) === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()) {
+    if (base === null && meta && typeof meta === "object" && promotedType === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()) {
       const refusedSurface = this.#surfacingGate(pkg);
       if (refusedSurface) return refusedSurface;
       surfacing = { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() };
     }
-    const migration = base === null && !surfacing && meta && typeof meta === "object" && normalizeType(meta.object_type) === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object" && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture ? {
+    const migration = base === null && !surfacing && meta && typeof meta === "object" && promotedType === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object" && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture ? {
       capture: pkg.migrationReplay.capture,
       promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null
     } : null;
@@ -45490,7 +45497,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
         if (prev && prev.title) meta.title = prev.title;
       }
-      if (meta.object_type === "project") {
+      if (promotedType === "project") {
         const key = _Store.projectNameKey(meta.title);
         if (!key)
           return {
@@ -45528,7 +45535,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
-      if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired") && (cur ? cur.object_type : normalizeType(meta.object_type)) === "information") {
+      if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired") && (cur ? cur.object_type : promotedType) === "information") {
         const citedBy = this.#retirementCitedBy(bundleId);
         if (citedBy.length)
           return {
@@ -45561,7 +45568,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             { bundleId, current: was, revision: now }
           );
       }
-      if (!pkg[LAWS_ACT] && (cur && normalizeType(cur.object_type) === "action" || !cur && normalizeType(meta.object_type) === "action")) {
+      if (!pkg[LAWS_ACT] && (cur && normalizeType(cur.object_type) === "action" || !cur && promotedType === "action")) {
         const lawsOf = (text) => {
           if (typeof text !== "string") return "unreadable";
           const fm = parseFrontmatter(text).data;
@@ -45609,9 +45616,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       const basisMd = files.find((f2) => f2.path === "bundle.md");
       const docFmW = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
-      const typeStated = (v) => typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null;
-      const documentType = docFmW && typeof docFmW === "object" ? typeStated(docFmW.object_type) : null;
-      const envelopeType = typeStated(meta.object_type);
       if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {
         const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES;
         return {
@@ -45625,7 +45629,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           detail: `the document being promoted says object_type '${String(docFmW.object_type).slice(0, 40)}' and this request's meta says '${String(meta.object_type).slice(0, 40)}'. The record goes by the document, and it will not file one kind of thing as another: what a document IS decides which columns, projections and reads it gets. Send it again with the meta naming the type the document names, or change the document first. Nothing was written.`
         };
       }
-      const promotedType = documentType ?? normalizeType(meta.object_type);
       const isInquiry = promotedType === "inquiry";
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
@@ -45961,7 +45964,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             detail: `this write would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.`
           };
       }
-      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+      if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {
         const bf = [];
         checkBiasExtension({ fm: docFmW, files: /* @__PURE__ */ new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
         const errs = bf.filter((x) => x.severity === "error");
@@ -46466,7 +46469,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       const testimonyWrote = testimony ? testimony.within(bundleId) : null;
       const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
       let owner = null;
-      if (!cur && ownerMemberId && meta.object_type === "project") {
+      if (!cur && ownerMemberId && promotedType === "project") {
         const ts = (/* @__PURE__ */ new Date()).toISOString();
         this.sql.exec(
           `INSERT OR REPLACE INTO project_participants
@@ -83765,6 +83768,13 @@ var index_default = {
     if (op === "promote" && passBody) {
       try {
         const b = JSON.parse(passBody);
+        const promotedType = (() => {
+          const md = Array.isArray(b.files) ? b.files.find((f2) => f2 && f2.path === "bundle.md") : null;
+          const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+          const said = fm && typeof fm === "object" ? fm.object_type : void 0;
+          if (typeof said === "string" && said.trim() !== "") return normalizeType(said);
+          return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : void 0;
+        })();
         delete b.ownerMemberId;
         delete b.actorMemberId;
         delete b.author;
@@ -83778,7 +83788,7 @@ var index_default = {
         b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (viaSession || cls !== "admin") delete b.replay;
         delete b.migrationReplay;
-        const replayed = !viaSession && cls === "admin" && b.base === null && b.meta && normalizeType(b.meta.object_type) === "inquiry" ? await migrationReplayOf(env, storeName, b) : null;
+        const replayed = !viaSession && cls === "admin" && b.base === null && b.meta && promotedType === "inquiry" ? await migrationReplayOf(env, storeName, b) : null;
         if (replayed) {
           b.migrationReplay = replayed;
           b.replay = true;
@@ -83787,7 +83797,7 @@ var index_default = {
         if (!viaSession)
           b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (replayed) delete b.assistantPrincipal;
-        if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
+        if (b.base === null && b.meta && promotedType === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({
               ok: false,
@@ -83800,7 +83810,7 @@ var index_default = {
             }, 403);
           b.ownerMemberId = sessMember;
         }
-        if (b.base === null && b.meta && !replayed && normalizeType(b.meta.object_type) === "inquiry" && Array.isArray(b.files)) {
+        if (b.base === null && b.meta && !replayed && promotedType === "inquiry" && Array.isArray(b.files)) {
           const bm = b.files.find((f2) => f2 && f2.path === "bundle.md" && typeof f2.text === "string");
           if (bm) {
             const want = viaSession ? "human" : "agent";
