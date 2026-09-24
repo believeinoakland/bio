@@ -19,6 +19,7 @@ import os from "os";
 import path from "path";
 import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
+import { declaredFaces } from "../build-worker.mjs";
 
 const UI = fileURLToPath(new URL("../", import.meta.url));
 const SUITE = fileURLToPath(new URL("./self-hosted-fonts.test.mjs", import.meta.url));
@@ -55,8 +56,11 @@ try {
     if (arm.template) { const f = path.join(dir, `${name}-template.mjs`); fs.writeFileSync(f, arm.template(TEMPLATE)); env.UXF_TEMPLATE = f; }
     if (arm.dropFont) {
       const d = path.join(dir, `${name}-fonts`); fs.mkdirSync(d);
-      for (const f of fs.readdirSync(path.join(UI, "fonts"))) if (f !== arm.dropFont) fs.copyFileSync(path.join(UI, "fonts", f), path.join(d, f));
-      if (fs.readdirSync(d).length !== fs.readdirSync(path.join(UI, "fonts")).length - 1) throw new Error(`ARM ${name} DID NOT ARM`);
+      /* The copy is of the NAMED faces and licences, never a listing of fonts/ (hygiene: no unguarded walk). */
+      const keep = declaredFaces(APP).filter((f) => f !== arm.dropFont)
+        .concat(["OFL-source-serif-4.txt", "OFL-source-sans-3.txt", "OFL-source-code-pro.txt"]);
+      if (keep.length !== declaredFaces(APP).length + 2) throw new Error(`ARM ${name} DID NOT ARM`);
+      for (const f of keep) fs.copyFileSync(path.join(UI, "fonts", f), path.join(d, f));
       env.UXF_FONTS_DIR = d;
     }
     let out = "", code = 0;
