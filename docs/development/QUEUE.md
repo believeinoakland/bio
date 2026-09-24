@@ -548,7 +548,7 @@ scope: the render arm writes one capture: the rendered document (method `rendere
 accepts-when: a rendered capture of a shell holds both artifacts and names every script origin executed, or says undetermined. NEGATIVE CONTROL: force `determined` on a page drawing data from a second origin, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-64's DEBT row of 2026-07-30; keeps its `D-` id).
 
-### UI-83 · queued — **A MEMBER CANNOT REVISE A PROGRESSION FROM THE UI: D-128 made a revision require a basis statement and a citation (`NO_BASIS`, `NO_CITATION`), and `civicos-ui/app.html`'s progression form (`progDefineDraft` / `progDefineGo`) has neither field.** Declaring a new progression still works. Re-read on `land/conduct/c17-batch3` @ `419272eb`. — owner UI.
+### UI-83 · running — SPAWNED 2026-09-24 ~01:48Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER UI-83 (CONDUCT #19), base origin/main 15b2a4c0 (D-128 on main via c17-batch3); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-83 and that session; never conclude queued from the absence alone.
 order: directly after D-443, first of the D-128 follow-ons: a surface that answers a member's act with a refusal it gives them no field to meet is a correction to just-landed work, which outranks new work (SCHEDULER #16, 2026-09-23; D-128's worker via CONDUCT #17)
 milestone: M8
 interface: I3 consumer (D-128's IC).
