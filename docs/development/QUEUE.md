@@ -282,6 +282,37 @@ scope: drop `.md` from those provenance labels; textchain's own /MEASUREMENTS/ a
 accepts-when: a MEASUREMENTS-only diff no longer selects the four. NEGATIVE CONTROL: restore one `.md` label and that suite is selected again, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
+### M0-173 · queued — **A GATE'S VERDICT DEPENDS ON OTHER LANES' TIMING: every unit that runs plancheck reads the MOVING `origin/coord` (`gates.mjs` §3a: *"it reads what plancheck reads, the whole tree and `origin/coord`"*), so a coord write mid-gate can flip it. CONDUCT #20 measured `planning-hygiene.test.mjs` failing once mid-gate at ~17:1xZ and passing 76/0 on a re-run of the identical tree.** — owner M0.
+order: at the backlog head: a gate whose verdict depends on timing undermines every train's gate and costs a red round (it cuts gate time, so the lane's law admits it at the head); D-511..D-510 above it wait on the running train, so no security row is delayed (BOB #33, 17:26Z; SCHEDULER #19, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a gate measures ONE tree; *do not change the tree while a gate is running*).
+depends-on: none.
+scope: the gate reads coord ONCE at its start, pins that commit, and every plancheck-running unit (planning-hygiene among them) reads the pinned snapshot, never the moving `origin/coord`; the gate's record names the pinned coord sha.
+accepts-when: a coord write during a gate cannot change any unit's verdict. NEGATIVE CONTROL: with the pin removed, write coord mid-run and the suite's assertion flips by name.
+added: 2026-09-24 · SCHEDULER #19 (BOB #33's inbox trigger 17:26Z; `node tools/mintid.mjs M0`).
+
+### D-492 · queued — **D-64's RENDER ALLOWANCE CLAIMS A BOUND THE CODE DOES NOT HOLD: `renderAdmit` admits while `spent_ms < allowance`, but `renderSpend` adds the time only AFTER the Worker's render finishes, so N concurrent renders are all admitted against one `spent_ms`. The overrun is in-flight × (wait timeout 15,000 ms + navigation), not "at most one render" as its docstring says.** Diagnosed by CONDUCT #20 at `land/worker/D-64` @ b1ffb5a0. — owner CAPTURE.
+order: after DIST-9, AHEAD of D-64's other follow-ons: a correction to D-64's own claim outranks new work, and a record that claims more than it holds is the worse defect (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:25Z)
+milestone: M2
+interface: I5 — a `reserved_ms` column on `render_allowance`; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "There is no collision: rendering is available on the free tier" (the free tier's daily allowance is the budget this admits against).
+depends-on: D-64.
+scope: `renderAdmit` reserves the render's maximum cost (its `asked` wait timeout plus the navigation bound) into `reserved_ms`, admitting only if spent + reserved + this ≤ allowance; `renderSpend` releases it and adds the reported time; an unreported render stays charged. Correct the docstring to the bound then held.
+accepts-when: K concurrent admits against room for exactly J reservations admit J and defer K−J, admits interleaved before any spend. NEGATIVE CONTROL: drop the reservation and the concurrency arm admits all K, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### D-499 · queued — **A RENDER WHOSE WAIT FIRED ON ITS TIMEOUT IS NOT DISTINGUISHED FROM ONE WHOSE CONDITION MET: D-64's render block does not record which fired, so a possibly-incomplete rendering reads as the whole page.** BOB #32's ruling owed at D-64's integration and not paid there (CONDUCT #20 04:56Z). — owner CAPTURE.
+order: after D-492, with D-64's corrections: a correction to landed work outranks its follow-ons (SCHEDULER #18, 2026-09-24)
+milestone: M2
+interface: I3 additive — `render.wait.fired`; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "What must be recorded on a rendered capture", with BOB #32's timeout ruling on the D-64 row (coord a04264b8; cite until folded): the capture keeps its GRADE, its COMPLETENESS is UNDETERMINED, never presented as the whole page, never refused.
+depends-on: D-64.
+scope: the render block records `wait.fired: "timeout"|"condition"`; the reading derives "render may be incomplete (wait timed out)". Drive with a stub renderer through `op=acquire`.
+accepts-when: a timed-out render reads the sentence with its grade intact; a condition-met render does not. NEGATIVE CONTROL: record every wait as `condition` and the timeout arm fails by name.
+note: 2026-09-24 05:22Z (CONDUCT #20): first confirm D-64's `rendererFor` seam admits a stub; if it does not, making it do so is this row's first act.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
