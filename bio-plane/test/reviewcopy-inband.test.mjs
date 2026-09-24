@@ -69,6 +69,13 @@
      (e) -> 31/0 GREEN, as declared.
      (f) -> 22/9: 6a, "AND NOTHING HAPPENED", block 1's date arm, 6b's comment arm and block 7's five arms.
          As declared, and it is what makes (d)'s greens meaningful — a date that merely MOVES does not pass.
+
+   RE-RUN 2026-09-24, WHOLE, after the gate found block 7's wait UNCHECKED (`budget-sweep.test.mjs`: a
+   hand-rolled wall-clock deadline is UNCHECKABLE by construction, M0-107) and it was rebuilt on `until` +
+   `budgetAssert`, with the stability arm moved ahead of the acknowledgement so an expired budget skips only
+   what it did not measure: EVERY ARM UNCHANGED — baseline 31/0, (a) 22/9, (b) 31/0, (c) 28/3, (d) 26/5 with
+   the same five arms named, (e) 31/0, (f) 22/9. The subject's control is re-run because the subject moved,
+   not because anything was expected to differ.
  */
 
 /* REC-148 / DEC-31's BOUND RULE — THE REVIEW COPY CARRIES ITS HASH, DATE, AUTHOR AND BOTH FLOORS IN-BAND.
@@ -107,6 +114,9 @@ import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs";
+/* REC-200: M0-107's budget helper — a hand-rolled wall-clock deadline is UNCHECKABLE by construction
+   (`scripts/budgetsweep.mjs`), and an expired budget must read NOT MEASURED rather than as a finding. */
+import { until, budgetAssert } from "./budget.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- reviewcopy-inband ---");
@@ -532,34 +542,34 @@ console.log("\n--- 7. REC-200: the date is the copy's LAST CHANGE, act by act, o
     [true, true, 200, true, "Dana Ruiz, City Auditor's office", "recipient",
      "Dana Ruiz, City Auditor's office"]);
 
+  const r3b = await member();
+  t("AND NOTHING HAPPENED: two reads with no act between them answer the SAME hash and the SAME date — the "
+  + "date is the copy's last change, never the moment of the read",
+    [r3b.sha === r3.sha, r3b.date === r3.date], [true, true]);
+
   /* AN ACKNOWLEDGEMENT'S STAMP IS CUT TO THE SECOND (`acknowledgeStatement`), and every other act here is
      stamped with milliseconds. So an acknowledgement made in the SAME SECOND as the act before it is DATED
      EARLIER than it, and the copy's last change is honestly still that earlier act — a fact about the
-     record's two spellings, not a flake to paper over. The arm waits for the wall clock to cross into the
-     next second (bounded, and it reports rather than hangs) so the ack's own stamp is unambiguously newest. */
-  {
-    const floorSec = Math.floor(Date.parse(c8.comment?.at ?? new Date().toISOString()) / 1000);
-    const deadline = Date.now() + 5000;
-    while (Math.floor(Date.now() / 1000) <= floorSec && Date.now() < deadline)
-      await new Promise((r) => setTimeout(r, 25));
-    t("(fixture) the clock crossed into the second after the recipient's comment, so the acknowledgement's "
-    + "second-precision stamp can be compared at all",
-      Math.floor(Date.now() / 1000) > floorSec, true);
+     record's two spellings, not a flake to paper over. The wait for the clock to cross into the next second
+     is M0-107's `until` with its result read by `budgetAssert`, never a hand-rolled deadline: an expiry
+     measured nothing, so it reads NOT MEASURED and the acknowledgement arms below are SKIPPED rather than
+     failing as though the plane were wrong. */
+  const secFloor = Math.floor(Date.parse(c8.comment?.at ?? new Date().toISOString()) / 1000);
+  const crossed = await until(() => Math.floor(Date.now() / 1000) > secFloor, 5000, { stepMs: 25 });
+  const clockOk = budgetAssert(t, "reviewcopy-inband block 7: the clock crossing into the second after the "
+    + "recipient's comment", crossed, 5000,
+    "the acknowledgement arms — a second-precision stamp cannot be ranked inside the second it was cut from");
+  if (clockOk) {
+    const a7 = rP(await POST(`op=statementack&draft=${D7}&secret=${SEC}`, {}));
+    if (!a7?.ok) await bail("statementack (block 7, recipient)", a7);
+    const r4 = await member();
+    const rr4 = await readAs(`op=reviewcopy&secret=${SEC}`);
+    t("AN ACKNOWLEDGEMENT OF THE STATEMENT — the fourth dated act the copy carries: the date moves to it on "
+    + "both doors, named as an acknowledgement and attributed to the addressee",
+      [r4.date === a7.acknowledgement?.at, rr4.date === a7.acknowledgement?.at, r4.sha !== r3.sha,
+       r4.rehash === r4.sha, r4.lc?.kind, r4.lc?.by],
+      [true, true, true, true, "statement acknowledgement", "Dana Ruiz, City Auditor's office"]);
   }
-  const a7 = rP(await POST(`op=statementack&draft=${D7}&secret=${SEC}`, {}));
-  if (!a7?.ok) await bail("statementack (block 7, recipient)", a7);
-  const r4 = await member();
-  const rr4 = await readAs(`op=reviewcopy&secret=${SEC}`);
-  t("AN ACKNOWLEDGEMENT OF THE STATEMENT — the fourth dated act the copy carries: the date moves to it on "
-  + "both doors, named as an acknowledgement and attributed to the addressee",
-    [r4.date === a7.acknowledgement?.at, rr4.date === a7.acknowledgement?.at, r4.sha !== r3.sha,
-     r4.rehash === r4.sha, r4.lc?.kind, r4.lc?.by],
-    [true, true, true, true, "statement acknowledgement", "Dana Ruiz, City Auditor's office"]);
-
-  const r5 = await member();
-  t("AND NOTHING HAPPENED: two reads with no act between them answer the SAME hash and the SAME date — the "
-  + "date is the copy's last change, never the moment of the read",
-    [r5.sha === r4.sha, r5.date === r4.date], [true, true]);
 
   /* WHAT THIS BLOCK CANNOT SEE, SAID PLAINLY: it drives the four dated acts the answer carries. It does NOT
      drive a grant's REVOCATION (a revoked grant is not served on the recipient door at all, and the member
