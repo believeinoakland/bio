@@ -120,6 +120,19 @@ var CONTROL_FLOW = {
   }
 };
 var FIRST_STEP = "gate-mode";
+function runContextTarget(session) {
+  const ctx = session && typeof session === "object" ? session.context : null;
+  const type = ctx && typeof ctx.type === "string" ? ctx.type : null;
+  const id = ctx && ctx.id != null && String(ctx.id).trim() !== "" ? String(ctx.id).trim() : null;
+  if (!id) return { target: null, basis: "UNDETERMINED: the run read published no context id" };
+  if (type === "project")
+    return {
+      target: null,
+      basis: "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the run read does not publish that set; a candidate names its own target, never the project id"
+    };
+  if (type === "inquiry") return { target: id, basis: "the run's context question" };
+  return { target: null, basis: `UNDETERMINED: the run's context kind ${JSON.stringify(type)} is not one this member reads` };
+}
 function emptyLevelCandidates(state, target) {
   const reports = Array.isArray(state?.reports) ? state.reports : [];
   const out = [];
@@ -271,6 +284,12 @@ function nextStep(state) {
       return { step: "next-pass", why: "every candidate this pass formed has been written or dropped" };
     }
     case "adjust": {
+      const queue = s.queue || [];
+      if (!s.adjusted && queue.length)
+        return {
+          step: "submit",
+          why: `the refusal could not be answered by changing the submission, so the candidate is DROPPED and never resent (that would climb PL-3's \`repeats\` counter); ${queue.length} candidate(s) behind it in this pass are still written, one at a time`
+        };
       if (!s.adjusted)
         return {
           step: "next-pass",
@@ -319,7 +338,7 @@ var JUDGEABLE = [
   "governed",
   "condition"
 ];
-var NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store"];
+var NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"];
 function applyJudgement(state, judgement) {
   const j = judgement && typeof judgement === "object" ? judgement : {};
   const overreach = Object.keys(j).filter((k) => NOT_JUDGEABLE.includes(k));
@@ -560,6 +579,75 @@ function citedAddresses(reports) {
       if (c && typeof c.address === "string" && c.address && !out.includes(c.address)) out.push(c.address);
   return out.slice(0, CITATIONS_MAX);
 }
+function documentHoldings(resolved) {
+  const documents = /* @__PURE__ */ new Map();
+  const unchained = [], undetermined = [];
+  const list = Array.isArray(resolved) ? resolved : [];
+  for (const r of list) {
+    if (!r || typeof r !== "object") continue;
+    if (r.refused) {
+      undetermined.push({
+        citation: r.citation ?? null,
+        at: r.refused.at ?? null,
+        code: r.refused.code ?? null,
+        check: r.refused.check ?? null
+      });
+      continue;
+    }
+    const chain = r.chain && typeof r.chain === "object" ? r.chain : null;
+    const key = chain && typeof chain.address_norm === "string" ? chain.address_norm : "";
+    const held = chain ? Number(chain.total) || 0 : 0;
+    if (!key || held < 1) {
+      unchained.push({
+        citation: r.citation ?? null,
+        address: r.address ?? null,
+        reason: r.reason ?? "the record holds no captured version at this address"
+      });
+      continue;
+    }
+    const versions = Array.isArray(chain.versions) ? chain.versions : [];
+    const inChain = new Set(versions.map((v) => v && v.bundle_id).filter(Boolean));
+    let doc = documents.get(key);
+    if (!doc) {
+      doc = {
+        address_norm: key,
+        versions_held: held,
+        truncated: chain.truncated === true,
+        cited: [],
+        versions_cited: [],
+        cited_not_listed: []
+      };
+      documents.set(key, doc);
+    }
+    doc.cited.push(r.citation ?? null);
+    if (r.bundle) {
+      if (inChain.has(r.bundle)) {
+        if (!doc.versions_cited.includes(r.bundle)) doc.versions_cited.push(r.bundle);
+      } else doc.cited_not_listed.push(r.bundle);
+    }
+  }
+  const docs = [...documents.values()];
+  return {
+    /* THE COUNT A READER WILL TAKE AS COVERAGE, and it counts DOCUMENTS. */
+    documents: docs.length,
+    citations: list.length,
+    versions_cited: docs.reduce((n, d) => n + d.versions_cited.length, 0),
+    versions_held: docs.reduce((n, d) => n + d.versions_held, 0),
+    unchained: unchained.length,
+    undetermined: undetermined.length,
+    by_document: docs,
+    unchained_items: unchained,
+    undetermined_items: undetermined,
+    identity: "op=versionchain's address_norm \u2014 the record's captured_locators \u22C8 register join (PL-10), never a title, a text or a byte comparison"
+  };
+}
+function holdingsNote(h) {
+  if (!h) return "";
+  let s = `${h.documents} document(s) held across ${h.citations} citation(s), each counted ONCE with its versions (${h.versions_cited} of ${h.versions_held} held version(s) cited, read through op=versionchain)`;
+  if (h.unchained) s += `; ${h.unchained} cited item(s) in no version chain, each counted as itself`;
+  if (h.undetermined) s += `; ${h.undetermined} citation(s) whose document is UNDETERMINED \u2014 the plane refused a read, so they are counted as neither a document nor an item`;
+  return s;
+}
 
 // ../bio-plane/src/tokens.mjs
 var PUBLISHED_TOKEN_HASHES = /* @__PURE__ */ new Set([
@@ -612,7 +700,7 @@ var PLANE_ORIGIN = "http://plane";
 var DEFAULT_MAX_TURNS_PER_SEGMENT = 120;
 var BOUND_SOURCE = "FL-1 2026-08-08 memory curve (120.4 MB P99 of 128 MB at 200 turns), not the CPU curve";
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
-var STORE_SHAPE = /^[a-z0-9_-]+$/i;
+var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
@@ -695,9 +783,12 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   const budget = {};
   for (const b of Array.isArray(session.budget) ? session.budget : [])
     budget[String(b.bound)] = { allowed: Number(b.allowed) || 0, consumed: Number(b.consumed) || 0 };
+  const seeded = runContextTarget(session);
   let state = {
     step: FIRST_STEP,
     mode: session.mode,
+    target: seeded.target,
+    targetBasis: seeded.basis,
     pass: 0,
     maxPasses: Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES,
     resumedFrom,
@@ -837,6 +928,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     ended,
     logged,
     submitted,
+    /* FL-11: the question this run's readings default to, and WHY — published so a reader can check it
+       against the run's context rather than take it on this member's word. */
+    target: { id: state.target ?? null, basis: state.targetBasis ?? null },
     refusals,
     adjusted,
     verbatimResubmits,
@@ -861,6 +955,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        breaking its contract; a bare number would say it happened and not what. */
     reportsRefused: state.reportsRefused || [],
     citationsReread: state.rereads || 0,
+    /* D-220: the LAST pass's holdings, like `fanout`. Null when no `collect` ran,
+       which is "nothing was counted", not "nothing is held". */
+    holdings: state.holdings ?? null,
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...state.budget[b] || { allowed: 0, consumed: 0 } }))
   };
 }
@@ -903,7 +1000,7 @@ async function performStep(call, state, runId) {
         const r = planeAnswer(await call(
           "capturerequest",
           null,
-          { run: runId, target: t.target ?? null, url: t.url ?? null }
+          { run: runId, target: t.target ?? state.target ?? null, address: t.url ?? null }
         ), "capturerequest");
         if (r.silent) return { silent: r.silent };
         if (r.refused) acqRefused.push(r.refused);
@@ -926,13 +1023,48 @@ async function performStep(call, state, runId) {
         }
         reread += 1;
       }
+      const resolved = [];
+      for (const address of addresses) {
+        const found = planeAnswer(await call(
+          "search",
+          { q: `id:"${address.replace(/"/g, "")}"`, limit: 1, facets: "none" }
+        ), "search");
+        if (found.silent) return { silent: found.silent };
+        if (found.refused) {
+          rereadRefused.push(found.refused);
+          resolved.push({ citation: address, refused: found.refused });
+          continue;
+        }
+        const hit = (Array.isArray(found.result?.hits) ? found.result.hits : []).find((h) => h && h.bundle_id === address) || null;
+        if (hit && !(typeof hit.source_locator === "string" && hit.source_locator.trim())) {
+          resolved.push({
+            citation: address,
+            bundle: address,
+            address: null,
+            chain: null,
+            reason: "the cited bundle names no source address, so no version chain can hold it"
+          });
+          continue;
+        }
+        const target = hit ? hit.source_locator.trim() : address;
+        const chain = planeAnswer(await call("versionchain", { address: target, limit: 1e3 }), "versionchain");
+        if (chain.silent) return { silent: chain.silent };
+        if (chain.refused) {
+          rereadRefused.push(chain.refused);
+          resolved.push({ citation: address, refused: chain.refused });
+          continue;
+        }
+        resolved.push({ citation: address, bundle: hit ? address : null, address: target, chain: chain.result });
+      }
+      const holdings = documentHoldings(resolved);
       if (rereadRefused.length) out.refused = rereadRefused;
-      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of ${addresses.length} citation(s) re-read BY ADDRESS` + (rereadRefused.length ? `, and ${rereadRefused.length} could NOT be \u2014 the plane refused '${String(rereadRefused[0].code ?? "?")}', so those addresses are UNREAD rather than empty` : "") + `. No document was returned by a sub-session and none was loaded`;
+      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of ${addresses.length} citation(s) re-read BY ADDRESS` + (rereadRefused.length ? `, and ${rereadRefused.length} read(s) could NOT be made \u2014 the plane refused '${String(rereadRefused[0].code ?? "?")}', so what they would have answered is UNREAD rather than empty` : "") + `; ${holdingsNote(holdings)}. No document was returned by a sub-session and none was loaded`;
       out.state = {
         ...state,
         reports: taken,
         rereads: (state.rereads || 0) + reread,
-        reportsRefused: [...state.reportsRefused || [], ...refused]
+        reportsRefused: [...state.reportsRefused || [], ...refused],
+        holdings
       };
       return out;
     }
@@ -969,8 +1101,10 @@ async function performStep(call, state, runId) {
       }
       const body = held.result ?? {};
       const names = new Set((Array.isArray(body.versions) ? body.versions : []).map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
-      const queue = (state.candidates || []).filter((c) => c && !names.has(String(c.name ?? "")));
-      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; ${queue.length} survived`;
+      const aimedHere = (c) => (c.target ?? state.target ?? null) === (state.target ?? null);
+      const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
+      const queue = (state.candidates || []).filter((c) => c && (!aimedHere(c) || !names.has(String(c.name ?? ""))));
+      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; ${queue.length} survived` + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
       out.state = { ...state, queue };
       return out;
     }
@@ -978,7 +1112,11 @@ async function performStep(call, state, runId) {
       const queue = [...state.queue || []];
       const candidate = queue.shift();
       if (!candidate) return out;
-      const res = await call("suggest", null, { ...candidate, run: runId });
+      const res = await call(
+        "suggest",
+        null,
+        { ...candidate, target: candidate.target ?? state.target ?? null, run: runId }
+      );
       if (!res.reached) return { silent: res };
       const answer = res.body?.result ?? res.body ?? {};
       if (res.status === 200 && res.body?.ok === true && answer.wrote !== false) {
@@ -1050,11 +1188,18 @@ async function handleRun(req, env) {
       "a run is identified by the plane and this member mints no identity of its own; the caller must say which run this segment belongs to.",
       400
     );
-  if (!store || !STORE_SHAPE.test(store))
+  if (typeof body.store !== "string")
     return refusal2(
       "BAD_STORE",
       "a run happens inside one namespace and this member guesses none: the caller must say which. A default namespace here would let a run touch the real record while its caller believed it was working in a scratch one.",
       400
+    );
+  if (!NAMESPACES.includes(store))
+    return refusal2(
+      "NAMESPACE_UNKNOWN",
+      "a run names the namespace it works in, and no namespace by that name exists on any instance this member can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message.",
+      400,
+      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }
     );
   if (!credential)
     return refusal2(
@@ -1169,6 +1314,9 @@ async function handleRun(req, env) {
     adjusted: drive.adjusted,
     verbatim_resubmits: drive.verbatimResubmits,
     resumed_from: drive.resumedFrom,
+    /* FL-11: the question this run's readings default to, and WHY (`runContextTarget`) — published so a
+       reader can check it against the run's context rather than take it on this member's word. */
+    target: drive.target,
     /* FL-5 / IS-9(a) ON THE WIRE. `fanout.contracts` is exactly what each
        sub-session was handed — the party protected by §14's fence can be read
        from outside instead of trusting this member's own summary of itself.
@@ -1179,6 +1327,10 @@ async function handleRun(req, env) {
     reports_taken: drive.reportsTaken,
     reports_refused: drive.reportsRefused,
     citations_reread: drive.citationsReread,
+    /* D-220 ON THE WIRE. `citations_reread` counts READS; this counts DOCUMENTS,
+       each once with its versions, by the record's own chain — the figure a
+       reader may take as what the run held. */
+    holdings: drive.holdings,
     budget: drive.budget,
     segment: { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE },
     /* THE PLANE'S STATEMENT ABOUT THE CREDENTIAL, COPIED AND NOT INTERPRETED.
