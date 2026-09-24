@@ -230,6 +230,7 @@ depends-on: none.
 scope: break only when the baseline moves — Td/TD with ty=0 and a Tm at the current line's y add nothing (a space past a word-gap advance); T\*, ', " and any y change still break. Extend the pdfstructure suite.
 accepts-when: Budget-Basics-FY21-23's bytes read at least 60 words per page. NEGATIVE CONTROL: revert the fix, and that arm reads glyph-per-line and fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+owed-at-integration: fold into docs/architecture/BIO_Content_Framework_v0_10.md §16 as a stated LIMIT (the worker's design gap, SCHEDULER #18 placed the fold with the integrator 05:27Z; D-502 cites it): "Tier-1 PDF text breaks a line when the baseline moves; two runs sharing a baseline and separated only by a horizontal jump are concatenated, because glyph advance widths are not read (D-502 reads them)." Move §16's Status `as of`, run corpuscheck. Actor: whoever integrates land/worker/D-481 @ dbe88ab9. Recorded by CONDUCT #20.
 
 ### D-484 · running — SPAWNED 2026-09-24 ~04:18Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-484 (CONDUCT #20), base origin/main 16fe1e7f, into REC-185's freed slot; push by 05:45Z. Falsify rather than believe: read the branch land/worker/D-484 and that session; never conclude queued from the absence alone.
 order: (moved behind the ~2 h rows for tonight's quota shutdown, Bob via BOB #32 03:00Z; SCHEDULER #18) after D-481, with the corrections: a refusal a member cannot read (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
