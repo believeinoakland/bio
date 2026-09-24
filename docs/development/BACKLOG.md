@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-212 · queued — **THE CASE DOCUMENT CONFLATES TWO ACTS: `completeness.author` names who PREPARED AND PUBLISHED it, and C-41.10's author exclusion reads that name, so the writer of the statement can ratify it when someone else published.** REC-193's finding (1). BOB #32 RULED (b), 2026-09-24 06:11Z (cite until folded): two acts, two names, never conflated. — owner RECORD.
-order: after REC-194, the same statementack family; after REC-193 lands (SCHEDULER #18, 2026-09-24)
-milestone: M10
-interface: I3 — `completeness.statement_by` added; the integrator classifies.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13, with BOB #32's ruling of 06:11Z (cite until folded); Case Making prose states the two roles.
-depends-on: REC-193.
-scope: carry the draft's server-stamped `statement_by` onto the document at publish; `author` keeps its meaning; C-41.10 excludes `statement_by`; a pre-existing case with none reads UNDETERMINED and its ratify is refused by name, never back-filled from `author`; `op=caseratify` and `op=publishedcase` show both names.
-accepts-when: a statement's writer cannot ratify a case another member published. NEGATIVE CONTROL: point C-41.10 back at `author` and that arm is admitted, failing by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs REC`).
-
 ### REC-211 · queued — **A DISPOSITION BINDS WHATEVER DEFINITION IS CURRENT AT THE ACT, NOT THE ONE THE MEMBER SAW: REC-184 stamps the version at the act, so a definition revised in between is disposed of unseen.** BOB #32's DEFINITION_MOVED ruling owed at REC-184's integration and not paid there (CONDUCT #20 04:56Z). — owner RECORD.
 order: after D-496 at the backlog head: a correction to just-landed work, where an authored act binds what was not authored (SCHEDULER #18, 2026-09-24)
 milestone: M4
@@ -102,6 +92,26 @@ design: `docs/development/VERIFICATION.md` (a check that cannot fail is worse th
 depends-on: none.
 scope: a `--check` arm failing any probe `hit` that matches more than once in its file; re-pin every claim it names.
 accepts-when: `node tools/status.mjs --check` reads 0 ambiguous probes. NEGATIVE CONTROL: widen one claim's `hit` to match twice and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-165 · queued — **FOUR SUITES ARE SELECTED FOR ANY MEASUREMENTS-ONLY CHANGE BY A DATA STRING: `measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)"` in calibration, reextract, textchain and tier3-layer-parts reads to the gate as a MEASUREMENTS reader.** Found by M0-153's worker. — owner M0.
+order: after M0-160, with the gate-time rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:33Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
+depends-on: M0-153.
+scope: drop `.md` from those provenance labels; textchain's own /MEASUREMENTS/ assertion survives; expect ~45 → ~41 units, measured.
+accepts-when: a MEASUREMENTS-only diff no longer selects the four. NEGATIVE CONTROL: restore one `.md` label and that suite is selected again, by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-166 · queued — **`VERIFICATION.md` HAS NO PROSE ON HOW THE GATE CLASSIFIES A DIFF OR SELECTS UNITS: the rule lives only in `gates.mjs`'s header comments, and M0-116, M0-143 and M0-153 each had to rediscover it.** Found by M0-153's worker. — owner M0 (the document's owner).
+order: after M0-165, the same subject; prose, small (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:33Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (this row adds its missing section).
+depends-on: M0-153.
+scope: a VERIFICATION.md section stating the classes, the reader derivation (comment-blanked), the doc-facing rule and its edge rule, citing `gates.mjs` sections, with front matter moved.
+accepts-when: the section is on `main` and `corpuscheck` reads 0 fail. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
@@ -682,7 +692,7 @@ milestone: M0
 interface: none.
 design: `docs/development/VERIFICATION.md` (a control coupled to shape must read what the gate reads).
 depends-on: M0-143.
-scope: read the suite through the same `stripComments` M0-143 uses before the check.
+scope: read the suite through the same `stripComments` M0-143 uses before the check. WIDENED 2026-09-24 (M0-153's finding b): the doc-facing rule arm 5(b) restates is also stale on comment-blanking and the edge rule — read through `stripComments` (`bio-plane/scripts/walkfloor.mjs`) and assert the derivation THROUGH `gates.mjs`, not a restatement.
 accepts-when: the driver's verdict equals `gates.mjs --explain`'s for fleetbundles. NEGATIVE CONTROL: add a `docs/` comment to the suite and the old whole-read line disagrees, the new one does not.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
@@ -1307,13 +1317,3 @@ depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch
 scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
 accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).
-
-### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push`** … (whole text: the cut archive)
-order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree … (whole text: the cut archive)
-depends-on: none — D-293 is on `main`.
-accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

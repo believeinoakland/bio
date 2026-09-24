@@ -228,6 +228,16 @@ scope: catalogue RATE_IP and RATE_GLOBAL with translations in a DEC-49 REGION on
 accepts-when: a rate refusal arrives with its code and translation. NEGATIVE CONTROL: return the bare reason and the guard names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
+### REC-212 · queued — **THE CASE DOCUMENT CONFLATES TWO ACTS: `completeness.author` names who PREPARED AND PUBLISHED it, and C-41.10's author exclusion reads that name, so the writer of the statement can ratify it when someone else published.** REC-193's finding (1). BOB #32 RULED (b), 2026-09-24 06:11Z (cite until folded): two acts, two names, never conflated. — owner RECORD.
+order: after REC-194, the same statementack family; after REC-193 lands (SCHEDULER #18, 2026-09-24)
+milestone: M10
+interface: I3 — `completeness.statement_by` added; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13, with BOB #32's ruling of 06:11Z (cite until folded); Case Making prose states the two roles.
+depends-on: REC-193.
+scope: carry the draft's server-stamped `statement_by` onto the document at publish; `author` keeps its meaning; C-41.10 excludes `statement_by`; a pre-existing case with none reads UNDETERMINED and its ratify is refused by name, never back-filled from `author`; `op=caseratify` and `op=publishedcase` show both names.
+accepts-when: a statement's writer cannot ratify a case another member published. NEGATIVE CONTROL: point C-41.10 back at `author` and that arm is admitted, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs REC`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
