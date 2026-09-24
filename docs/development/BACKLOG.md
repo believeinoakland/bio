@@ -115,7 +115,7 @@ accepts-when: the section is on `main` and `corpuscheck` reads 0 fail. NEGATIVE 
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-168 · queued — **`control-register.mjs` `declarationAt` ENDS A DECLARATION AT ANY LINE CONTAINING THE MARKER PHRASE, so a mere citation truncates it and LOWERS the recorded arms count (measured: coverage --strict 2093 → 2081).** Found by M0-157's worker. — owner M0.
-order: after M0-167, before it in effect: a register that under-counts is a false floor (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:36Z)
+order: after M0-166 and AHEAD of M0-167: a register that under-counts is a false floor (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:36Z)
 milestone: M0
 interface: none.
 design: `docs/development/VERIFICATION.md` "The negative-control register".
