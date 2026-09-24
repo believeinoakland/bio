@@ -43,6 +43,9 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   BOB's two owed rulings (D-64 timeout, REC-184 DEFINITION_MOVED) were NOT paid → sent to SCHEDULER 04:56Z to row.
 - M0-146 @ 3f939f53 built the `.scratch/` ignored path BOB RULED AGAINST (05:04Z) — NOT TRAINABLE as is; sent back 05:33Z to rework
   (scratch in the session scratchpad, WORKER.md under 24,576 B, JSDoc sentence); push by 06:30Z. If not reworked, carry the row.
+- land/conduct/c20-batch17 @ 20a2a990 PUSHED = batch16b + M0-146 (ruled shape, flipped integrated) + land/dist/newgroup-dist-078
+  (installer bundle 0.71→0.78; lags DIST-9's installer code until DIST rebuilds — DIST's, not CONDUCT's). AFTER batch15 LANDS, TRAIN
+  batch17 ALONE (it carries 16b). M0-146 @ 3f939f53 (the reverted shape) is inside its history, reverted.
 - land/conduct/c20-batch16b @ 75d5c7df PUSHED (on batch15 e729ee8e): D-481 D-494 DIST-12 D-483 D-484 (flipped integrated); D-481 §16
   limit FOLDED; IC-263 (D-484) I3 MINOR 81.4.0. TRAIN IT after batch15 lands. NEVER train land/conduct/c20-batch16 (same trees,
   missing Dropped-from-branch trailers; mergecarry fails it).
