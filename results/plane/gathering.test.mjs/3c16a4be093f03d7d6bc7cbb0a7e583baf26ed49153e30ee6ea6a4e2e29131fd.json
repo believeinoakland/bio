@@ -1,0 +1,16 @@
+{
+ "unit": "plane:gathering.test.mjs",
+ "inputHash": "3c16a4be093f03d7d6bc7cbb0a7e583baf26ed49153e30ee6ea6a4e2e29131fd",
+ "verdict": "PASS",
+ "run": "64bc5e3e6fe157ccc3adfd52c4988280eb2b73d0.1790274730240.9230.json",
+ "tree": "64bc5e3e6fe157ccc3adfd52c4988280eb2b73d0",
+ "head": "08c73e4e9b401921248e46a61fe680936344be1e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5681ba5f-7f41-5042-972d-e173019e22a7",
+ "at": "2026-09-24T18:32:10.251Z"
+}
