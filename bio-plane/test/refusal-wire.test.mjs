@@ -7,6 +7,9 @@
    (e) THE OP WALK GOES BLIND — neuter the `OPS` parse in THIS FILE. MUST FAIL on the op-corpus FLOOR for the same reason, and MUST NOT be able to report "0 violations" as good news.
    (f) A THIRTEENTH FENCE ARRIVES UNMEASURED — drop one code out of the harvested machine-fence set. MUST FAIL naming the code and the count (the set is harvested from `store.mjs`, never typed).
    (g) OVER-STRICTNESS, and it is the arm this file exists to survive: a REAL site is rewritten to carry its row itself, in a SHAPE THIS SUITE WAS NOT WRITTEN AROUND — the code spelled in `code` with NO `reason` at all, the row IMPORTED rather than hand-copied (an equality that costs nothing is not evidence), an extra key the grader has never seen. It MUST PASS. A grader that reports correct work as bare is worse than no grader, because it teaches the next author to route around it.
+   (h) REC-185 — `op=purge`'s CODED REFUSAL REVERTED TO ITS BARE SENTENCE at its site in `src/index.mjs`, the whole refusal restored to the pre-REC-185 answer rather than one key deleted, so the arm is the defect and not a caricature of it. Section 6b MUST FAIL BY NAME on four of its six lines — no code, no C-number and no canned translation, no argument/shape, and no "Nothing was changed." on the one op that destroys a record. MUST NOT FAIL: 6b's `error` line, because the sentence is byte-identical either way and that is precisely what makes this an arm about the CODE and not about the wording; nor anything in section 2c, whose two walks do not read this site (it carries no spread, and it never left by a raw `new Response`) — an arm that took those down with it would be moving a second variable.
+   (i) REC-185's OVER-STRICTNESS ARM, on the REAL site: `op=purge`'s refusal rebuilt AT ITS SITE in a spelling 6b was not written around — the code in `code` with NO `reason`, the row IMPORTED from `REQUIRED_ARGUMENT_CHECKS` rather than hand-copied, the `detail` worded unlike anything the helper writes, an extra key the grader has never seen. It MUST PASS: 6b grades whether a caller is told the FACT, never whether the helper was the author.
+   RUN 2026-09-24 BY THE REC-185 WORKER on branch `land/worker/REC-185` over origin/main 548eb2c5, TWICE, and the figures are the ones the driver PRINTED: FIRST PASS **ARM (f) CAME BACK GREEN 33/0 WHERE IT IS DECLARED RED** — not this item's arm and not a broken arm, but the fence floor of 12 gone slack against a family of 14, which had disarmed (f) silently. The floor was moved to the measured 14 with its reason at the site and the driver RE-RUN rather than adjusted on paper: **a GREEN 33/0 · b RED 29/4 · c RED 30/3 · d RED 1/2 · e RED 27/6 · f RED 32/1 · g GREEN 33/0 · h RED 29/4 · i GREEN 33/0 — ALL NINE AS DECLARED**, all three files byte-identical to their pristine-of-record by sha256 AND by `cmp`. Arm (h)'s four failures are exactly the four declared and no others.
    RUN 2026-08-09 IN WORKTREE agent-a0afb13cbfcc0d6b9, THREE TIMES, and the figures are the ones the driver PRINTED. FIRST RUN (suite at 22 assertions): six of seven as declared — a GREEN 22/0, b RED 18/4, c RED 19/3, e RED 15/7, f RED 21/1, g GREEN 22/0. **ARM (d) CAME BACK `NO TALLY` RATHER THAN RED, AND IT IS RECORDED HERE RATHER THAN SMOOTHED: the arm was right and the INSTRUMENT was wrong.** A blind catalogue made every later block read `ROWS.get(code).translation` on `undefined`, so a `TypeError` ended the module while the tally read clean — WORKER.md's named failure, arriving inside the file built to find that class. Corrected in two ways at once (every `ROWS.get` read is null-tolerant, and a corpus below its floor HALTS at the floor with its tally printed) and RE-RUN: all seven as declared. THIRD RUN against the FINAL suite (23 assertions, after the static-class block landed) — re-run rather than adjusted on paper, because a figure carried forward across an edit is a figure nobody measured: **ALL SEVEN AS DECLARED — (a) GREEN 23/0 · (b) RED 19/4 · (c) RED 20/3 · (d) RED 1/2 · (e) RED 16/7 · (f) RED 22/1 · (g) GREEN 23/0**, all three files byte-identical to their pristine-of-record by sha256 and by `cmp`.
  * =========================================================================
  * refusal-wire.test.mjs — D-262. **THE RESPONSE, GRADED AGAINST THE CATALOGUE.**
@@ -71,8 +74,15 @@
  *   - IT CAN SEE any refusal that leaves the control plane through `json()` in
  *     an op response, at the top level or under the Durable Object's `result`.
  *   - IT CANNOT SEE a refusal returned as a raw `new Response(...)` (bytes,
- *     HTML, 204, the version string — measured: 7 such returns, none of them a
- *     refusal carrier); a refusal nested deeper than `result` (deliberately out
+ *     HTML, 204, the version string — 7 such returns, none of them a refusal
+ *     carrier). **THAT FIGURE IS NO LONGER PROSE: REC-185 walks it on every run
+ *     in section 2c and GATES the refusal-carrying set at empty, because a
+ *     figure measured once by hand is a claim about the day it was taken and
+ *     this one had been carried across weeks.** Also invisible here: a refusal
+ *     whose code arrives only through a SPREAD of somebody else's answer — 13
+ *     such forwards, walked and PRINTED in 2c, visible on the wire wherever the
+ *     drive reaches the op and residual exactly where it does not; a refusal
+ *     nested deeper than `result` (deliberately out
  *     of the decoration's reach too, and for the same reason: those are data);
  *     a refusal a payload richer than empty would be needed to provoke; or a
  *     refusal shape that does not say `ok: false`. The last of those is the
@@ -267,13 +277,129 @@ t("the static walk found real sites and did not go blind — the figures above a
 + "not a reassurance, and this is the floor that tells the two apart",
   STATIC.carried + STATIC.bare + STATIC.uncatalogued >= 300, true);
 
+/* ====================================================================== 2c
+ * REC-185 — THE TWO BLIND SPOTS THIS FILE'S OWN "WHAT IT CANNOT SEE" PARAGRAPH
+ * NAMES, MEASURED RATHER THAN DESCRIBED.
+ *
+ * That paragraph says this suite cannot see a refusal returned as a raw
+ * `new Response(...)`, and it carries a figure — *"measured: 7 such returns,
+ * none of them a refusal carrier"* — taken once, by hand, on a tree that is now
+ * weeks old. A FIGURE IN PROSE IS A CLAIM ABOUT THE DAY IT WAS TAKEN; the eighth
+ * such return can land tomorrow and this file would still say seven. So the two
+ * blind spots are walked HERE, on every run, and the second one is GATED.
+ *
+ * (B) A REFUSAL BUILT WITHOUT `json()` — GATED, as an EMPTY SET and not a count.
+ *     `json()` is the one place `dec49Attach` runs, so a refusal that leaves by
+ *     any other door reaches a caller undecorated no matter how well it is
+ *     catalogued. The corpus is FLOORED first, because a walk that found nothing
+ *     would otherwise report an empty residue as good news.
+ *
+ * (A) A CODE ARRIVING AT ITS SITE ONLY THROUGH A SPREAD — REPORTED AND FLOORED,
+ *     not gated on membership. These are the control plane forwarding somebody
+ *     else's refusal (the store's, a helper's) rather than minting one: the code
+ *     is a string literal at the SOURCE and there is no literal at the FORWARD,
+ *     so the static walks — 2b above, and VF-2's guard, which both key on a
+ *     literal `reason:`/`code:` — are blind to every one of them. They are not
+ *     therefore undecorated: they leave through `json()`, so the WIRE sees them
+ *     for any op the drive reaches. The residue is the ops it does not reach.
+ *     WHAT THIS PIN CANNOT SEE, and it is the sentence that matters: it pins the
+ *     DISTINCT SPREAD EXPRESSIONS, so a SECOND site forwarding an already-listed
+ *     name (`...r` is the commonest) arrives invisibly. It fails on a new NAME,
+ *     never on a new SITE — which is why the count is printed beside it.
+ * ==================================================================== */
+console.log("\n--- 2c. the two blind spots: refusals built without `json()`, and codes arriving by spread ---");
+const INDEX_BARE = decomment(INDEX_SRC);
+const lineOf = (src, at) => src.slice(0, at).split("\n").length;
+
+/* (B) every `new Response(` construction in the control plane, classified. */
+const RESP = [];
+for (const m of INDEX_BARE.matchAll(/new Response\(/g)) {
+  const tail = INDEX_BARE.slice(m.index, m.index + 320);
+  /* `json()`'s OWN construction is the one that decorates; it is the door, not a
+     way around it, and is named rather than filtered silently. */
+  const isJsonItself = /dec49Attach/.test(tail);
+  const carriesRefusal = /\bok\s*:\s*false\b/.test(tail) || /\berror\s*:/.test(tail);
+  RESP.push({ line: lineOf(INDEX_BARE, m.index), isJsonItself, carriesRefusal,
+              head: INDEX_SRC.split("\n")[lineOf(INDEX_BARE, m.index) - 1].trim().slice(0, 96) });
+}
+const RESP_OUT = RESP.filter((r) => !r.isJsonItself);
+console.log(`    (B) ${RESP.length} \`new Response(\` construction(s) in index.mjs — ${RESP.length - RESP_OUT.length} `
+          + `is json()'s own, ${RESP_OUT.length} leave by another door:`);
+for (const r of RESP_OUT) console.log(`        L${r.line}  ${r.carriesRefusal ? "REFUSAL CARRIER" : "not a refusal"}  ${r.head}`);
+t("the `new Response` walk found a real corpus and did not go blind — floored BEFORE the emptiness "
++ "below is read as good news, which is this project's three-times-measured failure",
+  RESP_OUT.length >= 6, true);
+t("NO refusal leaves the control plane by a door other than `json()` — pinned as a SET and not a "
++ "count, so it fails in BOTH directions: a refusal written as a raw Response fails this line and "
++ "must be looked at, and this file's prose figure can no longer go stale in silence",
+  RESP_OUT.filter((r) => r.carriesRefusal).map((r) => `L${r.line} ${r.head}`), []);
+
+/* (A) every `json({…})` whose object literal spreads a VALUE and carries no
+   literal code of its own. Three-way, because a thing the matcher does not
+   understand must be NAMED and never silently scored zero. */
+const FWD = [], FWD_UNDET = [];
+for (const m of INDEX_BARE.matchAll(/json\(\{/g)) {
+  let i = m.index + 5, depth = 0, end = -1;
+  for (; i < INDEX_BARE.length; i++) {
+    const c = INDEX_BARE[i];
+    if (c === "{") depth++;
+    else if (c === "}") { depth--; if (depth === 0) { end = i; break; } }
+  }
+  if (end < 0) continue;
+  const body = INDEX_BARE.slice(m.index + 5, end + 1);
+  /* a spread of a VALUE. `...helper(…)` is a row minted at this site with a
+     literal code inside it and is NOT a forward. */
+  const names = [...body.matchAll(/\.\.\.\s*([A-Za-z_$][\w$.]*)(\s*\()?/g)].filter((x) => !x[2]).map((x) => x[1]);
+  if (!names.length) continue;
+  if (/\b(?:reason|code)\s*:\s*"/.test(body)) continue;     /* visible to the static walks already */
+  const after = INDEX_BARE.slice(end + 1, end + 40);
+  const st = /^\s*\}?\s*,\s*(\d{3})\s*\)/.exec(after) || /^\s*,\s*(\d{3})\s*\)/.exec(after);
+  const statusVar = !st && /^\s*,\s*[A-Za-z_$]/.test(after);
+  const site = { line: lineOf(INDEX_BARE, m.index), names: names.join(", "),
+                 status: st ? Number(st[1]) : null,
+                 head: INDEX_SRC.split("\n")[lineOf(INDEX_BARE, m.index) - 1].trim().slice(0, 96) };
+  const saysRefused = /\bok\s*:\s*false\b/.test(body) || names.some((n) => /\.(error|refusal)$/.test(n));
+  if (saysRefused || (site.status !== null && site.status >= 400)) FWD.push(site);
+  else if (statusVar && !/\bok\s*:\s*true\b/.test(body)) FWD_UNDET.push(site);
+}
+console.log(`    (A) ${FWD.length} site(s) forward a refusal through a spread with NO literal code of their own:`);
+for (const f of FWD) console.log(`        L${f.line}  ${f.status ?? "—"}  spreads ${f.names}  |  ${f.head}`);
+console.log(`        AND ${FWD_UNDET.length} this matcher COULD NOT CLASSIFY (the status is a variable, so whether `
+          + `the body is a refusal is not decidable here) — NAMED, never scored zero:`);
+for (const f of FWD_UNDET) console.log(`        L${f.line}  status=<variable>  spreads ${f.names}  |  ${f.head}`);
+t("the forward walk found a real corpus — floored, for the same reason the walk above is",
+  FWD.length >= 10, true);
+t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NEW kind of forward "
++ "must be looked at, and one that disappears must be struck with its reason. It does NOT see a "
++ "second site forwarding a name already on this list, which is why the count is printed beside it",
+  [...new Set(FWD.map((f) => f.names))].sort(),
+  ["arm.refusal", "built", "c", "declared.error", "facts", "r", "rec.result", "scoped.error", "zip"]);
+
 /* ====================================================================== 3
  * THE TWELVE — HARVESTED FROM `store.mjs`, SO A THIRTEENTH CANNOT ARRIVE
  * UNMEASURED. (REC-73's harvest, for REC-73's reason.)
  * ==================================================================== */
 const FENCES = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
 console.log(`    the machine-fence family, harvested from store.mjs: ${FENCES.length} code(s)`);
-t("the fence harvest found a REAL family and not an empty set", FENCES.length >= 12, true);
+/* THE FLOOR MOVED 12 -> 14 BY REC-185, 2026-09-24, FROM THIS LINE'S OWN PRINT ON ITS TREE — AND IT
+   WAS FOUND BY A CONTROL COMING BACK GREEN, NOT BY READING IT. Arm (f) of this file's driver drops
+   one code out of the harvest and is DECLARED RED. On 2026-09-24 it came back **GREEN, 33/0**. The
+   arm was not broken: the family has grown from 12 codes to 14 since this floor was written, so a
+   floor of 12 tolerated losing TWO — `CLAUDE.md` §"a floor with slack is not a ratchet", and the
+   receipt it names is one sitting 19 codes low that had already flipped a control from RED to GREEN.
+   This is the same failure, two codes deep, and the fifth item in a row to find a floor stale BY
+   MEASURING IT. Moved to the printed 14, and arm (f) re-run to RED.
+   WHAT THIS FLOOR STILL CANNOT DO, stated rather than implied: it is a NUMBER, so it goes stale
+   again the day a fifteenth fence lands, and the honest fix is to derive it. REC-185 did NOT derive
+   it, and the reason is a measurement rather than a shortage of time: `MACHINE_FENCE_CHECKS` holds
+   **18** rows where this harvest finds **14** — three are `OPERATOR_TOKEN_*` and two
+   (`MACHINE_CANNOT_RATIFY`, `MACHINE_CANNOT_RATIFY_CASE`) are catalogued fences that appear as NO
+   string literal in `store.mjs` at all. So catalogue-size is not this corpus's size, the gap is
+   somebody's finding rather than a derivation detail, and it is reported to SCHEDULER by name. */
+t("the fence harvest found a REAL family and not an empty set — and the floor is a RATCHET rather "
++ "than a reassurance: it is this family's measured size today, so ONE code leaving the harvest "
++ "fails this line and must be struck with its reason",
+  FENCES.length >= 14, true);
 t("every harvested fence has a catalogue row with a canned translation — REC-64's work, and the "
 + "precondition for asking whether it reaches anybody",
   FENCES.filter((c) => !ROWS.has(c)), []);
@@ -494,6 +620,48 @@ t("AND THE TWO REMAIN DISTINGUISHABLE BY `detail`, which is the only thing that 
 + "`detail` ever collapsed too, the answer would name a condition without naming its cause",
   [detailOf(beyondReach) !== null, detailOf(beyondScope) !== null,
    detailOf(beyondReach) !== detailOf(beyondScope)], [true, true, true]);
+
+/* ====================================================================== 7b
+ * REC-185 — `op=purge`, THE PLANE'S ONE DESTRUCTIVE OP, DRIVEN OUTSIDE THE
+ * MEMBER CLASS.
+ *
+ * WHY BY HAND. The sweep above filters to MEMBER-class ops, and `purge` is
+ * `["admin", "probe"]` — the class-filter blindness section 8's pin already
+ * names in its own words. So the one op that destroys a record answered a bare
+ * `error` string, outside every wire instrument, for as long as it has existed:
+ * a refusal with no code is one a member cannot be told in WORDS at all
+ * (CLAUDE.md §2), which is one layer further out than a code with no sentence.
+ *
+ * DRIVING THE DESTRUCTIVE OP HERE IS SAFE, AND THE ASSERTION IS WHAT SAYS SO
+ * RATHER THAN THE COMMENT: it is called with NO `confirm`, which is the arm's
+ * whole subject, and the refusal is taken before anything is read or written.
+ * `ok:false` is pinned first, so a run in which the purge SUCCEEDED could not
+ * come back green.
+ * ==================================================================== */
+console.log("\n--- 6b. op=purge without `confirm`: the coded refusal, through the op (REC-185) ---");
+{
+  const wire = (await RAW(`op=purge&token=adm-d262`, {})).body;
+  const row = ROWS.get("REQUIRED_ARGUMENT_MISSING") ?? { check: null, translation: null };
+  t("op=purge with no `confirm` is REFUSED, and refused with C-61.1's code — minted through the one "
+  + "governed `requiredArgument` helper, so the row's `where` still names a single span",
+    [wire?.ok, wire?.reason ?? wire?.code], [false, "REQUIRED_ARGUMENT_MISSING"]);
+  t("and it carries the CATALOGUE'S canned translation and C-number, compared by EQUALITY against "
+  + "the row rather than for presence — a surface rendering a sentence the catalogue does not hold "
+  + "is DEC-8's defect wearing DEC-49's clothes",
+    [wire?.check, wire?.translation], [row.check, row.translation]);
+  t("the ARGUMENT and the SHAPE are named beside it, which is what lets one code serve every op's "
+  + "argument complaint without the catalogue growing a row per call site",
+    [wire?.op, wire?.argument, wire?.shape], ["purge", "confirm", "<store name>"]);
+  t("`error` is BYTE-IDENTICAL to the pre-REC-185 answer (D-270's pattern), so no consumer reading "
+  + "it moves — `purge.test.mjs` reads exactly this string and is the proof the sentence is load-bearing",
+    wire?.error, "purge requires confirm=<store>");
+  t("and the caller is told NOTHING WAS CHANGED — on the one op that can destroy a record, a caller "
+  + "who cannot tell a refused request from a half-applied one has to go and look",
+    typeof wire?.detail === "string" && /Nothing was changed\./.test(wire.detail), true);
+  t("the refusal still names the store it wanted and the class that asked, so the fields the old "
+  + "bare-string answer carried are ADDED TO and not replaced",
+    [wire?.expected === wire?.store, wire?.got, typeof wire?.tokenClass], [true, null, "string"]);
+}
 
 /* ====================================================================== 8
  * THE OVER-STRICTNESS ARM, BUILT IN. A correct refusal in a shape this file did

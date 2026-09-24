@@ -9,10 +9,19 @@
 // extractor (`src/pdfstructure.mjs`, CPDF-4, extractPdfStructure -> .text) and
 // runs it against a fixed manifest of real Oakland documents.
 //
-//     node test/tier1-coverage-probe.mjs
+//     node test/tier1-coverage-probe.mjs            # the coverage measurement
+//     node test/tier1-coverage-probe.mjs --urls     # D-166: the URL preflight
 //
 // It caches fetched bytes into an OS temp dir so re-runs are cheap and offline.
 // Point it at an already-populated cache with CPDF5_CACHE=/path/to/dir.
+//
+// `--urls` (D-166, 2026-09-24) checks only that every URL in the manifest still
+// serves bytes BEGINNING `%PDF`, reading the first kilobyte by range request, and
+// exits non-zero if any does not. It names REFUSED (the request never reached the
+// origin — an egress claim about that hour) apart from NOT_FOUND (the origin
+// answered 404/410 — the one outcome that means the manifest needs re-pointing),
+// because a session behind a closed proxy otherwise reads exactly like a corpus
+// that has moved. See `preflight()` below.
 //
 // WHAT IT MEASURES, per document
 //   - decode outcome: FULLY / PARTIALLY / FAILED / NO-TEXT-LAYER
@@ -66,17 +75,104 @@ const DOCS = [
   { id: "legistar-attach-15721260", cls: "Staff report", src: `${LEG}?M=F&ID=15721260&GUID=8F04A287-4A49-44DC-83B7-29FAD97140C2` },
 ];
 
+// THE FILE'S OWN FIRST BYTES ARE THE TEST, NOT THE SERVER'S content-type (D-166,
+// 2026-09-24). Until this landing `bytesOf` accepted anything the origin LABELLED
+// `application/pdf`, which is a claim by the server about bytes it is also free to
+// get wrong: a CDN error page, a login interstitial or a "document moved" stub
+// served under a PDF content-type would be cached here and handed to the extractor,
+// which would then report NO-TEXT-LAYER — a decode outcome, indistinguishable in
+// the coverage table from a real scanned page. So the magic is checked FIRST and
+// names itself, and it is checked on the CACHED path too: a cache poisoned once by
+// such a stub otherwise survives every later run, offline and unexamined.
+const PDF_MAGIC = "%PDF";
+const firstBytes = (buf, n = 16) =>
+  JSON.stringify(new TextDecoder("latin1").decode(buf.subarray(0, n)));
+function assertPdfMagic(doc, buf, where) {
+  const head = new TextDecoder("latin1").decode(buf.subarray(0, 4));
+  if (head !== PDF_MAGIC) {
+    throw new Error(`${doc.id}: NOT_PDF — ${where} begins ${firstBytes(buf)}, not ${JSON.stringify(PDF_MAGIC)} (${buf.length}B)`);
+  }
+}
+
 async function bytesOf(doc) {
   const path = join(CACHE, doc.id + ".pdf");
-  if (existsSync(path)) return new Uint8Array(readFileSync(path));
+  if (existsSync(path)) {
+    const cached = new Uint8Array(readFileSync(path));
+    assertPdfMagic(doc, cached, "the cached copy");
+    return cached;
+  }
   if (!existsSync(CACHE)) mkdirSync(CACHE, { recursive: true });
   const res = await fetch(doc.src, { headers: { "user-agent": UA }, redirect: "follow" });
   const buf = new Uint8Array(await res.arrayBuffer());
   const ct = res.headers.get("content-type") || "";
-  if (!res.ok || !ct.includes("pdf")) throw new Error(`${doc.id}: http ${res.status} ${ct} (${buf.length}B) — not a PDF`);
+  if (!res.ok) throw new Error(`${doc.id}: http ${res.status} ${ct} (${buf.length}B) — not a PDF`);
+  assertPdfMagic(doc, buf, `http ${res.status} ${ct}`);
   writeFileSync(path, buf);
   return buf;
 }
+
+// ---- the URL preflight: `node test/tier1-coverage-probe.mjs --urls` ----
+//
+// WHY IT IS A MODE OF ITS OWN (D-166). This manifest's URLs go stale — a city
+// reorganises its document centre, Legistar rotates a GUID — and the corpus run
+// above cannot tell you WHICH url did what, because a fetch failure and a decode
+// failure both arrive as one FAILED row. Worse, a session whose EGRESS is refused
+// reads exactly like a session whose documents have MOVED, and this project has
+// paid for that confusion: D-166 was raised on the belief the Oakland half had
+// moved, and the measurement below found every one of them live at the URL it had
+// always had, the earlier evidence having been the proxy refusing the host.
+//
+// So the preflight names the four outcomes APART, per URL, with the date and the
+// observed first bytes, and never collapses them:
+//   LIVE     — the response's own bytes begin %PDF. The only passing outcome.
+//   NOT_PDF  — bytes arrived and are NOT a PDF (an HTML interstitial, a stub).
+//   REFUSED  — the request never reached the origin (proxy/DNS/TLS/timeout), or
+//              the origin refused it (401/403/429). A claim about THIS HOUR and
+//              this session, NEVER evidence that the document moved or is absent.
+//   NOT_FOUND— the origin answered and says it does not have it (404/410). This
+//              is the outcome that means "re-point me", and it is the only one.
+// It reads the FIRST KILOBYTE by range request, so it costs no budget book.
+async function preflight() {
+  const at = new Date().toISOString();
+  console.log(`\n=== D-166 · URL preflight for the CPDF-5 corpus ===`);
+  console.log(`date: ${at} · node ${process.version} · instrument: this file, \`--urls\`, range GET bytes 0-1023, ua=${JSON.stringify(UA)}\n`);
+  const w = (s, n) => String(s).padEnd(n).slice(0, n);
+  const out = [];
+  for (const doc of DOCS) {
+    let verdict, detail;
+    try {
+      const res = await fetch(doc.src, {
+        headers: { "user-agent": UA, range: "bytes=0-1023" },
+        redirect: "follow",
+      });
+      const buf = new Uint8Array(await res.arrayBuffer());
+      const ct = (res.headers.get("content-type") || "").split(";")[0];
+      if (res.status === 404 || res.status === 410) { verdict = "NOT_FOUND"; detail = `http ${res.status} ${ct}`; }
+      else if (!res.ok) { verdict = "REFUSED"; detail = `http ${res.status} ${ct}`; }
+      else if (new TextDecoder("latin1").decode(buf.subarray(0, 4)) === PDF_MAGIC) {
+        verdict = "LIVE";
+        detail = `http ${res.status} ${ct} ${firstBytes(buf, 8)}`;
+      } else { verdict = "NOT_PDF"; detail = `http ${res.status} ${ct} begins ${firstBytes(buf)}`; }
+    } catch (e) {
+      // An exception here is the request never completing — egress, DNS, TLS,
+      // timeout. It is REFUSED AT THIS HOUR and is recorded as nothing else.
+      verdict = "REFUSED"; detail = "no response: " + e.message;
+    }
+    out.push({ id: doc.id, verdict, detail });
+    console.log(w(doc.id, 30), w(verdict, 10), detail);
+    console.log(w("", 30), w("", 10), doc.src);
+  }
+  const bad = out.filter((r) => r.verdict !== "LIVE");
+  console.log(`\n  ${out.length - bad.length}/${out.length} LIVE (bytes begin %PDF) at ${at}`);
+  for (const v of ["NOT_PDF", "NOT_FOUND", "REFUSED"]) {
+    const n = out.filter((r) => r.verdict === v).length;
+    if (n) console.log(`  ${v}: ${n} — ${out.filter((r) => r.verdict === v).map((r) => r.id).join(", ")}`);
+  }
+  // A non-zero exit is what makes this usable as a gate on the corpus: a run that
+  // printed a table nobody read is not a check.
+  process.exit(bad.length ? 1 : 0);
+}
+if (process.argv.includes("--urls")) await preflight();
 
 // Sum the undecodable code-points across every undetermined marker, and group
 // the marker COUNT by reason. `count` is the extractor's own per-region tally.

@@ -77783,7 +77783,12 @@ var index_default = {
       if (confirm !== storeName)
         return json({
           ok: false,
-          error: "purge requires confirm=<store>",
+          ...requiredArgument(
+            "purge",
+            "confirm",
+            "<store name>",
+            "purge requires confirm=<store>"
+          ),
           expected: storeName,
           got: confirm,
           tokenClass: cls,
