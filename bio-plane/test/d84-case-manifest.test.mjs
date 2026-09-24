@@ -23,6 +23,21 @@
    `doc_sha: d.doc_sha, text: d.text,` occurs TWICE in store.mjs, the patch's own count-assertion refused,
    and the suite ran 17/0 over an untouched file; re-armed on the anchor unique to `caseDocument()`.
 
+   REC-187 (RUN 2026-09-24, session WORKER REC-187 (CONDUCT #18)) — THREE MORE ARMS, same discipline: each
+   armed ALONE in `src/store.mjs` by an anchor asserted to match EXACTLY ONCE, the suite run directly, every
+   restore by `cp` from a per-arm pristine copy and verified by sha256 AND `cmp` (bb7e28f5…, 2,956,805 bytes
+   each time). Declared before arming: each MUST fail the EQUALITY ARM by name; section 1 MUST NOT fail.
+   (0) BASELINE -> **25 pass, 0 fail**, foot reached.
+   (d) PIN THE PROPOSED SHA — the re-pin at promotion to `adopted` disabled, so every adoption keeps the
+   pin op=biasadopt took at `proposed` -> **14 pass, 11 fail**, EQUALITY ARM among them by name. MORE than
+   the equality arm, and named rather than smoothed: with the pin on PROPOSED bytes the pinned-state rule
+   withholds force, so section 2's lens is not in force either and its six rows go with it. Section 1 green.
+   (e) THE LIAR THE ROW NAMES — the statements hashed from the `bias_statements` PROJECTION (the head) ->
+   **22 pass, 3 fail**: the later-proposal row, EQUALITY ARM, and THE ARM COSTS SOMETHING (the stamp now IS
+   the later proposal's hash). The pins are right and only the hash lies, which is exactly the two-names defect.
+   (f) IN FORCE ASKED OF THE HEAD (the pre-REC-187 join) -> **20 pass, 5 fail**, EQUALITY ARM by name: a
+   later PROPOSAL lifts the adopted lens, and case D signs a manifest without it.
+
    ---
 
    D-84 — THE BIAS MANIFEST IS STAMPED INTO THE SIGNED CASE DOCUMENT, FROZEN.
@@ -37,6 +52,8 @@
      - a case published under an adopted set names EACH PAIR and the HASH          -> section 2
      - adopting a new revision afterwards leaves the published bytes IDENTICAL     -> section 3
      - with nothing adopted the document says NO MANIFEST WAS IN FORCE             -> section 1
+     - REC-187: across propose -> adopt -> LATER propose, the stamped hash equals one recomputed from
+       exactly the stamped sha's bytes, and the sha is the ADOPTED one                  -> section 4
    HOW A LIAR PASSES IT: recompute at read time. So section 3 MOVES THE LENS after publishing — a new
    revision of the instance set, re-adopted, which moves op=biasmanifest's hash — and asserts the
    signed bytes, their sha, and the pairs they name did not move.
@@ -193,6 +210,7 @@ const biasMd = (id, state, sid, text) => ["---",
 
 let snapSeq = 0;
 const HEAD = new Map();
+const BYTES = new Map();
 const promote = async (tok, id, text, type, state, register = []) => {
   const r = await POST(`op=promote&token=${tok}`, {
     bundleId: id, base: HEAD.get(id) ?? null,
@@ -202,6 +220,7 @@ const promote = async (tok, id, text, type, state, register = []) => {
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register });
   if (!r || r.ok === false || !r.bundleSha) bail(`promote ${id} -> ${state}`, r);
   HEAD.set(id, r.bundleSha);
+  BYTES.set(r.bundleSha, text);   /* REC-187: every revision's bytes, keyed by the sha the PLANE returned */
   return r;
 };
 const reg = (s) => [{ sha256: s, path: `data/${s.slice(0, 4)}.pdf`, encoding: "binary", bytes: 10 }];
@@ -267,10 +286,10 @@ const TXT_I1 = "Claims from the city attorney's office need a second record.";
 const TXT_P1 = "Budget figures quoted by the office are checked against the adopted budget.";
 for (const st of ["draft", "proposed"]) await promote(NADIA, BI, biasMd(BI, st, "i1", TXT_I1), "bias", st);
 const adI = await GET(`op=biasadopt&token=${NADIA}&bundleId=${BI}`);
-await promote(NADIA, BI, biasMd(BI, "adopted", "i1", TXT_I1), "bias", "adopted");
+const ADOPTED_I = (await promote(NADIA, BI, biasMd(BI, "adopted", "i1", TXT_I1), "bias", "adopted")).bundleSha;
 for (const st of ["draft", "proposed"]) await promote(IRIS, BP, biasMd(BP, st, "p1", TXT_P1), "bias", st);
 const adP = await GET(`op=biasadopt&token=${IRIS}&bundleId=${BP}&scope=project&scopeId=${PROJ}`);
-await promote(IRIS, BP, biasMd(BP, "adopted", "p1", TXT_P1), "bias", "adopted");
+const ADOPTED_P = (await promote(IRIS, BP, biasMd(BP, "adopted", "p1", TXT_P1), "bias", "adopted")).bundleSha;
 const L1 = await lensOf();
 t("REACH: both adoptions landed and the project's lens is IN FORCE with TWO pairs — one instance, one "
 + "project — so every arm below compares something real",
@@ -288,14 +307,20 @@ t("NAMED-LENS ARM: the signed document names EACH (bias bundle id, revision) pai
 t("and the HASH of the effective statement set is op=biasmanifest's own, in force and not a page's",
   [FB.bias_manifest?.in_force, FB.bias_manifest?.statements_sha, FB.bias_manifest?.scope_id],
   [true, L1.statements_sha, PROJ]);
-/* THE REVISION IS THE ADOPTION'S PIN (DEC-54 d), which op=biasadopt echoes as `pinned.bundle_sha` —
-   CORRECTED on this suite's first run, which asserted the bundle's HEAD sha and went red: the pin is
-   taken at op=biasadopt, while the set stands at `proposed`, and the promotion to `adopted` mints a
-   newer sha. The stamp names what op=biasmanifest names, and that is the pin. Measured and reported
-   (D-84 worker), not changed here: PL-12's pin and the adopted head differ by construction. */
-const PIN_I = adI?.pinned?.bundle_sha, PIN_P = adP?.pinned?.bundle_sha;
-t("the revisions ARE the adoptions' own pins, as op=biasadopt echoed them — the pin, not a label",
-  pairsOf(FB).map((p) => p[1]), [PIN_I, PIN_P]);
+/* THE REVISION IS THE ADOPTED ONE. CORRECTED 2026-09-24 by REC-187, not exempted. This assertion
+   read `[adI.pinned.bundle_sha, adP.pinned.bundle_sha]` — the pins op=biasadopt took while each set
+   stood at `proposed` — and the D-84 worker measured and reported that those name bytes OLDER than
+   the adopted head. That was the defect, pinned as the expectation: a PROPOSED revision's sha named as
+   the lens a case was produced under. BOB #31 ruled it (`BIO_Declared_Bias_v0_1.md` §"The bias
+   acknowledgement, authored at export": *"the ADOPTED one"*), and promotion to `adopted` now re-pins.
+   So the stamp names the sha the promotion to `adopted` minted, and NOT the proposed pin — both
+   halves asserted, because "differs from the proposed pin" alone would pass a stamp of anything. */
+const PIN_I = ADOPTED_I, PIN_P = ADOPTED_P;
+t("the revisions ARE the ADOPTED revisions — the shas the promotions to `adopted` minted — and NOT "
++ "the proposed shas op=biasadopt pinned before them (BOB #31, REC-187)",
+  [pairsOf(FB).map((p) => p[1]),
+   adI?.pinned?.bundle_sha !== ADOPTED_I && adP?.pinned?.bundle_sha !== ADOPTED_P],
+  [[ADOPTED_I, ADOPTED_P], true]);
 t("a PERSON reads each pair and the hash in the body",
   [docB.text.includes(`- ${BI} (instance) at revision ${PIN_I}`),
    docB.text.includes(`- ${BP} (project) at revision ${PIN_P}`),
@@ -344,6 +369,98 @@ t("OVER-STRICTNESS ARM: a case published after the lens moved stamps the lens in
 + "publication — the new revision and hash — so freezing is per edition, not a stamp that stopped reading",
   [FC.bias_manifest?.statements_sha, pairsOf(FC).map((p) => p[1])],
   [L2.statements_sha, (L2.bundles || []).map((b) => b.revision)]);
+
+/* ===========================================================================
+   4. REC-187 — PROPOSE -> ADOPT -> A LATER PROPOSAL: the stamp names the ADOPTED revision, and its
+      hash is recomputable from EXACTLY that revision's bytes.
+   BOB #31, `BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at export": *"Promotion
+   to `adopted` re-pins the adoption to the adopted bundle_sha, the case stamps that sha, and
+   op=biasmanifest hashes THAT revision's statements — one quantity under one name."*
+   HOW A LIAR PASSES IT: hash the latest projection. So after adoption a NEWER revision is PROPOSED
+   with a different statement, the case is published then, and the expectation is recomputed by THIS
+   SUITE from the bytes of the stamped shas alone — its own reading of the frontmatter and its own
+   SHA-256, never the plane's helper — so a hash of the head, of the projection, or of anything but
+   the named revision disagrees with it.
+   =========================================================================== */
+/* WHAT SECTION 4 CANNOT SEE, stated: (1) the RESIDUE is now read from the pinned revision too, but this
+   fixture writes the same `## What This Does Not Enforce` text into every revision, so no row here can tell
+   a head's residue from a pin's; (2) op=biasmanifest's UNDETERMINED answer (a pin whose bytes the store
+   cannot produce) is not reachable through the ops — promote() snapshots every outgoing revision into
+   `history`, and purge clears a purged set's adoptions — so it is written and NOT driven; (3) the recompute
+   does not model a project NULLIFICATION and refuses rather than guesses if one appears. */
+console.log("\n--- 4. REC-187: propose -> adopt -> a LATER proposal; the stamp names the ADOPTED revision and hashes exactly its bytes ---");
+/* The recompute. Each stamped (bundle, revision) pair is resolved to bytes BY THE REVISION, and the
+   bytes are proved to BE that revision (their sha256 is the pin) before a statement is read. The
+   plane's formula, restated here from its doctrine rather than imported: every statement of every
+   pinned revision, ordered by (bundle id, statement id), hashed over the fields that change meaning.
+   It does not model a project NULLIFICATION, and it refuses rather than guesses if one appears. */
+const recompute = (pairs) => {
+  const rows = [];
+  for (const [bid, rev] of pairs) {
+    const text = BYTES.get(rev);
+    if (typeof text !== "string" || sha(text) !== rev) return `NO BYTES FOR ${bid} AT ${rev}`;
+    for (const st of parseFrontmatter(text).data?.statements || []) {
+      if (st.nullifies) return "a nullification this recompute does not model";
+      rows.push([bid, st.id, st.kind, String(st.subject), st.text, st.justification, st.locked === true]);
+    }
+  }
+  rows.sort((x, y) => x[0].localeCompare(y[0]) || x[1].localeCompare(y[1]));
+  return sha(JSON.stringify(rows));
+};
+const BQ = "BIAS-2026-8400-amended";
+const TXT_Q1 = "Contract figures the office cites are checked against the executed contract.";
+const TXT_Q2 = "Contract figures the office cites are checked against the executed contract AND its amendments.";
+await promote(IRIS, BQ, biasMd(BQ, "draft", "q1", TXT_Q1), "bias", "draft");
+const PROPOSED_Q = (await promote(IRIS, BQ, biasMd(BQ, "proposed", "q1", TXT_Q1), "bias", "proposed")).bundleSha;
+const adQ = await GET(`op=biasadopt&token=${IRIS}&bundleId=${BQ}&scope=project&scopeId=${PROJ}`);
+const ADOPTED_Q = (await promote(IRIS, BQ, biasMd(BQ, "adopted", "q1", TXT_Q1), "bias", "adopted")).bundleSha;
+const L3 = await lensOf();
+const LATER_Q = (await promote(IRIS, BQ, biasMd(BQ, "proposed", "q1", TXT_Q2), "bias", "proposed")).bundleSha;
+const revOf = (bundles, id) => (bundles || []).find((b) => b.bundle_id === id)?.revision;
+t("REACH: three DISTINCT revisions of one set — proposed, adopted, and a later proposal that is now the "
++ "HEAD with a different statement — op=biasadopt pinned the PROPOSED one, and at adoption the lens "
++ "named the adopted one; so the rows below separate three candidate answers, not one",
+  [new Set([PROPOSED_Q, ADOPTED_Q, LATER_Q]).size, adQ?.ok, adQ?.pinned?.bundle_sha, HEAD.get(BQ),
+   revOf(L3?.bundles, BQ)],
+  [3, true, PROPOSED_Q, LATER_Q, ADOPTED_Q]);
+const L4 = await lensOf();
+t("A LATER PROPOSAL DOES NOT UNSEAT THE ADOPTED LENS, and does not move it: op=biasmanifest still names "
++ "the ADOPTED revision and the SAME hash it gave at adoption — the head moved and the lens in force did not",
+  [L4?.in_force, revOf(L4?.bundles, BQ), L4?.statements_sha], [true, ADOPTED_Q, L3?.statements_sha]);
+
+const pubD = await publishAndSign(await ground("amended"), "D");
+const docD = await readDoc(pubD);
+const FD = parseFrontmatter(docD.text).data;
+const pairsD = pairsOf(FD).map((p) => [p[0], p[1]]);
+t("EQUALITY ARM: the case stamps the ADOPTED sha, and its statements hash EQUALS a hash recomputed by this "
++ "suite from EXACTLY the stamped shas' bytes — one quantity under one name",
+  [revOf(FD.bias_manifest_bundles, BQ), FD.bias_manifest?.statements_sha],
+  [ADOPTED_Q, recompute(pairsD)]);
+t("THE ARM COSTS SOMETHING: the same recompute over the LATER proposal's bytes — the hash a liar reading "
++ "the latest projection would stamp — is a DIFFERENT hash, so the equality above could not hold by accident",
+  [recompute(pairsD.map(([b, r]) => [b, b === BQ ? LATER_Q : r])) !== FD.bias_manifest?.statements_sha,
+   /^[0-9a-f]{64}$/.test(recompute(pairsD.map(([b, r]) => [b, b === BQ ? LATER_Q : r])))],
+  [true, true]);
+t("the stamp and op=biasmanifest are ONE quantity: the same pairs and the same hash, read by two readers",
+  [pairsD, FD.bias_manifest?.statements_sha],
+  [(L4?.bundles || []).map((b) => [b.bundle_id, b.revision]), L4?.statements_sha]);
+t("a PERSON reads the adopted revision in the body, and the proposed and later shas appear nowhere in it",
+  [docD.text.includes(`- ${BQ} (project) at revision ${ADOPTED_Q}`),
+   docD.text.includes(PROPOSED_Q), docD.text.includes(LATER_Q)],
+  [true, false, false]);
+
+/* OVER-STRICTNESS: the re-pin must FOLLOW a real adoption, not freeze on the first one. The later
+   proposal is promoted to `adopted`; the lens and the next case now name IT, with its own hash. */
+const ADOPTED_Q2 = (await promote(IRIS, BQ, biasMd(BQ, "adopted", "q1", TXT_Q2), "bias", "adopted")).bundleSha;
+const L5 = await lensOf();
+const pubE = await publishAndSign(await ground("readopted"), "E");
+const FE = parseFrontmatter((await readDoc(pubE)).text).data;
+t("OVER-STRICTNESS ARM: once the later revision is itself promoted to `adopted`, the lens and the next "
++ "case name THAT revision and hash exactly its bytes — the pin follows adoption, it does not stick",
+  [revOf(L5?.bundles, BQ), revOf(FE.bias_manifest_bundles, BQ), FE.bias_manifest?.statements_sha],
+  [ADOPTED_Q2, ADOPTED_Q2, recompute(pairsOf(FE).map((p) => [p[0], p[1]]))]);
+t("and case D, published under the earlier adoption, still names it — frozen, never recomputed",
+  [revOf(parseFrontmatter((await readDoc(pubD)).text).data.bias_manifest_bundles, BQ)], [ADOPTED_Q]);
 
 console.log(`\nd84-case-manifest: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
 await mf.dispose();

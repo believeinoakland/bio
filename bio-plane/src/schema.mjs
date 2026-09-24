@@ -2511,7 +2511,7 @@ CREATE TABLE IF NOT EXISTS bias_adoptions (
   scope_type    TEXT NOT NULL,   -- 'instance' | 'project'
   scope_id      TEXT NOT NULL,   -- empty for instance, the project bundle id otherwise
   bundle_id     TEXT NOT NULL,   -- the bias bundle adopted
-  bundle_sha    TEXT NOT NULL,   -- THE PIN: the revision adopted, never re-read
+  bundle_sha    TEXT NOT NULL,   -- THE PIN: the revision adopted, never re-read, and moved to the adopted sha by promote (REC-187)
   author        TEXT NOT NULL,   -- the member who adopted it, server-stamped
   at            TEXT NOT NULL,
   source_url    TEXT,            -- DEC-54 (d), for an inhaled policy
