@@ -108,8 +108,8 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
-import { RENDER_DEFAULTS, RENDERED_METHOD, renderAllowanceMs, renderBlock, renderedAuthority,
-         rendererFor } from "./render.mjs";
+import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, renderAllowanceMs, renderBlock,
+         renderedAuthority, renderReserveMs, rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
    entry, reached through getFormat("pdf").structure with byte-identical
@@ -694,6 +694,11 @@ const OPS = {
      machine class REACHES it and is refused BY THE STORE (MACHINE_CANNOT_SET_LAWS), so the refusal says what
      is wrong. One `target`; the list arrives in the POST body. */
   actionlaws:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-195: the PROPOSAL of that list — D-149's remaining half. `themepropose`'s class cut, for its reason:
+     proposing is the MACHINE's half of the ruling, so the `ai` class reaches it through the DEC-55 floor when
+     its minted `writes` name it, and the store refuses NOBODY by class here. The fence that matters is one op
+     up: a machine is refused at `actionlaws` BY NAME (C-32.18), and this op writes no list at all. */
+  actionlawspropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -2073,6 +2078,10 @@ const SESSION_OPS = {
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
                    "themedeclare", "themeplace", "themepropose",
+                   /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
+                      proposer is stamped from the credential that asked, and the session route is the one
+                      that produces a member's own name for a member's proposal. */
+                   "actionlawspropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2114,6 +2123,10 @@ const SESSION_OPS = {
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
                    "themedeclare", "themeplace", "themepropose",
+                   /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
+                      proposer is stamped from the credential that asked, and the session route is the one
+                      that produces a member's own name for a member's proposal. */
+                   "actionlawspropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2346,6 +2359,9 @@ const NEEDS = {
   actionmove:       "contribute",
   actioncorrespond: "contribute",
   actionlaws:       "contribute",
+  /* REC-195: proposing takes `contribute` beside the act it proposes to, and the capability is the only gate
+     it has — who proposed is RECORDED and labelled rather than fenced (D-149: the machine may propose). */
+  actionlawspropose: "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -6000,6 +6016,15 @@ export default {
              could only infer by hitting it. The sentence names the window and
              says the count is an estimate, so it does not claim more than the
              two-bucket window in `Store.knock` can support. */
+          /* D-508: and the refusal itself now carries its DEC-49 code, check and canned
+             translation, minted in `Store.knock`'s `is-knock-rate` region from
+             `KNOCK_CHECKS` (C-85.1, C-85.2) — so the spread below carries them out
+             unchanged. THE TWO ARE DIFFERENT THINGS AND ARE NOT FOLDED TOGETHER:
+             `stated` is THIS instance's published NUMBER, composed here from the limits
+             it runs and moving when they move; the translation is the member-facing
+             SENTENCE, the same in every instance and naming no figure. The comparison
+             below READS a code the plane sent, which is what DEC-49 licenses a surface
+             to do; it is not a second mint, and the mint stays the one region. */
           const stated = rec.result.reason === "RATE_IP" ? KNOCK.statedPerIp
                        : rec.result.reason === "RATE_GLOBAL" ? KNOCK.statedGlobal : null;
           return json({ ok: false, ...rec.result, ...(stated ? { stated } : {}) }, 429);
@@ -6554,7 +6579,14 @@ export default {
     if (op === "livefire") {
       const out = await livefire(env, storeName, { capacity: cls === "admin",
         viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
-      return json(out, out.ok ? 200 : 500);
+      /* D-506 / IC-265, on BOB #32's ruling of 2026-09-24 06:07Z. This read `out.ok ? 200 : 500`, and
+         `out.ok` WAS the canary's verdict — which is why a failing canary answered `ok:false` with no
+         code of any kind to every consumer that reads `ok:false` as a refusal. `out.ok` is now
+         `true` whenever the op answered, and the verdict lives in `out.verdict` / `out.failing`.
+         THE STATUS IS KEYED TO THE VERDICT, so it is byte-for-byte what it was for every outcome: a
+         DIST gate or a curl that reads the status alone loses nothing to this change, which is the
+         whole point of moving the verdict to keys of its own rather than deleting it from the wire. */
+      return json(out, out.verdict === "pass" ? 200 : 500);
     }
 
     /* capture is the one op that moves bytes. PUT or POST writes capture
@@ -7311,6 +7343,11 @@ export default {
          "no render" is answered, not refused (a fence tighter than its rule). */
       const renderAsked = Object.prototype.hasOwnProperty.call(body || {}, "render") && body.render !== false;
       let renderer = null;
+      /* D-492: the reservation this render took from the day's allowance, declared HERE beside
+         `renderer` because the admission and the release sit in two different `renderAsked`
+         blocks — the first before the shell is fetched, the second after — and the release must
+         name the SAME figure the admission took. */
+      let renderReserved = 0;
       /* DEC-49 REGION is-render-admit
        *
        * THE SPAN C-83.1..C-83.5 name. Helper `renderRow`, every code a STRING
@@ -7347,18 +7384,26 @@ export default {
               op, host: rHost, retry_in_ms: g.retry_in_ms || 0,
               detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).` }, 429);
         }
-        /* THE DAILY ALLOWANCE (BOB #32 item 3): spent means DEFERRED, recorded. */
+        /* THE DAILY ALLOWANCE (BOB #32 item 3): committed means DEFERRED, recorded. */
         /* A store that did not answer DEFERS the render rather than running it
            unmetered: the answered-guard, never a bare `.result` read. */
+        /* D-492: the admission RESERVES this render's maximum cost, so the renders already in
+           flight — whose cost nothing has reported yet — are counted against the allowance too.
+           The reservation is released by the `renderspend` below, on every path out of the
+           render arm that knows what the render cost, including the paths that know it cost
+           nothing. `renderReserved` is read ONCE here so the release names the same figure the
+           admission took, not a figure recomputed later from a mutated environment. */
+        renderReserved = renderReserveMs(RENDER_DEFAULTS);
         const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), at: retrieved }) }));
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved, at: retrieved }) }));
         const adm = admOut.answered ? admOut.result : null;
         if (!adm || adm.state !== "admitted")
           return json({ ok: false, reason: "RENDER_DEFERRED", ...renderRow("RENDER_DEFERRED"),
             op, render: { state: "deferred", content: "undetermined", allowance: adm || null },
-            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is spent `
-                        + `(${adm.spent_ms} ms); this render is recorded as deferred (${adm.deferred} today).`
+            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed `
+                        + `(${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this `
+                        + `render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).`
                         : "the render allowance could not be read, so the render is deferred rather than run unmetered." }, 429);
       }
       /* END DEC-49 REGION is-render-admit */
@@ -7709,16 +7754,26 @@ export default {
          * THE SPAN C-83.6 and C-83.7 name. Helper `renderRow`, codes as STRING
          * LITERALS. Nothing below this region's refusals is filed as a document:
          * the shell's bytes are held unregistered, as TOO_LARGE's parts are. */
-        if (multipart || detectFormat(null, ct || null).format !== "html")
+        if (multipart || detectFormat(null, ct || null).format !== "html") {
+          /* D-492: NO RENDERER WAS EVER ASKED on this path, so no browser time was spent and the
+             reservation is released WITHOUT CHARGE. Letting it stand would charge the day's
+             allowance for a render that did not happen, and a caller could empty the allowance
+             with addresses that serve PDFs. This is the one release with `ms: 0`; every other
+             path either reports the render's time or leaves the reservation charged on purpose. */
+          try { await stGov.fetch("http://x/renderspend", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ ms: 0, releaseMs: renderReserved, at: retrieved }) }); }
+          catch { /* an unreleased reservation under-uses the allowance; it never fails the refusal */ }
           return json({ ok: false, reason: "RENDER_NOT_A_PAGE", ...renderRow("RENDER_NOT_A_PAGE"),
             op, content_type: ct || null, bytes: total, multipart,
             detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, `
                   + `not an HTML page; nothing was filed.` }, 422);
+        }
         try { answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS }); }
         catch (e) { answer = { ok: false, error: String(e && e.message || e) }; }
         try { await stGov.fetch("http://x/renderspend", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ ms: answer && answer.elapsed_ms, at: retrieved }) }); }
+          body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, at: retrieved }) }); }
         catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
         rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
         if (rb.ok) rbytes = new TextEncoder().encode(answer.html);
@@ -8962,8 +9017,13 @@ export default {
              * the content. */
           provenance_chain: [{
             who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
+            /* D-499 / BOB #32: a render whose wait fired on its TIMEOUT is NEVER
+               PRESENTED AS THE WHOLE PAGE. The qualification is DERIVED from the
+               block by `completenessReading`, never retyped here: a second copy
+               of the sentence would agree with the record for free and drift from
+               it for free. The grade and the method above are untouched. */
             asserts: renderRecorded
-              ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)`
+              ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}`
               : `these bytes were served for ${locator} at ${retrieved}`,
             evidence: renderRecorded
               ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment"
@@ -10598,6 +10658,10 @@ export default {
            as one that does not exist — `contentmint`'s reason. Fails closed on an
            absent stamp. */
         || op === "themeplace" || op === "themepropose" || op === "themeread"
+        /* REC-195: the governing-law proposal NAMES AN ACTION and reads it behind the fail-closed gate before
+           it writes anything, so an action the caller may not see refuses NO_SUCH_BUNDLE identically to an
+           absent one — `ACTION_ACTIONS`' own reason, arriving at an op that is not one of them. */
+        || op === "actionlawspropose"
         /* D-464: the COUNTS. Every counter `op=stats` serves names rows, and a row naming a project the caller
            cannot see is that project's existence (§7.9) — so the counts are taken through the caller's own
            sight, and fail closed on an absent stamp. `op=selftest` relays the same answer and stamps the same
@@ -10830,6 +10894,23 @@ export default {
        Never the principal a key was minted for, which would put an assistant's hunch under a
        person's id. */
     if (op === "themepropose")
+      inner.searchParams.set("proposer",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* REC-195 / D-149: WHO PROPOSED AN ACTION'S GOVERNING LAWS, stamped on the line above for its reason
+       exactly. Any credential may propose — the plane LABELS a proposal rather than fencing it — so the only
+       obligation here is NAMING: a session stamps its signed-in id, a machine stamps `class:<cls>`, and the
+       `ai` class stamps its tokenId beside its class, so a proposal stays attributable to the exact key that
+       proposed it. Never the principal a key was minted for, which would put a machine's citations under
+       somebody else's id. A caller-supplied `proposer` is overwritten rather than honoured: the label is the
+       whole product and a label a caller can write is not one.
+       THE PROSE HERE DELIBERATELY CLAIMS NO PERSON-ONLY CONSTRAINT, and that is not style:
+       `identity-claims.mjs` reads a stamp site's own comment for a claim that only a signed-in person may
+       write the field, and grades it a DEFECT where nothing refuses a machine identity. Nothing refuses one
+       here BY DESIGN — D-149 says the machine MAY propose — so a comment claiming otherwise would be the
+       instrument reading this site correctly. The fence is one op up, at the act that SETS the list. */
+    if (op === "actionlawspropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`

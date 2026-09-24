@@ -1317,15 +1317,65 @@ export function readingPositionInExtent(position, extentKind, extent) {
  *  spelling of it rather than three that drift. */
 export const TIER_RULE =
   "per page, tier 2 replaces tier 1 only when it has strictly fewer undetermined "
-+ "characters AND strictly more decoded characters; anything else keeps tier 1";
++ "characters AND strictly more decoded GLYPHS — non-whitespace code points, so "
++ "neither tier's whitespace policy can move the award; anything else keeps tier 1";
 
 const undeterminedChars = (page) =>
   (page && Array.isArray(page.undetermined))
     ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0)
     : 0;
 
-const decodedChars = (page) =>
-  (page && typeof page.text === "string") ? page.text.length : 0;
+/* D-501 — THE AWARD COUNTS GLYPHS, AND `text.length` IS NOT A COUNT OF GLYPHS.
+ *
+ * THE DEFECT, and it is a defect in the INSTRUMENT rather than in the rule.
+ * `perPageTierWinner`'s second condition asks whether tier 2 decoded MORE than
+ * tier 1 — "more" meaning more of the document recovered. It was reading
+ * `text.length`, which is the UTF-16 length of the whole string, whitespace and
+ * all. The two tiers are two independent engines with two independent
+ * line-breaking policies over the SAME bytes, so that number differs between
+ * them for reasons that have nothing to do with how much of the document either
+ * one read. **A change to one tier's whitespace policy then moves an award with
+ * no glyph changing hands**, which is how this was found: D-481 changed tier 1's
+ * line-breaking rule (a line breaks when the BASELINE moves) and the margin on
+ * `legistar-73618` page 1 — the fixture's own degradation trap — fell from 129
+ * to 77 while tier 1 decoded not one character less. M-133 measured the same
+ * thing from the other end: on `Budget-Basics-FY23-25` the reading went from
+ * 4,528 lines to 194 with the non-whitespace character count UNCHANGED at 4,228.
+ *
+ * WHAT THE MEASUREMENT SAYS ABOUT THIS FIXTURE, and it is stronger than the row
+ * expected (M-140). On EVERY page of the four committed PDFs that tier 1 read at
+ * all, the two tiers decode the IDENTICAL number of non-whitespace code points —
+ * 73450: 1503/2601/914, 73545 p6: 2856, 73618: 915 and 486, each side equal. The
+ * whole of every margin the old instrument saw (40, 39, 22, 4, 104, 77) was
+ * whitespace. So the second condition was doing its work, on this corpus,
+ * entirely on a whitespace artifact — and it keeps doing it under this counter,
+ * but for the honest reason: tier 2 offers no glyph tier 1 did not already have.
+ *
+ * WHY CODE POINTS AND NOT UTF-16 UNITS. An astral glyph is one glyph and two
+ * UTF-16 units, so an engine that emits it where the other emits a replacement
+ * character would score two-for-one on a `.length` comparison. The committed
+ * corpus contains none (measured: code-point count equals `.length` on all 15
+ * pages), so that half of this counter is exercised by a synthetic arm in the
+ * suite and by nothing in the wild — stated rather than implied.
+ *
+ * WHAT THIS DOES NOT TOUCH. `undeterminedChars` reads counts the decoder
+ * reported and is not a length at all. `counts.chars` — the figure I2 REPORTS —
+ * is deliberately left as the raw character count: it is a reported quantity
+ * rather than an award, and moving it is an interface change. That leaves
+ * `needsTier2` in `index.mjs`, which compares undetermined REGIONS against
+ * `counts.chars`, reading the same class of number; it is the ROUTING half,
+ * closed on purpose (index.mjs's own note), and is named in D-501's report
+ * rather than changed here. */
+const WHITESPACE = /\s/u;
+const decodedChars = (page) => {
+  if (!page || typeof page.text !== "string") return 0;
+  /* `for…of` over a string iterates CODE POINTS, so a surrogate pair counts
+     once. A lone surrogate counts once too, which is the honest answer for a
+     thing that is not a glyph either way. */
+  let n = 0;
+  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
+  return n;
+};
 
 /**
  * Which tier wins ONE page. The whole rule, isolated so it can be driven

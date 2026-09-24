@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* train.control.mjs — the NEGATIVE-CONTROL DRIVER of M0-111, M0-122 and M0-131, 9 ARMS PLUS A BASELINE, for `tools/train.mjs`,
+/* train.control.mjs — the NEGATIVE-CONTROL DRIVER of M0-111, M0-122, M0-131 and M0-159, 12 ARMS PLUS A BASELINE, for `tools/train.mjs`,
  * the push guard's `main` arm in `tools/pushguard.mjs`, `tools/gates.mjs`'s `--never-cached` set (M0-131), and their suite
  * `bio-plane/test/train.test.mjs`.
  *
@@ -32,7 +32,7 @@ const GATES = path.join(REPO, "tools", "gates.mjs");
 const SUITE = path.join(REPO, "bio-plane", "test", "train.test.mjs");
 const PEN = path.join(REPO, ".m0111-harness");
 const ONLY = process.argv[2] || null;
-const DECLARED_ARMS = 9;
+const DECLARED_ARMS = 12;
 const FLOOR = { [GUARD]: 40000, [TRAIN]: 10000, [GATES]: 40000 };
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -130,6 +130,29 @@ const ARMS = [
     patches: [["  if (reuse) return { ...reuse, verdict, exit: r.status, open,", "  if (reuse) return { ...reuse, verdict: \"GREEN\", exit: r.status, open,"]],
     mustBreak: "A UNION WHOSE TREE IS RECORDED GREEN BUT WHOSE MERGE DROPS A CARRIED EDIT IS REFUSED BY THE TRAIN NAMING THE CHECK",
     mustNotBreak: ["THE DERIVED SET IS NOT EMPTY", "THE TRAIN LANDS BOTH LANES", "A RECORDED-GREEN TREE LANDS WITH ONLY ITS NEVER-CACHED UNITS RUN"] },
+  /* M0-159. Arm 10 is the row's NEGATIVE CONTROL: THE REFUSAL DROPPED — the silent ignore restored, so an unmatched
+     `--drop` entry is accepted and drops nothing. Arm 11 drops the COMMA SPLIT, so a `--drop` value is one branch name
+     again (the refusal, still armed, then catches the list as an unmatched entry — which is exactly what tells the two
+     halves of the fix apart: arm 10 breaks only the refusal, arm 11 only the dropping). Arm 12 drops the bare-flag
+     check. The refusing arms and the dropping arms drive fixtures of their own (R and S), so neither cascades. */
+  { id: "10", file: TRAIN, title: "THE REFUSAL DROPPED — the silent ignore restored: a --drop entry matching no branch is accepted and drops nothing",
+    patches: [["  if (!opts.dropChecked) {\n", "  if (false) {\n"]],
+    mustBreak: "A --drop ENTRY NAMING NO BRANCH REFUSES THE TRAIN BY NAME",
+    alsoBreak: ["...and the REFUSAL ITSELF names what it could have dropped"],
+    mustNotBreak: ["A VALID COMMA LIST DROPS EACH BRANCH IT NAMES", "A FLAG WITH NO VALUE AFTER IT IS REFUSED BY NAME",
+                   "OVER-STRICTNESS — an origin/ prefix", "THE LIMIT — a drop naming a listed row"] },
+  { id: "11", file: TRAIN, title: "THE COMMA SPLIT DROPPED — a --drop value is ONE branch name again, as on 2026-09-24",
+    patches: [["  const drop = new Set((opts.drop || []).flatMap((d) => String(d).split(\",\")).map(dropName).filter(Boolean));\n",
+               "  const drop = new Set((opts.drop || []).flatMap((d) => [String(d)]).map(dropName).filter(Boolean));\n"]],
+    mustBreak: "A VALID COMMA LIST DROPS EACH BRANCH IT NAMES",
+    alsoBreak: ["OVER-STRICTNESS — an origin/ prefix"],
+    mustNotBreak: ["A --drop ENTRY NAMING NO BRANCH REFUSES THE TRAIN BY NAME", "A FLAG WITH NO VALUE AFTER IT IS REFUSED BY NAME",
+                   "THE LIMIT — a drop naming a listed row"] },
+  { id: "12", file: TRAIN, title: "THE BARE-FLAG CHECK DROPPED — `--drop` last on the line is read as if it were never typed",
+    patches: [["    const bare = [\"--branch\", \"--drop\", \"--trailer\"].filter", "    const bare = [].filter"]],
+    mustBreak: "A FLAG WITH NO VALUE AFTER IT IS REFUSED BY NAME",
+    mustNotBreak: ["A --drop ENTRY NAMING NO BRANCH REFUSES THE TRAIN BY NAME", "A VALID COMMA LIST DROPS EACH BRANCH IT NAMES",
+                   "OVER-STRICTNESS — an origin/ prefix", "THE LIMIT — a drop naming a listed row"] },
 ];
 if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms in the table against ${DECLARED_ARMS} declared — the head is wrong`); process.exit(1); }
 

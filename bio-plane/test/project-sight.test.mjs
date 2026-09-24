@@ -5,7 +5,8 @@
    RE-RUN 2026-09-23 by D-447 in worktree /home/user/bio (cloud) on base 02603e88 AFTER adding §7 (the ranked read) and three arms, real src/index.mjs 731,481 B sha256 c7d77e7eee13…, src/store.mjs 2,902,978 B sha256 893a1cc99c3b…, src/query.mjs 166,525 B sha256 bdeb4e9c8285… (now hashed too), untouched: YES — baseline 110/0 · cite-distinguishing 108/2 · position-first 106/4 · not-found-to-everyone 88/22 · roster-stamp-dropped 98/12 · publish-raw-bm25 103/7 (THE BRIEF'S CONTROL: the index-wide bm25() published again as `score` — the six hit-bearing digests and NO SCORE IS PUBLISHED fail BY NAME, select-all `ids` and the selection order do NOT) · order-by-index-bm25 105/5 (no score, the ORDER from the index-wide bm25() again — exactly the five orders the hidden revision flips) · tf-over-vis 110/0 (over-strictness) · sight-via-redactor 110/0: AS DECLARED. RECORDED, NOT SMOOTHED: (1) not-found-to-everyone came back NOT AS DECLARED on the first run because §7's hidden revision was iris's session, which that arm lies to — a second variable; §7 now revises by the ADMIN token and the arm is AS DECLARED. (2) promote-stamp-dropped is NOT AS DECLARED (0/1: the suite throws in its fixture, SURFACE_NO_RUN) and it is PRE-EXISTING — the same result on a clean checkout of 02603e88 with §7 absent: the arm drops the promote stamp, which REC-171's surfacing-run fixture (`surfacing-run.mjs`) needs to open its run. Routed with its fix named (create the fixture's inquiry through the store's internal door, the bias set's precedent, or open the run before arming); not changed here.
    RE-RUN 2026-09-24 by D-464 in worktree /home/user/bio (cloud) on base 15b2a4c0 AFTER adding §8 (the counts) and five arms, real src/index.mjs 742,733 B sha256 450e60c61109…, src/store.mjs 2,958,609 B sha256 9a5b205f5a3b…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 125/0 · cite-distinguishing 123/2 · position-first 121/4 · not-found-to-everyone 103/22 · roster-stamp-dropped 113/12 · publish-raw-bm25 118/7 · order-by-index-bm25 120/5 · tf-over-vis 125/0 · stats-whole-store 122/3 (THE BRIEF'S CONTROL: `op=stats` counts the whole store again — the hidden-creation arm fails BY NAME, `A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats`, with the digest and EXACT arms; searchindexcheck and selectionlist stay green) · indexcheck-whole-index 122/3 · selectionbytes-whole 124/1 · stats-stamp-dropped 122/3 · subtract-for-everyone 125/0 (over-strictness) · sight-via-redactor 125/0: AS DECLARED. BEFORE the fix §8 read 115/7 on the unedited sources (vera's stats moved `bundles, files, history, refs, indexed, projectParticipants`). RECORDED, NOT SMOOTHED: (1) stats-stamp-dropped came back NOT AS DECLARED on its first run (then 121/4, against a store reading an ABSENT stamp as DENY: the ADMIN witness failed and three zeros agreed); that reading was corrected before landing because it zeroed the counters four store-level suites read off the DO route (a never-sent viewer is now an internal call, WHOLE), and the arm was re-declared: dropping the stamp now fails the headline by name. Reason at the arm. (2) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2) above, unchanged by D-464.
    RE-RUN 2026-09-24 by D-486 in worktree /home/user/bio (cloud) on base land/conduct/c19-batch10 @ cff0ede6 AFTER adding §9 (a RUN over a hidden project, the five observation-log tallies) and four arms, real src/index.mjs 786,508 B sha256 4579fae29f93…, src/store.mjs 3,178,998 B sha256 ae571b49b306…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 136/0 · cite-distinguishing 134/2 · position-first 132/4 · not-found-to-everyone 114/22 · roster-stamp-dropped 124/12 · publish-raw-bm25 129/7 · order-by-index-bm25 131/5 · tf-over-vis 136/0 · stats-whole-store 129/7 · indexcheck-whole-index 133/3 · selectionbytes-whole 135/1 · stats-stamp-dropped 130/6 · subtract-for-everyone 136/0 · d486-content-tally-unsubtracted 134/2 (THE ROW'S OWN CONTROL: the predicate dropped from ONE reader — the content tally — and its arms fail BY NAME) · d486-stats-airunlog-unsubtracted 133/3 · d486-meaning-run-ungated 134/2 · d486-predicate-de-morgan 136/0 (over-strictness) · sight-via-redactor 136/0: AS DECLARED. BEFORE the fix §9 read 131/5 on the unedited sources (MEASUREMENTS M-131: vera's `aiRunLog` and `observationsNonLead` moved, all three tallies moved, and the MEANING level published the hidden run's own id in `looked`). RECORDED, NOT SMOOTHED: (1) d486-content-tally-unsubtracted came back NOT AS DECLARED on its first run with THREE undeclared reds, one of them BEFORE its own cause — the patch removed the predicate from the SQL and left its BINDINGS, so the statement threw; corrected to remove both, reason at the arm. (2) §9's residue arm came back GREEN on a second run after failing on the first WITHOUT a line changing: the four watermark keys move only when the fixture's captures and the run's rows fall inside ONE SECOND (the causes normalise to the second, `register.registered` carries milliseconds). Diagnosed, spelled as a CEILING, and routed as D-486 FINDING 2 — an intermittent disclosure is worse than a steady one, not better. (3) stats-whole-store and stats-stamp-dropped came back NOT AS DECLARED because §9 reads two `op=stats` keys their declarations predate; both declarations were EXTENDED (never exempted) and are AS DECLARED. (4) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-486.
- * =========================================================================
+   RE-RUN 2026-09-24 by D-480 in worktree /home/user/bio (cloud) on base origin/main 58293bf3 merged with land/worker/D-497 @ 29d8409d, AFTER adding §10 (a hidden project's CITATIONS, and a hidden TARGET, in the shared-question candidate page) and three arms, real src/index.mjs 802,067 B sha256 fbdcfb83ed09…, src/store.mjs 3,233,147 B sha256 d0f540dbbadf…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 147/0 · cite-distinguishing 145/2 · position-first 143/4 · not-found-to-everyone 123/24 · roster-stamp-dropped 135/12 · publish-raw-bm25 140/7 · order-by-index-bm25 142/5 · tf-over-vis 147/0 · stats-whole-store 133/14 · indexcheck-whole-index 144/3 · selectionbytes-whole 146/1 · stats-stamp-dropped 141/6 · subtract-for-everyone 147/0 · d486-content-tally-unsubtracted 145/2 · d486-stats-airunlog-unsubtracted 144/3 · d486-meaning-run-ungated 145/2 · d486-predicate-de-morgan 147/0 · d480-citers-ungated 140/7 (THE ROW'S OWN CONTROL: the citer end of the edge ungated again — §10's seven arms fail, headed by `A HIDDEN PROJECT'S CITATIONS MOVE NOTHING`) · d480-targets-ungated 146/1 (the ATTRIBUTION arm: the target end alone, failing `A TARGET VERA CANNOT SEE TAKES NO SLOT` and NOTHING else, with the citer arms either side of it green) · d480-not-in-inverted 147/0 (over-strictness) · sight-via-redactor 147/0: AS DECLARED. BEFORE the fix §10's seven arms fail, measured twice — by `d480-citers-ungated` and by `stats-whole-store`, which neuters `#hiddenSets`' `hid` at source and takes all seven with it. RECORDED, NOT SMOOTHED: (1) `d480-citers-ungated` came back NOT AS DECLARED on its first run and THE ARM WAS RIGHT WHILE THE DECLARATION WAS WRONG — two of §10's arms read `truncOf(...).every((x) => x === false)`, which is TRUE OVER AN EMPTY ARRAY, so with vera's item crowded off her page entirely they PASSED over a feed holding nothing, while a third arm failed for a reason that was not its subject (a digest compared between two reads both missing the item). The SUITE was corrected — every flag is now asserted once per item beside the item COUNT — and the declaration re-taken. (2) `not-found-to-everyone` and `stats-whole-store` came back NOT AS DECLARED on declarations that PREDATE this item: the first has been failing §9's two ADMIN-token arms undeclared since D-486 added them, and the second neuters the ONE predicate both D-464's counts and D-480's candidate page read. Both declarations were EXTENDED, never exempted, and the second is a measurement: `stats-stamp-dropped`, which drops the stamp on `op=stats` alone, leaves §10 wholly green, so the coupling is the predicate and not the door. (3) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-464, D-486 or D-480.
+ * ========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
  * existence, not its name, not its references, not its participants."* IC-141's rule for how that is
@@ -671,6 +672,159 @@ console.log("\n--- 9. D-486 / BOB #32: a RUN over a project vera cannot see move
     [s2.bundles - s1.bundles, s2.files - s1.files, s2.register - s1.register, s2.indexed - s1.indexed,
      s2.aiRunLog - s1.aiRunLog, s2.observationsNonLead - s1.observationsNonLead],
     [1, 1, 1, 1, 0, 0]);
+}
+
+console.log("\n--- 10. D-480: a hidden project's CITATIONS take no slot in vera's shared-question candidates ---");
+{
+  /* WHAT WAS WRONG, and D-464's worker found it while D-464 was being measured (routed with its fix in D-464's
+     report; `BIO_Membership_Architecture_v2.md` §7 item 7.9). `Store#queueSharedInquiryCandidates` grouped over the
+     UNGATED `refs` table and took the first `QUEUE_SHARED_INQUIRIES_MAX` (64) target ids in `target_id` order. Two
+     consequences, neither of which the later gate in `#projectsDrawingOn` can undo, because both happen at the
+     page's EDGE rather than among the candidates it reaches:
+       (1) a question only a HIDDEN project pair shares becomes a candidate and TAKES A SLOT, displacing a question
+           the caller can see past the cap — so a divergence she is entitled to read DISAPPEARS from her feed; and
+       (2) `bounds.inquiries_truncated`, published on every item this feed mints, FLIPS — a count-shaped side
+           channel, D-447's and D-464's class: §7.9's *"Not its existence"* arriving as an aggregate.
+     THE FIXTURE ARMS BOTH AT ONCE, and deliberately over-shoots rather than balancing on the cap: TWO hidden
+     projects jointly cite 70 filler questions whose ids sort BEFORE vera's own shared question, so ungated they
+     fill the whole page and her question is never reached at all. Nothing here needs the fillers to EXIST as
+     bundles — a `references[]` entry for a document nobody has captured is the common case in this record, and it
+     is exactly what `refs` projects — which is also why the fix may not fail closed on an absent target. */
+  const FILLERS = 70;
+  const fill = (n) => `INQ-2026-9480-a${String(n).padStart(2, "0")}`;
+  const QQ = "INQ-2026-9480-zz-shared";        /* sorts AFTER every filler: the question that is crowded out */
+  must("vera's own shared question", await promoteAs(ADM, QQ, inquiryMd(QQ, LEDGER), "inquiry", "open"));
+  const mintProject = async (title, cites) => {
+    const { bundleId: _n, ...c } = pkg(NEVER, projectMd(null, cites), "project", "forming", null, `d480-${++seq}`);
+    return must(`mint ${title}`, await POST(`op=promote&token=${ADM}`, { ...c, meta: { ...c.meta, title } })).bundleId;
+  };
+  /* TWO projects vera PARTICIPATES IN (she owns them), so the divergence below is hers to read. */
+  const VA = await mintProject("Vera oversight 9480", [QQ]);
+  const VB = await mintProject("Vera budget 9480", [QQ]);
+  for (const [pid, nm] of [[VA, "VA"], [VB, "VB"]])
+    must(`vera owns ${nm}`, await DO("projectclaimowner", { projectId: pid, memberId: "vera" }));
+  must("vera accepts the reading", await POST(`op=versionaccept&token=${VERA}&target=${E(QQ)}&version=v1&reason=${E("borne out")}`, {}));
+  must("and VA stands on it while VB stands on nothing — the divergence",
+       await POST(`op=versioncurrent&token=${VERA}&target=${E(QQ)}&version=v1&project=${E(VA)}`, {}));
+
+  const KIND = "stance-changed-here-not-elsewhere";
+  /* `now` IS PINNED, AND THE FIRST RUN OF THIS SECTION IS WHY. Without it the two reads differed at exactly one
+     path — `items[0].age.ms`, 405 -> 494 — which is the WALL CLOCK and not a disclosure. A digest arm that a
+     passing clock can fail is an instrument that cries wolf, so the item's age is taken from a fixed instant the
+     way the rest of this fixture takes its dates. The diff is PRINTED rather than left as two hashes, because a
+     digest that moves says only that something did. */
+  const NOWMS = Date.parse("2026-07-03T00:00:00Z");
+  const readQ = async (tok) => RAW(`op=queue&token=${tok}&limit=500&now=${NOWMS}`);
+  const paths = (x, y, at = "") => {
+    if (JSON.stringify(x) === JSON.stringify(y)) return [];
+    if (x === null || y === null || typeof x !== "object" || typeof y !== "object" || Array.isArray(x) !== Array.isArray(y))
+      return [`${at} ${JSON.stringify(x)?.slice(0, 60)} -> ${JSON.stringify(y)?.slice(0, 60)}`];
+    const ks = [...new Set([...Object.keys(x), ...Object.keys(y)])];
+    return ks.flatMap((k) => (k in x && k in y) ? paths(x[k], y[k], `${at}.${k}`) : [`${at}.${k} (added or removed)`]);
+  };
+  const itemsOf = (r) => { const q = parse(r); return (q && Array.isArray(q.items)) ? q.items : []; };
+  const mine = (r) => itemsOf(r).filter((i) => i && i.kind === KIND && String(i.id || "").includes(QQ));
+  const boundsOf = (r) => mine(r).map((i) => i?.basis?.bounds);
+  const truncOf = (r) => boundsOf(r).map((b) => b?.inquiries_truncated);
+  const examinedOf = (r) => { const b = boundsOf(r)[0]; return b ? b.inquiries_examined : -1; };
+  /* The expected flag ONCE PER ITEM, so an arm cannot be satisfied by an empty list of items. */
+  const TRUNC = (v) => Array.from({ length: n0 }, () => v);
+  const capOf = (r) => { const b = boundsOf(r)[0]; return b ? b.inquiries_bound : -1; };
+
+  const vBefore = await readQ(VERA), aBefore = await readQ(ADM);
+  const n0 = mine(vBefore).length;
+  console.log(`  corpus: vera's op=queue carries ${itemsOf(vBefore).length} items, ${n0} of them this question's divergence`);
+  t("the fixture is live: vera's feed carries her shared question's divergence, and it is NOT truncated (floor: 1 item)",
+    [n0 >= 1, truncOf(vBefore).every((x) => x === false)], [true, true]);
+
+  /* THE HIDDEN CROWDING. Two projects iris owns and vera is never invited to, citing the same 70 filler questions,
+     so each filler has TWO distinct citers and qualifies as SHARED on the ungated table. */
+  const cites = Array.from({ length: FILLERS }, (_, i) => fill(i + 1));
+  const H1 = await mintProject("Hidden crowder 9480 a", cites);
+  const H2 = await mintProject("Hidden crowder 9480 b", cites);
+  for (const [pid, nm] of [[H1, "H1"], [H2, "H2"]])
+    must(`iris owns ${nm}`, await DO("projectclaimowner", { projectId: pid, memberId: "iris" }));
+  t("the crowding LANDED: both hidden projects exist and vera's own project list does not show them",
+    [typeof (await shaOf(H1)), typeof (await shaOf(H2)),
+     ((parse(await RAW(`op=list&token=${VERA}&limit=1000`)) || {}).bundles || []).some((b) => b.bundle_id === H1 || b.bundle_id === H2)],
+    ["string", "string", false]);
+
+  const vAfter = await readQ(VERA), aAfter = await readQ(ADM);
+  /* THE WITNESS: a credential the gate does not filter DOES see the crowding — the 70 questions really are shared
+     on the ungated table, so the byte-identity below is not an equality that cost nothing. */
+  t("the store SAW the crowding: the ADMIN token's queue moved (it can see both hidden projects)",
+    sha(aAfter.body) !== sha(aBefore.body), true);
+  t("the store SAW the crowding: the ADMIN token's own divergence item is now TRUNCATED, or gone from its page",
+    [mine(aBefore).length >= 1, truncOf(aBefore).every((x) => x === false),
+     mine(aAfter).length === 0 || truncOf(aAfter).every((x) => x === true)], [true, true, true]);
+
+  const moved = paths(parse(vBefore), parse(vAfter));
+  if (moved.length) console.log(`  vera's queue moved at: ${moved.slice(0, 8).join(" | ")}`);
+  t("A HIDDEN PROJECT'S CITATIONS MOVE NOTHING: vera's op=queue (status, content type, body, by digest)",
+    { status: vAfter.status, type: vAfter.type, sha: sha(vAfter.body) },
+    { status: vBefore.status, type: vBefore.type, sha: sha(vBefore.body) });
+  t("A HIDDEN PROJECT'S CITATIONS TAKE NO SLOT: her divergence item is still there, and still says NOT truncated",
+    [mine(vAfter).length, truncOf(vAfter).every((x) => x === false)], [n0, true]);
+
+  /* ---------------- THE OTHER END OF THE EDGE: a TARGET the caller cannot see (the same sentence).
+     A question the caller cannot see is dropped by `#queueSharedInquiry` and mints nothing — but until this landing
+     it still spent a slot on the way there. The shape is a PROJECT cited by two bundles the caller can see, which is
+     the only target this gate hides, and a `PROJ-` id sorts after every `INQ-` one, so it can only ever be the row
+     that tips the page over its cap. That makes the bound the whole observable, and it is why this arm is driven at
+     the CAP rather than by a digest: vera's visible candidates are filled to EXACTLY the bound the plane publishes,
+     and then one more target is added at each end of the sight rule. */
+  const capacity = capOf(vAfter), examined = examinedOf(vAfter);
+  const need = capacity - examined;
+  console.log(`  vera's visible candidates: ${examined} of a published bound of ${capacity} — ${need} filler questions to reach it`);
+  t("the bound is the plane's own published figure and there is room to fill it (floor: 1, and it is not truncated)",
+    [capacity > 1, need >= 1, truncOf(vAfter).every((x) => x === false)], [true, true, true]);
+  const cFill = Array.from({ length: need }, (_, i) => `INQ-2026-9480-c${String(i + 1).padStart(3, "0")}`);
+  /* VA and VB are revised together, so every filler has TWO visible citers and is genuinely shared.
+     THE STANCE IS RE-MADE AFTER EVERY REVISION, and the first run of this section is why: `projectMd` writes no
+     `current_versions` block, so a revision of VA's bytes DROPS the pointer §7 makes a project's own dated property
+     — the divergence then vanishes and every bound below reads `-1` over a feed with no item in it. The act, not a
+     hand-authored row, puts it back, which is also the product's own order (`op=versioncurrent`). */
+  const reviseVis = async (extra) => {
+    for (const [pid, nm] of [[VA, "VA"], [VB, "VB"]])
+      must(`revise ${nm}`, await promoteAs(ADM, pid, projectMd(pid, [QQ, ...cFill, ...extra]), "project", "forming", await shaOf(pid)));
+    must("VA stands on the reading again",
+         await POST(`op=versioncurrent&token=${VERA}&target=${E(QQ)}&version=v1&project=${E(VA)}`, {}));
+  };
+  await reviseVis([]);
+  const vFull = await readQ(VERA);
+  t("THE PAGE IS EXACTLY FULL: vera's visible candidates now equal the published bound, and nothing is truncated",
+    [examinedOf(vFull), truncOf(vFull), mine(vFull).length], [capacity, TRUNC(false), n0]);
+
+  await reviseVis([H1]);
+  const vHidTarget = await readQ(VERA);
+  /* THE COUNT IS ASSERTED BESIDE THE FLAG, AND THE `d480-citers-ungated` CONTROL ARM IS WHY. The first spelling
+     of this arm and the one below read `truncOf(...).every((x) => x === false)`, which is TRUE OVER AN EMPTY
+     ARRAY — so with the citer half broken, and vera's item pushed off her page entirely, both arms passed over a
+     feed that had nothing in it. The arm was right and the declaration was wrong; recorded rather than smoothed,
+     and this file's own rule about headline assertions over an empty corpus applied where it was missing. */
+  t("A TARGET VERA CANNOT SEE TAKES NO SLOT: citing the hidden project itself leaves her page full and untruncated",
+    [mine(vHidTarget).length, examinedOf(vHidTarget), truncOf(vHidTarget)], [n0, capacity, TRUNC(false)]);
+
+  /* STILL LIVE, and it is the arm that stops the target half from being "a target never counts": the SAME act
+     against a project she CAN see does tip the page over its bound. */
+  const VP = await mintProject("Vera visible target 9480", []);
+  must("vera owns VP", await DO("projectclaimowner", { projectId: VP, memberId: "vera" }));
+  await reviseVis([H1, VP]);
+  const vVisTarget = await readQ(VERA);
+  t("STILL LIVE: a target she CAN see DOES take a slot — the same act tips her page past its bound and says so",
+    [mine(vVisTarget).length, examinedOf(vVisTarget), truncOf(vVisTarget)], [n0, capacity, TRUNC(true)]);
+
+  /* OVER-STRICTNESS, and it is the arm that stops the whole section from passing over a feed that never moves:
+     crowding vera CAN see must still reach her bound. Two projects SHE owns cite 70 fillers of their own. */
+  const cites2 = Array.from({ length: FILLERS }, (_, i) => `INQ-2026-9480-b${String(i + 1).padStart(2, "0")}`);
+  const VC = await mintProject("Vera crowder 9480 a", cites2);
+  const VD = await mintProject("Vera crowder 9480 b", cites2);
+  for (const [pid, nm] of [[VC, "VC"], [VD, "VD"]])
+    must(`vera owns ${nm}`, await DO("projectclaimowner", { projectId: pid, memberId: "vera" }));
+  const vVis = await readQ(VERA);
+  t("STILL LIVE: crowding vera CAN see does reach her — her queue moves, and her own question is crowded off "
+  + "her page (the same consequence the hidden crowding must NOT have)",
+    [sha(vVis.body) !== sha(vVisTarget.body), mine(vVis).length], [true, 0]);
 }
 
 } catch (e) {

@@ -22,10 +22,23 @@
  *   (F) a recipient's comment labelled as a member's                                -> RED, naming "LABELLED";
  *       MUST NOT fail "THE RECORD: the plane holds the comment as a RECIPIENT's"
  *   (G) OVER-STRICTNESS — the page's own headings and the grant note re-worded      -> GREEN
+ *
+ * UI-92 (2026-09-24) added section 6b to the suite — the workspace's list of this project's drafts — and four
+ * arms for it. They are lettered from (I) because (H) is taken by the hand-run wait arm recorded in the suite's
+ * own header and never lived in this table:
+ *
+ *   (I) THE ROW'S OWN — the list stubbed EMPTY                                     -> RED, naming
+ *       "EVERY DRAFT THE PLANE LISTS APPEARS"; MUST NOT fail "NO EXPORT" or "MARKING"
+ *   (J) every row opens the FIRST draft                                            -> RED, naming "EACH OPENS"
+ *       and "AND THEY ARE DIFFERENT DRAFTS"; MUST NOT fail "EVERY DRAFT THE PLANE LISTS APPEARS"
+ *   (K) the list dropped from the invited member's SKELETON                        -> RED, naming
+ *       "THE SKELETON CARRIES THE LIST"; MUST NOT fail "EVERY DRAFT THE PLANE LISTS APPEARS"
+ *   (L) OVER-STRICTNESS — the list's heading re-worded and its local renamed       -> GREEN
  */
 import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
@@ -34,7 +47,12 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, "..", "..");
 const APP = path.join(REPO, "civicos-ui", "app.html");
 const SUITE = path.join(HERE, "review-copy.test.mjs");
-const SCRATCH = path.join(REPO, ".ui68-harness", "control");
+/* CORRECTED 2026-09-24 (UI-92), on BOB #32's ruling of the same day: a scratch file in the WORKTREE is not
+   inert. This control's pristine copies lived at `<repo>/.ui68-harness/control`, and three items paid for that
+   class in one night — a repository-walking suite counted a scratch directory into its corpus, `gates.mjs`'s
+   under-inclusion check tripped on one, and a third made the tree DIRTY so D-293 refused to record a green
+   verdict. They are per-run and unique here, so nothing else can collide with them. */
+const SCRATCH = fs.mkdtempSync(path.join(os.tmpdir(), "ui68-control-"));
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 
 const ARMS = [
@@ -65,6 +83,23 @@ const ARMS = [
             ["return '<h2 class=\"sec\">Comments</h2>'", "return '<h2 class=\"sec\">What readers have said</h2>'"],
             ["'<button class=\"btn\" onclick=\"rvcGrant()\">Give access</button></div>'",
              "'<button class=\"btn\" onclick=\"rvcGrant()\">Hand this draft to them</button></div>'"]] },
+  /* ---- UI-92: the workspace's list of this project's drafts (section 6b) ---- */
+  { name: "(I) the list stubbed empty", declared: "RED", names: ["EVERY DRAFT THE PLANE LISTS APPEARS"],
+    mustNotFail: ["NO EXPORT", "MARKING"],
+    edits: [["  const rows = (Array.isArray(r.drafts) ? r.drafts : []).filter(d => d && typeof d === \"object\" && d.draft_id);",
+             "  const rows = [];"]] },
+  { name: "(J) every row opens the first draft", declared: "RED",
+    names: ["EACH OPENS", "AND THEY ARE DIFFERENT DRAFTS"], mustNotFail: ["EVERY DRAFT THE PLANE LISTS APPEARS"],
+    edits: [["onclick=\"rvcOpen(${esc(JSON.stringify(String(d.draft_id)))})\"",
+             "onclick=\"rvcOpen(${esc(JSON.stringify(String(rows[0].draft_id)))})\""]] },
+  { name: "(K) the list dropped from the skeleton", declared: "RED", names: ["THE SKELETON CARRIES THE LIST"],
+    mustNotFail: ["EVERY DRAFT THE PLANE LISTS APPEARS"],
+    edits: [["        ${PROJECT_DRAFTS_HEADING}\n        ${projectDraftsHtml(drafts)}\n", ""]] },
+  { name: "(L) OVER-STRICTNESS: the list's heading re-worded and its local renamed", declared: "GREEN",
+    edits: [["<h2 class=\"sec\">Drafts of a case</h2>", "<h2 class=\"sec\">The case drafts written here</h2>"],
+            ["  const body = rows.map(d => {", "  const listRows = rows.map(d => {"],
+            ["return `${bound}<div class=\"card\" data-project-drafts=\"${rows.length}\" style=\"padding:4px 18px\">${body}</div>`;",
+             "return `${bound}<div class=\"card\" data-project-drafts=\"${rows.length}\" style=\"padding:4px 18px\">${listRows}</div>`;"]] },
 ];
 
 fs.mkdirSync(SCRATCH, { recursive: true });
@@ -117,7 +152,7 @@ try {
   }
   const s = sha(APP);
   console.log(`app.html final sha256 ${s} — ${s === orig.sha ? "IDENTICAL to pristine" : "DIFFERS FROM PRISTINE"}`);
-  if (s === orig.sha) fs.rmSync(path.join(REPO, ".ui68-harness"), { recursive: true, force: true });
+  if (s === orig.sha) fs.rmSync(SCRATCH, { recursive: true, force: true });
 }
 console.log(`\nRESULTS: ${rows.map((r) => `${r.arm.split(" ")[0]} ${r.got} ${r.tally}`).join(" · ")}`);
 console.log(`review-copy.control: ${rows.filter((r) => r.asDeclared).length}/${ARMS.length} arms AS DECLARED`);

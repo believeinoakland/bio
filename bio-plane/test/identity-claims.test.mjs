@@ -287,8 +287,12 @@ t("(i) the same payloads succeed for a member and an administrator, so the refus
   [val(sExpD, "ok"), val(sExpC, "ok")], [true, true]);
 
 console.log("\n--- 2c. the OPEN pair: measured, reported, not decided ---");
+/* CORRECTED 2026-09-24 (REC-211): the act now binds the definition version the member READ and
+   refuses one that names none (NO_DEFINITION_VERSION) — so this call names the version standing for
+   its fixture. The assertion's subject is unchanged; what was wrong in the old call is that it was
+   admitted at all (BOB #32, framework 8.2). */
 const mDis = await POST("op=proposedispose&token=mem-rec65",
-  { progressionKey: "procurement", stageKey: "award", to: "deferred",
+  { progressionKey: "procurement", stageKey: "award", to: "deferred", definitionVersion: 1,
     reason: "not now, revisit after the budget cycle closes" });
 t("(j) OPEN and measured: a machine DISPOSES the record's own derived question today",
   [val(mDis, "ok"), val(mDis, "decided_by")], [true, "class:member"]);

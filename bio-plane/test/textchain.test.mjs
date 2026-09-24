@@ -210,9 +210,15 @@ const MIXED = mixedPdf(agendaLines("26-7601", "26-7602", "26-7603"));
 const OCR_TEXT = agendaLines("26-7801", "26-7802", "26-7803");
 const region = (text, page, rect, confidence) => ({ text, confidence,
   source: { kind: "pdf-page", ref: `p${page}`, page, rect } });
+/* THE `.md` IS OFF THESE PROVENANCE LABELS ON PURPOSE (M0-165, 2026-09-24). `measured_by` is a FREE STRING
+   (index.mjs' chain contract) naming WHERE a fidelity grade was measured; it is not a path and nothing opens
+   it. But `tools/gates.mjs` reads a unit's code with the estate's one lexer, which KEEPS strings on purpose
+   (D-301: a path is a string), so its basename probe read `"MEASUREMENTS.md …"` here as a read of the ledger
+   and made this suite a MEASUREMENTS reader — selected, and run, for every measurement anyone appends.
+   Do not put it back: `bio-plane/test/statepaths.test.mjs` pins the property and names the file that breaks it. */
 const goodAnswer = () => ({
   ok: true, engine: "tesseract", version: "5.3.4-fast", cap: "C",
-  measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)", confidence_floor: 0.6,
+  measured_by: "MEASUREMENTS 2026-08-03 (CPDF-9)", confidence_floor: 0.6,
   pages: [{ page: 0, regions: OCR_TEXT.map((line, i) =>
     region(line, 0, [72, 700 - i * 12, 540, 712 - i * 12], { value: 0.97, basis: "engine" })) }],
 });
@@ -227,7 +233,7 @@ const ocrPage = (page, lines) => ({ page, regions: lines.map((line, i) =>
   region(line, page, [72, 700 - i * 12, 540, 712 - i * 12], { value: 0.97, basis: "engine" })) });
 const mixedAnswer = (pages = [ocrPage(1, SCAN_TEXT)]) => ({
   ok: true, engine: "tesseract", version: "5.3.4-fast", cap: "C",
-  measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)", confidence_floor: 0.6, pages,
+  measured_by: "MEASUREMENTS 2026-08-03 (CPDF-9)", confidence_floor: 0.6, pages,
 });
 
 /* WHAT THE WIRE ASKED FOR, recorded rather than assumed. The page list is the
@@ -555,7 +561,7 @@ for (const [number, drive] of CHECK_ARMS) {
    safer fence — it would be an undeclared interface change wearing the costume
    of caution, and it would have refused the whole store on migration. */
 t("OVER-STRICTNESS: a step with a cap and NO calibration is LEGAL — the pre-CPDF-13 shape",
-  checkChain([{ step: "layer", cap: "C", measured_by: "MEASUREMENTS.md 2026-08-03" }]), null);
+  checkChain([{ step: "layer", cap: "C", measured_by: "MEASUREMENTS 2026-08-03" }]), null);
 t("OVER-STRICTNESS: a step naming a calibration as a plain string is LEGAL",
   checkChain([{ step: "layer", cap: "C", calibration: "CAL-1" }]), null);
 t("and a chain reports the calibrations it names, deduped and in order",

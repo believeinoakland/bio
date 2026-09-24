@@ -307,8 +307,10 @@ const textOf = (abs) => {
    included, on the reasoning that over-selection is the safe direction; measured, it was not safe but merely
    expensive — about 30 suites were selected for a MEASUREMENTS-only change because their OWN prose cites a
    measurement (`see MEASUREMENTS.md M-60`), and a comment reads nothing. A suite that READS the file does it
-   through a string (`join(REPO, "docs/development/MEASUREMENTS.md")`), which the lexer keeps. What a unit names
-   as a tool or script it RUNS (`edges`) is still read off the whole text. If the lexer cannot be loaded, every
+   through a string (`join(REPO, "docs/development/MEASUREMENTS.md")`), which the lexer keeps. WHAT A UNIT NAMES AS A
+   TOOL OR SCRIPT IT RUNS (`edges`) IS READ AS CODE TOO SINCE M0-153 (2026-09-24) — this block said "still read off
+   the whole text" until then, and that was the last raw reader in the selection path: a tool named in PROSE entered
+   the closure, and everything that tool reads became something the unit "reads". If the lexer cannot be loaded, every
    file is read whole and the plan SAYS so. */
 let stripComments = null;
 try { ({ stripComments } = await import("../bio-plane/scripts/walkfloor.mjs")); } catch { /* read whole, and say so */ }
@@ -335,9 +337,11 @@ const codeOf = (abs) => {
    a suite doc-facing. MEASURED on this tree at 16fe1e7f, by this tool's own printed line in a clone whose
    `origin/main` carried each side: 72 doc-facing suites before (plane 60 · ui 12), 41 after (plane 37 · ui 4) —
    31 of 72, 43%, qualified by a comment mention ALONE, and NONE was added. `measurements/M-134.md` names all 31.
-   REACH, stated, and it differs from §2b's: there a tool or script the unit NAMES is read off the
-   unit's whole text, because naming one is weak evidence it runs it; here the name is the whole of the
-   evidence, so a named tool inside a comment selects nothing. A `docs/` path written inside a REGEX
+   REACH, stated, and §2b now agrees: M0-153 (2026-09-24) put the closure's own edges under this same `codeOf`,
+   so a named tool inside a comment selects nothing THERE EITHER. This block read, until then, that §2b was
+   deliberately wider "because naming one is weak evidence it runs it"; measured, the weak evidence was the
+   estate's own prose — `fleetbundles.test.mjs` names `tools/gates.mjs` in the very sentence saying it does NOT
+   drive it. A `docs/` path written inside a REGEX
    literal is blanked with the comments (the lexer's rule), and one assembled at run time from pieces
    none of which spells `docs/` was invisible before this change and still is. If the lexer cannot be
    loaded, every file is read whole — over-selection — and the plan SAYS so. */
@@ -404,9 +408,32 @@ const UNITS = (() => {
 
 const TOOL_RE = /\btools\/([\w.-]+\.mjs)\b/g;
 const SCRIPT_RE = /\bscripts\/([\w.-]+\.mjs)\b/g;
+/* THE ASSEMBLED SPELLING — `join(REPO, "tools", "pushguard.mjs")`, the directory and the file as two
+   arguments and the slash never written. It is the SAME act as `tools/pushguard.mjs`, and M0-153 had
+   to see it: blanking the comments below took the accidental cover away. MEASURED on this tree over
+   the 840 `.mjs` files of `bio-plane/test`, `civicos-ui/test`, `civicos-ui`, `tools` and
+   `bio-plane/scripts`: 24 files spell a tool or script this way in CODE, 13 of them spell that name
+   NO other way in code, and for EIGHT the literal `tools/x.mjs` existed only in a COMMENT — so the
+   comment was the whole of a real edge (`entries.control.mjs` -> `tools/entries.mjs`, the very tool it
+   drives; `gateverdict.test.mjs` -> `tools/pushguard.mjs`, which it dynamically imports at line 43;
+   also `debt-floor.control.mjs`, `mintid-freshclone.control.mjs`, `provenance-floor.control.mjs`,
+   `tally-through-pipe.{test,control}.mjs`, `train.control.mjs`). REACH, stated: this sees only the
+   two-argument literal form; a name built from a variable, a three-segment join, a template with an
+   interpolated name, or a shell string handed to a spawn is invisible here and still is. */
+const ASM_RE = /["'`](tools|scripts)["'`]\s*,\s*["'`]([\w.-]+\.mjs)["'`]/g;
 /* [file, how it is reached]: "import" for a relative import or a `new URL(…, import.meta.url)`
    module, "name" for a tool or script the UNIT ITSELF names (only a unit's own files are read for
-   names — a tool naming another tool in prose is not evidence that it runs it). */
+   names — a tool naming another tool in prose is not evidence that it runs it).
+   EVERY FILE IS READ AS CODE, ITS COMMENTS BLANKED (M0-153, 2026-09-24), through the one `codeOf`
+   §2 and §2b already share. This is the last raw reader in the selection path: `fileHit` and
+   `isWalker` were corrected by M0-116, §2's two sites by M0-143, and the closure's own edges were
+   still cut from the whole text — so a tool NAMED IN PROSE was followed, and everything that tool
+   reads became something the unit "reads". A comment runs nothing. §2's header said the name here
+   was deliberately read whole "because naming one is weak evidence it runs it"; measured, the weak
+   evidence was not caution but the estate's own prose: `fleetbundles.test.mjs` names `tools/gates.mjs`
+   in the sentence that says it does NOT drive it. What a unit really runs it spells in code, in one
+   of the three forms above. `GATE: never-cache` and `GATE: reads` are still read WHOLE, because each
+   IS a comment (see their own blocks). */
 const EDGES_MEMO = new Map();
 function edges(abs, top) {
   const mk = `${abs}\0${top ? 1 : 0}`;
@@ -414,7 +441,7 @@ function edges(abs, top) {
   return EDGES_MEMO.get(mk);
 }
 function edgesOf(abs, top) {
-  const src = textOf(abs) || "";
+  const src = codeOf(abs) || "";
   const out = new Map();
   for (const m of src.matchAll(IMPORT_RE)) out.set(resolve(dirname(abs), m[1]), "import");
   for (const m of src.matchAll(URL_RE)) out.set(resolve(dirname(abs), m[1]), "import");
@@ -423,8 +450,13 @@ function edgesOf(abs, top) {
        file that exists is followed. */
     const pkg = repoRel(abs).split("/")[0];
     const named = (p) => { if (!out.has(p)) out.set(p, "name"); };
-    for (const m of src.matchAll(TOOL_RE)) named(join(REPO, "tools", m[1]));
-    for (const m of src.matchAll(SCRIPT_RE)) { named(join(REPO, "bio-plane/scripts", m[1])); named(join(REPO, pkg, "scripts", m[1])); }
+    const namedIn = (dir, file) => {
+      if (dir === "tools") named(join(REPO, "tools", file));
+      else { named(join(REPO, "bio-plane/scripts", file)); named(join(REPO, pkg, "scripts", file)); }
+    };
+    for (const m of src.matchAll(TOOL_RE)) namedIn("tools", m[1]);
+    for (const m of src.matchAll(SCRIPT_RE)) namedIn("scripts", m[1]);
+    for (const m of src.matchAll(ASM_RE)) namedIn(m[1], m[2]);
   }
   return [...out].filter(([p]) => isFile(p));
 }
@@ -907,7 +939,24 @@ const CLASS_RANK = (c) => (c === "FULL" || c === "FULLREUSE" ? 2 : c === "NEVERC
 /* M0-131: a NEVERCACHE run ran only the never-cached units, so it COVERS no class (rank 0): it can never be the record
    this shortcut stands on. */
 const PER_UNIT_ON = !RESULTS_OFF && isFile(join(REPO, "tools/gateresults.mjs"));
-if (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null && !NEVER_ONLY) {
+/* M0-157: THIS SHORTCUT READS THE TREE ITSELF, because it is the ONE verdict write `§4`'s end-of-run check can never
+   back. The REUSED record below is written and the process EXITS 0 here, BEFORE `§4` — so `CLEAN_AT_START` was the
+   only thing standing between a working tree that is not the tree HEAD names and a GREEN record the push guard
+   honours. MEASURED 2026-09-24 (M0-157) by arming `bio-plane/test/gates.control.mjs` G5, which breaks exactly that
+   boolean: the armed gate took this shortcut over a DIRTY tree, wrote a SECOND record for it — `GREEN`, class
+   `REUSED`, `already GREEN by <the clean run's own record>` — and exited 0, which is why G5's "a DIRTY tree is NOT
+   recorded" failed although G5 declared the end-of-run check backed it. It could not: this path never reaches it.
+   So the shortcut re-reads `status` and `HEAD^{tree}` for itself. On a clean tree the read agrees with `START` and
+   nothing changes but one `git status` on the runs that would take the shortcut; when it DISAGREES the shortcut is
+   not taken and the run falls through to `§4`, whose end-of-run check refuses the record — which is the redundancy
+   G5 declares, now real. A disagreement is PRINTED rather than silent: it means either a broken start check or a
+   tree that moved under the gate, and both are findings. */
+const SHORTCUT_CLEAN = (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null && !NEVER_ONLY)
+  ? (statusNow() === "" && treeNow() === START.tree) : null;
+if (SHORTCUT_CLEAN === false)
+  console.log("gates: the record shortcut (§2d) is NOT taken — its own read of the tree disagrees with the start check,"
+    + " so no record answers for this working tree and everything selected runs (D-293, M0-157)");
+if (SHORTCUT_CLEAN) {
   const own = readRuns({ repo: REPO, tree: START.tree });
   const eff = effectiveVerdict(own.runs);
   const covering = own.runs.some((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls));
@@ -1105,6 +1154,7 @@ if (cls === "TARGETED" || cls === "SINCE" || cls === "RERUN") {
   for (const { unit, why: w } of selection.values()) console.log(`gates:   ${unit.id}  <- ${w}`);
   console.log("gates: REACH — a unit's source and control, the tools/scripts it names and their relative imports, all "
     + `read as code${stripComments ? ", comments blanked (strings kept)" : " — THE LEXER DID NOT LOAD, so comments count too (over-selection)"}; `
+    + "the `tools/x.mjs` spelling and the assembled `join(…, \"tools\", \"x.mjs\")` one both name a tool (M0-153); "
     + "not the plane's runtime code, and not a path assembled at run time from pieces none of which is its name, stem or directory.");
 }
 if (!GR) console.log(`gates: results (M0-126) — OFF: ${grWhy}; every selected unit runs and no per-unit record is read or written`);

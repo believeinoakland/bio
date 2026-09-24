@@ -174,6 +174,8 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { fileURLToPath } from "url";   /* UI-40: the consumer walk resolves the repo root from this file */
 import { appScript } from "./extract.mjs";
+import { requiredArgumentWire } from "./plane-refusal-wire.mjs";   /* UI-100: C-61.1's envelope DERIVED from the plane's own
+      call site and the DEC-49 catalogue, never typed. */
 /* D-257 — UI-40's consumer walk reads the WHOLE REPOSITORY off the working tree
    and FLOORS on what it found. One mechanism, imported; the argument is at the
    walk. */
@@ -936,7 +938,31 @@ function mockFetch(u, opts){
      deliberately NOT in check-mock-envelope's FLAT list. */
   if(op === "publishedbytes"){
     const sha = (url.searchParams.get("sha256") || "").toLowerCase();
-    if(url.searchParams.get("path")) return R({ ok:false, error:"publishedbytes requires sha256=<64 lowercase hex>. This surface answers BY HASH and never by path, so there is nothing to walk." });
+    /* CORRECTED 2026-09-24 (UI-100), never exempted. This typed the caller-facing
+       `error` alone. That was true to the wire until D-278 (2026-09-23), which minted
+       this refusal through `requiredArgument` (C-61.1) — so it now carries
+       REQUIRED_ARGUMENT_MISSING (named unquoted on purpose; see the note at the foot),
+       `check`, DEC-49's canned `translation`, and the
+       helper's own `op`/`argument`/`shape`/`detail` beside that unchanged sentence.
+       UI-84's class sweep named this site by line number as the one fixture in the
+       `requiredArgument` family already narrower than its wire; this is that fix.
+       Every value is now read out of the plane's own call site and catalogue.
+       WHAT IT IS AND IS NOT: this arm is UNDRIVEN — measured, not assumed. No call
+       in `app.html` sends `path` to `op=publishedbytes` (the op answers BY HASH and
+       the surface never asks otherwise), so nothing here renders it and no assertion
+       below reads it. It is a fixture that refuses to fabricate a success for a
+       request the plane would refuse, and it is corrected for the same reason a
+       fixture is corrected anywhere: one that cannot represent the wire cannot
+       assert against it the day something does drive it.
+       AND THE CODE ABOVE IS UNQUOTED ON PURPOSE. UI-100 measured that
+       `check-refusal-codes.mjs`' R3-FED walk harvests any SCREAMING_SNAKE token in
+       quotes or backticks anywhere in a suite's source, COMMENTS INCLUDED, and counts
+       it as a code this suite hands to a surface: with it backticked, the `r3Fed`
+       floor rose by one for a sentence. This suite really does feed C-61.1's code now,
+       and the walk cannot see it — it arrives through `requiredArgumentWire`, and UI-84
+       recorded that blind spot — but a floor pinned on prose would fall the moment
+       somebody reworded this comment. */
+    if(url.searchParams.get("path")) return R(requiredArgumentWire("publishedbytes"));
     if(!PUBLISHED_SHAS.has(sha))
       return R({ ok:false, reason:"NOT_FOUND", sha256:sha,
         detail:"no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately." });

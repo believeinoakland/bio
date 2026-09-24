@@ -1,3 +1,41 @@
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-24, D-500, worktree /home/user/bio on
+   land/worker/D-500) THREE ARMS at the rule itself (`enteredAfterFirstRow` in
+   `src/airun.mjs`), each planted ALONE with the others held open, restored from a
+   uniquely-named pristine copy between arms and verified by sha256 AND `cmp`
+   (`airun.mjs` 160,425 B sha256 `0ade3d9a6619…`, all three restores YES, and the
+   planted marker string counted back to 0 each time). Baseline both ends:
+   119 pass, 0 fail.
+   (1) `truncate` — THE ROW'S OWN ARM: the mixed precision RESTORED, i.e. the rule
+       the two readers shipped, `String(v).slice(0, 19) >= String(v).slice(0, 19)`.
+       Declared MUST FAIL M2 M2b M5 M5b; MUST NOT FAIL M1 M4 M4b M6 M6b M7 M7b M7c M8.
+       ACTUAL: M2 M2b M5 M5b **and M3** — right to be there and worth the line: M3
+       is the arm that NAMES the residual band, so when the band MOVES back onto the
+       same-second pair M3 goes red naming it. Two detectors for one defect, one
+       asserting the band is empty where it must be and one asserting where it is
+       allowed to sit. 114 pass, 5 fail; every section A–L stayed green.
+   (2) `noop` — **THE ARM THAT MATTERS MOST HERE, and it is not a defect: it is this
+       ROW'S OWN SCOPE read literally.** D-500 says *compare at ONE precision
+       (milliseconds) in both readers*, and the obvious reading — parse both sides,
+       compare epoch milliseconds, change nothing else — is planted verbatim.
+       Declared MUST FAIL M2 M2b M3; MUST NOT FAIL everything else. AS DECLARED
+       (116 pass, 3 fail). M5b stays green because the finite guard catches a NaN
+       either way. **So the landing that would have read in review exactly like the
+       fix is caught by three arms**, and M4b says why in one measurement: because
+       the stored watermark is already a whole second, the truncating form and the
+       parse form answer IDENTICALLY over all 2,717 pairs.
+   (3) `overstrict` — CORRECT WORK IN A SPELLING NOTHING HERE ANTICIPATED: the same
+       rule with the uncertainty ADDED to the entered side instead of subtracted from
+       the watermark, and the comparison written as a difference against zero.
+       Declared MUST NOT FAIL ANYTHING. AS DECLARED — 119 pass, 0 fail. The arms bind
+       to the rule's BEHAVIOUR and not to its shape.
+   WHAT THESE ARMS CANNOT SEE: they are local to this plane's source under miniflare.
+   M6–M8 reach the op on a store with an EMPTY content level and on one whose first
+   row is EARLIER than the registration; no arm here places a watermark INSIDE a
+   registration's own second through the plane, because `register.registered` is
+   stamped by `op=promote` from the wall clock and no op sets it. That placement is
+   driven on the exported rule (M2, 143 placements of the clock second) and tied to
+   the op by M7b, which asserts the op's answer IS the rule's answer on the op's own
+   two timestamps. It is named here rather than scored zero. */
 /* NEGATIVE CONTROL: (declared and RUN 2026-09-18, REC-100 / IC-130 / D-366 CLOSED, worktree
    agent-a249f66820def3efd) NINE arms plus a baseline at BOTH ends, RUN in one step through
    `node test/nc-rec100.mjs [arm]` from `bio-plane/`. THREE SUITES ON EVERY ARM — this one,
@@ -9,11 +47,11 @@
    sha256 `c0aa882ba742…`, all restores YES). Baseline both ends: 101 / 127 / 49 pass, 0 fail.
    FINAL RUN: EVERY ARM AS DECLARED.
    (1) `carveout` — THE ROW'S OWN ARM: C-22.10's `run` carve-out RESTORED. Declared MUST FAIL B17
-       I2b; MUST NOT FAIL K3 K4 K6. ACTUAL: B17 I2b **and I4** — right to be there: the re-admitted
+       L2b; MUST NOT FAIL K3 K4 K6. ACTUAL: B17 L2b **and L4** — right to be there: the re-admitted
        bare row becomes the run's latest PRESENT, so the terminal points at it instead.
    (2) `noreferent` — THE DEADLOCK RETURNED: the rollup writers carry no referent, carve-out still
-       deleted. Declared MUST FAIL I3 K3 K4 K6d, `airun` K5c, the scheduler's wake arm. AS DECLARED,
-       plus I4 K0 K3b and 12 `airun` / 8 `scheduler` reds — the close, the reaper AND the wake all
+       deleted. Declared MUST FAIL L3 K3 K4 K6d, `airun` K5c, the scheduler's wake arm. AS DECLARED,
+       plus L4 K0 K3b and 12 `airun` / 8 `scheduler` reds — the close, the reaper AND the wake all
        deadlock, which is REC-100's 2026-09-16 measurement reproduced on purpose.
    (3) `noarm` — C-22.10's `observation` arm removed. MUST FAIL K2 K2b K2c K2d K2f; MUST NOT FAIL
        K1a K3 K4. AS DECLARED, plus K3c (the other run's forged row was accepted, so that run no
@@ -32,7 +70,7 @@
    (8) `fill` — the read FILLS a legacy bare row. MUST FAIL K6c K6d. AS DECLARED.
    (9) `overstrict` — every `observation` referent refused. Declared first as K1a alone; **the
        first run found it re-creates the deadlock on every writer** (the plane's rollups pass the
-       same check as a caller's), so I3 K3 K4 K6d, `airun` K5 and the wake arm are declared too.
+       same check as a caller's), so L3 K3 K4 K6d, `airun` K5 and the wake arm are declared too.
    `test/nc-rec93.mjs`'s `overstrict` arm is RETIRED (its anchor, the carve-out, is gone); its
    declaration said it would become the gate on D-366, and it did.
    WHAT THESE ARMS CANNOT SEE: `agent-worker`'s `stepLog`, whose suites MOCK `op=airuntick` — a
@@ -98,24 +136,24 @@
    (a) `baseline` — nothing armed. The row that distinguishes four-arms-broken from
        four-arms-working. Both ends green.
    (b) `projection` — the row's own arm: the two columns removed from the SELECT. Declared
-       MUST FAIL I2 I2b I2c I2d. **ACTUAL: I2 and I2c ONLY — I2b AND I2d CAME BACK GREEN, AND
+       MUST FAIL L2 L2b L2c L2d. **ACTUAL: L2 and L2c ONLY — L2b AND L2d CAME BACK GREEN, AND
        THAT IS THIS CONTROL'S MOST USEFUL RESULT RATHER THAN A FAULT IN THE ARM.** With the
        columns gone a row that HAS no referent still reads `null / null / undetermined`, which
        is what it should read — so an assertion over a row with nothing to show cannot tell
        *the record has no referent* from *the read dropped the column*. That is D-366's own
        absence-with-two-causes shape arriving inside the suite written to close it. **Only a
-       row that HAS a referent can detect a missing projection**, which is what makes I2 and
-       I2c load-bearing; the declaration is CORRECTED in the driver with its reason, never
+       row that HAS a referent can detect a missing projection**, which is what makes L2 and
+       L2c load-bearing; the declaration is CORRECTED in the driver with its reason, never
        exempted.
    (c) `statement` — projected but NOT stated: the columns come back, the `coverage` sentence
-       does not. Declared MUST FAIL I2 I2b I2c I2d; MUST NOT FAIL I2e I2f. AS DECLARED. This is
+       does not. Declared MUST FAIL L2 L2b L2c L2d; MUST NOT FAIL L2e L2f. AS DECLARED. This is
        the arm that proves the third field is load-bearing rather than decoration — without it,
        "STATED as undetermined" would be satisfied by a null after all.
    (d) `manufacture` — THE COSTLY DIRECTION: drop the state test so ANY row without a referent
        reads undetermined, making a LOOKED_ABSENT row say the record does not know something it
-       does know. Declared MUST FAIL I2d I2e; MUST NOT FAIL I2 I2b I2c I2f. AS DECLARED.
+       does know. Declared MUST FAIL L2d L2e; MUST NOT FAIL L2 L2b L2c L2f. AS DECLARED.
    (e) `blind` — THE WORST DIRECTION: ignore the referent entirely, so even rows the record CAN
-       back read undetermined. Declared MUST FAIL I2 I2c I2e; MUST NOT FAIL I2b I2f. AS
+       back read undetermined. Declared MUST FAIL L2 L2c L2e; MUST NOT FAIL L2b L2f. AS
        DECLARED, and the identity driver's own must-fail arm went red with it.
    WHAT THESE ARMS CANNOT SEE: they are local to this plane's source under miniflare — no real
    account, no deploy, no second instance, and critically NOT `agent-worker`'s live use of
@@ -205,14 +243,14 @@
        referent field while `observed` sits in `JUDGEABLE`. **And agent-worker's own suites MOCK
        the plane's `op=airuntick`**, so widening C-22.10 would break that integration with the
        whole battery green. An EMPTY arm here would therefore have licensed exactly the wrong
-       conclusion. Section I drives the three directly, which is what the arm cannot do.
+       conclusion. Section L drives the three directly, which is what the arm cannot do.
    THE ACTUAL RESULTS OF EVERY ARM ARE IN `CLAIMS.md`'s release line for REC-93, including the
    ones that came back other than declared.
    NEGATIVE CONTROL RE-RUN AND RE-DECLARED 2026-09-16 BY REC-100 (worktree
-   `agent-a984a71a7b324f52c`), which appended section I. ALL SEVEN ARMS RUN, every one AS
+   `agent-a984a71a7b324f52c`), which appended section L. ALL SEVEN ARMS RUN, every one AS
    DECLARED, baseline green at 62/0, every restore byte-identical by sha256 AND `cmp`
    (`airun.mjs` 91,867 B sha256 `1890746cfc23…`, `store.mjs` 2,182,088 B sha256 `548259580784…`).
-   `overstrict` moved 5 fail -> 7 as section I landed, and **its declaration GAINED I3 so the arm
+   `overstrict` moved 5 fail -> 7 as section I landed, and **its declaration GAINED L3 so the arm
    now GRADES the rollup rather than printing it** — REC-99's finding applied here.
    **WHAT THAT ARM MEASURED, AND IT IS HEAVIER THAN THE OVER-STRICTNESS IT WAS BUILT FOR:** with
    C-22.10 widened over `run`, `op=airunclose` answers `terminated: false, ok: false,
@@ -261,7 +299,7 @@
  * and reads as an invitation to go and look), and a look recorded as PRESENT
  * with nothing behind it (which reads as coverage and is the worse of the two).
  *
- * SEVEN SECTIONS:
+ * THE SECTIONS, IN THE FILE'S OWN ORDER (the count is the list, never a number):
  *   A. THE TABLE — its shape, its indexes, and both purge arms.
  *   B. THE ONE APPEND SITE and its refusals, driven through the real plane.
  *   C. THE FOLD — `op=airunlog` byte-identical, PINNED against the pre-item
@@ -272,7 +310,14 @@
  *   F. §7's EDGE-TRIGGERED RULE, whose volume is measured in M-14.
  *   G. RATIFY'S MAPPING, including the one outcome that writes NO ROW.
  *   H. PURGE — both arms, which do opposite things on purpose.
- *   I. REC-100 (appended 2026-09-16) — WHAT THE `run` CARVE-OUT IS WAITING ON,
+ *   I. REC-103 / IC-105 (appended 2026-09-16) — THE DOCUMENT ARM'S FENCE: §6's
+ *      withholding is row-whole, and the resolver is INVERTED rather than listed.
+ *      NAMED HERE BY D-500: this section was in the file and not in this list, so
+ *      the list ran A B C D E F G H I J K over TWELVE sections and the letter `I`
+ *      named two of them — which is why every arm label below it had a twin, and
+ *      why `bio-checks.mjs` and `nc-rec93.mjs` both cited "section I" for arms
+ *      that live in what is now L.
+ *   L. REC-100 (appended 2026-09-16) — WHAT THE `run` CARVE-OUT IS WAITING ON,
  *      measured rather than inherited: the write door is already open, the READ
  *      does not project the referent, and the run's terminal entry is a ROLLUP
  *      whose PRESENT has nothing to point at by construction.
@@ -280,11 +325,23 @@
  *   K. REC-100 (appended 2026-09-18, IC-130) — the rollup referent BUILT under
  *      BOB #14's ruling: the falsifier pinned, forged referents refused by name,
  *      the close and the reaper driven, legacy bare rows stated undetermined.
- *      Section I's gap-pins went red at their sites and were CORRECTED there.
+ *      Section L's gap-pins went red at their sites and were CORRECTED there.
+ *   M. D-500 — §5.1's TOP-END BOUND AT ONE PRECISION: the watermark comparison
+ *      lifted into `airun.mjs`, driven across every placement of the clock second,
+ *      with the residual band NAMED and the superseded rule driven beside it.
  *
  * THE SECTION LIST SAID "SEVEN SECTIONS" AND NAMED SIX while H was already in
  * the file — corrected here rather than left, since a header that miscounts its
  * own contents is the cheapest possible version of this suite's whole subject.
+ * **AND IT WENT ON MISCOUNTING UNTIL D-500 (2026-09-24), WHICH IS THE POINT OF
+ * THE FIRST CORRECTION ARRIVING TWICE.** The list named eleven sections where the
+ * file held twelve, and the one it omitted (REC-103's, now I) had taken the same
+ * letter as REC-100's — so two sections answered to `I`, twenty-six arm labels
+ * had a twin in the other, and two live citations outside this file pointed at
+ * the ambiguous letter. REC-100's section and its arms are now L; REC-103's keep
+ * I; the citations in `checks/bio-checks.mjs` and `test/nc-rec93.mjs` were moved
+ * with them. THE COUNT IS THIRTEEN and it is written as a list rather than as a
+ * number, because a number is the thing that went stale.
  */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -304,7 +361,11 @@ import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
          observationCoverage,
          /* REC-100 / IC-130: section K names each referent fault BY THE KEY the
             checker publishes, read from here rather than typed. */
-         OBSERVATION_REFERENT_FAULTS } from "../src/airun.mjs";
+         OBSERVATION_REFERENT_FAULTS,
+         /* D-500 / section M: the watermark comparison is driven AS THE RULE, imported
+            from the one place it lives rather than retyped — a hand copy of a rule agrees
+            with itself for free, which is this file's own standing objection. */
+         enteredAfterFirstRow, watermarkUncertaintyMs } from "../src/airun.mjs";
 import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -1127,7 +1188,7 @@ console.log("\n--- H · purge: the whole-store arm clears, the per-bundle arm LE
 }
 
 /* ========================================================================= *
- *  I · REC-100 — WHAT THE `run` CARVE-OUT IS ACTUALLY WAITING ON.
+ *  L · REC-100 — WHAT THE `run` CARVE-OUT IS ACTUALLY WAITING ON.
  *
  *  APPENDED 2026-09-16. C-22.10 does not fire on `authority_kind = run`
  *  (D-366). REC-100 was spawned to DELETE that carve-out and did not, because
@@ -1145,7 +1206,7 @@ console.log("\n--- H · purge: the whole-store arm clears, the per-bundle arm LE
  *  in prose reaches nobody; this is the same finding with a failing test
  *  attached to it.
  * ========================================================================= */
-console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) ---");
+console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) ---");
 
 {
   const B2 = "INQ-2026-0916-rec100";
@@ -1166,7 +1227,7 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
     bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: 600000, at: T0,
   });
 
-  /* I1 — THE WRITE DOOR IS ALREADY OPEN, and nothing in the record said so.
+  /* L1 — THE WRITE DOOR IS ALREADY OPEN, and nothing in the record said so.
      D-366 reads as though the fold cannot carry a referent at all; in fact
      `aiRunTick` hands the caller's entry straight to `#aiRunAppend`, which reads
      `entry.result_ref`. So the plane half of "the run's writers carry referents"
@@ -1178,11 +1239,11 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
             result_kind: "capture", result_ref: SHA_B,
             detail: "a run PRESENT that DOES name what it found" }],
   });
-  t("I1: a `run` PRESENT that CARRIES a referent is accepted through `op=airuntick` — "
+  t("L1: a `run` PRESENT that CARRIES a referent is accepted through `op=airuntick` — "
   + "the write door is already open and needs no plane change",
     [withRef && withRef.appended, (withRef && withRef.refused || []).length], [1, 0]);
 
-  /* I2 — INVERTED 2026-09-17 BY REC-113 / IC-116, WHICH IS THE ARM WORKING
+  /* L2 — INVERTED 2026-09-17 BY REC-113 / IC-116, WHICH IS THE ARM WORKING
      EXACTLY AS REC-100 BUILT IT TO.
      ==================================================================
      REC-100 wrote this assertion to PIN A GAP rather than a capability, and said
@@ -1206,16 +1267,16 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
      read); `coverage: "backed"` is a statement. Note this row is the one that
      CARRIES a referent, so it must read `backed` and NEVER `undetermined`: the
      failure that costs here is the record saying it does not know something it
-     does know. I2b below drives the other direction. */
+     does know. L2b below drives the other direction. */
   const back = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
-  t("I2: …and `op=airunlog` NOW PROJECTS IT — the stored referent is visible AND the coverage "
+  t("L2: …and `op=airunlog` NOW PROJECTS IT — the stored referent is visible AND the coverage "
   + "claim it supports is STATED as `backed`, never left to be inferred from a non-null "
   + "(REC-113 / IC-116 closes the READ half of D-366)",
     [back.entries[0].state, back.entries[0].result_kind, back.entries[0].result_ref,
      back.entries[0].coverage],
     ["PRESENT", "capture", SHA_B, "backed"]);
 
-  /* I2b — THE ARM THIS ITEM EXISTS FOR, AND IT IS DRIVEN THROUGH THE OP RATHER
+  /* L2b — THE ARM THIS ITEM EXISTS FOR, AND IT IS DRIVEN THROUGH THE OP RATHER
      THAN AT THE STORE, because `op=invitelook` shipped with a ReferenceError
      while 1,276 assertions passed.
      A BARE `run` PRESENT — the exact shape C-22.10's carve-out admits (D-366) —
@@ -1225,11 +1286,11 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
      order, with its state intact), and NEVER INFERRED FROM A SIBLING ROW — which
      is why this run already contains a row that IS backed, so a read that
      borrowed a neighbour's referent would answer `backed` here and fail. */
-  /* CORRECTED 2026-09-18 BY REC-100 (IC-130), NOT EXEMPTED. I2b appended a
+  /* CORRECTED 2026-09-18 BY REC-100 (IC-130), NOT EXEMPTED. L2b appended a
      bare `run` PRESENT through `op=airuntick` and asserted it was ACCEPTED and
      read back `undetermined` — true while C-22.10 carried the `run` carve-out.
      The carve-out is DELETED under the rollup ruling, so the same tick is now
-     REFUSED BY NAME and nothing is appended. The half of I2b that is still owed
+     REFUSED BY NAME and nothing is appended. The half of L2b that is still owed
      — a bare `run` PRESENT that is ALREADY IN THE LOG reads back `undetermined`,
      never filled — cannot be produced by the live build any more, so it moved to
      section K6, which writes the row with a build carrying the old rule and reads
@@ -1241,31 +1302,31 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
   });
   const back2 = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
   const bareRow = back2.entries.find((e) => e.subject === "observation:budget-2025");
-  t("I2b: a NEW bare `run` PRESENT is REFUSED BY NAME at the tick (the carve-out is deleted, "
+  t("L2b: a NEW bare `run` PRESENT is REFUSED BY NAME at the tick (the carve-out is deleted, "
   + "REC-100) and NOTHING is appended — the pre-existing half of this arm is K6",
     [bare && bare.appended, (bare && bare.refused || []).map((r) => [r.code, r.check]),
      bareRow ?? "(absent)"],
     [0, [["OBS_PRESENT_NO_REFERENT", "C-22.10"]], "(absent)"]);
 
-  /* I2c IS LOAD-BEARING AND THE NEGATIVE CONTROL IS WHAT PROVED IT, which is
-     worth knowing before anyone decides it duplicates I2b.
+  /* L2c IS LOAD-BEARING AND THE NEGATIVE CONTROL IS WHAT PROVED IT, which is
+     worth knowing before anyone decides it duplicates L2b.
      Under this item's `projection` arm — the two columns removed from the SELECT
-     so the read projects NOTHING — I2b AND I2d BOTH CAME BACK GREEN. They had to:
+     so the read projects NOTHING — L2b AND L2d BOTH CAME BACK GREEN. They had to:
      with the columns gone `e.result_ref` is `undefined`, so a row that has no
      referent reads `null / null / undetermined`, which is exactly what it should
      read. An assertion over a row with nothing to show CANNOT TELL "the record
      has no referent" from "the read dropped the column" — the same two bytes for
      two different facts, which is D-366's own shape arriving inside the suite
      written to close it.
-     So only a row that HAS a referent can detect a missing projection. I2 and
+     So only a row that HAS a referent can detect a missing projection. L2 and
      this line are those rows. A suite built only around the undetermined case
      would have passed, in full, over a read that projected nothing at all. */
-  t("I2c: …and the SIBLING is untouched by it — the backed row still reads `backed` after an "
-  + "undetermined row lands in the same run, which is what makes I2b a per-row statement "
+  t("L2c: …and the SIBLING is untouched by it — the backed row still reads `backed` after an "
+  + "undetermined row lands in the same run, which is what makes L2b a per-row statement "
   + "rather than a property of the answer",
     back2.entries.find((e) => e.subject === "observation:budget-2026")?.coverage, "backed");
 
-  /* I2d — THE OTHER DIRECTION, AND IT IS THE ONE THAT PROTECTS THE RECORD FROM
+  /* L2d — THE OTHER DIRECTION, AND IT IS THE ONE THAT PROTECTS THE RECORD FROM
      MANUFACTURING AN UNKNOWN. A `LOOKED_ABSENT` row has nothing to point at BY
      DEFINITION — that is what it found out — so calling it undetermined would be
      the record saying it does not know something it DOES know. `none_owed` is
@@ -1277,12 +1338,12 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
             detail: "positively gone, 404 from the origin" }],
   });
   const back3 = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
-  t("I2d: a LOOKED_ABSENT row reads `none_owed`, NOT undetermined — a row with nothing to "
+  t("L2d: a LOOKED_ABSENT row reads `none_owed`, NOT undetermined — a row with nothing to "
   + "point at by definition is not an unknown, and manufacturing one would be an overclaim "
   + "wearing the costume of caution",
     back3.entries.find((e) => e.subject === "observation:never-existed")?.coverage, "none_owed");
 
-  /* I2e — THE READ AND THE REFUSAL HELD TOGETHER BY DRIVING BOTH, not by
+  /* L2e — THE READ AND THE REFUSAL HELD TOGETHER BY DRIVING BOTH, not by
      asserting that somebody kept two literals in step. `observationCoverage`
      answers `undetermined` on exactly the rows C-22.10 would REFUSE under a
      non-`run` authority; if the two ever drift, this goes red. `checkObservation`
@@ -1307,17 +1368,17 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
     /* Label CORRECTED 2026-09-18 by REC-100: it ended *"and the carve-out
        itself is UNTOUCHED"*, which REC-100 deleted. The assertion is unchanged
        and still holds — the refusal now fires under `run` too (B17). */
-    t("I2e: the read's `undetermined` fires on EXACTLY the rows C-22.10 refuses — "
+    t("L2e: the read's `undetermined` fires on EXACTLY the rows C-22.10 refuses — "
     + "the read and the refusal share one rule instead of two literals somebody must keep "
     + "in step",
       saysUndetermined, refusesUnderSweep);
-    t("I2f: …and that agreement is not free — the matrix genuinely contains both answers, so "
+    t("L2f: …and that agreement is not free — the matrix genuinely contains both answers, so "
     + "two all-false lists cannot pass it (an equality that costs nothing is not evidence)",
       [refusesUnderSweep.filter(Boolean).length, refusesUnderSweep.filter((x) => !x).length],
       [1, 4]);
   }
 
-  /* I3 — THE ROLLUP, AND IT IS THE FINDING THAT UNSEATS D-366's REMEDY.
+  /* L3 — THE ROLLUP, AND IT IS THE FINDING THAT UNSEATS D-366's REMEDY.
      `#aiRunTerminate` writes the run's terminal entry with `#aiRunSearchState`'s
      state — a reduction over the run's WHOLE log. Because this run wrote a
      PRESENT, the rollup is PRESENT, and the terminal row carries no referent.
@@ -1328,19 +1389,19 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
   const closed = await POST(`op=airunclose&token=${TOK}`, {
     run: R2, at: at(9000), bound: "completed",
   });
-  /* I3/I4 — CORRECTED 2026-09-18 BY REC-100 (IC-130). They pinned the GAP: the
+  /* L3/L4 — CORRECTED 2026-09-18 BY REC-100 (IC-130). They pinned the GAP: the
      terminal entry was a bare `run` PRESENT with no referent by construction.
      BOB #14 ruled what a rollup's referent is (§3), and it is built: the same
      close now writes a terminal PRESENT carrying `result_kind = observation`
      pointing at the run's latest PRESENT look. They went red AT THE SITE THAT
      CHANGED, exactly as REC-100's first pass built them to. */
-  t("I3: the run's TERMINAL entry is a rollup PRESENT and it CLOSES — the deadlock the carve-out "
+  t("L3: the run's TERMINAL entry is a rollup PRESENT and it CLOSES — the deadlock the carve-out "
   + "was guarding against does not arise, because the rollup now carries its referent",
     [closed && closed.terminated, closed && closed.state], [true, "PRESENT"]);
   const after = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
   const terminal = after.entries.filter((e) => e.terminal === true);
   const backedLook = after.entries.find((e) => e.subject === "observation:budget-2026");
-  t("I4: …and it is written to the log as one row, terminal, PRESENT, with an `observation` "
+  t("L4: …and it is written to the log as one row, terminal, PRESENT, with an `observation` "
   + "referent naming the run's one PRESENT look BY THIS OP'S OWN `seq`",
     [terminal.length, terminal[0]?.state, terminal[0]?.result_kind, terminal[0]?.result_ref,
      terminal[0]?.coverage],
@@ -1756,6 +1817,237 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
       } finally { await live.dispose(); }
     } finally { rmSync(root, { recursive: true, force: true }); }
   }
+}
+
+
+/* ------------------------------------------------------------------------- *
+ *  M · D-500 — §5.1's TOP-END BOUND, AT ONE PRECISION.
+ *
+ *  §5.1: *the window stops growing rather than closing, and it is bounded at its
+ *  top end — a subject that entered the record after the log's first row at its
+ *  level reaches cause (3) normally.* That sentence is a COMPARISON between two
+ *  timestamps of DIFFERENT PRECISION: `register.registered` and `entities.at`
+ *  carry milliseconds, `observation_log.at` has the fraction cut. D-486 measured
+ *  what the mismatch costs (`measurements/M-131.md`): twice in one worktree ~20
+ *  minutes apart, four of an outsider's frontier keys moved on one run and not on
+ *  the other, because whether a hidden run's row and a fixture's captures fell
+ *  inside one clock second decided the answer. BOB #32 ruled (2026-09-24 05:04Z)
+ *  that the watermark STAYS VIEWER-INDEPENDENT and that the reclassification is
+ *  the accepted cost ONLY IF DETERMINISTIC.
+ *
+ *  THE ARMS BELOW ARE WEIGHTED AT THE TWO THINGS THAT CAN GO WRONG HERE, and the
+ *  second is the one this item nearly shipped. (1) The rule is not deterministic.
+ *  (2) The rule is "fixed" by a re-spelling that changes nothing — M4 drives the
+ *  superseded comparison on the SAME corpus so M2 is never an equality between
+ *  two things that were never different.
+ * ------------------------------------------------------------------------- */
+console.log("\n--- M · D-500: the watermark comparison is deterministic (§5.1, §6) ---");
+
+/* THE RULE IS ONE FUNCTION AND THE TWO READERS CALL IT. A structural pin off the
+   source, because a behaviour arm cannot tell "one rule" from "two rules that
+   agree today" — B1's reason, one construct over. */
+t("M1: `store.mjs` holds NO second watermark comparison — both readers call the "
++ "one exported rule, and the truncating helper they each defined is gone",
+  [[...SRC_STORE.matchAll(/enteredAfterFirstRow\(/g)].length,
+   [...SRC_STORE.matchAll(/const sec = /g)].length,
+   [...SRC_STORE.matchAll(/import \{ enteredAfterFirstRow \} from "\.\/airun\.mjs";/g)].length],
+  [2, 0, 1]);
+/* THE PIN IS ON THE HELPER AND NOT ON `slice(0, 19)`, and the reason is worth one
+   line: the superseded spelling is QUOTED in the corrections at both sites, so a
+   pin on the literal counts this file's own history as a defect — the shape
+   `hygiene.test.mjs` calls a detector matching the doctrine's own prose. The
+   helper's declaration is the thing that cannot survive in a comment and be
+   mistaken for code. TWO call sites — the content reader and the meaning reader —
+   and the import counted separately, so a reader that quietly stopped calling the
+   rule while the import stayed is still caught. */
+
+{
+  /* THE CORPUS IS PRINTED AND FLOORED. Every placement of the clock second (the
+     free variable the writers do not control) against every gap that matters,
+     in BOTH directions — a pair where the subject entered BEFORE the first row
+     and one where it entered after. */
+  const SECOND = 1000, STEP = 7;
+  const GAPS_SAME_SECOND = [-999, -900, -500, -100, -1, 0, 1, 100, 500, 900, 999];
+  const GAPS_BEYOND = [-2500, -1800, -1500, -1200, 1200, 1500, 1800, 2500];
+  const BASE = Date.parse("2026-09-24T12:00:15Z");
+  const iso = (ms) => new Date(ms).toISOString();
+  const cut = (ms) => iso(ms).split(".")[0] + "Z";      /* `#observe`'s own spelling */
+  /* THE SUPERSEDED RULE, VERBATIM from `store.mjs` before this item, so M4 measures
+     what actually shipped rather than a paraphrase of it. */
+  const shipped = (enteredAt, firstAt) => {
+    const sec = (v) => String(v).slice(0, 19);
+    return sec(enteredAt) >= sec(firstAt);
+  };
+  const answersFor = (rule, gap) => {
+    const seen = new Set();
+    for (let off = 0; off < SECOND; off += STEP) {
+      const rowTrue = BASE + off;                        /* where the clock second falls */
+      seen.add(rule(iso(rowTrue + gap), cut(rowTrue)));
+    }
+    return seen;
+  };
+  const placements = Math.ceil(SECOND / STEP);
+  const unstable = (rule, gaps) => gaps.filter((g) => answersFor(rule, g).size !== 1);
+  console.log(`  corpus: ${placements} placements of the clock second × `
+    + `${GAPS_SAME_SECOND.length} same-second gaps + ${GAPS_BEYOND.length} beyond `
+    + `= ${placements * (GAPS_SAME_SECOND.length + GAPS_BEYOND.length)} pairs per rule`);
+  t("M2a: THE CORPUS IS NON-EMPTY AND SWEEPS THE WHOLE SECOND — without this the "
+  + "arms below could pass over nothing at all",
+    [placements >= 100, GAPS_SAME_SECOND.length >= 8], [true, true]);
+
+  t("M2: A SAME-SECOND PAIR CLASSIFIES IDENTICALLY ON EVERY RUN — for every gap "
+  + "within one second, in either direction, the answer does not depend on where "
+  + "the clock second fell. This is the row's whole subject and BOB #32's condition",
+    unstable(enteredAfterFirstRow, GAPS_SAME_SECOND), []);
+
+  t("M2b: and the answer a same-second pair settles on is REC-94's tie — cause (3), "
+  + "not a withdrawal of it: the tie rests on simultaneity, and the shared clock "
+  + "second was only ever the proxy the stored precision allowed",
+    GAPS_SAME_SECOND.map((g) => [...answersFor(enteredAfterFirstRow, g)][0]),
+    GAPS_SAME_SECOND.map(() => true));
+
+  /* WHAT THIS RULE CANNOT DO, NAMED RATHER THAN SCORED ZERO — M-131's own ceiling
+     form. One second of uncertainty is in the STORED value and no comparison can
+     remove it; `c = -1000` moves the band off the pairs the writers produce, and
+     the band that remains is stated here so a later reader meets it as a known
+     cost rather than as a surprise. Closing it needs the watermark stored with
+     milliseconds, which `ISO_TS_RE` does not admit — an interface question, and
+     not this row's. */
+  t("M3: THE RESIDUAL BAND IS NAMED: the ONLY gaps whose answer still depends on "
+  + "the boundary are 1–2 s BEFORE the first row, and every one of them is that. "
+  + "Closing it needs a millisecond watermark, which is an interface question",
+    unstable(enteredAfterFirstRow, GAPS_BEYOND).sort((a, b) => a - b),
+    [-1800, -1500, -1200]);
+
+  /* THE ARM THAT MAKES M2 MEAN SOMETHING. */
+  /* DECLARED [-900, -500, -100] AND THE FIRST RUN ANSWERED [-900, -500, -100, -1].
+     CORRECTED HERE WITH THE REASON RATHER THAN WIDENED: a gap of ONE millisecond
+     before the first row is inside the shipped rule's band like any other — it was
+     left out of the declaration because a 1 ms gap reads like a tie, and under the
+     shipped rule a "tie" was never an equality of instants at all but a shared
+     clock floor. That is the item's whole subject arriving inside its own control
+     declaration, which is why it is recorded instead of smoothed. */
+  t("M4: THE SUPERSEDED RULE FAILS M2 ON THIS CORPUS — its band sits exactly on the "
+  + "same-second pair, which is D-486's measured flip reproduced here on purpose",
+    unstable(shipped, GAPS_SAME_SECOND).sort((a, b) => a - b), [-900, -500, -100, -1]);
+  t("M4b: AND A PLAIN `Date.parse` RE-SPELLING WOULD HAVE FIXED NOTHING — measured, "
+  + "not assumed: over the whole corpus it answers IDENTICALLY to the truncating "
+  + "form, because the stored watermark is already a whole second. The obvious fix "
+  + "is a no-op and would have passed review looking like the fix",
+    [...GAPS_SAME_SECOND, ...GAPS_BEYOND].filter((g) => {
+      for (let off = 0; off < SECOND; off += STEP) {
+        const rowTrue = BASE + off, e = iso(rowTrue + g), f = cut(rowTrue);
+        if (shipped(e, f) !== (Date.parse(e) >= Date.parse(f))) return true;
+      }
+      return false;
+    }), []);
+
+  t("M5: A WATERMARK THAT CARRIES A FRACTION IS COMPARED EXACTLY — the uncertainty "
+  + "is read off the VALUE, so the rule needs no edit if the stored precision ever "
+  + "moves, and REC-94's tie narrows to an equality of instants",
+    [watermarkUncertaintyMs("2026-09-24T12:00:15Z"),
+     watermarkUncertaintyMs("2026-09-24T12:00:15.900Z"),
+     enteredAfterFirstRow("2026-09-24T12:00:15.100Z", "2026-09-24T12:00:15.100Z"),
+     enteredAfterFirstRow("2026-09-24T12:00:15.099Z", "2026-09-24T12:00:15.100Z")],
+    [1000, 0, true, false]);
+  t("M5b: and a value the rule cannot parse never reaches the positive statement — "
+  + "the inverted default `causesNotRuledOut` takes one call up",
+    [enteredAfterFirstRow(null, "2026-09-24T12:00:15Z"),
+     enteredAfterFirstRow("2026-09-24T12:00:15.100Z", null),
+     enteredAfterFirstRow("not a date", "2026-09-24T12:00:15Z")],
+    [false, false, false]);
+}
+
+/* THROUGH THE OP, ON A STORE WITH AN EMPTY LOG — because a store-level agreement
+   and a caller-reachable one are different claims, and only one of them is what a
+   member actually gets. */
+{
+  const persist = mkdtempSync(join(tmpdir(), "d500-obs-"));
+  const solo = withSurfacingRun(new Miniflare({
+    modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "Store", useSQLite: true } },
+    durableObjectsPersist: persist,
+    r2Buckets: ["CAPTURES", "PUBLISHED"],
+    bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: TOK, PROBE_TOKEN: "prb-rec93",
+                VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" } }));
+  try {
+    const sPOST = async (q, b) => rP(await (await solo.dispatchFetch(`http://x/api/?${q}`,
+      { method: "POST", body: JSON.stringify(b ?? {}) })).json());
+    const sGET = async (q) => rP(await (await solo.dispatchFetch(`http://x/api/?${q}`)).json());
+    const MB = "INQ-2026-0924-d500-watermark";
+    const MSHA = "d".repeat(64);
+    const text = `---\nid: ${MB}\n---\n\n## What\n\nA capture nothing has read.\n`;
+    await sPOST(`op=promote&token=${ADM}`, {
+      bundleId: MB, base: null, snapKey: "20260924T120000Z_d500",
+      meta: { object_type: "inquiry", group: "believe-in-oakland",
+              title: "the watermark fixture", current_state: "open",
+              created: T0, last_updated: T0 },
+      files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text) }],
+      register: [{ sha256: MSHA, path: "data/d500.pdf", encoding: "binary", bytes: 10 }] });
+
+    const empty = await sGET(`op=frontier&token=${ADM}&level=content&limit=50`);
+    t("M6: AN EMPTY CONTENT LEVEL IS UNDETERMINED AND SAYS SO — with no row at this "
+    + "level at all the record cannot order the capture against a first row that "
+    + "does not exist, so §5.1's cause (2) bucket takes it and `not_ruled_out` "
+    + "names all three. It is NOT the positive statement",
+      [(empty.missing_unexplained || []).find((r) => r.subject === MSHA)?.missing_cause,
+       (empty.never_looked || []).some((r) => r.subject === MSHA)],
+      ["purged", false]);
+
+    const RUN_M = "RUN-2026-0924-d500";
+    await sPOST(`op=airunopen&token=${TOK}`, {
+      run: RUN_M, contextType: "inquiry", contextId: MB, label: "D-500's watermark",
+      mode: "check", principalClaude: "project",
+      principalClaudeRef: "believe-in-oakland/claude",
+      skillVersion: "investigative-session@1", biasManifest: null,
+      bounds: [{ bound: "fetches", allowed: 4, unit: "requests" }],
+      leaseMs: 600000, at: "2020-01-01T00:00:00Z" });
+    const tickM = await sPOST(`op=airuntick&token=${TOK}`, {
+      run: RUN_M, at: "2020-01-01T00:00:00Z", leaseMs: 600000, consume: { fetches: 1 },
+      log: [{ level: "content", subject: "observation:d500-watermark",
+              state: "LOOKED_ABSENT", detail: "the first content-level row this log holds" }] });
+    t("M6b: THE ARM IS ARMED — the watermark row really was appended, so the read "
+    + "below is measuring a moved watermark and not a no-op",
+      [tickM?.appended, (tickM?.refused || []).length], [1, 0]);
+
+    const after = await sGET(`op=frontier&token=${ADM}&level=content&limit=50`);
+    const row = (after.never_looked || []).find((r) => r.subject === MSHA);
+    t("M7: AND WITH A FIRST ROW EARLIER THAN THE REGISTRATION THE OP REACHES CAUSE "
+    + "(3) — §5.1's one cause that licenses a positive statement, through the op "
+    + "rather than at the store",
+      [row?.missing_cause, (after.missing_unexplained || []).some((r) => r.subject === MSHA)],
+      ["never_looked", false]);
+    t("M7b: THE SITE PIN — the op's answer IS the exported rule's answer on the op's "
+    + "OWN two timestamps, so the reader cannot drift from the rule without this "
+    + "going red",
+      [typeof row?.registered === "string",
+       row ? enteredAfterFirstRow(row.registered, "2020-01-01T00:00:00Z") : null],
+      [true, true]);
+    t("M7c: and the SAME registration, read against a watermark placed anywhere "
+    + "within a second of it, answers the same way — the op's real data driven "
+    + "through every boundary placement M2 sweeps synthetically",
+      row ? [...new Set([-999, -500, 0, 500, 999].map((d) => {
+        const base = Math.floor(Date.parse(row.registered) / 1000) * 1000 + d;
+        return enteredAfterFirstRow(row.registered,
+          new Date(base).toISOString().split(".")[0] + "Z");
+      }))] : null,
+      [true]);
+    /* WHAT THIS ARM CANNOT REACH, STATED — H6 and H11's form in the two sibling
+       suites. `register.registered` is stamped by `op=promote` from the wall clock
+       and no op sets it, so this section cannot place the watermark INSIDE the
+       registration's own second through the plane; M2 drives those placements on
+       the exported rule with the same two values the op passes, and M7b is what
+       ties the two together. */
+    t("M8: THE REACH OF M6–M7, STATED RATHER THAN ASSUMED: through the op this "
+    + "section reaches the empty level and a watermark EARLIER than the "
+    + "registration; it cannot place one inside the registration's own second, "
+    + "because no op sets `register.registered`. That placement is driven on the "
+    + "pure rule in M2 and tied to the op by M7b",
+      [typeof row?.registered === "string",
+       /op=promote/.test(SRC_STORE) && !/UPDATE register SET registered/.test(SRC_STORE)],
+      [true, true]);
+  } finally { await solo.dispose(); rmSync(persist, { recursive: true, force: true }); }
 }
 
 console.log(`\nobservation-log: ${pass} pass, ${fail} fail`);

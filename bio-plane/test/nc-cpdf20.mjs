@@ -44,6 +44,17 @@
  *       fails here means the suite is pinned to how the rule is written rather
  *       than to what it does.
  *
+ *   A7  RESTORE RAW `text.length` in `decodedChars` — the D-501 defect, put back.
+ *                                                                  MUST FAIL
+ *       Added 2026-09-24. The award is supposed to count GLYPHS; it counted the
+ *       whole string, whitespace and all, so a change to EITHER tier's newline
+ *       policy moved it with no glyph changing hands (D-481 moved tier 1's and
+ *       the margin on `legistar-73618` p1 fell 129 -> 77). This arm must fail on
+ *       the NEWLINE ARM by name — specifically on `strip`, which drops tier 1 to
+ *       486 against tier 2's 580 and hands the trap page to tier 2. If this arm
+ *       ever PASSES, the newline arm has stopped discriminating and D-501 should
+ *       be re-opened rather than the arm deleted.
+ *
  * A SURPRISING GREEN IS A FINDING ABOUT THE ARM. Recorded, never smoothed.
  */
 import { readFileSync, writeFileSync, copyFileSync, renameSync, existsSync, mkdirSync, rmSync } from "node:fs";
@@ -120,7 +131,9 @@ function sourceArm({ name, declared, from, to }) {
   const armedSha = sha(SUBJECT);
   const r = runSuite();
   const actual = r.code === 0 ? "PASS" : "FAIL";
-  const named = /73618|tier that produced|BYTE-IDENTICAL|fixture floor|perPageTier|tier 2 reports ZERO/.test(r.out);
+  /* D-501 added `newline policy` and `glyph count`: A7's failure lands on the
+     newline arm, which names neither the fixture page nor any earlier phrase. */
+  const named = /73618|tier that produced|BYTE-IDENTICAL|fixture floor|perPageTier|tier 2 reports ZERO|newline policy|glyph count/.test(r.out);
   console.log(`  ${name}  declared ${declared.padEnd(8)} actual ${actual.padEnd(5)} `
             + `(armed sha ${armedSha.slice(0, 8)}, exit ${r.code})`);
   if (actual === "FAIL") {
@@ -208,6 +221,15 @@ sourceArm({
   if (!(u2 < u1)) return "tier1";
   if (!(c2 > c1)) return "tier1";
   return "tier2";`,
+});
+
+/* ── A7 · D-501: the award back on RAW `text.length` ─────────────────── */
+sourceArm({
+  name: "A7", declared: "FAIL",
+  from: `  let n = 0;
+  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
+  return n;`,
+  to:   `  return page.text.length;   /* NC A7: the D-501 defect — whitespace counted as decoded */`,
 });
 
 /* ── the ledger ───────────────────────────────────────────────────────────── */

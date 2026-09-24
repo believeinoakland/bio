@@ -35,12 +35,56 @@
  * battery does that) and an absence is only as good as the names tried — which is why an
  * ABSENT claim should search under more than one. `uinone` sees LITERAL call sites only.
  *
+ * EVERY PROBE READS CODE WITH ITS COMMENTS BLANKED (M0-155, 2026-09-24), through the estate's one
+ * lexer — `stripComments` in `bio-plane/scripts/walkfloor.mjs`, which blanks comments and regex
+ * literals and KEEPS string literals, character-for-character so a line number still points at the
+ * source line. THE DEFECT IT CLOSES IS THE ONE `judge` ALREADY NAMES FOR ABSENCES, ARRIVING IN THE
+ * OTHER DIRECTION: three ABSENT claims once rested on a `hit` over the code's own comment saying the
+ * thing was missing, and when CPDF-19 built one of them its correction comment QUOTED the old
+ * sentence, so the probe passed on a fixed defect. `judge` answered that by refusing an ABSENT claim
+ * with no `none`/`uinone` search — but a `hit` under a BUILT claim could still be satisfied by a
+ * sentence in a comment, and a `none` under an ABSENT claim could still be FALSIFIED by one. A
+ * comment is prose, and prose is what drifted; a claim now stands on code or it does not stand.
+ *
+ * WHAT THE BLANKING CANNOT SEE, so nobody rediscovers it as a surprise:
+ *   - It applies to the JS-family extensions in CODE_EXT and to nothing else. A `.json`, `.md` or
+ *     text fixture is read RAW, because a JS lexer over prose blanks a `//` inside a URL. A probe
+ *     over such a file can still be satisfied by that file's own commentary — stated, not hidden.
+ *   - `civicos-ui/app.html` is lexed AS JAVASCRIPT, so an HTML comment (`<!-- … -->`) is NOT blanked:
+ *     a UI call commented out that way still reads as a call, and `uinone` would still see it.
+ *   - Regex literals go with the comments (walkfloor blanks both), so a `hit` naming text that lives
+ *     only inside a `/…/` in the source no longer matches. Measured on this tree: no probe did.
+ *
+ * AND A `hit` PINS EXACTLY ONE SITE, OR IT PINS NOTHING (M0-160, 2026-09-24). A `hit` used to be
+ * satisfied by its FIRST match and report that one line as evidence, so a pattern matching many
+ * sites read exactly like a pattern matching the right one. D-498's first probe, `limit: cap,
+ * truncated`, matched 24 TIMES in `store.mjs` and stayed green while the op it was written about
+ * was untouched by the change that should have moved it — the probe was pinned to whichever site
+ * came first in the file, which was not the construct's. So a `hit` now COUNTS its matches over
+ * every file in `in` and is ok only at exactly one: two sites means deleting the real one leaves
+ * the probe green, which is the same defect the blanking closes, one lexical home out. Measured on
+ * this tree the day it landed: 43 of 318 `hit` probes were ambiguous, and every one was re-aimed.
+ *
+ * WHAT THAT COSTS, stated rather than discovered: `in` is now ONE corpus that must hold exactly one
+ * site, so a multi-file `in` can no longer mean "in EITHER of these files" — it means "once across
+ * all of them". Nothing in the corpus used it the other way (measured: 1 of 318 `hit` probes had a
+ * multi-file `in`, `8.risk-tier`'s, and that one was ambiguous by any reading — one catalogue entry
+ * and three test assertions). A claim that really needs an either/or reads it as two claims or as a
+ * `count`. The counting is over the SAME blanked text every other probe reads, so a second match
+ * that lives only in a comment does not make a probe ambiguous.
+ *
  * NEGATIVE CONTROL: `node bio-plane/test/status.control.mjs` from the repo root.
  */
 
 import { readFileSync, existsSync, writeFileSync, realpathSync } from "node:fs";
-import { join } from "node:path";
+import { extname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+/* THE ESTATE'S ONE LEXER, imported STATICALLY on purpose. A dynamic import with a raw-text
+   fallback would make this tool quietly weaker wherever the lexer is missing, and a check that
+   cannot fail is worse than none (`docs/development/VERIFICATION.md`). Missing, it throws by
+   name. `status.test.mjs` §7 copies this tool into a scratch repository and so copies the lexer
+   and its two imports with it — the seam that would otherwise pay for this line. */
+import { stripComments } from "../bio-plane/scripts/walkfloor.mjs";
 
 export const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 export const DATA = "docs/architecture/construct-status.json";
@@ -75,10 +119,43 @@ function read(repo, rel) {
   }
   return cache.get(k);
 }
+/* The extensions whose `//` and slash-star spans are COMMENTS. A file outside this set is read
+   RAW by `readCode` — see the header's "WHAT THE BLANKING CANNOT SEE". `.jsonc` is in because
+   `bio-plane/wrangler.jsonc` is probed and JSONC comments are JS comments; plain `.json` is out
+   because JSON has no comments and lexing it could only lose something. */
+export const CODE_EXT = new Set([".mjs", ".js", ".cjs", ".html", ".jsonc"]);
+
+/* WHAT MAKES A `CREATE TABLE` A DECLARATION RATHER THAN A SENTENCE ABOUT ONE, spelled once so the
+   `table` probe and the census cannot disagree. A declaration is followed by its COLUMN LIST, or by
+   `USING` for a virtual table; a sentence is followed by an English word. THIS IS NOT A NEW IDEA and
+   it is not this item's invention — `test/hygiene.test.mjs:685` has harvested table names by
+   `IF NOT EXISTS\s+(\w+)\s*\(` for exactly this reason, and `src/schema.mjs` carries a comment
+   (§ around line 2293) recording that the sentence DESCRIBING a table's removal was itself parsed as
+   a table. Only this census stayed loose, so it counted TWO PHANTOMS, both measured by M0-155 on
+   2026-09-24: `does`, from store.mjs:833's `CREATE TABLE IF NOT EXISTS does nothing to a table that
+   already exists` (a JS comment, which comment-blanking removes), and `would`, from schema.mjs's own
+   `first read "because CREATE TABLE IF NOT EXISTS would rebuild ..."` (an SQL `--` comment INSIDE the
+   schema template literal, which is string content to a JS lexer and survives the blanking — so the
+   blanking alone could not have caught this one, and the shape had to close it). Tightened: 115 names
+   -> 114, `would` the only one dropped and nothing added. What it still cannot see is stated: a
+   declaration written with a comment between the name and its `(`. */
+const DECL = "CREATE\\s+(?:VIRTUAL\\s+)?TABLE\\s+IF\\s+NOT\\s+EXISTS\\s+";
+const DECL_TAIL = "\\s*(?:\\(|USING\\s)";
+const codeCache = new Map();
+/* WHAT EVERY PROBE READS. `stripComments` is length- and newline-preserving, so `lineOf` over this
+   still names the line in the real file — a probe's evidence keeps pointing at the source. */
+function readCode(repo, rel) {
+  const k = `${repo}\0${rel}`;
+  if (!codeCache.has(k)) {
+    const t = read(repo, rel);
+    codeCache.set(k, t === null || !CODE_EXT.has(extname(rel)) ? t : stripComments(t));
+  }
+  return codeCache.get(k);
+}
 const lineOf = (text, idx) => text.slice(0, idx).split("\n").length;
 
 function opsBlock(repo) {
-  const t = read(repo, "bio-plane/src/index.mjs");
+  const t = readCode(repo, "bio-plane/src/index.mjs");
   if (t === null) return null;
   const s = t.indexOf("const OPS = {");
   return s < 0 ? null : { text: t, start: s };
@@ -95,9 +172,9 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
              : { ok: false, evidence: `op=${p.op} is NOT in index.mjs's OPS table` };
   }
   if (p.table) {
-    const re = new RegExp(`CREATE\\s+(?:VIRTUAL\\s+)?TABLE\\s+IF\\s+NOT\\s+EXISTS\\s+${p.table}\\b`);
+    const re = new RegExp(`${DECL}${p.table}${DECL_TAIL}`);
     for (const f of ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]) {
-      const t = read(repo, f); if (t === null) continue;
+      const t = readCode(repo, f); if (t === null) continue;
       const m = re.exec(t);
       if (m) return { ok: true, evidence: `table ${p.table} (${f.split("/").pop()}:${lineOf(t, m.index)})` };
     }
@@ -108,22 +185,31 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
                                            : { ok: false, evidence: `${p.file} does NOT exist` };
   }
   if (p.hit) {
-    const re = new RegExp(p.hit, p.flags || "");
-    const fl = files(p.in); const missing = [];
+    /* EVERY match, not the first: a `hit` that matches twice pins neither site, so the count is the
+       verdict (M0-160 — the header's "A `hit` PINS EXACTLY ONE SITE"). `g` is forced on because the
+       claim may spell its own flags and `matchAll` requires it; a zero-width pattern still advances. */
+    const re = new RegExp(p.hit, (p.flags || "").includes("g") ? p.flags : `${p.flags || ""}g`);
+    const fl = files(p.in); const missing = []; const sites = [];
     for (const f of fl) {
-      const t = read(repo, f); if (t === null) { missing.push(f); continue; }
-      const m = re.exec(t);
-      if (m) return { ok: true, evidence: `/${p.hit}/ at ${f}:${lineOf(t, m.index)}` };
+      const t = readCode(repo, f); if (t === null) { missing.push(f); continue; }
+      for (const m of t.matchAll(re)) sites.push(`${f}:${lineOf(t, m.index)}`);
     }
-    return { ok: false, evidence: `/${p.hit}/ matches nowhere in ${fl.join(", ")}`
+    if (sites.length === 1) return { ok: true, evidence: `/${p.hit}/ at ${sites[0]}` };
+    if (sites.length === 0) return { ok: false, evidence: `/${p.hit}/ matches nowhere in ${fl.join(", ")}`
       + (missing.length ? ` (UNREADABLE: ${missing.join(", ")})` : "") };
+    const shown = sites.slice(0, AMBIGUOUS_SITES_SHOWN);
+    return { ok: false, ambiguous: true,
+      evidence: `/${p.hit}/ is AMBIGUOUS — ${sites.length} matches (${shown.join(", ")}`
+        + `${sites.length > shown.length ? `, +${sites.length - shown.length} more` : ""}), so it pins no site: `
+        + "delete the one this claim is about and the probe stays green. Re-aim it at a pattern that "
+        + "matches ONCE at the code that makes the claim true, verified at the code — never widen the claim to fit the probe" };
   }
   if (p.none) {
     const fl = files(p.in); const missing = [];
     for (const pat of p.none) {
       const re = new RegExp(pat, p.flags || "");
       for (const f of fl) {
-        const t = read(repo, f); if (t === null) { missing.push(f); continue; }
+        const t = readCode(repo, f); if (t === null) { missing.push(f); continue; }
         const m = re.exec(t);
         if (m) return { ok: false, evidence: `/${pat}/ FOUND at ${f}:${lineOf(t, m.index)} — "${m[0]}"` };
       }
@@ -134,7 +220,7 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
     return { ok: true, evidence: `none of ${p.none.map((x) => `/${x}/`).join(", ")} in ${fl.length} file(s)` };
   }
   if (p.uinone) {
-    const t = read(repo, "civicos-ui/app.html");
+    const t = readCode(repo, "civicos-ui/app.html");
     if (t === null) return { ok: false, evidence: "UNREADABLE: civicos-ui/app.html" };
     for (const op of p.uinone) {
       const re = new RegExp(`\\b(?:${UI_HELPERS.join("|")})\\(\\s*["'\`]${op}["'\`]`);
@@ -156,8 +242,8 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
     } else if (p.count === "tables") {
       const set = new Set();
       for (const f of ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]) {
-        const t = read(repo, f); if (t === null) return { ok: false, evidence: `UNREADABLE: ${f}` };
-        for (const m of t.matchAll(/CREATE\s+(?:VIRTUAL\s+)?TABLE\s+IF\s+NOT\s+EXISTS\s+([a-z_0-9]+)/g)) set.add(m[1]);
+        const t = readCode(repo, f); if (t === null) return { ok: false, evidence: `UNREADABLE: ${f}` };
+        for (const m of t.matchAll(new RegExp(`${DECL}([a-z_0-9]+)${DECL_TAIL}`, "g"))) set.add(m[1]);
       }
       n = set.size;
     } else return { ok: false, evidence: `unknown census: ${p.count}` };
@@ -165,7 +251,7 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
       : { ok: false, evidence: `census: ${n} ${p.count}, the claim says ${p.equals} — something was added or removed; review the ABSENT claims it could express, then update the count` };
   }
   if (p.keys) {
-    const t = read(repo, (p.in || [])[0] || "");
+    const t = readCode(repo, (p.in || [])[0] || "");
     if (t === null) return { ok: false, evidence: `UNREADABLE: ${(p.in || [])[0]}` };
     const i = t.indexOf(`export const ${p.keys} = {`);
     if (i < 0) return { ok: false, evidence: `${p.keys} is not declared in ${p.in[0]}` };
@@ -226,6 +312,9 @@ const CITE = /§\s*\d+(?:\.\d+)*\s+item\s+\d+/gi;
    CELL_CAP characters, at the last word boundary OUTSIDE backticks, and marked ` …` like any cut. The claim text is
    untouched: this is the rendering's limit, and no author rewords a claim to fit it. */
 export const CELL_CAP = 240;
+/* How many of an ambiguous `hit`'s sites the evidence names before it says "+N more". Enough to
+   re-aim from without printing 24 lines for one probe (M0-160). */
+export const AMBIGUOUS_SITES_SHOWN = 4;
 function capAtWord(head) {
   if (head.length <= CELL_CAP) return { text: head, cut: false };
   let tick = false, lastSpace = -1;
@@ -340,8 +429,11 @@ if (IS_CLI) {
     if (stale) console.log(`STALE  ${MAP} §3's state column differs from its rendering — run \`node tools/status.mjs --write\` and commit.`);
     if (r.missing.length) console.log(`MISSING  construct(s) ${r.missing.join(", ")} have no row in ${MAP} §3`);
     const probes = j.claims.reduce((a, c) => a + c.results.length, 0);
+    /* PRINTED UNCONDITIONALLY, including the 0 (M0-160): the row that accepts this guard reads
+       "0 ambiguous probes", and a figure that appears only when it is non-zero cannot be read. */
+    const ambiguous = j.claims.reduce((a, c) => a + c.results.filter((x) => x.ambiguous).length, 0);
     console.log(`status: ${j.claims.length} claims, ${probes} probes over ${j.data.constructs.length} constructs — `
-      + `${drift.length} drift${stale ? ", §3 STALE" : ""}${r.missing.length ? ", rows MISSING" : ""}`);
+      + `${drift.length} drift, ${ambiguous} ambiguous${stale ? ", §3 STALE" : ""}${r.missing.length ? ", rows MISSING" : ""}`);
     if (drift.length) console.log(`  Update ${DATA} to what the code says (and say why in the commit), or fix the code. Never delete a probe to pass.`);
     process.exit(drift.length || stale || r.missing.length ? 1 : 0);
   } else {

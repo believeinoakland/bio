@@ -194,15 +194,18 @@ for (const [code, , region] of SIX) {
      in for it — and the body is floored, because a slice that missed would make every test below
      vacuous. */
   const from = store.indexOf("  acknowledgeStatement({ draft = null");
-  /* CORRECTED 2026-09-24 BY REC-194, never exempted — and this arm's own FLOOR is what caught it, which
-     is the arm working. The slice was a FIXED 12,000 characters from the method's opening, and a
-     fixed-width window is not a method's body: REC-194 added ~2.5 kB of comment INSIDE
-     `acknowledgeStatement` (§3 rule 13's one-case-identity narrowing), the LAST of the seven refusals
-     fell outside the window, and the floor went RED rather than letting every arm below it go vacuous
-     while still reading true. The old assertion was not stale, it was WRONG about what it measured:
-     the window has to track the method, so the slice now ends at the last governed region's own END
-     marker. The floor still fails if the slice misses, and it no longer moves when somebody writes a
-     comment. */
+  /* CORRECTED TWICE IN ONE DAY BY TWO LANDINGS THAT NEVER SAW EACH OTHER, and that is the whole argument
+     for the resolution taken here. The slice was a FIXED 12,000 characters from the method's opening.
+     c20-batch23 (CONDUCT #20) raised it to 24,000 because REC-212 grew the body past it; REC-194 grew the
+     body past it independently, with ~2.5 kB of comment for §3 rule 13's one-case-identity narrowing.
+     Neither landing was wrong and neither could have known about the other — what is wrong is the
+     MEASURE: a fixed-width window is not a method's body, and a constant that has already failed twice in
+     a day will fail again the next time somebody writes a comment. So the window now ENDS AT THE LAST
+     GOVERNED REGION'S OWN END MARKER and tracks the method instead of a byte count. The floor below is
+     unchanged and still fails if the slice misses, which is what caught both landings rather than letting
+     the arms under it go vacuous while reading true — the arm working, both times. Kept from the other
+     resolution: its finding, recorded above, since the two together are what show the constant was the
+     defect. */
   const bodyEnd = store.indexOf("END DEC-49 REGION is-statement-ack-documents-bound", from);
   const body = from < 0 || bodyEnd < 0 ? "" : store.slice(from, bodyEnd);
   t("acknowledgeStatement's body was found, reaches its LAST governed region, and is long enough to hold "

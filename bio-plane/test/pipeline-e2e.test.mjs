@@ -344,8 +344,12 @@ t("the proposal's instance names the entitycreate entity_id (the finding traces 
  * open and appears in dispositions[].                                    *
  * ===================================================================== */
 console.log("\n=== STAGE 7: op=proposedispose ages the finding out of open (REC-7) ===");
+/* CORRECTED 2026-09-24 (REC-211): the act now binds the definition version the member READ and
+   refuses one that names none (NO_DEFINITION_VERSION) — so this call names the version standing for
+   its fixture. The assertion's subject is unchanged; what was wrong in the old call is that it was
+   admitted at all (BOB #32, framework 8.2). */
 const disp = await post("proposedispose", {
-  key: PROP_KEY, to: "dismissed",
+  key: PROP_KEY, to: "dismissed", definitionVersion: 1,
   reason: "these meetings fall under the consent calendar, so no separate agenda item was published",
 });
 t("op=proposedispose records the dismissal keyed on the SAME (progression_key, stage_key) proposals surfaced",

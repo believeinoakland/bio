@@ -86,7 +86,10 @@
    HC 97/1 judging 19, HO 98/0 judging 19.
    SUPERSEDED 2026-09-22 BY M0-110, AND KEPT AS THE RECORD: §1's live read and its floor left this suite for `coord.mjs`'
    ledger check LC-debt-token (BOB #28's ruling 2); `debt-floor.control.mjs` was re-pointed there (arms TL and TC), and
-   its run of record is on `coord.test.mjs`' NEGATIVE CONTROL line. */
+   its run of record is on `coord.test.mjs`' NEGATIVE CONTROL line.
+   RETIRED 2026-09-24 BY M0-140, AND KEPT AS THE RECORD: the DEBT construct is retired whole, so both floors and
+   the arms they guarded are gone, and `debt-floor.control.mjs` is DELETED with them (it patched `tools/coord.mjs`
+   at two anchors neither of which exists now). The runs above stand as what was measured on the day. */
 /* Planning-drift hygiene: the M0-6 gate, on D-113's precedent.
  *
  * The repository is the channel between sessions (CLAUDE.md). The PLAN is how a
@@ -134,7 +137,6 @@ import { readGitProvenance, repoPath, reportProvenance } from "../scripts/proven
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 /* M0-110: the live-row arms of this suite left the battery for `tools/coord.mjs`' ledger checks (see below). */
-import { debtTokenAudit } from "../../tools/ledger.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 const REPO = join(DIR, "..", "..");            // bio-plane/test -> repo root
@@ -198,41 +200,32 @@ const HEAD_SAYS = PROV.inHead === null
    What stays is BEHAVIOUR: each rule driven on a fixture, and each mechanism shown to be in the loop. The arm list is
    pinned below, so a moved arm cannot silently disappear from `coord.mjs`. */
 const COORD_SRC = read(join(REPO, "tools/coord.mjs"));
-const MOVED_ARMS = ["LC-queued-refs", "LC-debt-token", "LC-row-design", "LC-delegations"];
+/* CORRECTED 2026-09-24 by M0-140: `LC-debt-token` was in this list. It is retired with the construct, and a pin
+   that asserts a retired arm still exists is a pin that fails for the right reason at the wrong moment — or, if the
+   arm were merely renamed, one that passes while nothing checks. It leaves the list in the same act that deletes §1
+   below, which is the arm it paired with. */
+const MOVED_ARMS = ["LC-queued-refs", "LC-row-design", "LC-delegations"];
 t("every live-row arm this suite gave up is an arm of coord.mjs' ledger checks (none dropped)",
   MOVED_ARMS.filter((id) => !COORD_SRC.includes(`await arm("${id}"`)), []);
 
-/* --------------------------------------- 1. every open DEBT row has a token */
-/* The exact predicate plancheck.mjs enforces, ported so a session that runs only
-   the battery gets the identical gate. A row is fine if its LAST cell begins with
-   a disposition token OR reads as resolved. */
-console.log("\n--- every open DEBT row carries a disposition token (the rule, on a fixture) ---");
-{
-  /* CORRECTED 2026-09-22 by M0-110: this section PORTED plancheck's inline predicate and ran it over the LIVE DEBT.md.
-     The predicate is now ONE function, `ledger.mjs`' `debtTokenAudit`, which plancheck §2 and the coord ledger check
-     LC-debt-token both call; the live run is LC-debt-token's. Here the rule is driven on a fixture, each edge a row. */
-  const FIXD = [
-    "| D-1 | gap | 2026-09-18 | a milestone token | M3 · open |",
-    "| D-2 | gap | 2026-09-18 | doctrine | DOCTRINE — held as a standing rule |",
-    "| D-3 | gap | 2026-09-18 | a resolved verb, lower case | closed 2026-09-18 by the fixture |",
-    "| D-4 | gap | 2026-09-18 | NO token and NO resolution | open, and nobody said where it goes |",
-    "| D-5 | gap | 2026-09-18 | not ours | NOT OURS — the City's |",
-    "| D-6 | gap | 2026-09-18 | a pipe \\| in the body | BOB's call |",
-  ].join("\n");
-  const fa = debtTokenAudit(FIXD);
-  t("the fixture parses as six DEBT rows", fa.rows, 6);
-  t("exactly the row with no token and no resolved verb fails, by id — and the token is read from the LAST cell",
-    fa.bad.map((b) => b.id), ["D-4"]);
-  const PC = read(join(REPO, "tools/plancheck.mjs"));
-  t("ONE predicate: plancheck §2 and the coord ledger check both call debtTokenAudit, and plancheck spells no TOKEN of its own",
-    [/debtTokenAudit\(/.test(PC), /debtTokenAudit\(/.test(COORD_SRC), /const TOKEN = /.test(PC)], [true, true, false]);
-  const rows = [];
-  /* CORRECTED 2026-09-22 by M0-109, not exempted — the same defect as `ledger.test.mjs` §3's floor, found by that item's
-     class sweep: `>= 20` measured the ledger's SIZE where this check needs only NON-VACUITY, and LED-7's fold drains
-     DEBT.md on purpose (WORK-PIPELINE.md §3), so at 19 rows the fold's own progress would have failed every gate here.
-     ZERO rows still FAILS HERE BY NAME: when LED-7 archives DEBT.md whole (once empty), that same landing re-points or
-     retires this check, and it is never left to pass over nothing. */
-}
+/* --------------------------------------- 1. RETIRED — every open DEBT row had a token */
+/* §1 WAS HERE, and is RETIRED by M0-140 (2026-09-24) with the DEBT construct. It drove, on a fixture, the rule that
+   every open `| D-n |` row's LAST cell begins with a disposition token or reads as resolved — six rows, each an
+   edge, with exactly the untokened one failing by id — and pinned that plancheck §2 and LC-debt-token both called
+   the ONE predicate, `ledger.mjs`' `debtTokenAudit`, rather than spelling a TOKEN of their own.
+
+   ALL THREE of those callers are retired in this landing, `debtTokenAudit` among them, so this section cannot be
+   re-pointed: there is no predicate left to drive and no open DEBT row left to judge. It is DELETED rather than
+   left passing over a fixture, because a rule nothing enforces, driven on a fixture that proves it still parses, is
+   the exempted test this estate refuses — it would report six green assertions about a check no gate runs.
+
+   The floor it carried is the reason this is safe to delete now. M0-109 corrected it from `>= 20` (which measured
+   the ledger's SIZE, and would have reddened every gate as LED-7's fold drained the file on purpose) to a
+   NON-VACUITY floor that FAILED BY NAME at zero rows — explicitly so that the fold's last act could not pass
+   silently, and explicitly saying that the landing archiving DEBT.md whole would re-point or retire it. This is
+   that landing. The rule's successor is structural and needs no fixture: there is no side list for a defect to be
+   invisible in, and a defect's placement in the build plan IS its disposition (CLAUDE.md §4, WORK-PIPELINE §3).
+   `MOVED_ARMS` above drops LC-debt-token in the same act, so the pin cannot go on asserting an arm nobody has. */
 
 /* ---------------------------- 2. every QUEUED <ID> reference names a real item */
 /* A status marker's `QUEUED <ID>` (and the prose "QUEUED as <ID>") must point at

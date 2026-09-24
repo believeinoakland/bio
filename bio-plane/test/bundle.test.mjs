@@ -30,9 +30,13 @@ const j = async (p) => (await (await mf.dispatchFetch("http://x" + p)).json());
 const st = await j("/?op=selftest&token=probe-local-fixture-2026");
 console.log("selftest bindings:", JSON.stringify(st.bindings));
 const lf = await j("/?op=livefire&token=probe-local-fixture-2026");
-console.log("livefire:", lf.summary, "ok:", lf.ok);
+/* D-506 (IC-265): `ok` is the op ANSWERING; the canary's answer is `verdict`, named by `failing`. */
+console.log("livefire:", lf.summary, "answered:", lf.ok, "verdict:", lf.verdict,
+            lf.failing?.length ? "failing: " + lf.failing.join(" · ") : "");
 for (const a of lf.assertions) if (!a.ok) console.log("  FAIL", a.name);
 const d1 = await j("/?op=promote&token=probe-local-fixture-2026&store=bio");
 console.log("confinement:", d1.error || "ALLOWED (DEFECT)");
 /* M0-67 / D-425's sweep: `ALLOWED (DEFECT)` above was printed and not exited on. */
-await mf.dispose(); process.exit(lf.ok && d1.error ? 0 : 1);
+/* D-506: keyed to the VERDICT. `ok` is true whenever the op answered, so an exit reading it would be
+   green over a bundled artifact whose canary found a defect — this suite's whole purpose. */
+await mf.dispose(); process.exit(lf.verdict === "pass" && d1.error ? 0 : 1);

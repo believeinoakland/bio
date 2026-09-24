@@ -2251,7 +2251,11 @@ const SURFACES = {
        ARM A's fiction check forbids naming an act the plane did not publish. It now names them. */
     acts: ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
            "projectownerremove", "projectownerrescue"],
-    reads: ["projectparticipants", "projectownerarith", "projection"],
+    /* UI-92: `casedrafts` (REC-198, IC-243) is read HERE and nowhere else — the list of the
+       project's draft cases belongs to the workspace, and the review-copy surface keeps the
+       DRAFT itself at its own address. So the read is declared on the surface that performs
+       it; `review-copy`'s `reads` are unchanged. */
+    reads: ["projectparticipants", "projectownerarith", "projection", "casedrafts"],
   },
   action: {
     routes: ["object:action", "hash:action"],
@@ -7877,7 +7881,7 @@ function actNamed(acts, id){ return (acts||[]).find(a=>a && a.id === id) || null
    moves; and it would be the FIRST position-gate in a file whose roster-act table
    deliberately holds none ("position-enforced by the store", seven acts, with the
    reason given). That is its own item's worth of consequence, and half-building it inside a
-   surfaces item is how a fence ends up tighter than its rule. It is in `DEBT.md`
+   surfaces item is how a fence ends up tighter than its rule. It is a debt row
    with the cost and the closing move. What this section does in the meantime is
    the honest thing a statement can do: say the rule, so that a reader is not
    told by silence that it does not exist.
@@ -8821,6 +8825,72 @@ function projectContentsHtml(refs, back){
     ? `<div class="card" style="padding:4px 18px">${rows.join("")}</div>${surfacedByNoteHtml(true)}`
     : `<div class="empty">Nothing is in this project yet: it cites nothing and nothing in the record points at it.</div>`;
 }
+/* ============================================================
+   UI-92 · THE DRAFTS OF A CASE THIS PROJECT HOLDS.
+
+   DESIGN: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, and §3 rule 15 (a)
+   (BOB #32, 2026-09-23 23:08Z) — *"a list read of a project's drafts, fenced
+   exactly like reading one draft"*. The plane's list is REC-198's `op=casedrafts`
+   (IC-243, I3 MINOR, ADDITIVE), and this page is its first and only caller.
+
+   WHY IT IS ON THE WORKSPACE. Until REC-198 nothing could NAME a project's
+   drafts: every read of `case_drafts` was keyed on `draft_id`, so a draft whose
+   address was lost was a lost draft, and UI-68 measured exactly that and recorded
+   it as the surface's own gap. A member goes looking for the project's working
+   material on the project, so the list belongs on the workspace — the draft
+   itself keeps its own address (`#draft/<id>`) and this page opens it there
+   rather than rendering any part of it here.
+
+   NOTHING BELOW IS COMPUTED. The rows are the plane's rows in the plane's order;
+   the case identity is the plane's own sentence (`case.identity` — the edition
+   read from the published record, never stored and never re-derived here); the
+   bound is the plane's APPLIED `limit` beside its own `total` and `truncated`,
+   said rather than left to be inferred; and a refusal is the plane's words
+   through `actRefusalHtml`. This page never filters the list and never decides
+   who may see it: the fence is the single read's own predicate
+   (`Store#seesProjectDrafts`), and a caller it refuses receives the single read's
+   dead answer — one answer for a project that does not exist and one this
+   credential may not see alike, which is why nothing here says which it was.
+
+   AND IT IS SHOWN ON THE SKELETON TOO — decided here, and the reason is the
+   record's rather than this page's. The invited-not-joined member is withheld who
+   is working on the project, its work product and its ownership arithmetic (7.9,
+   above), and all three are GOVERNANCE. The plane admits every participant,
+   invited or joined, to BOTH draft reads (`viewerPredicate` draws no line between
+   them, and REC-198's IC measured the admission caller by caller), so an invited
+   member holding a draft's address can already open it. Withholding the LIST here
+   would be this page inventing a fence the record does not have, while leaving
+   the door it fences standing open. */
+const PROJECT_DRAFTS_HEADING = `<h2 class="sec">Drafts of a case</h2>
+  <p class="subj-note">A draft of a case is written before anything is published, and can be shown to a named person to read and comment on without leaving this group&rsquo;s record. These are the drafts this project holds, listed by the record itself; opening one opens the draft.</p>`;
+function projectDraftsHtml(ask){
+  if(!ask) return "";
+  if(!ask.accepted) return actRefusalHtml(ask.refusal);
+  const r = (ask.result && typeof ask.result === "object") ? ask.result : {};
+  const rows = (Array.isArray(r.drafts) ? r.drafts : []).filter(d => d && typeof d === "object" && d.draft_id);
+  if(!rows.length)
+    return `<div class="empty" data-project-drafts="0">No draft of a case has been made in this project. A draft is what a review copy is taken from, and until one is made there is nothing here to list.</div>`;
+  /* The bound, in the plane's own figures. A list that quietly showed the first
+     few would be a claim that those are all of them. */
+  const total = Number.isInteger(r.total) ? r.total : null;
+  const bound = (r.truncated === true && total !== null)
+    ? `<p class="subj-note">This project holds ${esc(String(total))} drafts and this list shows the first ${esc(String(rows.length))}, the bound the record applied to its own answer.</p>`
+    : "";
+  const body = rows.map(d => {
+    const c = (d.case && typeof d.case === "object") ? d.case : {};
+    const identity = typeof c.identity === "string" && c.identity ? c.identity : "";
+    const when = d.updated_at ? fmtWhenFull(d.updated_at) : (d.created_at ? fmtWhenFull(d.created_at) : "");
+    const who = d.updated_by || d.created_by || "";
+    const line = [identity, who ? `last written by ${who}` : "", when].filter(Boolean).join(" · ");
+    return `<div class="linkrow" onclick="rvcOpen(${esc(JSON.stringify(String(d.draft_id)))})">`
+      + `<span class="lt mono">${esc(String(d.draft_id))}</span>`
+      + `<span class="ln">${esc(line)}</span></div>`;
+  }).join("");
+  /* `data-project-drafts` carries the count the section DREW, so a harness can find this section and measure
+     its reach without keying on a heading's wording — an instrument pinned to a sentence fails correct work in
+     a spelling nobody anticipated, which is what this file's own over-strictness arm is for. */
+  return `${bound}<div class="card" data-project-drafts="${rows.length}" style="padding:4px 18px">${body}</div>`;
+}
 /* One click, the right surface: a question opens the QUESTION page, a project
    opens its own workspace, everything else opens as a document. */
 function openByType(id, type){
@@ -8987,6 +9057,14 @@ async function openProjectWorkspace(id, fromNav){
     const contents = backErr ? errPane(backErr)
                              : projectContentsHtml(refs, (back && back.backlinks) || []);
 
+    /* THE PROJECT'S DRAFT CASES (UI-92, §6A.4). Asked with the rest of this
+       page's reads and AFTER the visibility gate cleared — 7.9's discipline, and
+       this read is no exception even though it carries the single draft read's
+       own fence. `actAsk` rather than `recR` because the plane's answer to a
+       caller that fence refuses is the single read's DEAD ANSWER: a refusal to
+       RENDER in the plane's words, never an error of this page's. */
+    const drafts = await actAsk("casedrafts", { project: id });
+
     const controls = projectRosterBarHtml(pos);
     /* AND WHETHER A JOB IS RUNNING ON THIS PROJECT (UI-49, §14a). ASKED AFTER
        THE VISIBILITY GATE CLEARED, with the rest of this page's reads — 7.9's
@@ -9013,6 +9091,8 @@ async function openProjectWorkspace(id, fromNav){
     if(pos.invited){
       $("#content").innerHTML = `${header}
         <h2 class="sec">What is in this project</h2>${contents}
+        ${PROJECT_DRAFTS_HEADING}
+        ${projectDraftsHtml(drafts)}
         <h2 class="sec">Who is working on this</h2>
         <p class="subj-note">You have been invited to this project and have not joined it. Until you do, this page shows you the project's skeleton &mdash; that it exists, what it is for, and what is in it &mdash; and does not show you who is working on it, the state of its work product, or how its ownership changes hands. Joining is one act and it is below.</p>
         ${controls}`;
@@ -9034,6 +9114,8 @@ async function openProjectWorkspace(id, fromNav){
       <h2 class="sec">What is in this project</h2>
       <p class="subj-note">The questions, documents and actions this project carries. What each one RESTS ON, how strong it is and what it concluded live on the question itself, one click away: a project is a container with membership and access control, and a question is a claim structure &mdash; this page does not answer for the other.</p>
       ${contents}
+      ${PROJECT_DRAFTS_HEADING}
+      ${projectDraftsHtml(drafts)}
       <h2 class="sec">Who is working on this</h2>
       <p class="subj-note">Every participant of this project, read in one call from the record. Every participant sees the handles of all the others (Section 7.8).</p>
       ${projectParticipantsHtml(pos)}
@@ -14280,7 +14362,16 @@ async function queueApplySet(op, shared){
   const ids = queueSelFor(op);
   try{
     if(!ids.length) return;
-    const items = ids.map(id => op === "proposedispose" ? { key: queueFindingKey(QUEUE_ITEMS.get(id)) } : { id });
+    /* REC-211 / IC-273: a progression disposition BINDS THE VERSION OF THE DECLARED FLOW THIS
+       PAGE WAS SHOWING (framework 8.2, BOB #32). It is sent per ITEM, not once for the set, because
+       a selection can span progressions standing at different versions; it is taken off the item's
+       own published `disposition` block — the same block the key comes from — and never composed or
+       re-read here. A set that names a version the record has since revised is RETAINED with the
+       plane's own DEFINITION_MOVED words, exactly as a missing reason already is. */
+    const items = ids.map(id => op === "proposedispose"
+      ? { key: queueFindingKey(QUEUE_ITEMS.get(id)),
+          definitionVersion: queueDispositionVersion(QUEUE_ITEMS.get(id)) }
+      : { id });
     const res = await recPostR(op, { ...(shared || {}), items });
     const outs = (res && Array.isArray(res.items)) ? res.items : null;
     if(!outs){ QUEUE_SET_ERR = queueReason(res); return; }
@@ -14678,6 +14769,14 @@ function queueEntryControlsHtml(it){
    (progression, stage) — so nothing here re-reads op=proposals to aggregate the
    same thing a second time. */
 function queueFindingKey(it){ return String((it && it.id) || "").replace(/^FINDING::/, ""); }
+/* REC-211 / IC-273: the version `op=proposedispose` now binds, read in ONE place off the plane's own
+   `disposition` block. A finding the plane published no version for sends null and is refused by the
+   record in its own words, which is the shape this surface already takes everywhere: the page does
+   not invent a version, and it does not compute the refusal for one it lacks. */
+function queueDispositionVersion(it){
+  const d = (it && it.disposition) || null;
+  return (d && Number.isInteger(d.definition_version)) ? d.definition_version : null;
+}
 function queueFindingAsProposal(it){
   const b = (it && it.basis) || {};
   return { key: queueFindingKey(it),
@@ -14686,6 +14785,9 @@ function queueFindingAsProposal(it){
     required: null, n: Number.isFinite(b.n) ? b.n : 0,
     grade: b.grade ?? null, grade_determined: b.grade_determined !== false,
     surfaced_by: b.surfaced_by || "machine", instances: [],
+    /* REC-211: carried so the single act sends the same version the set act does, from the same
+       published block — two send paths reading one field rather than two answers. */
+    definition_version: queueDispositionVersion(it),
     /* The producer's own sentence, so the act dialog quotes the record rather
        than a sentence this browser composed. */
     summary: it.summary || null };
@@ -17134,7 +17236,13 @@ async function doProposalDispose(){
   const key = PROP_ACT.key, to = PROP_ACT.to, reason = PROP_ACT.reason.trim();
   PROP_ACT.busy = true; PROP_ACT.refusal = null; proposalActPaint();
   try{
-    const out = await recPostR("proposedispose", { key, to, reason });
+    /* REC-211 / IC-273: the version the member was actually reading, off the proposal this dialog
+       was opened on (op=proposals publishes it; a finding opened from the queue carries it through
+       queueFindingAsProposal). Never the current version fetched now — that is precisely the
+       substitution BOB #32 ruled against, and it would make this page the thing that hid a revision. */
+    const out = await recPostR("proposedispose", { key, to, reason,
+      definitionVersion: (PROP_ACT.proposal && Number.isInteger(PROP_ACT.proposal.definition_version))
+        ? PROP_ACT.proposal.definition_version : null });
     if(!PROP_ACT || PROP_ACT.key !== key) return;
     PROP_ACT.busy = false;
     if(out && out.ok === false){ PROP_ACT.refusal = out; proposalActPaint(); return { refused:true, reason: out.reason }; }
@@ -20734,15 +20842,32 @@ function pubFooterHtml(c, floors){
    the plane said is selection; the sentence is never edited, and the code still
    reaches the reader whenever it is all the plane sent.
    AND WHERE IT IS PUT ON THE PAGE IS PART OF NOT EDITING IT. The plane's
-   refusals do not all end in a full stop — "verify requires sha256=<64 lowercase
-   hex>" and "unknown op" do not — so a sentence of this surface's own set
-   directly after one of them runs the two together and a reader gets a single
-   ungrammatical run of text with no way to tell where ours stops and theirs
-   starts. The gate has never had this problem because `teach()` puts the plane's
-   sentence in `#g-err` ALONE, which is the precedent followed here: this
+   refusals do not all end in a full stop — so a sentence of this surface's own
+   set directly after one of them runs the two together and a reader gets a
+   single ungrammatical run of text with no way to tell where ours stops and
+   theirs starts. The gate has never had this problem because `teach()` puts the
+   plane's sentence in `#g-err` ALONE, which is the precedent followed here: this
    surface's own words come FIRST and complete, and the plane's follow behind an
    explicit attribution, in their own element. Adding punctuation to the plane's
-   sentence would have been the easy fix and is exactly the edit DEC-8 forbids. */
+   sentence would have been the easy fix and is exactly the edit DEC-8 forbids.
+   **THE TWO EXAMPLES THAT STOOD HERE ARE CORRECTED 2026-09-24 (UI-100), NOT
+   DELETED, AND THE CONCLUSION IS UNCHANGED.** They were "verify requires
+   sha256=<64 lowercase hex>" and "unknown op", and both were true of the wire
+   when this was written. D-278 (2026-09-23) gave BOTH of those refusals a DEC-49
+   code and a CANNED TRANSLATION — C-61.1 through `requiredArgument` and C-69.1
+   through `dispatchRow` — and `refusalWords`, which `planeSaid` now goes
+   through, renders the translation FIRST. Every canned sentence in the catalogue
+   ends in a full stop, so the two sentences this comment cited as the problem
+   are no longer what a member reads, and the reader who checked them against the
+   plane would have found the account of the wire false. THE LAYOUT RULE STILL
+   HOLDS AND IS WHY THE CORRECTION IS A CORRECTION RATHER THAN A DELETION: this
+   function is reached by refusals from the whole catalogue, and `refusalWords`
+   falls through to `detail` and then to `error` whenever a code has no canned
+   translation — which is the overwhelming majority of them (UI-84 measured two
+   of 592 gaining one). A refusal with no sentence of its own still arrives here
+   as a bare SCREAMING_SNAKE code, which ends in no punctuation at all. So the
+   rule is not weakened by D-278; it is only no longer illustrated by the two
+   refusals that used to illustrate it. */
 function planeSaid(x){
   if(!x || typeof x !== "object") return "";
   /* UI-73: the sentence is `refusalWords`' (DEC-49's canned translation

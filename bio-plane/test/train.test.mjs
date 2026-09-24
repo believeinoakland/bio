@@ -30,6 +30,8 @@
  * AND THE GUARD'S OWN LIMIT IS DRIVEN, NOT IMPLIED CLOSED: forging the trailer, the train record and a GREEN gate
  * record by hand PASSES the `main` arm (section 8) — the mark proves a procedure, never an actor.
  *
+ *   - M0-159: a train that refuses EVERY `--drop` passes the refusal arm, so the valid comma list is asserted to LAND
+ *     the branch it did not name and to leave the two it did WAITING on the remote, read from the remote.
  * NEGATIVE CONTROL: `node bio-plane/test/train.control.mjs` from the repo root, each arm ALONE against pristine copies
  * restored by sha256 AND `cmp` —
  *   (1) the guard's `main` arm dropped (its call site in `run`) -> "A LANE'S DIRECT PUSH TO main IS REFUSED BY NAME"
@@ -51,6 +53,25 @@
  *       NOT EMPTY"; the train and the reuse arm hold.
  *   (9) M0-131 — THE VERDICT IGNORED (the never-cached run happens; the reused tree reads GREEN) -> the refusal FAILS
  *       (no "RED at plane:carry.test.mjs", nothing returned by name) while "THE DERIVED SET IS NOT EMPTY" holds.
+ *  (10) M0-159 — THE REFUSAL DROPPED (the silent ignore restored: an unmatched --drop entry is accepted and drops
+ *       nothing) -> "A --drop ENTRY NAMING NO BRANCH REFUSES THE TRAIN BY NAME" FAILS; the comma split, the
+ *       over-strictness arm and the bare-flag refusal hold.
+ *  (11) M0-159 — THE COMMA SPLIT DROPPED (a --drop value is one branch name again) -> "A VALID COMMA LIST DROPS EACH
+ *       BRANCH IT NAMES" FAILS, and the OVER-STRICTNESS arm with it (both lists are now unmatched entries, which the
+ *       refusal — still armed — catches); the refusal arm itself holds, which is what tells the two halves apart.
+ *  (12) M0-159 — THE BARE-FLAG CHECK DROPPED (`--drop` last on the line is read as if never typed) -> "A FLAG WITH NO
+ *       VALUE AFTER IT IS REFUSED BY NAME" FAILS; the refusal, the comma split and the over-strictness arm hold.
+ *   RUN 2026-09-24 by the M0-159 worker, ALL TWELVE AS DECLARED: baseline 61 pass / 0 fail, closing 61 / 0, driver
+ *   106 pass / 0 fail, 12 of 12 arms run, every restore byte-identical by sha256 and `cmp`, pen removed; failing counts
+ *   per arm 9, 1, 1, 25, 7, 5, 5, 4, 1, 2, 3, 1. Arm 4's count moved 22 -> 25 because this section's three landing
+ *   assertions cascade with every other train when the trailer is dropped — the arm working, on fixtures of their own.
+ *   TWO OF ARM 10's DECLARATIONS CAME BACK WRONG ON ITS FIRST RUN AND ARE RECORDED RATHER THAN SMOOTHED, BOTH DEFECTS
+ *   IN THE SUITE THIS CONTROL FOUND: (a) "...it names what it COULD have dropped" did NOT fail, because the train logs
+ *   `WAITING <branch>` for every waiting branch, so a train that MERGED instead of refusing contained all three names
+ *   for free — an equality that costs nothing to produce; the assertion now reads the REFUSAL's own
+ *   `What it could drop:` list and nothing else. (b) "A FLAG WITH NO VALUE AFTER IT IS REFUSED BY NAME" went red as a
+ *   CASCADE, not collateral: with the refusal disarmed, the unmatched-entry train LANDED and moved `main` under an
+ *   assertion that shared its fixture; that arm now drives a fixture of its own, which is why this section has three.
  *   RUN 2026-09-23 by the M0-131 worker, all nine AS DECLARED: baseline 53 pass / 0 fail; failing counts per arm 9, 1, 1,
  *   22, 7, 5, 5, 4, 1; every restore byte-identical by sha256 and `cmp`, closing 53 / 0, driver 78 pass / 0 fail. Arm 7
  *   is the row's control: the bad merge landed. FOUND BY ARM 9, re-run alone: main still did NOT move — the never-cached
@@ -68,6 +89,28 @@
  *   red because every refused train leaves the earlier sections' branches WAITING, so the "lone" branch shares its
  *   train — a cascade of the arm, not collateral; the declaration now names only arms that run no train.
  */
+/* NEGATIVE CONTROL: RAN 2026-09-24 by the M0-154 worker, by hand, over the DERIVED fixture copy list
+ * (`test/gatedeps.mjs`). Declared before arming; each arm ALONE, the other three suites held open; every
+ * restore by `cp` from a uniquely-named pristine copy, verified by sha256 AND `cmp` AND a byte count.
+ *   BASELINE (this tree, before the arms): train.test.mjs 53 pass / 0 fail.
+ *   (A1) ACCEPTS-WHEN — `tools/m0154probe.mjs` added and imported by `tools/gates.mjs`. MUST NOT fail:
+ *        all four suites GREEN, each fixture's printed `gatedeps:` list one file longer. ACTUAL: green
+ *        (gates 96/0, gateresults 52/0, entries 59/0, train 53/0), every list carrying `tools/m0154probe.mjs`.
+ *   (A2) THE CONTROL THE ROW NAMES — A1 still armed, and `gates.test.mjs`'s HAND copy list restored verbatim.
+ *        MUST fail, BY NAME, at "the fixture carries the REAL … (DERIVED)". ACTUAL (in `gates.test.mjs`,
+ *        the suite armed): 24 pass / 72 fail, that assertion first and naming the file —
+ *        `want [true,true,true,[]] got [true,true,true,["tools/m0154probe.mjs"]]`.
+ *   (A2') A FINDING ABOUT THE ARM, not smoothed: A2's FIRST run threw `ENOENT` out of the assertion and
+ *        ended the module with NO TALLY AT ALL — a control that dies proves nothing (`kickoffs/WORKER.md`).
+ *        `missingFrom` below is that correction; A2 as recorded is the re-run against it.
+ *   (A3) OVER-STRICTNESS — the same import written three ways the derivation was not written against:
+ *        `await import("./m0154probe.mjs")`, `export { … } from "./m0154reexport.mjs"`, and an
+ *        `import … from "./m0154absent.mjs"` inside a COMMENT whose target EXISTS on disk. MUST pass, and
+ *        MUST copy the first two and NOT the third. ACTUAL: exactly that; gates 96/0, entries 59/0.
+ *   (A4) THE HELPER'S OWN REFUSALS, driven directly: a `without` naming a file outside the closure THROWS
+ *        (a stale exclusion cannot outlive its import); a missing root THROWS; `const IMPORT_RE` renamed in
+ *        a scratch copy of `tools/gates.mjs` THROWS naming the line. All three as declared.
+ */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
@@ -76,9 +119,30 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { install, readRuns, appendRun, trainDir, HOOK_MARKER } from "../../tools/pushguard.mjs";
+import { gateDeps } from "./gatedeps.mjs";     /* M0-154: the fixture's copy list is DERIVED, never kept by hand */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
+/* M0-154 · WHAT THE FIXTURE CARRIES, DERIVED FROM `tools/gates.mjs`'s OWN IMPORTS, transitively, by the
+   ONE shared helper — never a hand list here, which is the D-93 defect and cannot fail when it falls
+   behind (`gates.mjs` loads each of these under a `try` and DEGRADES rather than crashing, so a missing
+   copy silently weakens every assertion below). ONE derived dependency is deliberately NOT carried,
+   `tools/gateresults.mjs`, and `without` is checked against the closure so the exclusion cannot outlive
+   the import it names. Both reasons MEASURED 2026-09-24: (1) its mere PRESENCE turns the per-unit record
+   on — `PER_UNIT_ON` in `gates.mjs` is `isFile(tools/gateresults.mjs)` — armed, this suite stayed green, so the exclusion rests on (2) alone. (2) this suite hands the
+   fixture's gate `process.env` whole, so under a real outer gate the fixture would inherit
+   `BIO_GATE_RESULTS_REMOTE` and write its own PASS records to the OUTER gate's results remote: the
+   incident `gateresults.test.mjs` records against itself, which only its `CLEAN_ENV` prevents. */
+const GATE_DEPS = gateDeps({ repo: REPO, roots: ["tools/gates.mjs", "tools/train.mjs"], without: ["tools/gateresults.mjs"] });
+console.log(`gatedeps: train.test.mjs fixture carries ${GATE_DEPS.length} derived file(s) — ${GATE_DEPS.join(", ")}`);
+/* A FILE THE FIXTURE LACKS MUST FAIL AN ASSERTION, NEVER THROW PAST ONE. Found by this item's own control
+   arm (M0-154, 2026-09-24): the first draft compared with a bare `readFileSync` on both sides, so a fixture
+   missing a derived file ended the module with an ENOENT and NO TALLY AT ALL — a control that "fails" by
+   dying proves nothing about the assertion, and `kickoffs/WORKER.md` records the same shape as a suite whose
+   count reads clean. It reports the offending paths BY NAME instead. */
+const missingFrom = (dir) => GATE_DEPS.filter((p) => {
+  try { return !readFileSync(join(dir, p)).equals(readFileSync(join(REPO, p))); } catch { return true; }
+});
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -86,7 +150,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 12;
+const SECTIONS = 13;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -132,9 +196,7 @@ const FILES = {
 
 function fixture(name, extra = {}) {
   const seed = join(SANDBOX, `${name}-seed`);
-  for (const f of ["gates.mjs", "pushguard.mjs", "train.mjs"]) put(seed, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
-  for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
-    put(seed, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
+  for (const p of GATE_DEPS) put(seed, p, readFileSync(join(REPO, p)));
   for (const [rel, body] of Object.entries({ ...FILES, ...extra })) put(seed, rel, body);
   git(["init", "-q", "-b", "main"], seed); ident(seed);
   commitAll(seed, "base");
@@ -176,8 +238,14 @@ const train = (root, args = [], env = {}) => {
 section("THE FIXTURE — a real remote, two lanes and an integrator, the real tools and the real hook");
 const F = fixture("fx");
 {
-  t("the fixture carries the REAL train.mjs, gates.mjs and pushguard.mjs",
-    ["train.mjs", "gates.mjs", "pushguard.mjs"].every((f) => readFileSync(join(F.C, "tools", f)).equals(readFileSync(join(REPO, "tools", f)))), true);
+  /* CORRECTED 2026-09-24 (M0-154), never exempted: this named the same files the copy list did, so it agreed
+     for free and could not fail when the list fell behind `gates.mjs`'s imports. It now reads the DERIVED list —
+     the same one the fixture was built from — and floors its size, since a totality assertion over an empty
+     corpus passes (three receipts in `kickoffs/WORKER.md`). The list is PRINTED so the selection is auditable. */
+  t("the fixture carries the REAL train.mjs, gates.mjs and everything they import, byte for byte (DERIVED)",
+    [GATE_DEPS.length >= 6, ["tools/train.mjs", "tools/gates.mjs", "tools/pushguard.mjs"].every((p) => GATE_DEPS.includes(p)),
+     missingFrom(F.C)],
+    [true, true, []]);
   t("each clone has the hook installed", [F.A, F.B, F.C].every((d) => readFileSync(join(d, ".git/hooks/pre-push"), "utf8").includes(HOOK_MARKER)), true);
   t("the remote's main exists", onRemote(F.remote, "main").length, 40);
 }
@@ -518,6 +586,88 @@ section("M0-131 · A REUSED GREEN TREE STILL RUNS THE NEVER-CACHED UNITS — a m
     [g1.status, ok.status, isAncestor(K.remote, good), /NO FULL GATE/.test(ok.text), /^train: the reused tree's never-cached run — GREEN, \d+ unit\(s\) run: [^\n]*plane:carry\.test\.mjs/m.test(ok.text)],
     [0, 0, true, true, true]);
   git(["worktree", "remove", "--force", wt], K.C);
+}
+
+/* ========================================================================== */
+section("M0-159 — A `--drop` THAT NAMES NOTHING REFUSES THE TRAIN; a comma list drops each branch it names");
+{
+  /* THE INCIDENT, DRIVEN (2026-09-24 07:08Z): `run --drop a,b,c` read the comma list as ONE branch name, which matched
+     no WAITING row, so the train dropped NOTHING and began merging every waiting branch — the forbidden ones included.
+     It was killed by PID before any gate or push. The only sign was `dropped: a,b,c` beside the waiting count, which
+     reads exactly like it worked, so this section asserts on what MERGED and on the REMOTE, never on that line alone.
+     HOW A LIAR PASSES THIS SECTION, stated before what it checks: a train that refused EVERY `--drop` would pass the
+     refusal arm, so the valid comma list is asserted to LAND the branch it did not name and to leave the two it did
+     WAITING on the remote; and a refusal read from the exit status alone would pass over a train refused for any
+     other reason, so each refusal is read from the train's OWN text, naming the unknown entry. Its own fixture, so
+     nothing here cascades from the sections above or into them. */
+  /* THREE FIXTURES, AND THE REASON IS THE CONTROL, MEASURED: each REFUSAL arm here, when the control disarms it, lets
+     its train MERGE AND PUSH — which moves every later assertion in the SAME fixture and makes a cascade
+     indistinguishable from a collateral red. Control arm 10's first run proved it: with the refusal dropped, the
+     unmatched-entry train landed, and the bare-flag assertion sharing its fixture went red on `main` having moved,
+     against a declaration that said it must not. So each refusing arm has a fixture of its own (R and T), the
+     dropping arms have S, and no arm's train can reach another's remote. */
+  const R = fixture("dropbad");
+  const d1 = lane(R.A, "land/alpha/d1", "docs/notes/d1.md", "# d1\n");
+  const d2 = lane(R.B, "land/beta/d2", "docs/notes/d2.md", "# d2\n");
+  const d3 = lane(R.A, "land/alpha/d3", "docs/notes/d3.md", "# d3\n");
+  const before = onRemote(R.remote, "main");
+  t("(fixture R: three lanes waiting, all three pushed, main not yet moved)",
+    [d1.status, d2.status, d3.status, isAncestor(R.remote, d1.sha)], [0, 0, 0, false]);
+
+  const bad = train(R.C, ["run", "--drop", "land/alpha/d1,land/typo/nope"]);
+  t("A --drop ENTRY NAMING NO BRANCH REFUSES THE TRAIN BY NAME — nothing merged, no gate run, main unmoved, the unknown entry named",
+    [bad.status !== 0, /^train: REFUSED — --drop names 1 branch\(es\) this train cannot drop/m.test(bad.summary),
+     bad.text.includes("land/typo/nope"), bad.gates, onRemote(R.remote, "main"), isAncestor(R.remote, d1.sha), isAncestor(R.remote, d3.sha)],
+    [true, true, true, 0, before, false, false]);
+  /* READ FROM THE REFUSAL'S OWN LINE, never from `bad.text`: MEASURED by control arm 10's first run, a train that
+     merged instead of refusing ALSO contained all three names, because it logs `WAITING <branch>` for each — an
+     equality that costs nothing to produce, and the assertion passed over the disarmed subject. */
+  const couldDrop = ((bad.summary || "").match(/What it could drop: ([^·]+)/) || [])[1] || "";
+  t("...and the REFUSAL ITSELF names what it could have dropped, so the operator can see the spelling it missed",
+    ["land/alpha/d1", "land/beta/d2", "land/alpha/d3"].every((b) => couldDrop.includes(b)), true);
+
+  /* THE SAME CLASS ONE LEVEL OUT: `--drop` as the LAST token yields no value at all, so no entry reaches the check
+     above and the train would merge everything — the incident's own shape in the one spelling the check cannot see.
+     Its own fixture, because disarming the check above lets that train land (see the three-fixtures note). */
+  const T_ = fixture("dropbare");
+  const f1 = lane(T_.A, "land/alpha/f1", "docs/notes/f1.md", "# f1\n");
+  const beforeT = onRemote(T_.remote, "main");
+  const bareDrop = train(T_.C, ["run", "--drop"]);
+  t("A FLAG WITH NO VALUE AFTER IT IS REFUSED BY NAME — a bare trailing --drop merges nothing and main does not move",
+    [bareDrop.status !== 0, /^train: REFUSED — --drop given with no value after it/m.test(bareDrop.text),
+     bareDrop.gates, f1.status, isAncestor(T_.remote, f1.sha), onRemote(T_.remote, "main")],
+    [true, true, 0, 0, false, beforeT]);
+
+  const S = fixture("dropok");
+  const e1 = lane(S.A, "land/alpha/e1", "docs/notes/e1.md", "# e1\n");
+  const e2 = lane(S.B, "land/beta/e2", "docs/notes/e2.md", "# e2\n");
+  const e3 = lane(S.A, "land/alpha/e3", "docs/notes/e3.md", "# e3\n");
+  const ok = train(S.C, ["run", "--drop", "land/alpha/e1,land/beta/e2"]);
+  t("A VALID COMMA LIST DROPS EACH BRANCH IT NAMES — the one not named lands; the two named do not, and their refs are kept for their lanes",
+    [ok.status, isAncestor(S.remote, e3.sha), isAncestor(S.remote, e1.sha), isAncestor(S.remote, e2.sha),
+     onRemote(S.remote, "land/alpha/e1"), onRemote(S.remote, "land/beta/e2")],
+    [0, true, false, false, e1.sha, e2.sha]);
+  t("...and the train's own line names both dropped branches separately, never the comma list as one name",
+    /· dropped: land\/alpha\/e1, land\/beta\/e2/.test(ok.text), true);
+
+  /* OVER-STRICTNESS — a correct drop in a spelling this change did not anticipate must PASS: an `origin/` prefix (the
+     spelling `train.mjs list` does NOT print, but `--branch` has always accepted) and a space after the comma. */
+  const e4 = lane(S.B, "land/beta/e4", "docs/notes/e4.md", "# e4\n");
+  const loose = train(S.C, ["run", "--drop", "origin/land/alpha/e1, land/beta/e2"]);
+  t("OVER-STRICTNESS — an origin/ prefix and a space after the comma are ACCEPTED and DROP: e4 lands, the two named still do not",
+    [loose.status, /REFUSED — --drop/.test(loose.text), isAncestor(S.remote, e4.sha), isAncestor(S.remote, e1.sha), isAncestor(S.remote, e2.sha)],
+    [0, false, true, false, false]);
+
+  /* THE LIMIT, DRIVEN rather than implied closed: the check accepts any row `list` names, not only a WAITING one. A
+     drop naming a row that could never merge anyway (MALFORMED here; a LANDED one the same) is a NO-OP, not a typo —
+     a branch that lands between the operator's `list` and the run must not become a refusal. */
+  const mal = lane(S.B, "land/malformed", "docs/notes/mal.md", "# no lane in this name\n");
+  const e5 = lane(S.A, "land/alpha/e5", "docs/notes/e5.md", "# e5\n");
+  const limit = train(S.C, ["run", "--drop", "land/malformed"]);
+  t("THE LIMIT — a drop naming a listed row that could never merge (MALFORMED) is ACCEPTED as a no-op, not refused, and the train lands",
+    [limit.status, /REFUSED — --drop/.test(limit.text), isAncestor(S.remote, e5.sha), mal.status,
+     limit.returned.some((l) => l.includes("land/malformed") && l.includes("MALFORMED"))],
+    [0, false, true, 0, true]);
 }
 
 /* ========================================================================== */

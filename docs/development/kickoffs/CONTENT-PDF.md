@@ -100,7 +100,8 @@ into `measurements/<id>.md`, dated, instrumented.
    (`tokens.mjs` denylists any token published in the repo and treats it as NOT
    SET, so committing one revokes it).
 
-Then read: `DEBT.md` D-91 (the ruling and the mapping), D-60 (docprofile's
+Then read (each by `node tools/ledger.mjs find <ID>` — `DEBT.md` is retired, M0-140, and its rows are in
+`docs/archive/ledgers/DEBT-closed.md`): D-91 (the ruling and the mapping), D-60 (docprofile's
 `digests`/`compare` — reference only; do not grow a second copy), and the "Bob's
 rulings, already made" block in `kickoffs/CAPTURE.md` (several bind you).
 
@@ -174,7 +175,7 @@ It is now refused by name (`NAMESPACE_UNKNOWN`, C-78.1). A deploy verified is no
 build serving: confirm which build answered before believing a probe (D-108).
 
 **(6) Close out.** Land green via `land/<lane>/<topic>`; hand any plane release to
-DIST (do not bump a version, sign, tag, or run `deploy.mjs`). Append to `DEBT.md`
+DIST (do not bump a version, sign, tag, or run `deploy.mjs`). Send each defect to SCHEDULER as a minted `D-` row (`DEBT.md` retired, M0-140)
 (next free D-number at the moment you write; per-area IDs like `D-PDF-1` are not
 adopted until three areas are live) and `MEASUREMENTS.md`, prepend a state-doc
 entry naming this area, rewrite ONLY this file, and end with decision items that

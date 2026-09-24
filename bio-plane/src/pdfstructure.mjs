@@ -1146,7 +1146,126 @@ async function loadFont(doc, fontVal) {
     }
   }
   if (width == null) width = isType0 ? 2 : 1; // composite codes are ≥2 bytes in practice; simple fonts are 1
-  return { subtype, isType0, baseFont, toUni, width };
+  const w = fontWidths(doc, map, subtype, isType0);
+  return { subtype, isType0, baseFont, toUni, width, widths: w.widths, widthsWhy: w.why };
+}
+
+/* D-502 — GLYPH ADVANCE WIDTHS, SO THE PEN HAS A POSITION.
+ *
+ * D-481 made a line break on a BASELINE move rather than on any positioning
+ * operator, and said in the same breath what that cost: two runs on ONE
+ * baseline separated only by a horizontal jump — a table row's cells, a
+ * footer's left and right halves — were concatenated into one token, because
+ * nothing here knew where the pen had got to. Measured on the Legistar agenda
+ * as `OaklandPrinted` and `5:26:26PM` (M-133; 0.32% of that document's tokens).
+ *
+ * A jump can only be judged against where the pen WAS, and the pen only moves
+ * by the width of what was shown. So the widths are read from the file:
+ *
+ *   - a SIMPLE font (Type1, TrueType, Type3) declares /FirstChar and /Widths,
+ *     indexed by character code, with /FontDescriptor /MissingWidth for a code
+ *     outside the array (ISO 32000-1 §9.6.2.1);
+ *   - a COMPOSITE font's descendant CIDFont declares /DW (default 1000) and a
+ *     /W array in two alternating shapes — `c [w …]` and `cFirst cLast w`
+ *     (§9.7.4.3).
+ *
+ * EVERY WIDTH RETURNED IS IN TEXT SPACE, never glyph space: a simple font's
+ * and a CIDFont's glyph space is 1/1000 of text space, and a Type3 font's is
+ * whatever its own /FontMatrix says, so the [0] entry is read rather than the
+ * 1/1000 assumed. A Type3 with no readable /FontMatrix yields NO widths.
+ *
+ * WHEN THE WIDTHS ARE NOT KNOWN THE ANSWER IS `null` AND THE PEN GOES UNKNOWN
+ * WITH IT — it is never filled in from a default, an average or the font size.
+ * This is the whole safety property of D-502: a document whose widths this
+ * reader cannot establish reads EXACTLY as D-481 left it, because a break
+ * placed on an invented width is an invented break, and the record would have
+ * no way to tell one from a real one. `widthsWhy` names which case it was.
+ *
+ * THE ONE MAPPING THIS DOES NOT DO, stated rather than left to be found: a
+ * composite font's code→CID mapping is taken as the IDENTITY, which is what
+ * /Identity-H and /Identity-V mean and what every composite font in this
+ * project's PDF corpus uses. Any other /Encoding — a predefined CMap by name,
+ * or an embedded CMap stream — yields NO widths (`cid_encoding_not_identity`)
+ * rather than widths read at the wrong index. */
+function numOf(doc, v) {
+  v = doc.resolve(v);
+  return typeof v === "number" ? v : null;
+}
+
+/** The horizontal glyph-space scale of a font: 1/1000 for everything but a
+ *  Type3, whose /FontMatrix states its own. Null when a Type3 does not. */
+function glyphScale(doc, map, subtype) {
+  if (subtype !== "Type3") return 0.001;
+  const fm = doc.resolve(map.FontMatrix);
+  if (!fm || fm.t !== "arr" || fm.items.length < 6) return null;
+  const a = numOf(doc, fm.items[0]);
+  return typeof a === "number" && a !== 0 ? a : null;
+}
+
+/** Read a font's advance widths. Returns `{ widths, why }`; `widths` is a
+ *  lookup from character code to a TEXT-SPACE advance, or null with `why`. */
+function fontWidths(doc, map, subtype, isType0) {
+  if (isType0) return cidWidths(doc, map);
+  const scale = glyphScale(doc, map, subtype);
+  if (scale == null) return { widths: null, why: "type3_no_font_matrix" };
+  const first = numOf(doc, map.FirstChar);
+  const arr = doc.resolve(map.Widths);
+  if (first == null || !arr || arr.t !== "arr" || arr.items.length === 0) {
+    return { widths: null, why: "no_widths_array" };
+  }
+  const vals = arr.items.map((x) => numOf(doc, x));
+  const desc = doc.dictOf(map.FontDescriptor);
+  const missing = (desc ? numOf(doc, desc.MissingWidth) : null) ?? 0;
+  const widths = (code) => {
+    const i = code - first;
+    const w = i >= 0 && i < vals.length ? vals[i] : null;
+    return (w == null ? missing : w) * scale;
+  };
+  return { widths, why: null };
+}
+
+/** A composite font's widths, from its descendant CIDFont's /DW and /W. */
+function cidWidths(doc, map) {
+  const enc = nameOf(doc, map.Encoding);
+  if (enc !== "Identity-H" && enc !== "Identity-V") {
+    return { widths: null, why: "cid_encoding_not_identity" };
+  }
+  const descArr = doc.resolve(map.DescendantFonts);
+  const cid = descArr && descArr.t === "arr" && descArr.items.length
+    ? doc.dictOf(descArr.items[0])
+    : null;
+  if (!cid) return { widths: null, why: "no_descendant_font" };
+  const dw = numOf(doc, cid.DW) ?? 1000;
+  const table = new Map();
+  const wArr = doc.resolve(cid.W);
+  if (wArr && wArr.t === "arr") {
+    const items = wArr.items.map((x) => doc.resolve(x));
+    let i = 0;
+    while (i < items.length) {
+      const c = items[i];
+      if (typeof c !== "number") { i++; continue; }
+      const next = items[i + 1];
+      if (next && typeof next === "object" && next.t === "arr") {
+        // `c [w1 w2 …]`: consecutive CIDs starting at c.
+        const list = next.items.map((x) => numOf(doc, x));
+        for (let k = 0; k < list.length; k++) if (list[k] != null) table.set(c + k, list[k]);
+        i += 2;
+        continue;
+      }
+      const last = typeof next === "number" ? next : null;
+      const w = typeof items[i + 2] === "number" ? items[i + 2] : null;
+      // `cFirst cLast w`: one width for the whole range. The range is bounded
+      // because a malformed pair could otherwise ask for millions of entries.
+      if (last != null && w != null && last >= c && last - c <= 65535) {
+        for (let code = c; code <= last; code++) table.set(code, w);
+        i += 3;
+        continue;
+      }
+      i++;
+    }
+  }
+  const widths = (code) => (table.has(code) ? table.get(code) : dw) * 0.001;
+  return { widths, why: null };
 }
 
 /* ---- the per-page text interpreter ---- */
@@ -1232,6 +1351,42 @@ const baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
  *  identical multiplies do not drift, and non-identical paths to one baseline do. */
 const BASELINE_EPS = 1e-6;
 
+/* D-502 — THE WORD-GAP THRESHOLD, IN EMS, TAKEN FROM A MEASURED DISTRIBUTION
+ * AND FROM A MEASURED SWEEP OF ITS OWN VALUE (M-141).
+ *
+ * The question this number answers: a positioning operator has landed on the
+ * baseline already being written — did it CONTINUE the run just shown, or start
+ * a new one? The distance from where the pen was left to where the operator
+ * puts it is the evidence, in EMS of the text it follows, because 4 pt is a
+ * word gap at 8 pt and a kern at 40 pt and one agenda holds both.
+ *
+ * THE DISTRIBUTION, over 5,960 same-baseline jumps in nine Oakland PDFs (the
+ * seven committed PDF fixtures, `Budget-Basics-FY23-25.pdf` and the Legistar
+ * agenda D-481 measured; shas and instrument in `measurements/M-141.md`):
+ *
+ *   |gap| ≤ 0.025 em     5,002   the pen landed where the widths said it would
+ *   0.025 … 0.25 em         299   kerning and rounding, inside and between words
+ *   0.25 … 0.45 em            9   ← the valley; (0.375, 0.450] holds NOTHING
+ *   ≥ 0.45 em               579   word gaps, column jumps, footer halves
+ *
+ * AND THE SWEEP, which is the more useful half and says the figure is NOT
+ * load-bearing: re-reading all seven text-bearing documents at fifteen values
+ * of this constant gives 14,041 tokens at 0.03 and 14,039 at 1.0 — TWO tokens
+ * of difference across a factor of thirty, because a jump into text the
+ * document already spaced adds nothing (`softSpace`). What the sweep DOES find
+ * is one cliff, and it is at zero: with the threshold at 0 the same corpus
+ * reads 17,292 tokens with 4,578 of them ONE CHARACTER LONG, because float
+ * noise in the matrix arithmetic becomes a word gap. So the property that
+ * matters is being clear of that floor, not the exact value; 0.25 is the
+ * valley's own midpoint and is what a space IS in a text face (0.25–0.33 em),
+ * two independent readings meeting rather than one number standing alone.
+ *
+ * APPLIED TO THE MAGNITUDE, so ONE constant serves both directions. A BACKWARD
+ * jump on a live baseline is a new run too — a column drawn out of order — and
+ * its valley was measured on the same corpus: of 185 backward jumps, 181 are
+ * ≤ 0.21 em (kerning and overprint) and four are ≥ 2.68 em. */
+const WORD_GAP_EM = 0.25;
+
 /** Extract Tier 1 text from one page. Returns { text, undetermined:[markers] }.
  *  `fontCache` is keyed by font object so a font shared across pages is parsed
  *  once. Every undecodable region is recorded, never rendered. */
@@ -1260,6 +1415,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const show = (bytes) => {
     if (!bytes || bytes.length === 0) return;
     if (!curFont) {
+      penKnown = false; inkValid = false; // D-502: nothing says how far this moved the pen
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -1270,6 +1426,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       return;
     }
     if (!curFont.toUni) {
+      /* D-502: the text is undecodable, the ADVANCE is not \u2014 a width is
+         looked up by CODE and needs no /ToUnicode. So the pen survives a run
+         this reader cannot read, and the gap after it is still judged. */
+      advanceOver(bytes);
+      endRun();
       undetermined.push({
         page: pageIdx,
         reason: curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
@@ -1281,6 +1442,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      advanceOne(code);
       const u = curFont.toUni.get(code);
       if (u == null) {
         undetermined.push({
@@ -1290,9 +1452,20 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           codes: code.toString(16).padStart((curFont.width || 1) * 2, "0"),
           count: 1,
         });
-      } else pieces.push(u);
+      } else {
+        /* D-502: withdraw an inserted separator the DOCUMENT then supplies
+           itself. `softSpace` cannot see what is coming, so the symmetric half
+           of the rule lives here and in `breakLine`: a separator this reader
+           added is kept only where it actually separates something. The net
+           property, and it is the one worth stating: D-502 adds a separator
+           ONLY where the document wrote none. */
+        if (softAt === pieces.length && /^\s/.test(u)) { pieces.pop(); softAt = -1; }
+        pieces.push(u);
+      }
     }
+    endRun();
     if (leftover) {
+      penKnown = false; inkValid = false; // D-502: bytes of unknown code width advance by an unknown amount
       undetermined.push({
         page: pageIdx,
         reason: "code_width_misaligned",
@@ -1355,7 +1528,125 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   let tlm = IDENTITY_MATRIX.slice();   // the text LINE matrix; BT resets it
   let leading = 0;                     // TL, the leading T* moves by
   let lineY = null;                    // the baseline of the line being written
-  const breakLine = () => { pieces.push("\n"); lineY = baselineOf(tlm, ctm); };
+  const breakLine = () => {
+    /* D-502: a separator this reader inserted and then never separated
+       anything is withdrawn rather than left at the end of a line. `softAt`
+       is the length `pieces` had immediately after that push, so it still
+       matches ONLY if nothing has been shown since — which is exactly the
+       case where the jump turned out to end the line. A space the DOCUMENT
+       wrote, or one the TJ rule read out of a displacement, never matches. */
+    if (softAt === pieces.length && pieces.length) { pieces.pop(); softAt = -1; }
+    pieces.push("\n");
+    lineY = baselineOf(tlm, ctm);
+  };
+
+  /* D-502 \u2014 THE PEN, AND THE ONE THING IT IS ASKED.
+   *
+   * The TEXT matrix is the line matrix plus everything shown since the line
+   * began; D-481 tracked only the line matrix, which is why a horizontal jump
+   * BACK ALONG a baseline could not be told from a continuation. Tracked here:
+   * the text matrix `tmat`, the font size, character and word spacing, and
+   * horizontal scaling \u2014 the four text-state parameters that enter the glyph
+   * displacement (ISO 32000-1 \u00a79.4.4). Rise does not; it moves y, and y is the
+   * baseline's question, already answered.
+   *
+   * `penKnown` IS THE HONEST HALF. It goes false the moment something is shown
+   * whose advance this reader cannot compute \u2014 no font, no width array, a
+   * trailing partial code \u2014 and while it is false NO GAP IS JUDGED. It comes
+   * back true at the next positioning operator, which STATES where the pen is.
+   * So a document whose widths are unreadable reads exactly as D-481 left it,
+   * rather than acquiring breaks derived from a width nobody read. */
+  let tmat = IDENTITY_MATRIX.slice(); // the TEXT matrix
+  let penKnown = true;                // is tmat where the pen actually is?
+  let tfs = 0;                        // Tf size
+  let tc = 0;                         // Tc character spacing
+  let tw = 0;                         // Tw word spacing
+  let th = 1;                         // Tz horizontal scaling, as a factor
+
+  /* WHERE THE INK STOPPED, IN DEVICE SPACE, AND WHY IT IS HELD THAT WAY.
+   *
+   * `BT` resets the text matrices, and `Q`/`cm` move the CTM, so a position
+   * kept in TEXT space is worthless across those \u2014 and a very common producer
+   * writes ONE `BT \u2026 ET` PER RUN with its own `cm` (Legistar's own PDFs do:
+   * `\u2026 cm BT 46 0 0 46 1053.309 94 Tm /TT4 1 Tf [\u2026] TJ ET Q q \u2026 cm BT 46 0 0
+   * 46 1404.691 94 Tm \u2026`). Measured on `legistar-73450`: reading the pen off
+   * the text matrix at the second `Tm` reads the ORIGIN, because `BT` had just
+   * reset it, and every gap came out ~1,200 ems. So the pen's device x is
+   * captured when the ink stops and survives `ET`, `Q` and `BT` untouched.
+   *
+   * `inkEm` is the em of the text LAST SHOWN, not of the text state at the
+   * jump, and that is deliberate: in the same producer's output the `Tf` for
+   * the next run comes AFTER its `Tm`, so the only font in hand at the moment
+   * a gap is judged is the one the gap follows. That is also the right
+   * reference \u2014 the question is whether the jump is wide FOR THE TEXT IT
+   * FOLLOWS. */
+  let softAt = -1;    // `pieces.length` just after the last separator inserted here
+  let inkX = 0;       // device x where the last tracked run of ink ended
+  let inkEm = null;   // device length of one em of that run
+  let inkValid = false;
+
+  /** Device-space x of a text-space origin under the current CTM. */
+  const deviceX = (m) => m[4] * ctm[0] + m[5] * ctm[2] + ctm[4];
+  /** The device-space length of ONE EM of the current text state. A gap is
+   *  judged in ems and never in points, because 4 pt is a word gap at 8 pt and
+   *  a kern at 40 pt, and one document holds both. */
+  const emDevice = () => {
+    const m = matMul(tmat, ctm);
+    return Math.abs(tfs) * th * Math.hypot(m[0], m[1]);
+  };
+  /** Push a separator unless one is already there. Never opens a line. */
+  const softSpace = () => {
+    if (!pieces.length) return;
+    const last = pieces[pieces.length - 1];
+    if (last.endsWith(" ") || last.endsWith("\n")) return;
+    pieces.push(" ");
+    softAt = pieces.length;
+  };
+  /** A positioning operator landed on the CURRENT baseline: is the distance it
+   *  jumped a WORD GAP, or a continuation of the run just shown? */
+  const judgeGap = (toX) => {
+    if (!inkValid) return;
+    const em = inkEm ?? emDevice();
+    if (!(em > 0) || !Number.isFinite(em)) return;
+    const gapEm = (toX - inkX) / em;
+    if (Math.abs(gapEm) > WORD_GAP_EM) softSpace();
+  };
+  /** A shown run has ended: the ink is where the pen is, and one em of THAT
+   *  run is the yardstick the next jump is measured with. */
+  const endRun = () => {
+    markInk();
+    if (penKnown) inkEm = emDevice();
+  };
+  /** Advance the pen over one character code. */
+  const advanceOne = (code) => {
+    if (!penKnown) return;
+    const w0 = curFont && curFont.widths ? curFont.widths(code) : null;
+    if (w0 == null || !Number.isFinite(w0)) { penKnown = false; return; }
+    const spacing = tc + (curFont.width === 1 && code === 32 ? tw : 0);
+    tmat = matMul([1, 0, 0, 1, (w0 * tfs + spacing) * th, 0], tmat);
+  };
+  /** Advance the pen over a shown string whose text was not decoded. */
+  const advanceOver = (bytes) => {
+    if (!penKnown) return;
+    if (!curFont || !curFont.widths) { penKnown = false; return; }
+    const { codes, leftover } = bytesToCodes(bytes, curFont.width);
+    for (const code of codes) advanceOne(code);
+    if (leftover) penKnown = false;
+  };
+  /** Advance the pen by a TJ displacement, in thousandths of text space. */
+  const advanceBy = (adj) => {
+    if (!penKnown) return;
+    tmat = matMul([1, 0, 0, 1, (-adj / 1000) * tfs * th, 0], tmat);
+  };
+  /** The pen is where `tmat` says: record it in device space. */
+  const markInk = () => {
+    if (!penKnown) { inkValid = false; return; }
+    inkX = deviceX(tmat);
+    inkValid = true;
+  };
+  /** A positioning operator has set the line matrix: the pen is THERE, and it
+   *  is known again whatever went before. */
+  const penToLine = () => { tmat = tlm.slice(); penKnown = true; markInk(); };
 
   for (const tk of toks) {
     if (tk.t !== "op") { stack.push(tk); continue; }
@@ -1364,6 +1655,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         const nameTok = lastOfType("name");
         curFontName = nameTok ? nameTok.v : null;
         curFont = curFontName ? await getFont(curFontName) : null;
+        const sz = numArgs(1); // D-502: `/F1 12 Tf` \u2014 the size is the operand
+        if (sz) tfs = sz[0];
         break;
       }
       case "Tj": {
@@ -1378,7 +1671,18 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           if (it.t === "arr_close") { inArr = false; continue; }
           if (!inArr) continue;
           if (it.t === "str") show(it.bytes);
-          else if (it.t === "num" && it.v < -100) pieces.push(" "); // a large negative advance is a word gap
+          else if (it.t === "num") {
+            /* D-481's rule, KEPT rather than replaced by D-502's threshold, and
+               the reason is that they answer different questions. A TJ number
+               is a displacement the producer wrote INSIDE one shown run; the
+               threshold D-502 measures is for a jump between two runs a
+               positioning operator separates. Re-deciding this one needs its
+               own distribution over its own population, which is not this
+               row's. It still moves the pen, because the next positioning
+               operator's gap is measured from wherever it left it. */
+            if (it.v < -100) pieces.push(" "); // a large negative advance is a word gap
+            advanceBy(it.v);
+          }
         }
         break;
       }
@@ -1386,8 +1690,14 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       case '"': {
         // ' : next line then show;  " : aw ac (string) — next line then show.
         // Both are T* followed by Tj, so both MOVE the line matrix and BREAK.
+        if (tk.v === '"') {
+          // `aw ac (string) "` sets word then character spacing (\u00a79.4.3).
+          const a = numArgs(2);
+          if (a) { tw = a[0]; tc = a[1]; }
+        }
         tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
         breakLine();
+        penToLine();
         const st = lastOfType("str");
         if (st) show(st.bytes);
         break;
@@ -1405,12 +1715,25 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       }
       case "BT":
         tlm = IDENTITY_MATRIX.slice(); // BT resets the text and line matrices
+        /* D-502: the matrices reset, the INK DOES NOT. `BT` moves the pen to
+           this text object's origin, which is true and useless: the reference a
+           jump is measured against is where the last run of ink STOPPED, and a
+           producer that writes one `BT … ET` per run would otherwise have every
+           gap measured from its own origin. Measured on `legistar-73450`, where
+           marking the ink here read every gap as ~1,200 ems. */
+        tmat = tlm.slice();
+        penKnown = true;
         break;
       case "TL": {
         const a = numArgs(1);
         if (a) leading = a[0];
         break;
       }
+      /* D-502: the three text-state parameters that enter a glyph's horizontal
+         displacement beside the width itself. They change no character. */
+      case "Tc": { const a = numArgs(1); if (a) tc = a[0]; break; }
+      case "Tw": { const a = numArgs(1); if (a) tw = a[0]; break; }
+      case "Tz": { const a = numArgs(1); if (a) th = a[0] / 100; break; }
       case "Td": case "TD": {
         const a = numArgs(2);
         if (!a) break;
@@ -1419,6 +1742,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
         if (ty !== 0) breakLine();
         else if (lineY === null) lineY = baselineOf(tlm, ctm);
+        else judgeGap(deviceX(tlm));
+        penToLine();
         break;
       }
       case "Tm": {
@@ -1427,11 +1752,14 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         tlm = m;
         const y = baselineOf(tlm, ctm);
         if (lineY === null || Math.abs(y - lineY) > BASELINE_EPS) breakLine();
+        else judgeGap(deviceX(tlm));
+        penToLine();
         break;
       }
       case "T*":
         tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
         breakLine();
+        penToLine();
         break;
       default:
         break;

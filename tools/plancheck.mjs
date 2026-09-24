@@ -148,10 +148,11 @@ const queue = read("docs/development/QUEUE.md");
 const milestones = read("docs/development/MILESTONES.md");
 const interfaces = read("docs/development/INTERFACES.md");
 const register = read("docs/development/kickoffs/README.md");
-const debt = read("docs/development/DEBT.md");
+/* `DEBT.md` WAS READ HERE and required to EXIST. Retired with the construct (M0-140, 2026-09-24): requiring a file
+   the estate has deliberately deleted is how a gate keeps a retired construct alive. */
 
 for (const [name, body] of [["QUEUE.md", queue], ["MILESTONES.md", milestones],
-                            ["INTERFACES.md", interfaces], ["DEBT.md", debt]])
+                            ["INTERFACES.md", interfaces]])
   if (!body) fail(`MISSING — docs/development/${name} does not exist.`);
 
 if (queue && register) {
@@ -212,27 +213,11 @@ if (queue && register) {
   }
 }
 
-if (debt) {
-  /* Every OPEN row carries a disposition token, or it is invisible work — which is
-     how a standing ruling went two design revisions with nothing scheduling it.
-     M0-110: the predicate is `ledger.mjs`' `debtTokenAudit`, the ONE copy this arm, the
-     coord write's ledger checks and the battery's fixture arms all read (it was inline here
-     and PORTED into `planning-hygiene`; two copies of one rule is D-302's shape). */
-  const { debtTokenAudit } = await import("./ledger.mjs");
-  const { bad } = debtTokenAudit(debt);
-  if (bad.length) {
-    /* Show what was FOUND and the exact shape expected. The first row to trip this
-       was written by a session that had placed the item correctly and described the
-       placement in prose — the token is what makes the ledger sortable, and a check
-       that only says "wrong" makes the reader guess which part. */
-    fail(`NO DISPOSITION — ${bad.length} open debt row(s) carry no leading disposition\n`
-       + `        TOKEN, so they cannot be sorted out of the ledger into work:\n`
-       + bad.map((b) => `          ${b.id}  found: "${b.status.slice(0, 60)}"`).join("\n")
-       + `\n        Expected the status cell to BEGIN with one of: M0..M7 | DOCTRINE |\n`
-       + `        ACCEPTED | WATCH | SUPERSEDED | NOT OURS, e.g. "M2 · open (DEC-1)".\n`
-       + `        Prose naming the milestone is not enough — the token is the sortable part.`);
-  }
-}
+/* THE DISPOSITION ARM WAS HERE (§2's debt half): every OPEN `| D-n |` row carries a leading disposition token, or
+   it is invisible work. RETIRED with the construct (M0-140, 2026-09-24). Its predicate, `ledger.mjs`'
+   `debtTokenAudit`, is retired there and says why: a plan row's PLACEMENT is its disposition, so re-pointing this at
+   `BACKLOG.md` would be a second, weaker producer of a quantity P1-P5, `rowdesign` and `rowsubstrate` already
+   produce. There is no side list for work to be invisible in any more (CLAUDE.md §4). */
 
 /* A kickoff is what a worker reads INSTEAD of this document, so a thin one
    reintroduces the collisions the claims system exists to prevent. Every registered
@@ -807,9 +792,9 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    no standing step — by 2026-09-18 QUEUE.md was 1.17 MB again and 338 of its rows were closed.
    `tools/ledger.mjs archive <ID>` is the standing step; these arms make forgetting it visible.
 
-     (a) no CLOSED row in the live DEBT ledger — "closed" is the archiver's definition, which for DEBT
-         is `owed.mjs`'s `isClosedDebtRow` and nothing else (its QUEUE half is now P2, below);
-     (b) a size budget per open DEBT row (≤ 3 KiB; its QUEUE half is now P5, below);
+     (a) and (b) WERE the DEBT halves — no CLOSED row in the live DEBT ledger, and a size budget per open DEBT
+         row. Both are RETIRED with the construct (M0-140, 2026-09-24): the ledger has no live file. Their QUEUE
+         halves, which is what remains of this arm, are P2 and P5 below.
      (c) every open row's `depends-on` resolves — to an open row, a done row (live or archived), or
          a `tools/status.mjs` claim reading BUILT — across the cache AND the backlog.
 
@@ -828,7 +813,7 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    (`BACKLOG-LATER.md`, M0-119 — the same order continued; absent is an empty tail):
      P1 every open id in EXACTLY ONE of the three — FAILs now (it holds on the real ledgers);
      P2 no closed row in either — armed with (a)'s LED-3, as the QUEUE half of (a) always was;
-     P3 the cache ≤ 16 rows (`CACHE_ROWS`), none `blocked`; P4 every open cache row's depends-on MET; P5 both files
+     P3 the cache ≤ 20 rows (`CACHE_ROWS`), none `blocked`; P4 every open cache row's depends-on MET; P5 both files
      within budget (cache 48 KiB / row 3 KiB, backlog 150 KiB / row 2 KiB) — WARN until LED-6 is
      done, because none can hold before the migration (§5 steps 2–4), then FAIL. */
 
@@ -854,21 +839,11 @@ if (conduct && inbox && !/INBOX/.test(conduct))
        BACKLOG.md was 381 B over a budget the batch itself tightened (M0-119). `coord.mjs write` runs the same arms
        (LC-ledger) before every push, so the state is still enforced where it is WRITTEN; here it is reported, loudly. */
     const say = (armed) => (armed ? stateFail : warn);
-    const debtClosed = a.closedLive.DEBT || [];
-    if (debtClosed.length)
-      say(a.armed.closedLive)(`CLOSED ROWS IN THE LIVE DEBT LEDGER — ${debtClosed.length} (${a.armed.closedLive ? "FAIL: " + ARMING_NOTE(a, "closedLive")
-        : "WARN until " + a.arming.closedLive.row + " is done, now " + a.arming.closedLive.state}):\n`
-        + `          DEBT: ${debtClosed.slice(0, 12).join(", ")}${debtClosed.length > 12 ? ", …" : ""}`
-        + `\n        Move each with \`node tools/ledger.mjs archive <ID>\`, in the SAME commit as its done flip.`);
-    const debtOver = a.budget.rowsOver.filter((r) => r.ledger === "DEBT");
+    /* The CLOSED-ROWS-IN-THE-LIVE-DEBT-LEDGER report and the DEBT-ROWS-OVER-BUDGET report WERE HERE, keyed on
+       `a.closedLive.DEBT` and `a.arming.debtBudget`. Retired with the construct (M0-140): `ledgerAudit` no longer
+       walks a DEBT ledger, so both would read an empty list for ever — a check that cannot fail. */
     notes.push(`ledger sizes: ${a.budget.ledgers.map((x) => `${x.ledger} ${x.bytes} B`
-      + (x.budget === null ? " (no whole-file budget named)" : ` of ${x.budget}`)).join(", ")}; `
-      + `${debtOver.length} open DEBT row(s) over ${L.BUDGET.DEBT.row} B`);
-    if (debtOver.length)
-      say(a.armed.debtBudget)(`DEBT ROWS OVER BUDGET (${a.armed.debtBudget ? "FAIL: " + ARMING_NOTE(a, "debtBudget")
-        : "WARN until " + a.arming.debtBudget.row + " is done, now " + a.arming.debtBudget.state}) — `
-        + `${debtOver.length} open row(s) over ${L.BUDGET.DEBT.row} B, largest: `
-        + [...debtOver].sort((p, q) => q.bytes - p.bytes).slice(0, 8).map((r) => `${r.id} ${r.bytes} B`).join(", "));
+      + (x.budget === null ? " (no whole-file budget named)" : ` of ${x.budget}`)).join(", ")}`);
     if (!a.claimsReadable)
       warn(`DEPENDS-ON: docs/architecture/construct-status.json unreadable — a dependency on a status claim cannot resolve this run.`);
     notes.push(`depends-on: ${a.depends.checked} dependency id(s) checked across the open rows, `
@@ -1163,7 +1138,7 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
     }
     /* (b) — the pattern is BUILT so this file does not match itself. */
     const ORIGIN_MAIN = "origin" + "/main:";
-    const stateRef = new RegExp(ORIGIN_MAIN.replace("/", "\\/") + String.raw`[^\s\x60'")]*(?:CLAIMS\.md|QUEUE\.md|BACKLOG\.md|BACKLOG-LATER\.md|DEBT\.md|PLACEMENT\.md|-NEXT\.md|archive\/ledgers\/)`);
+    const stateRef = new RegExp(ORIGIN_MAIN.replace("/", "\\/") + String.raw`[^\s\x60'")]*(?:CLAIMS\.md|QUEUE\.md|BACKLOG\.md|BACKLOG-LATER\.md|PLACEMENT\.md|-NEXT\.md|archive\/ledgers\/)`);
     const left = [];
     const EK = (await import("./entries.mjs")).kindOf;
     for (const f of tracked) {
@@ -1182,7 +1157,7 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
          + `        Read it with \`node tools/coord.mjs read <path>\` (coord once it exists, main before):\n`
          + left.slice(0, 12).map((x) => `          ${x}`).join("\n"));
     /* (c) */
-    const r = await C.ledgerChecks({ repo: ROOT, only: ["LC-markers", "LC-queued-refs", "LC-debt-agreement", "LC-undecided-route", "LC-op-claims", "LC-strays", "LC-owed-agreement"] });
+    const r = await C.ledgerChecks({ repo: ROOT, only: ["LC-markers", "LC-queued-refs", "LC-undecided-route", "LC-op-claims", "LC-strays", "LC-owed-agreement"] });
     for (const a of r.arms) for (const f of a.fails) stateFail(`LEDGER CHECK ${a.id} (${a.title}; moved from ${a.from}) — ${f}`);
     notes.push(`coord ledger checks: ${r.arms.map((a) => `${a.id} ${a.fails.length ? "FAIL" : "pass"}${a.note ? ` (${a.note})` : ""}`).join(", ")}`);
   }

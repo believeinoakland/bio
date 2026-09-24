@@ -65,7 +65,7 @@
  *
  * **THE LIVE CORPUS FOR A LABEL EXCLUDES `docs/`, AND THAT IS A FINDING RATHER
  * THAN A TIDY-UP.** An assertion's NAME lives in a suite. The RECORD, however,
- * quotes the defects it records — `DEBT.md`'s own D-329 row carries the stale
+ * quotes the defects it records — D-329's own row carries the stale
  * 26-ops fragment verbatim, because that is what a debt row is for. With `docs/`
  * in the live corpus this instrument reads that row and scores the defect
  * "present", so the negative control for the whole check goes green over a fully

@@ -31,6 +31,16 @@
  * 17/3 at 89 units, 42 through coord.mjs; arm (b) 16/4 at 89 units, "imports nothing" failing too; arm (c) 20/0 at
  * 60 units. Every restore byte-identical by sha256 + cmp + size (statepaths.mjs d7c599ed…, coord.mjs 00b2a83e…,
  * op-claims.mjs 372a05d4…), and re-checked by `sha256sum -c` after the driver exited.
+ * (d) M0-165's arm, ADDED 2026-09-24: ONE provenance label in `textchain.test.mjs` gets its `.md` back
+ * (`measured_by: "MEASUREMENTS 2026-08-03 (CPDF-9)"` -> `"MEASUREMENTS.md …"`, armed ALONE — the other three suites'
+ * labels stay corrected, so the arm moves exactly one variable) -> "no unit is a MEASUREMENTS reader through a
+ * basename-only provenance label" MUST FAIL NAMING the file, and "selects at most 42 units" MUST FAIL by count;
+ * "the method sees a real reader" MUST NOT (`tools/entries.mjs` spells the path and is untouched).
+ * RUN 2026-09-24 by the M0-165 worker, ALL FOUR ARMS AS DECLARED (driver 31 pass, 0 fail): baseline 21/0 at 42 units;
+ * (a) 19/2 at 46 units, 9 through coord.mjs; (b) 18/3 at 46; (c) 21/0 at 42; (d) 19/2 at 43 units and 28 readers, the
+ * label arm failing with `got ["bio-plane/test/textchain.test.mjs"]` — BY NAME, which is what the row asked for. Every
+ * restore sha256-MATCH and cmp-IDENTICAL against a uniquely-named per-arm pristine copy with its byte count floored
+ * (textchain.test.mjs 04dd39b6…, 68,985 B).
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -127,7 +137,32 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    and the selected set does NOT. So the figure is unchanged and no slack is bought; the superseded move is recorded
    here rather than silently dropped, because a constant that moved twice in one day and came back is exactly the
    history a later reader needs. */
-const UNITS_CEILING = 47;
+/* MOVED 47 -> 45 by M0-153 (2026-09-24), from the figure THIS suite PRINTED on its own clone of the M0-153 tree
+   (`45 unit(s) of 427 selected · 31 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`), never by subtracting from
+   the old number. THE REASON, and it is again a narrowing rather than slack: `gates.mjs` §2b now cuts the CLOSURE'S
+   OWN EDGES from a unit's code rather than its whole text, so a tool NAMED IN A COMMENT no longer enters the closure
+   and no longer lends the unit everything that tool reads. The two that left are `plane:fleetbundles.test.mjs`
+   (its header names `tools/gates.mjs` in the sentence saying it does NOT drive it) and `plane:hygiene.test.mjs`
+   (a comment names `scripts/op-claims-ledger.mjs`); both were checked at the code. `plane:gateverdict.test.mjs`
+   left and came BACK, because it really does load `tools/pushguard.mjs` — through `join(REPO, "tools",
+   "pushguard.mjs")`, whose literal spelling lived only in a comment — and §2b now reads that assembled spelling too.
+   A CEILING IS NOT A RATCHET: left at the printed figure, with no slack bought for a future landing. */
+/* MOVED 45 -> 42 by M0-165 (2026-09-24), from the figure THIS SUITE PRINTED on its own clone of this tree
+   (`42 unit(s) of 427 selected · 27 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`), never by subtracting
+   from the old number. THE REASON, and it is a narrowing rather than slack: four suites carried the PROVENANCE
+   LABEL `measured_by: "MEASUREMENTS.md …"` in a fixture chain. `measured_by` is a free string (index.mjs' chain
+   contract) saying WHERE a fidelity grade was measured — it is not a path and nothing opens it — but the gate's
+   lexer keeps strings on purpose (D-301: a path is a string), so `fileHit`'s basename probe read the label as
+   a read of the ledger and made `calibration`, `reextract`, `textchain` and `tier3-layer-parts` MEASUREMENTS
+   readers. Dropping `.md` from the labels leaves the provenance intact (textchain's own `/MEASUREMENTS/`
+   assertion on the wire still passes) and takes the edge away. THREE of the four left the selection; the
+   readers fell 31 -> 27 (four labels went, and `calibration` lost its reader edge too). CALIBRATION IS STILL
+   SELECTED, and that is a DELIBERATE CLOSURE rather than a miss: it really does open `docs/development/
+   SCHEDULER.md` and assert on its text, so it is in DOCS' own doc-facing set, and §2's "net" bound gives every
+   doc-facing unit any `docs/` change — prose is never checked more narrowly than DOCS checks it. It was in that
+   set before this item too, verified in a clone of the unchanged tree. A CEILING IS NOT A RATCHET: left at the
+   printed figure, with no slack bought for a future landing. */
+const UNITS_CEILING = 42;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
@@ -196,11 +231,41 @@ section("THE UNIT-COUNT ARM — a MEASUREMENTS-only change, M-106's method");
   t("gates --explain ran (exit 0)", r.status, 0);
   t("the plant reads class TARGETED (so MENTION is asked)", cls, "TARGETED");
   t(`the unit corpus is not empty (>= ${UNITS_FLOOR} units)`, of >= UNITS_FLOOR, true);
-  t("the method sees a real reader: calibration.test.mjs, which names MEASUREMENTS.md in its code, is selected",
-    readers.some((l) => /^gates: {3}plane:calibration\.test\.mjs /.test(l)), true);
+  /* CORRECTED by M0-165 (2026-09-24). The old assertion named `calibration.test.mjs` as "a real reader,
+     which names MEASUREMENTS.md in its code" — and it was WRONG about that suite when it was written, not
+     merely overtaken. `calibration.test.mjs` never read the ledger: it carried the PROVENANCE LABEL
+     `measured_by: "MEASUREMENTS.md"` in a fixture chain, a data string the lexer keeps (a path is a string,
+     D-301) and `fileHit`'s basename probe cannot tell from a path. So the canary for "the method still sees a
+     real reader" was itself an instance of the over-selection this suite exists to bound — it would have gone
+     on passing after the method stopped seeing every genuine reader, which is the one failure it must catch.
+     M0-165 dropped `.md` from those labels, so the false edge is gone and the old canary can no longer hold.
+     The replacement is a reader that OPENS the file: `entries.test.mjs` reaches it through `tools/entries.mjs`,
+     whose `FROZEN.M.frozen` is the literal path `docs/development/MEASUREMENTS.md` handed to `readRel`'s
+     `readFileSync` — this suite's own head has named it as that reader since M0-100. */
+  t("the method sees a real reader: entries.test.mjs, which OPENS MEASUREMENTS.md through tools/entries.mjs, is selected",
+    readers.some((l) => /^gates: {3}plane:entries\.test\.mjs /.test(l)), true);
   t(`a MEASUREMENTS-only change selects at most ${UNITS_CEILING} units (88 when the predicate lived in coord.mjs)`, units >= 0 && units <= UNITS_CEILING, true);
   t(`at most ${THROUGH_COORD_CEILING} MEASUREMENTS readers reach it through tools/coord.mjs (41 before)`, viaCoord.length <= THROUGH_COORD_CEILING, true);
   t("no unit is selected for MEASUREMENTS.md through the predicate's module", viaPred.filter((l) => l.includes("MEASUREMENTS")).length, 0);
+  /* M0-165 — THE PROVENANCE-LABEL ARM, and it is written as a PROPERTY rather than as a list of four suites.
+     A unit that really reads the ledger spells its PATH: `tools/entries.mjs` hands `docs/development/MEASUREMENTS.md`
+     to `readRel`'s `readFileSync`. A unit that merely carries a provenance LABEL spells the BASENAME ALONE, in a
+     data string — `measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)"`, the free string of index.mjs' chain contract
+     saying where a fidelity grade was measured. The gate's lexer keeps strings on purpose (D-301: a path IS a string),
+     so `fileHit`'s basename and stem probes cannot tell the two apart and read the label as a read. The discriminator
+     is the spelling, not a list: BASENAME ALONE, with no path anywhere in the file's code, is a label. Four suites
+     read that way before this item (calibration, reextract, textchain, tier3-layer-parts); a list of those four would
+     go stale the moment a fifth is written. */
+  const byName = readers.map((l) => [l, (l.match(/ names (?:MEASUREMENTS\.md|"MEASUREMENTS") in (\S+)/) || [])[1]])
+    .filter(([, f]) => f);
+  const labelOnly = byName.filter(([, f]) => {
+    let code = null;
+    try { code = stripComments(readFileSync(join(SCR, f), "utf8")); } catch { return false; }
+    return !code.includes("docs/development/MEASUREMENTS.md");
+  });
+  console.log(`    MEASUREMENTS readers selected by basename: ${byName.length} (${byName.map(([, f]) => f).join(", ") || "none"})`);
+  t("every one of them SPELLS THE PATH — no unit is a MEASUREMENTS reader through a basename-only provenance label (M0-165)",
+    labelOnly.map(([, f]) => f), []);
   /* acquire.test.mjs reaches `op-claims.mjs` (through the scripts it names) and nothing else of the state layer: on
      `f05c1efd` it was selected "walks docs/development/ in tools/coord.mjs", only through the predicate's import. */
   t("acquire.test.mjs, which reached coord.mjs only through op-claims' predicate import, is NOT selected",

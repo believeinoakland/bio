@@ -20,6 +20,12 @@
  *   c  OVER-STRICTNESS: `op-claims.mjs` imports the     -> NOTHING fails: the suite is GREEN.
  *      module by namespace (`import * as`), a spelling
  *      the brief did not anticipate
+ *   d  M0-165's control: ONE provenance label in         -> "no unit is a MEASUREMENTS reader through a basename-only
+ *      `textchain.test.mjs` gets its `.md` back             provenance label" FAILS, NAMING `bio-plane/test/textchain.test.mjs`,
+ *      (`measured_by: "MEASUREMENTS 2026-08-03              and "selects at most N units" FAILS by count (the suite comes back
+ *      (CPDF-9)"` -> `"MEASUREMENTS.md 2026-08-03           into the selection). MUST NOT: "the method sees a real reader"
+ *      (CPDF-9)"`)                                          (`entries.mjs` spells the path and is unaffected), the
+ *                                                           one-definition arms, the clone arms.
  */
 import { readFileSync, writeFileSync, statSync, mkdtempSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -35,8 +41,9 @@ const FILES = {
   statepaths: { abs: join(REPO, "tools/statepaths.mjs"), min: 1500 },
   coord: { abs: join(REPO, "tools/coord.mjs"), min: 30000 },
   opclaims: { abs: join(REPO, "bio-plane/scripts/op-claims.mjs"), min: 20000 },
+  textchain: { abs: join(REPO, "bio-plane/test/textchain.test.mjs"), min: 50000 },
 };
-const DECLARED_ARMS = 3;
+const DECLARED_ARMS = 4;
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -88,6 +95,10 @@ const suiteRun = () => {
 const broke = (s, frag) => s.failed.some((l) => l.includes(frag));
 
 const IMPORT_LINE = 'import { isMovedPath } from "../../tools/statepaths.mjs";';
+/* M0-165's arm (d): the gate's basename probe reads a provenance LABEL as a read of the ledger. One label, armed
+   ALONE — the other three suites' labels stay as they are, so the arm moves exactly one variable. */
+const LABEL_WITHOUT_MD = 'measured_by: "MEASUREMENTS 2026-08-03 (CPDF-9)", confidence_floor: 0.6, pages,';
+const LABEL_WITH_MD = 'measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)", confidence_floor: 0.6, pages,';
 const COORD_BLOCK = 'import { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath } from "./statepaths.mjs";\nexport { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath };';
 const DEFS = FILES.statepaths.pristine.toString("utf8").slice(FILES.statepaths.pristine.toString("utf8").indexOf("export const MOVED_FILES"));
 
@@ -112,6 +123,10 @@ const ARMS = [
     arm: () => [patch(FILES.opclaims, IMPORT_LINE,
       'import * as STATEPATHS from "../../tools/statepaths.mjs";\nconst { isMovedPath } = STATEPATHS;')],
     mustBreak: [], mustHold: ["selects at most", "reach it through tools/coord.mjs", "imports nothing"] },
+  { id: "d", title: "M0-165 — ONE provenance label in textchain.test.mjs gets its `.md` back",
+    arm: () => [patch(FILES.textchain, LABEL_WITHOUT_MD, LABEL_WITH_MD)],
+    mustBreak: ["basename-only provenance label", "selects at most"],
+    mustHold: ["the method sees a real reader", "IS statepaths.mjs' isMovedPath", "byte for byte"] },
 ];
 
 let ran = 0;

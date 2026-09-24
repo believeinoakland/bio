@@ -20,7 +20,9 @@
  *       `--since` arm with it; tools-only still reads TARGETED and every other FULL category still FULL;
  *   (4) selection by import alone -> the COMPUTED-path arm FAILS, with the walker arm; the importer is still selected;
  *   (5) the clean-at-start check removed -> "...and the gate says why" FAILS; the dirty run is still not recorded,
- *       because the end-of-run check backs it — a real redundancy, kept;
+ *       because the end-of-run check backs it — a real redundancy, kept. **TRUE WHEN WRITTEN, FALSE FROM
+ *       2026-09-23 (`7eace1e21` put a second verdict write in front of §4) AND TRUE AGAIN FROM M0-157**: the
+ *       dated control block at the foot of this header says what it measured;
  *   (6) the end-of-run check removed -> "a tree that CHANGES while the gate runs is NOT recorded" FAILS;
  *   (7) `--since` ignoring the record -> both fallback arms FAIL; disjoint docs still re-run only plancheck;
  *   (8) both sides read as the SAME FILE changed on both -> "a unit reading BOTH sides re-runs" FAILS;
@@ -72,6 +74,54 @@
  *   (17) re-read: blanking strings now also fails the doc-facing STRING reader and the whole-set pin, because M0-143
  *       put §2 under the SAME `codeOf`. Declared in the arm rather than discovered — 11 fail of 96.
  *
+ * NEGATIVE CONTROL: G5 RE-RUN 2026-09-24 by the M0-157 worker, ALONE, on the fix it drove — the arm asserts a
+ * REDUNDANCY, and it was the assertion that was right and the SUBJECT that was wrong:
+ *   (5) re-read, BEFORE the fix: baseline 96/0, armed **93/3** and NOT isolated. The MUST NOT failed — the dirty run
+ *       WAS recorded — and a THIRD failure nobody had declared came with it. Diagnosed at the armed gate's own
+ *       output rather than by reading the source: `gates.mjs` §2d's tree-keyed shortcut, reached because the armed
+ *       `CLEAN_AT_START` read clean, wrote a SECOND record for that tree (`GREEN`, class `REUSED`, `already GREEN by
+ *       <the clean run's record>`) and exited 0 — BEFORE §4, which is the ONLY site the end-of-run check guards. The
+ *       undeclared third failure, "a tree that CHANGES while the gate runs is NOT recorded", asserts the same record
+ *       COUNT and fell with it: collateral, and it is now DECLARED in G5's `mustNotBreak` so a re-run cannot absorb it.
+ *   (5) re-read, AFTER it: baseline 96/0, armed **95/1** — the one being the declared `mustBreak` — closing 96/0,
+ *       both subjects restored sha256- and cmp-identical. §2d now re-reads `status` and `HEAD^{tree}` itself, declines
+ *       the shortcut when its own read disagrees with the start check, and lets the run reach §4. MEASURED at the
+ *       sentence, not inferred: the armed gate prints `NOT RECORDED — the tree changed while the gate ran (1 path(s)
+ *       dirty at the end)`, so the check doing the refusing really is the end-of-run one this arm names.
+ *   AND THE ARM IS UNCHANGED, which is the finding's shape: **the declaration was TRUE when it was written and a
+ *   landing in the SUBJECT made it false, with nothing re-running it.** Dated: G5 last read isolated on 2026-09-22
+ *   (M0-116's re-run, seventeen arms as declared, driver 123/0), when §4 held the only `appendRun` in `gates.mjs`
+ *   and its end-of-run check therefore backed every verdict write there was. §2d itself (BOB #29, `6873215ac`,
+ *   2026-09-23) still wrote none — CHECKED, not assumed: that commit's `gates.mjs` holds ONE `appendRun` call. The
+ *   SECOND landed later the same day in `7eace1e21` (BOB #29, "a gate that finds its tree already GREEN still RECORDS
+ *   its answer (REUSED)"), whose own reason is sound and is quoted at the site — a caller reads its verdict from the
+ *   run it caused, so writing nothing read as UNDETERMINED. It is the SITE, not the reason, that invalidated this arm.
+ *   The 2026-09-24 re-run above ran G17-G19 only, so no run of G5 stood between that landing and M0-146's worker
+ *   finding it. The general form,
+ *   which is why it is written here rather than in a report: **an arm that asserts a REDUNDANCY is invalidated by a
+ *   change that adds a SITE, not by a change to either check it names** — so `gates.mjs` gaining an `appendRun` is
+ *   the event that owes this driver a re-run, and `grep -n appendRun tools/gates.mjs` (2 sites, 2026-09-24) is the
+ *   one-line instrument that says whether it does.
+ *   AND ONE TRAP PAID FOR HERE, so the next editor of this header does not pay it again: the first draft of the line
+ *   above pointed a reader at this block BY NAMING THE REGISTER'S MARKER PHRASE, and `control-register.mjs`
+ *   `declarationAt` ends a declaration at any line CONTAINING that phrase (`text.includes(MARKER_PHRASE)` — "the next
+ *   declaration begins"). So a CITATION reads as a new marker: the (1)-(17) declaration was cut off at (5) and this
+ *   file's recorded arms fell 17 -> 5, taking `coverage --strict` to `arms 2081/2093` and exit 1 — MEASURED both ways
+ *   against origin/main 68fecb8d, which prints 2093/2093 and exit 0. The line is reworded, not the floor moved: a
+ *   floor that falls for a citation is not slack. Refer to a control block by where it sits, never by the phrase.
+ *   AND THE WHOLE DRIVER RAN, not only the arm whose row it was — the subject `tools/gates.mjs` is every arm's
+ *   subject, so a change to it owes all of them. RUN TWICE, and the SECOND run is the one that stands:
+ *     (i) on M0-157's own branch, 19 arms, driver 145 pass / 0 fail, baseline and closing 96/0.
+ *     (ii) ON THE MERGE WITH `land/worker/M0-153` @ 8dde5a55, which corrected this same arm the OTHER way and added
+ *     G20/G21: **21 arms plus baseline and closing, driver 166 pass / 0 fail, exit 0 read UNPIPED**, baseline and
+ *     closing 101/0, both subjects restored sha256- and cmp-identical at 92,570 and 94,212 bytes after every arm.
+ *     Every arm as declared, M0-153's two included. Per-arm armed tallies of 101: G1 92/9 · G2 72/29 · G3 92/9 ·
+ *     G4 92/9 · G5 100/1 · G6 99/2 · G7 98/3 · G8 100/1 · G11 100/1 · G12 93/8 · G13 100/1 · G9 100/1 ·
+ *     G10 99/2 · G14 98/3 · G15 100/1 · G16 99/2 · G17 70/31 · G18 98/3 · G19 99/2 · G20 99/2 · G21 100/1.
+ *   G5's ONE failure under (ii) is its `mustBreak`, with all FOUR `mustNotBreak` assertions holding — the two this
+ *   item restored and the two M0-153 added. That is the arm isolated on the union of both items' changes to the
+ *   subject, which is the only tree either figure is about.
+ *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote
  * would be a real refusal of a real push. So every arm builds a REAL repository under the battery's
@@ -92,6 +142,28 @@
  *     the two FILE sets). A tool moved on one side and its suite on the other shares no file, and that
  *     pairing was never measured anywhere. So an arm asserts the suite re-runs.
  */
+/* NEGATIVE CONTROL: RAN 2026-09-24 by the M0-154 worker, by hand, over the DERIVED fixture copy list
+ * (`test/gatedeps.mjs`). Declared before arming; each arm ALONE, the other three suites held open; every
+ * restore by `cp` from a uniquely-named pristine copy, verified by sha256 AND `cmp` AND a byte count.
+ *   BASELINE (this tree, before the arms): gates.test.mjs 96 pass / 0 fail.
+ *   (A1) ACCEPTS-WHEN — `tools/m0154probe.mjs` added and imported by `tools/gates.mjs`. MUST NOT fail:
+ *        all four suites GREEN, each fixture's printed `gatedeps:` list one file longer. ACTUAL: green
+ *        (gates 96/0, gateresults 52/0, entries 59/0, train 53/0), every list carrying `tools/m0154probe.mjs`.
+ *   (A2) THE CONTROL THE ROW NAMES — A1 still armed, and this suite's HAND copy list restored verbatim.
+ *        MUST fail, BY NAME, at "the fixture carries the REAL … (DERIVED)". ACTUAL (in `gates.test.mjs`,
+ *        the suite armed): 24 pass / 72 fail, that assertion first and naming the file —
+ *        `want [true,true,true,[]] got [true,true,true,["tools/m0154probe.mjs"]]`.
+ *   (A2') A FINDING ABOUT THE ARM, not smoothed: A2's FIRST run threw `ENOENT` out of the assertion and
+ *        ended the module with NO TALLY AT ALL — a control that dies proves nothing (`kickoffs/WORKER.md`).
+ *        `missingFrom` below is that correction; A2 as recorded is the re-run against it.
+ *   (A3) OVER-STRICTNESS — the same import written three ways the derivation was not written against:
+ *        `await import("./m0154probe.mjs")`, `export { … } from "./m0154reexport.mjs"`, and an
+ *        `import … from "./m0154absent.mjs"` inside a COMMENT whose target EXISTS on disk. MUST pass, and
+ *        MUST copy the first two and NOT the third. ACTUAL: exactly that; gates 96/0, entries 59/0.
+ *   (A4) THE HELPER'S OWN REFUSALS, driven directly: a `without` naming a file outside the closure THROWS
+ *        (a stale exclusion cannot outlive its import); a missing root THROWS; `const IMPORT_RE` renamed in
+ *        a scratch copy of `tools/gates.mjs` THROWS naming the line. All three as declared.
+ */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, existsSync } from "node:fs";
@@ -100,9 +172,32 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { install, hooksDir, readRuns, effectiveVerdict, recordDir } from "../../tools/pushguard.mjs";
+import { gateDeps } from "./gatedeps.mjs";     /* M0-154: the fixture's copy list is DERIVED, never kept by hand */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
+/* M0-154 · WHAT THE FIXTURE CARRIES, DERIVED FROM `tools/gates.mjs`'s OWN IMPORTS, transitively, by the
+   ONE shared helper — never a hand list here, which is the D-93 defect and cannot fail when it falls
+   behind (`gates.mjs` loads each of these under a `try` and DEGRADES rather than crashing, so a missing
+   copy silently weakens every assertion below). ONE derived dependency is deliberately NOT carried,
+   `tools/gateresults.mjs`, and `without` is checked against the closure so the exclusion cannot outlive
+   the import it names. Both reasons MEASURED 2026-09-24: (1) its mere PRESENCE turns the per-unit record
+   on — `PER_UNIT_ON` in `gates.mjs` is `isFile(tools/gateresults.mjs)` — and this suite's subject is the tree-keyed D-293 shortcut, which BOB #30 suspends
+   when that record is on: armed, two assertions here failed by name ("a run on a tree already recorded
+   GREEN runs NOTHING and says so"). (2) this suite hands the
+   fixture's gate `process.env` whole, so under a real outer gate the fixture would inherit
+   `BIO_GATE_RESULTS_REMOTE` and write its own PASS records to the OUTER gate's results remote: the
+   incident `gateresults.test.mjs` records against itself, which only its `CLEAN_ENV` prevents. */
+const GATE_DEPS = gateDeps({ repo: REPO, without: ["tools/gateresults.mjs"] });
+console.log(`gatedeps: gates.test.mjs fixture carries ${GATE_DEPS.length} derived file(s) — ${GATE_DEPS.join(", ")}`);
+/* A FILE THE FIXTURE LACKS MUST FAIL AN ASSERTION, NEVER THROW PAST ONE. Found by this item's own control
+   arm (M0-154, 2026-09-24): the first draft compared with a bare `readFileSync` on both sides, so a fixture
+   missing a derived file ended the module with an ENOENT and NO TALLY AT ALL — a control that "fails" by
+   dying proves nothing about the assertion, and `kickoffs/WORKER.md` records the same shape as a suite whose
+   count reads clean. It reports the offending paths BY NAME instead. */
+const missingFrom = (dir) => GATE_DEPS.filter((p) => {
+  try { return !readFileSync(join(dir, p)).equals(readFileSync(join(REPO, p))); } catch { return true; }
+});
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -112,7 +207,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 10;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1 */
+const SECTIONS = 11;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1; M0-153: +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -206,6 +301,17 @@ const FILES = {
     `const F = new URL("../../data/figures.txt", import.meta.url);`,
     `process.exit(readFileSync(F, "utf8").length ? 0 : 1);`, ""].join("\n"),
   "bio-plane/test/figcomment.test.mjs": `/* the figures this suite was tuned against are in figures.txt (M-1) */\nprocess.exit(0);\n`,
+  /* M0-153: the CLOSURE'S EDGES, read as code. `figtool.mjs` READS the figures (a string path); one suite names it
+     through the ASSEMBLED spelling `join(REPO, "tools", "figtool.mjs")` — the slash never written — and one names
+     it only in its prose. Neither spells `data/figures.txt` itself, so what selects them is the EDGE and nothing else. */
+  "tools/figtool.mjs": `export const F = "data/figures.txt";\nexport const read = () => F;\n`,
+  "bio-plane/test/asmtool.test.mjs": [
+    `import { join, dirname } from "node:path";`,
+    `import { fileURLToPath } from "node:url";`,
+    `const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");`,
+    `const mod = await import(join(REPO, "tools", "figtool.mjs"));`,
+    `process.exit(mod.read() ? 0 : 1);`, ""].join("\n"),
+  "bio-plane/test/asmcomment.test.mjs": `/* the figures behind this suite are what tools/figtool.mjs reads */\nprocess.exit(0);\n`,
   /* two suites through a shared HELPER: one helper names a tool only in a COMMENT, the other in CODE */
   "bio-plane/test/helper-prose.mjs": `/* this helper's prose cites tools/lonely.mjs and reads nothing */\nexport const h = 1;\n`,
   "bio-plane/test/helped.test.mjs": `import { h } from "./helper-prose.mjs";\nprocess.exit(h === 1 ? 0 : 1);\n`,
@@ -213,7 +319,14 @@ const FILES = {
   "bio-plane/test/helped2.test.mjs": `import { TOOL } from "./helper-code.mjs";\nprocess.exit(TOOL ? 0 : 1);\n`,
   "bio-plane/test/unrelated.test.mjs": "process.exit(0);\n",
   "civicos-ui/test/run.mjs": stub("ui-harness"),
-  "civicos-ui/test/uiwidget.test.mjs": `// drives tools/widget.mjs from the UI side\n${stub("ui-uiwidget")}`,
+  /* CORRECTED 2026-09-24 (M0-153), never exempted: it named `tools/widget.mjs` in a `//` COMMENT, which stood
+     for "drives the tool" only while the CLOSURE'S EDGES were cut from a unit's whole text. They are now cut from
+     its code, so a comment drives nothing and the arm below asked its question of a suite that named no tool at
+     all. A UI suite that really drives a tool spells it in code, which is what this fixture now does. */
+  "civicos-ui/test/uiwidget.test.mjs": `const TOOL = "tools/widget.mjs"; // driven from the UI side\n${stub("ui-uiwidget")}`,
+  /* ...and the other direction, so "fewer units" cannot pass for the fix: a UI suite whose ONLY mention of that
+     same tool is a comment. */
+  "civicos-ui/test/uicomment.test.mjs": `// tuned against tools/widget.mjs, which this suite does not drive\n${stub("ui-uicomment")}`,
   "civicos-ui/app.html": "<!doctype html>\n",
   "pdf-worker/fleet-member.json": `${JSON.stringify({ name: "pdf-worker", entry: "src/index.mjs", testDir: "test" })}\n`,
   "pdf-worker/src/index.mjs": "export default {};\n",
@@ -241,10 +354,7 @@ const landMain = (root) => git(["push", "-q", "--no-verify", "origin", "main"], 
 
 function fixture(name) {
   const root = join(SANDBOX, name);
-  for (const f of ["gates.mjs", "pushguard.mjs"]) put(root, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
-  /* the estate's ONE lexer, which the gate reads imported files through, and what it imports */
-  for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
-    put(root, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
+  for (const p of GATE_DEPS) put(root, p, readFileSync(join(REPO, p)));
   for (const [rel, body] of Object.entries(FILES)) put(root, rel, body);
   git(["init", "-q", "-b", "main"], root);
   commitAll(root, "base");
@@ -293,9 +403,14 @@ const batteryOf = (g) => ((g.plan || "").match(/battery \[([^\]]*)\]/) || [, ""]
 section("THE FIXTURE — a real repository, the real tools, a real remote, the real hook");
 const F = fixture("main-fx");
 {
-  t("the fixture carries the REAL gates.mjs and pushguard.mjs",
-    ["gates.mjs", "pushguard.mjs"].every((f) =>
-      readFileSync(join(F.root, "tools", f)).equals(readFileSync(join(REPO, "tools", f)))), true);
+  /* CORRECTED 2026-09-24 (M0-154), never exempted: this named the same files the copy list did, so it agreed
+     for free and could not fail when the list fell behind `gates.mjs`'s imports. It now reads the DERIVED list —
+     the same one the fixture was built from — and floors its size, since a totality assertion over an empty
+     corpus passes (three receipts in `kickoffs/WORKER.md`). The list is PRINTED so the selection is auditable. */
+  t("the fixture carries the REAL gates.mjs and everything it imports, byte for byte (DERIVED)",
+    [GATE_DEPS.length >= 5, GATE_DEPS.includes("tools/gates.mjs"), GATE_DEPS.includes("tools/pushguard.mjs"),
+     missingFrom(F.root)],
+    [true, true, true, []]);
   t("the fixture's origin/main exists, so the gate measures a real diff",
     out1(["rev-parse", "--verify", "--quiet", "origin/main"], F.root).length, 40);
   t("the hook is installed where git reads hooks", existsSync(join(hooksDir({ repo: F.root }).dir, "pre-push")), true);
@@ -421,7 +536,8 @@ section("M0-98 · THE CLASS — TARGETED by MENTION, and what stays FULL");
   t("a tools-only diff reads TARGETED", tools.cls, "TARGETED");
   t("...and selects its IMPORTER", tools.units.includes("plane:widget.test.mjs"), true);
   t("...and the suite that WALKS tools/", tools.units.includes("plane:walker.test.mjs"), true);
-  t("...and a UI suite that names the tool", tools.units.includes("ui:uiwidget.test.mjs"), true);
+  t("...and a UI suite that names the tool in CODE", tools.units.includes("ui:uiwidget.test.mjs"), true);
+  t("...and NOT a UI suite that names it only in a COMMENT", tools.units.includes("ui:uicomment.test.mjs"), false);
   t("...and NOT a suite that reads none of it",
     ["plane:unrelated.test.mjs", "plane:computed.test.mjs", "plane:prose.test.mjs", "fleet:pdf-worker/member.test.mjs"]
       .filter((u) => tools.units.includes(u)), []);
@@ -505,6 +621,32 @@ section("M0-143 · THE DOC-FACING SET IS READ AS CODE — a comment names `docs/
     [batteryOf(d), batteryOf(d).length > 0], [["prose.test.mjs", "toolstring.test.mjs"], true]);
   t("...and the plan SAYS the set was read as code, so the selection stays auditable",
     d.out.includes("doc-facing suites derived fresh, read as code, comments blanked (strings kept)"), true);
+}
+
+/* ========================================================================== */
+section("M0-153 · THE CLOSURE'S EDGES ARE READ AS CODE — a tool NAMED IN PROSE is a tool nothing runs");
+{
+  /* THE LAST RAW READER IN THE SELECTION PATH. `fileHit` and `isWalker` were corrected by M0-116 and §2's two
+     sites by M0-143, but `edgesOf` still cut a unit's edges from its WHOLE text — so a tool named in a comment
+     entered the closure, and everything that tool reads became something the unit "reads". Measured on the estate
+     at 68fecb8d by `statepaths.test.mjs`'s own printed line: a MEASUREMENTS-only change selected 47 units before
+     and 45 after, and `plane:m025-arm-anchor-witness.test.mjs` stopped being NEVER-CACHED — it never ran
+     `tools/plancheck.mjs`, it only quotes the name in the paragraph explaining why its corpus walks `tools/`.
+
+     HOW A LIAR PASSES THIS, stated first: blanking the comments ALSO blanks the only literal spelling of a tool a
+     unit really runs through an ASSEMBLED path (`join(REPO, "tools", "x.mjs")`) — eight files on the estate, among
+     them `entries.control.mjs`, whose lost edge was `tools/entries.mjs`, the very tool it drives. So the
+     comment-only arm is asserted BESIDE the assembled reader that must STAY, and a fix that merely selects fewer
+     units fails here. */
+  branch(F.root, "edgecode");
+  const figs = withEdits(F.root, ["data/figures.txt"], () => gates(F.root, ["--explain"]));
+  t("a data-only diff reads TARGETED", figs.cls, "TARGETED");
+  t("a suite naming, through the ASSEMBLED spelling in CODE, a tool that READS the file is selected — it is the edge, "
+    + "not the path, that selects it", figs.units.includes("plane:asmtool.test.mjs"), true);
+  t("...and a suite whose ONLY mention of that same tool is a COMMENT is NOT selected — a comment runs nothing",
+    figs.units.includes("plane:asmcomment.test.mjs"), false);
+  t("...and the plan SAYS the edges were read as code, so the selection stays auditable",
+    figs.out.includes("the `tools/x.mjs` spelling and the assembled `join(…, \"tools\", \"x.mjs\")` one both name a tool (M0-153)"), true);
 }
 
 /* ========================================================================== */

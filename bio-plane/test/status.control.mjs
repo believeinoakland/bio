@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * eleven arms plus an opening and closing baseline.
+ * fourteen arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -118,6 +118,41 @@ const ARMS = [
     from: "export const CELL_CAP = 240;",
     to:   "export const CELL_CAP = 1e9;",
     mustBreak: "a first sentence past CELL_CAP is cut, marked, and no longer than the cap plus its mark" },
+  /* M0-155, 2026-09-24. THE ARM THAT MATTERS MOST HERE, because the property it breaks is the one
+     that had never been asserted at all: this tool spent its whole life matching comments, and
+     sixteen claims' probes were resting on one when the arm was written. Armed, `readCode` hands
+     every probe the RAW source again, so a comment satisfies a `hit` and falsifies a `none` exactly
+     as before. Note what it must ALSO break, on the real tree rather than in a fixture — a DEC-49
+     region marker is a comment, and eleven claims used to read BUILT on one. */
+  { id: "A12", title: "comments read as code again — a claim stands on a sentence nothing enforces (M0-155)",
+    from: "? t : stripComments(t));",
+    to:   "? t : t);",
+    mustBreak: "A `hit` WHOSE ONLY MATCH IS A COMMENT IS NOT BUILT",
+    alsoBreak: "ON THE REAL TREE a DEC-49 REGION MARKER" },
+  /* M0-155, the SECOND defect and a separate arm because it has a separate cause: A12's blanking
+     cannot reach an SQL comment inside a template literal, so the DECLARATION SHAPE closes that one.
+     Loosen the shape back and a sentence about a table is counted as a table again — which is how
+     `would` sat in the census, and how `does` sat there before the blanking took it. */
+  { id: "A13", title: "a sentence about a table counted as a table again — the census's two phantoms (M0-155)",
+    /* The anchor is written with DOUBLED backslashes on purpose: the LINE in `status.mjs` contains
+       `"\\s*…"` (a regex source inside a JS string), so a JS literal that reproduces it needs four.
+       Spelled with two, this patch matched ZERO times and the driver's own "the arm ARMED" assertion
+       said so — an arm that did not arm is a finding, and that is the assertion that made it one. */
+    from: 'const DECL_TAIL = "\\\\s*(?:\\\\(|USING\\\\s)";',
+    to:   'const DECL_TAIL = "";',
+    mustBreak: "A `CREATE TABLE` IN A PROSE SENTENCE IS NOT A TABLE",
+    alsoBreak: "...so the census does not count it either" },
+  /* M0-160, 2026-09-24. The property is new, and it is the one a probe's whole worth rests on: a
+     `hit` names ONE site or it names nothing. Armed, the tool takes the FIRST match again and
+     reports that line as evidence — which is exactly how D-498's probe matched 24 sites in
+     `store.mjs` and stayed green over an op its subject never touched. The arm must NOT touch the
+     miss ("matches nowhere") or the unique pin, because a guard that failed every `hit` would pass
+     the ambiguity arms while blinding the corpus. */
+  { id: "A14", title: "a `hit` satisfied by its FIRST of many matches again — a probe that pins nothing reads as one that pins the right site (M0-160)",
+    from: "    if (sites.length === 1) return { ok: true, evidence:",
+    to:   "    if (sites.length >= 1) return { ok: true, evidence:",
+    mustBreak: "A `hit` MATCHING TWICE IN ITS FILE IS NOT ok",
+    alsoBreak: "TWO FILES MATCHING ONCE EACH IS AMBIGUOUS TOO" },
 ];
 
 for (const a of ARMS) {

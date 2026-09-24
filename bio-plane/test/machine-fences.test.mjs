@@ -37,6 +37,67 @@
    A MEMBER'S TIER TO UNDETERMINED is refused by name, and the member's tier stands". Arms (A)–(C) above were run on the
    branch before the ruling; (B)'s second named arm ("…stating the tier UNDETERMINED lands") is the assertion the ruling
    CORRECTED, and "…from undetermined the machine still cannot state 1" now stands on a never-set tier. */
+/* NEGATIVE CONTROL (D-503, block 3b's five arms, DECLARED IN `test/machine-fences.control.mjs` arms (6)-(10) and RUN
+   2026-09-24 on branch land/worker/D-503 over origin/main 68fecb8d, each arm ALONE with every other defence held open,
+   every restore verified by sha256 AND by content by the harness's own `restoreAll`; BASELINE 87 pass / 0 fail before
+   each). **ALL FIVE BEHAVED AS DECLARED**, and the figures are the ones the harness PRINTED:
+   (6) DROP THE `ai` FENCE AT op=caseratify -> 84/3 as declared: the MACHINE_CANNOT_RATIFY_CASE pin and its
+       catalogue-sentence twin fail by name, and the set arm names the pair. Its `got` is the arm's content:
+       `OPERATOR_TOKEN_CANNOT_RATIFY_CASE` — the act is DOUBLY FENCED, so "the case is NOT committed" stayed GREEN as
+       declared. A control that had only asked "did anything land" would have read this edit as no effect at all.
+   (7) DROP THE SESSION FENCE AT op=ratify -> 83/4 as declared, and the fourth failure is the reason the fence exists:
+       "the finding is STILL not published" went RED — **a bearer token PUBLISHED the finding** (`got: true`). Nothing
+       else stands between an operator's token and the published corpus. op=caseratify's arms and MACHINE_CANNOT_RATIFY
+       stayed green. RECORDED RATHER THAN DECLARED, because the arm could not predict it: ruth's own call afterwards
+       answers `RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE` — the act she was going to perform had already been performed by
+       a credential that is not her.
+   (8) DROP THE GOVERNANCE FENCE -> 84/3 as declared, `got: NOT_AN_ADMIN`, and "nothing the bearer asked for landed"
+       stayed GREEN — D-136's own argument arriving as a measurement: the `by` stamp behind the fence still refuses, with
+       a sentence that is CORRECT AND FALSE (a token is not a person who failed to be an administrator).
+   (9) OVER-STRICTNESS — the op=caseratify fence widened from the `ai` class to EVERY caller -> 82/5 as declared: BOTH
+       member twins fail (ruth cannot commit her own signed bytes, and her ratification then fails behind it) and the
+       OPERATOR pin fails because the bearer is now answered with the MACHINE's code — a fence lying about which caller
+       it refused. The MACHINE pin stayed green, which is why only the member arm can tell a fence from a wall.
+   (10) A SIXTH FENCE ARRIVES UNDRIVEN — one literal planted in `src/index.mjs` -> 86/1 as declared: 3b's equality alone
+       fails, naming `MACHINE_CANNOT_ARRIVE_UNMEASURED`, and every pin stayed green (the arm moved no fence). This is the
+       failure block 3b exists for and the one no instrument in this file could see before it.
+   ONE ARM CAME BACK WRONG AND IT IS NOT D-503's — arm (2), the REGRESSION SENTINEL, pre-existing on origin/main
+   68fecb8d and reported rather than smoothed. Its second assertion, "and NOTHING was declared by the machine's call",
+   STAYED GREEN when the declaration says it must fail. **DIAGNOSED BY DRIVING, not by reading:** with the identity
+   predicate neutered the machine's `op=strengthbar` answered
+   `{ok:true, group:"biosmoke-rec73", capture:"B", connection:"C", author:"token:ai"}` — **the machine DID set the
+   group's required evidentiary strength**, which is the exact fact the sentinel exists to catch. The assertion missed it
+   because `barOf()` reads `group=believe-in-oakland` while the act, whose payload names no group, writes to the store's
+   PRODUCING group (`#producingGroup()`, the INSTANCE_NAME binding `biosmoke-rec73`) — D-436's rule that "the default is
+   the store's recorded group, never a literal" moved the write and nothing moved the read-back with it. So block (ix)'s
+   guard and its read-back are BOTH passing over the wrong group, and the arm's declaration was RIGHT. THE FIX WAS
+   NAMEABLE AND WAS NOT TAKEN HERE, because it was outside that row: name the group in the act's payload so the write
+   and the read-back address the same one, then re-run the arm, which should then fail as declared. Reported to CONDUCT,
+   placed by SCHEDULER, and **TAKEN 2026-09-24 BY D-509**, whose own declaration is the block below; the D-503 worker's
+   diagnosis and its named fix were both confirmed by running them, and the paragraph above is left as it was written
+   rather than rewritten into hindsight. */
+/* NEGATIVE CONTROL (D-509, THE SENTINEL'S OWN ARM, RUN TWICE — the whole harness `test/machine-fences.control.mjs`,
+   all ten arms, 2026-09-24 on branch land/worker/D-509 over origin/main e9b21be66, every restore verified by sha256
+   AND by content by the harness's own `restoreAll`, baseline 87 pass / 0 fail before each arm).
+   BEFORE THE FIX, MEASURED ON THIS TREE RATHER THAN TAKEN FROM THE ROW: ten arms run, ONE behaved differently from its
+   declaration — the sentinel arm, whose second assertion "and NOTHING was declared by the machine's call" stayed GREEN
+   with the identity predicate neutered; the harness exited 1. That reproduced D-503's report exactly.
+   AFTER: ten arms run, ZERO behaved differently from their declaration, and the harness exited 0. The sentinel arm now
+   takes down BOTH of the assertions it declares — the MACHINE_CANNOT_DECLARE pin AND the read-back — which is the whole
+   of what this row bought: a machine getting past the refusal and a machine changing what the group requires of its own
+   evidence are two facts, and only the second one was unpinned.
+   WHAT MOVED, AND IT IS EXACTLY ONE FAILURE IN EXACTLY THE TWO ARMS THAT NEUTER THE IDENTITY PREDICATE: the item arm
+   49 pass / 38 fail -> 48 pass / 39 fail, and the sentinel arm 56 pass / 31 fail -> 55 pass / 32 fail. Every other
+   arm's printed figure is unchanged (85/2, 85/2, 87/0, 84/3, 83/4, 84/3, 82/5, 86/1), so the edit moved the sentinel
+   and nothing else — the over-strictness arm's 87/0 is the direct evidence that naming the group refuses no correct work.
+   AND THE RE-MEASUREMENT THIS ROW REQUIRED, BECAUSE A GROUP-WIDE BAR DECLARED MID-SUITE COULD HAVE GATED WHAT RUNS
+   AFTER BLOCK ix: the whole suite reads 87 pass / 0 fail both before and after, and a line-for-line diff of the two
+   runs' output moves TWO LABELS AND NO VERDICT. MOVE_VERSION, REVIEW, SET_LAWS and SET_RISK_TIER — and every member
+   twin below them — are GREEN in both. The reading that agrees with the measurement, stated as the reading and not as
+   the evidence: `group_strength_bar` has exactly two sites in `src/store.mjs`, this write and `strengthBarOf`'s read,
+   and DEC-72 withdrew the group bar as a publication bar, leaving it the SEED a new project starts from.
+   WHAT THIS BLOCK DOES NOT CLAIM: the arms were not re-derived, only re-run. Their declarations are unchanged and live
+   in the harness; this block records what running them produced. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/machine-fences.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3's, PL-4's and PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, and every restore is verified BY sha256 AND BY CONTENT.
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a75c0395e77e7eaed, every one behaving as declared, baseline 45/0 before each. Figures below are MEASURED.
    (1) NEUTER THE PREDICATE — `isMachineStamp` returns false in checks/bio-checks.mjs — and ALL TWELVE complete-payload arms FAIL NAMING THE MACHINE REFUSAL, not a payload complaint -> 15 pass, 30 FAIL. **AND HERE IS WHAT THE COMPLETE PAYLOAD BOUGHT, WHICH IS MORE THAN THE ITEM PREDICTED: TEN OF THE TWELVE ACTS THEN WENT ALL THE WAY THROUGH.** The machine RELEASED a collected document to `verified`, CONCLUDED a question, REOPENED one, PUBLISHED a case at edition 1, MOVED an action, wrote a CORRESPONDENCE entry at ord 0, DIVIDED a question into two children, GROUPED a basis, SET THE GROUP'S REQUIRED EVIDENTIARY STRENGTH (`author: token:ai` in the row, read back), and ACCEPTED a reading. Under PL-11's payloads the same edit produced ONE success and eleven payload complaints; under these it produces ten. **THE TWO THAT DID NOT: `taskforward` and `taskresolve`, both answering `NOT_YOURS` — REC-4's assignee fence catching what the machine fence let past.** Those two verbs are the only pair in the family with a SECOND independent fence behind the first, and nobody knew that until the arm was run with a payload good enough to reach it.
@@ -92,19 +153,29 @@
  *   3. THE SWEEP. Which OTHER refusals are believed on the strength of their
  *      first half — a walk over every refusal `store.mjs` mints, reporting how
  *      much each one SHADOWS and whether any suite pins it at all.
+ *
+ * AND ONE BLOCK THIS ITEM DID NOT WRITE: 3b, ADDED 2026-09-24 BY D-503. Blocks 1
+ * to 3 read `src/store.mjs` ALONE, so the completeness equality that makes "a
+ * thirteenth fence cannot arrive unmeasured" true could never see a fence minted
+ * in `src/index.mjs` — where five of them are. 3b harvests those five, DRIVES
+ * each through its op under a payload a human then succeeds with, and holds the
+ * same equality over them. Its own header says what the row that asked for it
+ * got wrong, and what was actually missing.
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdtempSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";  /* D-503 block 3b: op=ratify's authority is a REAL SSHSIG */
+import { tmpdir } from "node:os";                              /* D-503 block 3b: the key directory, OUTSIDE the worktree */
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 /* M0-18 — ONE mechanism, imported. This suite's exposure is NOT its siblings'
    and the difference is argued in full at the pin roster walk in block 4. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
-import { isMachineIdentity, isMachineStamp } from "../checks/bio-checks.mjs";
-import { makePublishingProject } from "./publishingproject.mjs";
+import { isMachineIdentity, isMachineStamp, MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
+import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
@@ -572,19 +643,39 @@ const fence = (code, payload, machineAnswer) => {
   const barOf = async () => (await GET(`op=strengthbarof&token=${RUTH}&group=${GROUP}`))?.bar ?? null;
   t("  no bar is declared for this group before either call — the guard, so 'it was set' cannot be "
   + "true before the act", await barOf(), null);
-  const BODY = { capture: "B", connection: "C" };
+  /* D-509: `group: GROUP` IS LOAD-BEARING AND ITS ABSENCE WAS A FALSE GREEN. Without it this act
+     names no group, so D-436's default sends the write to the STORE'S PRODUCING group
+     (`#producingGroup()`, the INSTANCE_NAME binding `biosmoke-rec73`) while `barOf()` above reads
+     back `group=believe-in-oakland`. The read-back below then found `null` whatever the act did,
+     so the sentinel's second assertion PASSED OVER THE WRONG GROUP and stayed green under the
+     control's arm (2) — measured on origin/main e9b21be66, where a machine with the identity
+     predicate neutered DID set the bar and the suite said nothing was declared. Naming the group
+     puts the write and the read-back on the same one. It is also the group every fixture in this
+     file is promoted into, so the bar this block leaves behind is the one a reader would expect. */
+  const BODY = { group: GROUP, capture: "B", connection: "C" };
 
   const m = await POST(`op=strengthbar&token=${AI}`, BODY);
   fence("MACHINE_CANNOT_DECLARE",
-    "a legal grade on BOTH axes and the group defaulted — the payload PL-11 measured going all the "
+    /* CORRECTED 2026-09-24 by D-509. It read "and the group defaulted", which was true of the
+       payload and was the reason the read-back below could not see the act: the default is the
+       PRODUCING group and the read-back names this one. The payload now names the group, so the
+       sentence does too — an old assertion's description that outlives the payload it describes
+       is how a suite comes to say something it no longer tests. */
+    "a legal grade on BOTH axes and the group NAMED — the payload PL-11 measured going all the "
     + "way through, which is why this act is the regression sentinel rather than the exception",
     codeOf(m));
   t("  and NOTHING was declared by the machine's call — the sentinel's whole point, since this is "
   + "the act PL-11 measured going through", await barOf(), null);
 
   const r = await POST(`op=strengthbar&token=${RUTH}`, BODY);
-  t("  and the SAME payload sets the group's required strength for a signed-in member holding `publish`",
-    [r.ok, r.capture, r.connection, r.author], [true, "B", "C", "ruth"]);
+  /* D-509 ADDED `r.group` TO THIS TUPLE. The member twin is the only arm that can say WHERE the
+     write landed, and pinning it here is what makes the read-back above address the same row as
+     the act rather than agreeing with it for free — the property whose absence made the sentinel
+     unable to fail. A future default that moves the write again turns this suite red by name
+     instead of turning the control quietly green. */
+  t("  and the SAME payload sets the group's required strength for a signed-in member holding `publish`, "
+  + "ON THE GROUP THE PAYLOAD NAMED — which is the group `barOf()` reads",
+    [r.ok, r.group, r.capture, r.connection, r.author], [true, GROUP, "B", "C", "ruth"]);
 }
 
 /* -------------------------------------------------------- (x) MOVE_VERSION */
@@ -828,11 +919,291 @@ console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence ca
      MOVED 14 -> 15 at c19-batch10 by REC-189 (C-32.19 MACHINE_CANNOT_SET_RISK_TIER, minted C-32.18, block xv). */
   t("(fifteen fences were actually driven — the guard before the equality, because two empty sets are "
   + "equal and prove nothing)", drivenCodes.length, 15);
-  t("EVERY MACHINE_CANNOT_* the plane can mint was driven under a COMPLETE payload",
+  /* CORRECTED 2026-09-24 by D-503, never exempted: this label read "EVERY MACHINE_CANNOT_* THE PLANE
+     can mint", and that is wider than the arm can support. `HARVEST` reads `src/store.mjs` ALONE, and
+     the plane mints five more fence codes in `src/index.mjs` (the two MACHINE_CANNOT_RATIFY* and the
+     three OPERATOR_TOKEN_CANNOT_*) which this equality has never been able to see. Those are block
+     3b's, harvested and driven there; the two arms together are the whole plane, and neither claims
+     to be. The old wording was the defect this file exists to find, in this file. */
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` mints was driven under a COMPLETE payload — the codes "
+  + "`src/index.mjs` mints are block 3b's, and were outside this corpus, not inside it (D-503)",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);
   t("every one of them answered with its OWN name — this is the whole item, stated once as a set",
     DRIVEN.filter((d) => d.machineAnswer !== d.code).map((d) => [d.code, d.machineAnswer]), []);
+}
+
+/* ===================================================================== 3b
+ * D-503 — THE FIVE FENCES `src/index.mjs` MINTS, DRIVEN THROUGH THE OP.
+ *
+ * WHAT THE ROW SAID, AND WHAT WAS MEASURED. The row reads *"the authority
+ * boundary that no machine attests, with five of its fences asserted by
+ * nothing"*. **Measured on this tree that premise is FALSE, and it is corrected
+ * here rather than repeated**: every one of the five is already driven through
+ * its op, under a complete payload, by a named suite —
+ * `machine-attest.test.mjs` (REC-123) drives MACHINE_CANNOT_RATIFY C-32.12 and
+ * MACHINE_CANNOT_RATIFY_CASE C-32.13 with an `ai` credential carrying a
+ * registered member's REAL signature; `operator-attest.test.mjs` (REC-125)
+ * drives OPERATOR_TOKEN_CANNOT_RATIFY C-32.14 and
+ * OPERATOR_TOKEN_CANNOT_RATIFY_CASE C-32.15 for every bearer class
+ * `classify()` resolves, and `ratify.test.mjs` pins C-32.14 again;
+ * `adminvote.test.mjs` (D-136) drives OPERATOR_TOKEN_CANNOT_GOVERN C-32.17
+ * across class x op with a live proposal as its payload.
+ *
+ * WHAT *IS* ASSERTED BY NOTHING IS THE COMPLETENESS, AND IT IS THIS FILE'S OWN.
+ * Block 1 harvests `src/store.mjs` ALONE. So block 3's equality — the guard that
+ * makes *"a thirteenth fence cannot arrive unmeasured"* true — has never been
+ * able to SEE a fence minted in `src/index.mjs`, and a sixth one landing there
+ * undriven would have read exactly like the five standing. D-494 found the same
+ * blindness one level up, in the CATALOGUE walk, and widened that harvest to
+ * both sources; its note says plainly what it could not do — *"IT IS A SOURCE
+ * WALK, not a drive. That a fence is MINTED says nothing about whether the act
+ * reaches it; `test/machine-fences.test.mjs` grades the fence against the act."*
+ * That sentence names this file, and until this block it was not true of
+ * `index.mjs`. Block 3's own label carried the same over-claim (*"EVERY
+ * MACHINE_CANNOT_* the plane can mint"* over a store-only corpus) and is
+ * corrected at its site, not exempted.
+ *
+ * SO THIS IS NOT A SECOND COPY OF THOSE THREE SUITES AND MUST NOT BE READ AS
+ * ONE. Their findings are theirs and none is re-derived here: not REC-123's
+ * trace on the pre-item tree, not REC-125's bearer-class census, not D-136's
+ * governance arithmetic. What is new is that all five are driven in the ONE file
+ * that holds the harvest-to-drive equality, from ONE fixture, so that equality
+ * has something of its own to stand on. **Two instruments over one variable is
+ * agreement, not evidence** (CLAUDE.md §5), and that is stated rather than
+ * traded on: if an arm here and its twin there ever disagree, the fence moved.
+ *
+ * THE PAYLOAD IS COMPLETE AND THE MEMBER TWIN IS THE PROOF OF IT — REC-73's
+ * lesson, unchanged. Each act is driven by the MACHINE (`ai`), then by the
+ * OPERATOR's bearer token, then by RUTH'S OWN SIGNED-IN SESSION, which must
+ * SUCCEED. The two refusals are therefore the FENCE and not a payload complaint
+ * standing behind it, and the member arm is the over-strictness arm at the same
+ * time. The order is deliberate: a ratification is SPENT once it lands, so the
+ * human arm is last; and between the arms the record is READ BACK, because a 403
+ * returned over a write that went through is the shape eleven fences in this
+ * repository turned out to have.
+ *
+ * WHAT THIS BLOCK CANNOT DO, STATED RATHER THAN DISCOVERED. `op=ratify` and
+ * `op=caseratify` rest on a REAL SSHSIG, so with no `ssh-keygen` on PATH their
+ * four arms cannot be driven at all — a caller refused over a signature it could
+ * never have presented proves nothing. They are then SKIPPED BY NAME and the
+ * equality below carries them as NOT DRIVEN, so it reports a hole instead of
+ * passing over one; the arm still FAILS, by name, on any fence the harvest finds
+ * that neither ran nor was skipped. And the harvest is a walk over LITERALS with
+ * comments blanked: it cannot see a code assembled from a template, which
+ * `refusal-wire.test.mjs` 3b gates at empty for both sources.
+ * ==================================================================== */
+console.log("\n--- 3b. D-503 · the five fences src/index.mjs mints, DRIVEN through the op ---");
+{
+  const INDEX_BARE = decomment(readFileSync(SRC("index.mjs"), "utf8"));
+  const INDEX_HARVEST = [...new Set([...INDEX_BARE.matchAll(/"((?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]+)"/g)]
+    .map((m) => m[1]))].sort();
+  console.log(`    src/index.mjs mints ${INDEX_HARVEST.length} fence code(s): ${INDEX_HARVEST.join(", ")}`);
+  t("the src/index.mjs harvest found a REAL set and not an empty one — the guard BEFORE the equality, "
+  + "because two empty sets agree for free and this project has measured a headline arm passing over an "
+  + "empty corpus three times",
+    INDEX_HARVEST.length >= 5, true);
+
+  const IDX_DRIVEN = [];            /* { code, answer } — what was actually driven */
+  const IDX_SKIPPED = [];           /* { code, why }    — what could not be, BY NAME */
+  const idxFence = (code, payload, answer) => {
+    IDX_DRIVEN.push({ code, answer });
+    t(`${code} — refused BY NAME through the op, under a COMPLETE payload: ${payload}`, answer, code);
+  };
+  /* The refusal's SENTENCE is the catalogue's, never one typed at the site (DEC-49),
+     so each pin asks the row rather than repeating its words here. */
+  const catGot = (r, code) => [r && r.check, r && r.translation === MACHINE_FENCE_CHECKS[code]?.translation];
+  const catWant = (code) => [MACHINE_FENCE_CHECKS[code]?.check, true];
+
+  /* ---------------------------------------- (a)+(b) THE TWO RATIFICATION ACTS */
+  if (spawnSync("ssh-keygen", ["-Q"]).error) {
+    for (const c of ["MACHINE_CANNOT_RATIFY", "MACHINE_CANNOT_RATIFY_CASE",
+                     "OPERATOR_TOKEN_CANNOT_RATIFY", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"])
+      IDX_SKIPPED.push({ code: c, why: "ssh-keygen is not on PATH" });
+    console.log("  SKIP  the four ratification fences — ssh-keygen is not on PATH, and their authority is a "
+              + "REAL member signature; a caller refused over a signature it could never have presented "
+              + "proves nothing about the fence");
+  } else {
+    const kdir = mkdtempSync(join(tmpdir(), "d503-machine-fences-"));
+    const mkKey = (who) => {
+      execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", who, "-f", join(kdir, who), "-q"]);
+      return readFileSync(join(kdir, `${who}.pub`), "utf8").trim().split(/\s+/)[1];
+    };
+    /* THE STATEMENTS ARE WRITTEN OUT IN ASCII rather than imported from
+       `src/sshsig.mjs`: an expectation taken from the thing under test agrees
+       with it for free (CLAUDE.md §5). */
+    let sigSeq = 0;
+    const signBytes = (who, text) => {
+      const f = join(kdir, `d503-stmt-${++sigSeq}`);
+      writeFileSync(f, text);
+      execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(kdir, who), "-n", "bio-ratify", f],
+        { stdio: ["ignore", "ignore", "ignore"] });
+      return readFileSync(`${f}.sig`, "utf8");
+    };
+    const reg = await POST("op=signeradd&token=adm-rec73",
+      { keyB64: mkKey("ruth"), memberId: "ruth", comment: "ruth laptop (D-503)" });
+    if (!reg || reg.ok === false) throw new Error(`signeradd: ${JSON.stringify(reg).slice(0, 400)}`);
+
+    /* The ground: a real case, authored by RUTH, awaiting her signature. Its own
+       fixture rather than block (iv)'s, so nothing this block drives can move
+       what an earlier arm already asserted about that case. */
+    const D503_PRJ = await makePublishingProject({
+      post: POST, mf, sha, machineToken: "adm-rec73", owner: "ruth",
+      name: "PROJ-2026-7303-d503-ratify", created: NOW, updated: LATER });
+    const DOC = "INFO-2026-7303-d503-memo", LEAD = "INQ-2026-7303-d503-lead";
+    await mustPromote(DOC, infoMd(DOC), "information");
+    await mustPromote(LEAD, withAdoptableReading(
+      inquiryMd(LEAD, { question: "Was the FY2024 transfer authorised?", refs: [DOC],
+                        legs: [{ target: DOC, role: "supports" }] })), "inquiry");
+    const cn = await GET(`op=conclude&token=${RUTH}&target=${LEAD}`
+      + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
+      + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+      + adoptedVersionParam());
+    if (!cn || cn.ok === false) throw new Error(`conclude: ${JSON.stringify(cn).slice(0, 400)}`);
+    const pub = await POST(`op=publish&token=${RUTH}`, {
+      project: D503_PRJ, targets: [LEAD], roles: allLoadBearing({ targets: [LEAD] }),
+      scope: "Whether the FY2024 transfer was authorised, on the documents in hand.",
+      statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",
+      excluded: [], subjectPosition: "sought_and_answered",
+      subjectJustification: "We put the claims to the City Administrator on 2026-06-20 and printed what came back.",
+      biasAcknowledgement: "This group holds that transfers should be adopted in public session." });
+    if (!pub || pub.ok === false || !pub.caseDocument || !/^[0-9a-f]{64}$/.test(String(pub.caseDocument.doc_sha)))
+      throw new Error(`publish: ${JSON.stringify(pub).slice(0, 800)}`);
+
+    /* A SECOND `ai` credential, scoped to the two acts — the block-2 credential's
+       scope names neither, and a call refused at the CREDENTIAL layer would absorb
+       a control aimed at the IDENTITY layer (PL-11's block 8, REC-123's restatement).
+       Member-authored and member-scoped for the reason block 2 states at its mint. */
+    const ratMint = await POST(`op=aicredentialmint&token=${RUTH}`, {
+      tokenId: "d503-ratifier", principalKind: "member", principalMember: "ruth",
+      taskScope: "D-503: the two ratification acts, driven under payloads that would otherwise succeed",
+      writes: ["ratify", "caseratify"],
+      note: "D-503. A member authored this scope so the credential layer is held OPEN and what answers "
+          + "these calls is the identity fence rather than the gate in front of it." });
+    if (!ratMint || ratMint.ok !== true) throw new Error(`aicredentialmint: ${JSON.stringify(ratMint).slice(0, 400)}`);
+    const AI_R = ratMint.token;
+    t("the ratifying `ai` credential's scope NAMES both acts, so nothing in front of the fence can be "
+    + "what refuses these calls", (ratMint.credential || {}).writes, ["caseratify", "ratify"]);
+
+    /* -------------------------------------------------------- (a) caseratify */
+    const CD = pub.caseDocument;
+    const caseBody = { caseId: CD.case_id, edition: CD.edition, expectedSha: CD.doc_sha,
+                       sig: signBytes("ruth", `bio-ratify-case ${CD.case_id} ${CD.edition} ${CD.doc_sha}\n`) };
+    const caseSays = async () => codeOf(await GET(`op=publishedcase&id=${CD.case_id}`));
+    t("  the ground for (a): a case document authored by ruth at edition 1 awaits her signature, and "
+    + "nothing about it is published", [CD.edition, await caseSays()], [1, "NOT_PUBLISHED"]);
+
+    const mc = await POST(`op=caseratify&token=${AI_R}`, caseBody);
+    idxFence("MACHINE_CANNOT_RATIFY_CASE",
+      "a real case document at edition 1, with ruth's REGISTERED key's valid signature over that "
+      + "document's own doc_sha, carried by an `ai` credential whose member-authored scope NAMES op=caseratify",
+      codeOf(mc));
+    t("  ...carrying the catalogue's check and its canned sentence rather than one typed at the site",
+      catGot(mc, "MACHINE_CANNOT_RATIFY_CASE"), catWant("MACHINE_CANNOT_RATIFY_CASE"));
+    t("  and the case is NOT committed under the machine's call — the public read still answers NOT_PUBLISHED",
+      await caseSays(), "NOT_PUBLISHED");
+
+    const oc = await POST("op=caseratify&token=adm-rec73", caseBody);
+    idxFence("OPERATOR_TOKEN_CANNOT_RATIFY_CASE",
+      "THE SAME signed bytes, carried by the operator's `admin`-class bearer token — a credential that "
+      + "arrived through no one's session", codeOf(oc));
+    t("  ...naming the class it refused, with the catalogue's check and canned sentence",
+      [oc && oc.tokenClass, ...catGot(oc, "OPERATOR_TOKEN_CANNOT_RATIFY_CASE")],
+      ["admin", ...catWant("OPERATOR_TOKEN_CANNOT_RATIFY_CASE")]);
+    t("  and the case is STILL not committed", await caseSays(), "NOT_PUBLISHED");
+
+    const hc = await POST(`op=caseratify&token=${RUTH}`, caseBody);
+    t("  OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth committing THE SAME signed "
+    + "bytes through her OWN signed-in session SUCCEEDS, and the record names her",
+      [codeOf(hc), hc && hc.ok, hc && hc.attestor && hc.attestor.member], [null, true, "ruth"]);
+
+    /* ------------------------------------------------------------ (b) ratify */
+    const listed = await GET(`op=list&token=${RUTH}&limit=1000`);
+    const leadSha = (Array.isArray(listed) ? listed : (listed && listed.bundles) || [])
+      .find((b) => b.bundle_id === LEAD)?.bundle_sha ?? null;
+    if (!/^[0-9a-f]{64}$/.test(String(leadSha))) throw new Error(`no bundle_sha for ${LEAD}`);
+    const ratBody = { bundleId: LEAD, expectedSha: leadSha,
+                      sig: signBytes("ruth", `bio-ratify ${LEAD} ${leadSha}\n`) };
+    const publishedIds = async () => ((await GET("op=publishedmanifest"))?.published || [])
+      .map((b) => b.bundle_id).filter(Boolean);
+    t("  the ground for (b): the finding is not in the published manifest",
+      (await publishedIds()).includes(LEAD), false);
+
+    const mr = await POST(`op=ratify&token=${AI_R}`, ratBody);
+    idxFence("MACHINE_CANNOT_RATIFY",
+      "a concluded finding at the exact revision the caller states it reviewed, with ruth's REGISTERED "
+      + "key's valid signature over that revision's sha, carried by an `ai` credential whose "
+      + "member-authored scope NAMES op=ratify", codeOf(mr));
+    t("  ...carrying the catalogue's check and its canned sentence",
+      catGot(mr, "MACHINE_CANNOT_RATIFY"), catWant("MACHINE_CANNOT_RATIFY"));
+    t("  and the finding is NOT published under the machine's call",
+      (await publishedIds()).includes(LEAD), false);
+
+    const or = await POST("op=ratify&token=adm-rec73", ratBody);
+    idxFence("OPERATOR_TOKEN_CANNOT_RATIFY",
+      "THE SAME signed bytes, carried by the operator's `admin`-class bearer token", codeOf(or));
+    t("  ...naming the class it refused, with the catalogue's check and canned sentence",
+      [or && or.tokenClass, ...catGot(or, "OPERATOR_TOKEN_CANNOT_RATIFY")],
+      ["admin", ...catWant("OPERATOR_TOKEN_CANNOT_RATIFY")]);
+    t("  and the finding is STILL not published", (await publishedIds()).includes(LEAD), false);
+
+    const hr = await POST(`op=ratify&token=${RUTH}`, ratBody);
+    t("  OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth ratifying THE SAME signed "
+    + "bytes through her OWN signed-in session SUCCEEDS, and the finding is published",
+      [codeOf(hr), hr && hr.ok, (await publishedIds()).includes(LEAD)], [null, true, true]);
+  }
+
+  /* ------------------------------------------------- (c) THE GOVERNANCE FENCE */
+  {
+    /* THE ACTS ARE READ OUT OF THE PLANE, never typed: a fourth governance act is
+       driven the day it lands rather than the day somebody remembers this list. */
+    const GOV = JSON.parse((/const GOVERNANCE_ACTIONS = (\[[^\]]*\]);/.exec(INDEX_BARE) || [])[1] || "null");
+    t("GOVERNANCE_ACTIONS was READ OUT OF src/index.mjs and names op=membercaps — an unparsed list "
+    + "would drive nothing while reading like a clean arm",
+      Array.isArray(GOV) && GOV.length >= 3 && GOV.includes("membercaps"), true);
+    const capsOf = async (who) => {
+      const row = ((await POST(`op=memberlist&token=${RUTH}`))?.members || [])
+        .find((m) => m.member_id === who) || null;
+      return row ? (row.capabilities ?? null) : null;
+    };
+    const BEFORE = await capsOf("anna");
+    const CAPS = ["contribute", "publish"];
+    t("  the ground for (c): anna is on the roster and does NOT yet hold `publish`, so the edit below "
+    + "is a real change and not a no-op dressed as one",
+      [Array.isArray(BEFORE), (BEFORE || []).includes("publish")], [true, false]);
+
+    const ob = await POST("op=membercaps&token=adm-rec73&by=ruth", { memberId: "anna", capabilities: CAPS, by: "ruth" });
+    idxFence("OPERATOR_TOKEN_CANNOT_GOVERN",
+      "a capability edit naming a real roster member and a real active administrator as its `by`, "
+      + "carried by the operator's `admin`-class bearer token", codeOf(ob));
+    t("  ...naming the class it refused, with the catalogue's check and canned sentence",
+      [ob && ob.tokenClass, ...catGot(ob, "OPERATOR_TOKEN_CANNOT_GOVERN")],
+      ["admin", ...catWant("OPERATOR_TOKEN_CANNOT_GOVERN")]);
+    t("  and nothing the bearer asked for landed: anna's capabilities are the ones she had",
+      await capsOf("anna"), BEFORE);
+
+    const hb = await POST(`op=membercaps&token=${RUTH}`, { memberId: "anna", capabilities: CAPS });
+    t("  OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth making THE SAME edit through "
+    + "her OWN signed-in session SUCCEEDS, and anna holds `publish` on the read-back",
+      [codeOf(hb), hb && hb.ok, ((await capsOf("anna")) || []).includes("publish")], [null, true, true]);
+  }
+
+  /* ------------------------------------------------------------ THE EQUALITY */
+  const idxCodes = [...new Set(IDX_DRIVEN.map((d) => d.code))].sort();
+  const skippedCodes = [...new Set(IDX_SKIPPED.map((s) => s.code))].sort();
+  console.log(`    driven through the op: ${idxCodes.join(", ") || "(none)"}`);
+  for (const s of IDX_SKIPPED) console.log(`    NOT DRIVEN: ${s.code} — ${s.why}`);
+  t("(the drive is NON-EMPTY — the guard before the equality, since an empty driven set would satisfy "
+  + "every comparison below for free)", idxCodes.length >= 1, true);
+  t("D-503 · EVERY fence src/index.mjs mints was DRIVEN THROUGH ITS OP under a complete payload, and a "
+  + "code this run could not reach is carried BY NAME as SKIPPED rather than passed over. A SIXTH fence "
+  + "minted there with nothing driving it fails HERE, naming itself",
+    INDEX_HARVEST.filter((c) => !idxCodes.includes(c)), skippedCodes);
+  t("and nothing was driven that src/index.mjs does not mint — the other direction, so a fence deleted "
+  + "from the plane while an arm still passes over it is a NAME here",
+    idxCodes.filter((c) => !INDEX_HARVEST.includes(c)), []);
+  t("every one of them answered with its OWN name, stated once as a set",
+    IDX_DRIVEN.filter((d) => d.answer !== d.code).map((d) => [d.code, d.answer]), []);
 }
 
 /* ====================================================================== 4

@@ -884,6 +884,109 @@ export function causesNotRuledOut(missingCause, { evidenceOneSided = undefined }
   return [...ALL_MISSING_ROW_CAUSES];
 }
 
+/** D-500 — **§5.1's TOP-END BOUND, AT ONE PRECISION, IN ONE PLACE.** §5.1: *the
+ *  window stops growing rather than closing, and it is bounded at its top end — a
+ *  subject that entered the record after the log's first row at its level reaches
+ *  cause (3) normally.* Both bundle-level readers ask exactly that question —
+ *  `#missingCauseFrom` for the content level, and through it `#contentAxisTally`
+ *  for `op=contentaxis` and the search envelope; `#missingMeaningCause` for the
+ *  meaning level — and until this item each spelled it for itself, which is the
+ *  drift class this file refuses everywhere else.
+ *
+ *  **WHAT WAS WRONG, AND IT IS A PRECISION MISMATCH RATHER THAN A COMPARISON BUG**
+ *  (D-486's narrowed trace, `measurements/M-131.md`). The two sides do not carry
+ *  the same precision. `register.registered` and `entities.at` are full ISO
+ *  instants WITH MILLISECONDS (`new Date().toISOString()`); `observation_log.at`
+ *  is the same value with the fraction CUT — `#observe`'s own spelling, and the
+ *  estate's `ISO_TS_RE` convention, which this item does NOT change. So a stored
+ *  `…:15Z` does not assert that the first row was written at `…:15.000Z`; it
+ *  asserts only that it was written somewhere in `[…:15.000Z, …:16.000Z)`. **The
+ *  watermark carries one second of uncertainty, and that uncertainty cannot be
+ *  removed by any comparison — only placed.**
+ *
+ *  **WHY THE OBVIOUS FIX IS NOT ONE — MEASURED, NOT ASSUMED, and it is the finding
+ *  this item nearly shipped past.** The truncating comparison the two readers shipped,
+ *  `String(v).slice(0, 19)`, and a plain `Date.parse` comparison disagree on NOTHING —
+ *  because the stored watermark is already a whole second, truncating the finer side
+ *  changes no answer. Re-spelling the comparison in epoch milliseconds is therefore a
+ *  NO-OP that would have fixed no flip and passed review looking like the fix. Driven
+ *  over the whole corpus by `observation-log.test.mjs` arm M4b, and planted as that
+ *  section's `noop` control arm, which fails three arms by name.
+ *
+ *  **WHERE THE INDETERMINACY ACTUALLY SITS, AND THE ONE THING A READER CAN CHOOSE.**
+ *  Every rule of the form `entered >= first + c` carries a ONE-SECOND-WIDE band of
+ *  gaps whose answer depends on where the clock second happened to fall, because
+ *  `first` jumps by a second while `entered` moves continuously. `c` does not remove
+ *  the band; it MOVES it, and the band's position is the whole decision. Driven
+ *  across every boundary placement:
+ *
+ *    c =     0 (what shipped) — the band is a subject entering 0–1 s BEFORE the first
+ *                               row. That is exactly the pair the writers produce —
+ *                               a promote and its sibling rows, a run's tick — and
+ *                               exactly what D-486 measured flipping: twice in one
+ *                               worktree ~20 minutes apart, four of an outsider's
+ *                               frontier keys moved on one run and not the other.
+ *    c = +1000 (refuse inside the uncertainty) — the band moves to a subject entering
+ *                               0–1 s AFTER the first row. Still on a same-second
+ *                               pair, so it does not satisfy this row, and it also
+ *                               withdraws REC-94's tie (below) on every instance.
+ *    c = -1000 (THIS RULE) — the band moves OFF the same-second case entirely, to
+ *                               gaps of 1–2 s. Every pair within a second of each
+ *                               other, in EITHER direction, now classifies the same
+ *                               way on every run.
+ *
+ *  **AND c = -1000 IS REC-94's OWN REASON READ AT THE PRECISION THE DATA HAS, not a
+ *  new licence.** REC-94 ruled the tie — a subject entering in the same second as the
+ *  first row reaches cause (3) — because the content writer runs INSIDE promote's
+ *  transaction, so a capture promoted as the writer first ran either got a row (and is
+ *  not in this set) or was promoted with no reading, which is genuinely nobody-looked.
+ *  That reason is about SIMULTANEITY, not about sharing a clock second's floor; the
+ *  shared floor was only ever the proxy the stored precision allowed. Applying the
+ *  reason over the watermark's real uncertainty is what this offset does, and it is
+ *  why every answer the estate drives today is unmoved.
+ *
+ *  **THE RESIDUE, STATED RATHER THAN ROUNDED OFF.** A subject entering 1–2 s before a
+ *  level's first row can still classify either way depending on the boundary. That band
+ *  cannot be closed from here: closing it needs the watermark stored with milliseconds,
+ *  which would put one timestamp in this estate at a precision `ISO_TS_RE` does not
+ *  admit and is an interface question rather than this row's. It is narrower than what
+ *  shipped and it is off the pairs the writers produce, which is the whole of what
+ *  BOB #32's ruling of 2026-09-24 05:04Z asks for: the watermark STAYS
+ *  VIEWER-INDEPENDENT, and a hidden run's reclassification is the accepted cost ONLY
+ *  IF DETERMINISTIC.
+ *
+ *  **THE UNCERTAINTY IS READ OFF THE VALUE AND NEVER ASSUMED.** A watermark that one
+ *  day carries a fraction is compared EXACTLY — its interval is zero wide, `c` is 0,
+ *  and REC-94's tie narrows to an equality of instants — with no edit here and no
+ *  second rule. A value this function cannot recognise takes the second-wide interval,
+ *  which is the same inverted default `causesNotRuledOut` takes for an unrecognised
+ *  cause word one call up: a datum nobody has declared the precision of does not get
+ *  the tighter reading by omission.
+ *
+ *  PURE AND TOTAL, taking the two strings rather than the store, so a suite drives
+ *  every placement of the second boundary with no corpus at all — REC-92's arrangement
+ *  for the rule one call up, adopted here for its reason. */
+export const WATERMARK_SECOND_MS = 1000;
+
+const WATERMARK_HAS_FRACTION = /\.\d+Z?$/;
+
+/** The width of the interval a watermark value actually denotes: zero for an exact
+ *  instant, one second for the cut form `#observe` writes. */
+export function watermarkUncertaintyMs(firstAt) {
+  return WATERMARK_HAS_FRACTION.test(String(firstAt ?? "")) ? 0 : WATERMARK_SECOND_MS;
+}
+
+export function enteredAfterFirstRow(enteredAt, firstAt) {
+  const entered = Date.parse(String(enteredAt ?? ""));
+  const first = Date.parse(String(firstAt ?? ""));
+  /* AN UNPARSEABLE SIDE NEVER REACHES THE POSITIVE STATEMENT. Both callers have
+     already answered `purged` for an absent value before they get here; this is the
+     floor that makes that true AT THE RULE rather than by the courtesy of the
+     caller — the shape `checkObservation` takes one screen down. */
+  if (!Number.isFinite(entered) || !Number.isFinite(first)) return false;
+  return entered >= first - watermarkUncertaintyMs(firstAt);
+}
+
 /** THE READER RUN — section 4.3's first act, as a function.
  *
  *  *One row per reader run per capture: `PRESENT` with the reference count in
