@@ -392,7 +392,7 @@ scope: count glyphs (non-whitespace code points) at all three sites through D-50
 accepts-when: legistar-73550 p1 is not attributed to `layer`; a whitespace-only base takes tier 2 and tier 3; `needsTier2` reads glyphs. NEGATIVE CONTROL: restore raw length at the layer filter and the whitespace-page arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-516 · queued — **INSIDE THE ONE-SECOND BAND THE OBSERVATION-LOG READERS PICK A CLASS THEY CANNOT TELL: a subject entering 1-2 s before a level's first row reads `never_looked` or `purged` depending on where the clock second fell (D-500's arm M3).** BOB #33 RULED 2026-09-24 17:58Z (drained to `BOB-INBOX-drained.md`; cite until folded): `observation_log.at` STAYS whole-second; within the band the reader states undetermined. — owner RECORD.
+### D-516 · running — **INSIDE THE ONE-SECOND BAND THE OBSERVATION-LOG READERS PICK A CLASS THEY CANNOT TELL: a subject entering 1-2 s before a level's first row reads `never_looked` or `purged` depending on where the clock second fell (D-500's arm M3).** BOB #33 RULED 2026-09-24 17:58Z (drained to `BOB-INBOX-drained.md`; cite until folded): `observation_log.at` STAYS whole-second; within the band the reader states undetermined. — owner RECORD.
 order: after D-514, with the corrections to just-landed work: the record choosing between two claims it cannot tell apart (CLAUDE.md §2) (BOB #33, 17:58Z; SCHEDULER #19, 2026-09-24)
 milestone: M8
 interface: I3 additive — a published state on a new path; the integrator classifies.
