@@ -5,3 +5,5 @@ M0-145	2026-09-24T03:39:06.696Z	SCHEDULER #18	D-482 findings: quoted keys in che
 M0-146	2026-09-24T04:21:25.262Z	SCHEDULER #18	WORKER.md scratch path vs gates §2e
 M0-147	2026-09-24T04:25:35.736Z	SCHEDULER #18	New-Year straddle in mint-ledger/opaque-ids suites (D-487)
 M0-148	2026-09-24T04:26:49.363Z	SCHEDULER #18	R3-FED walk keys on literals
+M0-149	2026-09-24T04:49:50.949Z	SCHEDULER #18	meaning-bounds: BOUNDED roster publishes bound; UNJUDGED bucket ratchet
+M0-150	2026-09-24T04:49:50.949Z	SCHEDULER #18	meaning-bounds: BOUNDED roster publishes bound; UNJUDGED bucket ratchet
