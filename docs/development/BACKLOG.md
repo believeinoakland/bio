@@ -63,6 +63,16 @@ scope: strip `//` and `/* */` comments from `src` and `ctrlSrc` before matching;
 accepts-when: `gates.mjs --explain` on a prose diff lists fewer suites. NEGATIVE CONTROL: a suite whose only `tools/x.mjs` mention is in a comment is doc-facing before the fix and not after, named by the arm.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
+### M0-144 · queued — **THE DEC-49 GUARD CANNOT SEE A QUOTED KEY IN A SURFACE TABLE: `civicos-ui/check-refusal-codes.mjs` harvests keys with `/(?:^|[{,\s])([A-Z][A-Z0-9_]{2,})\s*:/g`, so a code table written with quoted keys escapes the TABLE_PRODUCERS pairing.** Latent: `app.html`'s four quoted SCREAMING keys (ACFR, GPF, CAFR, SSHSIG) are glossary terms, not codes. Found by D-482's worker. — owner M0 (UI reviews).
+order: after M0-143, with the instrument rows: a guard with a blind spot, not yet bitten (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:38Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
+depends-on: none.
+scope: `/(?:^|[{,\s])(["']?)([A-Z][A-Z0-9_]{2,})\1\s*:/g` with `.map(x => x[2])`; over-strictness and refusal arms in `civicos-ui/test/refusal-codes.test.mjs`; glossary keys stay out of the pairing.
+accepts-when: a 3-key fixture with quoted keys returns all three. NEGATIVE CONTROL: restore the old pattern and the quoted-key arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
 ### DIST-9 · queued — **D-260's DIST HALF HAS NO ROW: install and update do not carry the instance's organisation `ai` credential as the Worker secret `INSTANCE_AI_TOKEN`, as they carry DAEMON_TOKEN, so on every installed instance each wake says NO_INSTANCE_AI_CREDENTIAL** (`15.instance-ai-secret` ABSENT at 548eb2c5; I8 1.0.0 STABLE since IC-242). Found by DIST #6. — owner DIST.
 order: after D-484: the dependent half of a landed ruling, whose plane half (D-260) reads a secret nothing places; DIST builds it, no release until Bob asks (SCHEDULER #18, 2026-09-24; DIST #6 03:06Z)
 milestone: M8
@@ -593,6 +603,16 @@ depends-on: D-484 (else the new arm reads RED on its first run).
 scope: a real-plane reach arm in `civicos-ui/check-refusal-codes.mjs`: a code a real-plane UI suite observes in a surface pane counts toward reach.
 accepts-when: the arm lists reached codes and all carry translations. NEGATIVE CONTROL: strip `NO_CITATION`'s translation and the arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### M0-145 · queued — **`run-conditions.test.mjs`'s COLUMN READER MISSES A SQLite DOUBLE-QUOTED IDENTIFIER: `(?:^|[\s,(]|\w\.)${c}\b` (line 492).** Zero instances today. Found by D-482's worker. — owner M0.
+order: low in the M0 group: latent, no instance (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:38Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative-control register).
+depends-on: none.
+scope: add `"` and `'` to the class; an over-strictness arm reading a quoted column.
+accepts-when: a quoted column is read. NEGATIVE CONTROL: drop the quotes from the class and that arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
@@ -1255,23 +1275,3 @@ depends-on: none.
 accepts-when: a fixture log with an older instance landing after a newer one WARNs naming both; the same log whose late commit touches only the `-NEXT` file does not. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-84» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-85 · blocked — **THE HEARTBEAT MEASURES A STALE TREE.** `conduct-heartbeat` STEP 3 greps `QUEUE.md` in the MAIN CHECKOUT's working tree and … (whole text: the cut archive)
-order: behind the product rows with the session-hygiene instruments (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*; SCHEDULER #12), M0-81's class (BOB #19, 2026-09-21); `blocked` because no worker can take it — the definition is Bob's to approve and is never changed from here (SCHEDULER #4, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the heartbeat's own STEP 3 warning … (whole text: the cut archive)
-depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-09-21).
-accepts-when: a heartbeat run's `queued`/`running` counts equal those of `git show origin/main:docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
-added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
-order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
-depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
-accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
