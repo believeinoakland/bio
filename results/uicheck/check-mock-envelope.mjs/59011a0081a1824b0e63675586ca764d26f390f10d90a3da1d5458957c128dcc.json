@@ -1,0 +1,16 @@
+{
+ "unit": "uicheck:check-mock-envelope.mjs",
+ "inputHash": "59011a0081a1824b0e63675586ca764d26f390f10d90a3da1d5458957c128dcc",
+ "verdict": "PASS",
+ "run": "13b70b73983789f9697a75fe3ba31c7a5013c56a.1790278580280.10264.json",
+ "tree": "13b70b73983789f9697a75fe3ba31c7a5013c56a",
+ "head": "5a40d33c553a72c547e06751e55d6e261c534610",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1319,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d0b572e9-3248-5679-af25-765cbbfff79d",
+ "at": "2026-09-24T19:36:20.293Z"
+}
