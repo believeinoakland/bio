@@ -1,0 +1,16 @@
+{
+ "unit": "plane:admission-gate.test.mjs",
+ "inputHash": "80f5d90efe32ef19e4fea2cb7720d773cf4651664e0799697e082b5cb69dc590",
+ "verdict": "PASS",
+ "run": "64626352fc388c32ab98cb09607d11ff30d0dab0.1790229419364.16101.json",
+ "tree": "64626352fc388c32ab98cb09607d11ff30d0dab0",
+ "head": "e6716189f8db6180badcad05654c7b1967da4746",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 141,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "0571ae16-666e-5cbf-b27e-65294099d08b",
+ "at": "2026-09-24T05:56:59.376Z"
+}
