@@ -27,7 +27,8 @@ const before = REAL.map(digest);
 /* THE SUBJECTS, each one anchor in `index.mjs`'s `migrationReplayOf` or `op=promote`'s stamp block. */
 const SHA_CHECK = '    && p.record.files.some((f) => f && f.name === "bundle.md" && f.sha256 === mdSha));\n';
 const BUNDLE_CHECK = "    && p.record.target === b.bundleId\n";
-const ADMIN_CHECK = '(!viaSession && cls === "admin" && b.base === null';
+/* D-512 generalised the call site: the admin condition now fronts `(replayAsserted || creatingInquiry)`. */
+const ADMIN_CHECK = '(!viaSession && cls === "admin" && (replayAsserted || creatingInquiry))';
 const REGISTER_CHECK = "  if (!registered) return null;\n";
 const COMPUTED_SHA = "  const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();\n"
   + "  if (bm.sha256 !== mdSha) return null;\n";
@@ -44,11 +45,11 @@ const ARMS = {
      replay is then admitted as a replay, so N0 counts one row too many, and N7's failed replay lands as a replay
      instead of inside its run. N3b must NOT fail: the computed-sha guard still refuses a lying `sha256` field. */
   "no-sha": { patches: [["index.mjs", SHA_CHECK, '    && p.record.files.some((f) => f && f.name === "bundle.md"));\n']],
-              mustFail: ["ARM N3 ", "ARM N0:", "ARM N7 "] },
+              mustFail: ["ARM N3 ", "ARM N0:", "ARM N7 ", "ARM N7b "] },
   /* THE BUNDLE CHECK: another bundle's capture listing these very bytes is admitted. */
   "no-bundle": { patches: [["index.mjs", BUNDLE_CHECK, ""]], mustFail: ["ARM N2 ", "ARM N0:"] },
   /* THE LIAR WITH THE WRONG CREDENTIAL: any deploy class is admitted, not the admin alone. */
-  "any-class": { patches: [["index.mjs", ADMIN_CHECK, "(!viaSession && b.base === null"]],
+  "any-class": { patches: [["index.mjs", ADMIN_CHECK, "(!viaSession && (replayAsserted || creatingInquiry))"]],
                  mustFail: ["ARM N4 ", "ARM N4b ", "ARM N0:"] },
   /* THE CALLER-MADE CAPTURE: a held capture that is not registered as the Drive provenance is admitted. */
   "no-register": { patches: [["index.mjs", REGISTER_CHECK, ""]], mustFail: ["ARM N5b ", "ARM N5c ", "ARM N0:"] },
@@ -58,7 +59,9 @@ const ARMS = {
      disarms BOTH layers so it still proves the replay path never trusts the caller's figure on its own. */
   "trust-caller-sha": { patches: [["index.mjs", COMPUTED_SHA, "  const mdSha = bm.sha256;\n"],
                                   ["store.mjs", "    if (digested.disagree.length)\n", "    if (false)\n"]],
-                        mustFail: ["ARM N3b ", "ARM N0:"] },
+                        /* D-512: and ARM N3c, which drives REC-175's door ALONE (no replay claimed), fails with the door
+                           this arm disarms — declared after its first run came back NOT AS DECLARED naming only N3c. */
+                        mustFail: ["ARM N3b ", "ARM N0:", "ARM N3c "] },
   /* (b) BROKEN: D-78 restamps the verified replay — its Drive-era `surfaced_by: human` is rewritten `agent`. */
   "restamp-replay": { patches: [["index.mjs", NO_RESTAMP, "        if (b.base === null && b.meta "]], mustFail: ["ARM R1b "] },
   /* (a) BROKEN: the replay is still stamped for rule 2 — every replay is refused SURFACE_NO_RUN. */

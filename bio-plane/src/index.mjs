@@ -3772,6 +3772,15 @@ const machineFenceRow = (code) => {
   return { code, check: row.check, translation: row.translation };
 };
 
+/* D-512: C-66.6's row — a replay the plane could not verify — on `identityFenceRow`'s shape and its refusal to invent. */
+const replayRow = (code) => {
+  const row = CHECK_CATALOGUE.SURFACE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`replayRow: ${code} has no SURFACE_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
 /* REC-164: C-64.4's row, the fence's canned sentence taken from the one catalogue family that holds it. */
 const identityFenceRow = (code) => {
   const row = CHECK_CATALOGUE.INSTANCE_GROUP_CHECKS[code];
@@ -4054,8 +4063,10 @@ class StoreSilent extends Error {
 const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 
 /* REC-173 (INVESTIGATIVE-SESSION.md §11 item 5, "A MIGRATION IS A REPLAY, NOT A SURFACING", BOB #30): IS THIS
-   CREATION A MIGRATION REPLAY? Condition (2) of the ruling, asked of what the SERVER holds and never of what the
-   caller says: the creation names a capture (`provenanceCapture`, a sha256) that is
+   CREATION A MIGRATION REPLAY? — and since D-512 (BOB #33's step (2)) IS THIS PROMOTION, of ANY type and ANY revision,
+   A REPLAY THE SERVER CAN VERIFY? The same test answers both: nothing below is particular to an inquiry or to a
+   creation (`b.bundleId` is the bundle a revision revises too). Condition (2) of the ruling, asked of what the SERVER
+   holds and never of what the caller says: the promotion names a capture (`provenanceCapture`, a sha256) that is
      - REGISTERED as the Drive era's provenance — at `DRIVE_PROVENANCE_PATH` — by this creation's own `register`
        list, the one writer of the register (`promote`) and so the earliest act that can register anything against
        a bundle that does not exist yet (the builder's DESIGN GAP, stated in the IC);
@@ -4064,7 +4075,8 @@ const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
      - and its PRESERVED PROMOTION RECORDS name THIS bundle id (`record.target`) and, in THE SAME record, list THIS
        revision's `bundle.md` SHA-256 — computed here from the text being promoted, and the `sha256` the caller
        sent must BE that value, because the store keeps the caller's figure as the bundle's head.
-   Null when any of it fails: the creation is then an ORDINARY creation and rule 2 and D-78 apply unchanged, so this
+   Null when any of it fails: a promotion that ASSERTED `replay` is then refused REPLAY_UNVERIFIED (C-66.6, D-512), and
+   an inquiry creation that asserted nothing is an ORDINARY creation and rule 2 and D-78 apply unchanged, so this
    door cannot be used to skip a run. Condition (1), the ADMIN class, is the caller's to ask before calling this.
    WHAT THIS CANNOT CHECK, stated rather than hidden: the provenance capture is uploaded by the root of trust, whose
    honesty the record does not model (Membership §DEC-2, deferred). */
@@ -11640,17 +11652,51 @@ export default {
            by the fence's own name (C-32.19 for the measured case) rather than by a name about the flag.
            DELETED BEFORE the `migrationReplay` block below, which sets `b.replay` as the SERVER's word on a verified
            migration replay — the only writer of it that remains.
-           RESIDUE, STATED RATHER THAN LEFT TO BE FOUND: until step (2) is built (every replayed promotion, of any
-           type and any revision, names a drive-provenance capture the plane verifies, as `migrationReplayOf` already
-           does for a creation) an ADMIN-class caller can still ASSERT a replay it cannot show. The record does not
-           model the root of trust's honesty (Membership §DEC-2, deferred). Step (1) closes the measured hole; it does
-           not close that one, and BOB #33 keeps step (1)'s class test as a second condition when step (2) lands. */
+           THE RESIDUE STEP (1) LEFT — an ADMIN-class caller could still ASSERT a replay it cannot show — IS CLOSED BY
+           STEP (2) (D-512, the block below): every replayed promotion, of any type and any revision, now names a
+           drive-provenance capture the plane verifies, and this class test stays as its second condition. */
         if (viaSession || cls !== "admin") delete b.replay;
         delete b.migrationReplay;
-        const replayed = (!viaSession && cls === "admin" && b.base === null && b.meta
-                          && normalizeType(b.meta.object_type) === "inquiry")
+        /* D-512 (§11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", BOB #33), STEP (2), THE END STATE.
+           `replay` is honoured only where the SERVER VERIFIES it: a replayed promotion of ANY type and ANY revision
+           names its drive-provenance capture, and `migrationReplayOf` — REC-173's check, which asked this of an
+           inquiry's creation alone — finds the capture registered by this promotion, its bytes HELD and hashing to
+           the sha named, and one preserved promotion record naming THIS bundle and listing THIS revision's
+           `bundle.md` SHA-256, computed here from the text being promoted. The caller's flag is read once and
+           DELETED; the only writer of `b.replay` after this line is the verification. Step (1)'s class test above
+           is KEPT as the SECOND condition, as BOB #33 ruled: a non-admin caller's flag was already removed, so it is
+           judged by the fences it tried to skip exactly as D-511 made it (no new refusal reaches that class).
+           AN ADMIN THAT ASSERTS A REPLAY IT CANNOT SHOW IS REFUSED BY NAME (C-66.6), NOT DOWNGRADED. Deleting the
+           flag and letting the promotion land as an ordinary one would be D-511's answer, and it is wrong for the
+           one caller that sends the flag honestly: `migrate.mjs` carries the Drive era VERBATIM, and an ordinary
+           creation is rewritten on the way in (D-436's group stamp; D-78's restamp) — the migration would report
+           success over bytes the Drive record does not list. So the root of trust hears which claim failed and
+           nothing is written. An inquiry CREATION that asserts nothing is still asked, as REC-173 built it: verified,
+           it is a migration replay; unverified, it is an ordinary creation and rule 2 and D-78 apply unchanged.
+           RESIDUE, STATED: the provenance capture is itself uploaded by the root of trust, whose honesty the record
+           does not model (Membership §DEC-2, deferred). After this step no caller can ASSERT a replay the held
+           bytes do not list; an admin can still FABRICATE the bytes. */
+        const replayAsserted = !!b.replay;
+        delete b.replay;
+        const creatingInquiry = b.base === null && !!b.meta && normalizeType(b.meta.object_type) === "inquiry";
+        const proven = (!viaSession && cls === "admin" && (replayAsserted || creatingInquiry))
           ? await migrationReplayOf(env, storeName, b) : null;
-        if (replayed) { b.migrationReplay = replayed; b.replay = true; }
+        /* DEC-49 REGION is-promote-replay-verified */
+        if (replayAsserted && !proven)
+          return json({ ok: false, reason: "REPLAY_UNVERIFIED", ...replayRow("REPLAY_UNVERIFIED"), op,
+            bundleId: typeof b.bundleId === "string" ? b.bundleId.slice(0, 200) : null,
+            provenanceCapture: typeof b.provenanceCapture === "string" ? b.provenanceCapture.slice(0, 64) : null,
+            detail: `this promotion says it is a replay of the record's own past, and a replay is honoured only when the `
+                  + `plane can check it: it must name a drive-provenance capture (\`provenanceCapture\`) that this `
+                  + `promotion registers at ${DRIVE_PROVENANCE_PATH}, whose bytes the record holds, and whose preserved `
+                  + `promotion records name this bundle and list this revision's bundle.md SHA-256. One of those did not `
+                  + `hold. Nothing was written.` }, 403);
+        /* END DEC-49 REGION is-promote-replay-verified */
+        if (proven) b.replay = true;
+        /* REC-173's migration-replay stamp stays an INQUIRY CREATION's: it is what `op=projection`'s `surfaced_in`
+           reads, and no other promotion has a surfacing act to account for. */
+        const replayed = creatingInquiry ? proven : null;
+        if (replayed) b.migrationReplay = replayed;
         delete b.assistantPrincipal;
         if (!viaSession)
           b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;

@@ -397,10 +397,17 @@ export function buildPackages(bundleId, loaded, states, revisionFiles, provRegis
          bytes were uploaded before any promote), and the creation names it. It
          rides revision N too, beside the captures that exist only there, so a
          resumed migration whose creation predates this still registers it. This
-         used to ride revision N alone, i.e. AFTER the creation. */
-      register: [...new Set([...(i === 0 ? provRegister.filter(isProvenanceEntry) : []),
+         used to ride revision N alone, i.e. AFTER the creation.
+         D-512 (BOB #33's step (2), "`replay` IS THE SERVER'S WORD"): the plane
+         now honours `replay` on EVERY promotion only when it verifies it the
+         same way, so EVERY revision names the provenance capture and registers
+         it (a re-registration under the same bundle is the register's upsert),
+         and the plane finds this revision's bundle.md SHA-256 in the record the
+         Drive era wrote for it. A revision that did not would be refused
+         REPLAY_UNVERIFIED (C-66.6) rather than replayed. */
+      register: [...new Set([...provRegister.filter(isProvenanceEntry),
                              ...(i === N ? provRegister : [])])],
-      ...(i === 0 && provRegister.some(isProvenanceEntry)
+      ...(provRegister.some(isProvenanceEntry)
         ? { provenanceCapture: provRegister.find(isProvenanceEntry).sha256 } : {}),
     });
   }

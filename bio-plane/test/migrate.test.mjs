@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) disable the capture-vs-register hash check in migrate.mjs checkProvenance (guard `got !== want` with `false`, so a tampered capture is not detected) -> 1 assertion fails ("a capture that fails its register aborts" no longer sees PROVENANCE_MISMATCH); restored, 40 pass. SECOND ARM (REC-173, run 2026-09-23 on a scratch COPY of the tree, the real migrate.mjs untouched, sha256 f395782a7b75…): move the drive-provenance registration back to the LAST revision alone (buildPackages' register: i === N ? provRegister : [] — the order before this item, which registered the provenance AFTER the creation) -> 5 fail BY NAME ("the provenance capture is REGISTERED BY THE CREATION (rev 0)", "D migrated under the admin token" — PROMOTE_FAILED rev 0 SURFACE_NO_RUN, "D verifies clean", "the live question still says surfaced_by: human", "its read states not recorded (migrated from the Drive era)"); on the real tree 48 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the capture-vs-register hash check in migrate.mjs checkProvenance (guard `got !== want` with `false`, so a tampered capture is not detected) -> 1 assertion fails ("a capture that fails its register aborts" no longer sees PROVENANCE_MISMATCH); restored, 40 pass. SECOND ARM (REC-173, run 2026-09-23 on a scratch COPY of the tree, the real migrate.mjs untouched, sha256 f395782a7b75…): move the drive-provenance registration back to the LAST revision alone (buildPackages' register: i === N ? provRegister : [] — the order before this item, which registered the provenance AFTER the creation) -> 5 fail BY NAME ("the provenance capture is REGISTERED BY THE CREATION (rev 0)", "D migrated under the admin token" — PROMOTE_FAILED rev 0 SURFACE_NO_RUN, "D verifies clean", "the live question still says surfaced_by: human", "its read states not recorded (migrated from the Drive era)"); on the real tree 48 pass. THIRD ARM (D-512, run 2026-09-24 against the REAL migrate.mjs, restored from a uniquely-named pristine copy in the session scratchpad, never the worktree, and verified BY sha256 c4b1a6d43c891328… AND BY cmp at 29,044 B): name and register the drive provenance on revision 0 ALONE again (the shape before this item) -> the suite THREW BEFORE ITS FOOT (tally -1) at `PROMOTE_FAILED INFO-2026-9001-fixture rev 1: REPLAY_UNVERIFIED (C-66.6)` — BY NAME, the plane refusing a revision's replay that shows no provenance; that this suite does not catch a failed migrateBundle is its own pre-existing shape, recorded rather than changed here. Restored: 49 pass. */
 /* The migration replayer against a real plane instance on a live port.
  * The fixture is modeled byte-for-byte on the observed Drive store: promotion
  * records in the daemon's shape (base chain from the empty hash, per-file
@@ -8,12 +8,12 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, cpSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
-import { discoverBundles, loadBundle, reconstruct, frontmatter, checkProvenance, planeClient, migrateBundle, verifyBundle, buildPackages } from "../migrate/migrate.mjs";
+import { discoverBundles, loadBundle, reconstruct, frontmatter, checkProvenance, planeClient, migrateBundle, verifyBundle, buildPackages, DRIVE_PROVENANCE_PATH } from "../migrate/migrate.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 /* M0-10/D-235: this ROOT was the literal "/tmp/civicos-fixture" — ONE directory
@@ -256,9 +256,15 @@ console.log("\n--- a Drive-era QUESTION is a replay, not a surfacing (REC-173) -
       ({ path, text: buf.toString("utf8"), bytes: buf.length, sha256: sha(buf) }))),
     [{ path: "snapshots/x.bin", sha256: "1".repeat(64), bytes: 1, encoding: "binary" },
      { path: "migration/drive-provenance.json", sha256: "2".repeat(64), bytes: 1, encoding: "utf8" }]);
-  t("the provenance capture is REGISTERED BY THE CREATION (rev 0) and named by it — before rev 1 is promoted",
-    [pk[0].register.map((r) => r.path), pk[0].provenanceCapture, "provenanceCapture" in pk[1]],
-    [["migration/drive-provenance.json"], "2".repeat(64), false]);
+  /* CORRECTED 2026-09-24 by D-512, never exempted. This asserted rev 1 names NO provenance capture — true of REC-173's
+     tree, where only an inquiry's CREATION was verified as a replay. BOB #33's step (2) makes the plane verify EVERY
+     replayed promotion, of any type and any revision, so a revision that named none would be refused
+     REPLAY_UNVERIFIED (C-66.6): the old pin now describes a package the plane refuses. What it protected — the
+     creation registers and names the provenance, before rev 1 — is asserted unchanged; rev 1 now names it too. */
+  t("the provenance capture is REGISTERED BY THE CREATION (rev 0) and named by it — before rev 1 is promoted — and "
+    + "since D-512 every later revision names and registers it too",
+    [pk[0].register.map((r) => r.path), pk[0].provenanceCapture, pk[1].provenanceCapture],
+    [["migration/drive-provenance.json"], "2".repeat(64), "2".repeat(64)]);
   t("and rides the last revision too, beside the captures that exist only there",
     pk[1].register.map((r) => r.path).sort(), ["migration/drive-provenance.json", "snapshots/x.bin"]);
   let memberRefused = null;
@@ -288,16 +294,33 @@ console.log("\n--- an interrupted migration resumes from where it stopped ---");
 {
   /* Simulate an interruption: replay only bundle A's first revision into a
      fresh bundle id, then hand the tool the same mirror under that id. */
+  /* CORRECTED 2026-09-24 by D-512, never exempted. This replayed bundle A's OWN Drive records under a different id, P,
+     and registered no provenance at all. Both were invisible while the plane took `replay` on the caller's word; since
+     BOB #33's step (2) a replay is honoured only when a HELD provenance capture's records name THIS bundle and list
+     this revision's bundle.md SHA-256, so the old setup is a replay the plane correctly refuses (REPLAY_UNVERIFIED,
+     C-66.6) and it tested nothing about resuming. The mirror is now A's, copied to its own directory with its Drive
+     records naming P — the shape a real interrupted bundle has — and the partial setup uploads and names P's
+     provenance exactly as `migrateBundle` would. The subject, resuming from rev 1, is unchanged. */
+  const P = "INFO-2026-9009-partial";
   const dirA = bundles.find((b) => b.bundleId === A).dir;
-  const loadedP = loadBundle(dirA);
+  const dirP = join(ROOT, "partial", P);
+  cpSync(dirA, dirP, { recursive: true });
+  for (const f of readdirSync(join(dirP, "_history")).filter((n) => /^promotion_.*\.json$/.test(n))) {
+    const rec = JSON.parse(readFileSync(join(dirP, "_history", f), "utf8"));
+    writeFileSync(join(dirP, "_history", f), JSON.stringify({ ...rec, target: P }));
+  }
+  const loadedP = loadBundle(dirP);
   const statesP = reconstruct(loadedP);
   const filesOf = (st) => [...st.entries()].sort((x, y) => x[0].localeCompare(y[0]))
     .map(([path, buf]) => ({ path, text: buf.toString("utf8"), bytes: buf.length, sha256: sha(buf) }));
-  const P = "INFO-2026-9009-partial";
-  const pkgs = buildPackages(P, loadedP, statesP, statesP.map(filesOf), []);
+  const provP = Buffer.from(JSON.stringify({ bundleId: P,
+    promotions: loadedP.promotions.map((x) => ({ key: x.key, record: x.record })) }), "utf8");
+  t("partial setup: P's provenance capture is held", (await client.capturePut(sha(provP), provP)).ok, true);
+  const pkgs = buildPackages(P, loadedP, statesP, statesP.map(filesOf),
+    [{ path: DRIVE_PROVENANCE_PATH, sha256: sha(provP), bytes: provP.length, encoding: "utf8" }]);
   const first = await client.promote({ ...pkgs[0], base: null });
   t("partial setup landed one revision", first.result.ok, true);
-  const partialBundle = { bundleId: P, typeRoot: "information", dir: dirA };
+  const partialBundle = { bundleId: P, typeRoot: "information", dir: dirP };
   const resumed = await migrateBundle(client, partialBundle, {});
   t("the tool resumed rather than restarted", resumed.resumedFrom, 1);
   t("and completed the chain", resumed.ok, true);
