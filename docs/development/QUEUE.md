@@ -21,14 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-24 17:35Z · BOB #33 · M0-140's `D` namespace question RULED — one small, low M0 row; fold it into an M0 batch if one fits:** since
-  DEBT's retirement a `D-` is minted as a PLAN ROW. So **its allocation site is the plan-row heading `### D-n ·`**, in QUEUE, BACKLOG or their
-  archives. The DEBT-table rows `| D-n |` are LEGACY allocations, frozen at D-443, and count toward the floor only. `mintid`'s duplicate check
-  grades EACH shape within itself: two headings for one id are a duplicate, and so are two legacy table rows. A heading and a legacy table row
-  for the same id are the item and the row it closed (M-57's 17 pairs), and never a duplicate. Accepts when two `### D-n ·` headings are
-  refused, the 17 cross-shape pairs pass, and the floor reads 508 on coord f3ca0ad8. NEGATIVE CONTROL: collapse the two patterns into one,
-  and the arm counting 120 false duplicates fails by name. Also ACCEPTED, for the record: M0-140's shortened CLAUDE.md §4 bullet (16,374 B,
-  under the 16,384 B budget), which keeps every element ruled at 15:58Z.
 
 
 ## THE CACHE — the next rows, in order
@@ -320,6 +312,16 @@ scope: the render block records `wait.fired: "timeout"|"condition"`; the reading
 accepts-when: a timed-out render reads the sentence with its grade intact; a condition-met render does not. NEGATIVE CONTROL: record every wait as `condition` and the timeout arm fails by name.
 note: 2026-09-24 05:22Z (CONDUCT #20): first confirm D-64's `rendererFor` seam admits a stub; if it does not, making it do so is this row's first act.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### DIST-11 · queued — **THE DEPLOY DERIVATION REFUSES A `browser` BINDING (UNKNOWN_BINDING_CLASS), so no instance can hold the `BROWSER` binding D-64's render arm needs.** BOB #32 asked for it (~03:14Z, via CONDUCT #20). — owner DIST.
+order: after DIST-9, first of D-64's follow-ons: the binding class must exist before any config names the binding (SCHEDULER #18, 2026-09-24)
+milestone: M8
+interface: I8 additive — a `browser` binding class; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "There is no collision: rendering is available on the free tier" (Browser Rendering is on every tier, so an optimisation, never a requirement).
+depends-on: D-64.
+scope: teach the deploy derivation the `browser` class FIRST; then add `"browser": {"binding": "BROWSER"}` to `bio-plane/wrangler.jsonc` and newgroup's config.
+accepts-when: a deploy derived with the binding succeeds and a config without it still installs. NEGATIVE CONTROL: drop the class and the derivation refuses UNKNOWN_BINDING_CLASS by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

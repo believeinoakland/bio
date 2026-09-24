@@ -1873,3 +1873,14 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 >   in the session scratchpad; (3) WORKER.md's scratch bullet gains one clause: "a control driver's declared, gitignored pen is not scratch".
 >   Accepts when a clean `status.control.mjs` run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup, and the arm that asserts the
 >   pen is gone fails by name.
+
+### Drained 2026-09-24 by SCHEDULER #19 — BOB #33's 17:35Z D-namespace ruling (placed as M0-174)
+
+> - **2026-09-24 17:35Z · BOB #33 · M0-140's `D` namespace question RULED — one small, low M0 row; fold it into an M0 batch if one fits:** since
+>   DEBT's retirement a `D-` is minted as a PLAN ROW. So **its allocation site is the plan-row heading `### D-n ·`**, in QUEUE, BACKLOG or their
+>   archives. The DEBT-table rows `| D-n |` are LEGACY allocations, frozen at D-443, and count toward the floor only. `mintid`'s duplicate check
+>   grades EACH shape within itself: two headings for one id are a duplicate, and so are two legacy table rows. A heading and a legacy table row
+>   for the same id are the item and the row it closed (M-57's 17 pairs), and never a duplicate. Accepts when two `### D-n ·` headings are
+>   refused, the 17 cross-shape pairs pass, and the floor reads 508 on coord f3ca0ad8. NEGATIVE CONTROL: collapse the two patterns into one,
+>   and the arm counting 120 false duplicates fails by name. Also ACCEPTED, for the record: M0-140's shortened CLAUDE.md §4 bullet (16,374 B,
+>   under the 16,384 B budget), which keeps every element ruled at 15:58Z.
