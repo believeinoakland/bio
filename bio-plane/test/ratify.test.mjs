@@ -237,7 +237,13 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.28.0)");
+/* CORRECTED 2026-09-24 by D-448, never exempted: the catalogue gained C-87's eleven rows (census
+   461 -> 472), the census arm forced the MINOR bump 1.28.0 -> 1.29.0, and the old literal named a
+   catalogue that no longer exists. The assertion's SUBJECT is unchanged — the stamp must carry the
+   CATALOGUE's version and not the gate's own — and it is only meaningful while the literal moves
+   whenever the catalogue does, which is why it is corrected at its site rather than loosened. FOUND
+   BY ASKING WHO ELSE READS THE CONSTANT (CLAUDE.md §5), not from a red suite. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.29.0)");
 /* CORRECTED 2026-09-24 (D-491): 1.23.0 -> 1.24.0, and CORRECTED rather than exempted for the
    reason every note above says — the old literal named a catalogue that no longer exists once
    C-28.16 joined CAPTURE_REQUEST_CHECKS (IC-276). FOUND BY ASKING WHO ELSE READS THE CONSTANT

@@ -498,6 +498,10 @@ import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-che
 import { THEME_CHECKS } from "../checks/bio-checks.mjs";
 /* IC-246 / C-82: op=statementack's bound on the unsigned documents it re-authors — a refusal, never a cut. */
 import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
+/* D-448 / C-87: the review copy's eleven refusals, imported for the reason every other DEC-49
+   family is — the C-number, the wire code and the canned translation are ONE ROW in the catalogue
+   and this file holds no second copy of the sentence. */
+import { REVIEW_COPY_CHECKS } from "../checks/bio-checks.mjs";
 /* D-508 / C-85: the doorbell's rate refusals — the one door open to the public, and the one
    refusal surface whose reader is guaranteed not to be a member. */
 import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
@@ -9886,12 +9890,31 @@ export class Store extends DurableObject {
      argument at all, so the bytes cannot vary with anything the caller sent or with
      anything the record holds. `#noCaseDocument`'s rule one altitude over: a
      refusal that said REVOKED would tell the holder their access had existed. */
+  /* D-448 — ONE CONSTRUCTOR FOR EVERY REFUSAL THE REVIEW COPY MAKES (REC-79's single-helper shape, as
+     `BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates DEC-49), reading the canned translation off the
+     catalogue row rather than repeating a sentence here. IT IS STATIC, and `#leadRefusal` is the precedent:
+     this family's eleven refusals are spread over SIX methods — `reviewAct`, `#caseDraft`, `#reviewGrant`,
+     `#reviewRevoke`, `reviewComment` and the two static dead answers — so a `const refusal` local to one
+     method, which is what every single-method family uses, could not reach the other five. D-507's finding
+     is the reason the declaration sits ABOVE every one of them: a helper a return cannot see is a helper
+     that return does not use, and that is exactly how six `op=statementack` codes reached a member with no
+     translation. ADDITIVE ON THE WIRE: `reason`, each site's own `detail` and its per-site keys are
+     unchanged; `code`, `check` and `translation` join them. */
+  static #reviewRefusal(code, detail, extra) {
+    const row = REVIEW_COPY_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+             detail, ...(extra || {}) };
+  }
+
   static #noReviewCopy() {
-    return { ok: false, reason: "NO_REVIEW_COPY",
-             detail: "no review copy answers to this request. A review copy is read through the grant that "
-                   + "was issued for it, or by a member with standing in the project that produced it; a "
-                   + "grant that was withdrawn, or whose draft has moved to another edition, answers exactly "
-                   + "as one that was never issued." };
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
+    /* DEC-49 REGION is-no-review-copy */
+    return refusal("NO_REVIEW_COPY",
+             "no review copy answers to this request. A review copy is read through the grant that "
+           + "was issued for it, or by a member with standing in the project that produced it; a "
+           + "grant that was withdrawn, or whose draft has moved to another edition, answers exactly "
+           + "as one that was never issued.");
+    /* END DEC-49 REGION is-no-review-copy */
   }
 
   /* THE THREE AUTHORING ACTS — draft, grant, revoke — ENTER THROUGH ONE DOOR, and
@@ -9903,6 +9926,7 @@ export class Store extends DurableObject {
      A machine is refused BY NAME before any act is chosen: the act is ADDRESSED
      and ATTRIBUTED (§6A.2), so the record must name the person who did it. */
   reviewAct({ act = "", author = null, ...args } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-review — REC-126/C-32.16. The fence alone. */
     if (!who || isMachineIdentity(who))
@@ -9914,8 +9938,10 @@ export class Store extends DurableObject {
     if (act === "draft") return this.#caseDraft(who, args);
     if (act === "grant") return this.#reviewGrant(who, args);
     if (act === "revoke") return this.#reviewRevoke(who, args);
-    return { ok: false, reason: "REVIEW_UNKNOWN_ACT", act,
-             detail: "the review copy's authoring acts are draft, grant and revoke." };
+    /* DEC-49 REGION is-review-unknown-act */
+    return refusal("REVIEW_UNKNOWN_ACT",
+             "the review copy's authoring acts are draft, grant and revoke.", { act });
+    /* END DEC-49 REGION is-review-unknown-act */
   }
 
   /* NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER: a caller without the act's
@@ -9938,9 +9964,12 @@ export class Store extends DurableObject {
           + "one is (BIO_Publication §6A.2). An administrator sees every project and directs none of them.",
   };
   static #notReviewOwner(act) {
-    return { ok: false, reason: "REVIEW_NOT_PROJECT_OWNER",
-             detail: `${Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over `
-                   + "is answered exactly as one that does not exist." };
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
+    /* DEC-49 REGION is-review-authority */
+    return refusal("REVIEW_NOT_PROJECT_OWNER",
+             `${Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over `
+           + "is answered exactly as one that does not exist.");
+    /* END DEC-49 REGION is-review-authority */
   }
 
   /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
@@ -9963,6 +9992,7 @@ export class Store extends DurableObject {
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
      2026-09-17: *"An editor must be able to edit"*). */
   #caseDraft(who, { draft = null, project = null, viewer = null, ...rest } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const proj = String(project ?? "").trim();
     /* REC-149: a NEW draft under a DISCOVERABLE project its caller is outside is refused positionally (C-70.1);
@@ -9972,13 +10002,17 @@ export class Store extends DurableObject {
     if (draft && !existing) return Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
     if (!owning)
-      return { ok: false, reason: "REVIEW_NO_PROJECT",
-               detail: "a draft case is a production of a project, as a published case is (DEC-72): pass "
-                     + "project=<project id>." };
+      /* DEC-49 REGION is-review-no-project */
+      return refusal("REVIEW_NO_PROJECT",
+               "a draft case is a production of a project, as a published case is (DEC-72): pass "
+             + "project=<project id>.");
+      /* END DEC-49 REGION is-review-no-project */
     if (existing && proj && proj !== existing.project_id)
-      return { ok: false, reason: "REVIEW_DRAFT_CHANGES_PROJECT",
-               detail: `this draft is ${existing.project_id}'s production, and a case does not change hands `
-                     + `(DEC-72). Draft this material as a new case under the other project instead.` };
+      /* DEC-49 REGION is-review-draft-changes-project */
+      return refusal("REVIEW_DRAFT_CHANGES_PROJECT",
+               `this draft is ${existing.project_id}'s production, and a case does not change hands `
+             + `(DEC-72). Draft this material as a new case under the other project instead.`);
+      /* END DEC-49 REGION is-review-draft-changes-project */
     if (!this.#isProjectEditor(owning, a.who)) return Store.#notReviewOwner("draft");
     const params = {};
     for (const k of Store.REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
@@ -9986,16 +10020,20 @@ export class Store extends DurableObject {
     if (named) {
       const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, named);
       if (!owned || owned.project_id !== owning)
-        return { ok: false, reason: "REVIEW_NO_SUCH_CASE", caseId: named,
-                 detail: `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its `
-                       + `next edition, and a case this project did not publish is answered exactly as one `
-                       + `that does not exist.` };
+        /* DEC-49 REGION is-review-no-such-case */
+        return refusal("REVIEW_NO_SUCH_CASE",
+                 `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its `
+               + `next edition, and a case this project did not publish is answered exactly as one `
+               + `that does not exist.`, { caseId: named });
+        /* END DEC-49 REGION is-review-no-such-case */
       params.caseId = named;
     }
     const json = JSON.stringify(params);
     if (json.length > 64 * 1024)
-      return { ok: false, reason: "REVIEW_DRAFT_TOO_LARGE",
-               detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept." };
+      /* DEC-49 REGION is-review-draft-too-large */
+      return refusal("REVIEW_DRAFT_TOO_LARGE",
+               "a draft's arguments are at most 64 KiB, the size of what op=publish would accept.");
+      /* END DEC-49 REGION is-review-draft-too-large */
     const when = new Date().toISOString();
     /* REC-193 / §3 rule 13 (BOB #32, 2026-09-23) — THE STATEMENT'S AUTHOR IS THE MEMBER WHO WROTE ITS
        CURRENT BYTES, AND THE SERVER SAYS WHO THAT IS. Stamped here, at the write, from the session the act
@@ -10136,19 +10174,24 @@ export class Store extends DurableObject {
   }
 
   #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
     if (!d || !this.#isProjectOwner(d.project_id, a.who)) return Store.#notReviewOwner("grant");
     const to = String(recipient ?? "").trim();
     if (!to || to.length > Store.REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
-      return { ok: false, reason: "REVIEW_NO_RECIPIENT",
-               detail: `name the person or group this copy is addressed to, in one line of at most `
-                     + `${Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not `
-                     + `attributed, and the grant is the record of who was handed what.` };
+      /* DEC-49 REGION is-review-recipient */
+      return refusal("REVIEW_NO_RECIPIENT",
+               `name the person or group this copy is addressed to, in one line of at most `
+             + `${Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not `
+             + `attributed, and the grant is the record of who was handed what.`);
+      /* END DEC-49 REGION is-review-recipient */
     const s = String(secretSha ?? "");
     if (!/^[0-9a-f]{64}$/.test(s))
-      return { ok: false, reason: "REVIEW_NO_SECRET",
-               detail: "the read secret's fingerprint is set by the control plane and was absent." };
+      /* DEC-49 REGION is-review-secret */
+      return refusal("REVIEW_NO_SECRET",
+               "the read secret's fingerprint is set by the control plane and was absent.");
+      /* END DEC-49 REGION is-review-secret */
     const when = new Date().toISOString();
     const ident = this.#draftIdentity(d);
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7) — a grant is its project owner's alone. */
@@ -10165,13 +10208,16 @@ export class Store extends DurableObject {
   }
 
   #reviewRevoke(who, { grant = null } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const gid = String(grant ?? "").trim();
     /* An ABSENT argument says nothing about what exists, so it is named as the
        payload complaint it is rather than answered as a grant nobody owns. */
     if (!gid)
-      return { ok: false, reason: "REVIEW_NO_GRANT",
-               detail: "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>." };
+      /* DEC-49 REGION is-review-grant-named */
+      return refusal("REVIEW_NO_GRANT",
+               "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>.");
+      /* END DEC-49 REGION is-review-grant-named */
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
     if (!g || !this.#isProjectOwner(g.project_id, a.who)) return Store.#notReviewOwner("revoke");
@@ -10300,6 +10346,7 @@ export class Store extends DurableObject {
   }
 
   reviewComment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     let d, kind, author, grantId = null;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
@@ -10313,8 +10360,10 @@ export class Store extends DurableObject {
     }
     const body = String(text ?? "").trim();
     if (!body || body.length > Store.REVIEW_TEXT_MAX)
-      return { ok: false, reason: "REVIEW_NO_COMMENT_TEXT",
-               detail: `a comment says something: at least one character and at most ${Store.REVIEW_TEXT_MAX}.` };
+      /* DEC-49 REGION is-review-comment-text */
+      return refusal("REVIEW_NO_COMMENT_TEXT",
+               `a comment says something: at least one character and at most ${Store.REVIEW_TEXT_MAX}.`);
+      /* END DEC-49 REGION is-review-comment-text */
     const when = new Date().toISOString();
     this.sql.exec(`INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at) VALUES (?,?,?,?,?,?)`,
                   d.draft_id, kind, author, grantId, body, when);

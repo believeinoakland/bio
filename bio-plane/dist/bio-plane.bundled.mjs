@@ -4415,6 +4415,7 @@ __export(bio_checks_exports, {
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
+  REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   RISK_TIERS: () => RISK_TIERS,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
@@ -13577,6 +13578,63 @@ var STATEMENT_ACK_CHECKS = {
     translation: "The record does not say who wrote this statement, so it cannot tell whether you are its author. For a draft, ask an editor of the project to save the statement again; for a published case, it can be published again from a draft that records who wrote it. You can acknowledge it after that. The case can be published either way."
   }
 };
+var REVIEW_COPY_CHECKS = {
+  NO_REVIEW_COPY: {
+    check: "C-87.1",
+    where: "src/store.mjs #noReviewCopy > is-no-review-copy",
+    translation: "No review copy answers to this request. A review copy is read through the grant issued for it, or by a member with standing in the project that produced it. A grant that was withdrawn, one whose draft has moved on to another edition, and one that never existed all answer the same way, so this answer tells you nothing about which of those is the case."
+  },
+  REVIEW_UNKNOWN_ACT: {
+    check: "C-87.2",
+    where: "src/store.mjs reviewAct > is-review-unknown-act",
+    translation: "That is not one of the things you can do to a review copy. There are three: draft the case that will be shown, grant someone a copy to read, and withdraw a grant you issued."
+  },
+  REVIEW_NOT_PROJECT_OWNER: {
+    check: "C-87.3",
+    where: "src/store.mjs #notReviewOwner > is-review-authority",
+    translation: "You do not hold this act's authority over this project. Drafting the case needs permission to edit the project's work; handing the draft to someone outside the group, and withdrawing a copy you handed over, are the project owner's own acts. A project, draft or grant you hold no such authority over is answered exactly as one that does not exist, so this answer does not tell you whether it is there."
+  },
+  REVIEW_NO_PROJECT: {
+    check: "C-87.4",
+    where: "src/store.mjs #caseDraft > is-review-no-project",
+    translation: "Say which project this draft belongs to. A draft case is a piece of a project's work, the same as a published case is, and it is not held by anybody until it names one."
+  },
+  REVIEW_DRAFT_CHANGES_PROJECT: {
+    check: "C-87.5",
+    where: "src/store.mjs #caseDraft > is-review-draft-changes-project",
+    translation: "This draft belongs to a different project, and a case does not change hands. If the other project should be making this case, draft it there as a case of its own."
+  },
+  REVIEW_NO_SUCH_CASE: {
+    check: "C-87.6",
+    where: "src/store.mjs #caseDraft > is-review-no-such-case",
+    translation: "This project has published no case by that name. A draft may name an existing case, which makes the draft that case's next edition; a case another project published is answered exactly as one that does not exist. Leave the name off and the draft is a new case."
+  },
+  REVIEW_DRAFT_TOO_LARGE: {
+    check: "C-87.7",
+    where: "src/store.mjs #caseDraft > is-review-draft-too-large",
+    translation: "This draft's arguments are larger than the plane will store: the limit is 64 KiB, the same size publishing the case would accept. Nothing was saved. Material this large belongs in the documents and content the case rests on rather than in the draft itself."
+  },
+  REVIEW_NO_RECIPIENT: {
+    check: "C-87.8",
+    where: "src/store.mjs #reviewGrant > is-review-recipient",
+    translation: "Say who this copy is for, in one line. Handing a draft to someone is an addressed act: the record says who it went to, and a grant addressed to nobody would leave no such record."
+  },
+  REVIEW_NO_SECRET: {
+    check: "C-87.9",
+    where: "src/store.mjs #reviewGrant > is-review-secret",
+    translation: "The reading secret that would let this recipient open the copy was not set. That secret is made for you when the grant is issued, so this is a fault in the request rather than something you supply; nothing was issued. Try issuing the grant again."
+  },
+  REVIEW_NO_GRANT: {
+    check: "C-87.10",
+    where: "src/store.mjs #reviewRevoke > is-review-grant-named",
+    translation: "Say which grant to withdraw, by the id you were given when it was issued. Nothing was withdrawn. This answer says only that no grant was named; it says nothing about which grants exist."
+  },
+  REVIEW_NO_COMMENT_TEXT: {
+    check: "C-87.11",
+    where: "src/store.mjs reviewComment > is-review-comment-text",
+    translation: "A comment has to say something, and at most 4000 characters of it. Nothing was recorded. What you have written is still yours to send once it is within that length."
+  }
+};
 var THEME_CHECKS = {
   THEME_NOT_EVIDENCE: {
     check: "C-81.1",
@@ -15592,7 +15650,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.28.0";
+var CATALOG_VERSION = "1.29.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -38924,12 +38982,34 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
      argument at all, so the bytes cannot vary with anything the caller sent or with
      anything the record holds. `#noCaseDocument`'s rule one altitude over: a
      refusal that said REVOKED would tell the holder their access had existed. */
-  static #noReviewCopy() {
+  /* D-448 — ONE CONSTRUCTOR FOR EVERY REFUSAL THE REVIEW COPY MAKES (REC-79's single-helper shape, as
+     `BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates DEC-49), reading the canned translation off the
+     catalogue row rather than repeating a sentence here. IT IS STATIC, and `#leadRefusal` is the precedent:
+     this family's eleven refusals are spread over SIX methods — `reviewAct`, `#caseDraft`, `#reviewGrant`,
+     `#reviewRevoke`, `reviewComment` and the two static dead answers — so a `const refusal` local to one
+     method, which is what every single-method family uses, could not reach the other five. D-507's finding
+     is the reason the declaration sits ABOVE every one of them: a helper a return cannot see is a helper
+     that return does not use, and that is exactly how six `op=statementack` codes reached a member with no
+     translation. ADDITIVE ON THE WIRE: `reason`, each site's own `detail` and its per-site keys are
+     unchanged; `code`, `check` and `translation` join them. */
+  static #reviewRefusal(code, detail, extra) {
+    const row = REVIEW_COPY_CHECKS[code];
     return {
       ok: false,
-      reason: "NO_REVIEW_COPY",
-      detail: "no review copy answers to this request. A review copy is read through the grant that was issued for it, or by a member with standing in the project that produced it; a grant that was withdrawn, or whose draft has moved to another edition, answers exactly as one that was never issued."
+      reason: code,
+      code,
+      check: row.check,
+      translation: row.translation,
+      detail,
+      ...extra || {}
     };
+  }
+  static #noReviewCopy() {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
+    return refusal7(
+      "NO_REVIEW_COPY",
+      "no review copy answers to this request. A review copy is read through the grant that was issued for it, or by a member with standing in the project that produced it; a grant that was withdrawn, or whose draft has moved to another edition, answers exactly as one that was never issued."
+    );
   }
   /* THE THREE AUTHORING ACTS — draft, grant, revoke — ENTER THROUGH ONE DOOR, and
      the door is where the MACHINE FENCE (C-32.16) stands. That is measured rather
@@ -38940,6 +39020,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
      A machine is refused BY NAME before any act is chosen: the act is ADDRESSED
      and ATTRIBUTED (§6A.2), so the record must name the person who did it. */
   reviewAct({ act = "", author = null, ...args } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     const who = String(author ?? "").trim();
     if (!who || isMachineIdentity(who))
       return {
@@ -38950,12 +39031,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (act === "draft") return this.#caseDraft(who, args);
     if (act === "grant") return this.#reviewGrant(who, args);
     if (act === "revoke") return this.#reviewRevoke(who, args);
-    return {
-      ok: false,
-      reason: "REVIEW_UNKNOWN_ACT",
-      act,
-      detail: "the review copy's authoring acts are draft, grant and revoke."
-    };
+    return refusal7(
+      "REVIEW_UNKNOWN_ACT",
+      "the review copy's authoring acts are draft, grant and revoke.",
+      { act }
+    );
   }
   /* NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER: a caller without the act's
        authority cannot learn from this refusal whether the project, the draft or the
@@ -38974,11 +39054,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     revoke: "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing one is (BIO_Publication \xA76A.2). An administrator sees every project and directs none of them."
   };
   static #notReviewOwner(act) {
-    return {
-      ok: false,
-      reason: "REVIEW_NOT_PROJECT_OWNER",
-      detail: `${_Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.`
-    };
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
+    return refusal7(
+      "REVIEW_NOT_PROJECT_OWNER",
+      `${_Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.`
+    );
   }
   /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
      never taken from the caller — `publishCase`'s own rule (DEC-12 as DEC-44
@@ -38996,6 +39076,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
      2026-09-17: *"An editor must be able to edit"*). */
   #caseDraft(who, { draft = null, project = null, viewer = null, ...rest } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const proj = String(project ?? "").trim();
     if (!draft && proj) {
@@ -39006,17 +39087,15 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (draft && !existing) return _Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
     if (!owning)
-      return {
-        ok: false,
-        reason: "REVIEW_NO_PROJECT",
-        detail: "a draft case is a production of a project, as a published case is (DEC-72): pass project=<project id>."
-      };
+      return refusal7(
+        "REVIEW_NO_PROJECT",
+        "a draft case is a production of a project, as a published case is (DEC-72): pass project=<project id>."
+      );
     if (existing && proj && proj !== existing.project_id)
-      return {
-        ok: false,
-        reason: "REVIEW_DRAFT_CHANGES_PROJECT",
-        detail: `this draft is ${existing.project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.`
-      };
+      return refusal7(
+        "REVIEW_DRAFT_CHANGES_PROJECT",
+        `this draft is ${existing.project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.`
+      );
     if (!this.#isProjectEditor(owning, a.who)) return _Store.#notReviewOwner("draft");
     const params = {};
     for (const k of _Store.REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
@@ -39024,21 +39103,19 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (named) {
       const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, named);
       if (!owned || owned.project_id !== owning)
-        return {
-          ok: false,
-          reason: "REVIEW_NO_SUCH_CASE",
-          caseId: named,
-          detail: `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.`
-        };
+        return refusal7(
+          "REVIEW_NO_SUCH_CASE",
+          `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.`,
+          { caseId: named }
+        );
       params.caseId = named;
     }
     const json2 = JSON.stringify(params);
     if (json2.length > 64 * 1024)
-      return {
-        ok: false,
-        reason: "REVIEW_DRAFT_TOO_LARGE",
-        detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
-      };
+      return refusal7(
+        "REVIEW_DRAFT_TOO_LARGE",
+        "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
+      );
     const when = (/* @__PURE__ */ new Date()).toISOString();
     const priorStatement = existing ? _Store.#fmSafe(JSON.parse(existing.params).statement ?? "") : "";
     const nextStatement = _Store.#fmSafe(params.statement ?? "");
@@ -39193,23 +39270,22 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     );
   }
   #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
     if (!d || !this.#isProjectOwner(d.project_id, a.who)) return _Store.#notReviewOwner("grant");
     const to = String(recipient ?? "").trim();
     if (!to || to.length > _Store.REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
-      return {
-        ok: false,
-        reason: "REVIEW_NO_RECIPIENT",
-        detail: `name the person or group this copy is addressed to, in one line of at most ${_Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not attributed, and the grant is the record of who was handed what.`
-      };
+      return refusal7(
+        "REVIEW_NO_RECIPIENT",
+        `name the person or group this copy is addressed to, in one line of at most ${_Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not attributed, and the grant is the record of who was handed what.`
+      );
     const s = String(secretSha ?? "");
     if (!/^[0-9a-f]{64}$/.test(s))
-      return {
-        ok: false,
-        reason: "REVIEW_NO_SECRET",
-        detail: "the read secret's fingerprint is set by the control plane and was absent."
-      };
+      return refusal7(
+        "REVIEW_NO_SECRET",
+        "the read secret's fingerprint is set by the control plane and was absent."
+      );
     const when = (/* @__PURE__ */ new Date()).toISOString();
     const ident = this.#draftIdentity(d);
     const id = this.#mintOpaqueId(
@@ -39238,14 +39314,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     };
   }
   #reviewRevoke(who, { grant = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const gid = String(grant ?? "").trim();
     if (!gid)
-      return {
-        ok: false,
-        reason: "REVIEW_NO_GRANT",
-        detail: "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>."
-      };
+      return refusal7(
+        "REVIEW_NO_GRANT",
+        "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>."
+      );
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
     if (!g || !this.#isProjectOwner(g.project_id, a.who)) return _Store.#notReviewOwner("revoke");
@@ -39398,6 +39474,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     };
   }
   reviewComment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     let d, kind, author, grantId = null;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
@@ -39415,11 +39492,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     }
     const body = String(text ?? "").trim();
     if (!body || body.length > _Store.REVIEW_TEXT_MAX)
-      return {
-        ok: false,
-        reason: "REVIEW_NO_COMMENT_TEXT",
-        detail: `a comment says something: at least one character and at most ${_Store.REVIEW_TEXT_MAX}.`
-      };
+      return refusal7(
+        "REVIEW_NO_COMMENT_TEXT",
+        `a comment says something: at least one character and at most ${_Store.REVIEW_TEXT_MAX}.`
+      );
     const when = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at) VALUES (?,?,?,?,?,?)`,

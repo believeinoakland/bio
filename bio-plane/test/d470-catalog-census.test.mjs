@@ -317,6 +317,11 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 1.29.0 (D-448, 2026-09-24): C-87 REVIEW_COPY_CHECKS, the review copy's eleven refusals, over 1.28.0.
+     1.28.0's row STAYS: each row is the census of the catalogue that stamped it. Count and digest are
+     THIS SUITE'S OWN PRINT on the item's tree; CONDUCT re-reads both at integration, where neither
+     branch's figure is the union's. */
+  "1.29.0": { count: 472, digest: "a7d4dd3e407aa0c3324652cf125b8129d151b9e971f4959305c30975da2b32e9" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
