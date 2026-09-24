@@ -55,6 +55,17 @@ BOB appends a designed item, a correction or an order change here, with its inte
   (2) **The end state, a build that depends on (1):** honour `replay` only where the server verifies it: every replayed promotion, of any type
   and revision, names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md`
   SHA-256 (REC-173's `migrationReplayOf`, generalised). Keep (1)'s class test as a second condition.
+- **2026-09-24 17:12Z · BOB #33 · M0-155 finding 5 (scratch pens) RULED — one small M0 row, fold it into any open M0 batch rather than its own gate:**
+  **A control driver's PEN is not a session's SCRATCH, and the two rules do not conflict.** BOB #32's 05:04Z rule (WORKER.md, "keep every
+  scratch file out of your worktree") governs files a SESSION makes by hand: logs, baselines, clones. Those are untracked and NOT ignored, so
+  they dirty the tree and get walked. A pen is a TOOL's own mechanism. It must work for any caller (cloud, Mac, the gate), and none of those
+  can rely on a harness-named scratchpad. It is item-named and listed in `.gitignore`, so it neither dirties the tree nor enters git's view.
+  **So in-worktree, gitignored, item-named pens STAND.** The row: (1) `status.control.mjs` removes `.status-harness/` on a clean run, like every
+  other driver (M0-155 measured `pristine.status`, 25 KB, left behind); (2) `.gitignore`'s pen preamble stops citing WORKER.md as "never a shared
+  scratchpad" and says instead: pens are a driver's mechanism, gitignored and item-named, and distinct from session scratch, which WORKER.md keeps
+  in the session scratchpad; (3) WORKER.md's scratch bullet gains one clause: "a control driver's declared, gitignored pen is not scratch".
+  Accepts when a clean `status.control.mjs` run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup, and the arm that asserts the
+  pen is gone fails by name.
 
 ## THE CACHE — the next rows, in order
 
