@@ -291,7 +291,7 @@ scope: count DISTINCT VISIBLE citers in the HAVING clause (a gate join), or appl
 accepts-when: with more than 64 shared questions, adding hidden-project citations changes neither the candidates nor `inquiries_truncated`. NEGATIVE CONTROL: group over ungated refs again, and the hidden-crowding arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-472 · running — **MONITORING A DRIVE-LINKED DOCUMENT CRIES WOLF ON EVERY TICK: `op=monitor` fetches the bundle's `source.locator` itself (`const locator = fm.source?.locator` → the governed fetch), which is Google's app shell, not the export address, so the comparison runs raw and reads `modified` every time.** Read at the code on `main`. — owner CAPTURE.
+### D-472 · integrated — **MONITORING A DRIVE-LINKED DOCUMENT CRIES WOLF ON EVERY TICK: `op=monitor` fetches the bundle's `source.locator` itself (`const locator = fm.source?.locator` → the governed fetch), which is Google's app shell, not the export address, so the comparison runs raw and reads `modified` every time.** Read at the code on `main`. — owner CAPTURE.
 order: after D-469, with the head corrections: a monitor that reports change where none happened misleads members every tick (SCHEDULER #17, 2026-09-24; D-351's worker via CONDUCT #19; renumbered from its clone's colliding "D-467")
 milestone: M3
 interface: none — the monitor's fetch path.
@@ -431,7 +431,7 @@ scope: one line in WORKER.md's construct-status step: probes read code with comm
 accepts-when: the line is on main and names M0-155 (the measured failure it moves: two probes on comment text drifting at batch22's union). NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### M0-183 · running — **A WORKER'S /tmp SCRATCHPAD CAN LOSE FILES MID-SESSION (cause not established; REC-194's worker), and `kickoffs/WORKER.md` does not say where durable scratch goes; the practice that held was the harness's `tasks/<id>.output`.** Found by REC-194's worker (F6). — owner M0 (BOB reviews the WORKER.md line).
+### M0-183 · integrated — **A WORKER'S /tmp SCRATCHPAD CAN LOSE FILES MID-SESSION (cause not established; REC-194's worker), and `kickoffs/WORKER.md` does not say where durable scratch goes; the practice that held was the harness's `tasks/<id>.output`.** Found by REC-194's worker (F6). — owner M0 (BOB reviews the WORKER.md line).
 order: after M0-181, AHEAD of the product rows: a worker losing its own evidence mid-session costs a re-run (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
 milestone: M0
 interface: none.
