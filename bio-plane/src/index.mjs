@@ -4053,6 +4053,35 @@ class StoreSilent extends Error {
    read the identical object rather than two copies of the key drifting apart. */
 const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 
+/* D-533: ARE THESE PARTS, AS THE RECORD NAMES THEM, HELD — each present under its own content address and its
+   digest verified? `op=registeraudit` asks it of a capture held only in parts (Intake Doctrine section 8, BOB #33's
+   ruling of 2026-09-24 21:17Z). A part is VERIFIED when R2 reports the SHA-256 it checked at the put (both
+   writers, `op=acquire` and `op=capture`, pass it) and that digest is the one the record names, and the stored
+   size is the record's. An object carrying no such checksum is read and hashed when it is no larger than one
+   acquire part; a larger one is left UNVERIFIED and said so, never passed. Three lists, each naming the part:
+   `missing`, `disagree` (size or digest), `unverified`.
+   SEAM: D-530 heads the same parted captures for `op=attest`; if it factors a shared "held, whole or in parts"
+   helper, the two are ONE rule and belong in one place (REC-35: identical copies diverge silently). */
+const PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
+async function partsHeld(bucket, storeName, parts) {
+  const missing = [], disagree = [], unverified = [];
+  const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  for (const p of parts) {
+    const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
+    const h = await bucket.head(captureKey(storeName, p.sha256));
+    if (!h) { missing.push(name); continue; }
+    if (h.size !== p.bytes) { disagree.push({ ...name, stored_bytes: h.size }); continue; }
+    let digest = h.checksums?.sha256 ? hex(h.checksums.sha256) : null;
+    if (!digest && h.size <= PART_VERIFY_READ_MAX) {
+      const o = await bucket.get(captureKey(storeName, p.sha256));
+      if (o) digest = hex(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
+    }
+    if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
+    else if (digest !== p.sha256) disagree.push({ ...name, stored_sha256: digest });
+  }
+  return { missing, disagree, unverified };
+}
+
 /* REC-173 (INVESTIGATIVE-SESSION.md §11 item 5, "A MIGRATION IS A REPLAY, NOT A SURFACING", BOB #30): IS THIS
    CREATION A MIGRATION REPLAY? Condition (2) of the ruling, asked of what the SERVER holds and never of what the
    caller says: the creation names a capture (`provenanceCapture`, a sha256) that is
@@ -6486,25 +6515,52 @@ export default {
       if (!aOut.answered || !aOut.result) return storeSilent("registeraudit");
       const r = aOut.result;
       const canProbe = typeof env.CAPTURES?.head === "function";
-      const captured = [], unbacked = [], mismatched = [];
-      for (const row of r.unresolved) {
+      const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
+      for (const { named_parts: named, ...row } of r.unresolved) {
         if (row.class === "orphan") { unbacked.push({ ...row, why: "the bundle itself is absent" }); continue; }
         if (!canProbe) { unbacked.push({ ...row, why: "no capture bucket is configured to check" }); continue; }
         const h = await env.CAPTURES.head(`${storeName}/captures/${row.capture_sha}`);
-        if (!h) unbacked.push({ ...row, why: "no bytes in the working bucket" });
-        else if (typeof row.bytes === "number" && h.size !== row.bytes)
-          mismatched.push({ ...row, registered: row.bytes, stored: h.size });
-        else captured.push(row);
+        if (h) {
+          if (typeof row.bytes === "number" && h.size !== row.bytes)
+            mismatched.push({ ...row, registered: row.bytes, stored: h.size });
+          else captured.push(row);
+          continue;
+        }
+        /* D-533 (BOB #33, 2026-09-24 21:17Z; Intake Doctrine section 8): A CAPTURE HELD IN PARTS HAS NO
+           WHOLE KEY. `op=acquire` stores a multi-part document only as its parts, so the head above misses for
+           every one of them and this audit called held bytes missing and the record unsound. The ruling: such
+           a row is SOUND when every part the record names is present and each part's digest is verified
+           ("held in parts, all present"); a missing part is NAMED; and a row resolving neither way is
+           UNDETERMINED, counted outside `sound`, never inside it. */
+        if (named?.state === "unreadable") { undetermined.push({ ...row, why: named.why }); continue; }
+        if (named?.state !== "named") { unbacked.push({ ...row, why: "no bytes in the working bucket" }); continue; }
+        const v = await partsHeld(env.CAPTURES, storeName, named.parts);
+        const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
+        if (v.missing.length)
+          unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names `
+                                     + `are not in the working bucket`, missing_parts: v.missing });
+        else if (v.disagree.length || (typeof row.bytes === "number" && sum !== row.bytes))
+          mismatched.push({ ...row, registered: row.bytes, stored: sum,
+                            ...(v.disagree.length ? { disagreeing_parts: v.disagree } : {}) });
+        else if (v.unverified.length)
+          undetermined.push({ ...row, why: `every part the record names is present, but the digest of `
+                                         + `${v.unverified.length} could not be verified`, unverified_parts: v.unverified });
+        else heldInParts.push(row);
       }
       return json({ ok: true, result: {
         total: r.total, live: r.live, superseded: r.superseded, historical: r.historical,
-        captured: captured.length, mismatched: mismatched.length, unbacked: unbacked.length,
+        captured: captured.length, held_in_parts: heldInParts.length,
+        mismatched: mismatched.length, unbacked: unbacked.length, undetermined: undetermined.length,
         sound: unbacked.length === 0 && mismatched.length === 0, probed: canProbe,
         detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which "
               + "is the deliberate pattern migrate.mjs uses and what the two-bucket design exists for. "
-              + "unbacked is the only broken state, and mismatched means the register and the stored object "
-              + "disagree about size.",
-        sample: [...unbacked, ...mismatched].slice(0, 40),
+              + "held_in_parts is the same for a document the store keeps only in parts: every part the "
+              + "record names is in the working bucket and each part's digest is verified (the reassembled "
+              + "whole's digest is C-18.6's check, not re-read here). "
+              + "unbacked is the only broken state, and names any missing part; mismatched means the register "
+              + "and the stored object disagree about size, or a part about its digest. undetermined rows "
+              + "resolved neither way and are counted OUTSIDE sound: sound speaks for the other rows only.",
+        sample: [...unbacked, ...mismatched, ...undetermined].slice(0, 40),
       }, store: storeName, tokenClass: cls }, 200);
     }
 

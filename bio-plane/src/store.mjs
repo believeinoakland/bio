@@ -32937,9 +32937,43 @@ export class Store extends DurableObject {
         out.historical++; continue;
       }
       if (here) { out.superseded++; continue; }
-      out.unresolved.push({ ...r, class: "unresolved" });
+      out.unresolved.push({ ...r, class: "unresolved", named_parts: this.#partsNamedFor(r.bundle_id, r.capture_sha) });
     }
     return { ok: true, ...out, needsCaptureProbe: out.unresolved.length };
+  }
+
+  /* D-533 (BOB #33, 2026-09-24 21:17Z; Intake Doctrine section 8): WHICH PARTS DOES THE RECORD NAME FOR A
+   * CAPTURE IT HOLDS IN PARTS? `op=acquire` stores a multi-part document ONLY as its parts, each under its own
+   * hash, and never the whole under the whole's; the one place the record names those parts is the holding
+   * bundle's intake provenance register, `data/provenance.json`, whose document for that `capture_sha` carries
+   * `parts: [{file, sha256, bytes}]` (the shape C-18.1 checks). So the audit's R2 probe of the WHOLE key can
+   * only ever miss for such a row, and it called held bytes missing.
+   *
+   *   none        the register document names no parts for this sha (or the bundle has no register): the
+   *               whole key is the only place the record says the bytes live
+   *   named       the parts, as the record names them, for the control plane to head and verify
+   *   unreadable  the register exists and could not be read to an answer, with why: the row resolves
+   *               NEITHER way, and the ruling counts it UNDETERMINED, outside `sound`
+   *
+   * It reads the live image only (`files`), which is what the audit's `live` class reads too. */
+  #partsNamedFor(bundleId, sha) {
+    const f = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, bundleId);
+    if (!f) return { state: "none" };
+    if (typeof f.content !== "string")
+      return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
+    let reg;
+    try { reg = JSON.parse(f.content); } catch {
+      return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
+    }
+    const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    const doc = (Array.isArray(reg?.documents) ? reg.documents : [])
+      .find((d) => d && bare(d.capture?.sha256) === sha && d.parts !== undefined);
+    if (!doc) return { state: "none" };
+    const ok = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) =>
+      p && /^[0-9a-f]{64}$/.test(bare(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
+    if (!ok) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
+    return { state: "named", parts: doc.parts.map((p) => ({ file: typeof p.file === "string" ? p.file : null,
+                                                            sha256: bare(p.sha256), bytes: p.bytes })) };
   }
 
   /* ---- project participation, Architecture section 7 ----
