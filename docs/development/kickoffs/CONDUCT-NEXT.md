@@ -61,6 +61,8 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   0fdef669; IC-259, IC-260, IC-257 all resolved MINOR → I3 81.3.0; D-470's §3 rule 17 folded. If #20 died mid-train: check
   origin/main for 'train-…: land land/conduct/c20-batch12'; else re-run `train.mjs run` dropping every other WAITING.
   M0-146 spawned session_01Ff67qPyPcjycvojZ6EcFqY at 04:44Z into D-479's slot.
+- D-493 DONE @ 9649acf5 (125/125, M-135, no IC; base D-166, on main) — NOT on any integration branch: put it on the next train
+  (with c20-batch13). D-483 spawned session_0133FxhF1BsMJ5tLXVfjwW5m at ~04:50Z (last spawn before the 05:00Z cap).
 - UI-84 DONE @ 8f8b7be7 (124/124, M-130, no IC) — NEXT TRAIN. M0-144 spawned session_01ERbJKhXFUofstFpHerqrEx into its slot.
 - D-487 DONE @ 14e9140d (101/101, M-128, no IC) — NEXT TRAIN. BOB asked: knock limiter bound or budget (sliding-window fix named).
   D-493 spawned session_01XknYRN5Zzyw2fU3nRqF8F9 from land/worker/D-166 into its slot.
