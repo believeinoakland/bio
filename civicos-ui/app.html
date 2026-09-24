@@ -15638,8 +15638,96 @@ async function loadResolveCandidates(){
   : d.already_resolved                ? ` &mdash; already resolved to this subject`
   : d.ref                             ? ` &mdash; names ${esc(d.ref)}`
   : "";
-  out.innerHTML = note + INTENT_SUBJ.docs.map(d=>
-    `<button class="intent-pick" onclick="resolvePick('${esc(d.capture_sha)}')">${esc(d.bundle_id || ("a capture "+String(d.capture_sha).slice(0,12)+"…"))}${how(d)}</button>`).join("");
+  /* D-291: a fresh list starts a fresh selection — a tick held over from another subject's list would send
+     documents this member is not looking at. */
+  RES_SEL.clear(); RES_RETAINED.clear(); RES_SET_RECEIPT = ""; RES_SET_ERR = "";
+  INTENT_SUBJ.candNote = note;
+  INTENT_SUBJ.candHow = how;
+  if(!ACT_SOURCE.loaded) await loadActSource();
+  resolveCandPaint();
+}
+/* D-291 — THE RESOLVE LIST TAKES A SELECTION, AS ONE CALL (BIO_Interaction_Constructs §S, BOB #32's ruling of
+   2026-09-23 23:30Z; DEC-69 as amended: *"they shouldn't be forced to make decisions in bulk. But they should
+   be enabled to when appropriate"*). Every candidate keeps its own button — pick ONE document, look at it,
+   resolve it — and gains a tick; the ticked documents go to the plane as ONE `op=resolve` carrying `items[]`
+   under the `per-item` weight the plane publishes in `set_acts`. A loop of N calls here would be N motions
+   over N documents, the forty-dialogs shape wearing a bulk control's clothes (DEC-52), so there is none.
+
+   THE BULK PATH EXISTS ONLY WHERE THE PLANE PUBLISHES IT, exactly as on the queue: no `resolve` in `set_acts`
+   under `per-item`, no tick and no bar — a plane that cannot take a set is never handed one.
+
+   WHAT THE RECORD SAID IS WHAT IS SHOWN. Each document the record did not resolve stays ticked and listed with
+   the record's own reason; the receipt counts what the record answered, and the grades stay where they
+   always were — on the subject's own panes, which are re-read after the act. Nothing here grades. */
+let RES_SEL = new Set();          // capture shas the member has ticked
+let RES_RETAINED = new Map();     // capture sha -> the record's reason it was not resolved
+let RES_SET_RECEIPT = "";         // the last set act's receipt, from its answer
+let RES_SET_ERR = "";             // a refusal of the SET itself
+function resolveSetAct(){
+  const acts = (ACT_SOURCE && Array.isArray(ACT_SOURCE.setActs)) ? ACT_SOURCE.setActs : [];
+  return acts.find(a => a && a.id === "resolve" && a.weight === "per-item") || null;
+}
+function resolveSelectionToggle(sha, on){
+  sha = String(sha);
+  if(on) RES_SEL.add(sha); else RES_SEL.delete(sha);
+  resolveCandPaint();
+}
+function resolveSelClear(){ RES_SEL.clear(); RES_SET_ERR = ""; resolveCandPaint(); }
+function resolveCandPaint(){
+  const out = $("#res-cands"); if(!out) return;
+  const how = INTENT_SUBJ.candHow || (() => "");
+  const act = canIntentWrite() ? resolveSetAct() : null;
+  const docs = INTENT_SUBJ.docs || [];
+  const tick = (d) => act
+    ? `<label class="q-sel"><input type="checkbox" data-rsel="${esc(d.capture_sha)}"${RES_SEL.has(String(d.capture_sha))?" checked":""} onchange="resolveSelectionToggle('${esc(d.capture_sha)}', this.checked)"> Select</label>`
+    : "";
+  const kept = (d) => {
+    const why = RES_RETAINED.get(String(d.capture_sha));
+    return why === undefined ? "" : `<div class="q-retained" data-rretained="${esc(d.capture_sha)}"><b>Not resolved by your last action &mdash; it stays selected.</b> The record&rsquo;s reason: ${esc(why || "the record gave none")}</div>`;
+  };
+  const n = [...RES_SEL].filter(sha => docs.some(d => String(d.capture_sha) === sha)).length;
+  const bar = act && (n || RES_SET_ERR || RES_SET_RECEIPT)
+    ? `<div class="q-selbar" data-rselbar>`
+      + (n ? `<b>${n} selected.</b> Each document is resolved on its own, by the same reading the single button runs: whatever the record cannot do to one stays selected here with its reason, and does not stop the others. <button class="btn" data-rset onclick="resolveApplySet()">${esc(act.label)} (${n})</button> <button class="tbtn" onclick="resolveSelClear()">Clear the selection</button>` : "")
+      + (RES_SET_RECEIPT ? `<div class="intent-ok">${RES_SET_RECEIPT}</div>` : "")
+      + (RES_SET_ERR ? `<div class="q-err">${esc(RES_SET_ERR)}</div>` : "")
+      + `</div>`
+    : "";
+  out.innerHTML = (INTENT_SUBJ.candNote || "") + bar + docs.map(d=>
+    `<div class="res-cand">${tick(d)}<button class="intent-pick" onclick="resolvePick('${esc(d.capture_sha)}')">${esc(d.bundle_id || ("a capture "+String(d.capture_sha).slice(0,12)+"…"))}${how(d)}</button>${kept(d)}</div>`).join("");
+}
+/* ONE call for the whole selection. Each item carries only its own document; `resolvedBy` is the control
+   plane's stamp and is never sent. */
+let RES_BUSY = false;
+async function resolveApplySet(){
+  if(RES_BUSY) return; RES_BUSY = true;
+  RES_SET_ERR = ""; RES_SET_RECEIPT = "";
+  const shas = [...RES_SEL].filter(sha => (INTENT_SUBJ.docs||[]).some(d => String(d.capture_sha) === sha));
+  try{
+    if(!shas.length) return;
+    const a = await intentAsk("resolve", { items: shas.map(captureSha => ({ captureSha })) });
+    const r = a.accepted ? a.result : a.refusal;
+    const outs = (r && Array.isArray(r.items)) ? r.items : null;
+    if(!outs){ RES_SET_ERR = refusalWords(r) || "The record refused the selection and said nothing further."; return; }
+    let done = 0, refs = 0;
+    outs.forEach(o => {
+      const sha = shas[o.index];
+      if(sha === undefined) return;
+      if(o.outcome === "applied"){
+        RES_SEL.delete(sha); RES_RETAINED.delete(sha); done++;
+        refs += Number(o.references) || 0;
+      } else {
+        const words = refusalWords(o);
+        const extra = (o.translation && o.detail && o.detail !== o.translation) ? ` · ${o.detail}` : "";
+        RES_RETAINED.set(sha, (words || "") + extra);
+      }
+    });
+    RES_SET_RECEIPT = `The record read ${esc(String(done))} ${done===1?"document":"documents"} (${esc(String(refs))} ${refs===1?"reference":"references"})`
+      + (outs.length - done ? `, and did not resolve ${esc(String(outs.length - done))} &mdash; ${outs.length - done === 1 ? "it stays" : "they stay"} selected below with the record&rsquo;s reason.` : ".")
+      + (done ? ` This subject&rsquo;s panes above have been read again from the record.` : "");
+    if(done) await showEntity(INTENT_SUBJ.entity.entity_id, null, true);
+  }catch(e){ RES_SET_ERR = refusalWords(e) || String(e); }
+  finally{ RES_BUSY = false; resolveCandPaint(); }
 }
 async function resolvePick(sha){
   INTENT_SUBJ.chosen = sha;

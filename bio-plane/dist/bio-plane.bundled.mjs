@@ -16546,6 +16546,17 @@ var PER_ITEM_ACTS = [
     set_key: "items",
     item_keys: [["id"]],
     shared_keys: ["to"]
+  },
+  /* D-291 (BIO_Interaction_Constructs §S, BOB #32 2026-09-23 23:30Z): a member's selection of captured
+     documents resolved in ONE call — each document's references run through the recogniser exactly as the
+     single act runs them, each document applied or retained with that act's own reason. */
+  {
+    id: "resolve",
+    label: "Resolve the selected documents' references",
+    weight: "per-item",
+    set_key: "items",
+    item_keys: [["captureSha"], ["captureSha", "ref"]],
+    shared_keys: ["ref"]
   }
 ];
 var ACT_IDS = new Set(ACTS.map((a) => a.id));
@@ -47483,7 +47494,20 @@ ${words}`;
      resolutions. With a `ref`, resolve just that reference; without one, resolve every
      reference the document's reading carries. A reference matching no entity is returned
      UNRESOLVED and honestly so -- there is no row, no force-match. */
-  async resolveReferences({ captureSha, ref = null, resolvedBy = null } = {}) {
+  async resolveReferences({ captureSha, ref = null, resolvedBy = null, items } = {}) {
+    if (items !== void 0) {
+      const set = this.#perItem("resolve", { items, ref }, { resolvedBy }, (b) => this.#resolveOne(b));
+      if ((set.items || []).some((o) => o.outcome === "applied" && (o.resolved || []).some((m) => !m.kept)))
+        await this.#armConnectionDerive();
+      return set;
+    }
+    const one = this.#resolveOne({ captureSha, ref, resolvedBy });
+    if (one.ok && one.resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
+    return one;
+  }
+  /* D-291: op=resolve's ONE-DOCUMENT act, synchronous, shared by the single form and every item of the set
+     form. Moved out of `resolveReferences` unchanged but for the sweep, which its caller arms. */
+  #resolveOne({ captureSha, ref = null, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "a resolution is over a captured document, named by its capture sha256" };
     let refs;
@@ -47533,7 +47557,6 @@ ${words}`;
         for (const m of matches) resolved.push(m);
       }
     });
-    if (resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
     return {
       ok: true,
       capture_sha: captureSha,

@@ -50,6 +50,27 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v107, 2026-09-24 session, thread UI, D-291 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/D-291`
+(base `origin/main` @ `3f4b8f8c` with `land/worker/D-126` @ `168895a4` merged in, because D-126 is not on `main`), in the
+commit that carries this entry; the version number is provisional and CONDUCT renumbers it at integration if a
+concurrent entry took it. SURFACE: the subject page's "Resolve the documents that mention this subject".
+
+**What was absent.** The resolve list drew one button per candidate document and nothing else: a member with forty
+candidates made forty motions, and UI-55's ARM 4c carried the row as "UI-56 (carried)" because `op=resolve` took ONE
+`captureSha` — a bulk path had to be the plane accepting a set, never this surface looping (DEC-52).
+
+**What a member now sees.** Every candidate keeps its own button (pick one, look at it, resolve it) and gains a tick,
+drawn only where the plane publishes `resolve` in `set_acts` under `per-item`. The ticked documents go as ONE
+`op=resolve` carrying `items[]`; the receipt counts what the record answered; a document the record did not resolve
+stays ticked with the record's reason on it; the subject's read panes are re-read. Nothing on the surface grades.
+
+**Suites.** `resolve-set.test.mjs` (new, 17, real plane under miniflare; the wire is counted, the record read back) and
+`.control.mjs` (baseline + 3 arms, every arm as declared — the row's own control, a client-side loop, RED 14/3 at the
+two one-call arms). Moved: `member-respect` (the SETS row re-keyed `loadResolveCandidates` → `resolveCandPaint`, bulk
+now built; ARM 4d's `resolve` carry STRUCK and the set form measured instead; the footer's written "Two" carried sets
+is now counted). The retained path is driven by ONE doctored candidate and the suite says why: `op=resolve` over a
+content-addressed document refuses only an absent sha, so the plane hands this list no real refusable candidate.
+
 v106, 2026-09-23 session, thread UI, D-126 (a WORKER of CONDUCT #18, cloud session). Landed on `land/worker/D-126` (base
 `origin/main` @ `02603e88`), in the commit that carries this entry; the version number is provisional and CONDUCT
 renumbers it at integration if a concurrent entry took it. (It did: UI-74 holds `v104` and UI-68 `v105`, so CONDUCT #18

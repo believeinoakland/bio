@@ -682,8 +682,15 @@ const CHOOSERS = {
    modes are owed. Every row states which modes exist TODAY and, where a mode is
    missing, WHY it cannot be built here. */
 const SETS = {
-  "loadResolveCandidates": { single: true, bulk: false, op: "resolve",
-    why: "UI-56 (carried): `op=resolve` takes ONE `captureSha`. A bulk path is the PLANE accepting a set, not this surface looping — N calls over N documents is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, and `aiConnectionsReviewMotion`'s own note)." },
+  /* CORRECTED 2026-09-24 by D-291, not exempted: this row was keyed `loadResolveCandidates`, read `bulk: false`
+     and "UI-56 (carried): `op=resolve` takes ONE `captureSha`. A bulk path is the PLANE accepting a set, not
+     this surface looping — N calls over N documents is the forty-dialogs shape wearing a bulk control's clothes
+     (DEC-52, and `aiConnectionsReviewMotion`'s own note)." That was TRUE and ARM 4d measured it every run.
+     D-291 (BIO_Interaction_Constructs §S, BOB #32 2026-09-23 23:30Z) gave `op=resolve` a SET form under D-126's
+     `per-item` weight and built the bulk path here, so the carry's premise is gone. The list's markup moved
+     into `resolveCandPaint` (it repaints after a set act without re-reading the lookup), so the key moved with it. */
+  "resolveCandPaint": { single: true, bulk: true, op: "resolve",
+    why: "CLEAN since D-291: every candidate keeps its own button (pick ONE document, look at it, resolve it) and gains a tick; the ticked documents go as ONE `op=resolve` carrying `items[]` under the plane's `per-item` weight — each document resolved by the same code the single act runs, or kept ticked with the record's own reason, none stopping the others. No `resolve` in `set_acts`, no tick: a plane that cannot take a set is never handed one. A client-side loop of N calls is the forty-dialogs shape (DEC-52) and there is none." },
   /* CORRECTED 2026-09-23 by D-126, not exempted: this row read `bulk: false` and "UI-56 (carried):
      `op=proposedispose` is keyed on ONE (progression_key, stage_key) and `op=taskresolve`/`op=taskforward`
      each take ONE `id`". That was TRUE and ARM 4d measured it every run. D-126 gave all three a SET form
@@ -700,7 +707,7 @@ const SETS = {
   "aiConnectionCardHtml": { single: true, bulk: true, op: "(none — no plane op records a review of a machine connection)",
     why: "CLEAN, and it is the amendment's shape reached the other way round. Selection is PER CARD and `aiConnectionsReviewMotion` composes ONE motion over whatever is picked — one connection or forty — so neither mode is forced. UI-44's anti-gate arm already holds the harder half: reviewing changes a connection's standing not at all, so this is visibility and bulk review rather than an approval gate (DEC-52 final)." },
   "passageRowHtml": { single: true, bulk: false, op: "cite",
-    why: "UI-62 (carried): `op=cite` REFUSES an extent over more than one leg BY NAME — `EXTENT_ON_MANY`, whose own words are that writing the same passage onto several documents *would put claims in the record that nobody made*. So a bulk passage cite is not a control this surface is declining to build; it is a shape the plane refuses, and correctly. Looping N calls over N passages is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `loadResolveCandidates`' own note). NOR DO PASSAGES CARRY A TICK into the finder's selection lease, and that is deliberate rather than an omission: the lease is over BUNDLES and a passage is a part of one, so ticking passages into it would hand a member a set they would then cite as documents — the grain confusion this whole surface reports three counts to avoid. The single-item path is the whole of what is coherent here." },
+    why: "UI-62 (carried): `op=cite` REFUSES an extent over more than one leg BY NAME — `EXTENT_ON_MANY`, whose own words are that writing the same passage onto several documents *would put claims in the record that nobody made*. So a bulk passage cite is not a control this surface is declining to build; it is a shape the plane refuses, and correctly. Looping N calls over N passages is the forty-dialogs shape wearing a bulk control's clothes (DEC-52; the note `op=resolve`'s row carried until D-291 gave it a set form). NOR DO PASSAGES CARRY A TICK into the finder's selection lease, and that is deliberate rather than an omission: the lease is over BUNDLES and a passage is a part of one, so ticking passages into it would hand a member a set they would then cite as documents — the grain confusion this whole surface reports three counts to avoid. The single-item path is the whole of what is coherent here." },
   "queueMuteHtml": { single: true, bulk: true, op: "queuemute",
     why: "CORRECTED IN PLACE by UI-55. This was the amendment's BULK-ONLY half: one control muted every condition kind on the case and the member could not say 'just this one'. `op=queuemute` already took an arbitrary subset, so the single-kind path was one parameter away and no plane change was owed." },
 };
@@ -742,9 +749,15 @@ for(const [host, s] of Object.entries(SETS)){
      same commit that built the bulk path. The signature was never the right instrument for that claim (a
      wrapper can take a set without the method's signature moving), so the set form is measured below as
      the FIRST STATEMENT of each act's own method, where a set reaches the act, for all three acts the queue uses. */
-  const stillScalar = [
-    { op: "resolve",        sig: /async resolveReferences\(\{\s*captureSha/ },
-  ];
+  /* CORRECTED 2026-09-24 by D-291, not exempted: `resolve` stood in this list, carried on its single-key
+     signature `async resolveReferences({ captureSha`. The arm's premise is gone — D-291 made the op take a set
+     and struck the carry in the same commit that built the bulk path (`resolveCandPaint`). And the signature was
+     never the instrument for the claim (it STILL opens with `captureSha` over a method that takes a set), so the
+     set form is measured below as the method's FIRST STATEMENT, as D-126 measures its three. The list is kept,
+     EMPTY, because the loop below is the carry mechanism for the next single-key act that is carried here. */
+  const stillScalar = [];
+  ok(/\n  async resolveReferences\(\{[^}]*\bitems \} = \{\}\) \{\s*(?:\/\*[\s\S]*?\*\/\s*)?if \(items !== undefined\) \{\s*const set = this\.#perItem\("resolve", [^;]*\(b\) => this\.#resolveOne\(b\)\);/.test(store),
+     "ARM 4d: `op=resolve` (`resolveReferences`) no longer opens with the set branch into the per-item weight (`#perItem`) over the SAME one-document act the single form runs (`#resolveOne`) — the bulk path in `resolveCandPaint` would be sending a selection the plane cannot take. Re-measure the act.");
   for(const [op, method] of [["proposedispose","proposeDispose"], ["taskresolve","taskResolve"], ["taskforward","taskForward"]])
     ok(new RegExp(`\\n  ${method}\\(\\{[^}]*\\bitems \\} = \\{\\}\\) \\{\\s*(?:/\\*[\\s\\S]*?\\*/\\s*)?if \\(items !== undefined\\)\\s*return this\\.#perItem\\("${op}"`).test(store),
        `ARM 4d: \`op=${op}\` (\`${method}\`) no longer opens with the set branch into the per-item weight (\`#perItem\`) — the bulk path in \`queueSelBarHtml\` would be sending a selection the plane cannot take. Re-measure the act.`);
@@ -776,6 +789,7 @@ console.log(
   no vocabulary to derive a closure from — a novel phrasing is not caught and that is
   said rather than implied. ARM 4 partitions by REGISTER because whether a repeated
   control is a set of decisions or a chooser is not a fact a static walk can read;
-  what the walk DOES enforce is that nothing arrives unclassified. Two sets of
-  decisions are CARRIED, not clean: see ARM 4c.`);
+  what the walk DOES enforce is that nothing arrives unclassified. ${Object.values(SETS).filter(x => !x.bulk).length}
+  set(s) of decisions CARRIED, not clean: see ARM 4c. (D-291, 2026-09-24: this count was a
+  written word, "Two", that no carry being struck could move; it is now counted from SETS.)`);
 process.exit(fails.length ? 1 : 0);
