@@ -56,13 +56,13 @@ probe that reads a public op on scratch will be refused), D-464, D-462, REC-190.
   livefire canaries, 13 July probe members (not DIST's), CPDF-3's count of 17 bundles and 11 aiRuns. Build only when
   SCHEDULER caches it and CONDUCT writes `running`.
 - **DIST-7 · queued, BACKLOG**: installer uploads carry `limits.subrequests` from the signed release (depends on D-54).
-- **DIST-9 · queued, BACKLOG** (D-260's DIST half; placed by SCHEDULER #18 at 03:09Z, coord `4bbe7757`, second after D-484;
-  `node tools/ledger.mjs find DIST-9`). Install and update CARRY an operator-supplied organisation `ai` credential as
-  Worker secret `INSTANCE_AI_TOKEN`, as `DAEMON_TOKEN` is (`newgroup/src/index.mjs`, `newgroup/src/release.mjs`,
-  `bio-plane/scripts/deploy.mjs`); never generate one (minting is a MEMBER act, DS-3); with none supplied, install without
-  it and say so. NEGATIVE CONTROL: an installer that invents a value fails the no-invention arm. `15.instance-ai-secret`
-  is ABSENT until it lands, and every installed instance's wake says NO_INSTANCE_AI_CREDENTIAL. SCHEDULER judged no new
-  design needed. Whether biosmoke7 itself holds `INSTANCE_AI_TOKEN` is UNDETERMINED.
+- **DIST-9 · BUILT, on `land/dist/DIST-9` @ `41c195d5`, waiting for CONDUCT #20's train** (flipped `running` 03:52Z; base
+  `16fe1e7f`; merges cleanly onto `0fdef669`). Gate GREEN on tree `4d107829`: 326/326 · 18418 (FULLREUSE, not a backstop).
+  Install and update CARRY an operator-supplied `INSTANCE_AI_TOKEN` (the /update page's optional password box; `/begin`
+  refuses a malformed value); `deploy.mjs` sends it only from its environment. NEVER generated: none supplied sends none;
+  an update keeps a held value. `15.instance-ai-secret` → BUILT. Wizard 200/0, deploybindings 38/0; controls N1 190/10,
+  N2 199/1, deploy 37/1. Reaches groups only with the next release. On the deploy that carries it: `deploy.mjs` prints
+  whether INSTANCE_AI_TOKEN was sent; whether biosmoke7 should hold one is Bob's/a member's (minting is a member act).
 
 ## The cloud machine
 
