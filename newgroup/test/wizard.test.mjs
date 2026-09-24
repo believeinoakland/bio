@@ -86,6 +86,10 @@
  * first upload restates no member -> 180/4, the kept-bindings arm and the D-297-population arms. `newgroup/src/index.mjs`
  * restored after each by cp from a per-arm pristine copy and verified by sha256 AND byte compare (83b6af0d…).
  *
+ * NEGATIVE CONTROL (DIST-7, DIST #6, 2026-09-24), declared before arming: `limits` dropped from `uploadUpdate` ->
+ * 204 passed, 2 failed, exactly DIST-7 UPDATE and DIST-7 INSTALL (the install's step-3 re-PUT takes the update's shape,
+ * learned at DIST-11), the INSTALL arm naming [10000, null]; the PIN held. Restored by cp, sha256 (5778bfee…), cmp.
+ *
  * NEGATIVE CONTROL (DIST-11, DIST #6, 2026-09-24), declared before arming: the BROWSER restatement dropped from
  * `uploadUpdate` -> 201 passed, 2 failed: DIST-11 UPDATE as declared, AND DIST-11 INSTALL — the install's step-3 re-PUT
  * takes the update's shape and `browser` is not in keep_bindings, so a fresh install would end WITHOUT the binding too.
@@ -1489,6 +1493,28 @@ console.log("\n--- DIST-11: install and update declare BROWSER ---");
   const u = await dist6("br-update", { mode: "update", pre: { "br-update": planeBase("br-update") } });
   t("DIST-11 UPDATE: a copy installed before DIST-11 gains BROWSER (browser is not kept by keep_bindings, so it is restated)",
     (u.planePuts.at(-1) || []).filter((b) => b.type === "browser").map((b) => b.name), ["BROWSER"]);
+}
+
+/* ---- DIST-7 (D-54): both upload paths send the plane's subrequest ceiling, pinned to the plane's own config ---- */
+console.log("\n--- DIST-7: install and update send limits.subrequests ---");
+{
+  const planeCfg = readFileSync(new URL("../../bio-plane/wrangler.jsonc", import.meta.url), "utf8");
+  const cfgSub = Number((planeCfg.match(/"limits":\s*\{\s*"subrequests":\s*(\d+)/) || [])[1]);
+  t("DIST-7 PIN: the installer's PLANE_LIMITS.subrequests equals bio-plane/wrangler.jsonc's (the release's stated ceiling)",
+    NG.PLANE_LIMITS?.subrequests ?? null, Number.isFinite(cfgSub) ? cfgSub : "wrangler.jsonc states none");
+  const limitsSent = async (calls, slug) => {
+    const out = [];
+    for (const c of calls.filter((c) => c.method === "PUT" && c.u.endsWith(`/workers/scripts/${slug}`)))
+      out.push((await metadataOf(c)).limits?.subrequests ?? null);
+    return out;
+  };
+  const i = await dist6("lim-install");
+  t("DIST-7 INSTALL: every plane upload of the install (the install PUT and its step-3 re-PUT) sends the ceiling",
+    await limitsSent(i.calls, "lim-install"), [cfgSub, cfgSub]);
+  const u = await dist6("lim-update", { mode: "update", pre: { "lim-update": planeBase("lim-update") } });
+  const sent = await limitsSent(u.calls, "lim-update");
+  t("DIST-7 UPDATE: every plane upload of an update sends it too (a copy installed before DIST-7 has no limit to keep)",
+    sent.length > 0 && sent.every((v) => v === cfgSub), true);
 }
 
 console.log(`\nwizard: ${pass} passed, ${fail} failed`);
