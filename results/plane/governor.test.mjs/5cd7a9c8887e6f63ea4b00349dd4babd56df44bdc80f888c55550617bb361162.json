@@ -1,0 +1,16 @@
+{
+ "unit": "plane:governor.test.mjs",
+ "inputHash": "5cd7a9c8887e6f63ea4b00349dd4babd56df44bdc80f888c55550617bb361162",
+ "verdict": "PASS",
+ "run": "b36e01852564150ebdee548a0fdb7bcdc4ebc00f.1790291924884.12866.json",
+ "tree": "b36e01852564150ebdee548a0fdb7bcdc4ebc00f",
+ "head": "9045c3e4c8ea6765a8414e5288cbf052e1edaf4a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 139,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "fc9d741e-87ea-5045-8551-f5105c32033c",
+ "at": "2026-09-24T23:18:44.903Z"
+}
