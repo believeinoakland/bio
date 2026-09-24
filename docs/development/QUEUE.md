@@ -518,7 +518,7 @@ scope: narrow `STORE_SHAPE` to `bio` or `scratch` with its own BAD_STORE refusal
 accepts-when: `store=biosmoke` is refused by the worker by name. NEGATIVE CONTROL: widen the shape again, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
+### REC-192 · running — SPAWNED 2026-09-24 ~01:16Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER REC-192 (CONDUCT #19), base origin/main 15b2a4c0 (REC-161 on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-192 and that session; never conclude queued from the absence alone.
 order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
 milestone: M9
 interface: I3 additive — `partitionindependence` (REC-161) takes `version=<id>` and reads that stored version's legs through the same `#independenceOf`, returning no strength field; versionstrength's gate and viewer stamp kept. The integrator mints and classifies the IC.
