@@ -317,6 +317,8 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 1.29.0 (D-530, 2026-09-24): C-89.1 CAPTURE_HELD_IN_PARTS over 1.28.0; count and digest are THIS SUITE'S PRINT on the D-530 tree. */
+  "1.29.0": { count: 462, digest: "5e033b6010763ea78967e2362dade9406c40cd5de7eba8c8672736a4c26a9d83" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -414,8 +416,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

@@ -11279,6 +11279,29 @@ export const KNOCK_CHECKS = {
 };
 
 /* ===========================================================================
+   D-530 — CO-ATTESTING A CAPTURE HELD IN PARTS (C-89; Intake Doctrine §8, D-476).
+
+   A document over one part is stored ONLY as its parts, each under its own hash,
+   and never under the whole's. `op=attest` asked only for the whole-hash object
+   and answered a miss NO_SUCH_CAPTURE, telling a member to capture again a
+   document the record holds. It now asks the store the whole-document question.
+   On the plane's own acquisition receipt it attests. On the register ALONE, a row
+   written from what a promoting caller named (D-45), it refuses by THIS code:
+   the bytes are not called absent, and a timestamp is not rested on a caller's
+   word. NO_SUCH_CAPTURE stays for a hash nothing names at all.
+   =========================================================================== */
+export const ATTEST_CHECKS = {
+  CAPTURE_HELD_IN_PARTS: {
+    check: 'C-89.1',
+    where: 'src/index.mjs fetch > is-attest-parts',
+    translation: 'The record lists this document, but keeps it in parts rather than as one file, and this '
+      + 'instance has no record of fetching it itself. A timestamp is only requested for bytes this '
+      + 'instance can vouch for, so none was requested. Nothing is missing: do not capture the document '
+      + 'again. If the instance fetches it from its address, it can then be co-attested.',
+  },
+};
+
+/* ===========================================================================
    CAP-8 — THE GOOGLE DRIVE HOST STACK (C-48), enacting Bob's ruling of
    2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
    the OpenDocument export the content is extracted from.

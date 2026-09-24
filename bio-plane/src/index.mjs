@@ -9273,9 +9273,52 @@ export default {
       const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" }, 400);
-      if (!(await env.CAPTURES.head(`${storeName}/captures/${sha}`)))
-        return json({ ok: false, reason: "NO_SUCH_CAPTURE",
-                      detail: "nothing in this store has that hash; capture the document before attesting it" }, 404);
+      /* D-530: A MISS ON THE WHOLE-HASH KEY IS NOT ABSENCE. A document over one part
+         is stored ONLY as its parts, each under its own hash, and never under the
+         whole's (D-469, D-476), so this head misses for every such capture - and the
+         setup surface attests the whole hash straight after acquiring it. The
+         refusal it gave, "nothing in this store has that hash; capture the document
+         before attesting it", was false for bytes the record holds and sent a member
+         to capture them again. So a miss asks the store the whole-document question
+         (Intake Doctrine section 8, D-476's `registerholds`), and three answers are
+         kept apart:
+           - the plane's own ACQUISITION RECEIPT names the hash: the plane hashed
+             these bytes as they arrived and keeps them in parts, and no caller can
+             write that row. The hash is attested, and the answer says how it is held.
+           - only the REGISTER names it: a row `op=promote` wrote from what its caller
+             named, without reading R2 (D-45). A timestamp is not rested on that
+             alone, and the bytes are not called absent either: CAPTURE_HELD_IN_PARTS.
+           - neither, or the store did not answer: NO_SUCH_CAPTURE, saying what was
+             asked rather than that nothing anywhere holds the bytes. */
+      let held = null;
+      if (!(await env.CAPTURES.head(`${storeName}/captures/${sha}`))) {
+        const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
+          `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+        const holds = hOut.answered ? hOut.result : null;
+        if (holds && holds.acquired === true) {
+          held = { form: "parts", on: "acquisition_receipt",
+                   detail: "no object is stored under this hash, because the document was captured in parts "
+                         + "and only its parts are stored, each under its own hash. This plane hashed the "
+                         + "whole document as it arrived and recorded that receipt, which is what this "
+                         + "attestation rests on." };
+        } else {
+          /* DEC-49 REGION is-attest-parts */
+          if (holds && holds.registered === true)
+            return json({ ok: false, reason: "CAPTURE_HELD_IN_PARTS", sha256: sha,
+              detail: "the record's register names these bytes, but no object is stored under this hash and "
+                    + "this plane holds no receipt of having acquired them, which is the shape of a document "
+                    + "kept only in parts. A register row is written from what the promoting caller named, so "
+                    + "a timestamp is not rested on it alone. Nothing here says the bytes are missing." }, 409);
+          /* END DEC-49 REGION is-attest-parts */
+          return json({ ok: false, reason: "NO_SUCH_CAPTURE",
+                        detail: holds
+                          ? "no object is stored under that hash, the register holds no row for it under a "
+                            + "bundle that exists, and this plane holds no receipt of having acquired it"
+                          : "no object is stored under that hash, and the store could not be asked whether "
+                            + "its register or an acquisition receipt names it, so this is not a finding that "
+                            + "the record lacks the bytes" }, 404);
+        }
+      }
 
       const attempts = [];
       let token = null, tokenSha = null, service = null;
@@ -9348,6 +9391,7 @@ export default {
             over: sha,
           },
           note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
+          ...(held ? { held } : {}),
         } : {
           reason: "NO_ATTESTATION",
           note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped.",
@@ -10202,7 +10246,18 @@ export default {
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
-          return h ? { present: true, bytes: h.size } : { present: false, bytes: 0 };
+          if (h) return { present: true, bytes: h.size };
+          /* D-530: a miss on the whole-hash key is not absence. A register row naming the
+             WHOLE hash of a document captured in parts misses here, and the gate called it
+             "absent from the working bucket". The plane's own acquisition receipt (the
+             same question op=attest asks) says the bytes are held in parts; the gate still
+             refuses the row, because the publish step copies a capture by its whole hash,
+             but with a finding that is true. The register is not asked: it is the row
+             being checked. */
+          const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
+            `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+          const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
+          return { present: false, bytes: 0, ...(inParts ? { heldInParts: true } : {}) };
         },
       });
       if (!gate.ok)

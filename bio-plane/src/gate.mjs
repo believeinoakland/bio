@@ -115,7 +115,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
-export const CATALOG_VERSION = "1.28.0";
+export const CATALOG_VERSION = "1.29.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -129,6 +129,7 @@ export const CATALOG_VERSION = "1.28.0";
 /* 1.26.0 AT THE THIRD UNION (CONDUCT #20, c20-batch25): D-491 took 1.24.0 on its branch for 447 + 1 (C-28.16), but main's line is already 1.25.0 = 457 (c20-batch23). ONE VERSION NAMES ONE CATALOGUE, so the union moves the stamp once more, MINOR: 458, read from the d470 suite's print. */
 /* 1.27.0 AT THE UNION (CONDUCT #20, c20-batch25): D-472 took a branch version over its own base; the line already stood at 1.26.0, so the union takes the next number once, MINOR, its census read from the d470 suite's print. */
 /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510 took a branch version over its own base; the line already stood at 1.27.0, so the union takes the next number once, MINOR, its census read from the d470 suite's print. */
+/* 1.29.0 (D-530, 2026-09-24): the catalogue gained C-89.1 (ATTEST_CHECKS, CAPTURE_HELD_IN_PARTS), 461 -> 462, MINOR, its census read from the d470 suite's print. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -216,7 +217,18 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
   /* The plane's own remaining duty: bytes the register claims must exist. */
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
-    if (!probe.present)
+    /* D-530: a whole hash held only in parts is not missing bytes, and saying so was
+       false. It is still refused: publication copies a capture by the hash its row
+       names, and there is no object under this one. Registering each part, as the
+       setup surface does, is the shape that publishes. */
+    if (!probe.present && probe.heldInParts)
+      errors.push({ check: "PLANE_HELD_IN_PARTS",
+                    detail: `registered capture is held only in parts: this plane's acquisition receipt names `
+                          + `the whole hash, and the working bucket stores the document as its parts, each under `
+                          + `its own hash. Publication copies a capture by the hash its register row names, so `
+                          + `register the parts rather than the whole`,
+                    where: { path: r.path, sha256: r.capture_sha } });
+    else if (!probe.present)
       errors.push({ check: "PLANE_MISSING_BYTES", detail: `registered capture is absent from the working bucket`,
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (typeof r.bytes === "number" && probe.bytes !== r.bytes)

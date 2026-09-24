@@ -33650,14 +33650,26 @@ export class Store extends DurableObject {
    *  register answers for documents the record REGISTERED, and a prior acquire
    *  never promoted leaves parts in R2 and no register row. `registered: false` is
    *  that one fact and nothing more; `registered: null` is no question asked.
+   *
+   *  D-530 - AND THE PLANE'S OWN RECEIPT, `acquired`. `captured_locators` has one
+   *  writer, `op=acquire`, and the hash in it is the one the plane computed as the
+   *  bytes ARRIVED; nothing deletes a store's captures. So a receipt for a whole
+   *  hash that has no object under it says the plane took the document and keeps
+   *  it in parts, and no caller can write it. The register cannot say that: a
+   *  register row is written by `op=promote` from what its CALLER names, and
+   *  promote does not read R2 (D-45). `op=attest` attests on the receipt and not on
+   *  the register alone; the ratify gate names a whole-hash row held in parts
+   *  rather than calling its bytes absent. One bounded read on the
+   *  `captured_locators_sha` index, and like `registered` it names no bundle.
    */
   registerHolds({ sha = null } = {}) {
     const s = typeof sha === "string" && sha.trim()
       ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
-    if (!s) return { ok: true, sha: null, asked: false, registered: null };
+    if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
     return { ok: true, sha: s, asked: true, registered: !!this.#one(
       `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
-        WHERE r.capture_sha = ? LIMIT 1`, s) };
+        WHERE r.capture_sha = ? LIMIT 1`, s),
+      acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s) };
   }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
