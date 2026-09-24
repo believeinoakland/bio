@@ -969,13 +969,28 @@ names the four measurements owed and what a match must show to count.
    system, however many documents carry the number (`CLAUDE.md` §5: several documents agreeing is usually one source
    copied). The same string naming different things is not a match, so each space carries the check that its referent
    agrees. **A fund code, for one, counts only when the fund NAME agrees too**, because the bare code collides with years.
-2. **A space whose FORMAT changes is ONE space with dated format ERAS** (Oakland's projects: `C######`, then `100xxxx`).
-   Each era has its own recogniser and a recorded boundary. An identifier matches across eras only through a CROSSWALK
-   that is itself a captured document with provenance, never through a pattern we infer.
-3. **Oakland's first three spaces, designed and NOT BUILT:** the PROJECT number (budget line ↔ Legistar award; the C→B
-   lever), the C.M.S. number (any citing document ↔ its Legistar matter, by `MatterEnactmentNumber`), and the fund code
-   (checked against the fund name). Measuring them needs egress to Oakland's hosts, which this cloud's proxy refuses
-   (D-453, `blocked`).
+2. **A space may run in SEVERAL FORMS AT ONCE — AMENDED 2026-09-24 by BOB #32 on M-132 (D-453).** A space's forms are
+   told apart by their SHAPE, never by DATE: M-132 measured Oakland's project numbers over the whole Legistar corpus
+   (32,976 matters) and found the `C######` form running 2000–2026 and the `100xxxx` form 2015–2026, ELEVEN YEARS
+   CONCURRENT and both current (M-119's "format changed in 2016–17" was an artefact of its sample). Each form has its own
+   recogniser; the two new-form series interleave, so they are ONE allocator. An identifier matches ACROSS forms only
+   through a CROSSWALK that is itself a captured document with provenance, never through a pattern we infer, and a
+   document naming both forms is not a crosswalk (M-132 read the one candidate by hand: two different projects).
+3. **Oakland's spaces, MEASURED (M-132, 2026-09-24) and NOT BUILT:**
+   - **The C.M.S. number** (a resolution or ordinance, cited from any document ↔ its Legistar matter by
+     `MatterEnactmentNumber`), the best-evidenced space: 38 of 41 citations resolve. Its recogniser MUST check the
+     REFERENT — a budget book cites "Resolution No. 87751" for the OPEB funding policy, which is 87551; 87751 is a Head
+     Start matter, and joining on the number alone would assert a false edge — and MUST carry the record's COVERAGE FLOOR
+     (Legistar's ordinances begin at 12274, its resolutions at 75950): a citation below it reads OUTSIDE THE RECORD'S
+     REACH, never NOT FOUND (§2 of `CLAUDE.md`: say which).
+   - **The project number**, under rule 2's concurrent forms.
+   - **The fund code**, counted only when the fund NAME agrees (rule 1).
+   - **The APN** (assessor's parcel number): normalised to the roll's own canonical key (`apn_sort`), because Legistar
+     pads every part and the roll does not; and a parcel absent from the CURRENT roll reads RETIRED (merged, split or
+     taken), never NO SUCH PARCEL — 33 of 102 Legistar APNs are retired, including exactly the takings a case documents.
+     The roll read is Oakland's republication, whose provenance the portal does not state: an APN pair is
+     cross-institution only once the county's own roll is captured.
+   The contract/PO space is UNPUBLISHED AT SOURCE (Oakland's own systems catalogue, M-132), not undetermined.
 
 ## 8.4 Themes: a connection through an IDEA — RULED BY BOB 2026-09-21 (D-162), Part I's one amendment since approval
 
