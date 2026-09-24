@@ -22,7 +22,7 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (05:17Z)
+## 4. STATE (05:51Z)
 - MAIN = d536f834 (train-20260924T044500Z-4275: c20-batch12 = D-470 D-487 UI-84 D-479; I3 81.3.0; workers archived). Before: 0fdef669 (train-20260924T041650Z-598: D-482 61b5ceca, D-166 958ad9ac, REC-185 0fdef669 — reported). Before it 16fe1e7f (train-20260924T033115Z-658: land/bob/status-cellcap 6977d9d2 + folds-0924e 16fe1e7f; 112/112 green). Map budget
   now 49,152 B with CELL_CAP 240 — never raise it. Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
 - land/bob/d461-claude RETURNED (conflicts vs main) → merged by c20-batch11fix instead (its CLAUDE.md §5 commit is the novel part).
@@ -43,6 +43,9 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   BOB's two owed rulings (D-64 timeout, REC-184 DEFINITION_MOVED) were NOT paid → sent to SCHEDULER 04:56Z to row.
 - M0-146 @ 3f939f53 built the `.scratch/` ignored path BOB RULED AGAINST (05:04Z) — NOT TRAINABLE as is; sent back 05:33Z to rework
   (scratch in the session scratchpad, WORKER.md under 24,576 B, JSDoc sentence); push by 06:30Z. If not reworked, carry the row.
+- land/conduct/c20-batch16b @ 75d5c7df PUSHED (on batch15 e729ee8e): D-481 D-494 DIST-12 D-483 D-484 (flipped integrated); D-481 §16
+  limit FOLDED; IC-263 (D-484) I3 MINOR 81.4.0. TRAIN IT after batch15 lands. NEVER train land/conduct/c20-batch16 (same trees,
+  missing Dropped-from-branch trailers; mergecarry fails it).
 - DIST-12 DONE: land/dist/DIST-12 @ 1a0fc88f (127/127, M-136, no IC; accepts-when waits for the next release, so it cannot close tonight).
   NEXT SMALL TRAIN after batch15: D-481 + D-494 + DIST-12 (fold D-481's §16 limit — it is on D-481's row).
 - D-494 DONE @ 6283fe29 (96/96; 18=18 fences) — next small train. D-496 spawned 05:31Z (push by 06:40Z).
