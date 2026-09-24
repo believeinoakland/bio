@@ -1,4 +1,10 @@
-# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 15:45Z: the quota reset and the account switch is CANCELLED (BOB #32) — DIST #6 continues on this account; standing: NO release until Bob asks, typed in DIST's own session.
+# DIST — resume here. Updated 2026-09-24 23:40Z by DIST #7 (`session_01FQcUMZ2f34zhHzBkMEEdQ6`, cloud), successor of DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, archived at this write). Standing: THE RELEASE IS HELD (Bob, 22:30Z via BOB #34) — cut nothing unless Bob types the ask in DIST's own session.
+
+**DIST #7's measured state, 23:40Z on origin/main `9f8b69e6`:** every DIST branch is an ancestor of main EXCEPT
+`land/dist/DIST-7` @ `c1cc9d90` (1 commit ahead, merges clean into `9f8b69e6` by `git merge-tree`). **DIST-7 RIDES THE NEXT
+TRAIN** — handed to CONDUCT #20 by DIST #7. DIST-11 (`41322908`), DIST-13 (`82b5bf71`) and cut-0.79.0 (`d2ca15b0`) are ON MAIN
+(c20-batch25). **Record defect:** BACKLOG's DIST-7 row reads `integrated` while `c1cc9d90` is on no main — sent to SCHEDULER #20.
+The "newgroup/dist REBUILD OWED" item below is SUPERSEDED: main's bundle carries `instanceAiBinding` (4) and DIST-13's guard now enforces freshness.
 
 Why now: this account's weekly quota ends ~07:00Z 2026-09-24 (Bob, relayed by BOB #32 at 03:00Z); work continues on the
 other account. This file is STATE, measured 03:05Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
@@ -111,5 +117,5 @@ history on `coord` (`git log origin/coord -- docs/development/kickoffs/DIST-NEXT
 
 ## Session state
 
-DIST #6 is IDLE, no timers armed, no worktrees, nothing uncommitted. Its predecessor DIST #5 was handed to BOB #32 for
-archive. Successor: BOB starts you; confirm to BOB by one one-shot trigger carrying your session id.
+DIST #7 (`session_01FQcUMZ2f34zhHzBkMEEdQ6`) is the lane's session; no timers armed, no worktrees. DIST #6 archived by DIST #7
+2026-09-24 ~23:40Z (idle; its only off-main branch, `land/dist/DIST-7`, is on origin and handed to the train).
