@@ -204,14 +204,14 @@ scope: record `statement_by` (server-stamped) at every draft write that changes 
 accepts-when: B edits another section after A wrote the statement, and B may acknowledge while A is refused by name. NEGATIVE CONTROL: read the last editor again, and the "the statement's writer is refused" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #32's G2; `node tools/mintid.mjs REC`).
 
-### REC-194 · queued — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** BOB #32's ruling of 2026-09-23 22:26Z (cite it until folded into Publication §3): *an acknowledgement binds to ONE case identity; reading A's statement is not reading B's.* — owner RECORD.
+### REC-194 · queued — **AN ACKNOWLEDGEMENT MAY MATCH ANOTHER CASE WHOSE STATEMENT IS BYTE-IDENTICAL: D-150 binds it to the statement's bytes, not to ONE case identity.** Publication §3 rule 13 (folded): *an acknowledgement binds to ONE case identity; it never matches another case whose statement is byte-identical.* — owner RECORD.
 order: directly after REC-193, the same block (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 — the `statementack` op's binding narrows to one case; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11, with BOB #32's ruling of 2026-09-23 22:26Z (cite it until folded into Publication §3).
-depends-on: D-150 (`integrated` on c17-batch7).
-scope: an acknowledgement records and is matched by the case identity it was given for; a second case in the project with byte-identical statement text lists none of the first's. Extend D-150's suite.
-accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (BOB #32's ruling, folded).
+depends-on: D-150 (on `main` at 548eb2c5).
+scope: an acknowledgement records and is matched by the case identity it was given for; a second case in the project with byte-identical statement text lists none of the first's.; and the DRAFT DOOR matches only the draft's own document/case, never an unsigned edition-1 document of another case with the same statement text (widened by SCHEDULER #18 2026-09-24 on BOB #32's 03:40Z instruction via CONDUCT #20; c18-batch7fix's finding). Extend D-150's suite.
+accepts-when: two cases with identical statements, one acknowledged: the other's completeness block lists nobody; and two cases' unsigned edition-1 documents with identical statements: the draft door of one finds none of the other's. NEGATIVE CONTROL: match by statement hash alone, and the "the twin case lists nobody" arm fails by name; match the draft door by statement text across the project, and the draft-door arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #32's G3; `node tools/mintid.mjs REC`).
 
 ### UI-89 · queued — **THE STATEMENT'S ACKNOWLEDGEMENTS HAVE A PLANE AND NO SURFACE: the `statementack` op and the signed `completeness.acknowledgements` (D-150, IC-227) are unreachable from any page.** The DELEGATION RECORD (D-150) -> UI of 2026-09-23 on coord `CLAIMS.md` names three surfaces. — owner UI.
@@ -1265,13 +1265,3 @@ depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the r
 accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own … (whole text: the cut archive)
-order: behind the product rows, first of the reading-budget rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: an over-budget kickoff costs every RECORD spawn context, not gate time, and blocks no product; SCHEDULER #12); not a defect in the product, cheap and mechanical (SCHEDULER #2, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` with CLAUDE.md §1's reading budget — *a file is either READ WHOLE … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
