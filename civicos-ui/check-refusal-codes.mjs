@@ -840,7 +840,7 @@ const FLOOR = {
      are PRE-EXISTING SLACK: codes minted without a translation since REC-84's re-read, while the census floor above was
      moved past them (D-270's 517 -> 595) and this one was not. A partition floor 27 below its subject would have passed a
      walk that lost sight of 27 untranslated codes, which is the empty-corpus defence this floor exists to be. */
-  untranslated: 296,   /* UI-81 (C-44.2 FINDING_IN_SEVERAL_CASES in CASE_DERIVATION_CHECKS, 2026-09-23, worktree agent-a306ff29faf082ef3): FELL 297 -> 296 from this guard's own print, and THE FALL IS NOT SLACK: FINDING_IN_SEVERAL_CASES was in arm F's subject (F6, one site, out of reach) and left it because it now carries a canned translation — the census is unchanged at 608 and the partition still sums to exactly this figure (F6 168 -> 167). A floor that falls needs its reason at the site; this is it. */
+  untranslated: 295, /* D-126 (C-75 PER_ITEM_CHECKS + C-76 TASK_ACTOR_CHECKS, 2026-09-23, branch land/worker/D-126): MOVED 296 -> 295 from this guard's own print on the item's tree — FELL by 1, and the fall is a CLOSURE rather than slack: NOT_YOURS was untranslated and now carries C-76.1's canned translation, because a queue selection can surface it to a member (reachGap held at 40 for that reason). */   /* UI-81 (C-44.2 FINDING_IN_SEVERAL_CASES in CASE_DERIVATION_CHECKS, 2026-09-23, worktree agent-a306ff29faf082ef3): FELL 297 -> 296 from this guard's own print, and THE FALL IS NOT SLACK: FINDING_IN_SEVERAL_CASES was in arm F's subject (F6, one site, out of reach) and left it because it now carries a canned translation — the census is unchanged at 608 and the partition still sums to exactly this figure (F6 168 -> 167). A floor that falls needs its reason at the site; this is it. */
                        /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
                           from arm F's own printed partition (F1=2 F2=1 F3=18 F4=94 F5=6 F6=127,
                           summing to 248). **ALL OF THIS MOVE IS PRE-EXISTING SLACK AND NONE OF IT IS
@@ -892,7 +892,7 @@ const FLOOR = {
      `group-surface.test.mjs` FEEDS `NOT_AUTHENTICATED` to the public header — the refusal an older plane (before
      REC-163/IC-174) answers a stranger's `op=instancegroup` with — so the header can be shown saying it could not
      read the group rather than that none is recorded. A real widening, which this floor says should raise it. */
-  r3Fed: 71,
+  r3Fed: 72, /* D-126 (2026-09-23, branch land/worker/D-126): MOVED 71 -> 72 from this guard's own print at the COMMIT that adds civicos-ui/test/queue-peritem.test.mjs (D-257: the working tree read it before the file was committed) — the suite FEEDS NOT_YOURS into the queue surface through a real plane. */
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a

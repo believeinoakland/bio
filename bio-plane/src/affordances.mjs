@@ -2073,6 +2073,33 @@ export const NON_ACTS = {
   aicredentialrevoke: "withdrawing an agent credential (D-199): the narrowing half of the same governance act, recorded against the member who withdrew it. Not object-directed, for the reason its counterpart is not",
 };
 
+/* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
+ *
+ * NOTIFICATIONS.md §Applying a handler to a selection: *"each item independently succeeds or is RETAINED
+ * WITH A REASON."* `refuse` stops the whole set on drift and hands over nothing; `report` proceeds and says
+ * what moved; `single` has no set. `per-item` is none of them: every item is tried on its own, the ones
+ * the act accepts are applied, and each one it refuses is kept, carrying that act's own refusal as its
+ * reason. The mechanism is `store.mjs #perItem`, and these three ops reach it when the body carries
+ * `items` (a caller who sends no `items` gets the single act, unchanged).
+ *
+ * WHY A TABLE OF ITS OWN AND NOT ROWS IN `ACTS`: all three are NON_ACTS below for reasons that still hold
+ * — a proposal disposition is keyed on a derived proposal and a task act on a task, never on a bundle's
+ * state — so an `applies()` over `affordanceFacts` would have nothing to read. What a surface needs from
+ * the plane is the WEIGHT (so it knows a selection is one call, not N) and the SET KEY; both are published
+ * here, and `op=affordances` serves this table as `set_acts`. The bound, `PER_ITEM_MAX`, is defined HERE and
+ * imported by the store (`Store.PER_ITEM_MAX`) and by the control plane, so the number a surface reads
+ * is the one the act enforces. */
+export const PER_ITEM_MAX = 100;
+export const PER_ITEM_ACTS = [
+  { id: "proposedispose", label: "Defer or dismiss the selected findings", weight: "per-item",
+    set_key: "items", item_keys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
+    shared_keys: ["to", "reason", "kind"] },
+  { id: "taskresolve", label: "Resolve the selected obligations", weight: "per-item",
+    set_key: "items", item_keys: [["id"]], shared_keys: [] },
+  { id: "taskforward", label: "Forward the selected obligations", weight: "per-item",
+    set_key: "items", item_keys: [["id"]], shared_keys: ["to"] },
+];
+
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));
 
 /* The derivation: which acts exist for THIS object as it stands. Pure over the

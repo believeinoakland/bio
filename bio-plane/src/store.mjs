@@ -216,7 +216,7 @@ import { liveToken } from "./tokens.mjs";
    admits and the catalogue does not publish (or the reverse) is not reachable
    by editing one place, which is the whole of the guarantee. */
 import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
-         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS } from "./affordances.mjs";
+         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, PER_ITEM_MAX } from "./affordances.mjs";
 /* REC-21: the queue's PERSONAL half. The CONDITION-kind vocabulary the mute
    fence refuses against, and the ONE admission decision the feed applies — pure,
    so the suite holds the rule directly rather than only through a Durable
@@ -457,6 +457,9 @@ import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers,
    the version-name grammar its new reading must meet (C-25.2's own regex, so a
    name this act accepts is one op=promote accepts). */
 import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-checks.mjs";
+/* D-126 / C-75: the PER-ITEM weight's own refusals — the SET's words, never an item's (NOTIFICATIONS.md
+   §Applying a handler to a selection). An item's reason is its own act's refusal, carried verbatim. */
+import { PER_ITEM_CHECKS, TASK_ACTOR_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-87 / IC-128: TRANSCRIBE's refusals, and the digest the `typed` step
    carries — the catalogue's own sync sha256, so the text digest and the content
    address are computed by one implementation. */
@@ -26807,7 +26810,14 @@ export class Store extends DurableObject {
      IS checked is that the project is a real project bundle THIS VIEWER CAN SEE, so a caller
      cannot write a decision under a team it was never invited to. */
   proposeDispose({ progressionKey, stageKey, key, project, finding, kind,
-                   to, state, reason, decidedBy = null, viewer = null, identity = null } = {}) {
+                   to, state, reason, decidedBy = null, viewer = null, identity = null, items } = {}) {
+    /* D-126: WITH `items`, the act takes a SET under the PER-ITEM weight (`#perItem`), each item decided by
+       THIS method's single-key path. The decider (the control plane's stamp) and the viewer and identity
+       (the URL's, spread after the body at the dispatch) are forced onto every item. */
+    if (items !== undefined)
+      return this.#perItem("proposedispose",
+        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason },
+        { decidedBy, viewer, identity }, (b) => this.proposeDispose(b));
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
     /* WHICH ACT THIS IS, decided by what the caller SENT and never by inspecting the id's shape.
@@ -42693,13 +42703,19 @@ export class Store extends DurableObject {
     if (row.assignee === "unassigned") return null;
     if (actor === row.assignee) return null;
     if (this.#isAdminMember(actor)) return null;
+    /* DEC-49 REGION is-task-actor-fence — D-126/C-76.1: `code`, `check` and `translation` added (a queue
+       selection now surfaces this refusal to a member); `reason`, `detail` and the assignee are unchanged. */
     return {
       ok: false,
       reason: "NOT_YOURS",
+      code: "NOT_YOURS",
+      check: TASK_ACTOR_CHECKS.NOT_YOURS.check,
+      translation: TASK_ACTOR_CHECKS.NOT_YOURS.translation,
       detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
       assignee: row.assignee,
       assignee_role: row.assignee_role,
     };
+    /* END DEC-49 REGION is-task-actor-fence */
   }
 
   /** Forward a task to a member better placed to attest it.
@@ -42731,7 +42747,11 @@ export class Store extends DurableObject {
    *  are derived from the SAME `MACHINE_STAMP_PREFIXES` in the catalog, so the
    *  spelling still moves in one place and moves here too; what is deliberately
    *  not shared is the bare-class arm, for the reason in the paragraph above. */
-  taskForward({ id = null, to = null, actor = null, now = null } = {}) {
+  taskForward({ id = null, to = null, actor = null, now = null, items } = {}) {
+    /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor (the control plane's stamp) is forced
+       onto every item. */
+    if (items !== undefined)
+      return this.#perItem("taskforward", { items, to, now }, { actor }, (b) => this.taskForward(b));
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
     /* DEC-49 REGION is-machine-forward — REC-64/C-32.10. The fence alone. REC-73
        measured that this pair is the ONLY one of the twelve with a second
@@ -42779,7 +42799,10 @@ export class Store extends DurableObject {
    *  `taskDrain` is deliberately untouched and is the daemon's path: draining
    *  turns queued events into tasks and ROUTES them, which is surfacing work
    *  rather than discharging it. Nothing a drain does closes an obligation. */
-  taskResolve({ id = null, actor = null, now = null } = {}) {
+  taskResolve({ id = null, actor = null, now = null, items } = {}) {
+    /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor is forced onto every item. */
+    if (items !== undefined)
+      return this.#perItem("taskresolve", { items, now }, { actor }, (b) => this.taskResolve(b));
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
     /* DEC-49 REGION is-machine-resolve — REC-64/C-32.11. The fence alone. */
     if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
@@ -42804,6 +42827,105 @@ export class Store extends DurableObject {
     this.sql.exec(`UPDATE tasks SET status=?, resolved_at=?, history=? WHERE id=?`,
       task.status, at, JSON.stringify(task.history), id);
     return { ok: true, id, status: "resolved", resolved_at: at };
+  }
+
+  /* ==================================================================== D-126
+   * THE PER-ITEM WEIGHT — "each item independently succeeds or is RETAINED WITH A REASON"
+   * (NOTIFICATIONS.md §Applying a handler to a selection; Bob: *"If that action didn't work for one or
+   * more, they'd stay in the list so that the user can take a different action."*).
+   *
+   * ONE HELPER, THREE ACTS. `op=proposedispose`, `op=taskresolve` and `op=taskforward` each take a SET
+   * when the body carries `items` — the branch is the first statement of each act's own method, so the
+   * dispatch map is unchanged — and without `items` each is the single-key act it was. The
+   * set form is NOT a second implementation of any act: every item goes through the SAME method the
+   * single form calls, so an item is accepted and refused by exactly the rules one key would be, and its
+   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-75).
+   *
+   * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
+   *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
+   *     the loop, and the `refuse` weight's stop-on-drift is exactly the behaviour this weight is not.
+   *   - SILENT SKIPPING. Every item the caller sent has exactly one outcome in `items[]`, at its own
+   *     `index`, `applied` or `retained`, and `applied + retained === count` by construction. A retained
+   *     item carries its act's `reason` (and `code`/`translation` where that act has them).
+   *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
+   *     C-75.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
+   *     truth about the set and a caller reading `items[]` is told the truth about each item.
+   *
+   * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` is what the control plane stamped (the actor, the
+   * decider) or the URL carries (viewer, identity); it is spread LAST, so an item that names its own
+   * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
+   * `reason`, `to` or disposition — and an item may override it for itself.
+   *
+   * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
+   * at most once, after all of its own refusals, so an item that is refused has written nothing. */
+  static PER_ITEM_MAX = PER_ITEM_MAX;   /* affordances.mjs: ONE number, published as set_acts[].max_items */
+  #perItem(act, body, stamped, one) {
+    const refusal = (code, detail, extra) => {
+      const row = PER_ITEM_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    const { items, ...shared } = body || {};
+    const count = Array.isArray(items) ? items.length : 0;
+    /* DEC-49 REGION is-per-item-set-shape */
+    if (!Array.isArray(items) || items.length === 0)
+      return refusal("SET_NO_ITEMS",
+        `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or `
+        + `send one item's fields without \`items\` for the single act. Nothing was done.`,
+        { op: act, weight: "per-item", count: 0 });
+    if (items.length > Store.PER_ITEM_MAX)
+      return refusal("SET_TOO_LARGE",
+        `op=${act} acts on at most ${Store.PER_ITEM_MAX} items at once and this set holds ${items.length}. `
+        + `Refused WHOLE, before any item was tried, so no item moved.`,
+        { op: act, weight: "per-item", count: items.length, max: Store.PER_ITEM_MAX });
+    /* END DEC-49 REGION is-per-item-set-shape */
+    const echo = (it) => {
+      const o = {};
+      for (const [k, v] of Object.entries(it)) {
+        if (typeof v === "string") o[k] = v.slice(0, 400);
+        else if (typeof v === "number" || typeof v === "boolean" || v === null) o[k] = v;
+      }
+      return o;
+    };
+    const outcomes = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      /* DEC-49 REGION is-per-item-malformed */
+      if (!it || typeof it !== "object" || Array.isArray(it)) {
+        outcomes.push({ index: i, outcome: "retained", asked: null,
+          ...refusal("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was `
+            + `left as it was and the other items were still tried.`) });
+        continue;
+      }
+      /* END DEC-49 REGION is-per-item-malformed */
+      let r;
+      /* `items: undefined` LAST: an item cannot smuggle a nested set back into the act. */
+      try { r = one({ ...shared, ...it, ...stamped, items: undefined }); }
+      catch (e) {
+        /* DEC-49 REGION is-per-item-failed */
+        r = refusal("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: `
+          + String((e && e.message) || e).slice(0, 200) + `. Nothing about the item is claimed.`);
+        /* END DEC-49 REGION is-per-item-failed */
+      }
+      const res = (r && typeof r === "object") ? r : { ok: false };
+      outcomes.push({ index: i, outcome: res.ok === true ? "applied" : "retained", asked: echo(it), ...res });
+    }
+    const applied = outcomes.filter((o) => o.outcome === "applied").length;
+    const retained = outcomes.length - applied;
+    const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
+    if (retained === 0)
+      return { ok: true, ...head,
+               detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.` };
+    /* DEC-49 REGION is-per-item-retained */
+    /* Written out rather than spread from `refusal()`, so the verdict and the code are LITERALS at the
+       site the DEC-49 guard reads (a spread verdict is one its outcome walk cannot grade). */
+    return { ok: false, reason: "SET_ITEMS_RETAINED", code: "SET_ITEMS_RETAINED",
+             check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
+             translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
+             detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in `
+               + `items[] carries its own act's reason. The applied items stand — this is not a rollback.`,
+             ...head };
+    /* END DEC-49 REGION is-per-item-retained */
   }
 
   /* ---- D-104: source reachability ----

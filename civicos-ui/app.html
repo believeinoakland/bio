@@ -7328,7 +7328,7 @@ function strataGo(a, id){
    why the surface-side disposition array — the option map C5 forbids and the
    last one in this file — was deleted by this item rather than moved.
    ============================================================ */
-const ACT_SOURCE = { loaded:false, catalog:null, vocab:null, captureActs:null };
+const ACT_SOURCE = { loaded:false, catalog:null, vocab:null, captureActs:null, setActs:null };
 async function loadActSource(force){
   if(ACT_SOURCE.loaded && !force) return ACT_SOURCE;
   try{
@@ -7339,7 +7339,10 @@ async function loadActSource(force){
        See `captureAct` below for what it is and why it is separate from
        `catalog`. */
     ACT_SOURCE.captureActs = Array.isArray(r && r.capture_acts) ? r.capture_acts : null;
-  }catch(_){ ACT_SOURCE.catalog = null; ACT_SOURCE.vocab = null; ACT_SOURCE.captureActs = null; }
+    /* D-126's block, off the SAME answer: the acts that take a selection under the `per-item` weight.
+       Read by the queue (`queueSetActsFrom`); absent, the queue draws no selection control. */
+    ACT_SOURCE.setActs = Array.isArray(r && r.set_acts) ? r.set_acts : null;
+  }catch(_){ ACT_SOURCE.catalog = null; ACT_SOURCE.vocab = null; ACT_SOURCE.captureActs = null; ACT_SOURCE.setActs = null; }
   ACT_SOURCE.loaded = true;
   return ACT_SOURCE;
 }
@@ -13773,6 +13776,130 @@ let QUEUE_ITEMS = new Map();      // id -> the live item, for the forward picker
 let QUEUE_SEEN = new Map();       // id -> what this member was SHOWN, so a disappearance can be explained
 let QUEUE_BUSY = false;
 
+/* ---- D-126: APPLYING A HANDLER TO A SELECTION (NOTIFICATIONS.md §Applying a handler to a selection) ----
+   Bob: *"select some (or all) to apply the action to … If that action didn't work for one or more, they'd
+   stay in the list so that the user can take a different action."* The plane's `per-item` weight is what
+   makes that ONE call rather than N: each item is applied or RETAINED WITH ITS OWN ACT'S REASON, and none
+   stops the others. This surface decides none of it — it sends the selection, reads `items[]`, and keeps
+   every retained item listed with the reason the record gave, in the record's own words (`queueReason`).
+
+   THE BULK PATH EXISTS ONLY WHERE THE PLANE PUBLISHES IT. `op=affordances` (no target) answers `set_acts`;
+   an op missing from it, or published under any weight but `per-item`, draws no selection control at all,
+   so a plane that cannot take a set is never handed one. The single-item controls are untouched: neither
+   mode is forced (DEC-69 as amended).
+
+   A RETAINED ITEM IS KEPT ON THIS SCREEN EVEN WHEN THE FEED NO LONGER CARRIES IT. The commonest drift is an
+   obligation moved to somebody else, and `op=queue` is right not to list another member's task for this
+   one — so the retained item, its summary as it was shown, and the record's reason are held here until the
+   member clears the note or acts on it again. Nothing is invented about it beyond what `items[]` said. */
+let QUEUE_SET_ACTS = new Map();   // op -> the plane's published set act (weight per-item only)
+let QUEUE_SEL = new Set();        // ids of items the member has selected
+let QUEUE_RETAINED = new Map();   // id -> { why, summary } from the last set act's retained outcomes
+let QUEUE_SET_ERR = "";           // a refusal of the SET itself (it had no items to judge)
+/* Read off the act source boot already loaded (`loadActSource`, one `op=affordances` read for the whole
+   surface), never a second call — and never awaited ahead of the feeds, so the queue is not held back by it. */
+function queueSetActsFrom(src){
+  const acts = (src && Array.isArray(src.setActs)) ? src.setActs : [];
+  QUEUE_SET_ACTS = new Map(acts.filter(a => a && a.weight === "per-item" && a.id).map(a => [a.id, a]));
+}
+/* WHICH op a selected item's set act is, from the item's own class and the record's own disposition
+   publication. A finding keyed by (project, finding) is NOT selectable: its act needs the member to name
+   the project it is acting for, one item at a time, and a set would have to choose it for them. */
+function queueSetOpFor(it){
+  if(!it) return null;
+  if(it.class === "OBLIGATION") return canContribute() && QUEUE_SET_ACTS.has("taskresolve") ? "taskresolve" : null;
+  if(it.class === "FINDING"){
+    const d = it.disposition || null;
+    if(d && d.available === true && d.scope === "project") return null;
+    if(!notifDispositionKeyed(it) || !queueFindingKey(it) || !canProposalAct()) return null;
+    return QUEUE_SET_ACTS.has("proposedispose") ? "proposedispose" : null;
+  }
+  return null;
+}
+function queueSelectionToggle(id, on){
+  id = String(id);
+  if(on === undefined) on = !QUEUE_SEL.has(id);
+  if(on) QUEUE_SEL.add(id); else QUEUE_SEL.delete(id);
+  queuePaint();
+}
+function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_SET_ERR = ""; queuePaint(); }
+function queueRetainedClear(id){ QUEUE_RETAINED.delete(String(id)); queuePaint(); }
+/* The selected ids a set op would take, in the order the member sees them. */
+function queueSelFor(op){
+  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id); return it && queueSetOpFor(it) === op; });
+}
+/* ONE call for the whole selection. `shared` is what every item shares (a disposition, a reason); each
+   item carries only its own identity. The actor and the decider are the plane's stamps and are never sent. */
+async function queueApplySet(op, shared){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  QUEUE_SET_ERR = "";
+  const ids = queueSelFor(op);
+  try{
+    if(!ids.length) return;
+    const items = ids.map(id => op === "proposedispose" ? { key: queueFindingKey(QUEUE_ITEMS.get(id)) } : { id });
+    const res = await recPostR(op, { ...(shared || {}), items });
+    const outs = (res && Array.isArray(res.items)) ? res.items : null;
+    if(!outs){ QUEUE_SET_ERR = queueReason(res); return; }
+    outs.forEach(o => {
+      const id = ids[o.index];
+      if(id === undefined) return;
+      if(o.outcome === "applied"){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); }
+      else {
+        const it = QUEUE_ITEMS.get(id);
+        /* The canned translation is chosen first (`queueReason`); where the record ALSO sent a detail — the
+           task fence's names who holds the task now — it is shown beside it, verbatim, never re-worded. */
+        const extra = (o.translation && o.detail && o.detail !== o.translation) ? ` · ${o.detail}` : "";
+        QUEUE_RETAINED.set(id, { why: queueReason(o) + extra, summary: (it && it.summary) || "" });
+      }
+    });
+    await queueRun(QUEUE_FEEDS.map(f=>f.id));
+  }catch(e){ QUEUE_SET_ERR = queueReason(e); }
+  finally{ QUEUE_BUSY = false; queuePaint(); }
+}
+/* The per-item tick, drawn only where a published set act can take this item. */
+function queueSelTickHtml(it){
+  if(!queueSetOpFor(it)) return "";
+  const id = String(it.id);
+  /* The tick FEEDS THE SET the act sends (member-respect ARM 1d's item selector): its value is the
+     item's membership of `items[]`, nothing else. */
+  return `<label class="q-sel"><input type="checkbox" data-qsel="${esc(id)}"${QUEUE_SEL.has(id)?" checked":""} onchange="queueSelectionToggle('${esc(id)}', this.checked)"> Select</label>`;
+}
+/* The record's reason an item was kept, on the item itself. */
+function queueRetainedHtml(id){
+  const r = QUEUE_RETAINED.get(String(id));
+  if(!r) return "";
+  return `<div class="q-retained" data-retained="${esc(String(id))}"><b>Not handled by your last action — it stays here.</b> The record's reason: ${esc(r.why || "the record gave none")} <button class="tbtn" data-unretain="${esc(String(id))}">Clear this note</button></div>`;
+}
+/* Retained items the feed no longer carries for this member (moved to somebody else, say): still listed,
+   as they were shown, with the reason. */
+function queueRetainedGoneHtml(){
+  const live = new Set(queueItems().map(i=>String(i.id)));
+  const gone = [...QUEUE_RETAINED.entries()].filter(([id]) => !live.has(id));
+  if(!gone.length) return "";
+  return `<section class="q-case" data-case="__retained__"><h2>Kept from your last action</h2>
+    <p class="q-case-meta">These were in your selection and the record did not handle them. They are no longer in your queue as it reads now, and the reason below is the record's own.</p>
+    ${gone.map(([id, r]) => `<div class="q-item" data-id="${esc(id)}"><div class="q-summary">${esc(r.summary||"")}</div>${queueRetainedHtml(id)}</div>`).join("")}
+  </section>`;
+}
+/* The selection bar: what is selected, and the published set acts over it. */
+function queueSelBarHtml(){
+  const ids = [...QUEUE_SEL].filter(id => QUEUE_ITEMS.has(id));
+  if(!ids.length && !QUEUE_SET_ERR) return "";
+  const tasks = queueSelFor("taskresolve"), finds = queueSelFor("proposedispose");
+  const res = QUEUE_SET_ACTS.get("taskresolve"), disp = QUEUE_SET_ACTS.get("proposedispose");
+  const bits = [];
+  if(tasks.length && res) bits.push(`<button class="btn" data-qset="taskresolve">${esc(res.label)} (${tasks.length})</button>`);
+  if(finds.length && disp) bits.push(`<span class="q-setdisp">${esc(disp.label)} (${finds.length}): `
+    + `<input class="q-setreason" data-qsetreason placeholder="Your reason, in your own words"> `
+    + `<button class="btn ghost" data-qsetdisp="deferred">Defer</button> <button class="btn ghost" data-qsetdisp="dismissed">Dismiss</button></span>`);
+  return `<div class="q-selbar" data-selbar>
+    <b>${ids.length} selected.</b> Each one is handled on its own: whatever the record cannot do to one item stays in your list with its reason, and does not stop the others.
+    ${bits.join(" ")}
+    <button class="tbtn" data-qselclear>Clear the selection</button>
+    ${QUEUE_SET_ERR ? `<div class="q-err">${esc(QUEUE_SET_ERR)}</div>` : ""}
+  </div>`;
+}
+
 async function renderQueue(){
   setActive("queue");
   const c = $("#content");
@@ -13780,6 +13907,10 @@ async function renderQueue(){
     <p class="lede">Everything the record is asking of somebody, in one list: what a named person owes, what the record noticed on its own, and what our own machinery is doing to the work. Each item is filed under the case it belongs to. Nothing is decided by this screen — every option on an item is one the record published for it.</p>
     <div id="q">Loading&hellip;</div>`;
   QUEUE = { feeds:{} };
+  /* D-126: whether the plane takes a selection. From the loaded act source; if boot has not loaded it
+     yet, it loads beside the feeds and the screen repaints when it lands. */
+  queueSetActsFrom(ACT_SOURCE);
+  if(!ACT_SOURCE.loaded) loadActSource().then(src => { queueSetActsFrom(src); queuePaint(); });
   await queueRun(QUEUE_FEEDS.map(f=>f.id));
 }
 
@@ -14069,6 +14200,7 @@ function queueEntryControlsHtml(it){
   if(it.class === "OBLIGATION"){
     if(!canContribute()) return "";
     return `<div class="q-entry-acts" data-acts="${esc(it.id)}">`
+      + queueSelTickHtml(it)
       + `<button class="tbtn tfwd" data-fwd="${esc(it.id)}">Forward to someone&hellip;</button>`
       + `<button class="tbtn tres" data-res="${esc(it.id)}">Mark resolved</button>`
       + `</div><div class="q-err" data-err="${esc(it.id)}"></div>`;
@@ -14088,6 +14220,7 @@ function queueEntryControlsHtml(it){
     const key = queueFindingKey(it);
     if(!key || !canProposalAct()) return "";
     return `<div class="q-entry-acts">`
+      + queueSelTickHtml(it)
       + `<button class="btn" data-prop-adopt="${esc(key)}" onclick="openProposalAdopt('${esc(key)}')">Adopt — make it a question</button>`
       + `<button class="btn ghost" data-prop-defer="${esc(key)}" onclick="openProposalAct('${esc(key)}','deferred')">Defer&hellip;</button>`
       + `<button class="btn ghost" data-prop-dismiss="${esc(key)}" onclick="openProposalAct('${esc(key)}','dismissed')">Dismiss&hellip;</button>`
@@ -14140,6 +14273,7 @@ function queueItemHtml(it){
     ${queueOptionsHtml(it)}
     ${notifOptionsGrainHtml(it)}
     ${queueEntryControlsHtml(it)}
+    ${queueRetainedHtml(it.id)}
   </article>`;
 }
 
@@ -14305,6 +14439,12 @@ function queuePaint(){
   const { groups, ungrouped, unknownHome } = queueGrouped(items);
   QUEUE_GROUPS = groups;
   QUEUE_ITEMS = new Map(items.map(i=>[String(i.id), i]));
+  /* D-126: a selected item the feed no longer carries is no longer selectable; its retained note, if any,
+     is kept (queueRetainedGoneHtml). ONLY OVER AN ANSWERED FEED: a feed that is pending or failed carries no
+     items, and pruning against it would silently empty the member's selection (measured — the retained
+     items stayed listed and their ticks came back cleared). */
+  if(queueFeedState("queue").state === "answered")
+    for(const id of [...QUEUE_SEL]) if(!QUEUE_ITEMS.has(id)) QUEUE_SEL.delete(id);
   /* The three proposal affordances take their context from THIS feed — and, since
      UI-45, only from the findings op=proposedispose can actually be keyed on. A
      finding with no progression identity used to enter this list with two null
@@ -14375,6 +14515,8 @@ function queuePaint(){
     + notifAbsenceHtml()
     + notifDisposedHtml()
     + queueMuteReportHtml()
+    + queueSelBarHtml()
+    + queueRetainedGoneHtml()
     + groupsHtml + ungroupedHtml + unknownHtml + emptyHtml;
   queueWire();
   queueRemember(items);
@@ -14432,6 +14574,14 @@ function queueWire(){
      rather than one overloaded attribute, so a per-kind button cannot be picked up
      by the whole-set selector above and silently mute everything. */
   document.querySelectorAll("#q [data-mute1]").forEach(b=>b.onclick=()=>queueMuteCase(b.dataset.mute1, b.dataset.mutekind));
+  /* D-126: the selection, and the published set acts over it. */
+  document.querySelectorAll("#q [data-qselclear]").forEach(b=>b.onclick=()=>queueSelClear());
+  document.querySelectorAll("#q [data-unretain]").forEach(b=>b.onclick=()=>queueRetainedClear(b.dataset.unretain));
+  document.querySelectorAll("#q [data-qset]").forEach(b=>b.onclick=()=>queueApplySet(b.dataset.qset));
+  document.querySelectorAll("#q [data-qsetdisp]").forEach(b=>b.onclick=()=>{
+    const r = document.querySelector("#q [data-qsetreason]");
+    queueApplySet("proposedispose", { to: b.dataset.qsetdisp, reason: (r && r.value) || "" });
+  });
 }
 /*__QUEUE_END__*/
 

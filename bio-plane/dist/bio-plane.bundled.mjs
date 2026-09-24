@@ -3981,6 +3981,7 @@ __export(bio_checks_exports, {
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
+  PER_ITEM_CHECKS: () => PER_ITEM_CHECKS,
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
@@ -4002,6 +4003,7 @@ __export(bio_checks_exports, {
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
   SURFACE_CHECKS: () => SURFACE_CHECKS,
+  TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
   TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
@@ -12682,6 +12684,40 @@ function coversImagePlacement(e, container) {
   const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(", ")}]`).join(" ");
   return `page ${e.page} of this capture paints ${onPage.length} image(s)${onPage.length ? ` (${listed}${onPage.length > 6 ? " \u2026" : ""})` : ""} and none at [${want.join(", ")}], the rectangle the extent names`;
 }
+var TASK_ACTOR_CHECKS = {
+  NOT_YOURS: {
+    check: "C-76.1",
+    where: "src/store.mjs #refuseNotYours > is-task-actor-fence",
+    translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
+  }
+};
+var PER_ITEM_CHECKS = {
+  SET_NO_ITEMS: {
+    check: "C-75.1",
+    where: "src/store.mjs #perItem > is-per-item-set-shape",
+    translation: "Nothing was selected, so nothing was done. Choose at least one item and try again."
+  },
+  SET_TOO_LARGE: {
+    check: "C-75.2",
+    where: "src/store.mjs #perItem > is-per-item-set-shape",
+    translation: "That selection is larger than the record acts on at once, so nothing was done to any of it. Select fewer items and apply the action again."
+  },
+  SET_ITEM_MALFORMED: {
+    check: "C-75.3",
+    where: "src/store.mjs #perItem > is-per-item-malformed",
+    translation: "This item could not be read as an item, so it was left as it was. The rest of the selection was still acted on, one by one."
+  },
+  SET_ITEM_FAILED: {
+    check: "C-75.4",
+    where: "src/store.mjs #perItem > is-per-item-failed",
+    translation: "The record could not complete the action on this item and did not change it. It stays in your list. The rest of the selection was still acted on, one by one."
+  },
+  SET_ITEMS_RETAINED: {
+    check: "C-75.5",
+    where: "src/store.mjs #perItem > is-per-item-retained",
+    translation: "Not every selected item was handled. The ones that were have left your list; the ones that were not are still there, each with the reason the record gave for it, so you can take a different action on them."
+  }
+};
 var CONNECTION_PAIR_CHECKS = {
   /* THE FORGED PAIR. A pair whose recorded position is NOT inside the extent
      being graded may not grade it — which sounds obvious and is exactly the
@@ -16485,6 +16521,33 @@ var MACHINE_REFUSALS = {
   versioncurrent: "MACHINE_CANNOT_MOVE_VERSION",
   versionhide: "MACHINE_CANNOT_MOVE_VERSION"
 };
+var PER_ITEM_MAX = 100;
+var PER_ITEM_ACTS = [
+  {
+    id: "proposedispose",
+    label: "Defer or dismiss the selected findings",
+    weight: "per-item",
+    set_key: "items",
+    item_keys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
+    shared_keys: ["to", "reason", "kind"]
+  },
+  {
+    id: "taskresolve",
+    label: "Resolve the selected obligations",
+    weight: "per-item",
+    set_key: "items",
+    item_keys: [["id"]],
+    shared_keys: []
+  },
+  {
+    id: "taskforward",
+    label: "Forward the selected obligations",
+    weight: "per-item",
+    set_key: "items",
+    item_keys: [["id"]],
+    shared_keys: ["to"]
+  }
+];
 var ACT_IDS = new Set(ACTS.map((a) => a.id));
 function deriveActs(facts) {
   const ty = normalizeType(facts.object_type);
@@ -51974,8 +52037,16 @@ ${words}`;
     reason,
     decidedBy = null,
     viewer = null,
-    identity = null
+    identity = null,
+    items
   } = {}) {
+    if (items !== void 0)
+      return this.#perItem(
+        "proposedispose",
+        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason },
+        { decidedBy, viewer, identity },
+        (b) => this.proposeDispose(b)
+      );
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
     const scoped = !!(proj || find);
@@ -66166,6 +66237,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     return {
       ok: false,
       reason: "NOT_YOURS",
+      code: "NOT_YOURS",
+      check: TASK_ACTOR_CHECKS.NOT_YOURS.check,
+      translation: TASK_ACTOR_CHECKS.NOT_YOURS.translation,
       detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
       assignee: row.assignee,
       assignee_role: row.assignee_role
@@ -66200,7 +66274,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  are derived from the SAME `MACHINE_STAMP_PREFIXES` in the catalog, so the
    *  spelling still moves in one place and moves here too; what is deliberately
    *  not shared is the bare-class arm, for the reason in the paragraph above. */
-  taskForward({ id = null, to = null, actor = null, now = null } = {}) {
+  taskForward({ id = null, to = null, actor = null, now = null, items } = {}) {
+    if (items !== void 0)
+      return this.#perItem("taskforward", { items, to, now }, { actor }, (b) => this.taskForward(b));
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
     if (isMachineStamp(actor))
       return {
@@ -66249,7 +66325,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  `taskDrain` is deliberately untouched and is the daemon's path: draining
    *  turns queued events into tasks and ROUTES them, which is surfacing work
    *  rather than discharging it. Nothing a drain does closes an obligation. */
-  taskResolve({ id = null, actor = null, now = null } = {}) {
+  taskResolve({ id = null, actor = null, now = null, items } = {}) {
+    if (items !== void 0)
+      return this.#perItem("taskresolve", { items, now }, { actor }, (b) => this.taskResolve(b));
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
     if (isMachineStamp(actor))
       return {
@@ -66277,6 +66355,112 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       id
     );
     return { ok: true, id, status: "resolved", resolved_at: at };
+  }
+  /* ==================================================================== D-126
+   * THE PER-ITEM WEIGHT — "each item independently succeeds or is RETAINED WITH A REASON"
+   * (NOTIFICATIONS.md §Applying a handler to a selection; Bob: *"If that action didn't work for one or
+   * more, they'd stay in the list so that the user can take a different action."*).
+   *
+   * ONE HELPER, THREE ACTS. `op=proposedispose`, `op=taskresolve` and `op=taskforward` each take a SET
+   * when the body carries `items` — the branch is the first statement of each act's own method, so the
+   * dispatch map is unchanged — and without `items` each is the single-key act it was. The
+   * set form is NOT a second implementation of any act: every item goes through the SAME method the
+   * single form calls, so an item is accepted and refused by exactly the rules one key would be, and its
+   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-75).
+   *
+   * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
+   *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
+   *     the loop, and the `refuse` weight's stop-on-drift is exactly the behaviour this weight is not.
+   *   - SILENT SKIPPING. Every item the caller sent has exactly one outcome in `items[]`, at its own
+   *     `index`, `applied` or `retained`, and `applied + retained === count` by construction. A retained
+   *     item carries its act's `reason` (and `code`/`translation` where that act has them).
+   *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
+   *     C-75.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
+   *     truth about the set and a caller reading `items[]` is told the truth about each item.
+   *
+   * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` is what the control plane stamped (the actor, the
+   * decider) or the URL carries (viewer, identity); it is spread LAST, so an item that names its own
+   * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
+   * `reason`, `to` or disposition — and an item may override it for itself.
+   *
+   * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
+   * at most once, after all of its own refusals, so an item that is refused has written nothing. */
+  static PER_ITEM_MAX = PER_ITEM_MAX;
+  /* affordances.mjs: ONE number, published as set_acts[].max_items */
+  #perItem(act, body, stamped, one) {
+    const refusal7 = (code, detail, extra) => {
+      const row = PER_ITEM_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const { items, ...shared } = body || {};
+    const count = Array.isArray(items) ? items.length : 0;
+    if (!Array.isArray(items) || items.length === 0)
+      return refusal7(
+        "SET_NO_ITEMS",
+        `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or send one item's fields without \`items\` for the single act. Nothing was done.`,
+        { op: act, weight: "per-item", count: 0 }
+      );
+    if (items.length > _Store.PER_ITEM_MAX)
+      return refusal7(
+        "SET_TOO_LARGE",
+        `op=${act} acts on at most ${_Store.PER_ITEM_MAX} items at once and this set holds ${items.length}. Refused WHOLE, before any item was tried, so no item moved.`,
+        { op: act, weight: "per-item", count: items.length, max: _Store.PER_ITEM_MAX }
+      );
+    const echo = (it) => {
+      const o = {};
+      for (const [k, v] of Object.entries(it)) {
+        if (typeof v === "string") o[k] = v.slice(0, 400);
+        else if (typeof v === "number" || typeof v === "boolean" || v === null) o[k] = v;
+      }
+      return o;
+    };
+    const outcomes = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (!it || typeof it !== "object" || Array.isArray(it)) {
+        outcomes.push({
+          index: i,
+          outcome: "retained",
+          asked: null,
+          ...refusal7("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was left as it was and the other items were still tried.`)
+        });
+        continue;
+      }
+      let r;
+      try {
+        r = one({ ...shared, ...it, ...stamped, items: void 0 });
+      } catch (e) {
+        r = refusal7("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: ` + String(e && e.message || e).slice(0, 200) + `. Nothing about the item is claimed.`);
+      }
+      const res = r && typeof r === "object" ? r : { ok: false };
+      outcomes.push({ index: i, outcome: res.ok === true ? "applied" : "retained", asked: echo(it), ...res });
+    }
+    const applied = outcomes.filter((o) => o.outcome === "applied").length;
+    const retained = outcomes.length - applied;
+    const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
+    if (retained === 0)
+      return {
+        ok: true,
+        ...head,
+        detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.`
+      };
+    return {
+      ok: false,
+      reason: "SET_ITEMS_RETAINED",
+      code: "SET_ITEMS_RETAINED",
+      check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
+      translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
+      detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in items[] carries its own act's reason. The applied items stand \u2014 this is not a rollback.`,
+      ...head
+    };
   }
   /* ---- D-104: source reachability ----
    *
@@ -72550,7 +72734,16 @@ var index_default = {
           catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
           vocabularies: VOCABULARIES,
           capture_acts: CAPTURE_ACTS.map(decorate),
-          detail: "pass target=<bundle id> for the acts available on that object right now; rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is null only where the act carries a STATED absence \u2014 read rung_absence for the ground, and vocabularies.rung_absence_grounds for what that ground means; capture_acts are keyed by a capture sha rather than by a bundle, so they are published with their metadata and never derived against an object's state"
+          /* D-126: the acts that take a SET under the `per-item` weight (affordances.mjs PER_ITEM_ACTS),
+             decorated from the same tables as every act, with the bound the store enforces. */
+          set_acts: PER_ITEM_ACTS.map((a) => ({
+            ...decorate(a),
+            set_key: a.set_key,
+            item_keys: a.item_keys,
+            shared_keys: a.shared_keys,
+            max_items: PER_ITEM_MAX
+          })),
+          detail: "pass target=<bundle id> for the acts available on that object right now; rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is null only where the act carries a STATED absence \u2014 read rung_absence for the ground, and vocabularies.rung_absence_grounds for what that ground means; capture_acts are keyed by a capture sha rather than by a bundle, so they are published with their metadata and never derived against an object's state; set_acts take a selection as `items` under the per-item weight: each item is applied or RETAINED with its own act's reason, and none stops the others"
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));

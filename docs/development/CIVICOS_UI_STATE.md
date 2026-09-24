@@ -50,6 +50,36 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v106, 2026-09-23 session, thread UI, D-126 (a WORKER of CONDUCT #18, cloud session). Landed on `land/worker/D-126` (base
+`origin/main` @ `02603e88`), in the commit that carries this entry; the version number is provisional and CONDUCT
+renumbers it at integration if a concurrent entry took it. (It did: UI-74 holds `v104` and UI-68 `v105`, so CONDUCT #18
+renumbered this entry `v106` at c17-batch7.) SURFACE: the queue.
+
+**What was missing.** Bob's requirement for the queue (NOTIFICATIONS.md §Applying a handler to a selection): *"select some
+(or all) to apply the action to … If that action didn't work for one or more, they'd stay in the list so that the user can
+take a different action."* The queue offered one item at a time only, because the plane's three acts each took one key
+(UI-56's carry, watched by member-respect ARM 4d).
+
+**What it does now.** Where the plane publishes the act under the `per-item` weight (`op=affordances`' `set_acts`, read off
+the act source boot already loads), every obligation and every instance-keyed finding carries a Select tick. The selection
+bar names the plane's own label and sends ONE `op=taskresolve` or ONE `op=proposedispose` carrying `items[]`. Items the record
+applied leave the list. Each item it RETAINED stays listed with the record's reason, rendered by `queueReason` (the code and its
+canned translation or detail), and stays selected so the member can act again. A retained item the feed no longer carries
+(an obligation that moved to somebody else between the paint and the click) is kept under "Kept from your last action"
+rather than vanishing. A project-scoped finding takes no tick (its act needs a project named per item); `op=taskforward`
+takes a set on the plane but has no bulk control here yet (the picker is per item). The single controls are unchanged.
+
+**Driven against the real plane**, `civicos-ui/test/queue-peritem.test.mjs` (16): three of mona's obligations selected, one
+forwarded to nate by an administrator after the paint; ONE call carrying three items; the two applied leave the list; the
+drifted one is kept with `NOT_YOURS` and "it is with nate"; two findings dismissed with no reason stay in the list with
+`NO_REASON`, still selected, and leave it when given one; a plane answer without `set_acts` draws no tick. Control
+`queue-peritem.control.mjs`, every arm as declared: all-or-nothing RED 13/3, silent drop RED 14/2, N calls RED 14/2, baseline
+16/0. The harness caught one defect of this item's own before landing: the selection was pruned against a PENDING feed and
+silently emptied on every repaint; pruning now waits for an answered feed.
+A second finding, from the full harness: giving `NOT_YOURS` its canned translation (C-76.1, owed once a member can meet it)
+made the retained note show the translation and drop the plane's detail naming who holds the task. The note now shows the
+detail beside the translation, verbatim, wherever the record sent both.
+
 v104, 2026-09-23 session, thread UI, UI-74 (a WORKER of CONDUCT #17, cloud session). Landed on `land/worker/UI-74` (base
 `origin/main` @ `02603e88`), in the commit that carries this entry. (If a concurrent batch has taken `v104`, renumber this
 entry at integration.) SURFACES: a new place, the ACCEPT CEREMONY at `#accept/<INQ-…>/<name>`, reached by "Act on this
