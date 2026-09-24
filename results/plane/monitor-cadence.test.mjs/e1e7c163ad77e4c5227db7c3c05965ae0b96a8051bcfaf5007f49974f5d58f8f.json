@@ -1,0 +1,16 @@
+{
+ "unit": "plane:monitor-cadence.test.mjs",
+ "inputHash": "e1e7c163ad77e4c5227db7c3c05965ae0b96a8051bcfaf5007f49974f5d58f8f",
+ "verdict": "PASS",
+ "run": "37efe32cb91e0cc56ef8d5e5ac4ca78b360338cd.1790277649576.19389.json",
+ "tree": "37efe32cb91e0cc56ef8d5e5ac4ca78b360338cd",
+ "head": "2caed9a2de93e729a371733323ce2396e2c95880",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 153,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "73e2372a-94a8-5450-aa67-2981e8a4168f",
+ "at": "2026-09-24T19:20:49.588Z"
+}
