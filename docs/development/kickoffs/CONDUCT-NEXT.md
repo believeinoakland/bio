@@ -53,7 +53,7 @@ session -> tell SCHEDULER. REVIEW_READY is often a worker idling while its gate 
 bucket alone — the branch must be pushed with a finished gate line. An open slot or a queued row with no worker is SCHEDULER's.
 State at 22:05Z: c20-batch25 LANDED, main = 9f8b69e6; its 17 worker sessions are archived (REC-194's was not listed). c20-batch26 is in
 /home/user/w16 @ 5dbb75f3 (UI-101, UI-102, M0-181, REC-199, D-514, D-478, UI-99, REC-200; IC-282, IC-284 and IC-285 resolved;
-arms floor 2176), gating in the background, then push and train. After it lands: DIST deploys pdf-worker and ocr-worker (D-478).
+arms floor 2176), gating in the background, then push and train. NO RELEASE (Bob, 22:30Z via BOB #34, coord ec9b251d): "Hold the release until tomorrow or beyond" — trains keep landing on main; no release-readiness work ahead of plan rows; D-478's member deploy waits with it.
 Workers based before 1a7f0bcc report a phantom "DEBT.md missing / cache over 16": the remedy is the rebase, never a restore.
 
 ## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
