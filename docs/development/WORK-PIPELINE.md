@@ -95,7 +95,7 @@ built, `coord.mjs write` rebalances after EVERY write; that is the correction ow
 rebalance is harmless because it conserves every row verbatim. A tree's GATE never fails on the budget either way
 (TREE-SHARING §3 (c)): the budget is enforced at the write.
 
-## 3. DEBT.md FOLDS INTO THE BUILD PLAN, and is retired as a live file
+## 3. DEBT.md FOLDED INTO THE BUILD PLAN, and is RETIRED — completed 2026-09-24 (M0-140)
 
 Bob, 2026-09-18: *"those debts should be appropriately folded into the build plan so that those debts are retired - in
 the right build order. Once in the build plan, they'll eventually be worked on when they are included in a tranche of
@@ -119,18 +119,44 @@ replaces it.
    written where the event that fires it is recorded (a milestone's text, or the row that builds its precondition), then
    archived pointing there — never a blocked backlog row, which costs a placement and watches nothing.
 
-**After the fold, a newly found defect is DIAGNOSED UNTIL ITS FIX CAN BE NAMED, then placed by SCHEDULER as a
-BACKLOG item in build order** (class `defect`, a `D-` id minted as today; Bob: *"understood deeply enough that a fix
+**THE FOLD IS COMPLETE, 2026-09-24 (M0-140), and this is the rule that stands in DEBT.md's place — the SECOND of its
+two statements, the first being `CLAUDE.md` §4, and there is no third.** `docs/development/DEBT.md` no longer exists,
+on `coord` or on `main`. Its last three open rows — D-313 and D-391 (door 3, stated limitations in
+`BIO_Content_Framework_v0_10.md` §16 and `CONTENT-SEARCH-DESIGN.md`) and D-388 (door 1, closed in fact by
+`CORPUS-STANDARD.md` §6) — were closed by SCHEDULER #18, and the whole file moved VERBATIM into
+`docs/archive/ledgers/DEBT-closed.md`. Every `D-` id ever allocated still resolves: `node tools/ledger.mjs find <ID>`
+reads that archive and `DEBT-closed-2026-08.md`, and `tools/mintid.mjs` reads them too, so no retired `D-` can be
+minted twice.
+
+**THE RULE: a defect found anywhere is DIAGNOSED UNTIL ITS FIX CAN BE NAMED, then minted with
+`node tools/mintid.mjs D` and placed by SCHEDULER as a plan row in BUILD ORDER — or routed to BOB first when the fix
+needs design. THERE IS NO SIDE LIST; the plan is the only place work waits.** A `D-` is a plan row while it is open
+and an archived table row once it closed, which is why `mintid`'s `D` floor reads both shapes (see its NAMESPACES
+entry, and the one question M0-140 left open there).
+
+The former wording follows, and it is unchanged in substance: **a newly found defect is DIAGNOSED UNTIL ITS FIX CAN BE
+NAMED, then placed by SCHEDULER as a BACKLOG item in build order** (class `defect`, a `D-` id minted as today; Bob: *"understood deeply enough that a fix
 can be identified and properly added (in the correct order) in the build plan"*; a fix that needs design goes to BOB
-first) — there is no second list for work to wait in. **`DEBT.md` cannot be emptied row by row** (M0-109's sweep, M-96:
-`ledger.mjs`'s `DEBT_FLOOR_BYTES`, 10,000 B, refuses any archive leaving less, and an empty file is 3,174 B), so LED-7's
-CLOSING landing archives the last rows with the file and, in that landing, retargets every reader of the live file:
-`owed.mjs`, `plancheck`'s disposition arm and `ledger.mjs` to the backlog; `DEBT_FLOOR_BYTES` retired with
-`nc-m039.mjs`'s arm 2 re-pointed at the backlog; `ledger.test.mjs` §3 at the archive and `planning-hygiene.test.mjs` §1
-re-pointed or retired — both fail by name at zero rows, on purpose. And AHEAD of the batch that moves D-388,
-`corpuscheck.test.mjs` §5 reads D-388 through `ledger.mjs`'s `findId`, open in the live DEBT, the cache or the backlog
-(BOB #27, 2026-09-22, folding M0-109's DELEGATION to SCHEDULER, which places the fixes); these readers move and `CLAUDE.md` §4's *write it in
-DEBT.md* changes to the backlog in LED-7's own landing, not before. **Performed in batches of ~20 rows by SCHEDULER itself** (Bob,
+first) — there is no second list for work to wait in. **`DEBT.md` could not be emptied row by row** (M0-109's sweep, M-96:
+`ledger.mjs`'s `DEBT_FLOOR_BYTES`, 10,000 B, refused any archive leaving less, and an empty file was 3,174 B), so
+LED-7's CLOSING landing archived the last rows WITH the file. **AS PERFORMED (M0-140, 2026-09-24)**, and it differs
+from the plan above in two places, each stated because the plan said *the backlog* and the landing did not: every
+reader was RETIRED rather than re-pointed at the backlog — `owed.mjs`'s DEBT walk, `plancheck`'s disposition arm and
+its MISSING arm, `ledger.mjs`'s `LEDGERS.DEBT` (now the archive-only `DEBT_ARCHIVE`), `DEBT_FLOOR_BYTES`,
+`debtTokenAudit`, `BUDGET.DEBT`, `ARMING.debtBudget`, and `coord.mjs`'s LC-debt-token and LC-debt-agreement — because
+a plan row's PLACEMENT is its disposition and a second producer of that quantity is the defect `kickoffs/BOB.md`
+rule 7 names. And `nc-m039.mjs`'s arm 2 was re-pointed at **`DECISIONS.md`, not the backlog**: `BACKLOG.md` is STATE,
+so on `main` it is a one-line COORD-POINTER, and a plant appended to a pointer leaves the head bytes intact and is
+read past — an arm that plants and never arms. (That had already happened: the arm's subject became a 216-byte
+pointer at M0-110's cutover and it had been throwing on its own size floor ever since.) `ledger.test.mjs` §3's live
+agreement and `planning-hygiene.test.mjs` §1 are retired with their predicates, each having failed BY NAME at zero
+rows on purpose, which is how this moment reached a landing instead of passing in silence. And AHEAD of the batch that moved D-388,
+`corpuscheck.test.mjs` §5 read D-388 through `ledger.mjs`'s `findId`, open in the live DEBT, the cache or the backlog
+(BOB #27, 2026-09-22, folding M0-109's DELEGATION to SCHEDULER, which places the fixes). That clause is SPENT: BOB #32
+classified all three files in `CORPUS-STANDARD.md` §6 (2026-09-24), `coord.mjs`'s LC-undecided-route was retired of its
+D-388 clause by c19-unionfix the same day, and D-388 is closed and archived by this landing — `findId` answers it from
+`DEBT-closed.md`. `CLAUDE.md` §4's *write it in DEBT.md* changed in LED-7's own landing, as this said it would, and not
+before. **Performed in batches of ~20 rows by SCHEDULER itself** (Bob,
 2026-09-19: *"Scheduler should be actively involved in moving debt rows into the build plan (in the proper order)"* —
 corrected by BOB #16; this read *by workers under CONDUCT*), each row verified at the code, with a worker through CONDUCT
 only for a row whose verification needs a build; **accepts when** every open row has left by one of the three doors with

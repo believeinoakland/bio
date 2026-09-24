@@ -93,32 +93,27 @@ console.log("\n--- ARM BASELINE · nothing armed ---");
 const ARMS = [
   { id: "A1", title: "the owner test matches the row BODY again — the measured 58-item defect, "
                    + "where every row QUOTING Bob was read as assigning work to him",
-    /* RE-AIMED 2026-09-21 (D-435, BOB #22): the line it patched gained the discharge test. The arm
-       still adds the BODY to the owner test and leaves the discharge in place — one variable, as before. */
-    from: "    const owned = owner.test(r.disposition) && !discharge.test(r.disposition);",
-    to:   "    const owned = (owner.test(r.disposition) || owner.test(r.body)) && !discharge.test(r.disposition);",
-    mustBreak: "A ROW THAT ONLY QUOTES BOB IN ITS BODY IS NOT OWED" },
+    /* RE-AIMED 2026-09-21 (D-435, BOB #22): the line it patched gained the discharge test.
+       RE-AIMED AGAIN 2026-09-24 (M0-140): that line was the DEBT walk's and the DEBT walk is retired. The defect
+       is not about DEBT — it is that a predicate reading the row's BODY cannot tell a NARRATED assignment from a
+       live one — and its subject is now a blocked plan row, whose HEADING assigns and whose body narrates. The arm
+       adds the body to the owner test at the walk that survives, discharge left in place: one variable, as before. */
+    from: "    if (owner.test(rest) && !discharge.test(rest))",
+    to:   "    if ((owner.test(rest) || owner.test(r.body)) && !discharge.test(rest))",
+    mustBreak: "A ROW THAT ONLY QUOTES BOB BELOW ITS HEADING IS NOT OWED" },
 
-  { id: "A2", title: "a bare `RESIDUE` marker again — the measured 28-item defect, where prose "
-                   + "ABOUT a residue counted as a declaration of one",
-    from: String.raw`|\bRESIDUE[,:]? (?:NAMED|STATED|AND NOT)\b|\bOUTSTANDING\b/i;`,
-    to:   String.raw`|\bRESIDUE\b|\bOUTSTANDING\b/i;`,
-    mustBreak: "PROSE ABOUT a residue is NOT a declaration of one" },
-
-  { id: "A3", title: "the CLOSED-row filter removed — a resolved row goes on being owed forever, "
-                   + "which is how a worklist stops being read",
-    /* REPOINTED 2026-09-18 (LED-2): the closed test is now ONE function, `isClosedDebtRow`, which
-       `tools/ledger.mjs` imports so the archiver and this file cannot disagree. The arm still
-       removes the filter at its one call site, which is the property it tests. */
-    from: `    if (isClosedDebtRow(r.disposition)) continue;`,
-    to:   `    if (false) continue;`,
-    mustBreak: "a CLOSED row is not owed" },
-
-  { id: "A4", title: "the residue EXEMPTION on a closed row removed — closing a row would erase "
-                   + "its own honest remainder",
-    from: "    const residue = RESIDUE_RE.test(r.disposition);",
-    to:   "    const residue = false;",
-    mustBreak: "BUT a closed row DECLARING a residue still is" },
+  /* ARMS A2, A3 and A4 WERE HERE, and are RETIRED by M0-140 (2026-09-24) with the DEBT walk they patched.
+       A2 — a bare `RESIDUE` marker again (the measured 28-item defect, where prose ABOUT a residue counted as a
+            declaration of one). Its subject was `owedFor`'s residue population, which no longer exists: a residue
+            was a DEBT disposition declaring an unfinished half. `RESIDUE_RE` itself is NOT unguarded — it is
+            `isClosedDebtRow`'s residue test, and C3 of `ledger.control.mjs` drives that definition by reverting
+            it to the August form and watching `ledger.test.mjs` §3's open-spelling assertion fail.
+       A3 — the CLOSED-row filter removed, so a resolved row goes on being owed for ever. Same subject, same
+            reason; its call site `if (isClosedDebtRow(r.disposition)) continue;` is gone with the walk.
+       A4 — the residue EXEMPTION on a closed row removed. Same.
+     All three patched lines that no longer exist, so leaving them would be arms that cannot arm — and this driver
+     asserts `hits === 1` per arm, which is what would have caught it. They are deleted rather than re-aimed
+     because the behaviour they protected is retired, not moved. */
 
   { id: "A5", title: "an UNREADABLE ledger reported as an empty one — the rule this whole family "
                    + "of instruments turns on, and the one that would silently STOP the lane",
@@ -126,14 +121,14 @@ const ARMS = [
     to:   "  if (false)\n    return `OWED BY ${o.lane} — UNKNOWN: could not read ${o.unreadable.join(\", \")}. `\n         + `An unreadable ledger is not an empty one.`;",
     mustBreak: "the message says UNKNOWN rather than reporting an empty list" },
 
-  { id: "A6", title: "THE PRECISION ARM — every judged row returned as owed, so the list is "
+  { id: "A6", title: "THE PRECISION ARM — every blocked row returned as owed, so the list is "
                    + "complete and useless. A sensitivity control would not notice.",
-    from: "    if (owned || residue)",
+    /* RE-AIMED 2026-09-24 (M0-140): the DEBT walk's `if (owned || residue)` is gone; the surviving walk's own
+       gate is the owner test, forced open here. The arm that matters is the DISCRIMINATION one — a filter that
+       returns everything passes every assertion about a row it SHOULD return. */
+    from: "    if (owner.test(rest) && !discharge.test(rest))",
     to:   "    if (true)",
-    /* No alsoBreak: the CLOSED filter `continue`s before this line is reached, so closed rows
-       stay excluded even with the gate forced open. Measured — the first version expected it
-       and was wrong, which is the arm-that-fired-at-the-wrong-thing class one more time. */
-    mustBreak: "A ROW THAT ONLY QUOTES BOB IN ITS BODY IS NOT OWED" },
+    mustBreak: "A NONEXISTENT LANE IS ATTRIBUTED NOTHING" },
 
   { id: "A7", title: "the whole owner pattern case-INSENSITIVE again — Bob the PERSON read as the "
                    + "BOB lane, the measured defect behind all four of BOB #13's attributed rows",
@@ -147,8 +142,9 @@ const ARMS = [
                    + "routing to BOB sat past that point and the lane was told it owed nothing",
     /* REPOINTED 2026-09-19 (M0-73): the blocked rows now come from `ledger.mjs`' `pipelineRows`, and the
        heading's remainder after its state is `rest` — the arm truncates THAT, the property it tests. */
-    from: "    if (owner.test(rest)) items.push(",
-    to:   "    if (owner.test(rest.slice(0, 220))) items.push(",
+    /* RE-AIMED 2026-09-24 (M0-140): the line gained the discharge test (D-435, re-pointed onto this walk). */
+    from: "    if (owner.test(rest) && !discharge.test(rest))",
+    to:   "    if (owner.test(rest.slice(0, 220)) && !discharge.test(rest))",
     mustBreak: "A ROUTING DEEP IN A LONG BLOCKED HEADING IS STILL OWED" },
 
   { id: "A9", title: "a possessive allowed to be followed by a NOUN — Bob the person's framing read as the BOB lane (D-127)",
@@ -158,8 +154,10 @@ const ARMS = [
 
   { id: "A10", title: "the discharge ignored again — the pre-D-435 line, where an OPEN row that once said "
                     + "ROUTED TO BOB owed BOB forever, whatever a later sentence in its cell said (D-134)",
-    from: "    const owned = owner.test(r.disposition) && !discharge.test(r.disposition);",
-    to:   "    const owned = owner.test(r.disposition);",
+    /* RE-AIMED 2026-09-24 (M0-140): D-435's rule moved with its subject from a DEBT disposition to a blocked
+       plan row's heading (`tools/owed.mjs`). The arm drops the discharge at its one surviving site. */
+    from: "    if (owner.test(rest) && !discharge.test(rest))",
+    to:   "    if (owner.test(rest))",
     mustBreak: "A ROW CARRYING AN OWNER PHRASE AND A DISCHARGE FOR THE LANE IS NOT ATTRIBUTED",
     /* The per-lane arm's CONDUCT half fails WITH it by construction — it asserts CONDUCT's discharge
        works, which no row can show with the discharge gone — so it is declared here, not discovered.
