@@ -134,10 +134,21 @@ const ARMS = {
    replaced. RE-CORRECTED THE SAME DAY (REC-131 resumed): the wire's count is `observationsNonLead` (BOB.md
    rule 7 — purge's `observations` keeps the whole log), and `dbBytes` is the admin class's only, under a
    server-set `capacity` stamp — so the anchors below moved, and five arms were added for the two rulings. */
-const STATS_NONLEAD = "        : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),";
+/* RE-ANCHORED 2026-09-24 BY D-559 (D-353 decay mode c): D-486 split the wire's count over several lines and
+   added the caller's run subtraction, so the one-line STATS_NONLEAD matched 0 times and statsleadrows, statsdropall
+   and keyboth never armed. Each arm now anchors on the ONE line its subject lives on, and every replacement keeps
+   D-486's run subtraction, so an arm moves only its own subject. */
+const STATS_NONLEAD_OPEN = "        : { observationsNonLead: this.#one(";
+const STATS_NONLEAD_SQL = "`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'${runRows ? ` AND ${runRows.sql}` : \"\"}`,";
+const STATS_NONLEAD_CLOSE = "...(runRows ? runRows.args : [])).c }),";
 /* CORRECTED 2026-09-24 BY D-464: the route passes the VIEWER stamp too (counts are taken through the caller's sight),
-   so the anchor is the new line; the armed replacements below carry it, so each arm still moves only its own subject. */
-const STATS_ROUTE = '        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1", viewer: url.searchParams.get("viewer") }),';
+   so the anchor is the new line; the armed replacements below carry it, so each arm still moves only its own subject.
+   RE-ANCHORED 2026-09-24 BY D-559: the route now spans two lines and forwards `viewer` only when it is present
+   (`has` ? `get` : undefined), so the one-line anchor matched 0 times and statsadminleads and routeproof never armed.
+   The replacement carries the same viewer expression. */
+const STATS_VIEWER = 'url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined';
+const STATS_ROUTE = '        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1",\n'
+  + `                                   viewer: ${STATS_VIEWER} }),`;
 const STATS_STAMP = '    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");\n';
 const DB_GATE = "      ...((proof || capacity) ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),";
 Object.assign(ARMS, {
@@ -153,8 +164,8 @@ Object.assign(ARMS, {
                "F1: the member TOKEN's WHOLE", "E2: and its proof carries"],
     mustPass: "A1/F1 for the probe TOKEN (it reads SCRATCH — NON-DISCRIMINATING, named), B (the key is still "
             + "present), C (it still moves on a non-lead row)",
-    patch: () => arm([[STORE, STATS_NONLEAD,
-      "        : { observationsNonLead: n(\"observation_log\") }),"]]),
+    patch: () => arm([[STORE, STATS_NONLEAD_SQL,
+      "`SELECT count(*) c FROM observation_log WHERE 1=1${runRows ? ` AND ${runRows.sql}` : \"\"}`,"]]),
   },
   statsadminleads: {
     suite: "stats-disclosure", files: [STORE],
@@ -163,7 +174,7 @@ Object.assign(ARMS, {
     mustFail: ["FIXTURE:", "A1: the admin TOKEN's WHOLE", "B1: the admin TOKEN receives"],
     mustPass: "every member, session and probe arm — they never receive the key under this arm",
     patch: () => arm([[STORE, STATS_ROUTE,
-      '        stats: () => url.searchParams.get("capacity") === "1" ? { ...this.stats({ capacity: true, viewer: url.searchParams.get("viewer") }), leads: this.#counts({ proof: true }).leads } : this.stats({ viewer: url.searchParams.get("viewer") }),']]),
+      `        stats: () => url.searchParams.get("capacity") === "1" ? { ...this.stats({ capacity: true, viewer: ${STATS_VIEWER} }), leads: this.#counts({ proof: true }).leads } : this.stats({ viewer: ${STATS_VIEWER} }),`]]),
   },
   statsdropall: {
     suite: "stats-disclosure", files: [STORE],
@@ -172,7 +183,9 @@ Object.assign(ARMS, {
     mustFail: ["FIXTURE:", "B1: the admin TOKEN receives", "B1: the probe TOKEN receives", "C0:",
                "C1: the admin TOKEN's `observationsNonLead` MOVED", "C2:", "D2:", "D3:"],
     mustPass: "every A1 arm (the liar passes the headline — which is why C exists)",
-    patch: () => arm([[STORE, STATS_NONLEAD, "        : {}),"]]),
+    patch: () => arm([
+      [STORE, STATS_NONLEAD_OPEN, "        : { ...(0 && this.#one("],
+      [STORE, STATS_NONLEAD_CLOSE, "...(runRows ? runRows.args : [])).c) }),"]]),
   },
   routeproof: {
     suite: "stats-disclosure", files: [STORE],
@@ -233,14 +246,14 @@ Object.assign(ARMS, {
        + "beside `observationsNonLead` — so one name carries two meanings across op=stats and op=purge",
     mustFail: ["FIXTURE:", "B1: the admin TOKEN receives", "B1: the member TOKEN receives", "D2:", "D3:"],
     mustPass: "A (the numbers do not move), C (they still move together), E",
-    patch: () => arm([[STORE, STATS_NONLEAD,
-      "        : { observations: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c, observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),"]]),
+    patch: () => arm([[STORE, STATS_NONLEAD_CLOSE,
+      "...(runRows ? runRows.args : [])).c, get observations() { return this.observationsNonLead; } }),"]]),
   },
 });
 const want = process.argv[2] || null;
 const names = want ? [want] : Object.keys(ARMS);
 if (want && !ARMS[want]) { console.error(`unknown arm '${want}'. arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }
-let finding = 0;
+let finding = 0, armedCount = 0;
 for (const name of names) {
   const a = ARMS[name];
   console.log(`\n===== ARM ${name} =====`);
@@ -258,10 +271,11 @@ for (const name of names) {
   }
   const armed = a.patch();
   console.log(`  ARMED      ${armed.armed ? "yes" : "NO"}  (patch matched ${armed.matches})`);
-  if (!armed.armed && !/baseline$/.test(name)) {
+  if (armed.armed) armedCount++;
+  /* D-559: an unarmed arm is ONE finding, counted by its verdict below (`ok` requires `armed.armed`). This line
+     used to add a second, so 5 unarmed arms read as "10 finding(s)" and were reported as 10 unarmed. */
+  if (!armed.armed && !/baseline$/.test(name))
     console.log(`  FINDING    the arm DID NOT ARM. An arm that did not arm is a finding, never a retry.`);
-    finding++;
-  }
   const r = runSuite(a.suite);
   console.log(`  RESULT     ${r.pass} pass, ${r.fail} fail, exit ${r.exit}`);
   for (const l of r.failing) console.log(`             ${l}`);
@@ -283,5 +297,5 @@ for (const name of names) {
   console.log(`  VERDICT    ${ok ? "AS DECLARED" : "NOT AS DECLARED"}${hit.every(Boolean) ? "" : ` — did not fail: ${a.mustFail.filter((_, i) => !hit[i]).join(" | ")}`}`);
   if (!ok) finding++;
 }
-console.log(`\nnc-rec129: ${finding} finding(s) across ${names.length} arm(s)`);
+console.log(`\nnc-rec129: ${armedCount} of ${names.length} arm(s) armed, ${finding} finding(s)`);
 process.exit(finding ? 1 : 0);

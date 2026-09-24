@@ -39,29 +39,29 @@ const runSuite = (rel) => {
               : { pass: null, fail: null, named, exit: r.status, noFoot: true };
 };
 
+/* RE-ANCHORED 2026-09-24 BY D-559 (D-353 decay mode c): FW-17 and REC-120 added `ref` to the select and
+   `, ref` to the outer ORDER BY, so the old anchor matched 0 times (the throw said "not unique (0 hits)" —
+   ABSENT, not duplicated) and arms 1 and 2 never armed. The unbounded form keeps both additions, so each arm
+   moves only the bound. `const scan = this.#rows(` alone occurs three times in store.mjs; the SQL makes it one. */
+const SCAN_BOUNDED = "const scan = this.#rows(\n      `SELECT capture_sha, bundle_id, grade, ref FROM resolutions\n"
+  + "        WHERE entity_id=? AND capture_sha IN (\n"
+  + "          SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha\n"
+  + "           ORDER BY capture_sha LIMIT ?)\n"
+  + "        ORDER BY capture_sha, ref LIMIT ?`, entityId, entityId, endsCap + 1, rowCap + 1);";
+const SCAN_UNBOUNDED = "const scan = this.#rows(\n      `SELECT capture_sha, bundle_id, grade, ref FROM resolutions "
+  + "WHERE entity_id=? ORDER BY capture_sha, ref`, entityId);";
+
 const ARMS = [
   { n: 1, what: "RESTORE THE UNBOUNDED DERIVATION — the state this item found the op in",
     suites: ["derivation", "meaning", "bounds"], file: STORE,
     edits: [
-      [ "const scan = this.#rows(\n      `SELECT capture_sha, bundle_id, grade FROM resolutions\n"
-      + "        WHERE entity_id=? AND capture_sha IN (\n"
-      + "          SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha\n"
-      + "           ORDER BY capture_sha LIMIT ?)\n"
-      + "        ORDER BY capture_sha LIMIT ?`, entityId, entityId, endsCap + 1, rowCap + 1);",
-        "const scan = this.#rows(\n      `SELECT capture_sha, bundle_id, grade FROM resolutions "
-      + "WHERE entity_id=? ORDER BY capture_sha`, entityId);" ],
+      [ SCAN_BOUNDED, SCAN_UNBOUNDED ],
       [ "const ends = distinct.length > endsCap ? distinct.slice(0, endsCap) : distinct;",
         "const ends = distinct;" ]] },
   { n: 2, what: "THE NAIVE FIX — derivation left unbounded, the ANSWER cut instead",
     suites: ["derivation", "meaning", "bounds"], file: STORE,
     edits: [
-      [ "const scan = this.#rows(\n      `SELECT capture_sha, bundle_id, grade FROM resolutions\n"
-      + "        WHERE entity_id=? AND capture_sha IN (\n"
-      + "          SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha\n"
-      + "           ORDER BY capture_sha LIMIT ?)\n"
-      + "        ORDER BY capture_sha LIMIT ?`, entityId, entityId, endsCap + 1, rowCap + 1);",
-        "const scan = this.#rows(\n      `SELECT capture_sha, bundle_id, grade FROM resolutions "
-      + "WHERE entity_id=? ORDER BY capture_sha`, entityId);" ],
+      [ SCAN_BOUNDED, SCAN_UNBOUNDED ],
       [ "const ends = distinct.length > endsCap ? distinct.slice(0, endsCap) : distinct;",
         "const ends = distinct;" ],
       [ "documents: ends.length, document_limit: endsCap, resolution_rows: scan.length,\n"
