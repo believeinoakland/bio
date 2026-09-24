@@ -37,6 +37,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 /* D-431: the bundle this suite ratifies is made EVIDENCE OF A RATIFIED CASE (Publication rule 2). */
 import { restOnARatifiedCase } from "./ratified-evidence.mjs";
+/* D-558: the stamp arm reads the catalogue version from the source, never a literal that every bump turns red. */
+import { CATALOG_VERSION } from "../src/gate.mjs";
 
 /* Detect stock ssh-keygen before Miniflare spins up or any key is generated.
    spawnSync sets `.error` (ENOENT) only when the binary cannot be spawned at
@@ -193,66 +195,32 @@ console.log("\n--- ratification ---");
 const rat = await POST(RAT, { bundleId: ID, expectedSha: LIVE, sig: signRatify("sparky", ID, LIVE) });
 t("ratification succeeds", rat.ok, true);
 t("attested by the key's member", rat.attestor, "sparky");
-/* 1.17.0: C-19.1, the task inbox grammar (D-98). CORRECTED rather than
-   loosened to a pattern match: the point of this assertion is that a
-   ratification records WHICH catalog judged it, so a test that stopped
-   pinning the exact version would stop testing the thing it exists for.
-   1.20.0: C-2.10's three-valued counterparty (REC-23/D-130) — same correction,
-   same reason.
-   1.21.0 (D-470, 2026-09-24): CORRECTED, and the OLD ASSERTION WAS WRONG rather
-   than merely stale — 1.20.0 went on stamping ratifications while the catalog
-   took new checks, so this line was pinning a number that had stopped naming one
-   catalog. The bump is MINOR and no check moves with it; what moves is that the
-   number is now HELD to the catalog by `test/d470-catalog-census.test.mjs`, so
-   the next check that lands turns that suite red until this string and that one
-   move together. Still the exact version and still not a pattern, for the reason
-   above.
-   1.22.0 (CONDUCT #20, c20-batch13, 2026-09-24): CORRECTED AGAIN, and this time
-   the correction was FORCED rather than noticed — which is the mechanism the
-   note above promised. Five checks arrived from the other side of this
-   integration (C-32.19, C-41.13, C-71.8, C-71.9, C-78.2),
-   `test/d470-catalog-census.test.mjs` went red at its census pin, and this
-   string and that one moved together exactly as that note says they must. The
-   old assertion was WRONG, not stale: at the union it named a catalogue that no
-   longer existed. */
-/* 1.22.0 (CONDUCT #20, c20-batch18): CORRECTED, not exempted — the catalogue gained D-484's two rows, so the
-   stamp moved; the old pin named a catalogue that no longer exists. */
-/* CORRECTED 2026-09-24 (c20-batch14): 1.22.0 -> 1.23.0. D-64's C-83 family arrived from the other side of this
-   integration, the catalogue census moved 438 -> 445, and `CATALOG_VERSION` took the MINOR bump the census arm
-   forces. The old literal was right for the tree it was written on. */
-/* CORRECTED 2026-09-24 (D-507): 1.23.0 -> 1.24.0, and CORRECTED rather than exempted for the same reason as
-   the two lines above — the catalogue gained C-82.2..C-82.7 (447 -> 453 checks), so the stamp moved and the
-   old pin named a catalogue that no longer exists. This assertion is about which catalogue a ratification
-   records, and it is only true of the catalogue that actually ran. */
-/* CORRECTED 2026-09-24 by D-508: 1.23.0 -> 1.24.0. The doorbell's two rate refusals took catalogue rows
-   (C-85.1 RATE_IP, C-85.2 RATE_GLOBAL in the new KNOCK_CHECKS family), the census moved 447 -> 449 and
-   `CATALOG_VERSION` took the MINOR bump the census arm forces. The old literal was RIGHT for the tree it was
-   written on and is WRONG here — it names a catalogue that no longer exists — which is why it is corrected at
-   its site and never exempted. D-507 moves the same constant in parallel; CONDUCT re-reads this line at the
-   union, where neither branch's number is the union's. */
-/* CORRECTED 2026-09-24 (REC-211): 1.23.0 -> 1.24.0. The assertion's SUBJECT is unchanged and is why
-   it is corrected rather than loosened — the stamp must carry the CATALOGUE's version and not the
-   gate's own, and that is only meaningful while the literal moves whenever the catalogue does. IC-273
-   added C-33.42 and C-33.43, so the census went 447 -> 449 and CATALOG_VERSION 1.23.0 -> 1.24.0. */
-/* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
-   main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
-   names the catalogue that actually runs. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.28.0)");
-/* CORRECTED 2026-09-24 (D-491): 1.23.0 -> 1.24.0, and CORRECTED rather than exempted for the
-   reason every note above says — the old literal named a catalogue that no longer exists once
-   C-28.16 joined CAPTURE_REQUEST_CHECKS (IC-276). FOUND BY ASKING WHO ELSE READS THE CONSTANT
-   rather than by a red suite: the census arm (d470 A3/A5) is what forces the bump, and this pin
-   is a SECOND reader of it, two directories away from the change. */
-/* CORRECTED at c20-batch25 (CONDUCT #20): 1.25.0 -> 1.26.0, D-491's C-28.16 over the batch23 catalogue; the literal names the catalogue that runs. */
-/* CORRECTED 2026-09-24 by D-472, never exempted: `op=monitor` gained C-48.8 and C-48.9, the census arm
-   forced the MINOR bump 1.23.0 -> 1.24.0, and the old literal named a catalogue that no longer exists.
-   The stamp is the CATALOGUE's version, so it moves whenever the catalogue does — which is the whole
-   point of the pin, and why this assertion is corrected rather than loosened. */
-/* CORRECTED at c20-batch25 (CONDUCT #20): 1.26.0 -> 1.27.0, D-472's rows over the union's catalogue. */
-/* MOVED 1.23.0 -> 1.24.0 by D-510 (2026-09-24): the catalogue gained C-86.1 (ENVELOPE_TYPE_DISAGREES), so
-   CATALOG_VERSION took a MINOR step and the stamp this arm reads moved with it. Found by asking who ELSE
-   reads the constant rather than by a red suite (CLAUDE.md §5). */
-/* CORRECTED at c20-batch25 (CONDUCT #20): 1.27.0 -> 1.28.0, D-510's rows over the union's catalogue. */
+/* D-558 (2026-09-24): CORRECTED, never exempted, and this time the correction is to WHERE the expected value
+   comes from, not to the value. From 1.17.0 to 1.28.0 this arm pinned the stamp as a literal,
+   "plane-gate/1.0 (bio-checks <n>)", and was hand-corrected at every catalogue move — sixteen correction notes in thirteen
+   comment blocks stood here (verbatim in git at 9f8b69e6), several of them written by integrators after it went red at a
+   union two directories away from the change that moved the constant. THE OLD ASSERTION WAS WRONG about what
+   it held constant: its claim is that a ratification records the CATALOGUE's version and not the gate's own,
+   and that claim does not change when the catalogue does. The number itself is already held to the catalogue
+   by `test/d470-catalog-census.test.mjs` (A3: a version with no recorded census is red; A5: the stamp reads
+   it) — that suite is the one a bump is SUPPOSED to turn red, and this one no longer duplicates it.
+   So the expected stamp is built from `CATALOG_VERSION` read from src/gate.mjs (VERIFICATION.md: a suite pins
+   what its claim asserts, read from the source), and the gate's own "plane-gate/1.0" prefix stays a literal —
+   it moves only when the gate itself does, which is an interface change this suite SHOULD see.
+   It is not a free equality: the expected value is not `GATE_VERSION` (which would agree with the plane for
+   nothing), the constant is floored as a real three-part version first, and the second arm below fails BY
+   NAME if the gate's own version is what reaches the record.
+   NEGATIVE CONTROL (D-558, 2026-09-24): `GATE_VERSION` in src/gate.mjs set to "plane-gate/1.0" alone ->
+   exactly the two stamp arms below FAIL by name ("the catalog's version is recorded, not the gate's own" and
+   "... and NOT the gate's own version alone"), every other assertion passes; restored, verified by sha256 and
+   cmp. BUMP ARM: `CATALOG_VERSION` set to "1.99.0" -> this suite stays GREEN (the measured failure it moves:
+   a red here on every catalogue bump); the pre-D-558 suite on the same arm: 1 FAIL. FLOOR ARM: `CATALOG_VERSION`
+   set to "" -> the floor arm alone FAILS. Figures in the D-558 commit. */
+t("the catalogue version the stamp is built from is a real version (floor: not empty, not free)",
+  /^\d+\.\d+\.\d+$/.test(CATALOG_VERSION), true);
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`);
+t("... and NOT the gate's own version alone — the recorded stamp names the catalogue that judged it",
+  [rat.gateVersion === "plane-gate/1.0", String(rat.gateVersion).includes(`(bio-checks ${CATALOG_VERSION})`)], [false, true]);
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong
