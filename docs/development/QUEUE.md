@@ -21,6 +21,8 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-24 23:55Z · BOB #34 · D-546, RULED: the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.** Lift D-468's state-edge fence to every type with a head: `op=promote` refuses any move its type's table does not declare, for every caller. Ratified bytes are immutable, so a stored move that the current tables do not declare is NEVER rewritten, reversed or "repaired". The row's first half MEASURES the corpus: per type, the count of recorded moves whose edge is undeclared today, with dates. Each such move, where a reader meets it, is stated as "made by a path the current rules do not allow (before <fence date>)", which means neither valid nor invalid. The row must not make that finding sound larger or smaller than the count shows. `STATES` keeps its valid-but-unreachable states (reading old records needs them). They are not reachable by `promote`. Place it in product order. Home: State Rules §4 (the state machines), folded by the row.
+- **Same time · the WORKER.md line** "A governed refusal is built as a LITERAL, never spread" (D-468, the DEC-49 guard cannot see a spread verdict) goes to M0-194's worker, which is rewriting WORKER.md now, so it lands in one place. It does not go on a BOB branch.
 
 
 
