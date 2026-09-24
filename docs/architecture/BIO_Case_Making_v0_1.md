@@ -185,7 +185,11 @@ loosen the fee rules is pending) and an encoded rule goes stale silently; a memb
 quote (above) is read against it by a member. `cpra_request` already names one law in its KIND: every action
 written with it stands unchanged and counts as its member's statement that the CPRA governs, and nothing else
 is inferred from it; whether the kinds gain a law-neutral records request is the builder's to propose through
-the interface protocol.
+the interface protocol. **PROPOSED by D-149's builder and ADOPTED as the direction 2026-09-23 by BOB #32:** a law-neutral
+`records_request` kind that carries a `law` field, since a sovereign group may sit outside California; `cpra_request`
+stays readable as written. A quote is read "by" the action's own counterparty name, matched EXACTLY; when nothing
+matches, it is stated as undetermined (D-148's gap). NOT BUILT (rowed behind the M9/M10 product rows; the integrator
+mints the IC).
 
 **THE RECORDS-REQUEST LIFECYCLE, DESIGNED 2026-09-22 by BOB #27 (D-147, on SCHEDULER #13's LED-7 question), on the
 pattern of D-148 and bound by D-149.** Each stage after the request is its OWN correspondence entry naming the entry it
