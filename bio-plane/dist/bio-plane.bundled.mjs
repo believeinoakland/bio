@@ -11693,6 +11693,14 @@ var NAMESPACE_CHECKS = {
     check: "C-78.1",
     where: "src/index.mjs namespaceGate > is-namespace-gate",
     translation: "This request named a part of the record that does not exist on this copy, so nothing was read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The name must match one of them exactly; the names are listed beside this message."
+  },
+  /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
+     Twelve such operations used to answer from the record while the caller believed it was in scratch — one of
+     them, a knock, WROTE there. The sentence says nothing happened first and names no remedy but the true one. */
+  NAMESPACE_PINNED: {
+    check: "C-78.2",
+    where: "src/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate",
+    translation: "This request asked for the scratch area, but this operation only ever answers from the record itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area out of the request, knowing it then reaches the real record."
   }
 };
 var DISPATCH_CHECKS = {
@@ -75926,6 +75934,20 @@ function namespaceGate(url) {
     namespaces: [...NAMESPACES]
   }, 400);
 }
+var SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup"]);
+function pinnedNamespaceGate(url, op, spec) {
+  if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
+  if (url.searchParams.get("store") !== SCRATCH) return null;
+  return json({
+    ok: false,
+    reason: "NAMESPACE_PINNED",
+    ...namespaceRow("NAMESPACE_PINNED"),
+    error: `op=${op} always answers from the bio namespace and has no ${SCRATCH} counterpart; nothing was read or written`,
+    op,
+    asked: SCRATCH,
+    pinned: "bio"
+  }, 400);
+}
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 function aiReachesAsMember(spec) {
   return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member") && !Array.isArray(spec.machineClasses);
@@ -77008,6 +77030,8 @@ var index_default = {
     }, 400);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
+    const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
+    if (pinnedNamespace) return pinnedNamespace;
     if (spec.classes === null) {
       const fp = await fingerprint(env.ADMIN_TOKEN);
       const stub2 = env.STORE.get(env.STORE.idFromName("bio"));

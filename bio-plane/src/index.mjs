@@ -2976,6 +2976,35 @@ function namespaceGate(url) {
   /* END DEC-49 REGION is-namespace-gate */
 }
 
+/* D-461 (C-78.2, IC-250) — A PUBLIC OP THAT ALWAYS ANSWERS FROM `bio` REFUSES `store=scratch` BY NAME.
+ *
+ * WHAT WAS WRONG, MEASURED. The unauthenticated block opens ONE stub on `bio` and twelve of its fifteen ops answer
+ * through it whatever `store=` says — three of them MUTATING (`knock`, `claim`, `reviewcomment`). So
+ * `op=knock&store=scratch` passed D-456's gate (`scratch` is a namespace), filed a knock in the REAL record's inbox,
+ * and answered `ok` without saying which store it wrote. A live verification whose no-write guarantee is naming
+ * `store=scratch` on every call (CLAUDE.md §5, D-325) wrote production while believing it was in scratch.
+ *
+ * WHY REFUSE AND NOT REDIRECT. Claiming and logging in are pinned on purpose (an instance has ONE identity), and the
+ * published reads are the record's public face; answering them from scratch would change what they MEAN. Refusal is
+ * also D-456's rule for a namespace the op cannot serve: the caller is told, never silently answered elsewhere.
+ *
+ * THE SET IS INVERTED ON PURPOSE. It lists the public ops that DO address scratch — the invitation ops and
+ * op=instancegroup, each of which reads `store=` itself — and every other `classes: null` op is pinned. A public op
+ * added later is refused `store=scratch` until somebody makes it answer from scratch and lists it here, which is the
+ * safe direction: the unlisted default is the refusal, never the real record. Gated ops take their namespace from
+ * `scopeFor` and are not this function's. `store=bio` and an absent `store=` are unchanged. Nothing is read or
+ * written when this answers. */
+const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup"]);
+function pinnedNamespaceGate(url, op, spec) {
+  if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
+  if (url.searchParams.get("store") !== SCRATCH) return null;
+  /* DEC-49 REGION is-pinned-namespace-gate */
+  return json({ ok: false, reason: "NAMESPACE_PINNED", ...namespaceRow("NAMESPACE_PINNED"),
+                error: `op=${op} always answers from the bio namespace and has no ${SCRATCH} counterpart; nothing was read or written`,
+                op, asked: SCRATCH, pinned: "bio" }, 400);
+  /* END DEC-49 REGION is-pinned-namespace-gate */
+}
+
 /* =====================================================================
  * PL-11 / IS-5 / D-199 — THE FIFTH CLASS, AND THE FIRST ONE THAT IS NOT A
  * BINDING.
@@ -5306,6 +5335,9 @@ export default {
     /* D-456: a `store=` naming no namespace is refused here, before any credential is read (`namespaceGate`). */
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
+    /* D-461: `store=scratch` on a public op that always answers from `bio` is refused here (`pinnedNamespaceGate`). */
+    const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
+    if (pinnedNamespace) return pinnedNamespace;
 
     /* Unauthenticated by design. Each one gates itself. */
     if (spec.classes === null) {
