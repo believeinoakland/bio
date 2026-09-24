@@ -1,0 +1,16 @@
+{
+ "unit": "fleet:pdf-worker/pdf-worker.test.mjs",
+ "inputHash": "9e6afb530f4c78e0a194d36c745fe14d4c53122db1e8a96bd5a2da3684c8aa93",
+ "verdict": "PASS",
+ "run": "06f78fa60a84ac481767d269a6d8280ed50f3db0.1790280033092.6319.json",
+ "tree": "06f78fa60a84ac481767d269a6d8280ed50f3db0",
+ "head": "7ad352a9be477fb3ea1bc2c7b2bfa8710f9313b5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 986,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "6e91c0dd-8af0-5467-8355-634881f7b5f0",
+ "at": "2026-09-24T20:00:33.108Z"
+}

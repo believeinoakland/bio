@@ -1,0 +1,16 @@
+{
+ "unit": "ui:member-respect.test.mjs",
+ "inputHash": "790da65e7eda0173037f7903742344c51ee05f9b31055a386b61b4b48ad2b837",
+ "verdict": "PASS",
+ "run": "06f78fa60a84ac481767d269a6d8280ed50f3db0.1790280033092.6319.json",
+ "tree": "06f78fa60a84ac481767d269a6d8280ed50f3db0",
+ "head": "7ad352a9be477fb3ea1bc2c7b2bfa8710f9313b5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1204,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "6e91c0dd-8af0-5467-8355-634881f7b5f0",
+ "at": "2026-09-24T20:00:33.108Z"
+}
