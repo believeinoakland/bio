@@ -24099,6 +24099,400 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   return acc;
 }
 
+// src/csv.mjs
+var CSV_CONTENT_TYPE = "text/csv";
+var CSV_CONTENT_TYPE_SYNONYMS = ["application/csv", "text/comma-separated-values"];
+var CSV_SHEET_NAME = "csv";
+var MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
+var SIGNATURE_WINDOW_BYTES = 1 << 20;
+var SIGNATURE_LINES = 50;
+var DELIMITERS = [
+  { ch: ",", name: "comma" },
+  { ch: ";", name: "semicolon" },
+  { ch: "	", name: "tab" },
+  { ch: "|", name: "pipe" }
+];
+function readBom(b) {
+  if (b.length >= 3 && b[0] === 239 && b[1] === 187 && b[2] === 191)
+    return { encoding: "utf-8", bomBytes: 3, signal: "BOM: EF BB BF" };
+  if (b.length >= 4 && b[0] === 255 && b[1] === 254 && b[2] === 0 && b[3] === 0)
+    return null;
+  if (b.length >= 2 && b[0] === 255 && b[1] === 254)
+    return { encoding: "utf-16le", bomBytes: 2, signal: "BOM: FF FE" };
+  if (b.length >= 2 && b[0] === 254 && b[1] === 255)
+    return { encoding: "utf-16be", bomBytes: 2, signal: "BOM: FE FF" };
+  return null;
+}
+function hasHighBytes(b) {
+  for (let i = 0; i < b.length; i++) if (b[i] >= 128) return true;
+  return false;
+}
+function isValidUtf8(b) {
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(b);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function encodingSignature(bytes) {
+  const bom = readBom(bytes);
+  if (bom) {
+    return {
+      encoding: bom.encoding,
+      confidence: "certain",
+      bomBytes: bom.bomBytes,
+      signals: [bom.signal, "declared by the producer in the bytes"],
+      undetermined: null
+    };
+  }
+  const window = bytes.subarray(0, SIGNATURE_WINDOW_BYTES);
+  if (!hasHighBytes(window)) {
+    return {
+      encoding: "us-ascii",
+      confidence: "certain",
+      bomBytes: 0,
+      signals: [
+        `no byte >= 0x80 in the first ${window.length} bytes`,
+        "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+      ],
+      undetermined: null
+    };
+  }
+  if (isValidUtf8(window)) {
+    return {
+      encoding: "utf-8",
+      confidence: "likely",
+      bomBytes: 0,
+      signals: [
+        "no BOM",
+        "every multi-byte sequence in the signature window is valid utf-8",
+        "likely, not certain: validity is evidence, not the producer's declaration"
+      ],
+      undetermined: null
+    };
+  }
+  return {
+    encoding: null,
+    confidence: "none",
+    bomBytes: 0,
+    signals: ["no BOM", "a byte >= 0x80 that is not part of a valid utf-8 sequence"],
+    undetermined: "encoding_undetermined"
+  };
+}
+function countOutsideQuotes(line, ch) {
+  let n = 0, inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') inQuotes = !inQuotes;
+    else if (!inQuotes && c === ch) n++;
+  }
+  return n;
+}
+function delimiterSignature(text) {
+  const raw = text.split("\n");
+  const complete = raw.slice(0, -1).map((l) => l.endsWith("\r") ? l.slice(0, -1) : l);
+  const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
+  if (lines.length < 2) {
+    return {
+      delimiter: null,
+      name: null,
+      confidence: "none",
+      lines: lines.length,
+      signals: [`${lines.length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything`],
+      undetermined: "delimiter_undetermined_too_few_lines",
+      tied: []
+    };
+  }
+  const consistent = [];
+  const counted = {};
+  for (const d of DELIMITERS) {
+    const per = lines.map((l) => countOutsideQuotes(l, d.ch));
+    counted[d.name] = per[0];
+    if (per[0] >= 1 && per.every((n) => n === per[0])) consistent.push(d);
+  }
+  if (consistent.length === 1) {
+    const d = consistent[0];
+    return {
+      delimiter: d.ch,
+      name: d.name,
+      confidence: "certain",
+      lines: lines.length,
+      signals: [`${d.name} occurs ${counted[d.name]} time(s) outside quotes on every one of the first ${lines.length} complete lines`],
+      undetermined: null,
+      tied: []
+    };
+  }
+  if (consistent.length > 1) {
+    return {
+      delimiter: null,
+      name: null,
+      confidence: "none",
+      lines: lines.length,
+      signals: [`${consistent.length} candidates are equally consistent over ${lines.length} lines: ` + consistent.map((d) => `${d.name} (${counted[d.name]}/line)`).join(", ")],
+      undetermined: "delimiter_undetermined_tied",
+      tied: consistent.map((d) => d.name)
+    };
+  }
+  return {
+    delimiter: null,
+    name: null,
+    confidence: "none",
+    lines: lines.length,
+    signals: [`no candidate (${DELIMITERS.map((d) => d.name).join(", ")}) occurs a consistent, non-zero number of times over ${lines.length} lines`],
+    undetermined: "delimiter_undetermined_none_consistent",
+    tied: []
+  };
+}
+function walkRecords(text, delimiter) {
+  const records = [];
+  let row = [], field = "", inQuotes = false, started = false;
+  const endField = () => {
+    row.push(field);
+    field = "";
+  };
+  const endRecord = () => {
+    endField();
+    records.push(row);
+    row = [];
+    started = false;
+  };
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    started = true;
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else inQuotes = false;
+      } else field += c;
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+      continue;
+    }
+    if (delimiter && c === delimiter) {
+      endField();
+      continue;
+    }
+    if (c === "\r") {
+      if (text[i + 1] === "\n") i++;
+      endRecord();
+      continue;
+    }
+    if (c === "\n") {
+      endRecord();
+      continue;
+    }
+    field += c;
+  }
+  if (started || field !== "" || row.length) endRecord();
+  return records;
+}
+var BYTE_TRANSPORT = new TextDecoder("latin1");
+async function csvParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  if (!b.length) {
+    return { ok: false, why: "empty_body" };
+  }
+  const enc2 = encodingSignature(b);
+  const body = b.subarray(enc2.bomBytes);
+  const head = body.subarray(0, SIGNATURE_WINDOW_BYTES);
+  let headText;
+  try {
+    headText = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(head) : BYTE_TRANSPORT.decode(head);
+  } catch {
+    return { ok: false, why: `decoder_unavailable:${enc2.encoding}`, encoding: enc2 };
+  }
+  const delim = delimiterSignature(headText);
+  const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES ? {
+    ok: false,
+    text: "undetermined",
+    why: "over_size_bound",
+    size: body.length,
+    bound: MEASURED_CSV_TEXT_BOUND_BYTES,
+    boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
+    metric: "body_bytes"
+  } : null;
+  let records = null;
+  if (!guard) {
+    const text = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(body) : BYTE_TRANSPORT.decode(body);
+    records = walkRecords(text, delim.delimiter);
+  }
+  return {
+    ok: true,
+    format: "csv",
+    bytes: b,
+    bodyBytes: body.length,
+    encoding: enc2,
+    delimiter: delim,
+    guard,
+    records
+  };
+}
+function dialectOf(parts) {
+  return {
+    encoding: parts.encoding.encoding,
+    encodingConfidence: parts.encoding.confidence,
+    encodingSignals: parts.encoding.signals,
+    delimiter: parts.delimiter.name,
+    delimiterConfidence: parts.delimiter.confidence,
+    delimiterSignals: parts.delimiter.signals,
+    undetermined: [parts.encoding.undetermined, parts.delimiter.undetermined].filter(Boolean)
+  };
+}
+function csvStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "csv", reason: parts ? parts.why : "PARTS_ABSENT" };
+  }
+  const dialect = dialectOf(parts);
+  const notes = [
+    "the csv format declares no relationships, so the zero link counts are the format's and not a walk's",
+    "a url in a cell is text, not a declared link: reading it as one would be this entry deciding what a string means"
+  ];
+  if (parts.guard) notes.push("text_body_over_bound");
+  return {
+    ok: true,
+    container: "csv",
+    sheets: [{ sheet: 0, name: CSV_SHEET_NAME, sheetId: null, state: "visible", hidden: false }],
+    links: [],
+    counts: { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 },
+    /* The IC-2 envelope in the shape the office entries accepted. A CSV
+       carries none of DEC-5's extras — no formula beside a value, no tracked
+       change, no comment, no hidden row, no core properties — because the
+       format has no place for any of them. `kinds: []` is exhaustive by the
+       FORMAT's definition, which the note records. */
+    evidentiary: {
+      container: "csv",
+      kinds: [],
+      items: [],
+      undetermined: parts.guard ? [{ part: "(body)", why: "over_size_bound", guard: parts.guard }] : [],
+      counts: {}
+    },
+    dialect,
+    notes
+  };
+}
+function asciiClean(s) {
+  for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) >= 128) return false;
+  return true;
+}
+function csvText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const dialect = dialectOf(parts);
+  const base = {
+    ok: true,
+    container: "csv",
+    /* Exhaustive and EMPTY, not null: the format has no media container to
+       have looked in, so this is a zero of the format and not of a walk. */
+    images: [],
+    dialect
+  };
+  if (parts.guard) {
+    return {
+      ...base,
+      document: null,
+      sheets: [],
+      undetermined: [parts.guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const undetermined = [];
+  const lines = [];
+  let cellCount = 0, usedRows = 0, usedCols = 0;
+  const encodingUndetermined = parts.encoding.encoding == null;
+  parts.records.forEach((record, r0) => {
+    const row = r0 + 1;
+    const vals = [];
+    record.forEach((field, c0) => {
+      const col = c0 + 1;
+      if (encodingUndetermined && !asciiClean(field)) {
+        undetermined.push({
+          sheet: 0,
+          cell: `${columnLetters(col)}${row}`,
+          reason: "encoding_undetermined"
+        });
+        if (row > usedRows) usedRows = row;
+        if (col > usedCols) usedCols = col;
+        return;
+      }
+      if (field === "") return;
+      cellCount++;
+      if (row > usedRows) usedRows = row;
+      if (col > usedCols) usedCols = col;
+      vals.push(field);
+    });
+    if (vals.length) lines.push(vals.join("	"));
+  });
+  const text = lines.join("\n");
+  const sheet = {
+    sheet: 0,
+    name: CSV_SHEET_NAME,
+    hidden: false,
+    /* THE BOUND IS NULL — `.ods`'s reason exactly: RFC 4180 fixes no maximum
+       number of rows or columns, so a CSV has no capacity to state, and
+       borrowing OOXML's grid would be this reader inventing a bound the
+       format never fixed. The USED range is measured and emitted beside it. */
+    rows: null,
+    cols: null,
+    usedRows,
+    usedCols,
+    range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
+    text,
+    undetermined
+  };
+  return {
+    ...base,
+    document: text,
+    sheets: [sheet],
+    undetermined,
+    counts: {
+      chars: text.length,
+      cells: cellCount,
+      formulas: 0,
+      undetermined: undetermined.length
+    }
+  };
+}
+var csvEntry = {
+  format: "csv",
+  detect(bytes, contentType) {
+    if (bytes) return null;
+    if (typeof contentType !== "string") return null;
+    const ct = contentType.trim().toLowerCase();
+    if (ct === CSV_CONTENT_TYPE) {
+      return { format: "csv", confidence: "likely", signals: [
+        `content type "${contentType}"`,
+        "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
+        "measured: 166 of 166 .csv keys in s3://cao-94612 were served this type exactly (M-144)"
+      ] };
+    }
+    if (CSV_CONTENT_TYPE_SYNONYMS.includes(ct)) {
+      return { format: "csv", confidence: "likely", signals: [
+        `content type "${contentType}"`,
+        `an older spelling of ${CSV_CONTENT_TYPE}; UNMEASURED in s3://cao-94612, where all 166 keys declared ${CSV_CONTENT_TYPE}`
+      ] };
+    }
+    return null;
+  },
+  parts: (bytes) => csvParts(bytes),
+  /* Accept either parts() output or raw bytes, exactly as the office entries
+     do, so detect->structure works uniformly at the registry seam while a
+     caller that already paid for parts() does not pay twice. */
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await csvParts(partsOrBytes) : partsOrBytes;
+    return csvStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await csvParts(partsOrBytes) : partsOrBytes;
+    return csvText(parts);
+  }
+};
+
 // src/formats.mjs
 var REGISTRY = /* @__PURE__ */ new Map();
 function registerFormat(entry) {
@@ -24211,6 +24605,7 @@ registerFormat(pptxEntry);
 registerFormat(odtEntry);
 registerFormat(odsEntry);
 registerFormat(odpEntry);
+registerFormat(csvEntry);
 
 // src/textchain.mjs
 var STEP_KINDS = {
