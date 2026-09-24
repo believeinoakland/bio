@@ -1,0 +1,16 @@
+{
+ "unit": "plane:homecensus.test.mjs",
+ "inputHash": "558323f8e003e48e6a5ade83678e0810d23fffa0d48402bba674c264236497c0",
+ "verdict": "PASS",
+ "run": "2a0d7b374d3a58bb55f0e3756f2837b68be9a058.1790292081831.21896.json",
+ "tree": "2a0d7b374d3a58bb55f0e3756f2837b68be9a058",
+ "head": "be038bc1b572e65a20152c587db4f5a1858dc10d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 922,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "71f0e583-da12-53f4-9ac5-8f744193e9b1",
+ "at": "2026-09-24T23:21:21.845Z"
+}
