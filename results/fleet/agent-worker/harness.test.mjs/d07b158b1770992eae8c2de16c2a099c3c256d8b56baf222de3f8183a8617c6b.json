@@ -1,0 +1,16 @@
+{
+ "unit": "fleet:agent-worker/harness.test.mjs",
+ "inputHash": "d07b158b1770992eae8c2de16c2a099c3c256d8b56baf222de3f8183a8617c6b",
+ "verdict": "PASS",
+ "run": "63b681f7259750474d52fb299cf16c0dbfb2685f.1790220502669.20866.json",
+ "tree": "63b681f7259750474d52fb299cf16c0dbfb2685f",
+ "head": "192f98f415a7b6eb0276e3c5c8601c1e34aac7e6",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 885,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d1e8838e-4b6e-5018-b118-31c31d521716",
+ "at": "2026-09-24T03:28:22.683Z"
+}
