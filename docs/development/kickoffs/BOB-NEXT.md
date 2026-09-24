@@ -93,3 +93,4 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
   not available on the web, and cloud sessions IGNORE settings-file defaultMode/autoMode (docs: code.claude.com/docs/en/permission-modes.md).
   So the settings fix would not work and is ABANDONED (local branch land/bob/automode-lanes never pushed; do not push it). Standing
   arrangement: everything relays through BOB EXCEPT a release deploy, which needs Bob's one line typed in DIST's own session.
+- 13:25Z BRANCH PRUNING: Bob committed .github/workflows/prune-landed.yml (main 0a00c9c6). First run: deleted 197 · kept 8 · failed 0. It runs on every push to main and hourly, deleting only land/* branches already contained in main. Sessions never delete remote branches (auto mode refuses it); the 8 kept are the never-merge refs, deletable only on Bob's word by name. train.mjs's own ref-deletion step always fails from the cloud and is now redundant: a small M0 row could drop it.
