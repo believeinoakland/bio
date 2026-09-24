@@ -85,8 +85,17 @@ incident's own shape inverted:
   so `stash@{0}` means *what any of the sixty pushed last*, and `push -u` carries untracked
   files. That is how one worker's untracked suite was materialised into another's tree and
   **counted into its baseline**. Need a clean tree? `git worktree add` a scratch checkout.
-- **The shared scratchpad is NOT isolated between sessions** — two workers reported it
-  independently. Keep every harness and scratch file **inside your own worktree**.
+- **KEEP EVERY SCRATCH FILE OUT OF YOUR WORKTREE — in the SESSION SCRATCHPAD your harness names:**
+  logs, baseline captures, control-pen copies, and above all a scratch COPY OR CLONE OF THE REPO.
+  **RULED by BOB #32, 2026-09-24**, superseding "inside your own worktree": a file in the worktree
+  is not inert. Repository-walking suites WALK IT, it trips
+  `gates.mjs` §2e's under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to RECORD a
+  GREEN verdict. **THREE ITEMS PAID IN ONE NIGHT (2026-09-24):** REC-185's
+  `.rec185/` moved the battery's assertion total 19513 -> 19512 with no source change; D-487's
+  `bio-plane/.d487-gate.log` cost a 14-minute re-run of a green gate; D-486's scratch
+  clone was walked by `statepaths`, 36 files. **The scratchpad is NOT isolated between
+  sessions** — two workers reported that — so name every file there for YOUR item, never
+  generically (and see the `provenance:` rule below).
 - **PUSH YOUR OWN BRANCH. Do not merge, and never push to `main`.** CONDUCT integrates; you make
   your work SURVIVE. CORRECTED 2026-09-16 (D-288, ruled by BOB #12) — this line read *do not push*
   for five weeks and that is the instruction that strands the work: `CLAUDE.md`'s rule is that a
@@ -252,10 +261,10 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
    CONSECUTIVE `RECORD` ITEMS EACH DISCOVERED IT FROM A RED SUITE** — REC-119 counted them and said the remedy is a
    process change rather than a better warning, which is what this line is. Rebuild BEFORE the battery, because the
    guard is what turns red and the failure names the artifact rather than your change.
-   **A COMMENT-ONLY `src/` CHANGE IS THE EXCEPTION AND IT IS MEASURED, NOT ASSUMED: the bundler STRIPS COMMENTS, so the
-   emitted bundle is BYTE-IDENTICAL while the manifest's INPUT RECORD still moves** (REC-110 measured both, twice). So
-   rebuild anyway — but if you are hunting a diff in `bundled.mjs` after a comment-only change, there isn't one, and a
-   session expecting one will chase a build problem that does not exist.
+   **A PLAIN-COMMENT-ONLY `src/` CHANGE IS THE EXCEPTION AND IT IS MEASURED, NOT ASSUMED: the bundler strips a plain
+   `/* */` or `//`, so the emitted bundle is BYTE-IDENTICAL while the manifest's INPUT RECORD still moves** (REC-110,
+   twice). **A `/** */` DOCSTRING IS NOT STRIPPED — it is EMITTED, measured at +1,104 B** (corrected 2026-09-24). So
+   rebuild anyway — and if you are hunting a diff in `bundled.mjs` after a plain comment-only change, there isn't one.
 
 1. `cd bio-plane && npm run test:battery` — the WHOLE battery, green.
 2. `node scripts/coverage.mjs --strict` — run **DIRECTLY**, `$?` read **UNPIPED**, exit 0.
@@ -286,29 +295,16 @@ than a complete one reported loosely, and a narrowed unknown is a legitimate res
 
 ## A LOG FILE UNDER `/tmp` WITH A GENERIC NAME IS NOT YOURS, AND ITS `provenance:` LINE IS THE ONLY THING THAT SAYS SO.
 
-**Measured 2026-09-15 by the REC-98 worker, and it is recorded here because it cost real time
-and would have cost a false bug report.** A battery redirected to `/tmp/final-battery.log` came
-back **198/202 with four suites FAILED — all four of which pass alone at exit 0.**
-
-**It was another session's run.** `/tmp` is shared across every worktree and every session on
-this machine, a generic filename collides, and the second writer wins. The log that came back
-was a real battery, honestly reported, of a tree that was not this worker's: its `provenance:`
-line named a DIFFERENT HEAD and listed a suite that has never existed in that worktree.
-
-**What makes this dangerous rather than merely annoying is that it looked exactly like damage
-the worker had done.** All four named suites are repository readers, and a worker that has just
-edited repository prose has every reason to believe it broke them. The obvious next move — start
-bisecting your own change — is wasted work against a subject that was never yours.
-
-**The practice, and it is two lines.** Write run logs into YOUR OWN WORKTREE or into a path
-carrying your worktree's name, never a bare `/tmp/<generic>.log`. And **before you believe any
-figure you did not watch print, read the log's `provenance:` line and check the HEAD against
-your own** — the line exists for exactly this, and it is the only discriminator, because the
-contents of a foreign battery are indistinguishable from the contents of yours.
-
-**The general form, which is this project's oldest shape wearing new clothes:** a shared,
-unqualified name is an identity nobody owns, so two different facts arrive under it and nothing
-fails loudly. Ask what the figure is a figure OF before you ask what it means.
+**Measured 2026-09-15 by the REC-98 worker.** A battery redirected to `/tmp/final-battery.log` came
+back **198/202 with four suites FAILED — all four of which pass alone at exit 0. It was another
+session's run:** a shared temp root spans every session, a generic name collides, the second writer
+wins, and its `provenance:` line named a DIFFERENT HEAD and a suite that never existed in that
+worktree. **It looked exactly like damage the worker had done** — all four are repository readers —
+so the obvious next move, bisecting your own change, is wasted work on a subject never yours.
+**So: name every scratchpad file for YOUR item, and before you believe a figure you did not watch
+print, read the log's `provenance:` line against your own HEAD** — the only discriminator, because
+a foreign battery's contents are indistinguishable from yours. **The general form:** a shared,
+unqualified name is an identity nobody owns, so two facts arrive under it and nothing fails loudly.
 
 
 ## KILL BY PID OR BY THE PROCESS GROUP YOU STARTED. NEVER BY A MACHINE-WIDE PATTERN ON A SHARED MACHINE.

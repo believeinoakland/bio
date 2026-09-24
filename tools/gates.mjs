@@ -1256,7 +1256,16 @@ if (notMeasured) {
   const endTree = treeNow();
   const endStatus = statusNow();
   if (!CLEAN_AT_START) {
-    console.log(`gates: NOT RECORDED — the tree was not clean when the run began; a verdict binds only a clean tree (D-293)`);
+    /* M0-146: NAME THE PATHS. A worker whose GREEN run is refused a record needs to see WHICH file made the tree
+       dirty — D-487 lost fourteen minutes to a gate log it had written itself, and this line said only "not clean".
+       The remedy for the worker is in `kickoffs/WORKER.md` (BOB #32, 2026-09-24): scratch, logs and scratch copies
+       of the repository go in the SESSION SCRATCHPAD, outside the worktree, where no reading of the tree reaches them. */
+    const dirty = String(START.status || "").split("\n").filter(Boolean);
+    const shown = dirty.slice(0, 5).map((l) => l.trim()).join(" · ");
+    console.log(`gates: NOT RECORDED — the tree was not clean when the run began; a verdict binds only a clean tree (D-293)`
+      + (dirty.length ? `\ngates:   ${dirty.length} path(s): ${shown}${dirty.length > 5 ? ` · and ${dirty.length - 5} more` : ""}`
+                      + `\ngates:   a worker's own scratch, logs and scratch copies of the repository belong in the SESSION`
+                      + ` SCRATCHPAD, OUTSIDE the worktree (kickoffs/WORKER.md, BOB #32 2026-09-24)` : ""));
   } else if (endStatus !== "" || endTree !== START.tree) {
     console.log(`gates: NOT RECORDED — the tree changed while the gate ran (`
       + `${endTree !== START.tree ? `HEAD's tree ${short(START.tree)} -> ${short(endTree)}` : `${String(endStatus || "").split("\n").filter(Boolean).length} path(s) dirty at the end`}`
