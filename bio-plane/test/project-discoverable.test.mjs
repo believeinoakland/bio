@@ -158,10 +158,34 @@ let P, Q, IRIS, VERA, OLGA, RUTH, FOUNDER;
   const schemaPath = join(tree, "bio-plane", "src", "schema.mjs");
   const schema = readFileSync(schemaPath, "utf8");
   const TABLE = /CREATE TABLE IF NOT EXISTS project_visibility \([\s\S]*?\);\nCREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility\(project_id, seq\);\n/;
+  /* CORRECTED 2026-09-24 by D-497, and the old arm was WRONG rather than merely narrow: it stripped the
+     visibility table alone, which since D-497 describes a tree that never existed. The sight index is DERIVED
+     from the act log and recomputed at every boot, so a predecessor holding `project_sight` while lacking
+     `project_visibility` is not "the build before this one" — it is this build with half a landing, and the
+     boot recompute throws on it. The predecessor is the tree before BOTH, which is what REC-149's and D-497's
+     stores were, and the arm now asserts both were armed. */
+  const SIGHT = /CREATE TABLE IF NOT EXISTS project_sight \([\s\S]*?\);\nCREATE INDEX IF NOT EXISTS project_sight_setting ON project_sight\(setting, project_id\);\n/;
   const hits = (schema.match(new RegExp(TABLE.source, "g")) || []).length;
-  writeFileSync(schemaPath, schema.replace(TABLE, ""));
-  t("1a: the predecessor is ARMED — the table's DDL occurs exactly once in this tree's schema and was removed",
-    [hits, readFileSync(schemaPath, "utf8").includes("project_visibility (")], [1, false]);
+  const sightHits = (schema.match(new RegExp(SIGHT.source, "g")) || []).length;
+  writeFileSync(schemaPath, schema.replace(TABLE, "").replace(SIGHT, ""));
+  /* D-497: and the predecessor's STORE must be the predecessor's too. This tree copies today's `src/` over
+     yesterday's schema, which worked while `#visibilityOf` was the only reader — it is lazy, and nothing on
+     this fixture's path called it. The sight index is DERIVED at the boot and at every promotion, so today's
+     store would ask a store that has no such table, at the claim, and the fixture would fail on its own
+     scaffolding rather than on its subject. The CALLS are neutered, not the method: the tree still holds the
+     derivation, so a mistake that leaves one call standing shows up here as the throw it is. */
+  const storePath = join(tree, "bio-plane", "src", "store.mjs");
+  const storeSrc = readFileSync(storePath, "utf8");
+  const CALL = "this.#reindexProjectSight(";
+  const callHits = storeSrc.split(CALL).length - 1;
+  writeFileSync(storePath, storeSrc.split(CALL).join(`false && ${CALL}`));
+  t("1a0: the predecessor's STORE is armed too — every call into the sight derivation is neutered, and the "
+  + "count is the one D-497 landed",
+    [callHits, readFileSync(storePath, "utf8").split(`false && ${CALL}`).length - 1], [3, 3]);
+  t("1a: the predecessor is ARMED — the act log's DDL and the sight index's DDL each occur exactly once in "
+  + "this tree's schema and BOTH were removed",
+    [hits, sightHits, readFileSync(schemaPath, "utf8").includes("project_visibility ("),
+     readFileSync(schemaPath, "utf8").includes("project_sight (")], [1, 1, false, false]);
   const old = planeAt(join(tree, "bio-plane", "src", "index.mjs"));
   try {
     const o = on(old);

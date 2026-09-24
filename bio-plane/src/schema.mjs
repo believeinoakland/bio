@@ -3827,6 +3827,33 @@ CREATE TABLE IF NOT EXISTS project_visibility (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(project_id, seq);
+
+-- D-497 (Membership Architecture v2 section 7, item 7.14, "The directory"; SCHEDULER #17's finding carried
+-- forward from D-479): THE SIGHT INDEX. One row per PROJECT, holding the setting that project_visibility's
+-- acts DERIVE -- the latest act, and HIDDEN where the owners have never acted. It is not a second place the
+-- rule is stated: Store#reindexProjectSight is the one statement that computes a row here, and Store#sight
+-- READS this table through #visibilityOf rather than reading the act log. That is what lets the directory's
+-- candidate query bound IN SQL: before this table, sight was a JS predicate the directory had to ask about
+-- every project in the group one at a time, so the number of statements grew with the record even though
+-- each was bounded, and REC-149's first attempt to put the rule in the directory's own SQL instead put
+-- "no act = hidden" in a SECOND place -- caught by its own default-discoverable control arm, which flipped
+-- the default while the directory did not move.
+--
+-- DERIVED, AND IT SAYS SO: every row is recomputed from project_visibility and bundles at every boot
+-- (Store#seedProjectSight, the #seedMintLedger precedent), at every promotion of a bundle, and at every
+-- owner's act. Nothing here is authored, so drift cannot survive a restart, and the act log stays the
+-- record. Keyed on project_id, a bundle id, so both purge arms clear it with the project (the
+-- project_participants precedent).
+-- THE ROW IS THE PROJECT AND ITS SETTING AND NOTHING ELSE. No date: a projection needs none, the act log
+-- above carries every date there is, and a column that moved on each recompute would make an UNCHANGED boot
+-- rewrite every row with different bytes -- which is a RESTART PLUS A PURE READ MOVING A TABLE, and is what
+-- versionnotice.test.mjs's no-write WITNESS refuses. That witness is the guarantee a live verification's
+-- no-write claim rests on, so the derivation is idempotent at the byte instead.
+CREATE TABLE IF NOT EXISTS project_sight (
+  project_id TEXT PRIMARY KEY,
+  setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden'))
+);
+CREATE INDEX IF NOT EXISTS project_sight_setting ON project_sight(setting, project_id);
 -- =========================================================================
 
 -- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
