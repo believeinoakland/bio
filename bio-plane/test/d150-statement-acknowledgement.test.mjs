@@ -426,10 +426,17 @@ console.log("\n--- 7. the gate: bytes listing the author as their own second rea
     errs(self), ["C-41.10"]);
   const miscount = { ...good, completeness: { ...good.completeness, acknowledged: 5 } };
   t("and so is a count that disagrees with its own list", errs(miscount), ["C-41.10"]);
-  const legacy = { ...good };
+  /* CORRECTED 2026-09-24 (REC-188), never exempted: this arm deleted the list from the document op=publish
+     had JUST authored and asserted no refusal. That was right while op=publish authored `bio-case-document/2`,
+     which is the shape a document authored before acknowledgements were recorded carries. REC-188 moved
+     op=publish to `/3`, which is OBLIGED to carry the list (C-41.13), so a /3 document without it is exactly
+     what the row refuses — the old assertion would now demand the hole the row closes. The property this
+     arm guards is about what ALREADY CROSSED, and that is a /2 document: so the arm now states /2, and the
+     /3 counterpart is asserted by `d84-case-manifest.test.mjs` section 4. */
+  const legacy = { ...good, format: "bio-case-document/2" };
   delete legacy.completeness_acknowledgements;
-  t("a document with NO list (authored before acknowledgements were recorded) is not refused — what already crossed "
-  + "stays crossed", errs(legacy), []);
+  t("a /2 document with NO list (authored before acknowledgements were recorded) is not refused — what already "
+  + "crossed stays crossed", errs(legacy), []);
 }
 
 console.log(`\nd150-statement-acknowledgement: ${pass} pass, ${fail} fail`);

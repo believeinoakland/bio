@@ -7,7 +7,7 @@
 **Incomplete sections** ·
 - §header — "no check exists, no code implements it" is stale; the bias type, the manifest op and the acknowledgement exist.
 - §Statement anatomy — the subject lists are superseded; both defer to the registry vocabulary (RULED 2026-08-01).
-- §Bias bundles and adoption — the manifest now travels with publication (D-84, 2026-09-23): stamped into the signed case document and frozen. Still open: the case-document gate does not REQUIRE the manifest block (a /2 document authored before D-84 carries none), and a manifest's `revision` is the pin `op=biasadopt` takes while the set stands at `proposed`, so it can name bytes older than the adopted head.
+- §Bias bundles and adoption — the manifest now travels with publication (D-84, 2026-09-23): stamped into the signed case document and frozen. Since REC-188 (2026-09-24) the gate REQUIRES the block of a `bio-case-document/3`, which op=publish authors (C-41.13); a /2 document authored before D-84 carries none and still ratifies. Still open: a manifest's `revision` is the pin `op=biasadopt` takes while the set stands at `proposed`, so it can name bytes older than the adopted head.
 - §Integration with the epistemics ladder — the mechanical binding is a stated prerequisite; no ruling, no op.
 - §Bias debt, and HUNCH DEBT — bias debt is now RAISED (D-86, 2026-09-23: one disclosed obligation per run whose lens moved, `construct-status.json` 7.bias-debt) and nothing DISCHARGES it but the lens moving back; the section does not say what settles a debt, and no act does.
 - §Bias debt, and HUNCH DEBT — says `op=publishpreflight` "exists"; it is deferred with REC-15 behind DEC-33; the sequencing paragraph predates PL-12.
@@ -413,6 +413,10 @@ document before its hash is taken (`bias_manifest`, `bias_manifest_bundles`, and
 `## Bias Manifest` in the body). The signature freezes it: nothing recomputes it,
 so a lens adopted afterwards moves `op=biasmanifest` and never a published case.
 With nothing adopted the document says *no manifest was in force*.
+**REQUIRED since REC-188 (2026-09-24)**: a `bio-case-document/3` — what `op=publish` now authors — without
+the `bias_manifest` map (a boolean `in_force`; in force, the 64-hex `statements_sha`; not in force, the
+stated sentence) or its `bias_manifest_bundles` list is refused by C-41.13, so *disclosed* holds because the
+gate refuses the absence and not because the writer happens to stamp it. A /2 document keeps ratifying.
 
 **The rules, as shipped:**
 

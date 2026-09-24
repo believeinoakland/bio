@@ -1032,6 +1032,9 @@ console.log("\n--- 7. C-41: every arm of the case document's gate, driven over a
     ["COMPLETENESS", "C-41.10", (d) => { d.completeness = { ...d.completeness, statement: "" }; return d; }],
     ["EXCLUDED",     "C-41.11", (d) => { delete d.completeness_excluded; return d; }],
     ["BAR",          "C-41.12", (d) => { delete d.required_strength; return d; }],
+    /* REC-188: the thirteenth member, driven on the manifest half; the acknowledgement half and the /2
+       over-strictness arm are `d84-case-manifest.test.mjs` section 4's. */
+    ["DISCLOSURES",  "C-41.13", (d) => { delete d.bias_manifest; return d; }],
   ];
   /* ONE ASSERTION PER ARM, EACH NAMING ITS OWN C-NUMBER, because a bare count of
      twelve is satisfied by any twelve and a family graded as a whole hides the
@@ -1040,7 +1043,7 @@ console.log("\n--- 7. C-41: every arm of the case document's gate, driven over a
     t(`${num} is what the catalog declares for ${key}, and it FIRES on ${CASE_DOCUMENT_FAMILY[key].what}`,
       [CASE_DOCUMENT_FAMILY[key].check, fires(mutate, num)], [num, true]);
   }
-  t("and the twelve arms cover the family EXACTLY — a member added to the catalog and not driven here "
+  t("and the thirteen arms cover the family EXACTLY — a member added to the catalog and not driven here "
   + "fails this row rather than being silently unexercised",
     arms.map(([k]) => k).sort(), Object.keys(CASE_DOCUMENT_FAMILY).sort());
   /* C-21.1 AT CASE ALTITUDE, which moved here from checkCompletenessFreshness.

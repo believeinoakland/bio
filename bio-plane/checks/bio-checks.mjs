@@ -11050,13 +11050,32 @@ export const REEXTRACT_CHECKS = {
    and the ACCEPTED SET is what keeps rule 1 true: a /1 document already signed in this record —
    or authored before this landing and still awaiting its signature — verifies and ratifies exactly
    as it did, because what already crossed stays crossed (rule 12 (e)). op=publish authors /2 only. */
-export const CASE_DOCUMENT_FORMAT = 'bio-case-document/2';
+/* REC-188 / BIO_Declared_Bias_v0_1.md §"The bias acknowledgement, authored at export" and
+   BIO_Publication_v0_1.md §3 rules 11 and 12 (BOB #31 confirmed the bump, BOB #32 widened it: ONE
+   format bump carries both requirements): THE FORMAT MOVES TO /3, AND IT IS OWED FOR THE REASON /2
+   WAS. D-84 stamped the bias MANIFEST into every newly published case document and D-150 listed the
+   completeness statement's ACKNOWLEDGEMENTS there, but both landed under /2 — so the gate could not
+   REQUIRE either without refusing a /2 document authored before them, and DEC-20's "bias ACCOMPANIES
+   every published case" held only as long as op=publish happened to write it. A /3 document is one
+   whose author was obliged to carry both; C-41.13 refuses one that does not. /2 and /1 stay in the
+   accepted set and keep ratifying exactly as written (rule 1: what already crossed stays crossed).
+   op=publish authors /3 only. */
+export const CASE_DOCUMENT_FORMAT = 'bio-case-document/3';
+/* /2 (D-442, rule 12) states its members' frozen blocks exactly as /3 does and is not obliged to
+   carry the manifest or the acknowledgement list; /1 (legacy) carried the frozen blocks in its
+   members' own bytes. */
+export const CASE_DOCUMENT_FORMAT_V2 = 'bio-case-document/2';
 export const CASE_DOCUMENT_FORMAT_LEGACY = 'bio-case-document/1';
-export const CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_LEGACY];
-/* Does this case document state its members' frozen blocks itself (rule 12, /2), or were they
+export const CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY];
+/* Does this case document state its members' frozen blocks itself (rule 12, /2 and /3), or were they
    carried in the members' own bytes (/1, legacy)? ONE predicate, read by the gate, the ratify
-   committer and every per-case reader, so the two shapes cannot be told apart two ways. */
-export const caseDocumentStatesMemberBlocks = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
+   committer and every per-case reader, so the two shapes cannot be told apart two ways. REC-188:
+   /3 is rule 12's shape plus two required disclosures, so it answers yes exactly as /2 does. */
+export const caseDocumentStatesMemberBlocks = (fm) =>
+  fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V2;
+/* REC-188: is this document obliged to carry the bias manifest and the statement's acknowledgement
+   list (C-41.13)? ONE predicate, so the obligation is a property of the token and nothing else. */
+export const caseDocumentRequiresDisclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 
 /* REC-96 / D-196 / IC-112 — WHERE A CASE'S `searched` SECTION GOT ITS SUBJECTS,
    AND THE VOCABULARY IS THE FENCE RATHER THAN A LABEL.
@@ -11128,6 +11147,7 @@ export const CASE_DOCUMENT_FAMILY = {
   COMPLETENESS: { check: 'C-41.10', what: 'the completeness block (REC-14)' },
   EXCLUDED:     { check: 'C-41.11', what: 'the exclusion list field (C-9)' },
   BAR:          { check: 'C-41.12', what: 'required_strength — the standard of evidence (DEC-17 as DEC-72 rehomes it)' },
+  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest and the statement\'s acknowledgement list, required of a bio-case-document/3 (REC-188)' },
 };
 const C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check]));
@@ -11138,7 +11158,7 @@ export function checkCaseDocument(fm, ctx = {}) {
 
   /* D-442: an ACCEPTED SET, never a single value — the IC-166 precondition for the bump. */
   if (!CASE_DOCUMENT_FORMATS_ACCEPTED.includes(fm?.format)) {
-    findings.push(f(C41.FORMAT, 'error', `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before BIO_Publication_v0_1.md §3 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+    findings.push(f(C41.FORMAT, 'error', `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before REC-188, '${CASE_DOCUMENT_FORMAT_V2}'; or, authored before BIO_Publication_v0_1.md §3 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
       ['re-publish through op=publish, which authors the case document']));
   }
   /* THE IDENTITY AND THE EDITION, CHECKED AGAINST WHAT THE STORE IS ABOUT TO
@@ -11269,6 +11289,44 @@ export function checkCaseDocument(fm, ctx = {}) {
       }
       if (c && c.acknowledged !== undefined && c.acknowledged !== acks.length)
         findings.push(f(C41.COMPLETENESS, 'error', `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
+    }
+  }
+  /* REC-188 — C-41.13, THE TWO DISCLOSURES A /3 DOCUMENT MUST CARRY. The arm above cannot demand the
+     acknowledgement list and C-41.6 asks only for the authored acknowledgement, because both are read
+     over /2 documents authored before D-84 and D-150; the token is what lets the gate tell a document
+     that was never obliged from one that left its obligation out. So under /3, and ONLY under /3:
+       (a) `bias_manifest` is a MAP whose `in_force` is a boolean, with `bias_manifest_bundles` beside it
+           as a list. In force, it names the hash of the effective statement set; not in force, it SAYS
+           so (`stated`) — the two are different facts from a lens with nothing in it (D-84), and a
+           manifest that is neither is a blank a reader would take for one.
+       (b) `completeness.acknowledged` is an integer of 0 or more and `completeness_acknowledgements` is
+           a list. ZERO and an EMPTY list are legal and are the common answer: they say nobody but the
+           statement's author acknowledged it, and nothing anywhere requires a second reader (rule 11).
+     What is refused is SILENCE about the lens or about the second readers — never an unfavourable
+     value. Nothing here reads WHICH bias is named (DEC-20: a disclosure, never a bar). */
+  if (caseDocumentRequiresDisclosures(fm)) {
+    const bm = fm?.bias_manifest;
+    if (!bm || typeof bm !== 'object' || Array.isArray(bm) || typeof bm.in_force !== 'boolean') {
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself — computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
+        ['re-publish through op=publish, which stamps the manifest in force for the case\'s project into the case document']));
+    } else if (bm.in_force === true && !(typeof bm.statements_sha === 'string' && /^[0-9a-f]{64}$/.test(bm.statements_sha))) {
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (bundle, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
+        ['re-publish through op=publish']));
+    } else if (bm.in_force === false && !(typeof bm.stated === 'string' && bm.stated.trim())) {
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
+        ['re-publish through op=publish']));
+    }
+    if (bm && typeof bm === 'object' && !Array.isArray(fm?.bias_manifest_bundles)) {
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias bundle was in force) and is legal — an ABSENT field is silence about which revisions the lens was`,
+        ['re-publish through op=publish']));
+    }
+    if (!c || !Number.isInteger(c.acknowledged) || c.acknowledged < 0) {
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : undefined}'): ZERO is a statement — nobody but its author acknowledged it — and is legal; an absent count is silence (BIO_Publication §3 rule 11). An acknowledgement is never required to publish`,
+        ['re-publish through op=publish, which lists every acknowledgement of the statement it publishes']));
+    }
+    if (!Array.isArray(fm?.completeness_acknowledgements)) {
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal — an ABSENT field is silence about who else read what this case leaves out (BIO_Publication §3 rule 11)`,
+        ['re-publish through op=publish, which lists every acknowledgement of the statement it publishes']));
     }
   }
   /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM
