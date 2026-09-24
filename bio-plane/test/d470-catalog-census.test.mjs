@@ -24,7 +24,7 @@
  * INCLUDED — contains either of those two directory prefixes, so ONE CITATION IN
  * PROSE enrols this suite in every prose-only gate run. Measured 2026-09-24: with
  * the documentation prefix spelled, a
- * MEASUREMENTS-only change selected 75 units against `statepaths.test.mjs`'s
+ * change to the measurement ledger alone selected 75 units against `statepaths.test.mjs`'s
  * ceiling of 74 and the gate went RED, naming this suite's own header. This
  * suite reads `checks/bio-checks.mjs` and `src/gate.mjs` and no prose at all, so
  * doc-facing is the WRONG answer and the citation is what was wrong, not the
