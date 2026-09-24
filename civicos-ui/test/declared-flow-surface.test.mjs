@@ -48,6 +48,18 @@
  * nothing about `op=proposals`' own `prior_disposition`, which no surface reads at all (named in
  * UI-99's report, not fixed here).
  *
+ * GATE: reads bio-plane/src/ bio-plane/checks/bio-checks.mjs
+ *   (M0-126 condition 2, declared because `mention` CANNOT see these reads and the first gate said so — RED with
+ *   `underinclusion:ui:declared-flow-surface.test.mjs`, naming 50 files. The sibling `progression-revision.test.mjs`
+ *   needs no such line because it hands miniflare `new URL("../../bio-plane/src/index.mjs")` and reads that file, so
+ *   the closure walks the whole plane from a path written literally in its source. THIS suite hands miniflare a probe
+ *   SCRIPT whose `import "./index.mjs"` and `import "./store.mjs"` live inside a template literal, and its `scriptPath`
+ *   names a file that does not exist on disk — it is only the directory the probe's relative imports resolve against,
+ *   which is `bio-plane/test/proposedispose.test.mjs`'s own arrangement. So the plane it actually runs is invisible to
+ *   the derivation, and the honest fix is to declare it rather than to decorate the source with a read it does not do.
+ *   The directory, not a list of 50 names: a plane file added tomorrow is one this suite runs and one no list would
+ *   name — and over-inclusion costs only a re-run.)
+ *
  * NEGATIVE CONTROL: RUN 2026-09-24 by UI-99 against `civicos-ui/app.html`
  * `2f62b15f48064f84875ec0c4434781d5e41787daee62ad8a31151de68fc85c72` (1,590,490 bytes), four arms, each
  * armed ALONE by ONE anchored replacement asserted to match exactly once, each restored by `cp` from a
