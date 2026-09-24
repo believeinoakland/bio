@@ -1,0 +1,16 @@
+{
+ "unit": "plane:signer-enrolment.test.mjs",
+ "inputHash": "33529a0769d55b19489b9bb05bc3b60948be8ecc25985b6a44aec0ee89bc74b3",
+ "verdict": "PASS",
+ "run": "134501e40df037790f836e8c8548d27359bc6efb.1790288768928.2126.json",
+ "tree": "134501e40df037790f836e8c8548d27359bc6efb",
+ "head": "eaeeb3e0f85834d912483696adad850d12ff16fd",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 157,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "ab5589a3-734d-55b0-a53d-b85456578d6c",
+ "at": "2026-09-24T22:26:08.943Z"
+}
