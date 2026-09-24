@@ -20210,25 +20210,43 @@ export class Store extends DurableObject {
    * invited to, and a placement the reader cannot see is omitted without a
    * count. An unrecognised or absent viewer reads nothing (fail closed).
    *
-   * WHO IS SHOWN. §8.4 fence 1 says the theme is declared "under that member's
-   * COVER, which every reading of the theme shows". Membership v2 §3 rules that
-   * members and the public see HANDLES and only administrators see cover and
-   * handle together. Every reading here shows the declarer's member id and
-   * handle — the record's attribution — and never the cover, since a cover
-   * beside a handle is the pairing §3 withholds. Stated as a DESIGN GAP in
-   * IC-241 rather than resolved silently in either direction. */
+   * WHO IS SHOWN (BOB #32, 2026-09-24: Membership v2 §3 governs). Members and
+   * the public see HANDLES; only administrators see cover and handle together.
+   * So every reading that names a declarer, a placer or a proposer shows a
+   * reader who does not administer the person's HANDLE ALONE — no member id
+   * (MK-6's precedent: the member id is not published in member-facing reads)
+   * and no cover. The member id and the cover go to ADMINISTRATORS only,
+   * through the `administer` projection `memberList` already follows: the
+   * control plane stamps it from the credential (index.mjs) and anything but
+   * the affirmative stamp yields handles, so a lost stamp loses the pairing
+   * rather than leaking it. A MACHINE stamp (`class:<cls>`) is no person and no
+   * pairing, and every reader is shown it — a hunch stays attributable to the
+   * credential that proposed it. This corrects D-162's first cut, which showed
+   * every reader the member id (IC-241's DESIGN GAP, ruled). */
   static #themeRefusal(code, detail, extra) {
     const row = THEME_CHECKS[code];
     return { ok: false, reason: code, code, check: row.check, translation: row.translation,
              detail, ...(extra || {}) };
   }
 
-  /** The declarer as every reading shows them: the member id the act was stamped
-   *  with and the handle that member chose. Never the cover (see above). */
-  #themePerson(memberId) {
-    if (!memberId) return { id: null, handle: null };
-    const m = this.#one(`SELECT handle FROM members WHERE member_id = ?`, memberId);
-    return { id: memberId, handle: m && m.handle ? m.handle : null };
+  /** A person on a theme reading, projected for THIS reader (see WHO IS SHOWN): the fields
+   *  `<prefix>_handle` for everyone; `<prefix>` (the member id) and `<prefix>_cover` for an
+   *  administrator alone. The cover is NOT SELECTED for anyone else, `memberList`'s way. */
+  #themePerson(prefix, stamp, administer) {
+    const pairs = administer === true || administer === "1";
+    if (stamp && isMachineIdentity(stamp))
+      return { [prefix]: stamp, [`${prefix}_handle`]: null, ...(pairs ? { [`${prefix}_cover`]: null } : {}) };
+    const m = stamp ? this.#one(`SELECT ${pairs ? "cover, " : ""}handle FROM members WHERE member_id = ?`, stamp) : null;
+    const handle = m && m.handle ? m.handle : null;
+    if (!pairs) return { [`${prefix}_handle`]: handle };
+    return { [prefix]: stamp || null, [`${prefix}_handle`]: handle, [`${prefix}_cover`]: m && m.cover ? m.cover : null };
+  }
+
+  /** The same person in a sentence (`says`), under the same projection: a handle, a machine's
+   *  stamp, or — for a reader who does not administer — never the member id. */
+  #themeName(stamp, administer) {
+    const p = this.#themePerson("by", stamp, administer);
+    return p.by_handle || p.by || "a member whose handle is not recorded";
   }
 
   /** WHICH THEME. One answer for a theme that does not exist and for a viewer the
@@ -20282,7 +20300,7 @@ export class Store extends DurableObject {
 
   /** op=themedeclare — THE ACT. `declarer` is the control plane's stamp and never
    *  the caller's. */
-  themeDeclare({ name = null, test = null, declarer = null } = {}) {
+  themeDeclare({ name = null, test = null, declarer = null, administer = null } = {}) {
     const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
     const who = typeof declarer === "string" ? declarer.trim() : "";
     const idea = typeof name === "string" ? name : "";
@@ -20314,17 +20332,16 @@ export class Store extends DurableObject {
     const themeId = `THEME-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${Store.#rand(6)}`;
     this.sql.exec(`INSERT INTO themes (theme_id, declared_by, name, test, at) VALUES (?, ?, ?, ?, ?)`,
                   themeId, who, idea, criterion, at);
-    const by = this.#themePerson(who);
     return { ok: true, theme_id: themeId, name: idea, test: criterion, at,
-             declared_by: by.id, declared_by_handle: by.handle, evidence: false,
-             says: `${by.handle || by.id}'s theme is declared, with its test. It is a lens for finding and `
+             ...this.#themePerson("declared_by", who, administer), evidence: false,
+             says: `${this.#themeName(who, administer)}'s theme is declared, with its test. It is a lens for finding and `
                  + `gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it `
                  + `or on membership in it` };
   }
 
   /** op=themeplace — A MEMBER PLACES A DOCUMENT OR A PASSAGE, or CONFIRMS a hunch
    *  standing at the same target. `placer` is the control plane's stamp. */
-  themePlace({ theme = null, target = null, note = null, placer = null, viewer = null } = {}) {
+  themePlace({ theme = null, target = null, note = null, placer = null, viewer = null, administer = null } = {}) {
     const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
     const who = typeof placer === "string" ? placer.trim() : "";
     /* DEC-49 REGION is-theme-place */
@@ -20358,12 +20375,12 @@ export class Store extends DurableObject {
         who, at, tgt.note, T.theme_id, tgt.target);
     const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
                           T.theme_id, tgt.target);
-    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row),
+    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row, administer),
              confirmed_hunch: !!before && before.state === "hunch",
              already: !!before && before.state === "member", evidence: false,
              says: before && before.state === "member"
                ? `${tgt.target} was already a member of this theme; nothing changed`
-               : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${who}'s judgement that it `
+               : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${this.#themeName(who, administer)}'s judgement that it `
                  + `passes the test${before ? ", confirming a proposal" : ""}. Membership connects it to the `
                  + `theme's other members through this lens only, and is never a basis leg` };
   }
@@ -20372,7 +20389,7 @@ export class Store extends DurableObject {
    *  may propose — the machine's half of §8.4 fence 3 — and the proposer is the
    *  control plane's stamp (`class:<cls>` for a machine). A proposal at a target
    *  already standing is not written again, and never demotes a member. */
-  themePropose({ theme = null, target = null, note = null, proposer = null, viewer = null } = {}) {
+  themePropose({ theme = null, target = null, note = null, proposer = null, viewer = null, administer = null } = {}) {
     const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
     const who = typeof proposer === "string" ? proposer.trim() : "";
     /* DEC-49 REGION is-theme-propose */
@@ -20400,30 +20417,32 @@ export class Store extends DurableObject {
         T.theme_id, tgt.target, tgt.kind, tgt.bundleId, who, at, tgt.note);
     const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
                           T.theme_id, tgt.target);
-    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row), already: !!before, evidence: false,
+    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row, administer), already: !!before, evidence: false,
              says: row.state === "member"
-               ? `${tgt.target} is already a member of this theme, placed by ${row.placed_by}; the proposal `
+               ? `${tgt.target} is already a member of this theme, placed by ${this.#themeName(row.placed_by, administer)}; the proposal `
                  + `changed nothing`
                : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch — not `
                  + `membership — until a member checks it against the test and places it` };
   }
 
-  /** One placement as every reading shows it. `membership` is the only field a
-   *  reader should ask whether it counts, and it is true for `member` alone. */
-  #placementView(r) {
+  /** One placement as this reader is shown it. `membership` is the only field a
+   *  reader should ask whether it counts, and it is true for `member` alone. The
+   *  placer and the proposer go through `#themePerson`'s projection. */
+  #placementView(r, administer) {
     return { target: r.target, target_kind: r.target_kind, document: r.bundle_id,
              state: r.state, membership: r.state === "member", hunch: r.state === "hunch", grade: r.grade,
-             placed_by: r.placed_by, placed_at: r.placed_at, note: r.placement_note,
-             proposed_by: r.proposed_by, proposed_at: r.proposed_at, proposal_note: r.proposal_note };
+             ...this.#themePerson("placed_by", r.placed_by, administer), placed_at: r.placed_at, note: r.placement_note,
+             ...this.#themePerson("proposed_by", r.proposed_by, administer), proposed_at: r.proposed_at,
+             proposal_note: r.proposal_note };
   }
 
   /** op=themeread — ONE THEME (`id`), with its members and its hunches APART, or
    *  THE THEMES (`q` narrows by a phrase in the name or the test). Bounded, and
    *  the cut is published. */
-  themeRead({ id = null, q = null, limit = null, viewer = null } = {}) {
+  themeRead({ id = null, q = null, limit = null, viewer = null, administer = null } = {}) {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.THEME_READ_LIMIT_DEFAULT),
                                      Store.THEME_READ_LIMIT_MAX));
-    const person = (m) => { const p = this.#themePerson(m); return { declared_by: p.id, declared_by_handle: p.handle }; };
+    const person = (m) => this.#themePerson("declared_by", m, administer);
     if (id == null || String(id).trim() === "") {
       const g = viewerPredicate(viewer);
       const phrase = typeof q === "string" ? q.trim() : "";
@@ -20456,9 +20475,9 @@ export class Store extends DurableObject {
     return {
       ok: true, theme_id: T.theme_id, name: T.name, test: T.test, at: T.at, ...person(T.declared_by),
       evidence: false, limit: cap,
-      members: members.slice(0, cap).map((r) => this.#placementView(r)),
+      members: members.slice(0, cap).map((r) => this.#placementView(r, administer)),
       members_truncated: members.length > cap,
-      hunches: hunches.slice(0, cap).map((r) => this.#placementView(r)),
+      hunches: hunches.slice(0, cap).map((r) => this.#placementView(r, administer)),
       hunches_truncated: hunches.length > cap,
       says: `a member's declared lens, and never the basis of a claim. `
           + `${n(members)} member(s) you can see, placed by a member against the test; `
@@ -47442,6 +47461,7 @@ export class Store extends DurableObject {
           name: body ? body.name : null,
           test: body ? body.test : null,
           declarer: url.searchParams.get("declarer"),
+          administer: url.searchParams.get("administer"),
         }),
         themeplace: () => this.themePlace({
           theme: (body && body.theme) || url.searchParams.get("theme"),
@@ -47449,6 +47469,7 @@ export class Store extends DurableObject {
           note: body ? body.note : null,
           placer: url.searchParams.get("placer"),
           viewer: url.searchParams.get("viewer"),
+          administer: url.searchParams.get("administer"),
         }),
         themepropose: () => this.themePropose({
           theme: (body && body.theme) || url.searchParams.get("theme"),
@@ -47456,11 +47477,13 @@ export class Store extends DurableObject {
           note: body ? body.note : null,
           proposer: url.searchParams.get("proposer"),
           viewer: url.searchParams.get("viewer"),
+          administer: url.searchParams.get("administer"),
         }),
         themeread: () => this.themeRead({ id: url.searchParams.get("id"),
                                           q: url.searchParams.get("q"),
                                           limit: url.searchParams.get("limit"),
-                                          viewer: url.searchParams.get("viewer") }),
+                                          viewer: url.searchParams.get("viewer"),
+                                          administer: url.searchParams.get("administer") }),
         leadread: () => this.leadRead({ id: url.searchParams.get("id"),
                                         limit: url.searchParams.get("limit"),
                                         viewer: url.searchParams.get("viewer"),
