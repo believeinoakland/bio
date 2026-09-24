@@ -74,6 +74,8 @@
  *       MUST NOT, and did not: the mid-run fetch still MOVES the ref (the arm is armed), the same reader unpinned
  *       still reads the moved state (the identity costs something), a PLANTED override is still kept, and a checkout
  *       with no `origin/coord` still says NOT PINNED.
+ *       RE-RUN 2026-09-24 after the fixture was SEALED from the outer run's own pin (see the section): the same
+ *       four, baseline and closing 110 / 0, driver exit 0.
  * NEGATIVE CONTROL: RAN 2026-09-24 by the M0-143 worker, same driver, arms G17-G19 each ALONE, baseline and closing
  * 96 pass / 0 fail, driver 30 pass / 0 fail, both subjects restored sha256- and cmp-identical at 86,802 and 94,212
  * bytes after every arm:
@@ -806,12 +808,17 @@ section("M0-173 · THE COORD SNAPSHOT — ONE commit for the whole run, whatever
     .filter((l) => tag === null || l.includes(` ${tag} `));
   const stateOf = (l) => l.split(" ").slice(3).join(" ");
   const shaOf = (l) => l.split(" ")[2];
-  const env = { GATES_FIXTURE_COORDMOD: MOD, GATES_FIXTURE_COORDREAD: STATE };
+  /* SEALED FROM THE OUTER RUN. This suite runs UNDER a gate, which pins `BIO_COORD_REF` for its whole run (§0b) — and
+     that pin names a commit of the REAL repository, which this fixture does not hold. MEASURED 2026-09-24: with the
+     variable inherited, five of this section's assertions fail and the state reads ABSENT, so the suite would have
+     turned the gate red on its own fix. Every fixture gate below is therefore run with the variable CLEARED (empty is
+     unset to both readers), except the arm that plants one deliberately. */
+  const env = { GATES_FIXTURE_COORDMOD: MOD, GATES_FIXTURE_COORDREAD: STATE, BIO_COORD_REF: "" };
 
   /* (1) BEFORE there is a `coord` at all: a clone that never fetched it is told so, and nothing is pinned. (No coord
      environment here: the fixture does not carry the reading layer yet, and a stub told to import a module that is not
      there would fail the step — measured on this arm's first run.) */
-  const none = gates(CX.root, ["--full"]);
+  const none = gates(CX.root, ["--full"], { BIO_COORD_REF: "" });
   t("a checkout where origin/coord does not resolve says NOT PINNED and names the fetch",
     [/^gates: coord NOT PINNED — origin\/coord does not resolve in this checkout/m.test(none.out), none.status], [true, 0]);
 
