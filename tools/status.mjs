@@ -73,6 +73,15 @@
  * `count`. The counting is over the SAME blanked text every other probe reads, so a second match
  * that lives only in a comment does not make a probe ambiguous.
  *
+ * AND A `table` PINS EXACTLY ONE DECLARATION, FOR THE SAME REASON (M0-181, 2026-09-24). The `hit` rule
+ * above was closed one probe kind short: a `table` answered from its FIRST match and searched anywhere
+ * in the line, so `content` was satisfied by a STRING ARGUMENT in store.mjs as well as by its
+ * declaration in schema.mjs — delete the declaration and the claim would have read BUILT off a string
+ * saying its name. Closed in the shape rather than by a list of spellings: a declaration begins a line
+ * or follows a template backtick (see DECL_ANCHOR for the measurement, and for the bare `^` that was
+ * rejected for losing nine real ones), and a `table` matching more than once is AMBIGUOUS exactly as a
+ * `hit` is. Measured the day it landed: 116 declarations over 116 distinct names, one apiece.
+ *
  * NEGATIVE CONTROL: `node bio-plane/test/status.control.mjs` from the repo root.
  */
 
@@ -139,8 +148,39 @@ export const CODE_EXT = new Set([".mjs", ".js", ".cjs", ".html", ".jsonc"]);
    blanking alone could not have caught this one, and the shape had to close it). Tightened: 115 names
    -> 114, `would` the only one dropped and nothing added. What it still cannot see is stated: a
    declaration written with a comment between the name and its `(`. */
+/* AND WHERE A DECLARATION MAY BEGIN (M0-181, 2026-09-24) — M0-160's ambiguity hole, still open in this
+   shape and LIVE on this tree: `content` matched TWICE, once at its declaration (schema.mjs:3273) and
+   once inside a STRING ARGUMENT in store.mjs:1254, `.find((x) => x.startsWith("CREATE TABLE IF NOT
+   EXISTS content ("))`, and the probe answered from whichever came first. Delete the declaration and
+   the probe would still have read BUILT off the string — a false green in the record of what is built,
+   which is the defect this whole file exists to refuse. A declaration BEGINS A LINE, or follows a
+   template backtick immediately; a mention inside a string does neither. Measured on this tree the day
+   it landed: 117 matches over 116 names before, 116 over 116 after — one match per name, nothing
+   dropped and nothing added, and the census unmoved at 116. A BARE `^` WAS MEASURED AND REJECTED: it
+   loses the NINE declarations store.mjs writes as a backtick opening an indented template (bundles_fts,
+   capture_text_fts, project_participants, member_expertise, export_log, project_owner_votes,
+   admin_votes, selections, selection_items). What this still cannot see, stated rather than discovered
+   later: a real declaration written mid-line after anything but a backtick. */
+const DECL_ANCHOR = "(?:^|`)[ \\t]*";
 const DECL = "CREATE\\s+(?:VIRTUAL\\s+)?TABLE\\s+IF\\s+NOT\\s+EXISTS\\s+";
 const DECL_TAIL = "\\s*(?:\\(|USING\\s)";
+/* BUILT THROUGH ONE HELPER, so the `table` probe and the census cannot disagree about the shape AND
+   cannot disagree about its flags: `m` is what the anchor's `^` means, and `g` is what counting needs.
+   A call site that spelled the parts itself and forgot `m` would match at most once per FILE. */
+const declRe = (name) => new RegExp(`${DECL_ANCHOR}${DECL}${name}${DECL_TAIL}`, "gm");
+/* EVERY DECLARATION AS A SITE, one entry per site and not per name, so the census's DISTINCT-name
+   count and the `table` probe's ONE-SITE-PER-NAME rule are two readings of a single walk. The suite
+   asserts the two figures are equal on the real tree (116 = 116, M0-181): a name declared twice would
+   part them, and that is the shape a `table` probe cannot pin. */
+export function tableSites({ repo = ROOT } = {}) {
+  const sites = [], unreadable = [];
+  for (const f of ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]) {
+    const t = readCode(repo, f);
+    if (t === null) { unreadable.push(f); continue; }
+    for (const m of t.matchAll(declRe("([a-z_0-9]+)"))) sites.push({ name: m[1], file: f, line: lineOf(t, m.index) });
+  }
+  return { sites, unreadable };
+}
 const codeCache = new Map();
 /* WHAT EVERY PROBE READS. `stripComments` is length- and newline-preserving, so `lineOf` over this
    still names the line in the real file — a probe's evidence keeps pointing at the source. */
@@ -172,13 +212,22 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
              : { ok: false, evidence: `op=${p.op} is NOT in index.mjs's OPS table` };
   }
   if (p.table) {
-    const re = new RegExp(`${DECL}${p.table}${DECL_TAIL}`);
+    /* EVERY declaration over BOTH files, not the first in the first file — M0-160's rule arriving at
+       the probe that still had the hole open. Two declarations of one name pin neither site: delete
+       the one the claim is about and the probe stays green on the other. The count is the verdict. */
+    const sites = [];
     for (const f of ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]) {
       const t = readCode(repo, f); if (t === null) continue;
-      const m = re.exec(t);
-      if (m) return { ok: true, evidence: `table ${p.table} (${f.split("/").pop()}:${lineOf(t, m.index)})` };
+      for (const m of t.matchAll(declRe(p.table))) sites.push(`${f.split("/").pop()}:${lineOf(t, m.index)}`);
     }
-    return { ok: false, evidence: `table ${p.table} is declared in neither schema.mjs nor store.mjs` };
+    if (sites.length === 1) return { ok: true, evidence: `table ${p.table} (${sites[0]})` };
+    if (sites.length === 0) return { ok: false, evidence: `table ${p.table} is declared in neither schema.mjs nor store.mjs` };
+    const shown = sites.slice(0, AMBIGUOUS_SITES_SHOWN);
+    return { ok: false, ambiguous: true,
+      evidence: `table ${p.table} is AMBIGUOUS — ${sites.length} declarations (${shown.join(", ")}`
+        + `${sites.length > shown.length ? `, +${sites.length - shown.length} more` : ""}), so it pins no site: `
+        + "delete the one this claim is about and the probe stays green. Declare the table ONCE, or aim the claim "
+        + "at the table it is really about — never widen the claim to fit the probe" };
   }
   if (p.file) {
     return existsSync(join(repo, p.file)) ? { ok: true, evidence: `${p.file} exists` }
@@ -240,12 +289,9 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
       if (!b) return { ok: false, evidence: "UNREADABLE: no OPS table" };
       n = [...b.text.slice(b.start).matchAll(/^\s{2}[a-z][a-z0-9]*:\s*\{\s*classes/gm)].length;
     } else if (p.count === "tables") {
-      const set = new Set();
-      for (const f of ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]) {
-        const t = readCode(repo, f); if (t === null) return { ok: false, evidence: `UNREADABLE: ${f}` };
-        for (const m of t.matchAll(new RegExp(`${DECL}([a-z_0-9]+)${DECL_TAIL}`, "g"))) set.add(m[1]);
-      }
-      n = set.size;
+      const { sites, unreadable } = tableSites({ repo });
+      if (unreadable.length) return { ok: false, evidence: `UNREADABLE: ${unreadable[0]}` };
+      n = new Set(sites.map((x) => x.name)).size;
     } else return { ok: false, evidence: `unknown census: ${p.count}` };
     return n === p.equals ? { ok: true, evidence: `census: ${n} ${p.count}` }
       : { ok: false, evidence: `census: ${n} ${p.count}, the claim says ${p.equals} — something was added or removed; review the ABSENT claims it could express, then update the count` };
