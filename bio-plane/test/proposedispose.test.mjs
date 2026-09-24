@@ -26,7 +26,11 @@
    (3) THE REVERT — the envelope publishes the block under a name nothing reads, so `q.disposed` is `undefined`, which is exactly this op's shape yesterday -> **21/6**, current 62/0, and THE BEFORE ARM FALLS TOO. Arm (1) and arm (3) together are the measurement that an ABSENT block and an EMPTY one are different facts to this suite, which is the sparse obligation this item is an instance of.
    (4) THROW AWAY THE UNATTRIBUTABLE COUNT at the producer's return -> this suite **27/0** (untouched), current **61/1**. The two halves of D-266 are independent and the arm proves it.
    (5) COUNT ONE BRANCH OF THE SILENCE AND NOT THE OTHER — the `!from` increment removed, so the answer is 1 where the truth is 2 -> this suite 27/0, current **61/1**. This is what makes the EXACT figure in that suite worth writing: 'at least one' would have passed.
-   (6) OVER-STRICTNESS — `#findingsStanceDiverged` re-wired through a LOCAL instead of spread directly into `items`, correct code in a form the producer does not use -> **BOTH SUITES GREEN**, which is the receipt that the producer-wiring pin corrected by this item asks its property rather than trading one spelling for two. */
+   (6) OVER-STRICTNESS — `#findingsStanceDiverged` re-wired through a LOCAL instead of spread directly into `items`, correct code in a form the producer does not use -> **BOTH SUITES GREEN**, which is the receipt that the producer-wiring pin corrected by this item asks its property rather than trading one spelling for two.
+   REC-184's THREE ARMS, RUN 2026-09-24 (WORKER REC-184), each armed ALONE by one exact-match patch of store.mjs (the anchor matched once), restored by cp from a pristine copy and verified by sha256 (fc9e2159…) AND cmp after every arm. BASELINE 44/0. ALL THREE AS DECLARED.
+   (A) STOP WRITING THE VERSION — op=proposedispose binds NULL where it bound `definitionVersion` in the INSERT (the act's RETURN still names the version, so only the ROW moves) -> **38/6**: "under version 1 the decision GOVERNS … READS BACK", "THE ARM: A DISPOSITION UNDER VERSION 1 DOES NOT APPLY UNDER VERSION 2", "it is STATED", "the member's own feed agrees", the procurement/grant OVER-STRICTNESS arm and "RE-TRIAGE … re-stamps the version" fail by name; "THE COLUMN IS WRITTEN" stays GREEN because it reads the act's return, which the arm did not touch — the read-back arm is the one that sees the row. Worth recording: under this arm the permit proposal DOES reopen (the not-recorded ORDER rule catches it), and THE ARM fails on `applies_because` naming the wrong cause, which is why the arm asserts the cause and not only the reopening.
+   (B) THE READ IGNORES THE VERSION — proposalsFeed ages on every recorded disposition (`disposed` unfiltered) -> **41/3**: THE ARM, the member's own feed and L4 fail; the read-back and "it is STATED" stay green, because the version VIEW is still computed and published — the arm breaks what the view governs, not the view.
+   (C) OVER-STRICTNESS — the version written by a SEPARATE `UPDATE` after an INSERT that binds NULL, correct in a spelling the act does not use -> **44/0**. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -307,17 +311,202 @@ t("D-266 — a RE-DECIDED finding keeps ONE published decision, moved, never a s
    queueIds(qd2).filter((i) => i.startsWith("FINDING::"))],
   [2, [["grant::application", "dismissed"], ["procurement::solicitation", "dismissed"]].sort(), []]);
 
+/* ================================================================= REC-184
+   A DECISION IS A JUDGMENT OF THE DEFINITION IT WAS TAKEN AGAINST (framework §8.2, "The declared
+   flow, and its revisions"; D-128's follow-on). D-128 made a progression definition append-only and
+   named the version on every finding; the disposition still carried no version, so a member's
+   dismissal under version 1 went on ageing the proposal version 2 produces — the record applying a
+   decision to a definition nobody judged. The arm: dismiss under version 1, revise to version 2,
+   and the proposal is OPEN again with the earlier decision beside it; the column reads back.
+   Through the op, as every other arm here. ================================================== */
+console.log("\n--- REC-184: a disposition under version 1 does not apply under version 2 ---");
+const PERMIT_V1 = [{ key: "application", label: "permit application", cardinality: "1", required: "usually" },
+                   { key: "issuance", label: "permit issued", after: "application", cardinality: "1", required: "always" }];
+const PERMIT_V2 = [{ key: "application", label: "permit application (filed with the planning desk)", cardinality: "1", required: "usually" },
+                   { key: "issuance", label: "permit issued", after: "application", cardinality: "1", required: "always" }];
+const pv1 = await post("progressiondefine", { progressionKey: "permit", label: "Permit", stages: PERMIT_V1 });
+/* a permit is threaded by its PARCEL (ENTITY_KINDS has no `permit`); the fixture is asserted to have
+   been built, so an arm below cannot pass or fail over an entity that never existed. */
+const eP = await post("entitycreate", { kind: "parcel", label: "Parcel P", aliases: ["parcel:P-1"] });
+t("REC-184 — fixture: the threading parcel exists", [eP.ok !== false, typeof eP.entity_id], [true, "string"]);
+const pIss = sha("rec184-P-issuance");
+await promoteReading(pIss, [{ ref: "parcel:P-1", kind: "parcel", key: "P-1", label: "Parcel P" }]);
+await post("resolve", { captureSha: pIss });
+await post("thread", { progressionKey: "permit", entityId: eP.entity_id, placements: [{ stage: "issuance", captureSha: pIss }] });
+const fp0 = await getProposals();
+const pOpen0 = fp0.proposals.find((p) => p.key === "permit::application");
+t("REC-184 — the permit definition is version 1 and its gap is an OPEN proposal read against version 1",
+  [pv1.ok, pv1.version, !!pOpen0, pOpen0 && pOpen0.definition_version, pOpen0 && pOpen0.prior_disposition],
+  [true, 1, true, 1, null]);
+const pd1 = await proposeDispose({ key: "permit::application", to: "dismissed",
+  reason: "this permit class is issued over the counter with no written application" });
+t("REC-184 — THE COLUMN IS WRITTEN: the act answers the version it was decided against, stamped by the store",
+  [pd1.ok, pd1.definition_version], [true, 1]);
+const fp1 = await getProposals();
+const dp1 = fp1.dispositions.find((d) => d.key === "permit::application");
+t("REC-184 — under version 1 the decision GOVERNS: the proposal is aged out of open, and the column "
++ "READS BACK as version 1, recorded, applying to the version in force",
+  [fp1.proposals.some((p) => p.key === "permit::application"),
+   dp1 && [dp1.definition_version, dp1.definition_version_state, dp1.current_definition_version, dp1.applies, dp1.applies_because]],
+  [false, [1, "recorded", 1, true, "decided_against_current_version"]]);
+await new Promise((r) => setTimeout(r, 5));   /* the revision's instant is strictly after the decision's */
+const pv2 = await post("progressiondefine", { progressionKey: "permit", label: "Permit", stages: PERMIT_V2,
+  basis: "The planning desk now requires a written application for every permit of this class.",
+  citation: "Planning Department bulletin 2026-14" });
+t("REC-184 — the definition is REVISED to version 2, version 1 standing as its prior",
+  [pv2.ok, pv2.version, pv2.prior_version], [true, 2, 1]);
+const fp2 = await getProposals();
+const pOpen2 = fp2.proposals.find((p) => p.key === "permit::application");
+const dp2 = fp2.dispositions.find((d) => d.key === "permit::application");
+t("REC-184 — THE ARM: A DISPOSITION UNDER VERSION 1 DOES NOT APPLY UNDER VERSION 2. The proposal is "
++ "OPEN again, read against version 2, and carries the version-1 decision beside it as its prior",
+  [!!pOpen2, pOpen2 && pOpen2.definition_version,
+   pOpen2 && pOpen2.prior_disposition && [pOpen2.prior_disposition.state, pOpen2.prior_disposition.definition_version,
+                                           pOpen2.prior_disposition.applies, pOpen2.prior_disposition.applies_because]],
+  [true, 2, ["dismissed", 1, false, "decided_against_earlier_version"]]);
+t("REC-184 — and it is STATED, not vanished (D-79): the decision stays in dispositions[] with its "
++ "reason, naming version 1 against a current version 2, applies:false",
+  dp2 && [dp2.state, dp2.reason, dp2.definition_version, dp2.definition_version_state,
+          dp2.current_definition_version, dp2.applies, dp2.applies_because],
+  ["dismissed", "this permit class is issued over the counter with no written application",
+   1, "recorded", 2, false, "decided_against_earlier_version"]);
+const qp2 = await getQueue();
+const qdp2 = (qp2.disposed?.findings || []).find((d) => d.key === "permit::application");
+t("REC-184 — the member's own feed agrees: FINDING::permit::application is an OPEN item again, and the "
++ "published decision says it judged version 1 and no longer applies",
+  [queueIds(qp2).includes("FINDING::permit::application"),
+   qdp2 && [qdp2.definition_version, qdp2.definition_version_state, qdp2.applies]],
+  [true, [1, "recorded", false]]);
+t("REC-184 — OVER-STRICTNESS: the revision of `permit` reopened NOTHING ELSE — procurement's and "
++ "grant's decisions, taken against their own unrevised version 1, still govern",
+  fp2.dispositions.filter((d) => d.key !== "permit::application").map((d) => [d.key, d.definition_version, d.applies]).sort(),
+  [["grant::application", 1, true], ["procurement::solicitation", 1, true]]);
+const pd3 = await proposeDispose({ key: "permit::application", to: "deferred",
+  reason: "wait for the planning desk to publish the application form" });
+const fp3 = await getProposals();
+const dp3 = fp3.dispositions.find((d) => d.key === "permit::application");
+t("REC-184 — RE-TRIAGE under version 2 re-stamps the version: one row, version 2, governing again",
+  [pd3.definition_version, fp3.proposals.some((p) => p.key === "permit::application"),
+   fp3.disposition_count, dp3 && [dp3.state, dp3.definition_version, dp3.applies]],
+  [2, false, 3, ["deferred", 2, true]]);
+const stP = rP(await (await mf.dispatchFetch(`http://x/api/?op=stats&token=adm-rec7`)).json());
+t("REC-184 — THE STATS COUNTERS COUNT THE VERSION TABLES: four definition versions (procurement 1, "
++ "grant 1, permit 1 and 2) over three current definitions, and 4 + 2 + 2 + 2 stage versions",
+  [stP.progressionDefs, stP.progressionDefVersions, stP.progressionStages, stP.progressionStageVersions],
+  [3, 4, 8, 10]);
+
 /* ---- op=purge clears the disposition store (D-113): a whole-store purge that reported ALL while
    leaving dispositions is the silent-leftover D-113 exists to prevent. ---- */
 console.log("\n--- op=purge takes the disposition store (D-113) ---");
 const purged = rP(await (await mf.dispatchFetch(
   `http://x/api/?op=purge&token=adm-rec7&confirm=bio`, { method: "POST", body: "{}" })).json());
+/* CORRECTED 2026-09-24 (REC-184): 2 -> 3. The REC-184 arm above records a third disposition
+   (permit::application) before the purge; the assertion's subject — the purge takes EVERY
+   disposition and says how many — is unchanged. */
 t("a whole-store purge REPORTS how many dispositions it cleared, and takes them",
-  [purged.ok, purged.scope, purged.removed.proposalDispositions], [true, "ALL", 2]);
+  [purged.ok, purged.scope, purged.removed.proposalDispositions], [true, "ALL", 3]);
+t("REC-184 — and it PROVES it took D-128's version history (D-113), both tables to zero",
+  [purged.removed.progressionDefVersions, purged.removed.progressionStageVersions,
+   purged.after.progressionDefVersions, purged.after.progressionStageVersions], [4, 10, 0, 0]);
 const feed4 = await getProposals();
 t("after the purge the feed carries no dispositions (and no proposals — the corpus is gone)",
   [feed4.disposition_count, feed4.proposal_count], [0, 0]);
 
 await mf.dispose();
+
+/* ================================================================= REC-184 · THE ROWS WRITTEN BEFORE
+   A store whose `proposal_dispositions` predates the column is made by DROPPING it from a live store
+   (the row keeps everything else, exactly as an old row did) and re-booting on the same storage, the
+   cap14-reused-from.test.mjs precedent: #migrate's additive pass must put the column back NULL, never
+   back-filled, and the row must read `not recorded`. Such a row cannot say which version it judged;
+   what the record DOES hold is the ORDER — the definition's own declaration instant against the
+   decision's — so it governs while nothing has been declared since, and stops the moment something is.
+   The probe subclass adds one raw-SQL route; every act and read goes through the control plane. */
+console.log("\n--- REC-184: a disposition written before the column reads NOT RECORDED, never back-filled ---");
+{
+  const PROBE = `
+import worker from "./index.mjs";
+import { Store } from "./store.mjs";
+export class ProbeStore extends Store {
+  async fetch(req) {
+    const url = new URL(req.url);
+    if (url.pathname === "/rawsql") {
+      const { sql, args = [] } = await req.json();
+      try { return Response.json({ ok: true, rows: [...this.sql.exec(sql, ...args)] }); }
+      catch (e) { return Response.json({ ok: false, error: String(e && e.message || e) }); }
+    }
+    return super.fetch(req);
+  }
+}
+export default worker;
+`;
+  const opts = (version) => ({
+    modules: true, script: PROBE, modulesRoot: "/",
+    scriptPath: fileURLToPath(new URL("../src/rec184-migrate-probe.mjs", import.meta.url)),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "ProbeStore", useSQLite: true } },
+    r2Buckets: ["CAPTURES", "PUBLISHED"],
+    bindings: { ADMIN_TOKEN: "adm-rec7", MEMBER_TOKEN: "mem-rec7", PROBE_TOKEN: "prb-rec7", VERSION: version },
+  });
+  const mf2 = new Miniflare(opts("test"));
+  const call = async (op, body) => rP(await (await mf2.dispatchFetch(`http://x/api/?op=${op}&token=mem-rec7`,
+    body ? { method: "POST", body: JSON.stringify(body) } : {})).json());
+  const raw = async (sql) => {
+    const ns2 = await mf2.getDurableObjectNamespace("STORE");
+    return (await ns2.get(ns2.idFromName("bio")).fetch("http://x/rawsql",
+      { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sql }) })).json();
+  };
+  const cols = async () => ((await raw("PRAGMA table_info(proposal_dispositions)")).rows || []).map((r) => r.name);
+  await call("progressiondefine", { progressionKey: "grant", label: "Grant",
+    stages: [{ key: "application", label: "application", cardinality: "1", required: "usually" },
+             { key: "award", label: "award", after: "application", cardinality: "1", required: "always" }] });
+  const e = await call("entitycreate", { kind: "fund", label: "Grant L", aliases: ["fund:L"] });
+  const lAward = sha("rec184-L-award");
+  const lDoc = { capture: { sha256: lAward, encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
+               entities: [{ ref: "fund:L", kind: "fund", key: "L", label: "Grant L" }] } };
+  const lMd = bundleMd("INFO-2026-0901-rec184"), lProv = JSON.stringify({ documents: [lDoc] });
+  await call("promote", { bundleId: "INFO-2026-0901-rec184", base: null, snapKey: "20260924T010000Z_bbbb2222", author: "rec184",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Doc L", current_state: "collected",
+            created: NOW, last_updated: NOW },
+    files: [{ path: "bundle.md", text: lMd, bytes: lMd.length, sha256: sha(lMd) },
+            { path: "data/provenance.json", text: lProv, bytes: lProv.length, sha256: sha(lProv) }], register: [] });
+  await call("resolve", { captureSha: lAward });
+  await call("thread", { progressionKey: "grant", entityId: e.entity_id, placements: [{ stage: "award", captureSha: lAward }] });
+  await new Promise((r) => setTimeout(r, 5));   /* the decision's instant is strictly after the declaration's */
+  const ld = await call("proposedispose", { key: "grant::application", to: "dismissed", reason: "a legacy decision" });
+  t("REC-184 L0 — fixture: the legacy store's gap is dismissed on the current shape, stamped version 1",
+    [ld.ok, ld.definition_version], [true, 1]);
+  const drop = await raw("ALTER TABLE proposal_dispositions DROP COLUMN definition_version");
+  t("REC-184 L1 ARMED — the pre-build shape is made: the column is dropped, the row kept",
+    [drop.ok, (await cols()).includes("definition_version"),
+     ((await raw("SELECT count(*) AS c FROM proposal_dispositions")).rows || [])[0]?.c], [true, false, 1]);
+  await mf2.setOptions(opts("test-reboot"));   /* same storage, a fresh boot through #migrate */
+  t("REC-184 L2 — after the boot the column exists again and the old row holds NULL: never back-filled",
+    [(await cols()).includes("definition_version"),
+     ((await raw("SELECT definition_version AS v FROM proposal_dispositions")).rows || [])[0]?.v], [true, null]);
+  const lf1 = await call("proposals");
+  const l1 = (lf1.dispositions || []).find((d) => d.key === "grant::application");
+  t("REC-184 L3 — the pre-build decision reads `not recorded`, its version null, and still GOVERNS because "
+  + "the definition has not been declared since it was taken: the proposal stays aged",
+    [l1 && [l1.definition_version, l1.definition_version_state, l1.current_definition_version, l1.applies, l1.applies_because],
+     (lf1.proposals || []).some((p) => p.key === "grant::application")],
+    [[null, "not recorded", 1, true, "version_not_recorded_definition_not_declared_since"], false]);
+  await new Promise((r) => setTimeout(r, 5));
+  const lv2 = await call("progressiondefine", { progressionKey: "grant", label: "Grant",
+    stages: [{ key: "application", label: "written application", cardinality: "1", required: "usually" },
+             { key: "award", label: "award", after: "application", cardinality: "1", required: "always" }],
+    basis: "The fund now takes written applications only.", citation: "Fund guidelines 2026" });
+  const lf2 = await call("proposals");
+  const l2 = (lf2.dispositions || []).find((d) => d.key === "grant::application");
+  const lp2 = (lf2.proposals || []).find((p) => p.key === "grant::application");
+  t("REC-184 L4 — once the definition is declared AFTER the unrecorded decision, the decision stops "
+  + "governing: the proposal is OPEN at version 2 with the decision beside it, and the version stays "
+  + "`not recorded` rather than being guessed as 1",
+    [lv2.version, l2 && [l2.definition_version, l2.definition_version_state, l2.applies, l2.applies_because],
+     lp2 && lp2.definition_version, lp2 && lp2.prior_disposition && lp2.prior_disposition.definition_version_state],
+    [2, [null, "not recorded", false, "version_not_recorded_definition_declared_since"], 2, "not recorded"]);
+  await mf2.dispose();
+}
 console.log(`\nproposedispose: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
