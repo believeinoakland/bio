@@ -8,7 +8,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, cpSync, readdirSync } from "node:fs";
+import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, cpSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -305,7 +305,9 @@ console.log("\n--- an interrupted migration resumes from where it stopped ---");
   const dirA = bundles.find((b) => b.bundleId === A).dir;
   const dirP = join(ROOT, "partial", P);
   cpSync(dirA, dirP, { recursive: true });
-  for (const f of readdirSync(join(dirP, "_history")).filter((n) => /^promotion_.*\.json$/.test(n))) {
+  /* The three Drive records bundle A's fixture wrote, NAMED rather than found by walking the directory: a directory walk
+     in a suite is a decision `hygiene.test.mjs` requires be guarded or named, and this one needs none. */
+  for (const f of ["promotion_20260701T010000Z_aaaa0000.json", `promotion_${K1}.json`, `promotion_${K2}.json`]) {
     const rec = JSON.parse(readFileSync(join(dirP, "_history", f), "utf8"));
     writeFileSync(join(dirP, "_history", f), JSON.stringify({ ...rec, target: P }));
   }
