@@ -89,8 +89,8 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - 03:43Z flipped INTEGRATED (BOB's rule tonight: flip at the integration merge): REC-192 REC-190 UI-85 UI-83 D-64 REC-184 M0-141.
   D-481 spawned session_01DT8JTdkweNJ78Y3EQxY1qr. QUEUED next: D-484, M0-143, D-493 (branch from land/worker/D-166 @ 05ec142e),
   M0-144. M0-142 waits for batch11fix on main.
-- D-453 (Oakland identifier-space measurement) RUNNING beside the eight: session_017L57JtEbWmyk63Ep8SRZoj (fresh, network FULL), branch
-  land/worker/D-453, push by 05:45Z. D-166 (Tier 1 probe re-point) RUNNING beside the eight: session_01YVmxTyjL1kajX9Yam7MQgM (fresh), land/worker/D-166.
+- D-453 DONE: land/worker/D-453 @ 5f4a5914 (M-132; base 548eb2c5; report went to BOB) — next small train. D-495 spawned 05:08Z into its slot.
+  D-486 watermark RULED by BOB 05:05Z: stays viewer-independent; the precision race is the defect (SCHEDULER rows it). D-166 (Tier 1 probe re-point) RUNNING beside the eight: session_01YVmxTyjL1kajX9Yam7MQgM (fresh), land/worker/D-166.
   Live at 03:12Z = 10/10 (the cap). D-479 spawned 03:35Z into D-482's slot; cache EMPTY of queued rows at 03:35Z (asked SCHEDULER to refill) (D-481, D-484 at the backlog head).
 - To archive after integ1 lands: WORKER D-64 session_011NsrFb1XMsrK73ukion49o, WORKER REC-184 session_0168F3n5XEbnzSJutjKHxZ2t,
   c18-batch7fix session_01Pho5eXgBrQK8TjhnKHW6fa; after batch11 trains: its 4 row workers + batch10/batch11 sessions.
