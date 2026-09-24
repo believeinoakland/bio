@@ -285,6 +285,11 @@ const CATALOG_CENSUS = {
      number, MINOR (two arrivals, no departures), and its count and digest are THIS SUITE'S OWN PRINT on the merged
      tree. REC-211's branch row is DROPPED (its comment kept as history). */
   "1.25.0": { count: 457, digest: "b333cf2716ad870d295d9373e081076a15e1a7543e1beda28ab312fad77ca3c5" },
+  /* 1.26.0 (REC-205, 2026-09-24, branch land/worker/REC-205): ONE arrival, C-33.44 CLASS_NOT_DISPOSED in
+     ACT_SHAPE_CHECKS, and no departure — MINOR. The code was given a canned translation AT THE MINT rather
+     than added bare to the 293 untranslated ones, which is why `check-refusal-codes`' `untranslated` floor
+     did not move for this landing. Count and digest are THIS SUITE'S OWN PRINT on the item's tree. */
+  "1.26.0": { count: 458, digest: "a9c5dbdead1c4d1f6a1ea61931949dedbb4f1ff89d8a20daf20f363205cae0d2" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -382,8 +387,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.24.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.25.0)", "1.25.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.26.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.26.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

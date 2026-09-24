@@ -105,7 +105,12 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
-export const CATALOG_VERSION = "1.25.0";
+/* 1.26.0 (REC-205, 2026-09-24, branch land/worker/REC-205): C-33.44 CLASS_NOT_DISPOSED joins
+   ACT_SHAPE_CHECKS — op=proposedispose refuses a CONDITION or an OBLIGATION by its CLASS, naming the act
+   that does reach it, where it used to answer NO_SUCH_PROGRESSION. One arrival, no departure, nothing
+   moved: MINOR on this constant's own rule (Publication §3 rule 17). 457 + 1 = 458, count and digest
+   re-read from the d470 suite's own print on this tree. */
+export const CATALOG_VERSION = "1.26.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
