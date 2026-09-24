@@ -317,6 +317,49 @@ class. The three
 bundle-level tallies count no lead row either, so the two still answer one question to one audience,
 and REC-110's ruling stands unreopened.
 
+**NARROWED BY ONE ROW CLASS — BOB #32, 2026-09-24 02:30Z; BUILT by D-486 (IC-258, MEASUREMENTS M-131). THE RULING
+ABOVE IS NOT REOPENED AND THIS PARAGRAPH IS WHY THAT IS A DISTINCTION AND NOT A DODGE.** Bob ruled the question
+D-464 routed rather than decided: *a hidden project's run output is the PROJECT'S THINKING until something outside
+uses it; the bytes stay shared, only the run's ATTRIBUTION is withheld.* So every tally here — and `op=stats`'
+`observationsNonLead` and `aiRunLog` with them, **in the same landing** — now drops a row whose `authority_kind` is
+`run` and whose run's context is a project the caller cannot see. One predicate, compiled once (`Store#hiddenSets`)
+and taken by all five readers.
+
+- **Premise (1) is KEPT TRUE rather than broken, and that is the whole reason the five moved together.** The door of
+  identical width is `op=stats`; gating four readers and leaving the fifth would have created exactly the documented
+  hole this premise warns about. It is also why D-486's row reads *all five readers together*.
+- **Premises (2) and (3) are untouched.** This is not a bundle gate on `observation_log` and not the second resolver
+  REC-92 refused: it subtracts ONE indexed set of run ids (`observation_log_authority` is `(authority_kind,
+  authority, seq)`), with no per-row work, so the amplification class `derivation-bounds.test.mjs` instruments
+  against is not entered.
+- **Premise (4) is untouched.** The field still counts every row at its level, never this page's states.
+- **The viewer-independence corroboration is the one thing that genuinely weakens**, and it is stated at its true
+  weight here as it was above: the tally IS now viewer-dependent for this one row class. No live consumer depends on
+  it — `searchedSection` in `airun.mjs` takes its `levels` from the caller and does not read this tally, re-driven
+  by D-486 rather than carried — so no signed completeness statement's content moves. **If a consumer is ever built
+  that DOES compute D-196's `searched` section from this tally, this narrowing must be reopened with it**, because a
+  signed claim that depends on who computed it is the failure that argument names.
+- **`op=purge`'s `observations` is unchanged** and still counts the whole log (§5), and the internet level's tally
+  was already scoped to the viewer (REC-129, IC-143) and counts no run row.
+
+**AND A DEFECT THE SAME ITEM'S ARM FOUND AT THE MEANING LEVEL, FIXED WITH IT.** §6's fence is row-whole — *a row is
+published only when every bundle it names, through a run's context included, is one this viewer may see* — and
+`#frontierMeaning` did not implement the run half. It gates a `capture` and a `reference` and returns true for
+everything else, which is REASONED for an ENTITY; but `#aiRunAppend` stamps every run row `subject_kind = 'unstated'`,
+a FOURTH kind that level never had, so a hidden project's run rows were published WHOLE — `authority`, the run id,
+and `ran_and_found_nothing` — to an uninvited member, while the document arm withheld the same rows. It is now
+delegated to `aiRunLog` exactly as `#frontierDocumentVisible` does. The entity decision is not reopened.
+
+**STILL OPEN, AND ROUTED TO BOB BY D-486 RATHER THAN DECIDED HERE:** `#missingContentCause` and
+`#missingMeaningCause` classify an absent look by comparing a subject's entry date against `MIN(at)` over the WHOLE
+log at that level. A hidden project's run writing the earliest row at a level re-dates that watermark and flips an
+outsider's `missing_cause` from `purged` to `never_looked` for subjects that have nothing to do with it. It is a
+RECLASSIFICATION and not a disclosure — measured: no id of the run, its project or its subjects appears anywhere in
+the answer — and it is INTERMITTENT, because both causes normalise to the SECOND while `register.registered` carries
+milliseconds. **Taking the watermark through the caller's sight is the one-line fix and it is exactly what the
+argument above refuses for the tally**, so it is Bob's to rule. `#contentAxisTally` reads the same watermark for
+`op=contentaxis` and the search envelope and was not driven by D-486; it is the same class.
+
 ## 7. Lifecycle, purge and growth
 
 - **Purge of a bundle leaves its observations.** They are the coverage record, not derived from the bundle; a `result_ref` to a purged capture is annotated at read time (`purged`), never rewritten. A whole-store purge (scope ALL) clears the table — D-113's rule applies to it as to every table.

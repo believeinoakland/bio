@@ -28771,6 +28771,72 @@ export class Store extends DurableObject {
    *  because it must ride the one DO route every door already fetches. */
   stats({ capacity = false, viewer } = {}) { return this.#counts({ proof: false, capacity: capacity === true, viewer }); }
 
+  /** D-486 — THE ONE PREDICATE THAT WITHHOLDS A HIDDEN PROJECT'S RUN ATTRIBUTION, AND THE ONE PLACE
+   *  THE THREE SETS ARE SPELLED. Five readers take it (`#counts`' `aiRunLog` and
+   *  `observationsNonLead`, and the document, content and meaning frontier tallies), because a rule
+   *  with five spellings is the mirror-and-drift class this file refuses for gates.
+   *
+   *  **RULED BY BOB #32, 2026-09-24 02:30Z, on the question D-464 routed rather than decided**
+   *  (`BIO_Membership_Architecture_v2.md` §7 item 7.9; `OBSERVATION-LOG-DESIGN.md` §6): *a hidden
+   *  project's run output is the PROJECT'S THINKING until something outside uses it; the bytes stay
+   *  shared, only the run's ATTRIBUTION is withheld.* So nothing here touches the evidence — a
+   *  capture, a content row, a reading a hidden project's run produced stays in every corpus count
+   *  it was ever in. What leaves an outsider's tallies is the LOG ROW that says a run happened, and
+   *  it leaves because that row is §7.9's *"not its existence"* arriving as an aggregate: a member
+   *  diffing `op=stats` or `op=frontier` across a colleague's work learned that a project they were
+   *  never invited to had RUN.
+   *
+   *  THE PREDICATE IS A SET SUBTRACTION AND DELIBERATELY NOT A RESOLVER, which is what makes it
+   *  admissible where REC-110 (D-386) refused gating these tallies. That ruling's premise (2) is
+   *  that `observation_log` has no bundle column, so a bundle gate here would be the SECOND
+   *  implementation of `#observationBundles` REC-92 refused; its premise (3) is that applying that
+   *  resolver per row is `derivation-bounds.test.mjs`'s amplification class. Neither is touched:
+   *  this reads ONE indexed set of run ids (`observation_log_authority` is `(authority_kind,
+   *  authority, seq)`) and subtracts it, with no per-row work and no second resolver. Premise (1) —
+   *  *`op=stats` answers the same question to the same audience through a door of identical width* —
+   *  is KEPT TRUE BY MOVING BOTH DOORS IN ONE LANDING rather than by leaving the tallies whole; that
+   *  is why D-486's row says *all five readers together*, and why gating four of them would have
+   *  been the documented hole the premise warns about. Premise (4) is untouched: the field still
+   *  counts every row at its level rather than this page's states.
+   *
+   *  WHO IS FILTERED IS THE GATE'S WORD (D-464's sentence, inherited rather than restated): a
+   *  credential `viewerPredicate` does not filter — scope `member`, the four token classes and an
+   *  organisation `ai` key — and an enrolled administrator's session get `null` here, i.e. exactly
+   *  the count they always got. A viewer SENT but unrecognised is DENY, so every project is hidden
+   *  and every project-context run's rows drop: FAILS CLOSED.
+   *
+   *  THE NEVER-SENT STAMP IS THE CALLER'S CONVENTION AND NOT THIS METHOD'S, and the two callers
+   *  differ ON PURPOSE rather than by omission. `#counts` passes `viewer` straight through, so a
+   *  direct INTERNAL call (`undefined`: the DO route passes the parameter only when present) stays
+   *  WHOLE — purge's proof and the store-level suites, D-464's correction. `frontier()` defaults
+   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all —
+   *  `#frontierDocumentVisible`'s posture one method away (*a missing stamp is an outage and never a
+   *  leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
+  #hiddenSets(viewer) {
+    const gate = viewer === undefined ? null : viewerPredicate(viewer);
+    const hid = gate && gate.scope !== "member"
+      ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args }
+      : null;
+    const hidRuns = hid && { sql: `(SELECT run FROM ai_runs WHERE context_type = 'project' AND context_id IN ${hid.sql})`,
+                             args: hid.args };
+    /* `COALESCE(authority, '')`: a NULL authority names no run, and `NULL IN (…)` is NULL — the row would be
+       kept by a bare `NOT (… IN …)` only by accident, and dropped by the inverted spelling. It is written so the
+       answer does not depend on which way round the next reader spells it. The `authority_kind = 'run'` conjunct
+       is LOAD-BEARING and not decoration: `authority` also holds sweep request ids, lead ids and the document a
+       link came from, and a subtraction keyed on the value alone would drop a sweep that happened to share a
+       run's spelling — a fence tighter than its rule. */
+    const runRows = hidRuns && { sql: `NOT (authority_kind = 'run' AND COALESCE(authority, '') IN ${hidRuns.sql})`,
+                                 args: hidRuns.args };
+    return { gate, hid, hidRuns, runRows };
+  }
+
+  /** D-486's predicate as a WHERE tail, for the three frontier tallies. Returns `""` and no args when
+   *  nothing is withheld, so the unfiltered SQL is byte-identical to what it was before this landing. */
+  #hiddenRunTail(viewer) {
+    const { runRows } = this.#hiddenSets(viewer);
+    return runRows ? { sql: ` AND ${runRows.sql}`, args: runRows.args } : { sql: "", args: [] };
+  }
+
   /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
    *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
    *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
@@ -28803,17 +28869,11 @@ export class Store extends DurableObject {
      * CORRECTED before landing: the first draft read an absent parameter as DENY, which zeroed the counters four
      * store-level suites read straight off the DO route (projects, search, selection, status) — a direct internal
      * call is not a caller. */
-    const gate = viewer === undefined ? null : viewerPredicate(viewer);
-    const hid = gate && gate.scope !== "member"
-      ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args }
-      : null;
-    /* A run over a project the caller cannot see is that project's act, and its BOUNDS are the run's own rows. What a
-       run PRODUCED at the evidence levels (its observation-log rows, proposed readings, capture requests) is NOT
-       subtracted here: whether coverage a hidden project's run produced is the shared evidence corpus's or the
-       project's thinking is a design question the frontier's tallies share (`OBSERVATION-LOG-DESIGN.md` §6's
-       premise 1 equates this count with theirs), routed by D-464 rather than decided by one of its two readers. */
-    const hidRuns = hid && { sql: `(SELECT run FROM ai_runs WHERE context_type = 'project' AND context_id IN ${hid.sql})`,
-                             args: hid.args };
+    /* D-486 / BOB #32: the three sets are compiled in ONE place now (`#hiddenSets`), because the frontier's
+       three tallies take the same predicate this function's `aiRunLog` and `observationsNonLead` take and a rule
+       with five spellings is the drift class. D-464's reading of the never-sent stamp is unchanged and lives
+       there: `undefined` is a direct internal call and stays WHOLE. */
+    const { hid, hidRuns, runRows } = this.#hiddenSets(viewer);
     /* `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL — the row would be dropped. */
     const nx = (t, where, keys = [], runKeys = [], whereArgs = []) => {
       const conds = where ? [where] : [], args = [...whereArgs];
@@ -28976,7 +29036,14 @@ export class Store extends DurableObject {
          from that proof reads as a table nobody is checking. `observations` is
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
-      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
+      /* D-486 / BOB #32 (2026-09-24): AND IT IS TAKEN THROUGH THE CALLER'S OWN SIGHT. This key is the
+         `authority_kind = 'run'` SLICE of the log, so every row it counts is a run saying it looked —
+         which for a project the caller cannot see is that project's THINKING, withheld by the ruling.
+         `runRows` is D-464's `hidRuns` inverted into a row predicate at `#hiddenSets`, one compilation
+         point for this key, `observationsNonLead` below and the three frontier tallies. Unfiltered
+         callers get `null` and the count they always got; purge's `observations` below stays WHOLE. */
+      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runRows ? ` AND ${runRows.sql}` : ""}`,
+                          ...(runRows ? runRows.args : [])).c,
       /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
          DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
          COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes
@@ -28996,7 +29063,14 @@ export class Store extends DurableObject {
          * untouched: no lead act writes a 'run' row. */
       ...(proof
         ? { observations: n("observation_log") }   /* PURGE'S PROOF: the WHOLE log. The TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
-        : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),
+        : { observationsNonLead: this.#one(
+              /* D-486 / BOB #32: the wire's log count subtracts a hidden project's RUN rows for the same reason
+                 `aiRunLog` does — and ONLY those. The lead exclusion and this one are two predicates over one
+                 table and are deliberately not folded: `authority_kind <> 'lead'` states the key's NAME (REC-131:
+                 a key never carries two meanings), while the run subtraction is the CALLER's sight and moves with
+                 the viewer. A rename would be an IC; this is a subtraction inside the name the key already has. */
+              `SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'${runRows ? ` AND ${runRows.sql}` : ""}`,
+              ...(runRows ? runRows.args : [])).c }),
       /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
          PROVE it took them (D-113). What any lead says is not an operator fact —
          and since REC-131, neither is how many there are: purge's proof only. */
@@ -42132,9 +42206,18 @@ export class Store extends DurableObject {
        REC-110's row exists to end, one method away from where it was being
        prevented. Pinned by `observation-content.test.mjs` section J, which goes
        red if a later session quietly gates this or narrows it to the page. */
+    /* D-486 / BOB #32 (2026-09-24) — REC-110's ruling STANDS AND IS NARROWED BY ONE ROW CLASS, which is
+       the opposite of the quiet gating section J refuses. The tally still counts EVERY row at this level
+       for every viewer, still does not follow the page, and still names no bundle, subject or address.
+       What it no longer counts is a run row whose project the caller cannot see: `#hiddenSets` compiles
+       that one predicate for all five readers, and the premise-(1) door — `op=stats`' `observationsNonLead`
+       and `aiRunLog` — subtracts the same rows IN THIS LANDING, so the two ops still answer one question to
+       one audience. The reasoning is at `#hiddenSets` and is not restated here; the site-pin arm is section J. */
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`))
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args))
       tally[row.state] = row.n;
     const candidates = looked.filter((r) => r.recandidate);
     return {
@@ -42568,8 +42651,29 @@ export class Store extends DurableObject {
     /* A REFERENCE IS GATED THROUGH THE CAPTURE THAT CARRIED IT, which is the row's
        own AUTHORITY — so the gate asks about the document the look was made for
        and not about some other document that happens to carry the same name. */
+    /* D-486 — THE RUN REFERENT, AND IT IS A DEFECT THIS ITEM'S OWN ARM FOUND RATHER THAN A WIDENING.
+       The header declares THREE subject kinds here and gates two of them; the third arm reads
+       `return true` and is REASONED for an ENTITY (the subject registry is instance-wide). A RUN's row
+       is not an entity: `#aiRunAppend` stamps every run row `subject_kind = 'unstated'`, a FOURTH kind
+       the meaning arm never had, and it fell through the entity branch — so `op=frontier&level=meaning`
+       published a hidden project's run rows WHOLE to an uninvited member, `authority` (the run id) and
+       `ran_and_found_nothing` included, while the document arm one method up withheld the same rows.
+       Measured at the op by `project-sight.test.mjs` §9 before this line existed: vera's `looked`,
+       `never_looked` and `by_subject_kind` all moved on iris's run over a project vera cannot see.
+       THE RULE IS §6's ROW-WHOLE FENCE AS WRITTEN — *a row is published only when every bundle it names
+       … through a run's context … is one this viewer may see* — and it is DELEGATED to the reader that
+       already gates it rather than spelled a second time, exactly as `#frontierDocumentVisible` does:
+       `aiRunLog` answers `found: false` both for a run this viewer may not see and for one that does not
+       exist, so the unknown run and the unviewable run read identically and both fail closed. Bounded at
+       one entry — nothing here reads the log, only whether the run is reachable at all — and bounded in
+       total by `#frontierPage`'s over-fetch, which is the document arm's arrangement and stays inside
+       `derivation-bounds.test.mjs`' blessed form. A row with a NULL authority names no run and is
+       untouched. THE ENTITY DECISION IS NOT REOPENED: an entity row with no run authority still passes. */
+    const runSeen = (r) => r.authority_kind !== "run" || !r.authority
+      || this.aiRunLog({ run: r.authority, viewer, limit: 1 }).found === true;
     /* D-389: the over-fetch, gate, cut and claim are `#frontierPage`'s, shared with the other two arms. */
     const latest = this.#frontierPage("meaning", cap, { limit: (cap + 1) * 3 }, (r) => {
+      if (!runSeen(r)) return false;
       if (r.subject_kind === "capture") return captureSeen(r.subject);
       if (r.subject_kind === "reference")
         return r.authority ? captureSeen(r.authority) : false;
@@ -42662,9 +42766,18 @@ export class Store extends DurableObject {
        is the whole-level count and is. Pinned by `observation-meaning.test.mjs`
        section J, which goes red if a later session quietly gates this or narrows
        it to the page. */
+    /* D-486 / BOB #32 (2026-09-24) — REC-110's ruling STANDS AND IS NARROWED BY ONE ROW CLASS, which is
+       the opposite of the quiet gating section J refuses. The tally still counts EVERY row at this level
+       for every viewer, still does not follow the page, and still names no bundle, subject or address.
+       What it no longer counts is a run row whose project the caller cannot see: `#hiddenSets` compiles
+       that one predicate for all five readers, and the premise-(1) door — `op=stats`' `observationsNonLead`
+       and `aiRunLog` — subtracts the same rows IN THIS LANDING, so the two ops still answer one question to
+       one audience. The reasoning is at `#hiddenSets` and is not restated here; the site-pin arm is section J. */
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning' GROUP BY state`))
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args))
       tally[row.state] = row.n;
     /* THE TALLY BY SUBJECT KIND, because one number over three acts would answer
        none of the three questions this level asks. It is a projection of `looked`
@@ -42979,9 +43092,18 @@ export class Store extends DurableObject {
       (r) => seenRow({ result_kind: "capture", result_ref: r.from_document,
                        authority: null, authority_kind: null }));
     const never = neverFetch.rows;
+    /* D-486 / BOB #32 (2026-09-24) — REC-110's ruling STANDS AND IS NARROWED BY ONE ROW CLASS, which is
+       the opposite of the quiet gating section J refuses. The tally still counts EVERY row at this level
+       for every viewer, still does not follow the page, and still names no bundle, subject or address.
+       What it no longer counts is a run row whose project the caller cannot see: `#hiddenSets` compiles
+       that one predicate for all five readers, and the premise-(1) door — `op=stats`' `observationsNonLead`
+       and `aiRunLog` — subtracts the same rows IN THIS LANDING, so the two ops still answer one question to
+       one audience. The reasoning is at `#hiddenSets` and is not restated here; the site-pin arm is section J. */
+    const hidTail = this.#hiddenRunTail(viewer);
     const tally = {};
     for (const row of this.#rows(
-      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`))
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document'${hidTail.sql} GROUP BY state`,
+      ...hidTail.args))
       tally[row.state] = row.n;
     /* NEVER_LOOKED is reported as its own count and is NEVER folded into the
        tally above, because it is the one state that is the ABSENCE of a row —

@@ -4,6 +4,7 @@
    RE-RUN 2026-09-19 by REC-141 after BOB #16's opaque-suffix ruling (P can no longer be predicted: the never-minted reads are taken at NEVER, and §1 normalises each read's OWN id to one placeholder), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,648,430 B sha256 d037f85ce689…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0. RECORDED: the first 2026-09-19 run had cite-distinguishing and roster-stamp-dropped NOT AS DECLARED only because §1's label was reworded and the driver matches it by fragment; the label was restored, and the arms then came back as declared.
    RE-RUN 2026-09-23 by D-447 in worktree /home/user/bio (cloud) on base 02603e88 AFTER adding §7 (the ranked read) and three arms, real src/index.mjs 731,481 B sha256 c7d77e7eee13…, src/store.mjs 2,902,978 B sha256 893a1cc99c3b…, src/query.mjs 166,525 B sha256 bdeb4e9c8285… (now hashed too), untouched: YES — baseline 110/0 · cite-distinguishing 108/2 · position-first 106/4 · not-found-to-everyone 88/22 · roster-stamp-dropped 98/12 · publish-raw-bm25 103/7 (THE BRIEF'S CONTROL: the index-wide bm25() published again as `score` — the six hit-bearing digests and NO SCORE IS PUBLISHED fail BY NAME, select-all `ids` and the selection order do NOT) · order-by-index-bm25 105/5 (no score, the ORDER from the index-wide bm25() again — exactly the five orders the hidden revision flips) · tf-over-vis 110/0 (over-strictness) · sight-via-redactor 110/0: AS DECLARED. RECORDED, NOT SMOOTHED: (1) not-found-to-everyone came back NOT AS DECLARED on the first run because §7's hidden revision was iris's session, which that arm lies to — a second variable; §7 now revises by the ADMIN token and the arm is AS DECLARED. (2) promote-stamp-dropped is NOT AS DECLARED (0/1: the suite throws in its fixture, SURFACE_NO_RUN) and it is PRE-EXISTING — the same result on a clean checkout of 02603e88 with §7 absent: the arm drops the promote stamp, which REC-171's surfacing-run fixture (`surfacing-run.mjs`) needs to open its run. Routed with its fix named (create the fixture's inquiry through the store's internal door, the bias set's precedent, or open the run before arming); not changed here.
    RE-RUN 2026-09-24 by D-464 in worktree /home/user/bio (cloud) on base 15b2a4c0 AFTER adding §8 (the counts) and five arms, real src/index.mjs 742,733 B sha256 450e60c61109…, src/store.mjs 2,958,609 B sha256 9a5b205f5a3b…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 125/0 · cite-distinguishing 123/2 · position-first 121/4 · not-found-to-everyone 103/22 · roster-stamp-dropped 113/12 · publish-raw-bm25 118/7 · order-by-index-bm25 120/5 · tf-over-vis 125/0 · stats-whole-store 122/3 (THE BRIEF'S CONTROL: `op=stats` counts the whole store again — the hidden-creation arm fails BY NAME, `A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats`, with the digest and EXACT arms; searchindexcheck and selectionlist stay green) · indexcheck-whole-index 122/3 · selectionbytes-whole 124/1 · stats-stamp-dropped 122/3 · subtract-for-everyone 125/0 (over-strictness) · sight-via-redactor 125/0: AS DECLARED. BEFORE the fix §8 read 115/7 on the unedited sources (vera's stats moved `bundles, files, history, refs, indexed, projectParticipants`). RECORDED, NOT SMOOTHED: (1) stats-stamp-dropped came back NOT AS DECLARED on its first run (then 121/4, against a store reading an ABSENT stamp as DENY: the ADMIN witness failed and three zeros agreed); that reading was corrected before landing because it zeroed the counters four store-level suites read off the DO route (a never-sent viewer is now an internal call, WHOLE), and the arm was re-declared: dropping the stamp now fails the headline by name. Reason at the arm. (2) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2) above, unchanged by D-464.
+   RE-RUN 2026-09-24 by D-486 in worktree /home/user/bio (cloud) on base land/conduct/c19-batch10 @ cff0ede6 AFTER adding §9 (a RUN over a hidden project, the five observation-log tallies) and four arms, real src/index.mjs 786,508 B sha256 4579fae29f93…, src/store.mjs 3,178,998 B sha256 ae571b49b306…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 136/0 · cite-distinguishing 134/2 · position-first 132/4 · not-found-to-everyone 114/22 · roster-stamp-dropped 124/12 · publish-raw-bm25 129/7 · order-by-index-bm25 131/5 · tf-over-vis 136/0 · stats-whole-store 129/7 · indexcheck-whole-index 133/3 · selectionbytes-whole 135/1 · stats-stamp-dropped 130/6 · subtract-for-everyone 136/0 · d486-content-tally-unsubtracted 134/2 (THE ROW'S OWN CONTROL: the predicate dropped from ONE reader — the content tally — and its arms fail BY NAME) · d486-stats-airunlog-unsubtracted 133/3 · d486-meaning-run-ungated 134/2 · d486-predicate-de-morgan 136/0 (over-strictness) · sight-via-redactor 136/0: AS DECLARED. BEFORE the fix §9 read 131/5 on the unedited sources (MEASUREMENTS M-131: vera's `aiRunLog` and `observationsNonLead` moved, all three tallies moved, and the MEANING level published the hidden run's own id in `looked`). RECORDED, NOT SMOOTHED: (1) d486-content-tally-unsubtracted came back NOT AS DECLARED on its first run with THREE undeclared reds, one of them BEFORE its own cause — the patch removed the predicate from the SQL and left its BINDINGS, so the statement threw; corrected to remove both, reason at the arm. (2) §9's residue arm came back GREEN on a second run after failing on the first WITHOUT a line changing: the four watermark keys move only when the fixture's captures and the run's rows fall inside ONE SECOND (the causes normalise to the second, `register.registered` carries milliseconds). Diagnosed, spelled as a CEILING, and routed as D-486 FINDING 2 — an intermittent disclosure is worse than a steady one, not better. (3) stats-whole-store and stats-stamp-dropped came back NOT AS DECLARED because §9 reads two `op=stats` keys their declarations predate; both declarations were EXTENDED (never exempted) and are AS DECLARED. (4) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-486.
  * =========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
@@ -519,6 +520,157 @@ console.log("\n--- 8. D-464: creating and revising a project vera cannot see mov
   t("EXACT: the ADMIN token's bundles less vera's is the number of bundles her list does not show, and it includes both hidden projects (floor: 2)",
     [whole.bundles - s2.bundles, unseen.length >= 2, unseen.includes(P) && unseen.includes(q), allIds.size === whole.bundles],
     [unseen.length, true, true, true]);
+}
+
+console.log("\n--- 9. D-486 / BOB #32: a RUN over a project vera cannot see moves NOTHING in her five tallies ---");
+{
+  /* WHAT WAS WRONG, and D-464 ROUTED IT RATHER THAN DECIDING IT (§8's own comment, and
+     `BIO_Membership_Architecture_v2.md` §7's line: *NOT decided and stated*). D-464 took every count whose rows NAME
+     a bundle through the caller's sight, and left the five that count the OBSERVATION LOG whole, because whether a
+     hidden project's run output belongs to the shared evidence corpus or to the project was a design question, not
+     an implementation choice. **BOB #32 ruled it on 2026-09-24 at 02:30Z:** *a hidden project's run output is the
+     PROJECT'S THINKING until something outside uses it; the bytes stay shared, only the run's attribution is
+     withheld.* So the five readers subtract the LOG ROWS of a run whose context is a project the caller cannot
+     see — and nothing else: the capture, the content row and the reading such a run produced stay in every corpus
+     count they were ever in, which is the `STILL LIVE` arm at the foot.
+     THE FIVE READERS, and they are the whole class rather than a list of the ones that came to mind: a sweep of
+     `store.mjs` for an aggregate over `observation_log` finds exactly five — `op=stats`' `aiRunLog` and
+     `observationsNonLead`, and the document, content and meaning frontier tallies. `op=purge`'s `observations` is
+     the sixth and stays WHOLE on purpose (§5: the purge proof's own count stays whole); the internet level's tally
+     was already scoped to the viewer (REC-129, IC-143) and counts no run row. */
+  const READS = ["op=stats", "op=frontier&level=document&limit=500",
+                 "op=frontier&level=content&limit=500", "op=frontier&level=meaning&limit=500"];
+  const readAll = async (tok) => { const o = []; for (const q of READS) o.push(await RAW(`${q}&token=${tok}`)); return o; };
+  const TALLY = (r) => JSON.stringify(parse(r)?.tally ?? null);
+  const FIVE = (rs) => { const st = parse(rs[0]) || {};
+    return [st.aiRunLog, st.observationsNonLead, TALLY(rs[1]), TALLY(rs[2]), TALLY(rs[3])]; };
+
+  const vBefore = await readAll(VERA), aBefore = await readAll(ADM);
+  console.log(`  vera's five before: aiRunLog=${FIVE(vBefore)[0]} observationsNonLead=${FIVE(vBefore)[1]} `
+            + `document=${FIVE(vBefore)[2]} content=${FIVE(vBefore)[3]} meaning=${FIVE(vBefore)[4]}`);
+  t("the five readers ANSWER AT ALL for vera before anything is written (a tuple of undefineds would make every "
+  + "identity below an equality between two absences — the costs-nothing rule)",
+    FIVE(vBefore).map((x) => x !== undefined && x !== null && x !== "null"), [true, true, true, true, true]);
+
+  const openRun = async (tok, run, contextType, contextId) => POST(`op=airunopen&token=${tok}`, {
+    run, contextType, contextId, label: "evidence sweep", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1",
+    bounds: [{ bound: "fetches", allowed: 20, unit: "requests" }], leaseMs: 600000 });
+  /* ONE ROW AT EACH OF THE THREE BUNDLE LEVELS, so all three frontier tallies are driven rather than one and the
+     other two argued from it. Each is `LOOKED_ABSENT`: the run looked and found nothing, which is the state that
+     makes the row a COVERAGE claim and therefore exactly the disclosure §7.9 refuses to make about a hidden
+     project. `subject_kind` is `unstated` for every run row by `#aiRunAppend`'s design — not this suite's choice. */
+  const LOOK = (n) => [
+    { level: "document", subject: `https://example.gov/d486-${n}`, state: "LOOKED_ABSENT" },
+    { level: "content",  subject: sha(`d486-capture-${n}`),        state: "LOOKED_ABSENT" },
+    { level: "meaning",  subject: `ENT-2026-9486-${n}`,            state: "LOOKED_ABSENT" }];
+
+  const HIDDEN_RUN = "RUN-2026-9486-hidden";
+  must("iris, who OWNS the hidden project, opens a run over it", await openRun(IRIS, HIDDEN_RUN, "project", P));
+  must("and the run looks at all three bundle levels",
+       await POST(`op=airuntick&token=${IRIS}`, { run: HIDDEN_RUN, consume: { fetches: 3 }, log: LOOK("hidden") }));
+
+  const vAfter = await readAll(VERA), aAfter = await readAll(ADM);
+  /* THE WITNESS, AND IT IS THE WHOLE DIFFERENCE BETWEEN THIS ARM AND AN EQUALITY THAT COSTS NOTHING: the ADMIN
+     token sees every project, so its own five figures MOVE on exactly the acts vera's must not see. Without this
+     the identity below would pass over a run that never wrote a row. */
+  t("THE ARM IS ARMED: the ADMIN token's five all MOVED on the hidden run (the ones that did NOT move, by name)",
+    ["aiRunLog", "observationsNonLead", "tally:document", "tally:content", "tally:meaning"]
+      .filter((k, i) => FIVE(aAfter)[i] === FIVE(aBefore)[i]), []);
+  t("A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE (the ones that moved, by name)",
+    ["aiRunLog", "observationsNonLead", "tally:document", "tally:content", "tally:meaning"]
+      .filter((k, i) => FIVE(vAfter)[i] !== FIVE(vBefore)[i]), []);
+  /* THE WHOLE ANSWER, KEY BY KEY, AND THE RESIDUE IS PINNED BY NAME RATHER THAN ROUNDED OFF. Two of the four
+     reads are byte-identical; the other two still move FOUR keys, and this arm names exactly which, so it fails
+     loudly in BOTH directions — if a later landing fixes the residue, or if it grows. A digest-only arm would have
+     said "two reads moved" and left the next reader to find out what; that is the narrowed-unknown this project
+     asks for instead of a rounded pass. THE RESIDUE IS `D-486 FINDING 2`, ROUTED TO BOB IN THIS ITEM'S REPORT AND
+     NOT FIXED HERE BECAUSE ITS FIX NEEDS A DESIGN CALL: `#missingContentCause` and `#missingMeaningCause` classify
+     an absent look by comparing the subject's entry date against `MIN(at)` over the WHOLE log at that level, so a
+     hidden project's run writing the earliest row at a level re-dates that watermark and flips an outsider's
+     `missing_cause` from `purged` to `never_looked` for subjects that have nothing to do with it. Taking the
+     watermark through the caller's sight is the one-line fix and it is EXACTLY the change `OBSERVATION-LOG-DESIGN`
+     §6 argues against for the tally — a signed completeness statement (D-196) would then depend on who computed
+     it, so two signings of one case could disagree about what was searched. That is Bob's to rule, not a worker's. */
+  const KEYDIFF = (i) => { const A = parse(vBefore[i]) || {}, B = parse(vAfter[i]) || {};
+    return [...new Set([...Object.keys(A), ...Object.keys(B)])]
+      .filter((k) => JSON.stringify(A[k]) !== JSON.stringify(B[k])).sort(); };
+  READS.forEach((r, i) => { const d = KEYDIFF(i); if (d.length) console.log(`  residue on ${r}: ${d.join(", ")}`); });
+  t("A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier (status, type, body, by digest)",
+    [0, 1].map((i) => ({ status: vAfter[i].status, type: vAfter[i].type, sha: sha(vAfter[i].body) })),
+    [0, 1].map((i) => ({ status: vBefore[i].status, type: vBefore[i].type, sha: sha(vBefore[i].body) })));
+  /* A SURPRISING GREEN IS A FINDING ABOUT THE ARM, AND THIS ONE IS RECORDED RATHER THAN SMOOTHED (D-486, measured
+     twice in the same worktree twenty minutes apart). The first spelling of this arm pinned the residue to EXACTLY
+     those four keys and came back `[[], []]` on a later run — the residue had vanished without a line changing.
+     IT IS A WALL-CLOCK RACE, and diagnosing it is worth more than the arm was: `#missingContentCause` and
+     `#missingMeaningCause` normalise BOTH sides to the SECOND before comparing (REC-94's inherited defect note),
+     while `register.registered` carries milliseconds and a run row's `at` does not. So when the fixture's captures
+     register and the run's rows land inside ONE SECOND, `entered >= firstAt` flips and four keys reclassify; when
+     the second boundary falls between them, nothing moves. **The residue is therefore real but intermittent, which
+     makes it WORSE than a steady one, not better** — a disclosure that appears on some runs and not others is the
+     kind a reader cannot reproduce and will conclude was imagined. It is carried in FINDING 2's routing.
+     SO THE ARM IS SPELLED AS A CEILING, NOT AN EQUALITY: every key that moves must be one of the four the
+     watermark can reach. That holds under either timing, and it still fails loudly on the two regressions this
+     pin exists for — a fifth key moving, or the `tally` moving at all. The `tally`, `looked` and `by_subject_kind`
+     are named explicitly beside it, because those are D-486's own subject and a ceiling that merely excluded them
+     by arithmetic would not say so to the next reader. */
+  const WATERMARK = ["missing_unexplained", "missing_unexplained_count", "never_looked", "never_looked_count"];
+  t("THE TALLY — D-486's OWN SUBJECT — AND EVERY OTHER PUBLISHED FIELD OF THE CONTENT AND MEANING ANSWERS IS "
+  + "UNMOVED. What may still move is the four WATERMARK-derived keys and NOTHING else (D-486 FINDING 2, routed to "
+  + "BOB above): the arm is a ceiling because the residue is intermittent by a wall-clock race, and a fifth key "
+  + "moving — or `tally`, `looked` or `by_subject_kind` moving — is a REGRESSION this arm names",
+    [KEYDIFF(2).filter((k) => !WATERMARK.includes(k)), KEYDIFF(3).filter((k) => !WATERMARK.includes(k)),
+     [2, 3].flatMap((i) => ["tally", "looked", "by_subject_kind"].filter((k) => KEYDIFF(i).includes(k)))],
+    [[], [], []]);
+  t("AND THE RESIDUE IS A RECLASSIFICATION, NEVER A DISCLOSURE OF THE RUN ITSELF: neither answer names the hidden "
+  + "run, its id, its project or its subjects anywhere in its bytes — which is the half of §7.9 that would be a "
+  + "leak rather than a wrong word, and the reason FINDING 2 is routed and not treated as this item's failure",
+    [2, 3].flatMap((i) => [HIDDEN_RUN, P, "ENT-2026-9486-hidden"].map((needle) => vAfter[i].body.includes(needle))),
+    [false, false, false, false, false, false]);
+
+  /* OVER-STRICTNESS, ARM 1 — A PREDICATE THAT SUBTRACTED EVERY RUN WOULD PASS EVERY ARM ABOVE. A run over a
+     context that is NOT a project is nobody's hidden thinking, and its rows must still reach vera. */
+  const OPEN_RUN = "RUN-2026-9486-inquiry";
+  must("iris opens a run over the INQUIRY, which vera can see", await openRun(IRIS, OPEN_RUN, "inquiry", INQ));
+  must("and it looks at all three levels too",
+       await POST(`op=airuntick&token=${IRIS}`, { run: OPEN_RUN, consume: { fetches: 3 }, log: LOOK("open") }));
+  const vOpen = await readAll(VERA);
+  t("STILL LIVE: a run over a context vera CAN see moves all five of her figures (the ones that did NOT move, by name)",
+    ["aiRunLog", "observationsNonLead", "tally:document", "tally:content", "tally:meaning"]
+      .filter((k, i) => FIVE(vOpen)[i] === FIVE(vAfter)[i]), []);
+  t("STILL LIVE, EXACT: her aiRunLog and observationsNonLead each rose by exactly the three rows that run wrote",
+    [FIVE(vOpen)[0] - FIVE(vAfter)[0], FIVE(vOpen)[1] - FIVE(vAfter)[1]], [3, 3]);
+
+  /* OVER-STRICTNESS, ARM 2 — WHOLE FOR THE UNFILTERED. `viewerPredicate` filters an identified member session and
+     nothing else, so the MEMBER token, the ADMIN token and ruth (an enrolled ADMINISTRATOR, who sees every
+     project per §7.9) must each count the hidden run's rows. A fence tighter than its rule is not a safer fence. */
+  const whole = await readAll(ADM), mem = await readAll(MEM), ruth = await readAll(RUTH);
+  t("WHOLE FOR THE UNFILTERED: the MEMBER token and ruth (an administrator) read the ADMIN token's own five",
+    [JSON.stringify(FIVE(mem)) === JSON.stringify(FIVE(whole)),
+     JSON.stringify(FIVE(ruth)) === JSON.stringify(FIVE(whole))], [true, true]);
+  /* AND THE SUBTRACTION IS EXACTLY THE HIDDEN RUN'S ROWS — read out of the run's own log rather than assumed
+     from the number this suite wrote, so the arm cannot agree with itself. */
+  const hiddenRows = (parse(await RAW(`op=airunlog&token=${ADM}&run=${E(HIDDEN_RUN)}&limit=500`))?.entries || []).length;
+  console.log(`  the hidden run's own log holds ${hiddenRows} rows; vera's aiRunLog is ${FIVE(vOpen)[0]}, the ADMIN token's ${FIVE(whole)[0]}`);
+  t("EXACT: the ADMIN token's aiRunLog less vera's is the hidden run's own row count (floor: 3), and the same for "
+  + "observationsNonLead — the count is the rows, not a looser or a tighter number",
+    [FIVE(whole)[0] - FIVE(vOpen)[0], FIVE(whole)[1] - FIVE(vOpen)[1], hiddenRows >= 3],
+    [hiddenRows, hiddenRows, true]);
+
+  /* THE BYTES STAY SHARED — BOB #32's ruling has TWO halves and an arm for one of them is half a pin. A capture the
+     hidden run's project produced is EVIDENCE, and evidence is the shared corpus's: it must still be in vera's
+     document count. This is driven with a register write under the hidden project's own run, then read off the
+     corpus counter `op=stats` publishes for her. */
+  const s1 = parse(await RAW(`op=stats&token=${VERA}`)) || {};
+  must("the hidden run's project captures a document, and it is EVIDENCE rather than thinking",
+       await promoteAs(ADM, "INFO-2026-9486-evidence", infoMd("INFO-2026-9486-evidence"), "information", "collected"));
+  const s2 = parse(await RAW(`op=stats&token=${VERA}`)) || {};
+  t("THE BYTES STAY SHARED: the evidence moves vera's bundles, files, register and indexed by one each, while her "
+  + "aiRunLog and observationsNonLead do not move (a capture is not a run row)",
+    [s2.bundles - s1.bundles, s2.files - s1.files, s2.register - s1.register, s2.indexed - s1.indexed,
+     s2.aiRunLog - s1.aiRunLog, s2.observationsNonLead - s1.observationsNonLead],
+    [1, 1, 1, 1, 0, 0]);
 }
 
 } catch (e) {

@@ -1044,8 +1044,29 @@ t("H6: and every set this function can return is a SUBSET of the published vocab
   + "would delete this comment too, so the arm reads the SOURCE and not only the answer",
     [/REC-110, 2026-09-17, D-386 CLOSED/.test(
        SRC.store.slice(SRC.store.indexOf("#frontierMeaning(cap, viewer"))),
-     /level = 'meaning' GROUP BY state/.test(SRC.store)],
+     /* CORRECTED 2026-09-24 BY D-486, NEVER EXEMPTED — the content suite's J3 carries the reasoning and
+        it is not restated here: this was an ADJACENCY pin, and D-486 interpolates `#hiddenRunTail(viewer)`
+        between the level literal and the GROUP BY, so the two tokens stopped being neighbours. The rule
+        (whole level, grouped by state, never the page) is pinned as its own tokens instead of a spelling. */
+     /level = 'meaning'\$\{hidTail\.sql\} GROUP BY state/.test(SRC.store)],
     [true, true]);
+
+  /* J5 — D-486 / BOB #32 (2026-09-24): THE ONE NARROWING, AND ITS PIN AT THIS SITE. The content suite's J5
+     carries the reasoning. THIS LEVEL OWES ONE MORE ARM THAN THE OTHER TWO, and it is a DEFECT D-486's own
+     live arm found rather than a widening: this arm's row predicate gates a `capture` and a `reference`
+     and returns `true` for everything else, reasoned for an ENTITY — but `#aiRunAppend` stamps every run
+     row `subject_kind = 'unstated'`, a FOURTH kind this level never had, so a hidden project's run rows
+     were published WHOLE here (`authority`, the run id, included) while the document arm withheld them.
+     `runSeen` delegates to `aiRunLog` exactly as `#frontierDocumentVisible` does. J4 below is unchanged and
+     still passes, which is the statement that the ENTITY decision was not reopened by this. */
+  t("J5: D-486's narrowing is at this site and is the SHARED predicate; and the run referent is now gated "
+  + "row-whole at this level through the reader that already gates it, delegated rather than spelled twice",
+    [/const hidTail = this\.#hiddenRunTail\(viewer\);/.test(
+       SRC.store.slice(SRC.store.indexOf("#frontierMeaning(cap, viewer"))),
+     /const runSeen = \(r\) => r\.authority_kind !== "run" \|\| !r\.authority/.test(SRC.store),
+     /aiRunLog\(\{ run: r\.authority, viewer, limit: 1 \}\)\.found === true/.test(SRC.store),
+     (SRC.store.match(/this\.#hiddenRunTail\(viewer\)/g) || []).length],
+    [true, true, true, 3]);
 
   /* J4 — THE OVER-STRICTNESS ARM, AND IT IS THE ONE THAT MATTERS MOST HERE.
      The ruling is about `tally` and about NOTHING ELSE. `by_subject_kind` is a
