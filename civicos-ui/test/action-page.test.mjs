@@ -69,6 +69,16 @@
  *      round-trips with its levels through the act, and with the plane naming no
  *      levels at all the chooser is ABSENT and says so.
  *
+ * THE FIGURE, MEASURED AND NOT SUBTRACTED (UI-90, 2026-09-24): this suite stands
+ * at 139 pass / 0 fail. Its BASELINE was re-measured by running the suite at the
+ * item's base commit d536f834dcebcef7049a42f14e9bb4432044d242 in a scratch
+ * worktree — 99 pass / 0 fail — so §8 adds 40 assertions, of which nine are the
+ * three level loops over the plane's own array. UI-90's own commit message says
+ * "118 -> 139" and that figure is WRONG: it was arithmetic from a count of the
+ * arms written rather than a run, exactly the thing CLAUDE.md says to measure.
+ * Corrected here rather than in the message, which is immutable once pushed, and
+ * reported as a finding to CONDUCT.
+ *
  * NEGATIVE CONTROL (UI-90), three arms, RUN 2026-09-24 — `civicos-ui/app.html`'s
  * sha256 taken before, after each break and after each restore, returning to
  * 91e94109ce7bf6eb4ae5bb3080eff83c87da42cb96a3651ab125c76c4da49d6e (1,541,395
