@@ -1,0 +1,16 @@
+{
+ "unit": "fleet:ocr-worker/ocr-worker.test.mjs",
+ "inputHash": "e33eb8a05f53d1e09e1c06660af604f7b38debd0219b77be761682f14bc76a8a",
+ "verdict": "PASS",
+ "run": "f51de4fb1e1dc284cd2a8c99359ff9aa4d64a2e0.1790288507438.3931.json",
+ "tree": "f51de4fb1e1dc284cd2a8c99359ff9aa4d64a2e0",
+ "head": "330dc978aa17d92bd755d7e39ecc36127ce20051",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 855,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e0496cdc-2ccb-535c-82d3-e5632fb3d49f",
+ "at": "2026-09-24T22:21:47.454Z"
+}

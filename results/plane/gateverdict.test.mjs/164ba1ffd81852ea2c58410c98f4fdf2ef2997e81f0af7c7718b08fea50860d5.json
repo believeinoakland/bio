@@ -1,0 +1,16 @@
+{
+ "unit": "plane:gateverdict.test.mjs",
+ "inputHash": "164ba1ffd81852ea2c58410c98f4fdf2ef2997e81f0af7c7718b08fea50860d5",
+ "verdict": "PASS",
+ "run": "f51de4fb1e1dc284cd2a8c99359ff9aa4d64a2e0.1790288507438.3931.json",
+ "tree": "f51de4fb1e1dc284cd2a8c99359ff9aa4d64a2e0",
+ "head": "330dc978aa17d92bd755d7e39ecc36127ce20051",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1263,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e0496cdc-2ccb-535c-82d3-e5632fb3d49f",
+ "at": "2026-09-24T22:21:47.454Z"
+}
