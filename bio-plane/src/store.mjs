@@ -27232,10 +27232,15 @@ export class Store extends DurableObject {
      *
      * WHO IS FILTERED IS THE GATE'S WORD, NOT THIS FUNCTION'S. A credential the gate does not filter (scope `member`:
      * the four token classes and an organisation `ai` key) gets `hid` = nothing, i.e. exactly the count it always got,
-     * and an enrolled ADMINISTRATOR's session passes every project (§7.9). A viewer the gate does not recognise is
-     * DENY, so `hid` is every bundle — fails closed, like every stamped read. `viewer === undefined` is a direct
-     * INTERNAL call (the DO route always passes the stamp, present or `null`): purge's proof and the internal
-     * callers stay WHOLE, `Store#rosterInSight`'s never-sent precedent. */
+     * and an enrolled ADMINISTRATOR's session passes every project (§7.9). A viewer SENT but not
+     * recognised (an empty stamp included) is DENY, so `hid` is every bundle — fails closed. A viewer NEVER SENT
+     * (`undefined`: the DO route passes one only when the parameter is present) is a direct INTERNAL call and stays
+     * WHOLE — purge's proof, and the suites that read the store's own counters — `Store#rosterInSight`'s never-sent
+     * precedent. So the stamp is LOAD-BEARING at the control plane: every door (`op=stats`, `op=selftest`,
+     * `op=livefire`) sets it, and the `stats-stamp-dropped` control arm measures what dropping it discloses.
+     * CORRECTED before landing: the first draft read an absent parameter as DENY, which zeroed the counters four
+     * store-level suites read straight off the DO route (projects, search, selection, status) — a direct internal
+     * call is not a caller. */
     const gate = viewer === undefined ? null : viewerPredicate(viewer);
     const hid = gate && gate.scope !== "member"
       ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args }
@@ -44920,7 +44925,8 @@ export class Store extends DurableObject {
           author: url.searchParams.get("author"),
           identity: url.searchParams.get("identity"),   /* REC-134 */
         }),
-        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner"), viewer: url.searchParams.get("viewer") }),
+        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner"),
+                                                  viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         selectionrelease: () => this.selectionRelease({
           handle: url.searchParams.get("handle"), owner: url.searchParams.get("owner") }),
         searchindexcheck: () => this.searchIndexCheck({
@@ -44932,7 +44938,8 @@ export class Store extends DurableObject {
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1", viewer: url.searchParams.get("viewer") }),
+        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1",
+                                   viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
            isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
            rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls

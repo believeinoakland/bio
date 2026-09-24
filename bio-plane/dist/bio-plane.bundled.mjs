@@ -68496,7 +68496,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           identity: url.searchParams.get("identity")
           /* REC-134 */
         }),
-        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner"), viewer: url.searchParams.get("viewer") }),
+        selectionlist: () => this.selectionList({
+          owner: url.searchParams.get("owner"),
+          viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
+        }),
         selectionrelease: () => this.selectionRelease({
           handle: url.searchParams.get("handle"),
           owner: url.searchParams.get("owner")
@@ -68510,7 +68513,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1", viewer: url.searchParams.get("viewer") }),
+        stats: () => this.stats({
+          capacity: url.searchParams.get("capacity") === "1",
+          viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
+        }),
         /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
            isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
            rather than stand beside it. `this.env` is the env of the worker version THIS OBJECT is running, which rolls

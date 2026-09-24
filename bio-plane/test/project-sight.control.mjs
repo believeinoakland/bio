@@ -154,17 +154,16 @@ const ARMS = {
     patches: [["store.mjs", `        const hide = g && g.scope !== "member";`, `        const hide = false && g;`]],
     mustFail: ["MOVE NOTHING: op=selectionlist (status"],
   },
-  /* D-464: the control plane's viewer stamp on op=stats dropped. The store FAILS CLOSED (an absent stamp is DENY, so
-     every bundle is subtracted): vera's answer is then byte-identical too — the liar passes the headline — and only
-     the LIVE, WITNESS and EXACT arms can tell it from the fix. RECORDED, NOT SMOOTHED: first declared with WHOLE
-     among the failures and the witness absent, and it came back NOT AS DECLARED — the stamp is dropped for EVERY
-     class, so the ADMIN token's own counts read zero too (the witness fails) and three zeros agree with each other
-     (WHOLE passes: it asks equality among the unfiltered, which an all-DENY store also satisfies). The arm was right
-     and the declaration was wrong; EXACT is the assertion that pins the number itself. */
+  /* D-464: the control plane's viewer stamp on op=stats dropped. A viewer NEVER SENT is the store's direct-internal
+     call and counts WHOLE, so the stamp is load-bearing: vera's stats move again, by name, exactly as the brief's arm.
+     RECORDED, NOT SMOOTHED: this arm was first declared (and first run) against a store that read an ABSENT stamp as
+     DENY — there it failed LIVE, the witness and EXACT and passed the headline (three zeros agree). That reading was
+     then corrected because it zeroed the counters four store-level suites read off the DO route directly; the arm
+     was re-declared for the store as landed. */
   "stats-stamp-dropped": {
     patches: [["index.mjs", `        || op === "stats"\n`, ``]],
-    mustFail: ["the counts are live", "the store SAW the acts: the ADMIN token's bundles",
-               "STILL LIVE: a document vera CAN see moves her bundles", "EXACT: the ADMIN token's bundles less vera's"],
+    mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
+               "EXACT: the ADMIN token's bundles less vera's"],
   },
   /* D-464 OVER-STRICTNESS: the subtraction taken for EVERY sent viewer, unfiltered ones included — correct work in a
      spelling the suite did not anticipate (an unfiltered gate's complement is empty). Nothing may fail. */

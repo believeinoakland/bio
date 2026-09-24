@@ -313,6 +313,12 @@ const ROLE = {
   "#aiRunReapPending": "HOUSEKEEPS",
   "#aiRunReapWake":    "HOUSEKEEPS",
   "#aiRunReap":        "HOUSEKEEPS",
+  /* D-464's, 2026-09-24, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself. `#counts` (op=stats'
+     and purge's proof) always COUNTED `ai_runs`, through a table name the walk could not see; D-464 made it SELECT
+     `run` WHERE the context is a project the caller cannot see, to subtract that run's bounds from the caller's
+     counts. It projects the key only, publishes a NUMBER and no fact of any run, and is purge's proof besides —
+     the purge half of HOUSEKEEPS. Not SELECTS: it delegates to no PUBLISHES reader, because it publishes no run. */
+  "#counts":           "HOUSEKEEPS",
   /* FL-4's two, and ARM W3 IS WHY THEY ARE HERE — they arrived as a FAILURE
      naming both of them by name, which is the sweep behaving exactly as its own
      comment promises rather than absorbing a new reader in silence.
