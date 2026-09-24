@@ -311,7 +311,7 @@ scope: route each code's sites through ONE governed helper inside a DEC-49 REGIO
 accepts-when: each site's refusal carries its translation. NEGATIVE CONTROL: mint one site's code outside the helper and the DEC-49 guard fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-143 · queued — **`tools/gates.mjs` `docFacing()` MATCHES `docs/` AND `tools/<x>.mjs` AGAINST A SUITE'S RAW SOURCE, COMMENTS INCLUDED, so a comment naming a tool makes the suite doc-facing: it fails safe but over-runs suites on every prose landing.** Found by c18-batch7fix's worker; verified at 548eb2c5. — owner M0.
+### M0-143 · running — SPAWNED 2026-09-24 ~04:20Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-143 (CONDUCT #20), base origin/main, into D-470's freed slot; carries D-470's measurement (30 of 72 doc-facing suites by a comment mention alone) and its second site toolReachesDocs(); push by 05:45Z. Falsify rather than believe: read the branch land/worker/M0-143 and that session; never conclude queued from the absence alone.
 order: after M0-142, the same class: gate time on every doc landing (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
 milestone: M0
 interface: none.
