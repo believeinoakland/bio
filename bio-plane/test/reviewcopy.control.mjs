@@ -1,5 +1,6 @@
-/* REC-126's NEGATIVE CONTROL DRIVER — eleven arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
- * REC-133's, §6A.2's authority, (i)-(k) REC-198's, the list of a project's drafts), re-runnable in one step:
+/* REC-126's NEGATIVE CONTROL DRIVER — fourteen arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
+ * REC-133's, §6A.2's authority, (i)-(k) REC-198's, the list of a project's drafts, (l)-(n) REC-199's,
+ * the copy saying `newCase` back), re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -25,7 +26,12 @@ import { preflight } from "../scripts/armdecay.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
-const PEN = join(ROOT, ".nc-reviewcopy");          /* inside this worktree */
+/* THE PEN. BOB #32 RULED ON 2026-09-24 that a scratch file belongs OUTSIDE the worktree — a file
+   in it is WALKED by the repository-reading suites, trips `gates.mjs` §2e's under-inclusion check
+   and makes the tree dirty, which is how D-293 refuses to record a green verdict (three items paid
+   in one night; see `kickoffs/WORKER.md`). The default is unchanged, so no other lane's run moves;
+   `BIO_NC_PEN` points it at the session scratchpad, which is how REC-199 ran it. */
+const PEN = process.env.BIO_NC_PEN || join(ROOT, ".nc-reviewcopy");
 const STORE = join(ROOT, "src", "store.mjs");
 const SUITE = join(DIR, "reviewcopy.test.mjs");
 const LOG = join(PEN, "run.out");
@@ -140,6 +146,31 @@ const ARMS = {
          if (DRY) { DRY.push({ file: STORE, needle: "  caseDraftList({ project = null" }); return; }
          writeFileSync(STORE, src.slice(0, a) + renamed + src.slice(b));
        } },
+
+  /* REC-199 — `op=reviewcopy` answers `newCase` (BOB #32, 2026-09-23 23:08Z). Declarations in the
+     suite's header, made before arming. */
+  l: { files: [STORE],
+       label: "(l) THE FIELD DROPPED: the copy stops saying `newCase` back, which is the state of the plane "
+            + "before REC-199 — an edit written from the answer loses the draft's new-case intent",
+       apply: () => edit(STORE,
+         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition),\n"
+       + "              newCase: !!params.newCase },",
+         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition) },") },
+
+  m: { files: [STORE],
+       label: "(m) THE LIAR'S FIELD: `newCase` answered from the CASE IDENTITY (`!ident.caseId`) instead of "
+            + "from the draft — free agreement wherever a new-case draft is looked at, and wrong about every "
+            + "draft that named no case and asked for nothing",
+       apply: () => edit(STORE,
+         "              newCase: !!params.newCase },",
+         "              newCase: !ident.caseId },") },
+
+  n: { files: [STORE],
+       label: "(n) OVER-STRICTNESS: correct work in a spelling this suite did not write — the same truthiness "
+            + "as a ternary rather than `!!` — must PASS",
+       apply: () => edit(STORE,
+         "              newCase: !!params.newCase },",
+         "              newCase: params.newCase ? true : false },") },
 };
 
 const want = process.argv[2];
@@ -246,4 +277,17 @@ console.log(`\npen removed: ${PEN}`);
      h         reviewcopy: 76 pass, 1 fail
      i         reviewcopy: 71 pass, 6 fail   as declared (the fence dropped; the uninvited arm fails by name)
      j         reviewcopy: 74 pass, 3 fail   as declared (a second, joined-only fence: the admission table and structure)
-     k         reviewcopy: 77 pass, 0 fail   as declared (over-strictness: a renamed local passes) */
+     k         reviewcopy: 77 pass, 0 fail   as declared (over-strictness: a renamed local passes) 
+
+   RE-MEASURED 2026-09-24 by REC-199 (cloud, CONDUCT #20), all FOURTEEN arms, pen in the session
+   scratchpad via `BIO_NC_PEN`, every restore of a 3,287,730-byte `store.mjs` sha256 MATCH / content
+   IDENTICAL / size ok:
+     baseline  82/0
+     a 77/5   b 81/1   c 80/2   d 80/2   e 80/2   f 81/1   g 74/8   h 81/1
+     i 76/6   j 79/3   k 82/0
+     l 79/3   the field dropped — as declared, and the fork and trip-lands arms GREEN
+     m 80/2   the liar agreed for free on the draft the round trip reads; the says-back and fixed-point
+              arms are what caught it — recorded because it is the arm's finding, not a shortfall
+     n 82/0   the unanticipated spelling passes
+   Every (a)-(k) failure count is REC-198's, unchanged; the three new arms of block 10 are the only movement.
+*/

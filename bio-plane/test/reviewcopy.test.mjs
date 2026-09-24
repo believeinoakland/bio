@@ -97,7 +97,42 @@
    GREEN, which is the liar's copy agreeing today exactly where it was built to. AS DECLARED. (k) -> **77 pass, 0 fail**.
    AS DECLARED. ARMS (a)-(h) RE-RUN in the same driver run: a 72/5, b 76/1, c 75/2, d 75/2, e 75/2, f 76/1, h 76/1 — each
    REC-133's failure count unchanged — and g 69/8, FOUR MORE than REC-133 recorded, all four block 9's: with authoring
-   widened, vic, omar and pat write drafts into PROJ and the list reports more than the seven authorised drafts. */
+   widened, vic, omar and pat write drafts into PROJ and the list reports more than the seven authorised drafts.
+
+   REC-199 (BOB #32, 2026-09-23 23:08Z: `op=reviewcopy` answers `newCase`, because a read that drops a field an edit
+   writes back loses it) ADDED BLOCK 10 AND THREE ARMS. DECLARED 2026-09-24 BEFORE ARMING (results appended below
+   when run):
+
+   (l) THE FIELD DROPPED — the `case` block stops carrying `newCase`, which is the plane exactly as it stood before
+   REC-199. MUST FAIL, by name: "THE COPY SAYS THE FIELD BACK" (the field reads `undefined` for all four drafts),
+   "REC-199 ACCEPTS-WHEN" (the write-back built from the answer cannot carry what the answer does not say, so the
+   draft comes back DERIVED and its gates refuse ALREADY_A_CASE_MEMBER) and the FIXED POINT arm (its own untouched
+   draft `DC` goes from `passed` to `refused` across one trip). MUST NOT FAIL: "THE TWO ROUTES ARE A REAL FORK"
+   (it reads the drafts as authored, before any write-back) and "THE ROUND TRIP" (the edit still lands — losing a
+   field is not an error), nor any arm of blocks 1-9.
+
+   (m) THE LIAR'S FIELD — `newCase` answered from the CASE IDENTITY (`!ident.caseId`) rather than from the draft.
+   IT AGREES FOR FREE wherever a new-case draft is looked at, which is why the round trip alone cannot catch it:
+   MUST NOT FAIL "REC-199 ACCEPTS-WHEN", which reads a draft the liar is right about, nor the fork, nor the trip
+   landing. MUST FAIL "THE COPY SAYS THE FIELD BACK" (the two drafts that named no case and asked for nothing are
+   told back as new-case drafts) and the FIXED POINT arm (`DD`, the derived draft, is handed back with
+   `newCase: true` written into it and its gates flip from refused to passed — the liar's answer MAKING ITSELF
+   true, which is the loss running the other way).
+
+   (n) OVER-STRICTNESS — the same truthiness in a spelling this suite did not write (`params.newCase ? true : false`
+   for `!!params.newCase`). MUST PASS, every arm.
+
+   MEASURED 2026-09-24 by WORKER REC-199 (cloud session, CONDUCT #20) with `node test/reviewcopy.control.mjs`, every
+   arm ALONE, the pen in the SESSION SCRATCHPAD and not in the worktree (BOB #32, 2026-09-24; the driver's `PEN`
+   now takes `BIO_NC_PEN`), every restore of `src/store.mjs` (3,287,730 B) sha256 MATCH, content IDENTICAL, size ok:
+   (0) BASELINE -> **82 pass, 0 fail**. (l) -> **79 pass, 3 fail**: THE COPY SAYS THE FIELD BACK, REC-199
+   ACCEPTS-WHEN and THE CLASS AND NOT THE FIELD, by name; the fork arm and the trip-lands arm GREEN. AS DECLARED,
+   exactly. (m) -> **80 pass, 2 fail**: THE COPY SAYS THE FIELD BACK and THE CLASS AND NOT THE FIELD; ACCEPTS-WHEN
+   GREEN, which is the arm's whole point — the liar is RIGHT about the one draft the round trip looks at, and only
+   the draft that asked for nothing and the fixed point catch it. AS DECLARED. (n) -> **82 pass, 0 fail**. AS
+   DECLARED. ARMS (a)-(k) RE-RUN in the same driver run: a 77/5, b 81/1, c 80/2, d 80/2, e 80/2, f 81/1, g 74/8,
+   h 81/1, i 76/6, j 79/3, k 82/0 — EVERY failure count unchanged from REC-198's measurement, the five new arms
+   landing whole in each tally's pass column. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -803,6 +838,117 @@ t("REC-198: A JOINED PARTICIPANT WHO IS NOT THE OWNER LISTS THE SAME SEVEN — t
     [true, true, true, true, false, false]);
   t("and the fence has exactly those two callers in the store",
     (STORE_SRC.match(/this\.#seesProjectDrafts\(/g) || []).length, 2);
+}
+
+/* =========================================================================== 10
+ * REC-199 / BOB #32 (2026-09-23 23:08Z), `BIO_Publication_v0_1.md` §6A.4: `op=reviewcopy`
+ * ANSWERS `newCase`, BECAUSE A READ THAT DROPS A FIELD AN EDIT WRITES BACK LOSES IT.
+ *
+ * WHY THE LOSS IS BEHAVIOURAL AND NOT COSMETIC — which is what makes an arm possible at
+ * all. D-309's `newCase` is the ONLY way a caller can SAY "this material starts a new
+ * case" when its findings already serve one; the identity a draft stands at is otherwise
+ * DERIVED. LEAD is already published as case C1 edition 1 (block 1), so the two routes
+ * answer differently through the gates and nothing internal has to be believed:
+ *   - with `newCase`   -> the dry run mints, and every gate PASSES.
+ *   - without it       -> the derivation finds C1 and the gates refuse ALREADY_A_CASE_MEMBER.
+ * A copy that drops the field turns the first draft into the second at the next edit, in
+ * exactly the direction D-309 exists to refuse: the publisher's NEW-CASE intent silently
+ * overridden. `case.case_id` cannot stand in for it — it is `null` for both.
+ *
+ * THE ROUND TRIP IS DRIVEN, NEVER ASSERTED. `bodyFromCopy` rebuilds `op=casedraft`'s body
+ * FROM THE ANSWER AND NOTHING ELSE — the shape `civicos-ui`'s `rvcFormFromCopy` +
+ * `rvcDraftBody` pair has, and the act the UI performs when a member re-opens a draft to
+ * edit it. So an arm cannot pass because this suite remembered what it sent: if the answer
+ * does not say a thing, the write-back cannot say it either.
+ *
+ * AND THE LAST ARM IS THE CLASS, NOT THE FIELD. A list of field names goes stale the day a
+ * twelfth is added to `REVIEW_DRAFT_FIELDS`, so the property asserted is that a review copy
+ * is a FIXED POINT of read -> write-back -> read: every authored fact, the case identity and
+ * the gates' own verdict survive the trip unchanged. Any future field the answer drops fails
+ * it without anybody remembering to extend a list.
+ * ========================================================================= */
+console.log("\n--- 10. REC-199: the copy says `newCase` back, so an edit does not lose it ---");
+{
+  /* THE WRITE-BACK, BUILT FROM THE ANSWER ALONE. Every value here is read off the review
+     copy; nothing is carried over from the body that made the draft. */
+  const bodyFromCopy = (c) => {
+    const b = { project: c?.project, draft: c?.draft };
+    const fs = Array.isArray(c?.findings) ? c.findings : [];
+    if (fs.length) {
+      b.targets = fs.map((f) => f.target);
+      const roles = {};
+      for (const f of fs) if (f.role) roles[f.target] = f.role;
+      if (Object.keys(roles).length) b.roles = roles;
+    }
+    if (c?.case?.case_id) b.caseId = c.case.case_id;
+    if (c?.case?.newCase) b.newCase = c.case.newCase;
+    const a = c?.authored || {};
+    for (const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"])
+      if (a[k]) b[k] = a[k];
+    if (Array.isArray(a.excluded)) b.excluded = a.excluded;
+    return b;
+  };
+  /* The comparable part of a copy: what an EDIT is supposed to preserve. `updated_at` moves
+     on every write and is REC-200's subject, not this one's; the lists and the marking are
+     not authored. */
+  const authoredPart = (c) => ({ case: c?.case, authored: c?.authored, gates: c?.gates,
+                                 missing: c?.missing, findings: c?.findings });
+  const copyOf = async (id) => rP(await GET(`op=reviewcopy&draft=${id}&token=${IRIS}`));
+
+  const DNr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD], newCase: true }));
+  if (!DNr?.ok) bail("casedraft DN (the new-case draft over a finding C1 already publishes)", DNr);
+  const DDr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD] }));
+  if (!DDr?.ok) bail("casedraft DD (the same material with the field unset)", DDr);
+
+  const DN1 = await copyOf(DNr.draftId), DD1 = await copyOf(DDr.draftId);
+  const D1c = await copyOf(D1), D2c = await copyOf(D2);
+
+  t("REC-199: THE TWO ROUTES ARE A REAL FORK, and the draft's own answer proves the fixture before any "
+  + "arm rests on it — the same findings, `newCase` the only difference: one mints and passes every gate, "
+  + "the other derives C1 and is refused ALREADY_A_CASE_MEMBER",
+    [DN1?.gates, DN1?.missing?.length, DD1?.gates, DD1?.missing?.[0]?.reason],
+    ["passed", 0, "refused", "ALREADY_A_CASE_MEMBER"]);
+
+  t("REC-199: THE COPY SAYS THE FIELD BACK, and says it of the DRAFT rather than of the case identity: "
+  + "`true` only where the draft asked for a new case, `false` where it named a case AND where it said "
+  + "nothing — the two the case identity cannot tell apart, since `case_id` is null for both",
+    [DN1?.case?.newCase, DD1?.case?.newCase, D1c?.case?.newCase, D2c?.case?.newCase,
+     DD1?.case?.case_id, D2c?.case?.case_id, D1c?.case?.case_id],
+    [true, false, false, false, null, null, C1]);
+
+  /* THE ROUND TRIP, through the op, as a member editing a draft they have just read. */
+  const wrote = await draft(IRIS, bodyFromCopy(DN1));
+  t("REC-199: THE ROUND TRIP — the copy is read, `op=casedraft`'s body is rebuilt FROM THE ANSWER ALONE "
+  + "and written back to the same draft, and the edit lands",
+    [wrote?.ok, wrote?.draftId, wrote?.edited], [true, DNr.draftId, true]);
+  const DN2 = await copyOf(DNr.draftId);
+  t("REC-199 ACCEPTS-WHEN: AND THE DRAFT IS STILL THE NEW CASE IT WAS — the field survives the trip and "
+  + "the gates still pass. A copy that dropped it would hand this draft back as the derived one, refused "
+  + "ALREADY_A_CASE_MEMBER, which is the whole defect",
+    [DN2?.case?.newCase, DN2?.gates, DN2?.missing?.length], [true, "passed", 0]);
+
+  /* THE CLASS. IT RUNS OVER A DRAFT OF ITS OWN (`DC`), NOT OVER `DN`: the round trip above
+     has already written `DN` back, so a copy that dropped the field would have turned it into
+     the derived draft on that first trip and every trip after it would be a fixed point of
+     the WRONG draft — an arm that cannot fail once the damage is done. `DC` is authored the
+     same way and read for the first time here. */
+  const DCr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD], newCase: true }));
+  if (!DCr?.ok) bail("casedraft DC (the class arm's own untouched new-case draft)", DCr);
+  const RT = async (id) => {
+    const before = await copyOf(id);
+    const w = await draft(IRIS, bodyFromCopy(before));
+    return [authoredPart(before), w?.ok === true, authoredPart(await copyOf(id))];
+  };
+  const [bN, okN, aN] = await RT(DCr.draftId);
+  const [bD, okD, aD] = await RT(DDr.draftId);
+  const [b1, ok1, a1] = await RT(D1);
+  const [b2, ok2, a2] = await RT(D2);
+  t("REC-199, THE CLASS AND NOT THE FIELD: A REVIEW COPY IS A FIXED POINT OF read -> write-back -> read. "
+  + "Four drafts — the new case, the derived one, one naming an existing case and one saying nothing — "
+  + "each rewritten from its own answer, and every authored fact, the case identity and the gates' own "
+  + "verdict come back unchanged. A twelfth field the answer forgets fails this without a list to extend",
+    [[okN, okD, ok1, ok2], JSON.stringify([bN, bD, b1, b2]) === JSON.stringify([aN, aD, a1, a2])],
+    [[true, true, true, true], true]);
 }
 
 console.log(`\nreviewcopy: ${pass} pass, ${fail} fail`);

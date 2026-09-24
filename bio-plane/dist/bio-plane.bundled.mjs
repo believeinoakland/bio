@@ -39347,10 +39347,27 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       draft: d.draft_id,
       project: d.project_id,
       reader,
+      /* REC-199 / BOB #32 (2026-09-23 23:08Z), BIO_Publication_v0_1.md 6A.4: `newCase` IS SAID BACK,
+         BECAUSE A READ THAT DROPS A FIELD AN EDIT WRITES BACK LOSES IT. It was the ONE member of
+         `REVIEW_DRAFT_FIELDS` this answer never carried: `targets`/`target` and `roles` come back as
+         `findings`, `caseId` as `case.case_id`, and the six authored sentences as `authored` — so an
+         editor who read a draft and wrote the copy back turned a draft that had asked for a NEW case
+         (D-309's third route, the one a caller can only ever STATE) into one whose case is DERIVED
+         from what its findings already serve, silently and in the direction D-309 exists to refuse.
+         IT SITS IN `case` AND NOT IN `authored` because it is the other half of ONE choice — name a
+         case, or ask for a new one, which `publishCase` refuses TOGETHER as CASE_IDENTITY_AMBIGUOUS —
+         and the two halves of one choice do not live in two blocks.
+         ANSWERED AS THE GATES READ IT, a boolean: `publishCase` consults `newCase` for truthiness
+         alone, so `!!` is exactly route-preserving for every spelling a caller may have stored
+         (`"false"` is truthy here as it is there, and an absent field is the derivation, not an
+         UNDETERMINED). WHAT IT DOES NOT SAY is the identity SENTENCE beside it: with no case named,
+         that sentence reads *a new case* whether or not this field is set, which is REC-199's
+         reported finding and is `#caseIdentitySentence`'s to fix, in the three answers that print it. */
       case: {
         case_id: ident.caseId,
         edition: ident.edition,
-        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition)
+        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition),
+        newCase: !!params.newCase
       },
       authored: {
         scope: params.scope ?? null,
