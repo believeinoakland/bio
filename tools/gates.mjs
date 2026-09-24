@@ -166,6 +166,47 @@ const treeNow = () => tryGit(["rev-parse", "--verify", "--quiet", "HEAD^{tree}"]
 const START = { head: tryGit(["rev-parse", "--verify", "--quiet", "HEAD"]), tree: treeNow(), status: statusNow() };
 const CLEAN_AT_START = START.status === "" && !!START.tree;
 
+/* ---- 0b · the coord snapshot this run measures (M0-173) ----------------
+ *
+ * A GATE'S VERDICT MUST NOT DEPEND ON WHEN IT RAN. Every unit that runs `plancheck` reads `origin/coord` through the
+ * coord layer (§3a condition 1: "it reads what plancheck reads, the whole tree and `origin/coord`"), and so do the
+ * suites that read the state files directly — and `origin/coord` is a LIVE remote-tracking ref this very checkout
+ * moves: `coord.mjs read`, `ledger`, `decided`, `owed` and `mintid` FETCH it when a suite drives their CLIs (31
+ * fetches in one `mintid` run, measured 2026-09-23 by M0-136), and a lane writes `coord` every few minutes. So one
+ * gate run could read two different coord snapshots, and a unit holding TWO readings of it to each other went red on
+ * the timing alone. MEASURED by CONDUCT #20 on 2026-09-24: a train's gate read `planning-hygiene` 75 pass / 1 fail at
+ * ~17:1xZ — its arm "plancheck's own count of open rows equals this suite's", which compares the suite's own read of
+ * the plan with the figure a separately-spawned plancheck printed — and the IDENTICAL tree re-run by hand read 76 / 0.
+ *
+ * THE PIN. This run resolves `origin/coord` ONCE, here, and sets `BIO_COORD_REF` — the coord layer's own override
+ * (`tools/coord.mjs` `coordRef`) — to that COMMIT. Every step inherits it through the environment, so every unit and
+ * every CLI a unit spawns reads the same bytes, and a tool whose override is set does not fetch (`freshen`), which is
+ * what moved the ref mid-run in the first place. A suite that pins a commit of its own (`bio-plane/test/coordpin.mjs`,
+ * M0-136) sets the variable after this one and keeps its own; an override already in the environment when the gate
+ * starts is a plant (a fixture's, a driver's) and is never overridden. `coord` is append-only, so the pinned commit
+ * stays reachable; a clone that never fetched `coord` reads the state as ABSENT, exactly as it did before the pin.
+ *
+ * WHAT THE PIN DOES NOT CLAIM. It says nothing about a battery run by hand outside the gate (no pin, so a hand run
+ * can still read a moving ref), and it does not make the live state judged: `plancheck` bare and the coord write's own
+ * ledger checks are where a live read is the purpose (§3a item 4's cost, in M0-136's words). */
+const COORD = (() => {
+  const planted = process.env.BIO_COORD_REF;
+  if (planted) return { ref: planted, sha: tryGit(["rev-parse", "--verify", "--quiet", `${planted}^{commit}`]), pinned: false,
+                        why: "BIO_COORD_REF was already set when the gate began, so this run reads what it names" };
+  const sha = tryGit(["rev-parse", "--verify", "--quiet", "origin/coord^{commit}"]);
+  if (!sha) return { ref: "origin/coord", sha: null, pinned: false,
+                     why: "origin/coord does not resolve in this checkout, so there is no commit to pin (`git fetch origin coord`)" };
+  process.env.BIO_COORD_REF = sha;
+  /* READ BACK what every child will actually be told, so the printed line and the record rest on the variable that
+     GOVERNS the units and not on this block having run: a mechanism believed on the strength of its existence rather
+     than its behaviour is the defect this project meets most (`kickoffs/WORKER.md`). With `pinned` hardcoded, a gate
+     whose assignment was gone went on printing PINNED over units reading the moved ref — measured by arm G22. */
+  const set = process.env.BIO_COORD_REF || null;
+  return { ref: set, sha: set, pinned: set === sha,
+           why: set === sha ? null
+             : `origin/coord resolved to ${short(sha)}, but BIO_COORD_REF reads ${set === null ? "unset" : short(set)}, so no unit was told to read that commit` };
+})();
+
 /* ---- 1 · what changed, measured ---------------------------------------- */
 const listDiff = (args) => {
   const out = tryGit(["diff", "--name-only", "--no-renames", ...args]);
@@ -1159,6 +1200,11 @@ console.log(CLEAN_AT_START
   ? `gates: record — the tree ${short(START.tree)} is CLEAN, so this run's verdict ${EXPLAIN ? "would be" : "will be"} recorded under the git common dir (D-293)`
   : `gates: record — the tree is NOT clean (${START.status === null ? "status unreadable" : `${START.status.split("\n").filter(Boolean).length} path(s)`}), so this run's verdict will NOT be recorded (D-293)`);
 
+console.log(COORD.pinned
+  ? `gates: coord PINNED at ${short(COORD.sha)} — every unit of this run, and every CLI a unit spawns, reads the state at that `
+    + "commit, never the moving origin/coord (M0-173)"
+  : `gates: coord NOT PINNED — ${COORD.why}${COORD.sha ? ` (${short(COORD.sha)})` : ""}`);
+
 if (EXPLAIN) process.exit(0);
 
 /* M0-107 (BOB #28): each step is handed a verdict file of its own. A battery writes its verdict there; a step
@@ -1324,6 +1370,9 @@ if (notMeasured) {
       w = appendRun({ repo: REPO, run: {
         tree: START.tree, verdict: VERDICT, class: cls, why, head: START.head, base: base || null,
         at: new Date().toISOString(), worktree: REPO, since: sinceInfo,
+        /* M0-173: the coord snapshot every unit read, so a record says WHICH state its verdict rests on; `pinned`
+           false means this run read whatever a plant named, or nothing (`origin/coord` absent). */
+        coord: COORD.sha, coordPinned: COORD.pinned,
         /* BOB #30 (2026-09-23, TREE-SHARING §3a condition 3): a release cut may rely on a GREEN FULL whole-tree record ONLY
            when its run REUSED NOTHING and used no `--since`. This run says so itself; pushguard's `isBackstop` reads it. A
            run that reused even ONE unit is FULLREUSE and never a backstop. */
