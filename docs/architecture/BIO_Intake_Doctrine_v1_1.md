@@ -1,6 +1,6 @@
 # BIO Intake Doctrine
 
-**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name — BUILT 2026-09-23 (D-179: `op=promote` refuses it before any write, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13); the census of what a pre-fence move left behind is BUILT 2026-09-24 (REC-190: `op=homecensus`, read-only, the first holder stated undetermined).** as of 2026-09-24.
+**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name — BUILT 2026-09-23 (D-179: `op=promote` refuses it before any write, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13); the census of what a pre-fence move left behind is BUILT 2026-09-24 (REC-190: `op=homecensus`, read-only, the first holder stated undetermined).** **§2a ADDED 2026-09-24 (BOB #33): the doorbell, `op=knock`, the one route by which anyone, without an account, hands the group material; it folds BOB #32's ruling of that day that a published limit is a BOUND (D-496).** as of 2026-09-24.
 
 **Place in the system** · Owns construct 2 of `BIO_System_Design.md` §3 (intake, capture and provenance) and half of construct 10 (standing intent): "the State Rules specification governs bundle shape; this doctrine governs admission to the store." `BIO_State_Rules_Consistency_v1_5.md` realises it as the intake provenance register, I-18's ratification fence and drafted I-19; `BIO_Membership_Architecture_v2.md` §1 borrows its who-issued/how-captured split; the plane's C-18 rules and the sweep floor cite it.
 
@@ -9,6 +9,7 @@
 - §1 and §5 — "draft position".
 - §1a — the incident procedure is "drafted if ever forced"; the chooses-not-to-hold case is "still deferred".
 - §2 — landing "through the pending queue" is the retired substrate.
+- §2a — how a member moves a knock into the record (what `pulled` commits them to, and whether the capture it becomes names the doorbell as its provenance) is not designed (verified 2026-09-24 by BOB #33: no document names it); and `RATE_IP` / `RATE_GLOBAL` have no member-facing translation yet (D-508).
 - §3 — the checker advisory is pending; DEC-39's attest-fence wording, which this section is said to take, is not referenced here.
 - §3c — bag ingestion "built when the first bag is produced or consumed".
 - §4 and §4a — daemon-centred; the retention posture "deferred until forced"; "today the client authenticates the group, not the person" predates Membership v2 §6.
@@ -24,6 +25,7 @@
 - [1. What the store admits (D1, draft position)](#1-what-the-store-admits-d1-draft-position)
 - [1a. Admission requires provenance, never relevance](#1a-admission-requires-provenance-never-relevance)
 - [2. The intake contract (D2)](#2-the-intake-contract-d2)
+- [2a. The doorbell: material from anyone (added 2026-09-24)](#2a-the-doorbell-material-from-anyone-added-2026-09-24)
 - [3. Capture grades (D3)](#3-capture-grades-d3)
 - [3a. Member-original records (added draft 0.3)](#3a-member-original-records-added-draft-03)
 - [3b. Independent verifiability (added draft 0.4)](#3b-independent-verifiability-added-draft-04)
@@ -247,6 +249,37 @@ Every submission, daemon or member, carries:
 How it lands: as a gated Information bundle through the pending queue,
 promotion consuming it. No intake path writes live state; the daemon and
 the member are writers like every writer.
+
+# 2a. The doorbell: material from anyone (added 2026-09-24)
+
+The doorbell is the one route into an instance that needs no account, no token and no session: anyone may hand the group material. It
+exists because a group whose purpose is accountability must be reachable by people who will not, or cannot, join it. It is the route
+Membership v2 §1.2 sets against hand-carried material: what comes through it has NO attributed source, and the record says so rather than
+supplying one.
+
+**What arrives is material, never an act.** A knock (`POST op=knock`, content as `contentB64` or `contentText`, with an optional `note` of
+up to 2,000 characters and `contact` of up to 300) writes one row in the instance's doorbell inbox and, with evidence storage configured,
+one object under `bio/inbox/<sha256>` in the working bucket, and changes nothing else. Its worst case is by construction a full inbox. The
+bytes are held with their SHA-256 and byte count, the time received, and status `new`. The size cap is 8 MiB with evidence storage and
+64 KiB without it (stored inline, and the refusal says large material needs evidence storage). An empty knock, a missing body, bad base64
+and an oversized one are each refused by name. A store that does not answer is reported as silence, never as a rate refusal (REC-52): a
+429 tells a member of the public they knocked too often, which is a claim that needs a count behind it.
+
+**It does not enter the record by knocking.** Nothing leaves the doorbell inbox except to a signed-in member (`op=inbox`, `op=inboxget`),
+who resolves each knock as `pulled`, `discarded` or back to `new`, recorded with when and by whom (`op=inboxresolve`). A knock is not a
+capture and not a bundle; the §2 contract and the §1a admission rule apply when a member brings its material in, not before. This inbox
+is not the task inbox of `docs/development/INBOX-GRAMMAR.md`, which holds work items for members; they share the word and nothing else.
+
+**The limit is a BOUND (BOB #32, 2026-09-24, D-496).** A limit the instance publishes is one it holds, not the name of a bucket. The limits
+are 12 knocks per source (a fingerprint of the connecting address, never the address) and 300 per instance, in any 10 minutes, counted in
+the same transaction as the write so a race cannot slip past them. The count is a two-bucket weighted sliding window,
+`est = prev × (1 − elapsed/W) + cur`, refused at `est ≥ limit`. The fixed bucket it replaced let a caller send the limit just before a
+bucket edge and again just after it: twice the published number in less than one window, with the code doing exactly what it said. The
+estimate is approximate in both directions, because it assumes the previous bucket's knocks were spread evenly. So the instance publishes
+the bound together with its method, built from the same constants so the words and numbers cannot drift: *"at most 12 knocks from one
+source in any 10 minutes, estimated by a sliding window"*, and the instance-wide 300 likewise. The sentence is returned as `stated` on
+the 429, at the one moment a caller is held to it. If the word "estimated" is ever dropped, the limiter must become exact in the same
+change.
 
 # 3. Capture grades (D3)
 

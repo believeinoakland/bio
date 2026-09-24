@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) disable the published-token denylist in tokens.mjs liveToken (return true for any non-empty value instead of checking PUBLISHED_TOKEN_HASHES) so a leaked repo token authenticates -> 4 assertions fail (published value authenticates as admin, selftest calls the poisoned binding live, bootstrap reports a usable credential, claim accepts the published bootstrap token); restored, 30 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the published-token denylist in tokens.mjs liveToken (return true for any non-empty value instead of checking PUBLISHED_TOKEN_HASHES) so a leaked repo token authenticates -> 4 assertions fail (published value authenticates as admin, selftest calls the poisoned binding live, bootstrap reports a usable credential, claim accepts the published bootstrap token); restored, 30 pass (the suite stated 30 arms that day; it states 34 today). D-506's THREE ARMS, RUN 2026-09-24 on `land/worker/D-506`, each armed ALONE in `src/livefire.mjs`, others held open, and restored from a uniquely-named per-arm pristine copy verified by sha256 AND `cmp` (5c9eb97abdb2ce922ced7355445aa179939ed5cbaef8a52c0427fe0acb87330a, 15,316 B, IDENTICAL after all three). BASELINE first, so six-arms-broken cannot read as six-arms-working: installer 34/34, d334-monitor-credential 46/46, refusal-wire 42/42, all exit 0. **ARM 1 — THE ROW'S: drop every failing assertion's NAME from `failing`** (`const failing = [];`), the assertion still broken. DECLARED: installer's *"D-506: and `failing` NAMES the assertion"* and d334's *"and the verdict NAMES the token-hygiene assertion"* MUST FAIL; every `verdict` and `ok` arm MUST NOT. ACTUAL, EXACTLY AS DECLARED: installer 33/1 failing that arm alone (`want ["no configured token is a published repository value"] got []`), d334 45/1 failing that arm alone, refusal-wire 42/42 green. The verdict arms held — which is the point of deriving `verdict` from the assertions and `r2.ok` directly rather than from `failing.length`: the control moves ONE variable. **ARM 2 — restore `ok` as the VERDICT** (the pre-D-506 `ok: A.every((a) => a.ok) && r2.ok`). DECLARED: installer's *"the op ANSWERED"*, d334's *"livefire goes red on the published daemon binding"* and refusal-wire §6c's residue pin MUST FAIL; the `verdict`/`failing` arms MUST NOT. ACTUAL, EXACTLY AS DECLARED: 33/1, 45/1 and refusal-wire RED on the residue pin — `op=livefire` walks straight back into the codeless-refusal set, which is the instrument agreeing that the set was struck for a real reason. **ARM 3 — OVER-STRICTNESS: the same `failing` in a spelling nothing anticipated** (`A.flatMap((a) => (a.ok === false ? [String(a.name)] : []))`). DECLARED: nothing may fail. ACTUAL: 34/34, 46/46, 42/42, all exit 0. ONE ARM COULD NOT BE EXERCISED AND IS STATED RATHER THAN COUNTED: installer's *"and it names nothing failing"* on the no-R2 fixture pins `failing` as `[]`, which ARM 1 also produces, so that arm discriminates nothing under ARM 1. It is load-bearing in the other direction — a verdict of `pass` beside a named failure — and ARM 2 leaves it green as declared. */
 /* Installer-readiness guarantees:
  *  1. A published repository token value can never authenticate and can never
  *     arm the bootstrap claim, even if an operator sets it.
@@ -77,7 +77,14 @@ console.log("\n--- no R2 is healthy and declared; livefire agrees ---");
   t("bindings report absence, not failure", st.bindings.CAPTURES, "not configured");
   t("required bindings all present", st.bindingsAllPresent, true);
   const lf = await j("/api/?op=livefire&token=probe-local-battery");
-  t("livefire ok with no R2", lf.ok, true);
+  /* CORRECTED BY D-506 (IC-265), never exempted: this read `lf.ok` as the VERDICT, which it no longer
+     is — `ok` says the op ANSWERED. The old assertion was not wrong about the canary, it was asking
+     the wrong key, so it is re-pointed at `verdict` and joined by the two keys that now carry the
+     answer. The PASS side matters as much as the fail side below: `failing` must be EMPTY here, or a
+     verdict of `pass` beside a named failure would be the same silence in the other direction. */
+  t("livefire ANSWERED with no R2 — `ok` is the op answering, not the verdict", lf.ok, true);
+  t("livefire's verdict passes with no R2", lf.verdict, "pass");
+  t("and it names nothing failing", lf.failing, []);
   t("livefire declares R2 not configured", lf.r2.configured, false);
   t("declared-absence assertion present",
     lf.assertions.some((a) => a.name === "R2 not configured is declared, not silent" && a.ok), true);
@@ -88,10 +95,31 @@ console.log("\n--- no R2 is healthy and declared; livefire agrees ---");
 
 console.log("\n--- livefire fails a configured token that is a published value ---");
 {
-  const mf = mk({ ADMIN_TOKEN: PUBLISHED, PROBE_TOKEN: "probe-local-battery" });
+  /* CORRECTED BY D-506, never exempted — AND THE CORRECTION WAS FOUND BY THIS ITEM'S OWN SUBJECT.
+     D-436 (IC-172) made a store recording no producing group refuse the canary's creation by name
+     (C-64.1), and bound INSTANCE_NAME in the block above for exactly that reason; THIS block was
+     missed. So the canary here failed FOURTEEN assertions, thirteen of them the C-64.1 cascade and
+     nothing to do with a published token — while the line below called the published-value assertion
+     "the one that failed", which was simply untrue. `ok:false` was all anyone could see, so nothing
+     said otherwise. Binding INSTANCE_NAME restores the fixture to testing what its own labels claim:
+     exactly one assertion fails, and it is the published-value one. **This is the item's thesis
+     measured on itself** — the verdict said red, the record said nothing about WHICH, and a false
+     sentence sat in the suite unchallenged. */
+  const mf = mk({ ADMIN_TOKEN: PUBLISHED, PROBE_TOKEN: "probe-local-battery",
+                  INSTANCE_NAME: "published-token-fixture" });
   const j = async (p) => (await (await mf.dispatchFetch("http://x" + p)).json());
   const lf = await j("/api/?op=livefire&token=probe-local-battery");
-  t("battery goes red", lf.ok, false);
+  /* ---- D-506's ACCEPTANCE (IC-265), on the one fixture in the battery where the canary finds a REAL
+     defect: an ADMIN_TOKEN bound to a value published in this repository. A BROKEN ASSERTION YIELDS
+     `ok:true`, `verdict:"fail"`, AND `failing` NAMING IT. Before this item the same fixture answered
+     `ok:false` with no `reason`, no `code` and no `error` sentence of any kind — which every consumer
+     that reads `ok:false` as a refusal (the catalogue-free agent worker included) could neither
+     translate nor name. `failing` is pinned as the WHOLE LIST rather than a `.includes`, so an arm
+     that drops the name fails here and an arm that adds a name nobody expected fails here too. */
+  t("D-506: the op ANSWERED, so `ok` is true even though the canary found a defect", lf.ok, true);
+  t("D-506: the verdict is where the canary's answer lives, and it reads fail", lf.verdict, "fail");
+  t("D-506: and `failing` NAMES the assertion, so the answer is never silent about which",
+    lf.failing, ["no configured token is a published repository value"]);
   const a = lf.assertions.find((x) => x.name === "no configured token is a published repository value");
   t("the published-value assertion is the one that failed", a.ok, false);
   t("it names the binding, not the value", JSON.stringify(a.got), JSON.stringify(["ADMIN_TOKEN"]));

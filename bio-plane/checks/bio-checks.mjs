@@ -634,6 +634,70 @@ function governingLawsFindings(fm, findings) {
     findings.push(f('C-2.10', 'error', `governing_laws_at '${at}' is not a timestamp: the act that set the list is dated`));
 }
 
+/* =====================================================================
+ * REC-195 (D-149's remaining half; `BIO_Case_Making_v0_1.md` §2): A MACHINE'S
+ * PROPOSAL OF THE LIST, LABELLED MACHINE WORK.
+ *
+ * The ruling's own words are *the machine may propose the list from the
+ * counterparty, labelled as machine work, and never sets it*. D-149 built the
+ * fence (C-32.18) and left the proposal unbuilt. The proposal is stored APART
+ * from the member's list — it is not `governing_laws[]`, it is not in the
+ * action's bytes, and no read composes the two — so the only thing this block
+ * has to get right is the LABEL.
+ *
+ * THE LABEL IS THE PLANE'S OWN ANSWER, NOT A LITERAL FOR A SURFACE TO MATCH,
+ * and this is `CONTENT_MINT_STATES` one construct over, for its reason exactly
+ * (PL-17: *a surface that reads the field itself and matches on the literal has
+ * rebuilt the predicate*). `proposed_by` holds an identity — a machine stamp,
+ * or a member handle — and a surface rendering that identity verbatim prints a
+ * machine word at a member. So the plane answers the QUESTION and publishes the
+ * SENTENCE.
+ *
+ * THE BLOCK IS PRESENT ON EVERY PROPOSAL, not only on machine ones, for
+ * `#mintLabel`'s stated reason: a key that appears only when the answer is
+ * "machine" makes ABSENCE carry the meaning, and a surface that never learned
+ * the key then renders nothing at all for a machine's proposal — which is the
+ * failure the label exists to prevent, arriving as silence.
+ *
+ * THE READING IS TOTAL: three states, every `proposed_by` lands in exactly one,
+ * and `unstated` is a STATED answer rather than a gap. A proposal nobody can be
+ * named for is refused at the act, so `unstated` is not reachable through the
+ * control plane today; it is kept because the reading is a property of the
+ * VALUE, and a reader handed a row from anywhere must land somewhere honest.
+ * ===================================================================== */
+export const LAW_PROPOSAL_STATES = {
+  machine_proposed: 'a machine credential proposed these citations. That is machine work, labelled as machine '
+    + 'work: it can set a list of laws beside the request and it can never state which laws govern it. Nothing '
+    + 'here is this action\'s list of governing laws, and nothing becomes one until a member states it themselves',
+  member_proposed: 'a member proposed these citations to whoever states this action\'s governing laws. It is a '
+    + 'proposal and not the list: only the governing-laws act sets that, and the record holds who made it',
+  unstated: 'the record does not say who proposed these citations',
+};
+
+/** Read a proposal's `proposed_by` as ONE of the three states above. Blank is
+ *  answered first — "nobody said" and "a machine said" are different findings —
+ *  and everything the machine predicate does not claim is a name, i.e. a member.
+ *  `isMachineIdentity` is REC-46's one predicate and is not re-spelled here. */
+export function lawProposalState(proposedBy) {
+  const s = String(proposedBy ?? '').trim();
+  if (s.length === 0) return 'unstated';
+  return isMachineIdentity(s) ? 'machine_proposed' : 'member_proposed';
+}
+
+/** The whole label block a reader is shown beside a proposal: who, which state,
+ *  whether it is machine work, and the published sentence. ONE composer, so the
+ *  store's read and any later surface cannot compose two answers to one
+ *  question (REC-46's eleven-copies finding, arriving at a label). */
+export function lawProposalLabel(proposedBy) {
+  const state = lawProposalState(proposedBy);
+  return { by: proposedBy ?? null, state, machine_work: state === 'machine_proposed',
+           says: LAW_PROPOSAL_STATES[state] };
+}
+
+/* The longest `why` a proposal may carry against one citation, in characters. A why says what the proposer
+   read the citation off — "the counterparty is a California city agency" — and is never the law's text. */
+export const LAW_PROPOSAL_WHY_MAX = 240;
+
 /* REC-24 (a): the two kinds a leg of an action's basis may carry. Exported for
  * the same reason ACTION_KINDS is — op=affordances publishes it and the store
  * projects against it, so the gate and the publication read ONE array. */
@@ -9775,6 +9839,14 @@ export const MACHINE_FENCE_CHECKS = {
  * read: a writer that filled a citation in at creation would pass every read-side assertion while the record
  * asserted a legal frame no member chose, so the creation arm is refused BY NAME (GOVERNING_LAWS_REWRITTEN).
  * The machine fence is C-32.18, in its own family.
+ *
+ * THE FOUR SHAPE ROWS MOVED THEIR `where` FROM `actionLaws` TO `#lawEntries` ON 2026-09-24 (REC-195), and the
+ * move is the row's own rule working rather than a tidy-up: REC-195 adds a SECOND act that takes a list of
+ * citations — `op=actionlawspropose`, the machine's PROPOSAL — and a `where` names THE SMALLEST SPAN IN WHICH
+ * THE REFUSAL IS ENFORCED. Two acts each enforcing these four conditions in their own body would be two spans
+ * for one row, which is the shape D-484 had to consolidate for `NO_BASIS`. So the grammar is one private helper
+ * both acts ask, the region travelled with it unchanged, and the codes, the C-numbers and the translations are
+ * the same four a member already meets.
  * ========================================================================= */
 export const GOVERNING_LAW_CHECKS = {
   GOVERNING_LAWS_REWRITTEN: {
@@ -9786,27 +9858,27 @@ export const GOVERNING_LAW_CHECKS = {
   },
   NO_LAWS: {
     check: 'C-73.2',
-    where: 'src/store.mjs actionLaws > is-laws-entry',
+    where: 'src/store.mjs #lawEntries > is-laws-entry',
     translation: 'The act names at least one law, each by its citation and its level. With none named there is '
       + 'nothing to set: a request whose laws nobody has stated reads as undetermined on its own, and '
       + 'setting an empty list would not make that any truer.',
   },
   BAD_LAW_LEVEL: {
     check: 'C-73.3',
-    where: 'src/store.mjs actionLaws > is-laws-entry',
+    where: 'src/store.mjs #lawEntries > is-laws-entry',
     translation: 'Each law is stated at one of three levels: federal, state or local. One entry named a level '
       + 'outside those three, so nothing was written.',
   },
   BAD_CITATION: {
     check: 'C-73.4',
-    where: 'src/store.mjs actionLaws > is-laws-entry',
+    where: 'src/store.mjs #lawEntries > is-laws-entry',
     translation: 'Each law is named by its citation — a short reference such as a code section — and one entry '
       + 'was empty, too long, repeated, or held a quotation mark, backslash or line break, which this record '
       + 'cannot store. Nothing was written.',
   },
   TOO_MANY_LAWS: {
     check: 'C-73.5',
-    where: 'src/store.mjs actionLaws > is-laws-entry',
+    where: 'src/store.mjs #lawEntries > is-laws-entry',
     translation: 'One act states at most twelve governing laws. A request governed at the federal, state and '
       + 'local levels names a handful; a longer list is more likely a list of every law that might apply than '
       + 'of the ones that do. Nothing was written.',

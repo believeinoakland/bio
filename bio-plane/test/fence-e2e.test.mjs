@@ -926,8 +926,14 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
   const HARVEST = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
   t("the harvest found a REAL family and not an empty one — the guard is the evidence, never the "
   + "equality that follows it", HARVEST.length >= 12, true);
-  t("and the set driven below IS the family the plane can mint, so a thirteenth cannot arrive "
-  + "unmeasured", [HARVEST.filter((c) => !(c in SHORT)), Object.keys(SHORT).filter((c) => !HARVEST.includes(c))],
+  /* CORRECTED 2026-09-24 by D-503's class sweep, never exempted, and the correction is to the CLAIM
+     rather than to the corpus: `STORE_BARE` above reads `src/store.mjs` alone, while "the family the
+     plane can mint" also covers the five fences minted in `src/index.mjs`, which this suite does not
+     drive. Those five are harvested and driven, each under a payload a human then succeeds with, by
+     `machine-fences.test.mjs` block 3b (D-503), which holds the same equality over them. */
+  t("and the set driven below IS the family `src/store.mjs` mints, so a thirteenth cannot arrive "
+  + "unmeasured (the five `src/index.mjs` mints are machine-fences.test.mjs block 3b's, D-503)",
+    [HARVEST.filter((c) => !(c in SHORT)), Object.keys(SHORT).filter((c) => !HARVEST.includes(c))],
     [[], []]);
 
   const broad = await POST(`op=aicredentialmint&token=${RUTH}`, {
