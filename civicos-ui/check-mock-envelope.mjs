@@ -197,6 +197,13 @@ const FLAT_OPS = new Map(Object.entries({
      (`json({ok:true, result:{…, secret}})`), so none of those three is here. */
   reviewcopy:     'index.mjs op==="reviewcopy" — json({ ok: true, ...r }, 200) over the DO\'s result',
   reviewcomment:  'index.mjs op==="reviewcomment" — the same handler, json({ ok: true, ...r }, 200)',
+  /* UI-89. D-150 gave that SAME handler a third op: `op === "reviewcopy" || op === "reviewcomment" ||
+     op === "statementack"` in index.mjs, and every one of the three returns through `reviewAnswer`, whose
+     tail is `json({ ok: true, ...r }, 200)` and whose refusal half is `json({ ok: false, ...r }, …)`. Only
+     `reviewcopy` takes the `inband` branch before it; `statementack` falls straight through. So it is FLAT
+     on both wires, and `statement-ack.test.mjs` drives the REAL plane rather than mocking it — this line is
+     what lets that suite's own answers be judged instead of being read as a mock of the wrong shape. */
+  statementack:   'index.mjs op==="statementack" — the same handler, reviewAnswer\'s json({ ok: true, ...r }, 200)',
 }));
 const wireShapeOf = op => FLAT_OPS.has(op) ? "flat" : "wrapped";
 
