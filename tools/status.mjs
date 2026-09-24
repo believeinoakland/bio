@@ -49,7 +49,15 @@ export const STATES = ["BUILT", "PARTIAL", "ABSENT", "DEFERRED", "UNDETERMINED"]
 /* The member UI's call helpers, DERIVED 2026-09-18 by matching every OPS name against
    `helper("op"` in app.html — not recalled. A new helper is a probe blind spot; the suite
    re-derives this list and fails if a helper calling an op is missing from it. */
-export const UI_HELPERS = ["recR", "recPostR", "actAsk", "intentAsk", "intentPreflight",
+export const UI_HELPERS = ["recR", "recPostR", "actAsk",
+  /* UI-90 (2026-09-24): `actAskPost` is `actAsk`'s POST twin, added for `op=actionlaws`, whose list of
+     citations travels in the body. NAMED HERE BECAUSE status.test.mjs's re-derivation FAILED THE GATE on
+     it — a helper the list does not know is a blind spot every `uinone` claim through it inherits, which
+     is the arm doing exactly its job. It goes AFTER "actAsk" on purpose: status.control.mjs arm A5
+     anchors on the literal `["recR", "recPostR", "actAsk",`, and inserting ahead of it would have
+     disarmed the control that guards this very list. No `uinone` claim names actionlaws, so registering
+     it flips no absence claim — checked, not assumed. */
+  "actAskPost", "intentAsk", "intentPreflight",
   "captureAct", "apiQ", "apiR", "api",
   /* D-126's queue set-apply (`recPostR(op, …)` over a selection), added at integration by c19-unionfix, 2026-09-24,
      when the suite's re-derivation named it. */

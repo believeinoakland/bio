@@ -946,10 +946,10 @@ await section("ARM A · acts come from the plane", () => {
      have carried one act of slack in each. */
   /* CONDUCT #17 (c17-batch5, 2026-09-23): D-311 (seven roster acts) and UI-74 (four version transitions) each moved these floors from the same base; the union's figures are re-read from this arm's PRINT on the merged tree. */
   ok(G.baseline.length >= 30,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 30 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED when `actionlaws` was struck; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the plane published no roster act; 18 was UI-65's, up from 17 when the register still named withdrawconclusion). `
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 30 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED when actionlaws was struck; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the plane published no roster act; 18 was UI-65's, up from 17 when the register still named withdrawconclusion). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
   ok(G.hostedSet.size >= 30,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 30 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED when the action surface took `actionlaws`; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the project surface could name none of its seven roster acts; 18 was UI-65's, up from 17 when no surface hosted withdrawconclusion). `
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 30 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED when the action surface took actionlaws; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the project surface could name none of its seven roster acts; 18 was UI-65's, up from 17 when no surface hosted withdrawconclusion). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.
