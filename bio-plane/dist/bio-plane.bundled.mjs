@@ -39368,19 +39368,29 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
          `op=publish` lists in the case document, so a reviewer sees the list the document would print
          (less the publisher's own, which the act leaves out). An edited statement starts empty. */
       statement_acknowledgements: (() => {
+        const writer = { by: d.statement_by ?? null };
         const a = this.#statementAcknowledgements(
           d.project_id,
           ident.caseId,
           ident.edition,
           params.statement ?? "",
           null,
-          null,
+          writer,
           d.draft_id
         );
+        const withheld = a.byWriter + a.withheldWriterUndetermined;
         return {
           statement_sha: a.statementSha,
           acknowledgements: a.rows,
           truncated: a.truncated,
+          /* THE COUNT IS ALWAYS A NUMBER AND THE REASON IS ALWAYS A SENTENCE, zero included —
+             `acknowledged: 0` is D-150's own precedent that a zero is a STATEMENT and never a
+             blank. The two keys below are the publish answer's spellings, reused rather than
+             re-invented, so one fact is not named two ways across two doors. */
+          withheld,
+          ...a.byWriter ? { acknowledgements_by_statement_writer_not_listed: a.byWriter } : {},
+          ...a.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: a.withheldWriterUndetermined } : {},
+          withheld_stated: _Store.#withheldWriterStated(withheld, writer.by),
           act: "op=statementack&draft=" + d.draft_id
         };
       })(),
@@ -39704,6 +39714,26 @@ case_project: ${project}
       ...acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this document lists)"] : []
     ] : acks.unbound ? [`${_Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
   }
+  /* REC-213 / §6A + §3 rule 11 (BOB #33, 2026-09-24) — WHAT THE REVIEW COPY'S LIST LEFT OUT, IN ONE
+     SENTENCE A READER READS RATHER THAN A KEY THEY DECODE. `#ackBodyLines` is the case document's
+     spelling of the same obligation and this is the review copy's; they are two renderings because a
+     case document is signed prose and a review copy is an answer, and they must never disagree about
+     the FACT. Four states, each named and none a fallback:
+       - nothing withheld, a writer known — the plain case, said so a reader never infers it;
+       - nothing withheld, the writer UNDETERMINED — said too, because a short list with no participant
+         row in it looks identical whether the withholding bit or there was nothing to withhold;
+       - rows withheld by a NAMED writer — the row's own reason, in §3 rule 11's words;
+       - rows withheld because the writer is UNDETERMINED — stated as undetermined and NEVER as
+         *by the writer*, which would name a reading this record cannot attribute.
+     A RECIPIENT's row is never withheld by either arm (a grant's holder is never the writer), so this
+     sentence speaks only of participants and says so. */
+  static #withheldWriterStated(withheld, writerBy) {
+    const n = Number(withheld) || 0;
+    const rows = `${n} acknowledgement${n === 1 ? "" : "s"}`;
+    if (!n)
+      return writerBy ? `Nothing is withheld from this list: this record holds no acknowledgement of this statement by ${writerBy}, who wrote it.` : `Nothing is withheld from this list: this record holds no participant's acknowledgement of this statement at this production, so there is none that might be its writer's own.`;
+    return writerBy ? `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, by the statement's writer, ${writerBy}: a reading by its own writer is not a SECOND reading of it (BIO_Publication \xA73 rule 11). It is counted here rather than hidden \u2014 everything recorded is shown or stated (\xA76A).` : `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, and the reason is UNDETERMINED rather than the writer's own: this draft predates the recording of the statement's author, so any participant's acknowledgement of it may be the writer's and this list cannot rule that out (BIO_Publication \xA73 rule 11). They are counted here rather than hidden \u2014 everything recorded is shown or stated (\xA76A).`;
+  }
   /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
      DOCUMENT, because the list must be inside the signature and `op=publish` cannot run twice over
      one prepared edition (ALREADY_A_CASE_MEMBER). Only the list's two runs change; the document's
@@ -39766,8 +39796,13 @@ case_project: ${project}
      act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
      since D-150. `writer` is the member who wrote the SENTENCE (`#statementWriter`), which rule 11's
      exclusion is actually about and which nothing here could see until rule 13 gave it a name.
-       - `writer === null` means NOT ASKED, and is the review copy's live list: it shows a reader every
-         acknowledgement recorded, ahead of any act that decides what a document may print.
+       - `writer === null` means NOT ASKED. CORRECTED BY REC-213 (BOB #33, 2026-09-24), never exempted,
+         because the old sentence here named the wrong caller: it read *and is the review copy's live
+         list*, and that is no longer true and was never right. The review copy ASKS — a row by the
+         sentence's own writer is not a second reading at any moment, so showing it overclaims whether
+         or not a document has been authored yet. The one caller left that does not ask is
+         `#reauthorAcknowledgements` over a case document carrying NO `statement_by` KEY, which
+         predates rule 13 and is read in its own shape.
        - `{ by: '<member>' }` withholds that member's own.
        - `{ by: null }` is UNDETERMINED, and withholds EVERY participant row, because any one of them
          may BE the writer's own and a list that cannot rule that out is the record claiming a second
