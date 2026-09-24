@@ -1,0 +1,16 @@
+{
+ "unit": "plane:skilldoctrine.test.mjs",
+ "inputHash": "0d3259287aea1fa32433ee857bff3229367ca650f30a45066ad0b71e6548ca4a",
+ "verdict": "PASS",
+ "run": "a10317c29454b1ea3a3cfc7abe05b7a4633e9035.1790267472186.3959.json",
+ "tree": "a10317c29454b1ea3a3cfc7abe05b7a4633e9035",
+ "head": "2a3b54bbca8857a6981695719e31880066039133",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1238,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "7f36485c-ad90-54eb-bc09-683663c66341",
+ "at": "2026-09-24T16:31:12.198Z"
+}

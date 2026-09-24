@@ -1,0 +1,16 @@
+{
+ "unit": "plane:framework-digest-audit.test.mjs",
+ "inputHash": "244a0886ab15d8ed8a9a465346b6db5dd0150d18d145921f4bd3b246b5fdc89d",
+ "verdict": "PASS",
+ "run": "a10317c29454b1ea3a3cfc7abe05b7a4633e9035.1790267472186.3959.json",
+ "tree": "a10317c29454b1ea3a3cfc7abe05b7a4633e9035",
+ "head": "2a3b54bbca8857a6981695719e31880066039133",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "7f36485c-ad90-54eb-bc09-683663c66341",
+ "at": "2026-09-24T16:31:12.197Z"
+}
