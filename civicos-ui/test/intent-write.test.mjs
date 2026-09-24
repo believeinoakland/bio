@@ -826,8 +826,16 @@ ok("a reference matching nothing is left honestly unresolved, never force-matche
 ok("the testify control offers no grade to choose", !/tst-grade/.test(html("#testify-box")));
 $$("#tst-ref").value = "contract:QQ-9999";
 await U.testifyPreflight();
-ok("the plane refuses testimony with no basis, in its own words",
-   /NO_BASIS/.test(html("#tst-pf")) && /testimony/.test(html("#tst-pf")));
+/* CORRECTED 2026-09-24 by D-484, and the old assertion was WRONG rather than merely stale.
+   It required the word "testimony" in what the MEMBER reads, which was true only while NO_BASIS
+   had no canned translation and the surface fell back to the site's `detail` — the OPERATOR's
+   sentence. NO_BASIS is now a DEC-49 row (C-33.40), so the surface renders the canned sentence,
+   which is DEC-49's whole point: a member meets prose, not the plane's internal wording. Pinning
+   the operator's word here would have made the translation a regression. What this assertion
+   should always have checked, and now does, is that the member is told WHAT IS MISSING and that
+   the code is still shown beside it for anybody reporting the refusal. */
+ok("the plane refuses testimony with no basis, and the member reads the canned sentence with the code beside it",
+   /NO_BASIS/.test(html("#tst-pf")) && /without saying what it rests on/.test(html("#tst-pf")));
 ok("and the commit control is ABSENT while it refuses", !/tst-go/.test(html("#tst-pf")));
 $$("#tst-basis").value = "I was at the meeting where this arrangement was named as the Recology contract.";
 await U.testifyPreflight();
