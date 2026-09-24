@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rowsubstrate.test.mjs",
+ "inputHash": "f31337ccbb9f003ff1c8334bccc5e2ebbe1e74e32eff47a042ba70ded95dc5ba",
+ "verdict": "PASS",
+ "run": "7b80fbe2516a15ba0ec3ecf0f4b6550b6c72bb96.1790293821085.2500.json",
+ "tree": "7b80fbe2516a15ba0ec3ecf0f4b6550b6c72bb96",
+ "head": "4d581b09cb732f5847c219117f4cf6866c166b6d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 444,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4ec119c4-defa-586c-9bdb-1dcc8d466b42",
+ "at": "2026-09-24T23:50:21.101Z"
+}
