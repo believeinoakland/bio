@@ -215,7 +215,10 @@ t("attested by the key's member", rat.attestor, "sparky");
    string and that one moved together exactly as that note says they must. The
    old assertion was WRONG, not stale: at the union it named a catalogue that no
    longer existed. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.22.0)");
+/* CORRECTED 2026-09-24 (c20-batch14): 1.22.0 -> 1.23.0. D-64's C-83 family arrived from the other side of this
+   integration, the catalogue census moved 438 -> 445, and `CATALOG_VERSION` took the MINOR bump the census arm
+   forces. The old literal was right for the tree it was written on. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.23.0)");
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

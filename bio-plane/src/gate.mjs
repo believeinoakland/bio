@@ -49,6 +49,13 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    refuse documents that used to pass. This bump is ADDITIVE in the same sense
    and no check moves with it.
 
+   1.23.0 (CONDUCT #20, c20-batch14, 2026-09-24): MINOR, ADDITIVE, and the census arm
+   forced it a SECOND time at the union of c20-batch13 and c20-integ1b. D-64's
+   `RENDER_CAPTURE_CHECKS` family arrived from the other side of the integration, so
+   the catalogue went 438 -> 445 checks: SEVEN ARRIVALS, NO DEPARTURES (C-83.1 to
+   C-83.7). The figure is the one `d470-catalog-census.test.mjs` PRINTED on this tree,
+   never 438 plus seven. Same precedent as the bump below, one integration on.
+
    1.22.0 (CONDUCT #20, c20-batch13, 2026-09-24): MINOR, ADDITIVE, AND IT IS THE
    FIRST MOVE D-470'S OWN CENSUS FORCED RATHER THAN A HAND DECIDING TO MOVE IT.
    D-470 recorded 1.21.0's census on ITS OWN BASE. The other side of this
@@ -74,7 +81,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    refuse documents that used to pass) — the catalog's own version records what
    judged a bundle, and every ratification stamps it, so an action refused here
    is distinguishable from one refused by 1.19.0 without reading this file. */
-export const CATALOG_VERSION = "1.22.0";
+export const CATALOG_VERSION = "1.23.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

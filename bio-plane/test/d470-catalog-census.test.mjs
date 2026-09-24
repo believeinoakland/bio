@@ -38,7 +38,8 @@
  * The BUMP follows REC-14's precedent as `gate.mjs` records it: 1.18.0 -> 1.19.0
  * was MINOR, and so was 1.19.0 -> 1.20.0, for a change that made the catalogue
  * refuse documents that used to pass. This is the same class, and the bump is
- * MINOR: 1.20.0 -> 1.21.0, and 1.21.0 -> 1.22.0 at c20-batch13 (below).
+ * MINOR: 1.20.0 -> 1.21.0, 1.21.0 -> 1.22.0 at c20-batch13 and 1.22.0 -> 1.23.0 at
+ * c20-batch14 (both below).
  *
  * WHAT THE CENSUS IS. The set of C-numbers THIS CATALOGUE HOLDS, taken from
  * `checks/bio-checks.mjs` by two sources that are unioned and never subtracted:
@@ -212,6 +213,16 @@ const digestOf = (ids) => createHash("sha256").update([...ids].sort().join("\n")
  * measured the catalogue it stamped and inventing that figure now would be the
  * defect this row is closing, wearing the other face.
  *
+ * 1.23.0 (CONDUCT #20, c20-batch14, 2026-09-24): THE SECOND MOVE, and it is the same
+ * arm doing the same job one integration on. c20-batch13 and c20-integ1b had each
+ * re-done the c19-batch10 + `main` union independently; c20-integ1b carried D-64,
+ * whose `RENDER_CAPTURE_CHECKS` family (C-83.1 to C-83.7) the census at 1.22.0 had
+ * never seen. At this union A3 went red naming both figures and the exact line to
+ * write, and this is that line: 445 and its digest, from what THIS SUITE PRINTED on
+ * the merged tree, never 438 + 7. SEVEN ARRIVALS, NO DEPARTURES, so the bump is
+ * ADDITIVE and MINOR on the precedent below. 1.21.0's and 1.22.0's rows STAY: each is
+ * what the catalogue held at that version, and a ratification is not walked back.
+ *
  * 1.22.0 (CONDUCT #20, c20-batch13, 2026-09-24): THE FIRST MOVE THIS CENSUS
  * FORCED, and it is the arm working rather than the arm being maintained. D-470
  * measured 433 on ITS OWN BASE; the other side of this integration,
@@ -227,6 +238,7 @@ const digestOf = (ids) => createHash("sha256").update([...ids].sort().join("\n")
 const CATALOG_CENSUS = {
   "1.21.0": { count: 433, digest: "7e1c85cd94bffdf2140d52e6269b6a1178d3dbc76c40f8ec1b870b5626293e02" },
   "1.22.0": { count: 438, digest: "1cce052ae21076c6f7f5f0fafe13c2cc25b834a546dd108480dd6b873b81772b" },
+  "1.23.0": { count: 445, digest: "b8b84189e7daa40a396c11badac3a92e625260c9e8f8ad09b863d2dec37b118b" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -316,8 +328,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED at c20-batch13, never exempted: the catalogue moved under this pin
    at the union (five arrivals from c20-batch11fix's side), so 1.21.0 had stopped
    naming one catalogue — the exact defect the header describes. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.22.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.22.0)", "1.22.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.23.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.23.0)", "1.23.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
