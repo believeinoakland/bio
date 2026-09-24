@@ -31,9 +31,13 @@
  *   (3) a check on one caller class only — §1 drives both.
  *
  * WHAT THIS CANNOT SEE: the PROJECT arm of the `reinstate` affordance is not
- * narrowed (a count cannot say every severed target is retired) and is not
- * asserted here; an inquiry cited by a case has no `retired` state and is not
- * driven.
+ * asserted here — it is asserted in `affordances.test.mjs`'s `--- D-444 ---`
+ * block, which NARROWED it (2026-09-24). CORRECTED, never exempted: this line
+ * read "is not narrowed (a count cannot say every severed target is retired)",
+ * which was true of the plane REC-183 left and is false of this one — the store
+ * now states `cites_out.severed_reinstatable`, counted through the same
+ * `#retiredNotCitable` predicate §1 below refuses on. An inquiry cited by a case
+ * has no `retired` state and is still not driven.
  * ========================================================================= */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */

@@ -1123,7 +1123,11 @@ const anyVersionEdgeTo = (f, to) =>
  * membership), declared_type (the document's own spelling, for vocabulary —
  * REC-13), current_state, cites_in {confirmed[], severed[]} (edges INTO an
  * information target, read the way retire reads them — severed is not live),
- * cites_out {confirmed, severed} (a project's own citation edges by status),
+ * cites_out {confirmed, severed, severed_reinstatable} (a project's own
+ * citation edges by status, and — D-444 — how many of the severed ones could
+ * actually be put back, asked through the same `#retiredNotCitable` predicate
+ * `#edgeTransition` refuses on, because a bare count cannot say whether a
+ * target has since been RETIRED),
  * basis_legs (REC-16: how many legs this question rests on), and rested_on
  * {working, frozen, severed} (REC-17: how many live basis legs rest ON it, by
  * whether the dependent can still withdraw one — COUNTS and never ids, because
@@ -1692,14 +1696,29 @@ export const ACTS = [
                      || (ty === "project" && f.cites_out.confirmed > 0 && f.project_participant !== false) },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
      refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
-     is not. The PROJECT arm is not narrowed: `cites_out.severed` is a count and does not say whether
-     every severed target is retired, so a project whose only severed edges point at retired items is
-     still offered an act the store refuses — a stated residue, not a rule. */
+     is not.
+
+     D-444 NARROWS THE PROJECT ARM, which REC-183 left as a stated residue. The two arms ask the
+     same question from the two ends of the edge. From the TARGET's end `current_state` answers it
+     outright. From the PROJECT's end it cannot be answered by `cites_out.severed` at all: that is a
+     count of the project's own severed edges and says nothing about what their targets have BECOME,
+     so a project whose only severed edges point at retired items was offered an act the store then
+     refused — a pre-flight disagreeing with the refusal it fronts. The store now states
+     `severed_reinstatable`, counted through `#retiredNotCitable`, the predicate `#edgeTransition`
+     itself runs; the arm keys on it and the offer cannot drift from the refusal.
+
+     IT IS NARROWED AND NOT DROPPED, which is the whole of the accepts-when: a project holding a
+     severed edge onto a LIVE target must still be offered `reinstate`, and the store must still
+     accept it. Withholding the act from every project would satisfy "never offer what is refused"
+     and cost a case the one recorded way to take a citation back up. `?? 0` for the posture every
+     fact added since REC-16 takes: absent reads as ZERO, the safe direction, because `deriveActs`
+     is exported and two suites call it with hand-built facts. */
   { id: "reinstate", label: "Reinstate a severed citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0
                          && !(ty === "information" && f.current_state === "retired"))
-                     || (ty === "project" && f.cites_out.severed > 0 && f.project_participant !== false) },
+                     || (ty === "project" && (f.cites_out.severed_reinstatable ?? 0) > 0
+                         && f.project_participant !== false) },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
      existed (its argument is kept, as history, at NON_ACTS' participation block). It exists now:

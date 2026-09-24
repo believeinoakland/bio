@@ -2860,7 +2860,7 @@ export class Store extends DurableObject {
       }
     /* A project's OWN citation edges by status, from its document — the same
        source cite/sever read (the projection carries no status). */
-    const citesOut = { confirmed: 0, severed: 0 };
+    const citesOut = { confirmed: 0, severed: 0, severed_reinstatable: 0 };
     /* The document is read for a project's own edge statuses, and (REC-13) for
        the DECLARED object_type. `bundles.object_type` is the NORMALIZED type —
        promote projects it through normalizeType — so the row alone cannot
@@ -2889,8 +2889,38 @@ export class Store extends DurableObject {
     if (normalizeType(b.object_type) === "project") {
       const refs = docFm.references;
       for (const r of (Array.isArray(refs) ? refs : []))
-        if (r && typeof r === "object" && r.rel === "cites")
-          citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
+        if (r && typeof r === "object" && r.rel === "cites") {
+          if (r.status !== "severed") { citesOut.confirmed++; continue; }
+          citesOut.severed++;
+          /* D-444: HOW MANY OF THOSE SEVERED EDGES COULD ACTUALLY BE PUT BACK —
+             the fact the `reinstate` act is derived over, because `severed` is a
+             COUNT and a count cannot say what its targets have BECOME. REC-183
+             closed reinstate's third door onto a retired item
+             (RETIRED_NOT_CITABLE) and left this side un-narrowed, so a project
+             whose only severed edges point at retired items was offered an act
+             the store refuses — DEC-8's headline failure, arriving by the
+             pre-flight instead of by the op.
+
+             ASKED THROUGH `#retiredNotCitable`, THE PREDICATE `#edgeTransition`
+             ITSELF RUNS, never a second copy of the same question: that is the
+             `#citesInto` discipline (retire's CITED refusal and its
+             publication) applied to reinstate, and a copy here would be the
+             defect one layer on. A non-string target is not counted
+             reinstatable — `#edgeTransition` builds its edge map from
+             `typeof r.target === "string"` entries only, so such an edge cannot
+             be moved by the op at all, and claiming it could be is the same
+             overclaim in miniature.
+
+             A COUNT AND NEVER IDS, `cited_by_case`'s precedent one block up:
+             op=affordances answers about the TARGET, and naming which of a
+             project's edges point at retired material is op=backlinks' gated,
+             viewer-filtered question. `severed` is KEPT beside it rather than
+             replaced — it is what the project's own document says, and a
+             consumer asking "are there severed edges at all" is asking a
+             different question from "is there one to put back". */
+          if (typeof r.target === "string" && !this.#retiredNotCitable(r.target))
+            citesOut.severed_reinstatable++;
+        }
     }
     /* REC-16: HOW MANY LEGS this question rests on, read from the document like
        every other fact here (inquiry_basis is a projection of it, never a second
@@ -4289,14 +4319,13 @@ export class Store extends DurableObject {
        (cite > is-cite-retired) and the guard refuses a marker no row claims, so
        this second site of the same code is outside the region walk (the
        guard's F4 MULTI-SITE shape). rec-183-reinstate-retired.test.mjs asserts
-       the code, check and translation arrive through the op. */
+       the code, check and translation arrive through the op.
+       D-444: the question itself moved to `#retiredNotCitable` so the
+       pre-flight's `cites_out.severed_reinstatable` asks THIS one and not a
+       copy of it. The refusal is unchanged. */
     if (to === "confirmed") {
       const retiredMembers = [];
-      for (const id of sel.members) {
-        const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-        if (b && normalizeType(b.object_type) === "information"
-            && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
-      }
+      for (const id of sel.members) if (this.#retiredNotCitable(id)) retiredMembers.push(id);
       if (retiredMembers.length)
         return { ok: false, reason: "RETIRED_NOT_CITABLE", code: "RETIRED_NOT_CITABLE",
                  check: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.check,
@@ -5131,6 +5160,32 @@ export class Store extends DurableObject {
     + "sever the edge with a reason. Sever first, then retire.";
   #retirementCitedBy(id) {
     return this.#citesInto(id).confirmed;
+  }
+
+  /* D-444: REINSTATEMENT'S ONE RETIRED-TARGET PREDICATE, shared by
+   * `#edgeTransition`'s RETIRED_NOT_CITABLE refusal (REC-183) and by
+   * `affordanceFacts`' `cites_out.severed_reinstatable`. §4.1 of State Rules
+   * v1.5 (BOB #30): a retired item is not citable, and moving an edge INTO
+   * `confirmed` is a citation made now.
+   *
+   * IT IS EXTRACTED FOR THE REASON `#citesInto` AND `#retirementCitedBy` WERE:
+   * the pre-flight publishes `reinstate` over a COUNT of severed edges, and a
+   * count cannot say whether every one of those targets has since been retired
+   * — so a project whose only severed edges point at retired items was offered
+   * an act this very predicate then refused, which is the drift DEC-8 forbids.
+   * The fact now asks THIS, so the offer and the refusal cannot answer
+   * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
+   *
+   * `source_status` is not read, as at cite and at reinstate: a removed or
+   * modified source stays citable, and `retired` is the other axis. Only
+   * Information has the state — an inquiry target answers false, exactly as
+   * `#edgeTransition` leaves it un-refused — and an id with no row answers
+   * false too, because an absent target is refused by another door and this
+   * one claims nothing about it. */
+  #retiredNotCitable(id) {
+    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+    return !!b && normalizeType(b.object_type) === "information"
+        && String(b.current_state ?? "").trim() === "retired";
   }
 
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
