@@ -2071,8 +2071,17 @@ if(S("case-address-at-load") && !HID("case-verify")){
         else, an `ok:false` returned through this non-throwing seam included, renders the plane's one dead
         sentence; only `ok:true` is a comment recorded, and anything else renders as that comment's refusal. A
         thrown transport error reads as the record NOT REACHED, never as a dead copy. */
-     && APIQ_CALLERS.length === 7
-     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,verify");
+     /* CORRECTED 2026-09-24 (UI-89), never exempted: EIGHT callers. A review copy's recipient now ACKNOWLEDGES the
+        exclusion statement through this seam (`rvsAcknowledge`, `op=statementack`, BIO_Publication §3 rule 11) —
+        the second credential-free WRITE on this surface, carrying the grant's secret as a parameter and no token,
+        exactly as `rvsComment` does. It keeps its OWN error path as this sweep requires, and it is a SHAPE test:
+        ONLY `{ok:true}` is an acknowledgement recorded, and everything else — an `ok:false` this non-throwing
+        seam returns included — is rendered as that act's refusal in the plane's own words; a thrown transport
+        error reads as the record NOT REACHED, never as a refusal. The old pin was right about `apiQ` and about the
+        discipline; its set predates the second write. `statement-ack.test.mjs` drives both halves through the real
+        plane, and asserts on the WIRE that the acknowledgement carried the secret and no token. */
+     && APIQ_CALLERS.length === 8
+     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the

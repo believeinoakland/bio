@@ -117,6 +117,16 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    prose is no longer doc-facing, and a MEASUREMENTS plant no longer sweeps it in. Estate-wide the doc-facing set
    went 72 -> 41 (plane 60 -> 37, ui 12 -> 4); `measurements/M-134.md` has the dropped list. A CEILING IS NOT A
    RATCHET: this one is left at the printed figure, with no slack bought for a future landing. */
+/* RE-MEASURED AT UI-89's MERGE WITH c20-batch18 (2026-09-24) AND LEFT AT 47 — a delta on 47, and the whole of it is
+   that M0-143's narrowing SUPERSEDED a move made hours earlier the same day. UI-89 had moved this 74 -> 75 on its
+   own branch, correctly for the selector as it then was: its new suite `ui:statement-ack.test.mjs` mentions
+   `docs/` only in its header PROSE, which made it doc-facing and swept it into a MEASUREMENTS plant. M0-143 now
+   reads a suite's source AS CODE with comments blanked, so that suite is no longer doc-facing and the 75 became
+   wrong rather than merely stale. The MERGED tree prints `47 unit(s) of 420 selected · 33 MEASUREMENTS reader(s) ·
+   4 through tools/coord.mjs`, 20 pass / 0 fail — the corpus carries UI-89's new unit (417 -> 420 across the batch)
+   and the selected set does NOT. So the figure is unchanged and no slack is bought; the superseded move is recorded
+   here rather than silently dropped, because a constant that moved twice in one day and came back is exactly the
+   history a later reader needs. */
 const UNITS_CEILING = 47;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
