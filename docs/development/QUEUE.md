@@ -291,7 +291,7 @@ accepts-when: MEASUREMENTS.md carries the per-format table with N, instrument, c
 cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «CAP-11». A worker READS IT before building.
 uncut: restored whole from «CAP-11» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-351 · queued — **A GOOGLE DRIVE EXPORT IS NOT BYTE-STABLE, SO ITS `capture_sha` DIFFERS ON EVERY RE-FETCH OF AN UNCHANGED DOCUMENT, AND THREE MECHANISMS GO QUIET OR CRY WOLF:** C-18.3's corroboration fold never fires; the normalised arm cannot rescue it (an ODF container is never read as text, so `digests.determined` is null); and `resolveLinks`' identity bracket never fires, so a monitoring tick reports a CHANGE on every re-fetch. CAP-8 measured three exports, three shas. — owner CAPTURE.
+### D-351 · running — SPAWNED 2026-09-24 ~00:15Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-351 (CONDUCT #19), base origin/main (CAP-11's export-step findings on land/worker/CAP-11 @ 0b44e652); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-351 and that session; never conclude queued from the absence alone.
 order: after CAP-11, which calibrates the same export step and cites this measurement: the record says LESS than it could, never more, and CAP-7 counted the population small — 22 distinct Drive targets in COFF-6's whole census (M-13) (SCHEDULER #6, 2026-09-21, LED-7 batch 13)
 milestone: M2
 interface: I1 — §4c's `digests.determined`, gated today on `profiled_from_text`; the integrator mints and classifies the IC.
@@ -322,7 +322,7 @@ scope: scan bundle bodies for the sentence, resolve each named bundle through th
 accepts-when: every affected bundle lands in exactly one class with separate totals, and every body is byte-unchanged. NEGATIVE CONTROL: resolve through the ranked search instead of the chain, and the "provably wrong" arm (a sixty-version fixture naming the oldest) fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-256's DEBT row of 2026-08-08, keeps its `D-` id).
 
-### D-66 · queued — **A BUDGET OR DATASET HAS NO CONTENT TYPE, AND THE CLASS HAS NEVER BEEN COUNTED.** Bob named it beside four types now built or placed (FW-20, the directory); `EXTRACTION-BREADTH-DESIGN.md` §2 lists it fifth, *"UNMEASURED: not in the census's class list"*, and neither `tools/m032-class-census.py` nor `docprofile/doctypes/registry.mjs` knows it (re-read 2026-09-21). NARROWED by BOB #24 to this class. — owner FRAMEWORK.
+### D-66 · running — SPAWNED 2026-09-24 ~00:15Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-66 (CONDUCT #19), BRANCHED FROM land/conduct/c18-batch8 (carries FW-20); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-66 and that session; never conclude queued from the absence alone.
 order: directly after FW-20, §2's order: row 5 after row 4, a count before any reader (SCHEDULER #10, 2026-09-21, LED-7)
 milestone: M2
 interface: none — a census class and a read sample; a reader they justify is its own row.
@@ -426,7 +426,7 @@ scope: re-pin at promotion to `adopted`; the case document stamps the adopted bu
 accepts-when: the stamped statements hash equals a hash recomputed from exactly the stamped sha's bytes, across a propose → adopt → later-propose sequence. How a liar passes it: hashing the latest projection, so the arm proposes a newer revision after adoption and recomputes from the stamped sha alone. NEGATIVE CONTROL: pin the proposed sha, and the equality arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (BOB #31's ruling, 21:43Z/21:48Z; `node tools/mintid.mjs REC`).
 
-### REC-188 · queued — **C-41 DOES NOT REQUIRE THE BIAS MANIFEST D-84 STAMPS: `checkCaseDocument` and the C-41 family never read `bias_manifest`, so a case document published without its lens still ratifies.** BOB #32 (22:26Z, G1) folds D-150's `completeness.acknowledged` and its list (possibly empty) into the SAME bump. — owner RECORD.
+### REC-188 · running — SPAWNED 2026-09-24 ~00:15Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER REC-188 (CONDUCT #19), BRANCHED FROM land/conduct/c18-batch8 (carries D-150); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-188 and that session; never conclude queued from the absence alone.
 order: directly after REC-187: a correction to just-landed work (D-84, D-150); DEC-20's *disclosed* holds only if the gate refuses the absence (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 — the case document format becomes `bio-case-document/3` (additive, a newly REQUIRED key); /2 and /1 stay accepted; the integrator mints and classifies the IC.
@@ -436,7 +436,7 @@ scope: `op=publish` writes `bio-case-document/3`; a new C-41 check (mint its C-n
 accepts-when: a /3 document lacking `bias_manifest`, and one lacking the acknowledgement list, is each refused by the new C-41 check by name; a /2 document without it still ratifies; a published case reads /3. NEGATIVE CONTROL: drop the new check's push, and the "/3 without a manifest is refused" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
-### REC-189 · queued — **A MACHINE CREDENTIAL CAN SET `risk_tier` 1, 2 OR 3 — THE ONE FIELD THAT CARRIES LEGAL EXPOSURE — BECAUSE NOTHING AT PROMOTE ENFORCES *"only a member's authored act sets 1, 2 or 3"*.** `Store.promote`'s action block never reads `risk_tier` nor calls `isMachineIdentity`, and `op=promote` admits probe; the only machine fence on actions is `actionMove`'s. — owner RECORD.
+### REC-189 · running — SPAWNED 2026-09-24 ~00:15Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER REC-189 (CONDUCT #19), base origin/main (D-182 is on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-189 and that session; never conclude queued from the absence alone.
 order: after REC-188, ahead of the features: a correction to just-landed work (D-182) on the field BOB #21 ruled carries legal exposure; UI-85's chooser follows it so the fence and the member path arrive together (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:48Z finding (1), verified at c17-batch5 @ 74fc2e25)
 milestone: M10
 interface: I3 additive — a new refusal code, registered in `affordances.mjs`'s refusal table beside `actionmove`; the integrator mints and classifies the IC.
@@ -467,7 +467,7 @@ scope: a chooser in the action intake reading the published map, `undetermined` 
 accepts-when: a member picks tier 2 and `op=projection` reads 2 with the published words; an untouched chooser writes undetermined; the page shows only words the plane published. How a liar passes it: hard-coding the three words, so an identity arm swaps the published map and the page must follow. NEGATIVE CONTROL: default the chooser to 1, and the "an untouched chooser writes undetermined" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
 
-### UI-86 · queued — **THE QUEUE OFFERS NO MUTE ON A FINDING, THOUGH THE PLANE NOW ACCEPTS ONE: `op=queuemute` takes FINDING kinds and the item form `{item}` (`PERSONALLY_MUTABLE_CLASSES` = CONDITION, FINDING), while `app.html`'s `queueMutableKinds` filters CONDITION only and sends only `{case, kinds}`.** Its copy (*"reaches condition kinds only"*) and `queueMuteReportHtml` are now false, and `civicos-ui/test/notifications.test.mjs` §2 still pins PL-15's superseded *"NO MUTE IS OFFERED ON A FINDING"*. — owner UI.
+### UI-86 · running — SPAWNED 2026-09-24 ~00:15Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER UI-86 (CONDUCT #19), base origin/main (D-125 is on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-86 and that session; never conclude queued from the absence alone.
 order: after UI-85: a correction to just-landed work (D-125's plane half), a surface that now tells a member something untrue (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (4), verified at c17-batch4 @ 65205437)
 milestone: M8
 interface: I3 consumer (`op=queuemute`'s item form); none new.
@@ -477,7 +477,7 @@ scope: FINDING kinds in the per-case control; a per-item mute sending `{item}`; 
 accepts-when: a feed holding only a lead draws a mute that reaches `op=queuemute` as `{item}` and the suppression reads under `mute.items`. How a liar passes it: offering the control without sending the item form, so the arm reads the request body. NEGATIVE CONTROL: restore the CONDITION-only filter, and the "a FINDING is offered a mute" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
 
-### D-176 · queued — **THE QUEUE'S ALL-CLEAR RESTS ON AN INTERPRETED FEED YIELD, AND `QUEUE_SEEN` GROWS FOR THE PAGE'S LIFE: `queueFeedYield` counts only what this session saw resolve, and nothing ever deletes from `QUEUE_SEEN`.** Honest and stated in the code; no document states it. — owner UI.
+### D-176 · running — SPAWNED 2026-09-24 ~00:15Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-176 (CONDUCT #19), base origin/main; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-176 and that session; never conclude queued from the absence alone.
 order: with the UI state hygiene, after UI-93 (SCHEDULER #17, 2026-09-23; BOB #32: *CIVICOS_UI_STATE.md is UI's file — a DELEGATION to UI to state the limit beside v46's UI-14 entry*)
 milestone: M8
 interface: none
@@ -487,7 +487,7 @@ scope: state the limit in `CIVICOS_UI_STATE.md` beside v46's UI-14 entry at UI's
 accepts-when: the statement is in `CIVICOS_UI_STATE.md` beside UI-14. NEGATIVE CONTROL: `corpuscheck` or a grep arm names the missing statement.
 added: 2026-09-23 · SCHEDULER #17 (LED-7; D-176's DEBT row of 2026-08-04; keeps its `D-` id).
 
-### D-291 · queued — **TWO MEMBER-FACING SETS OF DECISIONS CAN BE REACHED ONLY ONE ITEM AT A TIME: `resolveReferences({captureSha, ref})` and `proposeDispose({progressionKey, stageKey…})` take one item, so a surface's bulk act is a client loop; `member-respect.test.mjs` ARM 4c/4d carry both.** — owner RECORD, then UI.
+### D-291 · running — SPAWNED 2026-09-24 ~00:15Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER D-291 (CONDUCT #19), base origin/main; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-291 and that session; never conclude queued from the absence alone.
 order: after REC-205, with the M8 selection rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
 milestone: M8
 interface: I3 — a selection path per act; the integrator mints and classifies the IC.
