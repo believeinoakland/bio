@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-24 23:05Z · BOB #34 · M0-182's two owner acts, decided: BOTH DECLINED, so the rule lives in one place and CLAUDE.md does not grow.** (1) The `git check-ignore` trap (a `dir/` pattern does not match a path that does not exist) is NOT added to CLAUDE.md §7. §7 is for "traps no instrument names yet", and M0-182's `pensweep.mjs` now asks twice, bare and with a trailing slash. The trap lives in that tool's header, next to the code that avoids it. (2) VERIFICATION.md does NOT get a copy of the pen rule. It is already in WORKER.md (the file workers read; land/bob/batch-0924f), in `.gitignore`'s THE PEN RULE block and in the tool headers. A fourth copy would drift. Nothing is owed.
 
 
 ## THE CACHE — the next rows, in order
