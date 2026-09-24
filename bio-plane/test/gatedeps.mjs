@@ -50,6 +50,16 @@
  * its fixture, not behind. A static-only mode is therefore what those other fixtures would need, and this
  * helper does not have one; it is reported rather than guessed at.
  *
+ * THERE IS ONE OTHER DERIVATION OF THIS FACT IN THE ESTATE, and a reader who does not know that writes a
+ * third: `copyImports` in `civicos-ui/test/refusal-codes.test.mjs` (D-254, its `RELATIVE_IMPORT`) copies
+ * every module THAT guard imports into its own fixture. It is STATIC-ONLY and keeps comments out by
+ * anchoring an import to column zero rather than by the lexer; this one follows a dynamic literal and uses
+ * the lexer, because `gates.mjs`'s load-time dependencies are reached dynamically and its own selector reads
+ * files as code. Both are right for their subject and neither is a copy of the other. FOLDING THEM INTO ONE
+ * HELPER WITH A STATIC-ONLY MODE — which is also what `pushguard.test.mjs` and `retirable.test.mjs` would
+ * need to stop keeping hand lists — is a change across two areas, so M0-154 REPORTED it to SCHEDULER for the
+ * plan rather than taking it here (`CLAUDE.md` §4: a defect is diagnosed until its fix can be named).
+ *
  * `without` is for a dependency a fixture deliberately does NOT carry, and it is checked against
  * the derived closure: a name that is not in it throws, so an exclusion cannot outlive the import
  * it excludes (the hand-list failure again, inverted). Each caller states its reason at the call.
