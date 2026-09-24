@@ -24,7 +24,7 @@
 // that has moved. See `preflight()` below.
 //
 // WHAT IT MEASURES, per document
-//   - decode outcome: FULLY / PARTIALLY / FAILED / NO-TEXT-LAYER
+//   - decode outcome: FULLY / PARTIALLY / FAILED / ENCRYPTED / NO-TEXT-LAYER
 //   - decoded characters (text.counts.chars) vs undetermined code-points
 //     (sum of every undetermined marker's `count`) -> a coverage fraction
 //   - the residue broken down BY CAUSE, read straight off the per-region
@@ -193,6 +193,18 @@ function residue(text) {
 function classify(r) {
   if (!r.ok) return "FAILED";
   const chars = r.chars, undet = r.undetCodepoints, pages = r.pages;
+  // ENCRYPTED BEFORE NO-TEXT-LAYER (D-493, 2026-09-24). An encrypted document and
+  // a scanned one both arrive here with `chars + undet === 0`, so until this branch
+  // existed the classifier called acfr-2025 and legistar-staffrep-15579526 — the
+  // Standard Security Handler, empty user password, readable by pdf.js — by the same
+  // name it gives a page of pixels. That is the record claiming MORE than it can
+  // support in the direction that matters: NO-TEXT-LAYER sizes an OCR need (neither
+  // tier helps), where ENCRYPTED sizes a Tier-2 need that CPDF-5 MEASURED as
+  // recovered. The discriminator is the extractor's OWN marker, never inferred from
+  // the zero: `reason: "encrypted"` is read off the trailer's /Encrypt (the gap
+  // CPDF-5 named, since closed), so a document with no such marker cannot reach
+  // this branch and the two genuinely image-only documents still read NO-TEXT-LAYER.
+  if (r.byReason && r.byReason.has("encrypted")) return "ENCRYPTED";
   // A document with pages but essentially NO text operators and NO undetermined
   // markers has no text layer at all — a scanned image. Tier 2 (unpdf) will not
   // help either; that needs OCR, which is neither tier.
@@ -283,6 +295,7 @@ console.log("\n--- Tier-2 sizing rollup ---");
 console.log(`  documents:      ${rows.length}`);
 console.log(`  FULLY:          ${cnt("FULLY")}`);
 console.log(`  PARTIALLY:      ${cnt("PARTIALLY")}`);
+console.log(`  ENCRYPTED:      ${cnt("ENCRYPTED")}`);
 console.log(`  NO-TEXT-LAYER:  ${cnt("NO-TEXT-LAYER")}`);
 console.log(`  FAILED:         ${cnt("FAILED")}`);
 const decoded = rows.filter((r) => r.ok).reduce((a, r) => a + r.chars, 0);
