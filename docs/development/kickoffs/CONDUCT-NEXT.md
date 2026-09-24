@@ -26,7 +26,9 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
 - MAIN = 16fe1e7f (train-20260924T033115Z-658: land/bob/status-cellcap 6977d9d2 + folds-0924e 16fe1e7f; 112/112 green). Map budget
   now 49,152 B with CELL_CAP 240 — never raise it. Interfaces on main: I3 81.0.0, I5 3.5.0, I8 1.0.0.
 - land/bob/d461-claude RETURNED (conflicts vs main) → merged by c20-batch11fix instead (its CLAUDE.md §5 commit is the novel part).
-- land/conduct/c19-batch10 @ cff0ede6 — pushed, 10 rows integrated there (D-469 D-351 D-461 D-462 D-464 REC-189 REC-188 UI-86
+- land/conduct/c19-batch10 MOVED to 6a3dd8eb at 04:06Z (#19's batch10 worker pushed a PARALLEL union of batch11's rows). SUPERSEDED
+  by c20-batch11fix: DROP IT from every train. Archive its session session_01WHZuugzaksTkh8G6anyMyh once batch11fix lands. Its base cff0ede6
+  held 10 rows integrated there (D-469 D-351 D-461 D-462 D-464 REC-189 REC-188 UI-86
   D-291 D-66), NOT TRAINED.
 - c19-batch11 PUSHED @ 8b7e4bca (03:37Z): REC-192 8646219d, REC-190 c650a697, UI-85 e49f66f8, UI-83 3e3684ee — reported integrated to
   SCHEDULER. I3 84.1.0. ONE inherited red (meaning-bounds floor 43/42: op=resolve hidden in #resolveOne) + IC-246 unresolved (MAJOR)
