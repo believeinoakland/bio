@@ -1,11 +1,11 @@
 # WORKER — the standing brief. Every spawned worker reads this FIRST.
 
-**Why this file exists, and it is a measured failure rather than tidiness.** CONDUCT
-hand-carried these practices into every spawn brief, ~2,000 words each. That made
-spawning expensive and integration look cheap by comparison, so CONDUCT repeatedly ran
-one or two workers against a budget of eight — **caught by Bob four separate times, fixed
-four times with a RULE, and regressed every time.** A rule cannot beat arithmetic. The
-practices live here; a spawn brief is now the ITEM and nothing else.
+**Why this file exists — a measured failure, not tidiness.** CONDUCT hand-carried these
+practices into every spawn brief, ~2,000 words each. That made spawning expensive and
+integration look cheap, so CONDUCT ran one or two workers against a budget of eight —
+**caught by Bob four separate times, fixed four times with a RULE, and regressed every
+time.** A rule cannot beat arithmetic. The practices live here; a spawn brief is now the
+ITEM and nothing else.
 
 **If your brief contradicts this file, your brief wins** — it knows your item. If your
 brief is silent, this file governs.
@@ -66,8 +66,8 @@ incident's own shape inverted:
 1. **Launch a long run so its EXIT is your signal** — foreground, or backgrounded through the
    harness so completion re-invokes you. Never "start it and wait to hear."
 2. **Any hand-rolled wait is BOUNDED, and at every poll and at its timeout it checks the
-   PROCESS, not the signal**: if no battery/workerd process exists, the wait is OVER — read
-   the result from what the run wrote (the suite output, the exit file, git state) instead of
+   PROCESS, not the signal**: no battery/workerd process means the wait is OVER — read the
+   result from what the run wrote (the suite output, the exit file, git state) rather than
    waiting longer. An absent process is a completed wait wearing silence.
 3. **A worker is either RUNNING A TOOL or DONE AND SAYING SO.** Ending a turn with "waiting
    for X" and no pending tool call is a hang with a status message, not a state — if there is
@@ -105,8 +105,8 @@ incident's own shape inverted:
 ## Measurement
 
 - **MEASURE YOUR OWN BASELINE AND TRUST IT OVER YOUR BRIEF.** Twelve items found a briefed
-  figure stale by measuring it; several then found theirs exactly right and **said so** —
-  because the practice is to trust the measurement, not the streak. Report either way.
+  figure stale by measuring it; several then found theirs exactly right and **said so** — the
+  practice is to trust the measurement, not the streak. Report either way.
 - **Attribute your delta PER SUITE by re-running the true baseline**, never by subtraction.
 - **A vendor's documentation is a CLAIM, not a measurement**, and gets labelled as theirs.
 - **An equality or outcome that costs nothing to produce is not evidence.** A hand copy
@@ -253,23 +253,27 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
    process change rather than a better warning, which is what this line is. Rebuild BEFORE the battery, because the
    guard is what turns red and the failure names the artifact rather than your change.
    **A COMMENT-ONLY `src/` CHANGE IS THE EXCEPTION AND IT IS MEASURED, NOT ASSUMED: the bundler STRIPS COMMENTS, so the
-   emitted bundle is BYTE-IDENTICAL while the manifest's INPUT RECORD still moves** (REC-110 measured both, twice). So
-   rebuild anyway — but if you are hunting a diff in `bundled.mjs` after a comment-only change, there isn't one, and a
-   session expecting one will chase a build problem that does not exist.
+   emitted bundle is BYTE-IDENTICAL while the manifest's INPUT RECORD still moves** (REC-110 measured both, twice). Rebuild
+   anyway — but there is no diff to hunt in `bundled.mjs` after a comment-only change, and a session expecting
+   one chases a build problem that does not exist.
+
+0b. **EDITED A GOVERNED DESIGN DOC** (`docs/architecture/*`, or `docs/development/*` with front matter)?
+   Move its Status `as of` to today and run `node tools/corpuscheck.mjs` to **0 fail** BEFORE the gate
+   — `--write <file>` regenerates a Contents. The gate runs it, and a stale `as of` goes RED once the
+   battery has cost you the round (M0-141).
 
 1. `cd bio-plane && npm run test:battery` — the WHOLE battery, green.
 2. `node scripts/coverage.mjs --strict` — run **DIRECTLY**, `$?` read **UNPIPED**, exit 0.
-3. `node civicos-ui/test/run.mjs` — **from the REPO ROOT**, exit read UNPIPED, 0. Run it
-   even if you believe you did not touch the UI: CONDUCT once pushed `main` with it red at
-   32 failures, and twice a fixture drawing a value at runtime was refused by a plane check
-   that did not exist when the fixture was written.
+3. `node civicos-ui/test/run.mjs` — **from the REPO ROOT**, exit read UNPIPED, 0. Run it even
+   if you believe you did not touch the UI: CONDUCT once pushed `main` with it red at 32
+   failures, and twice a fixture drawing a value at runtime was refused by a plane check that
+   did not exist when the fixture was written.
 4. `node tools/plancheck.mjs` — clean but for UNPUSHED. It also refuses an unresolved merge
    marker anywhere in the tree.
-5. Commit on your branch, **then PUSH IT** — `git push origin HEAD:refs/heads/land/worker/<your row id>`, never
-   force and never to `main`. **Do not merge; CONDUCT integrates.** Then VERIFY it arrived by
-   asking the REMOTE rather than your own tree: `git ls-remote --heads origin land/worker/<your row id>`
-   must answer with the sha you just committed. An unverified push is a claim, and this project
-   has paid for exactly that distinction (D-288).
+5. Commit, **then PUSH** — `git push origin HEAD:refs/heads/land/worker/<your row id>` (the rule, and
+   why, under "Your environment"). Then VERIFY it arrived by asking the REMOTE, not your tree:
+   `git ls-remote --heads origin land/worker/<your row id>` must answer with the sha you just
+   committed. An unverified push is a claim, and this project has paid for that distinction (D-288).
 
 ## Report back
 
@@ -283,12 +287,11 @@ not see**; what your brief did not predict; every delegation; any decision for B
 **State plainly what you could NOT do.** A partial item reported honestly is worth more
 than a complete one reported loosely, and a narrowed unknown is a legitimate result.
 
+## A LOG FILE UNDER `/tmp` WITH A GENERIC NAME IS NOT YOURS.
 
-## A LOG FILE UNDER `/tmp` WITH A GENERIC NAME IS NOT YOURS, AND ITS `provenance:` LINE IS THE ONLY THING THAT SAYS SO.
-
-**Measured 2026-09-15 by the REC-98 worker, and it is recorded here because it cost real time
-and would have cost a false bug report.** A battery redirected to `/tmp/final-battery.log` came
-back **198/202 with four suites FAILED — all four of which pass alone at exit 0.**
+**Measured 2026-09-15 by the REC-98 worker; recorded here because it cost real time and would
+have cost a false bug report.** A battery redirected to `/tmp/final-battery.log` came back
+**198/202 with four suites FAILED — all four of which pass alone at exit 0.**
 
 **It was another session's run.** `/tmp` is shared across every worktree and every session on
 this machine, a generic filename collides, and the second writer wins. The log that came back
@@ -306,23 +309,21 @@ figure you did not watch print, read the log's `provenance:` line and check the 
 your own** — the line exists for exactly this, and it is the only discriminator, because the
 contents of a foreign battery are indistinguishable from the contents of yours.
 
-**The general form, which is this project's oldest shape wearing new clothes:** a shared,
-unqualified name is an identity nobody owns, so two different facts arrive under it and nothing
-fails loudly. Ask what the figure is a figure OF before you ask what it means.
+**The general form, this project's oldest shape in new clothes:** a shared, unqualified name is
+an identity nobody owns, so two different facts arrive under it and nothing fails loudly. Ask
+what the figure is a figure OF before you ask what it means.
 
+## KILL BY PID, OR BY THE PROCESS GROUP YOU STARTED — NEVER BY A MACHINE-WIDE PATTERN.
 
-## KILL BY PID OR BY THE PROCESS GROUP YOU STARTED. NEVER BY A MACHINE-WIDE PATTERN ON A SHARED MACHINE.
-
-**Reported by the REC-105 worker against itself, 2026-09-15, with roughly six batteries live.**
+**Reported by the REC-105 worker against itself, 2026-09-15, with ~six batteries live.**
 It ran `pkill -f "scripts/battery.mjs"` to stop ONE stale run of its own. **That pattern does not
-know whose battery it is.** Every worker on this machine runs exactly that script, and the
-machine read QUIET immediately afterwards.
+know whose battery it is.** Every worker here runs exactly that script, and the machine read
+QUIET immediately afterwards.
 
 **The practice is one line: read the process table, take the PID you mean, kill that.** Or kill
-the process group you yourself started. **`pkill -f` matches across every worktree and every
-session and is never the right tool here** — the same reasoning as *kill the tree, not the leaf*
-in `kickoffs/CONDUCT.md`, one scope out: that rule is about killing too little, this is about
-killing far too much.
+the process group you started. **`pkill -f` matches across every worktree and every session and
+is never the right tool here** — the same reasoning as *kill the tree, not the leaf* in
+`kickoffs/CONDUCT.md`, one scope out: that rule is about killing too little, this about far too much.
 
 **WHAT MAKES IT WORTH A SECTION RATHER THAN A WARNING IS THAT THE VICTIM CANNOT TELL.** A battery
 killed mid-run does not report a kill. **A compound command reports the WRAPPER's status — so a
@@ -337,12 +338,12 @@ did, and named three worktrees as candidates rather than as attribution — whic
 runs be checked instead of trusted. **A kill you do not report is indistinguishable from a
 mysterious failure in somebody else's item.**
 
-## A SEARCH THAT FAILED CAN RETURN ITS OWN ERROR TEXT AS MATCHES.
+## A FAILED SEARCH CAN RETURN ITS OWN ERROR TEXT AS MATCHES.
 
-**Measured by BOB #11, 2026-09-15, while checking its own logs for the kill signature above.** A
-shell regex the local `grep` could not compile produced **five "matches" that were the tool's own
-error output** — a false positive that reads exactly like a finding, in a search run to establish
-that something was ABSENT. Re-run properly it returned a clean zero.
+**Measured by BOB #11, 2026-09-15, checking its own logs for the kill signature above.** A shell
+regex the local `grep` could not compile produced **five "matches" that were the tool's own error
+output** — a false positive that reads exactly like a finding, in a search run to establish that
+something was ABSENT. Re-run properly it returned a clean zero.
 
 **So a search is an instrument and gets the same treatment as one: check that it COMPILED before
 you believe what it found, and be most suspicious when a search for absence comes back with
