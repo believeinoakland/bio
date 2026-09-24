@@ -78,6 +78,10 @@ probe that reads a public op on scratch will be refused), D-464, D-462, REC-190.
   origin/main: `cd newgroup && npm run build`; check RELEASE_VERSION 0.78.0, evaluated RELEASE_SOURCE sha256 `9dac9e46…`,
   `instanceAiBinding` present; build twice for byte-identity; gate; push a land/dist branch. Rebuild at EVERY cut and
   after any `newgroup/src` change. Freshness guard routed to SCHEDULER by CONDUCT #20.
+- **DIST-11 · BUILT, `land/dist/DIST-11` @ `41322908`** (GREEN 352/352 · 20119): the derivation carries `browser`, wrangler.jsonc
+  declares BROWSER, newgroup binds it (install + every update). **DIST-13 · BUILT, `land/dist/DIST-13` @ `82b5bf71`** (on DIST-11):
+  battery guard `newgroup-bundle-fresh.test.mjs` byte-compares the committed installer bundle with a fresh build — it now FAILS
+  any gate where `newgroup/src` changed without `cd newgroup && npm run build`. Both handed to CONDUCT #20 (19:34Z) for the train.
 - **DIST-7 · queued, BACKLOG**: installer uploads carry `limits.subrequests` from the signed release (depends on D-54).
 - **DIST-9 · LANDED on main** (in train `135abf3b`, c20-batch15, with IC-261; verified 06:47Z: `41c195d5` is an
   ancestor of origin/main). Install/update CARRY an operator-supplied `INSTANCE_AI_TOKEN`, never generate one;
