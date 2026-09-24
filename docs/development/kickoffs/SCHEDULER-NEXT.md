@@ -1,39 +1,78 @@
-
 Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKLOG.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
-## DISPATCH IS THIS LANE'S, END TO END (BOB #33, 2026-09-24 21:10Z, under Bob's direction)
-Root cause measured all day: CONDUCT did both long work (trains, 30–60 min) and short work (flips, spawns), so slots emptied while it trained. FROM NOW ON, at EVERY wake and after EVERY write:
-1. `list_sessions` (limit 50, mine) and read each worker's `status_bucket` against the cache's `running` rows.
-   - FLIP a row `integrated` ONLY when its worker REPORTED finished, or its branch is pushed WITH A RECORDED GREEN (BOB #33 21:17Z correction: an idle or REVIEW_READY bucket is NOT finished; workers gate in the background). REC-200 was flipped early at 21:12Z and says so on its row.
-   - BLOCKED → forward the question to CONDUCT, or to BOB if it is design.
-   - A `running` row with no live session, or an idle "completed" session with no pushed branch → tell CONDUCT.
-2. Refill to `CACHE_ROWS` (20).
-3. SPAWN every queued row yourself. First flip it `running` with the spawn sentence (the falsification clause); CONDUCT's form is in `kickoffs/CONDUCT.md` "For each free slot". Then call `create_session`:
-   - title `WORKER <ID> (SCHEDULER #N)`, model `claude-opus-5`, source `https://github.com/believeinoakland/bio`;
-   - a self-contained brief: read CLAUDE.md, WORKER.md, the area kickoff, the row on coord (STOP unless `running`), the design SECTION; `npm ci` ×3; mintid; no stash; claim; don't edit QUEUE; push `land/worker/<ID>`; report to CONDUCT #20 by one-shot trigger.
-   Check first that the row is not already landed, by its CONTENT.
-4. Target: 16+ worker sessions WORKING at all times.
-CONDUCT keeps verifying, integrating, trains and archiving of worker sessions. BOB's prototype check: builder/slots.py.txt in https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX.
+## WHY SCHEDULER #20 HANDED OVER (BOB #34, 23:26Z): RE-ROOTED, NOT REFRESHED
+SCHEDULER #20 (`session_01RxoRvCfY35n2aXnn2unRJp`, at ~31% context) sat at session lineage depth 7, so every worker it spawned sits at depth 8 and CANNOT CREATE A TRIGGER. Such a worker cannot report to CONDUCT or to SCHEDULER: D-528 reads "report blocked at lineage depth 8", and REC-217 is BLOCKED on "create_trigger fails at lineage depth 8/8". The ruling and the session-tree design are in the BOB INBOX (23:20Z, 23:35Z; UNDRAINED, yours). A SCHEDULER created by the root lane puts its workers at depth 2. SCHEDULER #20's in-flight workers keep running.
+**THEIR REPORTS WILL NEVER ARRIVE.** For every row below whose session is marked (SCHEDULER #20), read the worker's `get_session` post_turn_summary and its `land/worker/<ID>` branch at every wake. Flip `integrated` on a green stated there or on CONDUCT's verification. The same holds for any worker whose summary says its report was blocked.
+
+## DISPATCH (BOB #33 21:10Z, corrected by BOB #34 22:59Z)
+- ACTIVE means bucket WORKING, or REVIEW_READY with a summary that says a gate is running. COMPLETED is NOT active. Target: 16 active.
+- Flip `integrated` on a worker's REPORTED finish or a recorded/stated GREEN with its branch pushed; do not wait for a report that cannot come. If the stated result is not a green, flip only with a note saying NO recorded GREEN (M0-176, M0-191 precedent) and tell CONDUCT.
+- `integrated` holds no slot, so after flips run `--refill`, check each entering row BY CONTENT at the code, flip it `running`, and spawn it (model claude-opus-5-5).
+- Every spawn prompt carries, until BOB's batch-0924f lands on main: "A control driver's or tool's own pen that is GITIGNORED and ITEM-NAMED stands in your worktree; do not report, move or row it. Only files YOU make go to the scratchpad (BOB #33 17:12Z)." and "Name store=scratch on every live call; a confined credential makes that redundant, never optional (BOB #34 22:22Z)." Ask for the gate's N/N line in the commit message. SCHEDULER #20's early briefs said "scratch and pens OUTSIDE the worktree"; each of those 11 workers got a one-shot correction at 22:50Z.
+- QUEUE.md sits near its 48 KiB budget (P5): long status notes on running rows cost it. Keep spawn notes to one line; batch26 and batch27 archiving frees bytes. BACKLOG rows are 2 KiB each.
+
+## STATE at 23:28Z — main 9f8b69e6 (batch25); CONDUCT gating c20-batch26 (UI-101, UI-102, M0-181, REC-199, D-514, D-478, UI-99, REC-200) and assembling c20-batch27
+Every `integrated` row below rides batch26 or batch27, except DIST-7 (backlog, land/dist/DIST-7 @ c1cc9d90, next train). When a train lands: verify each tip is on origin/main BY CONTENT (`git cherry`), then in ONE write `--status <ID> done --archive <ID>` for each, and `--refill`. UI-101 closes as ALREADY BUILT BY UI-85; never re-row it.
+
+| row | state | worker session (spawner) | bucket at 23:26Z | branch tip | summary |
+| --- | --- | --- | --- | --- | --- |
+| FW-23 | integrated | `session_019KG4z2k9TMmpMbr9pj4pGo` (CONDUCT #20) | COMPLETED 22:29 | eaeeb3e0 | CSV format entry shipped; plancheck green, 2 findings routed to CONDUCT |
+| D-463 | integrated | `session_01VbFGtTJvgtTHC6j2YdQv6Z` (CONDUCT #20) | COMPLETED 22:04 | 96d2dd60 | arm B partial fix verified; BOB #33 routed for design gate |
+| D-478 | integrated | `session_01MFHpd7Bw9Fo4h4U7DEQxdp` (CONDUCT #20) | COMPLETED 21:45 | c5c42044 | WORKER D-478: namespace read defect fixed, all controls green |
+| UI-99 | integrated | `session_01XHoaW1JRn8NbmVrRKomKE7` (CONDUCT #20) | COMPLETED 21:48 | 38af046d | UI-99 complete: 217/217 tests green, defects flagged, D-527 routed |
+| M0-187 | integrated | `session_019J3gtdy48U9mctRvx7P7s2` (CONDUCT #20) | COMPLETED 22:10 | 3ef3c6b9 | M0-187 fixed NAME_TAKEN fixture bug; 355/355 suites green |
+| UI-101 | integrated | `session_01NPpoWMofitctEjjcNX8pGR` (CONDUCT #20) | COMPLETED 21:16 | 61532670 | UI-101 landed: 92/92 suites green, v114 ledger entry |
+| UI-102 | integrated | `session_01JAt9J6bTxCxNtTqSrXuvnT` (CONDUCT #20) | COMPLETED 21:14 | a2d974aa | UI-102 test suite complete; 5 arms verified, 3 findings logged |
+| REC-199 | integrated | `session_01UPNLBSXJuSTAaVExFzZoJV` (CONDUCT #20) | COMPLETED 21:38 | 83b73c91 | REC-199 findings: 3 bugs (case-identity, role field, control register) + 354/354 suites gr |
+| REC-200 | integrated | `session_01Pr5JAwsDiFvnk4XsRjNMT1` (CONDUCT #20) | COMPLETED 21:53 | cba42df5 | REC-200 pushed & verified: reviewcopy for last_change op |
+| M0-181 | integrated | `session_012c8Ad691ANycQMqorFidVJ` (CONDUCT #20) | COMPLETED 21:37 | 07ca2593 | M0-181 complete: anchor ambiguity fixed, 116/116 names, 80/80 suites green |
+| M0-182 | integrated | `session_01SMeLsetUafnaagikkq2n46` (CONDUCT #20) | COMPLETED 22:54 | 413e894d | M0-182: gitignore sweep complete; 5/5 declared pens verified clean; flagged row wording is |
+| D-513 | integrated | `session_011H6nWFjzDCPMcgb4j3uxut` (CONDUCT #20) | COMPLETED 22:54 | fe786466 | D-513 row complete: 3 defects corrected, 2 findings minted (D-549, D-550) |
+| D-514 | integrated | `session_01U51s17r8ZNqTmt2BjAmU6X` (CONDUCT #20) | COMPLETED 21:41 | e03816d7 | D-514 row completed: 9/9 test arms green, 3 pre-existing bugs fixed & recorded |
+| D-516 | integrated | `session_01Hrw3279HupDRDVqkKQ4wsG` (CONDUCT #20) | COMPLETED 22:53 | e5775cb9 | D-516 complete: observation-log watermark design documented, 360/360 suites green, merged |
+| D-517 | integrated | `session_01TdirGWzSgAgSrmKDkHtLii` (CONDUCT #20) | COMPLETED 22:37 | 99065b61 | D-517 row: measurement confirmed, three negative findings flagged |
+| REC-213 | integrated | `session_01JJwYaKs8chrSDYbEwxuZ3W` (CONDUCT #20) | COMPLETED 22:02 | 3e7ac340 | REC-213: two defects D-540, D-541 diagnosed and routed to CONDUCT |
+| M0-176 | integrated | `session_017gCL5VjEPYRUW5ABxNZ2TY` (CONDUCT #20) | COMPLETED 22:38 | 17f90f31 | M0-176 verified & recorded green; row narrowed to D-535 |
+| UI-103 | integrated | `session_01Q6zjcvzB6hiU7Tgv1MVXmo` (CONDUCT #20) | REVIEW_READY 22:21 | 5e6fe8a2 | UI-103 statement-writer: 297/297 suites green, coverage strict pass |
+| UI-97 | integrated | `session_01C2CD72xBmvuELNgyb1Bg1w` (SCHEDULER #19) | COMPLETED 21:54 | 412e917c | test suite green (73 suites, all passing); D-534 filed; defect corrected |
+| REC-207 | running | `session_012hreL8FuducwEXycuG9P3E` (SCHEDULER #19) | REVIEW_READY 23:22 | - | battery re-running on base be038bc1b; found origin/main moved (1a7f→9f8b), M0-178 tooling  |
+| D-468 | running | `session_01C8Ybpzhnjuccc5zuaWbQrg` (SCHEDULER #19) | WORKING 23:26 | 9045c3e4 |  |
+| REC-210 | integrated | `session_014JmwEB4HhdNSmk1bXoFRJ3` (SCHEDULER #19) | COMPLETED 22:52 | 5cd28164 | REC-210 completed: 10 test arms pass, D-545 finding filed, workaround deployed |
+| UI-94 | integrated | `session_0112MpTkDhs8e6RixvACKbTy` (SCHEDULER #19) | COMPLETED 22:04 | a3b8509c | UI-94 complete: queueSetOpsFor refactor, 7 arms verified, 3 flags to CONDUCT |
+| REC-205 | running | `session_01REVaFWAv57jneuNBQ9LfCc` (SCHEDULER #19) | REVIEW_READY 23:04 | - | machinefences-dec49 suite running; 2 guard failures resolved |
+| D-527 | integrated | `session_01Uw7C7GghJneh2hKtifGYSD` (SCHEDULER #19) | COMPLETED 22:30 | d72e0a2b | D-527 test suite green (55/3); defect verified + report filed |
+| D-444 | integrated | `session_01NFNPYAprAxvHUV7M5tfyZo` (SCHEDULER #19) | COMPLETED 22:31 | 92ac43b5 | D-444 verification complete: floor motion confirmed, REC-19 assertions pass, D-553 finding |
+| D-445 | integrated | `session_01WX6726ARFQWMu5SfxbRjRo` (SCHEDULER #19) | REVIEW_READY 22:24 | 330dc978 | D-445: verified frontier-chunk cases (16/0); negative control passes, 3 findings triaged,  |
+| D-448 | running | `session_01Qb2cHaTG1Mkm6KEQkhXN3k` (SCHEDULER #19) | COMPLETED 23:17 | 5eadd905 | analysis complete: UI-68 surface mismatch found, 2 own defects corrected, scope D-542 defe |
+| M0-188 | running | `session_01MWXM9vQg5dUXKx5s72Xw7F` (SCHEDULER #19) | REVIEW_READY 23:08 | 71b663a7 | m025 gate RED fixed; D-560 minted for SCHEDULER; sweep incomplete |
+| M0-191 | integrated | `session_01Ae6PjqcjesU4ZfbevZZ7te` (SCHEDULER #20) | COMPLETED 22:51 | ff3c7b9c | M0-191 complete: slots audit passed, pen/scratch outside worktree, report in transcript |
+| D-544 | integrated | `session_013PX6jsQUR4Mo9tCkDe7bDB` (SCHEDULER #20) | COMPLETED 22:51 | 32ec64b8 | D-544 complete: gate 87/87 suites green; ratify.test.mjs:240 flagged for M0 |
+| D-512 | running | `session_016pbHdxtuvv6dzMNuEkdkEr` (SCHEDULER #20) | REVIEW_READY 23:23 | c8246cb1 | D-512: guard floors moved +1, CATALOG_VERSION bumped to 1.29.0, 2 design choices recorded |
+| M0-192 | integrated | `session_01KZg25rQAQjpoZPSNuMxqdW` (SCHEDULER #20) | COMPLETED 22:51 | e5aa15f3 | M0-192 verification complete: control reads CATALOG_VERSION dynamically; 73/73 suites gree |
+| D-528 | running | `session_014bcm16fWa7eV4MqX3ST3Wk` (SCHEDULER #20) | REVIEW_READY 22:55 | 85eb32dc | verifying control driver placement; report blocked at lineage depth 8 |
+| D-530 | running | `session_018QS9D2jHPGnF6HwTq4mStv` (SCHEDULER #20) | REVIEW_READY 23:25 | - | gate running; 4 fixes applied; routing design gap |
+| REC-217 | running | `session_01YKaZtdpdxwK3coEfHwk5CX` (SCHEDULER #20) | BLOCKED 23:24 | 727a1d85 | create_trigger fails at lineage depth 8/8; report undelivered to SCHEDULER #20 |
+| D-552 | running | `session_01KdbRj6ATuFvsJvoWE65dhp` (SCHEDULER #20) | REVIEW_READY 23:15 | - | derivation-bounds.test.mjs green (72/0); gate 2 running on tip da6fdb8a |
+| D-533 | running | `session_01M5CtHfjyov6bTsA2bNhUWe` (SCHEDULER #20) | REVIEW_READY 23:14 | - | provenance-marker.test.mjs failed (exit 1); re-running gate on clean tree |
+| D-536 | running | `session_01MmM8cM4wbdEwKCj7Eoq9sE` (SCHEDULER #20) | WORKING 23:26 | 0a0f8240 |  |
+| REC-214 | running | `session_01YNKPkM1im26e7i6FTcwNEZ` (SCHEDULER #20) | WORKING 23:26 | - |  |
+| M0-194 | running | `session_01DynK5HSkeXKm9tKyHPoCiE` (SCHEDULER #20) | REVIEW_READY 23:21 | - | gate RED on statepaths.test.mjs; re-running on 3325a474 |
+| D-545 | running | `session_01CgxEtHPikZSPrqmaFhvsm3` (SCHEDULER #20) | REVIEW_READY 23:19 | - | stdio census flush import fix; re-running gate on a812be34 |
+| D-549 | running | `session_01WnKBBBWKLG6NhQK8GRhapD` (SCHEDULER #20) | REVIEW_READY 23:12 | - | full gate running (harness bg task); awaiting exit re-invoke |
+| D-558 | running | `session_019C1j7L6xPe3k5uHZDzwvRM` (SCHEDULER #20) | COMPLETED 23:21 | d614da45 | D-558 complete: gate assertions 39→41 passing, version bump validated |
+| D-521 | running | `session_017oGHVZRbcp6PS7sVFafim3` (SCHEDULER #20) | REVIEW_READY 23:12 | - | gate running in background; tree locked; awaiting exit |
+| D-524 | running | `session_01Ev8NV58fY9r2mgYgUPJgZY` (SCHEDULER #20) | WORKING 23:26 | - |  |
+| D-525 | running | `session_012DxfbbSRrcFbM4sGjFsiSu` (SCHEDULER #20) | WORKING 23:26 | - |  |
+
+**Read these first:** D-448 (COMPLETED 23:17Z, branch 5eadd905; flip on a stated green, and place its deferred D-542 scope if the report names a fix). D-558 (COMPLETED 23:21Z, d614da45: "gate assertions 39→41", which is a suite figure, not the battery; confirm the N/N). REC-217 (BLOCKED only on reporting; read its summary). D-530 ("routing design gap": if it is a design question, carry it to BOB). M0-188 minted D-560 "for SCHEDULER", which is NOT placed; read its report text. D-512 bumped CATALOG_VERSION to 1.29.0, and D-521 moves it too: the integrator unions them.
+**Ids minted and unplaced:** D-560 (M0-188's, text unread). D-542 (D-448's deferred scope). D-551 is closed NOT PLACED (it contradicts BOB #33 17:12Z; reason on D-445's line). D-535, D-540, D-541, D-543, D-549, D-550, D-552, D-553, D-558, D-559, D-537, M0-191…M0-194, REC-217…REC-219, DIST-15 and UI-108/UI-109 are all placed.
+**Routed and not rowed:** M0-176's finding 2 (§2b's basename probe cannot tell two SCHEDULER.md files apart; it errs safe, so it is dropped unless it measurably over-selects). D-517's declined word-gap unification (in M-145; no measured failure).
+**BOB rulings placed tonight:** REC-216 and UI-105 SUPERSEDED (UI-102 shows the proposal); REC-217 (publish draft=); REC-218 (reading.dialect); M0-194 (WORKER.md one line per rule, ahead of product); D-553 restated (retired is not citable by state, type-blind); REC-219 (`bio-case-document/4`: BOB named C-41.13, which is taken, so the next free C-41 is used). No release until the plan's current scope is done (BOB #34 22:30Z).
 
 ## How the lane runs
-- Wake by message only; no timers. Lane-to-lane = one-shot `create_trigger` with `persistent_session_id`, `run_once_at` ≈ +2 min. Peers: BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3` (succeeding BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` at ~22:00Z — confirm which is live), CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`, DIST #6 `session_01Vi1XTVwxcBBMStifuBasLZ`.
-- `CACHE_ROWS` is 20 on main since 1a7f0bcc (land/scheduler19/cache-20-on-m0140). DEBT.md is RETIRED on coord (M0-140's write, 0065b961). Write coord with MAIN's tools only; never from a stale or M0-140-less checkout (two deletions of DEBT.md today came from wrong checkouts).
-- ORDER (Bob, 17:41Z): every process improvement is a tracked row. A process row goes ahead of product ONLY for an appreciable effect on productivity (gate time, a false or flaky gate result, a blocker) or on product quality; every other one goes after the product rows. Record why on its `order:` line.
-- ROW-WRITING (BOB #33): a `scope:` naming a remedy names, in `accepts-when`, the measured failure it moves. `design:` must be a governed home (LC-row-design refuses TREE-SHARING for M0; cite VERIFICATION.md and name the other beside it).
-- Build intents with a QUOTED heredoc or a script file: an unquoted heredoc executes backticks in row text.
-
-## State at ~22:00Z (main 9f8b69e6; coord fe5e63e2) — SCHEDULER #19 refreshed here at 78% context
-- **FIRST ACT, UNDRAINED at my refresh (arrived 21:56-21:58Z) — ONE write:** (a) BOB #33 INBOX at coord 3871f7ec: REC-216 is SUPERSEDED — do NOT publish actionlawspropose in ACTS, the NON_ACTS reasoning stands (`affordances.mjs` ~1886) → close it (archive) as not-to-be-built; UI-105 is REWRITTEN to SHOW the proposal beside the member's list, with no member "propose" act (UI-102 a2d974aa built the showing surface — check its overlap); FW-23: persist the dialect as a `reading.dialect` key of its own, one RECORD I1 row → mint and place; repoint REC-214/REC-215/UI-104's design lines at the inbox record, not "21:21Z" (CONDUCT's F4: that ruling was unfindable). Drain the inbox in the same write. (b) CONDUCT #20 21:57Z, REC-200 F3: mint and place a D row — `acknowledgeStatement` stamps `at` WITHOUT milliseconds while every other act carries them, so a string compare across kinds misorders (`…:00Z` sorts after `…:00.123Z`); fix = one stamping helper every act uses; sweep for cross-kind string compares of `at` and state what the matcher cannot see; accepts-when names the measured failure. REC-200 now carries its GREEN (354/354 · 20394). Batch26 = UI-101, UI-102, M0-181, REC-199, D-514, D-478, UI-99, REC-200.
-- **ALSO in that first write (CONDUCT #20 22:09Z):** D-463 is flipped `integrated` (GREEN 355/355 · 20446 at 96d2dd60; it and UI-97 ride c20-batch27), so one slot is open: refill and spawn. PLACE two M0 rows AHEAD of product, since both are false or flaky gate results that cost red rounds: (1) `bio-plane/test/d470-catalog-census.control.mjs` QUOTES CATALOG_VERSION, so every bump silently disarms its VERSION arm (it was stale on main, 1.24.0 against 1.25.0, and hand-fixed at batch25) — fix: read `CATALOG_VERSION` from `src/gate.mjs`; control: bump the constant and the arm still fires. (2) Drop the CATALOG_VERSION probe from construct-status `13.statement-ack` (D-507's claim): nothing that claim asserts is the version, C-82.6/7's probes already carry it, and every bump costs four red suites (status --check, status.test, plancheck, strandedwork). Merge them only if they are one fix; they are not.
-- **AND (CONDUCT #20 22:11Z):** REC-213 is flipped `integrated` (GREEN 361/361 · 20690 at 3e7ac340; rides c20-batch27), so a second slot is open. PLACE two minted rows. D-540 (RECORD, product order, depends on REC-213; design §3 rule 13 / §6A.4): `#statementAcknowledgements`' `unbound` count includes the statement WRITER's own reading (measured 3, honest 2). Fix: exclude the writer in the NOT clause, as REC-212 did for the publisher, and count rows with an undetermined writer under a separately stated key. D-541 (process, AFTER the product rows, since it is a note, not a failure): `tools/rowsubstrate.mjs` `anchorPairs` captures digits and dots only, so `§6A` reads as `6`, and D-404's design-coverage arm falsely notes "substrate not evident" for REC-213, REC-199 and D-448. Fix: capture `(\d+(?:\.\d+)*[A-Za-z]?)`, compute depth from the dotted part, and escape the letter in `sectionText`.
-- c20-batch25 LANDED (9f8b69e6): its 20 rows done+archived at 357fedd0, each tip verified an ancestor of origin/main.
-- Still `integrated`, NOT on main (CONDUCT's next train): D-478, UI-99, UI-101, UI-102, REC-199, REC-200, M0-181, D-514, UI-97. On landing: verify tips, ONE write `--status done --archive` each + `--refill`, spawn what enters. AT UI-101's ARCHIVE: close it as ALREADY BUILT BY UI-85 (CONDUCT #20 21:26Z) — never re-row it.
-- Cache 20 running, 0 queued. At 21:59Z: 15 WORKING; REVIEW_READY (NOT finished — flip only on a reported GREEN): D-463, D-527, M0-176, M0-187. Just spawned: D-448 `session_01Qb2cHaTG1Mkm6KEQkhXN3k`, M0-188 `session_01MWXM9vQg5dUXKx5s72Xw7F`.
-- REC-216 BLOCKED (backlog head, 5b3bba8c): its worker built nothing and reported F1-F4, "rewrite the rows, don't move them", routed to BOB #33/CONDUCT #20. Re-enters on BOB's ruling; REC-215/UI-105 may need the same rewrite.
-- A `blocked` row may not sit in the cache (P3): move it out with `--row QUEUE <ID> <empty>` + `--insert BACKLOG before <head> <file>` + `--refill` in one write.
-- Owed to DIST at its next deploy: D-475's two GETs; ONE live render with the BROWSER binding (D-490).
-- Pending placement: FW-23's `dialect` persistence row once BOB rules the field; a UI row for D-527's render once D-527's plane half lands.
-- Dispatch helper (write it fresh; mine died with my scratchpad): parse list_sessions JSON (starts at `{"ccr"`, after an untrusted wrapper — use raw_decode), match titles `WORKER <ID> (`, join to `### <ID> · running` rows of `git -C /home/user/bio show origin/coord:docs/development/QUEUE.md`; a spawned session missing from the list may be ARCHIVED — get_session it.
+- Wake by message only. Lane-to-lane messages are one-shot `create_trigger` with `persistent_session_id` and `run_once_at` ≈ +2 min. The trigger-creation rate limit bites at about ten in a row, so spread them. Peers: BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3`, CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`; DIST is #7 (DIST #6 archived). Confirm the live ids with `get_session` / `list_sessions`.
+- `list_sessions` (limit 50, mine) overflows the tool: it saves to a file. Parse it with a JSON raw_decode starting at `{"ccr"`, match titles `WORKER <ID> (`, and join to `### <ID> · <state>` rows of `git show origin/coord:docs/development/QUEUE.md`.
+- ORDER (Bob 17:41Z): a process row goes ahead of product only for an appreciable effect on productivity (gate time, a false or flaky gate result, a blocker) or on product quality. Record why on its `order:` line. ROW-WRITING (BOB #33): a remedy's `scope:` names, in `accepts-when`, the measured failure it moves.
 
 ## The spawn brief (CONDUCT #20's form, 21:21Z; used for UI-97 and D-468)
 Flip `running` first (`coord.mjs write --status <ID> running --note "<spawn sentence with the falsification clause>"`), then `create_session` (title `WORKER <ID> (SCHEDULER #N)`, model `claude-opus-5`, source `https://github.com/believeinoakland/bio`), prompt:
