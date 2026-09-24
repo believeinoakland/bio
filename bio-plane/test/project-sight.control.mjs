@@ -68,7 +68,17 @@ const ARMS = {
                + "    if (String(viewer ?? \"\").startsWith(\"member:\")\n"
                + "        && this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId)?.object_type === \"project\") return false;\n"
                + "    const g = viewerPredicate(viewer);"]],
-    mustFail: ["SEES, NO ROLE:", "JOINED:"],
+    /* DECLARATION EXTENDED 2026-09-24 BY D-480, never exempted, and the extension is a FINDING about
+       D-486's landing rather than about this arm: §9's two ADMIN-token arms have been failing here
+       undeclared since D-486 added them (a project invisible to every member session takes the
+       hidden run's own context with it, so the run's rows never arrive and the ADMIN witness and its
+       EXACT figure both go red). Measured, not reasoned: this arm was run whole on the landing tree
+       and these are exactly the two labels it failed beyond its declaration. §10's arms are NOT here
+       and must stay green — the crowding fixture's projects are vera's own, and she is told they do
+       not exist by this arm's own lie, which removes her item BEFORE any bound is read. */
+    mustFail: ["SEES, NO ROLE:", "JOINED:",
+               "THE ARM IS ARMED: the ADMIN token's five all MOVED on the hidden run",
+               "EXACT: the ADMIN token's aiRunLog less vera's"],
   },
 
   /* THE ROSTER STAMP DROPPED at the control plane: the roster acts receive no viewer. The store reads
@@ -143,11 +153,21 @@ const ARMS = {
        §9 now reads two of its keys, so §9's arms go red too. They are DECLARED rather than left as
        "failed but not declared" — an arm whose declaration is stale reads as a control that surprised its
        author, which is the one signal this register exists to keep meaningful. */
+    /* DECLARATION EXTENDED AGAIN 2026-09-24 BY D-480, never exempted, and the extension is the
+       MEASUREMENT that the two fixes share ONE spelling of the sight rule rather than two. This arm
+       neuters `#hiddenSets`' `hid` at its source, and D-480's candidate walk reads that same `hid`,
+       so every §10 arm goes red here — while `stats-stamp-dropped` below, which drops the stamp on
+       `op=stats` alone, leaves §10 entirely green because `op=queue` carries its own. The asymmetry
+       is what says the coupling is the predicate and not the door. */
     mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
                "EXACT: the ADMIN token's bundles less vera's",
                "A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE", "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier",
                "EXACT: the ADMIN token's aiRunLog less vera's",
-               "THE TALLY — D-486's OWN SUBJECT"],
+               "THE TALLY — D-486's OWN SUBJECT",
+               "A HIDDEN PROJECT'S CITATIONS MOVE NOTHING", "A HIDDEN PROJECT'S CITATIONS TAKE NO SLOT",
+               "the bound is the plane's own published figure", "THE PAGE IS EXACTLY FULL",
+               "A TARGET VERA CANNOT SEE TAKES NO SLOT", "STILL LIVE: a target she CAN see DOES take a slot",
+               "STILL LIVE: crowding vera CAN see does reach her"],
   },
   /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
   "indexcheck-whole-index": {
@@ -244,6 +264,47 @@ const ARMS = {
   "d486-predicate-de-morgan": {
     patches: [["store.mjs", "`NOT (authority_kind = 'run' AND COALESCE(authority, '') IN ${hidRuns.sql})`",
                "`(authority_kind <> 'run' OR COALESCE(authority, '') NOT IN ${hidRuns.sql})`"]],
+    mustFail: [],
+  },
+
+  /* ------------------------------------------------------------------ D-480 (2026-09-24)
+     THE ROW'S OWN CONTROL, IN TWO ARMS RATHER THAN ONE, because the fix has two conjuncts and one
+     arm over both could not say which was doing the work. Each drops ONE end of the edge from
+     `#queueSharedInquiryCandidates` and leaves the other standing. The patch strings are ORDINARY
+     double-quoted strings and not template literals, so `${…}` stays the source's own text rather
+     than something this driver interpolates — the first spelling of these arms was a template
+     literal and died at load with `hid is not defined`, which is the friendly version of the same
+     mistake M-25's ARM L3 exists to catch (a patch that quotes what the source only produces).
+     RECORDED rather than fixed silently.
+
+     §10 IS SEQUENTIAL BY CONSTRUCTION and the declarations say so rather than smoothing it: each
+     block builds the fixture the next one reads (the crowding, then the page filled to the bound,
+     then a target at each end of the sight rule). So the CITER arm, which takes vera's divergence
+     item off her page altogether, necessarily takes every later arm with it — its declaration is
+     long for that reason and not because the arm is blunt. The TARGET arm is the attribution: it
+     fails ONE assertion, and the citer arms either side of it stay green. */
+  "d480-citers-ungated": {
+    patches: [["store.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
+    /* DECLARATION CORRECTED AFTER THE FIRST RUN, AND THE ARM WAS RIGHT WHILE THE DECLARATION WAS
+       WRONG. Two of §10's arms read `truncOf(...).every((x) => x === false)`, which is TRUE OVER AN
+       EMPTY ARRAY, so with vera's item crowded off her page entirely they PASSED over a feed with
+       nothing in it, and the last `STILL LIVE` arm failed instead — a digest comparison between two
+       reads that were both missing the item. The SUITE was corrected (the item count is asserted
+       beside every flag, and the last arm asks for the item to be GONE rather than for a digest to
+       move) and this declaration re-taken against it. */
+    mustFail: ["A HIDDEN PROJECT'S CITATIONS MOVE NOTHING", "A HIDDEN PROJECT'S CITATIONS TAKE NO SLOT",
+               "the bound is the plane's own published figure", "THE PAGE IS EXACTLY FULL",
+               "A TARGET VERA CANNOT SEE TAKES NO SLOT", "STILL LIVE: a target she CAN see DOES take a slot",
+               "STILL LIVE: crowding vera CAN see does reach her"],
+  },
+  "d480-targets-ungated": {
+    patches: [["store.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
+    mustFail: ["A TARGET VERA CANNOT SEE TAKES NO SLOT"],
+  },
+  /* D-480 OVER-STRICTNESS: the same subtraction in a spelling the suite did not anticipate — the
+     negation outside the membership test rather than inside it. Nothing may fail. */
+  "d480-not-in-inverted": {
+    patches: [["store.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";", "    const where = hid ? ` AND NOT (rf.bundle_id IN ${hid.sql}) AND NOT (rf.target_id IN ${hid.sql})` : \"\";"]],
     mustFail: [],
   },
 
