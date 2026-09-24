@@ -4574,3 +4574,24 @@ depends-on: none.
 scope: read each block, name its owner, resolve each contradiction to one statement, and release or place what each delegates; a coord write, not a `main` commit.
 accepts-when: each of the five names one owner and no two contradict. NEGATIVE CONTROL: none (a ledger edit).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### D-498 · done — on main at 58293bf3 (train 16:50Z) — SCHEDULER #18
+order: at the backlog head: the record claiming more than the plane does, one line (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
+milestone: M8
+interface: none.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14).
+depends-on: D-479 (its train).
+scope: amend the claim to "at most the cap, stated as truncated"; add a probe pinning `PROJECT_DIRECTORY_LIMIT`.
+accepts-when: `node tools/status.mjs discoverable` reads the capped claim and its probe passes. NEGATIVE CONTROL: rename the constant and the probe fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### M0-153 · done — on main at 58293bf3 (train 16:50Z) — SCHEDULER #18
+status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-153 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-153; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
+order: after M0-150, with the gate-time rows (M0-146 is cached) (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
+depends-on: M0-143.
+scope: `selectReaders` reads through M0-143's comment-blanking (`codeOf`); re-derive UNITS_CEILING from its print.
+accepts-when: a suite citing an M-id only in a comment is not a MEASUREMENTS reader. NEGATIVE CONTROL: read raw source and that suite is selected, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

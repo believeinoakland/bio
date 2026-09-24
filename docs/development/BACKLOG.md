@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-509 · queued — **A FALSE GREEN ON THE MACHINE-FENCE SENTINEL: `machine-fences.control.mjs` arm (2) stays green when it must fail. Driven, not read: with the identity predicate neutered, a machine's `op=strengthbar` DOES set the group's required evidentiary strength, but block (ix) reads back group=believe-in-oakland while the act writes to the store's PRODUCING group (D-436 moved the write, not the read).** Found by D-503's worker (id minted by it). — owner RECORD.
+order: at the backlog head: a control that cannot fail on the authority boundary no machine may cross (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:52Z)
+milestone: M7
+interface: none.
+design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 4, with `docs/development/VERIFICATION.md` "The negative-control register".
+depends-on: D-503.
+scope: add `group: GROUP` to block (ix)'s strengthbar body; re-measure the publication arms that run after it (MOVE_VERSION, REVIEW, SET_LAWS, RISK_TIER), since a group-wide bar can gate them.
+accepts-when: `node test/machine-fences.control.mjs` exits 0 with every arm as declared. NEGATIVE CONTROL: arm (2) itself — neuter the predicate and it now fails by name.
+added: 2026-09-24 · SCHEDULER #18 (placed; `D-509` minted by land/worker/D-503).
+
 ### D-510 · queued — **`promote` TRUSTS THE ENVELOPE'S TYPE OVER THE DOCUMENT'S: `bundles.object_type` and the action_basis/correspondence projection are gated on the caller's `meta.object_type`, while `#projectRow`'s action columns come from the document's own front matter — so a member can promote an ACTION under an envelope saying information: it lands typed information with `action_risk_tier` set and its basis and correspondence never projected.** Found by D-505's worker (finding 3). — owner RECORD.
 order: at the backlog head: the record holding an action it does not index as one (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:48Z)
 milestone: M7
@@ -1306,13 +1316,3 @@ depends-on: M0-131 (its derived never-cached set and `--never-cached` run are re
 scope: with the per-unit record off, §2d's shortcut on a recorded-GREEN tree behaves as `--with-never-cached`: it runs the derived never-cached set and records the tree GREEN only when they pass; the printed line says which units ran.
 accepts-when: `gates.mjs` on a recorded-GREEN tree with a planted history defect reads RED naming the never-cached unit. NEGATIVE CONTROL: restore the bare shortcut, and the planted arm reads GREEN and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-131's worker's finding via CONDUCT #16; `node tools/mintid.mjs M0`).
-
-### M0-137 · queued — **SUITES PASS ABBREVIATED COMMIT IDS TO GIT, SO A FETCH THAT BRINGS A COLLIDING PREFIX TURNS A GREEN SUITE RED WITH NO CODE CHANGE.** Re-read on `origin/main` @ `38b49c50`: `bio-plane/test/ledger.test.mjs` `PRE_MIGRATION = "9ea2eb02"` and `STATE_PIN = "de40aa56"`; `bio-plane/test/mergecarry.test.mjs` passes `"e241672"` to `git cat-file`, `auditMerge`, `git show` and the `tools/mergecarry.mjs --commit` CLI. — owner M0.
-order: first of the process block, directly after M0-135: a red on `main` from a git object, not the code, is TREE-SHARING §3's alarm to Bob, but no collision has happened, so it sits behind the product rows (SCHEDULER #16, 2026-09-23; M0-136's worker via CONDUCT #16)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch6`).
-scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
-accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).

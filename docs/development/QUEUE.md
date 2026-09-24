@@ -59,16 +59,6 @@ scope: (1) close D-313, D-391, D-388 (dispositions drafted on `scheduler18/row-d
 accepts-when: `node tools/plancheck.mjs`, the coord ledger checks and the full gate pass with no DEBT.md; `git grep -il "debt"` over live tools, suites, CLAUDE.md, kickoffs and development docs returns only archive pointers, each named in the landing; D-313/D-391/D-388 read done in the ledger archive. NEGATIVE CONTROL: restore one reader, and its arm fails naming the missing file.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs M0`).
 
-### D-498 · integrated — finished; land/worker/D-498 @ 9f46d90c (one line in construct-status 1.discoverable + 3 probes; gate TARGETED 42/42 green), merges clean onto 68fecb8d; rides the next train
-order: at the backlog head: the record claiming more than the plane does, one line (CLAUDE.md §2; SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
-milestone: M8
-interface: none.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14).
-depends-on: D-479 (its train).
-scope: amend the claim to "at most the cap, stated as truncated"; add a probe pinning `PROJECT_DIRECTORY_LIMIT`.
-accepts-when: `node tools/status.mjs discoverable` reads the capped claim and its probe passes. NEGATIVE CONTROL: rename the constant and the probe fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
-
 ### D-497 · running — **THE PROJECT DIRECTORY'S CANDIDATE SCAN IS STILL LINEAR IN THE GROUP'S PROJECTS: `#sight` is a JS predicate, so D-479's page bounds the ANSWER but not the rows read.** Found by D-479's worker. — owner RECORD.
 status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-497 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/D-497; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
 order: after D-495: a bound on work, not on disclosure; the answer is already capped (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z)
@@ -101,17 +91,6 @@ depends-on: D-149 (`integrated` on c17-batch7).
 scope: a proposal of citations and levels for an action, stored apart from the member's list and labelled machine work; it never sets the list, which only the member's act does.
 accepts-when: a proposal is read labelled machine work, and the action's list is unchanged until the member acts. NEGATIVE CONTROL: let the proposal write the list, and the "the list is the member's" arm fails by name. New suite `bio-plane/test/rec195-laws-proposal.test.mjs`.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
-
-### M0-153 · integrated — **CITING AN M-ID IN A SUITE'S PROSE MAKES THAT SUITE A MEASUREMENTS READER: `gates.mjs` `selectReaders` counts a bare `M-<n>` mention, comments included, contradicting "a comment reads nothing"; `statepaths` UNITS_CEILING then has zero slack against a MEASUREMENTS change.** Found by D-481's worker; M0-143 blanks comments only in the doc-facing selector. — owner M0.
-status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-153 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-153; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
-order: after M0-150, with the gate-time rows (M0-146 is cached) (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
-depends-on: M0-143.
-scope: `selectReaders` reads through M0-143's comment-blanking (`codeOf`); re-derive UNITS_CEILING from its print.
-accepts-when: a suite citing an M-id only in a comment is not a MEASUREMENTS reader. NEGATIVE CONTROL: read raw source and that suite is selected, failing by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-154 · integrated — **FOUR SUITES BUILD A FIXTURE REPO BY COPYING THE GATE'S TOOLS FROM A HAND-KEPT LIST (entries, gateresults, train, gates), so any new import in `gates.mjs` breaks them with ERR_MODULE_NOT_FOUND.** Found by M0-146's worker's first red. — owner M0.
 status: running — SPAWNED 2026-09-24 ~15:50Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER M0-154 (CONDUCT #20), base origin/main 68fecb8d, on development's RESUMPTION (Bob via BOB #32 15:40Z, cap 10). Falsify rather than believe: a live worker holds the branch land/worker/M0-154; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone. (headline restored by SCHEDULER #18 from coord history, 2026-09-24 16:2xZ; CONDUCT #20's F4)
