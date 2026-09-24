@@ -317,6 +317,12 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 2.0.0 (D-521, 2026-09-24, branch land/worker/D-521): ONE DEPARTURE, NO ARRIVALS — C-82.1
+     STATEMENT_ACK_DOCUMENTS_OVER_BOUND retired (unreachable since REC-194 keyed its read on the primary key).
+     A removal is not additive, so the step is MAJOR. 460 and the digest are THIS SUITE'S OWN PRINT on the
+     item's tree over origin/main 9f8b69e6, never 461 - 1. 1.28.0's row STAYS. If D-463 (c20-batch27) also
+     moves the version, CONDUCT takes the next number at the union and re-reads this print. */
+  "2.0.0": { count: 460, digest: "e665147887ee8a4379f79448105fbf0e595cd2f33ff86b99d02225675494d2f5" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -414,8 +420,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 2.0.0)",
+  /* CORRECTED by D-521 (2026-09-24): 1.28.0 -> 2.0.0 — C-82.1 retired, and the stamp moves with the catalogue. */
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 2.0.0)", "2.0.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

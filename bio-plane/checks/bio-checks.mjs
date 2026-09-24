@@ -13801,21 +13801,16 @@ const THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
    grammar reads either; a leg carrying one is claiming membership as a reason. */
 const THEME_LEG_KEYS = ["theme", "themes"];
 
-/* IC-246 / C-82 (minted with `node tools/mintid.mjs C` by c19-unionfix, 2026-09-24) — op=statementack's bound on
- * the unsigned case documents one acknowledgement re-authors (BIO_Publication_v0_1.md §3 rule 11). Over it the act
- * is REFUSED and nothing is written, because a cut would leave a document listing fewer second readers than the
- * record holds, and its owner would sign that absence. */
+/* IC-246 / C-82 (minted with `node tools/mintid.mjs C` by c19-unionfix, 2026-09-24) — op=statementack's refusals
+ * (BIO_Publication_v0_1.md §3 rule 11).
+ * C-82.1 IS RETIRED (D-521, 2026-09-24), and its number is NOT reused. It was IC-246's bound on the unsigned case
+ * documents one acknowledgement re-authors (STATEMENT_ACK_DOCUMENTS_OVER_BOUND, over STATEMENT_ACK_DOCUMENTS_MAX).
+ * REC-194 made that read name (case_id, edition), `case_documents`' PRIMARY KEY, so it returns at most one row and
+ * the refusal could never fire: a catalogued refusal no input can reach is a claim the record makes about itself.
+ * The read is now `#one`, and the row, its DEC-49 region and the bound went together. */
 export const STATEMENT_ACK_CHECKS = {
-  STATEMENT_ACK_DOCUMENTS_OVER_BOUND: {
-    check: 'C-82.1',
-    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-documents-bound',
-    translation: 'More unsigned case documents of this project carry this exact exclusion statement than one '
-      + 'acknowledgement can update at once. Updating only some would leave the others listing fewer second '
-      + 'readers than the record holds, so nothing was recorded. Sign or replace some of those documents, then '
-      + 'acknowledge the statement again.',
-  },
   /* D-507 / IC-270 — THE SIX REFUSALS THAT REACHED A MEMBER AS MACHINE WORDS. UI-89's worker measured it
-     at the surface: of the seven conditions `acknowledgeStatement` refuses on, only C-82.1 above held a
+     at the surface: of the seven conditions `acknowledgeStatement` then refused on, only C-82.1 (retired since, D-521) held a
      row, so the other six arrived carrying the plane's authored `detail` and NO canned translation, which
      is the state DEC-49 exists to make impossible (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10). The
      obstacle was the same STRUCTURAL one D-484 met at `NO_BASIS`: a row holds ONE `where` naming the

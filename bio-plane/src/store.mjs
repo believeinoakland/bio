@@ -10539,17 +10539,12 @@ export class Store extends DurableObject {
                { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor });
     /* END DEC-49 REGION is-statement-ack-by-its-author */
     const statementSha = Store.#statementSha(text);
-    /* THE DOCUMENTS ALREADY AUTHORED FOR THIS STATEMENT, UNSIGNED, AT THIS CASE IDENTITY, IN THIS PROJECT — the
+    /* THE DOCUMENT ALREADY AUTHORED FOR THIS STATEMENT, UNSIGNED, AT THIS CASE IDENTITY, IN THIS PROJECT — the
        case door's own document, or (through a draft) the edition `op=publish` authored from it. Found by the hash
        the document prints beside its statement AND by its project line, both IN THE STATEMENT, and read BEFORE
-       anything is written (IC-246). Two corrections to D-150's first cut, each a defect:
-       - THE PROJECT IS MATCHED IN SQL, spelled as `#caseDocumentText` writes it. It was filtered AFTER a `LIMIT 8`,
-         so another project's documents of the same sentence could fill the page and crowd this project's out —
-         an acknowledgement recorded and never listed where it belongs.
-       - OVER THE BOUND IS A REFUSAL, NOT A CUT. A cut would leave the ninth document listing fewer second readers
-         than the record holds, and its owner would SIGN that absence. So the read is `max + 1`, and more than
-         `max` refuses by name with nothing written. The parse filter stays, applied after the bound is decided. */
-    const ackMax = Store.STATEMENT_ACK_DOCUMENTS_MAX;
+       anything is written (IC-246). THE PROJECT IS MATCHED IN SQL, spelled as `#caseDocumentText` writes it
+       (IC-246's correction to D-150's first cut, which filtered it after a `LIMIT 8` and so could crowd this
+       project's documents out); the parse filter below stays as the authority, the SQL match its index. */
     const needle = `\n  statement_sha: ${statementSha}\n`;
     const projectLine = `\ncase_project: ${project}\n`;
     /* REC-194 / §3 rule 13 — THE DOOR REACHES ONLY ITS OWN DOCUMENT, AND A DRAFT OF A NEW CASE HAS NONE.
@@ -10564,25 +10559,19 @@ export class Store extends DurableObject {
        copy still lists it, and `#statementAcknowledgements` states it as an UNBINDABLE reading rather
        than letting a case document say nobody read the sentence. The fix that would bind it — `op=publish`
        naming the draft it publishes — is a design question, reported and not invented here.
-       THE BOUND AND ITS REFUSAL ARE KEPT AND ARE NOW UNREACHABLE BY CONSTRUCTION, WHICH IS SAID RATHER
-       THAN LEFT TO BE NOTICED: `(case_id, edition)` is `case_documents`' PRIMARY KEY, so a read naming
-       both returns at most one row and `found.length` cannot exceed 1. IC-246's refusal is retained as a
-       guard over this read — deleting it would move the DEC-49 refusal floor and drop C-82.1 from the
-       catalogue, which is a landing of its own — and the removal is reported as a nameable fix. */
-    const found = ident.caseId == null ? [] : this.#rows(
+       D-521 — AT MOST ONE DOCUMENT, AND THE READ SAYS SO BY ITS SHAPE: `(case_id, edition)` is
+       `case_documents`' PRIMARY KEY, so a read naming both returns at most one row. IC-246's bound on
+       this read (STATEMENT_ACK_DOCUMENTS_MAX, read at max + 1) and its refusal
+       (STATEMENT_ACK_DOCUMENTS_OVER_BOUND, C-82.1) guarded a many-row read that REC-194 made a keyed one;
+       no input could reach the refusal, and a catalogued refusal that cannot occur is a claim the record
+       makes about itself. So the read is `#one`, and the bound, the refusal, its catalogue row and its
+       DEC-49 region are RETIRED together (D-521). */
+    const one = ident.caseId == null ? null : this.#one(
                             `SELECT case_id, edition, doc_sha, text FROM case_documents
                               WHERE sig_armored IS NULL AND edition=? AND case_id=?
-                                AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
-                             ident.edition, ident.caseId, needle, projectLine, ackMax + 1);
-    /* DEC-49 REGION is-statement-ack-documents-bound */
-    if (found.length > ackMax)
-      return refusal("STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
-               `more than ${ackMax} unsigned case documents of this project carry this exact statement at `
-                     + `this case identity. Each would have to be re-authored to list the acknowledgement, and `
-                     + `re-authoring only some would leave the rest listing fewer second readers than the record `
-                     + `holds. Nothing was written: sign or supersede some of them, then acknowledge.`,
-               { limit: ackMax, statement_sha: statementSha, edition: ident.edition, case_id: ident.caseId ?? null });
-    /* END DEC-49 REGION is-statement-ack-documents-bound */
+                                AND instr(text, ?) > 0 AND instr(text, ?) > 0`,
+                             ident.edition, ident.caseId, needle, projectLine);
+    const found = one ? [one] : [];
     const same = this.#one(`SELECT ack_id, at FROM statement_acknowledgements
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
                               AND acknowledger_kind=? AND acknowledger=?`,
@@ -10603,7 +10592,6 @@ export class Store extends DurableObject {
              /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
-             case_documents_limit: ackMax, case_documents_truncated: false,
              /* REC-194 / §3 rule 13: THE ANSWER SAYS WHICH OF THE TWO THINGS HAPPENED, because they are
                 different facts and one sentence used to claim the stronger of them for both. An
                 acknowledgement given at a CASE IDENTITY is listed by that case's document and by no
@@ -10628,10 +10616,6 @@ export class Store extends DurableObject {
                    + `a gap in the design and is recorded as one rather than worked around here. A statement `
                    + `edited afterwards is a different sentence, and this acknowledgement is not listed under it.` };
   }
-
-  /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
-     The figure D-150's literal carried; over it the act is REFUSED (C-82.1), never cut. */
-  static STATEMENT_ACK_DOCUMENTS_MAX = 8;
 
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
      `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an

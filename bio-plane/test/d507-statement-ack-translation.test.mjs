@@ -161,9 +161,13 @@ for (const [code, check, region] of SIX) {
 }
 t("the six sentences are six DIFFERENT sentences — one sentence serving two codes is DEC-49's drift",
   new Set(SIX.map(([c]) => STATEMENT_ACK_CHECKS[c].translation)).size, 6);
-t("and C-82.1, the row that was already there, is untouched beside them",
-  [STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND.check,
-   Object.keys(STATEMENT_ACK_CHECKS).length], ["C-82.1", 7]);
+/* CORRECTED 2026-09-24 BY D-521, NEVER EXEMPTED: this arm asserted C-82.1, the row that was already there, stood
+   untouched beside the six (7 rows). C-82.1 is RETIRED — its read is keyed on the primary key since REC-194 and
+   no input could reach it — so the family is EXACTLY these six, and the old assertion would demand a catalogued
+   refusal that cannot occur. The retirement itself is asserted in d150's block 8. */
+t("and the family is EXACTLY these six — C-82.1, the unreachable bound, is retired (D-521)",
+  [Object.keys(STATEMENT_ACK_CHECKS).length, Object.values(STATEMENT_ACK_CHECKS).some((r) => r.check === "C-82.1")],
+  [6, false]);
 
 /* ============================================================================
    THE STRUCTURAL HALF — one site per code, inside the region its `where` claims,
@@ -206,11 +210,13 @@ for (const [code, , region] of SIX) {
      the arms under it go vacuous while reading true — the arm working, both times. Kept from the other
      resolution: its finding, recorded above, since the two together are what show the constant was the
      defect. */
-  const bodyEnd = store.indexOf("END DEC-49 REGION is-statement-ack-documents-bound", from);
+  /* CORRECTED by D-521: the last governed region was `is-statement-ack-documents-bound`, retired with C-82.1;
+     the last one now is `is-statement-ack-by-its-author`, and the window ends at ITS end marker. */
+  const bodyEnd = store.indexOf("END DEC-49 REGION is-statement-ack-by-its-author", from);
   const body = from < 0 || bodyEnd < 0 ? "" : store.slice(from, bodyEnd);
   t("acknowledgeStatement's body was found, reaches its LAST governed region, and is long enough to hold "
-  + "all seven refusals",
-    body.length > 6000 && body.includes("STATEMENT_ACK_DOCUMENTS_OVER_BOUND"), true);
+  + "all six refusals",
+    body.length > 6000 && body.includes("STATEMENT_ACK_BY_ITS_AUTHOR"), true);
   const helperAt = body.indexOf("const refusal = (code, detail, extra)");
   t("the `refusal` helper is declared EXACTLY ONCE in that body", body.split("const refusal = (code, detail, extra)").length - 1, 1);
   const firstUse = Math.min(...SIX.map(([c]) => { const i = body.indexOf(`refusal("${c}"`); return i < 0 ? Infinity : i; }));

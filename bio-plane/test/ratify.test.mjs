@@ -237,7 +237,10 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.28.0)");
+/* CORRECTED 2026-09-24 by D-521, never exempted: 1.28.0 -> 2.0.0, C-82.1 retired (one departure, so MAJOR); the
+   literal names the catalogue that runs. D-558 is replacing this literal with a read of the constant; if it lands
+   first, this line's conflict resolves to ITS form. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 2.0.0)");
 /* CORRECTED 2026-09-24 (D-491): 1.23.0 -> 1.24.0, and CORRECTED rather than exempted for the
    reason every note above says — the old literal named a catalogue that no longer exists once
    C-28.16 joined CAPTURE_REQUEST_CHECKS (IC-276). FOUND BY ASKING WHO ELSE READS THE CONSTANT

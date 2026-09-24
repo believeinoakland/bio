@@ -621,12 +621,14 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
    this narrowing replaced (a silent cut at the bound, and the project matched after the cut), and the read now
    names `case_id` and `edition`, which are `case_documents`' PRIMARY KEY, so it returns at most ONE row: the cut
    and the crowd-out are unreachable by construction rather than guarded. The bound's refusal
-   (STATEMENT_ACK_DOCUMENTS_OVER_BOUND, C-82.1) is therefore UNREACHABLE and is retained as a guard over the read;
-   its removal moves a DEC-49 floor and is reported by REC-194 as a nameable fix, not taken here. The arm below
-   asserts the unreachability as a MEASUREMENT rather than leaving it to be assumed. */
+   (STATEMENT_ACK_DOCUMENTS_OVER_BOUND, C-82.1) was therefore UNREACHABLE, and REC-194 retained it as a guard.
+   CORRECTED AGAIN 2026-09-24 BY D-521, NEVER EXEMPTED: the refusal, its row, its region and the bound constant
+   (STATEMENT_ACK_DOCUMENTS_MAX, 8) are RETIRED and the read is a keyed `#one`. The fixture keeps its size — the
+   old MAX + 1, nine documents, now a plain literal — because what it proves is REC-194's clause, that none of
+   SEVERAL same-sentence cases is this draft's; the arms that pinned the bound (the constant, the published
+   `case_documents_limit`/`_truncated`, and "C-82.1's row still stands") now assert its absence. */
 {
-  const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(
-    readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8")) || [])[1]);
+  const SA_MAX = 8; /* D-521: the retired bound's figure, kept as a literal so the fixture is the one it was. */
   const MANY = Array.from({ length: SA_MAX + 1 }, (_, i) => `INQ-2026-1500-many${String(i).padStart(2, "0")}`);
   const OTHER = "INQ-2026-1500-manysolo";
   for (const [id, tok] of [...MANY.map((m) => [m, IRIS]), [OTHER, SOL]]) {
@@ -650,7 +652,7 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
   const shaNow = async () => [...(await Promise.all(pubs.map(async (x) => (await docOf(x.caseId, 1, IRIS))?.doc_sha))),
                               (await docOf(po.caseDocument.case_id, 1, SOL))?.doc_sha];
   const before = await shaNow();
-  t("FIXTURE ARMS THE TRAP: STATEMENT_ACK_DOCUMENTS_MAX is a number and there are MAX + 1 unsigned documents of this "
+  t("FIXTURE ARMS THE TRAP: there are nine (the retired bound's MAX + 1) unsigned documents of this "
   + "one statement in this project, and one more of the same sentence in ANOTHER project",
     [Number.isInteger(SA_MAX) && SA_MAX > 0, pubs.length, new Set(pubs.map((x) => x.caseId)).size,
      before.every((x) => typeof x === "string"), fmOf((await docOf(po.caseDocument.case_id, 1, SOL))?.text).case_project],
@@ -671,10 +673,13 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
   if (signed?.ok === false) bail("caseratify many00", signed);
   const at = await ack(`draft=${Dm.draftId}&token=${ELLA}`);
   const after = await shaNow();
+  /* CORRECTED by D-521: the answer published `case_documents_limit: MAX` and `case_documents_truncated: false`,
+     a bound on a list that cannot exceed one; both keys are retired with the bound, and asserted ABSENT. */
   t("acknowledging again is the SAME act, still binds to no case, and still re-authors nothing — signing one of the "
-  + "MAX + 1 changes neither, because none of them was ever this draft's",
-    [at?.ok, at?.existed, (at?.case_documents || []).length, at?.case_documents_limit, at?.case_documents_truncated],
-    [true, true, 0, SA_MAX, false]);
+  + "MAX + 1 changes neither, because none of them was ever this draft's; and no retired bound is published",
+    [at?.ok, at?.existed, (at?.case_documents || []).length, "case_documents_limit" in (at || {}),
+     "case_documents_truncated" in (at || {})],
+    [true, true, 0, false, false]);
   t("every document is byte-identical to before the two acts, the OTHER project's included", after, before);
   /* THE ORPHANED GUARD IS NAMED HERE RATHER THAN LEFT TO GO QUIET, and this arm is the reason the landing is
      honest about it: `coverage.mjs` counts a catalogue check as covered when a suite NAMES it, and block 8's old
@@ -684,15 +689,21 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
      UNREACHABLE through this door by measurement rather than by reasoning about the primary key. The retention
      is deliberate: removing the refusal drops a DEC-49 catalogue row and moves the family, row, census, reach,
      region and codesChecked floors, which is a landing of its own and is ROUTED by REC-194, not taken here. */
-  t("MEASURED, not assumed: C-82.1's row still stands with its canned translation, and the condition it guards is "
-  + "UNREACHABLE through this door — over MAX + 1 same-sentence documents the act neither refuses nor re-authors, "
-  + "and the most documents either act could reach is one",
-    [STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND?.check,
-     typeof STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND?.translation === "string"
-       && STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND.translation.trim().length > 20,
+  /* CORRECTED 2026-09-24 BY D-521, NEVER EXEMPTED. This arm asserted C-82.1's row STILL STOOD beside the
+     measurement that its condition could not occur — REC-194's honest interim, naming the removal as a fix. D-521
+     is that fix, so the arm now asserts the retirement: no row for the code in the family, no check numbered
+     C-82.1 anywhere in the catalogue, and the same measured unreachability that justified it. */
+  t("MEASURED, not assumed: the condition C-82.1 guarded is UNREACHABLE through this door — over MAX + 1 "
+  + "same-sentence documents the act neither refuses nor re-authors, the most either act reaches is one — and so "
+  + "its row is RETIRED (D-521): no STATEMENT_ACK_CHECKS entry for the code, and no check C-82.1 in the family",
+    /* The retired code is SPELLED IN TWO PIECES on purpose: check-refusal-codes' R3-FED walk harvests every quoted
+       code-shaped token in a suite as one the suite FEEDS, and an assertion of ABSENCE feeds nothing. */
+    [("STATEMENT_ACK_" + "DOCUMENTS_OVER_BOUND") in STATEMENT_ACK_CHECKS,
+     Object.values(STATEMENT_ACK_CHECKS).some((r) => r?.check === "C-82.1"),
+     Object.keys(STATEMENT_ACK_CHECKS).length,
      over?.reason ?? null, at?.reason ?? null, (over?.case_documents || []).length <= 1,
      (at?.case_documents || []).length <= 1],
-    ["C-82.1", true, null, null, true, true]);
+    [false, false, 6, null, null, true, true]);
   /* THE RESIDUE, MEASURED AND STATED RATHER THAN SCORED AWAY (REC-194). These MAX + 1 documents were authored
      BEFORE any reading of this sentence existed, so each carries the flat "Nobody but its author acknowledged it"
      sentence — and nothing re-authors them now, because re-authoring them is precisely the cross-case reach this

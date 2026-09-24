@@ -613,7 +613,11 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      the one arrival whose answer grows with the record and each NAMED this fix rather than taking it. Its cap is
      PROJECT_DIRECTORY_LIMIT beside `LIMIT ?`, declared BELOW the method (REC-116's finding), with `limit` and
      `truncated` published; DRIVEN below with a real bite, and carried in DRIVEN_ELSEWHERE for the reason there. */
-  OPS.size, 45);
+  /* MOVED 45 -> 44 on 2026-09-24 by D-521, from THIS ARM'S OWN FAILURE OUTPUT (`want 45 / got 44`), never by
+     subtracting: op=statementack LEFT the roster. Its re-author read names (case_id, edition), the primary key,
+     so it is now a keyed `#one` with no cap to find — the departure is the item, not slack (IC-246's bound and
+     its refusal C-82.1 retired together). */
+  OPS.size, 44);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1490,13 +1494,13 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      sixty-version fixture — so the bite, the clamp, `truncated` and total
                                      paging are driven there in section 15; the envelope arm is below. */
                                   "changedfromaudit",
-                                  /* IC-246 (c19-unionfix, 2026-09-24): neither takes a caller's `limit`.
+                                  /* IC-246 (c19-unionfix, 2026-09-24): it takes no caller's `limit`.
                                      op=groupidentity's CUT is driven above with a real bite (an enrolled
-                                     administrator's GROUP_DOMAIN_CHECKS_MAX + 1 claims); op=statementack's
-                                     bound REFUSES and its bite lives in
-                                     `test/d150-statement-acknowledgement.test.mjs`; its named-constant arm is
-                                     above and its envelope below. */
-                                  "groupidentity", "statementack"]);
+                                     administrator's GROUP_DOMAIN_CHECKS_MAX + 1 claims). CORRECTED by D-521:
+                                     op=statementack LEFT this list with its bound — its read is keyed on
+                                     the primary key and carries no cap, so the walk no longer finds it and
+                                     the "nothing driven that the walk did not find" pin named it. */
+                                  "groupidentity"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1699,20 +1703,22 @@ t("op=groupidentity: the PUBLIC projection is unchanged — no check log and no 
   ["domain_checks", "domain_checks_limit", "domain_checks_truncated"].map((k) => k in giPublic),
   [false, false, false]);
 
-/* op=statementack is an ACT, and its bound REFUSES (C-82.1, STATEMENT_ACK_DOCUMENTS_OVER_BOUND): a cut would leave a
-   document listing fewer second readers than the record holds, and its owner would sign that absence. The bite —
-   STATEMENT_ACK_DOCUMENTS_MAX + 1 unsigned documents of one statement in one project, refused with nothing
-   written, and a same-sentence document in another project untouched — needs a project, joined participants and
-   authored case documents, which live in `test/d150-statement-acknowledgement.test.mjs`, where it is driven. Here:
-   the bound is a NAMED constant the statement reads, and the op answers an envelope. */
-const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+/* op=statementack re-authors AT MOST ONE document, and says so by the SHAPE of its read (D-521).
+   CORRECTED 2026-09-24 BY D-521, NEVER EXEMPTED. This arm asserted IC-246's bound: STATEMENT_ACK_DOCUMENTS_MAX read
+   at `LIMIT ?` with max + 1, a refusal over it (C-82.1), and a success publishing the limit. REC-194 made that read
+   name (case_id, edition) — `case_documents`' PRIMARY KEY — so it returns at most one row, the refusal could never
+   fire, and the published limit described a bound on nothing. The old assertion would now demand a catalogued
+   refusal no input can reach. So the arm asserts what the read IS: one keyed `#one`, no constant, no SQL LIMIT, no
+   published limit/truncation keys — and the retired constant gone from the source. Driven behaviourally in
+   `test/d150-statement-acknowledgement.test.mjs` block 8. */
 const saBody = SRC_STORE.slice(SRC_STORE.indexOf("  acknowledgeStatement({"),
-                               SRC_STORE.indexOf("static STATEMENT_ACK_DOCUMENTS_MAX"));
-t("op=statementack: its bound is the NAMED constant STATEMENT_ACK_DOCUMENTS_MAX, read at `LIMIT ?` with max + 1 and "
-+ "no SQL literal left, and a success publishes it",
-  [Number.isInteger(SA_MAX) && SA_MAX > 0, /LIMIT \?`,[\s\S]{0,200}ackMax \+ 1\)/.test(saBody),
-   /FROM case_documents[^`]*LIMIT \d/.test(saBody), /case_documents_limit: ackMax, case_documents_truncated: false/.test(saBody)],
-  [true, true, false, true]);
+                               SRC_STORE.indexOf("static #ackFrontmatterLines"));
+t("op=statementack: its re-author read is ONE keyed `#one` over case_documents' primary key — no bound constant, no "
++ "SQL LIMIT, and no limit or truncation key published for a list that cannot exceed one",
+  [saBody.length > 6000, /this\.#one\(\s*`SELECT case_id, edition, doc_sha, text FROM case_documents\s+WHERE sig_armored IS NULL AND edition=\? AND case_id=\?/.test(saBody),
+   /FROM case_documents[^`]*LIMIT/.test(saBody), /case_documents_(limit|truncated)/.test(saBody),
+   /static STATEMENT_ACK_DOCUMENTS_MAX\b/.test(SRC_STORE)],
+  [true, true, false, false, false]);
 /* ------------------------------------------------------ D-479's ARMS (SCHEDULER #17's finding on REC-149).
    op=projectdirectory, the DISCOVERABLE projects a member is outside (Membership v2 §7.14, "The directory").
    REC-149 built it listing EVERY such project, unpaged, publishing no bound; both bounds ratchets counted it and
@@ -1956,10 +1962,10 @@ const answersByOp = new Map([
   /* D-479: driven above with its real bite and REUSED here rather than re-driven — the read is idempotent, and
      it is carried the same way as its neighbours so the roster reads as one list rather than two conventions. */
   ["projectdirectory", D479_WHOLE],
-  /* IC-246: groupidentity driven above with its real bite and REUSED here; statementack's envelope for a caller
-     neither door admits — the review copy's one dead answer, an object. */
+  /* IC-246: groupidentity driven above with its real bite and REUSED here. CORRECTED by D-521: statementack's
+     envelope arm is gone with its bound — the op is no longer a capped op, and driving it here is what the
+     "nothing driven that the walk did not find" pin refuses. */
   ["groupidentity", GI_BITE],
-  ["statementack", await POST("op=statementack&token=mem-r57&draft=DRAFT-2026-0000")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "
