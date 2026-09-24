@@ -83,6 +83,7 @@ import { serialiseContainer, containerEntries } from "./container.mjs";
    three facts — export address, export format, producer — is readable off a
    request body, and `callerSuppliedHopFacts` makes an attempt to supply one a
    NAMED refusal rather than a silent drop (D-112). */
+import { odfEvidentiaryDigest } from "./odf.mjs";
 import { readDriveAddress, driveHop, callerSuppliedHopFacts,
          DRIVE_PRODUCER, driveConvertStep } from "./drive.mjs";
 /* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
@@ -2553,6 +2554,10 @@ async function sha256Hex(v) {
    when it records a capture and by op=monitor when it compares one (D-60), so the
    two cannot disagree about which bytes were eligible to be normalised. */
 const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+/* D-351: the bound on reading an OpenDocument capture back whole for its
+   container digest — the single-part bound, since a multipart capture is never
+   digested, and above M-121's largest Drive export (~3.4 MB). Chosen, not measured. */
+const ODF_DIGEST_MAX = 8 * 1024 * 1024;
 function profilesAsText(ct, total, multipart) {
   return !multipart && total <= PROFILE_TEXT_MAX
     && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
@@ -2566,9 +2571,35 @@ function profilesAsText(ct, total, multipart) {
    text; `sha` is the identity the bytes must hash to. Returns the `profile.digests`
    object acquire records: `determined` true only under a CERTAIN textual handler
    whose read-back bytes hash to `sha`, and null digests otherwise, never invented. */
-async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart) {
+async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes = null) {
   const digestCertain = !!profileBytes && stackId.handler.textual === true
     && stackId.confidence === CONFIDENCE.CERTAIN;
+  /* D-351 — THE CONTAINER ARM. A document that is not read as text may still be
+     an OpenDocument package whose substance member is measured stable while its
+     ZIP envelope is not (a Google Drive export). `odfEvidentiaryDigest` decides,
+     per flavour and from the bytes alone, whether content.xml can speak for the
+     substance, and states why when it cannot. The identity check below is the
+     text arm's own: the bytes digested must be the bytes registered. `rendition`
+     stays null — "would it look the same?" needs styles.xml and nothing measured
+     it — and `over` names the member, so no reader mistakes this digest for the
+     text arm's and a monitor compares like with like. */
+  if (!digestCertain && !profileBytes && containerBytes && !multipart) {
+    /* A reader that throws is an UNREAD package, never a failed capture: the
+       capture is already filed, and a digest the gate could not take is stated. */
+    let od;
+    try { od = await odfEvidentiaryDigest(containerBytes, sha256Hex); }
+    catch (e) { od = { determined: false, flavour: "unread",
+      basis: `the container digest could not be taken (${String(e && e.message || e).slice(0, 90)}), so none is claimed` }; }
+    if (od.determined) {
+      if (await sha256Hex(containerBytes) !== sha)
+        return { determined: false, rendition: null, evidentiary: null,
+          basis: "the container bytes read back from the store did not hash to the capture identity, so no container digest could be trusted" };
+      return { determined: true, rendition: null, evidentiary: od.evidentiary,
+               over: od.over, container: od.flavour, boundary_missed: false, basis: od.basis };
+    }
+    if (od.flavour)
+      return { determined: false, rendition: null, evidentiary: null, container: od.flavour, basis: od.basis };
+  }
   if (!digestCertain)
     return {
       determined: false, rendition: null, evidentiary: null,
@@ -7553,7 +7584,20 @@ export default {
       /* D-60: the gate and the computation are `substanceDigests`, the ONE function
          op=monitor also calls, so the digest a capture records and the digest a
          monitor tick compares it with are produced by the same rule. */
-      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart);
+      /* D-351: an OpenDocument capture — detected from the bytes, or declared by
+         the source — is read back WHOLE, bounded, for the container arm of
+         `substanceDigests`. The FORMAT wire below reads the same object again;
+         that second read is the price of keeping the digest beside its siblings
+         here rather than splitting the one gate across two blocks. */
+      let containerBytes = null;
+      const odfFmt = profile.format && ["odt", "ods", "odp"].includes(profile.format.format);
+      if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
+        try {
+          const cobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+          if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer());
+        } catch { /* unread is undetermined: the digest below says so */ }
+      }
+      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
 
       /* 2026-09-14, REC-81: every citation into the content framework in this file
          names a SECTION rather than a line. The line numbers they carried went stale
@@ -8611,18 +8655,26 @@ export default {
               const profCtx = { headers, locator, content_type: ct || null,
                                 text: asText ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "" };
               const stackId = identify(profCtx);
-              const fresh = await substanceDigests(asText ? bytes : null, stackId, profCtx, seen, false);
-              if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
+              const fresh = await substanceDigests(asText ? bytes : null, stackId, profCtx, seen, false,
+                                                   asText || bytes.length > ODF_DIGEST_MAX ? null : bytes);
+              /* D-351: a container digest is compared only with a container digest
+                 over the SAME member; a text-arm baseline has no `over`. */
+              const bdOver = bd.over || null, freshOver = fresh.over || null;
+              if (bdOver !== freshOver)
+                comparedBasis = `the baseline's evidentiary digest was taken over ${bdOver || "the normalised text"} but the fetched bytes' over ${freshOver || "the normalised text"}, so the raw bytes were compared`;
+              else if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
                 comparedBasis = `the fetched bytes identify as ${stackId.handler.key} v${stackId.handler.version} but the baseline was normalised under ${baselineProfile.handler} v${baselineProfile.handler_version}, so the raw bytes were compared`;
               else if (!fresh.determined)
                 comparedBasis = `the fetched bytes' substance digest is undetermined (${fresh.basis}), so the raw bytes were compared`;
               else {
                 compared = "evidentiary";
-                comparedBasis = `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
+                comparedBasis = freshOver
+                  ? `the evidentiary digests were compared, both taken over the package's ${freshOver} (${fresh.basis})`
+                  : `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
                 if (fresh.evidentiary !== bd.evidentiary) { status = "modified"; note = "the substance of the source differs from the capture"; }
                 else if (seen === baseline) { status = "unchanged"; note = "the source still serves the captured bytes"; }
                 else { status = "unchanged";
-                       note = fresh.rendition === bd.rendition
+                       note = fresh.rendition != null && fresh.rendition === bd.rendition
                          ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture"
                          : "the substance is unchanged; machinery or furniture around it differs from the capture"; }
               }

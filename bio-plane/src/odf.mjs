@@ -1435,3 +1435,126 @@ function entryFor(row, structureOf, textOf) {
 export const odtEntry = entryFor(ODT_ROW, odtStructure, odtText);
 export const odsEntry = entryFor(ODS_ROW, odsStructure, odsText);
 export const odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
+
+/* ==================================================================
+ * D-351 — THE EVIDENTIARY DIGEST OF AN OPENDOCUMENT PACKAGE, taken over
+ * the CONTAINER'S substance member and never over the envelope
+ * ================================================================== */
+
+/* WHY THIS EXISTS. A Google Drive export is Google's conversion AT FETCH
+ * TIME, and its ZIP envelope differs on every request (timestamps, member
+ * order — MEASUREMENTS.md 2026-09-14 §4). So `capture_sha`, the trust root,
+ * differs across three fetches of a document that did not change, and C-18.3's
+ * corroboration fold and monitoring's "has the substance changed?" both lost
+ * the document. `capture_sha` STAYS the envelope's: this digest is the §5
+ * `evidentiary` digest beside it (BIO_Content_Framework_v0_10.md §5;
+ * DOCUMENT-PROFILES.md "Three digests, not one"), never a replacement.
+ *
+ * WHAT IT IS, so anyone can recompute it from the artifact with two stock
+ * tools: the sha256 of the `content.xml` member's INFLATED bytes, exactly
+ * as `readPart` proves them whole (length and CRC-32 against the central
+ * directory). No byte of content.xml is rewritten. Outside content.xml the
+ * package's other members are discounted, and each discount is a region
+ * judgment §5 licenses: `meta.xml` (generation timestamps, the producer's
+ * stamp — mechanical), `settings.xml` (view state — mechanical), the ZIP
+ * envelope (per-request timestamps and order — mechanical, MEASURED to move),
+ * `styles.xml` and `Thumbnails/` (page styles and a preview — presentational).
+ *
+ * WHY content.xml CAN SPEAK FOR THE SUBSTANCE, AND WHEN IT CANNOT. OpenDocument
+ * puts the whole body — every cell, its formula beside its value, every
+ * annotation and tracked change — in content.xml (this module's header). What
+ * it does NOT hold is the bytes of a member it REFERENCES: an image under
+ * `Pictures/`, an embedded object or chart under `Object N/`. A changed image
+ * under an unchanged name would leave content.xml byte-identical, and a digest
+ * that folded those two captures would hide a real change — the one failure
+ * §"The failure asymmetry" says matters. So a package whose content.xml
+ * references ANY member of the package is UNDETERMINED, naming the member;
+ * the rule is the reference, not a list of directory names, so a producer
+ * that puts an image somewhere else is caught the same way.
+ *
+ * WHY ONLY `.ods`, AND THE SPLIT IS THE ROW'S OWN ALTERNATIVE ("state it, or
+ * split .odt out"). A normalisation is added only on MEASUREMENT (DOCUMENT-
+ * PROFILES.md, "The failure asymmetry"):
+ *   .ods  content.xml byte-identical across exports: 3 of 3 (MEASUREMENTS.md
+ *         2026-09-14 §4) and 18 of 18 over 3 census targets (M-121). No
+ *         normalisation is needed and none is applied.
+ *   .odt  content.xml differs on EVERY export. M-121 found the class on 2
+ *         documents — a random `xml:id` on `<text:list>` — and said this build
+ *         must re-measure it before relying on it. It was NOT re-measured here,
+ *         so no `.odt` digest is claimed: a normalisation resting on 2 documents
+ *         is a careless rule until it is measured, and a careless rule hides a
+ *         real change. UNDETERMINED, with the reason stated.
+ *   .odp  NO measurement at all (M-121: the census holds no Slides target).
+ *         UNDETERMINED.
+ * Widening this is one entry in `ODF_EVIDENTIARY_MEASURED` plus the
+ * measurement it cites — and, for `.odt`, the normalisation it measured. */
+export const ODF_EVIDENTIARY_VERSION = 1;
+export const ODF_EVIDENTIARY_MEASURED = Object.freeze({
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 §4) and 18/18 over 3 census targets (M-121)",
+});
+const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
+  odt: "the .odt content.xml differs on every Google export (MEASUREMENTS.md 2026-09-14 §4; M-121 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
+  odp: "no .odp export has been measured for content.xml stability (M-121: the census holds no Slides target), so no evidentiary digest is claimed for .odp",
+});
+
+/** Package members that content.xml REFERENCES by `href`, among the members
+ *  the container actually holds. Every href-bearing attribute is read, in any
+ *  namespace prefix (`attrsOf` keys by local name); a scheme-bearing URL or a
+ *  bare fragment is not a package member. A directory reference (`./Object 1`)
+ *  matches the members under it. */
+function referencedMembers(contentXml, container) {
+  const names = container.entries.map((e) => normalizePartName(e.name));
+  const hit = new Set();
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(contentXml)) !== null) {
+    if (m[1] === undefined || m[0][1] === "/") continue;
+    const href = attrsOf(m[2]).href;
+    if (typeof href !== "string" || !href || href.startsWith("#")) continue;
+    if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(href)) continue;
+    const want = normalizePartName(href.replace(/^(?:\.\/)+/, "").replace(/\/+$/, ""));
+    if (!want) continue;
+    for (const n of names)
+      if (n === want || n.startsWith(want + "/")) hit.add(n);
+  }
+  return [...hit];
+}
+
+/** The evidentiary digest of an OpenDocument package, or a stated refusal.
+ *  `sha256Hex` is the caller's hasher (the plane's, so identity and this digest
+ *  are named by one function). Returns
+ *    { determined:true, flavour, over:"content.xml", evidentiary, basis }
+ *  or { determined:false, flavour|null, evidentiary:null, basis }. Never throws
+ *  on bad bytes: every failure is a sentence. */
+export async function odfEvidentiaryDigest(bytes, sha256Hex) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  const no = (flavour, basis) => ({ determined: false, flavour, evidentiary: null, basis });
+  /* CERTAIN detection only — the mimetype member read first, stored,
+     CRC-verified, compared exactly, and the main part present. A content type
+     or a 1 KiB head is "likely", and "likely" never asserts sameness. */
+  let row = null;
+  for (const r of [ODT_ROW, ODS_ROW, ODP_ROW]) {
+    const d = detectOdf(r, b, null);
+    if (d && d.confidence === "certain") { row = r; break; }
+  }
+  if (!row) return no(null, "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken");
+  const flavour = row.flavour;
+  if (!ODF_EVIDENTIARY_MEASURED[flavour])
+    return no(flavour, ODF_EVIDENTIARY_UNMEASURED[flavour]
+      || `no .${flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed`);
+  const container = readContainer(b);
+  if (!container.ok) return no(flavour, `the package's central directory could not be read (${container.why})`);
+  const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
+  const guard = sizeGuard(declared.total);
+  if (!guard.ok) return no(flavour, `content.xml is over the declared-uncompressed text bound (${guard.why || "size_guard"}), so it was not inflated and no digest was taken`);
+  const read = await readPart(b, container, CONTENT_PART);
+  if (!read.ok) return no(flavour, `content.xml could not be read whole (${read.why})`);
+  const refs = referencedMembers(UTF8.decode(read.bytes), container);
+  if (refs.length)
+    return no(flavour, `content.xml references ${refs.length} package member(s) whose bytes it does not hold (${refs.slice(0, 3).join(", ")}${refs.length > 3 ? ", …" : ""}); a digest of content.xml cannot speak for them, so none is claimed`);
+  return {
+    determined: true, flavour, over: CONTENT_PART,
+    evidentiary: await sha256Hex(read.bytes),
+    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified), odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`,
+  };
+}

@@ -234,8 +234,10 @@ changed?"). Only the latter two are stored here.
 
 | Field | Value | Notes |
 | --- | --- | --- |
-| `determined` | boolean | whether the digests can be trusted to assert two documents are the same substance. TRUE only when the bytes were read as text AND the stack was identified with CERTAINTY — a signal only that stack emits. |
-| `rendition` | 64-hex \| null | mechanical-normalised digest; `null` when undetermined. |
+| `determined` | boolean | whether the digests can be trusted to assert two documents are the same substance. TRUE on the TEXT arm only when the bytes were read as text AND the stack was identified with CERTAINTY — a signal only that stack emits. **Proposed by IC-240 (D-351), PENDING RESOLUTION:** also TRUE on the CONTAINER arm, with `profiled_from_text: false`, for an OpenDocument `.ods` detected with certainty whose `content.xml` references no package member; `.odt` and `.odp` are `false` with the reason in `basis`. |
+| `rendition` | 64-hex \| null | mechanical-normalised digest; `null` when undetermined. **IC-240:** also `null` on a DETERMINED container-arm digest (nothing measured `styles.xml`), so `determined: true` no longer implies a rendition digest. |
+| `over` | `"content.xml"`, absent | **IC-240:** present only on a determined container-arm digest; the package member the evidentiary digest is the sha256 of. Absent on the text arm. A comparison of two evidentiary digests is sound only between equal `over` values. |
+| `container` | `"odt"` \| `"ods"` \| `"odp"` \| `"unread"`, absent | **IC-240:** the OpenDocument flavour the container arm read, present when it read one (determined or not); `"unread"` when the reader threw. |
 | `evidentiary` | 64-hex \| null | presentational+mechanical-normalised digest; `null` when undetermined. This is the one `op=audit`'s duplicate sweep (C-18.3) compares. |
 | `boundary_missed` | boolean | present when determined: the handler's boundary did not match, so nothing outside it was normalised (a boundary that missed is never read as a document with no content). |
 | `basis` | string | why the digests are determined, or why they are undetermined. |
