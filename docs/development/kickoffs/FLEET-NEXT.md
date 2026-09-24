@@ -1,182 +1,99 @@
-# FLEET — resume here. Written 2026-09-22 by FLEET #4 (standing lane, cloud, Bob's second account) at stand-up; FLEET #3's refresh text below is kept and re-measured
+# FLEET — resume here. Written 2026-09-24 ~03:15Z by FLEET #4 at the QUOTA HAND-OVER, for a FLEET on Bob's OTHER account
 
-Bob, 2026-09-22 (relayed by BOB #27): the estate moves TODAY to cloud-based Claude Code under a second Max account.
-This file assumes its reader has NO memory, NO `.env`, and perhaps no `list_sessions`, no `SendMessage` replies and
-no scheduled tasks. Everything needed is below, or named by the command that answers it. **Every fact is a POINTER,
-measured at the time given: re-measure it.**
+Bob, 2026-09-24 03:00Z (relayed by BOB #32): this account's weekly quota runs out ~07:00Z and the work continues on
+Bob's other account. This file assumes a reader with NO memory. **Every fact is a POINTER, measured at the time given:
+re-measure it.** FLEET #4's longer running log is this file's previous versions in `coord`'s history
+(`git log origin/coord -- docs/development/kickoffs/FLEET-NEXT.md`); nothing below depends on reading it.
 
 ## Open in this order
 
-1. `CLAUDE.md` IN FULL, from `origin/main` (never a copy you remember). Since 2026-09-19 it has gained: refresh past
-   **70%** context (§4); **never queue a gate behind another lane's**, with `node tools/gates.mjs --since <sha>`
-   re-checking a rebase (§6); and no shell variable in an `rm`/`rmdir` path (§7).
-2. `docs/development/kickoffs/FLEET.md` IN FULL, the area's law. Its 2026-09-21 stand-up section holds this lane's
-   corrections; read that before believing any older sentence in the file.
-3. This file, then the open rows of `docs/development/QUEUE.md`.
-4. `node tools/owed.mjs FLEET`. It read 0 attributed at every reading from 2026-09-21 to 2026-09-22T20:07Z (FLEET #4).
+1. `CLAUDE.md` IN FULL from `origin/main`, then `docs/development/kickoffs/FLEET.md` (the area's law; its 2026-09-21
+   section holds the corrections), then this file, then the open rows of `QUEUE.md` **on `coord`**.
+2. **State files live on the branch `coord`, not `main`** (M0-110). `main` holds a one-line pointer at each. Read with
+   `node tools/coord.mjs read <path>`; write this file with
+   `node tools/coord.mjs write --replace docs/development/kickoffs/FLEET-NEXT.md <file> -m "<what>"`. Run `coord.mjs`
+   from a checkout of `origin/main`: a branch cut before the cutover lacks the tool. It prints its header on STDERR.
+3. `node tools/owed.mjs FLEET`. It counts BLOCKED rows and ledger dispositions only, never a `queued` row in build order.
 
-## The fleet, measured (FLEET #4, 2026-09-22 ~20:10Z, cloud container, `origin/main` `17c0cab1`)
+## State at hand-over (2026-09-24 ~03:10Z, `main` @ `548eb2c5`, `coord` @ `99cb7fc5`)
 
-| what | reading | instrument |
-| --- | --- | --- |
-| members' `/version` | **`0.71.0`, all three** (ocr `engine_loaded: true`, tesseract-wasm 0.11.0), three samples each, 2026-09-23T01:27Z, after Bob admitted Cloudflare (BOB #29). From 20:10Z to 01:24Z the proxy refused `*.workers.dev` and these read UNDETERMINED | `curl` |
-| plane `biosmoke7` | **`0.71.0`** at `/version` (three samples) and at `op=bootstrap&store=scratch`, 01:27Z. Both are the ROUTING ISOLATE's `env.VERSION`; bootstrap proves only that the DO answered | `curl` |
-| main's labels | `release/RELEASE.json` reads `0.71.0`; latest tag `v0.71.0` | `git` |
-| staleness | **23 checked, 0 drift, 0 unreadable**: the SessionStart hook's install makes pdf-worker's vendored `unpdf` readable here | the one-liner below |
-| committed guard | `fleetbundles.test.mjs`: **87 pass, 0 fail, 0 skipped**, exit 0 read unpiped, byte-identity arm run for all three members and the plane | `node --test` |
-| member bytes | `dist/` artifact = manifest = `release/` copy = `RELEASE.json`: `a7e5f590…`, `b26dee19…`, `0d99f5d0…` | `sha256sum` |
+| what | reading |
+| --- | --- |
+| owed | `owed.mjs FLEET`: 0 attributed, 0 residue |
+| FLEET rows | **FL-11 and FL-12 are INTEGRATED** (built by a CONDUCT worker on `land/conduct/c17-batch7` @ `162e6c37`, flipped by SCHEDULER #17). **D-260 is INTEGRATED too.** Verified at the code on `main`: `state.target` seeded at run open (`agent-worker/src/index.mjs`, `seeded.target`), `submit` defaults a candidate's target to it, `capturerequest` sends `address: t.url`, and the plane now reads `env.AGENT_WORKER` (`store.mjs`, `AGENT_WORKER_UNBOUND`). Nothing of FLEET's is queued or running. |
+| guard | `bio-plane/test/fleetbundles.test.mjs`: **91 pass, 0 fail**, exit 0 unpiped, on `548eb2c5` |
+| staleness | 23 inputs checked, **0 drift**, 0 unreadable |
+| committed bytes on `main` | agent-worker **`e295b529…`** (rebuilt by FL-11/FL-12), pdf-worker `b26dee19…`, ocr-worker `0d99f5d0…` |
+| released bytes | newest release `land/dist/release-0.78.0` (no tags past v0.71.0; the git proxy refuses tags). Its `RELEASE.json`, and `main`'s, name agent-worker **`a7e5f590…`**: the OLD bytes. |
+| live `/version` | all three members and `biosmoke7` answer `0.78.0` (03:10Z) |
+
+**The one thing the next release must get right:** 0.78.0 carries NEITHER D-260's dispatch (no `AGENT_WORKER_UNBOUND`
+in its `store.mjs`) NOR the FL-11/FL-12 agent-worker (no `address: t.url`), so what is live is consistent. The next
+release carries BOTH. It must ship agent-worker `e295b529…` with the plane that dispatches to it. A plane that
+dispatches to the old `a7e5f590` would have every suggestion refused `SUGGEST_OUTSIDE_RUN_CONTEXT` and every
+internet look refused `CAPTURE_REQUEST_NOT_PUBLIC`. Check it when DIST cuts: compare the release's `fleet[].sha256` for
+agent-worker against `e295b529`. **And DIST #6 found D-260's DIST half has no row** (the installer carrying the
+organisation `ai` credential as `INSTANCE_AI_TOKEN`; construct `15.instance-ai-secret` ABSENT), routed to SCHEDULER
+#18 at 03:02Z. Until it lands, an installed instance's wake says `NO_INSTANCE_AI_CREDENTIAL`. That is DIST's, not FLEET's.
+No releases of any kind until Bob asks.
+
+## Built by FLEET #4, all on `main`
+
+- **Install-layout reproducibility** (BOB #29's diagnosis): `preserveSymlinks: true` in `optionsFor`
+  (`bio-plane/scripts/fleet-bundle.mjs`), the one recipe for all members and the plane. A recipe assertion per member
+  and one for the plane in the suite, and control arm 9 in `fleetbundles.control.mjs` (84/7 on both layouts; 87/4 on a real
+  install). Landed at `41c7e0c3`. A gate test may depend only on the code, never on the machine.
+- Diagnosed and routed FL-11 (`state.target`) and FL-12 (`url`→`address`); SCHEDULER #14 placed both, a CONDUCT worker built them.
+
+## How FLEET lands work now
+
+1. Branch from `origin/main`; before pushing, `git merge origin/main` (merge, never rebase or force) so the branch
+   carries the current `gates.yml` (it fires GitHub only on `main`; GitHub reads `on:` from the pushed commit).
+2. Gate: run ONLY the suites the row names, their negative controls, and `node tools/plancheck.mjs`. Never
+   `gates.mjs` FULL (Bob, 2026-09-23: "cut back on gates"); CONDUCT's train union gate is the one FULL gate.
+3. Push `land/fleet/<topic>`; CONDUCT's train (`tools/train.mjs`) lands it on `main`. Lanes never push `main`.
+4. Every failed GitHub run emails Bob: a branch you pushed that reads red is diagnosed at once; a negative control is
+   never pushed to `land/*` or `integrate/*`.
+5. A symlinked `node_modules` shows as UNTRACKED (`.gitignore` matches a directory), so `gates.mjs` calls the tree
+   unclean and records nothing. Gate with REAL installs (`npm ci`, or `cp -a` from a checkout whose locks match).
 
 ## Commands that answer the questions; none needs a secret
 
-- **Staleness, with no install**: every recorded input, vendored-input and asset hash against the checkout.
+- **Staleness, no install needed:**
   ```
   node -e 'const fs=require("fs"),c=require("crypto"),p=require("path");let d=0,n=0;for(const m of ["agent-worker","pdf-worker","ocr-worker"]){const j=JSON.parse(fs.readFileSync(`${m}/dist/${m}.bundle.json`));for(const i of [...j.inputs,...(j.vendoredInputs||[]),...(j.assets||[])]){const f=p.join(m,i.path);let b;try{b=fs.readFileSync(f)}catch{console.log("UNREADABLE",f);continue}n++;if(c.createHash("sha256").update(b).digest("hex")!==i.sha256){d++;console.log("DRIFT",f)}}}console.log("checked",n,"drift",d)'
   ```
-  The committed guard is `bio-plane/test/fleetbundles.test.mjs`. It imports esbuild, so it needs `npm ci` in
-  `bio-plane/` (and in `pdf-worker/` and `ocr-worker/` for its byte-identity arm).
-- **Did a release move member bytes?** Compare each `fleet[].sha256` in `git show <tag>:release/RELEASE.json` across
-  tags. Confirm each member's `dist/<m>.bundle.json` EXISTS at the older tag before calling its bytes "unchanged".
-- **What serves live** (no token needed; if the cloud blocks egress, report UNDETERMINED, never "down"):
-  `curl -s https://agent-worker.believeinoakland.workers.dev/version` (and `pdf-worker`, `ocr-worker`),
-  `curl -s https://biosmoke7.believeinoakland.workers.dev/version`, and
-  `curl -s "https://biosmoke7.believeinoakland.workers.dev/api/?op=bootstrap&store=scratch"`.
-- **The rest:** `node tools/status.mjs 15` · `node tools/decided.mjs "<subject>"` · `node tools/ledger.mjs find <ID>`.
-  For gates: `npm ci` in the three directories, then `node tools/gates.mjs`.
+- **What a release shipped:** releases are branches, `land/dist/release-<v>`. Read their `release/RELEASE.json`
+  `fleet[].sha256` (`git fetch origin refs/heads/land/dist/release-<v>:refs/remotes/x/r`).
+- **Live:** `curl -s https://<member>.believeinoakland.workers.dev/version` for `agent-worker`, `pdf-worker`,
+  `ocr-worker`, and `https://biosmoke7.believeinoakland.workers.dev/version`. If the network refuses, report
+  UNDETERMINED, never "down". Both plane fields are the ROUTING ISOLATE's `env.VERSION`, never the DO's build.
+- **Waking a peer** (cloud): a one-shot `create_trigger` with `persistent_session_id` = its session, `run_once_at` a
+  minute or two out. `SendMessage` reaches only sessions on the same machine. **Only BOB keeps timers** (BOB #32): arm
+  none unless BOB asks.
 
-## Open threads, as they stood at this refresh (2026-09-22 ~14:35Z)
+## Standing values
 
-- **I10 is STABLE for all seven exports**: the pair by BOB #20, and the five 1.1.0 exports by BOB #21 at `b6a14392`
-  (§I10's Status line on `origin/main`). A change to any of them is an IC against I10. Nothing is owed.
-- **FL-6** waits on **D-260**, now a placed row (`BACKLOG.md`, "### D-260 · queued"): FL-4's wake dispatches a woken
-  run to agent-worker with the instance's organisation credential, RECORD with FLEET. FLEET's share arrives as that
-  row; nothing in FLEET is runnable before it.
-- **D-116** (owner DIST) carries FLEET's DO-side narrowing. Nothing is owed by FLEET.
-- **A deploy dry-run for DIST**: if asked, DECLINE. A peer satisfying a permission decision made about another session
-  is the work-around, not a favour.
+- Refresh past **75%** of `get_session`'s context figure (BOB #31, 2026-09-23: the environment auto-compacts near 79%).
+  Read `CLAUDE.md` §4 on `main` for the current wording; on 2026-09-23 it still lagged the rulings.
+- I10 (`fleet-bundle.mjs`'s cross-lane exports) is registered and STABLE. `optionsFor` is outside it. Read
+  `docs/development/INTERFACES.md` §I10 before changing any export.
 
-## FLEET #3, and what it leaves on the old account
-
-- Session `local_1bea09c9-6351-4a98-9e18-8bd76a6fdeff` ("FLEET #3") on Sparky-Air; worktree
-  `.claude/worktrees/eloquent-goldstine-78dfbd`, clean, **nothing unpushed**, no unmerged branch. Its self-wake jobs
-  (`c75ea441`, with renewal `cf77adbf`) die with it. **A successor in the new account cannot archive it**: that is the
-  operator's act, or the old account's BOB's, under D-398's three conditions.
-- Disk and the ~4 GiB rule are facts about Sparky-Air. In the cloud, measure the environment you actually have.
-- Everything FLEET #3 landed is on `origin/main`: `790ad66a`, `d660d29e`, `86725fb8`, `e99abfec`, `89ff4592`,
-  `1f59f394`, `7a8b81d6`, and this refresh.
-
-## FLEET #4, cloud session `session_01YB9VgJtjiXwQ5vtx4fLvRB`
-
-- Opened 2026-09-22T20:05Z; kickoff gate passed on FLEET #3's header; `node -v` v26.10.0; context measured with
-  `get_session` well under 70%.
-- Nothing owed, nothing of FLEET's in the cache: D-260 is `queued` in `BACKLOG.md`, outside `QUEUE.md`'s cache.
-- Self-wake: one `send_later` at a time, each firing re-arming the next ~24h out; a successor finds the live one with
-  `list_triggers` (current: see the newest self-wake reading below).
-- Landed its stand-up by pushing `HEAD:main` (before M0-111). Superseded: see "Landing changed" below.
-
-## The one open FLEET defect, diagnosed by FLEET #4 (2026-09-23 ~00:05Z, `origin/main` `df9eb9f9`), routed to SCHEDULER #14
-
-CONDUCT #14 relayed it from REC-165. Checked at the code, not from the relay:
-- **agent-worker never sets `state.target`.** The run state built at `agent-worker/src/index.mjs` (`let state = {…}`)
-  has no `target`. Yet the `dedup` step reads `op=basisversions` with `id: state.target || ""`, and the
-  `search`-close step calls `emptyLevelCandidates(state, state.target ?? null)`. So dedup always asks about the empty id,
-  and §9's empty-level candidates always carry a null target.
-- **`submit` sends whatever target the model wrote**: `call("suggest", null, { ...candidate, run: runId })`. Since
-  BOB #28's target rule (`store.mjs`, `SUGGEST_OUTSIDE_RUN_CONTEXT`), the plane refuses a target outside the run's
-  context. That is the fence working; the member is what is wrong.
-- **The mock `agent-worker/test/plane-suggest.mjs` models neither the run's context nor its principal**, so the
-  fleet suites cannot see either refusal.
-- **The fix, named:** at run open, seed `state.target` from `op=airun`'s `session.context.id`. That field exists:
-  `aiRunRead` returns `context: { type, id }`. For a run over a PROJECT, the target is a question the project
-  confirmed-cites, not the project id. The table must then pick among those and must not trust a model-written id.
-  `submit` defaults a candidate's `target` to `state.target`. The mock gains the context rule and
-  `SUGGEST_OUTSIDE_RUN_CONTEXT`, plus a control arm: drop the seeding and the harness suite fails by name.
-  FLEET's ground (`agent-worker/**`). It rebuilds the committed bundle (the guard will demand it) and moves member
-  bytes for the next release. Inert until D-260 dispatches runs, so it orders with D-260 or before it.
-
-**PLACED as FL-11** (owner FLEET, M9) in `BACKLOG.md` on `coord`, directly before D-260 (SCHEDULER #14, coord
-`c3980219`, verified on `origin/coord`). Build it when it reaches the cache. `owed.mjs FLEET` does not list it and is right
-not to: it counts BLOCKED plan rows and ledger dispositions, never a `queued` row in build order.
-
-**A second agent-worker defect, same file, the same kind of wrong assumption** (REC-168's worker; verified by FLEET #4 on `origin/main`,
-2026-09-23T01:34Z). `capturerequest` is sent `{ run, target, url: t.url }`, but `captureRequest` in `store.mjs` reads only
-`args.address`. So every internet-level request the fleet makes is refused `CAPTURE_REQUEST_NOT_PUBLIC`. The mocks'
-`capturerequest` handlers (`harness.test.mjs`, `fanout.test.mjs`) do not model `address`. Fix: `address: t.url`, mocks
-refusing a request without a public https address, and a control arm that reverts to `url:`. Sent to SCHEDULER #14 with
-the proposal to FOLD it into FL-11: one rebuild, member bytes move once, and both are inert until D-260 because
-`AGENT_WORKER` occurs 0 times in `bio-plane/src`. **PLACED as FL-12** (owner FLEET), directly after FL-11 and before
-D-260. Its order line says ONE worker takes FL-11 and FL-12 together with one bundle rebuild (SCHEDULER #14, verified on
-`origin/coord` 2026-09-23T02:01Z). Build them as ONE landing on `land/fleet/<topic>` when they reach the cache.
-
-**Landing changed (M0-111, `c5c83dc4`):** a lane no longer pushes `main`. Push `land/fleet/<topic>` and CONDUCT's train
-(`tools/train.mjs`) lands it. The handoff and claims go to `coord` via `node tools/coord.mjs write … -m "…"`. This
-section's own "Lands by pushing `HEAD:main`" line above is superseded. Run `coord.mjs` from a checkout of `origin/main`:
-a session branch cut before the cutover does not have the tool.
-
-**0.72.0 (DIST #5), read by FLEET #4 at 2026-09-23T02:55Z: labels only, again.** Live: the three members and `biosmoke7`
-answer `0.72.0`. There is NO `v0.72.0` tag on the remote (the git proxy refused it; DIST's commit `b9d839da` on coord),
-so the released tree is the branch `land/dist/release-0.72.0` (`2049195c`). Its `RELEASE.json` names `a7e5f590…`,
-`b26dee19…`, `0d99f5d0…`, the same bytes as v0.59.0 … v0.71.0. `dist/` and the `release/` copies agree. The staleness check
-on that tree: 21 checked, 0 drift, 2 unreadable (the vendored `unpdf`, since a fresh worktree has no install). Until the tag
-exists, compare against that branch, never against `main` (whose `RELEASE.json` still reads 0.71.0).
-
-**Bob's rule on pushes, relayed by BOB #29 on 2026-09-23 (its home is TREE-SHARING §3; not yet in that section on `main`
-at 02:55Z):** every failed GitHub run emails Bob. Push `land/fleet/*` only after its own local gate is GREEN on that
-exact tree. A negative control never goes to a `land/*` or `integrate/*` branch; controls run locally. A branch FLEET
-pushed that reads red is diagnosed at once. FLEET's session branch carries no `.github/workflows/`, so it has fired no run.
-
-**Fleet bundles were not reproducible across install layouts. BUILT by FLEET #4 on 2026-09-23, on BOB #29's diagnosis.**
-esbuild names a module by its RESOLVED path, so a symlinked `node_modules` (a worktree sharing another checkout's
-install) put `../../../../home/...` into pdf-worker's boundary comment, and `fleetbundles.test.mjs` read 84/3 on identical
-source (reproduced). Fix: `preserveSymlinks: true` in `optionsFor`, the one recipe for all members and the plane. Also
-a recipe assertion per member and one for the plane, and control arm 9 in `fleetbundles.control.mjs` (84/7 on both layouts; a real
-install with the flag dropped reads 87/4). Committed bytes did not move. Local gate GREEN: 81/81 suites, 5,934
-assertions, class TARGETED, recorded for tree `e30256ab`. Pushed `land/fleet/preserve-symlinks` @ `b781b5b6` for the train.
-GitHub run `35819000017` read **success** (completed 04:42Z). **LANDED** on `main` by train `train-20260923T052524Z-23028` (merge `e7a0ccad`,
-`main` @ `41c7e0c3`, gate GREEN FULL; CONDUCT #15), verified from the remote at 05:29Z. Nothing owed back.
-
-**A trap met while doing it:** a symlinked `node_modules` shows as UNTRACKED (`.gitignore` matches a directory, not a
-link), so `gates.mjs` calls the tree unclean and records nothing. Gate a landing tree with REAL installs (`cp -a` from a
-checkout whose locks match, or `npm ci`).
-
-**Before pushing ANY `land/fleet/*` branch (CONDUCT #15, 2026-09-23; verified on `main` @ `41c7e0c3`):** `git merge origin/main`
-(merge, never rebase or force), gate the MERGED tree GREEN locally, then push. Since `41c7e0c3`, `gates.yml` fires
-GitHub only on `main` (Bob: one run per landed batch). But GitHub reads `on:` from the PUSHED commit, so a branch based
-before `41c7e0c3` still fires under the old `land/**` trigger, and a red run emails Bob.
-
-**Self-wake reading, 2026-09-23T10:01Z (`main` @ `19101d04`):** `owed.mjs FLEET` reads 0 attributed. FL-11, FL-12 and D-260 are
-still `queued` in BACKLOG, and the cache holds eight rows, all other lanes', all running. Live: three members and
-`biosmoke7` serve `0.75.0`. Releases 0.72.0 through 0.75.0 exist only as `land/dist/release-*` branches (no tags past
-v0.71.0); 0.75.0's `RELEASE.json` names `a7e5f590…`, `b26dee19…`, `0d99f5d0…`, the same member bytes as every
-release since v0.59.0. `main`'s `RELEASE.json` reads 0.74.0. Staleness on `main`: 23 checked, 0 drift, 0 unreadable.
-Context ~30%. Next self-wake `trig_01TGRNTEDZPx5KHRkz3ekU4C`, 2026-09-24T10:00Z (the earlier one fired and is spent).
-
-**Refresh line is 75%** (BOB #31, 2026-09-23T18:19Z, superseding BOB #30's 80%): the environment sets
-`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80`, so auto-compaction fires near 79% of the `get_session` figure. **And Bob: "cut back on
-gates".** A FLEET landing runs ONLY the suites its rows name, their negative controls and `plancheck`, never
-`gates.mjs` FULL; CONDUCT's train union gate is the one FULL gate. No releases of any kind until Bob asks.
-Earlier text:  `CLAUDE.md` §4 on `main` still read 70%
-at 15:06Z, so its home lags the ruling; BOB carries it. Peers at that time: integrator CONDUCT #16
-(`session_01DEAp94ny3PfWr6deFJtTaD`), SCHEDULER #16 (`session_01UZaSR1KRWmADuxBFYk1wY9`). Wake a peer by a one-shot
-`create_trigger` with `persistent_session_id` into its session, as CONDUCT and SCHEDULER wake this one.
-
-## Carried from the old account's memory, which will not travel
+## Carried memory
 
 - A background task's exit code is its WRAPPER's. Read the tool's own completion line (`N/N suites green · …`).
-- In a ledger conflict, carry BOTH sides' hunks (CLAIMS.md appends especially). Regenerate `docs/DECIDED.md`; never
-  merge it.
-- A name is not an address, and an unattended session cannot be messaged. What a lane must know goes on its ROW.
-- A QUEUE/BACKLOG row's size budget is the whole block, heading and trailing blank line included.
+- In a ledger conflict, carry BOTH sides' hunks. Regenerate `docs/DECIDED.md`; never merge it.
+- What a lane must know goes on its ROW or its `-NEXT.md`, not in a message nobody may read.
 
 ## What a successor must not get wrong
 
-1. `op=bootstrap`'s version is the routing isolate's. No version FIELD reports the DO's build (FLEET.md, 2026-09-21).
-2. Count importers by PARSING imports, never with a one-line grep: a multi-line `import { … }` is invisible to grep.
-3. A tag range is a claim about every tag in it. Check each one, or name the ones checked.
-4. When a suite's count moves between gates, attribute it at a FIXED BASE (a scratch worktree, with and without the
-   change).
-5. Never write an all-caps ruling marker (the words `decided.mjs` indexes) into a handoff file; it would index a
-   ruling in that file (D-367). Point at the ruling's home instead.
+1. `op=bootstrap`'s version is the routing isolate's; no version field reports the DO's build.
+2. Count importers by PARSING imports; a multi-line `import { … }` is invisible to a one-line grep.
+3. A range of releases is a claim about each one. Check each, or name the ones checked.
+4. When a suite's count moves, attribute it at a FIXED BASE (scratch worktree, with and without the change).
+5. Never write an all-caps ruling marker (the words `decided.mjs` indexes) into a handoff file (D-367).
 6. Never push for a lane whose push was refused.
 7. The `CLAUDE.md` in a long session's context can be older than `origin/main`'s. Re-read it when a peer cites a rule.
-8. A line read through `cut -c` is a truncated VIEW, not the line. FLEET #3 told BOB #27 that I10's Status line lacked
-   the five; the line was 1,193 characters long and carried them past the cut (`b6a14392`). Read the whole line.
+8. A line read through `cut -c` is a truncated VIEW, not the line.
+9. A row read `integrated` is a claim: verify the DEPENDENT at the code by name (FLEET #4 did, for FL-11/FL-12/D-260).
+10. Never leave a stray file outside the tree: one `cp` to `/home/user/…` had to be found and removed.
