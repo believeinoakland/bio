@@ -24,23 +24,24 @@ No timers; act on messages. CAP (Bob via BOB #33 18:24Z): 14 live workers + DIST
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (19:13Z, measured) — read the tree; these are pointers. Addresses: BOB #33 session_01BkXH3dLHH2wx8eUA4k5p73 · SCHEDULER #19
+## 4. STATE (20:12Z, measured) — read the tree; these are pointers. Addresses: BOB #33 session_01BkXH3dLHH2wx8eUA4k5p73 · SCHEDULER #19
 session_01KJoJnoXN6d5CyZsiw8KTKa (confirm each with get_session before binding; both lanes refresh).
-- #20 is LIVE (live context ~24%). CAUTION: get_session's context_usage.used_tokens COUNTS PAST THE COMPACTION BOUNDARY (read
-  753,618 = 75.4% while the live window was ~24%) — never refresh on that figure alone.
-- MAIN = e9b21be6 (batch21). TRAIN ~19:20Z (#20's background launcher; log: #20's scratchpad train23.log) carries
-  land/conduct/c20-batch24b @ 1ab3c839 (contains c20-batch23 @ 5ff1b9b2 and c20-batch22 @ bece63ad) + land/bob/batch-0924c @ 1b323110.
-  c20-batch24 @ 3d0d0529 is SUPERSEDED by 24b (same trees; 24b adds Dropped-from-branch trailers mergecarry needed) — never train it.
-  Rows carried: D-480 D-492 D-497 D-499 D-500 D-501 D-502 D-507 D-508 D-509 M0-159 M0-160 M0-164 (+M0-140) M0-165 REC-211 REC-212
-  UI-92 + cache-20-on-m0140. I3 91.1.0, I5 3.11.0, I1 1.11.0, CATALOG 1.25.0 (457), census 219/116.
-- IF IT LANDED (`git merge-base --is-ancestor 1ab3c839 origin/main`): archive under D-398 the workers of those rows; run M0-140's
-  coord write from m0140/coord-write @ ee12ecc7 (README; --delete DEBT.md); report rows + sha to SCHEDULER #19 and BOB #33.
-  IF REFUSED: read the named assertion, fix on a NEW branch (never force-push), re-run.
-- WORKING (15): REC-194 M0-173 D-490 D-491 D-472 D-511 D-510 M0-169 D-518 M0-178 D-476 FW-22 FW-23 D-463 D-475. DIST-11/13 are DIST's.
-  Bob 18:50Z via BOB: 16 WORKING is the target; at EVERY wake spawn first when rows are queued. None queued at 19:13Z (SCHEDULER asked).
-- Pending BOB: D-500 ms-watermark (I3), M0-155 pen doctrine (M0-172), C-82.6/7 generalised words, REC-211's §8.2 fold.
-- Coord writes from a main-based worktree are REFUSED (LC-ledger P3: cache 20 > 16) until CACHE_ROWS 20 lands; write from a
-  batch23+ worktree meanwhile.
+- #20 is LIVE (live context ~30%). get_session's used_tokens COUNTS PAST THE COMPACTION BOUNDARY — never refresh on it alone.
+- MAIN = 1a7f0bcc (c20-batch24c + BOB batch-0924c): 18 rows landed, workers ARCHIVED. Main carries CACHE_ROWS 20 and M0-140;
+  M0-140's coord write DONE (coord 0065b961: DEBT.md retired whole into DEBT-closed.md). WRITE COORD ONLY FROM A MAIN CHECKOUT —
+  a pre-M0-140 checkout now fails LC-debt (DEBT.md is gone ON PURPOSE); a batch worktree may carry stale planning files.
+  (#20 deleted DEBT.md twice by writing from batch worktrees before this landed; both restored — the lesson.)
+- NEXT TRAIN ~21:20Z: land/conduct/c20-batch25 @ 1d8fd8b6 (pushed; worktree /home/user/w15). Carries M0-173 M0-169 D-511 D-491
+  M0-178 M0-180 DIST-11 DIST-13 D-472 M0-183 (all flipped integrated). I3 94.0.0, I5 3.12.0, I4 2.3.0 (IC-281, minted at
+  integration), CATALOG 1.27.0 = 460. Floors read from prints; 0 drift, 0 ambiguous. Train it ALONE with one --drop per other
+  WAITING branch; if the train RETURNS it on a conflict, merge the conflicting branch into a NEW batch ref (never force-push).
+- REC-194 (@5038ee57) is re-merging onto the union by its worker (REC-212 + D-507 both redesigned #statementAcknowledgements);
+  its IC-269 (I3 MAJOR) resolves at its integration on top of 94.0.0.
+- WORKING (18): D-490 D-510 D-518 D-476 FW-22 FW-23 D-463 D-475 M0-179 D-478 UI-99 M0-187 UI-101 UI-102 REC-199 REC-200 UI-93
+  + REC-194. BOB 19:24Z: spawn EVERY queued row at once, 16+.
+- Merge helpers (scratchpad): csmerge2.py (construct-status by claim OBJECT, either side's layout), hmerge.py (diff3 prose by
+  words), catmerge.py (the CATALOG_VERSION union pattern: gate.mjs/ratify/d470 + floor history notes). A virtual merge base
+  (criss-cross) breaks stage 1: use the shared tip as base. Status probes must match EXACTLY ONCE in CODE (M0-160 guard).
 
 ## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
 land/* branches wait (sooner when a batch is ready); BOB's stall probe alarms after 120 min without a landing while branches wait. Refresh at 75% context.
