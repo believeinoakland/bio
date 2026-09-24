@@ -50,6 +50,66 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v114, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
+is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
+did for v113. SURFACE: **the published case page now names the member who WROTE the exclusion statement apart from
+the member who PREPARED AND PUBLISHED the case.**
+
+**WHAT IT CLOSES, and it is a sentence that claimed more than the record supports.** Page 2 read `Written by
+${c.completeness.author}` under a note promising *"the member who wrote it"*. `completeness.author` is the
+PUBLISHER. REC-212 (IC-272) split the two acts on the plane the same day — BOB #32 ruled (b), *two acts, two names,
+never conflated*, and BOB #33 ruled REC-212's three determinations — and raised the delegation this item
+discharges (`CLAIMS.md`, "DELEGATION 2026-09-24 RECORD (REC-212) -> UI"). So on the ordinary shape of a project
+that reviews its own work — an editor writes the statement, the owner publishes — a CREDENTIAL-FREE page told a
+stranger the publisher wrote a sentence they did not write. That is the overclaim this record exists to refuse, in
+the one place a stranger reads.
+
+**THE DATE WENT WITH IT, and it is the same defect's second half rather than a tidy-up.** `completeness.at` is
+stamped at the PUBLISHING act (`op=publish` writes `author: who, at: when` together), so *"Written by X on <at>"*
+dated the writing by the publishing. The date is kept and now prints against the act it measures.
+
+**WHAT LANDED**, three sites in `app.html` and nothing else of the surface: a new `pubStatementWriterHtml` beside
+`pubStatementAcksHtml`; the `p2` block of `pubCaseHtml` calling it, with the old sentence gone; and
+`pubCaseAuthors`, whose entries now name their own acts (`(prepared and published the case)`, and the writer as
+its own entry when the record names one that is not the publisher) where one read `(completeness, for the case)`.
+No `DEC-49 REGION`, no act dialog, no router, no `SURFACES` key, no review-copy surface was touched.
+
+**THE THREE STATES ARE RENDERED AS THREE, which is UI-89's rule (`[]` is not `null`) arriving at the name beside
+the list.** `op=publishedcase` serves `completeness.statement_by` — a name, or `null` — together with
+`completeness.statement_by_stated`, ONE sentence the plane committed from the SIGNED bytes at ratification. That
+sentence is what tells the plane's two nulls apart (a document that SAYS it could not establish the writer, and a
+document authored before rule 13 that says NOTHING about one), so it is rendered AS THE PLANE WROTE IT — DEC-8,
+and the area's own rule: render the record's own words or render nothing.
+
+**AND A FOURTH STATE THIS SURFACE CAN MEET AND THE PLANE CANNOT, found by asking who else reads the field.** A
+published record COMMITTED before `statement_by_stated` existed carries no such key at all, so there is no plane
+sentence to render. It is not the plane's stated undetermined and is not drawn as it: the page says the question
+was never put to this record, and takes no name off the publisher. `publishedcase.test.mjs`'s fixtures are exactly
+that state, which is why its two affected assertions were CORRECTED rather than exempted, each with a dated
+comment saying why the old one was wrong — one of them was asserting the defect (`/Written by vera on 2026-07-20/`).
+
+**MEASURED.** `civicos-ui/test/statement-writer.test.mjs`, 25/0, NEW: three cases drafted, published, SIGNED and
+ratified through the real plane under miniflare, then read back by the page through `op=publishedcase` as a caller
+holding NO credential — kai's draft statement published by iris (two names), a statement no draft holds (one
+member, two acts), and two drafts disagreeing (the plane's stated undetermined). `publishedcase.test.mjs` 244 ->
+245. UI harness and the full gate green; figures in the report.
+
+**WHAT IT CANNOT SEE, stated.** The no-key state cannot be driven live — `ratifyCaseDocument` writes the key
+unconditionally now — so it is rendered from a built answer and over `publishedcase.test.mjs`'s own pre-rule-13
+fixtures, and said rather than scored. `#statementWriter`'s `drafts_unbounded` and `draft_unreadable` answers are
+not reached (they need >500 drafts of one project, or a `case_drafts.params` no op writes); both are the PLANE's
+gap and `rec212-statement-writer.test.mjs` says the same of them. And rule 13's OWN residue is untestable by
+construction: a publisher who retypes a sentence an editor wrote in a draft SINCE EDITED is credited with it,
+because no record keeps a draft's statement history — the page prints the record's provenance sentence beside the
+name so a reader weighs it, and cannot do better than the record.
+
+**THE CONTROL FOUND THE INSTRUMENT WRONG, and it is recorded rather than smoothed.** Arm (A) — the row's own, the
+writer read off `author` again — came back RED at the right count with one DECLARED row GREEN. The row whose words
+are *"it is not read off the publisher"* read the PLANE's sentence and the HEADER's list and never asked what the
+page rendered as the writer, so the one row named for the defect could not see it. The row was corrected and the
+arm re-run against the corrected instrument: 7/7 AS DECLARED.
+
 v113, 2026-09-24 session, thread UI, UI-92 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-92` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version number
 was provisional; CONDUCT #20 renumbered it v112 -> v113 at c20-batch22 because UI-100 took v112 on main. SURFACE: **the PROJECT
