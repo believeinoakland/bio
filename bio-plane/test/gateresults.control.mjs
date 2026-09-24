@@ -42,17 +42,32 @@
  *                                                        no under-inclusion.
  *   R15 the tree-keyed GREEN shortcut taken again    -> "...a PLAIN gate on that same GREEN tree still RUNS the
  *                                                        never-cached unit" FAILS. MUST NOT: never-cached runs every time.
+ *   R16 M0-179's own: the reuse arm's refusal of a    -> "the next gate REUSES NOTHING" FAILS, and with it the three
+ *       non-descending tip REMOVED                      assertions reuse CARRIES (teeth, the write, does-not-heal).
+ *                                                       MUST NOT: the over-strictness arm, the guard's arms, descentOf.
+ *   R17 the JUDGEMENT disarmed — every tip reads as   -> "descentOf names FOUR outcomes" FAILS, and with it the reuse
+ *       descending                                      refusal, the write refusal and the does-not-heal arm. MUST NOT:
+ *                                                       the over-strictness arm.
+ *   R18 OVER-STRICTNESS — the fence tightened to      -> "OVER-STRICTNESS: another machine's ordinary APPEND" FAILS: an
+ *       demand EQUALITY of tip and record               honest append refused is a fence tighter than its rule. MUST
+ *                                                       NOT: the refusal of the planted tip, which is still right.
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count.
  */
-import { readFileSync, writeFileSync, mkdirSync, statSync, existsSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, statSync, existsSync, unlinkSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const PEN = join(REPO, ".m0126-harness");
+/* THE PEN IS OUTSIDE THE WORKTREE — moved there 2026-09-24 by M0-179, under BOB #32's ruling of the same day: a
+   scratch file in the worktree is not inert even when gitignored (`.m0126-harness/` was), because repository-walking
+   suites walk it, it trips `gates.mjs` §2e's under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to
+   record a GREEN verdict. `mkdtemp` also names the copies for THIS run, which a fixed directory did not: the ruling's
+   other half is that the scratch ground is not isolated between sessions. */
+const PEN = mkdtempSync(join(tmpdir(), "m0126-harness-"));
 const GATES = join(REPO, "tools/gates.mjs");
 const RESULTS = join(REPO, "tools/gateresults.mjs");
 const GUARD = join(REPO, "tools/pushguard.mjs");
@@ -67,7 +82,6 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-mkdirSync(PEN, { recursive: true });
 const WORKFLOW = join(REPO, ".github/workflows/gates.yml");
 const SUBJECTS = [GATES, RESULTS, GUARD, WORKFLOW].map((file) => {
   const copy = join(PEN, `pristine.${file.split("/").pop()}`);
@@ -177,6 +191,40 @@ const ARMS = [
   { id: "R15", title: "the tree-keyed GREEN shortcut taken again with the per-unit record on (a record answering for a never-cached unit)",
     patches: [{ file: GATES, from: "if (covering && eff.verdict === \"GREEN\" && !PER_UNIT_ON) {", to: "if (covering && eff.verdict === \"GREEN\") {" }],
     mustBreak: "...and a PLAIN gate on that same GREEN tree still RUNS the never-cached unit", mustNotBreak: ["a never-cached unit runs EVERY time"] },
+  /* M0-179's three arms. The row's own control is R16 — "plant a non-descending tip in a fixture and the reuse arm
+     refuses it by name" — and the suite plants the tip; R16 takes the refusal away and watches the assertion fail.
+     R17 disarms the JUDGEMENT rather than the refusal, which is the deeper half. R18 is the over-strictness arm the
+     other two cannot supply: a fence made TIGHTER than its rule is not a safer fence, so an ordinary append that the
+     check refuses must FAIL a named assertion too. */
+  { id: "R16", title: "M0-179 · the reuse arm reuses from a tip the record does not descend from (the refusal removed)",
+    patches: [{ file: GATES, from: "else if (!GR.descentHolds(grFetch)) RESULT_NOTES.push(",
+      to: "else if (false && !GR.descentHolds(grFetch)) RESULT_NOTES.push(" }],
+    /* THE FRAGMENTS ARE THE LABELS' STABLE MIDDLES, not their full text. Found by this arm's second run: the labels
+       were reworded when the arm itself was corrected, and a stale fragment makes `mustBreak` fail loudly — but makes
+       `mustNotBreak` PASS SILENTLY, because a fragment matching no label can never be found among the failures. R18's
+       read as isolated on exactly that. A check that cannot fail is worse than none (`VERIFICATION.md`).
+       ALSO DECLARED after the corrected arm's run, and not smoothed: taking the reuse refusal away breaks three more
+       assertions, each a CONSEQUENCE of the reuse it restores — the planted tip's PASSes are reused, so the units do
+       not RUN (the teeth arm), the gate has no new pass to write so the writer never reaches its own refusal (the
+       write arm), and the next gate reuses too (the does-not-heal arm). */
+    mustBreak: "the next gate REUSES NOTHING",
+    alsoBreak: ["...and the refusal has TEETH", "...and NOTHING is written onto that tip either",
+      "...and the refusal DOES NOT HEAL ITSELF"],
+    mustNotBreak: ["OVER-STRICTNESS: another machine's ordinary APPEND", "the guard refuses a STALE BASE",
+      "descentOf names FOUR outcomes"] },
+  { id: "R17", title: "M0-179 · the JUDGEMENT disarmed — every tip reads as descending",
+    patches: [{ file: RESULTS, from: "  if (!prior) return { descent: \"first\" };",
+      to: "  if (true) return { descent: \"ok\" };\n  if (!prior) return { descent: \"first\" };" }],
+    mustBreak: "descentOf names FOUR outcomes",
+    alsoBreak: ["the next gate REUSES NOTHING", "...and the refusal has TEETH",
+      "...and NOTHING is written onto that tip either", "...and the refusal DOES NOT HEAL ITSELF"],
+    mustNotBreak: ["OVER-STRICTNESS: another machine's ordinary APPEND"] },
+  { id: "R18", title: "M0-179 · OVER-STRICTNESS: the fence tightened to demand EQUALITY, so an honest append is refused",
+    patches: [{ file: RESULTS, from: "  const anc = git(repo, [\"merge-base\", \"--is-ancestor\", prior, tip]);",
+      to: "  const anc = { status: 1, stderr: \"\" };" }],
+    mustBreak: "OVER-STRICTNESS: another machine's ordinary APPEND",
+    alsoBreak: ["descentOf names FOUR outcomes"],
+    mustNotBreak: ["the next gate REUSES NOTHING"] },
 ];
 
 const RUN = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));
