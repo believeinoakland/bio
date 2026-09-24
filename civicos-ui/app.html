@@ -2251,7 +2251,11 @@ const SURFACES = {
        ARM A's fiction check forbids naming an act the plane did not publish. It now names them. */
     acts: ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
            "projectownerremove", "projectownerrescue"],
-    reads: ["projectparticipants", "projectownerarith", "projection"],
+    /* UI-92: `casedrafts` (REC-198, IC-243) is read HERE and nowhere else — the list of the
+       project's draft cases belongs to the workspace, and the review-copy surface keeps the
+       DRAFT itself at its own address. So the read is declared on the surface that performs
+       it; `review-copy`'s `reads` are unchanged. */
+    reads: ["projectparticipants", "projectownerarith", "projection", "casedrafts"],
   },
   action: {
     routes: ["object:action", "hash:action"],
@@ -8821,6 +8825,72 @@ function projectContentsHtml(refs, back){
     ? `<div class="card" style="padding:4px 18px">${rows.join("")}</div>${surfacedByNoteHtml(true)}`
     : `<div class="empty">Nothing is in this project yet: it cites nothing and nothing in the record points at it.</div>`;
 }
+/* ============================================================
+   UI-92 · THE DRAFTS OF A CASE THIS PROJECT HOLDS.
+
+   DESIGN: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, and §3 rule 15 (a)
+   (BOB #32, 2026-09-23 23:08Z) — *"a list read of a project's drafts, fenced
+   exactly like reading one draft"*. The plane's list is REC-198's `op=casedrafts`
+   (IC-243, I3 MINOR, ADDITIVE), and this page is its first and only caller.
+
+   WHY IT IS ON THE WORKSPACE. Until REC-198 nothing could NAME a project's
+   drafts: every read of `case_drafts` was keyed on `draft_id`, so a draft whose
+   address was lost was a lost draft, and UI-68 measured exactly that and recorded
+   it as the surface's own gap. A member goes looking for the project's working
+   material on the project, so the list belongs on the workspace — the draft
+   itself keeps its own address (`#draft/<id>`) and this page opens it there
+   rather than rendering any part of it here.
+
+   NOTHING BELOW IS COMPUTED. The rows are the plane's rows in the plane's order;
+   the case identity is the plane's own sentence (`case.identity` — the edition
+   read from the published record, never stored and never re-derived here); the
+   bound is the plane's APPLIED `limit` beside its own `total` and `truncated`,
+   said rather than left to be inferred; and a refusal is the plane's words
+   through `actRefusalHtml`. This page never filters the list and never decides
+   who may see it: the fence is the single read's own predicate
+   (`Store#seesProjectDrafts`), and a caller it refuses receives the single read's
+   dead answer — one answer for a project that does not exist and one this
+   credential may not see alike, which is why nothing here says which it was.
+
+   AND IT IS SHOWN ON THE SKELETON TOO — decided here, and the reason is the
+   record's rather than this page's. The invited-not-joined member is withheld who
+   is working on the project, its work product and its ownership arithmetic (7.9,
+   above), and all three are GOVERNANCE. The plane admits every participant,
+   invited or joined, to BOTH draft reads (`viewerPredicate` draws no line between
+   them, and REC-198's IC measured the admission caller by caller), so an invited
+   member holding a draft's address can already open it. Withholding the LIST here
+   would be this page inventing a fence the record does not have, while leaving
+   the door it fences standing open. */
+const PROJECT_DRAFTS_HEADING = `<h2 class="sec">Drafts of a case</h2>
+  <p class="subj-note">A draft of a case is written before anything is published, and can be shown to a named person to read and comment on without leaving this group&rsquo;s record. These are the drafts this project holds, listed by the record itself; opening one opens the draft.</p>`;
+function projectDraftsHtml(ask){
+  if(!ask) return "";
+  if(!ask.accepted) return actRefusalHtml(ask.refusal);
+  const r = (ask.result && typeof ask.result === "object") ? ask.result : {};
+  const rows = (Array.isArray(r.drafts) ? r.drafts : []).filter(d => d && typeof d === "object" && d.draft_id);
+  if(!rows.length)
+    return `<div class="empty" data-project-drafts="0">No draft of a case has been made in this project. A draft is what a review copy is taken from, and until one is made there is nothing here to list.</div>`;
+  /* The bound, in the plane's own figures. A list that quietly showed the first
+     few would be a claim that those are all of them. */
+  const total = Number.isInteger(r.total) ? r.total : null;
+  const bound = (r.truncated === true && total !== null)
+    ? `<p class="subj-note">This project holds ${esc(String(total))} drafts and this list shows the first ${esc(String(rows.length))}, the bound the record applied to its own answer.</p>`
+    : "";
+  const body = rows.map(d => {
+    const c = (d.case && typeof d.case === "object") ? d.case : {};
+    const identity = typeof c.identity === "string" && c.identity ? c.identity : "";
+    const when = d.updated_at ? fmtWhenFull(d.updated_at) : (d.created_at ? fmtWhenFull(d.created_at) : "");
+    const who = d.updated_by || d.created_by || "";
+    const line = [identity, who ? `last written by ${who}` : "", when].filter(Boolean).join(" · ");
+    return `<div class="linkrow" onclick="rvcOpen(${esc(JSON.stringify(String(d.draft_id)))})">`
+      + `<span class="lt mono">${esc(String(d.draft_id))}</span>`
+      + `<span class="ln">${esc(line)}</span></div>`;
+  }).join("");
+  /* `data-project-drafts` carries the count the section DREW, so a harness can find this section and measure
+     its reach without keying on a heading's wording — an instrument pinned to a sentence fails correct work in
+     a spelling nobody anticipated, which is what this file's own over-strictness arm is for. */
+  return `${bound}<div class="card" data-project-drafts="${rows.length}" style="padding:4px 18px">${body}</div>`;
+}
 /* One click, the right surface: a question opens the QUESTION page, a project
    opens its own workspace, everything else opens as a document. */
 function openByType(id, type){
@@ -8987,6 +9057,14 @@ async function openProjectWorkspace(id, fromNav){
     const contents = backErr ? errPane(backErr)
                              : projectContentsHtml(refs, (back && back.backlinks) || []);
 
+    /* THE PROJECT'S DRAFT CASES (UI-92, §6A.4). Asked with the rest of this
+       page's reads and AFTER the visibility gate cleared — 7.9's discipline, and
+       this read is no exception even though it carries the single draft read's
+       own fence. `actAsk` rather than `recR` because the plane's answer to a
+       caller that fence refuses is the single read's DEAD ANSWER: a refusal to
+       RENDER in the plane's words, never an error of this page's. */
+    const drafts = await actAsk("casedrafts", { project: id });
+
     const controls = projectRosterBarHtml(pos);
     /* AND WHETHER A JOB IS RUNNING ON THIS PROJECT (UI-49, §14a). ASKED AFTER
        THE VISIBILITY GATE CLEARED, with the rest of this page's reads — 7.9's
@@ -9013,6 +9091,8 @@ async function openProjectWorkspace(id, fromNav){
     if(pos.invited){
       $("#content").innerHTML = `${header}
         <h2 class="sec">What is in this project</h2>${contents}
+        ${PROJECT_DRAFTS_HEADING}
+        ${projectDraftsHtml(drafts)}
         <h2 class="sec">Who is working on this</h2>
         <p class="subj-note">You have been invited to this project and have not joined it. Until you do, this page shows you the project's skeleton &mdash; that it exists, what it is for, and what is in it &mdash; and does not show you who is working on it, the state of its work product, or how its ownership changes hands. Joining is one act and it is below.</p>
         ${controls}`;
@@ -9034,6 +9114,8 @@ async function openProjectWorkspace(id, fromNav){
       <h2 class="sec">What is in this project</h2>
       <p class="subj-note">The questions, documents and actions this project carries. What each one RESTS ON, how strong it is and what it concluded live on the question itself, one click away: a project is a container with membership and access control, and a question is a claim structure &mdash; this page does not answer for the other.</p>
       ${contents}
+      ${PROJECT_DRAFTS_HEADING}
+      ${projectDraftsHtml(drafts)}
       <h2 class="sec">Who is working on this</h2>
       <p class="subj-note">Every participant of this project, read in one call from the record. Every participant sees the handles of all the others (Section 7.8).</p>
       ${projectParticipantsHtml(pos)}

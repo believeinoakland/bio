@@ -50,6 +50,47 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v113, 2026-09-24 session, thread UI, UI-92 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-92` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version number
+was provisional; CONDUCT #20 renumbered it v112 -> v113 at c20-batch22 because UI-100 took v112 on main. SURFACE: **the PROJECT
+WORKSPACE now lists the project's review-copy drafts, and each row opens its draft.**
+
+**WHAT IT CLOSES.** UI-68 built the review copy's four surfaces and MEASURED its own gap: every read of
+`case_drafts` was keyed on `draft_id`, so a draft was reachable only by the address its save landed on, and a lost
+address was a lost draft. REC-198 built the plane's answer to that (`op=casedrafts`, IC-243, fenced exactly like
+reading one draft — BOB #32, §3 rule 15 (a)); this item is its first and only caller.
+
+**WHAT LANDED**, all of it in `app.html`'s PROJECT_WORKSPACE block and none of it in the REVIEW_COPY one:
+`projectDraftsHtml` and one `actAsk("casedrafts", { project: id })` in `openProjectWorkspace`, asked with the rest
+of the page's reads and after `op=projectparticipants` has cleared (§7.9's discipline). The rows are the plane's
+rows in the plane's order, the case identity is the plane's own sentence, the bound is the plane's applied
+`limit`/`total`/`truncated`, and a refusal is the plane's words with no code — this page filters nothing and
+decides nothing about who may see the list, because the fence is the single read's own predicate.
+
+**THE ONE DECISION THAT WAS MINE, and it went to the record rather than to caution: the list is drawn on the
+INVITED-NOT-JOINED member's SKELETON too.** §7.9's withholding on this page is about GOVERNANCE — the
+participants, the work product, the ownership arithmetic — and the plane admits every participant, invited or
+joined, to BOTH draft reads, so such a member holding a draft's address can already open it. Withholding the list
+would have been this page inventing a fence the record does not have while leaving the door it fences open. Its
+arm is (K) of the control.
+
+**WHAT THE CONTROL FOUND, and both findings are about the INSTRUMENT rather than the subject.** (J), every row
+opening the first draft, ALSO broke the appearance arm, because both were read off the row's `onclick` — one
+string standing for two facts. The page now carries the draft id as visible text and a `data-project-drafts`
+count; the appearance arm reads those and the open arm reads the handler. (L), the over-strictness arm, came back
+RED the first time because the reach arm keyed on the heading's literal words: correct work in an unanticipated
+spelling failed, which is exactly what that arm exists to catch. Re-run: 12/12 AS DECLARED, app.html identical
+after every arm.
+
+**AND ONE DEFECT IN A GUARD, found because this is the op's first UI call site.** `check-mock-envelope.mjs`'s
+`FLAT_OPS` did not name `casedrafts`, which the control plane answers through `reviewAnswer` — flat, deliberately,
+so that a caller the fence refuses gets the single read's dead answer byte for byte. Four suites that drive the
+REAL plane therefore read as mocks answering a shape the plane never sends. The line is added with its evidence.
+Nothing could have observed this before a surface called the op.
+
+Suites: `review-copy.test.mjs` 46/0 -> 58/0 (section 6b, against the real plane); `surface-registry.test.mjs`
+475/0 -> 477/0 (ARM D3 and D4 for the newly declared read), its ARM D1 floor MOVED 65 -> 78 and ARM D5 41 -> 54
+from the figures the arms printed, both found twelve low.
 v112, 2026-09-24 session, thread UI, UI-100 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-100` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version
 number is provisional and CONDUCT renumbers it at integration if a concurrent entry took it. SURFACE:
