@@ -50,6 +50,31 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v105, 2026-09-24 session, thread UI, UI-85 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/UI-85` (base
+`origin/main` @ `15b2a4c0`), in the commit that carries this entry. (v105 is the next number on THIS tree; if a concurrent
+batch has taken it, renumber at integration.) SURFACE: the Add form's action intake gains "Whether this is safe to file".
+
+**What was absent.** D-182 (BIO_Case_Making_v0_1.md §2, `risk_tier`, RULED by BOB #21) built the plane's half: the three
+tiers in Bob's words plus UNDETERMINED, published as `op=affordances`' `vocabularies.risk_tiers`, and both intake writers
+writing undetermined. No member could state a tier, so every action the member UI wrote read "not assessed" forever.
+
+**What a member now sees.** One radio per entry of the PUBLISHED map, in the plane's order and the plane's words, with
+undetermined preselected and no number a default; the choice survives the pane's repaint. `mdFor` writes `risk_tier: <k>`
+only when `k` is a key of the published map at write time (`riskTierLine`), otherwise undetermined. No map, no chooser:
+the page says the record has not published the words and the action is written undetermined. The surface spells none of
+the tier words, comments included (asserted over the source).
+
+**Verified through the op, as a member.** `add-surface.test.mjs` drives the app's own `addGo` against the real plane in
+miniflare with a SIGNED-IN MEMBER SESSION (memberadd → enroll → login; `whoami` asserted `session: true`), never
+`MEMBER_TOKEN`, which REC-189 found is a machine identity: an untouched chooser reads `undetermined` through
+`op=projection` and in the stored bytes; a member who picks 2 reads 2, "in the plane's words". The identity arms swap the
+published map (words drawn per run; then a map of two keys) and the page follows it word for word and key for key.
+Control: `add-surface.control.mjs` arms (5) default-to-1 RED at "UI-85 UNTOUCHED" by name, (6) the three words hard-coded
+RED at "UI-85 IDENTITY", (6b) `checked="checked"` GREEN.
+
+**Not built here.** The plane's own setup page (`bio-plane/src/setup.mjs`) still offers no chooser and writes
+undetermined, which is honest and not an overclaim; it is plane ground, not this area's.
+
 v104, 2026-09-23 session, thread UI, UI-74 (a WORKER of CONDUCT #17, cloud session). Landed on `land/worker/UI-74` (base
 `origin/main` @ `02603e88`), in the commit that carries this entry. (If a concurrent batch has taken `v104`, renumber this
 entry at integration.) SURFACES: a new place, the ACCEPT CEREMONY at `#accept/<INQ-…>/<name>`, reached by "Act on this
