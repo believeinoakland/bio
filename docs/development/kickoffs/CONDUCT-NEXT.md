@@ -24,8 +24,11 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (12:25Z, updated on BOB #32's instruction) — read the tree; these are pointers
-- MAIN = 13073707 (c20-batch14 @ bf73ee6d LANDED 11:39Z, trained ALONE by BOB #32 as Bob's ONE-TIME close-out exception — trains
+## 4. STATE (14:37Z, updated on BOB #32's instruction) — read the tree; these are pointers
+- MAIN = 5f116f33 (14:36Z: land/dist/cut-0.79.0 @ d2ca15b0 trained ALONE by #20 on Bob's ask via BOB #32 — release/ now reads
+  0.79.0, deployed and live-verified by DIST #6 on all six workers; gate GREEN; merged onto 0a00c9c6 = Bob's prune-landed.yml:
+  land/* refs already on main are now deleted by .github/workflows/prune-landed.yml on every push, so train.mjs's ref deletion is
+  redundant). Before: 13073707 (c20-batch14 @ bf73ee6d LANDED 11:39Z, trained ALONE by BOB #32 as Bob's ONE-TIME close-out exception — trains
   stay CONDUCT's act; gate GREEN 351/351 · 19,983). Versions on main: I1 1.10.0 · I3 87.0.0 · I4 2.2.0 · I5 3.8.0. Before it:
   6761e903 (batch19: UI-89 D-496), 454a02bc (batch18). D-150 -> UI delegation NARROWED on coord CLAIMS (six STATEMENT_ACK DEC-49 rows).
 - NO TRAIN IS OWED, and nothing is in flight. The archive list is DONE: BOB #32 archived all 23 idle workers on the first account
