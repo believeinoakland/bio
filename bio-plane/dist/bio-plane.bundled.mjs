@@ -2034,8 +2034,16 @@ CREATE INDEX IF NOT EXISTS monitor_fired_epoch ON monitor_fired(consumer, epoch)
 -- across an alarm retry. A retry arrives with a NEW Date.now(), so now cannot
 -- identify the tick; the epoch has to be remembered. A row here means "a tick
 -- started and did not finish cleanly", so the next tick REUSES its epoch and is
--- that tick's retry rather than a fresh one. It is deleted when a tick completes
--- with nothing failed, which is what lets the NEXT cadence really re-check.
+-- that tick's retry rather than a fresh one. It is deleted when a tick ACCOUNTS
+-- FOR EVERY ELIGIBLE SUBJECT ITSELF -- nothing failed AND nothing was skipped --
+-- which is what lets the NEXT cadence really re-check.
+-- D-518, 2026-09-24: the second half of that condition is a CORRECTION. This line
+-- read "when a tick completes with nothing failed", and so did the code, which
+-- deleted the row on a tick that fired nothing and only SKIPPED subjects an
+-- earlier unfinished tick had claimed. That tick learned nothing, and dropping the
+-- row let the next wake mint a fresh epoch and re-fire an address that already
+-- succeeded, inflating captured_locators.observations -- corroboration nobody
+-- produced. The release is now the spent-epoch rule alone, one whole cadence on.
 CREATE TABLE IF NOT EXISTS monitor_tick_epoch (
   consumer   TEXT PRIMARY KEY,
   epoch      INTEGER NOT NULL,
@@ -2732,7 +2740,31 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- column existed was never woken -- nothing existed to wake it -- and the
   -- consumer's own predicate requires the run to still be running, so a request
   -- belonging to a run that has already ended is never woken retroactively.
-  run_woken_at      TEXT
+  run_woken_at      TEXT,
+  -- D-491 / IC-276 / CLIENT-RENDERED.md, BOB #32 item 3: DOES THIS REQUEST ASK
+  -- FOR THE PAGE AS A VISITOR SAW IT. 0 is the served document, captured exactly
+  -- as every request before this column was. 1 asks the drain for the rendered
+  -- pair, and BOB #32 item 3 is what makes that askable at all -- an unattended
+  -- sweep MAY render, within the allowance and through the host governor.
+  --
+  -- NOT NULL DEFAULT 0, AND THAT IS THE HONEST DEFAULT HERE WHERE IT WOULD NOT
+  -- BE ON THE TWO COLUMNS ABOVE. lead_inquiry and run_woken_at are nullable
+  -- because a legacy row had an unstated value that a default would invent. This
+  -- column has no unstated value to invent: a request written before it existed
+  -- could not ask for a render, because no door read the flag and no drain could
+  -- have honoured one, so 0 states what was true of it rather than guessing.
+  --
+  -- IT IS THE ROW AND NOT THE CALL THAT CARRIES IT, for the reason address,
+  -- purpose and ua_mode are on the row: op=acquire reads it through
+  -- captureRequestDraining, so what this instance renders is what the drain
+  -- judged. The drain still sends two fields and nothing else.
+  --
+  -- WHEN THE RENDER CANNOT HAPPEN THE ROW IS HELD, never captured: op=acquire
+  -- answers a named C-83 refusal before anything is fetched, the drain records
+  -- that code and leaves the row in requested, and the served shell is NEVER
+  -- filed as though it were the content. That sentence is the whole of C-83 and
+  -- the reason this column cannot be read as advisory.
+  render            INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
@@ -4389,6 +4421,7 @@ __export(bio_checks_exports, {
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
+  PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   QUOTE_CHECKS: () => QUOTE_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
@@ -10788,6 +10821,26 @@ var CAPTURE_REQUEST_CHECKS = {
     check: "C-28.15",
     where: "src/store.mjs captureRequest > is-capture-request",
     translation: "This names the same question twice \u2014 the one being worked, and the one the document supposedly bears on. Evidence for the question you are already working is just evidence for it, and flagging it as belonging somewhere else would put a note in front of you saying a document you just asked for is about something other than what you asked."
+  },
+  /* D-491 / IC-276 — THE RENDER FLAG AT THE DOOR, AND IT IS C-83.1's ARGUMENT
+       ONE LAYER UP. op=acquire refuses a `render` that is present and not `true`
+       rather than reading it as absent, because a `render: "yes"` answered with the
+       plain capture files the served shell as the content — the one outcome the
+       whole C-83 family exists to prevent. The same value arriving at THIS door is
+       the same defect with a delay on it, and worse in one respect: the row
+       outlives the call, so the drain fetches under a flag nobody can see was
+       dropped and the request reads afterwards as one that never asked.
+  
+       IN THIS FAMILY AND NOT IN C-83, on PL-15's precedent (its two lead rows) and
+       for PL-15's reason: it is enforced inside `is-capture-request`, which is THIS
+       family's governed span, so a row filed under C-83 would leave a code in a
+       region whose rows do not name it and arm C would report a site it could not
+       judge. C-28.16 — C-28.5 and C-28.12 stay UNALLOCATED, because reusing a
+       number this file records as deleted would make its own history unreadable. */
+  CAPTURE_REQUEST_RENDER_MALFORMED: {
+    check: "C-28.16",
+    where: "src/store.mjs captureRequest > is-capture-request",
+    translation: "This asked for the page as a visitor would see it in a form this instance does not recognise. It reads render: true, or nothing at all for the document as the site serves it, so a request for the rendered page is never quietly turned into a request for the page's empty frame. Nothing was queued."
   }
 };
 var AI_CREDENTIAL_CHECKS = {
@@ -11997,8 +12050,15 @@ var RENDER_CAPTURE_CHECKS = {
     where: "src/index.mjs fetch > is-render-admit",
     translation: "A rendered capture runs the live page in a browser, and this request combined that with a way of capturing that does not load a live page (an archived copy, a Drive export, or the continuation of an earlier capture). Ask for one or the other. Nothing was fetched."
   },
-  /* No renderer bound — or the Browser Rendering binding is bound and the
-     in-plane driver over it is not built. Named rather than falling back. */
+  /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a
+     BROWSER bound to something that is not a Fetcher, so there is no endpoint to
+     open a devtools session on. Named rather than falling back.
+     CORRECTED BY D-490: this comment read "the Browser Rendering binding is bound
+     and the in-plane driver over it is not built", which was the state D-64 shipped
+     and is the state D-490 ended (`src/browserrender.mjs`). The TRANSLATION below
+     did not move and did not need to — "no working page renderer" is true of every
+     case this code still names — but a comment describing a condition that no longer
+     exists is how the next reader is told the wrong thing by the record. */
   RENDER_NO_RENDERER: {
     check: "C-83.3",
     where: "src/index.mjs fetch > is-render-admit",
@@ -12125,7 +12185,7 @@ var DRIVE_CAPTURE_CHECKS = {
      could honestly hold, so the honest answer is the shape's name and the reason. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: {
     check: "C-48.2",
-    where: "src/index.mjs fetch > is-drive-capture",
+    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both",
     translation: "That address is a Drive FOLDER \u2014 a listing of files rather than a document. There is nothing to export and no single set of bytes a capture of it would hold. Name the document you want; harvesting everything a folder lists is a different act."
   },
   /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an
@@ -12134,7 +12194,7 @@ var DRIVE_CAPTURE_CHECKS = {
      first-class and must be STATED. */
   DRIVE_KIND_UNDETERMINED: {
     check: "C-48.3",
-    where: "src/index.mjs fetch > is-drive-capture",
+    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
     translation: "That Drive address names a file but not what KIND of file it is, and the kind is what decides which export to ask for. Guessing would file bytes in a format nobody established. Use the address that opens the document itself, which carries the kind."
   },
   /* A DRIVE HOST WITH AN UNREAD PATH. Named rather than harvested, and named
@@ -12142,7 +12202,7 @@ var DRIVE_CAPTURE_CHECKS = {
      document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: {
     check: "C-48.4",
-    where: "src/index.mjs fetch > is-drive-capture",
+    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
     translation: "That is a Google Drive address in a form this instance does not recognise. Rather than capture whatever bytes the address happens to serve and call it the document, it says so. If this shape should be harvestable, that is a change worth making deliberately."
   },
   /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the
@@ -12174,6 +12234,33 @@ var DRIVE_CAPTURE_CHECKS = {
      address ends the capture with the failure named; it never quietly becomes a
      capture of the application page, which would look like a success and hold
      nothing. */
+  /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
+     FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
+     nothing and the member's remedy is to share the file. A TICK that meets the
+     shell has not captured anything either — it never would — and what it has
+     lost is the CHECK: the record's last comparison still stands, undisturbed,
+     and nothing about the document changed. Those are two different facts about
+     the member's own situation, and DEC-49's canned translation is the sentence
+     they actually read, so one sentence cannot be true of both. PL-4's rule cuts
+     the same way it did for C-48.5/C-48.7: two predicates, two sites, both
+     drivable — `op=acquire` drives the pair above, `op=monitor` drives this pair,
+     and `test/monitor-assess.test.mjs` drives both of these by name. */
+  DRIVE_TICK_EXPORT_IS_THE_SHELL: {
+    check: "C-48.8",
+    where: "src/index.mjs fetch > is-drive-tick-export",
+    translation: "The check of that Google Drive document did not run: the export address answered with a web page rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. Nothing was compared and nothing about the record changed \u2014 what is known is that this instance could not see the document today."
+  },
+  /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
+     declared type and the first kibibyte are two different pieces of evidence,
+     and "Google told us it was a document and it was a web page" is the more
+     serious fact. On a tick the consequence is the same either way and it is
+     still worth two codes, because a tick that compared the shell would report
+     the document CHANGED on every visit — the cry-wolf this row exists to end. */
+  DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
+    check: "C-48.9",
+    where: "src/index.mjs fetch > is-drive-tick-bytes",
+    translation: "The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. This instance reads the bytes rather than the label, so the application page was recognised and not compared against the captured document \u2014 comparing it would report a change on every visit that nobody made."
+  },
   DRIVE_EXPORT_UNREACHABLE: {
     check: "C-48.6",
     where: "src/index.mjs fetch > is-drive-export",
@@ -14036,6 +14123,13 @@ var CONNECTION_CHOICE_CHECKS = {
     translation: "The mention named is not one this document carries for that subject. The choice is among the places the record actually read the subject in this document, by the reference as the reading recorded it; a mention the record never read cannot be the one a connection rests on."
   }
 };
+var PROMOTED_TYPE_CHECKS = {
+  ENVELOPE_TYPE_DISAGREES: {
+    check: "C-86.1",
+    where: "src/store.mjs promote > is-promoted-type-disagrees",
+    translation: "The document being filed says what kind of thing it is, and the request that carried it says something different. The record goes by the document, so rather than file an action as information \u2014 or the reverse \u2014 and index it as neither, it stops and tells you both answers. Nothing was written. Send it again with the request naming the type the document names, or change the document first."
+  }
+};
 function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
   const p = pair && typeof pair === "object" ? pair : null;
   const position = p ? side === "b" ? p.b_position : p.a_position : null;
@@ -15560,7 +15654,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.26.0";
+var CATALOG_VERSION = "1.29.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -21487,16 +21581,30 @@ var ACTS = [
     applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0 && f2.project_participant !== false
   },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
-     refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
-     is not. The PROJECT arm is not narrowed: `cites_out.severed` is a count and does not say whether
-     every severed target is retired, so a project whose only severed edges point at retired items is
-     still offered an act the store refuses — a stated residue, not a rule. */
+       refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
+       is not.
+  
+       D-444 NARROWS THE PROJECT ARM, which REC-183 left as a stated residue. The two arms ask the
+       same question from the two ends of the edge. From the TARGET's end `current_state` answers it
+       outright. From the PROJECT's end it cannot be answered by `cites_out.severed` at all: that is a
+       count of the project's own severed edges and says nothing about what their targets have BECOME,
+       so a project whose only severed edges point at retired items was offered an act the store then
+       refused — a pre-flight disagreeing with the refusal it fronts. The store now states
+       `severed_reinstatable`, counted through `#retiredNotCitable`, the predicate `#edgeTransition`
+       itself runs; the arm keys on it and the offer cannot drift from the refusal.
+  
+       IT IS NARROWED AND NOT DROPPED, which is the whole of the accepts-when: a project holding a
+       severed edge onto a LIVE target must still be offered `reinstate`, and the store must still
+       accept it. Withholding the act from every project would satisfy "never offer what is refused"
+       and cost a case the one recorded way to take a citation back up. `?? 0` for the posture every
+       fact added since REC-16 takes: absent reads as ZERO, the safe direction, because `deriveActs`
+       is exported and two suites call it with hand-built facts. */
   {
     id: "reinstate",
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && (f2.cites_out.severed_reinstatable ?? 0) > 0 && f2.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -21761,6 +21869,334 @@ function archiveLocatorFrom(res, requested) {
   return null;
 }
 
+// src/browserrender.mjs
+var FAKE_HOST = "https://fake.host";
+var CLIENT_HEADER = "bio-plane";
+var IDLE_QUIET_MS = 500;
+async function openSession(binding) {
+  const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
+  if (acq.status !== 200) {
+    const text = await acq.text().catch(() => "");
+    throw new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text.slice(0, 200)}`);
+  }
+  let sessionId = null;
+  try {
+    sessionId = (await acq.json()).sessionId;
+  } catch {
+    sessionId = null;
+  }
+  if (typeof sessionId !== "string" || !sessionId)
+    throw new Error("the Browser Rendering binding acquired a session with no sessionId");
+  const up = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser/${sessionId}`, {
+    headers: { Upgrade: "websocket", "cf-brapi-client": CLIENT_HEADER }
+  });
+  if (!up.webSocket)
+    throw new Error(`the Browser Rendering binding did not upgrade session ${sessionId} to a websocket (HTTP ${up.status})`);
+  up.webSocket.accept();
+  return { sessionId, ws: up.webSocket };
+}
+function cdpConnection(ws) {
+  let nextId = 1, closed = null;
+  const pending = /* @__PURE__ */ new Map();
+  const listeners = [];
+  ws.addEventListener("message", (ev) => {
+    let m = null;
+    try {
+      m = JSON.parse(typeof ev.data === "string" ? ev.data : new TextDecoder().decode(ev.data));
+    } catch {
+      return;
+    }
+    if (m && typeof m.id === "number" && pending.has(m.id)) {
+      const { resolve, reject } = pending.get(m.id);
+      pending.delete(m.id);
+      m.error ? reject(new Error(`CDP ${m.error.message || "error"}`)) : resolve(m.result || {});
+      return;
+    }
+    if (m && typeof m.method === "string") for (const fn of listeners) {
+      try {
+        fn(m);
+      } catch {
+      }
+    }
+  });
+  ws.addEventListener("close", () => {
+    closed = new Error("the CDP socket closed");
+    for (const { reject } of pending.values()) reject(closed);
+    pending.clear();
+  });
+  return {
+    /** Send a command. `sessionId` is the FLAT session (a page); omitted for browser-level. */
+    send(method, params = {}, sessionId = void 0, timeoutMs = 3e4) {
+      if (closed) return Promise.reject(closed);
+      const id = nextId++;
+      const msg = { id, method, params, ...sessionId ? { sessionId } : {} };
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          if (pending.delete(id)) reject(new Error(`CDP ${method} did not answer within ${timeoutMs} ms`));
+        }, timeoutMs);
+        pending.set(id, {
+          resolve: (r) => {
+            clearTimeout(timer);
+            resolve(r);
+          },
+          reject: (e) => {
+            clearTimeout(timer);
+            reject(e);
+          }
+        });
+        try {
+          ws.send(JSON.stringify(msg));
+        } catch (e) {
+          pending.delete(id);
+          clearTimeout(timer);
+          reject(e);
+        }
+      });
+    },
+    on(fn) {
+      listeners.push(fn);
+    },
+    close() {
+      try {
+        ws.close();
+      } catch {
+      }
+    }
+  };
+}
+var resourceType = (t) => typeof t === "string" && t ? t.toLowerCase() : "other";
+async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) {
+  const asked = req || {};
+  const timeoutMs = Math.max(1e3, Number(asked.wait?.timeout_ms) || 15e3);
+  const until = typeof asked.wait?.until === "string" ? asked.wait.until : "networkidle";
+  let sess = null, conn = null, targetId = null;
+  const started = now();
+  try {
+    sess = await openSession(binding);
+    conn = cdpConnection(sess.ws);
+    let engine = null, engineVersion = null;
+    try {
+      const v = await conn.send("Browser.getVersion");
+      const product = typeof v.product === "string" ? v.product : null;
+      if (product) {
+        const slash = product.lastIndexOf("/");
+        if (slash > 0) {
+          engine = product.slice(0, slash);
+          engineVersion = product.slice(slash + 1);
+        } else engine = product;
+      }
+    } catch {
+    }
+    let pageTarget = null;
+    try {
+      const { targetInfos } = await conn.send("Target.getTargets");
+      pageTarget = (Array.isArray(targetInfos) ? targetInfos : []).find((t) => t && t.type === "page") || null;
+    } catch {
+      pageTarget = null;
+    }
+    if (!pageTarget) {
+      const made = await conn.send("Target.createTarget", { url: "about:blank" });
+      targetId = made.targetId;
+    } else targetId = pageTarget.targetId;
+    if (!targetId) throw new Error("the browser gave this render no page target");
+    const { sessionId } = await conn.send("Target.attachToTarget", { targetId, flatten: true });
+    if (!sessionId) throw new Error(`the browser did not attach a session to target ${targetId}`);
+    const vp = asked.viewport || {};
+    const envOk = { viewport: false, dpr: false, locale: false, timezone: false };
+    try {
+      await conn.send("Emulation.setDeviceMetricsOverride", {
+        width: Math.round(Number(vp.width) || 1280),
+        height: Math.round(Number(vp.height) || 800),
+        deviceScaleFactor: Number(asked.dpr) || 1,
+        mobile: false
+      }, sessionId);
+      envOk.viewport = true;
+      envOk.dpr = true;
+    } catch {
+    }
+    if (typeof asked.locale === "string" && asked.locale)
+      try {
+        await conn.send("Emulation.setLocaleOverride", { locale: asked.locale }, sessionId);
+        envOk.locale = true;
+      } catch {
+      }
+    if (typeof asked.timezone === "string" && asked.timezone)
+      try {
+        await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked.timezone }, sessionId);
+        envOk.timezone = true;
+      } catch {
+      }
+    let requests = /* @__PURE__ */ new Map(), scripts = [];
+    let sawNetwork = false, sawDebugger = false;
+    try {
+      await conn.send("Network.enable", {}, sessionId);
+      sawNetwork = true;
+    } catch {
+    }
+    try {
+      await conn.send("Page.enable", {}, sessionId);
+    } catch {
+    }
+    try {
+      await conn.send("Debugger.enable", {}, sessionId);
+      sawDebugger = true;
+    } catch {
+    }
+    let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
+    conn.on((m) => {
+      const p = m.params || {};
+      switch (m.method) {
+        case "Network.requestWillBeSent":
+          if (!p.requestId) break;
+          if (p.redirectResponse && requests.has(p.requestId)) {
+            const prev = requests.get(p.requestId);
+            requests.set(`${p.requestId}#${requests.size}`, {
+              ...prev,
+              outcome: "completed",
+              status: Number(p.redirectResponse.status) || prev.status
+            });
+          } else inflight++;
+          requests.set(p.requestId, {
+            url: String(p.request?.url || ""),
+            type: resourceType(p.type),
+            outcome: "pending",
+            status: null,
+            blocked_by: null
+          });
+          break;
+        case "Network.responseReceived": {
+          const r = requests.get(p.requestId);
+          if (r) {
+            r.status = Number(p.response?.status) || r.status;
+            if (p.type) r.type = resourceType(p.type);
+          }
+          if (resourceType(p.type) === "document" && p.frameId && p.frameId === mainFrameId)
+            mainStatus = Number(p.response?.status) || mainStatus;
+          break;
+        }
+        case "Network.loadingFinished": {
+          const r = requests.get(p.requestId);
+          if (r && r.outcome === "pending") {
+            r.outcome = "completed";
+            inflight--;
+            lastQuietAt = inflight === 0 ? now() : null;
+          }
+          break;
+        }
+        case "Network.loadingFailed": {
+          const r = requests.get(p.requestId);
+          if (r && r.outcome === "pending") {
+            r.outcome = p.blockedReason ? "blocked" : "failed";
+            if (p.blockedReason) r.blocked_by = String(p.blockedReason);
+            inflight--;
+            lastQuietAt = inflight === 0 ? now() : null;
+          }
+          break;
+        }
+        case "Page.loadEventFired":
+          loadFired = true;
+          break;
+        case "Debugger.scriptParsed":
+          if (typeof p.url === "string" && p.url) scripts.push({ url: p.url });
+          break;
+      }
+    });
+    const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, timeoutMs);
+    if (nav.errorText) throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}`);
+    mainFrameId = nav.frameId || null;
+    const deadline = started + timeoutMs;
+    let fired = null;
+    while (now() < deadline) {
+      if (until === "load" && loadFired) {
+        fired = "load";
+        break;
+      }
+      if (loadFired && inflight <= 0 && lastQuietAt !== null && now() - lastQuietAt >= IDLE_QUIET_MS) {
+        fired = "networkidle";
+        break;
+      }
+      if (loadFired && inflight <= 0 && lastQuietAt === null) lastQuietAt = now();
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    if (!fired) fired = "timeout";
+    const evaluated = await conn.send("Runtime.evaluate", {
+      expression: `JSON.stringify({html: (document.doctype ? "<!DOCTYPE " + document.doctype.name + ">\\n" : "") + document.documentElement.outerHTML,url: location.href })`,
+      returnByValue: true,
+      awaitPromise: false
+    }, sessionId, timeoutMs);
+    let html = null, navigatedTo = null;
+    try {
+      const parsed = JSON.parse(evaluated.result?.value);
+      html = typeof parsed.html === "string" ? parsed.html : null;
+      navigatedTo = typeof parsed.url === "string" ? parsed.url : null;
+    } catch {
+      html = null;
+    }
+    if (typeof html !== "string" || !html)
+      throw new Error("the browser returned no serialised document after the render");
+    const elapsed = now() - started;
+    return {
+      ok: true,
+      html,
+      engine,
+      engine_version: engineVersion,
+      /* WHAT WAS ASKED, reported as USED only where the override was accepted.
+         A refused override reports `null`, which `renderBlock` records as
+         "not reported by the renderer" — the honest reading, since the browser
+         then rendered at whatever IT had and we do not know what that was. */
+      viewport: envOk.viewport ? { width: Math.round(Number(vp.width) || 1280), height: Math.round(Number(vp.height) || 800) } : null,
+      dpr: envOk.dpr ? Number(asked.dpr) || 1 : null,
+      locale: envOk.locale ? asked.locale : null,
+      timezone: envOk.timezone ? asked.timezone : null,
+      wait: { condition: asked.wait || null, fired },
+      elapsed_ms: elapsed,
+      navigated_to: navigatedTo,
+      status: mainStatus,
+      /* `sha256` IS NEVER SET, AND THAT IS A STATEMENT: hashing a subresource body
+         means `Network.getResponseBody` per request, which the browser refuses for
+         many resources and which would put the renderer's copy of the bytes in the
+         record beside the plane's. `renderBlock` already records a missing hash as
+         `null` with `reported_by: "renderer"`, so the record says the renderer
+         reported the request and did not report its bytes. */
+      requests: sawNetwork ? [...requests.values()].map((r) => ({
+        url: r.url,
+        type: r.type,
+        outcome: r.outcome,
+        ...r.status !== null ? { status: r.status } : {},
+        ...r.blocked_by ? { blocked_by: r.blocked_by } : {}
+      })) : null,
+      /* WHAT `scripts` CAN AND CANNOT SEE, because the count feeds an authority
+         verdict: `Debugger.scriptParsed` fires for every script the ENGINE parsed,
+         which is every script resource that reached execution. It OVER-reports in
+         one direction — a script parsed and never invoked is listed — and that
+         direction makes a capture MORE undetermined, which is the bias
+         `render.mjs` states for `NON_DATA_TYPES` and the one to prefer. It does
+         NOT see a script whose parse the engine skipped, and it does not see
+         inline script (no url), which is the shell's own bytes. */
+      scripts: sawDebugger ? scripts : null
+    };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message || e) };
+  } finally {
+    if (conn) {
+      if (targetId) {
+        try {
+          await conn.send("Target.closeTarget", { targetId }, void 0, 5e3);
+        } catch {
+        }
+      }
+      try {
+        await conn.send("Browser.close", {}, void 0, 5e3);
+      } catch {
+      }
+      conn.close();
+    }
+  }
+}
+function browserBindingRenderer(binding) {
+  return { kind: "browser-binding", render: (req) => renderWithBinding(binding, req) };
+}
+
 // src/render.mjs
 var RENDER_DEFAULTS = Object.freeze({
   /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
@@ -21966,6 +22402,8 @@ function rendererFor(env) {
       });
       return r.json().catch(() => ({ ok: false, error: `the renderer answered HTTP ${r.status} with no JSON` }));
     } };
+  if (env && env.BROWSER && typeof env.BROWSER.fetch === "function")
+    return browserBindingRenderer(env.BROWSER);
   if (env && env.BROWSER)
     return { kind: "browser-binding-without-driver", render: null };
   return { kind: "none", render: null };
@@ -23086,6 +23524,7 @@ function matMul(a, b) {
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
 var WORD_GAP_EM = 0.25;
+var TJ_WORD_GAP_EM = 0.1;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -23291,7 +23730,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           if (!inArr) continue;
           if (it.t === "str") show(it.bytes);
           else if (it.t === "num") {
-            if (it.v < -100) pieces.push(" ");
+            if (-it.v / 1e3 > TJ_WORD_GAP_EM) softSpace();
             advanceBy(it.v);
           }
         }
@@ -23722,6 +24161,400 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   return acc;
 }
 
+// src/csv.mjs
+var CSV_CONTENT_TYPE = "text/csv";
+var CSV_CONTENT_TYPE_SYNONYMS = ["application/csv", "text/comma-separated-values"];
+var CSV_SHEET_NAME = "csv";
+var MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
+var SIGNATURE_WINDOW_BYTES = 1 << 20;
+var SIGNATURE_LINES = 50;
+var DELIMITERS = [
+  { ch: ",", name: "comma" },
+  { ch: ";", name: "semicolon" },
+  { ch: "	", name: "tab" },
+  { ch: "|", name: "pipe" }
+];
+function readBom(b) {
+  if (b.length >= 3 && b[0] === 239 && b[1] === 187 && b[2] === 191)
+    return { encoding: "utf-8", bomBytes: 3, signal: "BOM: EF BB BF" };
+  if (b.length >= 4 && b[0] === 255 && b[1] === 254 && b[2] === 0 && b[3] === 0)
+    return null;
+  if (b.length >= 2 && b[0] === 255 && b[1] === 254)
+    return { encoding: "utf-16le", bomBytes: 2, signal: "BOM: FF FE" };
+  if (b.length >= 2 && b[0] === 254 && b[1] === 255)
+    return { encoding: "utf-16be", bomBytes: 2, signal: "BOM: FE FF" };
+  return null;
+}
+function hasHighBytes(b) {
+  for (let i = 0; i < b.length; i++) if (b[i] >= 128) return true;
+  return false;
+}
+function isValidUtf8(b) {
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(b);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function encodingSignature(bytes) {
+  const bom = readBom(bytes);
+  if (bom) {
+    return {
+      encoding: bom.encoding,
+      confidence: "certain",
+      bomBytes: bom.bomBytes,
+      signals: [bom.signal, "declared by the producer in the bytes"],
+      undetermined: null
+    };
+  }
+  const window = bytes.subarray(0, SIGNATURE_WINDOW_BYTES);
+  if (!hasHighBytes(window)) {
+    return {
+      encoding: "us-ascii",
+      confidence: "certain",
+      bomBytes: 0,
+      signals: [
+        `no byte >= 0x80 in the first ${window.length} bytes`,
+        "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+      ],
+      undetermined: null
+    };
+  }
+  if (isValidUtf8(window)) {
+    return {
+      encoding: "utf-8",
+      confidence: "likely",
+      bomBytes: 0,
+      signals: [
+        "no BOM",
+        "every multi-byte sequence in the signature window is valid utf-8",
+        "likely, not certain: validity is evidence, not the producer's declaration"
+      ],
+      undetermined: null
+    };
+  }
+  return {
+    encoding: null,
+    confidence: "none",
+    bomBytes: 0,
+    signals: ["no BOM", "a byte >= 0x80 that is not part of a valid utf-8 sequence"],
+    undetermined: "encoding_undetermined"
+  };
+}
+function countOutsideQuotes(line, ch) {
+  let n = 0, inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') inQuotes = !inQuotes;
+    else if (!inQuotes && c === ch) n++;
+  }
+  return n;
+}
+function delimiterSignature(text) {
+  const raw = text.split("\n");
+  const complete = raw.slice(0, -1).map((l) => l.endsWith("\r") ? l.slice(0, -1) : l);
+  const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
+  if (lines.length < 2) {
+    return {
+      delimiter: null,
+      name: null,
+      confidence: "none",
+      lines: lines.length,
+      signals: [`${lines.length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything`],
+      undetermined: "delimiter_undetermined_too_few_lines",
+      tied: []
+    };
+  }
+  const consistent = [];
+  const counted = {};
+  for (const d of DELIMITERS) {
+    const per = lines.map((l) => countOutsideQuotes(l, d.ch));
+    counted[d.name] = per[0];
+    if (per[0] >= 1 && per.every((n) => n === per[0])) consistent.push(d);
+  }
+  if (consistent.length === 1) {
+    const d = consistent[0];
+    return {
+      delimiter: d.ch,
+      name: d.name,
+      confidence: "certain",
+      lines: lines.length,
+      signals: [`${d.name} occurs ${counted[d.name]} time(s) outside quotes on every one of the first ${lines.length} complete lines`],
+      undetermined: null,
+      tied: []
+    };
+  }
+  if (consistent.length > 1) {
+    return {
+      delimiter: null,
+      name: null,
+      confidence: "none",
+      lines: lines.length,
+      signals: [`${consistent.length} candidates are equally consistent over ${lines.length} lines: ` + consistent.map((d) => `${d.name} (${counted[d.name]}/line)`).join(", ")],
+      undetermined: "delimiter_undetermined_tied",
+      tied: consistent.map((d) => d.name)
+    };
+  }
+  return {
+    delimiter: null,
+    name: null,
+    confidence: "none",
+    lines: lines.length,
+    signals: [`no candidate (${DELIMITERS.map((d) => d.name).join(", ")}) occurs a consistent, non-zero number of times over ${lines.length} lines`],
+    undetermined: "delimiter_undetermined_none_consistent",
+    tied: []
+  };
+}
+function walkRecords(text, delimiter) {
+  const records = [];
+  let row = [], field = "", inQuotes = false, started = false;
+  const endField = () => {
+    row.push(field);
+    field = "";
+  };
+  const endRecord = () => {
+    endField();
+    records.push(row);
+    row = [];
+    started = false;
+  };
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    started = true;
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else inQuotes = false;
+      } else field += c;
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+      continue;
+    }
+    if (delimiter && c === delimiter) {
+      endField();
+      continue;
+    }
+    if (c === "\r") {
+      if (text[i + 1] === "\n") i++;
+      endRecord();
+      continue;
+    }
+    if (c === "\n") {
+      endRecord();
+      continue;
+    }
+    field += c;
+  }
+  if (started || field !== "" || row.length) endRecord();
+  return records;
+}
+var BYTE_TRANSPORT = new TextDecoder("latin1");
+async function csvParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  if (!b.length) {
+    return { ok: false, why: "empty_body" };
+  }
+  const enc2 = encodingSignature(b);
+  const body = b.subarray(enc2.bomBytes);
+  const head = body.subarray(0, SIGNATURE_WINDOW_BYTES);
+  let headText;
+  try {
+    headText = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(head) : BYTE_TRANSPORT.decode(head);
+  } catch {
+    return { ok: false, why: `decoder_unavailable:${enc2.encoding}`, encoding: enc2 };
+  }
+  const delim = delimiterSignature(headText);
+  const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES ? {
+    ok: false,
+    text: "undetermined",
+    why: "over_size_bound",
+    size: body.length,
+    bound: MEASURED_CSV_TEXT_BOUND_BYTES,
+    boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
+    metric: "body_bytes"
+  } : null;
+  let records = null;
+  if (!guard) {
+    const text = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(body) : BYTE_TRANSPORT.decode(body);
+    records = walkRecords(text, delim.delimiter);
+  }
+  return {
+    ok: true,
+    format: "csv",
+    bytes: b,
+    bodyBytes: body.length,
+    encoding: enc2,
+    delimiter: delim,
+    guard,
+    records
+  };
+}
+function dialectOf(parts) {
+  return {
+    encoding: parts.encoding.encoding,
+    encodingConfidence: parts.encoding.confidence,
+    encodingSignals: parts.encoding.signals,
+    delimiter: parts.delimiter.name,
+    delimiterConfidence: parts.delimiter.confidence,
+    delimiterSignals: parts.delimiter.signals,
+    undetermined: [parts.encoding.undetermined, parts.delimiter.undetermined].filter(Boolean)
+  };
+}
+function csvStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "csv", reason: parts ? parts.why : "PARTS_ABSENT" };
+  }
+  const dialect = dialectOf(parts);
+  const notes = [
+    "the csv format declares no relationships, so the zero link counts are the format's and not a walk's",
+    "a url in a cell is text, not a declared link: reading it as one would be this entry deciding what a string means"
+  ];
+  if (parts.guard) notes.push("text_body_over_bound");
+  return {
+    ok: true,
+    container: "csv",
+    sheets: [{ sheet: 0, name: CSV_SHEET_NAME, sheetId: null, state: "visible", hidden: false }],
+    links: [],
+    counts: { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 },
+    /* The IC-2 envelope in the shape the office entries accepted. A CSV
+       carries none of DEC-5's extras — no formula beside a value, no tracked
+       change, no comment, no hidden row, no core properties — because the
+       format has no place for any of them. `kinds: []` is exhaustive by the
+       FORMAT's definition, which the note records. */
+    evidentiary: {
+      container: "csv",
+      kinds: [],
+      items: [],
+      undetermined: parts.guard ? [{ part: "(body)", why: "over_size_bound", guard: parts.guard }] : [],
+      counts: {}
+    },
+    dialect,
+    notes
+  };
+}
+function asciiClean(s) {
+  for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) >= 128) return false;
+  return true;
+}
+function csvText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const dialect = dialectOf(parts);
+  const base = {
+    ok: true,
+    container: "csv",
+    /* Exhaustive and EMPTY, not null: the format has no media container to
+       have looked in, so this is a zero of the format and not of a walk. */
+    images: [],
+    dialect
+  };
+  if (parts.guard) {
+    return {
+      ...base,
+      document: null,
+      sheets: [],
+      undetermined: [parts.guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const undetermined = [];
+  const lines = [];
+  let cellCount = 0, usedRows = 0, usedCols = 0;
+  const encodingUndetermined = parts.encoding.encoding == null;
+  parts.records.forEach((record, r0) => {
+    const row = r0 + 1;
+    const vals = [];
+    record.forEach((field, c0) => {
+      const col = c0 + 1;
+      if (encodingUndetermined && !asciiClean(field)) {
+        undetermined.push({
+          sheet: 0,
+          cell: `${columnLetters(col)}${row}`,
+          reason: "encoding_undetermined"
+        });
+        if (row > usedRows) usedRows = row;
+        if (col > usedCols) usedCols = col;
+        return;
+      }
+      if (field === "") return;
+      cellCount++;
+      if (row > usedRows) usedRows = row;
+      if (col > usedCols) usedCols = col;
+      vals.push(field);
+    });
+    if (vals.length) lines.push(vals.join("	"));
+  });
+  const text = lines.join("\n");
+  const sheet = {
+    sheet: 0,
+    name: CSV_SHEET_NAME,
+    hidden: false,
+    /* THE BOUND IS NULL — `.ods`'s reason exactly: RFC 4180 fixes no maximum
+       number of rows or columns, so a CSV has no capacity to state, and
+       borrowing OOXML's grid would be this reader inventing a bound the
+       format never fixed. The USED range is measured and emitted beside it. */
+    rows: null,
+    cols: null,
+    usedRows,
+    usedCols,
+    range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
+    text,
+    undetermined
+  };
+  return {
+    ...base,
+    document: text,
+    sheets: [sheet],
+    undetermined,
+    counts: {
+      chars: text.length,
+      cells: cellCount,
+      formulas: 0,
+      undetermined: undetermined.length
+    }
+  };
+}
+var csvEntry = {
+  format: "csv",
+  detect(bytes, contentType) {
+    if (bytes) return null;
+    if (typeof contentType !== "string") return null;
+    const ct = contentType.trim().toLowerCase();
+    if (ct === CSV_CONTENT_TYPE) {
+      return { format: "csv", confidence: "likely", signals: [
+        `content type "${contentType}"`,
+        "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
+        "measured: 166 of 166 .csv keys in s3://cao-94612 were served this type exactly (M-144)"
+      ] };
+    }
+    if (CSV_CONTENT_TYPE_SYNONYMS.includes(ct)) {
+      return { format: "csv", confidence: "likely", signals: [
+        `content type "${contentType}"`,
+        `an older spelling of ${CSV_CONTENT_TYPE}; UNMEASURED in s3://cao-94612, where all 166 keys declared ${CSV_CONTENT_TYPE}`
+      ] };
+    }
+    return null;
+  },
+  parts: (bytes) => csvParts(bytes),
+  /* Accept either parts() output or raw bytes, exactly as the office entries
+     do, so detect->structure works uniformly at the registry seam while a
+     caller that already paid for parts() does not pay twice. */
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await csvParts(partsOrBytes) : partsOrBytes;
+    return csvStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await csvParts(partsOrBytes) : partsOrBytes;
+    return csvText(parts);
+  }
+};
+
 // src/formats.mjs
 var REGISTRY = /* @__PURE__ */ new Map();
 function registerFormat(entry) {
@@ -23834,6 +24667,7 @@ registerFormat(pptxEntry);
 registerFormat(odtEntry);
 registerFormat(odsEntry);
 registerFormat(odpEntry);
+registerFormat(csvEntry);
 
 // src/textchain.mjs
 var STEP_KINDS = {
@@ -24400,12 +25234,13 @@ function readingPositionInExtent(position, extentKind, extent) {
 }
 var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
 var WHITESPACE = /\s/u;
-var decodedChars = (page) => {
-  if (!page || typeof page.text !== "string") return 0;
+function glyphCount(s) {
+  if (typeof s !== "string") return 0;
   let n = 0;
-  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
+  for (const ch of s) if (!WHITESPACE.test(ch)) n++;
   return n;
-};
+}
+var decodedChars = (page) => page && typeof page.text === "string" ? glyphCount(page.text) : 0;
 function perPageTierWinner(p1, p2) {
   if (!p2) return "tier1";
   if (!p1) return "tier2";
@@ -24418,14 +25253,16 @@ function mergeTier2Text(base, t2) {
   const usable = basePages.filter((p) => p && Number.isInteger(p.page));
   const t2Pages = t2 && Array.isArray(t2.pages) ? t2.pages : [];
   if (!usable.length) {
-    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
-    if (baseChars > 0)
+    const baseText = typeof (base && base.document) === "string" ? base.document : null;
+    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
+    const reported = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : 0;
+    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return {
         ok: false,
         replaced: [],
         kept: [],
         perPageTier: null,
-        why: `this document's tier-1 reading has no per-page grain and already holds ${baseChars} decoded character(s), so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
+        why: `this document's tier-1 reading has no per-page grain and already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
       };
     return {
       ok: true,
@@ -28834,6 +29671,7 @@ var CONTENT_AXIS_STATES = {
   not_extracted: "nobody has tried to extract this capture's text. This is the ABSENCE of an observation and not a finding about the document (D-129's NEVER_LOOKED at the content level)"
 };
 var CONTENT_AXIS_UNDETERMINED = "undetermined";
+var WATERMARK_BAND_CAUSE = "watermark_band";
 var MISSING_ROW_CAUSES = {
   pre_log: "this capture was extracted BEFORE the observation log carried the content level, so the look is recorded in the readings table and not here. It is not a capture nobody read",
   /* CORRECTED BY REC-107, and the old sentence is quoted in the reason rather than
@@ -28849,7 +29687,13 @@ var MISSING_ROW_CAUSES = {
      `not_ruled_out` rather than asserted in prose here**, so this sentence describes
      the cause and stops claiming what it cannot. */
   purged: "this capture predates the earliest content-level row this log holds, so the log may not yet have existed for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked at all. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW, and they are different facts",
-  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement"
+  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement",
+  /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE FOURTH WORD, AND IT IS NOT A FOURTH
+     SECTION 5.1 CAUSE. Section 5.1 has three causes and this word names none of
+     them: it says WHICH TWO OF THEM THE STORED PRECISION LEFT OPEN, and it exists
+     because the alternative was the reader PICKING between them. `not_ruled_out`
+     is still drawn from `ALL_MISSING_ROW_CAUSES`, which stays at three. */
+  [WATERMARK_BAND_CAUSE]: "this capture entered the record in the clock second IMMEDIATELY BEFORE the earliest content-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the capture entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them. The uncertainty is in the STORED VALUE and no comparison can remove it. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW"
 };
 function contentAxisFor({
   observed = null,
@@ -28992,7 +29836,11 @@ var MEANING_MISSING_ROW_CAUSES = {
      `evidence_one_sided` map a caller had to remember to join to the row. Both now
      sit ON the row, in `not_ruled_out` and `evidence_one_sided`. */
   purged: "this subject entered the record before the earliest meaning-level row this log holds, so the log may not yet have carried this level for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked -- and at a reference or an entity a pre-log look that found NOTHING is live too, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
-  never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement"
+  never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement",
+  /* D-516 — THE SAME FOURTH WORD AT THIS LEVEL, and the sentence differs because
+     the row it is measured against differs, which is A3b's rule applied to the
+     word this item adds rather than inherited by it. */
+  [WATERMARK_BAND_CAUSE]: "this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the subject entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them; at a reference or an entity a pre-log look that found NOTHING is live in the set as well, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT"
 };
 var MEANING_EVIDENCE_IS_ONE_SIDED = {
   capture: false,
@@ -29019,7 +29867,8 @@ var ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]
 function causesNotRuledOut(missingCause, { evidenceOneSided = void 0 } = {}) {
   if (missingCause === "pre_log") return ["pre_log"];
   if (missingCause === "never_looked") return ["never_looked"];
-  if (missingCause !== "purged") return [...ALL_MISSING_ROW_CAUSES];
+  if (missingCause !== "purged" && missingCause !== WATERMARK_BAND_CAUSE)
+    return [...ALL_MISSING_ROW_CAUSES];
   if (evidenceOneSided === false) return ["purged", "never_looked"];
   return [...ALL_MISSING_ROW_CAUSES];
 }
@@ -29028,11 +29877,16 @@ var WATERMARK_HAS_FRACTION = /\.\d+Z?$/;
 function watermarkUncertaintyMs(firstAt) {
   return WATERMARK_HAS_FRACTION.test(String(firstAt ?? "")) ? 0 : WATERMARK_SECOND_MS;
 }
+var WATERMARK_AFTER = "after";
+var WATERMARK_BEFORE = "before";
+var WATERMARK_WITHIN_BAND = "within_band";
 function enteredAfterFirstRow(enteredAt, firstAt) {
   const entered = Date.parse(String(enteredAt ?? ""));
   const first = Date.parse(String(firstAt ?? ""));
-  if (!Number.isFinite(entered) || !Number.isFinite(first)) return false;
-  return entered >= first - watermarkUncertaintyMs(firstAt);
+  if (!Number.isFinite(entered) || !Number.isFinite(first)) return WATERMARK_BEFORE;
+  if (entered >= first) return WATERMARK_AFTER;
+  if (entered < first - watermarkUncertaintyMs(firstAt)) return WATERMARK_BEFORE;
+  return WATERMARK_WITHIN_BAND;
 }
 function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
@@ -29185,6 +30039,15 @@ function derivationStatement(row = null, missingCause = null) {
       documents: null,
       derived: "pre_log",
       says: "derived before the observation log recorded derivations: the connection rows exist, and whether that derivation was cut is NOT recorded"
+    };
+  if (cause === WATERMARK_BAND_CAUSE)
+    return {
+      state: null,
+      cut: null,
+      at: null,
+      documents: null,
+      derived: "undetermined",
+      says: "undetermined: no derivation over this subject is recorded, and this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row the log holds. `observation_log.at` stores whole seconds, so the record cannot tell which side of that row the subject entered on, and it does not pick"
     };
   return {
     state: null,
@@ -30517,6 +31380,18 @@ var Store = class _Store extends DurableObject {
          nobody delivered, which on THIS column would mean a wake that never
          happened reading as one that did. */
       ["capture_requests", "run_woken_at", "TEXT"],
+      /* D-491 / IC-276: does this request ask for the page as a visitor saw it
+         (CLIENT-RENDERED.md, BOB #32 item 3). THE ONE COLUMN IN THIS LIST THAT
+         IS NOT NULLABLE, and the distinction is the point rather than an
+         exception: every column above is nullable because a legacy row carried
+         an unstated value that a default would INVENT. This one has no unstated
+         value to invent. A request written before the column existed could not
+         ask for a render — no door read the flag, and no drain could have
+         honoured one — so 0 states what was true of that row, and a NULL here
+         would mean "we do not know whether this asked for a render" about a row
+         that demonstrably could not have. Backfilled by the ALTER so a migrated
+         store and a fresh install present the same table. */
+      ["capture_requests", "render", "INTEGER NOT NULL DEFAULT 0"],
       /* CASE-1 / DEC-72: the member finding's PINNED VERSION and the publisher's
          AUTHORED ROLE for it. Additive and nullable for the reason every column
          above is, and here NULL carries two facts this item exists to keep
@@ -31979,14 +32854,21 @@ var Store = class _Store extends DurableObject {
         const c = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
         if (c && normalizeType(c.object_type) === "project") citedByCase[key]++;
       }
-    const citesOut = { confirmed: 0, severed: 0 };
+    const citesOut = { confirmed: 0, severed: 0, severed_reinstatable: 0 };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     const docFm = md && md.content !== null ? parseFrontmatter(md.content).data || {} : {};
     if (normalizeType(b.object_type) === "project") {
       const refs = docFm.references;
       for (const r of Array.isArray(refs) ? refs : [])
-        if (r && typeof r === "object" && r.rel === "cites")
-          citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
+        if (r && typeof r === "object" && r.rel === "cites") {
+          if (r.status !== "severed") {
+            citesOut.confirmed++;
+            continue;
+          }
+          citesOut.severed++;
+          if (typeof r.target === "string" && !this.#retiredNotCitable(r.target))
+            citesOut.severed_reinstatable++;
+        }
     }
     const rested = normalizeType(b.object_type) === "inquiry" ? this.#restsOnLive(target) : { confirmed: [], frozen: [], severed: [] };
     return {
@@ -33352,10 +34234,7 @@ var Store = class _Store extends DurableObject {
       };
     if (to === "confirmed") {
       const retiredMembers = [];
-      for (const id of sel.members) {
-        const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-        if (b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
-      }
+      for (const id of sel.members) if (this.#retiredNotCitable(id)) retiredMembers.push(id);
       if (retiredMembers.length)
         return {
           ok: false,
@@ -34186,6 +35065,30 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
   static RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire.";
   #retirementCitedBy(id) {
     return this.#citesInto(id).confirmed;
+  }
+  /* D-444: REINSTATEMENT'S ONE RETIRED-TARGET PREDICATE, shared by
+   * `#edgeTransition`'s RETIRED_NOT_CITABLE refusal (REC-183) and by
+   * `affordanceFacts`' `cites_out.severed_reinstatable`. §4.1 of State Rules
+   * v1.5 (BOB #30): a retired item is not citable, and moving an edge INTO
+   * `confirmed` is a citation made now.
+   *
+   * IT IS EXTRACTED FOR THE REASON `#citesInto` AND `#retirementCitedBy` WERE:
+   * the pre-flight publishes `reinstate` over a COUNT of severed edges, and a
+   * count cannot say whether every one of those targets has since been retired
+   * — so a project whose only severed edges point at retired items was offered
+   * an act this very predicate then refused, which is the drift DEC-8 forbids.
+   * The fact now asks THIS, so the offer and the refusal cannot answer
+   * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
+   *
+   * `source_status` is not read, as at cite and at reinstate: a removed or
+   * modified source stays citable, and `retired` is the other axis. Only
+   * Information has the state — an inquiry target answers false, exactly as
+   * `#edgeTransition` leaves it un-refused — and an id with no row answers
+   * false too, because an absent target is refused by another door and this
+   * one claims nothing about it. */
+  #retiredNotCitable(id) {
+    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+    return !!b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired";
   }
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
    *
@@ -37657,7 +38560,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         statement_by: writer.by,
         statement_by_stated: writer.stated,
         ...acks.byWriter ? { acknowledgements_by_statement_writer_not_listed: acks.byWriter } : {},
-        ...acks.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined } : {}
+        ...acks.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined } : {},
+        /* REC-194 / §3 rule 13: the readings of this exact sentence this record cannot
+           bind to any case (a draft naming none). The document's prose states them;
+           the act says so too, so a publisher reads it before signing. */
+        ...acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}
       },
       author: who,
       at: when,
@@ -38889,6 +39796,75 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     );
     return { ok: true, existed: false, grantId: g.grant_id, revokedBy: a.who, revokedAt: when };
   }
+  /* REC-200 / BOB #32's ruling of 2026-09-23 23:08Z on `BIO_Publication_v0_1.md` §6A.3 point 1 — THE COPY
+       CARRIES THE DATE OF ITS LAST CHANGE, AND A COMMENT THAT MOVES THE HASH MOVES THE DATE.
+  
+       WHAT WAS WRONG. REC-148 took DEC-31's in-band date from the draft's `updated_at`, which is the date of
+       the last EDIT and not of the last CHANGE: a comment is carried in these bytes, so it moves the hash,
+       and the copy went on stating the older date. A rendering that leaves the instance would then carry a
+       hash of one moment under the date of another — the record claiming more than it can support, which is
+       the defect this construct exists to refuse.
+  
+       WHAT THE DATE IS. The newest DATED ACT these bytes carry, and only those they carry: this draft's own
+       last edit, a comment served in `comments`, a grant served in `grants` (or the recipient's own grant)
+       with its issue and its revocation, and an acknowledgement served in `statement_acknowledgements`. It is
+       computed over the rows SERVED, not over the rows that exist, so the invariant is exact in both
+       directions: an act beyond the list cap moves neither the hash nor this date.
+  
+       WHAT IT CANNOT SEE, STATED HERE AND IN THE ANSWER'S OWN WORDS RATHER THAN LEFT TO BE FOUND. A review
+       copy also draws material this record dates NOWHERE in these bytes: each finding's text, read live from
+       the bundle; the publish gates' verdict, recomputed at every read; and the project's declared floors.
+       Any of the three can move the hash without moving this date. Naming them is the honest scope of the
+       rule, and closing them would take a dated fact the answer does not hold.
+  
+       TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant:
+       a draft edit, a comment and a grant are stamped `new Date().toISOString()` (with milliseconds), and an
+       acknowledgement is stamped with the milliseconds cut off (`acknowledgeStatement`). Sorted as STRINGS
+       those two spellings rank WRONG inside one second — `…:00Z` sorts after `…:00.123Z`, because `Z` is
+       above `.` — so candidates are ranked by `Date.parse`, and anything unparseable is not ranked at all
+       rather than sorted as zero. Equal instants keep the FIRST candidate in the order above (edit, comment,
+       grant, acknowledgement), which is the order the answer itself presents them in.
+  
+       THE AUTHOR DOES NOT MOVE WITH IT, and that is a decision rather than an oversight: BOB #32 ruled on the
+       DATE. The quartet's `author` stays the draft's `updated_by` — a recipient who comments on a copy has
+       not authored it — and `by` here says who made the last change, so the two facts are told apart instead
+       of one name standing for both. */
+  static #reviewLastChange({ draft, comments, grants, acknowledgements }) {
+    const cand = [];
+    const add = (at, by, byKind, kind) => {
+      if (typeof at === "string" && at && !Number.isNaN(Date.parse(at)))
+        cand.push({ at, by: by ?? null, by_kind: byKind, kind });
+    };
+    add(draft.updated_at, draft.updated_by, "member", "edit");
+    for (const c of comments)
+      add(
+        c.at,
+        c.author_kind === "recipient" ? c.recipient : c.author,
+        c.author_kind === "recipient" ? "recipient" : "member",
+        "comment"
+      );
+    for (const g of grants) {
+      add(g.issued_at, g.issued_by, "member", "grant");
+      add(g.revoked_at, g.revoked_by, "member", "revocation");
+    }
+    for (const a of acknowledgements)
+      add(
+        a.at,
+        a.kind === "recipient" ? a.recipient : a.by,
+        a.kind === "recipient" ? "recipient" : "member",
+        "statement acknowledgement"
+      );
+    let last = null;
+    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;
+    const act = !last ? "UNDETERMINED: these bytes carry no dated act at all" : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft" : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
+    return {
+      at: last ? last.at : null,
+      by: last ? last.by : null,
+      by_kind: last ? last.by_kind : null,
+      kind: last ? last.kind : null,
+      stated: `${act}. THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md \xA76A.3 point 1, as BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy draws live and dates nowhere \u2014 each finding's text, the publish gates' verdict, and the project's declared floors \u2014 any of which can move the hash without moving this date.`
+    };
+  }
   /* THE READ. Two doors and one answer for everyone else: a RECIPIENT through a live
      grant's secret (and only the draft that grant names), or a MEMBER with standing
      in the producing project — D-15's predicate, as `#hasCaseStanding` asks it.
@@ -38964,6 +39940,37 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       }));
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
+    const writer = { by: d.statement_by ?? null };
+    const acks = this.#statementAcknowledgements(
+      d.project_id,
+      ident.caseId,
+      ident.edition,
+      params.statement ?? "",
+      null,
+      writer,
+      d.draft_id
+    );
+    const withheld = acks.byWriter + acks.withheldWriterUndetermined;
+    const statementAcks = {
+      statement_sha: acks.statementSha,
+      acknowledgements: acks.rows,
+      truncated: acks.truncated,
+      /* THE COUNT IS ALWAYS A NUMBER AND THE REASON IS ALWAYS A SENTENCE, zero included —
+         `acknowledged: 0` is D-150's own precedent that a zero is a STATEMENT and never a
+         blank. The two keys below are the publish answer's spellings, reused rather than
+         re-invented, so one fact is not named two ways across two doors (REC-213). */
+      withheld,
+      ...acks.byWriter ? { acknowledgements_by_statement_writer_not_listed: acks.byWriter } : {},
+      ...acks.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined } : {},
+      withheld_stated: _Store.#withheldWriterStated(withheld, writer.by),
+      act: "op=statementack&draft=" + d.draft_id
+    };
+    const lastChange = _Store.#reviewLastChange({
+      draft: d,
+      comments,
+      acknowledgements: statementAcks.acknowledgements,
+      grants: grantPart.grants ?? (grantPart.grant ? [grantPart.grant] : [])
+    });
     return {
       ok: true,
       kind: "review-copy",
@@ -38973,10 +39980,27 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       draft: d.draft_id,
       project: d.project_id,
       reader,
+      /* REC-199 / BOB #32 (2026-09-23 23:08Z), BIO_Publication_v0_1.md 6A.4: `newCase` IS SAID BACK,
+         BECAUSE A READ THAT DROPS A FIELD AN EDIT WRITES BACK LOSES IT. It was the ONE member of
+         `REVIEW_DRAFT_FIELDS` this answer never carried: `targets`/`target` and `roles` come back as
+         `findings`, `caseId` as `case.case_id`, and the six authored sentences as `authored` — so an
+         editor who read a draft and wrote the copy back turned a draft that had asked for a NEW case
+         (D-309's third route, the one a caller can only ever STATE) into one whose case is DERIVED
+         from what its findings already serve, silently and in the direction D-309 exists to refuse.
+         IT SITS IN `case` AND NOT IN `authored` because it is the other half of ONE choice — name a
+         case, or ask for a new one, which `publishCase` refuses TOGETHER as CASE_IDENTITY_AMBIGUOUS —
+         and the two halves of one choice do not live in two blocks.
+         ANSWERED AS THE GATES READ IT, a boolean: `publishCase` consults `newCase` for truthiness
+         alone, so `!!` is exactly route-preserving for every spelling a caller may have stored
+         (`"false"` is truthy here as it is there, and an absent field is the derivation, not an
+         UNDETERMINED). WHAT IT DOES NOT SAY is the identity SENTENCE beside it: with no case named,
+         that sentence reads *a new case* whether or not this field is set, which is REC-199's
+         reported finding and is `#caseIdentitySentence`'s to fix, in the three answers that print it. */
       case: {
         case_id: ident.caseId,
         edition: ident.edition,
-        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition)
+        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition),
+        newCase: !!params.newCase
       },
       authored: {
         scope: params.scope ?? null,
@@ -38993,20 +40017,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       comments,
       comments_truncated: commentsTruncated,
       list_limit: cap,
-      /* D-150 / §3 rule 11: who has acknowledged the statement AS IT STANDS NOW — the same read
-         `op=publish` lists in the case document, so a reviewer sees the list the document would print
-         (less the publisher's own, which the act leaves out). An edited statement starts empty. */
-      statement_acknowledgements: (() => {
-        const a = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition, params.statement ?? "");
-        return {
-          statement_sha: a.statementSha,
-          acknowledgements: a.rows,
-          truncated: a.truncated,
-          act: "op=statementack&draft=" + d.draft_id
-        };
-      })(),
+      statement_acknowledgements: statementAcks,
       updated_by: d.updated_by,
       updated_at: d.updated_at,
+      /* REC-200 / §6A.3 point 1 as BOB #32 ruled it: WHEN THIS COPY LAST CHANGED, and who changed it —
+         the quantity the control plane puts in the in-band quartet's `date`. `updated_at` above stays what
+         it always was, the draft's last EDIT, because they are two facts. */
+      last_change: lastChange,
       /* REC-193 / §3 rule 13: WHO WROTE THE STATEMENT THAT STANDS, beside the editor of everything else,
          because they are two facts and one column said both. `null` is the honest answer for a draft
          written before the stamp existed, and the sentence beside it says which. */
@@ -39204,13 +40221,12 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const projectLine = `
 case_project: ${project}
 `;
-    const found = this.#rows(
+    const found = ident.caseId == null ? [] : this.#rows(
       `SELECT case_id, edition, doc_sha, text FROM case_documents
-                              WHERE sig_armored IS NULL AND edition=? AND (case_id=? OR ? IS NULL)
+                              WHERE sig_armored IS NULL AND edition=? AND case_id=?
                                 AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
       ident.edition,
-      ident.caseId ?? null,
-      ident.caseId ?? null,
+      ident.caseId,
       needle,
       projectLine,
       ackMax + 1
@@ -39269,7 +40285,14 @@ case_project: ${project}
       case_documents: reauthored,
       case_documents_limit: ackMax,
       case_documents_truncated: false,
-      listed: `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId ?? null, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
+      /* REC-194 / §3 rule 13: THE ANSWER SAYS WHICH OF THE TWO THINGS HAPPENED, because they are
+         different facts and one sentence used to claim the stronger of them for both. An
+         acknowledgement given at a CASE IDENTITY is listed by that case's document and by no
+         other. One given for a draft that names NO case is a reading of the DRAFT: the review copy
+         lists it, and no case document can — a case id is minted only by publication, so nothing
+         here can say which case the draft became, and naming one would be inventing a referent. */
+      bound_to_a_case: ident.caseId != null,
+      listed: ident.caseId != null ? `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.` : `this is a reading of draft ${draftId}, which names no case \u2014 a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (\xA73 rule 13). A reading reaches a case's signed bytes only when it is given FOR that case, at its prepared and unsigned document \u2014 a door open to a member of this project holding a session, and NOT to the holder of a review grant, which is a gap in the design and is recorded as one rather than worked around here. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
     };
   }
   /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
@@ -39296,13 +40319,48 @@ case_project: ${project}
     ];
   }
   static ACK_PROSE_HEAD = "**Who else read this statement.**";
+  /* REC-194 / §3 rule 13 — THE UNBINDABLE READINGS TRAVEL WITH THE LIST, WHATEVER THE LIST SAYS. They
+     are a fact about this statement and not a substitute for an empty list, so the tail is appended to
+     the named run as well as to the nobody run: a document naming one second reader while the record
+     holds another reading it cannot attribute to this case would otherwise read as complete. Counted,
+     never named — naming is the claim that cannot be made. */
+  static #ackUnboundLines(acks, project) {
+    if (!acks.unbound) return [];
+    return [
+      "",
+      `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact statement in ${project} given for a case whose identity was not yet allocated \u2014 a draft \u2014 and whether any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and no draft is bound to the case it became, so a reading of a draft is not a reading of this case. They are counted here and deliberately not named, because naming them would claim they read THIS case's statement, which this record does not establish (BIO_Publication \xA73 rule 13).`
+    ];
+  }
   static #ackBodyLines(acks, project) {
+    return [..._Store.#ackBodyHeadLines(acks, project), ..._Store.#ackUnboundLines(acks, project)];
+  }
+  static #ackBodyHeadLines(acks, project) {
     return acks.rows.length ? [
       `${_Store.ACK_PROSE_HEAD} Acknowledged, as a second reader of what this case leaves out, by:`,
       "",
       ...acks.rows.map((a) => a.kind === "recipient" ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${_Store.#fmSafe(a.recipient)}', on ${a.at}` : `- ${a.by}, a participant of ${project}, on ${a.at}`),
       ...acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this document lists)"] : []
-    ] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
+    ] : acks.unbound ? [`${_Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
+  }
+  /* REC-213 / §6A + §3 rule 11 (BOB #33, 2026-09-24) — WHAT THE REVIEW COPY'S LIST LEFT OUT, IN ONE
+     SENTENCE A READER READS RATHER THAN A KEY THEY DECODE. `#ackBodyLines` is the case document's
+     spelling of the same obligation and this is the review copy's; they are two renderings because a
+     case document is signed prose and a review copy is an answer, and they must never disagree about
+     the FACT. Four states, each named and none a fallback:
+       - nothing withheld, a writer known — the plain case, said so a reader never infers it;
+       - nothing withheld, the writer UNDETERMINED — said too, because a short list with no participant
+         row in it looks identical whether the withholding bit or there was nothing to withhold;
+       - rows withheld by a NAMED writer — the row's own reason, in §3 rule 11's words;
+       - rows withheld because the writer is UNDETERMINED — stated as undetermined and NEVER as
+         *by the writer*, which would name a reading this record cannot attribute.
+     A RECIPIENT's row is never withheld by either arm (a grant's holder is never the writer), so this
+     sentence speaks only of participants and says so. */
+  static #withheldWriterStated(withheld, writerBy) {
+    const n = Number(withheld) || 0;
+    const rows = `${n} acknowledgement${n === 1 ? "" : "s"}`;
+    if (!n)
+      return writerBy ? `Nothing is withheld from this list: this record holds no acknowledgement of this statement by ${writerBy}, who wrote it.` : `Nothing is withheld from this list: this record holds no participant's acknowledgement of this statement at this production, so there is none that might be its writer's own.`;
+    return writerBy ? `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, by the statement's writer, ${writerBy}: a reading by its own writer is not a SECOND reading of it (BIO_Publication \xA73 rule 11). It is counted here rather than hidden \u2014 everything recorded is shown or stated (\xA76A).` : `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, and the reason is UNDETERMINED rather than the writer's own: this draft predates the recording of the statement's author, so any participant's acknowledgement of it may be the writer's and this list cannot rule that out (BIO_Publication \xA73 rule 11). They are counted here rather than hidden \u2014 everything recorded is shown or stated (\xA76A).`;
   }
   /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
      DOCUMENT, because the list must be inside the signature and `op=publish` cannot run twice over
@@ -39359,18 +40417,20 @@ case_project: ${project}
     };
   }
   /* THE ACKNOWLEDGEMENTS OF ONE STATEMENT AT ONE CASE IDENTITY, for `op=publish` and the review
-     copy alike, so the list a reviewer sees and the list a case document prints are one read. A
-     NEW case's draft carries no case id (one is minted only by publication), so at edition 1 an
-     acknowledgement taken through such a draft matches too: it is the same statement, in the
-     same project, at the only edition a new case has. Bounded, and a list that hit the bound
-     says so rather than presenting a page as the whole. */
+     copy alike, so the list a reviewer sees and the list a case document prints are one read.
+     Bounded, and a list that hit the bound says so rather than presenting a page as the whole. */
   /* REC-212 / §3 rule 13 — `writer` IS THE SECOND EXCLUSION, AND IT IS A DIFFERENT ONE FROM
      `exceptAuthor`. `exceptAuthor` is the member PUBLISHING: they author the completeness block at that
      act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
      since D-150. `writer` is the member who wrote the SENTENCE (`#statementWriter`), which rule 11's
      exclusion is actually about and which nothing here could see until rule 13 gave it a name.
-       - `writer === null` means NOT ASKED, and is the review copy's live list: it shows a reader every
-         acknowledgement recorded, ahead of any act that decides what a document may print.
+       - `writer === null` means NOT ASKED. CORRECTED BY REC-213 (BOB #33, 2026-09-24), never exempted,
+         because the old sentence here named the wrong caller: it read *and is the review copy's live
+         list*, and that is no longer true and was never right. The review copy ASKS — a row by the
+         sentence's own writer is not a second reading at any moment, so showing it overclaims whether
+         or not a document has been authored yet. The one caller left that does not ask is
+         `#reauthorAcknowledgements` over a case document carrying NO `statement_by` KEY, which
+         predates rule 13 and is read in its own shape.
        - `{ by: '<member>' }` withholds that member's own.
        - `{ by: null }` is UNDETERMINED, and withholds EVERY participant row, because any one of them
          may BE the writer's own and a list that cannot rule that out is the record claiming a second
@@ -39378,17 +40438,45 @@ case_project: ${project}
          holder is never the writer (REC-193's own sentence).
      EVERY WITHHOLDING IS COUNTED AND RETURNED, in its own key. A row left out and not stated would make
      the document list fewer second readers than the record holds, which its owner would then SIGN. */
-  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null) {
+  /* REC-194 / §3 rule 13 (BOB #32, 2026-09-23): AN ACKNOWLEDGEMENT IS MATCHED BY THE IDENTITY IT
+     WAS RECORDED AT, AND BY NOTHING ELSE. D-150's first cut read `(case_id IS ? OR (case_id IS NULL
+     AND edition=1))`, and the second half of that OR is the defect: an acknowledgement taken through
+     a draft naming NO case matched EVERY edition-1 document of the project carrying the same
+     sentence, so a second case with a byte-identical statement listed the first's second readers —
+     in its SIGNED completeness block, under its owner's signature. Reading A's statement is not
+     reading B's, and a statement's bytes are not a case's identity.
+       - A CASE DOCUMENT (`caseId` given) lists the rows recorded at ITS (case_id, edition). Never a
+         row at another case's, and never one at no case at all.
+       - A DRAFT NAMING NO CASE (`caseId` null — the review copy's own read) lists the rows recorded
+         THROUGH THAT DRAFT, matched on `draft_id`. Never another draft's of the same sentence: two
+         drafts of one project may hold the same statement and be two different productions.
+     `unbound` IS THE HONEST REMAINDER, AND IT EXISTS BECAUSE THE NARROWING WOULD OTHERWISE MAKE A
+     DOCUMENT LIE. Before it, a new case's document listed a draft-given reading (possibly another
+     draft's); after it, the document lists none — and writing `Nobody but its author acknowledged
+     it` over a record that holds a reading of that exact sentence would be the record claiming more
+     than it can support, which is worse than a missing feature (`CLAUDE.md` §2). So the readings
+     this record cannot bind to any case are COUNTED and STATED in the prose beside the block, as
+     undetermined and never as nobody. The author's own is not among them: at publication the
+     publisher becomes the statement's author, and their own reading is the first, not a second. */
+  /* THE SIGNATURE IS THE UNION OF THREE LANDINGS (CONDUCT #20, 2026-09-24): `exceptAuthor` is D-150's
+     publisher exclusion, `writer` is REC-212's writer exclusion, and `draftId` is REC-194's identity
+     match. They are THREE DIFFERENT QUESTIONS about one list and none subsumes another: the first two
+     decide WHOM the list may name, the third decides WHICH readings are this case's at all. */
+  #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null, draftId = null) {
     const sha = _Store.#statementSha(statement);
+    const unallocated = caseId == null;
+    const draftMatch = unallocated ? String(draftId ?? "") : "*";
     const rows = this.#rows(
       `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
-                             WHERE project_id=? AND statement_sha=? AND edition=? AND (case_id IS ? OR
-                               (case_id IS NULL AND edition=1))
+                             WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS ?
+                               AND (? = '*' OR draft_id = ?)
                              ORDER BY at, ack_id LIMIT ?`,
       project,
       sha,
       edition,
       caseId ?? null,
+      draftMatch,
+      draftMatch,
       _Store.STATEMENT_ACK_MAX + 1
     );
     const truncated = rows.length > _Store.STATEMENT_ACK_MAX;
@@ -39397,6 +40485,15 @@ case_project: ${project}
     const byTheWriter = (r) => !!(writer && writer.by && r.acknowledger_kind === "participant" && r.acknowledger === writer.by && !byPublisher(r));
     const undeterminedWithheld = (r) => !!(writer && writer.by === null && r.acknowledger_kind === "participant" && !byPublisher(r));
     const listed = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
+    const unboundRow = unallocated ? null : this.#one(
+      `SELECT COUNT(*) AS n FROM statement_acknowledgements
+                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)`,
+      project,
+      sha,
+      edition,
+      exceptAuthor ?? null
+    );
     return {
       statementSha: sha,
       truncated,
@@ -39405,6 +40502,7 @@ case_project: ${project}
       byAuthor: all.filter(byPublisher).length,
       byWriter: all.filter(byTheWriter).length,
       withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
+      unbound: unboundRow ? Number(unboundRow.n) : 0,
       rows: listed.map((r) => ({
         kind: r.acknowledger_kind,
         by: r.acknowledger,
@@ -45077,9 +46175,26 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             findings: errs.map((x) => ({ check: x.check, detail: x.message }))
           };
       }
-      const isInquiry = normalizeType(meta.object_type) === "inquiry";
       const basisMd = files.find((f2) => f2.path === "bundle.md");
       const docFmW = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
+      const typeStated = (v) => typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null;
+      const documentType = docFmW && typeof docFmW === "object" ? typeStated(docFmW.object_type) : null;
+      const envelopeType = typeStated(meta.object_type);
+      if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {
+        const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES;
+        return {
+          ok: false,
+          reason: "ENVELOPE_TYPE_DISAGREES",
+          code: "ENVELOPE_TYPE_DISAGREES",
+          check: dtRow.check,
+          translation: dtRow.translation,
+          document_type: documentType,
+          envelope_type: envelopeType,
+          detail: `the document being promoted says object_type '${String(docFmW.object_type).slice(0, 40)}' and this request's meta says '${String(meta.object_type).slice(0, 40)}'. The record goes by the document, and it will not file one kind of thing as another: what a document IS decides which columns, projections and reads it gets. Send it again with the meta naming the type the document names, or change the document first. Nothing was written.`
+        };
+      }
+      const promotedType = documentType ?? normalizeType(meta.object_type);
+      const isInquiry = promotedType === "inquiry";
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
       if (basisFm && !pkg.replay && (basisFm.basis !== void 0 && basisFm.basis !== null || basisFm.grounds !== void 0 && basisFm.grounds !== null)) {
@@ -45525,7 +46640,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           f2.sha256
         );
       const newSha = files.find((f2) => f2.path === "bundle.md")?.sha256;
-      const projectedType = normalizeType(meta.object_type);
+      const projectedType = promotedType;
       const mdForTitle = files.find((x) => x.path === "bundle.md");
       const projectedTitle = projectedType === "inquiry" ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? meta.title : meta.title;
       this.sql.exec(
@@ -45765,7 +46880,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         }
       }
       this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
-      if (normalizeType(meta.object_type) === "bias") {
+      if (promotedType === "bias") {
         for (const r of _Store.#biasStatementRows(bundleId, docFmW))
           this.sql.exec(
             `INSERT INTO bias_statements
@@ -45798,7 +46913,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       this.sql.exec(`DELETE FROM action_basis WHERE bundle_id=?`, bundleId);
       this.sql.exec(`DELETE FROM correspondence WHERE bundle_id=?`, bundleId);
       this.sql.exec(`DELETE FROM action_quotes WHERE bundle_id=?`, bundleId);
-      if (normalizeType(meta.object_type) === "action" && docFmW) {
+      if (promotedType === "action" && docFmW) {
         const alegs = Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [];
         for (let i = 0; i < alegs.length; i++) {
           const leg = alegs[i];
@@ -55905,6 +57020,23 @@ ${words}`;
           definition_version: p.definition_version,
           bundles: subjects.slice(0, _Store.QUEUE_OPTION_SUBJECTS_MAX)
         },
+        /* D-527: THE EARLIER DECISION TRAVELS WITH THE REOPENED QUESTION.
+           `proposalsFeed` already builds this object for a proposal a revision put
+           back in the open feed (REC-184, framework §8.2) and it is published here
+           UNCHANGED — the same object, no second derivation, `null` where nobody
+           has ever decided. It rode only on `op=proposals`, which NO surface reads
+           (UI-14 retired it for this op), so the one feed a member opens by habit
+           carried the reopened question and said nothing about the answer somebody
+           had already given it — a member meeting it is shown a question nobody
+           has answered when the record holds a decision, which is the record
+           claiming less than it holds. The `disposed` block below does carry the
+           row, and that is not the same fact reaching the reader: it is a JOIN on
+           a list bounded by QUEUE_DISPOSED_MAX, so a member with sixty-four
+           standing decisions meets the reopened item with its prior decision cut
+           off the end of the answer. `applies` is false wherever this is non-null
+           by construction and not by assertion — a decision that still governed
+           would have aged this finding out of the feed before it reached here. */
+        prior_disposition: p.prior_disposition,
         summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
         detail: `${p.n} instance${p.n === 1 ? "" : "s"} of this progression reach${p.n === 1 ? "es" : ""} '${p.stage_label}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : ""),
         basis: {
@@ -60433,6 +61565,43 @@ ${words}`;
       rewritten: 0,
       note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a different bundle that still exists. Nothing is rewritten or repaired. `home` is the register's current holder, never a finding about which bundle held the capture first \u2014 that is undetermined. The same content in different bytes is not reached."
     };
+  }
+  /** D-476 - IS THIS WHOLE DOCUMENT ALREADY IN THE REGISTER? ONE BOUNDED READ ON
+   *  THE REGISTER'S OWN KEY, and the only question `op=acquire` can ask about a
+   *  MULTI-PART capture.
+   *
+   *  D-469 answered acquire's `existed` for a single-part capture by asking R2 for
+   *  the whole's own key BEFORE the put. A multi-part capture has no such key: the
+   *  whole is never stored under its own hash, only its parts are. So that
+   *  question cannot be asked at all, and acquire answered a flat `false` - which
+   *  CLAIMS THE BYTES ARE NEW every time a document the record already holds is
+   *  re-fetched. This is the question that CAN be asked, and it is the record's
+   *  own: `register` is keyed by `capture_sha`, the identity of the bytes across
+   *  the whole system (`INTERFACES.md` I1 section 1), and one capture has one
+   *  home (D-179; `BIO_Intake_Doctrine_v1_1.md` section 8).
+   *
+   *  THE HOLDER MUST STILL EXIST - the `bundles` join D-179's fence makes, for
+   *  the reason that ruling gives: bytes whose home was purged register afresh,
+   *  so a register row whose bundle is gone is not a holding.
+   *
+   *  IT NAMES NO BUNDLE, and so it needs no viewer. A caller learns only that the
+   *  record holds these bytes, which is the whole of what `existed` has ever said;
+   *  WHICH bundle holds them is D-15's question, answered under a visibility stamp
+   *  by `op=promote`'s refusal and never here.
+   *
+   *  A MISS IS NOT AN ABSENCE, and THE CALLER STATES THAT, not this read: the
+   *  register answers for documents the record REGISTERED, and a prior acquire
+   *  never promoted leaves parts in R2 and no register row. `registered: false` is
+   *  that one fact and nothing more; `registered: null` is no question asked.
+   */
+  registerHolds({ sha = null } = {}) {
+    const s = typeof sha === "string" && sha.trim() ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    if (!s) return { ok: true, sha: null, asked: false, registered: null };
+    return { ok: true, sha: s, asked: true, registered: !!this.#one(
+      `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.capture_sha = ? LIMIT 1`,
+      s
+    ) };
   }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
@@ -67259,6 +68428,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60).`,
         { fields: brought }
       );
+    const renderRaw = args.render ?? null;
+    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)
+      return refusal7(
+        "CAPTURE_REQUEST_RENDER_MALFORMED",
+        `render=${JSON.stringify(renderRaw).slice(0, 40)} is not a value this door reads. Send render: true for the page as a visitor saw it, or nothing for the document as the site serves it.`,
+        { render: null }
+      );
+    const render = renderRaw === true ? 1 : 0;
     const purpose = String(args.purpose ?? "").trim();
     const uaMode = String(args.ua_mode ?? args.uaMode ?? "civicos").trim();
     const callerPlane = String(args.caller ?? "").trim();
@@ -67266,9 +68443,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const now = _Store.#aiIso(nowMs);
     const request = String(args.request ?? "").trim() || `CR-${now.replace(/[-:TZ]/g, "")}-${_Store.#rand(6)}`;
     const standing = this.#one(
-      `SELECT * FROM capture_requests WHERE run=? AND address=? AND state IN ('requested','draining','captured')`,
+      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
       run,
-      address
+      address,
+      render
     );
     if (standing)
       return {
@@ -67285,6 +68463,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            echoing the caller's field back would report a lead nothing
            stored — the answer disagreeing with the row it stands for. */
         lead_inquiry: standing.lead_inquiry ?? null,
+        /* D-491: the STANDING row's flag, on the identical reasoning the
+           lead above carries — and here it cannot disagree with the call,
+           because the flag is part of the key this row was found by. */
+        render: standing.render === 1,
         state: standing.state,
         requested: false,
         already: true,
@@ -67292,8 +68474,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       };
     this.sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?)`,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
       request,
       run,
       target,
@@ -67306,7 +68488,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       now,
       now,
       _Store.#aiIso(nowMs + _Store.CAPTURE_REQUEST_TTL_MS),
-      lead || null
+      lead || null,
+      render
     );
     return {
       ok: true,
@@ -67318,6 +68501,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       purpose,
       ua_mode: uaMode,
       lead_inquiry: lead || null,
+      /* D-491: the flag AS THE ROW WAS WRITTEN — the same `render` the
+         INSERT bound, not the field the caller sent, so an answer saying
+         `render: true` cannot disagree with the value the drain will
+         read. It is not a re-read of the row, and this comment says so
+         rather than letting the next reader assume one. */
+      render: render === 1,
       state: "requested",
       requested: true,
       already: false,
@@ -67462,6 +68651,40 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
             grade: r.grade ?? null,
             attribution: verdict.attribution
           });
+        } else if (r.renderCode) {
+          const renderRow2 = RENDER_CAPTURE_CHECKS[r.renderCode];
+          const why = String(r.detail || r.reason || "").slice(0, 400);
+          hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));
+          this.sql.exec(
+            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
+            r.renderCode,
+            why,
+            at,
+            q.request
+          );
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document",
+            subjectKind: "address",
+            subject: q.address,
+            state: "LOOKED_INDETERMINATE",
+            governed: true,
+            detail: `${renderRow2.check} ${r.renderCode}: the render was deferred and nothing was filed \u2014 ${why || "no detail was carried"}`
+          }, at, 0);
+          held.push({
+            request: q.request,
+            address: q.address,
+            host: q.host,
+            code: r.renderCode,
+            check: renderRow2.check,
+            translation: renderRow2.translation,
+            /* THE TICK'S OWN WORD FOR IT, in op=acquire's vocabulary so
+               a reader needs no second one: the content is UNDETERMINED
+               and says so, which is what keeps a deferral out of the
+               coverage a captured row would imply. */
+            render: { state: "deferred", content: "undetermined" },
+            detail: why
+          });
         } else {
           this.sql.exec(
             `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
@@ -67590,11 +68813,18 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  already live, and this consumer only DECIDES and INVOKES.
    *
    *  IT SENDS TWO FIELDS AND NOTHING ELSE — `via` and `request`. The address,
-   *  the purpose and the agent are read by op=acquire FROM THE ROW, through
-   *  `captureRequestDraining`, so what leaves this instance is exactly what the
-   *  conduct check judged. Passing them in the body would have made the check an
-   *  assertion about a value the sender could still differ from, which is the
-   *  "checked one thing, sent another" gap in its smallest form. */
+   *  the purpose, the agent and (D-491) WHETHER TO RENDER are read by op=acquire
+   *  FROM THE ROW, through `captureRequestDraining`, so what leaves this instance
+   *  is exactly what the conduct check judged. Passing them in the body would
+   *  have made the check an assertion about a value the sender could still differ
+   *  from, which is the "checked one thing, sent another" gap in its smallest
+   *  form. D-491 did NOT add a third field for the render, and that is why.
+   *
+   *  WHAT COMES BACK OUT, D-491: a refused render is named. op=acquire decides
+   *  every way a render cannot happen BEFORE it fetches anything and answers a
+   *  C-83 code; this returns that code as `renderCode` so the drain can hold the
+   *  row under it instead of reporting a fetch that was never attempted. `reason`
+   *  is unchanged for every other failure. */
   async #fireCaptureRequest(q) {
     const token = await this.#monitorToken();
     if (!token) return { ok: false, reason: _Store.MONITOR_NO_LIVE_CREDENTIAL };
@@ -67613,7 +68843,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         sha: doc.capture && doc.capture.sha256,
         grade: doc.capture && doc.capture.grade
       };
-      return { ok: false, reason: out && (out.reason || out.error) || `http ${res.status}` };
+      const reason = out && (out.reason || out.error) || `http ${res.status}`;
+      const renderCode = q.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
+      return {
+        ok: false,
+        reason,
+        renderCode,
+        detail: renderCode ? String(out && out.detail || "").slice(0, 400) : null
+      };
     } catch (e) {
       return { ok: false, reason: "the fetch did not complete and this plane did not record why" };
     }
@@ -67638,7 +68875,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         address: null,
         purpose: null,
         ua_mode: null,
-        agent: null
+        agent: null,
+        /* D-491: FALSE on a row that does not exist, and that is the
+           fail-closed direction — an absent row asks for no render, so a
+           silence here can never turn into a render nobody requested. */
+        render: false
       };
     const agent = r.ua_mode === "member-browser" ? this.#captureRequestMemberAgent(r.target) : civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, r.purpose);
     return {
@@ -67650,6 +68891,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       purpose: r.purpose,
       ua_mode: r.ua_mode,
       agent: agent || null,
+      /* D-491 / IC-276: WHETHER THIS ROW ASKED FOR THE RENDERED PAGE, on
+         the identical reasoning the three fields above it carry. op=acquire
+         takes it FROM HERE and never from the request body, so what this
+         instance renders is what the drain's conduct check judged — a value
+         a caller can supply is a value a caller can differ from what was
+         checked, and a render is a second load of the page. */
+      render: r.render === 1,
       run: r.run,
       target: r.target
     };
@@ -67726,6 +68974,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          those are the two states this one field distinguishes. Additive, on
          PL-15's precedent: no existing reader's shape moves. */
       run_woken_at: r.run_woken_at ?? null,
+      /* D-491 / IC-276: WHAT THIS REQUEST ASKED FOR, and it is published for the
+         reason the two fields above it are — this projection is explicit, so a
+         column omitted here is a column NO caller can see. It is the field that
+         makes a held row legible: a row sitting at `requested` under C-83.3 with
+         no `render` beside it reads as a fetch that keeps failing, when what it
+         is is a render this instance cannot yet do. A run cannot otherwise read
+         back what it asked, and an operator cannot tell the two apart. */
+      render: r.render === 1,
       /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
          drain used. A row whose principals cannot both be named answers with the
          refusal rather than with a half attribution — the read cannot state less
@@ -68679,7 +69935,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstContentAt) return "purged";
     const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
     if (!reg) return "purged";
-    return enteredAfterFirstRow(reg, firstContentAt) ? "never_looked" : "purged";
+    const order = enteredAfterFirstRow(reg, firstContentAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
   #missingContentCause(captureSha, registeredAt = null) {
     if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
@@ -69601,7 +70860,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstAt) return "purged";
     const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
     if (!entered) return "purged";
-    return enteredAfterFirstRow(entered, firstAt) ? "never_looked" : "purged";
+    const order = enteredAfterFirstRow(entered, firstAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
    *  every level's frontier, through the one function in `airun.mjs` that decides
@@ -73263,7 +74525,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         const r = await this.#fireArchiveFallback(address_norm);
         (r.ok ? fired : failed).push(r.ok ? { address: address_norm, grade: r.grade, hops: r.hops } : { address: address_norm, reason: r.reason });
       }
-      if (!failed.length) this.#closeTickEpoch("archive-monitor", epoch);
+      if (!failed.length && !skipped.length) this.#closeTickEpoch("archive-monitor", epoch);
       return { monitor: {
         configured: true,
         at: nowIso,
@@ -73467,7 +74729,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         const r = await this.#fireMonitorTick(d.bundle);
         (r.ok ? ticked : failed).push(r.ok ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval } : { bundle: d.bundle, frequency: d.frequency, reason: r.reason });
       }
-      if (!failed.length) this.#closeTickEpoch("monitor-cadence", epoch);
+      if (!failed.length && !skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
       return { monitorcadence: {
         configured: true,
         at,
@@ -73792,7 +75054,29 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          second condition to be discovered would be the overclaim this
          project's whole threat model is about. */
       in_force: b.current_state === "adopted",
-      note: b.current_state === "adopted" ? "this set is in force for that scope" : "recorded and pinned; the set is in force once the bundle itself stands at 'adopted', which is a member-authored transition through op=promote"
+      /* REC-210 — THE MARKER. Ruled by BOB #32 on 2026-09-24 and folded into
+                      `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": *"Adopting a proposed,
+                      not-yet-accepted revision is a REPLACEMENT: the adopter's lens becomes those bytes,
+                      and it stays on them whatever later happens to the proposal. It is never a
+                      pre-authorisation of whatever the proposal becomes. The adoption and its read SAY
+                      that they pin a proposed revision."*
+      
+                      IT IS A FACT ABOUT THE PIN, NOT A SECOND SPELLING OF `in_force`. The two agree in
+                      THIS answer because the pin is the head at this instant; they come apart at the
+                      READ, in both directions. promote() re-pins an adoption taken at `proposed` to the
+                      sha the promotion to `adopted` mints (REC-187), so this row stops pinning a proposed
+                      revision with nobody adopting again — and a re-adoption of an ALREADY ADOPTED set on
+                      a later proposal moves the pin back onto proposed bytes and LIFTS a lens that was in
+                      force. `in_force: false` says no lens stands over this scope's work; the marker says
+                      what was frozen instead, and that the group has not accepted it.
+      
+                      STATED RATHER THAN LEFT TO BE INFERRED, for the reason `in_force` itself is:
+                      `pinned.bundle_sha` is 64 hex characters that no reader can tell from an adopted
+                      revision's without going and fetching the bytes, so an answer without this field
+                      lets a REPLACEMENT read exactly like an ordinary adoption — the record claiming more
+                      than it can support, which is the defect this project ranks worst. */
+      pins_proposed: b.current_state === "proposed",
+      note: b.current_state === "adopted" ? "this set is in force for that scope" : "PINS A PROPOSED REVISION: this adoption froze bytes the group has offered and not yet accepted, so it REPLACES this scope's lens with them rather than pre-authorising whatever the proposal becomes; a lens is in force once the revision THIS ROW PINS stands at 'adopted', which is a member-authored transition through op=promote"
     };
   }
   /* NOT a literal. `MACHINE_AUTHOR_PREFIX` is the catalogue's, imported at the
@@ -73904,6 +75188,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const pinned = [];
     const pinnedText = /* @__PURE__ */ new Map();
     const unresolved = [];
+    const pinsProposed = [];
     const adoptionsFor = (type, id) => {
       const out = [];
       const rows = this.#rows(
@@ -73922,7 +75207,18 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           continue;
         }
         const fm = parseFrontmatter(text).data || {};
-        if (fm.current_state !== "adopted") continue;
+        if (fm.current_state !== "adopted") {
+          const pinnedState = fm.current_state;
+          pinsProposed.push({
+            bundle_id: a.bundle_id,
+            revision: a.bundle_sha,
+            scope: a.scope_type,
+            pinned_state: typeof pinnedState === "string" ? pinnedState : null,
+            adopted_by: a.author,
+            adopted_at: a.at
+          });
+          continue;
+        }
         pinned.push([a.bundle_id, fm]);
         pinnedText.set(a.bundle_id, text);
         out.push(a);
@@ -73932,6 +75228,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const instanceAdoptions = adoptionsFor("instance", "");
     const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
     const adoptions = [...instanceAdoptions, ...projectAdoptions];
+    const marker = pinsProposed.length === 0 ? {} : {
+      pins_proposed: pinsProposed,
+      pins_proposed_stated: "each entry is an adoption whose PINNED REVISION is one the group has offered and not accepted: the member's act REPLACED that scope's lens with those bytes and is not a pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin puts no lens in force until the revision it names stands at 'adopted'"
+    };
     if (unresolved.length > 0)
       return {
         ok: true,
@@ -73944,6 +75244,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         lock_violations: [],
         statements_sha: null,
         unresolved_pins: unresolved,
+        ...marker,
         count: 0,
         total: 0,
         limit: 0,
@@ -73962,6 +75263,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         residue: [],
         lock_violations: [],
         statements_sha: null,
+        ...marker,
         count: 0,
         total: 0,
         limit: 0,
@@ -74055,6 +75357,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       /* Stated in the answer rather than left to be inferred: the hash covers
          the whole set even when the page does not. */
       statements_sha_covers: "the whole effective set, before any bound was applied",
+      /* REC-210: A LENS IN FORCE AND AN ADOPTION PINNING A PROPOSED REVISION ARE NOT EXCLUSIVE —
+         one set's pin may stand at `adopted` while another's was moved onto a later proposal, and
+         the instance and project layers can differ. So the marker travels here too, and the
+         statements above are the effective set of the pins that ARE adopted, never of these. */
+      ...marker,
       statements: page,
       residue,
       lock_violations: lockViolations,
@@ -74272,6 +75579,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         }),
         /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
         homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
+        /* D-476: does the register hold these whole-document bytes, read-only and naming no
+           bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
+           is never stored under its own hash for R2 to be asked about. */
+        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
@@ -78436,7 +79747,12 @@ async function reviewAnswer(out, op) {
     const { quartet } = await inbandQuartet({
       subject: served,
       over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
-      date: r.updated_at ?? null,
+      /* REC-200 / BOB #32, 2026-09-23 23:08Z: THE DATE IS THE COPY'S LAST CHANGE, not the draft's last
+         EDIT — a comment moves these bytes, so it moves the hash, and it must move the date with it. The
+         store computes it over the rows it SERVES and says in `last_change.stated` what it cannot see.
+         THE AUTHOR DOES NOT MOVE: the ruling is about the date, and a recipient who comments on a copy
+         has not authored it; `last_change.by` is who made that change, beside it. */
+      date: r.last_change?.at ?? null,
       author: r.updated_by ?? null,
       bar: bar ?? null
     });
@@ -78559,7 +79875,12 @@ async function captureRequestArm(env, storeName, body, cls) {
     silent: false,
     locator: d.address,
     purpose: d.purpose,
-    agent: d.ua_mode === "member-browser" ? d.agent : null
+    agent: d.ua_mode === "member-browser" ? d.agent : null,
+    /* D-491 / IC-276: WHETHER THE ROW ASKED FOR THE RENDERED PAGE, read
+       from the row exactly as the three fields beside it are. `=== true`
+       rather than truthiness: the read answers a boolean, and a store that
+       answered something else must not become a render. */
+    render: d.render === true
   };
 }
 var storeSilent = (op) => json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
@@ -78769,7 +80090,8 @@ async function migrationReplayOf(env, storeName, b) {
 function needsTier2(text) {
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  if (!(c.undetermined > c.chars)) return false;
+  const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
+  if (!(c.undetermined > glyphs)) return false;
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
   return true;
@@ -78822,14 +80144,16 @@ function mergeTier3Text(base, ocr, eligible) {
   const ocrPages = ocr && Array.isArray(ocr.pages) ? ocr.pages : [];
   const wanted = new Set(eligible);
   if (!usable.length) {
-    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
-    if (baseChars > 0)
+    const baseText = typeof (base && base.document) === "string" ? base.document : null;
+    const baseGlyphs = baseText === null ? null : glyphCount(baseText);
+    const reported = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : 0;
+    if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return {
         ok: false,
         filled: [],
         refused: [],
         unanswered: [],
-        why: `this document's text could not be merged page by page (the tier that read it reported no per-page text), and it already holds ${baseChars} decoded character(s), so an OCR pass was refused rather than allowed to replace text that may be better than it`
+        why: `this document's text could not be merged page by page (the tier that read it reported no per-page text), and it already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so an OCR pass was refused rather than allowed to replace text that may be better than it`
       };
     return {
       ok: true,
@@ -78845,7 +80169,7 @@ function mergeTier3Text(base, ocr, eligible) {
   for (const p of ocrPages) {
     if (!p || !Number.isInteger(p.page)) continue;
     const target = usable.find((b) => b.page === p.page);
-    const empty = target && !(typeof target.text === "string" && target.text.length);
+    const empty = target && !(typeof target.text === "string" && glyphCount(target.text) > 0);
     if (!target || !wanted.has(p.page) || !empty) {
       refused.push(p.page);
       continue;
@@ -78930,7 +80254,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
             if (!m.ok) ocrNote = m.why;
             else {
               i2text = m.text;
-              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && p.text.length).map((p) => p.page);
+              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => p.page);
               const parts = [];
               const layerSet = new Set(layerPages);
               const spokenFor = tier2PerPage ? [
@@ -79425,11 +80749,15 @@ var index_default = {
       );
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
-    if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
+    if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
+      const pageNamespace = namespaceGate(url);
+      if (pageNamespace) return pageNamespace;
+      const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
       return new Response(
-        setupPage(await publicInstanceGroup(env, "bio")),
+        setupPage(await publicInstanceGroup(env, pageStore)),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
       );
+    }
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const spec = OPS[op];
@@ -80665,6 +81993,8 @@ var index_default = {
         body2.locator = arm.locator;
         crPurpose = arm.purpose;
         crAgent = arm.agent;
+        if (arm.render) body2.render = true;
+        else delete body2.render;
       }
       let driveCapture = null, driveHopRecorded = null;
       {
@@ -80761,7 +82091,14 @@ var index_default = {
             ...renderRow("RENDER_NO_RENDERER"),
             op,
             renderer: renderer.kind,
-            detail: renderer.kind === "browser-binding-without-driver" ? "a Browser Rendering binding (BROWSER) is bound, but the in-plane driver over it is not built (D-64 shipped the seam and the record, not a CDP client). Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding). Nothing was fetched."
+            /* D-490 CORRECTED THIS SENTENCE, and the correction is the point: D-64's
+               words said the in-plane driver was not built, which was true of every
+               instance and is no longer true of any. What this branch can still mean
+               is NARROWER — BROWSER bound to something with no `fetch`, so there is
+               no endpoint to open a devtools session on. Saying the old sentence now
+               would be the record claiming less than it can support, which is the
+               same defect as claiming more. */
+            detail: renderer.kind === "browser-binding-without-driver" ? "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched."
           }, 501);
         let rHost = null;
         try {
@@ -80988,6 +82325,7 @@ var index_default = {
       if (total === 0) return json({ ok: false, reason: "EMPTY", locator }, 502);
       let sha = whole.hex();
       let existed = false, multipart = parts.length > 1;
+      let existedUndetermined = null;
       if (!multipart) {
         const only = parts[0];
         if (only.sha256 !== sha) {
@@ -80998,6 +82336,17 @@ var index_default = {
           }, 500);
         }
         existed = partHeldBefore[0];
+      } else {
+        const heldOut = await doAnswer(stGov.fetch(
+          `http://x/registerholds?sha256=${encodeURIComponent(sha)}`
+        ));
+        const reg = heldOut.answered ? heldOut.result : null;
+        const heldParts = partHeldBefore.filter(Boolean).length;
+        if (reg && reg.registered === true) existed = true;
+        else {
+          existed = null;
+          existedUndetermined = reg ? `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register - which does answer by the whole hash - holds no row for these bytes under a bundle that still exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never promoted leaves its parts in the store and no register row, and part boundaries follow the stream's chunking, so this fetch's parts need not be the parts an earlier one made. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.` : `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register could not be consulted. Nothing here is a statement about the record, and in particular it is not a claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.`;
+        }
       }
       let ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
       const responseHeaders = [];
@@ -81660,6 +83009,10 @@ var index_default = {
       return json({
         ok: true,
         existed,
+        /* D-476: the stated reason, present exactly when `existed` is null and
+           absent otherwise - so the single-part answer is byte-identical to what
+           every caller reads today, and a null is never bare. */
+        ...existedUndetermined ? { existed_undetermined: existedUndetermined } : {},
         document: {
           file: `snapshots/${name}`,
           locator,
@@ -82034,10 +83387,51 @@ var index_default = {
           reason: "NO_LOCATOR",
           detail: "monitoring needs a public https locator in source.locator"
         }, 409);
+      const driveTick = readDriveAddress(locator);
+      if (driveTick && driveTick.shape === "folder")
+        return json({
+          ok: false,
+          reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
+          ...driveRow("DRIVE_FOLDER_NOT_A_DOCUMENT"),
+          op,
+          bundleId,
+          drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
+          locator: driveTick.address,
+          detail: driveTick.why + " Watching it is the same question one step on: a tick would compare Google's listing page, whose bytes are rebuilt on every render, and report a change nobody made."
+        }, 422);
+      if (driveTick && driveTick.shape === "file")
+        return json({
+          ok: false,
+          reason: "DRIVE_KIND_UNDETERMINED",
+          ...driveRow("DRIVE_KIND_UNDETERMINED"),
+          op,
+          bundleId,
+          drive: {
+            host: driveTick.host,
+            shape: driveTick.shape,
+            harvestable: false,
+            ...driveTick.fileId ? { file_id: driveTick.fileId } : {}
+          },
+          locator: driveTick.address,
+          detail: driveTick.why + " No export address can be composed, so there is nothing this tick could compare but the application page."
+        }, 422);
+      if (driveTick && driveTick.shape === "unknown")
+        return json({
+          ok: false,
+          reason: "DRIVE_SHAPE_UNRECOGNISED",
+          ...driveRow("DRIVE_SHAPE_UNRECOGNISED"),
+          op,
+          bundleId,
+          drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
+          locator: driveTick.address,
+          detail: driveTick.why + " A shape this instance cannot read is a shape it cannot promise to be watching."
+        }, 422);
+      const tickAddress = driveTick && driveTick.harvestable ? driveTick.exportAddress : locator;
       let baseline = null, baselineProfile = null, baselineAt = null;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
-        const match = (reg.documents || []).find((d) => d && d.locator === locator);
+        const rows = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
+        const match = (driveTick && driveTick.harvestable ? rows.find((d) => d.locator === driveTick.exportAddress) : null) || rows.find((d) => d.locator === locator);
         baseline = match?.capture?.sha256 || null;
         baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
         baselineProfile = match && match.profile && typeof match.profile === "object" ? match.profile : null;
@@ -82057,7 +83451,7 @@ var index_default = {
         actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
       });
       try {
-        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), locator, "monitor");
+        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), tickAddress, "monitor");
         if (g.refusedByGovernor) {
           const observation2 = await monitorLook({ outcome: "governed", reason: g.reason });
           return json({
@@ -82066,19 +83460,90 @@ var index_default = {
             detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
             retry_in_ms: g.retry_in_ms || 0,
             locator,
+            /* D-472: the governed host is the EXPORT's when a Drive document is
+               watched, and `docs.google.com` is not the host the bundle names. */
+            ...driveTick && driveTick.harvestable ? { fetched_address: tickAddress } : {},
             observation: observation2
           }, 429);
         }
         const res2 = g.res;
         httpStatus = res2.status;
+        const answered = driveTick && driveTick.harvestable ? `the OpenDocument export address ${driveTick.exportAddress} answered ${res2.status}` : `the source answered ${res2.status}`;
+        if (driveTick && driveTick.harvestable && res2.ok) {
+          const declaredType = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+          const servedAsPage = declaredType === "text/html" || declaredType === "application/xhtml+xml";
+          if (servedAsPage) {
+            try {
+              await res2.body?.cancel?.();
+            } catch {
+            }
+            const observation2 = await monitorLook({
+              outcome: "unreachable",
+              reason: `the Drive export address answered \`${declaredType}\`, which is the application shell`
+            });
+            return json({
+              ok: false,
+              reason: "DRIVE_TICK_EXPORT_IS_THE_SHELL",
+              ...driveRow("DRIVE_TICK_EXPORT_IS_THE_SHELL"),
+              op,
+              bundleId,
+              status: res2.status,
+              locator: driveTick.address,
+              export_address: driveTick.exportAddress,
+              declared_content_type: declaredType,
+              refused_on: "the declared content type",
+              drive: {
+                host: driveTick.host,
+                shape: driveTick.shape,
+                kind: driveTick.kind,
+                file_id: driveTick.fileId,
+                export_format: driveTick.format
+              },
+              observation: observation2,
+              detail: `the OpenDocument export address answered with \`${declaredType}\`, which is the Google Drive APPLICATION \u2014 a client-rendered shell whose bytes carry no document (framework Part I \xA76's UNWATCHABLE case). It is not compared against the capture: its bytes are rebuilt on every render, so a comparison would report this document changed today and on every later visit. Nothing about the record moved, and the look is logged as indeterminate. Google serves this when the file is no longer shared with anyone who has the link.`
+            }, 502);
+          }
+        }
         if (res2.status === 404 || res2.status === 410) {
           status = "removed";
-          note = `the source answered ${res2.status}`;
+          note = answered;
         } else if (!res2.ok) {
-          note = `the source answered ${res2.status}`;
+          note = answered;
           unreachable = note;
         } else {
           const bytes = new Uint8Array(await res2.arrayBuffer());
+          if (driveTick && driveTick.harvestable) {
+            const sniffed = detectFormat(bytes.subarray(0, Math.min(bytes.length, 1024)), null);
+            const servedType = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+            if (sniffed.format === "html") {
+              const observation2 = await monitorLook({
+                outcome: "unreachable",
+                reason: `the Drive export address served HTML under \`${servedType || "no content type"}\``
+              });
+              return json({
+                ok: false,
+                reason: "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL",
+                ...driveRow("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"),
+                op,
+                bundleId,
+                status: res2.status,
+                locator: driveTick.address,
+                export_address: driveTick.exportAddress,
+                declared_content_type: servedType || null,
+                refused_on: "the bytes",
+                detected: sniffed,
+                drive: {
+                  host: driveTick.host,
+                  shape: driveTick.shape,
+                  kind: driveTick.kind,
+                  file_id: driveTick.fileId,
+                  export_format: driveTick.format
+                },
+                observation: observation2,
+                detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniffed.signals.join("; ")} \u2014 while declaring otherwise. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. It is not compared against the capture: the shell is rebuilt on every render, so the comparison would report a change nobody made. Nothing about the record moved, and the look is logged as indeterminate.`
+              }, 502);
+            }
+          }
           const d = await crypto.subtle.digest("SHA-256", bytes);
           seen = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
           fetchedBytes = bytes;
@@ -82209,7 +83674,7 @@ var index_default = {
       let text = out.join("\n");
       if (!/^\s+last_checked:/m.test(text) && /^monitoring:/m.test(text))
         text = text.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
-      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + "\n";
+      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + (driveTick && driveTick.harvestable ? ` \u2014 fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed from the Drive ${driveTick.kind} in ${driveTick.address}` : "") + "\n";
       const at = text.indexOf("## Session Log");
       if (at < 0) text += "\n## Session Log\n\n" + entry;
       else {
@@ -82282,6 +83747,19 @@ var index_default = {
         assessment_basis: graded.basis,
         cadence,
         observation,
+        /* D-472: for a Drive-linked document, which address this tick actually
+           fetched and the three facts the plane derived to compose it. Absent for
+           every other document, where the locator is the address. */
+        ...driveTick && driveTick.harvestable ? {
+          drive: {
+            document_address: driveTick.address,
+            export_address: driveTick.exportAddress,
+            kind: driveTick.kind,
+            file_id: driveTick.fileId,
+            export_format: driveTick.format
+          },
+          fetched_address: tickAddress
+        } : {},
         reeval_raised: flags,
         ...promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail },
         note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
@@ -83030,6 +84508,7 @@ var index_default = {
         b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         delete b.actorViewer;
         b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+        if (viaSession || cls !== "admin") delete b.replay;
         delete b.migrationReplay;
         const replayed = !viaSession && cls === "admin" && b.base === null && b.meta && normalizeType(b.meta.object_type) === "inquiry" ? await migrationReplayOf(env, storeName, b) : null;
         if (replayed) {

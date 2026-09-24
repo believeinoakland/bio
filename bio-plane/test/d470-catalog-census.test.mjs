@@ -327,7 +327,7 @@ const CATALOG_CENSUS = {
      so the landed rows stand and this item takes the next number. */
 
   /* 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27): D-463's rows over 1.28.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
-  "1.29.0": { count: 0, digest: "PENDING" },
+  "1.29.0": { count: 466, digest: "82d13f0339c9228ff961949ec5e5f804d77c27a7e8aabd8d4f401bad4ba2e8e6" },
   /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
      rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
      KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
@@ -445,8 +445,9 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    purpose — it is the sentence a reader sees when this line goes red — and both are edited by hand in
    the same commit that moves the constant, because a pin derived from the thing it pins agrees for
    free (CLAUDE.md §5). */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.26.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.26.0)", "1.26.0"]);
+/* D-513's own A5 assertion (1.26.0) is SUPERSEDED at c20-batch27 (CONDUCT #20), not exempted: D-513's
+   checks ride the union's 1.29.0 with D-463's, and the ONE A5 assertion above pins that stamp. Two
+   assertions pinning two versions of one constant could never both pass. */
 
   /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
 
