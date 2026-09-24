@@ -1,0 +1,16 @@
+{
+ "unit": "plane:ratify.test.mjs",
+ "inputHash": "57cb9da81432f8d6ef6bbb2c21ec6b630cc08f00d594d2b006a08f2055156909",
+ "verdict": "PASS",
+ "run": "01af380ed6bb5a6f1e08f168a3553b9fa5b8eacd.1790213225240.2674.json",
+ "tree": "01af380ed6bb5a6f1e08f168a3553b9fa5b8eacd",
+ "head": "ebb2f02a2197261e907e21cfa3e4bf7e6b5a9649",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 850,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d3626722-b676-5fe1-a960-a7dfb6f9c3d1",
+ "at": "2026-09-24T01:27:05.251Z"
+}
