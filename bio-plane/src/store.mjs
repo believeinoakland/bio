@@ -345,6 +345,10 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
 /* REC-152: tick and close are the run's PRINCIPAL's acts — the positional half, decided once in `airun.mjs`.
    Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
 import { runPrincipalGate } from "./airun.mjs";
+/* D-500: §5.1's top-end bound — is this subject's entry provably at or after the log's first row at its
+   level — decided ONCE in `airun.mjs`, beside the cause vocabulary it answers into, and asked by the content
+   and meaning readers below. Its own import line, for the reason REC-152's gives. */
+import { enteredAfterFirstRow } from "./airun.mjs";
 /* REC-169: a figure written into a run's bound is a non-negative integer and never a plane-counted bound's — decided
    once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives.
    REC-172: the tick hands it its `consume` whole (`map: true` — a MAP of named bounds) and the open its `bounds`
@@ -41799,26 +41803,27 @@ export class Store extends DurableObject {
     if (!firstContentAt) return "purged";
     const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
     if (!reg) return "purged";
-    /* BOTH SIDES NORMALISED TO THE SECOND BEFORE THEY ARE COMPARED, AND THIS WAS
-       A REAL DEFECT IN THIS RULE'S FIRST DRAFT rather than a precaution.
-       `register.registered` is a full ISO timestamp WITH MILLISECONDS
-       (`new Date().toISOString()`); `observation_log.at` is the same value with
-       the fraction CUT (`…split(".")[0] + "Z"`), which is `#observe`'s own
-       spelling. Compared as raw strings those two precisions mis-sort inside a
-       single second — `"…:15.900Z"` is LESS than `"…:15Z"`, because `.` sorts
-       below `Z` — so a capture registered in the same second as the log's first
-       row was being read as PREDATING it.
-       The direction it failed in was the safe one (undetermined rather than a
-       claim), which is exactly why it would have survived review: it produced a
-       more cautious answer for a wrong reason, on an instance where nothing
-       would ever have looked odd.
-       A TIE ON THE SECOND GOES TO CAUSE (3), and that is reasoned rather than
-       convenient: the content writer runs INSIDE promote's transaction, so a
-       capture promoted in the same second the writer first ran either got a row
-       — and is therefore not in this set at all — or was promoted with no
-       reading, which is genuinely nobody-looked. */
-    const sec = (v) => String(v).slice(0, 19);
-    return sec(reg) >= sec(firstContentAt) ? "never_looked" : "purged";
+    /* D-500 — THE COMPARISON IS `enteredAfterFirstRow` IN `airun.mjs` AND THERE IS
+       NO SECOND COPY OF IT HERE. The reasoning is at that function and is
+       deliberately not restated: one rule with two spellings is the drift class,
+       and this method and `#missingMeaningCause` are the two spellings it had.
+       WHAT THIS REPLACED, kept rather than deleted because it is the defect and a
+       reader meeting the new rule should see what it corrected. REC-92's draft
+       compared the two sides as RAW strings, which mis-sorts inside a second
+       (`"…:15.900Z"` is LESS than `"…:15Z"` because `.` sorts below `Z`); REC-94
+       fixed that by truncating both to the second — `String(v).slice(0, 19)` —
+       and that stood until D-486 measured what it costs. Truncating compares two
+       FLOORS, so the answer turns on where a second boundary falls rather than on
+       the two instants' order, and a hidden run re-dating the watermark moved four
+       of an outsider's frontier keys on one run and not on the next (M-131). It
+       REC-94's reasoned tie is not reversed and is the reason the new rule reads
+       the way it does: the tie rests on SIMULTANEITY — the content writer runs
+       INSIDE promote's transaction — and a shared clock second was only ever the
+       proxy the stored precision allowed, so the tie is now applied over the
+       watermark's real one-second uncertainty instead. Every answer this suite
+       and the case document's `searched` section drive is unmoved; what moved is
+       that the answer no longer depends on where the second fell. */
+    return enteredAfterFirstRow(reg, firstContentAt) ? "never_looked" : "purged";
   }
 
   #missingContentCause(captureSha, registeredAt = null) {
@@ -42889,22 +42894,16 @@ export class Store extends DurableObject {
     if (!firstAt) return "purged";
     const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
     if (!entered) return "purged";
-    /* BOTH SIDES NORMALISED TO THE SECOND BEFORE THEY ARE COMPARED, AND THIS IS
-       REC-94's MEASURED DEFECT INHERITED RATHER THAN RE-PAID FOR. `registered`
-       and `entities.at` are full ISO timestamps WITH MILLISECONDS
-       (`new Date().toISOString()`); `observation_log.at` is the same value with
-       the fraction CUT, which is `#observe`'s own spelling. Compared as raw
-       strings those two precisions mis-sort inside a single second — `"…:15.900Z"`
-       is LESS than `"…:15Z"`, because `.` sorts below `Z` — so a subject that
-       entered in the same second as the log's first row reads as PREDATING it.
-       It fails in the SAFE direction (undetermined rather than a claim), which is
-       exactly why it would survive review.
-       A TIE ON THE SECOND GOES TO CAUSE (3), for REC-94's reason: the reader-run
-       writer runs INSIDE promote's transaction, so a capture registered in the
-       same second the writer first ran either got a row — and is not in this set
-       at all — or was promoted with no reading, which is genuinely nobody-looked. */
-    const sec = (v) => String(v).slice(0, 19);
-    return sec(entered) >= sec(firstAt) ? "never_looked" : "purged";
+    /* D-500 — THE SAME ONE COMPARISON THE CONTENT ARM ASKS, `enteredAfterFirstRow`
+       IN `airun.mjs`, AND THE POINT OF THE MOVE IS THAT THIS SITE NO LONGER
+       CARRIES ITS OWN COPY. This arm INHERITED REC-94's truncation verbatim —
+       which is how a rule ends up with two spellings — and D-486 then measured
+       what the truncation costs at BOTH levels: comparing two floors makes the
+       answer turn on where a second boundary falls, so a hidden run re-dating the
+       watermark moved this level's `never_looked` and `missing_unexplained` keys
+       on one run and not on the next (M-131). The reasoning, and REC-94's tie
+       narrowed to an equality of instants, are at the function. */
+    return enteredAfterFirstRow(entered, firstAt) ? "never_looked" : "purged";
   }
 
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
