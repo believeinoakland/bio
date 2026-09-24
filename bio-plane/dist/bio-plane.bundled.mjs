@@ -28772,6 +28772,7 @@ var CONTENT_AXIS_STATES = {
   not_extracted: "nobody has tried to extract this capture's text. This is the ABSENCE of an observation and not a finding about the document (D-129's NEVER_LOOKED at the content level)"
 };
 var CONTENT_AXIS_UNDETERMINED = "undetermined";
+var WATERMARK_BAND_CAUSE = "watermark_band";
 var MISSING_ROW_CAUSES = {
   pre_log: "this capture was extracted BEFORE the observation log carried the content level, so the look is recorded in the readings table and not here. It is not a capture nobody read",
   /* CORRECTED BY REC-107, and the old sentence is quoted in the reason rather than
@@ -28787,7 +28788,13 @@ var MISSING_ROW_CAUSES = {
      `not_ruled_out` rather than asserted in prose here**, so this sentence describes
      the cause and stops claiming what it cannot. */
   purged: "this capture predates the earliest content-level row this log holds, so the log may not yet have existed for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked at all. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW, and they are different facts",
-  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement"
+  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement",
+  /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE FOURTH WORD, AND IT IS NOT A FOURTH
+     SECTION 5.1 CAUSE. Section 5.1 has three causes and this word names none of
+     them: it says WHICH TWO OF THEM THE STORED PRECISION LEFT OPEN, and it exists
+     because the alternative was the reader PICKING between them. `not_ruled_out`
+     is still drawn from `ALL_MISSING_ROW_CAUSES`, which stays at three. */
+  [WATERMARK_BAND_CAUSE]: "this capture entered the record in the clock second IMMEDIATELY BEFORE the earliest content-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the capture entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them. The uncertainty is in the STORED VALUE and no comparison can remove it. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW"
 };
 function contentAxisFor({
   observed = null,
@@ -28930,7 +28937,11 @@ var MEANING_MISSING_ROW_CAUSES = {
      `evidence_one_sided` map a caller had to remember to join to the row. Both now
      sit ON the row, in `not_ruled_out` and `evidence_one_sided`. */
   purged: "this subject entered the record before the earliest meaning-level row this log holds, so the log may not yet have carried this level for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked -- and at a reference or an entity a pre-log look that found NOTHING is live too, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
-  never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement"
+  never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement",
+  /* D-516 — THE SAME FOURTH WORD AT THIS LEVEL, and the sentence differs because
+     the row it is measured against differs, which is A3b's rule applied to the
+     word this item adds rather than inherited by it. */
+  [WATERMARK_BAND_CAUSE]: "this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the subject entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them; at a reference or an entity a pre-log look that found NOTHING is live in the set as well, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT"
 };
 var MEANING_EVIDENCE_IS_ONE_SIDED = {
   capture: false,
@@ -28957,7 +28968,8 @@ var ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]
 function causesNotRuledOut(missingCause, { evidenceOneSided = void 0 } = {}) {
   if (missingCause === "pre_log") return ["pre_log"];
   if (missingCause === "never_looked") return ["never_looked"];
-  if (missingCause !== "purged") return [...ALL_MISSING_ROW_CAUSES];
+  if (missingCause !== "purged" && missingCause !== WATERMARK_BAND_CAUSE)
+    return [...ALL_MISSING_ROW_CAUSES];
   if (evidenceOneSided === false) return ["purged", "never_looked"];
   return [...ALL_MISSING_ROW_CAUSES];
 }
@@ -28966,11 +28978,16 @@ var WATERMARK_HAS_FRACTION = /\.\d+Z?$/;
 function watermarkUncertaintyMs(firstAt) {
   return WATERMARK_HAS_FRACTION.test(String(firstAt ?? "")) ? 0 : WATERMARK_SECOND_MS;
 }
+var WATERMARK_AFTER = "after";
+var WATERMARK_BEFORE = "before";
+var WATERMARK_WITHIN_BAND = "within_band";
 function enteredAfterFirstRow(enteredAt, firstAt) {
   const entered = Date.parse(String(enteredAt ?? ""));
   const first = Date.parse(String(firstAt ?? ""));
-  if (!Number.isFinite(entered) || !Number.isFinite(first)) return false;
-  return entered >= first - watermarkUncertaintyMs(firstAt);
+  if (!Number.isFinite(entered) || !Number.isFinite(first)) return WATERMARK_BEFORE;
+  if (entered >= first) return WATERMARK_AFTER;
+  if (entered < first - watermarkUncertaintyMs(firstAt)) return WATERMARK_BEFORE;
+  return WATERMARK_WITHIN_BAND;
 }
 function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
@@ -29123,6 +29140,15 @@ function derivationStatement(row = null, missingCause = null) {
       documents: null,
       derived: "pre_log",
       says: "derived before the observation log recorded derivations: the connection rows exist, and whether that derivation was cut is NOT recorded"
+    };
+  if (cause === WATERMARK_BAND_CAUSE)
+    return {
+      state: null,
+      cut: null,
+      at: null,
+      documents: null,
+      derived: "undetermined",
+      says: "undetermined: no derivation over this subject is recorded, and this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row the log holds. `observation_log.at` stores whole seconds, so the record cannot tell which side of that row the subject entered on, and it does not pick"
     };
   return {
     state: null,
@@ -68600,7 +68626,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstContentAt) return "purged";
     const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
     if (!reg) return "purged";
-    return enteredAfterFirstRow(reg, firstContentAt) ? "never_looked" : "purged";
+    const order = enteredAfterFirstRow(reg, firstContentAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
   #missingContentCause(captureSha, registeredAt = null) {
     if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
@@ -69522,7 +69551,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstAt) return "purged";
     const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
     if (!entered) return "purged";
-    return enteredAfterFirstRow(entered, firstAt) ? "never_looked" : "purged";
+    const order = enteredAfterFirstRow(entered, firstAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
    *  every level's frontier, through the one function in `airun.mjs` that decides

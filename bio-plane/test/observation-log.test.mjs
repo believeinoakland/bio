@@ -1,3 +1,29 @@
+/* NEGATIVE CONTROL (D-516, declared and RUN 2026-09-24, worktree /home/user/bio on
+   land/worker/D-516, cloud): ONE ARM at the rule itself (`enteredAfterFirstRow` in
+   `src/airun.mjs`), restored from a uniquely-named pristine copy OUTSIDE the worktree
+   and verified by sha256 AND `cmp` (`airun.mjs` 169,760 B sha256 `89377020f45c…`,
+   restore YES, byte-identical). Baseline both ends: 131 pass, 0 fail.
+   `collapse` — THE ROW'S OWN ARM, and it is BOB #33's own words: the three-way answer
+   collapsed back into D-500's two-way comparison, so `within_band` is never returned
+   and the reader PICKS again. One line changed and nothing else; the cause vocabulary,
+   both maps and both readers' mapping are untouched, so the arm moves the DECISION and
+   not the words it is spelled in.
+     Declared MUST FAIL: M3 M3a M9c M9e M9f. MUST NOT FAIL: M1 M1b M2a M2b M4 M4b M4c
+     M5 M5b M6 M6b M7 M7b M7c M8 M9b.
+     ACTUAL: 121 pass, 10 fail — M2 M2c M3 M3a M3c M9 M9c M9d M9e M9f. **The five
+     undeclared failures are right to be there and each is recorded rather than
+     smoothed**, because every one of them rests on the band EXISTING: M2 is the
+     never-both-claims property, which is precisely what the two-way rule violates
+     (it is D-500's measured flip, so this arm reproduces M-131); M2c and M3c name the
+     band's size and its kind; M9 is the armedness arm and asks the rule itself whether
+     the fixture's pair is the band; M9d reads a field off a row that, under the arm, is
+     no longer in `missing_unexplained` at all. NOTHING declared MUST NOT FAIL failed.
+   OVER-STRICTNESS ARM, in the direction that matters here: with `collapse` armed,
+   `observation-content.test.mjs` and `observation-meaning.test.mjs` stayed GREEN at
+   75/0 each. That is the arm's REACH, stated: it moves the comparison and leaves the
+   published vocabulary standing, so the four vocabulary pins those suites carry are
+   NOT what this control is measuring — a control that moved both would have proved
+   nothing about either. */
 /* NEGATIVE CONTROL: (declared and RUN 2026-09-24, D-500, worktree /home/user/bio on
    land/worker/D-500) THREE ARMS at the rule itself (`enteredAfterFirstRow` in
    `src/airun.mjs`), each planted ALONE with the others held open, restored from a
@@ -365,7 +391,15 @@ import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
          /* D-500 / section M: the watermark comparison is driven AS THE RULE, imported
             from the one place it lives rather than retyped — a hand copy of a rule agrees
             with itself for free, which is this file's own standing objection. */
-         enteredAfterFirstRow, watermarkUncertaintyMs } from "../src/airun.mjs";
+         enteredAfterFirstRow, watermarkUncertaintyMs,
+         /* D-516 / section M: the rule now answers THREE ways, so the arms below name
+            the answers from the constants rather than from string literals — the same
+            objection one line up, pointed at the vocabulary instead of at the rule. The
+            content axis and its cause vocabulary come too, because BOB #33's condition
+            is about what the READER says and not about what the comparison returns. */
+         WATERMARK_AFTER, WATERMARK_BEFORE, WATERMARK_WITHIN_BAND, WATERMARK_BAND_CAUSE,
+         MISSING_ROW_CAUSES, MEANING_MISSING_ROW_CAUSES, causesNotRuledOut,
+         contentAxisFor, CONTENT_AXIS_UNDETERMINED } from "../src/airun.mjs";
 import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -1852,6 +1886,25 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
    [...SRC_STORE.matchAll(/const sec = /g)].length,
    [...SRC_STORE.matchAll(/import \{ enteredAfterFirstRow \} from "\.\/airun\.mjs";/g)].length],
   [2, 0, 1]);
+/* D-516 — **THE TRAP THE THREE-WAY ANSWER OPENS, PINNED RATHER THAN WARNED ABOUT.**
+   `enteredAfterFirstRow` still READS as a predicate and now returns one of three
+   TRUTHY strings, so `enteredAfterFirstRow(a, b) ? x : y` — which is exactly what
+   both readers held until this item — compiles, runs, and classifies the band as
+   the positive statement. That is a defect no assertion about behaviour can see,
+   because a reader written that way agrees with the rule on two of its three
+   answers and is wrong only on the one this item exists to add. So the pin is
+   STRUCTURAL and it is on the SHAPE of the call, not on the answer.
+   WHAT IT CAN AND CANNOT SEE, stated: it matches the call followed by a ternary,
+   a negation, or a boolean operator, on one line. It cannot see the answer stored
+   in a variable and tested later — which is what BOTH readers now do, deliberately
+   and by name — so it is a floor against the careless spelling and not a proof.
+   The behaviour arms below are what cover the stored form. */
+t("M1b: NO READER TESTS THE THREE-WAY ANSWER AS A BOOLEAN — every one of its three "
++ "answers is a truthy string, so a ternary on the call is silently wrong exactly "
++ "where this item is right",
+  [...SRC_STORE.matchAll(/(?:!\s*)?enteredAfterFirstRow\([^\n]*?\)\s*(?:\?|&&|\|\|)/g)]
+    .map((m) => m[0]),
+  []);
 /* THE PIN IS ON THE HELPER AND NOT ON `slice(0, 19)`, and the reason is worth one
    line: the superseded spelling is QUOTED in the corrections at both sites, so a
    pin on the literal counts this file's own history as a defect — the shape
@@ -1878,6 +1931,17 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
     const sec = (v) => String(v).slice(0, 19);
     return sec(enteredAt) >= sec(firstAt);
   };
+  /* D-516 — **D-500's TWO-WAY RULE, VERBATIM from `airun.mjs` before THIS item**, and
+     it is a SECOND superseded rule and not the same one. `shipped` above is REC-94's
+     truncating comparison, which D-500 replaced; this is D-500's replacement, which
+     this item replaces in turn. Keeping both is what lets M3b and M4c measure this
+     item's move against the rule it actually moved, rather than against a rule two
+     landings old — a control that arms the wrong subject refutes nothing. */
+  const d500 = (enteredAt, firstAt) => {
+    const e = Date.parse(String(enteredAt ?? "")), f = Date.parse(String(firstAt ?? ""));
+    if (!Number.isFinite(e) || !Number.isFinite(f)) return false;
+    return e >= f - watermarkUncertaintyMs(firstAt);
+  };
   const answersFor = (rule, gap) => {
     const seen = new Set();
     for (let off = 0; off < SECOND; off += STEP) {
@@ -1888,6 +1952,14 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
   };
   const placements = Math.ceil(SECOND / STEP);
   const unstable = (rule, gaps) => gaps.filter((g) => answersFor(rule, g).size !== 1);
+  /* D-516 — THE SAME SWEEP READ AT THE LEVEL BOB #33's CONDITION IS WRITTEN AT:
+     what the READER says, not what the comparison returns. `contentAxisFor` is
+     called with the cause the store would map this answer to, so this is the
+     reader's own state and not a paraphrase of it. */
+  const causeOf = (answer) => answer === WATERMARK_AFTER ? "never_looked"
+                            : answer === WATERMARK_WITHIN_BAND ? WATERMARK_BAND_CAUSE : "purged";
+  const statesFor = (gap) => new Set([...answersFor(enteredAfterFirstRow, gap)].map((a) =>
+    contentAxisFor({ observed: null, missingCause: causeOf(a) }).state));
   console.log(`  corpus: ${placements} placements of the clock second × `
     + `${GAPS_SAME_SECOND.length} same-second gaps + ${GAPS_BEYOND.length} beyond `
     + `= ${placements * (GAPS_SAME_SECOND.length + GAPS_BEYOND.length)} pairs per rule`);
@@ -1895,29 +1967,112 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
   + "arms below could pass over nothing at all",
     [placements >= 100, GAPS_SAME_SECOND.length >= 8], [true, true]);
 
-  t("M2: A SAME-SECOND PAIR CLASSIFIES IDENTICALLY ON EVERY RUN — for every gap "
-  + "within one second, in either direction, the answer does not depend on where "
-  + "the clock second fell. This is the row's whole subject and BOB #32's condition",
-    unstable(enteredAfterFirstRow, GAPS_SAME_SECOND), []);
+  /* **M2 IS CORRECTED BY D-516 RATHER THAN EXEMPTED, AND THE OLD ASSERTION IS
+     QUOTED HERE BECAUSE IT IS THE DEFECT.** It read: *for every gap within one
+     second, in either direction, the answer does not depend on where the clock
+     second fell*, asserted as `unstable(rule, GAPS_SAME_SECOND) === []`. That was
+     TRUE of D-500's two-way rule and it was true the wrong way round: the rule
+     reached one stable answer for the whole band by PICKING a side of an interval
+     the stored value does not resolve, which is the record choosing between two
+     claims it cannot tell apart (BOB #33, 2026-09-24 17:58Z). Stability bought
+     that way is not the property worth asserting, and asserting it is what would
+     block the fix.
+     **WHAT REPLACES IT IS STRICTLY STRONGER AND HOLDS FOR EVERY GAP, not only the
+     same-second ones.** The failure D-486 measured (M-131) is a pair flipping
+     between the two CLAIMS — `never_looked` on one run and `purged` on the next.
+     That is now impossible for any gap at all, and the arm sweeps the whole corpus
+     rather than half of it. A pair may still weaken from a claim to `within_band`
+     as the second moves; it can never swap one claim for the other. */
+  t("M2: NO PAIR EVER FLIPS BETWEEN THE TWO CLAIMS — over the WHOLE corpus, near "
+  + "and far, no gap answers `after` on one placement of the clock second and "
+  + "`before` on another. That swap is D-486's measured failure (M-131) and this "
+  + "is the arm that says it cannot happen",
+    [...GAPS_SAME_SECOND, ...GAPS_BEYOND].filter((g) => {
+      const a = answersFor(enteredAfterFirstRow, g);
+      return a.has(WATERMARK_AFTER) && a.has(WATERMARK_BEFORE); }), []);
 
-  t("M2b: and the answer a same-second pair settles on is REC-94's tie — cause (3), "
-  + "not a withdrawal of it: the tie rests on simultaneity, and the shared clock "
+  t("M2b: and REC-94's TIE IS NOT WITHDRAWN — no same-second gap, in either "
+  + "direction, ever reaches `before`; a gap at or after the first row reaches the "
+  + "tie on EVERY placement. The tie rests on simultaneity, and the shared clock "
   + "second was only ever the proxy the stored precision allowed",
-    GAPS_SAME_SECOND.map((g) => [...answersFor(enteredAfterFirstRow, g)][0]),
-    GAPS_SAME_SECOND.map(() => true));
+    [GAPS_SAME_SECOND.filter((g) => answersFor(enteredAfterFirstRow, g).has(WATERMARK_BEFORE)),
+     GAPS_SAME_SECOND.filter((g) => g >= 0)
+       .map((g) => [...answersFor(enteredAfterFirstRow, g)].join("+"))],
+    [[], GAPS_SAME_SECOND.filter((g) => g >= 0).map(() => WATERMARK_AFTER)]);
 
-  /* WHAT THIS RULE CANNOT DO, NAMED RATHER THAN SCORED ZERO — M-131's own ceiling
-     form. One second of uncertainty is in the STORED value and no comparison can
-     remove it; `c = -1000` moves the band off the pairs the writers produce, and
-     the band that remains is stated here so a later reader meets it as a known
-     cost rather than as a surprise. Closing it needs the watermark stored with
-     milliseconds, which `ISO_TS_RE` does not admit — an interface question, and
-     not this row's. */
-  t("M3: THE RESIDUAL BAND IS NAMED: the ONLY gaps whose answer still depends on "
-  + "the boundary are 1–2 s BEFORE the first row, and every one of them is that. "
-  + "Closing it needs a millisecond watermark, which is an interface question",
-    unstable(enteredAfterFirstRow, GAPS_BEYOND).sort((a, b) => a - b),
-    [-1800, -1500, -1200]);
+  /* **AND THE COST OF THE CORRECTION, MEASURED AND NAMED RATHER THAN LEFT FOR A
+     READER TO DISCOVER — it is the honest half of what M2 used to assert.** A
+     same-second pair whose subject entered BEFORE the first row now reads
+     `within_band` on the placements that put the two in different clock seconds,
+     where D-500's rule read `never_looked` on all of them. It is a WEAKENING and
+     never a wrong claim, it is exactly what BOB #33 ruled for (inside the
+     uncertainty the record states rather than picks), and it is the residue M3b
+     names. Asserted, so that a later session meets the size of it as a figure
+     rather than as a surprise. */
+  t("M2c: THE MEASURED COST OF STATING RATHER THAN PICKING: the same-second gaps "
+  + "that now reach `within_band` on SOME placements are exactly the negative ones "
+  + "— a subject that entered before the first row — and none of the non-negative "
+  + "ones. Positive statements are not weakened; unprovable ones are",
+    [GAPS_SAME_SECOND.filter((g) => answersFor(enteredAfterFirstRow, g).has(WATERMARK_WITHIN_BAND)),
+     GAPS_SAME_SECOND.filter((g) => g >= 0
+       && answersFor(enteredAfterFirstRow, g).has(WATERMARK_WITHIN_BAND))],
+    [GAPS_SAME_SECOND.filter((g) => g < 0), []]);
+
+  /* **M3 IS THE ROW'S OWN ACCEPTANCE AND IT IS CORRECTED IN THE DIRECTION IT
+     NAMED.** D-500 wrote this arm to NAME its residue: the gaps 1–2 s before the
+     first row still answered `never_looked` or `purged` depending on where the
+     clock second fell, and D-500 could only record that. BOB #33 ruled on exactly
+     that sentence — *that is the record choosing between two claims it cannot tell
+     apart* — so the arm now asserts what the ruling requires instead of naming
+     what it could not do. The old assertion (`unstable(...) === [-1800,-1500,
+     -1200]`) is kept as M3's own control in M4c below, driven on the SUPERSEDED
+     rule, so this correction is never an equality between two things that were
+     never different. */
+  t("M3: THE GAPS D-500 MEASURED FLIPPING NEVER REACH A POSITIVE STATEMENT AGAIN — "
+  + "for every one of them, at every placement of the clock second, the answer is "
+  + "`before` or `within_band` and NEVER `after`. This is BOB #33's ruling at the "
+  + "rule: inside the band the record does not pick",
+    GAPS_BEYOND.filter((g) => g > -2000 && g < 0)
+      .filter((g) => answersFor(enteredAfterFirstRow, g).has(WATERMARK_AFTER)), []);
+
+  t("M3a: AND THE READER SAYS SO — the content axis reads UNDETERMINED for those "
+  + "gaps at EVERY placement, which is BOB #33's accepts-when read at the level it "
+  + "was written at: what the reader publishes, not what the comparison returns. "
+  + "One state and one only, so the STATE no longer moves with the clock second",
+    GAPS_BEYOND.filter((g) => g > -2000 && g < 0)
+      .map((g) => [...statesFor(g)].sort().join("+")),
+    GAPS_BEYOND.filter((g) => g > -2000 && g < 0).map(() => CONTENT_AXIS_UNDETERMINED));
+
+  t("M3b: THE PAIRS OUTSIDE THE BAND ARE UNMOVED, asserted as the partition it is "
+  + "rather than spot-checked: D-500's rule is `after ∪ within_band` and its "
+  + "negation is `before`, so every pair it called `purged` is still `purged` and "
+  + "every pair this rule calls `never_looked` it called `never_looked` too",
+    [...GAPS_SAME_SECOND, ...GAPS_BEYOND].filter((g) => {
+      for (let off = 0; off < SECOND; off += STEP) {
+        const rowTrue = BASE + off, e = iso(rowTrue + g), f = cut(rowTrue);
+        const now = enteredAfterFirstRow(e, f), was = d500(e, f);
+        if (was && now === WATERMARK_BEFORE) return true;          /* a `purged` invented */
+        if (!was && now !== WATERMARK_BEFORE) return true;          /* a `purged` lost */
+      }
+      return false; }), []);
+
+  /* WHAT THIS RULE STILL CANNOT DO, NAMED RATHER THAN SCORED ZERO — D-500's ceiling
+     NARROWED, not lifted, and this is the honest statement of what BOB #33's ruling
+     bought. The band is still ENTERED and LEFT as the clock second moves under a
+     fixed pair, so a subject a few milliseconds before the first row reads `after`
+     on most placements and `within_band` on the rest. What changed is the KIND of
+     the residue: it is now a claim weakening to *this record cannot tell*, never a
+     claim swapping for the opposite claim (M2). Closing it entirely needs the
+     watermark stored with milliseconds, which `ISO_TS_RE` does not admit and which
+     BOB #33 ruled against — an interface question, and not this row's. */
+  t("M3c: THE RESIDUE, NARROWED AND NAMED: gaps whose ANSWER still depends on the "
+  + "boundary remain, and every one of them is a boundary between a claim and "
+  + "`within_band` — never between the two claims. The kind of the residue is what "
+  + "this row moved; closing it needs a millisecond watermark",
+    unstable(enteredAfterFirstRow, [...GAPS_SAME_SECOND, ...GAPS_BEYOND])
+      .every((g) => { const a = answersFor(enteredAfterFirstRow, g);
+                      return a.has(WATERMARK_WITHIN_BAND) && a.size === 2; }),
+    true);
 
   /* THE ARM THAT MAKES M2 MEAN SOMETHING. */
   /* DECLARED [-900, -500, -100] AND THE FIRST RUN ANSWERED [-900, -500, -100, -1].
@@ -1930,6 +2085,18 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
   t("M4: THE SUPERSEDED RULE FAILS M2 ON THIS CORPUS — its band sits exactly on the "
   + "same-second pair, which is D-486's measured flip reproduced here on purpose",
     unstable(shipped, GAPS_SAME_SECOND).sort((a, b) => a - b), [-900, -500, -100, -1]);
+  /* D-516 — **M3's OLD ASSERTION, KEPT AND POINTED AT THE RULE IT WAS TRUE OF.**
+     It is what makes M3's correction mean something: D-500's rule really did flip
+     these three gaps between its two answers, so M3 is not an equality between two
+     things that were never different. It is driven on `d500` and NOT on `shipped`,
+     because `shipped` is REC-94's rule from one landing earlier and answers these
+     three gaps stably — a control on it would have armed nothing. */
+  t("M4c: D-500's RULE FLIPS EXACTLY THE THREE GAPS M3 NOW COVERS — "
+  + "1–2 s before the first row, flipping between `never_looked` and `purged` on "
+  + "where the clock second fell. That is D-500's own named residue, reproduced "
+  + "here on purpose as the control for M3",
+    unstable(d500, GAPS_BEYOND).sort((a, b) => a - b), [-1800, -1500, -1200]);
+
   t("M4b: AND A PLAIN `Date.parse` RE-SPELLING WOULD HAVE FIXED NOTHING — measured, "
   + "not assumed: over the whole corpus it answers IDENTICALLY to the truncating "
   + "form, because the stored watermark is already a whole second. The obvious fix "
@@ -1945,17 +2112,28 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
   t("M5: A WATERMARK THAT CARRIES A FRACTION IS COMPARED EXACTLY — the uncertainty "
   + "is read off the VALUE, so the rule needs no edit if the stored precision ever "
   + "moves, and REC-94's tie narrows to an equality of instants",
+    /* CORRECTED BY D-516: the rule answers three ways, so this arm reads the ANSWER
+       and not a boolean. The property it pins is unchanged and is now sharper — a
+       fractional watermark has a ZERO-WIDE interval, so `within_band` is not merely
+       unused there, it is UNREACHABLE, and the three-way answer collapses back to
+       two with no edit at the rule. */
     [watermarkUncertaintyMs("2026-09-24T12:00:15Z"),
      watermarkUncertaintyMs("2026-09-24T12:00:15.900Z"),
      enteredAfterFirstRow("2026-09-24T12:00:15.100Z", "2026-09-24T12:00:15.100Z"),
-     enteredAfterFirstRow("2026-09-24T12:00:15.099Z", "2026-09-24T12:00:15.100Z")],
-    [1000, 0, true, false]);
+     enteredAfterFirstRow("2026-09-24T12:00:15.099Z", "2026-09-24T12:00:15.100Z"),
+     enteredAfterFirstRow("2026-09-24T12:00:14.200Z", "2026-09-24T12:00:15.100Z")],
+    [1000, 0, WATERMARK_AFTER, WATERMARK_BEFORE, WATERMARK_BEFORE]);
   t("M5b: and a value the rule cannot parse never reaches the positive statement — "
   + "the inverted default `causesNotRuledOut` takes one call up",
+    /* CORRECTED BY D-516, and the correction is the POINT of the arm rather than a
+       re-spelling: an unreadable value must not reach the BAND either. The band is
+       a statement about a precision we can see; a value nobody can parse has no
+       precision to plead, and letting it answer `within_band` would dress an
+       unreadable datum as a measured uncertainty. */
     [enteredAfterFirstRow(null, "2026-09-24T12:00:15Z"),
      enteredAfterFirstRow("2026-09-24T12:00:15.100Z", null),
      enteredAfterFirstRow("not a date", "2026-09-24T12:00:15Z")],
-    [false, false, false]);
+    [WATERMARK_BEFORE, WATERMARK_BEFORE, WATERMARK_BEFORE]);
 }
 
 /* THROUGH THE OP, ON A STORE WITH AN EMPTY LOG — because a store-level agreement
@@ -2021,9 +2199,11 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
     t("M7b: THE SITE PIN — the op's answer IS the exported rule's answer on the op's "
     + "OWN two timestamps, so the reader cannot drift from the rule without this "
     + "going red",
+      /* CORRECTED BY D-516 to read the ANSWER: the rule returns one of three words
+         and `true` is no longer one of them. The property is unchanged. */
       [typeof row?.registered === "string",
        row ? enteredAfterFirstRow(row.registered, "2020-01-01T00:00:00Z") : null],
-      [true, true]);
+      [true, WATERMARK_AFTER]);
     t("M7c: and the SAME registration, read against a watermark placed anywhere "
     + "within a second of it, answers the same way — the op's real data driven "
     + "through every boundary placement M2 sweeps synthetically",
@@ -2032,7 +2212,11 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
         return enteredAfterFirstRow(row.registered,
           new Date(base).toISOString().split(".")[0] + "Z");
       }))] : null,
-      [true]);
+      /* CORRECTED BY D-516: one answer still, and it is now named rather than
+         spelled `true` — the op's real registration is SIX YEARS after this
+         watermark, so every placement within a second of it is far outside the
+         band and the arm's subject is untouched. */
+      [WATERMARK_AFTER]);
     /* WHAT THIS ARM CANNOT REACH, STATED — H6 and H11's form in the two sibling
        suites. `register.registered` is stamped by `op=promote` from the wall clock
        and no op sets it, so this section cannot place the watermark INSIDE the
@@ -2048,6 +2232,136 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
        /op=promote/.test(SRC_STORE) && !/UPDATE register SET registered/.test(SRC_STORE)],
       [true, true]);
   } finally { await solo.dispose(); rmSync(persist, { recursive: true, force: true }); }
+}
+
+/* ------------------------------------------------------------------------- *
+ *  M9 · D-516 / BOB #33 — THE BAND, THROUGH THE OP, IN BOTH READERS.
+ *
+ *  M8 states what section M could NOT reach through the plane: no op sets
+ *  `register.registered`, so the watermark could not be placed inside the
+ *  registration's own second. **This item reaches the band from the OTHER SIDE and
+ *  the ceiling is narrowed rather than inherited:** the registration cannot be
+ *  moved, but the WATERMARK can — `op=airuntick` takes its own `at` — so a row
+ *  written at the second IMMEDIATELY AFTER the registration's second puts the pair
+ *  in the band with no clock luck at all. A store-level agreement is not evidence
+ *  a caller can reach the feature (`op=invitelook` shipped with a ReferenceError
+ *  while 1,276 assertions passed), and BOB #33's accepts-when is written about the
+ *  READERS, so it is asked of the readers.
+ * ------------------------------------------------------------------------- */
+{
+  const persist = mkdtempSync(join(tmpdir(), "d516-band-"));
+  const band = withSurfacingRun(new Miniflare({
+    modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "Store", useSQLite: true } },
+    durableObjectsPersist: persist,
+    r2Buckets: ["CAPTURES", "PUBLISHED"],
+    bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: TOK, PROBE_TOKEN: "prb-rec93",
+                VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" } }));
+  try {
+    const bPOST = async (q, b) => rP(await (await band.dispatchFetch(`http://x/api/?${q}`,
+      { method: "POST", body: JSON.stringify(b ?? {}) })).json());
+    const bGET = async (q) => rP(await (await band.dispatchFetch(`http://x/api/?${q}`)).json());
+    /* **PLACING THE PAIR IN THE BAND WITHOUT BEING ABLE TO SET EITHER SIDE.**
+       `register.registered` is stamped by `op=promote` from the wall clock and no op
+       moves it (M8), and the frontier publishes it only on a `never_looked` row —
+       which is the one row this capture must NOT be on for the arm to mean anything.
+       So the registration's SECOND is BRACKETED instead: the wall clock is read on
+       both sides of the promote, and the attempt is kept only when both readings
+       fall in one clock second, which pins the second the DO stamped inside it.
+       A straddled attempt is RETRIED with a fresh subject rather than rounded, and
+       a run that never brackets fails M9 by name rather than passing over nothing —
+       the arm-that-never-armed shape, declared here because a timing fixture is
+       exactly where it hides. */
+    let BSHA = null, regSecond = null;
+    for (let attempt = 0; attempt < 8 && regSecond === null; attempt += 1) {
+      const sha = `${attempt}`.repeat(1) + "b".repeat(63);
+      const bundle = `INQ-2026-0924-d516-band-${attempt}`;
+      const text = `---\nid: ${bundle}\n---\n\n## What\n\nA capture in the band.\n`;
+      const t0 = Date.now();
+      await bPOST(`op=promote&token=${ADM}`, {
+        bundleId: bundle, base: null, snapKey: `20260924T120000Z_d516_${attempt}`,
+        meta: { object_type: "inquiry", group: "believe-in-oakland",
+                title: "the band fixture", current_state: "open",
+                created: T0, last_updated: T0 },
+        files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text) }],
+        register: [{ sha256: sha, path: "data/d516.pdf", encoding: "binary", bytes: 10 }] });
+      const t1 = Date.now();
+      if (Math.floor(t0 / 1000) === Math.floor(t1 / 1000)) {
+        BSHA = sha; regSecond = Math.floor(t0 / 1000) * 1000;
+      }
+    }
+    /* THE WATERMARK IS PLACED ONE SECOND AFTER THE REGISTRATION'S SECOND, which puts
+       the registration in the clock second immediately before it — the band, by
+       construction and not by where the second happened to fall. */
+    const AT_BAND = regSecond === null ? null
+      : new Date(regSecond + 1000).toISOString().split(".")[0] + "Z";
+    t("M9: THE ARM IS ARMED AND THE PAIR IS IN THE BAND — the registration's second "
+    + "was bracketed rather than assumed, and the rule itself is asked whether the "
+    + "two values this fixture built really are the band",
+      [typeof BSHA === "string", AT_BAND === null ? null
+        : enteredAfterFirstRow(new Date(regSecond + 1).toISOString(), AT_BAND),
+       AT_BAND === null ? null
+        : enteredAfterFirstRow(new Date(regSecond + 999).toISOString(), AT_BAND)],
+      [true, WATERMARK_WITHIN_BAND, WATERMARK_WITHIN_BAND]);
+
+    const RUN_B = "RUN-2026-0924-d516";
+    await bPOST(`op=airunopen&token=${TOK}`, {
+      run: RUN_B, contextType: "inquiry", contextId: "INQ-2026-0924-d516-band-0",
+      label: "D-516's band",
+      mode: "check", principalClaude: "project",
+      principalClaudeRef: "believe-in-oakland/claude",
+      skillVersion: "investigative-session@1", biasManifest: null,
+      bounds: [{ bound: "fetches", allowed: 4, unit: "requests" }],
+      leaseMs: 600000, at: "2020-01-01T00:00:00Z" });
+    const tickB = await bPOST(`op=airuntick&token=${TOK}`, {
+      run: RUN_B, at: AT_BAND, leaseMs: 600000, consume: { fetches: 1 },
+      log: [{ level: "content", subject: "observation:d516-band-content",
+              state: "LOOKED_ABSENT", detail: "the first content-level row this log holds" },
+            { level: "meaning", subject: "observation:d516-band-meaning",
+              state: "LOOKED_ABSENT", detail: "the first meaning-level row this log holds" }] });
+    t("M9b: BOTH WATERMARKS WERE WRITTEN, at the second this section chose — without "
+    + "this the two reads below would be measuring an empty level",
+      [tickB?.appended, (tickB?.refused || []).length], [2, 0]);
+
+    const fc = await bGET(`op=frontier&token=${ADM}&level=content&limit=50`);
+    const crow = (fc.missing_unexplained || []).find((r) => r.subject === BSHA);
+    t("M9c: THE CONTENT READER STATES THE BAND AND DOES NOT PICK — the capture is "
+    + "NOT in `never_looked`, its cause is the band's own word, and its `why` NAMES "
+    + "the stored watermark's whole-second precision rather than a purge it cannot "
+    + "evidence. BOB #33's accepts-when, at the first of the two readers",
+      [crow?.missing_cause,
+       (fc.never_looked || []).some((r) => r.subject === BSHA),
+       /whole\s+seconds/.test(String(crow?.why)),
+       /DOES NOT PICK/.test(String(crow?.why)),
+       Object.prototype.hasOwnProperty.call(fc.missing_causes || {}, WATERMARK_BAND_CAUSE)],
+      [WATERMARK_BAND_CAUSE, false, true, true, true]);
+    t("M9d: and the SET it could not narrow is published on the row and is exactly "
+    + "`purged`'s — the band widens nothing and narrows nothing, which is the whole "
+    + "of what the third answer claims",
+      [crow?.not_ruled_out, causesNotRuledOut("purged", { evidenceOneSided: false })],
+      [causesNotRuledOut("purged", { evidenceOneSided: false }),
+       causesNotRuledOut("purged", { evidenceOneSided: false })]);
+
+    const ax = await bGET(`op=contentaxis&token=${ADM}&captureSha=${BSHA}`);
+    t("M9e: AND THE PER-CAPTURE READ AGREES WITH THE FRONTIER — the content axis is "
+    + "UNDETERMINED with `determined` false, not the `not_extracted` positive "
+    + "statement D-500's rule reached on the placements that fell the other way",
+      [ax?.indexed, ax?.determined, ax?.missing_cause, ax?.extraction,
+       /whole\s+seconds/.test(String(ax?.why))],
+      [CONTENT_AXIS_UNDETERMINED, false, WATERMARK_BAND_CAUSE, null, true]);
+
+    const fm = await bGET(`op=frontier&token=${ADM}&level=meaning&limit=50`);
+    const mrow = (fm.missing_unexplained || []).find((r) => r.subject === BSHA);
+    t("M9f: THE MEANING READER STATES THE SAME BAND, with ITS OWN sentence — the "
+    + "second of BOB #33's two readers, and the arm that would catch the fix being "
+    + "made at one site and not the other",
+      [mrow?.missing_cause, mrow?.subject_kind,
+       (fm.never_looked || []).some((r) => r.subject === BSHA),
+       String(mrow?.why) === MEANING_MISSING_ROW_CAUSES[WATERMARK_BAND_CAUSE],
+       String(mrow?.why) === MISSING_ROW_CAUSES[WATERMARK_BAND_CAUSE]],
+      [WATERMARK_BAND_CAUSE, "capture", false, true, false]);
+  } finally { await band.dispose(); rmSync(persist, { recursive: true, force: true }); }
 }
 
 console.log(`\nobservation-log: ${pass} pass, ${fail} fail`);
