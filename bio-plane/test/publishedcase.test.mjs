@@ -71,6 +71,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { INSTALLATION_CHECKS } from "../checks/bio-checks.mjs";   /* D-549: C-68.5, read from the row, never a hand copy */
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 /* D-431: the loose branch's bundle is made EVIDENCE OF A RATIFIED CASE (Publication rule 2). */
@@ -85,13 +86,16 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 }
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = withSurfacingRun(new Miniflare({
+/* D-549: the options are NAMED so the last block can reboot the SAME record with the published store unbound
+   (`setOptions` keeps the Durable Object's state — doorbell.test.mjs's precedent). */
+const MF_OPTS = {
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-rec22", MEMBER_TOKEN: "mem-rec22", PROBE_TOKEN: "prb-rec22", VERSION: "test" },
-}));
+};
+const mf = withSurfacingRun(new Miniflare(MF_OPTS));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -1095,6 +1099,54 @@ console.log("\n--- REC-117 / BOB 2026-09-17: a finding concluded with NO falsifi
     oAu.falsifier, "An adopted resolution naming the transfer would overturn this.");
   t("REC-117 over-strictness: and reports the override as NULL — present so it can be read, null because nobody overrode anything",
     [("falsifier_override" in oAu), oAu.falsifier_override], [true, null]);
+}
+
+/* D-549 / C-68.5 — THE PUBLISHED-STORE COMPLAINT, AT BOTH PUBLIC SITES, DRIVEN AS A STRANGER.
+   Until D-549 the code for "this copy has no store for its published documents" reached an anonymous caller BARE,
+   minted at two sites (one of them a ternary it shared with the missing-object code) with no sentence behind it.
+   Now ONE governed helper mints it for ONE condition, with its check and canned translation from the row. Graded
+   against the IMPORTED row, never a copy. LAST in the suite because it deletes one published object and then
+   reboots the record with the published store unbound; nothing runs after it.
+   WHICH CODE UNDER WHICH CONDITION is graded in both directions, so neither can absorb the other:
+     (i)  store BOUND, the finding's object absent -> the missing-object code, bare, carrying NO C-68.5 row;
+     (ii) store UNBOUND -> NO_PUBLISHED_STORE with C-68.5's check and translation, at publishedcase AND publishedbytes,
+          and publishedbytes' own `detail` byte-identical to the sentence it said before D-549. */
+console.log("\n--- D-549: C-68.5, the published store absent, at both public ops ---");
+{
+  const row = INSTALLATION_CHECKS.NO_PUBLISHED_STORE || {};
+  const before = await anonCase(`id=${CASE}`);
+  const fb = ((before.findings || [])[0] || {}).body || {};
+  const pinned = fb.from_sha;
+  /* THE FIXTURE FLOOR: every arm below is about a published finding's bytes, so the fixture must be one. */
+  t("D-549 fixture: the case is published and its finding's body is served from a 64-hex sha",
+    [before.ok === true, fb.state, /^[0-9a-f]{64}$/.test(pinned || "")], [true, "published", true]);
+  t("D-549: the catalogue row exists, with a C-68.5 check and a non-empty translation",
+    [row.check, typeof row.translation === "string" && row.translation.length > 40], ["C-68.5", true]);
+
+  /* (i) the store bound and the object absent. */
+  await (await mf.getR2Bucket("PUBLISHED")).delete(`bio/published/${pinned}`);
+  const miss = ((((await anonCase(`id=${CASE}`)).findings) || [])[0] || {}).body || {};
+  t("D-549 (i): a bound store missing the finding's object answers the missing-object code, not NO_PUBLISHED_STORE",
+    [miss.state, miss.reason, miss.from_sha], ["unavailable", "OBJECT_MISSING", pinned]);
+  t("D-549 (i) over-strictness: and carries NO C-68.5 check or translation — the store-absent sentence would be false here",
+    [miss.check ?? null, miss.translation ?? null], [null, null]);
+
+  /* (ii) the SAME record, rebooted with no published store bound. */
+  await mf.setOptions({ ...MF_OPTS, r2Buckets: ["CAPTURES"] });
+  const gone = await anonCase(`id=${CASE}`);
+  const gb = ((gone.findings || [])[0] || {}).body || {};
+  t("D-549 (ii) publishedcase: the case still answers, and the finding's body is STATED unavailable, never substituted",
+    [gone.ok === true, gb.state, gb.from_sha], [true, "unavailable", pinned]);
+  t("D-549 (ii) publishedcase: NO_PUBLISHED_STORE with C-68.5's check and canned translation",
+    [gb.reason, gb.check, gb.translation], ["NO_PUBLISHED_STORE", row.check, row.translation]);
+  const rb = await anonBytes(`sha256=${pinned}`);
+  const bj = await rb.json().catch(() => ({}));
+  t("D-549 (ii) publishedbytes: 503 NO_PUBLISHED_STORE with C-68.5's check and canned translation",
+    [rb.status, bj.ok, bj.reason, bj.check, bj.translation], [503, false, "NO_PUBLISHED_STORE", row.check, row.translation]);
+  /* Typed as a literal ON PURPOSE: it is the pre-D-549 wire, and the point is that the translation is additive. */
+  t("D-549 (ii) publishedbytes: its own detail is byte-identical to the sentence it carried before D-549",
+    bj.detail, "this instance has no published object store configured, so its published bytes are "
+             + "not servable. The hash is genuine and this instance cannot hand over the bytes.");
 }
 
 await mf.dispose();

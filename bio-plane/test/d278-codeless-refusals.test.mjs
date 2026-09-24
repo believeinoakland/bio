@@ -36,7 +36,8 @@
  * WHAT IT CAN AND CANNOT SEE: it drives each site through the control plane (`dispatchFetch`, the route a real
  * caller takes), on Miniflare. It is NOT a live probe, and a green harness is not a serving build (D-108). It does
  * not see the 405 method complaints (codeless by design), `knock`'s `TOO_LARGE`/`EMPTY` (coded already, outside
- * D-278), or `publishedbytes`' `NO_PUBLISHED_STORE` (coded already).
+ * D-278), or publishedbytes' published-store complaint (coded already; its translation, C-68.5, is D-549's and
+ * is graded in publishedcase.test.mjs).
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
