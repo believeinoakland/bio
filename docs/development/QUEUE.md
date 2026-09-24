@@ -189,7 +189,7 @@ scope: `op=proposedispose` writes `definition_version`; a read against a later v
 accepts-when: `bio-plane/test/proposedispose.test.mjs` gains an arm: a disposition under version 1 does not apply under version 2, and the column reads back. NEGATIVE CONTROL: stop writing the version, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-128's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs REC`).
 
-### D-486 · queued — **A HIDDEN PROJECT'S RUNS MOVE COUNTS SERVED OUTSIDE ITS SIGHT: `#counts`, the frontier readers, and the run side of proposedReadings, inquiryRunSurfacings and captureRequests tally rows whose `authority_kind='run'` came from a run over a hidden project, so the tally discloses that the project exists.** Found by D-464's worker (finding 1). — owner RECORD.
+### D-486 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-486 (CONDUCT #20), base land/conduct/c19-batch10 @ cff0ede6 (same count readers as D-464); must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-486 and that session; never conclude queued from the absence alone.
 order: after D-480, the same disclosure class at the head (BOB #32, 02:30Z: *"Row it as disclosure-class, beside D-480 at the head"*; SCHEDULER #18, 2026-09-24)
 milestone: M8
 interface: I3 — the served counts subtract; shapes unchanged.
@@ -199,7 +199,7 @@ scope: one predicate excluding run rows whose context is a hidden project from e
 accepts-when: a run over a hidden project leaves each reader's answer to an outsider unchanged. NEGATIVE CONTROL: drop the predicate from one reader and its arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-470 · queued — **THE RATIFICATION STAMP CANNOT TELL WHICH CATALOG JUDGED A CASE: `gate.mjs` `CATALOG_VERSION` still reads "1.20.0" after dozens of added checks, so `plane-gate/1.0 (bio-checks 1.20.0)` names the same catalog for documents judged by different rules.** Read at the code on `main`. — owner RECORD.
+### D-470 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-470 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-470 and that session; never conclude queued from the absence alone.
 order: after D-469, at the head: a signed record that claims more precision than it holds (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
 milestone: M10
 interface: I3 — the stamp's version moves; the integrator mints and classifies the IC.
@@ -209,7 +209,7 @@ scope: bump `CATALOG_VERSION` MINOR now; add a suite pinning the version to the 
 accepts-when: the stamp reads the new version, and adding one check without a bump fails the pin by name. NEGATIVE CONTROL: add a check without moving the version, and the census-pin arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-482 · queued — **REC-59's HELPER-ARM MATCHER IN `bounds.test.mjs` IS OVER-STRICT: `callSites`' id pattern `(?:^|[?&,{\s])id[=:}]` does not see an id arm spelled `"id=" + x`, so correct work reads RED.** Found by UI-85's worker. — owner M0.
+### D-482 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-482 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-482 and that session; never conclude queued from the absence alone.
 order: after D-481: an instrument that fails correct work costs every lane gate time (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:24Z)
 milestone: M0
 interface: none.
@@ -219,7 +219,7 @@ scope: add `"` and `'` to the class in `callSites`; add an over-strictness arm r
 accepts-when: the new arm passes. NEGATIVE CONTROL: drop the quotes from the class and that arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-141 · queued — **WORKER.md's "Before you finish" HAS NO CORPUSCHECK STEP FOR A GOVERNED DESIGN DOC, so a worker who edited one meets its FIRST full gate RED on `status.test`/`corpuscheck` ("the real corpus on this tree is current") over a stale Status `as of`.** Measured 2026-09-24 in REC-192, D-461, D-351, D-64, UI-83 and REC-188: one wasted full-gate round each, ~10–20 min. — owner CONDUCT (the kickoff family).
+### M0-141 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 INSIDE the integration worker WORKER c20-integ1 (CONDUCT #20), with D-64 + REC-184 + the .gitignore carry. Falsify rather than believe: read the branch land/conduct/c20-integ1 and that session; never conclude queued from the absence alone.
 order: after D-482, with the rows that cut gate time (product before process, Bob 2026-09-22: a process row that cuts gate time may sit near the head; SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:31Z)
 milestone: M0
 interface: none — prose.
@@ -229,7 +229,7 @@ scope: one line in `docs/development/kickoffs/WORKER.md` "Before you finish": ed
 accepts-when: the line is on `main`; the next worker's first gate is not RED on corpuscheck. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-487 · queued — **`doorbell.test.mjs` FAILS WHEN ITS RUN CROSSES A 10-MINUTE BOUNDARY: `op=knock`'s window is a FIXED bucket read off the wall clock (`Math.floor(Date.now() / KNOCK.windowMs)`, `index.mjs`), so a rollover between the 13th and 14th knock fails "one source gets twelve and no more" and "refusal is a 429, not a 500".** A clock-edge bug, not a flake: REC-190's gate went RED once and passed alone on the same tree. — owner the plane estate.
+### D-487 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-487 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/D-487 and that session; never conclude queued from the absence alone.
 order: after M0-141, with the rows that cut gate time: a suite that fails correct work by the clock costs a full-gate round (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:42Z)
 milestone: M0
 interface: none.
@@ -239,7 +239,7 @@ scope: the suite waits past a bucket edge before its run, or the window reads an
 accepts-when: the suite passes with its run started seconds before a bucket edge. NEGATIVE CONTROL: remove the edge guard, start the run just before a rollover, and the twelve-knock arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### UI-84 · queued — **THE UI's MOCK REFUSALS FOR `verify` AND `unknown op` CARRY NO `translation`, WHILE THE LIVE WIRE NOW DOES (C-61.1, C-69.1, D-278), AND `refusalWords` RENDERS THE TRANSLATION FIRST — SO THE MOCKS ARE NARROWER THAN THE WIRE (the M-72 class).** Found in `civicos-ui/test/preauth-vocabulary.test.mjs` and sibling mocks; re-read on `land/conduct/c17-batch3` @ `d93d29c4`. — owner UI.
+### UI-84 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-84 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/UI-84 and that session; never conclude queued from the absence alone.
 order: after REC-184, with the D-278 follow-ons: a suite that pins what a member reads against a mock narrower than the wire can pass while the member reads something else, a correction to just-landed work (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
 milestone: M8
 interface: none (test mocks); the integrator classifies.
@@ -249,7 +249,7 @@ scope: every mock refusal for `verify` and `unknown op` carries `translation`, i
 accepts-when: `civicos-ui/test/preauth-vocabulary.test.mjs` and `refusal-translation-surface.test.mjs` green with the imported translations; the UI harness green. NEGATIVE CONTROL: drop `translation` from one mock, and the SUBJECT arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-278's worker's finding via CONDUCT #17, verified on the batch; `node tools/mintid.mjs UI`).
 
-### REC-185 · queued — **`op=purge`'s `purge requires confirm=<store>` (a 400 in `index.mjs`) IS STILL A BARE SENTENCE WITH NO CODE — the last of D-278's class the sweep could see.** Re-read on `land/conduct/c17-batch3` @ `d93d29c4`: `json({ ok: false, error: "purge requires confirm=<store>", … })`. UNDETERMINED, stated by the worker: its matcher sees only `json({ok:false…})` literals in `index.mjs`, not the 16 codes forwarded through a spread from the store, nor refusals built without `json()`. — owner RECORD.
+### REC-185 · running — SPAWNED 2026-09-24 ~03:15Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER REC-185 (CONDUCT #20), base origin/main 548eb2c5; must finish before 06:00Z (quota shutdown). Falsify rather than believe: read the branch land/worker/REC-185 and that session; never conclude queued from the absence alone.
 order: directly after UI-84, the same D-278 class: a refusal with no code a member cannot be told in words (CLAUDE.md §2) (SCHEDULER #16, 2026-09-23; D-278's worker via CONDUCT #17)
 milestone: M7
 interface: I3 — `op=purge`'s refusal gains a code through `requiredArgument`; the integrator classifies the IC.
