@@ -1,0 +1,16 @@
+{
+ "unit": "uicheck:check-refusal-codes.mjs",
+ "inputHash": "13616637bc71963e9758e3235e9521acfae1e6c8eeb3b14400ef878efa33dc14",
+ "verdict": "PASS",
+ "run": "1b424412fcf950f9cc7a43f2fadd1b3544f0a863.1790277126573.5504.json",
+ "tree": "1b424412fcf950f9cc7a43f2fadd1b3544f0a863",
+ "head": "278ecdad433e97cc4580cedc9eaf91e0d5c496fb",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1313,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "1800c35d-36b8-5cae-bb8d-07ddc3929158",
+ "at": "2026-09-24T19:12:06.586Z"
+}
