@@ -15,7 +15,7 @@ untouched). Build the args from `train.mjs list` (grep WAITING, awk $3), and con
 Ids: always `node tools/mintid.mjs <NS>`; check new ids at each merge (`mintid.mjs --audit --base origin/main`).
 
 ## 2. LANE ADDRESSES (one-shot `create_trigger`, persistent_session_id, run_once_at ~1 min ahead; NEVER fire_trigger)
-BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3` (since 22:02Z; BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` finishing batch-0924e) · SCHEDULER #20 `session_01RxoRvCfY35n2aXnn2unRJp` (since 22:05Z; #19 refreshed) · DIST #6
+BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3` (since 22:02Z; BOB #33 `session_01BkXH3dLHH2wx8eUA4k5p73` finishing batch-0924e) · SCHEDULER #21 `session_01EW169eb7SVoxFrivnk6P1f` (since 23:42Z, FLEET-rooted at depth 1; its workers at depth 2 CAN report) · DIST #7 `session_01FQcUMZ2f34zhHzBkMEEdQ6`
 `session_01Vi1XTVwxcBBMStifuBasLZ` · CONDUCT #20 `session_011PzZW1FSobMne4cYeAYWfU`.
 If the account switched, these sessions may be unreachable from the new account: route through the record (coord) and Bob.
 
@@ -24,8 +24,8 @@ No timers; act on messages. CAP (Bob via BOB #33 18:24Z): 14 live workers + DIST
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (20:12Z, measured) — read the tree; these are pointers. Addresses: BOB #34 session_015xYmWbudjCX7rFPF1bDJd3 · SCHEDULER #20
-session_01RxoRvCfY35n2aXnn2unRJp (confirm each with get_session before binding; both lanes refresh).
+## 4. STATE (20:12Z, measured) — read the tree; these are pointers. Addresses: BOB #34 session_015xYmWbudjCX7rFPF1bDJd3 · SCHEDULER #21
+session_01EW169eb7SVoxFrivnk6P1f (confirm each with get_session before binding; both lanes refresh).
 - #20 is LIVE (live context ~30%). get_session's used_tokens COUNTS PAST THE COMPACTION BOUNDARY — never refresh on it alone.
 - MAIN = 1a7f0bcc (c20-batch24c + BOB batch-0924c): 18 rows landed, workers ARCHIVED. Main carries CACHE_ROWS 20 and M0-140;
   M0-140's coord write DONE (coord 0065b961: DEBT.md retired whole into DEBT-closed.md). WRITE COORD ONLY FROM A MAIN CHECKOUT —
@@ -51,10 +51,12 @@ At every wake, still read the slots first (`list_sessions` limit 50, parse with 
 owns: a finished/pushed branch -> verify its gate, integrate, flip; a BLOCKED worker -> answer; a RUNNING row with no live
 session -> tell SCHEDULER. REVIEW_READY is often a worker idling while its gate runs (REC-199, 21:07Z): never integrate on the
 bucket alone — the branch must be pushed with a finished gate line. An open slot or a queued row with no worker is SCHEDULER's.
-State at 22:05Z: c20-batch25 LANDED, main = 9f8b69e6; its 17 worker sessions are archived (REC-194's was not listed). c20-batch26 is in
-/home/user/w16 @ 5dbb75f3 (UI-101, UI-102, M0-181, REC-199, D-514, D-478, UI-99, REC-200; IC-282, IC-284 and IC-285 resolved;
-arms floor 2176), gating in the background, then push and train. NO RELEASE (Bob, 22:30Z via BOB #34, coord ec9b251d): "Hold the release until tomorrow or beyond" — trains keep landing on main; no release-readiness work ahead of plan rows; D-478's member deploy waits with it.
-Workers based before 1a7f0bcc report a phantom "DEBT.md missing / cache over 16": the remedy is the rebase, never a restore.
+State at 23:45Z: c20-batch26 (b2533fee) ON THE TRAIN since 23:19Z (launcher scratchpad `train26.sh`). c20-batch27 BUILT
+in /home/user/w17 on batch26 (19 workers; catalogue 1.29.0 = 466; I3 99.4.0, I2 2.8.0, I5 3.13.0), FULL-gating (`gate27.log`).
+c20-batch28 queued, verified: M0-188, D-448, D-468, DIST-7, REC-205 — three bump the catalogue (take 1.30.0 once at the
+union). Scratchpad `batch27.todo` and `batch28.todo` hold every integration act. SCHEDULER #20's workers CANNOT report
+(lineage depth 8): read them by get_session summary and branch. NEVER put a timeout on a gate (it killed gate26b).
+NO RELEASE (Bob, 22:30Z via BOB #34, coord ec9b251d): trains land; nothing is released; D-478's member deploy waits.
 
 ## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
 land/* branches wait (sooner when a batch is ready); BOB's stall probe alarms after 120 min without a landing while branches wait. Refresh at 75% context.
