@@ -20266,3 +20266,13 @@ not complete an instance-scoped item in a set. Nothing is removed and no existin
 behaviour is worth knowing even though it needs no UI change: `#perItem` now NARROWS the shared body by
 `item_keys`, so a surface may hoist a project to the shared body for a single-team selection without poisoning any
 progression item beside it.
+
+### CLAIM 2026-09-24 UI (D-528) — THE QUEUE NAMES A BIAS-DEBT OBLIGATION'S RECIPIENTS INSTEAD OF SAYING IT IS ADDRESSED TO NOBODY
+session: WORKER D-528 spawned 2026-09-24 ~22:25Z by SCHEDULER #20 (cloud session), branch `land/worker/D-528`, from `origin/main` @ `9f8b69e67`.
+authority: `QUEUE.md` `### D-528 · running`; design `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class"; IC-234 (`recipients`). I3 CONSUMER only — no op changes.
+paths, BY SITE — `civicos-ui/app.html` is shared ground:
+  - `civicos-ui/app.html`, the QUEUE screen, ONE SITE: the function `queueAssigneeHtml` (and its comment). NOT TOUCHED: `queueSubjectHtml`, `queueItemHtml`, every other queue helper, every `SURFACES` key, every `DEC-49 REGION` marker.
+  - `civicos-ui/test/notifications.test.mjs` §7 (its phase-A reach assertion CORRECTED, not exempted) and `civicos-ui/test/notifications.control.mjs` (one arm added).
+  - NEW `civicos-ui/test/queue-recipients.test.mjs` (+ `.control.mjs`) — the real-plane suite.
+  - `docs/architecture/construct-status.json` (one claim), `docs/development/NOTIFICATIONS.md` front matter if it states the gap, `docs/development/CIVICOS_UI_STATE.md` (prepend one entry).
+**open as of 2026-09-24** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
