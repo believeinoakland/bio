@@ -137,12 +137,10 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
    how a check would be satisfied by a liar before you state what it checks**: for every acceptance criterion and every
    negative control you brief, ask what the cheapest way to make it green would be, and if that way does not also make the
    world right, say so IN the criterion.
-4. **Keep the slots full** (step 1) — idle slots, not idle workers, are the cost. Green and stopped look identical on every
-   board; nothing but you distinguishes them. **A slot is a WORKING SESSION, not a row** (BOB #33, 2026-09-24, measured: 9 of 16
-   working while the cache read full): a queued row with no worker, or an open slot SCHEDULER has not refilled, holds nobody,
-   and nothing wakes you. At EVERY wake, compare `list_sessions` against the cache. **An IDLE session status is not a stall**:
-   a worker waiting on its own background gate reads idle (CONDUCT #20, same day: all three flagged were gating). Read the
-   session: a finished one is flipped `integrated`; a stuck or asking one is resumed or answered.
+4. **Slots are SCHEDULER's since 2026-09-24 21:05Z** (BOB #33, on Bob's "why is it always below 16": while you trained,
+   slots emptied behind a 3-handoff refill). SCHEDULER flips finished rows (a report, or a pushed branch with a recorded GREEN; never the
+   idle bucket alone), replenishes and spawns. You verify, integrate, train, archive, and answer workers. If you hear of a finished worker first, flip its
+   row yourself: **never hold a flip or a spawn for a train.** An IDLE session status is not a stall (a gating worker reads idle).
 5. **Work `DECISIONS.md`.** Lifting in: a worker's decision item passes `kickoffs/README.md`'s three tests FIRST; what the
    repository answers, or you are better placed to decide (activation order, sequencing, mechanism, scoping), is resolved
    and recorded where it came from; only a genuine one becomes a `DEC-<n>` with a `provisional:` line (never block on it).

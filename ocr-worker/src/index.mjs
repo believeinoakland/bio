@@ -62,6 +62,31 @@ export const SURFACE = {
   version:    { method: "GET",  mutating: false },
 };
 
+/* D-478 — THE NAMESPACES THIS MEMBER WILL READ FROM: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
+ *
+ * WHAT WAS WRONG, AND WHY IT IS A RECORD DEFECT RATHER THAN A WRITE DEFECT. The store test here read
+ * `/^[a-z0-9_-]+$/i` — "a namespace token" — so `biosmoke`, `Scratch` and any other well-shaped name was accepted
+ * and spent as the R2 key prefix `<store>/captures/<sha>`. Nothing was ever written (this member holds no STORE
+ * binding and never calls .put/.delete; IC-237 measured it), so the bucket was safe — but the ANSWER was not: a
+ * bucket with no key under a prefix that does not exist answers the same 404 `NOT_FOUND` as a capture genuinely
+ * absent from a real namespace. That is the conflation CLAUDE.md §1 names outright — *not found* is not *absent* —
+ * and this member is the one where it costs most, because its whole output is GRADED: a page reported unread
+ * because the capture "was not there" is a fact about the document, and the truth was a fact about the NAME.
+ *
+ * WHY THE PLANE'S SPELLING IS HONEST HERE. The plane's set is not per instance: `namespaceGate` holds
+ * `Object.freeze(["bio", SCRATCH])` in code, so the fact this member states — "no such namespace exists" — is the
+ * same fact on every instance it can be bound to (D-456, C-78.1, IC-237; `agent-worker`'s member half is
+ * D-462/IC-253 and this is the I9 half of the same guard). It is kept here as a COPY because a fleet member
+ * cannot import the plane's `index.mjs`, and a copy ages; `test/ocr-worker.test.mjs` §6 reads the plane's
+ * `NAMESPACES` from its source and requires this set to equal it, so the day the plane gains a namespace this
+ * member's suite goes red. The set is exact and case-sensitive for the plane's reason: a Durable Object name, and
+ * an R2 key, is an exact string.
+ *
+ * NOT NAMING ONE IS A DIFFERENT CONDITION and keeps its old code, BAD_STORE — now the condition it always claimed
+ * to be: `store` ABSENT or not a string. An empty `store: ""` is a NAMED value and meets NAMESPACE_UNKNOWN with
+ * the rest, which is the same line `agent-worker` and `pdf-worker` draw. */
+const NAMESPACES = Object.freeze(["bio", "scratch"]);
+
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
     status,
@@ -105,8 +130,14 @@ async function handleTranscribe(req, env) {
   const store = typeof body?.store === "string" ? body.store : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
     return json({ ok: false, reason: "BAD_SHA", detail: REFUSALS.BAD_SHA }, 400);
-  if (!store || !/^[a-z0-9_-]+$/i.test(store))
+  if (typeof body?.store !== "string")
     return json({ ok: false, reason: "BAD_STORE", detail: REFUSALS.BAD_STORE }, 400);
+  /* D-478: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, the empty string — is
+     refused by the plane's own code, with `asked` and `namespaces` beside it, and R2 was never touched. Before
+     this, such a name reached R2 as a key prefix and came back NOT_FOUND. */
+  if (!NAMESPACES.includes(store))
+    return json({ ok: false, reason: "NAMESPACE_UNKNOWN", detail: REFUSALS.NAMESPACE_UNKNOWN,
+                  asked: store.slice(0, 80), namespaces: [...NAMESPACES] }, 400);
   const pages = Array.isArray(body?.pages) ? body.pages : null;
   if (!pages || !pages.length)
     return json({ ok: false, reason: "BAD_PAGES", detail: REFUSALS.BAD_PAGES }, 400);

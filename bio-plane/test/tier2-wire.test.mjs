@@ -486,8 +486,23 @@ console.log("\n--- the merge's refusal: driven, and its reach through the op sta
                      undetermined: [], counts: { chars: 32, undetermined: 0 } };
   const m = mergeTier2Text(pageless, { pages: [{ page: 0, text: "replacement", undetermined: [] }] });
   t("a pageless base holding text REFUSES rather than guessing", m.ok, false);
+  /* CORRECTED AT D-514, 2026-09-24 — THE OLD ASSERTION WAS WRONG, NOT MERELY
+     SUPERSEDED. It required the refusal to say "32 decoded character(s)", and 32
+     is this string's raw `.length`: it counts the five spaces as decoded text.
+     D-501 had already ruled that whitespace is not decoded text and that the unit
+     is the GLYPH; D-514 carries that ruling into this judgment, so the sentence
+     now reads 27 decoded GLYPHS — the same string, counted in the unit the claim
+     is actually about. The figure is asserted rather than the phrase alone,
+     because a refusal that names a number the document does not hold is exactly
+     the defect D-514 exists to close, and an assertion on `/decoded glyph/` with
+     no number would pass over any number at all.
+     BOTH HALVES ARE PINNED ON PURPOSE: `counts.chars` STAYS 32 in the fixture
+     above, unchanged, because the raw counter is still the raw counter (D-501's
+     interface note) — what moved is which of the two this JUDGMENT reads. */
   t("and the refusal says what it is protecting, in the record's own words",
-    /no per-page grain/.test(m.why) && /32 decoded character/.test(m.why), true);
+    /no per-page grain/.test(m.why) && /27 decoded glyph/.test(m.why), true);
+  t("and it counts the string's GLYPHS, never its raw length (D-514: 32 characters, 27 glyphs)",
+    /32 decoded/.test(m.why), false);
 }
 
 console.log(`\ntier2-wire: ${pass} pass, ${fail} fail`);

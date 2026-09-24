@@ -45,6 +45,7 @@ MK-1, REC-130) sat on `main` and on no deployed plane. **So DIST decides when, b
 - **NO RELEASE UNTIL BOB ASKS — RULED BY BOB 2026-09-23** (*"there don't need to be ANY releases — for security, daily, or
   otherwise — until I say we need a release"*; nobody but Bob can reach the site). DIST cuts and deploys NOTHING, and keeps no
   wake that would, until Bob asks through the BOB lane. The two rules below are suspended with it. Nothing waits on a deploy.
+  Restated by Bob 2026-09-24 22:30Z: hold until the build plan's current scope is complete.
 - **CUT NOW** (suspended) when `main` carries any integrated change that closes a SECURITY OR DISCLOSURE defect —
   something a stranger, a machine credential or the wrong member could read or do — that is not in the
   latest signed release. CONDUCT names such a change when it integrates it (its merge commit says so, and it

@@ -34,7 +34,9 @@ Bob can answer sends it here, and this session carries it into his conversation.
 1. **Fetch, and confirm your handoff is on the remote** (`BOB-NEXT.md` line 1, read from `coord`, names you as successor).
 2. **Archive your predecessor — the successor's act, ruled by Bob 2026-09-17, needing nobody's click.**
    Find it with `list_sessions`. **Re-check D-398's three conditions AT THE MOMENT YOU ACT:** `isRunning`
-   false; its worktree `git status --porcelain` EMPTY; its tip an ANCESTOR of `origin/main`. If any fails,
+   false; its worktree `git status --porcelain` EMPTY; every branch it pushed is on `origin` and either on `main` by CONTENT
+   (`git cherry`) or named in its handoff as riding the next train (BOB #34, 2026-09-24). Archive in your FIRST turn once it
+   is idle; never wait for a train. If any fails,
    STOP and say so. Then `archive_session`, then `git worktree remove` (the tool does not free the disk),
    and report the disk before and after, measured. If the archive is REFUSED, READ THE ERROR: its causes are
    disjunctive and two can hold at once (D-405) — a turn in progress is usually an unbounded poller. **Never
@@ -46,7 +48,7 @@ Bob can answer sends it here, and this session carries it into his conversation.
    session, so do not archive one by hand on an idle reading.
    **IN THE CLOUD THE TOOL CANNOT READ THE LISTING** (BOB #30, 2026-09-23): `list_sessions` returns `{ccr:{data:[…]}}`
    keyed `id`/`session_status` and the tool parses a bare array of `sessionId`/`isRunning`; and no session's container is
-   readable from another, so its worktree half has nothing to judge. Not rowed (no gate time, no product). Sweep by hand:
+   readable from another, so its worktree half has nothing to judge. Sweep by hand:
    a non-archived row that is not a standing lane's newest is judged by D-398 at `get_session` and its branches on `origin`.
    **BOB IS THE ONLY LANE WITH TIMERS** (Bob, 2026-09-23 ~20:28Z; the Mac-era heartbeat text is in git history). Arm
    (a) a ONE-SHOT 20-minute idle timer (`send_later`), RESET at the end of any turn a lane's message woke; on firing, run a
@@ -55,7 +57,7 @@ Bob can answer sends it here, and this session carries it into his conversation.
    gate reads idle, so ask CONDUCT to read it rather than calling it one; 2026-09-24) and TRIGGER the lane that can act. Never ask for an early train (Bob, 2026-09-24); (b) ONE hourly recurring dead-man check that re-arms (a) if its chain broke. Lanes trigger BOB
    `CONDUCT idle: <why>` / `SCHEDULER cannot fill: <why>`. Recurring routines count against a daily run cap; one-shots do not.
 4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.** And **measure every
-   live session's context** (`get_usage` per session): any over 75% is refreshed (BOB #30, 2026-09-23: 80% sat above the cloud's auto-compaction at ~79%; 70% until then, 60% before 2026-09-21) — tell it to write its
+   live session's context** (`get_usage` per session): any over 75% is refreshed — tell it to write its
    handoff, then file its successor's chip. Include yourself.
    **AND RECORD THE ACCOUNT'S WEEKLY FIGURE, WHICH THE SAME CALL ALREADY RETURNS** (`plan.windows`, *Weekly · all
    models*) — **the 75% rule watches per-session CONTEXT and NOTHING watches the weekly BUDGET, which is the metric
@@ -138,7 +140,7 @@ body below the inbox, and not any area's code.
     is running. Never report tactical state; fix it or route it.
     **A question only Bob can answer is not a report to hold for a boundary**: this lane IS his room, so
     bring it to him in this conversation now, in the `kickoffs/README.md` shape, and keep working on the rest
-    (M-60 Q1 found the two rules read against each other).
+   .
 
 11. **Learned by BOB #16, 2026-09-19 — each paid for once:**
     - **Name a new id only once its row exists.** An inbox entry naming D-431 before its register row reached main drove

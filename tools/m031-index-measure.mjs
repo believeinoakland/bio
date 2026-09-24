@@ -281,7 +281,11 @@ async function extractDoc(bytes, key, { detectFormat, getFormat, pdfWorker }) {
       try {
         const res = await pdfWorker.fetch(new Request("https://pdf-worker/structure", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ capture_sha: "0".repeat(64), store: "m031" }) }), env);
+          /* D-478: WAS `store: "m031"`, a namespace no instance holds. The member now refuses such a name
+             NAMESPACE_UNKNOWN, and this driver reads the refusal as "no tier-2 text" and silently keeps Tier 1 —
+             an instrument degrading without saying so. The R2 stub below ignores the key entirely, so the name
+             was always arbitrary; it is now one that exists. */
+          body: JSON.stringify({ capture_sha: "0".repeat(64), store: "scratch" }) }), env);
         const j = await res.json();
         if (j && j.text) { text = j.text; tier = j.tier ?? 2; note = (j.notes || []).join(";") || null; }
       } catch (e) { note = `tier2_driver_error:${String(e.message).slice(0, 80)}`; }
