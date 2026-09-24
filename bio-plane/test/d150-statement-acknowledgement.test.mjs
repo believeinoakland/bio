@@ -72,6 +72,27 @@
    it is the SECOND act, after one document is signed, that re-authors MAX of them; the arm that catches the write is
    the byte-identity arm after both acts, which failed. An arm that reads "nothing was written" is about ONE act.
 
+   NEGATIVE CONTROL: RUN 2026-09-24 by the D-521 worker (C-82.1 RETIRED), branch land/worker/D-521 at cbb42357 over
+   origin/main 9f8b69e6, driver in the session scratchpad, each arm ALONE, declared before arming; every restore from a
+   per-arm pristine copy verified sha256 MATCH, content IDENTICAL and `cmp` SAME (src/store.mjs 3,319,801 B
+   4ff97981f6e775b2…; checks/bio-checks.mjs 957,517 B c1a2fd30391aadff…). ALL FIVE AS DECLARED.
+   (0) BASELINE -> check-refusal-codes --strict exit 0; this suite 64/0; d507 63/0; status --check 0 drift.
+   (a) THE ROW'S NAMED CONTROL — C-82.1's catalogue row and the region `is-statement-ack-documents-bound` restored
+   WITHOUT its reachable site (the marker pair around nothing). DECLARED: the guard MUST name the orphan -> exit 1,
+   "region `is-statement-ack-documents-bound` ... (STATEMENT_ACK_DOCUMENTS_OVER_BOUND): the marked span is 2 line(s) /
+   0 characters", with rows/census/reach breaching as SLACK above their new floors; this suite 63/1 at exactly the
+   retirement arm ("MEASURED, not assumed: the condition C-82.1 guarded is UNREACHABLE ..."); d507 62/1 at "the family
+   is EXACTLY these six"; status.mjs DRIFT on 13.statement-ack's `none` probe.
+   (b) THE ROW ALONE, no region -> exit 1, "found 0 `DEC-49 REGION is-statement-ack-documents-bound` opening
+   marker(s)"; the same two suite arms and the same drift.
+   (c) OVER-STRICTNESS — a COMMENT naming the retired code and constant beside the read: guard exit 0, 64/0, 63/0,
+   0 drift (the `none` probe reads code with comments blanked, M0-155).
+   (d) REC-194's arm (b) RE-RUN over the new read (CLAUDE.md §5: re-run a subject's control after changing it) — the
+   `(case_id=? OR ? IS NULL)` predicate with no null short-circuit, now through `#one` -> 58/6, the same six arms
+   REC-194 recorded. ONE DIFFERENCE, RECORDED: REC-194's surprise ("NOTHING WAS WRITTEN" stayed GREEN because the
+   FIRST act refused over IC-246's bound) is GONE — with no bound the first act writes, and that arm now FAILS too.
+   The arm was right both times; what changed is that the bound no longer stands between the act and the write.
+
    NEGATIVE CONTROL: RE-RUN 2026-09-24 ON THE UNION by the REC-194 worker, after CONDUCT #20's merge of
    c20-batch24b (REC-212's `writer` exclusion) into this branch. **RE-RUN BECAUSE THE SUBJECT MOVED, NOT AS
    DILIGENCE:** the union put a parameter between `exceptAuthor` and `draftId` and rewrote the predicates
