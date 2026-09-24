@@ -11355,6 +11355,48 @@ var ACT_SHAPE_CHECKS = {
     check: "C-33.32",
     where: "src/store.mjs selectionResolve > is-selection-moved, reached from every act that takes a selection",
     translation: "This would have changed things, and the list of items it would have changed is not the list you were looking at \u2014 it has moved since you chose it. Nothing was done. Look at the selection again and choose it again, so that what you approve is what actually happens."
+  },
+  /* ---------------------------------------------------------------------------
+       D-484, 2026-09-24 — THE FIRST TWO ROWS THIS FAMILY'S OWN HEADER SAID IT
+       COULD NOT HOLD, AND THEY EXIST BECAUSE THE PLANE CHANGED SHAPE RATHER THAN
+       BECAUSE A SENTENCE WAS FINALLY WRITTEN.
+  
+       The header above states the bar and the reason: a row holds ONE `where`,
+       one code may not hold two rows, and a `where` naming one of four sites
+       would claim a span the code is not confined to — *"REC-71's overstatement
+       wearing the other face"*. It then names the honest fix — *"the refusals
+       consolidated behind one helper so there IS one site"* — and ROUTES it.
+       D-484 is that routing coming back. `NO_BASIS` was minted at four sites in
+       `store.mjs` and `NO_CITATION` at three; each is now minted at exactly ONE,
+       inside the region named below, and every former site returns through it.
+  
+       So the `where` is not a narrowing of a claim this family could not support
+       — it is now literally true, and `store.mjs` holds one `reason: "NO_BASIS"`
+       and one `reason: "NO_CITATION"` literal to prove it (a structural pin in
+       `test/d484-refusal-translation.test.mjs` asserts exactly that, because a
+       second site added later would silently make this `where` a lie again).
+  
+       EACH TRANSLATION IS TRUE AT EVERY SITE IT NOW SERVES, which is the price of
+       consolidation and is where a careless one would do harm. `NO_BASIS` covers
+       concluding an inquiry that rests on nothing, partitioning a question with no
+       legs, a grade-D testimony with no stated basis, and a revision of a declared
+       flow that does not say why it changes — so the sentence speaks about WHAT
+       THIS RESTS ON and never about legs, or documents, or flows. The per-site
+       `detail` still carries the particular, unchanged.
+  
+       THE UNDETERMINED DOOR IS NAMED, on NO_FALSIFIER's precedent (REC-117): a
+       member refused for a missing basis is a member under pressure to invent one,
+       and the record would rather carry *nothing supports this yet* in the open.
+       --------------------------------------------------------------------------- */
+  NO_BASIS: {
+    check: "C-33.40",
+    where: "src/store.mjs actNoBasis > is-act-no-basis",
+    translation: "This asks the record to stand behind something without saying what it rests on. Say what that is first \u2014 what the question is grounded in, what you personally observed, or why a settled thing is being changed \u2014 and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked."
+  },
+  NO_CITATION: {
+    check: "C-33.41",
+    where: "src/store.mjs actNoCitation > is-act-no-citation",
+    translation: "A citation is the address of something somebody who was not here can go and read. Without one, what you have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is published or held \u2014 if it is not public, say who holds it and how it was seen, which is still an address and is still checkable."
   }
 };
 var ROUTE_MARK_CHECKS = {
@@ -29122,6 +29164,34 @@ function refusal6(key, extra = {}) {
   const row = CASE_DERIVATION_CHECKS[key];
   return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
 }
+function actNoBasis(detail, extra = {}) {
+  const row = ACT_SHAPE_CHECKS.NO_BASIS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("actNoBasis: NO_BASIS has no ACT_SHAPE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_BASIS",
+    code: "NO_BASIS",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra
+  };
+}
+function actNoCitation(detail, extra = {}) {
+  const row = ACT_SHAPE_CHECKS.NO_CITATION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("actNoCitation: NO_CITATION has no ACT_SHAPE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_CITATION",
+    code: "NO_CITATION",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra
+  };
+}
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
@@ -33620,12 +33690,7 @@ Mitigation: ${mit}
     adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };
     const legs = Array.isArray(fm.basis) ? fm.basis : [];
     if (adopted.leg_count < 1 || !pid && legs.length < 1)
-      return {
-        ok: false,
-        reason: "NO_BASIS",
-        target,
-        detail: "a conclusion rests on something. An open inquiry may hold a claim with no legs at all \u2014 a standing objective the group means to pursue \u2014 but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first."
-      };
+      return actNoBasis("a conclusion rests on something. An open inquiry may hold a claim with no legs at all \u2014 a standing objective the group means to pursue \u2014 but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first.", { target });
     if (pid) {
       const when2 = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
       const priorRec = this.#conclusionRecordOf(pid, target, viewer);
@@ -38949,12 +39014,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
     const all = Array.isArray(fm.basis) ? fm.basis : [];
     const legs = all.filter((l) => l && typeof l === "object");
     if (!legs.length)
-      return {
-        ok: false,
-        reason: "NO_BASIS",
-        target,
-        detail: "a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite); an assertion that nothing is enough on its own is not a thing the record can hold."
-      };
+      return actNoBasis("a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite); an assertion that nothing is enough on its own is not a thing the record can hold.", { target });
     if (legs.length !== all.length)
       return {
         ok: false,
@@ -49712,11 +49772,7 @@ ${words}`;
       reason: "NO_JUSTIFICATION",
       detail: "a declared relation carries a justification, like a pattern statement (safeguard 4)"
     };
-    if (!cite) return {
-      ok: false,
-      reason: "NO_CITATION",
-      detail: "a declared relation carries a citation, like a pattern statement (safeguard 4)"
-    };
+    if (!cite) return actNoCitation("a declared relation carries a citation, like a pattern statement (safeguard 4)");
     const from = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, fromEntity);
     if (!from) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: fromEntity, end: "from" };
     const to = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, toEntity);
@@ -50178,11 +50234,7 @@ ${words}`;
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
     const b = typeof basis === "string" ? basis.trim() : "";
-    if (!b) return {
-      ok: false,
-      reason: "NO_BASIS",
-      detail: "grade D is recorded testimony: it carries the member's stated basis, with an author and a date"
-    };
+    if (!b) return actNoBasis("grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=?`, captureSha, ref);
     if (!rr) return {
       ok: false,
@@ -51145,20 +51197,14 @@ ${words}`;
           basis: cur.basis,
           prior_version: null
         };
-      if (!stmt) return {
-        ok: false,
-        reason: "NO_BASIS",
-        progression_key: key,
-        version: cur.version,
-        detail: `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)`
-      };
-      if (!cite) return {
-        ok: false,
-        reason: "NO_CITATION",
-        progression_key: key,
-        version: cur.version,
-        detail: "a revision of a declared flow carries a citation -- where the basis for the change is published or held"
-      };
+      if (!stmt) return actNoBasis(
+        `'${key}' is already declared (version ${cur.version}); a revision states its basis -- why the declared flow changes -- and version ${cur.version} stands beside it (framework 8.2)`,
+        { progression_key: key, version: cur.version }
+      );
+      if (!cite) return actNoCitation(
+        "a revision of a declared flow carries a citation -- where the basis for the change is published or held",
+        { progression_key: key, version: cur.version }
+      );
     }
     const version = cur ? cur.version + 1 : 1;
     const at = (/* @__PURE__ */ new Date()).toISOString();
@@ -51929,11 +51975,7 @@ ${words}`;
       detail: "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)"
     };
     const cite = typeof citation === "string" ? citation.trim() : "";
-    if (!cite) return {
-      ok: false,
-      reason: "NO_CITATION",
-      detail: "an exception document carries a citation -- where the justification for the skip is published"
-    };
+    if (!cite) return actNoCitation("an exception document carries a citation -- where the justification for the skip is published");
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
     if (!def) return {
       ok: false,
