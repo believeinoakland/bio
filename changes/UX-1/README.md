@@ -39,7 +39,13 @@ faces when offline.
 - Its control: baseline green. `googlelink`, `noroute` and `missingface` each fail their named arm.
   The tree was verified unchanged by hash afterwards.
 - UI harness: 73/73 green, up from 72 on `main`.
-- The full gate is recorded below once it finishes.
+- This is the lane's gate: the UI harness and the change's control. BIO's full gate is not run here
+  (Bob, 2026-09-24). A first full run, stopped partway, did catch one real finding. The hygiene suite
+  flagged `build-worker.mjs` for embedding whatever files sat in `fonts/`. It now embeds the faces
+  the page declares (`e2e6cba4`).
+- `ux/self-hosted-fonts` @ `e2e6cba4`, pushed. It merges cleanly with `main` @ `9f8b69e6`, and with
+  each of the 17 unlanded `land/*` branches that touch `civicos-ui/`, tested as main + that branch +
+  UX-1.
 
 ## What the handoff to BIO involves
 

@@ -34,3 +34,8 @@ Bob carries it there.
   the record:** before this ruling, the lane took id D-555 from BIO's id ledger and appended a D-555
   entry to the BOB INBOX on `coord` (165d236d). The entry was withdrawn undrained, and `QUEUE.md` is
   byte-identical to its prior state (3583e336, fae4d303). The id D-555 stays taken and unused.
+- **2026-09-24: the lane's gate.** "The gate should only test our section, because we're completely
+  isolated from what's going on outside our section." A `ux/` branch runs the suites of the paths it
+  changes, plus its own control, and never BIO's full gate (charter §2).
+- **2026-09-24: concise documents.** The files sessions read whole are kept "as small, efficiently
+  read (never scanned!), and accurate as possible." They are rewritten, never appended to.

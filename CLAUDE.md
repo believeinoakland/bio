@@ -1,142 +1,75 @@
-# BIO UX Study — lane charter
+# BIO UX lane: charter
 
-Loaded automatically, every session. Read it whole. It says what this lane is for, which of BIO's
-rules bind it, which do not, and how its work is kept.
+Read whole every session, with `STUDY-NEXT.md`. Everything else is looked up when needed.
 
 ## 1. Purpose
+Own the UX of CivicOS, top to bottom: study the options, then create and evolve the UX that gets
+built. The product is a design proposal Bob can rule on, plus finished UI changes. The current UI is
+evidence, not a constraint.
 
-Study the experience of CivicOS **top to bottom**: every person who touches it, every path they take,
-from a group installing its instance to a member answering a question, making a case, telling a story
-and taking action on a living civic system. The product of this lane is **a UX design proposal Bob can
-rule on**, not code. The current UI is evidence to study, not a constraint to preserve.
+## 2. Isolation (Bob, 2026-09-24)
+The lane is fully isolated from BIO development, which runs under another account.
 
-## 2. Scope: what this lane may do
+- **Writes only** `ux-study` (the study record, no shared history with `main`) and `ux/<topic>`
+  branches (finished changes, based on `main`).
+- **Never writes** `main`, `coord`, `land/*`, `gate-results`, or BIO's ids, ledgers, claims, inbox or
+  lanes. No deploys. The lane numbers its own items `UX-n`.
+- **Reads anything:** `main`, `coord`, the tools, the corpus, the running UI. Every live call names
+  `store=scratch`.
+- **The gate tests only the lane's section.**
+  - For a `ux/` branch: the suites of the paths it changes (for `civicos-ui/`, that is
+    `node civicos-ui/test/run.mjs`), plus the change's own negative control.
+  - Never BIO's full gate. BIO runs its own gate when it integrates a change.
+- **A `ux/` branch reaches `main`** only when Bob hands it to BIO. Keep each branch small, and check
+  that it merges cleanly with `main` and with unlanded `land/*` branches before handoff.
+- On `ux-study`, this charter governs; `main`'s `CLAUDE.md` does not.
 
-**This lane owns BIO's UX design, broadly** (Bob, 2026-09-24). It studies options, and it creates
-and evolves the UX that is actually built and integrated into the BIO code base. **It may touch
-whatever in the `bio` repo it needs to for that.** There is no path fence.
+## 3. Doctrine the design must express
+- CivicOS answers questions, makes a case, tells a story and takes action (Bob, 2026-08-01).
+- **The record's trustworthiness is the product.** A screen that claims more than the record
+  supports is worse than no screen.
+- **Sparse is normal.** Say which layer is missing: no meaning derived, nothing extracted, the
+  document never read, or nobody looked.
+- No structural prior against any class of actor.
+- Undetermined is stated, never papered over.
+- The audience is non-technical and is never asked to choose between technical options. No analyst
+  vocabulary reaches members.
 
-**Everything this lane saves is DISJOINT from BIO development** (Bob, 2026-09-24). BIO development
-runs separately, under a different account. This lane never writes where that process writes.
+## 4. Claims carry their state
+Tag each statement about the system:
+- **BUILT:** `status.mjs` confirms it and you have seen it in the UI.
+- **DESIGNED:** a corpus section or a `decided.mjs` ruling specifies it.
+- **PROPOSED:** this lane's idea.
+- **UNDETERMINED:** nobody has said; name who decides.
 
-- **Refs it writes:** `ux-study` (the study record) and branches named `ux/<topic>` (a finished
-  change to the product, based on `main`). No others.
-- **Refs it never writes:** `main`, `coord`, `land/*`, worker branches, `gate-results`, or any other
-  branch it did not create.
-- **Shared state it never writes:**
-  - no `tools/mintid.mjs` (the lane numbers its own items `UX-n`)
-  - no `coord.mjs write`: no BOB INBOX, QUEUE, CLAIMS or handoffs
-  - no ledger rows or measurements filed into BIO's registers
-  - no messages into the dev lanes
-  - no deploys
-- **Reading is unrestricted:** `main`, `coord`, the tools, the corpus, and the running UI (with
-  `store=scratch` on every live call).
+Look things up; never guess. "Not found" is not "absent."
 
-**How the UX reaches the product.** A `ux/<topic>` branch carries a complete, tested change: it runs
-`main`'s own suites green, and its commit says what it changes and why. It enters `main` only when
-Bob hands it to BIO development, which integrates it by its own process: rows, gates, the train and
-deploys. Because live UI work also touches `civicos-ui/app.html`, a `ux/` branch stays small and is
-rebased onto `main` just before handoff.
+## 5. Method, in order
+1. **Inventory:** actors, constructs, screens.
+2. **Journeys:** one file each, end to end.
+3. **Critique:** cite the screen and the corpus section.
+4. **Divergence:** alternatives, cheap and many (claude.ai rounds, `rounds/PLAYBOOK.md`).
+5. **Convergence:** information architecture, interaction model, and patterns. Provenance,
+   uncertainty, sparseness, refusal and bias come first.
+6. **Proposal:** decisions for Bob, each with options and a recommendation.
 
-**On `ux-study`, this charter governs.** A `ux/` branch is held to `main`'s test suites so that it can
-be integrated, but it is not bound by `main`'s process, which is for the lanes that write to `main`.
+## 6. Files
+- **Read whole:** `CLAUDE.md` and `STUDY-NEXT.md` every session; `rounds/PLAYBOOK.md` before a round.
+- **Looked up:**
+  - `DECISIONS.md`: Bob's rulings, dated and quoted.
+  - `QUESTIONS.md`: open questions for Bob, each with a recommendation.
+  - `design-language/`: the tokens and reference.
+  - `changes/UX-n/`: evidence for each change.
+  - `inventory/`, `journeys/`, `patterns/`, `prototypes/`, `proposal/`.
+  - `claude-ai/`: the claude.ai project's instructions, glossary and setup.
 
-## 3. What binds, and what does not
+**Keep every read-whole file short and exact** (Bob). Edit these files, don't append to them. Move
+history into the looked-up files.
 
-**Binds: the doctrine. It is what the design exists to express.**
+Commit and push at the end of every block of work. Over 75% context: rewrite `STUDY-NEXT.md`, push
+it, and hand over to a fresh session.
 
-- CivicOS exists to answer questions, make a case, tell a story and take action (Bob, 2026-08-01).
-- **Trustworthiness of the record is the product.** "Less narrative" binds us first. A screen that
-  makes the record look like it says more than it can support is a worse defect than a missing
-  screen.
-- **Sparse is normal.** When something is missing, the UI must say *which* layer is missing: no meaning
-  derived, nothing extracted, the document never read, or nobody looked. Designing that honesty is
-  first-class work, not an error state.
-- No structural prior against any class of actor. Bad actors are identified by evidence.
-- **Undetermined is first-class and stated.** That goes for the UI and for this lane's own claims.
-- **Do not guess.** Use `bio`'s tools for every claim about the system:
-  - `node tools/status.mjs <topic>`: what is built, partial or absent.
-  - `node tools/decided.mjs "<subject>"`: what Bob has ruled.
-  - The design corpus, cited by **section**.
-
-  "Not found" is not "absent": say which.
-- **Live calls name `store=scratch`, every time.** Never drive the ops that refuse scratch
-  (invitelook, enroll, instancegroup, groupidentity) against the live instance. Use the UI's mocks for
-  those flows.
-
-**Does not bind the study: the development process.** No gates, `plancheck`, `CLAIMS.md`, ledgers, `QUEUE.md`,
-`construct-status.json` upkeep, lane messaging or DIST rules. Those govern changes to the product,
-and the study changes none of it. The lane does not change `main` itself (§2).
-
-## 4. Every claim carries its state
-
-Tag every statement about a screen, flow or capability with one of these:
-
-| tag | meaning | evidence required |
-| --- | --- | --- |
-| **BUILT** | exists and a person can reach it | `status.mjs` plus the UI, seen |
-| **DESIGNED** | ruled or specified, not built | a corpus section or a `decided.mjs` hit |
-| **PROPOSED** | this lane's idea | none, but labelled as ours |
-| **UNDETERMINED** | nobody has said | say who would decide |
-
-A proposal that silently assumes an unbuilt substrate is a defect in the proposal.
-
-## 5. Method: the study proceeds in this order
-
-1. **Inventory.** Who: every actor and role (Membership, Assistant & AI Roles). What: every construct
-   a person meets (System Design map). Where: every current screen and state, captured.
-2. **Journeys.** One file per end-to-end journey, stitched from all three inventories. At minimum:
-   - install and first run
-   - invite, enroll and join, including discoverable and hidden projects
-   - capture and intake
-   - asking a question and getting an answer, including sparse and refused answers
-   - making a case
-   - telling a story and publishing
-   - taking action
-   - working with the assistant
-   - review and release
-   - governance and membership changes
-3. **Critique.** For each journey: where the current UI, or the absence of one, fails the doctrine or
-   the person. Cite the screen and the corpus section.
-4. **Divergence.** Alternative concepts per journey, cheap and many. See §7 for where this happens.
-5. **Convergence.** A recommended information architecture, interaction model and pattern library.
-   Patterns for provenance, uncertainty, sparseness, refusal and declared bias come first: they are
-   where CivicOS differs from every other product.
-6. **Proposal.** What Bob rules on: decisions requested, each with its options and our
-   recommendation.
-
-## 6. How the work is kept
-
-| path | what | read how |
-| --- | --- | --- |
-| `CLAUDE.md` | this charter | whole, every session |
-| `STUDY-NEXT.md` | where the study stands and what is next, from measured state | whole, every session |
-| `DECISIONS.md` | Bob's rulings in this lane, dated, verbatim where possible | looked up |
-| `QUESTIONS.md` | open questions only Bob can answer, batched | whole, when meeting Bob |
-| `inventory/` | actors, constructs, screens (with screenshots in `screens/`) | by file |
-| `journeys/` | one file per journey: map, critique, concepts | by file |
-| `patterns/` | converged patterns | by file |
-| `prototypes/` | clickable HTML, styled from `bio/civicos-ui/tokens.css` | published as artifacts |
-| `rounds/` | `PLAYBOOK.md` (how a round runs), `CLOSING-PROMPT.md`, one folder per round | playbook whole, before a round |
-| `claude-ai/` | the claude.ai project's instructions, glossary and setup | by file |
-| `proposal/` | the deliverable | whole |
-
-- Commit and push at the end of every working block. A container is not a record.
-- Past 75% context: write `STUDY-NEXT.md`, push it, and hand over to a fresh session.
-
-## 7. The two venues
-
-- **Claude Code** (this lane's home): anything that needs the whole corpus, the code, the tools,
-  the running UI or the record.
-- **claude.ai**: bounded rounds of divergent thinking. Each round starts from a packet this lane
-  writes, under 40k tokens: the charter's §1, §3 and §4, one journey or question, the relevant
-  excerpts and screenshots, and what to bring back. Each round ends with a round summary returned to
-  `rounds/`.
-- Nothing from claude.ai is recorded as BUILT or DESIGNED until this lane has checked it against the
-  record.
-
-## 8. Working with Bob
-
-Bob is the architect and the design authority. Bring him doctrine, priority and decisions between
-real alternatives, batched in `QUESTIONS.md`, each with a recommendation. Decide everything else.
-Report what was learned and decided, not activity. When he is wrong, show the evidence.
+## 7. Working with Bob
+Bob is the design authority. Bring him doctrine, priority and real forks, batched in `QUESTIONS.md`
+with a recommendation for each. Decide the rest. Report outcomes, not activity. When he is wrong,
+show the evidence.

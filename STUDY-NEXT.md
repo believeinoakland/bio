@@ -1,35 +1,26 @@
-# STUDY-NEXT: where the study stands
-
-*Rewrite this file from measured state at the end of every working block. Read it whole at the start
-of every session.*
-
-**As of 2026-09-24. Stage: setup.**
+# STUDY-NEXT
+Rewrite this file, never append. State as of 2026-09-24.
 
 ## Done
+- Charter, playbook, and the claude.ai files (instructions, glossary, setup).
+- Design language recovered into `design-language/`. The tokens are kept; the surfaces are rejected
+  (DECISIONS 09-24).
+- **UX-1** (`ux/self-hosted-fonts` @ `e2e6cba4`): the app serves its own typefaces, where before it
+  loaded them from Google. Lane gate green; merges cleanly with `main` and the 17 unlanded UI
+  branches. **Waiting for Bob to hand it to BIO.** Evidence: `changes/UX-1/`.
 
-- Charter written (`CLAUDE.md`).
-- Round playbook written (`rounds/PLAYBOOK.md`).
-- claude.ai project files written (`claude-ai/`).
+## Next
+1. **Bob:** set up the claude.ai project (`claude-ai/SETUP.md`).
+2. **Bob:** put the design-language handoff bundle in Drive (its README and source docs). Then build
+   the BIO Design System, tokens only.
+3. **Lane:** write the Round 1 packet on sparse answers (`rounds/PLAYBOOK.md`).
+4. **Lane, between rounds:** the inventory.
 
-## Next, in order
-
-1. **Bob:** create the claude.ai project **BIO UX Study** from `claude-ai/SETUP.md`.
-2. **Claude Code:** prepare Round 1, *sparse answers: how the UI says which layer is missing*. Read the
-   corpus sections, check the state with `status.mjs`, capture the current screens, then write
-   `rounds/01-sparse-answers/PACKET.md`.
-3. **Bob:** run Round 1 in claude.ai and paste the round summary back.
-4. **Claude Code:** take the summary in (playbook step 4), then prototype.
-5. **Claude Code, between rounds:** the inventory (actors, constructs, every screen) in `inventory/`.
-
-## Open
-
-- **Glossary findings to take into the inventory.**
-  - "Grade" is three scales.
-  - "Rung ladder" names two ladders.
-  - Focus became Inquiry, and Case became its own object.
-  - "Review", "Release", "Record", "Skill" and "Inbox" each have several meanings.
-  - The corpus never says how acquire differs from capture for a person, or whether "answer" is an
-    object.
-  - Membership contradicts itself on removing an administrator.
-
-  See `claude-ai/GLOSSARY.md`.
+## Open, for the inventory
+- "Grade" is three scales.
+- "Rung ladder" names two ladders.
+- Focus became Inquiry; Case became its own object.
+- "Review", "Release", "Record", "Skill" and "Inbox" each have several meanings.
+- The corpus never says how acquire differs from capture, or whether "answer" is an object.
+- Membership contradicts itself on removing an administrator.
+- For BIO, via Bob: `tokens.css` cites `BIO_Design_Language_v0_2.md`, which is not in `bio`.
