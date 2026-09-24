@@ -22,3 +22,5 @@ D-493	2026-09-24T03:41:49.190Z	SCHEDULER #18	D-166 finding: tier1 probe labels e
 D-494	2026-09-24T04:21:21.119Z	SCHEDULER #18	REC-185 findings: machine-fence corpora disagree; refusal-wire sweep member-only
 D-495	2026-09-24T04:21:21.119Z	SCHEDULER #18	REC-185 findings: machine-fence corpora disagree; refusal-wire sweep member-only
 D-496	2026-09-24T04:32:05.618Z	SCHEDULER #18	knock limiter fixed bucket doubles the published bound (BOB #32 04:28Z)
+D-497	2026-09-24T04:49:46.561Z	SCHEDULER #18	D-479 findings: directory candidate scan linear in projects; 1.discoverable claim overstates
+D-498	2026-09-24T04:49:46.561Z	SCHEDULER #18	D-479 findings: directory candidate scan linear in projects; 1.discoverable claim overstates
