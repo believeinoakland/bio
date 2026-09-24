@@ -1,6 +1,6 @@
 # Spreadsheets, word-processing and presentation documents
 
-**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. as of 2026-09-23.
+**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. as of 2026-09-24.
 
 **Place in the system** · A level-2 design serving construct 5 of `BIO_System_Design.md` §3, *document profile and the extraction substrate*, whose level-1 home is `BIO_Content_Framework_v0_10.md` **Part I**; §3 row 5 lists this document beside `DOCUMENT-PROFILES.md` as the two level-2 designs under it, and Part II §16 places the format entries in the extraction process as built ("delegated to format entries and members"). It is the FORMAT axis — framework §4's third axis, the one D-70 said had never been exercised — so it is also the evidence for a claim the framework makes about itself. Interfaces: it created I7 (the registry entry shape) and it drove IC-1 against I2, the element reference union that legs, connections and citations will share. What depends on it: `formats.mjs`, `ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`, and `CONTENT-EXTENT-DESIGN-SPACE.md`, which treats IC-1's union as D-164's per-container leaf.
 
@@ -20,6 +20,7 @@
 - [The risk that comes with it, and it is Bob's](#the-risk-that-comes-with-it-and-it-is-bobs)
 - [The architectural answer: a FORMAT axis, not a fifth if-branch](#the-architectural-answer-a-format-axis-not-a-fifth-if-branch)
 - [What changes in I2, and it needs the protocol](#what-changes-in-i2-and-it-needs-the-protocol)
+- [CSV — DESIGNED 2026-09-24 by BOB #32 (D-66's worker: 166 `.csv` keys unread)](#csv-designed-2026-09-24-by-bob-32-d-66s-worker-166-csv-keys-unread)
 - [Legacy binary formats are a SEPARATE and LATER decision](#legacy-binary-formats-are-a-separate-and-later-decision)
 - [Bounds and the size guard](#bounds-and-the-size-guard)
 - [What to build, in order](#what-to-build-in-order)
@@ -193,6 +194,15 @@ The likely shape is additive — `source` becomes a tagged union whose existing 
 is unchanged — so consumers that only read `{page, rect}` keep working. Additive or
 not, it is I2's owner's call and FRAMEWORK is dormant, so `ARCH`/CONDUCT answers for it
 in writing (protocol step 3).
+
+## CSV — DESIGNED 2026-09-24 by BOB #32 (D-66's worker: 166 `.csv` keys unread)
+
+A `csv` entry in the format registry, owned by FRAMEWORK, on this document's format axis. The delimiter and encoding are
+found by signature and RECORDED on the reading; when either cannot be determined the reading says so (undetermined) and
+nothing is guessed. The file is ONE sheet. Row 1 is row 1 whether or not it looks like a header, because a header is a
+reading and is never assumed. Cells are addressed with the existing `sheet-cell` / `sheet-range` extent kinds, 1-based
+row and column. It carries the capture's grade, since the bytes are the publisher's. NOT BUILT (rowed behind D-66). The
+50 legacy `.xls` keys wait on the section below.
 
 ## Legacy binary formats are a SEPARATE and LATER decision
 
