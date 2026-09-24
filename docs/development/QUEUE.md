@@ -528,7 +528,7 @@ scope: the version arm on the independence read. Extend `bio-plane/test/partitio
 accepts-when: the version arm's answer carries no strength key and equals versionstrength's `independence` for the same version. NEGATIVE CONTROL: add a strength field to the version-arm answer, and the "no strength key" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (UI-74's worker finding via CONDUCT #17; `node tools/mintid.mjs REC`).
 
-### REC-190 · queued — **NOTHING CAN FIND A CAPTURE MOVED BETWEEN BUNDLES BEFORE D-179's FENCE: the old UPSERT moved the register row (`capture_sha` is its primary key) to the newcomer, leaving the original bundle's `files`/`history` rows naming a sha the register gives to another bundle, and `registerAudit` reads the moved row as live.** — owner RECORD; DIST runs it live.
+### REC-190 · running — SPAWNED 2026-09-24 ~01:43Z by CONDUCT #19 as a SEPARATE CLOUD SESSION titled WORKER REC-190 (CONDUCT #19), base origin/main 15b2a4c0 (D-179 on main), IC-251 pre-minted; gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-190 and that session; never conclude queued from the absence alone.
 order: after UI-86: the census that tells whether D-179's residue exists on a live record, before anything repairs it (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (6), verified at c17-batch4 @ 65205437)
 milestone: M2
 interface: I3 additive — one new admin/probe census op, `mutating:false`, REC-175's shape (proposed name homecensus); the integrator mints and classifies the IC.
