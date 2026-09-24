@@ -1,0 +1,16 @@
+{
+ "unit": "plane:battery-provenance.test.mjs",
+ "inputHash": "0343c218044e25ca13ecc3d03e79ce98a4471a29353b8ff938c5980e8003d112",
+ "verdict": "PASS",
+ "run": "3fab7ba7e732169e382ba3085cacb35ce2778843.1790293205445.15876.json",
+ "tree": "3fab7ba7e732169e382ba3085cacb35ce2778843",
+ "head": "07780a682e1298ebc0c941e128b315319a1e073f",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 932,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "09596404-0aa3-56df-adfe-e29b815c5d90",
+ "at": "2026-09-24T23:40:05.457Z"
+}
