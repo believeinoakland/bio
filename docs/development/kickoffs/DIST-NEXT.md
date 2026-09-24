@@ -1,20 +1,18 @@
-# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 12:25Z (BOB #32's batch14 relay), for the DIST on Bob's OTHER account.
+# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 14:00Z (0.79.0 live), for the DIST on Bob's OTHER account.
 
 Why now: this account's weekly quota ends ~07:00Z 2026-09-24 (Bob, relayed by BOB #32 at 03:00Z); work continues on the
 other account. This file is STATE, measured 03:05Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
 pointer, the gate, the LESSONS) — read it whole. A sentence here is a pointer: re-measure before acting. State lives on
 `coord`: `node tools/coord.mjs read <path>`; write with `node tools/coord.mjs write --replace <path> <file> -m "<what>"`.
 
-## RELEASE 0.79.0 IS ASKED — CUT STARTED, NOT SIGNED (13:0xZ 2026-09-24)
+## RELEASE 0.79.0 — DEPLOYED AND LIVE-VERIFIED 2026-09-24 13:50–13:56Z (asked by Bob in DIST #6's session)
 
-Bob asked for 0.79.0 from main `13073707`, IN DIST #6's session. Done: `dist/cut-0.79.0` @ `9080f778` (pushed) holds the version
-bump (8 sites) and RELEASES row `["0.78.0", "dfe9858c…"]`; plane and members built clean (plane dist sha256 `09e4e334…`,
-members unchanged). **Refused by DIST #6's auto-mode permission classifier: `release-assemble --sign`** — so release/ is
-untouched; nothing is signed, gated or deployed; live is 0.78.0 everywhere. Resume on that branch at DIST.md gate step 5:
-`release-assemble --version 0.79.0 --sign`, the signature controls, newgroup `npm run embed` + `npm run build` (the bundle
-must carry DIST-9: `instanceAiBinding`), claim, `gates.mjs --full --no-reuse`, then deploy agent-worker → pdf → ocr → plane
-→ civicos (MOVES) → newgroup, and the owed reads (REC-175 digestcensus, D-256 changedfromaudit, REC-190 homecensus on
-store=bio; the DIST-12 preflight entry). Rollback ids: the 0.78.0 ids below. If main moved past 13073707, rebase the cut.
+Cut `dd324152` (tree `71af025a`, gate `--full --no-reuse` GREEN BACKSTOP **351/351 · 20004**, 1995 s); signature controls 7/7;
+newgroup embed 23/0, wizard 200/0. **OWED: the pointer** — `land/dist/cut-0.79.0` @ `d2ca15b0` (cut + M-137) waits for
+CONDUCT's train; merges clean onto main `0a00c9c6`. Until it lands, main's `release/` reads 0.78.0 and `/update` offers 0.78.0.
+Confirm: `git merge-base --is-ancestor d2ca15b0 origin/main`. Tag `v0.79.0` is local only (the 403). **Not run at this cut:**
+the migrate-released control arms (the SEQUENCE for lesson 19 was not extended; expected alterafter 465/78 etc.) and the
+member byte comparison of lesson 7 (members read 0.79.0 through D-116 only).
 
 ## Standing rulings (verify with `node tools/decided.mjs`)
 
@@ -24,19 +22,17 @@ store=bio; the DIST-12 preflight entry). Rollback ids: the 0.78.0 ids below. If 
   into BOB's session. Never `fire_trigger`. Measure context with `get_session`; refresh at 75%.
 - Deploying stays DIST's by Bob's standing permission, only when asked, under the gate; report to BOB after landing.
 
-## What is LIVE — measured 2026-09-24 03:05Z (deployments API at 100%, `/version`, `op=bootstrap&members=1`)
+## What is LIVE — 0.79.0, measured 13:55Z (deployments API 100%, `/version`, `op=bootstrap&members=1`) — ROLLBACK TARGETS
 
-`main`'s `release/` = live = **0.78.0** (signed `9dac9e46…`; pointer landed `38b49c50`, `183cc7df` an ancestor of main).
-Each id is the ROLLBACK TARGET for the next cut:
-biosmoke7 `bfc7677f-205b-416d-ab07-74936b2bd921` (`/version` 0.78.0, storeVersion 0.78.0; members agent/ocr/pdf all
-SERVING 0.78.0) · agent-worker `187e2e29-8918-42d1-8be0-0bd326fa9e59` · pdf-worker `43702cbb-6e22-4d16-8fab-b04dae05c5cc`
-· ocr-worker `c57606be-0067-4c4c-8801-ace1daba9647` · civicos `afd4a640-a300-43a5-9aee-71fa86d24241` (`/build`
-`a2599046…`) · newgroup `7a47324c-5c28-4f82-8659-018dd1c71107` (embeds 0.78.0; bindings `[]` at the 0.78.0 read-back).
-All six deployed 2026-09-23 16:46–16:49Z; nothing deployed since.
-
-biosmoke7's stores record group `believe-in-oakland` (write-once, C-64.3; never seed again). Since D-456 (on main, not
-live) any `store=` other than exactly `bio`/`scratch` is refused NAMESPACE_UNKNOWN; an admin op with no `store` runs
-against `bio` — name `store=scratch` on every probe call.
+biosmoke7 `f92ca6a8-2b83-4d2d-8a09-ffd147b25df4` (plane sha256 `09e4e334…`, storeVersion 0.79.0, limits.subrequests 10000 read
+back) · agent-worker `508d516e-b7fe-4560-b61c-b65e6065cfa7` · pdf-worker `f7e9c5de-fc58-420e-aa82-fcd4aefeae6a` · ocr-worker
+`b7fbd59b-e554-401b-a9bc-5d98b5caf0fd` · civicos `37f4b0ad-b7c3-4864-b85c-7254bfe93f72` (`/build` `5c7ac848…`) · newgroup
+`3df99d2e-6d41-44f0-9a2f-28486b6d7e42` (RELEASE_SOURCE → `09e4e334…`, carries DIST-9, bindings `[]`). The 0.78.0 ids:
+biosmoke7 `bfc7677f` · agent-worker `187e2e29` · pdf-worker `43702cbb` · ocr-worker `c57606be` · civicos `afd4a640` ·
+newgroup `7a47324c`. Live probe 6/6 (NAMESPACE_PINNED and NAMESPACE_UNKNOWN answered; 0 in the 0.78.0 bundle); audit =
+the ten-id baseline. M-137: URL preflight 14/14 LIVE; digestcensus 0/0; changedfromaudit 0; homecensus shas 1.
+biosmoke7's stores record group `believe-in-oakland` (never seed again). D-461 is live: a public op pinned to `bio` now
+REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `store=bio` or nothing.
 
 ## What waits for the release Bob asks for (origin/main @ `548eb2c5`; re-read `git log 38b49c50..origin/main` at the cut — never this list)
 **UPDATE 12:25Z (BOB #32, verified at the code by DIST #6): main = `13073707`** (c20-batch14 landed 11:39Z; gate GREEN
