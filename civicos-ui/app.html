@@ -16186,9 +16186,10 @@ async function connectGo(){
    stage with an exception document is DISCHARGED, which is a different thing
    and the record shows why.
    ============================================================ */
-const PROG = { draft:{ stages:[] }, def:null, entity:null, instance:null, place:{}, pf:{} };
+const PROG = { draft:{ stages:[] }, def:null, entity:null, instance:null, place:{}, pf:{}, standing:null };
 async function renderProgressions(){
   setActive("progressions");
+  PROG.standing = null;
   const c = $("#content");
   c.innerHTML = `<h1 class="rec">Progressions</h1>
     <p class="lede">How something is supposed to go &mdash; a meeting that owes an agenda and then minutes, a purchase that owes a solicitation before an award. Declare the shape once, then thread what actually happened through it and see what is missing.</p>
@@ -16205,11 +16206,12 @@ async function renderProgressionNew(){
   if(!PROG.draft.stages.length) PROG.draft.stages = [{},{}];
   box.innerHTML = `<details class="intent-box" open><summary>Declare how something is supposed to go</summary><div class="intent-body">
     <label class="intent-lab">A short key for it, one word.</label>
-    <input id="pg-key" class="intent-in" placeholder="e.g. procurement" onchange="progDefinePreflight()">
+    <input id="pg-key" class="intent-in" placeholder="e.g. procurement" onchange="progKeyChanged()">
     <label class="intent-lab">What is it called?</label>
     <input id="pg-label" class="intent-in" placeholder="e.g. How a purchase is supposed to go" onchange="progDefinePreflight()">
     <div id="pg-stages">${PROG.draft.stages.map((s,i)=>progStageHtml(i)).join("")}</div>
     <button class="intent-pick" onclick="progAddStage()">Add another stage</button>
+    <div id="pg-revise">${progReviseHtml()}</div>
     <div id="pg-pf"></div></div></details>`;
   for(let i=0;i<PROG.draft.stages.length;i++){
     const sel = $("#pg-st-"+i+"-req"); if(sel) sel.onchange = () => progDefinePreflight();
@@ -16229,6 +16231,35 @@ function progStageHtml(i){
     <label class="intent-lab">Is it expected?</label>
     ${intentChooser("pg-st-"+i+"-req","stage_required","answers about whether a stage is expected")}</div>`;
 }
+/* UI-83 (framework §8.2, "The declared flow, and its revisions"; D-128). A definition is
+   APPEND-ONLY: re-declaring a key that is already declared writes a NEW version, and the plane
+   refuses it NO_BASIS without the member's statement of why the declared flow changes and
+   NO_CITATION without where that basis is published or held. Until this item the form offered
+   neither field, so every revision a member made here was refused with nothing to meet it.
+   The two fields are offered when the key names a progression the record ALREADY holds — which
+   the record says, by `op=progression`, and this surface never guesses — and the version named is
+   the plane's own. Whether a revision needs them is still the plane's rule: they are sent when
+   written, and a refusal still reads through `refusalWords(r)` (the pre-flight clears before the
+   basis is judged, because the store judges every stage first, so the refusal meets the member at
+   the commit). */
+async function progKeyChanged(){ await progStandingLoad(); await progDefinePreflight(); }
+async function progStandingLoad(){
+  const key = (($("#pg-key") && $("#pg-key").value) || "").trim();
+  let def = null;
+  if(key){ try{ def = await recR("progression", { key }); }catch(_){ def = null; } }
+  PROG.standing = (def && def.found !== false && def.progression_key === key) ? def : null;
+  const box = $("#pg-revise"); if(box) box.innerHTML = progReviseHtml();
+}
+function progReviseHtml(){
+  const d = PROG.standing; if(!d) return "";
+  const v = d.version != null ? ` (version ${esc(String(d.version))})` : "";
+  return `<div class="intent-sub"><h3>This changes a progression the record already holds</h3>
+    <p class="subj-note"><b>${esc(d.label||d.progression_key)}</b> is already declared${v}. What you declare here is kept as a new version, and the one it replaces stays on the record beside it.</p>
+    <label class="intent-lab">Why is it changing? Say what you know that the earlier declaration did not.</label>
+    <textarea id="pg-basis" class="intent-in" rows="3"></textarea>
+    <label class="intent-lab">Where is that published or held? A resolution, an ordinance, a document, a page.</label>
+    <input id="pg-cite" class="intent-in"></div>`;
+}
 async function progAddStage(){ PROG.draft.stages.push({}); await renderProgressionNew(); }
 function progDefineDraft(){
   const stages = PROG.draft.stages.map((_,i)=>({
@@ -16238,8 +16269,11 @@ function progDefineDraft(){
     after: (($("#pg-st-"+i+"-after") && $("#pg-st-"+i+"-after").value) || "").trim(),
     required: ($("#pg-st-"+i+"-req") && $("#pg-st-"+i+"-req").value) || "",
   }));
+  const basis = (PROG.standing && $("#pg-basis") && $("#pg-basis").value || "").trim();
+  const citation = (PROG.standing && $("#pg-cite") && $("#pg-cite").value || "").trim();
   return { progressionKey: (($("#pg-key") && $("#pg-key").value) || "").trim(),
-           label: (($("#pg-label") && $("#pg-label").value) || "").trim(), stages };
+           label: (($("#pg-label") && $("#pg-label").value) || "").trim(), stages,
+           ...(basis ? { basis } : {}), ...(citation ? { citation } : {}) };
 }
 async function progDefinePreflight(){
   const d = progDefineDraft();
@@ -16254,10 +16288,17 @@ async function progDefineGo(){
   const pane = $("#pg-pf"); if(!pane) return;
   if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
   const r = a.result;
-  pane.innerHTML = intentReceiptHtml([
-    `<b>${esc(r.label)}</b> is declared, in ${esc(String(r.stage_count))} ${r.stage_count===1?"stage":"stages"}.`,
-    `It says how this is supposed to go. Nothing is claimed to have happened yet.`]);
+  /* UI-83: the receipt says what the plane wrote — a first declaration, a new version beside
+     the one it replaced, or nothing at all because the declaration matched what stands. */
+  pane.innerHTML = intentReceiptHtml(r.unchanged
+    ? [`<b>${esc(r.label)}</b> already reads exactly this way (version ${esc(String(r.version))}), so nothing new was recorded.`]
+    : r.prior_version != null
+    ? [`<b>${esc(r.label)}</b> is declared again, in ${esc(String(r.stage_count))} ${r.stage_count===1?"stage":"stages"}, as version ${esc(String(r.version))}.`,
+       `Version ${esc(String(r.prior_version))} stays on the record beside it, with what you gave as the reason for the change.`]
+    : [`<b>${esc(r.label)}</b> is declared, in ${esc(String(r.stage_count))} ${r.stage_count===1?"stage":"stages"}.`,
+       `It says how this is supposed to go. Nothing is claimed to have happened yet.`]);
   const k = $("#pg-look-key"); if(k) k.value = r.progression_key;
+  if(!r.unchanged) await progStandingLoad();
 }
 
 /* ---- reading one progression, and threading a subject through it ---- */

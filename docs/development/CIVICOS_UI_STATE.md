@@ -50,6 +50,35 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v110, 2026-09-24 session, thread UI, UI-83 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/UI-83` (base
+`origin/main` @ `15b2a4c0`), in the commit that carries this entry. (claimed `v105`, which UI-68 holds; UI-86, D-291 and
+UI-85 hold `v107`–`v109`, so renumbered `v110` at c19-batch10.) SURFACE: the Progressions screen's "Declare how something is supposed to go" form.
+
+**What was absent.** D-128 made a progression definition APPEND-ONLY on the plane (framework §8.2, "The declared flow,
+and its revisions"): a revision of a declared key is refused without the member's statement of why the declared flow
+changes and without its citation. The form had neither field, so every revision a member attempted there was refused
+with nothing on the page to meet the refusal — a correction to just-landed work.
+
+**What moved.** When the key names a progression the record already holds — asked of `op=progression`, never guessed —
+the form offers a statement field and a citation field, names the version the plane says stands, and says the earlier
+version stays on the record. It sends both when written; whether a revision needs them stays the plane's rule, and a
+refusal still reads through `refusalWords(r)`. The receipt distinguishes a first declaration, a new version beside the
+one it replaced, and a declaration identical to what stands (nothing written). Functions: `progKeyChanged`,
+`progStandingLoad`, `progReviseHtml` (new); `renderProgressions`, `renderProgressionNew`, `progDefineDraft`,
+`progDefineGo` (edited). No DEC-49 region, no `SURFACES` key and no other marked region touched.
+
+**Instrument.** `civicos-ui/test/progression-revision.test.mjs` (new, 30 assertions) drives the form against the real
+plane in miniflare as an ENROLLED, SIGNED-IN member (never the deploy member token, REC-189): the first declaration,
+the offered fields, a revision without either (the plane's refusal, read as exactly `refusalWords(r)`, nothing
+written) and a revision with both (version 2 authored by her, basis verbatim, version 1 beside it). Negative control on
+its `NEGATIVE CONTROL:` line.
+
+**Finding, not closed here.** The no-basis and no-citation refusals of this op carry NO canned translation (no DEC-49
+row), so the member reads the store's own detail. The citation code is minted at three sites (relation declare,
+discharge and this revision) and already reached two member surfaces that way before this item; the DEC-49 guard
+cannot see it, because its R3 walk counts only codes a mock FEEDS and the intent suites assert it by regex against
+the real plane. The fix is the plane's: one governed helper and one row. Routed in UI-83's report.
+
 v109, 2026-09-24 session, thread UI, UI-85 (a WORKER of CONDUCT #19, cloud session). Landed on `land/worker/UI-85` (base
 `origin/main` @ `15b2a4c0`), in the commit that carries this entry. (claimed `v105`, which UI-68 holds; UI-86 holds `v107` and
 D-291 `v108`, so renumbered `v109` at c19-batch10.) SURFACE: the Add form's action intake gains "Whether this is safe to file".
