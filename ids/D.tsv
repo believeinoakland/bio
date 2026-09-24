@@ -26,3 +26,5 @@ D-497	2026-09-24T04:49:46.561Z	SCHEDULER #18	D-479 findings: directory candidate
 D-498	2026-09-24T04:49:46.561Z	SCHEDULER #18	D-479 findings: directory candidate scan linear in projects; 1.discoverable claim overstates
 D-499	2026-09-24T04:56:51.509Z	SCHEDULER #18	D-64 timeout ruling owed at integration
 D-500	2026-09-24T05:04:54.271Z	SCHEDULER #18	D-486 watermark precision (BOB #32 05:04Z)
+D-501	2026-09-24T05:22:42.391Z	SCHEDULER #18	D-481 findings: tier-2 award on raw length; same-baseline column residue
+D-502	2026-09-24T05:22:42.391Z	SCHEDULER #18	D-481 findings: tier-2 award on raw length; same-baseline column residue
