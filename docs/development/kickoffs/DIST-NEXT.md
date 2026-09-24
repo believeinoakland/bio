@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 14:00Z (0.79.0 live), for the DIST on Bob's OTHER account.
+# DIST — resume here. Written 2026-09-24 by DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, cloud), last updated 14:45Z (0.79.0 complete), for the DIST on Bob's OTHER account.
 
 Why now: this account's weekly quota ends ~07:00Z 2026-09-24 (Bob, relayed by BOB #32 at 03:00Z); work continues on the
 other account. This file is STATE, measured 03:05Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
@@ -8,9 +8,9 @@ pointer, the gate, the LESSONS) — read it whole. A sentence here is a pointer:
 ## RELEASE 0.79.0 — DEPLOYED AND LIVE-VERIFIED 2026-09-24 13:50–13:56Z (asked by Bob in DIST #6's session)
 
 Cut `dd324152` (tree `71af025a`, gate `--full --no-reuse` GREEN BACKSTOP **351/351 · 20004**, 1995 s); signature controls 7/7;
-newgroup embed 23/0, wizard 200/0. **OWED: the pointer** — `land/dist/cut-0.79.0` @ `d2ca15b0` (cut + M-137) waits for
-CONDUCT's train; merges clean onto main `0a00c9c6`. Until it lands, main's `release/` reads 0.78.0 and `/update` offers 0.78.0.
-Confirm: `git merge-base --is-ancestor d2ca15b0 origin/main`. Tag `v0.79.0` is local only (the 403). **Not run at this cut:**
+newgroup embed 23/0, wizard 200/0. **POINTER LANDED** — `land/dist/cut-0.79.0` @ `d2ca15b0` trained ALONE into main `5f116f33` (14:2xZ, CONDUCT #20;
+verified by DIST #6: `d2ca15b0` an ancestor of origin/main, main's `release/RELEASE.json` and `newgroup/dist` read 0.79.0), so
+`/update` offers 0.79.0. The 0.79.0 release is COMPLETE. Tag `v0.79.0` is local only (the 403). **Not run at this cut:**
 the migrate-released control arms (the SEQUENCE for lesson 19 was not extended; expected alterafter 465/78 etc.) and the
 member byte comparison of lesson 7 (members read 0.79.0 through D-116 only).
 
