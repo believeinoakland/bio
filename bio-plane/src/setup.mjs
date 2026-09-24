@@ -16,7 +16,7 @@
  * when the page is served — see `setupPage` below.
  */
 
-import { STATES, HEADINGS, deriveInquiryTitle } from "../checks/bio-checks.mjs";
+import { STATES, HEADINGS, deriveInquiryTitle, RISK_TIERS, riskTierState } from "../checks/bio-checks.mjs";
 
 /* The intake form obeys the check catalog's own tables rather than a copy of
    them. Injected at module load, so a catalog change moves the UI with it and
@@ -27,6 +27,13 @@ import { STATES, HEADINGS, deriveInquiryTitle } from "../checks/bio-checks.mjs";
 const FIRST_STATE_JSON = JSON.stringify(
   Object.fromEntries(Object.entries(STATES).map(([t, s]) => [t, s.legal[0]])));
 const HEADINGS_JSON = JSON.stringify(HEADINGS);
+/* D-483: the tier vocabulary, injected the way FIRST_STATE and HEADINGS are and for the same reason —
+   the words a member is offered are the PLANE's words, read from the one map op=affordances publishes as
+   vocabularies.risk_tiers (affordances.mjs holds RISK_TIERS itself, not a copy of it), so a catalogue
+   change moves this control with it and a surface inventing a label is impossible rather than discouraged.
+   riskTierState travels with the map because the page must not decide for itself WHICH keys a member may
+   author: the settable tiers are exactly the values the plane reads back as themselves. */
+const RISK_TIERS_JSON = JSON.stringify(RISK_TIERS);
 
 /* REC-163 / IC-174 — WHOSE RECORD THIS IS, STATED ON THE PAGE AND READ FROM THE RECORD.
  *
@@ -336,6 +343,25 @@ ${GROUP_LINE_UNREAD}
         <textarea id="n-cp-basis" rows="4"></textarea>
       </div>
       <p class="hint">This action will not be sent while this is undetermined.</p>
+    </div>
+    <!-- D-483 / D-182 (BIO_Case_Making_v0_1.md section 2, RULED by BOB #21): THE RISK TIER, ASKED
+         RATHER THAN ASSUMED. This page wrote risk_tier: undetermined because it had no control to
+         ask with, which is honest and is also a missing affordance: a member who HAS assessed the
+         action had no way to say so here. The control is that way round and no further - NOTHING IS
+         PRESELECTED, because a preselected tier is this page assessing legal exposure on the
+         member's behalf, which is the overclaim D-182 exists to have removed. Leaving it alone still
+         writes undetermined.
+         THE CHOICES AND THEIR WORDS ARE NOT WRITTEN HERE. They are rendered from the injected
+         vocabulary below (REC-38's pattern, as the counterparty pair is not): a tier's MEANING is
+         the sentence, so a surface that wrote its own three labels would be deciding what 2 means.
+         The container is empty in the source on purpose - if the vocabulary ever stops arriving, a
+         member is offered nothing rather than offered a stale copy of it. -->
+    <div class="card" id="n-risk">
+      <p style="margin:0 0 10px"><b>How risky is it to file this?</b> This is the one field on an
+      action that carries legal exposure, so only a member can set it and nothing is filled in for
+      you. Choose one if you have assessed it, and leave it alone if you have not.</p>
+      <div id="n-risk-choices"></div>
+      <p class="hint" id="n-risk-unset"></p>
     </div>
   </div>
   <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
@@ -873,7 +899,13 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
      literal, and a stray pair here parses fine under node --check and then
      fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
   if (type === "action") {
-    fm.push("action_kind: other","risk_tier: undetermined");
+    /* D-483: the tier the member chose, or undetermined when they chose none - and undetermined is
+       WRITTEN either way, never omitted, because an absent key and a stated undetermined must read
+       the same and only one of them says so in the bytes. riskTierState is the plane's own reader
+       (injected above), so what is written here is what the plane will read back. */
+    const tier = riskTierState(act && act.risk_tier !== null && act.risk_tier !== undefined
+      ? act.risk_tier : undefined);
+    fm.push("action_kind: other","risk_tier: " + (tier === null ? "undetermined" : tier));
     const cp = act && act.counterparty;
     /* The state the member chose is written even when the field beside it is
        empty: a member who answered "not determined yet" and wrote nothing has
@@ -943,6 +975,38 @@ function acquireWhy(a){
    pressures a member into writing what they do not know is a bug in the
    gate. */
 const deriveInquiryTitle = ${deriveInquiryTitle.toString()};
+/* D-483: the tier vocabulary and the plane's own reader of it, injected verbatim (the deriveInquiryTitle
+   pattern one line up, for its reason: the page and the plane cannot drift if they are the same code).
+   THE SETTABLE TIERS ARE DERIVED, NOT LISTED. A member may author exactly the values riskTierState reads
+   back as themselves; undetermined is not among them, because it is what the record says when NO member
+   has stated a tier, and offering it as a choice would let a member author the absence of their own
+   assessment. If the catalogue ever grows a fourth tier this control grows with it; if it grew one the
+   plane would refuse, this control would not offer it. */
+const RISK_TIERS = ${RISK_TIERS_JSON};
+const riskTierState = ${riskTierState.toString()};
+const SETTABLE_TIERS = Object.keys(RISK_TIERS).filter((k)=> riskTierState(Number(k)) === Number(k));
+/* The words are the vocabulary's, escaped because they are rendered as markup and nothing else about
+   their provenance makes them safe to interpolate raw. */
+const renderRiskTiers = ()=>{
+  const box = $("#n-risk-choices");
+  if (box) box.innerHTML = SETTABLE_TIERS.map((k)=>
+    '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">'
+    + '<input type="radio" name="n-risk" id="n-risk-' + escH(k) + '" value="' + escH(k)
+    + '" style="width:auto;margin-top:4px">'
+    + '<span>' + escH(RISK_TIERS[k]) + '</span></label>').join("");
+  /* What leaving it alone WILL write, in the plane's sentence for it rather than this page's. */
+  const unset = $("#n-risk-unset");
+  if (unset) unset.textContent = "Leave this alone and the record will say: " + RISK_TIERS.undetermined;
+};
+renderRiskTiers();
+/* null means NO MEMBER CHOSE, which mdFor writes as undetermined. A value the vocabulary does not hold
+   cannot arrive from the control above; if one ever did it would be nobody stating a tier the plane
+   accepts, so it reads as no choice here rather than being passed through to the bytes. */
+const chosenRiskTier = ()=>{
+  const el = $("input[name=n-risk]:checked");
+  const st = riskTierState(el ? Number(el.value) : undefined);
+  return st === "undetermined" || st === null ? null : st;
+};
 const syncNewForm = ()=>{
   const t = $("#n-type").value;
   const isQ = t === "inquiry";
@@ -989,7 +1053,11 @@ $("#n-save").addEventListener("click", async ()=>{
     if (!named && !undet) { e.textContent = "Say who this is addressed to, or that it is not determined yet."; return; }
     if (named && !nm) { e.textContent = "Name the counterparty."; return; }
     if (undet && !bs) { e.textContent = "Say what is known so far, and what would settle it."; return; }
-    act = { counterparty: named ? { state:"named", name:nm } : { state:"undetermined", basis:bs } };
+    /* D-483: the tier goes with the counterparty because both are the member's answers and neither is
+       this form's. No refusal beside it: a member who assessed nothing has answered honestly, and a gate
+       that stopped them here would press them into stating the one value nobody assessed. */
+    act = { counterparty: named ? { state:"named", name:nm } : { state:"undetermined", basis:bs },
+            risk_tier: chosenRiskTier() };
   }
   $("#n-save").disabled = true;
   try {

@@ -23,18 +23,69 @@ from collections import defaultdict
 # file prefix -> system; the institution is the City of Oakland unless named.
 SYSTEMS = [
     ("LEG", "Legistar (Granicus): webapi JSON, calendar page, attachment PDFs",
-     ("0002-", "0109-", "0110-", "0111-", "0112-", "0113-", "0114-", "0115-", "0116-", "0117-", "0118-", "0119-")),
+     ("0002-", "0109-", "0110-", "0111-", "0112-", "0113-", "0114-", "0115-", "0116-", "0117-",
+      "0118-", "0119-", "0200-")),
     ("FIN", "Finance Department publications: ACFRs, adopted budget books, oaklandca.gov finance pages",
-     ("0100-", "0103-", "0104-", "0106-acfr", "0106-revenue", "0107-", "0301-")),
+     ("0100-", "0103-", "0104-", "0106-acfr", "0106-revenue", "0107-", "0301-",
+      "0201-", "0202-", "0203-")),
     ("ODP", "Open Data portal (Socrata data.oaklandca.gov): FY13-15 adopted budget line items",
-     ("0105-",)),
+     ("0105-", "0205-")),
     ("AUD", "Office of the City Auditor: 2022 sewer franchise fee report", ("0099-",)),
+    # D-453 (2026-09-24) added the 02xx- prefixes: the WIDER corpus fetched live from the
+    # sources themselves once egress opened, rather than from the 31 bundles M-119 could reach.
+    ("ASR", "Alameda County ASSESSOR's parcel roll as republished by Oakland (data.oaklandca.gov "
+            "c3xp-qcgn) — the APN's ISSUER is the county, so an ASR<->LEG pair is CROSS-INSTITUTION",
+     ("0204-",)),
     ("OGV", "OpenGov (oaklandca.opengov.com) transfer series", ("0101-",)),
     ("EXT", "NOT an Oakland system: Supreme Court of California opinion (SCOCAL)", ("0108-",)),
 ]
 CLASSES = ["contract", "project", "resord", "apn", "fund"]
 STOP = {"fund", "funds", "the", "of", "and", "for", "city", "oakland", "general", "service", "services",
         "special", "revenue", "project", "program", "a", "to", "in", "&", "-", "fy", "cip"}
+
+# Legistar writes MatterEnactmentNumber in several forms: a bare number, 'NNNNN CMS',
+# 'NNNNN C.M.S.', 'NNNNN C.M.S', and 'CMS NNNNN'. CORRECTED by D-453 (2026-09-24): this
+# path used re.fullmatch(r"\d{4,5}") and so DROPPED 8,470 of 17,692 enactment numbers
+# (47.9%, of which 7,370 C.M.S.-suffixed) when run over the whole matter set. The old
+# assertion was wrong because it tested the FIELD as if it were bare digits, while the
+# marker's spelling is exactly what normalisation is supposed to fold (as it already does
+# in RX["resord"] for running text).
+RX_ENACT = re.compile(r"^\s*(?:C\.?\s?M\.?\s?S\.?\s*)?(\d{4,5})\s*(?:C\.?\s?M\.?\s?S\b\.?)?\s*$")
+
+def enactment_value(en):
+    """The 4-5 digit enactment number in a MatterEnactmentNumber field, or None.
+    Folds the C.M.S. marker's spelling; NEVER folds digits."""
+    m = RX_ENACT.match(en or "")
+    return m.group(1) if m else None
+
+# An APN is written two ways in Oakland's record: Legistar pads every part
+# (011-0836-017-00) while the assessor's roll does not (11-836-17, sub-parcel omitted
+# when zero). The roll's OWN canonical column apn_sort is book(3)+' '+page(4)parcel(3)
+# sub(2) -- verified against the roll: apn 48-6298-3-2 has apn_sort '048 629800302'. So
+# both forms fold onto that key. Zero-padding a part is NOT folding a digit: it is the
+# roll's own spelling of the same part. An absent sub-parcel becomes 00 because the roll
+# itself writes it that way (apn 48-6313-23 -> '048 631302300').
+def apn_key(v):
+    parts = (v or "").strip().split("-")
+    if len(parts) < 3 or len(parts) > 4 or not all(x.isdigit() for x in parts):
+        return None
+    b, pg, pc = parts[0], parts[1], parts[2]
+    sub = parts[3] if len(parts) > 3 else "0"
+    if len(b) > 3 or len(pg) > 4 or len(pc) > 3 or len(sub) > 2:
+        return None
+    return f"{int(b):03d} {int(pg):04d}{int(pc):03d}{int(sub):02d}"
+
+def col(row, *names):
+    """A CSV column looked up by NAME rather than by one literal spelling. D-453
+    (2026-09-24): Socrata's CSV EXPORT heads the column 'Fund Code' while its API heads
+    the same column 'fund_code', so a reader pinned to one spelling reads the other as an
+    empty dataset -- silently, which is the failure mode this project calls a matcher
+    'looking in the wrong place'. Compared on letters and digits only."""
+    want = {re.sub(r"[^a-z0-9]", "", n.lower()) for n in names}
+    for k, v in row.items():
+        if k and re.sub(r"[^a-z0-9]", "", k.lower()) in want:
+            return v
+    return None
 
 def system_of(fn):
     for code, _, pre in SYSTEMS:
@@ -67,7 +118,11 @@ def extract_text(text, fn, sysc, out):
         out["resord"].append((m.group(1), ctx(text, m.start(), m.end()), fn, sysc))
     for rx in RX["apn"]:
         for m in rx.finditer(text):
-            out["apn"].append((m.group(1), ctx(text, m.start(), m.end()), fn, sysc))
+            # D-453: fold onto the assessor roll's own canonical key so Legistar's padded
+            # form and the roll's unpadded form are the SAME value. A string the key
+            # function refuses is kept verbatim, never silently dropped.
+            k = apn_key(m.group(1)) or m.group(1)
+            out["apn"].append((k, ctx(text, m.start(), m.end()), fn, sysc))
     for m in RX["contract"][0].finditer(text):
         out["contract"].append((m.group(1).upper(), ctx(text, m.start(), m.end()), fn, sysc))
     seenp = set()
@@ -104,19 +159,27 @@ def load(corpus, plant=False):
             rows = list(csv.DictReader(open(p, encoding="utf-8", errors="replace")))
             r["rows"] += len(rows)
             for x in rows:
-                fc, pc = (x.get("Fund Code") or "").strip(), (x.get("Project Code") or "").strip()
+                # D-453: the assessor roll (0204-) carries apn + the roll's own apn_sort.
+                av = (col(x, "apn") or "").strip()
+                if av:
+                    srt = (col(x, "apn_sort") or "").strip()
+                    k = apn_key(av) or srt or av
+                    out["apn"].append((k, f"parcel roll row apn={av} apn_sort={srt}", fn, sysc))
+                fc = (col(x, "Fund Code") or "").strip()
+                pc = (col(x, "Project Code") or "").strip()
                 if fc:
-                    out["fund"].append((fc, x.get("Fund Description", ""), fn, sysc))
+                    out["fund"].append((fc, col(x, "Fund Description") or "", fn, sysc))
                 if pc and pc != "0000000":
-                    out["project"].append((pc, x.get("Project Description", ""), fn, sysc))
+                    out["project"].append((pc, col(x, "Project Description") or "", fn, sysc))
             continue
         if fn.endswith(".json") and raw.lstrip().startswith("["):
             arr = json.loads(raw)
             r["rows"] += len(arr)
             for x in arr:
                 en = (x.get("MatterEnactmentNumber") or "").strip() if isinstance(x, dict) else ""
-                if re.fullmatch(r"\d{4,5}", en):
-                    out["resord"].append((en, f"MatterEnactmentNumber of {x.get('MatterFile')} "
+                ev = enactment_value(en)
+                if ev:
+                    out["resord"].append((ev, f"MatterEnactmentNumber {en} of {x.get('MatterFile')} "
                                           f"{x.get('MatterTypeName')}: {(x.get('MatterTitle') or '')[:90]}", fn, sysc))
                 text = " ".join(str(x.get(k) or "") for k in ("MatterTitle", "MatterName", "Name", "AttachmentName")) \
                     if isinstance(x, dict) else str(x)
@@ -165,12 +228,22 @@ def analyse(out):
             else:
                 a, b = ss[0], ss[1]
                 shared.append((v, ss, [(a, d[a][0][0], d[a][0][1], b, d[b][0][0], d[b][0][1])]))
-        vals = set(by)
-        for v in vals:
-            z = v.lstrip("0")
-            for w in vals:
-                if w != v and w.lstrip("0") == z and len(w) > len(v):
-                    near.append((v, w, sorted(by[v]), sorted(by[w])))
+        # CORRECTED by D-453 (2026-09-24): this was a nested scan over every pair of
+        # distinct values -- O(n^2). It is unnoticeable on M-119's 31-bundle corpus and
+        # does not terminate on a corpus holding the assessor's 394,597-row parcel roll
+        # (~1.5e11 comparisons). Grouping by the zero-stripped key is the same relation
+        # in one pass. The old code was not WRONG, it was unrunnable at scale, which for
+        # an instrument is the same defect.
+        groups = defaultdict(list)
+        for v in by:
+            groups[v.lstrip("0")].append(v)
+        for z, vs in groups.items():
+            if len(vs) < 2:
+                continue
+            for v in vs:
+                for w in vs:
+                    if w != v and len(w) > len(v):
+                        near.append((v, w, sorted(by[v]), sorted(by[w])))
         occ = {v: {s: len(x) for s, x in d.items()} for v, d in by.items()}
         res[c] = {"per_sys": per_sys, "shared": shared, "value_only": value_only, "near": near, "occ": occ}
     return res
@@ -231,6 +304,24 @@ def selftest():
         ("03100~3100 printed as NEAR-MISS", ("3100", "03100") in near["fund"]),
         ("APN -00 vs -01 does NOT match", not got["apn"]),
         ("fund 2010 with disagreeing labels does NOT count", "2010" not in got["fund"]),
+        # D-453 (2026-09-24), the two new normalisations, each with its over-strictness arm.
+        ("enactment field 'NNNNN CMS' normalises (was dropped)", enactment_value("85405 CMS") == "85405"),
+        ("enactment field 'NNNNN C.M.S.' normalises", enactment_value("85405 C.M.S.") == "85405"),
+        ("enactment field 'CMS NNNNN' normalises", enactment_value("CMS 85405") == "85405"),
+        ("a non-enactment field is REFUSED, not coerced", enactment_value("2000-58") is None),
+        ("roll form 48-6298-3-2 and padded 048-6298-003-02 are ONE key",
+         apn_key("48-6298-3-2") == apn_key("048-6298-003-02") == "048 629800302"),
+        ("an absent sub-parcel pads to 00 as the roll writes it",
+         apn_key("48-6313-23") == "048 631302300"),
+        ("a different sub-parcel is a DIFFERENT key",
+         apn_key("48-6298-3-2") != apn_key("48-6298-3-3")),
+        ("apn_key REFUSES a string that is not an APN", apn_key("2026-09-24") is None),
+        ("a CSV column is found under the export's spelling",
+         col({"Fund Code": "3100"}, "Fund Code") == "3100"),
+        ("...and under the API's spelling (over-strictness)",
+         col({"fund_code": "3100"}, "Fund Code") == "3100"),
+        ("an absent column is None, not a coerced empty",
+         col({"something_else": "x"}, "Fund Code") is None),
     ]
     ok = all(x for _, x in checks)
     for n, x in checks:

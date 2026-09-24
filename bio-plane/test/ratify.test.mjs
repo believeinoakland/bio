@@ -207,7 +207,9 @@ t("attested by the key's member", rat.attestor, "sparky");
    the next check that lands turns that suite red until this string and that one
    move together. Still the exact version and still not a pattern, for the reason
    above. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.21.0)");
+/* 1.22.0 (CONDUCT #20, c20-batch18): CORRECTED, not exempted — the catalogue gained D-484's two rows, so the
+   stamp moved; the old pin named a catalogue that no longer exists. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.22.0)");
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

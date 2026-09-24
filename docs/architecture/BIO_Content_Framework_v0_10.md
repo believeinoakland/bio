@@ -2000,7 +2000,7 @@ group's instance has no OCR member until the fleet is deployed to it, and takes 
 branch that claims nothing about a scan's text. Some code comments still describe tier 3 as
 untaken; they are stale and rowed for correction.
 
-**THREE STATED LIMITS AND ONE DESIGN (BOB #32, 2026-09-23).**
+**FOUR STATED LIMITS AND ONE DESIGN (BOB #32, 2026-09-23; the fourth D-481, 2026-09-24).**
 - **The image-only page is RARE AND CLUMPED (D-313).** CPDF-15 censused 1,377 Legistar pages twice and found ZERO
   image-only pages; CPDF-14 had found 13 of 1,458 on the same surface weeks earlier, in TWO documents. So a corpus arm
   that needs image-only pages cannot rely on harvesting them, and an n=0 is a statement about recent traffic, not about
@@ -2015,6 +2015,10 @@ untaken; they are stale and rowed for correction.
   I2 gains a page and rect on each tier-1 text unit, and anchor text plus a rect on each LinkRecord. An agenda item's
   membership in a file is then DERIVED from containment: labelled as machine work, graded as inferred, and never
   presented as the publisher's own link. NOT BUILT (REC-206, I2 PROVISIONAL).
+- **A tier-1 LINE is a baseline, and same-baseline runs are joined (D-481; M-133).** Tier-1 PDF text breaks a line
+  when the baseline moves; two runs sharing a baseline and separated only by a horizontal jump are concatenated,
+  because glyph advance widths are not read. Table columns and a two-part footer can therefore glue (measured:
+  0.32% of an agenda's tokens). D-502 reads the widths and splits them; until it lands this is a stated limit.
 
 **EVERY CORPUS-SCALE FIDELITY FIGURE IS AGREEMENT, NOT ACCURACY — A STATED, PERMANENT LIMITATION AS OF
 2026-09-19 (BOB #17, D-306), and the purchase that would close it is NOT FUNDED on DEC-74's own pattern.**

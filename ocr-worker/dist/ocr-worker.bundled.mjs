@@ -531,6 +531,7 @@ var OCR_PRODUCER_MARKERS = Object.freeze([
      unrelated word that merely contains the letters does not fire. */
   Object.freeze({ marker: "ocr", re: /(^|[^0-9a-z])ocr([^0-9a-z]|$)/i })
 ]);
+var IDENTITY_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
 var IMAGE_FILE_MIME = Object.freeze({
   DCTDecode: "image/jpeg",
   DCT: "image/jpeg",

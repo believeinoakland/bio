@@ -44,9 +44,12 @@ const KNOWN_BINDING_KEYS = [
  * refused any skew against the config's own vars.VERSION, so the two agree
  * by the time this runs — the argument is used because it is the one the
  * rollout gate waits for). `instanceClaudeToken` is DS-3's cascade value,
- * included only when the operator's environment carries it.
+ * included only when the operator's environment carries it. `instanceAiToken` is
+ * D-260's organisation `ai` credential (DIST-9), carried the same way and NEVER
+ * generated here: a member mints it on the instance, so a deploy only carries
+ * the value the operator's environment holds.
  */
-export function deriveBindings(cfg, { slug, version, instanceClaudeToken } = {}) {
+export function deriveBindings(cfg, { slug, version, instanceClaudeToken, instanceAiToken } = {}) {
   if (!slug) throw new Error("REFUSED [NO_SLUG]: the binding derivation needs the instance slug — a default would be the hardcoded name D-292 exists to forbid.");
   if (!version) throw new Error("REFUSED [NO_VERSION]: the binding derivation needs the version the rollout gate will wait for.");
 
@@ -80,6 +83,9 @@ export function deriveBindings(cfg, { slug, version, instanceClaudeToken } = {})
   }
   if (instanceClaudeToken) {
     bindings.push({ type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: instanceClaudeToken });
+  }
+  if (instanceAiToken) {
+    bindings.push({ type: "secret_text", name: "INSTANCE_AI_TOKEN", text: instanceAiToken });
   }
 
   /* The phantom must not survive derivation in any position. */

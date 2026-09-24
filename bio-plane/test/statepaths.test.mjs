@@ -110,7 +110,14 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    - UI-68's `ui:review-copy.test.mjs`, doc-facing.
    The one new READER of the ledger (32 -> 33) is `mintid-take.test.mjs` (names MEASUREMENTS.md in tools/entries.mjs,
    as recorded at D-242's own move); none of the seven reaches through `coord.mjs` (4 on both trees). */
-const UNITS_CEILING = 74;
+/* MOVED 74 -> 47 by M0-143 (2026-09-24), from the figure THIS suite PRINTED on its own clone of the M0-143 tree
+   (`47 unit(s) of 416 selected · 33 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`), never by subtracting from
+   the old number. THE REASON, and it is a narrowing rather than slack: `gates.mjs` §2 now reads a suite's own source,
+   its control and the tools it names AS CODE, comments blanked — so a suite whose only `docs/` mention is in its
+   prose is no longer doc-facing, and a MEASUREMENTS plant no longer sweeps it in. Estate-wide the doc-facing set
+   went 72 -> 41 (plane 60 -> 37, ui 12 -> 4); `measurements/M-134.md` has the dropped list. A CEILING IS NOT A
+   RATCHET: this one is left at the printed figure, with no slack bought for a future landing. */
+const UNITS_CEILING = 47;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
