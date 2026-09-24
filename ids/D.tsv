@@ -86,3 +86,5 @@ D-557	2026-09-24T22:59:02.010Z	land/worker/D-536
 D-558	2026-09-24T23:01:27.192Z	HEAD	SCHEDULER #20: ratify.test.mjs:240 version pin (D-544/M0-192 finding); nc-rec66/nc-rec129 arm decay re-anchor (CONDUCT #20 23:00Z)
 D-559	2026-09-24T23:01:27.192Z	HEAD	SCHEDULER #20: ratify.test.mjs:240 version pin (D-544/M0-192 finding); nc-rec66/nc-rec129 arm decay re-anchor (CONDUCT #20 23:00Z)
 D-560	2026-09-24T23:07:01.424Z	land/worker/M0-188	
+D-561	2026-09-24T23:07:31.885Z	WORKER D-549	D-549 findings: public-op untranslated codes; check-refusal-codes reach ignores public ops
+D-562	2026-09-24T23:07:31.885Z	WORKER D-549	D-549 findings: public-op untranslated codes; check-refusal-codes reach ignores public ops
