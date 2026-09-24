@@ -1,0 +1,16 @@
+{
+ "unit": "plane:citeinquiry.test.mjs",
+ "inputHash": "02f5b75485cc8e4589bf3db94305d6d863ffa115208a7f12de8bb1ee9c308255",
+ "verdict": "PASS",
+ "run": "c4a07fac0d616bb169b0b6c6b7813b307d89207a.1790275020345.2584.json",
+ "tree": "c4a07fac0d616bb169b0b6c6b7813b307d89207a",
+ "head": "651b43f896f52bec5b2621f4da07e65110477738",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 153,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "a01bd3a3-cf61-5ff4-afd6-ca63968b4a79",
+ "at": "2026-09-24T18:37:00.356Z"
+}

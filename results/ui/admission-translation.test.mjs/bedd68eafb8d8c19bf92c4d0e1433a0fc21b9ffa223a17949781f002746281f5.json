@@ -1,0 +1,16 @@
+{
+ "unit": "ui:admission-translation.test.mjs",
+ "inputHash": "bedd68eafb8d8c19bf92c4d0e1433a0fc21b9ffa223a17949781f002746281f5",
+ "verdict": "PASS",
+ "run": "c4a07fac0d616bb169b0b6c6b7813b307d89207a.1790275020345.2584.json",
+ "tree": "c4a07fac0d616bb169b0b6c6b7813b307d89207a",
+ "head": "651b43f896f52bec5b2621f4da07e65110477738",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 24,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "a01bd3a3-cf61-5ff4-afd6-ca63968b4a79",
+ "at": "2026-09-24T18:37:00.358Z"
+}
