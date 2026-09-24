@@ -43,14 +43,14 @@ scope: `promote` derives the projected type from the promoted document; an envel
 accepts-when: an action promoted under an information envelope is refused (or lands typed action with its basis and correspondence projected). NEGATIVE CONTROL: gate on the envelope again and that arm lands typed information, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-160 · queued — **`status.mjs` DOES NOT FLAG AN AMBIGUOUS PROBE: a `hit` matching more than once in its file pins nothing — D-498's first probe (`limit: cap, truncated`) matched 24 times in `store.mjs` and stayed green on an unrelated op.** Found by D-498's worker. — owner M0.
-order: after M0-159, beside M0-155 (probes going false-green on comments), the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:13Z)
+### M0-171 · queued — **`versions.test.mjs` HARVESTS SCHEMA TABLES WITH A LOOSE PATTERN (`/CREATE TABLE IF NOT EXISTS (\w+)/g`, ~line 719), so it still counts the prose phantom `would` that M0-155 removed from the census.** Found by M0-155's worker. — owner M0.
+order: after M0-160, beside the probe-accuracy rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 17:07Z)
 milestone: M0
 interface: none.
-design: `docs/development/VERIFICATION.md` (a check that cannot fail is worse than none).
-depends-on: none.
-scope: a `--check` arm failing any probe `hit` that matches more than once in its file; re-pin every claim it names.
-accepts-when: `node tools/status.mjs --check` reads 0 ambiguous probes. NEGATIVE CONTROL: widen one claim's `hit` to match twice and the arm names it.
+design: `docs/development/VERIFICATION.md` (an instrument counts code, not prose).
+depends-on: M0-155.
+scope: add the `\s*\(` tail `hygiene.test.mjs` (~line 685) uses; re-read the table count from its print.
+accepts-when: versions.test's table census equals M0-155's 114. NEGATIVE CONTROL: drop the tail and the `would` phantom returns, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-165 · queued — **FOUR SUITES ARE SELECTED FOR ANY MEASUREMENTS-ONLY CHANGE BY A DATA STRING: `measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)"` in calibration, reextract, textchain and tier3-layer-parts reads to the gate as a MEASUREMENTS reader.** Found by M0-153's worker. — owner M0.

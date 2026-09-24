@@ -293,6 +293,16 @@ scope: in `runTrain` (near `const drop = new Set(opts.drop || [])`), refuse to s
 accepts-when: `--drop x,y` naming no waiting branch is refused by name, and a valid comma list drops each named branch. NEGATIVE CONTROL: restore the silent ignore and the refusal arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
+### M0-160 · queued — **`status.mjs` DOES NOT FLAG AN AMBIGUOUS PROBE: a `hit` matching more than once in its file pins nothing — D-498's first probe (`limit: cap, truncated`) matched 24 times in `store.mjs` and stayed green on an unrelated op.** Found by D-498's worker. — owner M0.
+order: after M0-159, beside M0-155 (probes going false-green on comments), the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:13Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a check that cannot fail is worse than none).
+depends-on: none.
+scope: a `--check` arm failing any probe `hit` that matches more than once in its file; re-pin every claim it names.
+accepts-when: `node tools/status.mjs --check` reads 0 ambiguous probes. NEGATIVE CONTROL: widen one claim's `hit` to match twice and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
