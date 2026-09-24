@@ -1,0 +1,16 @@
+{
+ "unit": "ui:statement-ack.test.mjs",
+ "inputHash": "f81f292b49c5740b586f00bbd1faa10af2a16cecb7f0a0018a1e08d45fcab141",
+ "verdict": "PASS",
+ "run": "8d8203150869e7f8f65c2a9fab4d960e4d54e05c.1790292566160.13347.json",
+ "tree": "8d8203150869e7f8f65c2a9fab4d960e4d54e05c",
+ "head": "535294c77207c2676c7bd626b0946264ac564859",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 93,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c17fe8de-daa8-58e3-967d-5923f58bf4e6",
+ "at": "2026-09-24T23:29:26.173Z"
+}
