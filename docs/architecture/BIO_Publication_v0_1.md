@@ -139,6 +139,7 @@ Three consequences give the construct its shape. The record must be able to prov
     any container is built, as the VERIFYING value. The file's own sha256 is recorded beside it, labelled "this file's
     bytes", and is informative only. A check that fails honestly on another runtime is a check that gets switched off.
     NOT BUILT (rowed).
+17. **THE GATE STAMP'S CATALOGUE VERSION MOVES WHENEVER THE CATALOGUE DOES** (BOB #32, 2026-09-24, D-470). A case document's gate stamp names the check-catalogue version it was judged against, so one version names exactly one catalogue: any added, removed or changed check moves the version in the same landing. The per-version census pin enforces it and fails by name. A stamp whose version is ambiguous proves nothing about what judged it.
 
 ## 4. What is built
 
