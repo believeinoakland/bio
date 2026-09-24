@@ -20190,6 +20190,7 @@ paths, BY SITE — `civicos-ui/app.html` is shared ground and several UI workers
   - `docs/development/CIVICOS_UI_STATE.md` (prepend one entry).
 
 **open as of 2026-09-24** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
+amended 2026-09-24 — ALSO `civicos-ui/test/notifications.control.mjs`, and the claim above did not name it. Two reasons, both owed: (1) the subject's negative control is re-run after the subject changes (`CLAUDE.md` §5), so this item adds FOUR arms to it (15 the state this item found, 16 the row's own, 16b the case undo drawn over kinds the surface cannot see, 17 over-strictness) and re-runs the whole driver — 20 of 20 as declared, exit 0; (2) its scratch pen was `.ui45-harness/` INSIDE the worktree, which BOB #32's ruling of 2026-09-24 (WORKER.md) makes a defect, so it is now a per-run `mkdtemp` outside the worktree, with the driver's own practice line corrected in place and its collision reasoning KEPT. Nothing else in that file moved.
 
 ## DELEGATION 2026-09-24 RECORD (WORKER REC-213) -> UI — **THE REVIEW COPY'S LIST NOW WITHHOLDS THE WRITER'S OWN ROW AND COUNTS IT; `rvcAcksHtml` RENDERS THE LIST AND NOT THE COUNT**
 
