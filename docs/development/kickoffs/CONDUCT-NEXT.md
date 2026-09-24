@@ -24,21 +24,21 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (15:50Z) — DEVELOPMENT RESUMED ON THIS ACCOUNT (Bob via BOB #32 15:40Z: quota reset, account switch CANCELLED,
-wind-down OVER; cap 10 live workers). Read the tree; these are pointers.
-- MAIN = 68fecb8d (BOB's train landed land/bob/fold-m132). Before: 5f116f33 (0.79.0 release pointer, DEPLOYED by DIST #6),
-  13073707 (c20-batch14), 6761e903 (batch19), 454a02bc (batch18). Versions: I1 1.10.0 · I3 87.0.0 · I4 2.2.0 · I5 3.8.0.
-- land/* already on main are deleted by .github/workflows/prune-landed.yml; train.mjs's ref deletion is redundant. Trains:
-  ONE `--drop` PER BRANCH (M0-159 is the fix row). NEVER-MERGE refs: c16-batch3, c16-batch6, land/bob/folds-0924c,
-  land/bob/folds-0924d, c18-batch7fix, c19-batch10, c20-integ1, c20-batch16.
-- LIVE WORKERS (first 10, spawned 15:46-15:48Z, base 68fecb8d, rows flipped running at coord f8fd4a77; report by one-shot trigger):
-  M0-140 session_01SwHJ5PDWaoePcKuzYBscMK (retire the DEBT construct; CLAUDE.md wording goes to BOB first) · D-498
-  session_01N5aDuN1MfnKxsNJ5n7cPkU · D-497 session_018qopfWkzV5cvhBz2jTv3HD · UI-100 session_01SpHP4tgbseccztTdjMSCij ·
-  REC-195 session_01TXWen1KhhqKXJj5A9wnvpN · M0-153 session_01CA8h4ZpGNcoCbb18TUQc8U · M0-154 session_01Gh94DitRyuZFiqZDucoiy6 ·
-  M0-155 session_016oXJSbX622XgPZybiCHhPG · M0-157 session_01V8GNcS1HJ8NwMmx5AMsYzE · M0-158 session_01UNuTyy3HyKaA6NTmjLuGqT.
-  PLUS 5 (15:49-15:50Z, coord 0cf9783c; 15 live): UI-92 session_01QY1UMF2hnkFRAigwRyrbZp · D-505 session_014oU4xtRHymVAFfuYTPkFL4 ·
-  D-503 session_01Lar2mJnqfdxQ3fb6dVUuQv · D-506 session_01JnKExYq87zoNZ3mx3fCgdq · REC-194 session_01YL4Drx2EamtQLtaGQSL1HC.
-- NEXT RUNNABLE: the cache is DRAINED (only DIST-13, DIST's); SCHEDULER asked to refill 15:52Z. Fill a freed slot same turn.
+## 4. STATE (16:52Z) — read the tree; these are pointers. Development RESUMED 15:40Z on this account.
+- MAIN = 58293bf3 (16:50Z: D-498 + M0-153). Before: 68fecb8d (fold-m132), 5f116f33 (0.79.0 pointer). I3 87.0.0 on main.
+- TRAIN RUNNING (16:50Z, log #20 scratchpad train13.log): land/conduct/c20-batch20 @ 6a9df102 = UI-100 + D-505 + M0-154 +
+  D-503 + D-506, dist rebuilt; IC-265 (D-506) I3 88.0.0, IC-266 (D-505) I3 89.0.0. On landing archive those 5 by ancestry.
+- DONE on coord only: M0-158 (CLAIMS 6c0f0763), archived.
+- LIVE WORKERS: M0-140 session_01SwHJ5PDWaoePcKuzYBscMK · D-497 session_018qopfWkzV5cvhBz2jTv3HD · REC-195
+  session_01TXWen1KhhqKXJj5A9wnvpN · M0-155 session_016oXJSbX622XgPZybiCHhPG · M0-157 session_01V8GNcS1HJ8NwMmx5AMsYzE (told to merge
+  M0-153 and reconcile G5 IN ITS FAVOUR: its gates.mjs §2d fix beats M0-153's downgrade) · UI-92 session_01QY1UMF2hnkFRAigwRyrbZp ·
+  REC-194 session_01YL4Drx2EamtQLtaGQSL1HC · D-507 session_01PXoZMHp8BzqvtbponMk52b · D-508 session_01G8U6vc36TrANDpVtGUArFZ ·
+  REC-212 session_01HHnoha7mw6A3Dzdk5X45yy · REC-211 session_01M33XV9m3mqkNdrkz8BFWxx. Integrated-awaiting-archive: UI-100
+  session_01SpHP4tgbseccztTdjMSCij, D-505 session_014oU4xtRHymVAFfuYTPkFL4, M0-154 session_01Gh94DitRyuZFiqZDucoiy6, D-503
+  session_01Lar2mJnqfdxQ3fb6dVUuQv, D-506 session_01JnKExYq87zoNZ3mx3fCgdq.
+- VERSION COLLISIONS TO WATCH: D-507 and D-508 both move CATALOG_VERSION (reconcile at integration); REC-211 is I3 MAJOR (next
+  above 89.0.0). Flip rows with `--status <ID> running` and NO --note (a note replaces the headline; M0-164 fixes the tool).
+- Pending BOB #33: D-505's caller-asserted `replay: true` exemption (forwarded 16:48Z).
 
 ## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
 land/* branches wait (sooner when a batch is ready); BOB's stall probe alarms after 120 min without a landing while branches wait. Refresh at 75% context.
