@@ -30,9 +30,10 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   ARCHIVED by ancestry. Before: 135abf3b (batch15), d536f834 (batch12).
 - MAIN = 6761e903 (c20-batch19 LANDED 07:40Z, 346/346 green · 19659 assertions: UI-89 + D-496; IC-262 ACCEPTED, I3 82.0.0 MAJOR).
   UI-89 and D-496 ARCHIVED by ancestry. D-150 -> UI delegation NARROWED on coord CLAIMS (residue: six STATEMENT_ACK DEC-49 rows).
-- c20-batch14 (session_01Ya8PUPivB6xpvV51uhcZa9, LIVE at #20's stop; was FULL-GATE GREEN at ece0bdfc 06:39Z on its OWN base, since moved; told 07:14Z to merge current main and put its report in its LAST COMMIT MESSAGE) is THE ONE BIG PENDING LANDING: it
-  carries batch10/11's 14 rows + d461-claude + integ1b (D-64 REC-184) + batch11fix + batch13 (batch12) + D-486. Told to merge main,
-  renumber its I3 chain as ONE linear sequence above main (main is NOW I3 82.0.0 → batch14's 85.x/86.x entries renumber ABOVE 82.0.0 as one line), I5 IC-252 3.7.0 / IC-255 3.8.0, catalogue 1.23.0 re-censused. It must merge the main CURRENT when it finishes, then be
+- c20-batch14 (session_01Ya8PUPivB6xpvV51uhcZa9) REPORTED DONE 08:39Z: @ d026654d, gate GREEN (composite: 104/104 re-run on tree
+  8b10a224 + 314 units reused from 7df9d2d5), merged main 454a02bc + batch13 + D-486. Versions I1 1.10.0 · I3 86.3.0 (main's IC-263
+  renumbered 81.4.0→86.3.0) · I4 2.2.0 · I5 3.8.0 · CATALOG 1.23.0 = {447, 3309735d…}. IT HAS NOT MERGED 6761e903 (batch19): the
+  next merger renumbers IC-262 (I3 82.0.0 MAJOR) to 87.0.0 above 86.3.0, re-reads every ratchet from the print, then batch14 is
   trained ALONE. Its gate verdict is the proof, not its message. DROP from every train: c19-batch10, c19-batch11, c20-integ1
   (broken trailers), c20-integ1b, c20-batch11fix, c20-batch12, c20-batch13, c20-batch16, c20-batch17 (all inside batch14 or on
   main). On batch14 landing: DIST owed D-461 SAFETY, D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), DIST-11 browser class.
