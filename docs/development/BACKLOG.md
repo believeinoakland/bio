@@ -73,6 +73,16 @@ scope: teach the deploy derivation the `browser` class FIRST; then add `"browser
 accepts-when: a deploy derived with the binding succeeds and a config without it still installs. NEGATIVE CONTROL: drop the class and the derivation refuses UNKNOWN_BINDING_CLASS by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
+### DIST-12 · queued — **NOTHING NOTICES WHEN THE TIER 1 CORPUS URLS ROT: the probe's `--urls` preflight (D-166) runs only when someone runs it, and a network check cannot sit in the battery.** BOB #32 RULED (2026-09-24 03:45Z, cite until folded): the liveness check runs at EACH RELEASE'S LIVE VERIFICATION, by DIST. — owner DIST.
+order: after DIST-11, with DIST's small rows: a measurement at a step DIST already takes, no daemon (SCHEDULER #18, 2026-09-24)
+milestone: M0 (a measurement instrument's corpus)
+interface: none.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6 "The deploy-to-serve ladder", with BOB #32's ruling of 2026-09-24 03:45Z (cite until folded).
+depends-on: D-166 (the `--urls` preflight).
+scope: the release live verification runs `tier1-coverage-probe.mjs --urls`; its verdict lands in `MEASUREMENTS.md` as a dated entry, one line per URL (LIVE / NOT_PDF / NOT_FOUND / REFUSED). REFUSED is recorded as refused, never as rotted; a rotted URL becomes a plan row naming the fixture that depends on it.
+accepts-when: the next release's verification carries the dated entry. NEGATIVE CONTROL: feed the preflight a refused host and it records REFUSED, not NOT_FOUND, by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
+
 ### D-490 · queued — **NO RENDERER EXISTS: D-64's render arm answers every `render: true` with 501 RENDER_NO_RENDERER, so a client-rendered source is still captured as its empty shell.** Found by D-64's worker. — owner CAPTURE.
 order: after DIST-11, whose binding it runs behind (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:17Z)
 milestone: M2
@@ -1255,13 +1265,3 @@ depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `git show origin/main:docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
-order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
-depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
-accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
