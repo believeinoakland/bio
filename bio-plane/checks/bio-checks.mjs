@@ -13558,6 +13558,61 @@ export const STATEMENT_ACK_CHECKS = {
       + 'readers than the record holds, so nothing was recorded. Sign or replace some of those documents, then '
       + 'acknowledge the statement again.',
   },
+  /* D-507 / IC-270 — THE SIX REFUSALS THAT REACHED A MEMBER AS MACHINE WORDS. UI-89's worker measured it
+     at the surface: of the seven conditions `acknowledgeStatement` refuses on, only C-82.1 above held a
+     row, so the other six arrived carrying the plane's authored `detail` and NO canned translation, which
+     is the state DEC-49 exists to make impossible (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10). The
+     obstacle was the same STRUCTURAL one D-484 met at `NO_BASIS`: a row holds ONE `where` naming the
+     SMALLEST SPAN in which its refusal is enforced, and `acknowledgeStatement`'s `refusal` helper stood
+     BELOW all six, so none of them could be built through it and none could honestly hold a row. The six
+     returns now go through the helper, each inside its own DEC-49 region, and each carries the sentence
+     below beside its unchanged `reason` and `detail`.
+     THE WORDS ARE BOB #33's, approved 2026-09-24 and used verbatim. One was checked against the code and
+     is right rather than narrow: C-82.5 says "This draft", and the case-DOCUMENT door cannot reach it —
+     `publishCase` refuses `NO_STATEMENT` (region `is-publish-statement`) before authoring any document, so
+     every case document in the store carries a non-empty `completeness.statement` and the draft door is
+     the only one that reaches an empty one. */
+  STATEMENT_ACK_NO_SUBJECT: {
+    check: 'C-82.2',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-subject',
+    translation: 'Say which statement you are acknowledging: a draft case, or a case document, by its case '
+      + 'and edition, that has been written but not yet signed.',
+  },
+  STATEMENT_ACK_ALREADY_SIGNED: {
+    check: 'C-82.3',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-signed',
+    translation: 'This edition of the case is already signed, and the signature covers its list of who '
+      + 'acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is '
+      + 'corrected only by publishing the next edition.',
+  },
+  STATEMENT_ACK_NOT_A_PARTICIPANT: {
+    check: 'C-82.4',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-participant',
+    translation: 'Only someone who has joined the project that makes this case, or someone given a review '
+      + 'copy of it, can acknowledge its statement. Being able to see a project is not the same as having '
+      + 'joined it: an invited member who has not joined yet, and an administrator, cannot acknowledge it.',
+  },
+  STATEMENT_ACK_NO_STATEMENT: {
+    check: 'C-82.5',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-statement',
+    translation: 'This draft does not yet say what its case leaves out, so there is nothing to acknowledge. '
+      + 'Once an editor of the draft writes that statement, you can acknowledge it.',
+  },
+  STATEMENT_ACK_BY_ITS_AUTHOR: {
+    check: 'C-82.6',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-by-its-author',
+    translation: 'You wrote this statement. An acknowledgement means a second person has read what the case '
+      + 'leaves out, so it has to come from someone else: another participant in the project, or a reader '
+      + 'given a review copy. The case can be published without one, and will say so.',
+  },
+  STATEMENT_ACK_AUTHOR_UNDETERMINED: {
+    check: 'C-82.7',
+    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-author-undetermined',
+    translation: 'This draft does not record who wrote its statement, because it was written before the '
+      + 'system kept that record, so it cannot tell whether you are its author. Ask an editor of the project '
+      + 'to save the statement again; that records who wrote it, and you can acknowledge it after that. The '
+      + 'case can be published either way.',
+  },
 };
 
 export const THEME_CHECKS = {
