@@ -1,0 +1,16 @@
+{
+ "unit": "plane:formats-odf.test.mjs",
+ "inputHash": "fb52098a39612364c309f7319b6b6956bf3b09b3e12a0ef9ec71141ae8efccc1",
+ "verdict": "PASS",
+ "run": "a6c5e78f6c933206c2a593a86c2153ce5e796866.1790289968324.27057.json",
+ "tree": "a6c5e78f6c933206c2a593a86c2153ce5e796866",
+ "head": "d74bc8568aee3ac7f4f7b093098aa0051bdf4a1e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 140,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "fc9d741e-87ea-5045-8551-f5105c32033c",
+ "at": "2026-09-24T22:46:08.341Z"
+}
