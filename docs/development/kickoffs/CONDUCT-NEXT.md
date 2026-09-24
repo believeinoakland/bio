@@ -32,7 +32,8 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   | row | session | base | branch |
   | D-486 | session_01Ae2P1iE8tf4RQTeMT5TaGd | batch10 cff0ede6 | land/worker/D-486 |
   | D-470 | session_01D1Fsz23g9UbhaXAfJ7xxkK | main 548eb2c5 | land/worker/D-470 |
-  | D-482 | session_016Q8LfDNJxzG5jMpUZY2h9j | main | land/worker/D-482 |
+  | D-482 DONE @ c9dc8d96 (96/96, skip 0; findings sent) — WAITING FOR A TRAIN | session_016Q8LfDNJxzG5jMpUZY2h9j | main | land/worker/D-482 |
+  | D-479 | session_01TsotUfp91DeCLz8x2n9a8J | main | land/worker/D-479 |
   | D-487 | session_01QpChQQGWmsxiFychXbmKBX | main | land/worker/D-487 |
   | UI-84 | session_01SSgsMyxUrQACGyUi84gVuT | main | land/worker/UI-84 |
   | REC-185 | session_01CRZ6yfoarqeuJ8F2iGcnHS | main | land/worker/REC-185 |
@@ -51,10 +52,13 @@ at integration from printed figures; `Dropped-from-branch:` trailers; regenerate
   + one CLAUDE.md §5 commit) — ride it with the batch11 train. land/bob/folds-0924e @ e5ed7752 READY (BOB 03:22Z,
   prose, on main, doc gate 62/62 · 4488). land/bob/status-cellcap: gate running; BOB sends its tip when green. NEVER land/bob/folds-0924c or folds-0924d (superseded). On landing tell SCHEDULER the homes: MEMBER-KNOWLEDGE §5,
   EXTRACTION-BREADTH §2 row 5, OFFICE-FORMATS CSV, Intake §8.
+- IN FLIGHT 03:31Z: train-20260924T033115Z-658 = land/bob/d461-claude + status-cellcap + folds-0924e onto main 548eb2c5
+  (log in #20's scratchpad; if #20 died mid-train, re-read origin/main and train.mjs list).
+- c18-batch7fix REPORTED and DISPOSED (behind main; only .gitignore novel, riding integ1). Findings to SCHEDULER, D-150 design q to BOB.
 - Stale WAITING refs to drop from every train: c16-batch3, c16-batch6, c18-batch7fix, the land/worker/* already inside batch10/11/integ1.
 - D-453 (Oakland identifier-space measurement) RUNNING beside the eight: session_017L57JtEbWmyk63Ep8SRZoj (fresh, network FULL), branch
   land/worker/D-453, push by 05:45Z. D-166 (Tier 1 probe re-point) RUNNING beside the eight: session_01YVmxTyjL1kajX9Yam7MQgM (fresh), land/worker/D-166.
-  Live at 03:12Z = 10/10 (the cap). Queued left: D-479 — spawn it on the first freed slot (D-481, D-484 at the backlog head).
+  Live at 03:12Z = 10/10 (the cap). D-479 spawned 03:35Z into D-482's slot; cache EMPTY of queued rows at 03:35Z (asked SCHEDULER to refill) (D-481, D-484 at the backlog head).
 - To archive after integ1 lands: WORKER D-64 session_011NsrFb1XMsrK73ukion49o, WORKER REC-184 session_0168F3n5XEbnzSJutjKHxZ2t,
   c18-batch7fix session_01Pho5eXgBrQK8TjhnKHW6fa; after batch11 trains: its 4 row workers + batch10/batch11 sessions.
 
