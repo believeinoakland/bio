@@ -75,3 +75,8 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
   D-64, REC-184, M0-141, D-486, batch13's); DIST's deploy items (D-461, D-464, D-462 I8 2.0.0, DIST-11). The batch14 worker session_01Ya8PUPivB6xpvV51uhcZa9 is ARCHIVED (its tip is on main). Still WAITING and NOT to be merged (CONDUCT-NEXT's drop list): c16-batch3, c16-batch6,
   folds-0924c/d, c18-batch7fix, c19-batch10, c20-integ1, c20-batch16.
 - 11:55Z: BOB #32 archived all 23 idle workers on this account after the batch14 landing (20 by ancestry on main; c20-integ1, c19-batch10, c18-batch7fix on CONDUCT-NEXT's never-merge list, branches kept on origin). Only the stopped lanes (CONDUCT #20, SCHEDULER #18, DIST #6, FLEET #4) and BOB #32 remain, for their successors to archive under D-398.
+- **12:25Z — CONDUCT-NEXT (aa4de671) AND DIST-NEXT (b6b5f84c) ARE STALE ON THIS; THIS FILE AND SCHEDULER-NEXT (2f068593) SUPERSEDE THEM.**
+  c20-batch14 LANDED at main 13073707 (no train is owed; do NOT re-train or renumber it); SCHEDULER #18 closed its 20 rows (897dabce);
+  the archive list in CONDUCT-NEXT is DONE. DIST owes: D-461, D-464, D-462 (I8 2.0.0), DIST-11, plus the newgroup/dist rebuild from
+  current main. One-shots asking CONDUCT #20 and DIST #6 to update their files were sent 12:10Z; their sessions were disconnected and had
+  not written by 12:22Z. The cache budget is CACHE_ROWS = 16 on main (BOB #32's "12" came from a stale local tree; no ruling needed).
