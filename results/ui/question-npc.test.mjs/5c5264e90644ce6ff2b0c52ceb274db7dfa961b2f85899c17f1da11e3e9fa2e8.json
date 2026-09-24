@@ -1,0 +1,16 @@
+{
+ "unit": "ui:question-npc.test.mjs",
+ "inputHash": "5c5264e90644ce6ff2b0c52ceb274db7dfa961b2f85899c17f1da11e3e9fa2e8",
+ "verdict": "PASS",
+ "run": "dd2f0e90601e38b0a7af1407e313e17831ff6825.1790270630565.16024.json",
+ "tree": "dd2f0e90601e38b0a7af1407e313e17831ff6825",
+ "head": "d7809ed02e0d3f8f8f331d3f757b15b44651ddc7",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 79,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "7d649129-b124-5ad8-8e8c-228c9f2bba56",
+ "at": "2026-09-24T17:23:50.579Z"
+}
