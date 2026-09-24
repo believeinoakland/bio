@@ -25,3 +25,4 @@ D-496	2026-09-24T04:32:05.618Z	SCHEDULER #18	knock limiter fixed bucket doubles 
 D-497	2026-09-24T04:49:46.561Z	SCHEDULER #18	D-479 findings: directory candidate scan linear in projects; 1.discoverable claim overstates
 D-498	2026-09-24T04:49:46.561Z	SCHEDULER #18	D-479 findings: directory candidate scan linear in projects; 1.discoverable claim overstates
 D-499	2026-09-24T04:56:51.509Z	SCHEDULER #18	D-64 timeout ruling owed at integration
+D-500	2026-09-24T05:04:54.271Z	SCHEDULER #18	D-486 watermark precision (BOB #32 05:04Z)
