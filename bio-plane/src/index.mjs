@@ -2999,7 +2999,17 @@ function namespaceGate(url) {
  * safe direction: the unlisted default is the refusal, never the real record. Gated ops take their namespace from
  * `scopeFor` and are not this function's. `store=bio` and an absent `store=` are unchanged. Nothing is read or
  * written when this answers. */
-const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup"]);
+/* `groupidentity` LISTED AT INTEGRATION, 2026-09-24 (CONDUCT #20, c20-integ1), by the procedure the paragraph above
+ * prescribes — "a public op added later is refused `store=scratch` until somebody makes it answer from scratch and
+ * lists it here". IT ALREADY ANSWERS FROM SCRATCH: its handler reads `store=` itself and opens the scratch Durable
+ * Object (`giStore`, the op=groupidentity block below), which is the exact criterion this list states. It was swept
+ * into the pinned set only because REC-164 landed it on `origin/main` while D-461 was in flight on c19-batch10, so
+ * D-461's inverted list — written against a tree without the op — could not name it. Unlisted, the union refused
+ * `op=groupidentity&store=scratch` 400 NAMESPACE_PINNED and turned 13 arms of `group-identity.test.mjs` and 2 of
+ * `d456-namespace-scope.test.mjs` red, both of which drive it in scratch as CLAUDE.md §5 requires of a live
+ * verification. Listing it RESTORES what `main` published; it widens nothing D-461 fenced, and the twelve genuinely
+ * bio-pinned public ops — `knock`, `claim` and `reviewcomment` among them — are untouched. */
+const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity"]);
 function pinnedNamespaceGate(url, op, spec) {
   if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
   if (url.searchParams.get("store") !== SCRATCH) return null;
