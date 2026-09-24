@@ -43,5 +43,14 @@ session_01KJoJnoXN6d5CyZsiw8KTKa (confirm each with get_session before binding; 
   words), catmerge.py (the CATALOG_VERSION union pattern: gate.mjs/ratify/d470 + floor history notes). A virtual merge base
   (criss-cross) breaks stage 1: use the shared tip as base. Status probes must match EXACTLY ONCE in CODE (M0-160 guard).
 
+## 4b. THE SLOT CHECK, AT EVERY WAKE, BEFORE ANYTHING ELSE (Bob via BOB #33, 21:09Z)
+`list_sessions` (limit 50; the result spills to a file — parse it with #20's scratchpad `slots.py <file>`, or BOB's prototype
+`builder/slots.py.txt` in the plan-page artifact M5hUaNBgeM292h4D6odXbX) against coord's cache: a QUEUED row with no worker ->
+spawn; BLOCKED -> answer; a RUNNING row with NO live session -> read its branch, flip or respawn; COMPLETED/REVIEW_READY ->
+check the branch IS PUSHED with a finished gate, then integrate and flip (REVIEW_READY is often a worker idling while its gate
+runs in the background — measured 21:07Z: REC-199 read REVIEW_READY with NO branch pushed; never flip on the bucket alone);
+an open slot -> ask SCHEDULER. Flips, answers and spawns come BEFORE train work; a report is acted on at once, never batched.
+State at 21:14Z: batch25 @ e308f992 carries 19 rows (+FW-22, whose report never reached #20 — found by this check); 20 working.
+
 ## 5. CAP AND CADENCE (Bob via BOB #32 15:45Z): at most 16 live worker sessions. TRAIN at least every 2 HOURS whenever gated
 land/* branches wait (sooner when a batch is ready); BOB's stall probe alarms after 120 min without a landing while branches wait. Refresh at 75% context.
