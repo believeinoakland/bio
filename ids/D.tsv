@@ -11,3 +11,6 @@ D-472	2026-09-24T01:09:02.665Z	CONDUCT #19	D-351's finding (monitor fetches Driv
 D-480	2026-09-24T02:12:16.309Z	CONDUCT #19	D-66's finding (pdfstructure glyph-per-line) minted D-467 locally; SCHEDULER's D-467 stands
 D-482	2026-09-24T02:30:00.000Z	SCHEDULER #18	UI-85 finding (1): bounds REC-59 id-arm matcher over-strict
 D-483	2026-09-24T02:30:00.000Z	SCHEDULER #18	UI-85 finding (2): setup page has no risk-tier chooser
+D-484	2026-09-24T02:40:00.000Z	SCHEDULER #18	UI-83 finding (1): NO_BASIS/NO_CITATION untranslated
+D-485	2026-09-24T02:40:00.000Z	SCHEDULER #18	UI-83 finding (2): DEC-49 guard blind to real-plane reach
+D-486	2026-09-24T02:40:00.000Z	SCHEDULER #18	BOB #32 ruling on D-464 finding 1: hidden-project run counts
