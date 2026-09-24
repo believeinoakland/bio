@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec176-snapkey.test.mjs",
+ "inputHash": "1b7893a2c9a7f066e73fec167de547ba17eaaa898e526ac6c95b5631f6d5f0ec",
+ "verdict": "PASS",
+ "run": "10fa4d48ae5e79273acc4b8706a706a2e8cc89d4.1790284010382.886.json",
+ "tree": "10fa4d48ae5e79273acc4b8706a706a2e8cc89d4",
+ "head": "a2d974aa3fcc628eddbc000c2d9dace49e3ea57b",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 924,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "dd3ef97a-c14f-5e15-88e0-1218d77b746b",
+ "at": "2026-09-24T21:06:50.394Z"
+}
