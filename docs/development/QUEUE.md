@@ -222,7 +222,7 @@ scope: compare at ONE precision (milliseconds) in both readers; fold the rule in
 accepts-when: a same-second pair classifies identically on every run, pinned by an arm; §6 states the rule. NEGATIVE CONTROL: restore the mixed precision and the same-second arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-501 · running — **A PAGE'S TIER-2 AWARD COMPARES RAW `text.length`, so a newline policy moves its margin (129 → 77 in D-481's measurement) with no glyph changing hands.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
+### D-501 · integrated — **A PAGE'S TIER-2 AWARD COMPARES RAW `text.length`, so a newline policy moves its margin (129 → 77 in D-481's measurement) with no glyph changing hands.** Found by D-481's worker (M-133). — owner CONTENT-PDF.
 order: after D-500, with the extraction corrections (D-481 rides the next train) (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:21Z)
 milestone: M2
 interface: none.
