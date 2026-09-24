@@ -25,6 +25,7 @@ BOB appends a designed item, a correction or an order change here, with its inte
   - **The lock rule is untouched.** CLAUDE.md §4's "there was a lock … do not rebuild it" is about the OPERATOR's one-account lock. D-463's per-credential scratch confinement is a plane guard, not that lock, and the rule does not bar it.
   - **Keep D-463's CLAUDE.md §5 edit** ("RESIDUE CLOSED by D-463: a MINTED credential may be confined to scratch for life; a BINDING class cannot"). It corrects the sentence its own landing makes false, which is the licensed act (BOB.md, closing a turn, 3). It rides c20-batch27 with the row.
   - **The design home stays where the worker put it**, `BIO_Distribution_v0_1.md` (credentials and the namespace), with `VERIFICATION.md` citing it. No new document.
+- **2026-09-24 22:22Z · BOB #34 · D-463 question (1), ruled; this CORRECTS the 22:20Z entry's first bullet, which misread the question as being about the operator lock.** One rule, for CLAUDE.md §5 and `BIO_Distribution_v0_1.md` §6 rung 6: **"Name `store=scratch` on every call. A confined credential makes the naming REDUNDANT, not OPTIONAL: an instrument keeps naming it, so the day it runs under an unconfined class (admin, member, daemon, probe) it still lands in scratch."** The 22:20Z rulings on (2) the CLAUDE.md sentence (accepted) and (3) the home (rung 6) stand. Folding this sentence into CLAUDE.md §5 rides BOB's next batch branch.
 
 
 ## THE CACHE — the next rows, in order
