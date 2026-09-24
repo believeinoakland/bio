@@ -1,0 +1,16 @@
+{
+ "unit": "plane:walkfigure.test.mjs",
+ "inputHash": "429d4ab16722e7809d4824f3275336ad42faa9c899631dfa4e2618b55a1a44fc",
+ "verdict": "PASS",
+ "run": "216fa2824f84e54470640fd0934e642c971f9561.1790226812403.27389.json",
+ "tree": "216fa2824f84e54470640fd0934e642c971f9561",
+ "head": "4ed8616c3f7ff8c32b83d402a57411198df932c5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 967,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "258c1265-58a4-50bf-b99a-86f27d7bda3c",
+ "at": "2026-09-24T05:13:32.414Z"
+}
