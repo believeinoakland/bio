@@ -274,6 +274,16 @@ scope: `--status` keeps the headline and writes the note on a separate `status:`
 accepts-when: a flip with a note leaves the headline byte-identical. NEGATIVE CONTROL: restore the replacing behaviour and the headline arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
+### M0-159 · queued — **`tools/train.mjs run --drop a,b,c` DROPS NOTHING: the comma list is read as ONE branch name, matches no waiting row, and is silently ignored, so every waiting branch merges (forbidden ones included); the only sign is `dropped: a,b,c` beside the waiting count.** It happened on 2026-09-24 07:08Z; CONDUCT #20 killed the run by PID before any gate or push, and main was untouched. — owner M0.
+order: at the head of the M0 rows: a process defect that risks main itself (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:15Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument that silently does nothing is worse than none).
+depends-on: none.
+scope: in `runTrain` (near `const drop = new Set(opts.drop || [])`), refuse to start with a named error when any `--drop` entry matches no row of `train.mjs list`; also split on commas.
+accepts-when: `--drop x,y` naming no waiting branch is refused by name, and a valid comma list drops each named branch. NEGATIVE CONTROL: restore the silent ignore and the refusal arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.

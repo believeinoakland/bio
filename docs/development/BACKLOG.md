@@ -43,16 +43,6 @@ scope: `promote` derives the projected type from the promoted document; an envel
 accepts-when: an action promoted under an information envelope is refused (or lands typed action with its basis and correspondence projected). NEGATIVE CONTROL: gate on the envelope again and that arm lands typed information, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-159 · queued — **`tools/train.mjs run --drop a,b,c` DROPS NOTHING: the comma list is read as ONE branch name, matches no waiting row, and is silently ignored, so every waiting branch merges (forbidden ones included); the only sign is `dropped: a,b,c` beside the waiting count.** It happened on 2026-09-24 07:08Z; CONDUCT #20 killed the run by PID before any gate or push, and main was untouched. — owner M0.
-order: at the head of the M0 rows: a process defect that risks main itself (SCHEDULER #18, 2026-09-24; via CONDUCT #20 07:15Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument that silently does nothing is worse than none).
-depends-on: none.
-scope: in `runTrain` (near `const drop = new Set(opts.drop || [])`), refuse to start with a named error when any `--drop` entry matches no row of `train.mjs list`; also split on commas.
-accepts-when: `--drop x,y` naming no waiting branch is refused by name, and a valid comma list drops each named branch. NEGATIVE CONTROL: restore the silent ignore and the refusal arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
 ### M0-160 · queued — **`status.mjs` DOES NOT FLAG AN AMBIGUOUS PROBE: a `hit` matching more than once in its file pins nothing — D-498's first probe (`limit: cap, truncated`) matched 24 times in `store.mjs` and stayed green on an unrelated op.** Found by D-498's worker. — owner M0.
 order: after M0-159, beside M0-155 (probes going false-green on comments), the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:13Z)
 milestone: M0
@@ -1316,3 +1306,13 @@ depends-on: M0-131 (its derived never-cached set and `--never-cached` run are re
 scope: with the per-unit record off, §2d's shortcut on a recorded-GREEN tree behaves as `--with-never-cached`: it runs the derived never-cached set and records the tree GREEN only when they pass; the printed line says which units ran.
 accepts-when: `gates.mjs` on a recorded-GREEN tree with a planted history defect reads RED naming the never-cached unit. NEGATIVE CONTROL: restore the bare shortcut, and the planted arm reads GREEN and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-131's worker's finding via CONDUCT #16; `node tools/mintid.mjs M0`).
+
+### M0-137 · queued — **SUITES PASS ABBREVIATED COMMIT IDS TO GIT, SO A FETCH THAT BRINGS A COLLIDING PREFIX TURNS A GREEN SUITE RED WITH NO CODE CHANGE.** Re-read on `origin/main` @ `38b49c50`: `bio-plane/test/ledger.test.mjs` `PRE_MIGRATION = "9ea2eb02"` and `STATE_PIN = "de40aa56"`; `bio-plane/test/mergecarry.test.mjs` passes `"e241672"` to `git cat-file`, `auditMerge`, `git show` and the `tools/mergecarry.mjs --commit` CLI. — owner M0.
+order: first of the process block, directly after M0-135: a red on `main` from a git object, not the code, is TREE-SHARING §3's alarm to Bob, but no collision has happened, so it sits behind the product rows (SCHEDULER #16, 2026-09-23; M0-136's worker via CONDUCT #16)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch6`).
+scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
+accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).
