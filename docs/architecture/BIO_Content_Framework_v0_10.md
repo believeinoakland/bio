@@ -2028,7 +2028,7 @@ group's instance has no OCR member until the fleet is deployed to it, and takes 
 branch that claims nothing about a scan's text. Some code comments still describe tier 3 as
 untaken; they are stale and rowed for correction.
 
-**FOUR STATED LIMITS AND ONE DESIGN (BOB #32, 2026-09-23; the fourth D-481, 2026-09-24).**
+**FOUR STATED LIMITS AND ONE DESIGN (BOB #32, 2026-09-23; the fourth D-481, 2026-09-24 — and the fourth is now CLOSED by D-502 the same day, restated in place below rather than deleted, because the gap was real and its closing is the news).**
 - **The image-only page is RARE AND CLUMPED (D-313).** CPDF-15 censused 1,377 Legistar pages twice and found ZERO
   image-only pages; CPDF-14 had found 13 of 1,458 on the same surface weeks earlier, in TWO documents. So a corpus arm
   that needs image-only pages cannot rely on harvesting them, and an n=0 is a statement about recent traffic, not about
@@ -2043,10 +2043,23 @@ untaken; they are stale and rowed for correction.
   I2 gains a page and rect on each tier-1 text unit, and anchor text plus a rect on each LinkRecord. An agenda item's
   membership in a file is then DERIVED from containment: labelled as machine work, graded as inferred, and never
   presented as the publisher's own link. NOT BUILT (REC-206, I2 PROVISIONAL).
-- **A tier-1 LINE is a baseline, and same-baseline runs are joined (D-481; M-133).** Tier-1 PDF text breaks a line
-  when the baseline moves; two runs sharing a baseline and separated only by a horizontal jump are concatenated,
-  because glyph advance widths are not read. Table columns and a two-part footer can therefore glue (measured:
-  0.32% of an agenda's tokens). D-502 reads the widths and splits them; until it lands this is a stated limit.
+- **A tier-1 LINE is a baseline, and same-baseline runs are SEPARATED BY THE PEN — D-481's stated cost CLOSED by
+  D-502, 2026-09-24 (M-133, M-141).** Tier-1 PDF text breaks a line when the baseline moves. This bullet read
+  *two runs sharing a baseline and separated only by a horizontal jump are concatenated, because glyph advance
+  widths are not read* — table columns and a two-part footer could glue, measured at 0.32% of an agenda's tokens.
+  **The widths ARE read now**: `/Widths` with `/FirstChar` and the descriptor's `/MissingWidth` for a simple font,
+  `/W` and `/DW` for a composite one, a Type3 font's own `/FontMatrix` for its glyph space; the pen is tracked
+  through the text matrix with character spacing, word spacing and horizontal scaling; and a jump on a live
+  baseline wider than a quarter em, in either direction, separates the two runs. On M-133's own agenda the glue
+  falls 13 → 5 and the five are the document's own words, with **no non-whitespace character and no line gained
+  or lost on any document in the corpus**. **THREE THINGS THIS STILL DOES NOT DO, stated rather than left to be
+  found.** (1) **A font that declares NO widths is read exactly as D-481 left it** — the pen goes UNKNOWN and
+  nothing is judged, because a break placed on an invented width is an invented break; so is a composite font
+  whose `/Encoding` is not Identity, whose code→CID mapping this reader does not do. (2) **A CELL BOUNDARY IS
+  STILL NOT MARKED**: two table columns on one baseline read as two tokens separated by a space, and nothing
+  says they were two cells — that is §15's table question, not this one. (3) The threshold is a measured
+  figure and its corpus is nine Oakland PDFs from two producers (M-141), whose sweep shows the reading flat
+  across a factor of thirty in that figure and collapsing only at zero.
 
 **EVERY CORPUS-SCALE FIDELITY FIGURE IS AGREEMENT, NOT ACCURACY — A STATED, PERMANENT LIMITATION AS OF
 2026-09-19 (BOB #17, D-306), and the purchase that would close it is NOT FUNDED on DEC-74's own pattern.**
