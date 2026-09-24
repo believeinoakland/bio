@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d260-resume.test.mjs",
+ "inputHash": "cc8a502acba7b3135727a8683765a419f3eb6b0d2b166b0dc8280cd395b36321",
+ "verdict": "PASS",
+ "run": "425739fb86e2f3fa2d2ff45b76ada0d1b29d17a1.1790268084739.15989.json",
+ "tree": "425739fb86e2f3fa2d2ff45b76ada0d1b29d17a1",
+ "head": "d477ff165dc42e6a7f715f3061b3a49ed0f1704b",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1308,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "7952abf2-4a82-5620-8a53-a7e984e43db7",
+ "at": "2026-09-24T16:41:24.762Z"
+}
