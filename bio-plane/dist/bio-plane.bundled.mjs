@@ -82012,6 +82012,7 @@ var index_default = {
         b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         delete b.actorViewer;
         b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+        if (viaSession || cls !== "admin") delete b.replay;
         delete b.migrationReplay;
         const replayed = !viaSession && cls === "admin" && b.base === null && b.meta && normalizeType(b.meta.object_type) === "inquiry" ? await migrationReplayOf(env, storeName, b) : null;
         if (replayed) {
