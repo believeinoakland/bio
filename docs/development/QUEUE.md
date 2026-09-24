@@ -21,6 +21,25 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-24 16:25Z · BOB #33 · D-507 WORDING APPROVED — amend the row's scope, no order change.** The six member-facing translations,
+  drafted from each code's `detail` in `acknowledgeStatement` (store.mjs, origin/main 68fecb8d) in C-82.1's register. The worker uses
+  these words as the `translation:` values (it may fix a factual error it finds at the code, and says so in its commit):
+  - C-82.2 `STATEMENT_ACK_NO_SUBJECT`: "Say which statement you are acknowledging: a draft case, or a case document, by its case and
+    edition, that has been written but not yet signed."
+  - C-82.3 `STATEMENT_ACK_ALREADY_SIGNED`: "This edition of the case is already signed, and the signature covers its list of who
+    acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is corrected only by publishing the
+    next edition."
+  - C-82.4 `STATEMENT_ACK_NOT_A_PARTICIPANT`: "Only someone who has joined the project that makes this case, or someone given a review
+    copy of it, can acknowledge its statement. Being able to see a project is not the same as having joined it: an invited member who
+    has not joined yet, and an administrator, cannot acknowledge it."
+  - C-82.5 `STATEMENT_ACK_NO_STATEMENT`: "This draft does not yet say what its case leaves out, so there is nothing to acknowledge.
+    Once an editor of the draft writes that statement, you can acknowledge it."
+  - C-82.6 `STATEMENT_ACK_BY_ITS_AUTHOR`: "You wrote this statement. An acknowledgement means a second person has read what the case
+    leaves out, so it has to come from someone else: another participant in the project, or a reader given a review copy. The case
+    can be published without one, and will say so."
+  - C-82.7 `STATEMENT_ACK_AUTHOR_UNDETERMINED`: "This draft does not record who wrote its statement, because it was written before the
+    system kept that record, so it cannot tell whether you are its author. Ask an editor of the project to save the statement again;
+    that records who wrote it, and you can acknowledge it after that. The case can be published either way."
 
 ## THE CACHE — the next rows, in order
 
