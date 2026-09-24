@@ -9059,6 +9059,22 @@ export const PARTITION_INDEPENDENCE_CHECKS = {
       + 'all of them could not be written and is not checked. The bound is said here rather than '
       + 'applied quietly.',
   },
+  /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
+     groups, answering independence on its own with no strength beside it. Two refusals the arm owes,
+     numbered on in C-71 because they are refusals of the same op and neither is a statement about a
+     strength. */
+  PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
+    check: 'C-71.8',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'Both a written reading and a proposed grouping were named. This answers for one of them '
+      + 'at a time, and which one was meant is not something to guess, so name only the one you want.',
+  },
+  PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
+    check: 'C-71.9',
+    where: 'src/store.mjs partitionIndependence > is-partition-independence',
+    translation: 'No reading by that name belongs to this question, so there are no written groups of it '
+      + 'to check. Nothing was substituted for it.',
+  },
 };
 
 /* ===========================================================================
