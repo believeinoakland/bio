@@ -970,8 +970,9 @@ Bob, 2026-09-21: *"Reporters are connecting disparate ideas all the time. That's
 done as a hunch that doesn't pan out."* Connecting ideas is therefore a feature, and because *"these fuzzy ideas could
 become a narrative without basis"*, a THEME is fenced four ways (his ruling, with BOB #23's guardrails he accepted):
 
-1. **Declared by a member, under that member's COVER** (Membership v2 §3), which every reading of the theme shows. No
-   theme is anonymous, and no machine declares one.
+1. **Declared by a member, and every reading of the theme shows the declarer's HANDLE** (corrected 2026-09-24 by BOB #32,
+   D-162's finding: Membership v2 §3 lets only administrators see cover, so the member id and cover reach administrators
+   alone, through the administer projection). No theme is anonymous, and no machine declares one.
 2. **It carries its TEST**: an inclusion criterion its declarer writes, a sentence a document or a portion passes or
    fails, so any member can check a membership against it. A theme without its test cannot be declared.
 3. **Membership is graded like any connection (§8.1).** Placing a document or a portion in a theme is an attributed
@@ -2227,8 +2228,11 @@ correspondence would be worth less and could mislead a published case.
 
 #### What this does not decide
 
-Whether the notice also reaches a member whose case is already PUBLISHED, and through what surface,
-is a publication question and is not settled here. Nothing above changes §14.4, the row's identity,
+**RULED 2026-09-24 by Bob (option D of five BOB #32 put to him): a PUBLISHED case's OWNERS are told ONCE.**
+When a document a published case cites has a newer version at its address, the case's owners, the members who can
+publish a new edition, receive ONE notice. Other members and the public are not told. The published case is never
+marked or altered (DEC-19), and a new edition stays the owners' choice (DEC-69). Anyone may still ASK, through
+the cross-version read D-394 built (on its way to `main`). NOT BUILT: the owners' notice and its surface (4.cross-version-ui). Nothing above changes §14.4, the row's identity,
 or the rule that an authored edge moves only by a member's act.
 
 #### As built — 2026-09-23 (D-394, IC-239)

@@ -53,7 +53,10 @@ export const STATES = ["BUILT", "PARTIAL", "ABSENT", "DEFERRED", "UNDETERMINED"]
    (`queueApplySet(op, …)` → `recPostR(op, …)`; `queueSelFor("taskresolve")` names an op) arrived on a base older than
    this list's check, so the union reported them missing; added here rather than exempted. */
 export const UI_HELPERS = ["recR", "recPostR", "actAsk", "intentAsk", "intentPreflight",
-  "captureAct", "apiQ", "apiR", "api", "queueApplySet", "queueSelFor"];
+  "captureAct", "apiQ", "apiR", "api",
+  /* D-126's queue set-apply (`recPostR(op, …)` over a selection), added at integration by c19-unionfix, 2026-09-24,
+     when the suite's re-derivation named it. */
+  "queueApplySet", "queueSelFor"];
 
 const cache = new Map();
 function read(repo, rel) {

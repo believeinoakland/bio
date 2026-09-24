@@ -511,15 +511,20 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
              note: `${rows.length} DEBT row(s)` };
   });
 
-  await arm("LC-undecided-route", "corpuscheck §5 (live)", "the debt row the corpus standard routes its UNDECIDED set to is a live DEBT row", () => {
+  /* RETIRED 2026-09-24 by c19-unionfix (CONDUCT #19, on SCHEDULER #17's finding): the D-388 CLAUSE. This arm held that
+     the standard's UNDECIDED set was ROUTED to a live DEBT row, D-388. BOB #32 classified every undecided file in
+     CORPUS-STANDARD §6 (land/bob/folds-0924b) and the table is EMPTY: "D-388 drained it". The route it guarded no
+     longer exists, and once D-388 leaves DEBT.md (M0-140) the old clause would have refused EVERY coord write. What
+     survives is the arm's real duty, that UNDECIDED is a closed hole somebody drains, stated as what is now true: the
+     table is EMPTY, and a row arriving there fails here, by name, until it is classified in §5 or §6. */
+  await arm("LC-undecided-route", "corpuscheck §5 (live)", "the corpus standard's UNDECIDED table is empty — every design file is classified (D-388 drained it, 2026-09-24)", () => {
     const std = rs("docs/architecture/CORPUS-STANDARD.md");
-    const debt = rs("docs/development/DEBT.md");
-    if (std === null || debt === null) return { fails: [`${std === null ? "CORPUS-STANDARD.md" : "DEBT.md"} could not be read`] };
-    /* The route is the one `corpuscheck.test.mjs` §5 pinned: D-388, named by the standard. Read from the standard, so a
-       re-routing there is followed rather than contradicted; the standard naming none is itself the failure. */
-    const routed = [...new Set((std.match(/\bD-388\b/g) || []))];
-    if (!routed.length) return { fails: ["CORPUS-STANDARD.md no longer names D-388, the undecided set's route — name the row that drains it"] };
-    return { fails: routed.filter((id) => !new RegExp(`^\\| ${id} \\|`, "m").test(debt)).map((id) => `${id} is named by the standard and is not a live DEBT row`) };
+    if (std === null) return { fails: ["CORPUS-STANDARD.md could not be read"] };
+    const at = std.search(/^#{2,4}\s*Undecided\b/mi);
+    const sect = at < 0 ? "" : std.slice(at).split(/\n#{2,4}\s/)[0];
+    const rows = [...sect.matchAll(/^\|\s*`([^`]+\.md)`\s*\|/gm)].map((m) => m[1]);
+    return { fails: rows.map((f) => `CORPUS-STANDARD.md §6 lists ${f} as UNDECIDED — classify it in §5 or §6; the D-388 route that drained this table is retired`),
+             note: `${rows.length} undecided row(s)` };
   });
 
   await arm("LC-op-claims", "op-claims (the state half of its walk)", "every op= claim in a state file names a real op, routes where the plane routes it, or is ledgered exactly", async () => {

@@ -491,6 +491,14 @@ nothing, so they cannot half-run. A member must be able to tell, before acting, 
 kind they are about to perform — and the surface should show what the action will
 REFUSE and why before it runs, not after.
 
+**The second shape: an ENUMERATED SET, for items that do not drift** (BOB #32, 2026-09-24, folding D-291's built shape
+and D-126's precedent). The lease above is for BUNDLES, which can move under a member between selecting and acting. An
+item addressed by an identity that cannot drift (a queue item, a capture, a document a member resolves) takes the
+simpler shape. The member's chosen items are ENUMERATED in ONE call, and the plane answers PER ITEM: each item landed,
+or it was refused with its own named reason. There is no lease and nothing to expire. The same rules bind both shapes:
+the member chooses, and nothing is preselected (DEC-69); a refused item never silently drops out of the answer; and
+nothing in the set half-runs without saying so. Built: D-126's `#perItem` and `op=resolve`'s `items` (D-291).
+
 **Accountability rule:** an action lands on the set the operator saw. Auto-updating a
 selection is rejected doctrine (D-35): a selection records INTENT, and an action landing
 on rows the operator never saw is an accountability failure in a record whose purpose is
