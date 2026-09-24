@@ -61,3 +61,7 @@ commit on main for 120+ min. INBOX → SCHEDULER: undrained BOB INBOX entries.
 - REC-193 case author RULED (b), 06:08Z: completeness.author = who prepared/published; new completeness.statement_by carried from the draft; C-41.10 excludes statement_by; missing reads UNDETERMINED, refused by name. SCHEDULER rows it (I3).
 - Plain-words plan page republished at the wind-down from coord 62f73707 (see its as-of line).
 - SCHEDULER #18 asked BOB to relay its final report to CONDUCT; CONDUCT had stopped, so it is recorded here instead: batch18 closed (9 rows done), M0-159 placed, 15 rows refilled.
+- OWED BY BOB #33 FIRST (SCHEDULER #18, 07:22Z): **construct 14's doorbell (op=knock) has NO level-1 design home.** Name one and fold
+  BOB #32's 04:28Z knock-limit ruling there (the limiter is a BOUND, a sliding window, not a rate target; IC-262 made it I3 82.0.0).
+  D-496 and D-508 cite BIO_System_Design §3 construct 14 until then. Also: D-507 (six STATEMENT_ACK_* codes untranslated) asks BOB to
+  approve the six member-facing sentences' wording.
