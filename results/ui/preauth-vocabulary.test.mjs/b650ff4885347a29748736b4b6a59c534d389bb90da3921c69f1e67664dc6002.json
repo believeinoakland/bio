@@ -1,0 +1,16 @@
+{
+ "unit": "ui:preauth-vocabulary.test.mjs",
+ "inputHash": "b650ff4885347a29748736b4b6a59c534d389bb90da3921c69f1e67664dc6002",
+ "verdict": "PASS",
+ "run": "bbff4c98fda24d0fc127fc44ef76b526a795e4cf.1790267183693.8694.json",
+ "tree": "bbff4c98fda24d0fc127fc44ef76b526a795e4cf",
+ "head": "925b73004e4c5d3792993ffeb9aaa642a703817a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1308,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e418406d-2b0f-5066-80a8-d151490ce319",
+ "at": "2026-09-24T16:26:23.704Z"
+}
