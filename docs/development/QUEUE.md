@@ -295,7 +295,7 @@ scope: the release live verification runs `tier1-coverage-probe.mjs --urls`; its
 accepts-when: the next release's verification carries the dated entry. NEGATIVE CONTROL: feed the preflight a refused host and it records REFUSED, not NOT_FOUND, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs DIST`).
 
-### UI-89 · running — SPAWNED 2026-09-24 ~05:10Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER UI-89 (CONDUCT #20), base origin/main, into M0-143's slot; push by 06:30Z. Falsify rather than believe: read the branch land/worker/UI-89 and that session; never conclude queued from the absence alone.
+### UI-89 · integrated — finished; integrated on land/conduct/c20-batch19 @ 2cc51798 (merged batch18 itself, tip af8e080d), on its train 07:09Z
 order: after REC-194, the member half of the same block (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 consumer (IC-227).
@@ -325,7 +325,7 @@ scope: amend the claim to "at most the cap, stated as truncated"; add a probe pi
 accepts-when: `node tools/status.mjs discoverable` reads the capped claim and its probe passes. NEGATIVE CONTROL: rename the constant and the probe fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### D-496 · running — SPAWNED 2026-09-24 ~05:31Z by CONDUCT #20 as a SEPARATE CLOUD SESSION titled WORKER D-496 (CONDUCT #20), base origin/main (D-487 on main), into D-494's slot, before the 05:45Z cap; push by 06:40Z. Falsify rather than believe: read the branch land/worker/D-496 and that session; never conclude queued from the absence alone.
+### D-496 · integrated — finished; integrated on land/conduct/c20-batch19 @ 2cc51798 (IC-262 accepted, I3 MAJOR 82.0.0), on its train 07:09Z
 order: at the backlog head (M0-146 is cached): a record claiming a bound it does not hold (CLAUDE.md §2), small enough for tonight (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:31Z)
 milestone: M2
 interface: I3 behaviour — a refusal where an answer stood at the edge; MAJOR by IC-25's test; the integrator classifies.

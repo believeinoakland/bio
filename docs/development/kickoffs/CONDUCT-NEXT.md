@@ -1,6 +1,6 @@
 # CONDUCT-NEXT — the resume prompt for CONDUCT #21, in cloud Claude Code (likely on Bob's OTHER account)
 
-> Written by CONDUCT #20 (session_011PzZW1FSobMne4cYeAYWfU) 2026-09-24 ~03:12Z, kept current at every train (quota plan).
+> Written by CONDUCT #20 (session_011PzZW1FSobMne4cYeAYWfU) 2026-09-24 ~03:12Z; FINAL at wind-down ~07:15Z, kept current at every train (quota plan).
 > Everything below is on `origin` (main, coord, land/*). Where the tree disagrees with a line here, the tree is right.
 
 ## 1. RE-MEASURE BEFORE ACTING
@@ -9,7 +9,9 @@ git fetch origin
 node tools/train.mjs list | awk '$2=="WAITING"{print $3}'
 node tools/coord.mjs read docs/development/QUEUE.md | grep -E '^### '
 ```
-A TRAIN OF ONE BRANCH: `node tools/train.mjs run --branch origin/<b> --drop <every other WAITING>`.
+A TRAIN OF ONE BRANCH: `node tools/train.mjs run --drop <b1> --drop <b2> …` — ONE `--drop` PER BRANCH. A comma list is NOT parsed:
+#20's 07:08Z train took `--drop a,b,c` as one unknown name and merged EVERY waiting branch (killed by PID before any push; main
+untouched). Build the args from `train.mjs list` (grep WAITING, awk $3), and confirm the log's first line says `1 waiting`.
 Ids: always `node tools/mintid.mjs <NS>`; check new ids at each merge (`mintid.mjs --audit --base origin/main`).
 
 ## 2. LANE ADDRESSES (one-shot `create_trigger`, persistent_session_id, run_once_at ~1 min ahead; NEVER fire_trigger)
@@ -22,31 +24,30 @@ No timers; act on messages. ≤10 LIVE WORKER SESSIONS until 05:45Z, 6 from 05:4
 spawn; tell SCHEDULER "integrated <ID> <sha>". Never branch a worker from a red integration branch. Union-only ratchets fixed
 at integration from printed figures; `Dropped-from-branch:` trailers; regenerate status/dist last; no node_modules in the tree.
 
-## 4. STATE (06:00Z) — read the tree; these are pointers
-- MAIN = 135abf3b (c20-batch15 landed: D-493 M0-144 M0-143 D-453 DIST-9; IC-261 I4 2.2.0). Before: d536f834 (batch12: D-470 D-487
-  UI-84 D-479; I3 81.3.0), 0fdef669, 16fe1e7f. Landed workers archived by ancestry (Bob's rule).
-- c20-batch17's train (05:58Z) RETURNED RED at d470-catalog-census A3 (D-484's two catalogue rows moved the catalogue 433→435 with
-  the stamp at 1.21.0). FIXED on c20-batch18: CATALOG_VERSION 1.22.0 = {435, a388b642…}, pins corrected, control 5/5.
-- TRAIN RUNNING (06:34Z): land/conduct/c20-batch18 @ 950a3e67 = main 135abf3b + (batch17: D-481 D-494 DIST-12 D-483 D-484 M0-146
-  D-495 + newgroup-dist-078; IC-263 I3 81.4.0; §16 limit) + REC-193 (IC-264, I5 3.6.0) + UI-90. Log train7.log. On landing: archive
-  those workers by ancestry; tell SCHEDULER the rows. NEVER train c20-batch16 or c20-batch17 alone (inside 18).
-- c20-batch13 GREEN @ 41db70e1 (batch11fix + batch12; I3 85.3.0; CATALOG_VERSION 1.22.0, census 438): NOT trained alone — batch14
-  carries it.
-- INTEGRATION WORKERS: c20-batch13 session_01KXuCWoxFB4aA2GaADwB9E8 (batch11fix + batch12, I3 85.x; due 05:40Z, NOT yet reported)
-  and c20-batch14 session_01Ya8PUPivB6xpvV51uhcZa9 (integ1b @ 4ed8616c's D-64 + REC-184 onto batch11fix, IC-252 86.0.0 MAJOR,
-  IC-255 86.1.0, then batch13, then D-486 IC-258 86.2.0; due 06:15Z). They carry batch10/11's 14 rows + d461-claude + D-64 REC-184
-  M0-141 D-486. When batch14 pushes, it must ALSO merge current main (batch15/17), renumbering its I3 entries above main's 81.4.0 base:
-  main's 81.x chain and batch11fix's 85.0.0 must become ONE linear sequence. DROP c19-batch10, c19-batch11, c20-integ1 (broken
-  trailers), c20-batch11fix, c20-batch12, c20-batch16 from trains; they are inside the batches. On landing: DIST owed D-461 SAFETY,
-  D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), DIST-11 browser class.
-- REC-194 NOT spawned (wind-down); it branches from a main carrying REC-193. REC-194 unblocked, NOT spawned (wind-down).
-- ROW WORKERS LIVE (push by 06:30-06:40Z): UI-89 session_01WVb7DA8n2nySoZyKzqKR3C · UI-90 session_017i3ve8jwjhLq19sBHCcrWe · D-496 session_011bP9kqUTyWrRzBL7A7jTv8.
-  REC-194 HELD (shares statementack code with REC-193).
-- Unpaid BOB rulings are ROWS now: REC-211 (DEFINITION_MOVED, write half), D-499 (render wait.fired), D-500 (watermark precision).
-- To archive after their tips reach main (ancestry check first): D-493 D-453 M0-144 M0-143 (batch15); D-481 D-494 D-483 D-484 M0-146
-  (batch17); D-486, D-64 session_011NsrFb1XMsrK73ukion49o, REC-184 session_0168F3n5XEbnzSJutjKHxZ2t, c18-batch7fix
-  session_01Pho5eXgBrQK8TjhnKHW6fa, c19-batch10 session_01WHZuugzaksTkh8G6anyMyh, c19-batch11 session_01FoZ785Cn2MWUSRUCxU42Cz,
-  integ1 session_011vBzoPQBRZGhdLUxxiXzPG, batch11fix session_01TcTNdcXz9g85LF9TfQ29Jp (batch13/14). DIST-* are DIST's own session.
+## 4. STATE (07:15Z, #20's wind-down) — read the tree; these are pointers
+- MAIN = 454a02bc (c20-batch18 LANDED 07:05Z, 346/346 green · 19649 assertions: D-481 D-494 DIST-12 D-483 D-484 M0-146 D-495
+  REC-193 UI-90 + newgroup-dist-078; IC-263 I3 81.4.0, IC-264 I5 3.6.0, CATALOG_VERSION 1.22.0 = 435 checks). Its eight workers
+  ARCHIVED by ancestry. Before: 135abf3b (batch15), d536f834 (batch12).
+- TRAIN RUNNING at #20's stop (07:09Z): land/conduct/c20-batch19 @ 2cc51798 = main 454a02bc + UI-89 @ af8e080d + D-496 @ 2eea1e0b;
+  IC-262 ACCEPTED as I3 82.0.0 (MAJOR, knock limit a BOUND). Log: #20's scratchpad train9.log. CHECK `git log origin/main`: if it
+  landed, archive UI-89 session_01WVb7DA8n2nySoZyKzqKR3C and D-496 session_011bP9kqUTyWrRzBL7A7jTv8 by ancestry; if RED/not landed,
+  fix on a new branch from 2cc51798 and train it alone. Rows UI-89, D-496 are flipped `integrated` on c20-batch19.
+- c20-batch14 (session_01Ya8PUPivB6xpvV51uhcZa9, LIVE at #20's stop, tip 8db490cb 06:48Z) is THE ONE BIG PENDING LANDING: it
+  carries batch10/11's 14 rows + d461-claude + integ1b (D-64 REC-184) + batch11fix + batch13 (batch12) + D-486. Told to merge main,
+  renumber its I3 chain as ONE linear sequence above main (main is 81.4.0, 82.0.0 if batch19 lands → batch14's entries go ABOVE
+  that), I5 IC-252 3.7.0 / IC-255 3.8.0, catalogue 1.23.0 re-censused. It must merge the main CURRENT when it finishes, then be
+  trained ALONE. Its gate verdict is the proof, not its message. DROP from every train: c19-batch10, c19-batch11, c20-integ1
+  (broken trailers), c20-integ1b, c20-batch11fix, c20-batch12, c20-batch13, c20-batch16, c20-batch17 (all inside batch14 or on
+  main). On batch14 landing: DIST owed D-461 SAFETY, D-464 DISCLOSURE, D-462 agent-worker bundle (I8 2.0.0), DIST-11 browser class.
+- To archive after batch14 lands (ancestry check FIRST): D-486 session_01Ae2P1iE8tf4RQTeMT5TaGd, batch13 session_01KXuCWoxFB4aA2GaADwB9E8,
+  batch11fix session_01TcTNdcXz9g85LF9TfQ29Jp, integ1 session_011vBzoPQBRZGhdLUxxiXzPG, and #19's: c19-batch11 session_01FoZ785Cn2MWUSRUCxU42Cz,
+  c19-batch10 session_01WHZuugzaksTkh8G6anyMyh, REC-184 session_0168F3n5XEbnzSJutjKHxZ2t, UI-83 session_01M3Z9duYEGWXiXM6tnJMntX,
+  D-64 session_011NsrFb1XMsrK73ukion49o, REC-190 session_01R1xeKRqknqVPs7yR8j2yQY, UI-85 session_01WaD9mX9VyoE6CQJP7y5HPs,
+  REC-192 session_01AQGmdmsmaCKeo5jmMXfgLb, D-462 session_01Ps1kdpY7gtSCEGWohAmUem, D-469 session_01MdtEu1CdMzJYmw268tpfrn,
+  D-464 session_01S1yD1KP7nLEPi5EAGnHH8N, D-461 session_01TsJmm3f4seHyFePUKBdRvT. (All IN batch14's tip at 07:06Z by ancestry
+  except D-486, batch13, integ1, c19-batch10 — batch14 had not yet merged those.) These sessions are on Bob's FIRST account.
+- NEXT RUNNABLE (QUEUE.md is the source): REC-194 (unblocked by REC-193 on main), REC-211, D-499, D-500, REC-212, D-506, M0-153..158,
+  DIST-13. No worker of #20's needs Bob.
 
 ## 5. QUOTA PLAN (Bob via BOB #32, 03:00Z)
 Until 05:45Z ≤10 live; 05:45Z ≤6 live; 06:45Z spawn NOTHING — finish, push, integrate, train; list to BOB every worker that needs
