@@ -1,0 +1,16 @@
+{
+ "unit": "ui:accept-ceremony.test.mjs",
+ "inputHash": "eb37461f3725edd0d9b90a8cdcbf51a1ca6b81ad415d9ce0b83ee2a30a78c3ed",
+ "verdict": "PASS",
+ "run": "a039eac6f10f147f62b0965eeb5d8802d99c2ba1.1790218316553.24079.json",
+ "tree": "a039eac6f10f147f62b0965eeb5d8802d99c2ba1",
+ "head": "b1ffb5a0d4eec7eb131c615105d31c404ad3c270",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 78,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "475a130f-6051-55eb-9c12-d656d7cba088",
+ "at": "2026-09-24T02:51:56.565Z"
+}
