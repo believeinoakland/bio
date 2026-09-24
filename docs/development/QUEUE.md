@@ -314,7 +314,7 @@ scope: `promote` derives the projected type from the promoted document; an envel
 accepts-when: an action promoted under an information envelope is refused (or lands typed action with its basis and correspondence projected). NEGATIVE CONTROL: gate on the envelope again and that arm lands typed information, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### M0-169 · queued — **TWO DERIVATIONS OF "A FIXTURE'S MODULE CLOSURE": `bio-plane/test/gatedeps.mjs` (M0-154; follows dynamic literals, lexer-blanked) and `civicos-ui/test/refusal-codes.test.mjs` `copyImports` (D-254; static-only, column-anchored).** Found by M0-154's worker. — owner M0 (UI reviews).
+### M0-169 · running — **TWO DERIVATIONS OF "A FIXTURE'S MODULE CLOSURE": `bio-plane/test/gatedeps.mjs` (M0-154; follows dynamic literals, lexer-blanked) and `civicos-ui/test/refusal-codes.test.mjs` `copyImports` (D-254; static-only, column-anchored).** Found by M0-154's worker. — owner M0 (UI reviews).
 order: after M0-168, with the gate instruments (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:50Z) AHEAD of the product rows by Bob's 17:41Z rule: a new import in gates.mjs breaks a hand-copied fixture with a false red (a false gate result costs a round) (SCHEDULER #19, 2026-09-24).
 milestone: M0
 interface: none.
