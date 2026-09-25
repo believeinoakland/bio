@@ -33,6 +33,13 @@
  * section 4 drives it through the real engine and asserts it mints no reference.
  *
  *   node pdf-worker/test/agenda-scan-census.probe.mjs          (from the repo root)
+ *   node pdf-worker/test/agenda-scan-census.probe.mjs --dir <d> (a directory of files)
+ *
+ * `--dir` (D-321 part 2) censuses the files in ONE directory instead of the git
+ * store — the population an instance holds OUTSIDE git, fetched to a scratchpad by
+ * read-only `op=capture` GETs and checked against their sha256 on arrival (M-170).
+ * The committed `scan-ccitt-g4-page.pdf` is ADDED to that population so the same
+ * positive control gates the answer, and it is excluded from the candidate count.
  *
  * Result and population: `docs/development/measurements/M-170.md`.
  *
@@ -42,15 +49,43 @@
  * known image-only page (591b1615b674…)", PDFs 8 / pages 52 / raster blobs 2 unchanged.
  * Restored by `cp` from a pristine copy, `cmp` identical, sha256 4ecc62d61f754877… before and
  * after, 6,768 B. BASELINE: exit 0, image-only 1, the known resolution found.
+ * SECOND ARM, RUN 2026-09-25 by D-321 part 2 — the encrypted-file guard disarmed
+ * (`false &&` prefixed, 1 match, armed alone), `--dir` over the instance's 11 PDFs.
+ * Declared: MUST report encrypted 0, pages 2,056, image-only 27 (the EBMUD agenda
+ * report's p0/p3 back as false positives); MUST NOT fail the positive control.
+ * Actual: exactly that, exit 0. Restored by `cp`, `cmp` identical, sha256
+ * b5499574db931aba… before and after, 9,597 B; re-run: encrypted 2, pages 1,836,
+ * image-only 25.
  */
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
+import * as require_fs from "node:fs";
 import { loadPdf, analyzePage } from "../src/pagepixels.mjs";
 
 const ROOT = new URL("../../", import.meta.url).pathname;
 const KNOWN_SCAN_SHA = "591b1615b674"; /* sha256 prefix of scan-ccitt-g4-page.pdf, the positive control */
 const git = (args) => execFileSync("git", args, { cwd: ROOT, maxBuffer: 1 << 30 }).toString();
 
+const DIR = process.argv.includes("--dir") ? process.argv[process.argv.indexOf("--dir") + 1] : null;
+const MAGIC = [["%PDF", "pdf"], ["\x89PNG", "png"], ["\xff\xd8\xff", "jpeg"], ["II*\0", "tiff"], ["MM\0*", "tiff"]];
+const blobs = DIR ? dirPopulation(DIR) : await gitPopulation();
+
+function dirPopulation(dir) {
+  const { readdirSync, readFileSync } = require_fs;
+  const out = { scanned: 0, trees: 0, hits: [], label: `directory ${dir}` };
+  const files = readdirSync(dir).map((f) => ({ path: f, bytes: readFileSync(`${dir}/${f}`) }));
+  files.push({ path: "(positive control) pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf",
+               bytes: readFileSync(`${ROOT}pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf`) });
+  for (const f of files) {
+    out.scanned++;
+    const head = f.bytes.subarray(0, 8).toString("latin1");
+    for (const [m, kind] of MAGIC) if (head.startsWith(m))
+      out.hits.push({ sha: null, kind, path: f.path, bytes: new Uint8Array(f.bytes) });
+  }
+  return out;
+}
+
+async function gitPopulation() {
 /* ---- the population: every reachable blob, with a path it was reached by ---- */
 const pathOf = new Map();
 for (const line of git(["rev-list", "--all", "--objects"]).split("\n")) {
@@ -59,8 +94,7 @@ for (const line of git(["rev-list", "--all", "--objects"]).split("\n")) {
 }
 const refs = git(["for-each-ref", "--format=%(refname)"]).trim().split("\n").length;
 
-const MAGIC = [["%PDF", "pdf"], ["\x89PNG", "png"], ["\xff\xd8\xff", "jpeg"], ["II*\0", "tiff"], ["MM\0*", "tiff"]];
-const blobs = await new Promise((resolve, reject) => {
+return await new Promise((resolve, reject) => {
   const ids = [...pathOf.keys()];
   const p = spawn("git", ["cat-file", "--batch"], { cwd: ROOT });
   /* STREAMED, holding one object at a time: the whole store does not fit in memory
@@ -91,19 +125,27 @@ const blobs = await new Promise((resolve, reject) => {
   });
   p.on("error", reject);
   p.on("close", (code) => (code !== 0 ? reject(new Error(`git cat-file exited ${code}`)) : resolve(out)));
+  out.label = `${refs} refs`;
   p.stdin.end(ids.join("\n") + "\n");
 });
+}
 
 console.log(`D-321 census · ${new Date().toISOString()} · HEAD ${git(["rev-parse", "--short", "HEAD"]).trim()}`);
-console.log(`population: ${refs} refs · ${blobs.scanned} reachable blobs (${blobs.trees} trees/commits skipped)`);
+console.log(`population: ${blobs.label} · ${blobs.scanned} ${DIR ? "files" : "reachable blobs"} (${blobs.trees} trees/commits skipped)`);
 
-let pages = 0, imageOnly = [], rasters = [], pdfs = 0, unreadable = [];
+let pages = 0, imageOnly = [], rasters = [], pdfs = 0, unreadable = [], encrypted = [];
 for (const h of blobs.hits) {
   const sha256 = createHash("sha256").update(h.bytes).digest("hex");
   if (h.kind !== "pdf") { rasters.push(h); console.log(`  RASTER ${h.kind.padEnd(4)} ${h.path}  ${h.bytes.length} B  (judge by reading it)`); continue; }
   pdfs++;
   let doc;
   try { doc = await loadPdf(h.bytes); } catch (e) { unreadable.push(h.path); console.log(`  PDF UNREADABLE ${h.path}: ${e.message}`); continue; }
+  /* AN ENCRYPTED FILE IS NOT CENSUSED (D-321 part 2, measured): its content streams are
+     ciphertext to `analyzePage`, which then sees no text operator and calls a page with a
+     full text layer image-only — the EBMUD agenda report's p0/p3 read that way (2,226
+     characters on p0 by an independent reader). The OCR path refuses such a file before
+     `analyzePage` (`renderPageToPixels`' ENCRYPTED), so it never reaches tier 3 either. */
+  if (doc.isEncrypted()) { encrypted.push(h.path); console.log(`  PDF ENCRYPTED ${h.path}  sha256 ${sha256.slice(0, 12)}  pages ${doc.pageCount}  (not censused: streams are ciphertext here)`); continue; }
   const n = doc.pageCount;
   let io = 0;
   for (let i = 0; i < n; i++) {
@@ -113,7 +155,7 @@ for (const h of blobs.hits) {
   }
   console.log(`  PDF  ${h.path}  sha256 ${sha256.slice(0, 12)}  pages ${n}  image-only ${io}`);
 }
-console.log(`\nPDFs ${pdfs} (unreadable ${unreadable.length}) · pages censused ${pages} · IMAGE-ONLY pages ${imageOnly.length} · raster blobs ${rasters.length}`);
+console.log(`\nPDFs ${pdfs} (unreadable ${unreadable.length}, encrypted ${encrypted.length}) · pages censused ${pages} · IMAGE-ONLY pages ${imageOnly.length} · raster blobs ${rasters.length}`);
 for (const p of imageOnly) console.log(`  image-only: ${p.path} p${p.page} (${p.sha256.slice(0, 12)})`);
 
 /* THE POSITIVE CONTROL — an empty answer from a census that cannot see the class is worth nothing. */
