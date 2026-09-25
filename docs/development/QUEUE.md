@@ -936,9 +936,9 @@ accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGAT
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
 scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): control drivers writing `${file}.pristine-<arm>` beside the source, an UNDECLARED pen BOB's ruling does not stand — battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor, and every `nc-*.mjs` harness (D-499 fixed nc-d64). Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`.
 
-### D-721 · running — **#caseIdentitySentence's PAIR BRANCH STILL STATES "the next edition (N) of C1 — but …" for a draft naming C1 AND asking for a new case, in op=casedraft, casedrafts, reviewcopy and reviewgrant (boundTo), beside D-618's `edition: null`: the sentence names an edition the record has not chosen.** Found by D-708's worker (minted on land/worker/D-708). — owner RECORD.
+### D-721 · integrated — **#caseIdentitySentence's PAIR BRANCH STILL STATES "the next edition (N) of C1 — but …" for a draft naming C1 AND asking for a new case, in op=casedraft, casedrafts, reviewcopy and reviewgrant (boundTo), beside D-618's `edition: null`: the sentence names an edition the record has not chosen.** Found by D-708's worker (minted on land/worker/D-708). — owner RECORD.
+status: integrated — SCHEDULER #24 12:43Z: tip 3ef19436 (on D-708 656b0817), GATE GREEN FULLREUSE 62/62 re-run over full run 409/409 on f68d42df (its regionLines floor moved from the print), tree 8bbce337; the pair sentence states no edition at casedraft, casedrafts, reviewcopy, reviewgrant; PUBLISH_DRAFT_NOT_THIS_CASE passes newCase and draft_edition null for pair/derived (I3); minted D-728 (spawned)
 order: spawned directly, stacked on D-708 (same sentence family): a sentence claiming more than the record holds is the "less narrative" defect (CLAUDE.md §2) and corrects just-landed work (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 11:25Z: spawned, stacked on land/worker/D-708 @ 656b0817
 milestone: M10
 interface: I3 — the pair sentence's wording on four ops; the integrator classifies.
 design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 and §6A.4 (D-618: a pair draft states no edition).
@@ -1188,6 +1188,17 @@ depends-on: none (stacked on land/worker/D-685 @ 3094f19b, integrated, on D-684 
 scope: (1) correct §4.3 and the #writeCaptureText docblock to "every unit that fit, in reading order, with gaps"; (2) a `partial` capture records the unit keys it SKIPPED, from both loops, and the read that reports a capture's indexing state serves them as "not indexed: over the bound". Option (a), break at the first over-bound unit, is REJECTED.
 accepts-when: Z5's workbook reads S5 indexed and names S4 skipped over the bound; a capture under the bound names none (moves: a silent gap). NEGATIVE CONTROL: drop the skipped-key write and the Z5 arm fails naming S4.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-685's worker; BOB #36 inbox).
+
+### D-728 · running — **op=publish case=C1 draft=<a draft naming C1 AND setting newCase> PUBLISHES and binds that draft to C1's next edition (measured: ok:true, edition 2, completeness.draft = the pair draft), though D-618 ruled the pair UNDETERMINED and every pair sentence (D-708, D-721) says publication refuses the two instructions together — the record doing what its own sentences say it refuses.** Found by D-721's worker. — owner RECORD.
+order: spawned directly, stacked on D-721 (same is-publish-draft-this-case region): a signed binding the record's own rule forbids, in signed bytes (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 12:43Z: spawned, stacked on land/worker/D-721 @ 3ef19436
+milestone: M10
+interface: I3 — a new refusal where a publish used to land; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 and §6A.4 (D-618: a pair draft's case is UNDETERMINED; publication refuses the two instructions together).
+depends-on: none (stacked on land/worker/D-721 @ 3ef19436, integrated, on D-708 @ 656b0817).
+scope: in is-publish-draft-this-case treat a pair draft as standing at no case edition (compare #statedEdition, null, so it never matches) and answer PUBLISH_DRAFT_NOT_THIS_CASE; reproduce through op=publish first. If BOB #36 rules instead that the publisher's explicit case= resolves the pair, the fix becomes rewording D-708's sentence — do not decide that; the named fix follows D-618 as ruled.
+accepts-when: op=publish case=C1 naming a pair draft is refused by name and writes nothing; a draft naming C1 only still publishes (moves: a pair draft bound by a publish). NEGATIVE CONTROL: compare the draft's named edition again and the pair arm publishes, failing by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-721's worker).
 
 ### D-645 · queued — **`nc-mk4` arms machinewide/noshare/sharewide, aiscope: ANCHOR DRIFT — three match 0; aiscope matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-644, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
