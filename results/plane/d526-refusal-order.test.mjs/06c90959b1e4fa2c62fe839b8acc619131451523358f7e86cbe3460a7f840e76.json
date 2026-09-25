@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d526-refusal-order.test.mjs",
+ "inputHash": "06c90959b1e4fa2c62fe839b8acc619131451523358f7e86cbe3460a7f840e76",
+ "verdict": "PASS",
+ "run": "a6a4764a43e6850b531220ac0e28e7406878918b.1790332719008.29479.json",
+ "tree": "a6a4764a43e6850b531220ac0e28e7406878918b",
+ "head": "9f6112d3f978959be2ee436ebe5a1186c7f07c4a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 138,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "1b518b6f-dc7d-5129-8d75-2bf72c471c52",
+ "at": "2026-09-25T10:38:39.023Z"
+}
