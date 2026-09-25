@@ -152,7 +152,7 @@ import { skipString, matchBrace, outcomeReturns, topLevelParts, topLevelProps, t
    (`bio-plane/test/dec49-onecode-twoconditions.sweep.mjs`): arm G gates the figure that sweep prints. */
 /* c22-batch29: aliased at the union — D-485 imports walkfloor.mjs's `stripComments` for arm H and M0-148's walk, and
    arm G keeps the sweep's own stripper, so the two same-named bindings cannot both be `stripComments`. */
-import { stripComments as stripCommentsMultiSite, multiSiteCensus } from "../bio-plane/test/multisite-census.mjs";
+import { stripComments as stripCommentsMultiSite, multiSiteCensus, multiSiteFiles, MULTI_SITE_EXCLUDED } from "../bio-plane/test/multisite-census.mjs";
 const PLANE_SRC = path.join(PLANE, "src");
 const CATALOG = path.join(PLANE, "checks", "bio-checks.mjs");
 const APP = path.join(HERE, "app.html");
@@ -1525,13 +1525,21 @@ const CEILING = {
                           second copy of the thing DEC-49 exists to keep singular. So the ceiling is
                           set at the measured 4 and the pass-through is NAMED every run rather than
                           made invisible by a literal nobody needed. */
+  /* D-574 side, kept as history (c22-batch30: ours' multiSiteCodes kept; NUMBER TO RE-READ from --strict's print on the
+     union): multiSiteCodes: 65 — D-574 (2026-09-25, branch land/worker/D-574) RAISED it 59 -> 65 on its own tree, a
+     WIDER READING, not a new second site: arm G walks every src file but the three MULTI_SITE_EXCLUDED names. Of the
+     14 newly seen, 8 are one condition and DECLARED closures; 6 are candidates D-668 exists to split. */
   multiSiteCodes: 60, /* CONDUCT #22 at the c22-batch29 union: 59 -> 60, READ from --strict's print on the merged tree (`arm G: … 80 of 501 DEC-49 codes at 2+ literal sites … 20 DECLARED closure(s)`: 80 less the 7 closures before this union and the 13 declared here). The ONE new candidate is D-147's LIFECYCLE_TEXT_UNWRITABLE, read at both sites and found to be TWO conditions (see MULTI_SITE_CANDIDATES); it arrived on a base without this arm, so the ceiling rises by that one against this arm's own direction, NAMED, and a row is owed (CONDUCT mints it) to split the token case to its own code and lower this back to 59. */ /* D-550 (2026-09-24, cloud WORKER D-550, branch land/worker/D-550) — DEC-49 codes named at
                           MORE THAN ONE literal site in store.mjs/index.mjs, less the DECLARED closures (arm G). SET
                           from arm G's own print on the item's tree over origin/main 8bdf20e6: the sweep read 62
                           candidates (the row, written on an older tree, said 60), of which RATE_IP, RATE_GLOBAL and
                           VERSION_ACT_UNWRITABLE are one condition each and declared BY NAME, leaving 59. It may only
                           FALL: a landing that consolidates a code behind one helper removes it from
-                          MULTI_SITE_CANDIDATES and lowers this in the same commit. */
+                          MULTI_SITE_CANDIDATES and lowers this in the same commit.
+                          D-574 (2026-09-25, cloud WORKER D-574, branch land/worker/D-574) RAISED it 59 -> 65, and the
+                          raise is a WIDER READING, not a new second site: arm G now walks every src file but the three
+                          MULTI_SITE_EXCLUDED names (79 multi-site codes on 5e8a65a8, arm G's print). Of the 14 newly
+                          seen, 8 are one condition and DECLARED closures; 6 are candidates D-668 exists to split. */
 };
 
 /* ============================================================== M0-79, 2026-09-21
@@ -3652,12 +3660,18 @@ async function armE() {
          condition. A closure that stops being multi-site is a stale declaration and fails too.
 
    WHAT IT CAN AND CANNOT SEE (printed on arm G's line every run): literal quoted occurrences in
-   comment-stripped store.mjs and index.mjs. A code held in a variable is DEC-49's own floor's
-   business, not this walk's. A comparison site (`reason === "CODE"`) counts as a site: that is why
-   RATE_IP and RATE_GLOBAL are closures. Other `src` files are NOT walked — measured by D-550 at 93
-   candidates over every src file against 62 here, the 31 extra mostly `affordances.mjs` PUBLISHING
-   codes as data, not minting them. And a candidate is not a verdict: whether two sites are two
-   conditions is a judgement; this arm holds the set from GROWING while that judgement is made. */
+   EVERY comment-stripped `bio-plane/src` file but those `MULTI_SITE_EXCLUDED` (multisite-census.mjs,
+   one home) names with the reason each cannot mint. D-574 widened it: D-550 walked store.mjs and
+   index.mjs only, so AI_RUN_BOUND_UNKNOWN (4 sites, airun.mjs), TEXT_ATTEST_EXTENT and
+   TEXT_ANCHOR_MISSING (4 each, textchain.mjs), CAL_SIGNAL_SHAPE (3, calibration.mjs) and
+   AI_RUN_SKILL_VERSION_UNNAMED (2, skillpack.mjs) went unwatched, and a second site of a
+   single-site code in any of those files passed. Measured on 5e8a65a8: 97 multi-site codes over all
+   37 files; 16 of them affordances.mjs PUBLISHING a code minted once in store.mjs, 2 (CAS_STALE,
+   FILES_DROPPED) setup.mjs and livefire.mjs READING one — excluded by stated reason, leaving 79. A
+   code held in a variable is DEC-49's own floor's business, not this walk's. A comparison site
+   (`reason === "CODE"`) in a walked file counts as a site: that is why RATE_IP and RATE_GLOBAL are
+   closures. And a candidate is not a verdict: whether two sites are two conditions is a judgement;
+   this arm holds the set from GROWING while that judgement is made. */
 const MULTI_SITE_CLOSED = new Map([
   ["RATE_IP", "D-508/D-513: minted once in the knock rate governor; index.mjs's second site READS the code to pick the stated window (`rec.result.reason === \"RATE_IP\"`), it does not mint it"],
   ["RATE_GLOBAL", "D-508/D-513: minted once beside RATE_IP; index.mjs's second site is the same read of the code, not a second condition"],
@@ -3689,6 +3703,18 @@ const MULTI_SITE_CLOSED = new Map([
   ["CONSENSUS_REQUIRED", "D-134: three sites — memberAdd and adminEndorse (§4.7's administrators) and projectOwnerAdd (§7.10's owners) — each an addition recorded but not in effect because not every existing holder has agreed, each answering have/awaiting; C-96.6's sentence names both bodies and the have/awaiting lists, so it is true at all three"],
   ["EXISTS", "D-134: minted at TWO sites — memberAdd (the member id is taken) and promote (a creation against a bundle id already held) — both a creation under an id the record already holds, and C-96.4's sentence (`That id is already taken … nothing new was created under it`) is true of both. The third literal the walk counts is `standing.startsWith(\"EXISTS\")` in the case-exclusions read, the SQL keyword of a standing predicate — not a refusal"],
   ["SESSION_ROLE_CANNOT_REACH_OP", "REC-162: the two sites are sessionOpGate's (b) outcome split by WHICH set holds the op (the founder's session vs a member's own) — one condition, the op is reachable from a signed-in session but not this one's kind, with `reachedBy` naming which; C-38.7's sentence (`from a different session than this one, and this refusal names which`) was rewritten by REC-162 to be true of both"],
+  /* D-574 — the eight below came into sight when arm G widened past store/index. Each was READ at every site against
+     its row's canned translation (DEC-49 as D-484 settled it: the translation must be true of every site's condition),
+     and each translation is: one condition, several spellings of a malformed input. None raises the ceiling. The six
+     newly watched codes whose translation is NOT true at a site stay CANDIDATES (below) and are D-668's to split. */
+  ["AI_RUN_BOUND_UNKNOWN", "D-574: airun.mjs `checkConsume`, four sites — `bounds` not a list, an entry not an object, `consume` not a map, a name RUN_BOUNDS lacks. C-22.15's translation (`named a part of its budget that does not exist, or did not say which part it meant`) names both halves, so each site is ONE condition: no bound the run has was named"],
+  ["AI_RUN_BOUND_PLANE_COUNTED", "D-574: airun.mjs `checkConsume`, two sites — a plane-DECIDED bound (the lease, read off the clock) and a plane-COUNTED one given a figure. C-22.14's translation names both (`counted as the work lands ... read off the clock`): ONE condition, a figure for a bound the record keeps itself"],
+  ["AI_RUN_NO_SUCH_CONTEXT", "D-574: airun.mjs `checkRunContextKind`, two sites — a context kind that is not `inquiry`/`project`, and an id nothing of the named kind answers to. C-22.11's translation states both (`A run is over a question or a project, nothing else ... nothing of the kind this run names answers`), and rule 2 makes them one object on purpose (a hidden id answers as an absent one)"],
+  ["AI_RUN_SKILL_VERSION_UNNAMED", "D-574: skillpack.mjs `checkSkillVersion`, two sites — no version, and a bare edition with no `<pack>@`. C-22.7's condition (`did not say which version of its instructions`) is true of both: a bare edition identifies no version once a second pack exists (the site's own detail)"],
+  ["CAL_SHAPE", "D-574: calibration.mjs `checkCalibration`, two sites — not an object, and a `cap` off the BASIS_GRADES scale. C-42.1's translation names both (`not readable as one ... on the same scale the rest of this record uses`): ONE condition, an unreadable calibration"],
+  ["CAL_SIGNAL_SHAPE", "D-574: calibration.mjs `checkSignal`, three sites — not an object, no engine, no source. C-42.5's translation (`has to say which engine it is about and where you saw it`) is the conjunction of all three: ONE condition, an unreadable announcement"],
+  ["TEXT_ANCHOR_MISSING", "D-574: textchain.mjs `checkAnchor`, four sites — no source object, a kind other than pdf-page, no page, no rect. C-35.9's translation (`has to say WHERE on the page it came from`) is true of each: ONE condition, no checkable region named"],
+  ["TEXT_CONFIDENCE_SHAPE", "D-574: textchain.mjs `checkConfidence`, two sites — neither `'none'` nor an object, and an engine basis with a value outside 0..1. C-35.8's translation (`The confidence on this region is not readable`) is true of both: ONE condition"],
 ]);
 const MULTI_SITE_CANDIDATES = new Set([
   "AI_BEYOND_TASK_SCOPE", "BAD_CITATION", "BIAS_ADOPTION_NOT_PROPOSED", "BOOTSTRAP_CREDENTIAL_UNSET",
@@ -3712,10 +3738,29 @@ const MULTI_SITE_CANDIDATES = new Set([
      exemptions or the citation is too long, or holds a quotation mark …`) is FALSE of the second: a member sending
      `stage=Appeal` is told about exemptions. A CANDIDATE, owed a row by CONDUCT (mint a code for the token case). */
   "LIFECYCLE_TEXT_UNWRITABLE",
+  /* D-574 — newly watched outside store/index, READ at every site, and NOT closed: at one site each the row's canned
+     translation is untrue of the condition that fired, which is DEC-49's one-code-one-condition rule broken (D-484).
+     Each is D-668's to split behind its own code and row; each leaves this set, and the ceiling falls, in that landing.
+       CAL_NO_PROBE, CAL_UNNAMED — store.mjs `calibrationSubjectRegister` borrows C-42.4/C-42.2, written for a
+         calibration MEASUREMENT ("Nothing here was actually measured ... Run the probe and record what it scored"),
+         for REGISTERING a subject with no probe id / no engine, which measures nothing and asks no version;
+       TEXT_ATTEST_EXTENT — textchain.mjs `checkAttestation`: an attestation with no DATE answers C-35.11's "has to
+         say how much of the document you checked";
+       TEXT_ATTEST_MACHINE — the same function: an attestation naming NO member answers C-35.10's "The credential
+         that asked here is an automated one";
+       TEXT_CHAIN_STEP_UNNAMED — textchain.mjs: a `typed` step (a MEMBER typed the text) missing its member answers
+         C-35.5's "a machine read the text but not which machine".
+     OBS_PRESENT_NO_REFERENT (airun.mjs, a PRESENT row with no referent / with one that does not back it) is
+     UNDETERMINED, not closed: C-22.10's "has to point at what it found" is true of both; its "without saying what
+     was found" is not true of a referent that NAMES a row which fails to back it. D-668 carries it to judgement. */
+  "CAL_NO_PROBE", "CAL_UNNAMED", "OBS_PRESENT_NO_REFERENT", "TEXT_ATTEST_EXTENT", "TEXT_ATTEST_MACHINE", "TEXT_CHAIN_STEP_UNNAMED",
 ]);
 
-/* The plane files arm G walks, named once so the guard's fixture suite can point it at its own tree. */
-const MULTI_SITE_FILES = ["store.mjs", "index.mjs"];
+/* The plane files arm G walks, named once so the guard's fixture suite can point it at its own tree. D-574: EVERY
+   `src/*.mjs` IN THE COMMIT AT HEAD (`inCommit`, this file's provenance check — a file another worktree deposited
+   is never counted) but MULTI_SITE_EXCLUDED's (multisite-census.mjs, the sweep's one home) — inverted, so a new plane
+   file is walked the day it is committed; it was `["store.mjs", "index.mjs"]`. */
+const MULTI_SITE_FILES = [...multiSiteFiles(fs.readdirSync(PLANE_SRC).filter(f => inCommit(path.join(PLANE_SRC, f))))];
 
 function armG(catalogModule) {
   const files = {};
@@ -3724,8 +3769,9 @@ function armG(catalogModule) {
     const t = stripCommentsMultiSite(raw);
     /* The stripper is guarded both ways, as the sweep guards it: one that ate the file reports zero
        sites triumphantly; one that matched nothing counts prose as code. */
-    /* Relative, not absolute: a file with no block comment legitimately strips to itself, and the plane's two
-       files strip to about a third (the sweep measured), so a tenth is a stripper that ate code. */
+    /* Relative, not absolute: a file with no block comment legitimately strips to itself (schema.mjs), and the
+       plane's files strip to between 0.14 (gate.mjs) and 0.91 of their bytes (measured by D-574 over all 37), so a
+       tenth is a stripper that ate code. */
     const matchedNothing = raw.includes("/*") && t.length >= raw.length, ate = t.length * 10 < raw.length;
     if (matchedNothing || ate)
       FAIL(`arm G: the comment stripper ${matchedNothing ? "matched nothing in" : "ate"} src/${f} `
@@ -3734,7 +3780,7 @@ function armG(catalogModule) {
   }
   const { codes, multi } = multiSiteCensus(catalogModule, files);
   const open = [...multi.keys()].filter(c => !MULTI_SITE_CLOSED.has(c)).sort();
-  MEASURE("multiSiteCodes", open.length, "DEC-49 codes at 2+ literal sites in store/index, less the declared "
+  MEASURE("multiSiteCodes", open.length, "DEC-49 codes at 2+ literal sites in the walked src files, less the declared "
     + "closures (the `arm G:` line)");
   /* THE EMPTY-CORPUS DEFENCE. Zero CANDIDATES is not the alarm — it is the finished state this arm drives
      toward, and a conformant fixture legitimately reads it (arm F's floor learned the same thing). The alarm is
@@ -3768,9 +3814,10 @@ function armG(catalogModule) {
     FAIL(`arm G: ${open.length} DEC-49 codes are minted at more than one site, ceiling ${CEILING.multiSiteCodes}; `
        + `it may only ever move DOWN. The new one(s) are named above.`);
   NOTE(`arm G: ONE CODE, ONE MINT SITE — ${multi.size} of ${codes.size} DEC-49 codes at 2+ literal sites in `
-     + `comment-stripped store.mjs/index.mjs; ${multi.size - open.length} DECLARED closure(s) `
+     + `${MULTI_SITE_FILES.length} comment-stripped src files (excluded, each for its stated reason: `
+     + `${[...MULTI_SITE_EXCLUDED.keys()].join(", ")}); ${multi.size - open.length} DECLARED closure(s) `
      + `(${[...MULTI_SITE_CLOSED.keys()].join(", ")}); ${open.length} candidate(s) against ceiling `
-     + `${CEILING.multiSiteCodes} (may only fall). CANNOT SEE: a code in a variable, a site outside store/index, `
+     + `${CEILING.multiSiteCodes} (may only fall). CANNOT SEE: a code in a variable, a site in an excluded file, `
      + `and whether two sites are one condition (a candidate is not a verdict).`);
 }
 

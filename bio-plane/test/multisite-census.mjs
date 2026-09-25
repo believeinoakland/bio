@@ -10,12 +10,43 @@
  *
  * WHAT IT CAN SEE and CANNOT SEE is stated in the sweep's header and restated on
  * arm G's line every run: literal quoted occurrences only (a code in a variable is
- * DEC-49's floor's business), store.mjs and index.mjs only (widening to every
- * `src` file was MEASURED by D-550 at 93 against 62, the 31 extra being mostly
- * `affordances.mjs` PUBLISHING codes as data rather than minting them), and a
+ * DEC-49's floor's business), in EVERY `bio-plane/src` file but the ones
+ * `MULTI_SITE_EXCLUDED` names with the reason each cannot mint (D-574: D-550 walked
+ * store.mjs and index.mjs only, so AI_RUN_BOUND_UNKNOWN's four sites in airun.mjs
+ * and TEXT_ATTEST_EXTENT's four in textchain.mjs went unwatched), and a
  * multi-site code is a CANDIDATE, never a verdict: whether two sites are one
  * condition is a judgement this walk prints the evidence for and does not make.
  */
+/* THE FILES THAT NAME CODES AND CANNOT MINT ONE (D-574). Excluded BY NAME, with the
+   reason, and INVERTED rather than listed: the walk reads every `src/*.mjs` except
+   these, so a new plane file is walked the day it is written. Each reason is a claim
+   about what the file IS, checked at the file (none calls `refusal(`, measured
+   2026-09-25) — a file that starts minting refusals leaves this map, it does not
+   hide behind it. A name here that is not among the files handed in is stale and THROWS (below). */
+export const MULTI_SITE_EXCLUDED = new Map([
+  ["affordances.mjs", "PUBLISHES codes as data (op=affordances, REC-19/DEC-8): its tables name the code each act "
+    + "would be refused with, so a surface can render it; it mints none. Walked, it added 16 false candidates, every "
+    + "one a code minted once in store.mjs and PUBLISHED once here (D-550 measured the class, D-574 the figure)"],
+  ["setup.mjs", "the instance's own setup PAGE, served as a string to a browser: its script READS a refusal code it "
+    + "received to choose the words it shows (`why === \"FILES_DROPPED\"`), and DEC-8 forbids a surface computing "
+    + "one. Walked, it made CAS_STALE and FILES_DROPPED false candidates (D-574)"],
+  ["livefire.mjs", "the live-fire BATTERY: it ASSERTS the codes a deployed plane answers (`… .reason, \"CAS_STALE\"`), "
+    + "the READ shape RATE_IP is closed for, never a mint. Walked, it made CAS_STALE a false candidate (D-574)"],
+]);
+
+/* The plane files the census reads: every `.mjs` name in `names`, less the declared
+   exclusions, sorted so the order is the tree's and not the disk's. PURE — the CALLER
+   lists the directory, through its own provenance check (`scripts/provenance.mjs`,
+   D-238), so a file another worktree deposited is never counted here; this module
+   walks nothing and exports nothing a walk derived. */
+export function multiSiteFiles(names) {
+  const present = names.filter((f) => f.endsWith(".mjs"));
+  const stale = [...MULTI_SITE_EXCLUDED.keys()].filter((f) => !present.includes(f));
+  if (stale.length)
+    throw new Error(`multisite-census: MULTI_SITE_EXCLUDED names ${stale.join(", ")}, which ${stale.length > 1 ? "are" : "is"} `
+      + `not among the src files handed in. A stale exclusion is an exemption nobody needs; remove it (D-574).`);
+  return present.filter((f) => !MULTI_SITE_EXCLUDED.has(f)).sort();
+}
 
 /* Comment-stripped, so a code NAMED in a comment is not counted as a site. The
    callers guard the stripper both ways (see the sweep): a stripper that ate

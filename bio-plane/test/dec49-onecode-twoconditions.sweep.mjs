@@ -12,7 +12,9 @@
  *
  * WHAT IT CAN SEE: every `*_CHECKS` family exported by the catalog (the RESERVED
  * SUFFIX the DEC-49 guard already harvests), and every literal-string return
- * site of those codes in `src/store.mjs` and `src/index.mjs` — matched as
+ * site of those codes in EVERY `src/*.mjs` but the files `MULTI_SITE_EXCLUDED`
+ * (multisite-census.mjs) names with the reason each cannot mint — D-574 widened
+ * it from `src/store.mjs` and `src/index.mjs` alone — matched as
  * `refuse("CODE"`, `reason: "CODE"`, `code: "CODE"` and their single-quoted
  * twins, over COMMENT-STRIPPED source so a code named in prose is not counted as
  * a site.
@@ -32,10 +34,11 @@
  *     and they are printed separately as the population this class is measured
  *     AGAINST, because they are where the correct construct already lives.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { readGitProvenance, repoPath, classifyDiscovered } from "../scripts/provenance.mjs";
 import * as CATALOG from "../checks/bio-checks.mjs";
-import { stripComments, dec49Codes, literalSites } from "./multisite-census.mjs";
+import { stripComments, dec49Codes, literalSites, multiSiteFiles, MULTI_SITE_EXCLUDED } from "./multisite-census.mjs";
 
 const src = (p) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), "utf8");
 /* Comment-stripped, so a code NAMED in a comment is not counted as a site. The
@@ -46,8 +49,20 @@ const src = (p) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), "utf
    printed — and two copies of one matcher are two figures. */
 const strip = stripComments;
 
-const FILES = { "src/store.mjs": strip(src("../src/store.mjs")),
-                "src/index.mjs": strip(src("../src/index.mjs")) };
+/* D-574: the files are arm G's — every src file IN THE COMMIT AT HEAD (D-238's provenance check: a file another
+   worktree deposited is named and never counted) but the census's declared exclusions. */
+const REPO = fileURLToPath(new URL("../../", import.meta.url));
+const SRC_DIR = fileURLToPath(new URL("../src/", import.meta.url));
+const PROV = readGitProvenance(REPO);
+const { verified, rows } = classifyDiscovered(PROV, readdirSync(SRC_DIR).filter((f) => f.endsWith(".mjs"))
+  .map((f) => ({ path: repoPath(REPO, SRC_DIR + f), what: f })));
+const notCommitted = rows.filter((r) => r.state !== "in the commit");
+if (!verified) console.log(`provenance: UNVERIFIED — git could not answer, so every src file is walked (D-233: never "clean")`);
+for (const r of notCommitted) console.log(`provenance: src/${r.what} is ${r.state} — NOT walked`);
+const FILES = Object.fromEntries(multiSiteFiles(rows.filter((r) => !verified || r.state === "in the commit").map((r) => r.what))
+  .map((f) => ["src/" + f, strip(src("../src/" + f))]));
+console.log(`walked: ${Object.keys(FILES).length} src files at ${PROV.headSha || "(no HEAD)"} · excluded by stated reason: `
+          + [...MULTI_SITE_EXCLUDED.keys()].join(", "));
 /* THE STRIPPER IS GUARDED BOTH WAYS, and by CONTENT rather than by a ratio —
    these two sources are more comment than code (measured: store.mjs and
    index.mjs each strip to roughly a third), so a ratio floor would either be
@@ -58,8 +73,10 @@ const FILES = { "src/store.mjs": strip(src("../src/store.mjs")),
 for (const [f, t] of Object.entries(FILES)) {
   const raw = src("../" + f);
   console.log(`stripper: ${f} ${raw.length} -> ${t.length} bytes`);
-  if (t.length >= raw.length) { console.log(`FATAL: stripper matched nothing in ${f}`); process.exit(2); }
-  if (t.length < 1000)        { console.log(`FATAL: stripper ate ${f}`); process.exit(2); }
+  /* D-574: guarded as arm G guards it, now that the walk reaches files with no block comment at all
+     (schema.mjs strips to itself, legitimately) and small ones (deliverer.mjs strips to ~1,000 bytes). */
+  if (raw.includes("/*") && t.length >= raw.length) { console.log(`FATAL: stripper matched nothing in ${f}`); process.exit(2); }
+  if (t.length * 10 < raw.length) { console.log(`FATAL: stripper ate ${f}`); process.exit(2); }
 }
 if (FILES["src/store.mjs"].includes("THE SIXTH STATE MACHINE'S SIX MEMBER OPS")) {
   console.log("FATAL: stripper left a block comment behind"); process.exit(2); }
@@ -103,7 +120,7 @@ for (const [code, { fam }] of [...codes].sort()) {
   }
 }
 console.log(`\nMULTI-SITE CANDIDATES: ${multi}`);
-console.log(`CODES WITH NO LITERAL SITE IN store/index: ${zero}`
+console.log(`CODES WITH NO LITERAL SITE IN THE WALKED FILES: ${zero}`
           + ` — NAMED, never silently scored zero: ${unreachable.join(", ") || "(none)"}`);
 console.log(`\nTHE CORRECT CONSTRUCT, for comparison — the older non-DEC-49 shape already splits`
           + ` absent from malformed:\n  reason:"NO_REASON" sites  = `

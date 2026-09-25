@@ -2404,6 +2404,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
      (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
      bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
+  /* BRANCH HISTORY (c22-batch30 union; the floor stays OURS): MOVED 45 -> 47 by D-574, 2026-09-25, from the figure this suite PRINTED on the item's tree over origin/main 5e8a65a8
+     (`47 walking file(s)`), never by adding to the number in the file. ONE is D-574's: the one-code-one-site sweep
+     (`test/dec49-onecode-twoconditions.sweep.mjs`) now lists `src/` to walk every plane file, GUARDED by provenance.mjs.
+     THE OTHER WAS ALREADY THERE: the same suite on origin/main 5e8a65a8, before D-574 touched anything, printed `46
+     walking file(s)` against 45 — one walker landed without moving it. Closed here rather than carried. */
   t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 47)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */

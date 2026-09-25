@@ -48,6 +48,9 @@
  * entry removed -> refusal-codes.test.mjs fails at exactly ARM 16a, 16d, 16e
  * (ARM 13x on D-542's branch; relabelled at c22-batch30). Both RUN 2026-09-25 on
  * land/worker/D-542; the 49-arm table is re-run by CONDUCT on the union.
+ * D-574 ADDS (g2) — a second mint site of TEXT_CONFIDENCE_PSEUDO planted in the real
+ * textchain.mjs, which arm G reads since D-574: 50 arms. The (r5) anchor D-574 also
+ * corrected is D-664's regionEnd anchor on the union (the same fix, landed first).
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -68,6 +71,8 @@ const F = {
   catalog: path.join(PLANE, "checks", "bio-checks.mjs"),
   airun:   path.join(PLANE, "src", "airun.mjs"),
   store:   path.join(PLANE, "src", "store.mjs"),
+  /* D-574: arm G walks every src file now, and its row's control plants in textchain.mjs, a file it could not see. */
+  textchain: path.join(PLANE, "src", "textchain.mjs"),
   app:     path.join(UI, "app.html"),
   guard:   path.join(UI, "check-refusal-codes.mjs"),
   /* D-254: the guard IMPORTS REC-76's verdict reader from here, so an arm that
@@ -987,6 +992,27 @@ arm("(o2)", [{ file: F.rbo, from: "      if (anyEntry.has(k) && !own.has(k)) con
   const got = suiteArmsFailing(r.out), want = ["ARM 16a", "ARM 16d", "ARM 16e"];
   return { ok: r.exit === 1 && got.join(",") === want.join(","),
            what: `refusal-codes.test.mjs exits 1 failing at exactly [${want.join(", ")}] (measured [${got.join(", ")}])` };
+});
+
+/* ================================================================ D-574
+   (g2) THE WIDENED WALK — ARMED AGAINST THE REAL textchain.mjs, a file arm G did not read before D-574 (D-550 walked
+   store.mjs and index.mjs only, so this very plant passed). TEXT_CONFIDENCE_PSEUDO is minted ONCE today, in
+   textchain.mjs's `checkConfidence`, and is not in MULTI_SITE_CANDIDATES. The plant sits at module scope before
+   `glyphCount`, OUTSIDE every governed span. DECLARED BEFORE ARMING: MUST FAIL on exactly two lines, both arm G's —
+   the code named with its two sites, and the ceiling breached (66 against 65); MUST NOT fail anything else. */
+console.log("\n(g2) A SECOND MINT SITE OF A SINGLE-SITE CODE in the real textchain.mjs — arm G fails naming it");
+arm("(g2)", [{
+  file: F.textchain,
+  from: `export function glyphCount(s) {`,
+  to: `const d574Control = () => ({ ok: false, reason: "TEXT_CONFIDENCE_PSEUDO" });\nexport function glyphCount(s) {`,
+}], guard, r => {
+  const f = failLines(r.out);
+  return {
+    ok: r.exit === 1 && f.length === 2 && f.every(l => /^FAIL: arm G: /.test(l))
+      && /arm G: TEXT_CHAIN_CHECKS\.TEXT_CONFIDENCE_PSEUDO is now minted at 2 literal sites \(src\/textchain\.mjs/.test(r.out),
+    what: `the guard exits 1 naming TEXT_CONFIDENCE_PSEUDO at 2 sites in textchain.mjs, and nothing but arm G fails `
+        + `(${f.length} FAIL line(s): ${f.map(l => l.slice(6, 60)).join(" | ")})`,
+  };
 });
 
 /* ---------------------------------------------------------------- */
