@@ -45,10 +45,10 @@
  * own markup (the edit button's and the save button's `onclick` strings, a field's `onchange`, read out of what
  * the page rendered and run in its context), and every expected value is read back from the plane.
  * WHAT IT CANNOT SEE: a real browser's radio control (the page's `checked` attribute is read, not a click on the
- * other radio), and nothing is live — no deploy is this item's. A draft holding BOTH a case and `newCase` (the
- * plane's DB, refused at publication as ambiguous) is round-tripped by the form as its named case, which is the
- * delegation's stated precedence; that the form cannot say "both" is recorded in UI-106's report as a DESIGN GAP
- * and is not asserted here as correct.
+ * other radio), and nothing is live — no deploy is this item's. A draft holding BOTH a case and `newCase` is NOT
+ * this suite's: CORRECTED 2026-09-25 by UI-117 — this note said the form round-trips it as its named case, which
+ * was UI-106's DESIGN GAP and was the form dropping `newCase`; BOB #35 ruled it SURFACED (both shown, both kept
+ * until an owner keeps one), and `review-copy-both.test.mjs` asserts that.
  *
  * NEGATIVE CONTROL: `node civicos-ui/test/review-copy-newcase.control.mjs` from the repo root — every arm ALONE,
  * each anchor matched EXACTLY ONCE, restored by cp from a per-arm pristine copy and verified by sha256 AND cmp.

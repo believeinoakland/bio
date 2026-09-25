@@ -25548,7 +25548,8 @@ function rvcDraftBody(f, draftId){
       for(const i of sp) body.roles[i] = "supporting";
     }
   }
-  if(f.caseMode === "new") body.newCase = true;
+  if(f.caseMode === "both"){ body.caseId = String(f.caseId).trim(); body.newCase = true; }
+  else if(f.caseMode === "new") body.newCase = true;
   else if(f.caseMode === "next" && String(f.caseId || "").trim()) body.caseId = String(f.caseId).trim();
   for(const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"])
     if(String(f[k] || "").trim()) body[k] = String(f[k]).trim();
@@ -25568,7 +25569,11 @@ function rvcDraftBody(f, draftId){
    case publication DERIVES (the D-309 override the field exists to refuse). So the
    choice is read back as the draft holds it: a named case is the next-edition choice
    and keeps precedence (publication refuses the two together); `newCase` is the
-   new-case choice; neither leaves the choice unmade, which is what the draft holds. */
+   new-case choice; neither leaves the choice unmade, which is what the draft holds.
+   UI-117 (BOB #35, 2026-09-25 06:45Z): a draft holding BOTH is SURFACED, never refused and
+   never narrowed. It was read as its named case alone, so one edit wrote it back without
+   `newCase` — the form rewriting the record. Now it loads as "both", is written back holding
+   both until an owner keeps one, and keeping one is a save that clears the other. */
 function rvcFormFromCopy(c){
   const f = rvcEmptyForm();
   f.project = rvcStr(c && c.project);
@@ -25577,7 +25582,8 @@ function rvcFormFromCopy(c){
   f.supporting = fs.filter(x => x && x.role === "supporting").map(x => x.target).join("\n");
   f.undesignated = fs.filter(x => x && x.role !== "load_bearing" && x.role !== "supporting").map(x => x.target).join("\n");
   const cid = c && c.case && c.case.case_id;
-  if(cid){ f.caseMode = "next"; f.caseId = String(cid); }
+  if(cid && c.case.newCase === true){ f.caseMode = "both"; f.caseId = String(cid); f.bothHeld = true; }
+  else if(cid){ f.caseMode = "next"; f.caseId = String(cid); }
   else if(c && c.case && c.case.newCase === true) f.caseMode = "new";
   const a = (c && c.authored) || {};
   for(const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"]) f[k] = rvcStr(a[k]);
@@ -26044,6 +26050,23 @@ function rvcExportBoxHtml(){
     + (RVC.exportRefusal ? rvcRefusalHtml(RVC.exportRefusal) : '')
     + '<button class="btn ghost" id="rv-export" onclick="rvcExport()">Export this copy to a file</button></div>';
 }
+function rvcCaseChoiceHtml(f){
+  return '<label><input type="radio" name="rv-case" ' + (f.caseMode === "new" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'new\')"> A new case</label><br>'
+    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "next" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'next\')"> The next edition of an existing case of this project:</label> '
+    + '<input class="txt" id="rv-caseId" value="' + esc(f.caseId) + '" onchange="rvcFormField(\'caseId\', this.value)">';
+}
+/* UI-117 (BOB #35): a draft naming an existing case AND asking for a new one. Both values
+   are shown as the draft holds them, with one plain line; keeping one is the owner's own
+   act, offered with neither preselected (DEC-69), and saving without a choice keeps both. */
+function rvcBothHtml(f){
+  return '<div class="intent-box" data-rvc-both>'
+    + '<div class="kv"><span class="k">The existing case it names</span> <span class="v mono" data-rvc-both-case>' + esc(f.caseId) + '</span></div>'
+    + '<div class="kv"><span class="k">A new case</span> <span class="v" data-rvc-both-new>asked for</span></div>'
+    + '<p class="subj-note" data-rvc-both-line>This draft names an existing case and also asks for a new one, and it cannot be published until an owner keeps one of the two: publication refuses them together.</p>'
+    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "next" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'next\')"> Keep the existing case, ' + esc(f.caseId) + ', and withdraw the new one</label><br>'
+    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "new" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'new\')"> Keep the new case, and withdraw ' + esc(f.caseId) + '</label>'
+    + '</div>';
+}
 function rvcFormHtml(){
   const f = RVC.form;
   const ta = (k, rows) => '<textarea class="txt" id="rv-' + k + '" rows="' + rows + '" onchange="rvcFormField(\'' + k + '\', this.value)">' + esc(f[k]) + '</textarea>';
@@ -26067,9 +26090,7 @@ function rvcFormHtml(){
     + '<div class="kv"><span class="k">Supporting findings</span></div>' + ta("supporting", 3)
     + '<div class="kv"><span class="k">Findings not yet designated either way</span></div>' + ta("undesignated", 2)
     + '<h2 class="sec">Which case</h2>'
-    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "new" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'new\')"> A new case</label><br>'
-    + '<label><input type="radio" name="rv-case" ' + (f.caseMode === "next" ? 'checked ' : '') + 'onchange="rvcFormField(\'caseMode\', \'next\')"> The next edition of an existing case of this project:</label> '
-    + '<input class="txt" id="rv-caseId" value="' + esc(f.caseId) + '" onchange="rvcFormField(\'caseId\', this.value)">'
+    + (f.bothHeld ? rvcBothHtml(f) : rvcCaseChoiceHtml(f))
     + '<h2 class="sec">What the case covers</h2>' + ta("scope", 3)
     + '<h2 class="sec">What it leaves out</h2>'
     + '<div class="kv"><span class="k">The statement of what this case does not cover</span></div>' + ta("statement", 3)

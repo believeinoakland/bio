@@ -50,6 +50,17 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v130, 2026-09-25 session, thread UI, UI-117 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/UI-117` from `origin/main` @ `95fe7bc7`, in the commit that carries this entry; the version number is
+provisional and CONDUCT renumbers it at integration if a concurrent entry took it. SURFACE: **the review-copy form
+surfaces a draft holding BOTH a case and `newCase`** (BOB #35, 2026-09-25 06:45Z; Publication §6A.4). `rvcFormFromCopy`
+read the named case first, so such a draft came back as "the next edition of <case>" and one save wrote it back
+without `newCase`. It now loads as both: `rvcBothHtml` shows the case and the new-case request as stored, with one
+plain line (it cannot be published until an owner keeps one), and offers "keep the existing case" / "keep the new
+case" with neither preselected; a save without a choice writes both back, and keeping one clears the other. A draft
+naming one case gets the ordinary form, unchanged. `civicos-ui/test/review-copy-both.test.mjs` 13/0; its control
+5/5 as declared; UI-106's control re-run 6/6. The edition such a draft states is the plane's, D-618, not this entry's.
+
 v129, 2026-09-25 session, thread UI, D-617 (a WORKER of SCHEDULER #22, cloud session). Landed on
 `land/worker/D-617`, STACKED on `land/worker/UI-108` @ `80594009`, in the commit that carries this entry; numbered by
 CONDUCT #22 at c22-batch29, which landed v120–v129 together. SURFACE: **the document
