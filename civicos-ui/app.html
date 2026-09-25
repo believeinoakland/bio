@@ -17627,8 +17627,15 @@ async function connectGo(){
   const pane = $("#conn-pf"); if(!pane) return;
   if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
   const r = a.result;
+  /* D-576 — THE DERIVATION'S EXTENT ON THE RECEIPT. `truncated` on this answer is whether
+     the DERIVATION was cut (store.mjs, deriveConnections), and the receipt read the count
+     as every connection through the subject when it was part of them. The added sentence
+     is UI-95's, in the plane's own wording (`derivationStatement`, airun.mjs), because
+     op=connect answers `truncated` and `documents` but no `derivation.says` to render. */
+  const cutAfter = typeof r.documents === "number" ? `${esc(String(r.documents))} of this subject&rsquo;s documents` : "an unrecorded number of this subject&rsquo;s documents";
   pane.innerHTML = intentReceiptHtml([
-    `The record derived ${esc(String(r.count!=null?r.count:(r.connections||[]).length))} ${(r.count===1)?"connection":"connections"} among the documents that concern this subject.`]);
+    `The record derived ${esc(String(r.count!=null?r.count:(r.connections||[]).length))} ${(r.count===1)?"connection":"connections"} among the documents that concern this subject.`,
+    ...(r.truncated === true ? [`The derivation was CUT by its bound after ${cutAfter}: the connections here are true but are part of the set through this subject, not all of it.`] : [])]);
   await showEntity(INTENT_SUBJ.entity.entity_id, null, true);
 }
 
