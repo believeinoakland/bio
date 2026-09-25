@@ -29999,6 +29999,8 @@ export class Store extends DurableObject {
          still open — a non-zero monitorTickEpoch means the last tick failed on
          something and the next one will be its retry. */
       monitorFired: n("monitor_fired"), monitorTickEpoch: n("monitor_tick_epoch"),
+      /* REC-191: reported so a whole-store purge can PROVE it took the address types (D-113). */
+      monitorAddressType: n("monitor_address_type"),
       /* FW-6: the subject registry's depth, reported so a whole-store purge can
          PROVE it cleared the registry rather than assert it (D-113). */
       entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
@@ -31989,6 +31991,13 @@ export class Store extends DurableObject {
            this order: the fired rows, then the epoch that names them. */
         this.sql.exec(`DELETE FROM monitor_fired`);
         this.sql.exec(`DELETE FROM monitor_tick_epoch`);
+        /* REC-191. The content type each monitored ADDRESS last read as, which the
+           cadence plan falls back on where no version authored a frequency. Read
+           from sources about documents this purge just removed, so it goes with
+           them: a later capture at the same address must be read afresh rather
+           than inherit a type nobody holds a document for. Not in the per-bundle
+           arm, for source_reachability's reason: an address outlives a version. */
+        this.sql.exec(`DELETE FROM monitor_address_type`);
         /* The capture machinery's own derived tables, found MISSING here on
            2026-07-31 when D-113 was closed as a class rather than an instance.
            Every one is derived from the corpus and every one predates the fix
@@ -46935,8 +46944,13 @@ export class Store extends DurableObject {
   }
 
   recordMonitorLook({ bundleId = null, address = null, outcome = null, baseline = null, seen = null,
-                      httpStatus = null, reason = null, actorClass = "plane", actor = null } = {}) {
+                      httpStatus = null, reason = null, actorClass = "plane", actor = null,
+                      locator = null, content = undefined, contentBasis = null } = {}) {
     if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
+    /* REC-191: the type this look read the address as, kept BEFORE the observation's own
+       early returns, because a look with no baseline to compare still read what the
+       document is. `content` absent means the caller read nothing (a governed look). */
+    if (content !== undefined) this.#recordMonitorAddressType(address, locator, content, contentBasis);
     const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason });
     if (!row) return { ok: true, written: false,
                        why: outcome === "unchanged" || outcome === "changed"
@@ -46954,6 +46968,34 @@ export class Store extends DurableObject {
     if (bad) return { ok: false, written: false, refusal: bad };
     const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
     return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail };
+  }
+
+  /* REC-191 — WHAT A TICK READ THE ADDRESS AS, for the cadence plan's contract fallback.
+     A reading that determined a contract replaces whatever was held; one that could not
+     say is written only where nothing is held, so an unreachable source or a document
+     read as bytes does not erase what an earlier tick established. The contract word is
+     checked against CONTRACT_FREQUENCY's keys here, once: a word this plane gives no
+     meaning is kept as UNDETERMINED with its word in the basis, never stored as a
+     contract the plan would then have to second-guess. */
+  #recordMonitorAddressType(addressNorm, locator, content, basis) {
+    const at = new Date().toISOString().split(".")[0] + "Z";
+    const c = content && typeof content === "object" ? content : null;
+    const known = c && typeof c.contract === "string"
+      && Object.prototype.hasOwnProperty.call(Store.CONTRACT_FREQUENCY, c.contract);
+    const why = known ? null
+      : c && c.contract != null ? `the tick read the contract '${String(c.contract).slice(0, 40)}', which this plane gives no frequency`
+      : String(basis || "the tick could not determine the document's content type").slice(0, 240);
+    this.sql.exec(
+      `INSERT INTO monitor_address_type (address_norm, address, content_type, confidence, contract, basis, read_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(address_norm) DO UPDATE SET
+         address=excluded.address, content_type=excluded.content_type, confidence=excluded.confidence,
+         contract=excluded.contract, basis=excluded.basis, read_at=excluded.read_at
+       WHERE excluded.contract IS NOT NULL OR monitor_address_type.contract IS NULL`,
+      String(addressNorm), String(locator || addressNorm),
+      known && typeof c.type === "string" ? c.type : null,
+      known && c.confidence != null ? String(c.confidence) : null,
+      known ? c.contract : null, why, at);
   }
 
   /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.
@@ -48057,6 +48099,16 @@ export class Store extends DurableObject {
     per_meeting:      null,  // not a clock this plane can compute — stated, never guessed
     none:             null,  // not monitored on a clock
   };
+  /* D-65's PROVISIONAL contract intervals (BIO_Content_Framework section 6: a content
+     type's monitoring contract *"also sets the expected check frequency, because a
+     delisting is time-sensitive and a regulation is not"*; the framework names the ORDER
+     and no interval). ONE copy: op=monitor's `monitorCadence` reads this table and so does
+     the cadence plan below, so the cadence a tick ANSWERS with and the cadence the plan
+     SCHEDULES by cannot drift apart — which is exactly what REC-191 found they had done.
+     `unmonitorable` (a shell) has no clock: watching bytes that carry no substance proves
+     nothing. The words are the catalog's, checked by `monitorIntervalMs`. */
+  static CONTRACT_FREQUENCY = Object.freeze({ membership: "daily", substance: "weekly", unmonitorable: null });
+
   /* Bounded like TASK_DRAIN_ALARM_BATCH and MONITOR_TICK_BATCH: 50 is the usable
      external-subrequest budget measured for one invocation (MEASUREMENTS.md), and
      each fire in this tick spends one. */
@@ -48076,26 +48128,205 @@ export class Store extends DurableObject {
     return typeof v === "number" ? v : null;
   }
 
+  /* REC-191 — THE SUBJECT OF A SCHEDULE IS AN ADDRESS, NOT A BUNDLE.
+   *
+   *  Bob, 2026-08-06 (D-220): *"Monitoring an ADDRESS is what a member means"*; monitoring a
+   *  bundle is what this consumer did, so sixty captures of one calendar were sixty
+   *  schedules fetching the same address sixty times. The monitored bundles are GROUPED by
+   *  `captured_locators.address_norm` through the version-chain join (`versionChain`'s own
+   *  join: `captured_locators` to `register` on the capture sha, one version per sha, in
+   *  `first_retrieved` order with the sha as tiebreak), and each address becomes ONE row of
+   *  the shape the loop in `#monitorCadencePlan` has always read.
+   *
+   *  WHICH VERSION IS CHECKED: the CURRENT one — the newest version at the address among
+   *  those asking to be monitored, because op=monitor refuses a bundle that does not ask.
+   *  A NEWER version that does not ask is not silently passed over: it is STATED on the
+   *  row (`newer_unmonitored`), since a tick against an older baseline is then comparing
+   *  with a capture the record has already superseded.
+   *
+   *  WHICH FREQUENCY GOVERNS — BOB #31's 22:03Z ruling (quoted on REC-191's row, cited
+   *  until folded; its date is the row's to state, not this comment's): *"the ADDRESS's own setting governs; where none is set, the CURRENT version's;
+   *  never the shortest; a disagreement is STATED."* No address-level setting EXISTS in
+   *  this record (no column, no op writes one), so the first clause has nothing to read and
+   *  that is stated here rather than approximated. The current version's AUTHORED
+   *  `monitoring.frequency` governs; where it authored none, the CONTRACT of the content
+   *  type the last tick read at the address (`monitor_address_type`, CONTRACT_FREQUENCY) —
+   *  op=monitor's own rule (`monitorCadence`), so the plan and the tick agree. Other
+   *  versions' authored words never govern and never shorten it; where they differ from the
+   *  one that governs, the row carries `disagreement`.
+   *
+   *  WHEN IT WAS LAST CHECKED: the LATEST check of ANY monitored version, because every one
+   *  of them fetches the same address; the address was looked at when any was ticked.
+   *
+   *  NOTHING READ YET: an address whose current version authored no frequency and whose
+   *  type no tick has read is DUE NOW (`frequency_source: "unread"`) — the check is what
+   *  reads it, the same reasoning as a never-checked document. A tick that reads and cannot
+   *  say writes a row saying so, so this cannot recur for the same address. One that read
+   *  NO document (unreachable, gone) writes nothing, and the address is then STATED
+   *  unscheduled rather than retried on an interval nobody derived.
+   *
+   *  A BUNDLE WITH NO CAPTURED ADDRESS (promoted without a capture filed at an address)
+   *  is its own subject, as before, matched to a type reading by its own `source.locator`.
+   *  So is a bundle captured at SEVERAL addresses none of which is its `source.locator`:
+   *  choosing one would be the plane inventing which document it watches.
+   *
+   *  BOUNDED: three linear reads (the monitored bundles, the chain rows at their
+   *  addresses, the type readings), grouped in memory — no read per row. */
+  #monitorSubjects() {
+    const bundles = this.#rows(
+      `SELECT bundle_id, monitor_frequency, monitor_last_checked, source_locator
+         FROM bundles WHERE monitor_enabled = 1`);
+    const chain = this.#rows(
+      `SELECT cl.address_norm AS address_norm, cl.capture_sha AS capture_sha,
+              MIN(cl.first_retrieved) AS first_retrieved, MIN(cl.address) AS address,
+              r.bundle_id AS bundle_id, b.monitor_enabled AS monitor_enabled
+         FROM captured_locators cl
+         JOIN register r ON r.capture_sha = cl.capture_sha
+         JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE cl.address_norm IN (
+                SELECT cl2.address_norm FROM captured_locators cl2
+                  JOIN register r2 ON r2.capture_sha = cl2.capture_sha
+                  JOIN bundles b2 ON b2.bundle_id = r2.bundle_id
+                 WHERE b2.monitor_enabled = 1)
+        GROUP BY cl.address_norm, cl.capture_sha, r.bundle_id
+        ORDER BY cl.address_norm, MIN(cl.first_retrieved), cl.capture_sha, r.bundle_id`);
+    const types = new Map(), typesRaw = new Map();
+    for (const t of this.#rows(`SELECT * FROM monitor_address_type`)) {
+      types.set(t.address_norm, t);
+      typesRaw.set(t.address, t);
+    }
+    const byId = new Map(bundles.map((b) => [b.bundle_id, b]));
+    /* Every address each MONITORED bundle holds a version at, with the raw spelling. */
+    const addrsOf = new Map();
+    for (const c of chain) {
+      if (!byId.has(c.bundle_id)) continue;
+      if (!addrsOf.has(c.bundle_id)) addrsOf.set(c.bundle_id, new Map());
+      addrsOf.get(c.bundle_id).set(c.address_norm, c.address);
+    }
+    const home = new Map(), lone = [];
+    for (const b of bundles) {
+      const a = addrsOf.get(b.bundle_id);
+      if (!a || a.size === 0) { lone.push({ b, basis: null }); continue; }
+      if (a.size === 1) { home.set(b.bundle_id, [...a.keys()][0]); continue; }
+      const own = [...a].filter(([, raw]) => raw === b.source_locator).map(([norm]) => norm);
+      if (own.length === 1) home.set(b.bundle_id, own[0]);
+      else lone.push({ b, basis: `captured at ${a.size} addresses, none of them singly its source.locator, `
+                                + "so it is scheduled as itself rather than assigned to one" });
+    }
+    const last = (list) => {
+      let m = null;
+      for (const b of list) {
+        const v = b.monitor_last_checked ? Date.parse(b.monitor_last_checked) : NaN;
+        if (Number.isFinite(v) && (m === null || v > m)) m = v;
+      }
+      return m === null ? null : new Date(m).toISOString().split(".")[0] + "Z";
+    };
+    /* The frequency the plan schedules by, and WHICH SOURCE SET IT — `monitorCadence`'s
+       rule: an authored word stands (the catalog judges it below); none authored takes the
+       read type's contract; nothing read is `unread`. */
+    const cadence = (authored, type, checked) => {
+      if (authored != null && authored !== "") return { monitor_frequency: authored, frequency_source: "authored" };
+      /* Never checked: the check is what reads the type. Checked and still unread (the
+         checks found no document to read, or ran before this table existed): no interval
+         can be derived, and inventing one to retry on is the guess this consumer refuses. */
+      if (!type && !checked) return { monitor_frequency: null, frequency_source: "unread",
+        why: "no frequency authored, and no tick has read what the document is: this check reads it" };
+      if (!type) return { monitor_frequency: null, frequency_source: "undetermined",
+        why: `no frequency authored, and no check has read a document at this address (last checked ${checked})` };
+      if (type.contract == null) return { monitor_frequency: null, frequency_source: "undetermined",
+        why: `no frequency authored, and the content type read at this address on ${type.read_at} `
+           + `is undetermined (${type.basis || "no basis recorded"})` };
+      const f = Object.prototype.hasOwnProperty.call(Store.CONTRACT_FREQUENCY, type.contract)
+        ? Store.CONTRACT_FREQUENCY[type.contract] : undefined;
+      return { monitor_frequency: f ?? null, frequency_source: "contract",
+               contract: type.contract, content_type: type.content_type ?? null,
+               ...(f === null ? { why: "no frequency authored, and an unmonitorable document has no check "
+                                     + "clock: its bytes carry no substance to watch" }
+                  : f === undefined ? { why: `no frequency authored, and the contract '${type.contract}' `
+                                           + "is given no frequency" } : {}) };
+    };
+    const rows = [];
+    for (const { b, basis } of lone) {
+      /* A bundle with no locator gives a tick nothing to read (op=monitor refuses it
+         NO_LOCATOR), so "unread, check it now" would be a promise nothing can keep. */
+      const c = (b.monitor_frequency == null || b.monitor_frequency === "") && !b.source_locator
+        ? { monitor_frequency: null, frequency_source: "undetermined",
+            why: "no frequency authored, and no source.locator to read a content type from" }
+        : cadence(b.monitor_frequency, b.source_locator ? typesRaw.get(b.source_locator) : null,
+                  last([b]));
+      rows.push({ bundle_id: b.bundle_id, monitor_last_checked: b.monitor_last_checked,
+                  address: null, versions: [b.bundle_id],
+                  ...(basis ? { address_basis: basis } : {}), ...c });
+    }
+    /* ONE pass over the chain, which is ordered by address and then by version, so the
+       last member seen at an address IS its current version: recorded as the pass goes,
+       never looked for again. The groups partition the chain, so the per-address work
+       below is linear in it in total. */
+    const groups = new Map(), currentAt = new Map();
+    for (const c of chain) {
+      if (!groups.has(c.address_norm)) groups.set(c.address_norm, []);
+      groups.get(c.address_norm).push(c);
+      if (home.get(c.bundle_id) === c.address_norm) currentAt.set(c.address_norm, groups.get(c.address_norm).length - 1);
+    }
+    for (const [addr, versions] of groups) {
+      if (!currentAt.has(addr)) continue;
+      const at = currentAt.get(addr);
+      const members = [...new Set(versions.filter((v) => home.get(v.bundle_id) === addr).map((v) => v.bundle_id))]
+        .map((id) => byId.get(id));
+      const current = byId.get(versions[at].bundle_id);
+      const newer = [...new Set(versions.slice(at + 1).map((v) => v.bundle_id))]
+        .filter((id) => home.get(id) !== addr);
+      const authored = members.filter((m) => m.monitor_frequency != null && m.monitor_frequency !== "");
+      const words = new Set(authored.map((m) => m.monitor_frequency));
+      const governs = current.monitor_frequency != null && current.monitor_frequency !== ""
+        ? current.monitor_frequency : null;
+      const disagrees = words.size > 1 || (words.size === 1 && governs !== [...words][0]);
+      rows.push({
+        bundle_id: current.bundle_id, monitor_last_checked: last(members), address: addr,
+        versions: [...new Set(versions.map((v) => v.bundle_id))],
+        ...(newer.length ? { newer_unmonitored: newer } : {}),
+        ...cadence(current.monitor_frequency, types.get(addr), last(members)),
+        ...(disagrees ? { disagreement: {
+          governs: governs, governed_by: current.bundle_id,
+          authored: authored.map((m) => ({ bundle: m.bundle_id, frequency: m.monitor_frequency })),
+          note: "versions at this address author different frequencies; the current version's governs, "
+              + "never the shortest (BOB #31)" } } : {}),
+      });
+    }
+    return { rows, monitored: bundles.length, addresses: rows.filter((r) => r.address !== null).length };
+  }
+
   /* What is due, what is next, and what has no computable cadence — one read, so
-     `due`, `wake` and `tick` cannot disagree about the same instant. */
+     `due`, `wake` and `tick` cannot disagree about the same instant. REC-191: over
+     ADDRESSES (`#monitorSubjects`), one row per address, each row carrying the version
+     it checks as `bundle` and every version it stands for. */
   #monitorCadencePlan(now) {
-    if (!this.#monitorConfigured()) return { due: [], next: null, unscheduled: [], monitored: 0 };
+    if (!this.#monitorConfigured()) return { due: [], next: null, unscheduled: [], monitored: 0, addresses: 0 };
     const due = [], unscheduled = [];
-    let next = null, monitored = 0;
-    for (const r of this.#rows(
-      `SELECT bundle_id, monitor_frequency, monitor_last_checked
-         FROM bundles WHERE monitor_enabled = 1`)) {
-      monitored++;
+    let next = null;
+    const subjects = this.#monitorSubjects();
+    const about = (r) => ({ address: r.address, versions: r.versions, frequency_source: r.frequency_source,
+      ...(r.contract ? { contract: r.contract, content_type: r.content_type } : {}),
+      ...(r.address_basis ? { address_basis: r.address_basis } : {}),
+      ...(r.newer_unmonitored ? { newer_unmonitored: r.newer_unmonitored } : {}),
+      ...(r.disagreement ? { disagreement: r.disagreement } : {}) });
+    for (const r of subjects.rows) {
       const iv = Store.monitorIntervalMs(r.monitor_frequency);
       if (iv === null) {
+        /* REC-191: nothing authored and nothing read — the check is how the type is read. */
+        if (r.frequency_source === "unread") {
+          due.push({ bundle: r.bundle_id, frequency: null, due_at: 0, ...about(r), why: r.why });
+          continue;
+        }
         unscheduled.push({ bundle: r.bundle_id, frequency: r.monitor_frequency ?? null,
-          reason: r.monitor_frequency === "per_meeting"
+          reason: r.why ? r.why
+            : r.monitor_frequency === "per_meeting"
             ? "cadence is a meeting schedule this plane does not hold"
             : r.monitor_frequency === "none" || r.monitor_frequency == null
               ? "no frequency declared"
               : MONITOR_FREQ.includes(r.monitor_frequency)
                 ? "the cadence table gives this frequency no interval"
-                : "not a frequency the catalog knows" });
+                : "not a frequency the catalog knows", ...about(r) });
         continue;
       }
       /* A monitored document that has NEVER been checked is due now: the record
@@ -48103,13 +48334,13 @@ export class Store extends DurableObject {
          is the strongest case for asking rather than the weakest. */
       const last = r.monitor_last_checked ? Date.parse(r.monitor_last_checked) : NaN;
       const at = Number.isFinite(last) ? last + iv : 0;
-      if (at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at });
+      if (at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at, ...about(r) });
       else if (next === null || at < next) next = at;
     }
     /* Longest-overdue first, then by id, so a batch-bounded tick starves nobody
        and the same instant always produces the same batch. */
     due.sort((a, b) => a.due_at - b.due_at || (a.bundle < b.bundle ? -1 : a.bundle > b.bundle ? 1 : 0));
-    return { due, next, unscheduled, monitored };
+    return { due, next, unscheduled, monitored: subjects.monitored, addresses: subjects.addresses };
   }
 
   #monitorCadenceWake(now) {
@@ -48140,9 +48371,12 @@ export class Store extends DurableObject {
     for (const d of plan.due.slice(0, Store.MONITOR_CADENCE_BATCH)) {
       if (!this.#claimFire("monitor-cadence", d.bundle, epoch)) { skipped.push(d.bundle); continue; }
       const r = await this.#fireMonitorTick(d.bundle);
+      /* REC-191: each entry carries the plan's whole account of its ADDRESS — the
+         versions it stands for, which source set its frequency, and anything stated. */
+      const { bundle: _b, frequency: _f, due_at: _d, why: _w, ...of } = d;
       (r.ok ? ticked : failed).push(r.ok
-        ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval }
-        : { bundle: d.bundle, frequency: d.frequency, reason: r.reason });
+        ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval, ...of }
+        : { bundle: d.bundle, frequency: d.frequency, reason: r.reason, ...of });
     }
     /* D-518: the same correction as #monitorTick's, made for the same reason and
        in the same class — a cadence tick that fired nothing and only skipped
@@ -48153,6 +48387,7 @@ export class Store extends DurableObject {
        cadence instead. #monitorTick's note carries the measurement. */
     if (!failed.length && !skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
     return { monitorcadence: { configured: true, at, epoch, monitored: plan.monitored,
+                               addresses: plan.addresses,
                                candidates: plan.due.length, next: plan.next,
                                ticked, skipped, failed, unscheduled: plan.unscheduled } };
     } finally { this.#tickRunning.delete("monitor-cadence"); }

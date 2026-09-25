@@ -2841,8 +2841,10 @@ async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, 
    assumed): the framework names the ORDER — a list's membership is time-sensitive, a
    record's substance is not — and no interval, so `membership` is checked daily and
    `substance` weekly. `unmonitorable` (a shell) has no clock: watching bytes that carry
-   no substance proves nothing, so the answer says so rather than scheduling it. */
-const CONTRACT_FREQUENCY = { membership: "daily", substance: "weekly", unmonitorable: null };
+   no substance proves nothing, so the answer says so rather than scheduling it.
+   REC-191: the table lives ONCE, on `Store`, because the cadence plan schedules by it too;
+   two copies were how the tick and the plan came to disagree about one document. */
+const CONTRACT_FREQUENCY = Store.CONTRACT_FREQUENCY;
 
 /* What cadence governs a monitored document, and WHICH SOURCE SET IT. REC-26's authored
    `monitoring.frequency` stays the choice when the document states one the catalog knows;
@@ -2913,7 +2915,11 @@ async function monitorRecordLook(stub, o) {
   const out = await doAnswer(stub.fetch(new Request(`http://do/monitorlook?${q}`, {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ bundleId: o.bundleId, address: o.address, outcome: o.outcome, baseline: o.baseline,
-                           seen: o.seen, httpStatus: o.httpStatus, reason: o.reason }) })));
+                           seen: o.seen, httpStatus: o.httpStatus, reason: o.reason,
+                           /* REC-191: what the look read the document as, for the cadence plan's
+                              contract fallback; omitted (never null) when the look read nothing. */
+                           ...(o.content !== undefined ? { locator: o.locator, content: o.content,
+                                                           contentBasis: o.contentBasis ?? null } : {}) }) })));
   return out.answered ? out.result : { ok: false, written: false, why: "the store did not answer the observation write" };
 }
 
@@ -9546,7 +9552,7 @@ export default {
       let status = null, note = null, seen = null, compared = null, comparedBasis = null;
       /* D-65 — what `assess` said, the type the fetched document reads as, and the look. */
       let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
-      const monitorLook = (o) => monitorRecordLook(stub0, { bundleId, address: normalizeAddress(locator),
+      const monitorLook = (o) => monitorRecordLook(stub0, { bundleId, address: normalizeAddress(locator), locator,
         baseline, seen, httpStatus, ...o,
         actorClass: viaSession ? "member" : "machine",
         actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
@@ -9736,7 +9742,10 @@ export default {
       const observation = await monitorLook({
         outcome: status === "unchanged" ? "unchanged" : status === "modified" ? "changed"
                : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
-        reason: unreachable });
+        reason: unreachable,
+        /* REC-191: only a look that READ a document says what the document is; an
+           unreachable or gone source leaves the address's reading as it was. */
+        ...(fetchedBytes ? { content: graded.content, contentBasis: graded.basis } : {}) });
 
       /* Rewrite ONLY the permitted fields, line by line, so nothing else can
          move by accident. A mechanical writer that rebuilt the document from a
