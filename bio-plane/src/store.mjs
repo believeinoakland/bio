@@ -764,10 +764,12 @@ const TASK_KINDS = ["authority-undetermined"];
  * a 524,288 B budget. It bites on exactly one thing: a caller-authored
  * provenance document of many tiny units, which is the case section 4.3 named
  * and the case nothing stated. */
-/* D-685: EXPORTED, because the acquire wire (`textUnitsFor`, `index.mjs`) now cuts a unit to this cap
-   BEFORE charging its budget — the wire and the writer must cut at ONE number, or the wire would carry
-   (and pay for) text this writer throws away, or cut short of what it would keep. */
-export const CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
+/* D-685: `CAPTURE_TEXT_UNIT_CAP` (128 KiB) now LIVES IN `checks/bio-checks.mjs` and is imported here,
+   because the acquire wire (`textUnitsFor`, `index.mjs`) cuts a unit to it BEFORE charging its budget -- the
+   wire and this writer must cut at ONE number. Not exported from THIS file: workerd reads every named export
+   of a main module as an entrypoint, and suites that load `store.mjs` as the worker's main module then
+   refuse to start (measured: 22 suites, `Incorrect type for map entry 'CAPTURE_TEXT_UNIT_CAP'`). */
+import { CAPTURE_TEXT_UNIT_CAP } from "../checks/bio-checks.mjs";
 const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT

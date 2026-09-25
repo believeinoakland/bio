@@ -4434,6 +4434,7 @@ __export(bio_checks_exports, {
   CALIBRATION_CHECKS: () => CALIBRATION_CHECKS,
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
+  CAPTURE_TEXT_UNIT_CAP: () => CAPTURE_TEXT_UNIT_CAP,
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
@@ -13266,6 +13267,7 @@ function legContentId(leg) {
   return t === "" ? null : t;
 }
 var CONTENT_EXTENT_DOCUMENT_ONLY = Object.freeze({ known: false, chain: null, pageCount: null });
+var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 function canonicalExtent(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
   if (e.kind === "document") return canonicalJson({ kind: "document" });
@@ -32309,7 +32311,6 @@ function actNoCitation(detail, extra = {}) {
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
-var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 var CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 var CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]);

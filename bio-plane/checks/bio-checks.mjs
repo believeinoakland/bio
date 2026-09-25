@@ -12998,6 +12998,13 @@ export function legContentId(leg) {
  *  and its behaviour is byte-for-byte what REC-82 landed. */
 export const CONTENT_EXTENT_DOCUMENT_ONLY = Object.freeze({ known: false, chain: null, pageCount: null });
 
+/* CONTENT-SEARCH-DESIGN.md §4.3 -- ONE INDEXED UNIT'S TEXT IS STORED TO THIS MANY CHARACTERS (128 KiB), and
+   a unit over it with `truncated = 1` (`store.mjs`, `#writeCaptureText`). M-20: 6.2x the largest unit its
+   census produced. D-685 moved it HERE, beside the extent grammar both sides share, because the acquire
+   wire (`index.mjs`, `textUnitsFor`) now cuts a unit to it before charging its budget, and a main module
+   cannot export a constant (workerd reads each named export as an entrypoint). */
+export const CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
+
 /** The CANONICAL form of an extent — the bytes the content address is taken
  *  over. Two members who mean the same passage must produce the same string or
  *  the dedup-by-construction property is a claim rather than a mechanism, so:

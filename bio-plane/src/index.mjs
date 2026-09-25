@@ -310,7 +310,8 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
 }
 import { cpuProbe } from "./cpu.mjs";
 import { readingProvenance } from "./readingprov.mjs";
-import { Store, stampInstant, CAPTURE_TEXT_UNIT_CAP } from "./store.mjs";
+import { Store, stampInstant } from "./store.mjs";
+import { CAPTURE_TEXT_UNIT_CAP } from "../checks/bio-checks.mjs";   /* D-685: the store's per-unit cap, one number */
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
