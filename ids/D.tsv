@@ -140,3 +140,4 @@ D-611	2026-09-25T04:20:56.464Z	land/worker/D-312
 D-612	2026-09-25T04:40:56.833Z	land/worker/D-473	
 D-613	2026-09-25T04:43:12.701Z	WORKER D-561	op=publishedbytes format=zip answers DUPLICATE_PATH at HTTP 413 (every serialiseContainer refusal is 413); fix: status by code, 409 for DUPLICATE_PATH, 413 only for CONTAINER_TOO_LARGE
 D-614	2026-09-25T04:46:32.627Z	land/worker/D-607	
+D-615	2026-09-25T04:48:39.462Z	WORKER D-563	D-563 follow-on: promote projects bundles.created/last_updated from the envelope while the document states both (CORE_FIELDS)
