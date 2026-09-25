@@ -1377,7 +1377,14 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    seeing row sources — the graded truncation roster still reads this method, and `projectDirectory:projects`
    ARRIVES in the in-memory truncation rosters below in the same edit, CUT GRADED at the published cap. A fall
    with no such arrival anywhere would be the shrunken measurement this pair of arms exists to refuse. */
-const SCANNING_MEASURED_2026_09_15 = 117;
+/* 117 -> 118, 2026-09-25 by REC-219 / D-579(a), READ FROM THE CENSUS ROSTER THIS RUN PRINTED (118) and diffed by
+   name against the 117 above. ONE ARRIVAL, NO DEPARTURE, and not a lost LIMIT: `#caseCitations`, which reads a
+   case's citation edges at op=publish to sign each with its version. Its row sources are the project's own
+   `references[]` (one bundle.md, itself bounded by INLINE_MAX) and one grouped capture count per CHUNK of targets
+   under D-36's variable ceiling — never one read per edge; REC-220's `#legVersions` has the same shape. It is not in
+   the amplification CLASS; the class roster pinned by name above is unmoved. REC-220 (land/worker/REC-220) takes
+   117 -> 118 for `#legVersions` on its own branch, so AT THE UNION this figure is 119 — re-read from the print. */
+const SCANNING_MEASURED_2026_09_15 = 118;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
