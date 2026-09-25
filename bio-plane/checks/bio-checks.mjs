@@ -4095,7 +4095,15 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
  *  strength on their behalf, because the strength was not changed for them. */
 function checkInheritedLeg(leg, i, graded, registry, findings) {
   const target = typeof leg.target === 'string' ? leg.target : null;
-  const pub = registry && target ? registry[target] : null;
+  /* D-598 (BOB #34, 2026-09-25 03:00Z; BIO_Publication_v0_1.md §3 rule 5): THE RULE IS OVER PUBLISHED
+     INQUIRIES ONLY. A document or observation published as a case's EVIDENCE (D-431(b)) froze no strength,
+     so it is not a published finding and a leg on it keeps its own grade on its own axis (C-2.8 for
+     testimony, the capture grade for a document) — forcing it to `inherited` made every later finding over
+     published evidence ungradeable, the record claiming LESS than it can support. An entry with NO
+     object_type (a registry built before the key, or a caller's) is held to the inquiry rule: undetermined
+     is not evidence. */
+  const entry = registry && target ? registry[target] : null;
+  const pub = entry && (entry.object_type == null || entry.object_type === 'inquiry') ? entry : null;
   if (leg.grade_source === 'inherited' && !pub) {
     findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source 'inherited' but its target ${registry ? 'is not a published case' : 'cannot be checked against the published record here'}: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else`,
       ['cite a published case and name its edition', 'or state where this grade actually came from']));

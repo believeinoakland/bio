@@ -6947,7 +6947,8 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
 }
 function checkInheritedLeg(leg, i, graded, registry, findings) {
   const target = typeof leg.target === "string" ? leg.target : null;
-  const pub = registry && target ? registry[target] : null;
+  const entry = registry && target ? registry[target] : null;
+  const pub = entry && (entry.object_type == null || entry.object_type === "inquiry") ? entry : null;
   if (leg.grade_source === "inherited" && !pub) {
     findings.push(f(
       "C-2.8",
@@ -64724,13 +64725,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const ids = [...new Set([bundleId, ...extraTargets].filter(Boolean))];
     if (!ids.length) return {};
     const rows = this.#rows(
-      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, strength
-       FROM published_bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, edition`,
+      `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.strength, b.object_type
+       FROM published_bundles p LEFT JOIN bundles b ON b.bundle_id = p.bundle_id
+       WHERE p.bundle_id IN (SELECT value FROM json_each(?)) ORDER BY p.bundle_id, p.edition`,
       JSON.stringify(ids)
     );
     const reg = {};
     for (const r of rows) {
-      const e = reg[r.bundle_id] || (reg[r.bundle_id] = { latest: 0, editions: {} });
+      const e = reg[r.bundle_id] || (reg[r.bundle_id] = { object_type: r.object_type ?? null, latest: 0, editions: {} });
       const strength = r.strength ? JSON.parse(r.strength) : null;
       const byAxis = {};
       for (const a of Array.isArray(strength) ? strength : [])
