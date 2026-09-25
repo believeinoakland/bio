@@ -22,17 +22,17 @@ Requirements may suggest an implementation but never require one. The module is 
 
 **P7 · Only module jobs change module code, and every requirement is proven met.** Every change to a module meets all of that module's requirements as they stand at that moment. **Every requirement is tested, and the tests confirm the module is fully compliant with it.** No requirement goes untested, and no test merely samples one. The tests check behaviour at the module's interface, never its source text. When a module, or a user of a module, finds an ambiguity in the definition of a service, BOB updates the requirements to remove it and to state the service as it now is. The module's tests then confirm compliance with the clarified text.
 
-**P8 · The unit of work is the module job.** A module has at most one job at a time. A job applies every plan entry for its module. When the job finds a problem in its own module (a requirement not met, an inefficiency, a gap or error in its tests, or anything else), it fixes the problem in the job, or it adds an entry for it to the next tranche. Which one is the job's choice.
+**P8 · The unit of work is the module job.** A module has at most one job at a time. A job applies every plan entry for its module. Flaws and improvements are both reasons to change a module. When the job finds either in its own module (a requirement not met, an inefficiency, a gap or error in its tests, a better way to meet a requirement, or anything else), **it deals with it in the job whenever possible**. It adds an entry to the next tranche only when it must.
 
-**P9 · A flaw in another module goes through BOB.** A job that believes it has found a flaw in another module reports it to BOB, described in terms of that module's requirements or its efficiency. BOB confirms the flaw, then:
-- if that module's job is running, BOB forwards the flaw to it, and that job fixes it now or adds an entry to the next tranche, depending on its complexity and how far the job has gone;
+**P9 · A flaw or improvement in another module goes through BOB.** A job that believes it has found a flaw in another module, or an improvement to it, reports it to BOB, described in terms of that module's requirements or its efficiency. BOB confirms it, then:
+- if that module's job is running, BOB forwards it to that job, which deals with it in the job whenever possible and adds an entry to the next tranche only when it must, depending on its complexity and how far the job has gone;
 - if no job is running for that module, BOB adds an entry to the next tranche.
 
 A flaw in the requirements themselves goes to BOB and Bob.
 
 **P10 · Builds happen in tranches.** A tranche's plan is fixed when the tranche starts. Its jobs run in module order: lowest layer first, and in order within a layer. An entry that arises during a tranche goes to the **next** plan. The one exception is a change to a provided service. BOB carries it to the modules that use the service, and those modules come later in the order, so their jobs in this tranche pick it up. When every job of a tranche is merged, its plan is archived and the next plan becomes current.
 
-**P11 · Tests follow the architecture.** Each module has its own tests, and each layer may have layer tests. A job runs its module's tests and its layer's tests. When it changes what its module provides, it also runs the tests of every module that uses the change. The full regression runs only at release, or when Bob asks.
+**P11 · Tests follow the architecture.** Each module has its own tests, and each layer may have layer tests. A job runs its module's tests and its layer's tests. When it changes what its module provides, it also runs the tests of every module that uses the change. **Because every job in a layer may run that layer's tests, testing lives in module tests wherever possible, and the effort needed to run layer tests is kept as small as possible.** The full regression runs only at release, or when Bob asks.
 
 **P12 · Done means merged.** A job is done when its tests pass and it is merged to `main`. A tranche is done when every one of its jobs is merged.
 
@@ -44,6 +44,6 @@ A flaw in the requirements themselves goes to BOB and Bob.
 - **The first tranches COLLECT METRICS; they are not bounded by them.** Token counts per job are recorded alongside job size (the module's lines, its entries, its test runs, its session turns) and against the movement of Bob's weekly meter, to build an empirical model of what a job costs.
 - **Real budget bounds are set only once that model exists**, and Bob approves them. Until then Bob sees each tranche's measured usage when it ends.
 
-**P15 · A ruling is made once.** A decision is recorded once, in its home document, and it is not reopened without new evidence named in writing.
+**P15 · A ruling is made once, and recorded unambiguously yet concisely.** A decision is recorded once, in its home document, stated unambiguously and as concisely as possible, so that every later session that reads it spends as little context as possible. It is not reopened without new evidence named in writing.
 
 **P16 · Rules derive from principles.** Every process rule names the principle it serves. A rule is never added in reaction to an incident unless it can be derived from a principle. These principles change only with Bob's approval.
