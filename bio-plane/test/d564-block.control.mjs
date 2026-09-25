@@ -13,6 +13,9 @@
  * there is NO foot and no section tally, and the driver cannot read an early end as a finished run. Each anchor must
  * occur EXACTLY ONCE in the copy (an arm that did not arm is a finding). Output goes to a FILE (D-282: a pipe loses a
  * suite's tail at process.exit); tallies are read from the suite's own per-section lines and foot; a missing foot is -1.
+ *
+ * RUN 2026-09-25 on land/worker/D-564 (whole driver, seven suites): 21 arms, every one AS DECLARED, every real suite
+ * hashed unchanged before and after; exit 0.
  */
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, symlinkSync, readdirSync, openSync, closeSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
