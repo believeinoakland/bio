@@ -11756,10 +11756,14 @@ export default {
        (`status_by`); the store refuses a member-named `by` that is not an active administrator. */
     if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op)
         || op === "projectparticipants" || op === "projectownerarith"
-        /* REC-150: whose requests a caller reads — its own, or a project's as its owner or an administrator —
-           is a POSITIONAL question, so the read takes the server's `by` as projectparticipants does. */
-        || op === "projectrequests"
         || CUSTODIAL_ACTIONS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* REC-150: whose requests to join a caller reads — its own, or a project's as its owner or an administrator — is
+       a POSITIONAL question, so `op=projectrequests` takes the server's `by` exactly as projectparticipants does, by
+       the SAME expression. A statement of its own rather than a disjunct above, `IDENTITY_ACTIONS`' precedent below:
+       that condition is pinned as one expression by adminvote.test and anchored by adminvote.control, and it sits at
+       its pin's bound. */
+    if (op === "projectrequests")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's
        parameters were copied, so a caller's `by` is overwritten rather than honoured, and the store asks the roster
