@@ -267,7 +267,7 @@ import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MA
    re-derived here because the ordinary close and the reaper must compute the
    bound through ONE function — two paths that agree is the failure this
    repository has measured five times. */
-import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS,
+import { OBSERVATION_LEVELS, OBSERVATION_STATES, OBSERVATION_STATE_WORDS, RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS,
          /* REC-69: the two kinds of thing a run can be in the context of, as a
             TEXT vocabulary read from `airun.mjs` rather than typed at the one
             site that judges it. `op=airuns` names them back to a caller who got
@@ -22124,6 +22124,10 @@ export class Store extends DurableObject {
      every array constant whose name ends in _STATES as BUNDLE lifecycle states, and these are
      observation states (D-129) — the first draft was caught there by name. */
   static LEAD_LOOK_OUTCOMES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
+  /* D-682: the vocabulary `op=leadread` and `op=frontier&level=internet` publish — the
+     five states in a member's words, and the four a look may record, in this order. */
+  static LEAD_VOCABULARY = Object.freeze({ states: OBSERVATION_STATE_WORDS,
+                                           outcomes: Store.LEAD_LOOK_OUTCOMES });
 
   /** Does a look's referent name something this viewer can read? One read per
    *  kind, gated through `#viewerSees` — never a second gate. */
@@ -22182,6 +22186,10 @@ export class Store extends DurableObject {
          BOTH — so a lead standing with no look has had nobody look. Neither the
          pre-log cause nor the purged cause is reachable for it. */
       state: latest || "NEVER_LOOKED",
+      /* D-682: what each state MEANS, and which a look may record, travel WITH the answer
+         (op=airunlog's `vocabulary`, for its reason: DEC-8, a surface renders what it
+         received), in the member's words — `OBSERVATION_STATE_WORDS`, not the maintainers'. */
+      vocabulary: Store.LEAD_VOCABULARY,
       says: !looks.length
         ? `nobody has followed this lead yet. That is established rather than inferred: the lead and `
           + `any look at it are cleared only together, by a whole-store purge`
@@ -45676,7 +45684,10 @@ export class Store extends DurableObject {
                    tally_scope: "visible_to_viewer",
                    evidence_one_sided: INTERNET_EVIDENCE_IS_ONE_SIDED,
                    missing_unexplained: [], missing_unexplained_count: 0,
-                   empty_causes: INTERNET_FRONTIER_EMPTY_CAUSES };
+                   empty_causes: INTERNET_FRONTIER_EMPTY_CAUSES,
+                   /* D-682: `op=leadread`'s vocabulary, the same object, on every answer
+                      including the empty one — the rows here are leads' looks. */
+                   vocabulary: Store.LEAD_VOCABULARY };
     const empty = (cause) => ({ level: "internet", partition: "description", cause,
                                 says: INTERNET_FRONTIER_EMPTY_CAUSES[cause] });
     if (!reach)

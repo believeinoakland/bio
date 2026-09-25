@@ -50,6 +50,19 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v121, 2026-09-25 session, thread UI, D-682 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/D-682` (stacked on `land/worker/D-194` @ `45437e4d`, integrated, not on `main`), in the commit that carries
+this entry; the version number is PROVISIONAL, as v120's is. SURFACE: **the lead surface's words for a look's state are
+the plane's, read off the answer.** `op=leadread` and `op=frontier&level=internet` now carry `vocabulary: { states,
+outcomes }` (`Store.LEAD_VOCABULARY`; the states from `airun.mjs`'s `OBSERVATION_STATE_WORDS`, which is
+`OBSERVATION_STATES` with a maintainer's trailing note cut, so `partial` reaches a member as *we looked and got part of
+it*). The LEADS block keeps the last vocabulary it received in `LDS.vocab`, draws every state and every look outcome from
+it, and DELETES its mirror (`LEAD_STATE_WORDS`, and `LEAD_LOOK_CHOICES` with it). A state the answer gives no words for
+is said to be one; an answer with no outcomes offers no choice. `lead-surface.test.mjs` 55/0: its D-194 mirror guard is
+CORRECTED (the comment at section 6 says why) into a STATE ARM — each drawn state is the answer's word — and a NO MIRROR
+check over the block. Negative control 11/11 as declared; the row's own arm drops `vocabulary` from the ops in
+`store.mjs` and the state arm fails by name.
+
 v120, 2026-09-25 session, thread UI, D-194 (a WORKER of SCHEDULER #23, cloud session). Landed on
 `land/worker/D-194` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
 PROVISIONAL — CONDUCT renumbers at integration if a concurrent UI worker took v120 first. SURFACE: **a member's LEAD

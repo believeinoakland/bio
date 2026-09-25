@@ -121,6 +121,18 @@ export const OBSERVATION_STATES = {
   partial:              "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)",
 };
 
+/* D-682 — THE SAME FIVE IN THE WORDS A MEMBER READS. A sentence above may carry a
+   trailing parenthetical that is a note for this file's maintainers (where a state
+   came from, the measurement behind it), not a statement about the member's record.
+   This is DERIVED rather than written out a second time, so it cannot drift: each
+   sentence is the one above with that trailing note cut, and a sixth state added
+   there arrives here. A member-facing op publishes THIS table as its vocabulary
+   (`op=leadread`, `op=frontier&level=internet`), so a surface renders the words the
+   answer carried and holds no copy of its own. Named `_WORDS`, not `_STATES`, for
+   the reason `Store.LEAD_LOOK_OUTCOMES` gives. */
+export const OBSERVATION_STATE_WORDS = Object.freeze(Object.fromEntries(
+  Object.entries(OBSERVATION_STATES).map(([k, v]) => [k, v.replace(/\s*\([^()]*\)\s*$/, "")])));
+
 /* THE STATES THAT ARE DEFINITIVE ABOUT THE WORLD. C-22.2 and C-22.3 both turn
    on this set rather than on a list of literals repeated at each site: a
    governed refusal and a client-rendered shell are both facts about OUR run,

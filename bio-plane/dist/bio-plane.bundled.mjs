@@ -30564,6 +30564,9 @@ var OBSERVATION_STATES = {
   PRESENT: "we looked and it is there",
   partial: "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"
 };
+var OBSERVATION_STATE_WORDS = Object.freeze(Object.fromEntries(
+  Object.entries(OBSERVATION_STATES).map(([k, v]) => [k, v.replace(/\s*\([^()]*\)\s*$/, "")])
+));
 var DEFINITIVE_STATES = /* @__PURE__ */ new Set(["LOOKED_ABSENT", "PRESENT"]);
 var OBSERVATION_COVERAGE = {
   backed: "the row names what the look produced: `result_ref` points at it, and the claim can be checked against the thing itself",
@@ -51332,6 +51335,12 @@ ${words}`;
      every array constant whose name ends in _STATES as BUNDLE lifecycle states, and these are
      observation states (D-129) — the first draft was caught there by name. */
   static LEAD_LOOK_OUTCOMES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
+  /* D-682: the vocabulary `op=leadread` and `op=frontier&level=internet` publish — the
+     five states in a member's words, and the four a look may record, in this order. */
+  static LEAD_VOCABULARY = Object.freeze({
+    states: OBSERVATION_STATE_WORDS,
+    outcomes: _Store.LEAD_LOOK_OUTCOMES
+  });
   /** Does a look's referent name something this viewer can read? One read per
    *  kind, gated through `#viewerSees` — never a second gate. */
   #leadReferentVisible(kind, ref, viewer) {
@@ -51411,6 +51420,10 @@ ${words}`;
          BOTH — so a lead standing with no look has had nobody look. Neither the
          pre-log cause nor the purged cause is reachable for it. */
       state: latest || "NEVER_LOOKED",
+      /* D-682: what each state MEANS, and which a look may record, travel WITH the answer
+         (op=airunlog's `vocabulary`, for its reason: DEC-8, a surface renders what it
+         received), in the member's words — `OBSERVATION_STATE_WORDS`, not the maintainers'. */
+      vocabulary: _Store.LEAD_VOCABULARY,
       says: !looks.length ? `nobody has followed this lead yet. That is established rather than inferred: the lead and any look at it are cleared only together, by a whole-store purge` : `${looks.length}${rows.length > cap ? "+" : ""} look(s) recorded against this lead; the latest found ${latest}. The lead itself is never evidence`
     };
   }
@@ -73104,7 +73117,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       evidence_one_sided: INTERNET_EVIDENCE_IS_ONE_SIDED,
       missing_unexplained: [],
       missing_unexplained_count: 0,
-      empty_causes: INTERNET_FRONTIER_EMPTY_CAUSES
+      empty_causes: INTERNET_FRONTIER_EMPTY_CAUSES,
+      /* D-682: `op=leadread`'s vocabulary, the same object, on every answer
+         including the empty one — the rows here are leads' looks. */
+      vocabulary: _Store.LEAD_VOCABULARY
     };
     const empty = (cause2) => ({
       level: "internet",
