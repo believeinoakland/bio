@@ -472,8 +472,9 @@ export function contentAxisFor({ observed = null, unitIndex = false,
      observation (`authority_kind = derive`), and two of its four values are not
      points on the full/partial scale at all: the index LOOKED and there was
      nothing to index (no text), or it looked and COULD NOT address a passage of
-     this container (a workbook has no unit arm -- the `sheet-range` EXTENT arm landed with FW-19, and nothing yet writes its units into the index; an
-     HTML page has no `dom` producer). Both are the none-with-a-reason member,
+     this container (an HTML page has no `dom` producer; a workbook was this
+     case until D-672 gave it one `sheet-range` unit per sheet, and a workbook
+     promoted BEFORE D-672 still reads it until it is re-promoted). Both are the none-with-a-reason member,
      and the reason travels with them.
      THE DIRECTION IS WHY THIS BRANCH EXISTS. Without it those captures fall
      through to `unitsComplete === false` and answer PARTIAL — telling a member

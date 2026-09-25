@@ -203,7 +203,7 @@ const ARMS = {
     why: "neuter the `indexed` observation, so the units are written and the record cannot say "
        + "what it holds — which is the sparse rule failing at the one surface that reads absence",
     mustFail: ["C2: the DOCUMENT's content axis says its text is FULLY indexed",
-               "C3: the WORKBOOK says NONE with a REASON",
+               "C3: a container with NO unit arm says NONE with a REASON",
                "D1b: and the capture says its text is fully indexed",
                "D3: a unit over the PER-UNIT cap",
                "D4: a capture whose text did not fit"],
@@ -242,12 +242,17 @@ const ARMS = {
        than the state. A surface that rendered the state alone would show a
        workbook the record cannot index and a workbook nobody could read as the
        same answer. */
-    mustFail: ["C3b: and the reason NAMES the container"],
+    mustFail: ["C3b: and the reason NAMES the container",
+               /* D-672: X3 reads the set's source text, which this arm replaces. */
+               "X3: the store's unit-arm set admits every `sheets[]` producer"],
     mustPass: "`C3` — THE STATE DOES NOT MOVE, only the reason, which is the finding this arm "
             + "recorded rather than the failure it predicted — and every arm about the DOCUMENT "
             + "and the DECK, which really do have unit arms",
+    /* D-672: the subject of C3/C3b is now a container relabelled `html` (a
+       workbook HAS an arm since D-672); the arm's verdict is unchanged — the
+       state holds and the REASON moves. The anchor follows the set's new text. */
     patch: () => arm(STORE,
-      `const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);`,
+      `const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]);`,
       `const CAPTURE_TEXT_UNIT_CONTAINERS = { has: () => true };   /* ARMED */`),
   },
 
@@ -264,8 +269,8 @@ const ARMS = {
     mustFail: ["C2: the DOCUMENT's content axis says its text is FULLY indexed",
                "D1b: and the capture says its text is fully indexed",
                "D3: a unit over the PER-UNIT cap"],
-    mustPass: "`D4` (the capture that really IS partial stays partial), `C3` (the workbook's "
-            + "no-unit-arm answer is about the CONTAINER and no bound can change it), and every "
+    mustPass: "`D4` (the capture that really IS partial stays partial), `C3` (the no-arm "
+            + "container's no-unit-arm answer is about the CONTAINER and no bound can change it), and every "
             + "purge and index arm — a bound is not a refusal and must move no refusal",
     patch: () => arm(STORE,
       "const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;",
@@ -294,14 +299,80 @@ const ARMS = {
                "B2: the DECK emits ONE unit per SLIDE",
                "B2b: and the one slide unit carries BOTH",
                "C1: the units are PERSISTED",
-               "C2: the DOCUMENT's content axis says its text is FULLY indexed"],
-    mustPass: "`B3` (the workbook emits nothing either way — which is why the workbook arm alone "
-            + "cannot tell a wire failure from a container with no unit arm, and why this arm and "
-            + "`armsopen` are two arms), and every `pdf-page` arm, which is driven through "
-            + "`op=promote` with an authored document and never touches this wire",
+               "C2: the DOCUMENT's content axis says its text is FULLY indexed",
+               /* D-672: the workbook now has units, so the wire's loss reaches it. */
+               "B3: the WORKBOOK emits ONE `sheet-range` unit per SHEET",
+               "X1: a passage search over a captured WORKBOOK"],
+    mustPass: "`C3`/`C3b` (the no-arm container is driven through `op=promote` with its units "
+            + "withheld, so the wire cannot move it), and every `pdf-page` arm, which is driven "
+            + "through `op=promote` with an authored document and never touches this wire",
+    /* RE-ANCHORED BY D-672, AND THE OLD ANCHOR IS A FINDING. It read the line at
+       SIXTEEN spaces of indent, which is where REC-91 wrote it inside `op=acquire`;
+       CPDF-19 moved the block into `textUnitsFor` at FOUR, so from CPDF-19 until
+       D-672 this arm matched 0x and could not arm — `ARMED NO`, a control that
+       could never fail. D-672 found it by running the harness. */
     patch: () => arm(INDEX,
-      "                textUnits = kept.length ? kept : null;",
-      "                textUnits = null;   /* ARMED */"),
+      "    textUnits = kept.length ? kept : null;",
+      "    textUnits = null;   /* ARMED */"),
+  },
+
+  /* D-672's DECLARED CONTROL (the row's own NEGATIVE CONTROL): drop the
+     `sheets[]` arm from `textUnitsFor`, which is the tree exactly as it was
+     before D-672 on the wire side. The workbook then emits no units, nothing is
+     written for it, and a passage search for a cell's words returns 0 rows. */
+  d672nosheets: {
+    files: [INDEX], suite: SUBJECT,
+    why: "drop the sheets[] arm from textUnitsFor, so a workbook's sheets reach no unit and its "
+       + "text is unsearchable at content grain again",
+    mustFail: ["B3: the WORKBOOK emits ONE `sheet-range` unit per SHEET",
+               "B3b: and each sheet unit carries that SHEET's text",
+               "C1: the units are PERSISTED",
+               "C3c: and the WORKBOOK now reads FULLY indexed",
+               "X1: a passage search over a captured WORKBOOK",
+               "X2: an .ods workbook",
+               "X2b: and it is PROMOTED"],
+    mustPass: "every DOCUMENT and DECK arm (B1, B1b, B2, B2b, C2), `C3`/`C3b`, and `X3` — the "
+            + "store's set is untouched, which is what separates the wire's half from the store's",
+    patch: () => arm(INDEX,
+      "      : Array.isArray(i2text.sheets)     ? arm(i2text.sheets.map((u) =>",
+      "      : false /* ARMED */                ? arm(i2text.sheets.map((u) =>"),
+  },
+
+  /* D-672's STORE HALF, and the arm that shows the two halves are two. Revert
+     the container set to the five it held before D-672: the wire still emits
+     the sheet units and the writer still WRITES them (it never reads the kind),
+     so the rows exist and are searchable — while the capture's `indexed`
+     observation says the container has NO unit arm. That is the record
+     contradicting itself, and the axis arms must catch it. */
+  d672storeset: {
+    files: [STORE], suite: SUBJECT,
+    why: "revert CAPTURE_TEXT_UNIT_CONTAINERS to its pre-D-672 five, so a workbook's rows are "
+       + "written while its observation says no unit arm exists",
+    mustFail: ["C3c: and the WORKBOOK now reads FULLY indexed",
+               "X2b: and it is PROMOTED",
+               "X3: the store's unit-arm set admits every `sheets[]` producer"],
+    mustPass: "`B3`, `B3b`, `C1` and `X1` — the units are emitted, WRITTEN and FOUND; only what "
+            + "the record SAYS about them is wrong, which is the finding this arm exists to show",
+    patch: () => arm(STORE,
+      `const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]);`,
+      `const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);   /* ARMED */`),
+  },
+
+  /* D-672's OVER-STRICTNESS DIRECTION: correct work in a spelling the arm was
+     not written around must still pass. The tightening is a plausible one — "a
+     sheet whose grid BOUND is unknown is not addressable" — and it is wrong:
+     `.ods` and `.csv` state `rows`/`cols` NULL because their formats fix no
+     maximum (COFF-11), while their USED range, which is what the unit is keyed
+     by, is measured. Refusing them would silently drop every .ods workbook. */
+  d672strict: {
+    files: [INDEX], suite: SUBJECT,
+    why: "admit a sheet only when its grid bound is stated, so an .ods sheet (bound NULL by "
+       + "format) is dropped although its used range is known",
+    mustFail: ["X2: an .ods workbook", "X2b: and it is PROMOTED"],
+    mustPass: "`B3`, `B3b`, `C1`, `C3c` and `X1` — the .xlsx sheets state their bound and stay",
+    patch: () => arm(INDEX,
+      "            (u && u.range && typeof u.range.sheet === \"string\" && typeof u.range.range === \"string\"",
+      "            (u && u.range && Number.isInteger(u.rows) /* ARMED */ && typeof u.range.sheet === \"string\" && typeof u.range.range === \"string\""),
   },
 };
 

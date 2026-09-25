@@ -418,7 +418,11 @@ const ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
  * `ceiling <= CAPTURE_TEXT_CAPTURE_UNIT_BOUND`. **That is the whole point.** The
  * ceiling is a side effect of an ENVELOPE ESTIMATE -- "about eight indented
  * lines" -- and section 4.1 already names `sheet-range` as a coming unit arm
- * whose extent is larger, so that estimate WILL be revised. Without the pin, a
+ * whose extent is larger, so that estimate WILL be revised. (D-672 landed that
+ * arm and did NOT revise it: a sheet unit's extent is a few dozen bytes longer
+ * than a page's, and a workbook's units are its SHEETS — few, so the
+ * under-charge is bounded by the sheet count, not the cell count. Reasoned,
+ * not measured.) Without the pin, a
  * change about BYTES would silently change what a member's promote may COST,
  * which is the drift this item exists to stop. */
 const OPS = {
@@ -5558,9 +5562,33 @@ function textUnitsFor(i2text) {
    * is CAP-12's own rule and the reason a seventh producer landing
    * in the same I2 shape is fed by this code with no edit. `pages[]`
    * is a PDF; `paragraphs[]` a word-processing container; `slides[]`
-   * a deck. A workbook returns `sheets[]`, which is none of these
-   * and correctly yields nothing -- a cell is not a passage and
-   * the `sheet-range` extent arm (FW-19) has no unit writer here yet.
+   * a deck; `sheets[]` a workbook (every spreadsheet producer in the
+   * registry returns it, which is why the arm is the shape and not a
+   * name -- and why this file never names one: D-70).
+   *
+   * THE WORKBOOK IS ONE UNIT PER SHEET, KEYED BY ITS `range` (D-672,
+   * section 4.1: "a sheet's unit is a sheet-range"). Until D-672 this
+   * list returned nothing for `sheets[]` and said the arm had no unit
+   * writer; the EXTENT arm had existed since FW-19 and every producer
+   * already emitted `sheets[].range` -- the sheet's used range, built
+   * by `usedSheetRange`, the one builder -- so the unit was a missing
+   * reader and not a missing grammar. A cell is still not a passage:
+   * the unit's text is the SHEET's text (rows newline-joined, cells
+   * tab-joined, the producer's own stream), never a cell's.
+   * A sheet whose `range` is NULL -- unread, or whose walk measured no
+   * reach -- is NOT emitted: its extent cannot be named, and a unit
+   * with an invented range would mint a content address for cells the
+   * producer never located. Whether any sheet carries glyphs AND a null
+   * range is not measured; `usedRows` is taken from the same cells the
+   * text is, so the two should not diverge, and that is a claim, not a
+   * measurement.
+   * THE NAMED UNITS ARE NOT INDEXED (D-415's `rangeUnits`: defined
+   * names, table parts, named and database ranges). They carry an
+   * extent and no text, and indexing one means cutting the per-cell
+   * text of its rectangle out of the sheet -- a producer change and a
+   * dedup question (a table and its sheet cover the same words twice)
+   * that CONTENT-SEARCH-DESIGN section 4.1 does not design. Stated, not
+   * built.
    *
    * THE DECK IS ONE UNIT PER SLIDE, RULED BY BOB 2026-09-15, written
    * as a `slide-shape` extent with the SHAPE OMITTED -- which
@@ -5625,6 +5653,15 @@ function textUnitsFor(i2text) {
           (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
       : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
           (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
+      /* D-672: the sheet's own `range` (FW-19's `sheetRangeRef` shape) is
+         the extent, read field by field so the unit carries the arm's two
+         fields and not the producer's `ref` echo. A NULL range drops the
+         sheet BEFORE `arm` sees it, so the `seq` of the survivors is still
+         the producer's position. */
+      : Array.isArray(i2text.sheets)     ? arm(i2text.sheets.map((u) =>
+            (u && u.range && typeof u.range.sheet === "string" && typeof u.range.range === "string"
+              ? u : null)), "sheet-range",
+          (u) => ({ sheet: u.range.sheet, range: u.range.range }))
       : null;
     /* AN EMPTY LIST IS NULL AND NEVER A ZERO, which is CAP-12's rule
        twelve lines up applied to this key. A container whose entry

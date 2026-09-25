@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: D-672 (the workbook's sheet unit), run 2026-09-25 through `node test/nc-rec91.mjs` from `bio-plane/`, THREE NEW ARMS beside REC-91's seven, every arm ALONE, every restore byte-identical by sha256 AND content (`src/index.mjs` 889,784 B sha256 d62623fb8d0c…; `src/store.mjs` 3,472,630 B sha256 764a2df0f8b1…). Declared before arming: (h) `d672nosheets` — THE ROW'S CONTROL: drop the `sheets[]` arm from `textUnitsFor`; MUST fail B3, B3b, C1, C3c, X1 (the workbook passage search returns 0 rows), X2, X2b and MUST NOT move the document, deck or no-arm arms → 59/7, exactly those seven BY NAME, as declared. (i) `d672storeset` — revert the store's container set to its pre-D-672 five; MUST fail C3c, X2b, X3 and MUST NOT move B3, C1 or X1 — the units are emitted, WRITTEN and FOUND while the observation says the container has no unit arm, the record contradicting itself → 63/3, as declared. (j) `d672strict` — OVER-STRICTNESS: admit a sheet only when its grid bound is stated, dropping the .ods sheet (bound NULL by format, used range measured); MUST fail X2, X2b and MUST NOT move the .xlsx arms → 64/2, as declared. REC-91's arms re-run on this tree: baseline 66/0; `nowire` had NOT ARMED since CPDF-19 moved its anchor line from sixteen spaces of indent to four (matched 0×, a control that could never fail) — re-anchored, now 51/15, 8/8 declared; `armsopen` 64/2 (C3b and X3, X3 newly declared because it reads the set this arm replaces); `noobs` 51/15, `overstrict` 49/17, `replace` 58/8, `nopurge` and `nodelete` -1 (THREW, declared) — every arm AS DECLARED. `d672nosheets` IS the pre-D-672 wire, so it is the before-the-fix reading. */
 /* NEGATIVE CONTROL: D-531 (§W), run 2026-09-25, each arm ALONE with the other site held fixed, restored by `cp` from a uniquely-named pristine copy and verified by sha256 AND `cmp` (`index.mjs` 838,838 B sha256 38590bd40c69…; `store.mjs` 3,329,535 B sha256 bdfbfedbab26…). Declared before arming: (a) `index` — restore `u.text.length` in `index.mjs`'s `arm`; MUST fail W1 and W1b and MUST NOT move W2/W3, because the store's own filter still refuses the blank units → 58/2, W1 and W1b BY NAME, as declared. (b) `store` — restore `u.text.length` in `#writeCaptureText`'s ordering filter; MUST fail W2 and W3 and MUST NOT move W1/W1b → 58/2, W2 and W3 BY NAME, as declared. (c) `overstrict` — `glyphCount(u.text) > 1` at the `arm` site; MUST fail W1b (the one-glyph `§` paragraph dropped) → 58/2, W1b BY NAME and W1 WITH it, which was not declared and is correct: W1 asserts the exact surviving para list, so it sees the same drop. Before the fix, both sites pristine: 56/4 (W1, W1b, W2, W3) — M-154. */
 /* NEGATIVE CONTROL: SIX arms and a baseline live in `test/nc-rec91.mjs` and are re-run in one step with `node test/nc-rec91.mjs [arm]` from `bio-plane/`. Each arm EDITS A REAL SOURCE, is armed ALONE with every other defence held open, and is restored from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by content (`cmp`) with a byte count printed and a minimum guarded — never `git checkout --`, which restores to HEAD and has twice discarded a session's own uncommitted work. Declared before arming, and every one RUN; results are in this item's report and in CLAIMS.md's release line. (a) `baseline` — nothing armed; MUST be green, the row that distinguishes six-arms-broken from six-arms-working. (b) `nopurge` — drop `"capture_text"` from `purge`'s TABLES array; MUST fail the purge arms BY NAME in BOTH directions (the per-bundle arm and the whole-store arm) and MUST fail `hygiene.test.mjs`'s D-113 census, which is the check that would have caught it at the moment the mistake was made. (c) `nodelete` — in `#writeCaptureText` remove the leading `DELETE FROM capture_text WHERE capture_sha=?`; MUST fail the CHAIN-MOVE arm by name — the superseded text is still indexed, which is a search answering out of an engine that did not produce it — and MUST NOT move any first-promote arm, because on a first promotion there is nothing to delete and the defect is invisible. (d) `replace` — change that same plain `INSERT` to `INSERT OR REPLACE` and drop the delete with it; MUST fail the chain-move arm AND the stats-parity arm (`textIndexed` exceeds `textUnits`), because SQLite does not fire delete triggers for REPLACE conflict resolution and the superseded row's index entry is ORPHANED — this is the arm that proves the measured hazard is real in the product and not only in a probe. (e) `noobs` — neuter `#observeIndexed` to return without appending; MUST fail every content-axis arm and MUST NOT move the row-count arms, which separates the OBSERVATION from the WRITE. (f) `armsopen` — treat every container as having a unit arm (`CAPTURE_TEXT_UNIT_CONTAINERS` becomes a Set that answers true); MUST fail the WORKBOOK arm alone, because a workbook would then be recorded as extracted-and-indexed-nothing rather than as having no unit arm — the false-absence direction this item's whole vocabulary exists to refuse. (g) `overstrict` — THE OVER-STRICTNESS DIRECTION, and it is armed against the BOUND rather than against the writer: drop the per-capture bound to 64 B so an ordinary document goes `partial`; MUST fail the FULL arms and MUST NOT fail the partial arm or any refusal, because a bound tighter than its rule is not a safer bound — it makes the record say it holds less than it does, and a member reading `partial` would re-extract a document that was already whole. */
 /* RESULTS: see this item's report and the CLAIMS.md release line. */
@@ -79,15 +80,18 @@ function zip(files) {
   for (const f of files) {
     const nameB = Buffer.from(f.name, "utf-8");
     const data = Buffer.isBuffer(f.data) ? f.data : Buffer.from(f.data, "utf-8");
-    const comp = deflateRawSync(data);
+    /* D-672: `store: true` for an ODF `mimetype`, which the format must hold
+       uncompressed (the `fw19-extent-arms.test.mjs` builder's same option). */
+    const stored = f.store === true, method = stored ? 0 : 8;
+    const comp = stored ? data : deflateRawSync(data);
     const crc = crc32(data);
     const local = Buffer.concat([
-      u32le(0x04034b50), u16le(20), u16le(0x0800), u16le(8), u16le(0), u16le(0x21),
+      u32le(0x04034b50), u16le(20), u16le(0x0800), u16le(method), u16le(0), u16le(0x21),
       u32le(crc), u32le(comp.length), u32le(data.length),
       u16le(nameB.length), u16le(0), nameB, comp,
     ]);
     const central = Buffer.concat([
-      u32le(0x02014b50), u16le(20), u16le(20), u16le(0x0800), u16le(8), u16le(0), u16le(0x21),
+      u32le(0x02014b50), u16le(20), u16le(20), u16le(0x0800), u16le(method), u16le(0), u16le(0x21),
       u32le(crc), u32le(comp.length), u32le(data.length),
       u16le(nameB.length), u16le(0), u16le(0), u16le(0), u16le(0), u32le(0), u32le(offset), nameB,
     ]);
@@ -174,12 +178,17 @@ const PPTX = zip([
   ...SLIDE_TITLES.map((_, i) => ({ name: `ppt/slides/_rels/slide${i + 1}.xml.rels`, data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>` })),
 ]);
 
-/* ===== THE WORKBOOK — REAL TEXT AND NO UNIT ARM =========================
- * The point of this fixture is the gap: a workbook's text is extracted and this
- * record cannot address a passage of it, which is a DIFFERENT fact from a
- * document with no text. M-20 measured the size of that gap — 288 workbooks in
- * the census holding 72,651,441 bytes of text over 1,056 sheets and not one
- * indexable unit between them. */
+/* ===== THE WORKBOOK — REAL TEXT, ONE UNIT PER SHEET =====================
+ * CORRECTED BY D-672, and the old heading is kept in words because it was right
+ * for its day: this fixture was "REAL TEXT AND NO UNIT ARM", its point the gap —
+ * a workbook's text extracted and no passage of it addressable. M-20 measured
+ * that gap at 288 workbooks in the census holding 72,651,441 bytes of text over
+ * 1,056 sheets and not one indexable unit. D-672 closes it at the grain §4.1
+ * designs (*a sheet's unit is a sheet-range*), so the fixture's job is now the
+ * opposite assertion: one `sheet-range` unit per sheet, keyed by the sheet's
+ * used range, and a cell's text findable through `passage:`. The no-unit-arm
+ * answer the fixture used to carry moves to C3, onto a container that still has
+ * none. */
 const SHEET_NAMES = ["Summary", "Detail"];
 const XLSX_MAIN_CT = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
 const XLSX_CT = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -200,6 +209,25 @@ const XLSX = zip([
   { name: "xl/worksheets/sheet1.xml", data: sheetXml([["Department", "FY26 Adopted"], ["Police", "2200000"]]) },
   { name: "xl/worksheets/sheet2.xml", data: sheetXml([["Fund 1010", "General Purpose Fund"]]) },
 ]);
+/* D-672: an `.ods` workbook is a second producer of `sheets[]` (`odf.mjs`), so
+   the arm's recognise-by-shape claim is driven on a second container and not
+   asserted from one. One sheet, used range A1:B3; the term occurs in one cell. */
+const ONLY_IN_ODS = "Measure Q parcel levy";
+const ODS_CT = "application/vnd.oasis.opendocument.spreadsheet";
+const ODF_NS = ['xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"',
+  'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"',
+  'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"'].join(" ");
+const odsCell = (v) => `<table:table-cell office:value-type="string"><text:p>${v}</text:p></table:table-cell>`;
+const ODS = zip([
+  { name: "mimetype", data: ODS_CT, store: true },
+  { name: "META-INF/manifest.xml", data: `<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2"><manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="${ODS_CT}"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/></manifest:manifest>` },
+  { name: "content.xml", data: `<?xml version="1.0" encoding="UTF-8"?><office:document-content ${ODF_NS} office:version="1.3"><office:automatic-styles/><office:body><office:spreadsheet>`
+      + `<table:table table:name="Levies"><table:table-row>${odsCell("Line")}${odsCell("Item")}</table:table-row>`
+      + `<table:table-row>${odsCell("1")}${odsCell(ONLY_IN_ODS)}</table:table-row>`
+      + `<table:table-row>${odsCell("2")}${odsCell("Library hours")}</table:table-row></table:table>`
+      + `</office:spreadsheet></office:body></office:document-content>` },
+  { name: "styles.xml", data: `<?xml version="1.0"?><office:document-styles ${ODF_NS}/>` },
+]);
 
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
@@ -215,6 +243,7 @@ const mf = new Miniflare({
     if (u.pathname === "/report.docx") return bin(DOCX, DOCX_CT);
     if (u.pathname === "/deck.pptx") return bin(PPTX, PPTX_CT);
     if (u.pathname === "/budget.xlsx") return bin(XLSX, XLSX_CT);
+    if (u.pathname === "/levies.ods") return bin(ODS, ODS_CT);
     if (u.pathname === "/blank-paras.docx") return bin(DOCX_WS, DOCX_CT);
     return new Response("unscripted", { status: 500 });
   },
@@ -389,7 +418,7 @@ const bookDoc = (await acquire("/budget.xlsx")).document;
    an empty fixture has passed three times in this repository. */
 console.log(`  corpus: 3 containers acquired through op=acquire — a document of ${PARAS.length} `
           + `paragraphs, a deck of ${SLIDE_TITLES.length} slides with 2 shapes each, and a workbook `
-          + `of ${SHEET_NAMES.length} sheets (${SHEET_NAMES.join(", ")}), which has no unit arm at all`);
+          + `of ${SHEET_NAMES.length} sheets (${SHEET_NAMES.join(", ")}), one sheet-range unit per sheet (D-672)`);
 t("B0: the fixture is non-empty and all three were recognised by the FORMAT axis",
   [docDoc?.profile?.format?.format, deckDoc?.profile?.format?.format,
    bookDoc?.profile?.format?.format], ["docx", "pptx", "xlsx"]);
@@ -428,12 +457,31 @@ t("B2b: and the one slide unit carries BOTH of that slide's shapes' text, which 
   deckDoc.text_units?.every((u, i) => u.text.includes(SLIDE_TITLES[i]) && u.text.includes(SLIDE_SECOND)),
   true);
 
-t("B3: the WORKBOOK emits NO units at all — a cell is not a passage and `sheet-range` waits on "
-+ "EXTRACTION-BREADTH §3.2. The key is ABSENT rather than an empty array, because an empty list "
-+ "would say this workbook holds nothing to index, which is a different and false claim",
-  [Object.prototype.hasOwnProperty.call(bookDoc, "text_units"),
-   /* and its text WAS extracted, which is the half that makes the gap a gap */
-   bookDoc.reading?.read_from_text], [false, true]);
+/* CORRECTED BY D-672, NOT EXEMPTED. B3 asserted the workbook emitted NO units
+   ("a cell is not a passage and `sheet-range` waits on EXTRACTION-BREADTH §3.2")
+   with the key ABSENT. The extent arm landed with FW-19 and every workbook
+   producer emits `sheets[].range`, so the absence was a missing READER in
+   `textUnitsFor`, and the assertion pinned the gap D-672 exists to close. What
+   it protected stays protected: a cell is still not a unit — the unit is the
+   SHEET, carrying the sheet's text, addressed by the producer's own used range
+   (never re-derived here: the fixture's own cells give A1:B2 and A1:B1). */
+t("B3: the WORKBOOK emits ONE `sheet-range` unit per SHEET, keyed by the sheet's used range, "
++ "in the producer's sheet order — a cell is not a passage, a sheet is (D-672, §4.1)",
+  [bookDoc.text_units?.length,
+   bookDoc.text_units?.map((u) => u.extent),
+   bookDoc.text_units?.map((u) => u.seq),
+   bookDoc.reading?.read_from_text],
+  [SHEET_NAMES.length,
+   [{ kind: "sheet-range", sheet: "Summary", range: "A1:B2" },
+    { kind: "sheet-range", sheet: "Detail", range: "A1:B1" }],
+   [0, 1], true]);
+t("B3b: and each sheet unit carries that SHEET's text and only that sheet's — every cell of it, "
++ "none of the other sheet's",
+  [bookDoc.text_units?.[0]?.text.includes("Police") && bookDoc.text_units?.[0]?.text.includes("FY26 Adopted"),
+   bookDoc.text_units?.[0]?.text.includes("General Purpose Fund"),
+   bookDoc.text_units?.[1]?.text.includes("General Purpose Fund"),
+   bookDoc.text_units?.[1]?.text.includes("Police")],
+  [true, false, true, false]);
 
 /* THE EXTENT IS THE CONTENT ADDRESS, AND THIS IS THE ASSERTION §4.5 RESTS ON.
    The unit's extent must canonicalise to the SAME string a member's citation of
@@ -448,8 +496,13 @@ t("B4: every emitted unit's extent canonicalises to the SAME bytes the content a
      inside an assertion goes through NO assertion at all — it ended the module
      while the tally read clean, so the arm's verdict read 4/6 when the truth was
      that the suite never reached the two arms that would have answered. */
-  [...(docDoc.text_units || []), ...(deckDoc.text_units || [])]
-    .filter((u) => canonicalExtent(u.extent) !== canonicalExtent({ ...u.extent })).length, 0);
+  /* D-672: the workbook's units join the sweep. `canonicalRange` upper-cases
+     and strips `$`, so a range the producer spelled otherwise would show here as
+     a canonical form differing from what the producer wrote. */
+  [...(docDoc.text_units || []), ...(deckDoc.text_units || []), ...(bookDoc.text_units || [])]
+    .filter((u) => canonicalExtent(u.extent) !== canonicalExtent({ ...u.extent })
+                   || (u.extent.kind === "sheet-range"
+                       && JSON.parse(canonicalExtent(u.extent)).range !== u.extent.range)).length, 0);
 t("B4b: and a PDF page's rect is DEGENERATE on purpose — `describeExtent` reads a null rect as the "
 + "WHOLE page, so the indexed unit and a member citing `page 14` address one passage. A literal "
 + "rectangle would compute a different content id for the same words",
@@ -470,9 +523,10 @@ await promote(B_DECK, { document: deckDoc });
 await promote(B_BOOK, { document: bookDoc });
 
 const st1 = await get("stats", "", "adm-rec91");
-t("C1: the units are PERSISTED — one row per paragraph plus one per slide, and the workbook "
-+ "contributes none",
-  st1.textUnits, PARAS.length + SLIDE_TITLES.length);
+/* CORRECTED BY D-672: this read "and the workbook contributes none", which
+   pinned the missing unit. The workbook now contributes one row per sheet. */
+t("C1: the units are PERSISTED — one row per paragraph, one per slide and one per sheet",
+  st1.textUnits, PARAS.length + SLIDE_TITLES.length + SHEET_NAMES.length);
 /* CORRECTED BY THIS ITEM'S OWN `replace` CONTROL ARM, and the first spelling is
    kept here because it is the more useful half of the lesson. It read
    `st1.textIndexed === st1.textUnits` and called that "the trigger discipline
@@ -498,14 +552,45 @@ t("C2b: and the EXTRACTION axis beside it is still extraction's own row, not the
 
 /* THE OVER-STRICTNESS DIRECTION IN THE PRODUCT, not in a control arm: a
    container this record cannot address a passage of must say so, and must NOT
-   read as a document with no text. */
+   read as a document with no text.
+   MOVED BY D-672 FROM THE WORKBOOK TO HTML, and the property is unchanged. The
+   workbook WAS this case; it now has a unit, so asserting NONE of it would pin
+   the gap. HTML still has no `dom` producer (§4.1), and no fixture here makes
+   `op=acquire` read an HTML page's text into a reading, so the subject is the
+   workbook's own acquired document with its container relabelled `html` and its
+   units withheld — the writer's REAL input, a provenance document a caller can
+   author, carrying a container this build has no unit arm for. */
 const axBook = await axisOf(bookDoc.capture.sha256);
-t("C3: the WORKBOOK says NONE with a REASON — its text WAS extracted and this record cannot address "
-+ "a passage of it. That is not an absence of text and the answer must not let it read as one",
-  [axBook.indexed, axBook.determined, axBook.extraction?.state], [NONE, true, "PRESENT"]);
+t("C3c: and the WORKBOOK now reads FULLY indexed — both sheets written, nothing dropped (D-672)",
+  [axBook.indexed, axBook.determined, axBook.extraction?.state], [FULL, true, "PRESENT"]);
+/* D-672's ACCEPTANCE (X1) is asked HERE, while the workbook is promoted —
+   section E purges the store, so a search after it would find nothing for a
+   reason that has nothing to do with the index. See section X's header. */
+const passageRows = async (term) => get("meaningrows",
+  `rows=passage&q=${encodeURIComponent(`passage:${JSON.stringify(term)}`)}`);
+{
+  const hit = await passageRows("Fund 1010");
+  const rowsOf = Array.isArray(hit?.rows) ? hit.rows : [];
+  console.log(`  passage:"Fund 1010" -> ${rowsOf.length} row(s) `
+            + `${JSON.stringify(rowsOf.map((r) => [r.extent_kind, r.ref]))}`);
+  t("X1: a passage search over a captured WORKBOOK finds a cell's text in ONE unit labelled "
+  + "sheet-range — the Detail sheet, by its range, in that workbook's capture",
+    rowsOf.map((r) => [r.capture_sha, r.extent_kind, r.ref, JSON.parse(r.extent).sheet]),
+    [[bookDoc.capture.sha256, "sheet-range", "Detail!A1:B1", "Detail"]]);
+}
+const htmlSha = sha("D-672: a page whose container has no unit arm");
+await promote("INFO-2026-9310-noarm", { document: {
+  ...bookDoc, text_units: undefined,
+  capture: { ...bookDoc.capture, sha256: htmlSha },
+  reading: { ...bookDoc.reading, text_container: "html" } } });
+const axNoArm = await axisOf(htmlSha);
+t("C3: a container with NO unit arm says NONE with a REASON — its text WAS extracted and this record "
++ "cannot address a passage of it. That is not an absence of text and the answer must not let it "
++ "read as one",
+  [axNoArm.indexed, axNoArm.determined, axNoArm.extraction?.state], [NONE, true, "PRESENT"]);
 t("C3b: and the reason NAMES the container rather than the category, so a member is told which "
 + "absence is true (CLAUDE.md's sparse rule, made mechanical where absence is read)",
-  typeof axBook.why === "string" && axBook.why.includes("xlsx"), true);
+  typeof axNoArm.why === "string" && axNoArm.why.includes("html"), true);
 
 /* THE PRE-ITEM CORPUS, WHICH IS EVERY CAPTURE ON EVERY LIVE INSTANCE. A capture
    whose text was extracted before this writer existed has no index observation,
@@ -1019,23 +1104,69 @@ t("W1b: THE OVER-STRICTNESS HALF — a one-glyph paragraph is still a unit, and 
     [after.textUnits - before.textUnits, ax.indexed], [0, NONE]);
 }
 
+/* ========================================================================= *
+ *  X · D-672 — A WORKBOOK'S TEXT IS FINDABLE AT CONTENT GRAIN
+ * ========================================================================= */
+/* THE ROW'S ACCEPTANCE, DRIVEN THROUGH THE OP A MEMBER CALLS. B3 shows the wire
+   carries the units and C1 that the store writes them; neither shows a caller
+   can FIND one. `op=meaningrows&rows=passage` is REC-92's read, and a cell's
+   words coming back in exactly one row, labelled `sheet-range` and addressed by
+   the sheet's range, is the whole claim — "workbook text unsearchable" moved.
+   The term ("Fund 1010") occurs in ONE cell of ONE sheet of the fixture and in no
+   other document this suite promotes, so one row is the fixture's ground truth,
+   not a count the code produced for itself. (The first choice, "General Purpose
+   Fund", came back as TWO rows — the deck's second slide is titled GENERAL
+   PURPOSE FUND OUTLOOK — which was the fixture telling the truth, not the arm.)
+   X1 is asked in section C, while the workbook is promoted; section E purges. */
+console.log("\n--- X · D-672: a workbook's sheets are indexed units, and a cell's text is found in one ---");
+{
+  const odsDoc = (await acquire("/levies.ods")).document;
+  t("X2: an .ods workbook — a second producer of `sheets[]` — emits ONE `sheet-range` unit for its "
+  + "one sheet, recognised by SHAPE and not by the container's name",
+    [odsDoc?.profile?.format?.format, odsDoc?.text_units?.length,
+     odsDoc?.text_units?.[0]?.extent, odsDoc?.text_units?.[0]?.text.includes(ONLY_IN_ODS)],
+    ["ods", 1, { kind: "sheet-range", sheet: "Levies", range: "A1:B3" }, true]);
+  await promote("INFO-2026-9310-ods", { document: odsDoc });
+  const ax = await axisOf(odsDoc.capture.sha256);
+  const hit = await passageRows(ONLY_IN_ODS);
+  t("X2b: and it is PROMOTED, reads FULLY indexed, and its cell's text is found through `passage:` "
+  + "in that one unit",
+    [ax.indexed, (hit?.rows || []).map((r) => [r.capture_sha, r.extent_kind, r.ref])],
+    [FULL, [[odsDoc.capture.sha256, "sheet-range", "Levies!A1:B3"]]]);
+}
+/* THE STORE'S HALF, READ OUT OF THE SOURCE. The writer never reads the kind, so
+   admitting sheet-range is the container set and nothing else; `ods` has no
+   fixture here (see below), so its membership is asserted where it lives. */
+t("X3: the store's unit-arm set admits every `sheets[]` producer — xlsx, ods and csv — beside the "
++ "five it already held",
+  ["xlsx", "ods", "csv", "pdf", "docx", "odt", "pptx", "odp"].every((c) =>
+    new RegExp(`const CAPTURE_TEXT_UNIT_CONTAINERS = new Set\\(\\[[^\\]]*"${c}"`).test(STORE_SRC)), true);
+
 /* WHAT THIS SUITE CANNOT SEE, NAMED RATHER THAN SCORED ZERO.
    - The `passage:` ARM AND `rows=passage` (§8's first, third and fifth controls):
-     REC-92's, and not approximable here — a bundle-returning arm, the REC-36
+     REC-92's, and not approximable here (X drives ONE read of it, D-672's
+     acceptance, and claims nothing about the arm beyond that) — a bundle-returning arm, the REC-36
      withholding and "searching mints nothing" are all properties of a read that
      does not exist on this tree.
    - A SLIDE'S SPEAKER NOTES. `pptxText` emits them per slide and DEC-5 forbids
      merging them with slide text, and the only address that reaches a slide is
      `slide-shape`, whose shape-omitted form is now the slide itself. So the most
      candid text in a deck has no indexable unit. Reported as a DESIGN GAP.
-   - A `sheet-range` UNIT, which does not exist (EXTRACTION-BREADTH §3.2).
+   - A WORKBOOK'S NAMED UNITS (D-415's `rangeUnits`: defined names, table
+     parts, named and database ranges). They are extents without text and are
+     NOT indexed — §4.1 designs the SHEET as the unit and nothing about a
+     sub-sheet rectangle's text (D-672 states it, does not build it).
+   - AN `.ods` WORKBOOK end to end. The arm is recognised by the `sheets[]`
+     SHAPE, driven here on `.xlsx` and `.csv`; `.ods` returns the same shape
+     (`odf.mjs`) and `ods` is in the store's container set (asserted in X), but
+     no `.ods` fixture reaches the wire in this suite.
    - A REAL PDF PRODUCER. The `pdf-page` arm is driven through `op=promote` with
      an authored provenance document, which is the writer's real input; what it
      does NOT exercise is `pdfstructure`'s own `text.pages[]` reaching the wire.
      The DOCX and PPTX arms do exercise that path end to end, so the wire's
      shape-recognition is measured — but on two of its three arms, not three. */
 console.log(`\n  WHAT THIS SUITE CANNOT SEE: the \`passage:\` arm (REC-92), a slide's speaker notes `
-          + `(no extent arm — DESIGN GAP), a \`sheet-range\` unit (EXTRACTION-BREADTH §3.2), and the `
+          + `(no extent arm — DESIGN GAP), a workbook's named units (not designed), an .ods fixture, and the `
           + `PDF producer's own text reaching the wire (driven through op=promote instead).`);
 
 reachedFoot = true;
