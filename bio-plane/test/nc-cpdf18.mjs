@@ -124,9 +124,13 @@ const ARMS = {
        texts carry no run of two newlines for it to act on) and moving the TJ word-gap
        threshold from -100 to -50 (no advance on these fixtures falls between).
        Each perturbed a path the pinned inputs do not reach. The line-break
-       emission below is on the path EVERY text line takes. */
-    patch: () => arm(PDFS, `        pieces.push("\\n"); // a new text line`,
-                           `        pieces.push("\\n "); // a new text line`),
+       emission below is on the path EVERY text line takes.
+       D-643: RE-ANCHORED. D-481 moved that emission into `breakLine` (one
+       site, no trailing comment), so the old anchor matched 0 and this arm sat
+       unarmed. It now quotes the push WITH the baseline line that follows it,
+       a span unique in pdfstructure.mjs on this tree and on origin/main. */
+    patch: () => arm(PDFS, `    pieces.push("\\n");\n    lineY = baselineOf(tlm, ctm);`,
+                           `    pieces.push("\\n ");\n    lineY = baselineOf(tlm, ctm);`),
   },
 };
 
