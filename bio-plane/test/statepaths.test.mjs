@@ -175,6 +175,11 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    `tools/slots.mjs` REALLY imports `tools/coord.mjs` (`readRemote`, the CLI's default read of coord's QUEUE.md) and
    `tools/ledger.mjs` (`queueRows`, `CACHE_ROWS`), which imports coord.mjs too, so the edge is a module edge and not a
    label. THROUGH_COORD_CEILING (5) is met at 5 and not moved. A CEILING IS NOT A RATCHET: left at the printed figure. */
+/* MOVED 43 -> 44 by M0-194 (2026-09-24), READ from this suite's print on the M0-194 tree (`44 unit(s) of 437 selected ·
+   29 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`; its base 83d03b5f prints `43 of 436 · 28`). The one new unit
+   is M0-194's `plane:rulemap.test.mjs`, which really does read `docs/` — kickoffs/WORKER.md, its archive and
+   measurements/M-147.md, through tools/rulemap.mjs — so it is doc-facing and §2's net gives it any `docs/` change: a
+   legitimately added doc-facing suite, not slack. A CEILING IS NOT A RATCHET: left at the printed figure. */
 const UNITS_CEILING = 44;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
