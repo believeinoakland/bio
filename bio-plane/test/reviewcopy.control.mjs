@@ -1,7 +1,8 @@
-/* REC-126's NEGATIVE CONTROL DRIVER — seventeen arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
+/* REC-126's NEGATIVE CONTROL DRIVER — nineteen arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
  * REC-133's, §6A.2's authority, (i)-(k) REC-198's, the list of a project's drafts, (l)-(n) REC-199's,
- * the copy saying `newCase` back, (o)-(q) D-539's, the copy saying an absent finding's `role` back),
- * re-runnable in one step:
+ * the copy saying `newCase` back, (o)-(q) D-539's, the copy saying an absent finding's `role` back,
+ * (r)-(s) D-538's, the identity sentence reading `newCase` — its (o)-(p) on its branch, renamed at
+ * c21-batch28 by CONDUCT #21 because D-539 holds (o)-(q)), re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -154,9 +155,11 @@ const ARMS = {
        label: "(l) THE FIELD DROPPED: the copy stops saying `newCase` back, which is the state of the plane "
             + "before REC-199 — an edit written from the answer loses the draft's new-case intent",
        apply: () => edit(STORE,
-         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition),\n"
+         /* RE-ANCHORED by D-538: the identity line now passes the draft's `newCase` to the sentence. The arm
+            still drops the FIELD alone; the sentence beside it is (o)'s subject, not this one's. */
+         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),\n"
        + "              newCase: !!params.newCase },",
-         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition) },") },
+         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase) },") },
 
   m: { files: [STORE],
        label: "(m) THE LIAR'S FIELD: `newCase` answered from the CASE IDENTITY (`!ident.caseId`) instead of "
@@ -189,6 +192,22 @@ const ARMS = {
        label: "(q) THE LIAR'S CONSTANT: the absent branch answers `load_bearing` whatever the draft designated — "
             + "right about one absent finding, and promotes the supporting one across the trip",
        apply: () => edit(STORE, "present: false, role,", "present: false, role: \"load_bearing\",") },
+
+  /* D-538 — the identity sentence reads the draft's `newCase` (its (o)/(p) on its branch). Declarations in the suite's header. */
+  r: { files: [STORE],
+       label: "(r) `newCase` IGNORED AGAIN: the sentence treats every draft naming no case as a new case, and "
+            + "every draft naming one as its next edition — the plane exactly as it stood before D-538",
+       apply: () => edit(STORE,
+         "  static #caseIdentitySentence(caseId, edition, newCase) {",
+         "  static #caseIdentitySentence(caseId, edition, _ignored, newCase = !caseId) {") },
+
+  s: { files: [STORE],
+       label: "(s) OVER-STRICTNESS: the derived sentence REWORDED, saying the same two facts (derived at "
+            + "publication; undetermined here) in words this suite did not write — must PASS",
+       apply: () => edit(STORE,
+         "    return \"a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED \"",
+         "    return \"an undetermined case: publication will derive it from the record, since this draft names none \"\n"
+       + "         + \"and asks for no new one; until then \"") },
 };
 
 const want = process.argv[2];
@@ -320,4 +339,15 @@ console.log(`\npen removed: ${PEN}`);
      p 87/0   the unanticipated spelling passes
      q 85/2   the liar's constant — the supporting finding comes back load_bearing, caught by the same two
    Every (a)-(n) failure count is REC-199's, unchanged; block 11's five arms are the only movement.
+
+   RE-MEASURED 2026-09-24 by WORKER D-538 (cloud), on its own branch before D-539 (its o/p are this file's r/s), all SIXTEEN arms against the FINAL store, pen in the session
+   scratchpad via `BIO_NC_PEN`, every restore of a 3,331,204-byte `store.mjs` sha256 MATCH / content IDENTICAL /
+   size ok:
+     baseline  88/0
+     a 83/5   b 87/1   c 86/2   d 86/2   e 86/2   f 87/1   g 80/8   h 87/1
+     i 82/6   j 85/3   k 88/0   l 85/3 (re-anchored on the identity line)   m 86/2   n 88/0
+     o 85/3   `newCase` ignored again — block 2's corrected arm, ACCEPTS-WHEN and the names-C1-and-asks-new arm;
+              the new-case-kept arm GREEN, the liar agreeing for free on the one draft it is right about
+     p 88/0   the reworded derived sentence passes
+   Every (a)-(n) failure count is REC-199's, unchanged; block 11's six arms are the only movement.
 */

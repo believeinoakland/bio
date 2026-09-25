@@ -39676,15 +39676,34 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
   /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
      never taken from the caller — `publishCase`'s own rule (DEC-12 as DEC-44
      rehomes it). A draft naming an existing case stands at that case's next
-     edition; a draft naming none is a new case at edition 1. */
+     edition; a draft naming none stands at edition 1, the edition a MINTED case has — which is the case only
+     when it asks for a new one or the derivation finds nothing (D-538: the identity SENTENCE says which; this
+     `edition` does not, and is kept because grants and acknowledgements are keyed on it). */
   #draftIdentity(row) {
     const named = String(row.case_id ?? "").trim() || null;
     if (!named) return { caseId: null, edition: 1 };
     const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, named);
     return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
   }
-  static #caseIdentitySentence(caseId, edition) {
-    return caseId ? `the next edition (${edition}) of ${caseId}` : "a new case, whose identity is not yet allocated \u2014 a case id is minted only by publication";
+  /* D-538 (BIO_Publication_v0_1.md 6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE SENTENCE
+     TAKES THE DRAFT'S `newCase`, BECAUSE A CASE ID OF null IS TWO DIFFERENT DRAFTS. It read *a new case*
+     for every draft naming no case, while `publishCase` MINTS only when `newCase` is set or the
+     derivation finds nothing — so a draft over findings a published case already serves was told it was a
+     new case as its own gates derived that case and refused ALREADY_A_CASE_MEMBER (REC-199's block 10,
+     draft DD). With no case named and `newCase` unset the case is DERIVED AT PUBLICATION, from a record
+     that can change before then, so which case it becomes is UNDETERMINED here and the sentence says the
+     route instead of guessing its answer. And a draft that names a case AND asks for a new one is not
+     "the next edition" of anything: publication refuses the pair together (CASE_IDENTITY_AMBIGUOUS).
+     `newCase` is read for truthiness, as `publishCase` reads it. THE SENTENCE IS A MEMBER'S AND A
+     RECIPIENT'S TO READ, so it carries no code: the surfaces draw it verbatim, and their DEC-49 guards
+     refuse a SHOUTY_CODE on the page (measured: civicos-ui review-copy and statement-ack went red on
+     this change's first spelling, which named the refusal's code). */
+  static #caseIdentitySentence(caseId, edition, newCase) {
+    if (caseId && newCase)
+      return `the next edition (${edition}) of ${caseId} \u2014 but this draft also asks for a new case, and publication refuses those two instructions together, so which case it is stays UNDETERMINED until one of them is withdrawn`;
+    if (caseId) return `the next edition (${edition}) of ${caseId}`;
+    if (newCase) return "a new case, whose identity is not yet allocated \u2014 a case id is minted only by publication";
+    return "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED here: the draft names no case and does not ask for a new one, so publication reads the record at that moment \u2014 a further edition of the one case its findings already serve, a refusal to choose if they serve several, and a new case only if they serve none and no prepared, unsigned edition claims them";
   }
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
      2026-09-17: *"An editor must be able to edit"*). */
@@ -39778,7 +39797,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       edited: !!existing,
       caseId: ident.caseId,
       edition: ident.edition,
-      caseIdentity: _Store.#caseIdentitySentence(ident.caseId, ident.edition),
+      caseIdentity: _Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
       read: `op=reviewcopy&draft=${id}`
     };
   }
@@ -39927,7 +39946,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       recipient: to,
       issuedBy: a.who,
       issuedAt: when,
-      boundTo: `this grant reads ${_Store.#caseIdentitySentence(ident.caseId, ident.edition)} and nothing else. It ends when it is revoked, and when that edition is published and signed.`
+      boundTo: `this grant reads ${_Store.#caseIdentitySentence(
+        ident.caseId,
+        ident.edition,
+        !!JSON.parse(d.params).newCase
+      )} and nothing else. It ends when it is revoked, and when that edition is published and signed.`
     };
   }
   #reviewRevoke(who, { grant = null } = {}) {
@@ -40152,13 +40175,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
          ANSWERED AS THE GATES READ IT, a boolean: `publishCase` consults `newCase` for truthiness
          alone, so `!!` is exactly route-preserving for every spelling a caller may have stored
          (`"false"` is truthy here as it is there, and an absent field is the derivation, not an
-         UNDETERMINED). WHAT IT DOES NOT SAY is the identity SENTENCE beside it: with no case named,
-         that sentence reads *a new case* whether or not this field is set, which is REC-199's
-         reported finding and is `#caseIdentitySentence`'s to fix, in the three answers that print it. */
+         UNDETERMINED). THE IDENTITY SENTENCE BESIDE IT READS THE SAME FIELD (D-538): before it, with no
+         case named, that sentence read *a new case* whether or not this field was set — REC-199's
+         reported finding, fixed in `#caseIdentitySentence` for every answer that prints it. */
       case: {
         case_id: ident.caseId,
         edition: ident.edition,
-        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition),
+        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
         newCase: !!params.newCase
       },
       authored: {
@@ -40782,7 +40805,7 @@ case_project: ${project}
     const cap = Number.isInteger(askedCap) && askedCap >= 1 ? Math.min(askedCap, _Store.REVIEW_LIST_MAX) : _Store.REVIEW_LIST_MAX;
     const counted = this.#one(`SELECT COUNT(*) AS n FROM case_drafts WHERE project_id=?`, pid);
     const total = counted ? Number(counted.n) : 0;
-    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at,
+    const rows = this.#rows(`SELECT draft_id, case_id, params, created_by, created_at, updated_by, updated_at,
                              statement_by FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id
                              LIMIT ?`, pid, cap);
     const drafts = rows.map((d) => {
@@ -40792,7 +40815,11 @@ case_project: ${project}
         case: {
           case_id: ident.caseId,
           edition: ident.edition,
-          identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition)
+          identity: _Store.#caseIdentitySentence(
+            ident.caseId,
+            ident.edition,
+            !!JSON.parse(d.params).newCase
+          )
         },
         created_by: d.created_by,
         created_at: d.created_at,
