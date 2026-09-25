@@ -358,8 +358,8 @@ scope: head each part the record names and verify each part's digest; the fourth
 accepts-when: a fully held parted capture audits "held in parts, all present" with `sound: true`, one missing part is named and makes `sound` false, and an unresolvable row is counted outside `sound` (the measured failure it moves: `unbacked: 1, sound: false` for held bytes). NEGATIVE CONTROL: head the whole key only and the parted arm reads unbacked, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-536 · running — **A READING DOES NOT CARRY ITS OWN PROVENANCE, so a re-read that returns different text is silent: nothing records the tier, the member that produced it, the pages transcribed, or a digest of the exact text classified.** FW-22's worker (finding 2, via CONDUCT #20). BOB #33 RULED YES 2026-09-24 21:25Z (cite until folded): a reading carries tier, producing member, pages transcribed and a SHA-256 of the exact text it classified; a re-read is compared to the earlier one and a disagreement is ATTRIBUTED ("tier 2 on ocr-worker returned different text for pages 3-4"); both readings are kept, neither overwrites; a reading from before this lands reads provenance UNDETERMINED, never inferred. Until it lands, M-143's rule stands (compare census runs only on tier 1 or on named documents). — owner CONTENT-PDF, then RECORD.
-status: running — running — spawned 22:38Z 2026-09-24 by SCHEDULER #20 as WORKER D-536 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-536 and the session; never conclude queued from absence.
+### D-536 · integrated — **A READING DOES NOT CARRY ITS OWN PROVENANCE, so a re-read that returns different text is silent: nothing records the tier, the member that produced it, the pages transcribed, or a digest of the exact text classified.** FW-22's worker (finding 2, via CONDUCT #20). BOB #33 RULED YES 2026-09-24 21:25Z (cite until folded): a reading carries tier, producing member, pages transcribed and a SHA-256 of the exact text it classified; a re-read is compared to the earlier one and a disagreement is ATTRIBUTED ("tier 2 on ocr-worker returned different text for pages 3-4"); both readings are kept, neither overwrites; a reading from before this lands reads provenance UNDETERMINED, never inferred. Until it lands, M-143's rule stands (compare census runs only on tier 1 or on named documents). — owner CONTENT-PDF, then RECORD.
+status: integrated — SCHEDULER #21 00:40Z: tip 61dff564 (M-152), NO recorded N/N GREEN (depth 8, idle 00:29); D-557 placed
 order: after D-533, in product order (BOB #33, 21:25Z: *after D-533*); the record's readings becoming attributable ahead of the risk-tier feature trio (SCHEDULER #19, 2026-09-24)
 milestone: M2
 interface: I5 — the reading's provenance columns; the integrator mints and classifies the IC.
@@ -402,8 +402,8 @@ scope: blank comments before harvesting; refuse a match preceded by `typeof` or 
 accepts-when: a planted `typeof x.current_state === "string"` guard and a commented-out quote of the pattern leave the state set unchanged and are reported as unrecognised matches (the measured failure it moves: a RED naming a state nobody wrote). NEGATIVE CONTROL: harvest the raw file again and the planted guard is read as a state, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by CONDUCT #20).
 
-### D-549 · running — **NO_PUBLISHED_STORE ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase` REACHES AN ANONYMOUS CALLER UNTRANSLATED: it is minted at two sites (`index.mjs` ~5747 a literal, ~5900 a ternary shared with OBJECT_MISSING; main 9f8b69e6), has no DEC-49 translation, and `app.html` names it 0 times, so the public reads a machine token.** Found by D-513's worker (via CONDUCT #20 22:59Z). — owner RECORD.
-status: running — running — spawned 23:03Z 2026-09-24 by SCHEDULER #20 as WORKER D-549 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-549 and the session; never conclude queued from absence.
+### D-549 · integrated — **NO_PUBLISHED_STORE ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase` REACHES AN ANONYMOUS CALLER UNTRANSLATED: it is minted at two sites (`index.mjs` ~5747 a literal, ~5900 a ternary shared with OBJECT_MISSING; main 9f8b69e6), has no DEC-49 translation, and `app.html` names it 0 times, so the public reads a machine token.** Found by D-513's worker (via CONDUCT #20 22:59Z). — owner RECORD.
+status: integrated — SCHEDULER #21 00:40Z: tip afcf1128, NO recorded N/N GREEN (depth 8, COMPLETED); CATALOG 1.29.0 unions; D-561 placed, D-562 rides D-542
 order: after D-540, with the corrections: a public door answering in machine vocabulary (D-484's settled shape; CLAUDE.md §2) (SCHEDULER #20, 2026-09-24)
 milestone: M10
 interface: I3 — a translation added and a mint site consolidated; the integrator classifies.
@@ -697,6 +697,26 @@ depends-on: D-490.
 scope: for a render:true bundle the tick compares the served shell with the pair's `shell.sha256`, never `capture.sha256`: a match reads "frame unchanged", a difference `modified` (frame); both state the content UNDETERMINED in those words.
 accepts-when: a render:true bundle ticks "frame unchanged; content undetermined" on an unchanged shell and `modified` (frame) on a changed one (moves: a shell compared with the rendered digest). NEGATIVE CONTROL: point the tick at `capture.sha256` and the unchanged-shell arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-522's worker).
+
+### UI-91 · queued — **A MEMBER CAN CHOOSE A CONNECTION'S ON-POINT MENTION ON THE PLANE, AND NO SURFACE OFFERS IT: REC-122's `connectionchoose` (IC-232, C-74) has no page; construct 6.on-point-ui is ABSENT.** The DELEGATION RECORD (REC-122) -> UI of 2026-09-23 is on coord `CLAIMS.md`. — owner UI.
+order: after D-454, the member half of REC-122 (SCHEDULER #17, 2026-09-23; REC-122's worker via CONDUCT #18 23:08Z)
+milestone: M4
+interface: I3 consumer (IC-232).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair and what it is NOT), with D-161's act 3.
+depends-on: REC-122 (`integrated` on c17-batch7; verify the op on `main` first).
+scope: on the connection display, offer a signed-in member the choice among the mentions the C-49.4 entries name as bearing; show the chosen mention BESIDE the machine's pair, never replacing it; render a lapsed choice as the plane states it; replace 6.on-point-ui's `uinone` probe with `hit` probes.
+accepts-when: a member's choice renders beside the machine's pair, and a lapsed one reads as the plane states it. NEGATIVE CONTROL: render the choice in place of the pair, and the "never replacing" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+
+### UI-95 · queued — **A MEMBER SEES A CUT SET OF CONNECTIONS AS THE WHOLE SET: D-241 publishes the entity arm's `derivation`, and `app.html`'s subject view (`connectionsBoundHtml`) never renders `derivation.says`.** — owner UI.
+order: after UI-91, the connection display: a surface that claims more than the record holds (SCHEDULER #17, 2026-09-23; D-241's worker via CONDUCT #18 00:15Z)
+milestone: M3
+interface: I3 consumer (IC-236).
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.3 (the cap, and truncation stated).
+depends-on: D-241 (`integrated` on c18-batch8).
+scope: render `derivation.says` whenever `derivation.cut` is true or the state is not `derived`, beside the connection list. Extend the subject-view harness in `civicos-ui/test/`.
+accepts-when: a cut derivation shows its sentence; a whole one shows none. NEGATIVE CONTROL: drop the render, and the cut-set arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
