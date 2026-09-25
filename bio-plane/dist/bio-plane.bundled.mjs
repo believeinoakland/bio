@@ -38564,7 +38564,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         /* REC-194 / §3 rule 13: the readings of this exact sentence this record cannot
            bind to any case (a draft naming none). The document's prose states them;
            the act says so too, so a publisher reads it before signing. */
-        ...acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}
+        ...acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {},
+        /* D-540: the unbindable participant readings whose writer is UNDETERMINED, so none
+           can be ruled out as the writer's own — stated apart, never in the count above. */
+        ...acks.unboundWriterUndetermined ? { acknowledgements_unbindable_writer_undetermined: acks.unboundWriterUndetermined } : {}
       },
       author: who,
       at: when,
@@ -40325,10 +40328,20 @@ case_project: ${project}
      holds another reading it cannot attribute to this case would otherwise read as complete. Counted,
      never named — naming is the claim that cannot be made. */
   static #ackUnboundLines(acks, project) {
-    if (!acks.unbound) return [];
+    const u = acks.unboundWriterUndetermined || 0;
+    if (!acks.unbound && !u) return [];
     return [
-      "",
-      `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact statement in ${project} given for a case whose identity was not yet allocated \u2014 a draft \u2014 and whether any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and no draft is bound to the case it became, so a reading of a draft is not a reading of this case. They are counted here and deliberately not named, because naming them would claim they read THIS case's statement, which this record does not establish (BIO_Publication \xA73 rule 13).`
+      ...acks.unbound ? [
+        "",
+        `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact statement in ${project} given for a case whose identity was not yet allocated \u2014 a draft \u2014 and whether any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and no draft is bound to the case it became, so a reading of a draft is not a reading of this case. They are counted here and deliberately not named, because naming them would claim they read THIS case's statement, which this record does not establish (BIO_Publication \xA73 rule 13).`
+      ] : [],
+      /* D-540: a draft-given participant reading while the WRITER is undetermined is two unknowns at once —
+         whether it is this case's, and whether it is the writer's own — so it is counted in its own sentence
+         and never folded into the one above, which counts only readings that are not the writer's. */
+      ...u ? [
+        "",
+        `This record also holds ${u} acknowledgement${u === 1 ? "" : "s"} of this exact statement in ${project}, given by a participant for a draft, of which it is UNDETERMINED both whether any is a reading of THIS case and whether any is the statement's writer's own, because who wrote the statement is UNDETERMINED. They are counted here, apart, and deliberately not named (BIO_Publication \xA73 rule 13).`
+      ] : []
     ];
   }
   static #ackBodyLines(acks, project) {
@@ -40340,7 +40353,7 @@ case_project: ${project}
       "",
       ...acks.rows.map((a) => a.kind === "recipient" ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${_Store.#fmSafe(a.recipient)}', on ${a.at}` : `- ${a.by}, a participant of ${project}, on ${a.at}`),
       ...acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this document lists)"] : []
-    ] : acks.unbound ? [`${_Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
+    ] : acks.unbound || acks.unboundWriterUndetermined ? [`${_Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
   }
   /* REC-213 / §6A + §3 rule 11 (BOB #33, 2026-09-24) — WHAT THE REVIEW COPY'S LIST LEFT OUT, IN ONE
      SENTENCE A READER READS RATHER THAN A KEY THEY DECODE. `#ackBodyLines` is the case document's
@@ -40485,14 +40498,26 @@ case_project: ${project}
     const byTheWriter = (r) => !!(writer && writer.by && r.acknowledger_kind === "participant" && r.acknowledger === writer.by && !byPublisher(r));
     const undeterminedWithheld = (r) => !!(writer && writer.by === null && r.acknowledger_kind === "participant" && !byPublisher(r));
     const listed = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
+    const writerBy = writer && typeof writer.by === "string" ? writer.by : null;
+    const writerUndetermined = writer && writer.by === null ? 1 : 0;
     const unboundRow = unallocated ? null : this.#one(
-      `SELECT COUNT(*) AS n FROM statement_acknowledgements
-                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
-                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)`,
+      `SELECT COALESCE(SUM(CASE WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            WHEN acknowledger_kind='participant' AND ? = 1 THEN 0
+                                            WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            ELSE 1 END), 0) AS n,
+                          COALESCE(SUM(CASE WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            WHEN acknowledger_kind='participant' AND ? = 1 THEN 1
+                                            ELSE 0 END), 0) AS u
+                   FROM statement_acknowledgements
+                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL`,
+      exceptAuthor ?? null,
+      writerUndetermined,
+      writerBy,
+      exceptAuthor ?? null,
+      writerUndetermined,
       project,
       sha,
-      edition,
-      exceptAuthor ?? null
+      edition
     );
     return {
       statementSha: sha,
@@ -40503,6 +40528,7 @@ case_project: ${project}
       byWriter: all.filter(byTheWriter).length,
       withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
       unbound: unboundRow ? Number(unboundRow.n) : 0,
+      unboundWriterUndetermined: unboundRow ? Number(unboundRow.u) : 0,
       rows: listed.map((r) => ({
         kind: r.acknowledger_kind,
         by: r.acknowledger,

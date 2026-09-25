@@ -8985,7 +8985,12 @@ export class Store extends DurableObject {
                              /* REC-194 / §3 rule 13: the readings of this exact sentence this record cannot
                                 bind to any case (a draft naming none). The document's prose states them;
                                 the act says so too, so a publisher reads it before signing. */
-                             ...(acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}) },
+                             ...(acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}),
+                             /* D-540: the unbindable participant readings whose writer is UNDETERMINED, so none
+                                can be ruled out as the writer's own — stated apart, never in the count above. */
+                             ...(acks.unboundWriterUndetermined
+                               ? { acknowledgements_unbindable_writer_undetermined: acks.unboundWriterUndetermined }
+                               : {}) },
              author: who, at: when, weight: "single",
              /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE
                 ONE. Two findings whose strengths differ have two answers; one
@@ -10854,14 +10859,23 @@ export class Store extends DurableObject {
      holds another reading it cannot attribute to this case would otherwise read as complete. Counted,
      never named — naming is the claim that cannot be made. */
   static #ackUnboundLines(acks, project) {
-    if (!acks.unbound) return [];
-    return ["",
+    const u = acks.unboundWriterUndetermined || 0;
+    if (!acks.unbound && !u) return [];
+    return [...(acks.unbound ? ["",
       `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact `
       + `statement in ${project} given for a case whose identity was not yet allocated — a draft — and whether `
       + "any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and "
       + "no draft is bound to the case it became, so a reading of a draft is not a reading of this case. They "
       + "are counted here and deliberately not named, because naming them would claim they read THIS case's "
-      + "statement, which this record does not establish (BIO_Publication §3 rule 13)."];
+      + "statement, which this record does not establish (BIO_Publication §3 rule 13)."] : []),
+      /* D-540: a draft-given participant reading while the WRITER is undetermined is two unknowns at once —
+         whether it is this case's, and whether it is the writer's own — so it is counted in its own sentence
+         and never folded into the one above, which counts only readings that are not the writer's. */
+      ...(u ? ["",
+      `This record also holds ${u} acknowledgement${u === 1 ? "" : "s"} of this exact statement in ${project}, `
+      + "given by a participant for a draft, of which it is UNDETERMINED both whether any is a reading of THIS "
+      + "case and whether any is the statement's writer's own, because who wrote the statement is UNDETERMINED. "
+      + "They are counted here, apart, and deliberately not named (BIO_Publication §3 rule 13)."] : [])];
   }
   static #ackBodyLines(acks, project) {
     return [...Store.#ackBodyHeadLines(acks, project), ...Store.#ackUnboundLines(acks, project)];
@@ -10875,7 +10889,7 @@ export class Store extends DurableObject {
            : `- ${a.by}, a participant of ${project}, on ${a.at}`),
          ...(acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this "
                                 + "document lists)"] : [])]
-      : acks.unbound
+      : (acks.unbound || acks.unboundWriterUndetermined)
         /* REC-194 / §3 rule 13: NOBODY AND UNDETERMINED ARE DIFFERENT FACTS, and the narrowing is what
            made the difference reachable. This record holds readings of this exact sentence given for a
            case whose identity was not yet allocated — a draft — and it cannot establish that any of them
@@ -11048,11 +11062,31 @@ export class Store extends DurableObject {
        identity — a draft naming no case. Asked only for a case document: a draft's own read has no
        case to be unbound from. Counted, never listed: naming somebody as a reader of THIS case is
        exactly the claim that cannot be made of them. */
+    /* D-540 / §3 rule 13 — THE WRITER IS EXCLUDED HERE THE SAME WAY THE PUBLISHER IS, because a reading
+       by the sentence's own writer is not a second reading at ANY identity, bound or not. REC-212 put the
+       writer exclusion on the LIST and left this count asking only `exceptAuthor`, so a writer's own
+       draft-given reading was stated in the document as one more reading "whether of THIS case is
+       UNDETERMINED" — measured by REC-213's worker: 3 read where 2 is true. And where the writer is
+       UNDETERMINED (`writer.by === null`) a participant row here may be the writer's own, so it is counted
+       under its OWN key, `unboundWriterUndetermined`, never folded into `unbound` (which would claim it as a
+       possible second reading) nor silently excluded (which would claim it is the writer's): two unknowns,
+       stated apart. A RECIPIENT row is never the writer (REC-193), so it stays in `unbound` either way.
+       `writer === null` (not asked) excludes only the publisher, exactly as before this landing. */
+    const writerBy = writer && typeof writer.by === "string" ? writer.by : null;
+    const writerUndetermined = writer && writer.by === null ? 1 : 0;
     const unboundRow = unallocated ? null
-      : this.#one(`SELECT COUNT(*) AS n FROM statement_acknowledgements
-                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
-                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)`,
-                  project, sha, edition, exceptAuthor ?? null);
+      : this.#one(`SELECT COALESCE(SUM(CASE WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            WHEN acknowledger_kind='participant' AND ? = 1 THEN 0
+                                            WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            ELSE 1 END), 0) AS n,
+                          COALESCE(SUM(CASE WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            WHEN acknowledger_kind='participant' AND ? = 1 THEN 1
+                                            ELSE 0 END), 0) AS u
+                   FROM statement_acknowledgements
+                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL`,
+                  exceptAuthor ?? null, writerUndetermined, writerBy,
+                  exceptAuthor ?? null, writerUndetermined,
+                  project, sha, edition);
     return { statementSha: sha, truncated,
              /* UNCHANGED IN MEANING: the publisher's own, counted apart from every exclusion added since,
                 so a caller reading this number reads the same fact it has read since D-150. */
@@ -11060,6 +11094,7 @@ export class Store extends DurableObject {
              byWriter: all.filter(byTheWriter).length,
              withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
              unbound: unboundRow ? Number(unboundRow.n) : 0,
+             unboundWriterUndetermined: unboundRow ? Number(unboundRow.u) : 0,
              rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
                                         recipient: r.recipient ?? null, at: r.at })) };
   }

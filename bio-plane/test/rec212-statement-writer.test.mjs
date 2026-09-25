@@ -45,6 +45,19 @@
    with no `statement_by` — REC-193 measured that state unreachable through any act on a store this code
    wrote. Block 5 reaches the STATED null through two drafts DISAGREEING, which is reachable, and block 3
    reaches it as bytes. Block 7 prints its corpus and names both gaps.
+    D-540 (RUN 2026-09-25 by the D-540 worker on land/worker/D-540, each arm ALONE, DECLARED BEFORE ARMING,
+    every restore by `cp` from a uniquely-named pristine copy in the session scratchpad, verified by sha256
+    (`sha256sum -c` OK, 3b1f1cba9fed1c8262a0b4a59e476fb3ace82f492b9f264a876efda4743d63b3) AND `cmp`, 3,353,411
+    bytes). BASELINE: rec213 20/0, rec212 46/0, d150 64/0.
+      (d540-a) THE ROW'S OWN CONTROL — the writer exclusion DROPPED from `#statementAcknowledgements`' unbound
+        count (its `acknowledger IS ?` bound to null). DECLARED: MUST FAIL rec213 block 4's count row (reads
+        3) and its prose row [rec213-reviewcopy-writer]; MUST NOT fail rec212 or d150. RESULT: rec213 18 pass, 2 FAIL — exactly those two,
+        `got [..,3,..]` — rec212 46/0, d150 64/0, as declared.
+      (d540-b) THE FOLD — writer-undetermined participant rows counted INTO `unbound` and the own key zeroed.
+        DECLARED: MUST FAIL rec212 block 5's two D-540 rows; MUST NOT fail rec213 or d150. RESULT: rec212 44
+        pass, 2 FAIL — exactly those two, `got [0,[],1,null,null]` — rec213 20/0, d150 64/0, as declared.
+      NOT DRIVEN, SAID: a RECIPIENT's draft-given row under an UNDETERMINED writer (it stays in `unbound`);
+        no fixture here holds one.
 
    REC-212 / BIO_Publication_v0_1.md §3 rule 13 (BOB #32 RULED (b), 2026-09-24 06:11Z) — THE CASE
    DOCUMENT NAMED ONE ACT WHERE THERE ARE TWO, AND C-41.10's EXCLUSION READ THE WRONG ONE.
@@ -506,13 +519,28 @@ let SPLIT_CASE = null;
      the old key would now assert 0 dressed as 1. THE WITHHOLDING ITSELF IS NOT LEFT UNDRIVEN: it needs a
      row BOUND to the case, which after the narrowing means a draft naming an EXISTING case, and block 5b
      drives exactly that. */
-  t("THE PARTICIPANT ACKNOWLEDGEMENT ALREADY RECORDED IS COUNTED AND NEVER LISTED — and after REC-194 it is "
-  + "counted as UNBINDABLE rather than as withheld: ella read a DRAFT of a case that had no id yet, so it "
-  + "is not this case's reading to withhold, which is the stronger of the two reasons",
+  /* CORRECTED AGAIN 2026-09-25 BY D-540, never exempted, and the PROPERTY IS STILL UNCHANGED: ella's row is
+     counted and never listed. What was wrong was the claim that unbindability DOMINATES the writer question.
+     It does not: `acknowledgements_unbindable_to_this_case` is stated in the document as readings that MAY
+     be second readings of this case, and with the writer UNDETERMINED the record cannot rule out that
+     ella's is the writer's own — which is not a second reading at any identity (§3 rule 13). Two unknowns
+     at once, so the row is counted under its OWN key, `acknowledgements_unbindable_writer_undetermined`,
+     never folded into the unbindable count (claiming a possible second reading) nor into the withheld one
+     (it is not this case's row to withhold). The old 1 in the unbindable key was that fold. */
+  t("THE PARTICIPANT ACKNOWLEDGEMENT ALREADY RECORDED IS COUNTED AND NEVER LISTED — it is UNBINDABLE (ella "
+  + "read a DRAFT of a case that had no id yet) AND its writer is UNDETERMINED, so it is counted under its "
+  + "own key, never folded into the unbindable count or the withheld one (D-540)",
     [fm.completeness?.acknowledged, fm.completeness_acknowledgements,
-     p.completeness?.acknowledgements_unbindable_to_this_case,
+     p.completeness?.acknowledgements_unbindable_to_this_case ?? null,
+     p.completeness?.acknowledgements_unbindable_writer_undetermined ?? null,
      p.completeness?.acknowledgements_withheld_writer_undetermined ?? null],
-    [0, [], 1, null]);
+    [0, [], null, 1, null]);
+  t("D-540: and the PROSE states it apart, in its own sentence — never as a possible second reading of this case",
+    [/also holds 1 acknowledgement of this exact statement in [^,]+, given by a participant for a draft, of which it is UNDETERMINED both whether any is a reading of THIS case and whether any is the statement's writer's own/
+       .test(bodyOf(d?.text)),
+     /given for a case whose identity was not yet allocated/.test(bodyOf(d?.text)),
+     /Nobody acknowledged it FOR THIS CASE/.test(bodyOf(d?.text))],
+    [true, false, true]);
   t("so the bytes op=publish authored pass their own gate — it can never author a document C-41.10 refuses",
     [gate(fm, d.text).ok, checksOf(fm, d.text)], [true, []]);
   t("ella is refused at the door BY NAME, with the UNDETERMINED code and not the author code — the plane "
