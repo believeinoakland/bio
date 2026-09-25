@@ -90,3 +90,4 @@ filter-branch (it strips the SSH signatures and re-shas every worker commit).
 - SCHEDULER #22 04:14Z: batch28's 43 rows marked done + archived. Pen-sweep fix placed as M0-196. D-455 still owes BOB #34's §4.1 fold ON ITS
   BRANCH (worker re-asked) — confirm the tip before merging. D-598's CATALOG bump waits on M0-195 (census `changed:` mechanism). CATALOG
   1.30.0 is also claimed by REC-219, REC-203 and MK-7 (and D-147): the union takes ONE next number (1.31.0) from the d470 print.
+- D-515 24546c6b (M-166 measurement + comment-only test lines; no IC; D-608 minted)
