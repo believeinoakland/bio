@@ -843,8 +843,8 @@ scope: on the progression page, render each finding's disposition as the plane s
 accepts-when: against a real-plane suite a dismissed finding renders its decision beside it (the measured failure it moves: an answered question shown as open). NEGATIVE CONTROL: render `inst.findings` without the view and the decided-finding arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
 
-### D-617 · running — **THE DOCUMENT PAGE STILL SHOWS A DISMISSED FINDING AS OPEN: `docInstanceHtml` (app.html, the UI-9 block) renders op=captureprogressions' findings, which carry D-552's disposition, without it.** Found by UI-108's worker (05:41Z), the second of the two sites that render progression findings. — owner UI.
-status: running — SCHEDULER #22 05:45Z spawns WORKER D-617 (depth 2), stacked on land/worker/UI-108 @ 80594009 (it reuses progFindingDecisionHtml)
+### D-617 · integrated — **THE DOCUMENT PAGE STILL SHOWS A DISMISSED FINDING AS OPEN: `docInstanceHtml` (app.html, the UI-9 block) renders op=captureprogressions' findings, which carry D-552's disposition, without it.** Found by UI-108's worker (05:41Z), the second of the two sites that render progression findings. — owner UI.
+status: integrated — SCHEDULER #22 06:36Z: tip 7d466c6b (CARRIES UI-108 80594009), GATE 233/233 GREEN FULLREUSE (15352 assertions), tree c7d85b96; the document page shows each finding's decision; CIVICOS_UI_STATE v121 provisional
 order: directly after UI-108, its twin: an answered question shown as open on the other page (SCHEDULER #22, 2026-09-25)
 milestone: M4
 interface: none (I3 consumer of D-552).
@@ -865,8 +865,8 @@ scope: the setup page sends the line's SECOND token as keyB64 and the rest (the 
 accepts-when: a whole public-key line pasted into the setup page registers the key (moves: every setup-page registration refused BAD_KEY). NEGATIVE CONTROL: post the whole line again and the arm reads BAD_KEY, failing by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-134's worker).
 
-### UI-106 · running — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
-status: running — SCHEDULER #22 05:38Z spawns WORKER UI-106 (depth 2), carrying D-619
+### UI-106 · integrated — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
+status: integrated — SCHEDULER #22 06:36Z: tip 5b994a67 (CARRIES D-568 d5da99bb), GATE 318/318 GREEN FULLREUSE (18697 assertions), tree 55357791; newCase round-trips, D-619 carried; REC-199 DELEGATION discharged; minted D-626
 order: after D-539, the surface half of the review-copy corrections (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
 interface: I3 consumer (REC-199's IC-285 and D-538's IC).
@@ -876,8 +876,8 @@ scope: `rvcFormFromCopy` reads `case.newCase` so a read-then-write keeps it; the
 accepts-when: against a real-plane suite a round trip through the form keeps `newCase`, and draft DD shows the derivation sentence (the measured failure it moves: `newCase` lost at the surface). NEGATIVE CONTROL: drop the read and the round-trip arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
-### D-619 · running — **`rvcGrantsHtml` SAYS A DEAD GRANT BOUND TO NO CASE "was given for a new case", untrue for a DERIVED draft's grant (D-538's class, on the surface).** Found by D-568's worker (05:36Z). RIDES UI-106's landing (the same review-copy surface). — owner UI.
-status: running — SCHEDULER #22 05:38Z: rides WORKER UI-106's landing
+### D-619 · integrated — **`rvcGrantsHtml` SAYS A DEAD GRANT BOUND TO NO CASE "was given for a new case", untrue for a DERIVED draft's grant (D-538's class, on the surface).** Found by D-568's worker (05:36Z). RIDES UI-106's landing (the same review-copy surface). — owner UI.
+status: integrated — SCHEDULER #22 06:36Z: carried by UI-106 @ 5b994a67; closes with it
 order: directly after UI-106, which carries it (SCHEDULER #22, 2026-09-25)
 milestone: M10
 interface: none.
@@ -1063,6 +1063,36 @@ depends-on: DIST-7.
 scope: DIST decides the format first and records it in Distribution: a SEPARATELY signed plane-limits field, or a `/3` statement older installers are told to skip; then the installer carries `limits.subrequests` from the signed release and refuses a release without it by name.
 accepts-when: `newgroup/test/` asserts both uploads send the RELEASE's `limits.subrequests`, a release without it is refused by name, and an older installer still verifies its fleet signature (the measured failure it moves: the value read from `wrangler.jsonc`, not the signed release). NEGATIVE CONTROL: strip the field from a signed release and the refusal arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs DIST`).
+
+### D-626 · queued — **TWO PLANE SENTENCES STILL SAY A DRAFT THAT NAMES NO CASE IS A NEW CASE (D-538's class): C-87.6 REVIEW_NO_SUCH_CASE's translation ends "Leave the name off and the draft is a new case." (false since D-538: leaving it off lets publication DERIVE the case), and PUBLISH_DRAFT_NOT_THIS_CASE's detail calls `#caseIdentitySentence(di.caseId, di.edition)` without the draft's newCase, so a new-case draft is described with the derivation sentence.** Found by UI-106's worker (06:24Z). — owner RECORD.
+order: after D-618, with the review-copy corrections: D-538's class in two more sentences (SCHEDULER #22, 2026-09-25)
+milestone: M10
+interface: I3 — one translation's wording and one detail; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with D-538's identity sentence and BOB #32's newCase ruling.
+depends-on: none.
+scope: reword C-87.6's translation to say leaving the name off lets publication derive the case and asking for a new case is the separate choice; pass the draft's newCase into #caseIdentitySentence at is-publish-draft-this-case; census row per M0-195 (a translation change is behaviour).
+accepts-when: neither sentence calls a derived draft new, and a new-case draft's refusal reads the new-case sentence (moves: 2 sentences claiming a new case). NEGATIVE CONTROL: drop newCase from the call and the new-case arm reads the derivation sentence, failing by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by UI-106's worker).
+
+### D-346 · queued — **THE THREE OPENDOCUMENT ENTRIES EMIT NO `core-properties` AND NO `intra` LINK: `odf.mjs` never reads `meta.xml` or the manifest and says so with `outside_content_xml_not_read` markers, while Content Framework §16 says the formats "preserve the same evidence".** — owner COFF.
+order: after D-320 (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M2
+interface: I2 — the ODF part-map gains two item kinds; the integrator mints and classifies the IC.
+design: `docs/development/OFFICE-FORMATS.md` §"What each part-map offers, and where it maps onto I2".
+depends-on: none.
+scope: read `meta.xml` into `core-properties`; walk the manifest for sha256 `intra` links; remove both markers. Extend `bio-plane/test/formats-odf.test.mjs`.
+accepts-when: a planted creator appears as a `core-properties` item; a package without `meta.xml` still states the absence. NEGATIVE CONTROL: skip the `meta.xml` read, and the planted-creator arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### REC-204 · queued — **AN OFFICE DOCUMENT'S ENVELOPE IS EXTRACTED AND NEVER CONTENT: tracked-change authors, comments, core properties and speaker notes are emitted by the format parsers and never projected, indexed or searchable (`textUnitsFor`: *"SPEAKER NOTES ARE NOT INDEXED"*).** Under DEC-5, surface it all. — owner RECORD.
+order: with the M2 extraction rows, after D-346 (SCHEDULER #17, 2026-09-23; D-124's first row, placed under a new id because D-124 names two rows)
+milestone: M2
+interface: I2/I5 — a NINTH extent kind, `envelope`, with an item-kind field; the integrator mints the IC for the extent census.
+design: `docs/development/OFFICE-FORMATS.md` "THE ENVELOPE AS CONTENT" (on `land/bob/rulings-0923b` @ fd93bf1d, riding the next train): the extent carries the capture's grade, `cited_as` distinguishes it, and it is indexed LABELLED as envelope.
+depends-on: none.
+scope: the `envelope` extent and its projection; index each item labelled as its kind. Extend `bio-plane/test/search.test.mjs`.
+accepts-when: a passage search finds a tracked-change author and speaker-note text, each labelled as envelope. NEGATIVE CONTROL: drop the envelope arm, and the tracked-change-author search returns 0 by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
