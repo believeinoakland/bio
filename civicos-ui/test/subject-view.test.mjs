@@ -23,6 +23,18 @@
  * C document is NEVER shown as established", "the C document says plausible-not-
  * established", "no Grade C anywhere reads as established", "the weaker-C connection
  * reads unconfirmed"); restored to `if(established && !needsConfirm){` -> all green.
+ *
+ * NEGATIVE CONTROL (UI-95, derivation stated): RUN 2026-09-25. ARM 1 — drop the render,
+ * deleting `${c && c._err ? "" : connectionsDerivationHtml(c)}` from subjConnectionsHtml
+ * (anchor matched once): declared MUST FAIL the cut-set arm, MUST NOT fail the whole,
+ * failed-read or document-page arms. Actual: 7 of 48 failed, led by "UI-95 · CUT-SET: a cut
+ * derivation shows the plane's sentence VERBATIM beside the list", plus the three
+ * unrecorded causes, the empty-list, over-strictness and missing-key arms; the whole arms
+ * held. ARM 2 — delete connectionsDerivationHtml's `if(d.cut !== true && d.derived ===
+ * "derived") return ``;` so a whole derivation renders too: declared MUST FAIL the two
+ * "shows no derivation sentence" arms and nothing else. Actual: exactly those 2 of 48.
+ * Each arm restored from a per-arm pristine copy, `cmp` equal, sha256 dcc684cd9095b083…
+ * (1,599,985 B) before and after; 48/48 green.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -31,6 +43,9 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
    import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+/* UI-95: the derivation sentences come from the plane's OWN function, imported, never a hand
+   copy — a copy agrees with the surface for free and with the plane on nothing. */
+import { derivationStatement } from "../../bio-plane/src/airun.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -71,7 +86,13 @@ const CONNECTIONS = { ok:true, entity_id:"ENT-1", capture_sha:null, count:1,
       a_bundle_id:"INFO-2026-0100", b_bundle_id:"INFO-2026-0200",
       grade:"C", a_grade:"B", b_grade:"C", established:false, needs_confirmation:true,
       asserted_by:"system", basis:"both documents concern Sheng Thao", at:"2026-07-25T00:00:00Z" },
-  ] };
+  ],
+  /* CORRECTED 2026-09-25 (UI-95): since D-241 the plane's entity arm ALWAYS carries
+     `derivation`, and this fixture predated it — it answered a shape the real plane no
+     longer sends. It now carries a WHOLE recorded derivation, the ordinary case, which
+     the surface must render as nothing beyond the list. */
+  derivation: derivationStatement({ at:"2026-07-25T00:00:00Z", state:"PRESENT",
+    detail:"the derivation read 2 document(s) concerning this entity and wrote 1 connection(s)" }) };
 
 function mockFetch(u, opts){
   const url = new URL(u, "https://plane.test");
@@ -122,7 +143,8 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
 ctx.globalThis = ctx; vm.createContext(ctx);
 vm.runInContext(appScript() +
   ";globalThis.__PLANE=PLANE;globalThis.__renderSubjectView=renderSubjectView;" +
-  "globalThis.__lookupSubject=lookupSubject;globalThis.__showEntity=showEntity;", ctx);
+  "globalThis.__lookupSubject=lookupSubject;globalThis.__showEntity=showEntity;" +
+  "globalThis.__subjConnectionsHtml=subjConnectionsHtml;globalThis.__docConnectionsHtml=docConnectionsHtml;", ctx);
 
 ctx.__PLANE.session = true;
 ctx.__PLANE.me = { member:"m_alice", session:true, administer:false, capabilities:["contribute"] };
@@ -169,6 +191,69 @@ ok("the connection states it takes the weaker of its two ends", /weaker/.test(ht
 /* the connection's grade is the weaker end (B,C -> C): it must read unconfirmed */
 ok("the weaker-C connection reads unconfirmed, never established",
    html.includes("Grade C · unconfirmed") && !/Grade C · established/.test(html));
+
+/* ---- UI-95: THE DERIVATION'S EXTENT, beside the page's (D-241, CONTENT-SEARCH-DESIGN §4.3) ----
+   `truncated` says whether THIS PAGE was cut; `derivation` says whether the derivation that
+   wrote the rows was. A cut derivation read under the ceiling came back `truncated:false`
+   over PART of the set. Every sentence below is the plane's own, from derivationStatement,
+   and must appear VERBATIM (DEC-8) — escaped for HTML and nothing else. */
+const escH = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const connSec = h => (/Connections among these documents<\/h2>([\s\S]*?)<\/section>/.exec(h)||[])[1] || "";
+const LEAD = "The record says of the derivation behind this list:";
+const CUT = derivationStatement({ at:"2026-09-20T00:00:00Z", state:"partial",
+  detail:"the derivation over 32 document(s) concerning this entity was CUT by its pair bound" });
+const LOOKED_ABSENT = derivationStatement({ at:"2026-09-20T00:00:00Z", state:"LOOKED_ABSENT",
+  detail:"the derivation ran over 3 document(s) concerning this entity and formed no connection" });
+const NEVER = derivationStatement(null, "never_looked");
+const PRELOG = derivationStatement(null, "pre_log");
+const UNDET = derivationStatement(null, "purged");
+/* the fixtures are what they claim to be — a control over a mislabelled fixture refutes nothing */
+ok("UI-95 · INSTRUMENT: the cut fixture IS cut and names its documents", CUT.cut === true && CUT.documents === 32 && /CUT/.test(CUT.says));
+ok("UI-95 · INSTRUMENT: the whole fixtures are recorded and not cut",
+   CONNECTIONS.derivation.cut === false && CONNECTIONS.derivation.derived === "derived"
+   && LOOKED_ABSENT.cut === false && LOOKED_ABSENT.derived === "derived");
+ok("UI-95 · INSTRUMENT: the three unrecorded fixtures are the three causes",
+   NEVER.derived === "never_derived" && PRELOG.derived === "pre_log" && UNDET.derived === "undetermined");
+
+/* the live path: the whole derivation the base fixture carries adds NO sentence */
+const wholeSec = connSec(html);
+ok("UI-95 · a WHOLE derivation read through op=connections shows no derivation sentence",
+   wholeSec.includes("INFO-2026-0100") && !wholeSec.includes(LEAD) && !wholeSec.includes(escH(CONNECTIONS.derivation.says)));
+
+/* the cut-set arm — THE NEGATIVE CONTROL's target, driven through op=connections */
+const savedDerivation = CONNECTIONS.derivation;
+CONNECTIONS.derivation = CUT;
+await ctx.__showEntity("ENT-1", ENTITY, true);
+const cutSec = connSec(els.get("#subj-res")._html);
+CONNECTIONS.derivation = savedDerivation;
+ok("UI-95 · CUT-SET: a cut derivation shows the plane's sentence VERBATIM beside the list",
+   cutSec.includes(LEAD) && cutSec.includes(escH(CUT.says)));
+ok("UI-95 · CUT-SET: the cut sentence sits beside the connection it qualifies", cutSec.includes("INFO-2026-0200"));
+
+/* the other arms, through the panel function the subject view calls */
+const panel = c => connSec(ctx.__subjConnectionsHtml(c));
+const withD = d => ({ ...CONNECTIONS, derivation:d });
+ok("UI-95 · a whole derivation that formed no connection shows no derivation sentence",
+   !panel({ ...withD(LOOKED_ABSENT), connections:[], count:0 }).includes(LEAD));
+for(const [name, d] of [["never derived", NEVER], ["pre-log", PRELOG], ["undetermined", UNDET]])
+  ok(`UI-95 · an UNRECORDED derivation (${name}) shows the plane's sentence verbatim`,
+     panel(withD(d)).includes(LEAD) && panel(withD(d)).includes(escH(d.says)));
+ok("UI-95 · the never-derived sentence shows over an EMPTY list too",
+   panel({ ...withD(NEVER), connections:[], count:0 }).includes(escH(NEVER.says)));
+/* over-strictness: a cut derivation whose `says` the plane words differently still renders it,
+   because the surface keys on `cut`, not on a phrase it expects */
+const REWORDED = { ...CUT, says:"a sentence the plane may one day word <otherwise> & still mean cut" };
+ok("UI-95 · OVER-STRICTNESS: a cut derivation in a spelling the surface did not anticipate still shows, escaped",
+   panel(withD(REWORDED)).includes(escH(REWORDED.says)));
+/* an entity-arm answer with no derivation key is stated undetermined, never read as complete */
+const { derivation:_drop, ...noKey } = CONNECTIONS;
+ok("UI-95 · an answer WITHOUT the derivation key says the record did not say, rather than implying the set is whole",
+   /did not say whether the derivation behind this list was cut/.test(panel(noKey)) && !panel(noKey).includes(LEAD));
+ok("UI-95 · a failed read states no derivation at all", !/derivation/.test(panel({ connections:[], _err:true })));
+/* the capture arm publishes no derivation: the document page must not grow the undetermined sentence */
+const docPanel = ctx.__docConnectionsHtml({ ...noKey, entity_id:null, capture_sha:"a".repeat(64) }, "a".repeat(64));
+ok("UI-95 · the document page (capture arm, no derivation by design) states nothing about a derivation",
+   !/derivation behind this list/.test(docPanel) && !docPanel.includes(LEAD));
 
 /* ---- a subject found BY ID reads directly through op=entity ---- */
 CALLS.length = 0;
