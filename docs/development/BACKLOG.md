@@ -56,14 +56,14 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
-### D-686 · blocked — **EVERY UNIT OF A MIXED DOCUMENT READS `chain_kind` 'ocr': `capture_text.chain_kind` and `content.chain_kind` are the WHOLE chain's last step, so a text-layer page of a document that OCR also touched is labelled as OCR'd — the record says more about how a page was read than it holds.** Predates D-635. Found by D-635's worker (minted on land/worker/D-635). — owner RECORD, CONTENT-PDF.
-order: provisional, after D-671 with the PDF corrections; BLOCKED on design — `content.chain_kind` is a GENERATED column, so the per-unit kind needs BOB's look (sent 2026-09-25 ~08:55Z) (SCHEDULER #23, 2026-09-25)
+### D-686 · queued — **EVERY UNIT OF A MIXED DOCUMENT READS `chain_kind` 'ocr': `content.chain_kind` is the WHOLE chain's last step, so a text-layer page of a document OCR also touched is labelled as OCR'd.** Predates D-635. Found by D-635's worker. BOB #35 RULED 2026-09-25 09:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): REPLACE on content, KEEP on capture_text, ONE function — `content.chain_kind` becomes the kind of the last derivation step covering the unit's page (partKeyOf / stepCovers), stored at mint or computed at read (the builder's choice, no second computation); existing rows are derived values, recomputing them is not a rewrite; `capture_text.chain_kind` stays document-level and its reader text says "the last step of this document's chain, not how any given page was read". — owner CONTENT-PDF, RECORD.
+order: after D-671 with the PDF corrections, UNBLOCKED by BOB #35 09:05Z (SCHEDULER #23, 2026-09-25)
 milestone: M2
-interface: I5 — a per-unit chain kind (schema); the integrator classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (the derivation chain and its parts, D-635's overlapping parts), pending BOB's ruling on the GENERATED column.
-depends-on: none — BLOCKED on BOB's design ruling, not on a row.
-scope (named fix, pending design): derive the unit's kind from the last derivation step covering its page (`partKeyOf` / `stepCovers`); how `content.chain_kind` (GENERATED) carries it is the design question.
-accepts-when: a text-layer page of a mixed document reads its own kind and an OCR'd page reads 'ocr' (moves: every unit 'ocr'). NEGATIVE CONTROL: read the whole chain's last step again and the text-layer arm fails by name.
+interface: I5 — content.chain_kind changes meaning (IC REQUIRED; readers change); the integrator mints and classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (the derivation chain and its parts), with BOB #35's 09:05Z ruling, folded into Part II (the content object, extraction method) by this row.
+depends-on: D-635 (integrated, land/worker/D-635 @ d31c52bf — its overlapping parts and partKeyOf).
+scope: one function computing a unit's chain kind from the last step covering its page; every reader and writer calls it; recompute existing rows; capture_text's reader text as ruled.
+accepts-when: on a mixed fixture a text-layer page's unit reads its layer kind and an OCR'd page's reads 'ocr' (moves: every unit 'ocr'). NEGATIVE CONTROL: revert to the generated whole-chain column and the text-layer arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-635's worker).
 
 ### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
