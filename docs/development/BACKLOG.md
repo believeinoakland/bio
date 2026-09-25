@@ -83,16 +83,6 @@ scope: (1) Tier 1 inflate tolerates bytes after the compressed stream's end (kee
 accepts-when: CAFR-2002's pages read with text where their streams decode, and no page reads 0 chars without a marker (measured into a measurements/ file). NEGATIVE CONTROL: restore the strict inflate and the trailing-bytes arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-585's worker).
 
-### D-608 · queued — **TIER 1's TEXT WALK (`pdfstructure.mjs` `extractPageText`) INTERPRETS NO `Do`, so text inside Form XObjects goes unread and no page marker says so: the page reads as fully decoded while missing text.** MEASURED (M-166): ACFR FY2023-24 (biosmoke7 INFO-2026-0103) p38 tier 1 80 glyphs, tier 2 546, 34 of 40 text-show ops inside forms; all 9 held pages where tier 2 reads 10% or more beyond an unflagged tier 1 carry Form XObject text. Found by D-515's worker (04:14Z). — owner CONTENT-PDF.
-order: after D-591, with the reader corrections: a page stated as read while its text is unread claims more than the record holds (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
-milestone: M2
-interface: I6 if a page's tier or grade changes on the wire (the integrator classifies).
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with CPDF-18's image walk (it already descends into forms).
-depends-on: none.
-scope: descend into Form XObjects in the text walk the way CPDF-18's image walk does (/Matrix, /Resources, cycle and depth bounds); at the least, a counted page marker when a painted form carries unread text-show ops. Re-read M-166's 9 pages and record the moved counts; the 1,455 pages under 10% stay undiagnosed unless the re-read moves them.
-accepts-when: p38 reads its form text at tier 1 (moves: 9 pages reading as decoded while missing form text). NEGATIVE CONTROL: stop descending at `Do` and the form arm fails by name.
-added: 2026-09-25 · SCHEDULER #22 (id minted by D-515's worker).
-
 ### D-606 · queued — **A SCANNED DOCUMENT IS OCR'D ONE PAGE PER ACQUIRE AND THE REST IS DROPPED: `index.mjs` `tier3Extend` (the only OCR_WORKER.fetch call site) calls the member once and never reads its answer's `deferred`, while `contract.mjs` `chooseChunk` takes the lowest page. MEASURED (M-165): on FW-20's walk rebuilt, 174 of 190 selected scanned pages were never transcribed; a per-page loop transcribes 183.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF (the plane seam).
 order: after D-608, with the reader corrections: most of a scanned civic record going unread is the silent under-read CLAUDE.md §2 ranks worst (SCHEDULER #22, 2026-09-25)
 milestone: M2
@@ -1202,3 +1192,13 @@ depends-on: none — D-293 is on `main`.
 accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT** … (whole text: the cut archive)
+order: directly after M0-104, whose line it folds, behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; SCHEDULER #11 on BOB #25's word); RETURNED here by SCHEDULER #14 after M0-107 folded its ruling within budget (`VERIFICATION.md` 24,319 B at `14f1b75e`)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and … (whole text: the cut archive)
+depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
+accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

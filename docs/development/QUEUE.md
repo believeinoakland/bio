@@ -392,8 +392,8 @@ accepts-when: against the real plane, a group with a display name shows it besid
 added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, item 3, drained this commit; `node tools/mintid.mjs UI`).
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-78» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### MK-7 · running — **THE ATTRIBUTION ACT, AND THEN THE LIFT OF MK-1's FENCE** (MK-3's replacement (ii), `MEMBER-KNOWLEDGE-DESIGN.md` §4.2–§4.6): an … (whole text: the cut archive)
-status: running — SCHEDULER #21 02:36Z spawns WORKER MK-7 (depth 2)
+### MK-7 · integrated — **THE ATTRIBUTION ACT, AND THEN THE LIFT OF MK-1's FENCE** (MK-3's replacement (ii), `MEMBER-KNOWLEDGE-DESIGN.md` §4.2–§4.6): an … (whole text: the cut archive)
+status: integrated — SCHEDULER #22 04:37Z: tip 687c8ea9, GATE 367/367 GREEN FULLREUSE (21096 assertions), tree 1b76729c; the new attribute act, C-92.1-12, IC-319 (builder: MAJOR); CATALOG 1.30.0 (collides with REC-219, REC-203); 13.attribution BUILT, 2.firsthand BUILT; provisionals §4.4 and §4.6 with Bob; D-598 built separately
 order: after MK-6, which it rests on, and above MK-5, which rests on it; replaces MK-3 (superseded 2026-09-21). Two points are provisionals carried to Bob, cheap to change until built: §4.4's narrow veto and §4.6's `name` = handle (SCHEDULER #4, 2026-09-21)
 milestone: M3 — the member's own knowledge enters the record as what it is
 interface: I3 — the builder names the op and, if a design names it first, registers it in `op-claims.mjs`' `PLANNED_OPS`.
@@ -753,6 +753,16 @@ depends-on: D-468; D-563 (same promote function; SCHEDULER #22).
 scope: (1) MEASURE the corpus first: per type, the count of recorded moves whose edge is undeclared today, with dates, in `measurements/<id>.md`; (2) lift D-468's fence to every type with a head: promote refuses any move its type's table does not declare, for every caller by a named DEC-49 code; (3) never rewrite, reverse or repair a stored move; where a reader meets one it is stated "made by a path the current rules do not allow (before <fence date>)", neither valid nor invalid, and never larger or smaller than the count shows; (4) `STATES` keeps its valid-but-unreachable states for reading old records, unreachable by promote.
 accepts-when: an undeclared move on a non-bias type is refused by name, a stored undeclared move reads with the dated sentence and is unchanged, and the measurement states the per-type counts (moves: promote asks no table but bias). NEGATIVE CONTROL: drop the fence for one type and its undeclared-move arm lands, failing by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
+
+### D-608 · queued — **TIER 1's TEXT WALK (`pdfstructure.mjs` `extractPageText`) INTERPRETS NO `Do`, so text inside Form XObjects goes unread and no page marker says so: the page reads as fully decoded while missing text.** MEASURED (M-166): ACFR FY2023-24 (biosmoke7 INFO-2026-0103) p38 tier 1 80 glyphs, tier 2 546, 34 of 40 text-show ops inside forms; all 9 held pages where tier 2 reads 10% or more beyond an unflagged tier 1 carry Form XObject text. Found by D-515's worker (04:14Z). — owner CONTENT-PDF.
+order: after D-591, with the reader corrections: a page stated as read while its text is unread claims more than the record holds (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I6 if a page's tier or grade changes on the wire (the integrator classifies).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with CPDF-18's image walk (it already descends into forms).
+depends-on: none.
+scope: descend into Form XObjects in the text walk the way CPDF-18's image walk does (/Matrix, /Resources, cycle and depth bounds); at the least, a counted page marker when a painted form carries unread text-show ops. Re-read M-166's 9 pages and record the moved counts; the 1,455 pages under 10% stay undiagnosed unless the re-read moves them.
+accepts-when: p38 reads its form text at tier 1 (moves: 9 pages reading as decoded while missing form text). NEGATIVE CONTROL: stop descending at `Do` and the form arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-515's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
