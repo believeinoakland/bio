@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d334-monitor-credential.test.mjs",
+ "inputHash": "f4c8610cca4ceb8dfcc1a763e9247ba16eb481371e0c58c15d959d0e1ebb5df7",
+ "verdict": "PASS",
+ "run": "01cf59a45b0d5fdf906fc36fbabf78de6bd16b5d.1790323215851.2216.json",
+ "tree": "01cf59a45b0d5fdf906fc36fbabf78de6bd16b5d",
+ "head": "11778f29bc618ca3ac5edf1c052e3853d50ff815",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 157,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "a952da39-f61a-5a45-8cca-f5b80a4096a1",
+ "at": "2026-09-25T08:00:15.865Z"
+}

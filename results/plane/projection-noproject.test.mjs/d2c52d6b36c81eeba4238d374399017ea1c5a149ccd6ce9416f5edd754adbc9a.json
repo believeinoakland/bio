@@ -1,0 +1,16 @@
+{
+ "unit": "plane:projection-noproject.test.mjs",
+ "inputHash": "d2c52d6b36c81eeba4238d374399017ea1c5a149ccd6ce9416f5edd754adbc9a",
+ "verdict": "PASS",
+ "run": "01cf59a45b0d5fdf906fc36fbabf78de6bd16b5d.1790323215851.2216.json",
+ "tree": "01cf59a45b0d5fdf906fc36fbabf78de6bd16b5d",
+ "head": "11778f29bc618ca3ac5edf1c052e3853d50ff815",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 140,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "a952da39-f61a-5a45-8cca-f5b80a4096a1",
+ "at": "2026-09-25T08:00:15.865Z"
+}
