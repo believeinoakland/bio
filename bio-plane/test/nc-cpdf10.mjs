@@ -103,9 +103,14 @@ const ARMS = [
 
   { name: "h. D-252: the per-page eligibility test (a page may be FILLED, never REPLACED)",
     file: "src/index.mjs",
-    from: `    if (!target || !wanted.has(p.page) || !empty) { refused.push(p.page); continue; }`,
+    /* D-635 moved condition 2 off this line (a page holding a glyph is now APPENDED to, not refused), so the
+       anchor is the line as it now reads. The arm is unchanged: it drops the eligibility test. */
+    from: `    if (!target || !wanted.has(p.page)) { refused.push(p.page); continue; }`,
     to:   `    if (!target) { refused.push(p.page); continue; }`,
-    mustFail: "the OVER-REACHING MEMBER arms — a member answering for a page it was not asked about now overwrites that page's good text",
+    /* D-635, measured 2026-09-25: this arm fails 2 where it failed 4. With eligibility gone, the over-reaching
+       answer for a page holding text is APPENDED rather than overwriting it, so the good text survives and the
+       two arms about the member's text reaching the record, and being named as dropped, are the ones that fail. */
+    mustFail: "the OVER-REACHING MEMBER arms — a member answering for a page it was not asked about now reaches that page's text",
     mustNotFail: "the ordinary merge arms (the member answers only for the page it was asked about, so eligibility never has to catch anything)" },
 
   { name: "i. D-252: an unmeasured PART stops making the document undetermined (the null->letter resolution)",
@@ -117,7 +122,8 @@ const ARMS = [
 
   { name: "j. D-252: mergedChain stops SCOPING the steps it merges",
     file: "src/textchain.mjs",
-    from: `      out.push(STEP_KINDS[step.step].role === "derivation"\n        ? { ...step, extent: { kind: "pages", pages } } : { ...step });`,
+    /* D-635 added the part index to this line (stamped only when parts overlap); the anchor follows it. */
+    from: `      out.push(STEP_KINDS[step.step].role === "derivation"\n        ? { ...step, extent: overlap ? { kind: "pages", pages, part: index } : { kind: "pages", pages } }\n        : { ...step });`,
     to:   `      out.push({ ...step });`,
     mustFail: "the extent arms, the chain-sentence arm, the doctrine pin and the per-page cap arms — an unscoped mixed chain reads as a sequence and answers C for the whole document",
     mustNotFail: "the merge arms about TEXT (the good page's text still survives — the chain and the text are separate guarantees, which is why they are separate arms)" },

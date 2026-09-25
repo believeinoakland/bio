@@ -25718,9 +25718,13 @@ var EXTENT_KINDS = { region: 1, page: 1, document: 1 };
 function extentOf(step) {
   const e = step.extent;
   if (e == null) return "all";
-  if (e && typeof e === "object" && !Array.isArray(e) && e.kind === "pages" && Array.isArray(e.pages) && e.pages.length && e.pages.every((p) => Number.isInteger(p) && p >= 0))
+  if (e && typeof e === "object" && !Array.isArray(e) && e.kind === "pages" && Array.isArray(e.pages) && e.pages.length && e.pages.every((p) => Number.isInteger(p) && p >= 0) && (e.part === void 0 || Number.isInteger(e.part) && e.part >= 0))
     return e.pages;
   return "unreadable";
+}
+function partKeyOf(step) {
+  const e = step.extent;
+  return Number.isInteger(e && e.part) ? `#${e.part}` : extentOf(step).join(",");
 }
 function pageList(pages) {
   const runs = [];
@@ -25738,12 +25742,19 @@ function mergedChain(parts) {
     return bad || parts[0].chain;
   }
   const out = [];
-  for (const part of parts) {
+  const seen = /* @__PURE__ */ new Set();
+  let overlap = false;
+  for (const part of parts)
+    for (const p of new Set(Array.isArray(part && part.pages) ? part.pages : [])) {
+      if (seen.has(p)) overlap = true;
+      seen.add(p);
+    }
+  for (const [index, part] of parts.entries()) {
     const bad = checkChain(part && part.chain);
     if (bad) return bad;
     const pages = Array.isArray(part.pages) ? [...new Set(part.pages.filter((p) => Number.isInteger(p) && p >= 0))].sort((a, b) => a - b) : [];
     for (const step of part.chain) {
-      out.push(STEP_KINDS[step.step].role === "derivation" ? { ...step, extent: { kind: "pages", pages } } : { ...step });
+      out.push(STEP_KINDS[step.step].role === "derivation" ? { ...step, extent: overlap ? { kind: "pages", pages, part: index } : { kind: "pages", pages } } : { ...step });
     }
   }
   return out;
@@ -25873,6 +25884,12 @@ function derivationCap(chain2, target = null) {
     if (page != null) {
       if (ext !== "all" && !ext.includes(page)) continue;
       const m2 = measured(step);
+      if (ext !== "all") {
+        const key2 = partKeyOf(step);
+        if (!parts.has(key2)) parts.set(key2, null);
+        if (m2) parts.set(key2, parts.get(key2) == null ? m2 : weaker(parts.get(key2), m2));
+        continue;
+      }
       if (m2) cap = cap == null ? m2 : weaker(cap, m2);
       continue;
     }
@@ -25881,13 +25898,24 @@ function derivationCap(chain2, target = null) {
       if (m2) cap = cap == null ? m2 : weaker(cap, m2);
       continue;
     }
-    const key = ext.join(",");
+    const key = partKeyOf(step);
     const m = measured(step);
     if (!parts.has(key)) parts.set(key, null);
     if (m) parts.set(key, parts.get(key) == null ? m : weaker(parts.get(key), m));
   }
   if (unreadable) return null;
-  if (page != null) return cap;
+  if (page != null) {
+    if (parts.size <= 1) {
+      for (const one of parts.values())
+        if (one != null) cap = cap == null ? one : weaker(cap, one);
+      return cap;
+    }
+    for (const each of parts.values()) {
+      if (each == null) return null;
+      cap = cap == null ? each : weaker(cap, each);
+    }
+    return cap;
+  }
   for (const partCap of parts.values()) {
     if (partCap == null) return null;
     cap = cap == null ? partCap : weaker(cap, partCap);
@@ -28816,22 +28844,34 @@ function stepPages(s) {
   return "all";
 }
 var covers = (pages, p) => pages === "all" || pages.has(p);
-function chainTierOf(chain2, page) {
-  if (!Array.isArray(chain2)) return null;
-  let layer = null, pixels = null;
+function partOf(s) {
+  const e = s && s.extent;
+  if (e && Number.isInteger(e.part)) return `#${e.part}`;
+  return e && Array.isArray(e.pages) ? e.pages.join(",") : "all";
+}
+function chainTiersOf(chain2, page) {
+  if (!Array.isArray(chain2)) return [];
+  const byPart = /* @__PURE__ */ new Map();
   for (let i = 0; i < chain2.length; i++) {
     const s = chain2[i];
     if (!s || typeof s !== "object") continue;
     const pages = stepPages(s);
     if (!covers(pages, page)) continue;
+    const key = partOf(s);
+    const had = byPart.get(key) || { layer: null, pixels: null };
     if (s.step === "pixels") {
       const next = chain2[i + 1];
-      pixels = { tier: 3, engine: next && next.step === "ocr" && typeof next.engine === "string" ? `${next.engine}${next.version ? ` ${next.version}` : ""}` : null };
+      had.pixels = { tier: 3, engine: next && next.step === "ocr" && typeof next.engine === "string" ? `${next.engine}${next.version ? ` ${next.version}` : ""}` : null };
     } else if (s.step === "layer") {
-      layer = { tier: Number.isInteger(s.tier) ? s.tier : null, engine: null };
+      had.layer = { tier: Number.isInteger(s.tier) ? s.tier : null, engine: null };
     }
+    byPart.set(key, had);
   }
-  return pixels || layer;
+  return [...byPart.values()].map((h) => h.pixels || h.layer).filter(Boolean);
+}
+function chainTierOf(chain2, page) {
+  const all = chainTiersOf(chain2, page);
+  return all.length ? all[all.length - 1] : null;
 }
 async function readingProvenance({
   text = null,
@@ -28883,14 +28923,21 @@ async function readingProvenance({
       const fromChain = chainTierOf(chain2, p.page);
       const t = fromChain && fromChain.tier != null ? fromChain.tier : Number.isInteger(p.tier) ? p.tier : out.text_tier;
       const pt = typeof p.text === "string" ? p.text : "";
-      out.pages.push({
+      const several = chainTiersOf(chain2, p.page).filter((c) => c.tier != null);
+      const entry = {
         page: p.page,
         tier: t,
         member: t == null ? null : TIER_MEMBERS[t] ?? null,
         chars: pt.length,
         text_sha256: pt.length ? await sha256Hex5(pt) : null
-      });
-      if (pt.length) credit(t, fromChain && fromChain.engine, p.page);
+      };
+      if (several.length > 1)
+        entry.producers = several.map((c) => ({ tier: c.tier, member: TIER_MEMBERS[c.tier] ?? null }));
+      out.pages.push(entry);
+      if (pt.length) {
+        if (several.length > 1) for (const c of several) credit(c.tier, c.engine, p.page);
+        else credit(t, fromChain && fromChain.engine, p.page);
+      }
     }
   } else {
     out.pages_why = "this text carries no per-page grain (its producer itemised no pages), so a re-read that differs is attributed to the document, not to a page";
@@ -28917,6 +28964,7 @@ function describePages(list) {
   return `${ps.length === 1 ? "page" : "pages"} ${runs.map(([a, b]) => a === b ? `${a}` : `${a}-${b}`).join(", ")}`;
 }
 var who = (t, m) => t == null ? "an undetermined tier" : `tier ${t} on ${m || "an unnamed member"}`;
+var whoOf = (p) => Array.isArray(p.producers) && p.producers.length > 1 ? p.producers.map((q) => who(q.tier, q.member)).join(" and ") : who(p.tier, p.member);
 var isProv = (p) => !!(p && typeof p === "object" && p.scheme === PROVENANCE_SCHEME);
 function compareProvenance(prior, next) {
   if (!isProv(prior) || !isProv(next)) {
@@ -28946,13 +28994,14 @@ function compareProvenance(prior, next) {
   for (const pg of all) {
     const a = before.get(pg) || null, b = after.get(pg) || null;
     if (a && b && a.text_sha256 === b.text_sha256) continue;
-    const key = `${a ? a.tier : "-"}|${a ? a.member : "-"}|${b ? b.tier : "-"}|${b ? b.member : "-"}`;
+    const key = `${a ? whoOf(a) : "-"}|${b ? whoOf(b) : "-"}`;
+    const side = (x) => ({
+      tier: x.tier,
+      member: x.member,
+      ...Array.isArray(x.producers) && x.producers.length > 1 ? { producers: x.producers } : {}
+    });
     if (!groups.has(key))
-      groups.set(key, {
-        before: a ? { tier: a.tier, member: a.member } : null,
-        now: b ? { tier: b.tier, member: b.member } : null,
-        pages: []
-      });
+      groups.set(key, { before: a ? side(a) : null, now: b ? side(b) : null, pages: [] });
     groups.get(key).pages.push(pg);
   }
   const changed = [...groups.values()];
@@ -28964,11 +29013,11 @@ function compareProvenance(prior, next) {
     };
   const says = changed.map((g) => {
     const pgs = describePages(g.pages);
-    if (!g.before) return `${who(g.now.tier, g.now.member)} returned ${pgs}, which the earlier reading did not have`;
-    if (!g.now) return `the earlier reading had ${pgs} (${who(g.before.tier, g.before.member)}), which this reading does not`;
-    if (g.before.tier === g.now.tier && g.before.member === g.now.member)
-      return `${who(g.now.tier, g.now.member)} returned different text for ${pgs}`;
-    return `${pgs} ${g.pages.length === 1 ? "was" : "were"} read by ${who(g.before.tier, g.before.member)} before and by ${who(g.now.tier, g.now.member)} now, and the text differs`;
+    if (!g.before) return `${whoOf(g.now)} returned ${pgs}, which the earlier reading did not have`;
+    if (!g.now) return `the earlier reading had ${pgs} (${whoOf(g.before)}), which this reading does not`;
+    if (whoOf(g.before) === whoOf(g.now))
+      return `${whoOf(g.now)} returned different text for ${pgs}`;
+    return `${pgs} ${g.pages.length === 1 ? "was" : "were"} read by ${whoOf(g.before)} before and by ${whoOf(g.now)} now, and the text differs`;
   }).join("; ");
   return { state: "differs", changed, says };
 }
@@ -82794,16 +82843,30 @@ function mergeTier3Text(base, ocr, eligible) {
     if (!p || !Number.isInteger(p.page)) continue;
     const target = usable.find((b) => b.page === p.page);
     const empty = target && !(typeof target.text === "string" && glyphCount(target.text) > 0);
-    if (!target || !wanted.has(p.page) || !empty) {
+    if (!target || !wanted.has(p.page)) {
       refused.push(p.page);
       continue;
     }
-    byPage.set(p.page, p);
+    byPage.set(p.page, { ocr: p, append: !empty });
   }
-  const filled = [], pages = [], undetermined = [];
+  const filled = [], appended = [], pages = [], undetermined = [];
   for (const b of usable) {
-    const got = byPage.get(b.page);
-    if (got) {
+    const hit = byPage.get(b.page);
+    const got = hit && hit.ocr;
+    if (got && hit.append) {
+      filled.push(b.page);
+      appended.push(b.page);
+      const said = typeof got.text === "string" ? got.text : "";
+      pages.push({
+        ...b,
+        text: said.length ? `${b.text}
+${said}` : b.text,
+        undetermined: [
+          ...(Array.isArray(b.undetermined) ? b.undetermined : []).filter((u) => !(u && TIER3_REASONS.includes(u.reason))),
+          ...Array.isArray(got.undetermined) ? got.undetermined : []
+        ]
+      });
+    } else if (got) {
       filled.push(b.page);
       pages.push({
         page: b.page,
@@ -82826,12 +82889,14 @@ function mergeTier3Text(base, ocr, eligible) {
     counts: { chars: document.length, undetermined: undetermined.length }
   };
   if (regions.length) text.regions = regions;
-  return { ok: true, text, filled, refused, unanswered, wholesale: false };
+  return { ok: true, text, filled, appended, refused, unanswered, wholesale: false };
 }
 function tier3Note(m, memberNote) {
   const say = [];
   if (!m.wholesale && m.filled.length)
     say.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into this document's own text; the ${m.filled.length === 1 ? "page" : "pages"} that already had text kept it`);
+  if (!m.wholesale && Array.isArray(m.appended) && m.appended.length)
+    say.push(`${m.appended.length} of those page(s) already held a little text of their own (an image fills the page and its text is a folio), and kept it: the transcription was appended after it, so ${m.appended.length === 1 ? "that page is" : "those pages are"} credited to both the text layer and the OCR member`);
   if (m.unanswered.length)
     say.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay honestly unread`);
   if (m.refused.length)
@@ -82878,7 +82943,8 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
             if (!m.ok) ocrNote = m.why;
             else {
               i2text = m.text;
-              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => p.page);
+              const appendedTo = Array.isArray(m.appended) ? m.appended : [];
+              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && (!m.filled.includes(p.page) || appendedTo.includes(p.page)) && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => p.page);
               const parts = [];
               const layerSet = new Set(layerPages);
               const spokenFor = tier2PerPage ? [
