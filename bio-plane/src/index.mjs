@@ -9550,10 +9550,10 @@ export default {
       }
       /* D-684 — A TEXTUAL CAPTURE THE FORMAT AXIS ALSO ITEMISES GETS ITS UNITS. The three branches
          above are exclusive and the FORMAT wire lives in the third, so a document read as text at
-         intake — a `text/csv` body under PROFILE_TEXT_MAX — took the first or second and never reached
+         intake — a delimited-text body served as `text/…` under PROFILE_TEXT_MAX — took the first or second and never reached
          the entry that knows its sheet: no `text_units`, no `text_container`, and the store recorded a
-         capture whose container it does not hold, its cells unsearchable though the csv entry exists.
-         (A CSV over the bound took the third branch and WAS indexed; the small ones, the common case,
+         capture whose container it does not hold, its cells unsearchable though its format entry exists.
+         (One over the bound took the third branch and WAS indexed; the small ones, the common case,
          were not.) THE READING IS KEPT AS IT WAS beyond naming its container: the content-type reader
          read the profile text and that stays what it read — `classifiedText`, the provenance digest,
          the entities. What is added is what only the FORMAT axis can say: the units, by the one

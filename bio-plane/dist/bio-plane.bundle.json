@@ -198,8 +198,8 @@
     },
     {
       "path": "src/index.mjs",
-      "bytes": 892165,
-      "sha256": "fbb90c2b33baf923b97565159e2698425c558069279032ccebebd294051c6ead"
+      "bytes": 892191,
+      "sha256": "da5f850111bec15233337cdfff97ba4031d90da637e41dffef471a0267f2b913"
     },
     {
       "path": "src/livefire.mjs",
