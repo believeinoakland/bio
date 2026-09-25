@@ -42,6 +42,7 @@ const F = {
   planeIndex: join(PLANE, "src/index.mjs"),
   artifact: join(MEMBER, "dist/ocr-worker.bundled.mjs"),
   manifest: join(MEMBER, "dist/ocr-worker.bundle.json"),
+  dct: join(REPO, "pdf-worker/src/dctdecode.mjs"),
 };
 const TOUCHABLE = Object.values(F);
 
@@ -177,6 +178,23 @@ arm("3 · COLLAPSE THE CHAIN TO ONE LABEL (the wire stops recording the `pixels`
     'let chain = appendStep([{ step: "pixels", cap: r.cap, measured_by: r.measured_by,\n                            calibration }],\n                         { step: "ocr", engine: r.engine, version: r.version,\n                           cap: r.cap, measured_by: r.measured_by, calibration });',
     'let chain = [{ step: "ocr", engine: r.engine, version: r.version,\n                 cap: r.cap, measured_by: r.measured_by, calibration }];  /* NC ARM 3 */']],
   (r) => ({ ok: r.fail > 0 && r.foot, why: `${r.fail} failure(s); the chain-shape arms are the subject` }));
+
+/* (4) D-320: A NO-OP DECODER on the real path. The IDCT writes nothing, so the
+   member OCRs a frame of the right SIZE and no content. It must fail on the
+   PILLOW DIGEST by name — the arm that proves the digest, and not the tier or
+   the route name, is what says the member read the publisher's picture — and it
+   must NOT touch the CCITT page's arms, which never reach this decoder. */
+arm("4 · D-320: A NO-OP DCT DECODER (right dimensions, no picture)",
+  { what: "the DCT page's planes are never written; the member is handed a blank frame of the right size",
+    mustFail: "section 11's Pillow-digest arms, BY NAME",
+    mustNot: "sections 1-10 — the CCITT page and the ink page never reach the DCT decoder" },
+  [[F.dct, "function idctIslow(coef, q, out, o, stride) {\n", "function idctIslow(coef, q, out, o, stride) {\n  return; /* NC ARM 4 */\n"]],
+  (r) => {
+    const byName = r.failed.some((f) => /PILLOW's pixels, by digest/.test(f));
+    const spared = !r.failed.some((f) => /^(the capture landed|TIER 3 —|the chain names EACH step|a scoped attestation)/.test(f));
+    return { ok: r.fail > 0 && r.foot && byName && spared,
+             why: `${r.fail} failure(s); digest arm failed by name: ${byName}; CCITT/ink arms spared: ${spared}` };
+  });
 
 console.log("\n=== POST-RESTORE — the tree is back where it started ===");
 {

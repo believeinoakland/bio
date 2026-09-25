@@ -24,6 +24,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const SRC = fileURLToPath(new URL("../src/pagepixels.mjs", import.meta.url));
+const DCT = fileURLToPath(new URL("../src/dctdecode.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./pagepixels.test.mjs", import.meta.url));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -59,20 +60,37 @@ const ARMS = [
   { id: "h", file: SRC, declared: "D-585: a bare BT counts as text again -> the empty-BT scan page is refused PAGE_HAS_TEXT_LAYER",
     mustFail: true,
     edit: (s) => s.replace("    hasTextOps: textShown === true,", "    hasTextOps: textShown === true || /(^|\\s)BT(\\s|$)/.test(masked),") },
+  /* D-320's arms. Each names the assertions that MUST fail (`failsBy`) and those that MUST NOT (`spares`), so
+     an arm is judged by WHICH assertion went red and not only by whether the tally moved. */
+  { id: "i", file: DCT, declared: "D-320: a NO-OP decoder — the IDCT writes nothing, so every plane stays zero -> the Pillow digests fail BY NAME while every dimension still agrees",
+    mustFail: true, failsBy: [/pixels match Pillow's/, /UPRIGHT pixels match Pillow's decode/, /UNROTATED pixels match Pillow's/, /workerd's DCT pixels match Pillow's/],
+    spares: [/dimensions after/, /the page's \/Rotate 270 is applied/, /CCITT|UPRIGHT pixels match the independent decoder/, /refused BY NAME/],
+    edit: (s) => s.replace("function idctIslow(coef, q, out, o, stride) {\n", "function idctIslow(coef, q, out, o, stride) {\n  return; // NO-OP ARM\n") },
+  { id: "j", file: SRC, declared: "D-320: the decoded DCT route ignores the page's /Rotate -> the upright dimensions and digest fail, the UNROTATED digest does not",
+    mustFail: true, failsBy: [/the page's \/Rotate 270 is applied/, /UPRIGHT pixels match Pillow's decode/, /\/Rotate 90 through the whole route/, /workerd DECODES the DCT page, upright/],
+    spares: [/UNROTATED pixels match Pillow's too/, /rgb-420-rotate90: pixels match Pillow's/],
+    edit: (s) => s.replace("if (opts.decodeDct) return decodeDct(doc, im, raw, opts.rotate || 0);", "if (opts.decodeDct) return decodeDct(doc, im, raw, 0);") },
+  { id: "k", file: SRC, declared: "D-320: rotate8 turns 270 the wrong way -> the 8-bit rotation assertions against Pillow fail",
+    mustFail: true, failsBy: [/rotate8 270 equals Pillow's turn/], spares: [/rotate8 180 equals/, /UPRIGHT pixels match Pillow's decode/],
+    edit: (s) => s.replace("      else { sx = width - 1 - Y; sy = X; }\n      const o = (Y * w2 + X) * comps", "      else { sx = Y; sy = height - 1 - X; }\n      const o = (Y * w2 + X) * comps") },
+  { id: "l", file: DCT, declared: "D-320: a PROGRESSIVE file is let through to the baseline path -> the refusal assertions fail by name",
+    mustFail: true, failsBy: [/refuse-progressive: refused BY NAME/, /a PROGRESSIVE JPEG is refused by name/], spares: [/refuse-arithmetic/, /pixels match Pillow's/],
+    edit: (s) => s.replace("const DECODED_SOF = new Set([0xc0, 0xc1]);", "const DECODED_SOF = new Set([0xc0, 0xc1, 0xc2]);") },
   { id: "g", file: SRC, declared: "OVER-STRICTNESS ARM: a change that is real but must NOT break the suite — the `notes` field is removed from analyzePage's return. Declared MUST NOT FAIL.",
     mustFail: false,
     edit: (s) => s.replace("    contentBytes: content.length,\n", "    contentBytes: content.length, spuriousExtraField: true,\n") },
 ];
 
+const failsIn = (out) => [...out.matchAll(/^  FAIL  (.*)$/gm)].map((m) => m[1]);
 function runSuite() {
   try {
     const out = execFileSync(process.execPath, [SUITE], { encoding: "utf8", maxBuffer: 64e6 });
     const m = /pagepixels: (\d+) passed, (\d+) failed/.exec(out);
-    return m ? { pass: +m[1], fail: +m[2], ok: +m[2] === 0 } : { pass: null, fail: null, ok: false, note: "NO TALLY LINE" };
+    return m ? { pass: +m[1], fail: +m[2], ok: +m[2] === 0, fails: failsIn(out) } : { pass: null, fail: null, ok: false, note: "NO TALLY LINE", fails: [] };
   } catch (e) {
     const out = String(e.stdout || "");
     const m = /pagepixels: (\d+) passed, (\d+) failed/.exec(out);
-    return m ? { pass: +m[1], fail: +m[2], ok: false } : { pass: null, fail: null, ok: false, note: "NO TALLY LINE (suite died)" };
+    return m ? { pass: +m[1], fail: +m[2], ok: false, fails: failsIn(out) } : { pass: null, fail: null, ok: false, note: "NO TALLY LINE (suite died)", fails: [] };
   }
 }
 
@@ -109,7 +127,13 @@ for (const arm of ARMS) {
     if (!restored) { console.log("   *** RESTORE FAILED — stopping rather than running another arm over a mutated tree. ***"); process.exit(1); }
   }
   const failed = !res.ok;
-  const agreed = failed === arm.mustFail;
+  /* BY NAME (D-320's arms): every `failsBy` pattern must match a FAIL line and no `spares` pattern may. */
+  const missing = (arm.failsBy || []).filter((re) => !res.fails.some((f) => re.test(f))).map(String);
+  const spared = (arm.spares || []).filter((re) => res.fails.some((f) => re.test(f))).map(String);
+  for (const f of res.fails) console.log(`   FAIL  ${f}`);
+  if (missing.length) console.log(`   *** declared to fail BY NAME and did not: ${missing.join(", ")} ***`);
+  if (spared.length) console.log(`   *** declared MUST NOT fail and did: ${spared.join(", ")} ***`);
+  const agreed = failed === arm.mustFail && !missing.length && !spared.length;
   if (agreed) armsAgreeing++;
   console.log(`   observed: ${res.pass} pass, ${res.fail} fail${res.note ? ` [${res.note}]` : ""} — declared ${arm.mustFail ? "MUST FAIL" : "MUST NOT FAIL"}, ${agreed ? "AGREED" : "*** DISAGREED ***"}\n`);
 }

@@ -68,6 +68,18 @@
  * (h) 63/2, (g) 65/0 as declared — 8 of 8 as declared, every restore sha256 AND
  * byte-compare identical (42,153 B). The same break on the plane's side, and the
  * two halves named separately, is `bio-plane/test/nc-d585.mjs`.
+ * D-320 (2026-09-25) RE-RAN ALL of them against a baseline of 120 pass / 0 fail and
+ * ADDED FOUR, each judged BY NAME (the driver now reads WHICH assertions went red:
+ * `failsBy` must all fail, `spares` must all pass):
+ *   (i) a NO-OP DCT decoder (the IDCT writes nothing; every dimension still agrees)
+ *       -> 100/20, and all 20 are Pillow-digest assertions by name.
+ *   (j) the decoded DCT route drops the page's /Rotate -> 114/6.
+ *   (k) `rotate8` turns 270 the wrong way -> 119/1.
+ *   (l) SOF2 (progressive) let through to the baseline path -> 118/2.
+ * Earlier arms on the new baseline: (a) 116/4, (b) 116/4, (c) 104/16, (d) 114/6,
+ * (e) 118/2, (f) 119/1, (h) 118/2, (g) 120/0 as declared — 12 of 12 as declared,
+ * every restore sha256 AND byte-compare identical (pagepixels.mjs 47,791 B,
+ * dctdecode.mjs 27,941 B).
  * ONE MORE THING THE CONTROLS FOUND, kept because it is the instrument working:
  * arm (e)'s first hardened run ended through a TypeError rather than through an
  * assertion, and the FOOT SENTINEL printed `53 pass, 2 fail — SUITE ENDED
@@ -81,8 +93,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import {
   renderPageToPixels, loadPdf, analyzePage, ccittDecode, normalisePacked,
-  rotateBilevel, REFUSALS,
+  rotateBilevel, rotate8, REFUSALS,
 } from "../src/pagepixels.mjs";
+import { decodeBaselineJpeg, DctRefusal } from "../src/dctdecode.mjs";
 
 const { Miniflare } = await (async () => {
   try { return await import("miniflare"); } catch { /* fall through */ }
@@ -202,7 +215,8 @@ console.log("\n--- a refusal is a refusal, not a blank page ---");
   t("a real page count is reported with NO_SUCH_PAGE", (await renderPageToPixels(SCAN, 9)).pageCount, 1);
   t("every reason the module can emit is DECLARED",
     cases.every(([, r]) => r.reason in REFUSALS), true);
-  t("the declared set has not silently shrunk", Object.keys(REFUSALS).length >= 13, true);
+  /* 14 since D-320 added UNSUPPORTED_JPEG_PROCESS (13 before). */
+  t("the declared set has not silently shrunk", Object.keys(REFUSALS).length >= 14, true);
 }
 
 /* ---- the synthetic pages: one image, several images, a filter with no decoder ---- */
@@ -322,6 +336,150 @@ console.log("\n--- what the renderer will not pretend to do ---");
   t("and the two are NOT the same picture", blank.pixels_sha256 === inked.pixels_sha256, false);
 }
 
+
+/* ---- D-320: the DCT route DECODED, checked against Pillow, never against itself ---- */
+/* EXPECTED VALUES WITH INDEPENDENT PROVENANCE. `fixtures/dct-variants.json` and
+ * `fixtures/scan-dct-page.pdf` are written by `fixtures/make-dct-fixtures.py`,
+ * and every digest in them — and the two below — is PILLOW 11.3.0's decode
+ * (libjpeg-turbo 3.1.1), run 2026-09-25, rotated CLOCKWISE by the page's
+ * /Rotate. `dctdecode.mjs` shares no line of source with it. If a fixture
+ * changes, RE-RUN the generator; never copy a failing run's "got".
+ * FIXTURE PROVENANCE: `scan-dct-page.pdf` wraps the EXACT DCTDecode stream
+ * (261,747 bytes, 3300x2550, 4:2:0, restart interval 1656) of page 4 of the same
+ * Oakland attachment 15721260 the CCITT fixture comes from, `/Rotate 270`
+ * preserved — one of the three DCT pages at /Rotate 270 CPDF-12 counted (D-244). */
+const DCT_UPRIGHT_SHA   = "2afca4d5af6d1d463ee61eac64d5a270a3ac09334567727d5b90b48663225b94";
+const DCT_UNROTATED_SHA = "5e0adab5d8376c1617cf3620c2f2a6123615eeb9c060c27182533db444ded706";
+const DCT_STREAM_SHA    = "a537b2e0c19d384234695e5f9724b60c4b19857d20102211003ae0cbffc4a15b";
+const DCT_SCAN = F("fixtures/scan-dct-page.pdf");
+const VARIANTS = JSON.parse(Buffer.from(F("fixtures/dct-variants.json")).toString("utf8")).variants;
+
+console.log("\n--- D-320: a baseline JPEG, decoded bit-exact with an independent decoder ---");
+{
+  const ok = VARIANTS.filter((v) => v.expect === "ok"), no = VARIANTS.filter((v) => v.expect !== "ok");
+  /* THE CORPUS IS PRINTED AND FLOORED: a totality assertion over an empty list
+   * passes for free, and this suite would then say "every variant matched". */
+  console.log(`  (${ok.length} decodable variants, ${no.length} refusal variants: ${VARIANTS.map((v) => v.name).join(", ")})`);
+  t("the variant corpus is the one the generator wrote (12 decodable, 4 refused)", [ok.length, no.length], [12, 4]);
+  const kinds = new Set(ok.map((v) => v.name.replace(/-(cjpeg|rotate\d+)$/, "")));
+  t("and it spans grey, 4:4:4, 4:2:2, 4:2:0, 1x2, restart markers and Adobe no-transform",
+    ["grey-baseline", "rgb-444", "rgb-422-h2v1", "rgb-420-h2v2", "rgb-h1v2", "rgb-420-restart", "rgb-adobe-no-transform"]
+      .every((k) => kinds.has(k)), true);
+  for (const v of ok) {
+    let r = null, err = null;
+    try { r = decodeBaselineJpeg(new Uint8Array(Buffer.from(v.jpeg_b64, "base64")), { rotate: v.rotate }); }
+    catch (e) { err = e.code || e.message; }
+    t(`${v.name}: pixels match Pillow's`, r ? hex(r.samples) : `THREW ${err}`, v.pillow_sha256);
+    t(`${v.name}: dimensions after /Rotate ${v.rotate}`, r ? [r.width, r.height, r.comps] : null,
+      [v.width, v.height, v.mode === "L" ? 1 : 3]);
+  }
+  const wantCode = { "refuse-progressive": ["UNSUPPORTED_PROCESS", "progressive-huffman"],
+                     "refuse-arithmetic": ["UNSUPPORTED_PROCESS", "extended-sequential-arithmetic"],
+                     "refuse-cmyk": ["UNSUPPORTED_COMPONENTS", undefined],
+                     "refuse-truncated": ["TRUNCATED", undefined] };
+  for (const v of no) {
+    let got = "DECODED — NOT REFUSED";
+    try { decodeBaselineJpeg(new Uint8Array(Buffer.from(v.jpeg_b64, "base64"))); }
+    catch (e) { got = e instanceof DctRefusal ? [e.code, e.detail.process] : `THREW ${e.message}`; }
+    t(`${v.name}: refused BY NAME, never decoded`, got, wantCode[v.name]);
+  }
+}
+
+console.log("\n--- D-320: the real DCT page — the publisher's bytes by default, upright pixels when asked ---");
+{
+  const pass = await renderPageToPixels(DCT_SCAN, 0);
+  t("BY DEFAULT the route is unchanged: the publisher's own JPEG", [pass.ok, pass.route, pass.mediaType],
+    [true, "passthrough-dct", "image/jpeg"]);
+  t("byte-identical to the stream", hex(pass.bytes), DCT_STREAM_SHA);
+  t("and still honest that it is sideways", [pass.upright, pass.rotate_deg], [false, 270]);
+
+  const r = await renderPageToPixels(DCT_SCAN, 0, { decodeDct: true });
+  t("asked to decode, it renders", r.ok ? "ok" : r.reason, "ok");
+  t("route names the transform", [r.route, r.mediaType], ["decoded-dct", "image/png"]);
+  t("the page's /Rotate 270 is applied", [r.width, r.height, r.upright, r.rotate_deg], [2550, 3300, true, 270]);
+  t("UPRIGHT pixels match Pillow's decode of the same stream", r.pixels_sha256, DCT_UPRIGHT_SHA);
+  t("the decode is described", [r.dct?.process, r.dct?.sampling, r.dct?.restart, r.dct?.stream_bytes],
+    ["baseline", "2x2,1x1,1x1", 1656, 261747]);
+  const dv = new DataView(r.bytes.buffer, r.bytes.byteOffset);
+  t("a real PNG: 2550x3300, bit depth 8, colour type 2 (RGB)",
+    [dv.getUint32(16), dv.getUint32(20), r.bytes[24], r.bytes[25]], [2550, 3300, 8, 2]);
+
+  /* THE ROTATION IS ASSERTED APART FROM THE DECODE: the same stream decoded
+   * UN-rotated matches Pillow's un-rotated picture, so a wrong turn and a wrong
+   * decode cannot cancel into a pass. */
+  const doc = await loadPdf(DCT_SCAN);
+  const a = await analyzePage(doc, 0);
+  const u = decodeBaselineJpeg(doc.streamRawBytes(a._images[0].obj), { rotate: 0 });
+  t("UNROTATED pixels match Pillow's too", hex(u.samples), DCT_UNROTATED_SHA);
+}
+
+console.log("\n--- D-320: 8-bit rotation lands a sample on a sample ---");
+{
+  /* INDEPENDENT: our un-rotated decode, turned by `rotate8`, against PILLOW's
+   * transpose of its own decode — two producers, one expectation. */
+  const v0 = VARIANTS.find((v) => v.name === "rgb-420-h2v2");
+  const base = decodeBaselineJpeg(new Uint8Array(Buffer.from(v0.jpeg_b64, "base64")));
+  for (const deg of [90, 180, 270]) {
+    const want = VARIANTS.find((v) => v.name === `rgb-420-rotate${deg}`);
+    const r = rotate8(base.samples, base.width, base.height, 3, deg);
+    t(`rotate8 ${deg} equals Pillow's turn of the same picture`, [hex(r.samples), r.width, r.height],
+      [want.pillow_sha256, want.width, want.height]);
+  }
+  const g = new Uint8Array(5 * 3).map((_, i) => i * 17);
+  const four = [90, 90, 90, 90].reduce((acc) => rotate8(acc.samples, acc.width, acc.height, 1, 90), { samples: g, width: 5, height: 3 });
+  t("four quarter turns are the identity", [hex(four.samples), four.width], [hex(g), 5]);
+  let threw = null;
+  try { rotate8(g, 5, 3, 1, 45); } catch (e) { threw = e.message; }
+  t("an angle that cannot land a sample on a sample THROWS", /unsupported rotation/.test(threw || ""), true);
+}
+
+console.log("\n--- D-320: what the decoded route refuses, through the renderer ---");
+{
+  const wrap = (jpeg, w, h, rot = 0, extra = "") => {
+    const head = `%PDF-1.4\n`;
+    const objs = [
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${w} ${h}] /Rotate ${rot} /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`,
+      `<< /Length 26 >>\nstream\nq ${w} 0 0 ${h} 0 0 cm /Im0 Do Q\nendstream`,
+    ];
+    let pdf = Buffer.from(head, "latin1");
+    const off = [];
+    for (let i = 0; i < objs.length; i++) {
+      off.push(pdf.length);
+      pdf = Buffer.concat([pdf, Buffer.from(`${i + 1} 0 obj\n${objs[i]}\nendobj\n`, "latin1")]);
+    }
+    off.push(pdf.length);
+    pdf = Buffer.concat([pdf, Buffer.from(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode ${extra} /Length ${jpeg.length} >>\nstream\n`, "latin1"), jpeg, Buffer.from("\nendstream\nendobj\n", "latin1")]);
+    const x = pdf.length;
+    let xr = `xref\n0 6\n0000000000 65535 f \n` + off.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("");
+    return new Uint8Array(Buffer.concat([pdf, Buffer.from(xr + `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${x}\n%%EOF\n`, "latin1")]));
+  };
+  const jb = (name) => Buffer.from(VARIANTS.find((v) => v.name === name).jpeg_b64, "base64");
+  const prog = await renderPageToPixels(wrap(jb("refuse-progressive"), 63, 47), 0, { decodeDct: true });
+  t("a PROGRESSIVE JPEG is refused by name, never mis-decoded",
+    [prog.ok, prog.reason, prog.process, prog.bytes], [false, "UNSUPPORTED_JPEG_PROCESS", "progressive-huffman", undefined]);
+  const arith = await renderPageToPixels(wrap(jb("refuse-arithmetic"), 63, 47), 0, { decodeDct: true });
+  t("an ARITHMETIC-CODED JPEG is refused by name", [arith.reason, arith.process],
+    ["UNSUPPORTED_JPEG_PROCESS", "extended-sequential-arithmetic"]);
+  const trunc = await renderPageToPixels(wrap(jb("refuse-truncated"), 63, 47), 0, { decodeDct: true });
+  t("a JPEG whose data ends early is refused, NOT grey-filled", [trunc.reason, trunc.jpeg, trunc.bytes],
+    ["TRUNCATED_IMAGE_DATA", "TRUNCATED", undefined]);
+  const progPass = await renderPageToPixels(wrap(jb("refuse-progressive"), 63, 47), 0);
+  t("and un-asked the progressive page is still handed on as the publisher's bytes",
+    [progPass.route, hex(progPass.bytes)], ["passthrough-dct", hex(jb("refuse-progressive"))]);
+  const conflict = await renderPageToPixels(wrap(jb("rgb-444"), 63, 47, 0, "/DecodeParms << /ColorTransform 0 >>"), 0, { decodeDct: true });
+  t("a /ColorTransform the file's own JFIF marker contradicts is refused, not picked",
+    [conflict.reason, conflict.jpeg], ["UNSUPPORTED_SAMPLES", "COLOR_TRANSFORM_CONFLICT"]);
+  const small = await renderPageToPixels(wrap(jb("rgb-444"), 63, 47), 0, { decodeDct: true });
+  t("a well-formed small page through the whole route matches Pillow", small.pixels_sha256,
+    VARIANTS.find((v) => v.name === "rgb-444").pillow_sha256);
+  const rot = await renderPageToPixels(wrap(jb("rgb-420-h2v2"), 63, 47, 90), 0, { decodeDct: true });
+  t("and /Rotate 90 through the whole route matches Pillow's turn", [rot.pixels_sha256, rot.width, rot.height],
+    [VARIANTS.find((v) => v.name === "rgb-420-rotate90").pillow_sha256, 47, 63]);
+  t("every D-320 refusal is DECLARED", [prog, arith, trunc, conflict].every((r) => r.reason in REFUSALS), true);
+}
+
 /* ---- workerd: the runtime the placement question is actually about ---- */
 console.log("\n--- it runs in workerd, and the DECODE is runtime-independent ---");
 {
@@ -344,7 +502,7 @@ console.log("\n--- it runs in workerd, and the DECODE is runtime-independent ---
 export default {
   async fetch(req) {
     const bytes = new Uint8Array(await req.arrayBuffer());
-    const r = await renderPageToPixels(bytes, 0);
+    const r = await renderPageToPixels(bytes, 0, { decodeDct: new URL(req.url).searchParams.has("dct") });
     if (!r.ok) return Response.json(r);
     const d = await crypto.subtle.digest("SHA-256", r.bytes);
     return Response.json({ ok: true, route: r.route, width: r.width, height: r.height,
@@ -378,6 +536,11 @@ export default {
     t("workerd's PIXELS match the independent decoder", j.pixels_sha256, IND_UPRIGHT_SHA);
     const local = await renderPageToPixels(SCAN, 0);
     t("node and workerd agree on the PICTURE", j.pixels_sha256, local.pixels_sha256);
+    /* D-320: the DCT decoder in the runtime it is FOR. */
+    const jd = await (await mf.dispatchFetch("http://x/?dct=1", { method: "POST", body: DCT_SCAN })).json();
+    t("workerd DECODES the DCT page, upright", [jd.ok, jd.route, jd.width, jd.height, jd.upright],
+      [true, "decoded-dct", 2550, 3300, true]);
+    t("workerd's DCT pixels match Pillow's", jd.pixels_sha256, DCT_UPRIGHT_SHA);
     /* AND THE CLAIM THAT IS DELIBERATELY NOT MADE. The FILE digests do NOT have
      * to agree: `CompressionStream("deflate")` is a platform service and the two
      * runtimes emit different valid deflate streams for identical input (the
