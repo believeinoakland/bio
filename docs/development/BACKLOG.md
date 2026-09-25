@@ -124,6 +124,17 @@ depends-on: M0-172 (its controlPen moves touch two of these drivers; stack on la
 scope: dec65-strength-reach arm 2 re-anchored on the body, not the signature (D-301's lesson); m057-authority arm 6 asserts N>=1 read from the output; corpuscheck.control arm 6 plants its own UNDECIDED row; m041-instrument-census arms 2/3 re-targeted to a corpus the census still reads. Each arm run alone fails its subject by name.
 accepts-when: each of the four drivers runs whole with 0 arms NOT as declared (moves: four drivers whose arms do not bite). NEGATIVE CONTROL: the drivers' own arms, recorded on each suite's line.
 added: 2026-09-25 · SCHEDULER #24 (id minted by M0-172's worker).
+note: 2026-09-25 12:54Z SCHEDULER #24 — D-638 (238517e1) re-anchored dec65-strength-reach arm a2 on the NEW full signature (with captureBounds); this row's dec65 part is then only whether to move it to the body (D-301's lesson) — read D-638's branch first.
+
+### D-736 · queued — **`dec65-strength-reach.control` ARM (3) (scanner regex removed) MEASURES 26/1 AGAINST ITS DECLARED 22/5, on this base and origin/main: only the desync self-check fires; the closure floor, property-vocabulary floor, roster and sensitivity re-run no longer do — the runaway from #reevalRaisedBy no longer reaches the arithmetic (the subject moved, as D-330 found before).** Found by D-638's worker. — owner M0.
+order: directly after D-735, the same driver: a declaration the arm no longer meets is a control that does not say what it measures (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — test-only.
+design: `docs/development/VERIFICATION.md` (a negative control's declaration is what it measures; admitted for M0 by name), with D-330's method.
+depends-on: D-638 (arm a2 re-anchored in the same driver; stack on land/worker/D-638 until it lands).
+scope: bisect the store.mjs commit where the runaway stopped reaching #strengthWalk/#axisResult/#groundResult/#weakestOf (D-330's method) and correct arm (3)'s declaration to WHOLE-1/1 at its site naming that commit; OR, if losing those three guards under a desync is a weakening, re-seat the arm so the runaway reaches the arithmetic again — STATE which and why.
+accepts-when: arm (3) run alone matches its declaration, with the commit that moved the subject named (moves: an arm 4 failures short of its declaration). NEGATIVE CONTROL: the arm itself, recorded on the driver's header.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-638's worker).
 
 ### D-650 · queued — **`nc-rec82` arms oob/nochain/overstrict: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-649, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
@@ -1141,33 +1152,3 @@ depends-on: D-394 (`integrated` on c18-batch8).
 scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
 accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-467 · queued — **`nc-m038.mjs` ARM (15) DOES NOT ARM ON `main`: its anchor no longer occurs, so the arm cannot fail.** Found by REC-187's worker (F2). — owner M0.
-order: with the M0 control rows, after D-466 (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control that cannot fail refutes nothing).
-depends-on: none.
-scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)` closure.
-accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
-order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a census states what it reads).
-depends-on: none.
-scope: add both to `UI_HELPERS` in `tools/status.mjs`.
-accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-474 · queued — **`machine-fences.control.mjs` STILL DECLARES FIGURES FOR 12 OR 13 FENCES, AND THERE ARE NOW 14 (REC-189 added MACHINE_CANNOT_SET_RISK_TIER); the driver is REC-73's and is not in the battery.** — owner RECORD.
-order: with the M0 control rows, after D-471 (SCHEDULER #17, 2026-09-24; REC-189's worker F3 via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control declares what it measures).
-depends-on: REC-189 (finished; rides the train after c19-batch9).
-scope: re-run the driver and move its declared figures to 14 fences.
-accepts-when: `node bio-plane/test/machine-fences.control.mjs` reports every arm as declared at 14. NEGATIVE CONTROL: the driver's own arms, recorded on its `NEGATIVE CONTROL:` line.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).

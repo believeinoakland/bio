@@ -1079,8 +1079,8 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-638 · running — **`dec65-strength-reach.control` arm a2: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: running — SCHEDULER #24 12:18Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
+### D-638 · integrated — **`dec65-strength-reach.control` arm a2: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: integrated — SCHEDULER #24 12:54Z: tip 238517e1 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6536 assertions), tree 7583b9e6; dec65-strength-reach arm a2 re-anchored on the new #strengthWalk signature (1 match here and on main), allowance deleted, arm ARMS and is as declared (must-not-fail); minted D-736
 order: after D-637, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
@@ -1244,7 +1244,8 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-649 · queued — **`nc-rec64` arm 1: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+### D-649 · running — **`nc-rec64` arm 1: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: running — SCHEDULER #24 12:54Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
 order: after D-648, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
