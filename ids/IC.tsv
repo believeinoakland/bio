@@ -94,3 +94,4 @@ IC-333	2026-09-25T06:42:29.146Z	CONDUCT#22	REC-191: monitor cadence per ADDRESS;
 IC-334	2026-09-25T06:42:34.645Z	CONDUCT#22	D-455: a changed monitor tick captures the bytes; the look names the new capture (c22-batch29)
 IC-335	2026-09-25T06:42:39.794Z	CONDUCT#22	D-451: op=airun context.questions (c22-batch29)
 IC-336	2026-09-25T06:42:45.155Z	CONDUCT#22	D-534: op=queue mute.case_kinds (c22-batch29)
+IC-337	2026-09-25T06:42:50.514Z	CONDUCT#22	D-235: op=basisversions publishes each version's kind (c22-batch29)
