@@ -134,6 +134,9 @@ import { readGitProvenance, repoPath, reportProvenance } from "../bio-plane/scri
    verdict, because a change there changes three instruments at once. */
 import { skipString, matchBrace, outcomeReturns, topLevelParts, topLevelProps, topLevelSpreads,
          verdictKind, verdictOf } from "../bio-plane/test/verdict-reader.mjs";
+/* D-550 — the one-code-one-site walk has ONE home, shared with the sweep that measured it first
+   (`bio-plane/test/dec49-onecode-twoconditions.sweep.mjs`): arm G gates the figure that sweep prints. */
+import { stripComments, multiSiteCensus } from "../bio-plane/test/multisite-census.mjs";
 const PLANE_SRC = path.join(PLANE, "src");
 const CATALOG = path.join(PLANE, "checks", "bio-checks.mjs");
 const APP = path.join(HERE, "app.html");
@@ -1189,6 +1192,13 @@ const CEILING = {
                           second copy of the thing DEC-49 exists to keep singular. So the ceiling is
                           set at the measured 4 and the pass-through is NAMED every run rather than
                           made invisible by a literal nobody needed. */
+  multiSiteCodes: 59, /* D-550 (2026-09-24, cloud WORKER D-550, branch land/worker/D-550) — DEC-49 codes named at
+                          MORE THAN ONE literal site in store.mjs/index.mjs, less the DECLARED closures (arm G). SET
+                          from arm G's own print on the item's tree over origin/main 8bdf20e6: the sweep read 62
+                          candidates (the row, written on an older tree, said 60), of which RATE_IP, RATE_GLOBAL and
+                          VERSION_ACT_UNWRITABLE are one condition each and declared BY NAME, leaving 59. It may only
+                          FALL: a landing that consolidates a code behind one helper removes it from
+                          MULTI_SITE_CANDIDATES and lowers this in the same commit. */
 };
 
 /* ============================================================== M0-79, 2026-09-21
@@ -1263,6 +1273,7 @@ const SLACK = {
   reachGap:             { bound: 0, why: "a code in reach gains a translation or leaves reach in the landing that does it, and the ceiling falls with it in the same turn (CASE-6 found it carrying one code of slack)" },
   unclassifiedOutcomes: { bound: 0, why: "an unclassifiable outcome is retired by the landing that retires it, and the ceiling falls with it" },
   inheritedVerdicts:    { bound: 0, why: "an inherited verdict is retired by the landing that retires it, and the ceiling falls with it" },
+  multiSiteCodes:       { bound: 0, why: "a code leaves the multi-site set only by the landing that consolidates it behind one site, which removes its name from MULTI_SITE_CANDIDATES and lowers this ceiling in the same commit (D-550)" },
 };
 
 /* A REGION'S MINIMUM SPAN. Not a style rule: it is the cheap arm against the
@@ -2679,6 +2690,116 @@ async function armE() {
      + `· ${seen.join(" ")} · floors ${FLOOR.vocabularies}/${FLOOR.vocabularyTerms}`);
 }
 
+/* ============================================================
+   ARM G — ONE CATALOGUED CODE, ONE MINT SITE (D-550, 2026-09-24)
+   ============================================================
+
+   THE MEASURED FAILURE. `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs` counted DEC-49 codes
+   named at more than one literal site (62 on origin/main 8bdf20e6) and gated nothing, so a SECOND mint
+   site of a single-site code passed silently. A row holds one canned translation, true of one
+   condition; a second site is where a second condition can start borrowing it — the record telling a
+   member something untrue about their own input (DEC-49, as D-484 settled it: one code, one site).
+
+   THE GATE, in this file's ratchet shape. The walk is the sweep's own (`multisite-census.mjs`, one
+   home), so the figure gated here IS the figure the sweep prints. Three parts:
+     (1) CEILING.multiSiteCodes, the count less the declared closures, may only FALL (SLACK bound 0);
+     (2) MULTI_SITE_CANDIDATES names every code under it, so a NEW multi-site code FAILS BY NAME — a
+         count alone would say "one more" and leave the next reader to find which, and would pass a
+         swap (one consolidated, one new) outright. The set must match the measurement exactly: a
+         named code that is now single-site is slack, and fails naming it;
+     (3) MULTI_SITE_CLOSED declares BY NAME, with its reason, each code whose several sites are ONE
+         condition. A closure that stops being multi-site is a stale declaration and fails too.
+
+   WHAT IT CAN AND CANNOT SEE (printed on arm G's line every run): literal quoted occurrences in
+   comment-stripped store.mjs and index.mjs. A code held in a variable is DEC-49's own floor's
+   business, not this walk's. A comparison site (`reason === "CODE"`) counts as a site: that is why
+   RATE_IP and RATE_GLOBAL are closures. Other `src` files are NOT walked — measured by D-550 at 93
+   candidates over every src file against 62 here, the 31 extra mostly `affordances.mjs` PUBLISHING
+   codes as data, not minting them. And a candidate is not a verdict: whether two sites are two
+   conditions is a judgement; this arm holds the set from GROWING while that judgement is made. */
+const MULTI_SITE_CLOSED = new Map([
+  ["RATE_IP", "D-508/D-513: minted once in the knock rate governor; index.mjs's second site READS the code to pick the stated window (`rec.result.reason === \"RATE_IP\"`), it does not mint it"],
+  ["RATE_GLOBAL", "D-508/D-513: minted once beside RATE_IP; index.mjs's second site is the same read of the code, not a second condition"],
+  ["VERSION_ACT_UNWRITABLE", "the sweep's own header: several sites, ONE condition — the version file could not be rewritten — so the one translation is true at every site"],
+]);
+const MULTI_SITE_CANDIDATES = new Set([
+  "AI_BEYOND_TASK_SCOPE", "BAD_CITATION", "BIAS_ADOPTION_NOT_PROPOSED", "BOOTSTRAP_CREDENTIAL_UNSET",
+  "CAL_CANNOT_REGRADE", "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", "CAPTURE_CONDUCT_UA_ILLEGIBLE", "CAPTURE_REQUEST_NOT_PUBLIC",
+  "CAPTURE_REQUEST_NO_RUN", "CASE_IDENTITY_AMBIGUOUS", "CASE_SIGNER_NOT_AN_OWNER", "CONNECTION_PAIR_OUTSIDE_EXTENT",
+  "CONTENT_EXTENT_NO_CHAIN", "DRIVE_EXPORT_BYTES_ARE_THE_SHELL", "DRIVE_EXPORT_IS_THE_SHELL", "DRIVE_EXPORT_UNREACHABLE",
+  "DRIVE_FOLDER_NOT_A_DOCUMENT", "DRIVE_HOP_FACT_SUPPLIED", "DRIVE_KIND_UNDETERMINED", "DRIVE_SHAPE_UNRECOGNISED",
+  "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "DRIVE_TICK_EXPORT_IS_THE_SHELL", "EVIDENCE_STORAGE_NOT_CONFIGURED", "GROUP_IDENTITY_NEEDS_SESSION",
+  "LEAD_LOOK_REFERENT", "LEAD_TOO_LONG", "NARROW_BAD_EXTENT", "NOT_CAPABLE",
+  "NOT_YOURS", "NO_CLAIM", "NO_RESOLUTION", "OPERATOR_TOKEN_CANNOT_GOVERN",
+  "OPERATOR_TOKEN_CANNOT_RATIFY", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", "PARTITION_INDEPENDENCE_NOT_AN_INQUIRY", "PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
+  "PROJECT_ACT_NOT_A_PARTICIPANT", "QUOTE_AMOUNT_NOT_A_NUMBER", "QUOTE_ANSWERS_NO_SENT", "QUOTE_NOT_ON_RECEIVED",
+  "QUOTE_NO_CURRENCY", "QUOTE_REVISES_NO_QUOTE", "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE",
+  "REQUIRED_ARGUMENT_MISSING", "RETIRED_NOT_CITABLE", "ROOT_OF_TRUST_REQUIRED", "SUGGEST_COMPARISON_INCOMPLETE",
+  "SUGGEST_NOT_AN_INQUIRY", "SUGGEST_UNWRITABLE_STATE", "TESTIMONY_AUTHORED_DROPPED", "TESTIMONY_AUTHORED_UNEARNED",
+  "VERSION_ACT_NO_SUCH_VERSION", "VERSION_CURRENT_UNRELATED", "VERSION_FROZEN", "VERSION_LEG_UNRESOLVED",
+  "VERSION_STRENGTH_COMPOSED", "VERSION_STRENGTH_NOT_AN_INQUIRY", "VERSION_STRENGTH_UNFILTERED",
+]);
+
+/* The plane files arm G walks, named once so the guard's fixture suite can point it at its own tree. */
+const MULTI_SITE_FILES = ["store.mjs", "index.mjs"];
+
+function armG(catalogModule) {
+  const files = {};
+  for (const f of MULTI_SITE_FILES) {
+    const raw = fs.readFileSync(path.join(PLANE_SRC, f), "utf8");
+    const t = stripComments(raw);
+    /* The stripper is guarded both ways, as the sweep guards it: one that ate the file reports zero
+       sites triumphantly; one that matched nothing counts prose as code. */
+    /* Relative, not absolute: a file with no block comment legitimately strips to itself, and the plane's two
+       files strip to about a third (the sweep measured), so a tenth is a stripper that ate code. */
+    const matchedNothing = raw.includes("/*") && t.length >= raw.length, ate = t.length * 10 < raw.length;
+    if (matchedNothing || ate)
+      FAIL(`arm G: the comment stripper ${matchedNothing ? "matched nothing in" : "ate"} src/${f} `
+         + `(${raw.length} -> ${t.length} bytes), so arm G's census is not a reading of the plane`);
+    files["src/" + f] = t;
+  }
+  const { codes, multi } = multiSiteCensus(catalogModule, files);
+  const open = [...multi.keys()].filter(c => !MULTI_SITE_CLOSED.has(c)).sort();
+  MEASURE("multiSiteCodes", open.length, "DEC-49 codes at 2+ literal sites in store/index, less the declared "
+    + "closures (the `arm G:` line)");
+  /* THE EMPTY-CORPUS DEFENCE. Zero CANDIDATES is not the alarm — it is the finished state this arm drives
+     toward, and a conformant fixture legitimately reads it (arm F's floor learned the same thing). The alarm is
+     zero CODES, and, on the real tree, a declared closure the walk can no longer see as multi-site (below): all
+     three are known multi-site, so a blinded walk fails there BY NAME before it can report a clean ceiling. */
+  if (codes.size === 0)
+    FAIL(`arm G read 0 DEC-49 codes from the catalog. A ceiling over an empty census passes everything — the `
+       + `walk lost sight, it did not finish the work.`);
+  for (const c of open.filter(c => !MULTI_SITE_CANDIDATES.has(c))) {
+    const { fam, sites } = multi.get(c);
+    FAIL(`arm G: ${fam}.${c} is now minted at ${sites.length} literal sites (`
+       + `${sites.map(x => `${x.file} stripped-line ${x.line}`).join(", ")}) and was ONE. A DEC-49 code carries one `
+       + `canned translation, true of one condition; a second site is where a second condition borrows it `
+       + `(DEC-49, D-484). Route the refusal through the code's one governed helper, or mint a code for the new `
+       + `condition; if the sites really are one condition, declare it in MULTI_SITE_CLOSED with its reason.`);
+  }
+  for (const c of [...MULTI_SITE_CANDIDATES].sort().filter(c => !multi.has(c)))
+    FAIL(`arm G: ${c} is named in MULTI_SITE_CANDIDATES but is ${codes.has(c) ? "now at one site or none" : "no longer a DEC-49 code"}. `
+       + `That is the consolidation this arm exists to record: remove it from MULTI_SITE_CANDIDATES and lower `
+       + `CEILING.multiSiteCodes by one in the same commit, or the set carries slack a new site could hide in.`);
+  for (const c of [...MULTI_SITE_CANDIDATES].filter(c => MULTI_SITE_CLOSED.has(c)))
+    FAIL(`arm G: ${c} is both a CANDIDATE and a declared CLOSURE; it is one or the other.`);
+  for (const [c] of MULTI_SITE_CLOSED)
+    if (!multi.has(c))
+      FAIL(`arm G: ${c} is declared in MULTI_SITE_CLOSED but is not multi-site on this tree — a stale `
+         + `declaration is an exemption nobody needs, and the next second site of ${c} would pass under it.`);
+  /* No separate names-vs-number check: the two loops above hold the names EQUAL to the measured set, and
+     SLACK (bound 0) holds the ceiling equal to the measured count, so the names and the number cannot drift
+     apart without one of them failing by name. */
+  if (open.length > CEILING.multiSiteCodes)
+    FAIL(`arm G: ${open.length} DEC-49 codes are minted at more than one site, ceiling ${CEILING.multiSiteCodes}; `
+       + `it may only ever move DOWN. The new one(s) are named above.`);
+  NOTE(`arm G: ONE CODE, ONE MINT SITE — ${multi.size} of ${codes.size} DEC-49 codes at 2+ literal sites in `
+     + `comment-stripped store.mjs/index.mjs; ${multi.size - open.length} DECLARED closure(s) `
+     + `(${[...MULTI_SITE_CLOSED.keys()].join(", ")}); ${open.length} candidate(s) against ceiling `
+     + `${CEILING.multiSiteCodes} (may only fall). CANNOT SEE: a code in a variable, a site outside store/index, `
+     + `and whether two sites are one condition (a candidate is not a verdict).`);
+}
+
 /* ============================================================ */
 
 const families = await dec49Families();
@@ -2727,6 +2848,7 @@ NOTE(`census gap (REPORTED, not gated — see header): ${ungoverned.length} of $
    + `**two different defects, and arm F partitions them by the decision each needs.** `
    + `${census.union.size - ungoverned.length} are translated.`);
 armF(census, translated, reach);
+armG(await import("file://" + CATALOG));
 
 /* ============================================================== M0-79, 2026-09-21
    THE SLACK ARM — EVERY RATCHET KEY JUDGED IN THE DIRECTION ITS OWN ARM DOES NOT
