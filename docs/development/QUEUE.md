@@ -568,8 +568,8 @@ scope: measure (1)–(4) with a fresh network session (www.oaklandca.gov's 403 i
 accepts-when: each item recorded with date, instrument and counts, a refused host named as refused. NEGATIVE CONTROL: `tools/m132-negative-control.py`'s planted join counts exactly one.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### REC-203 · queued — UNBLOCKED 2026-09-24 by BOB #32: Framework §8.3 now carries M-132 (concurrent project-number forms told apart by shape; C.M.S. referent check and coverage floor; APN apn_sort and RETIRED parcels; contract/PO unpublished at source), on land/bob/fold-m132 awaiting its train. Build to §8.3 as amended.
-status: queued — SCHEDULER #21 01:53Z: RELEASED. Framework §8.3 rule 3 AMENDED by BOB #34 01:50Z on M-157: an APN reads RETIRED only where the assessor's lineage records it, else UNDETERMINED naming the vintages searched; build to that, citing the drained entry until folded
+### REC-203 · running — UNBLOCKED 2026-09-24 by BOB #32: Framework §8.3 now carries M-132 (concurrent project-number forms told apart by shape; C.M.S. referent check and coverage floor; APN apn_sort and RETIRED parcels; contract/PO unpublished at source), on land/bob/fold-m132 awaiting its train. Build to §8.3 as amended.
+status: running — SCHEDULER #21 01:54Z spawns WORKER REC-203 (depth 2) on the amended §8.3 rule 3
 order: behind D-453, whose measurements it rests on, as BOB #32 ruled (*Row them RECORD, blocked behind D-453's egress*) (SCHEDULER #17, 2026-09-23)
 milestone: M4
 interface: I3/I5 — three recognisers and their eras; the integrator mints and classifies the ICs.
