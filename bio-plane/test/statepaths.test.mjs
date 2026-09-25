@@ -188,7 +188,7 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
 /* MOVED 42 -> 43 by D-312 (2026-09-25), READ from this suite's print on the D-312 tree over origin/main 5e8a65a8
    (`43 unit(s) of 470 selected · 31 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`). The one is D-312's own
    `plane:memoryshare.test.mjs`, selected "walks docs/development/": it really does walk that directory's live design
-   documents for "of 128 MB", and it EXCLUDES the ledger and `measurements/` by a regex the gate's lexer blanks, so a
+   documents for the "share of 128 MB" class, and it EXCLUDES the ledger and `measurements/` by a regex the gate's lexer blanks, so a
    ledger-only change cannot move its verdict. That makes this ONE false selection, stated rather than hidden. The
    only way to avoid it would be for the gate to read an exclusion, and the gate does not. A CEILING IS NOT A RATCHET:
    left at the printed figure. CONTROL RE-RUN after the move (`statepaths.control.mjs`, 24 pass / 2 fail): arms a, c
