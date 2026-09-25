@@ -723,7 +723,7 @@ accepts-when: against a real-plane suite a reopened finding's queue item shows i
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
 
 ### REC-219 · integrated — **A PUBLISHED CASE SIGNS "no manifest was in force" WHILE ITS SCOPE'S ONLY ADOPTION PINS A PROPOSED REVISION: the frozen `bias_manifest` block of `bio-case-document/3` has no field for REC-210's `pins_proposed`, so a later reader takes "a declaration was pending" for "nobody declared anything".** Found at REC-210's integration (CONDUCT #20 22:57Z). BOB #34 RULED YES 2026-09-24 23:08Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20): `bio-case-document/4`, whose frozen `bias_manifest` states both facts as they stood at signing — none in force, and an adoption pinning a proposed revision (its id), not yet in force — and says nothing about when or whether it takes effect; /3 documents stay valid, read as they are, never re-signed. — owner RECORD.
-status: integrated — SCHEDULER #21 02:41Z: tip bf7e69ac, GATE 367/367 GREEN; /4 + C-41.14; CATALOG 1.30.0 (census 467) — re-read on the union; D-579(a) NOT in it: D-597
+status: integrated — SCHEDULER #22 03:48Z: tip b9528b03 = REC-219 (bf7e69ac, 367/367) + D-597 (c2524ad8, b9528b03; 78/78 GREEN on b191859d); CATALOG 1.30.0 (468, ce0367d3); census 117->118 (119 at union with REC-220); C-41.14, C-41.15; Publication §3 rule 18
 order: after UI-109, IN PRODUCT ORDER after REC-210 lands, not ahead (BOB #34 23:08Z) (SCHEDULER #20, 2026-09-24)
 milestone: M10
 interface: I3 — a format bump; the integrator mints and classifies the IC.
@@ -900,8 +900,8 @@ accepts-when: a request, a fee estimate, a waiver decision, a partial production
 added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 2, drained this commit; D-147's DEBT row of 2026-08-01; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-147» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### REC-196 · running — **A READ NAMING A DISCOVERABLE PROJECT'S OWN ID ANSWERS "DOES NOT EXIST" TO A MEMBER THE DIRECTORY HAS JUST SHOWN IT TO.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *POSITIONAL WINS for the PROJECT ITSELF: an uninvited member session naming a discoverable project's own id gets the positional refusal (not a participant; id and name only); anything INSIDE the project answers exactly as today; `viewerPredicate` unchanged.* — owner RECORD.
-status: running — SCHEDULER #21 02:44Z spawns WORKER REC-196 (depth 2); REC-197 (same discoverable setting) held behind it
+### REC-196 · integrated — **A READ NAMING A DISCOVERABLE PROJECT'S OWN ID ANSWERS "DOES NOT EXIST" TO A MEMBER THE DIRECTORY HAS JUST SHOWN IT TO.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *POSITIONAL WINS for the PROJECT ITSELF: an uninvited member session naming a discoverable project's own id gets the positional refusal (not a participant; id and name only); anything INSIDE the project answers exactly as today; `viewerPredicate` unchanged.* — owner RECORD.
+status: integrated — SCHEDULER #22 03:48Z: tip 82f604d2, GATE 366/366 GREEN FULLREUSE (21121 assertions), tree e55d42c9; 24 read ops answer C-70.1 at EXISTENCE (I3); carries D-601's fix
 order: before REC-150, the §7.14 sequence (SCHEDULER #17, 2026-09-23; REC-149's worker)
 milestone: M8
 interface: I3 — the project-id read's refusal; the integrator mints and classifies the IC.
@@ -911,7 +911,19 @@ scope: the project-itself read gives a discoverable project's positional refusal
 accepts-when: a discoverable project's id reads the positional refusal naming id and name; a bundle inside it still reads as absent. NEGATIVE CONTROL: answer "does not exist" for the project itself, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### REC-197 · queued — **CREATE AND FORK DO NOT CARRY THE DISCOVERABLE SETTING, AND A MACHINE CREDENTIAL'S OWNERLESS PROJECT HAS NO RULE.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *create and fork take one optional `visibility` (`discoverable` or `hidden`), absent means HIDDEN; a MACHINE credential never sets it (an ownerless project has no owner to choose): its creation is HIDDEN and `visibility=discoverable` from one is refused by name.* — owner RECORD.
+### D-601 · integrated — **`project-discoverable.control.mjs` ARM `default-discoverable` HAD NOT ARMED SINCE D-497 (its anchor ended `END,`, the comma before the removed `at` column), so the default-HIDDEN rule's only negative control was not running on main.** Found and FIXED by REC-196's worker inside its landing (03:41Z). — owner RECORD.
+status: integrated — SCHEDULER #22 03:48Z: fixed in land/worker/REC-196 @ 82f604d2 (366/366 GREEN); the arm runs AS DECLARED 96/61; archive with REC-196.
+order: with REC-196, which carries its fix (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative control: break the subject, watch the suite fail at a NAMED assertion).
+depends-on: none.
+scope: re-anchor the arm on the current line; done in REC-196's landing.
+accepts-when: the arm reports ARMED and fails by name (moves: 1 arm that never armed). NEGATIVE CONTROL: the arm itself, re-run AS DECLARED 96/61.
+added: 2026-09-25 · SCHEDULER #22 (id minted by REC-196's worker).
+
+### REC-197 · running — **CREATE AND FORK DO NOT CARRY THE DISCOVERABLE SETTING, AND A MACHINE CREDENTIAL'S OWNERLESS PROJECT HAS NO RULE.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *create and fork take one optional `visibility` (`discoverable` or `hidden`), absent means HIDDEN; a MACHINE credential never sets it (an ownerless project has no owner to choose): its creation is HIDDEN and `visibility=discoverable` from one is refused by name.* — owner RECORD.
+status: running — SCHEDULER #22 03:48Z spawns WORKER REC-197 (depth 2), REC-196 integrated at 82f604d2
 order: directly after REC-196 (SCHEDULER #17, 2026-09-23)
 milestone: M8
 interface: I3 additive — the `visibility` field and one refusal; the integrator mints and classifies the IC.
@@ -1019,7 +1031,8 @@ scope: correct each live site; re-check the agent-worker segment bound against t
 accepts-when: no live site divides by 128 or says "of 128"; the bound's re-check is recorded. NEGATIVE CONTROL: a grep arm over the live sites fails by name on a planted "of 128 MB".
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-460 · queued — **DIAGNOSIS: SOME TIER-3 AGENDAS AND MINUTES READ AS GENERIC, AND NOBODY KNOWS WHY.** FW-20 observed it on its walk (M-121, on c18-batch8) without diagnosing it; one suspected cause is that the OCR member transcribes one page per invocation and the plane reads only the first. Its finder's session is archived and no CONTENT-PDF lane is live, so the diagnosis is rowed. — owner CONTENT-PDF.
+### D-460 · running — **DIAGNOSIS: SOME TIER-3 AGENDAS AND MINUTES READ AS GENERIC, AND NOBODY KNOWS WHY.** FW-20 observed it on its walk (M-121, on c18-batch8) without diagnosing it; one suspected cause is that the OCR member transcribes one page per invocation and the plane reads only the first. Its finder's session is archived and no CONTENT-PDF lane is live, so the diagnosis is rowed. — owner CONTENT-PDF.
+status: running — SCHEDULER #22 03:48Z spawns WORKER D-460 (depth 2)
 order: after D-312, with the M2 extraction measurements: a possible silent under-read of scanned civic records, the class CLAUDE.md §2 ranks worst if confirmed (SCHEDULER #17, 2026-09-23; CONDUCT #18 23:51Z)
 milestone: M0 (a diagnosis — a measurement)
 interface: none until the fix is named.

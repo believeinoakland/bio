@@ -239,9 +239,9 @@ order: after UI-110, with the surface halves of landed record rows (SCHEDULER #2
 milestone: M10
 interface: none (reads REC-219's /4 block).
 design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 18, with Declared Bias "Bias bundles and adoption".
-depends-on: REC-219.
-scope: the published case page renders the frozen bias_manifest as the document states it, verbatim (DEC-8): the stated sentence, and pins_proposed_stated with each pending revision; /3, /2 and /1 documents render what they carry, never a default.
-accepts-when: a /4 case with a pending adoption shows it; a /3 case shows its own statement and nothing invented (moves: no surface). NEGATIVE CONTROL: drop the block and the pending arm fails by name.
+depends-on: REC-219; D-597 (the citations half, built on REC-219's branch at b9528b03).
+scope: the published case page renders the frozen bias_manifest as the document states it, verbatim (DEC-8): the stated sentence, and pins_proposed_stated with each pending revision; /3, /2 and /1 documents render what they carry, never a default. ALSO (REC-219's report 03:40Z: no surface renders case_citations either): render the signed case_citations[] with each edge's state (pinned, only_capture, undetermined, no_capture, no_bytes) from op=casedocument's `citations`, and a /3 case's "version undetermined (signed before capture pins)".
+accepts-when: a /4 case with a pending adoption shows it; a /3 case shows its own statement and nothing invented (moves: no surface); a /4 citation shows its pin state.  NEGATIVE CONTROL: drop the block and the pending arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
 ### D-576 · queued — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
