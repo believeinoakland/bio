@@ -1,4 +1,4 @@
-# BOB — resume here. Written by BOB #35 (session_01933kAN3JM2omheRacW6f9R), 2026-09-25 ~07:58Z at 52% (a checkpoint, not a refresh); successor: **BOB #36**
+# BOB — resume here. Written by BOB #35 (session_01933kAN3JM2omheRacW6f9R), 2026-09-25 ~09:47Z at 65% (a checkpoint; refresh near 70%); successor: **BOB #36**
 
 Read `CLAUDE.md`, `kickoffs/BOB.md` and `BIO_System_Design.md`, then this. Every line is a POINTER, measured at the time it names.
 
@@ -19,7 +19,7 @@ Last built after batch27 (964da679). Batch28 landed at 5e8a65a8, so a rebuild is
 
 ## 4. PUT TO BOB, UNANSWERED (each runs as built until he answers)
 - MK-7's two provisionals: §4.4 the narrow veto (an unchosen observation blocks ratification of an edition that reaches it) and §4.6 `name` = the member's HANDLE. Recommendation: keep both. When he answers: inbox, tell SCHEDULER, and fold §4.4/§4.6 plus the founder ruling (inbox 04:40Z) into MEMBER-KNOWLEDGE-DESIGN.
-- The live D-512 authority residue (REPLAY_UNVERIFIED): biosmoke7 at 0.79.0 lacks it because of the hold (DIST #7, 04:20Z). Recommendation: keep the hold unless anyone but Bob holds an admin-class credential on biosmoke7.
+- THE RELEASE HOLD (DIST #7 04:20Z and 09:40Z): main now carries D-512 (admin replay) PLUS batch29's REC-196 (a hidden project's existence leaks to a non-participant MEMBER), D-134/D-610 (server-stamped custodial by/status_by) and D-561; none is live on biosmoke7 (0.79.0). UPDATED recommendation (09:45Z): ship if anyone besides Bob is a member of biosmoke7 or his installed instance, else keep the hold. The act is Bob's: he types the ask in DIST #7's session.
 - The builder permission (§3).
 
 ## 5. IN FLIGHT
@@ -28,4 +28,5 @@ Last built after batch27 (964da679). Batch28 landed at 5e8a65a8, so a rebuild is
 - Weekly usage read allowed_warning at 03:00Z (resets 2026-09-29 18:00Z); at 04:51Z the call reported only the five-hour window, `allowed`.
 - Later rulings, in the BOB INBOX from 04:25Z to 08:15Z: the control-anchor instrument; D-191; D-485 R4 rides M0-184; REC-150; the MK-7 founder; REC-147/D-604; D-608 (image_content_unread); D-627 (per-image marker D-665, D-635 APPEND); UI-106 (surface both identities); D-626 (a derivation draft binds to the derived case); D-375 confirmed; D-177 (an archive capture earns C); D-673 (b); D-633 (re-grade at the carry); REC-202 (cite kept, version door via REC-223); D-680 (newCase kept).
 - OWED BY ME: once D-346 is on main, fold its ODF column into OFFICE-FORMATS.md §"What each part-map offers" (the meaning-based metadata map; draw:object intra links source:null).
-- Batch29 (77 branches, including land/bob/batch-0925c) was composed and gating at ~07:15Z and had NOT landed at 07:58Z (main 5e8a65a8).
+- Batch29 LANDED 09:23Z at main 95fe7bc7 (409/409), carrying land/bob/batch-0925c. Batch30 composing (CONDUCT #22). D-346 (ODF) is NOT on main yet; fold when it lands.
+- Rulings 08:20Z–09:35Z in the BOB INBOX: D-189 confirmed; REC-201 (b) fence machine law statements; D-689 removal fence confirmed; D-686 per-unit chain_kind plus `mixed`; CONDUCT #22's three rendered-capture calls confirmed; REC-206 grade C confirmed; D-665 pixel routing deferred; navchanges/links viewer filter (D row); chrome needs recurrence (D row).
