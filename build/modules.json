@@ -2,9 +2,10 @@
   "status": "APPROVED by Bob 2026-09-25 (TRANSITION.md T4), drafted by BOB #37 the same day. Order is the total order (P4). from names the legacy module a target module is extracted from; a module with no from already exists at its paths.",
   "modules": [
     {"id": "legacy-checks", "layer": 1, "legacy": true, "paths": ["bio-plane/checks/bio-checks.mjs"], "tests": [], "uses": []},
+    {"id": "jurisdictions", "layer": 1, "paths": ["jurisdictions/"], "tests": ["jurisdictions/test/"], "uses": []},
     {"id": "runtime-limits", "layer": 1, "paths": ["bio-plane/src/cpu.mjs", "bio-plane/src/tokens.mjs"], "tests": ["bio-plane/test/m/runtime-limits/"], "uses": []},
     {"id": "signatures", "layer": 1, "paths": ["bio-plane/src/sshsig.mjs", "bio-plane/src/tsa.mjs", "bio-plane/src/signpage.mjs"], "tests": ["bio-plane/test/m/signatures/"], "uses": []},
-    {"id": "id-spaces", "layer": 1, "paths": ["bio-plane/src/idspaces.mjs"], "tests": ["bio-plane/test/m/id-spaces/"], "uses": []},
+    {"id": "id-spaces", "layer": 1, "paths": ["bio-plane/src/idspaces.mjs"], "tests": ["bio-plane/test/m/id-spaces/"], "uses": ["jurisdictions"]},
     {"id": "subresources", "layer": 1, "paths": ["bio-plane/src/subresources.mjs"], "tests": ["bio-plane/test/m/subresources/"], "uses": ["runtime-limits"]},
     {"id": "ooxml", "layer": 1, "paths": ["bio-plane/src/ooxml.mjs"], "tests": ["bio-plane/test/m/ooxml/"], "uses": []},
     {"id": "office-readers", "layer": 1, "paths": ["bio-plane/src/docx.mjs", "bio-plane/src/pptx.mjs", "bio-plane/src/formats-xlsx.mjs", "bio-plane/src/csv.mjs"], "tests": ["bio-plane/test/m/office-readers/"], "uses": ["subresources", "ooxml"]},
@@ -12,7 +13,7 @@
     {"id": "pdf-reader", "layer": 1, "paths": ["bio-plane/src/pdfstructure.mjs"], "tests": ["bio-plane/test/m/pdf-reader/"], "uses": ["subresources"]},
     {"id": "format-registry", "layer": 1, "paths": ["bio-plane/src/formats.mjs"], "tests": ["bio-plane/test/m/format-registry/"], "uses": ["office-readers", "odf-reader", "pdf-reader"]},
     {"id": "text-chain", "layer": 1, "paths": ["bio-plane/src/textchain.mjs"], "tests": ["bio-plane/test/m/text-chain/"], "uses": ["legacy-checks"]},
-    {"id": "docprofile", "layer": 1, "paths": ["docprofile/"], "tests": ["docprofile/test/"], "uses": []},
+    {"id": "docprofile", "layer": 1, "paths": ["docprofile/"], "tests": ["docprofile/test/"], "uses": ["jurisdictions"]},
     {"id": "pdf-worker", "layer": 1, "paths": ["pdf-worker/"], "tests": ["pdf-worker/test/"], "uses": ["pdf-reader"]},
     {"id": "ocr-worker", "layer": 1, "paths": ["ocr-worker/"], "tests": ["ocr-worker/test/"], "uses": ["pdf-worker"]},
 

@@ -4,7 +4,7 @@
 
 | layer | name | constructs (System Design §3) | contract | modules |
 | --- | --- | --- | --- | --- |
-| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | legacy-checks, runtime-limits, signatures, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, docprofile, pdf-worker, ocr-worker |
+| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | legacy-checks, jurisdictions, runtime-limits, signatures, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, docprofile, pdf-worker, ocr-worker |
 | 2 | Record and authority | 3, 1 | Owns storage, id allocation, leases, audit and purge; the member, the capability and the fence; the one write path that promotes and checks a bundle. | record-core, membership, promotion |
 | 3 | Intake and provenance | 2 | Material enters only with provenance; a hop attests bytes, URL and time, no more. | host-governor, provenance, capture-sources, capture |
 | 4 | Content | 4, 5 | Readings are made from captured bytes; content is the reference to a part of a document, minted over them. | extraction, content |
@@ -13,6 +13,18 @@
 | 7 | Understanding | Content Framework §12, and 8 | What the investigation below has established: the group's intent, with progress computed against the record, and which findings still stand when their basis changes. | intent, reevaluation |
 | 8 | Publication and operations | 13, 10, 14 | What the group stands behind leaves one way; the instance keeps itself current unattended. | publication, monitoring, scheduler, legacy-store |
 | 9 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, queue, instance-setup, control-plane, legacy-index, legacy-ui, installer |
+
+## No jurisdiction in the product (Bob's concern, 2026-09-25; ruled by BOB #37)
+
+Bob: CivicOS must not carry so many outward-facing references to Oakland and Alameda County that a group elsewhere concludes it is not for them. Measured the same day: local knowledge is written into code (identifier spaces and publishing systems in `idspaces.mjs`; council headers and municipal-code citations in 12 `docprofile/` files; a default search term of "oakland" in `store.mjs`), and the installer's outward text brands itself "Believe in Oakland".
+
+1. **Product code and its outward text name no jurisdiction.** Everything local lives as DATA in a **jurisdiction profile**: identifier spaces and their forms, publishing systems and their addresses, coverage floors, the vocabulary document recognisers match, default search terms. A profile names the measurement each fact rests on.
+2. **The `jurisdictions` module holds the profiles** (layer 1, first after `legacy-checks`). Oakland and Alameda County are its first profile, the one the project's own instance uses. An instance may use several profiles; which ones is an instance setting chosen at install.
+3. **A module that needs local knowledge takes it from a profile.** Its requirements are stated for any jurisdiction, and its tests include at least one profile that is not Oakland's.
+4. **Outward text names the product (CivicOS) and the group.** Believe in Oakland is named only where it is the fact: as the publisher and signer of a release.
+5. A requirement that names a place is a defect in the requirement, except in the `jurisdictions` module's profile data.
+
+The work this makes is in `plan/next.md`. The UI is worked on elsewhere and carries the same rule.
 
 ## The legacy modules (PROCESS-MECHANICS §12)
 
