@@ -74,14 +74,6 @@
    "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/fence-e2e.control.mjs",
-   "arm": "(3)",
-   "anchor": "  return !!spec && Array.isArray(spec.classes) &",
-   "row": "D-639",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/m025-anchor-witness.control.mjs",
    "arm": "T1",
    "anchor": "/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms",

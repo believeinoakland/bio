@@ -203,8 +203,12 @@ arm("(3)", "**THE CREDENTIAL-SHAPE LAYER, ALONE.** `aiReachesAsMember` returns t
   + "door. MUST NOT FAIL: 1-5, which are already inside the floor and gain nothing from widening it "
   + "— and NOT attempt 6's code assertion, because the check BEHIND the floor answers the same code, "
   + "which is the finding this arm produced.",
-  [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");`,
-             `  return true || (!!spec && Array.isArray(spec.classes) && spec.classes.includes("member"));`]],
+  /* D-639, 2026-09-25: RE-ANCHORED, as D-632 did aicredential.control arm (3). REC-159 split the predicate over
+     two lines (`&& !Array.isArray(spec.machineClasses)`), so the one-line anchor matched 0 times and this arm
+     never armed — M0-197's reader found it. The anchor is now the whole return as it reads, and the arm still
+     makes `aiReachesAsMember` answer TRUE while keeping the original predicate behind the `||`. */
+  [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses);`,
+             `  return true || (!!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses));`]],
   ["it is the MEMBER-FLOOR branch that answers", "the DECLARATION is refused at the mint too"],
   ["1. accept (op=versionaccept)", "2. make-current (op=versioncurrent)",
    "3. hide (op=versionhide)", "4. publish (op=publish)", "5. direct capture (op=acquire)"]);
