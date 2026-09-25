@@ -678,6 +678,16 @@ scope: the census row may declare `changed: [C-n.m, …]`, counted in the versio
 accepts-when: a check's body edited with no census row fails by name, and one declared in `changed:` under a new version passes (moves: behaviour-only changes invisible to the version). NEGATIVE CONTROL: edit a check's body without a census row, and the new arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:00Z).
 
+### D-563 · queued — **`op=promote` TAKES A BUNDLE'S TITLE AND STATE FROM THE ENVELOPE, NOT THE DOCUMENT: it projects `bundles.title`, `current_state`, `prior_state`, `created` and `last_updated` from the envelope, and 7.1's name scan, 7.11's owner test and REC-181's retirement arm read `meta.title` / `meta.current_state`; MEASURED: a second project whose bytes name a TAKEN title LANDED when `meta.title` named another, and the projection shows the envelope's title over the bytes'.** D-526's class one field over; found by D-526's worker (00:48Z). — owner RECORD.
+order: at the head of the backlog with the promote corrections: a name fence and an owner test a caller can steer with a label are authority defects, which outrank features (SCHEDULER #21, 2026-09-25)
+milestone: M7
+interface: I3 — refusals on op=promote for a contradicting envelope; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, with C-2.5 and D-510's derivation (the document states what it is; the envelope is a label).
+depends-on: D-526.
+scope: extend D-510's derivation to title and state: derive both from the document, refuse an envelope that contradicts it by name, and make 7.1's name scan, 7.11's owner test and REC-181's retirement arm read the derived values; the projection writes the derived values.
+accepts-when: the taken-title promotion is refused NAME_TAKEN whatever meta.title says, and the projection shows the document's title (moves: a taken name landing under another label). NEGATIVE CONTROL: read meta.title in the name scan again and the taken-title arm lands, failing by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-526's worker).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
