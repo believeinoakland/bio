@@ -1,0 +1,16 @@
+{
+ "unit": "plane:independence.test.mjs",
+ "inputHash": "220d052219332c3c2a3333659527999a387b0b2a9a3134632734f5063e391944",
+ "verdict": "PASS",
+ "run": "02f32dc3c4fc3ecbae85188f30fc337193325132.1790313494271.1235.json",
+ "tree": "02f32dc3c4fc3ecbae85188f30fc337193325132",
+ "head": "f2d3d211a3684ed557b2b0f2a31979b806cd8697",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 139,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e36f1b05-49f4-536c-9409-ddbfdfa9e759",
+ "at": "2026-09-25T05:18:14.293Z"
+}
