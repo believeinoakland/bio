@@ -809,7 +809,8 @@ scope: on the progression page, render each finding's disposition as the plane s
 accepts-when: against a real-plane suite a dismissed finding renders its decision beside it (the measured failure it moves: an answered question shown as open). NEGATIVE CONTROL: render `inst.findings` without the view and the decided-finding arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
 
-### D-605 · queued — **REGISTERING A SIGNING KEY FROM THE SETUP PAGE IS ALWAYS REFUSED BAD_KEY: `bio-plane/src/setup.mjs`'s key form posts the WHOLE `ssh-ed25519 AAAA… label` line as keyB64, and `Store#signerAdd`'s `/^AAAA[A-Za-z0-9+/=]+$/` can never match it.** Found by D-134's worker (05:15Z), by reading describeKey and the regex; D-134's suite shows a whole line refused. — owner DIST (the plane's setup page).
+### D-605 · running — **REGISTERING A SIGNING KEY FROM THE SETUP PAGE IS ALWAYS REFUSED BAD_KEY: `bio-plane/src/setup.mjs`'s key form posts the WHOLE `ssh-ed25519 AAAA… label` line as keyB64, and `Store#signerAdd`'s `/^AAAA[A-Za-z0-9+/=]+$/` can never match it.** Found by D-134's worker (05:15Z), by reading describeKey and the regex; D-134's suite shows a whole line refused. — owner DIST (the plane's setup page).
+status: running — SCHEDULER #22 05:19Z spawns WORKER D-605 (depth 2), stacked on land/worker/D-596 @ 37430658 (same setup page)
 order: after D-586, with the corrections to acts a group needs: a setup act that can never succeed blocks a new group's first signer (SCHEDULER #22, 2026-09-25)
 milestone: M8
 interface: none on the wire (the page's request is corrected; signeradd is unchanged).
