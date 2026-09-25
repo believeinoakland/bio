@@ -93,6 +93,26 @@ scope: when the two newest candidates fall in one second and one is whole-second
 accepts-when: a legacy whole-second ack and a millisecond comment in one second give the pick PLUS the statement; acts in different seconds give none (moves: a silent pick). NEGATIVE CONTROL: drop the statement and the tie arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-543's worker).
 
+### D-570 · queued — **`networkidle` NEVER FIRES ON THE FOUNDING CLIENT-RENDERED SOURCE: on oaklandca.opengov.com it fired in 0 of 16 runs (60 s cap; load at 3.6-9.0 s), so every render of it ends on its timeout reading "may be incomplete" and burns its whole reservation.** Found by D-520's worker (M-151). BOB #34 RULED (c) 2026-09-25 02:00Z (drained to `BOB-INBOX-drained.md`; cite until folded): load, then a 500 ms quiet window with no request YOUNGER than N seconds in flight, N MEASURED; `render.wait` records which rule fired (`networkidle` / `quiet_excluding_long_lived` / `timeout`), N, and the ignored requests' count and URLs; a quiet-window settle reads "settled; N long-lived request(s) still open were not waited for", never "complete". — owner CAPTURE.
+order: after D-585, with the capture corrections: a render stated incomplete that the record could settle says less than it knows (BOB #34 02:00Z) (SCHEDULER #21, 2026-09-25)
+milestone: M2
+interface: I3/I5 — `render.wait`'s rule, N and ignored requests; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md`, beside BOB #32's render rulings, with BOB #34's 02:00Z ruling, folded by this row.
+depends-on: D-520.
+scope: measure request lifetimes on the client-rendered corpus sources (extend M-151) and set N from them; implement the quiet window in the driver; record and state as ruled.
+accepts-when: an opengov fixture settles by the quiet window with its open long-poll named; a page that never quiets still times out reading incomplete (moves: 16 of 16 timeouts). NEGATIVE CONTROL: drop the age exclusion and the opengov arm times out by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-520's worker).
+
+### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
+order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
+milestone: M6
+interface: I3 additive — the skill pack's observation shape gains `question`; the integrator classifies.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5 and §15, with BOB #34's 02:05Z ruling, folded by this row.
+depends-on: D-451.
+scope: the level observation carries `question` (one or several); the table targets each named question; an unnamed one stays provisional and is counted as unattributed by §15's instrument.
+accepts-when: a run whose level observation names Q2 files exactly one level-empty candidate on Q2; one naming nothing is refused and counted unattributed (moves: SUGGEST_NO_TARGET on every multi-question run). NEGATIVE CONTROL: target every cited question and the named-only arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-451's worker).
+
 ### D-568 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
 order: after D-573, with the review-copy corrections: an edition stated for a case the record has not chosen claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M10
@@ -1202,33 +1222,3 @@ depends-on: none.
 scope: consolidate each multi-site code behind one helper, one code per slice, starting with `NO_SUCH_BUNDLE` (15 sites); re-read the partition each slice.
 accepts-when: the sliced code reads single-site and the F4 count falls by one. NEGATIVE CONTROL: restore one inline literal, and arm F fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-344 · queued — **THE CONTROL REGISTER CANNOT SEE A QUALIFIED `NEGATIVE CONTROL` DECLARATION: `control-register.mjs` `markerPositions` counts the phrase only when a separator follows it directly, so `NEGATIVE CONTROL (…)` (over sixty suites) and `NEGATIVE CONTROL, …` (three in `corpuscheck.test.mjs`) are invisible, and `register-grammar.test.mjs` C5e works around the blind spot rather than fixing it.** — owner M0 (VERIFICATION).
-order: after D-272: the register every suite's control is counted by under-reads, so coverage is claimed on less than it reads (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` §"The negative-control register".
-depends-on: none.
-scope: `markerPositions` admits one parenthesised or comma qualifier before a separator on the same line; a bare phrase with no separator still does not count; C5e corrected in the same change.
-accepts-when: `corpuscheck.test.mjs` reads five declarations and C5e's workaround falls, in `register-grammar.test.mjs`. NEGATIVE CONTROL: restore the strict separator check, and the "a qualified marker is a declaration" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-357 · queued — **THE DEC-49 GUARD'S REGION MATCHER ENDS IN A WORD BOUNDARY, SO A REGION NAMED `x-y` OPENS REGION `x` TOO: `civicos-ui/check-refusal-codes.mjs` `REGION_START`/`REGION_END`.** A live latent pair exists (`is-capture-request` in `store.mjs`, `is-capture-request-arm` in `index.mjs`), harmless only while they sit in different files. — owner UI.
-order: after D-344 (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard's section, *what a refusal is in principle*).
-depends-on: none.
-scope: end both patterns in a lookahead for whitespace, a comment close or end of line instead of the word boundary; a sibling-region fixture.
-accepts-when: a file holding regions `x` and `x-y` passes with one opener each, and the `regionLines` floors do not move. NEGATIVE CONTROL: restore the word boundary, and the "one opener per name" arm fails naming two opening markers.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-300 · queued — **A SUITE THAT READS THE WALL CLOCK CAN TURN RED UNTOUCHED, AND THE SWEEP THAT WOULD SAY SO IS RUN BY NOBODY: three suites of about three hundred bind `BIO_NOW_MS`; `clockadvance.control.mjs` exists and no tool, script or gate runs it.** — owner M0.
-order: after D-357; the cheap half (run the sweep) first; threading the clock through every constructor is a later row if the sweep finds decay (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md`.
-depends-on: none.
-scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
-accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
