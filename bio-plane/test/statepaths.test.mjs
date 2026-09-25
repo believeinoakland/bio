@@ -180,7 +180,12 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    is M0-194's `plane:rulemap.test.mjs`, which really does read `docs/` — kickoffs/WORKER.md, its archive and
    measurements/M-147.md, through tools/rulemap.mjs — so it is doc-facing and §2's net gives it any `docs/` change: a
    legitimately added doc-facing suite, not slack. A CEILING IS NOT A RATCHET: left at the printed figure. */
-const UNITS_CEILING = 44;
+/* MOVED 44 -> 42 by M0-194 on its merge with origin/main 964da679 (2026-09-25), READ from this suite's print on the
+   merged, committed tree (`42 unit(s) of 447 selected · 30 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`). Both 44s
+   above were right on their own trees; the union selects 42, so the two slots of slack are closed rather than kept. The
+   cause of the fall is NOT attributed here (undetermined: main moved 167 files since 9f8b69e6); a later landing that
+   adds a unit reads its own print. A CEILING IS NOT A RATCHET: left at the printed figure. */
+const UNITS_CEILING = 42;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
