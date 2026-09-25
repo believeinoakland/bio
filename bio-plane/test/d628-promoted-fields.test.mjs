@@ -24,6 +24,8 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 
+/* D-620 (stated-null sweep, corrected at the c23-batch30 union): a stated null is told from a dropped key. */
+import { statedJSON } from "./stated.mjs";
 /* The control driver points this at an armed copy of the sources. */
 const SRC_DIR = process.env.D628_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
@@ -31,8 +33,8 @@ const { PROMOTED_TYPE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

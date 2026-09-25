@@ -64,6 +64,8 @@ import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { recordsLawOf, recordsLawStatement, governingLawsOf, MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
 
+/* D-620 (stated-null sweep, corrected at the c23-batch30 union): a stated null is told from a dropped key. */
+import { statedJSON } from "./stated.mjs";
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = join(PLANE, "..");
 const IDX = join(PLANE, "src", "index.mjs");
@@ -74,8 +76,8 @@ const PERSIST = mkdtempSync(join(tmpdir(), "d689-persist-"));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");
