@@ -568,8 +568,8 @@ scope: a baseline DCT decoder in the member, checked against Pillow digests as `
 accepts-when: a DCT image-only page transcribes, rotated, and its pixel hash matches Pillow's. NEGATIVE CONTROL: a no-op decoder fails on the digest by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-312 · running — **`memoryUsageBytes` IS NOT A FRACTION OF THE 128 MB ISOLATE, AND LIVE SITES STILL SAY "of 128 MB": `agent-worker/src/index.mjs` (the shipped `BOUND_SOURCE`, and the segment bound sized on that reading), `fl1-cpu-probe.mjs`, `INTERFACES.md` §"The segment bound…", `pagepixels.mjs`.** The rule is stated in `INTERFACES.md` §"The memory bound, and how it is expressed". — owner FLEET, CONTENT-PDF.
-status: running — SCHEDULER #22 03:44Z spawns WORKER D-312 (depth 2)
+### D-312 · integrated — **`memoryUsageBytes` IS NOT A FRACTION OF THE 128 MB ISOLATE, AND LIVE SITES STILL SAY "of 128 MB": `agent-worker/src/index.mjs` (the shipped `BOUND_SOURCE`, and the segment bound sized on that reading), `fl1-cpu-probe.mjs`, `INTERFACES.md` §"The segment bound…", `pagepixels.mjs`.** The rule is stated in `INTERFACES.md` §"The memory bound, and how it is expressed". — owner FLEET, CONTENT-PDF.
+status: integrated — SCHEDULER #22 05:42Z: tip 223766d9, GATE 80/80 GREEN FULLREUSE over f2507a54's full run (385/386, statepaths ceiling fixed), tree 755d20b3; no live site says of 128; M-168: 120-turn bound SAFE (~8x headroom), no memory wall, CPU binds; minted D-611, D-621
 order: after D-320, the M2 measurement corrections: a shipped bound rests on the misreading (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M0 (measurement wording, and one shipped bound)
 interface: none — wording, and a re-check of one bound.
@@ -578,6 +578,17 @@ depends-on: none.
 scope: correct each live site; re-check the agent-worker segment bound against the rule and state the result.
 accepts-when: no live site divides by 128 or says "of 128"; the bound's re-check is recorded. NEGATIVE CONTROL: a grep arm over the live sites fails by name on a planted "of 128 MB".
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-621 · integrated — **`statepaths.control.mjs` ARM b DOES NOT ARM: its COORD_BLOCK anchor predates `coord.mjs` importing and re-exporting RETIRED_FILES and isRetiredPath.** Found by D-312's worker (05:39Z) on main 5e8a65a8. D-535's worker found and FIXED the same arm on its branch ("statepaths.control arm b had NEVER ARMED since M0-140"), which is integrated and not yet on main. — owner M0.
+status: integrated — SCHEDULER #22 05:42Z: closes with D-535 (land/worker/D-535 @ 03f34d18); CONDUCT confirms arm b ARMS on the merged tree (D-535's union figure statepaths 35/33); if it does not, this row returns to queued with D-312's named fix (re-key COORD_BLOCK/DEFS to the current import and export lines)
+order: with D-535, which carries its fix (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative control: break the subject, watch the suite fail at a NAMED assertion).
+depends-on: none.
+scope: re-key COORD_BLOCK/DEFS to coord.mjs's current import and export lines; done in D-535's landing.
+accepts-when: statepaths.control arm b reports ARMED and fails by name on the merged tree. NEGATIVE CONTROL: the arm itself.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-312's worker).
 
 ### D-460 · integrated — **DIAGNOSIS: SOME TIER-3 AGENDAS AND MINUTES READ AS GENERIC, AND NOBODY KNOWS WHY.** FW-20 observed it on its walk (M-121, on c18-batch8) without diagnosing it; one suspected cause is that the OCR member transcribes one page per invocation and the plane reads only the first. Its finder's session is archived and no CONTENT-PDF lane is live, so the diagnosis is rowed. — owner CONTENT-PDF.
 status: integrated — SCHEDULER #22 04:34Z: tip 72879f23, GATE 64/64 GREEN TARGETED (5037 assertions), tree bc48bc56; M-165: one page per OCR acquire (174 of 190 untranscribed) AND agendas generic for lack of a Legistar file line (breadth, no defect); minted D-606, D-607
@@ -885,6 +896,16 @@ depends-on: UI-91, D-454.
 scope: the chooser offers each OCCURRENCE (page and position, from the plane's `occurrences`), sends `occurrence=` on the act, renders C-74.4 in its DEC-49 words, and shows a pre-D-454 choice the plane states AMBIGUOUS as it says.
 accepts-when: a subject string read on three pages offers three choices and each is accepted (moves: C-74.4 on every multi-page mention). NEGATIVE CONTROL: omit `occurrence=` and the three-page arm reads C-74.4, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
+
+### UI-104 · queued — **THE ACTION PAGE OFFERS NO RISK-TIER REVISION AND SHOWS NO TIER HISTORY.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), the surface half of REC-214. — owner UI.
+order: directly after REC-214, which it consumes (BOB #33: plane, then UI) (SCHEDULER #19, 2026-09-24)
+milestone: M7
+interface: I3 consumer (REC-214's IC).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`), with BOB #33's risk-tier ruling (sent by message 21:18Z, cited elsewhere as "21:21Z"; RECORDED in the BOB INBOX entry of 21:55Z, drained to `BOB-INBOX-drained.md` by SCHEDULER #20) (folded by REC-214).
+depends-on: REC-214.
+scope: on the action page, beside UI-90's governing-laws list, the revise act (tier plus a required reason, words from the plane's vocabulary) and the tier history as the plane states it.
+accepts-when: against a real-plane suite a member revises a tier with a reason and the history renders "revised from … to …: <reason>"; the act cannot submit without a reason (the measured failure it moves: no surface for the act). NEGATIVE CONTROL: submit without a reason and the required-reason arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

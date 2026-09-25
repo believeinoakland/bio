@@ -254,16 +254,6 @@ scope: `queueMuteReportHtml`'s per-case undo names every kind the member muted f
 accepts-when: against a real plane a member undoes a case mute whose kind holds nothing back today (the measured failure it moves: no control drawn). NEGATIVE CONTROL: read `suppressed[]` alone again and the quiet-kind arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
-### UI-104 · queued — **THE ACTION PAGE OFFERS NO RISK-TIER REVISION AND SHOWS NO TIER HISTORY.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), the surface half of REC-214. — owner UI.
-order: directly after REC-214, which it consumes (BOB #33: plane, then UI) (SCHEDULER #19, 2026-09-24)
-milestone: M7
-interface: I3 consumer (REC-214's IC).
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (`risk_tier`), with BOB #33's risk-tier ruling (sent by message 21:18Z, cited elsewhere as "21:21Z"; RECORDED in the BOB INBOX entry of 21:55Z, drained to `BOB-INBOX-drained.md` by SCHEDULER #20) (folded by REC-214).
-depends-on: REC-214.
-scope: on the action page, beside UI-90's governing-laws list, the revise act (tier plus a required reason, words from the plane's vocabulary) and the tier history as the plane states it.
-accepts-when: against a real-plane suite a member revises a tier with a reason and the history renders "revised from … to …: <reason>"; the act cannot submit without a reason (the measured failure it moves: no surface for the act). NEGATIVE CONTROL: submit without a reason and the required-reason arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
-
 ### REC-215 · queued — **NO MACHINE PROPOSAL OF A RISK TIER EXISTS, LABELLED AND APART FROM THE MEMBER'S VALUE.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), item 3: `actionriskpropose` (not yet an op), REC-195's shape. — owner RECORD.
 order: after UI-104 (BOB #33: after (1), the proposal half last) (SCHEDULER #19, 2026-09-24)
 milestone: M7
@@ -387,6 +377,16 @@ depends-on: none.
 scope: a shared comparator whose serialiser maps undefined to a distinct sentinel; adopt it in every suite that asserts a null (grep assertions naming null), not all 363.
 accepts-when: each null-asserting suite uses the comparator and fails on a dropped key (moves: stated-null arms blind to a dropped key). NEGATIVE CONTROL: drop a stated-null key in one fixture and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
+
+### D-611 · queued — **THE AGENT-WORKER'S SEGMENT BOUND IS A TURN COUNT (120), BUT ITS CPU CEILING SCALES WITH BYTES RE-SERIALISED (about turns squared times bytes per turn): M-168 measured no memory wall (P99 flat at 95-123 MB from 400 to 1,400 turns) and CPU binding at ~7-10 ms per MB re-serialised, so 120 is safe today by ~8x headroom but a heavier turn payload moves the ceiling with no bound noticing.** Found by D-312's worker (05:39Z). — owner FLEET.
+order: after D-620, with the measured-bound rows: the shipped bound is safe today, so nothing fails; its unit is wrong (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none unless the shipped bound's unit changes (the integrator classifies; FLEET deploys).
+design: `docs/development/VERIFICATION.md` (measure; do not recall), for the rule in `docs/development/INTERFACES.md` §"The memory bound, and how it is expressed".
+depends-on: D-312 (land/worker/D-312 @ 223766d9; M-168).
+scope: bound a segment on cumulative bytes re-serialised, with a margin under ~3 GB (M-168); state the unit at BOUND_SOURCE.
+accepts-when: a segment whose turns are few but heavy is cut by the byte bound before the CPU ceiling (moves: a turn count blind to payload size). NEGATIVE CONTROL: bound on turns again and the heavy-turn arm runs past the byte margin, failing by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-312's worker).
 
 ### D-542 · queued — **THE DEC-49 GUARD SCORES A CODE "OUT OF REACH" WHEN ITS SURFACE RENDERS THE PLANE'S OWN WORDS: `check-refusal-codes.mjs` puts a code in reach only by R1 (a catalogue row), R2 (a code LITERAL in `app.html`) or R3 (a harness mock), so UI-68's review-copy surface, which renders `detail` and keys on no literal, left TEN of D-448's eleven codes scored out of reach for a day while a member could meet them.** Found by D-448's worker (branch `land/worker/D-448` 5eadd905: the Publication front matter and `13.review-copy` both carry "D-542 carries that fix (reach-by-op) and is NOT BUILT"). — owner M0 (the guard).
 order: after D-550, with the DEC-49 instrument rows behind the product rows: it makes a false gate result (a reachable code read as unreachable) visible, which is product quality, but nothing regresses today since D-448 catalogues all eleven (Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-24)
