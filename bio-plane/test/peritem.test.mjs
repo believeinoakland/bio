@@ -310,9 +310,12 @@ try {
    *      NO_SUCH_PROGRESSION — the same true-and-useless refusal IC-60's bridge exists to have
    *      replaced, arriving by the other door. It now refuses CLASS_NOT_DISPOSED naming `instead`.
    *
-   * WHAT THIS BLOCK CANNOT SEE: the SURFACE. `civicos-ui/app.html`'s `queueSetOpFor` returns null for
-   * a finding whose `disposition.scope` is `project`, so no member can select one today whatever the
-   * plane accepts — that half is UI's and is DELEGATED (CLAIMS.md, REC-205), not closed here. */
+   * WHAT THIS BLOCK CANNOT SEE: the SURFACE. `civicos-ui/app.html`'s `queueSetOpsFor` (UI-94's name for
+   * `queueSetOpFor`) offers `proposedispose` for a finding whose `disposition.scope` is `project` wherever
+   * `queueFindingHomes` reads a home from the record's `disposition.projects` (no set act only where it
+   * publishes none), and the set act sends each such item as `{ project, finding }` — UI-110 closed that
+   * half on the surface; `civicos-ui/test/queue-projectscope.test.mjs` drives it, not this block
+   * (corrected at c22-batch29 after UI-110). */
   console.log("\n--- 9 · REC-205: a project-scoped finding in the selection ---");
   /* The fixture is `d266scope.test.mjs`'s, carried here deliberately rather than shared: the two
      suites must be able to disagree about the SET's behaviour without disagreeing about what a
