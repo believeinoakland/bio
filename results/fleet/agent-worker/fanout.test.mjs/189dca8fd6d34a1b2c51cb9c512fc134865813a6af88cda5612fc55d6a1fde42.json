@@ -1,0 +1,16 @@
+{
+ "unit": "fleet:agent-worker/fanout.test.mjs",
+ "inputHash": "189dca8fd6d34a1b2c51cb9c512fc134865813a6af88cda5612fc55d6a1fde42",
+ "verdict": "PASS",
+ "run": "4f63db8bb94833c73b03c60ecf44ae4a6bc2442e.1790316802175.8134.json",
+ "tree": "4f63db8bb94833c73b03c60ecf44ae4a6bc2442e",
+ "head": "070f28abf84d2ae6ef82683e76a4c472aa30a40d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1072,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "613b0073-ee48-5bb0-a24c-e66c73cbfbd2",
+ "at": "2026-09-25T06:13:22.186Z"
+}
