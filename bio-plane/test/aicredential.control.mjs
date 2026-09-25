@@ -175,7 +175,10 @@ arm("(3) PL-4's DELEGATED CONSTRAINT — THE FENCE IS A SHAPE. Make the member-r
   + "purge and export. The AI would then be able to make the plane fetch on its own timing, which is "
   + "the spine PL-4's own arm (1) protects, arriving through the credential instead of through the "
   + "row state.",
-  [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");`,
+  /* D-632, 2026-09-25: RE-ANCHORED. REC-159 split the predicate over two lines (`&& !Array.isArray(
+     spec.machineClasses)`), so the one-line anchor matched 0 times and this arm never armed — M0-197's reader
+     found it. The anchor is now the whole return as it reads, and the arm still makes the floor answer TRUE. */
+  [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses);`,
               `  return true;`]],
   [/* M0-25, 2026-09-13: THE NUMBER IS OUT OF THIS FRAGMENT ON PURPOSE. It read
      "every one of the 26 ops …", and the SUITE composes that label as
@@ -218,8 +221,12 @@ arm("(5) D-199 (4) IS A MEASUREMENT, NOT A LABEL. Stamp `class:ai` for every age
   + "credential is attributable to Anna while it saw everything the group has — the gap between what "
   + "the record claims about itself and what the code enforces, which is the failure mode this "
   + "project is built to refuse.",
-  [["index", `        : cls === "ai" ? aiCred.principal\n        : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`,
-              `        : cls === "ai" ? \`\${MACHINE_CLASS_PREFIX}ai\`\n        : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`]],
+  /* D-632, 2026-09-25: RE-ANCHORED. The old anchor (the `ai` line and the class line under it) now reads at
+     THREE sites — the viewer, and two `identity` stamps REC-132 / D-422 added beside it — so `edit` refused to
+     arm. The arm's subject is the VIEWER, so the anchor now opens on `inner.searchParams.set("viewer",`, which
+     makes it one site again. */
+  [["index", `      inner.searchParams.set("viewer",\n        viaSession ? sessViewer\n        : cls === "ai" ? aiCred.principal\n        : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`,
+              `      inner.searchParams.set("viewer",\n        viaSession ? sessViewer\n        : cls === "ai" ? \`\${MACHINE_CLASS_PREFIX}ai\`\n        : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`]],
   ["and NOT to a credential whose principal is ANNA, who was never invited"],
   ["Ruth's project is visible to the ORGANISATION-scoped credential",
    "while the shared evidence corpus is visible to all three"]);

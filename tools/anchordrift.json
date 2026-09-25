@@ -10,22 +10,6 @@
    "why": "bio-plane/src/index.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/aicredential.control.mjs",
-   "arm": "3",
-   "anchor": "  return !!spec && Array.isArray(spec.classes) &",
-   "row": "D-632",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/aicredential.control.mjs",
-   "arm": "5",
-   "anchor": "        : cls === \"ai\" ? aiCred.principal\n      ",
-   "row": "D-632",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/index.mjs: matches 3 times where the arm edits ONE site — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/caseflip.control.mjs",
    "arm": "c",
    "anchor": "      if (!r) { awaiting.push(m.bundle_id); cont",
