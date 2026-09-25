@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d270-refusal-truth.test.mjs",
+ "inputHash": "4c99f039b3440a65963406d8feb99fedfd8a4f39ff0c6f60278b778d7bb499d1",
+ "verdict": "PASS",
+ "run": "e88ce74aadabbfb509cba56c1db8b961241ff66a.1790319553661.1500.json",
+ "tree": "e88ce74aadabbfb509cba56c1db8b961241ff66a",
+ "head": "1858f11cb265df6e135a7c779c616c97d4f5345c",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 148,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "0b95252f-6342-54e8-af69-37f406e785fd",
+ "at": "2026-09-25T06:59:13.672Z"
+}
