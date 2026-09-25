@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL (D-455, run 2026-09-25 on land/worker/D-455 over land/worker/REC-191 cfcb33e3, FIVE ARMS PLUS A BASELINE, each armed ALONE by an anchor that must match EXACTLY ONCE, restored by cp from per-item pristine copies of `src/index.mjs` and `src/store.mjs` and every restore verified by sha256 AND `cmp` (10 of 10 IDENTICAL; index 846454 bytes e93424cb98871007…, store 3347983 bytes 0ad465309c3d6469…, floored at 100000). Re-run on the final source after the D-240 (c) restructure with identical figures. Declared before arming. BASELINE: 79 pass 0 fail. (A) THE ROW'S ARM — SKIP THE CAPTURE (`if (false && status === "modified" …)`): DECLARED red on "RESULT NAMES A HELD CAPTURE"; ACTUAL 65/14, that arm failing by name with every capture, version, image, Session Log, second-tick and D-179 arm. (B) FILE THE BLOB BUT NO REGISTER ROW (`register: []`), the store's register check intact: DECLARED red, and the look must NOT name the sha; ACTUAL 69/10 — "RESULT NAMES A HELD CAPTURE" fails with the ref at the BASELINE, and the answer's `registered` reads false (the OUTCOME, not the promotion's success). (C) THE LIAR — no register row AND the store's register check removed, so the look names a sha the register does not hold: DECLARED red; ACTUAL 75/4, "RESULT NAMES A HELD CAPTURE" failing on `result_purged: true` and the D-179 arm reading the other bundle's capture as this one's. (D) TWO ROWS — `recordCapturedLocator`'s own look re-enabled for the monitor's filing: DECLARED red on exactly "ONE LOOK, ONE ROW"; ACTUAL 78/1, that arm alone. (E) OVER-STRICTNESS — the capture filed under a spelling this suite was not written around (`snapshots/tick/<sha>.bin`): MUST PASS; ACTUAL 79/0. */
+/* NEGATIVE CONTROL: (run 2026-09-25, D-338, on land/worker/D-338 over origin/main 8bdf20e6, each arm ALONE in `src/index.mjs`, restored from a uniquely-named per-arm pristine copy in the session scratchpad and verified by `cmp` and sha256 (2c7b883e7b9dd098…, 839640 bytes). Declared before arming.) BASELINE, nothing armed: 74 passed, 0 failed. ARM THE ROW'S — map `unmonitorable` to weekly in CONTRACT_FREQUENCY: DECLARED to fail exactly the contract arm; ACTUAL 73/1, "UNMONITORABLE-CONTRACT: the answer states the contract `unmonitorable`, and no clock" got ["unmonitorable","weekly","contract"]. ARM THE FIX — `const unmonitorable = false && …`, the plane as it stood before D-338: DECLARED red on the grading arms and green on the 404 over-strictness arm; ACTUAL 69/5, "UNMONITORABLE-GRADES-NO-CHANGE: no status is graded, and the note says why" got ["modified",false] (the hash delta itself), the re-evaluation, the `changed` look, the record's source_status/flag, and the CAPTURED-bytes tick reading `unchanged`/PRESENT; "a GONE shell address still reads removed" PASSED as declared. */
 /* NEGATIVE CONTROL (D-472, run 2026-09-24 on branch land/worker/D-472 over origin/main e9b21be6, FIVE ARMS PLUS A BASELINE, each armed ALONE in `src/index.mjs` with every other defence held open, each restored from a UNIQUELY-NAMED per-arm pristine copy in the session scratchpad and every restore verified by sha256 AND by `cmp` with the byte count printed and FLOORED at 100000 (5 of 5 MATCH/IDENTICAL, 817928 bytes, pristine c34382f5e0b1f4d4…). Declared before arming. (a) BASELINE, nothing armed: MUST be green — 62 pass 0 fail, the row that distinguishes five-arms-broken from five-arms-working. (b) THE ITEM REMOVED — `tickAddress` back to the bundle's own locator AND both shell arms disarmed, which is the plane exactly as it stood before D-472: DECLARED red with the accepts-when arm reading `modified`; ACTUAL 45/17, and the accepts-when arm's `got` is **["modified","modified"]** compared **["raw","raw"]** — the cry-wolf itself, twice, on a document nobody touched. (c) THE ROUTING ALONE REVERTED, the shell arms held open: DECLARED red; ACTUAL 49/13, and THE FINDING recorded rather than smoothed — the accepts-when arm fails with `status: null` rather than `modified`, because C-48.8 catches the shell the document address served and refuses the tick. That is the defence's DEPTH, and it is why (b) must disarm all three to see the original defect at all. (d) OVER-STRICTNESS, on the real site: the routing rebuilt in a spelling this suite was not written around (an IIFE re-reading the address, naming `published` explicitly, testing `harvestable === true`). It MUST PASS — ACTUAL 62/0. A guard that only recognises one spelling is one the next author routes around. (e) THE BASELINE LOOKUP NARROWED back to `d.locator === locator`: DECLARED red; ACTUAL 58/4, the accepts-when arm reading `status: null` — a tick with NO baseline at all, which is the state a Drive bundle was really in (acquire answers `document.locator` as the address it FETCHED, so the register names the export). A suite that did not distinguish `null` from `unchanged` would have called that a pass. */
 /* NEGATIVE CONTROL: (run 2026-09-23, D-65) ARM BYPASS: bypass `assess` (return no assessment ahead of the call in `monitorAssess`) -> 11 fail, among them "removed-meeting: the gone meeting reads delisted as an event"; the observation, cadence and no-bytes arms still PASS as declared; 16 pass, 11 fail. ARM LIAR: grade every change an event (`settledQuiet = false && ...`) -> exactly "moved-window: NO re-evaluation is raised" fails; 26 pass, 1 fail. Each restored from a per-arm copy, verified by sha256 (eafcf7e279d91745...) and cmp, 740571 bytes; restored 27 pass, 0 fail. */
 /* D-65 — op=monitor asks `assess` (BIO_Content_Framework §6, "One public function")
@@ -74,6 +75,7 @@ const MOVED   = calendar("S3_" + "z".repeat(200), [M.c, M.d, M.e, M.f]);
 const LOC = "/Calendar.aspx";
 const serve = { [LOC]: BASE };
 let status404 = false;
+let status404Shell = false;   // D-338
 
 /* ====================================================================== *
  * D-472 — A GOOGLE SHEET, AND THE TWO ADDRESSES IT HAS
@@ -210,6 +212,7 @@ const mf = new Miniflare({
       return new Response(shellBody(++exportSeq), { headers: { "content-type": "text/html; charset=utf-8" } });
     }
     if (status404 && u.pathname === LOC) return new Response("gone", { status: 404 });
+    if (status404Shell && u.pathname === "/transparency") return new Response("gone", { status: 404 });
     if (u.pathname in serve) return new Response(serve[u.pathname], { headers: {
       "content-type": "text/html; charset=utf-8", "x-powered-by": "ASP.NET", server: "Microsoft-IIS/10.0" } });
     return new Response("unscripted", { status: 500 });
@@ -429,6 +432,87 @@ t("D-455: bytes already another bundle's capture are NOT filed here, and the ans
   const frC = await frontierRow(C.locator);
   t("…the look points at the BASELINE, never at a capture this bundle does not hold, and states it",
     frC && [frC.authority, frC.result_ref, /; not captured: /.test(frC.detail)], [C.id, C.cap, true]);
+}
+
+/* ====================================================================== *
+ * D-338 — AN UNMONITORABLE DOCUMENT: a shell, whose bytes move and whose substance is absent
+ * ====================================================================== *
+ *
+ * §6: `unmonitorable` is the contract of *"a shell whose delivered bytes are stable and whose content
+ * is absent"*, and L1 settles a shell as UNWATCHABLE *"and say so"*. D-65 declared the contract
+ * (`CONTRACT_FREQUENCY.unmonitorable: null`) and no suite drove it, so whether op=monitor still
+ * reported a HASH DELTA for such a document was undetermined. This arm determines it.
+ *
+ * WHAT MAKES IT EVIDENCE: the shell's per-render nonce moves between the capture and the tick, and
+ * the suite ASSERTS the raw shas differ before it claims "no change" — two identical shells would
+ * make "no change" free. Fetched through this suite's own `outboundService` stub, never the network.
+ */
+console.log("\n--- D-338: a SHELL-profiled document states unmonitorable and grades no change ---");
+{
+  /* client_rendered's CERTAIN shape: an empty mount point, a hydration payload, and a body of
+     more than 2000 bytes with no link and no prose. The nonce is what a render rebuilds. */
+  const SHELL_LOC = "/transparency";
+  const shell = (n) => '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Transparency</title></head><body>'
+    + '<div id="root"></div><script>window.__INITIAL_STATE__={nonce:"' + n + '",pad:"' + "q".repeat(2400)
+    + '"};</script></body></html>';
+  serve[SHELL_LOC] = shell("render-1");
+  const locator = "https://oakland.legistar.com" + SHELL_LOC;
+  const nbytes = Buffer.byteLength(serve[SHELL_LOC], "utf8");
+  const acq = await P("acquire", { locator, authority: "City Clerk" });
+  const doc = acq.document;
+  t("the shell was captured as a document", !!(doc && doc.capture && doc.capture.sha256), true);
+  const cap = doc ? doc.capture.sha256 : null;
+  const id = `INFO-2026-${String(9700 + ++seq)}-monitor-shell`;
+  const md = bundleMd(id, locator, null);
+  const prov = JSON.stringify({ documents: doc ? [doc] : [] });
+  const r = await P("promote", {
+    bundleId: id, base: null, snapKey: `20260925T000000Z_d338${String(seq).padStart(5, "0")}`, author: "suite",
+    meta: { object_type: "information", group: "believe-in-oakland", title: `Monitored ${id}`,
+            current_state: "collected", created: NOW, last_updated: NOW },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            { path: doc.file, blobSha: cap, sha256: cap, bytes: nbytes }],
+    register: [{ sha256: cap, path: doc.file, encoding: "binary", bytes: nbytes }],
+  });
+  t("the shell bundle promoted", r.ok !== false && (r.result ? r.result.ok !== false : true), true);
+  t("…and the capture profiled as the shell it is (client_rendered, certain)",
+    [doc?.profile?.handler, doc?.profile?.confidence], ["client_rendered", "certain"]);
+  const facts = async () => {
+    const md = ((await G(`op=image&id=${encodeURIComponent(id)}`)).result || {})["bundle.md"] || "";
+    return { status: (md.match(/^source_status: (.*)$/m) || [])[1] || null,
+             flag: (md.match(/^\s+flag: (.*)$/m) || [])[1] || null };
+  };
+
+  /* THE HASH DELTA: a render rebuilt the nonce, and nothing else. */
+  serve[SHELL_LOC] = shell("render-2");
+  const sh = await P("monitor", { bundleId: id });
+  t("THE ARM IS NOT FREE — the served bytes differ from the capture", [sh.baseline, sh.seen === sh.baseline], [cap, false]);
+  t("UNMONITORABLE-CONTRACT: the answer states the contract `unmonitorable`, and no clock",
+    [sh.cadence?.contract, sh.cadence?.frequency, sh.cadence?.source], ["unmonitorable", null, "contract"]);
+  t("…assess settled it UNWATCHABLE at L1, with no events",
+    [sh.assessment?.verdict, sh.assessment?.stopped_at, (sh.assessment?.events || []).length], ["unwatchable", "L1_stack", 0]);
+  t("UNMONITORABLE-GRADES-NO-CHANGE: no status is graded, and the note says why",
+    [sh.status, /unmonitorable/.test(sh.note || "")], [null, true]);
+  t("…no re-evaluation is raised", sh.reeval_raised, false);
+  t("…the look is logged INDETERMINATE, never `changed`",
+    [sh.observation?.written, sh.observation?.state, (sh.observation?.detail || "").split(";")[0]],
+    [true, "LOOKED_INDETERMINATE", "unmonitorable"]);
+  t("…AND THE RECORD SAYS SO: source_status and the flag did not move", await facts(),
+    { status: "unchanged", flag: "false" });
+
+  /* The other half: the CAPTURED shell bytes served again are not a confirmation of a document either
+     (the client_rendered handler: "monitoring will report 'unchanged' forever"). */
+  serve[SHELL_LOC] = shell("render-1");
+  const same2 = await P("monitor", { bundleId: id });
+  t("a tick on the CAPTURED shell bytes grades no `unchanged` either",
+    [same2.seen === cap, same2.status, same2.reeval_raised, same2.observation?.state], [true, null, false, "LOOKED_INDETERMINATE"]);
+
+  /* OVER-STRICTNESS: a gone shell is still a finding — the withdrawal is for bytes, not for a 404. */
+  status404Shell = true;
+  const gone2 = await P("monitor", { bundleId: id });
+  status404Shell = false;
+  t("a GONE shell address still reads removed and raises re-evaluation",
+    [gone2.status, gone2.reeval_raised, gone2.observation?.state], ["removed", true, "LOOKED_ABSENT"]);
 }
 
 /* ====================================================================== *

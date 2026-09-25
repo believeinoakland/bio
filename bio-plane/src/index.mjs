@@ -10410,6 +10410,25 @@ export default {
         beforeAt: baselineAt, afterAt: checked });
       const cadence = monitorCadence(fm.monitoring.frequency, graded.content);
 
+      /* D-338 — AN UNMONITORABLE DOCUMENT GRADES NO CHANGE (BIO_Content_Framework §6: `unmonitorable`
+         is the contract of a shell, and L1 settles a shell as UNWATCHABLE "and say so"). The comparison
+         above ran on bytes that carry no substance, so neither of its answers is a finding about the
+         document: `modified` is a per-render nonce moving (driven: `status: modified`, a `changed` look
+         and a raised re-evaluation on a shell nobody touched), and `unchanged` is the false comfort the
+         client_rendered handler names ("monitoring will report 'unchanged' forever"). The status is
+         withdrawn, the look is logged INDETERMINATE, and the note says why. A 404 is not touched: a
+         gone address is a finding whatever it served. */
+      /* CONDUCT #22 (c22-batch29), composing D-338 with D-567: a RENDERED capture's tick is excluded.
+         There the shell IS the compared frame by BOB #34 (b) — a frame difference is a D-472 `modified`
+         about the frame only, with the content already stated undetermined — and that more specific
+         ruling governs; D-338 withdraws the status of a shell captured as the document itself. */
+      const unmonitorable = !renderTick && !!graded.content && graded.content.contract === CONTRACT.UNMONITORABLE
+        && (status === "modified" || status === "unchanged");
+      if (unmonitorable) {
+        status = null;
+        note = "the source serves a shell whose bytes carry no substance (unmonitorable), so no change is graded";
+      }
+
       /* D-455 — A `changed` TICK CAPTURES THE BYTES IT FETCHED (BOB #32, 2026-09-23 23:08Z;
          OBSERVATION-LOG-DESIGN.md §4.1). The tick already HOLDS them — it hashed them to see the
          change — so discarding them discarded evidence the record had in hand, and the look could
@@ -10449,7 +10468,8 @@ export default {
 
       /* THE LOOK, written to the observation log (OBSERVATION-LOG-DESIGN.md §4.1). */
       const lookArgs = {
-        outcome: status === "unchanged" || frame === "unchanged" ? "unchanged" : status === "modified" ? "changed"
+        outcome: unmonitorable ? "unmonitorable"
+               : status === "unchanged" || frame === "unchanged" ? "unchanged" : status === "modified" ? "changed"
                : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
         reason: unreachable,
         /* REC-191: only a look that READ a document says what the document is; an
@@ -10466,8 +10486,9 @@ export default {
          parse would reformat it, and reformatting is a change. */
       /* D-65: a substance change `assess` SETTLED as not meaningful for its type (a calendar's
          window moving: `routine`; furniture: `restyled`) raises no re-evaluation. Every other
-         verdict — `changed`, `undetermined`, `unwatchable`, or no assessment at all — keeps
-         D-60's flag, the conservative direction. */
+         verdict — `changed`, `undetermined`, or no assessment at all — keeps D-60's flag, the
+         conservative direction. (`unwatchable` no longer reaches here as `modified`: D-338
+         withdraws a shell's status above, so a shell raises no flag unless its address is gone.) */
       const settledQuiet = !!graded.assessment
         && ["identical", "unchanged", "restyled", "routine"].includes(graded.assessment.verdict);
       const flags = status === "removed" || (status === "modified" && !settledQuiet);

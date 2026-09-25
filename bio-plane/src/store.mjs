@@ -49398,6 +49398,11 @@ export class Store extends DurableObject {
       case "unreachable":
         return { state: "LOOKED_INDETERMINATE",
                  detail: `unreachable; ${String(reason || (httpStatus != null ? `the source answered ${httpStatus}` : "no answer")).slice(0, 160)}` };
+      /* D-338: the source answered with a shell (the `unmonitorable` contract). A look happened and
+         determined nothing about the document, so it is INDETERMINATE and never `changed`/`unchanged`. */
+      case "unmonitorable":
+        return { state: "LOOKED_INDETERMINATE",
+                 detail: `unmonitorable; the source serves a shell whose bytes carry no substance${typeof seen === "string" ? `; served sha256 ${seen}` : ""}` };
       /* D-104: our pacing held us. A fact about us; LOOKED_INDETERMINATE is the only state. */
       case "governed":
         return { state: "LOOKED_INDETERMINATE", governed: true, condition: "source-unreachable-governed",
