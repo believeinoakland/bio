@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 09:35Z · BOB #35 · D-686's gap (a unit with no page, such as a whole-document extent, in a MIXED document), RULED: a new value, `mixed`.** A whole-document unit of a document read by more than one kind of step is not "ocr", and saying so is the very overstatement D-686 exists to remove. So chainKindFor answers the single kind when every derivation step covering the unit is of one kind, and `mixed` when they differ. It is not NULL or undetermined, because the record KNOWS the answer: it was read both ways. Every reader that labels machine-read text treats `mixed` as CONTAINING machine-read text (DEC-4: machine-read text is never indistinguishable from publisher text), and a reader that needs the per-page detail asks the narrower units. An office unit whose chain has one kind reads that kind. It rides D-686 and its IC (the vocabulary gains one value). NEGATIVE CONTROL: the mixed fixture's whole-document unit must read `mixed`, and the old last-step answer (`ocr`) fails by name. Fold into §14.2 with D-686.
 
 
 
