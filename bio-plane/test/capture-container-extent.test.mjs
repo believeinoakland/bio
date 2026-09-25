@@ -1073,8 +1073,18 @@ const normDigest = (o) => createHash("sha256")
   .update(JSON.stringify(o).replace(/\d{4}-\d{2}-\d{2}T[0-9:.]+Z/g, "<T>")).digest("hex");
 const pdfReadingSansNew = { ...pdfdoc.reading };
 delete pdfReadingSansNew.container_extent;
+/* CORRECTED 2026-09-24 by D-536, never exempted and never re-pinned: every reading now carries ONE
+   more key, `provenance` (framework Part II §16, "Reading provenance" — its tier, member and the SHA-256
+   of the text it classified), and this pin's rule is that a key a LATER item adds is removed by NAME
+   before the digest is taken, exactly as CAP-12 removes its own. With `provenance` removed from both
+   readings the two PRISTINE digests above still match unchanged, which is the proof that D-536 moved
+   nothing else. That the key is PRESENT is asserted here too, so removing it cannot hide its absence. */
+t("D-536: both readings carry their provenance", [!!html.reading.provenance, !!pdfdoc.reading.provenance], [true, true]);
+const htmlReadingSansD536 = { ...html.reading };
+delete htmlReadingSansD536.provenance;
+delete pdfReadingSansNew.provenance;
 t("an HTML capture's whole reading is BYTE-IDENTICAL to CAP-9's landing (pristine digest pin)",
-  normDigest(html.reading), PRISTINE.html);
+  normDigest(htmlReadingSansD536), PRISTINE.html);
 t("and a PDF capture's is too, once the ONE key this item adds is removed — nothing else "
   + "in the acquire document moved",
   normDigest(pdfReadingSansNew), PRISTINE.pdf);

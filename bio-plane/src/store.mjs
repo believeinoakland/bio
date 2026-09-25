@@ -508,6 +508,9 @@ import { PER_ITEM_CHECKS, TASK_ACTOR_CHECKS } from "../checks/bio-checks.mjs";
    carries — the catalogue's own sync sha256, so the text digest and the content
    address are computed by one implementation. */
 import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
+/* D-536: a re-read of a capture is COMPARED with the reading before it, and the difference ATTRIBUTED
+   to a tier and a member (`readingprov.mjs`, Part II §16 "Reading provenance"). */
+import { compareProvenance, PROVENANCE_SCHEME } from "./readingprov.mjs";
 /* D-162 / IC-241: THE THEME's refusals (C-81). */
 import { THEME_CHECKS } from "../checks/bio-checks.mjs";
 /* IC-246 / C-82: op=statementack's bound on the unsigned documents it re-authors — a refusal, never a cut. */
@@ -19441,6 +19444,10 @@ export class Store extends DurableObject {
       const fmtKey = prof && prof.format && typeof prof.format === "object"
         && typeof prof.format.format === "string" && prof.format.format.trim()
         ? prof.format.format.trim() : null;
+      /* D-536 — BOTH READINGS ARE KEPT, AND NEITHER OVERWRITES (BOB #33, 21:25Z). The row below
+         REPLACES this capture's reading, so the history is written FIRST, while the reading it replaces
+         is still in hand, in the same transaction. */
+      const kept = this.#keepReading(bundleId, sha, reading);
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at,capture_format)
          VALUES (?,?,?,?,?,?,?,?,COALESCE(?, (SELECT capture_format FROM readings WHERE capture_sha=?)))`,
@@ -19492,7 +19499,7 @@ export class Store extends DurableObject {
               `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
               sha, bundleId, ref, src, term);
       }
-      return { staled, indexed, extraction };
+      return { staled, indexed, extraction, kept };
   }
 
   /* ===================================================================== *
@@ -19561,6 +19568,8 @@ export class Store extends DurableObject {
       const out = this.#writeOneReading(row.bundle_id, sha, doc, reading, author);
       const ex = out.extraction || {};
       return { ok: true, held: true,
+               /* D-536: the re-read against the reading it replaced, attributed — both kept. */
+               compared: out.kept ? out.kept.compared : null,
                staled: out.staled || 0,
                indexed: out.indexed ? { written: out.indexed.written ?? 0, offered: out.indexed.offered ?? 0,
                                         over_bound: out.indexed.over_bound ?? 0 } : null,
@@ -19568,6 +19577,84 @@ export class Store extends DurableObject {
                            refused: Array.isArray(ex.refused) ? ex.refused.length : 0,
                            unclassified: ex.unclassified ?? null } };
     });
+  }
+
+  /* D-536 — KEEP THIS READING, AND COMPARE IT WITH THE ONE BEFORE IT (Part II §16, "Reading
+   * provenance"; BOB #33's ruling of 2026-09-24 21:25Z).
+   *
+   * `readings` holds one row per capture and `#writeOneReading` REPLACES it, so until this landed a
+   * re-read that classified different text left no trace of what it replaced: M-143 measured the class
+   * of a document moving between two walks of one sample and nothing in the record could say which
+   * tier's text had moved. `reading_history` keeps every DISTINCT reading, in order.
+   *
+   * THE READING THIS ONE REPLACES IS KEPT FIRST, when it predates the history. A capture read before
+   * D-536 has a `readings` row and no history, and writing only the incoming reading would lose the one
+   * it replaces — the overwrite the ruling forbids, done by the table built to prevent it. Its
+   * provenance is whatever it carries, and a reading from before D-536 carries none: UNDETERMINED,
+   * stated, and never inferred from its `text_tier` or its chain.
+   *
+   * A READING EQUAL TO THE LATEST KEPT ONE IS NOT KEPT AGAIN. An ordinary revision of a bundle
+   * re-submits the same `data/provenance.json`, and that is the same reading promoted twice, not a
+   * re-read; keeping it twice would make "how many times was this read" count revisions. Compared by a
+   * SHA-256 of the reading's JSON, the bytes `readings.reading` stores. A reading that goes A -> B -> A
+   * is kept three times, because the third IS a re-read that disagreed with the second.
+   *
+   * THE COMPARISON IS STORED, NOT RE-DERIVED ON READ, so what the record said at the moment of the
+   * re-read is what it says later, whatever `compareProvenance` becomes. */
+  #keepReading(bundleId, sha, reading) {
+    const json = JSON.stringify(reading);
+    const digest = sha256HexSync(json);
+    const provOf = (r) => (r && typeof r === "object" && r.provenance && typeof r.provenance === "object"
+                           && r.provenance.scheme === PROVENANCE_SCHEME ? r.provenance : null);
+    const textShaOf = (p) => (p && typeof p.text_sha256 === "string" ? p.text_sha256 : null);
+    const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    let last = this.#one(
+      `SELECT seq, reading_sha256, provenance FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
+    if (!last) {
+      const prior = this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha);
+      if (prior) {
+        const pr = safeJson(prior.reading);
+        const pp = provOf(pr);
+        const pd = sha256HexSync(prior.reading);
+        this.sql.exec(
+          `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
+           VALUES (?,?,?,?,?,?,?,NULL,?)`,
+          sha, 1, prior.bundle_id, pd, prior.reading, pp ? JSON.stringify(pp) : null, textShaOf(pp), now);
+        last = { seq: 1, reading_sha256: pd, provenance: pp ? JSON.stringify(pp) : null };
+      }
+    }
+    if (last && last.reading_sha256 === digest) return { seq: last.seq, added: false, compared: null };
+    const np = provOf(reading);
+    const compared = last ? compareProvenance(safeJson(last.provenance), np) : null;
+    const seq = last ? last.seq + 1 : 1;
+    this.sql.exec(
+      `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      sha, seq, bundleId, digest, json, np ? JSON.stringify(np) : null, textShaOf(np),
+      compared ? JSON.stringify(compared) : null, now);
+    return { seq, added: true, compared };
+  }
+
+  /* D-536: the kept readings of one capture, newest first, as `op=reading` serves them — the
+     provenance and the attribution of each, not the readings themselves (the latest IS the
+     `readings` row, and the rest are one row each here). BOUNDED AT BIRTH, `limit` beside
+     `truncated`, the plane's own spelling (REC-60/REC-70). */
+  #readingHistoryOf(captureSha, cap = 16) {
+    const page = this.#rows(
+      `SELECT seq, reading_sha256, provenance, text_sha256, compared, kept_at FROM reading_history
+        WHERE capture_sha=? ORDER BY seq DESC LIMIT ?`, captureSha, cap + 1);
+    const n = this.#one(`SELECT count(*) c FROM reading_history WHERE capture_sha=?`, captureSha).c;
+    return { kept: n, limit: cap, truncated: page.length > cap,
+             readings: page.slice(0, cap).map((r) => {
+               const prov = safeJson(r.provenance);
+               return { seq: r.seq, kept_at: r.kept_at, reading_sha256: r.reading_sha256,
+                        text_sha256: r.text_sha256,
+                        provenance: prov || { state: "undetermined",
+                          why: "this reading carries no reading provenance (it was written before D-536, or by a "
+                             + "caller that did not carry it), so the tier, the member and the text it classified "
+                             + "are UNDETERMINED and are not inferred" },
+                        compared: safeJson(r.compared) };
+             }) };
   }
 
   /* CPDF-10: PROJECT THE TRANSCRIPTION CHAIN INTO COLUMNS.
@@ -23346,6 +23433,15 @@ export class Store extends DurableObject {
     return { ok: true, cleared: captureSha || "ALL",
              remaining: this.#one(`SELECT count(*) c FROM reading_ref_terms`).c };
   }
+  /* D-536: test support on `readingTermsClear`'s precedent — clear a capture's kept readings so its
+     `readings` row looks like one written before D-536, which is the only way to drive the path that
+     KEEPS a pre-D-536 reading rather than overwriting it. DO-only; no control-plane op reaches it. */
+  readingHistoryClear({ captureSha = null } = {}) {
+    if (captureSha) this.sql.exec(`DELETE FROM reading_history WHERE capture_sha=?`, captureSha);
+    else this.sql.exec(`DELETE FROM reading_history`);
+    return { ok: true, cleared: captureSha || "ALL",
+             remaining: this.#one(`SELECT count(*) c FROM reading_history`).c };
+  }
   reindexNames({ limit = 500 } = {}) {
     return { ok: true, ...this.#backfillRefTerms(limit) };
   }
@@ -23388,7 +23484,12 @@ export class Store extends DurableObject {
                   is a third answer and the one this record is obliged to state. */
                : { recorded: false,
                    why: `this reading carries no text provenance, which is not the same as its `
-                      + `text not having been transcribed -- nobody recorded how it was produced` } };
+                      + `text not having been transcribed -- nobody recorded how it was produced`  },
+             /* D-536: every reading this record has held for this capture, with each re-read's
+                attribution against the one before it. `kept: 0` is a capture promoted before D-536
+                and not read since — its one reading is the `readings` row above, provenance
+                UNDETERMINED. */
+             reading_history: this.#readingHistoryOf(row.capture_sha) };
   }
 
   /* CPDF-10: THE INDEX HALF. Which captured documents' text a machine produced,
@@ -32543,6 +32644,10 @@ export class Store extends DurableObject {
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
                     "readings", "reading_refs", "reading_ref_terms",
                     "reading_text_source", "text_attestations", "resolutions", "progression_instances",
+                    /* D-536 / D-113: `reading_history` is DERIVED from the readings the corpus carried and
+                       carries bundle_id, so it clears in BOTH arms here. Left out, a purge reporting scope
+                       ALL would keep every earlier reading of documents the record no longer holds. */
+                    "reading_history",
                     "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
                     "inquiry_basis_versions", "inquiry_basis_version_legs",
                     "action_basis", "correspondence", "bias_statements", "bias_adoptions",
@@ -50648,6 +50753,7 @@ export class Store extends DurableObject {
         readingnameplan: () => this.readingNamePlan(
           (url.searchParams.get("terms") || "").split(",").map((s) => s.trim()).filter(Boolean)),
         readingtermsclear: () => this.readingTermsClear(body || {}),
+        readinghistoryclear: () => this.readingHistoryClear(body || {}),
         reindexnames: () => this.reindexNames(body || {}),
         /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY. Create an entity
            (with inline aliases), attach an alias, declare a constitutive relation;

@@ -4086,6 +4086,33 @@ CREATE TABLE IF NOT EXISTS bias_debt_settlements (
 );
 CREATE INDEX IF NOT EXISTS bias_debt_settlements_run ON bias_debt_settlements(run, seq);
 
+-- D-536 (BIO_Content_Framework_v0_10.md Part II section 16, Reading provenance -- BOB #33's
+-- ruling of 2026-09-24): EVERY READING OF A CAPTURE IS KEPT. The readings table holds ONE row per
+-- capture and a re-promotion or a re-extraction replaces it, so a re-read that returned different text
+-- used to leave no trace of the text it replaced. This table is the history: one row per DISTINCT
+-- reading the record has held for a capture, in the order it arrived, never updated and never
+-- deleted but by a purge. A reading equal byte for byte to the latest kept one is not kept twice --
+-- an ordinary revision of a bundle re-submits the same provenance document and that is not a re-read.
+-- reading is the whole reading as JSON, as the readings row held it. provenance is its
+-- reading-provenance object (readingprov.mjs) or NULL, and NULL is UNDETERMINED -- a reading written
+-- before D-536, or by a caller that carried none -- never inferred from text_tier or from the chain.
+-- compared is the attribution against the row before it (compareProvenance), NULL for the first row
+-- of a capture. text_sha256 is projected out of provenance so the comparison is a column, NULL when
+-- undetermined or when no text was classified. DERIVED from the readings the corpus carried, and it
+-- carries bundle_id, so a purge clears it in both arms (D-113).
+CREATE TABLE IF NOT EXISTS reading_history (
+  capture_sha    TEXT NOT NULL,
+  seq            INTEGER NOT NULL,
+  bundle_id      TEXT NOT NULL,
+  reading_sha256 TEXT NOT NULL,
+  reading        TEXT NOT NULL,
+  provenance     TEXT,
+  text_sha256    TEXT,
+  compared       TEXT,
+  kept_at        TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, seq)
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
