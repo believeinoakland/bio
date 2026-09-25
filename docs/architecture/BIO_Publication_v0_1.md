@@ -328,8 +328,8 @@ DEC-31 asked *when does a persistent rendering someone acted on become a record?
    no one's act but their own; the file's first page says so, and says the hash names the record's state and is checked
    against the record, not re-computed from the file. Offline verification, if ever wanted, is a SEPARATE export-scoped
    subject the plane hashes, never the served answer with third parties inside it. **(b) Only a MEMBER's door exports**:
-   point 2's statement speaks of *the grant they hold*, which a recipient does not hold; a recipient export would need its
-   own statement and is not designed. **(c) The record does NOT log that a copy left, and says why.** The export is
+   point 2's statement speaks of *the grant they hold*, which a recipient does not hold, so the recipient's door offers
+   no export (reversing it means writing a recipient's own statement first). **(c) The record does NOT log that a copy left, and says why.** The export is
    rendered in the member's browser from an ordinary read; the plane cannot observe a file leaving, so a "copy exported"
    row would be the client's own report — a provenance hop a caller can hand us is one a caller can invent — and would
    imply that copies it does not list did not leave, which a screenshot refutes. This differs from D-137's corpus export,
