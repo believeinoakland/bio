@@ -976,7 +976,8 @@ scope: resolve that expression (and its `new URL("../..", …)` siblings) as a T
 accepts-when: D-526's, D-547's and D-548's drivers read classified and the ceiling falls by name (moves: 3 drivers UNCLASSIFIED). NEGATIVE CONTROL: drop the new resolution and those three read UNCLASSIFIED over the lowered ceiling, failing by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; CONDUCT #21's batch28 finding).
 
-### D-620 · queued — **363 OF 376 bio-plane SUITES COMPARE WITH `JSON.stringify` EQUALITY, WHICH READS AN ABSENT VALUE IN AN ARRAY AS `null`, so any arm asserting a STATED null cannot tell it from a dropped key (measured in reviewcopy.control arm v, which stayed green until hardened).** Found by D-568's worker (05:36Z). — owner M0.
+### D-620 · running — **363 OF 376 bio-plane SUITES COMPARE WITH `JSON.stringify` EQUALITY, WHICH READS AN ABSENT VALUE IN AN ARRAY AS `null`, so any arm asserting a STATED null cannot tell it from a dropped key (measured in reviewcopy.control arm v, which stayed green until hardened).** Found by D-568's worker (05:36Z). — owner M0.
+status: running — SCHEDULER #22 06:07Z spawns WORKER D-620 (depth 2)
 order: after M0-196, with the gate-instrument rows: an arm that cannot fail on a dropped key is a control that refutes nothing (SCHEDULER #22, 2026-09-25)
 milestone: M0
 interface: none.
