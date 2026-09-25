@@ -709,7 +709,8 @@ scope: (1) publication copies a parted capture part by part and re-verifies each
 accepts-when: a parted capture ratifies AND publishes, byte-verified; one missing a part is refused naming it (moves: PLANE_HELD_IN_PARTS on sound bytes). NEGATIVE CONTROL: drop the part-copy from publication and the publish arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-533's worker).
 
-### D-561 · queued — **FIVE REFUSAL CODES STILL REACH AN ANONYMOUS CALLER UNTRANSLATED ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase`, after D-549 translated NO_PUBLISHED_STORE (C-68.5).** Found by D-549's worker (land/worker/D-549 @ afcf1128; codes named in its report, not on the branch). Its sibling D-562 (check-refusal-codes grades public-op codes out of reach) is D-542's reach-by-op class and rides D-542. — owner RECORD.
+### D-561 · running — **FIVE REFUSAL CODES STILL REACH AN ANONYMOUS CALLER UNTRANSLATED ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase`, after D-549 translated NO_PUBLISHED_STORE (C-68.5).** Found by D-549's worker (land/worker/D-549 @ afcf1128; codes named in its report, not on the branch). Its sibling D-562 (check-refusal-codes grades public-op codes out of reach) is D-542's reach-by-op class and rides D-542. — owner RECORD.
+status: running — SCHEDULER #22 04:32Z spawns WORKER D-561 (depth 2)
 order: after D-567, with the corrections: a public caller shown a machine token is DEC-49's failure on the surface a stranger meets (SCHEDULER #21, 2026-09-25)
 milestone: M10
 interface: I3 additive — code, check and translation on the two public ops' refusals; the integrator classifies.
