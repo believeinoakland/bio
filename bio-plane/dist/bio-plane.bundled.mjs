@@ -60929,9 +60929,45 @@ ${words}`;
         out.superseded++;
         continue;
       }
-      out.unresolved.push({ ...r, class: "unresolved" });
+      out.unresolved.push({ ...r, class: "unresolved", named_parts: this.#partsNamedFor(r.bundle_id, r.capture_sha) });
     }
     return { ok: true, ...out, needsCaptureProbe: out.unresolved.length };
+  }
+  /* D-533 (BOB #33, 2026-09-24 21:17Z; Intake Doctrine section 8): WHICH PARTS DOES THE RECORD NAME FOR A
+   * CAPTURE IT HOLDS IN PARTS? `op=acquire` stores a multi-part document ONLY as its parts, each under its own
+   * hash, and never the whole under the whole's; the one place the record names those parts is the holding
+   * bundle's intake provenance register, `data/provenance.json`, whose document for that `capture_sha` carries
+   * `parts: [{file, sha256, bytes}]` (the shape C-18.1 checks). So the audit's R2 probe of the WHOLE key can
+   * only ever miss for such a row, and it called held bytes missing.
+   *
+   *   none        the register document names no parts for this sha (or the bundle has no register): the
+   *               whole key is the only place the record says the bytes live
+   *   named       the parts, as the record names them, for the control plane to head and verify
+   *   unreadable  the register exists and could not be read to an answer, with why: the row resolves
+   *               NEITHER way, and the ruling counts it UNDETERMINED, outside `sound`
+   *
+   * It reads the live image only (`files`), which is what the audit's `live` class reads too. */
+  #partsNamedFor(bundleId, sha) {
+    const f2 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, bundleId);
+    if (!f2) return { state: "none" };
+    if (typeof f2.content !== "string")
+      return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
+    let reg;
+    try {
+      reg = JSON.parse(f2.content);
+    } catch {
+      return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
+    }
+    const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    const doc = (Array.isArray(reg?.documents) ? reg.documents : []).find((d) => d && bare(d.capture?.sha256) === sha && d.parts !== void 0);
+    if (!doc) return { state: "none" };
+    const ok = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) => p && /^[0-9a-f]{64}$/.test(bare(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
+    if (!ok) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
+    return { state: "named", parts: doc.parts.map((p) => ({
+      file: typeof p.file === "string" ? p.file : null,
+      sha256: bare(p.sha256),
+      bytes: p.bytes
+    })) };
   }
   /* ---- project participation, Architecture section 7 ----
    *
@@ -80121,6 +80157,31 @@ var StoreSilent = class extends Error {
   }
 };
 var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
+var PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
+async function partsHeld(bucket, storeName, parts) {
+  const missing = [], disagree = [], unverified = [];
+  const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  for (const p of parts) {
+    const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
+    const h = await bucket.head(captureKey(storeName, p.sha256));
+    if (!h) {
+      missing.push(name);
+      continue;
+    }
+    if (h.size !== p.bytes) {
+      disagree.push({ ...name, stored_bytes: h.size });
+      continue;
+    }
+    let digest = h.checksums?.sha256 ? hex2(h.checksums.sha256) : null;
+    if (!digest && h.size <= PART_VERIFY_READ_MAX) {
+      const o = await bucket.get(captureKey(storeName, p.sha256));
+      if (o) digest = hex2(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
+    }
+    if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
+    else if (digest !== p.sha256) disagree.push({ ...name, stored_sha256: digest });
+  }
+  return { missing, disagree, unverified };
+}
 var DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
 async function migrationReplayOf(env, storeName, b) {
   const cap = typeof b.provenanceCapture === "string" ? b.provenanceCapture.trim() : "";
@@ -81514,8 +81575,8 @@ var index_default = {
       if (!aOut.answered || !aOut.result) return storeSilent("registeraudit");
       const r = aOut.result;
       const canProbe = typeof env.CAPTURES?.head === "function";
-      const captured = [], unbacked = [], mismatched = [];
-      for (const row of r.unresolved) {
+      const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
+      for (const { named_parts: named, ...row } of r.unresolved) {
         if (row.class === "orphan") {
           unbacked.push({ ...row, why: "the bundle itself is absent" });
           continue;
@@ -81525,10 +81586,34 @@ var index_default = {
           continue;
         }
         const h = await env.CAPTURES.head(`${storeName}/captures/${row.capture_sha}`);
-        if (!h) unbacked.push({ ...row, why: "no bytes in the working bucket" });
-        else if (typeof row.bytes === "number" && h.size !== row.bytes)
-          mismatched.push({ ...row, registered: row.bytes, stored: h.size });
-        else captured.push(row);
+        if (h) {
+          if (typeof row.bytes === "number" && h.size !== row.bytes)
+            mismatched.push({ ...row, registered: row.bytes, stored: h.size });
+          else captured.push(row);
+          continue;
+        }
+        if (named?.state === "unreadable") {
+          undetermined.push({ ...row, why: named.why });
+          continue;
+        }
+        if (named?.state !== "named") {
+          unbacked.push({ ...row, why: "no bytes in the working bucket" });
+          continue;
+        }
+        const v = await partsHeld(env.CAPTURES, storeName, named.parts);
+        const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
+        if (v.missing.length)
+          unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names are not in the working bucket`, missing_parts: v.missing });
+        else if (v.disagree.length || typeof row.bytes === "number" && sum !== row.bytes)
+          mismatched.push({
+            ...row,
+            registered: row.bytes,
+            stored: sum,
+            ...v.disagree.length ? { disagreeing_parts: v.disagree } : {}
+          });
+        else if (v.unverified.length)
+          undetermined.push({ ...row, why: `every part the record names is present, but the digest of ${v.unverified.length} could not be verified`, unverified_parts: v.unverified });
+        else heldInParts.push(row);
       }
       return json({ ok: true, result: {
         total: r.total,
@@ -81536,12 +81621,14 @@ var index_default = {
         superseded: r.superseded,
         historical: r.historical,
         captured: captured.length,
+        held_in_parts: heldInParts.length,
         mismatched: mismatched.length,
         unbacked: unbacked.length,
+        undetermined: undetermined.length,
         sound: unbacked.length === 0 && mismatched.length === 0,
         probed: canProbe,
-        detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which is the deliberate pattern migrate.mjs uses and what the two-bucket design exists for. unbacked is the only broken state, and mismatched means the register and the stored object disagree about size.",
-        sample: [...unbacked, ...mismatched].slice(0, 40)
+        detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which is the deliberate pattern migrate.mjs uses and what the two-bucket design exists for. held_in_parts is the same for a document the store keeps only in parts: every part the record names is in the working bucket and each part's digest is verified (the reassembled whole's digest is C-18.6's check, not re-read here). unbacked is the only broken state, and names any missing part; mismatched means the register and the stored object disagree about size, or a part about its digest. undetermined rows resolved neither way and are counted OUTSIDE sound: sound speaks for the other rows only.",
+        sample: [...unbacked, ...mismatched, ...undetermined].slice(0, 40)
       }, store: storeName, tokenClass: cls }, 200);
     }
     if (op === "selftest") {
