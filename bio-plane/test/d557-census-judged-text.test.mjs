@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RUN 2026-09-25 through `node test/nc-d557.mjs` from `bio-plane/` — 3 arms, 0 not as declared, each DECLARED BEFORE ARMING and armed ALONE, `scripts/fw20-decode-census.mjs` restored by sha256 AND byte comparison (11,402 B, 4387382e…). (a) baseline, nothing armed -> green 16/0. (b) plain, the row's own: the census judges the PLAIN `op=pdfstructure` answer again -> 12/4, the TIER-3 arm fails BY NAME ("TIER-3 TEXT JUDGED: the scanned page's judged text is its OCR text, not empty"), with the digest arm, the mixed document's both-pages arm and the every-row arm; the born-digital page's arms stay green. (c) texttier, the label read off the document's `text_tier` again -> 15/1, exactly THE MIXED LABEL arm.
+/* NEGATIVE CONTROL: RUN 2026-09-25 through `node test/nc-d557.mjs` from `bio-plane/` — 3 arms, 0 not as declared, each DECLARED BEFORE ARMING and armed ALONE, `scripts/fw20-decode-census.mjs` restored by sha256 AND byte comparison (11,402 B, 0619c81f…). (a) baseline, nothing armed -> green 17/0. (b) plain, the row's own: the census judges the PLAIN `op=pdfstructure` answer again -> 13/4, the TIER-3 arm fails BY NAME ("TIER-3 TEXT JUDGED: the scanned page's judged text is its OCR text, not empty"), with the digest arm, the mixed document's both-pages arm and the every-row arm; the born-digital page's arms stay green. (c) texttier, the label read off the document's `text_tier` again -> 16/1, exactly THE MIXED LABEL arm.
  *
  * d557-census-judged-text.test.mjs — D-557. THE DECODE CENSUS JUDGES THE TEXT THE READING CLASSIFIED, AND
  * ITS READER LABEL NAMES A TIER ONLY WHEN THAT TIER'S TEXT WAS JUDGED.
@@ -26,12 +26,14 @@
  * `judged.reader`, which is what this suite asserts.
  */
 import "./stdio.mjs";                 /* D-282 */
+import "./sandbox.mjs";               /* D-186 */
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { budgetAssert } from "./budget.mjs";   /* M0-107 */
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SCRIPT = fileURLToPath(new URL("../scripts/fw20-decode-census.mjs", import.meta.url));
@@ -134,14 +136,18 @@ const man = docs.map((d) => ({ key: d.key, sha: sha(d.bytes), bytes: d.bytes.len
 mkdirSync(join(pen, "pdf")); mkdirSync(join(pen, "txt"));
 for (const d of docs) writeFileSync(join(pen, "pdf", `${sha(d.bytes)}.pdf`), d.bytes);
 writeFileSync(join(pen, "man.json"), JSON.stringify(man));
+const BUDGET_MS = 240_000;
 let rows = [];
 try {
   const r = spawnSync(process.execPath, [SCRIPT, join(pen, "man.json"), join(pen, "pdf"), join(pen, "out.json")],
     { cwd: ROOT, encoding: "utf8", env: { ...process.env, FW20_TEXT_DIR: join(pen, "txt") }, maxBuffer: 64 << 20,
-      timeout: 240_000 });
+      timeout: BUDGET_MS });
   console.log(`\n-- the instrument ran: exit ${r.status}, ${String(r.stdout || "").split("\n").filter((l) => l.startsWith("CENSUS")).join("") || "NO CENSUS LINE"}`);
   if (r.status !== 0) console.log(String(r.stderr || "").slice(-1500));
-  t("the census instrument exits 0 over the two documents", r.status, 0);
+  /* M0-107: an expired budget measured nothing — every arm below is skipped, never read as a finding. */
+  if (budgetAssert(t, "the census instrument over the three documents", r, BUDGET_MS,
+                   "every arm of this suite (the instrument was killed before it wrote its rows)")) {
+  t("the census instrument exits 0 over the three documents", r.status, 0);
   rows = existsSync(join(pen, "out.json")) ? JSON.parse(readFileSync(join(pen, "out.json"), "utf8")) : [];
   t("it wrote one row per document (the corpus is not empty)", rows.length, docs.length);
   const txt = (row, ext) => { const p = join(pen, "txt", `${row.sha}.${ext}`);
@@ -193,6 +199,7 @@ try {
   const lies = rows.filter((x) => /tier[^)]*3/.test((x.judged && x.judged.reader) || "")
                               && !((txt(x, "txt") || "").trim().length && x.judged.tiers.includes(3)));
   t(`NO ROW IS LABELLED TIER 3 UNLESS TIER-3 TEXT WAS JUDGED (${rows.length} rows)`, lies.map((x) => x.key), []);
+  }
 } finally {
   rmSync(pen, { recursive: true, force: true });
 }

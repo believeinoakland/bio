@@ -19,10 +19,10 @@
  *              number for two tiers of text); the TIER-3 text arm MUST NOT — the text judged is unchanged.
  *
  * RESULTS — RUN 2026-09-25 by D-557's worker on the tree this suite landed on (from the run's printout):
- *   3 arms, 0 NOT AS DECLARED — baseline 16/0 · plain 12/4 (TIER-3 TEXT JUDGED by name, the digest arm,
+ *   3 arms, 0 NOT AS DECLARED — baseline 17/0 · plain 13/4 (TIER-3 TEXT JUDGED by name, the digest arm,
  *   the mixed document's both-pages arm, and NO ROW IS LABELLED TIER 3 UNLESS…; the born-digital arms stayed
- *   green) · texttier 15/1 (exactly THE MIXED LABEL). Every restore byte-identical by sha256 AND by byte
- *   comparison (fw20-decode-census.mjs 11,402 B sha256 4387382e…).
+ *   green) · texttier 16/1 (exactly THE MIXED LABEL). Every restore byte-identical by sha256 AND by byte
+ *   comparison (fw20-decode-census.mjs 11,402 B sha256 0619c81f…).
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";

@@ -41,7 +41,7 @@
  * NEGATIVE CONTROL: `node test/nc-d557.mjs` from `bio-plane/` (D-557, 2026-09-25) — arm `plain` judges the
  * plain `op=pdfstructure` answer again and `d557-census-judged-text.test.mjs`'s TIER-3 arm fails by name;
  * arm `texttier` labels the reader from `text_tier` again and the label arm fails. RUN 2026-09-25: 3 arms, 0 not
- * as declared — baseline 16/0 · plain 12/4, "TIER-3 TEXT JUDGED" failing by name · texttier 15/1, exactly "THE MIXED
+ * as declared — baseline 17/0 · plain 13/4, "TIER-3 TEXT JUDGED" failing by name · texttier 16/1, exactly "THE MIXED
  * LABEL"; restored by sha256 AND byte comparison. Figures: `docs/development/measurements/M-173.md`.
  */
 import { createHash } from "node:crypto";
