@@ -317,6 +317,9 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 1.29.0 (D-520, 2026-09-25): C-83.8 RENDER_AT_CAPACITY added to RENDER_CAPTURE_CHECKS, none changed or removed. Count and
+     digest are THIS SUITE'S OWN PRINT on the item's tree over origin/main 8bdf20e6. CONDUCT reconciles at the union. */
+  "1.29.0": { count: 462, digest: "bbbbc10c8a9a3d179dd984d5c9bfb902dccc5b9fd91ba63a67edff5c6f4d0439" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -414,8 +417,10 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
+/* CORRECTED by D-520 (2026-09-25), never exempted: 1.28.0 named the catalogue before C-83.8 arrived; the catalogue
+   under the stamp moved, so the stamp moved with it and this literal is edited by hand in the same commit. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
