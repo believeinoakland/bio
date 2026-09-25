@@ -186,8 +186,14 @@ const sha = hex(pdfBytes);
 const put = await j(`/api/capture?token=mem-fmt&sha256=${sha}`, { method: "PUT", body: pdfBytes });
 t("the fixture landed via op=capture", put.ok, true);
 const viaOp = await j(`/api/pdfstructure?token=mem-fmt&sha256=${sha}`);
+/* CORRECTED 2026-09-24 by D-536, never exempted: the op now also serves `provenance` — the tier, member
+   and SHA-256 of the text it answers with (framework Part II §16, "Reading provenance") — which is the
+   op's own statement about its text and no part of the registry entry's output. So the byte-for-byte
+   comparison is made with that ONE key removed by name, and its presence is asserted beside it. */
+const { provenance: viaProv, ...viaOpSans } = viaOp;
+t("D-536: the op states the provenance of the text it serves", viaProv && viaProv.scheme, "reading-provenance/1");
 t("the op's output is the registry entry's output plus the tier stamp, byte for byte",
-  viaOp, { ...direct, tier: 1 });
+  viaOpSans, { ...direct, tier: 1 });
 t("the deferred link survives the registry hop", viaOp.links[0].target.url, LINK_URL);
 
 await mf.dispose();

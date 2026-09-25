@@ -115,7 +115,38 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
-export const CATALOG_VERSION = "1.29.0";
+/* 1.29.0 (REC-217, 2026-09-24, branch land/worker/REC-217): C-44.3 PUBLISH_DRAFT_NOT_FOUND, C-44.4
+   PUBLISH_DRAFT_NOT_THIS_CASE and C-44.5 PUBLISH_DRAFT_ALREADY_BOUND joined CASE_DERIVATION_CHECKS (op=publish's
+   draft= link, BIO_Publication §3 rule 13), so the catalogue moved 461 -> 464 checks and the stamp moves with it,
+   MINOR and additive on this constant's own rule (Publication §3 rule 17): three arrivals, none moves or leaves.
+   The figures are the d470 suite's print on this branch; the integrator re-reads them on the union. */
+/* D-448 (2026-09-24): 1.28.0 -> 1.29.0. C-87 REVIEW_COPY_CHECKS added eleven rows, so the catalogue
+   census moved 461 -> 472 and the census arm (d470 A3/A5) forces the MINOR step. */
+/* 1.29.0 (D-468, 2026-09-24): ONE arrival, C-26.12 BIAS_ILLEGAL_TRANSITION — `op=promote` holding a bias set to
+   the declared STATES edges read from its head, which STATES.bias described and nothing enforced. MINOR: one
+   arrival, no departures. THE FIGURE IS THE MERGED TREE'S: this item took 1.26.0 over origin/main 1a7f0bcc0 and
+   then MERGED a main already at 1.28.0 (whose own 1.26.0 row is a different catalogue), so the stamp moves once
+   more from the catalogue that actually runs and the census is RE-READ from d470-catalog-census.test.mjs's own
+   print — never either base's figure plus one. THREE PLACES MOVE WITH THIS CONSTANT and the gate names each if
+   one is missed: the census row in d470, that suite's (A5) literal, and ratify.test.mjs's gateVersion literal. */
+/* 1.29.0 (REC-214, 2026-09-24, branch land/worker/REC-214): the new `RISK_TIER_REVISION_CHECKS` family (C-90.1..5) —
+   `op=actionrisktier`'s four conditions and `promote`'s refusal of a revision that moves a tier or its history
+   without the act — so the catalogue moved 461 -> 466 and the stamp moves with it, MINOR and additive on this
+   constant's own rule (Publication §3 rule 17). FIVE ARRIVALS, NO DEPARTURES; C-32.19's row changed only its
+   `where` (the region moved into `#machineRiskTierRefusal`), not its condition. The census is the d470 suite's own
+   print. If another branch in the batch also takes 1.29.0, CONDUCT re-reads the union's census. */
+/* 1.29.0 (D-450, 2026-09-25, branch land/worker/D-450): NO check added or removed — C-41.12 CHANGED. It
+   admits `null` for a bar axis nobody set (Publication §3 rule 14), so a one-axis bar 1.28.0 refused now
+   signs; rule 17 moves the stamp for a changed check. The d470 census row names it in `changed`. If
+   another branch takes 1.29.0 first, CONDUCT takes the next number at the union. */
+/* 1.29.0 (D-512, 2026-09-24, branch land/worker/D-512): C-66.6 REPLAY_UNVERIFIED joined SURFACE_CHECKS — `op=promote`
+   honours `replay` only over a drive-provenance capture it verifies (BOB #33's step (2)). MINOR and additive: one check
+   arrives, none moves and none leaves. CONDUCT reconciles the number at integration if another branch takes 1.29.0. */
+/* 1.29.0 (D-454, 2026-09-25): ONE ARRIVAL, NO DEPARTURES — C-74.4 CONNECTION_CHOICE_OCCURRENCE_UNNAMED in
+   CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
+   on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
+   number and re-reads the census from the d470 suite's print on the merged tree. */
+export const CATALOG_VERSION = "1.30.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -148,6 +179,28 @@ export const CATALOG_VERSION = "1.29.0";
    so ONE VERSION NAMES ONE CATALOGUE (A4) makes the number at the union CONDUCT's to take once, from
    the d470 suite's print on the merged tree — this branch's figure is this branch's catalogue. */
 /* 1.29.0 AT THE UNION ALSO CARRIES D-513 (CONDUCT #20, c20-batch27): D-513 took 1.26.0 over its own base; the union's ONE new number for this batch is 1.29.0, holding D-463's and D-513's checks together, its census read from the d470 suite's print. */
+/* 1.29.0 (D-547, 2026-09-25, branch land/worker/D-547 over land/worker/D-526): C-86.2 REVISION_RETYPES_BUNDLE joins PROMOTED_TYPE_CHECKS — one check ADDED, none moved or removed, MINOR. Census from the d470 suite's print on this tree. OTHER BRANCHES ALSO TAKE 1.29.0: one version names one catalogue, so the integrator takes the next number at the union and re-reads the print. */
+/* 1.29.0 (D-549, 2026-09-24, branch land/worker/D-549, base 9f8b69e6): C-68.5 NO_PUBLISHED_STORE joined INSTALLATION_CHECKS,
+   so the catalogue moved 461 -> 462 checks (the d470 suite's print) and the stamp moves with it, MINOR and additive. If
+   another branch in the same train also took 1.29.0, the integrator re-reads the census on the union and this row takes
+   the next number — one version names one catalogue. */
+/* 1.26.0 (REC-205, 2026-09-24, branch land/worker/REC-205): C-33.44 CLASS_NOT_DISPOSED joins
+   ACT_SHAPE_CHECKS — op=proposedispose refuses a CONDITION or an OBLIGATION by its CLASS, naming the act
+   that does reach it, where it used to answer NO_SUCH_PROGRESSION. One arrival, no departure, nothing
+   moved: MINOR on this constant's own rule (Publication §3 rule 17). 457 + 1 = 458, count and digest
+   re-read from the d470 suite's own print on this tree. */
+/* 1.26.0 (REC-207, 2026-09-24): BOB #32's ruling of 2026-09-23 23:42Z on what settles a bias-debt
+   obligation added TEN rows — C-26.13 to C-26.19 in BIAS_CHECKS (the member's resolve) and C-33.45 to
+   C-33.47 in ACT_SHAPE_CHECKS (the re-run link, judged at op=airunopen's door). MINOR and additive on
+   this constant's own rule (Publication §3 rule 17): ten checks arrive, none moves and none leaves.
+   457 + 10 = 467, and the count and digest recorded in d470-catalog-census.test.mjs are THAT SUITE'S
+   OWN PRINT on this tree, never the arithmetic — the arithmetic would agree with itself for free. */
+/* 1.29.0 (D-530, 2026-09-24): the catalogue gained C-89.1 (ATTEST_CHECKS, CAPTURE_HELD_IN_PARTS), 461 -> 462, MINOR, its census read from the d470 suite's print. */
+/* 1.30.0 AT THE UNION (CONDUCT #21, c21-batch28): every branch above that took a number over its own base rides ONE new
+   number — D-448 (C-87), D-468 (C-26.12), REC-205 (C-33.44), REC-207 (C-26.13..19, C-33.45..47, renumbered off
+   those two collisions), D-512 (C-66.6), D-530 (C-89.1), D-547 (C-86.2), D-549 (C-68.5), REC-214 (C-90), D-454
+   (C-74.4), REC-217 (C-44.3..5) and D-450 (C-41.12 CHANGED) — MINOR, since no check leaves; count and digest are
+   the d470 suite's print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -235,7 +288,18 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
   /* The plane's own remaining duty: bytes the register claims must exist. */
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
-    if (!probe.present)
+    /* D-530: a whole hash held only in parts is not missing bytes, and saying so was
+       false. It is still refused: publication copies a capture by the hash its row
+       names, and there is no object under this one. Registering each part, as the
+       setup surface does, is the shape that publishes. */
+    if (!probe.present && probe.heldInParts)
+      errors.push({ check: "PLANE_HELD_IN_PARTS",
+                    detail: `registered capture is held only in parts: this plane's acquisition receipt names `
+                          + `the whole hash, and the working bucket stores the document as its parts, each under `
+                          + `its own hash. Publication copies a capture by the hash its register row names, so `
+                          + `register the parts rather than the whole`,
+                    where: { path: r.path, sha256: r.capture_sha } });
+    else if (!probe.present)
       errors.push({ check: "PLANE_MISSING_BYTES", detail: `registered capture is absent from the working bucket`,
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (typeof r.bytes === "number" && probe.bytes !== r.bytes)

@@ -226,6 +226,8 @@ import { getFormat } from "./formats.mjs";
    denylisted DAEMON_TOKEN be chosen every tick and refused every tick. A second
    local answer to the same question would age apart from the gate's (REC-46). */
 import { liveToken, sha256hex, instanceAiCredential, instanceClaudeToken } from "./tokens.mjs";
+/* D-525: the Drive shell sweep reads the ONE classifier `op=driveshells` answers with. */
+import { readDriveAddress, driveBaselineRow, classifyDriveBaseline } from "./drive.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
    suite pinning the two identical; REC-11's folded chore flips the direction. */
@@ -239,8 +241,13 @@ import { liveToken, sha256hex, instanceAiCredential, instanceClaudeToken } from 
    once there, and op=affordances publishes that same array. A kind this file
    admits and the catalogue does not publish (or the reverse) is not reachable
    by editing one place, which is the whole of the guarantee. */
+/* REC-205: and `PER_ITEM_ACTS`, for the same reason — the set act's IDENTITY SHAPES are declared
+   there once, published by op=affordances as `set_acts[].item_keys`, and ENFORCED by `#perItem`
+   below. A shape the catalogue publishes and the helper does not honour (or the reverse) would be
+   two answers to "what may an item name", which is the drift this import exists to prevent. */
 import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
-         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, PER_ITEM_MAX } from "./affordances.mjs";
+         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, PER_ITEM_MAX,
+         PER_ITEM_ACTS } from "./affordances.mjs";
 /* REC-21: the queue's PERSONAL half. The CONDITION-kind vocabulary the mute
    fence refuses against, and the ONE admission decision the feed applies — pure,
    so the suite holds the rule directly rather than only through a Durable
@@ -394,8 +401,11 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
             inside a content row's extent. Imported for the reason everything
             above it is — the extent vocabulary is ONE construct and a second
             copy here is the drift D-164 names. */
-         readingSource, readingSourceJson, readingSourceFromColumns,
-         readingPositionInExtent } from "./textchain.mjs";
+         readingSource, readingSourceJson, readingSourceFromColumns, readingOccurrenceKey,
+         readingPositionInExtent,
+         /* D-531: whether a unit carries text is a GLYPH question (D-514's
+            rule), asked here where the index decides what to write. */
+         glyphCount } from "./textchain.mjs";
 /* CPDF-13 / D-183 / D-253: THE CALIBRATION CONSTRUCT, imported for exactly the
    reason `textchain.mjs` is imported above — the rules about what a measurement
    must carry, how two measurements compare and what each direction may cause
@@ -500,10 +510,17 @@ import { PER_ITEM_CHECKS, TASK_ACTOR_CHECKS } from "../checks/bio-checks.mjs";
    carries — the catalogue's own sync sha256, so the text digest and the content
    address are computed by one implementation. */
 import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
+/* D-536: a re-read of a capture is COMPARED with the reading before it, and the difference ATTRIBUTED
+   to a tier and a member (`readingprov.mjs`, Part II §16 "Reading provenance"). */
+import { compareProvenance, PROVENANCE_SCHEME } from "./readingprov.mjs";
 /* D-162 / IC-241: THE THEME's refusals (C-81). */
 import { THEME_CHECKS } from "../checks/bio-checks.mjs";
 /* IC-246 / C-82: op=statementack's bound on the unsigned documents it re-authors — a refusal, never a cut. */
 import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
+/* D-448 / C-87: the review copy's eleven refusals, imported for the reason every other DEC-49
+   family is — the C-number, the wire code and the canned translation are ONE ROW in the catalogue
+   and this file holds no second copy of the sentence. */
+import { REVIEW_COPY_CHECKS } from "../checks/bio-checks.mjs";
 /* D-508 / C-85: the doorbell's rate refusals — the one door open to the public, and the one
    refusal surface whose reader is guaranteed not to be a member. */
 import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
@@ -536,6 +553,9 @@ import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 import { TESTIMONY_GRADE } from "../checks/bio-checks.mjs";
 /* D-182: an action's risk tier is READ through the catalogue's own state function and its words. */
 import { RISK_TIERS, riskTierState } from "../checks/bio-checks.mjs";
+/* REC-214: the ONE reader of an action's tier history and the act's two bounds, from the catalogue that judges them
+   (C-2.10's history arm) — the act, the promote fence and the read cannot disagree about the shape. */
+import { riskTierHistoryOf, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX } from "../checks/bio-checks.mjs";
 
 /* MK-1 / D-184 / IC-134 — THE TESTIMONY PATH'S KEY, AND IT IS A SYMBOL ON
    PURPOSE. `promote` honours the register's `authored` flag, and writes the
@@ -551,6 +571,10 @@ const TESTIMONY_PATH = Symbol("mk1-testimony-path");
    `promote` under this Symbol. A Symbol, for TESTIMONY_PATH's reason: no JSON body a caller sends can carry
    one, so `op=promote` cannot claim to be the act. */
 const LAWS_ACT = Symbol("d149-laws-act");
+/* REC-214: the one write that may change an action's risk tier after intake, or append to its history, is
+   `actionRiskTier`, and it says so to `promote` under this Symbol — LAWS_ACT's reason: no JSON body a caller sends
+   can carry one, so `op=promote` cannot claim to be the act. */
+const RISK_TIER_ACT = Symbol("rec214-risk-tier-act");
 
 /* D-309 / DEC-49, `src/airun.mjs`'s precedent exactly. THE CODE IS A STRING
    LITERAL AT ITS SITE and reaches the wire through here, because a code held in
@@ -767,6 +791,36 @@ const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp
    collapse that distinction by accident. */
 const SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+/* D-543 — THE STAMPING HELPER, AND IT NAMES ITS PRECISION AT EVERY CALL. The record spells an instant
+   two ways: `…:00Z` (whole seconds — the convention `ISO_TS_RE` holds a document's own bytes to, about
+   twenty gate checks) and `…:00.123Z` (milliseconds, `toISOString()`'s own spelling, which a row
+   stamped for ordering keeps). Neither is wrong; what was wrong is that the precision was carried by a
+   regex or a `split` at each site, in two spellings nobody named, so a site's precision could be learned
+   only by reading it. `stampInstant("second" | "millisecond", when)` says it; any other word throws.
+   `observation_log.at` stays whole-second by BOB #33's ruling (D-516), and it is a "second" call here
+   like any other, not an exception to the helper.
+   AND TWO SPELLINGS MUST NEVER BE COMPARED AS STRINGS: `Z` sorts above `.`, so `…:00Z` ranks AFTER
+   `…:00.123Z` though it names the earlier instant (read as `.000`). `instantOrder` compares INSTANTS —
+   negative, zero or positive like a comparator, and NaN when either side is not an instant, so a
+   `> 0` / `< 0` test is false for an unreadable stamp rather than ranking it as zero. Where a
+   comparison crosses act kinds, it goes through this. */
+export function stampInstant(precision, when = Date.now()) {
+  const iso = new Date(when).toISOString();
+  if (precision === "millisecond") return iso;
+  if (precision === "second") return iso.replace(/\.\d+Z$/, "Z");
+  throw new Error(`stampInstant: precision is "second" or "millisecond", never ${JSON.stringify(precision)}`);
+}
+export function instantOrder(a, b) {
+  const x = typeof a === "string" && a ? Date.parse(a) : NaN, y = typeof b === "string" && b ? Date.parse(b) : NaN;
+  return x - y;
+}
+
+/* REC-207 (BOB #32, 2026-09-23 23:42Z): the two settlements of a bias debt that a MEMBER or a RUN made,
+   as against the one the sweep derives when the lens moves back. The distinction is read on the sweep's
+   hot path and decides whether an unchanged lens delta re-raises the obligation, so it is a SET here
+   rather than a disjunction written out at the branch — a third authored act would otherwise have to be
+   remembered at the branch as well as at its own door, and the branch is the place nobody looks. */
+const SETTLED_BY_AN_ACT = new Set(["rerun", "resolved"]);
 /* Single line, length-capped, control characters stripped. Newlines go first
    because a multi-line subject is how a plausible-looking instruction gets
    room to look like a message rather than a label. */
@@ -857,6 +911,27 @@ export class Store extends DurableObject {
       const cols = [...this.sql.exec(`PRAGMA table_info(published_bundles)`)].map((r) => r.name);
       if (cols.length && !cols.includes("edition"))
         this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
+    }
+    /* D-454: reading_refs is RE-KEYED (capture_sha, ref, occurrence). It is DERIVED, so the
+       links/captured_locators DROP above would be defensible — and it is NOT taken, because
+       the row that ordered this (and the rows every connection's pair and every member's
+       choice were read from) says keep every existing row, and a drop would leave each store
+       with no reference index until every capture is re-promoted. Unlike those tables, an old
+       row here is not WRONG under the new key: it is the first occurrence (the readers kept
+       only the first sighting), which is exactly `seq` 0 at its own place. So the old table is
+       renamed out of the way here and copied forward after the schema, published_bundles'
+       precedent.
+       THE TWO INDEXES ARE DROPPED WITH THE RENAME, and that is load-bearing: a renamed table
+       KEEPS its indexes under their old names, so the schema's CREATE INDEX IF NOT EXISTS
+       would find the names taken and create nothing, and the DROP of the interim table below
+       would then remove them — a re-keyed table with neither lookup index, failing nothing. */
+    {
+      const cols = [...this.sql.exec(`PRAGMA table_info(reading_refs)`)].map((r) => r.name);
+      if (cols.length && !cols.includes("occurrence")) {
+        this.sql.exec(`ALTER TABLE reading_refs RENAME TO reading_refs_preoccurrence`);
+        this.sql.exec(`DROP INDEX IF EXISTS reading_refs_ref`);
+        this.sql.exec(`DROP INDEX IF EXISTS reading_refs_bundle`);
+      }
     }
 
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
@@ -1179,6 +1254,12 @@ export class Store extends DurableObject {
          that exists before this column did, and null is the TRUE value for them:
          their ties went to the scan's row order, which no read can recover. */
       ["connections", "pair_rule", "TEXT"],
+      /* D-454: WHICH OCCURRENCE a member's on-point choice names. Null on every choice made
+         before it, and null is the TRUE value: those choices named a string when the record
+         held one occurrence per string, and no backfill can know which read the member meant
+         once a re-read finds more. The read answers such a choice only while its reference
+         has exactly one occurrence (connectionGradeForContent says why). */
+      ["connection_pair_choices", "occurrence", "TEXT"],
       /* FW-19 / IC-125: `cited_as` on a content row. Every row that can exist
          before this column did was minted against a TEXT arm (no `image` kind
          was admissible), so the default IS the true value for all of them —
@@ -1243,6 +1324,11 @@ export class Store extends DurableObject {
          name (`STATEMENT_ACK_AUTHOR_UNDETERMINED`) rather than attribute the sentence to whoever last
          touched the draft. */
       ["case_drafts", "statement_by", "TEXT"],
+      /* REC-217 (BIO_Publication_v0_1.md §3 rule 13, BOB #33 19:14Z): THE DRAFT A PUBLISHER NAMED as a case
+         edition's draft at `op=publish`. NULLABLE AND NOT BACK-FILLED, and here NULL is the MEASURED truth for
+         every old row rather than a gap: no act could name a draft before this column existed, so a document
+         authored earlier was bound to none. */
+      ["case_documents", "draft_id", "TEXT"],
       /* D-492: browser time COMMITTED to renders in flight and not yet reported. NOT NULL with a
          DEFAULT because it is a running total and not an attribution: a store written before this
          column existed had no renders in flight at the moment it gained the column, so 0 is the
@@ -1255,6 +1341,21 @@ export class Store extends DurableObject {
          granted on the record. NULL reads back as not confined, which is what it is. schema.mjs says why the
          vocabulary is not restated in this file. */
       ["ai_credentials", "confined_to", "TEXT"],
+      /* REC-207 (BOB #32, 2026-09-23 23:42Z): THE RUN THIS RUN RE-RUNS, as its opener AUTHORED it. A link
+         nothing derives: DEC-24's authored-binds side, because "is this a re-run of that" is a judgement
+         about what was asked, and a plane inferring it from a context and a clock would be guessing. NULLABLE
+         AND NEVER BACK-FILLED — a run opened before this column existed named nothing, and the value a
+         backfill could reach for (the previous run in the same context) is exactly the guess this column
+         refuses to make. NULL reads back as `not a re-run`, which is what it is. */
+      ["ai_runs", "rerun_of", "TEXT"],
+      /* REC-207: WHICH OF THE THREE ACTS SETTLED THIS DEBT, beside the `cleared_at` D-86 already wrote. The
+         full record is `bias_debt_settlements`, append-only, one row per act; this column is what the SWEEP
+         reads on its hot path to tell an AUTHORED settlement (a re-run, a member's resolve) from the lens
+         having moved back, because the two behave differently when the sweep next sees the same lens delta.
+         NULLABLE AND NEVER BACK-FILLED: a debt cleared before this column existed was cleared by the lens
+         moving back — that was the only act there was — but writing that in would be back-filling an
+         attribution, so it reads UNDETERMINED and `#biasDebtSettlement` says so. */
+      ["bias_debts", "settled_kind", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -1354,6 +1455,29 @@ export class Store extends DurableObject {
            SELECT bundle_id,1,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored
            FROM published_bundles_preeditions`);
         this.sql.exec(`DROP TABLE published_bundles_preeditions`);
+      }
+    }
+    /* D-454: the copy-forward. EVERY row survives: the old key (capture_sha, ref) was unique,
+       so the new one is too, with each old row as its reference's first occurrence (seq 0) at
+       the place it recorded — `occurrence` is computed from the two columns the row already
+       carries, the rule `readingOccurrenceKey` states, and '' where it carried none. A store
+       older than FW-17 has no position columns at all and every row lands unplaced, which is
+       what it was. Keyed on the INTERIM table rather than on the rename above, so a boot that
+       died between the two finishes the copy on the next; OR IGNORE is for that re-run only,
+       since a row already copied is the same row. */
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(reading_refs_preoccurrence)`)].map((r) => r.name);
+      if (old.length) {
+        const col = (c) => (old.includes(c) ? c : "NULL");
+        this.sql.exec(
+          `INSERT OR IGNORE INTO reading_refs
+             (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref,occurrence,seq)
+           SELECT capture_sha, bundle_id, ref, ${col("ref_kind")}, ${col("ref_key")}, ${col("label")},
+                  ${col("pos_kind")}, ${col("pos")}, ${col("pos_ref")},
+                  CASE WHEN ${col("pos_kind")} IS NOT NULL AND ${col("pos")} IS NOT NULL
+                       THEN ${col("pos_kind")} || ':' || ${col("pos")} ELSE '' END, 0
+             FROM reading_refs_preoccurrence`);
+        this.sql.exec(`DROP TABLE reading_refs_preoccurrence`);
       }
     }
     /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */
@@ -1726,6 +1850,9 @@ export class Store extends DurableObject {
        assumed. */
     const rp = fm.reeval_pending;
     const rpObj = rp && typeof rp === "object" && !Array.isArray(rp);
+    /* D-526: "is this an action" through the catalogue's `normalizeType` (C-2.5), the one membership question
+       every other type test in this file asks — never the raw key, which a future alias of `action` would miss. */
+    const isAction = normalizeType(fm.object_type) === "action";
     return {
       schema_id: s(fm.schema),
       produced_mode: s(nested("produced_by", "mode")),
@@ -1744,12 +1871,12 @@ export class Store extends DurableObject {
       reeval_source: rpObj ? s(rp.source) : null,
       /* REC-24 (e). Only an ACTION projects these; every other type leaves them
          NULL, which is what "this bundle is not an action" says in a column. */
-      action_kind: fm.object_type === "action" ? s(fm.action_kind) : null,
-      action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier) : null,
-      action_counterparty_state: fm.object_type === "action" ? s(nested("counterparty", "state")) : null,
-      action_resolution: fm.object_type === "action" ? s(fm.resolution) : null,
-      action_clock_next: fm.object_type === "action" ? Store.actionClockNext(fm) : null,
-      action_clock_overdue: fm.object_type === "action"
+      action_kind: isAction ? s(fm.action_kind) : null,
+      action_risk_tier: isAction ? num(fm.risk_tier) : null,
+      action_counterparty_state: isAction ? s(nested("counterparty", "state")) : null,
+      action_resolution: isAction ? s(fm.resolution) : null,
+      action_clock_next: isAction ? Store.actionClockNext(fm) : null,
+      action_clock_overdue: isAction
         ? (Store.actionOverdue(fm, nowMs) ? 1 : 0) : null,
       fm_json: JSON.stringify(fm),
     };
@@ -2082,6 +2209,10 @@ export class Store extends DurableObject {
          the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
          as governed by anything, federal law included. */
       governing_laws: governingLawsOf(fm),
+      /* REC-214: EVERY TIER THIS ACTION HAS HELD, oldest first — each revision's tier, the tier it replaced, who,
+         when and why — and the intake tier with its author stated UNDETERMINED. Read by the catalogue's one reader
+         from the same bytes `risk_tier` above is, so the history and the current tier cannot disagree. */
+      risk_tier_history: riskTierHistoryOf(fm),
       /* REC-195: AND WHAT WAS PROPOSED, APART FROM IT. Two keys, never composed: `governing_laws` above is the
          member's statement or its honest undetermined, and this is machine work labelled as machine work
          (D-149). Nothing here is evidence that the list came from a proposal, and nothing derives one. */
@@ -4401,7 +4532,7 @@ export class Store extends DurableObject {
                      + `These targets are not, so the whole call is refused: a batch that moved only the `
                      + `eligible members would be a state change the operator did not ask for.` };
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     /* The reason is APPENDED to the note, never substituted. The note is the
        only prose an edge carries, and the reason it was cited is as much a part
        of the record as the reason it stopped being relied on. Bounded, with the
@@ -4635,7 +4766,7 @@ export class Store extends DurableObject {
                        + "dependent rather than stranding it." };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const disposed = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -5295,7 +5426,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "CITED", offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
                detail: Store.RETIRE_CITED_DETAIL };
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const retired = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -5492,7 +5623,7 @@ export class Store extends DurableObject {
                      + "bundles the catalog immediately rejects." };
     /* END DEC-49 REGION is-release-entry */
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const released = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -5902,7 +6033,7 @@ export class Store extends DurableObject {
        ELSE. The shared inquiry's bytes, its state and every other project's
        stance are left exactly where they were (§7.1 item 3: told, never moved). */
     if (pid) {
-      const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+      const when = stampInstant("second");
       /* REC-136: `prior` is the entry this one FOLLOWS in the history (a
          conclusion or a withdrawal) — nothing is replaced any more. */
       const priorRec = this.#conclusionRecordOf(pid, target, viewer);
@@ -5927,7 +6058,7 @@ export class Store extends DurableObject {
                author: who, at: when, weight: "single" };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const withHistory = Store.#appendStateHistory(text, {
       timestamp: when, from_state: b.current_state, to_state: "concluded",
       blurb: concl, author: who });
@@ -6586,7 +6717,7 @@ export class Store extends DurableObject {
                  : `${pid}'s latest entry on ${target} is one this plane cannot read, so what it stands on is `
                    + "undetermined and a withdrawal would be withdrawing a guess." };
     /* END DEC-49 REGION is-withdraw-stance */
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const w = this.#setProjectConclusion(projRow, target, {
       act: "withdrawn", version: rec.stance.version, withdrawsAt: rec.stance.at, reason: why, who, when });
     if (!w.ok) return { ...w, target, project: pid };
@@ -6722,7 +6853,7 @@ export class Store extends DurableObject {
                      + `${to} would record an outcome the action has not reached.` };
     /* END DEC-49 REGION is-move-resolution */
 
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     const withHistory = Store.#appendStateHistory(text, {
       timestamp: when, from_state: b.current_state, to_state: to, blurb: why, author: who });
     if (!withHistory)
@@ -6916,7 +7047,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_DOCUMENT", target,
                detail: "this action has no readable bundle.md, so nothing can be appended to it" };
     const fm = parseFrontmatter(liveMd.content).data || {};
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     const ledgerNow = Array.isArray(fm.correspondence) ? fm.correspondence : [];
     const ord = ledgerNow.length;
     const entryFm = {
@@ -7053,7 +7184,7 @@ export class Store extends DurableObject {
                detail: "this action has no readable bundle.md, so its governing laws cannot be set" };
     const fm = parseFrontmatter(liveMd.content).data || {};
     const before = governingLawsOf(fm);
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     let text = Store.#replaceGoverningLaws(liveMd.content, entries);
     if (!text)
       return { ok: false, reason: "UNSPLICEABLE_GOVERNING_LAWS", target,
@@ -7172,6 +7303,168 @@ export class Store extends DurableObject {
     return [...lines.slice(0, gi), ...block, ...lines.slice(last + 1)].join("\n");
   }
 
+  /* REC-189 / C-32.19, MOVED INTO ONE HELPER BY REC-214 — ONLY A MEMBER'S AUTHORED ACT SETS OR REVISES A RISK TIER.
+   * Two callers ask it: `promote`'s action block (a machine's revision stating a tier) and `actionRiskTier` (a
+   * machine calling the member's revision act). One helper, because DEC-49's `where` names THE smallest span in
+   * which a code is enforced, and the same code enforced in two bodies is two spans for one row.
+   *
+   * At `promote` (`act` false) it asks a CHANGE, never a presence, exactly as REC-189 and BOB #32 ruled: a machine
+   * may carry a member's tier forward unchanged, and may leave undetermined a tier no member ever set; it may not
+   * set one, change one, or drop a member's 1, 2 or 3 to undetermined. At the ACT (`act` true) there is nothing to
+   * carry forward — the act IS a revision — so a machine is refused whatever it asks for. REC-46's one predicate:
+   * a write no session or credential stamped is not a member's act either. Instance, not static, for
+   * `#lawEntries`'s reason: the guard's arm C cannot resolve a `where` naming a static method. */
+  #machineRiskTierRefusal({ who, nextTier, heldTier, cur, act }) {
+    const heldSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
+    /* DEC-49 REGION is-machine-set-risk-tier */
+    if ((!who || isMachineIdentity(who))
+        && (act || (((nextTier === 1 || nextTier === 2 || nextTier === 3) || heldSet) && nextTier !== heldTier)))
+      return { ok: false, reason: "MACHINE_CANNOT_SET_RISK_TIER", risk_tier: nextTier,
+               held: cur ? heldTier : null,
+               detail: (act
+                 ? `op=actionrisktier is a member's authored revision of this action's risk tier (held: ${heldTier}).`
+                 : cur ? `this revision states risk_tier ${nextTier} where the version it replaces states `
+                         + `${heldTier}.`
+                       : `this creation states risk_tier ${nextTier}.`)
+                     + ` A risk tier is a member's assessment of the legal exposure of filing `
+                     + `this action, and only a member's authored act sets 1, 2 or 3. A machine credential `
+                     + `may carry a member's tier forward unchanged, and may leave the tier unstated `
+                     + `(undetermined) only where no member has set one; it may not remove a member's tier. `
+                     + `Nothing was written.` };
+    /* END DEC-49 REGION is-machine-set-risk-tier */
+    return null;
+  }
+
+  /** op=actionrisktier — REC-214 (BOB #33, 2026-09-24, "Risk-tier revision"; `BIO_Case_Making_v0_1.md` §2,
+   *  `risk_tier`): A MEMBER REVISES AN ACTION'S RISK TIER, AS AN AUTHORED, APPEND-ONLY ACT.
+   *
+   *  The tier carries legal exposure — 3 is "do not file without counsel" — so the record must show that it was
+   *  changed, by whom, when and why. A member may revise ANY tier, up or down, and the act:
+   *   - writes `risk_tier` through the one front-matter path every reader derives the tier from (`riskTierState`
+   *     over the document's own bytes; `#projectRow`'s `action_risk_tier` column; `op=search q=risk:`);
+   *   - APPENDS one entry to `risk_tier_history[]` — the tier set, the tier replaced (`prior`), who, when and the
+   *     REQUIRED reason — and never edits or drops an earlier one, so the prior tier, its author and its reason stay
+   *     readable (`riskTierHistoryOf`); `promote` refuses any other writer that changes either (C-90.1);
+   *   - records the revision in the Session Log as well, as every act on an action does.
+   *  A machine credential is refused by C-32.19's own code. The act states 1, 2 or 3: `undetermined` is what an
+   *  action reads when nobody has assessed it, and a member does not "set" it — actionLaws' rule for an empty list.
+   *  A revision to the tier already held is refused: it would append a change that is not one. What a machine may
+   *  PROPOSE is REC-215's, read beside this history and never written into it. */
+  actionRiskTier({ target, tier = null, reason = null, viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    const machine = this.#machineRiskTierRefusal({ who, nextTier: riskTierState(tier), heldTier: null,
+                                                   cur: false, act: true });
+    if (machine) return { ...machine, target };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
+               detail: "a risk tier belongs to an action: it is the legal exposure of filing it." };
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this action has no readable bundle.md, so its risk tier cannot be revised" };
+    const fm = parseFrontmatter(liveMd.content).data || {};
+    const held = riskTierState(fm.risk_tier);
+    const before = riskTierHistoryOf(fm);
+    /* The query string carries every value as a string; the act's tier is a NUMBER in the bytes (a quoted "2" is
+       refused by C-2.10), so the wire's "2" is read as 2 here and nowhere else. */
+    const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
+    const next = riskTierState(asked);
+    const why = typeof reason === "string" ? reason.trim() : "";
+    const text0 = Store.#appendRiskTierHistory(liveMd.content, null);
+    /* DEC-49 REGION is-risk-tier-act */
+    if (next !== 1 && next !== 2 && next !== 3)
+      return { ok: false, reason: "BAD_RISK_TIER", target, tier: tier ?? null, legal: [1, 2, 3],
+               detail: "the act states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file without "
+                     + "counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set." };
+    if (!why || why.length > RISK_TIER_REASON_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "RISK_TIER_REASON_REFUSED", target, max: RISK_TIER_REASON_MAX,
+               detail: `a revision of a risk tier carries a reason of 1 to ${RISK_TIER_REASON_MAX} characters, with no `
+                     + "quote, backslash or line break: the restricted frontmatter grammar has no escapes. It is kept "
+                     + "beside the change for as long as the record lasts." };
+    if (next === held)
+      return { ok: false, reason: "RISK_TIER_UNCHANGED", target, risk_tier: held,
+               detail: `this action's risk tier is already ${held}; a revision changes it, and the history was not touched.` };
+    if (text0 === null || before.revisions.length >= RISK_TIER_HISTORY_MAX)
+      return { ok: false, reason: "RISK_TIER_HISTORY_UNSPLICEABLE", target, revisions: before.revisions.length,
+               max: RISK_TIER_HISTORY_MAX,
+               detail: "this action's risk_tier_history is not a block the act can append to in place (or it holds "
+                     + `${RISK_TIER_HISTORY_MAX} revisions already); the act only appends, so nothing was written.` };
+    /* END DEC-49 REGION is-risk-tier-act */
+
+    const when = stampInstant("second", this.#nowMs(null));
+    const entry = { tier: next, prior: held, by: Store.#fmSafe(who), at: when, reason: why };
+    let text = Store.#appendRiskTierHistory(liveMd.content, entry);
+    text = Store.#setOrAddScalar(text, "risk_tier", String(next));
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    text = Store.#appendSessionLog(text,
+      `### Session ${when} | Risk tier revised | ${who}\n`
+      + `Trigger: op=actionrisktier on ${target}\n`
+      + `Changes: risk_tier ${held} (${RISK_TIERS[held]}) -> ${next} (${RISK_TIERS[next]}).\n`
+      + `Reason: ${why}\n`);
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who, [RISK_TIER_ACT]: true,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type,
+              title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
+              created: fm.created, last_updated: when, criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    const after = parseFrontmatter(text).data || {};
+    return { ok: true, target, risk_tier: next, risk_tier_words: RISK_TIERS[next], prior: held,
+             prior_words: RISK_TIERS[held] ?? null, by: who, at: when, reason: why,
+             risk_tier_history: riskTierHistoryOf(after), weight: "single" };
+  }
+
+  /* REC-214: APPEND one entry to the top-level `risk_tier_history:` block, or open the block before the closing
+     fence when absent — `#replaceGoverningLaws`' grammar, but it only ever ADDS rows after the last one. With
+     `entry` null it answers only whether the block can be appended to (the act asks before it refuses anything
+     that would write). Returns null for a block it cannot read as that shape — an inline value other than `[]` —
+     refusing rather than guessing: the grammar has no escapes, and a wrong guess rewrites history silently. */
+  static #appendRiskTierHistory(text, entry) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const rows = entry ? [
+      `  - tier: ${entry.tier}`,
+      `    prior: ${entry.prior}`,
+      `    by: "${entry.by}"`,
+      `    at: "${entry.at}"`,
+      `    reason: "${entry.reason}"`,
+    ] : [];
+    let hi = -1;
+    for (let i = 1; i < end; i++) if (/^risk_tier_history:/.test(lines[i])) { hi = i; break; }
+    if (hi === -1) return [...lines.slice(0, end), "risk_tier_history:", ...rows, ...lines.slice(end)].join("\n");
+    const rest = lines[hi].slice("risk_tier_history:".length).trim();
+    if (rest !== "" && rest !== "[]") return null;
+    let last = hi;
+    if (rest === "")
+      for (let i = hi + 1; i < end; i++) {
+        if (lines[i].trim() === "") continue;
+        if (/^\s/.test(lines[i])) { last = i; continue; }
+        break;
+      }
+    return [...lines.slice(0, hi), "risk_tier_history:", ...lines.slice(hi + 1, last + 1), ...rows,
+            ...lines.slice(last + 1)].join("\n");
+  }
+
   /** op=actionlawspropose — REC-195 (D-149's remaining half; `BIO_Case_Making_v0_1.md` §2, *A RECORDS REQUEST
    *  NAMES EVERY LAW THAT GOVERNS IT*): A PROPOSAL OF CITATIONS AND LEVELS, STORED APART FROM THE MEMBER'S
    *  LIST AND LABELLED MACHINE WORK.
@@ -7224,7 +7517,7 @@ export class Store extends DurableObject {
     if (normalizeType(b.object_type) !== "action")
       return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
                detail: "governing laws belong to an action: they are the laws its request is made under." };
-    const at = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second", this.#nowMs(null));
     /* REPLACE THIS PROPOSER'S OWN ROWS AND NOBODY ELSE'S. Keyed on both columns, never on the bundle alone. */
     this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
     entries.forEach((e, i) => this.sql.exec(
@@ -7311,7 +7604,7 @@ export class Store extends DurableObject {
     const refs = Array.isArray(fm.references) ? fm.references : [];
     if (refs.some((r) => r && typeof r === "object" && r.rel === "responds_to" && r.target === actionId))
       return { bundle_id: doc.bundle_id, already: true };
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     let text = Store.#spliceReferences(doc.content,
       [{ rel: "responds_to", target: actionId, status: "confirmed", note: "" }]);
     if (!text) return null;
@@ -7676,7 +7969,7 @@ export class Store extends DurableObject {
                      + "focus/problem "
                      + "document has no `open` state at all until its frontmatter is modernized." };
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const withHistory = Store.#appendStateHistory(text, {
       timestamp: when, from_state: b.current_state, to_state: "open",
       blurb: why, author: who });
@@ -7838,7 +8131,7 @@ export class Store extends DurableObject {
   publishCase({ target = null, targets = null, caseId = null, newCase = false, scope = "",
                 statement = "", excluded = null, subjectPosition = "",
                 subjectJustification = "", biasAcknowledgement = "",
-                project = null, roles = null,
+                project = null, roles = null, draft = null,
                 viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-publish — REC-64/C-32.6. The fence alone. */
@@ -8563,6 +8856,65 @@ export class Store extends DurableObject {
        item. A finding may now serve two cases owned by two different projects;
        a single case still has exactly one owner.
        ====================================================================== */
+    /* ===== REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33, 2026-09-24 19:14Z): THE DRAFT THIS ACT
+       PUBLISHES, NAMED BY THE PUBLISHER. ====================================================================
+       REC-194 left a gap it could state and not close: nothing linked a draft to the case it produced, so a
+       reading of a NEW case's draft — given at no case identity, because a case id is minted only here — could
+       reach no case document and was counted UNDETERMINED. BOB ruled the one act that closes it: `op=publish`
+       names the draft it publishes (`draft=`, optional, additive), and AT THIS ACT the readings taken through
+       that draft bind to the case it produced. THE LINK IS AN ACT AND NOT AN INFERENCE: it is recorded with
+       its author (the publisher, `authored_by`) and its time (`authored_at`) on the case document row, and the
+       document says it in words, so the owner who signs signs a stated link whose author is named.
+       WHAT IT IS NOT: a match on the statement's bytes. Two drafts, or two cases, may carry one sentence and
+       be two productions (§3 rule 13's narrowing); only the NAMED draft's readings bind, and the negative
+       control of `rec217-draft-binding.test.mjs` arms exactly that substitution.
+       WITHOUT `draft=` NOTHING CHANGES: REC-194's provisional stands, and an unbindable reading is counted and
+       stated UNDETERMINED, never named.
+       THREE REFUSALS, each asked here — after every other refusal of the case identity and BEFORE an id is
+       minted, so a refused call spends none — and each for a link that would be false:
+         - the draft is not one of this project's that this caller can read (answered as absent, the draft
+           fence's own posture);
+         - the draft stands at another case identity than the one this act authors (a draft naming another
+           case, or a new case's draft named on a further edition of an existing one);
+         - the draft is already this link's subject for ANOTHER case edition: one draft, one case it produced. */
+    const draftNamed = String(draft ?? "").trim() || null;
+    let boundDraft = null;
+    if (draftNamed) {
+      const d = this.#draftForMember(draftNamed, viewer);
+      const predicted = theCase
+        ? (() => { const t = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, theCase);
+                   return (t && t.m != null ? Number(t.m) : 0) + 1; })()
+        : 1;
+      /* DEC-49 REGION is-publish-draft-found */
+      if (!d || d.project_id !== proj)
+        return refusal("PUBLISH_DRAFT_NOT_FOUND", { draft: draftNamed, project: proj,
+          detail: `no draft of ${proj} that you can read answers to ${draftNamed}. A draft you cannot read is `
+                + `answered exactly as one that does not exist. Name the draft this case was prepared in, or `
+                + `publish without draft= and its readings are stated as undetermined.` });
+      /* END DEC-49 REGION is-publish-draft-found */
+      const di = this.#draftIdentity(d);
+      /* DEC-49 REGION is-publish-draft-this-case */
+      if (di.caseId ? (di.caseId !== theCase || di.edition !== predicted) : predicted !== 1)
+        return refusal("PUBLISH_DRAFT_NOT_THIS_CASE", { draft: draftNamed,
+          draft_case: di.caseId ?? null, draft_edition: di.edition,
+          case_id: theCase ?? null, edition: predicted,
+          detail: `draft ${draftNamed} is prepared for ${Store.#caseIdentitySentence(di.caseId, di.edition)}, and `
+                + `this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it `
+                + `would bind its readings to a case they were not given for. Publish the case the draft names `
+                + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.` });
+      /* END DEC-49 REGION is-publish-draft-this-case */
+      const already = this.#one(`SELECT case_id, edition FROM case_documents WHERE draft_id=?
+                                   AND NOT (case_id IS ? AND edition=?) LIMIT 1`, d.draft_id, theCase ?? null, predicted);
+      /* DEC-49 REGION is-publish-draft-bound */
+      if (already)
+        return refusal("PUBLISH_DRAFT_ALREADY_BOUND", { draft: draftNamed,
+          bound_to: { case_id: already.case_id, edition: Number(already.edition) },
+          detail: `draft ${draftNamed} was already named as the draft of edition ${already.edition} of `
+                + `${already.case_id}, and its readings bound to that case at that act. One draft produces one `
+                + `case: binding its readings to a second would list the same readers under two productions.` });
+      /* END DEC-49 REGION is-publish-draft-bound */
+      boundDraft = d.draft_id;
+    }
     const minted = !theCase;
     /* REC-151: a NEW case's id is OPAQUE (`#mintOpaqueId`), never `allocId`'s CASE counter — a counted id told
        its publisher how many cases this year had minted, unratified ones included (Membership v2 §7). Unique
@@ -8686,7 +9038,7 @@ export class Store extends DurableObject {
                           + `of this edition.`}` };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const written = [];
     /* ===== D-442 / BIO_Publication_v0_1.md §3 rule 12 (BOB #28, 2026-09-22):
        PUBLISHING WRITES NOTHING ON A MEMBER FINDING. ===========================
@@ -8888,7 +9240,10 @@ export class Store extends DurableObject {
        reading (rule 11), so listing one would author bytes C-41.10 must refuse — and a store written
        before REC-193 HOLDS such rows, recorded while `op=statementack` read the draft's last editor. */
     const writer = this.#statementWriter(proj, theCase, edition, stmt, who);
-    const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who, writer);
+    /* REC-217 / §3 rule 13: THE LINK THIS ACT MAKES, when the publisher named the draft — its draft, its
+       author and its time are this act's own, so the list, the prose and the row all state one act. */
+    const draftLink = boundDraft ? { draft: boundDraft, by: who, at: when } : null;
+    const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who, writer, null, draftLink);
     const docText = Store.#caseDocumentText({
       caseId: theCase, edition, project: proj, scope: scp, bias: back, bar,
       roster: members, roles: memberRoles, pins: pinOf,
@@ -8907,12 +9262,12 @@ export class Store extends DurableObject {
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
     this.sql.exec(
-      `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by)
-       VALUES (?,?,?,?,?,?)
+      `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by,draft_id)
+       VALUES (?,?,?,?,?,?,?)
        ON CONFLICT(case_id,edition) DO UPDATE SET doc_sha=excluded.doc_sha, text=excluded.text,
-         authored_at=excluded.authored_at, authored_by=excluded.authored_by
+         authored_at=excluded.authored_at, authored_by=excluded.authored_by, draft_id=excluded.draft_id
        WHERE case_documents.sig_armored IS NULL`,
-      theCase, edition, docSha, docText, when, who);
+      theCase, edition, docSha, docText, when, who, boundDraft);
     /* READ BACK RATHER THAN ASSUMED, because the UPDATE above is CONDITIONAL and
        a conditional write that did nothing is indistinguishable from one that
        worked if you only look at the parameters you passed. What this act
@@ -8985,7 +9340,13 @@ export class Store extends DurableObject {
                              /* REC-194 / §3 rule 13: the readings of this exact sentence this record cannot
                                 bind to any case (a draft naming none). The document's prose states them;
                                 the act says so too, so a publisher reads it before signing. */
-                             ...(acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}) },
+                             ...(acks.unbound ? { acknowledgements_unbindable_to_this_case: acks.unbound } : {}),
+                             /* REC-217 / §3 rule 13: THE LINK, AS AN ACT — the draft the publisher named, who
+                                named it and when — present only when one was named. Without it the count
+                                above is REC-194's undetermined, unchanged. */
+                             ...(draftLink ? { draft: { draft_id: draftLink.draft, named_by: draftLink.by,
+                                                        named_at: draftLink.at,
+                                                        acknowledgements_bound: acks.boundByLink } } : {}) },
              author: who, at: when, weight: "single",
              /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE
                 ONE. Two findings whose strengths differ have two answers; one
@@ -9159,6 +9520,13 @@ export class Store extends DurableObject {
          dropped by the next acknowledgement that lands on an unsigned document. */
       `  statement_by: ${statementBy ?? "null"}`,
       `  at: "${at}"`,
+      /* REC-217 / §3 rule 13 (BOB #33): THE DRAFT THE PUBLISHER NAMED, WHO NAMED IT AND WHEN — the link as an
+         act, in the signed block, present only when a draft was named. Above `statement_sha` for the reason
+         `statement_by` is: the acknowledgement splice starts there, and the link is this act's and not the
+         splice's to rewrite. `draft_named_by` and `draft_named_at` are `author` and `at` above, stated again
+         beside the draft so the link names its own author rather than leaving a reader to infer it. */
+      ...(acks.link ? [`  draft: ${acks.link.draft}`, `  draft_named_by: ${acks.link.by}`,
+                       `  draft_named_at: "${acks.link.at}"`] : []),
       /* D-150 / §3 rule 11 — THE STATEMENT'S SECOND READERS, IN THE SIGNED BLOCK. The hash
          names the sentence they read (a reader can recompute it from `statement` above); the
          count is the list's length, so ZERO is a statement — nobody but its author
@@ -9425,7 +9793,7 @@ export class Store extends DurableObject {
          of the document meets that, so it says it. */
       bar.declared
         ? `This case is ${project}'s production and was held to that project's declared standard: `
-          + `capture ${bar.capture ?? "not set"}, connection ${bar.connection ?? "not set"}. `
+          + `${Store.#barAxisWords(bar)}. `
           + `${bar.detail || ""}`.trim()
         : `This case is ${project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. `
           + `An absent bar is not a bar of zero: this case claims no cleared standard, and a reader `
@@ -9954,12 +10322,31 @@ export class Store extends DurableObject {
      argument at all, so the bytes cannot vary with anything the caller sent or with
      anything the record holds. `#noCaseDocument`'s rule one altitude over: a
      refusal that said REVOKED would tell the holder their access had existed. */
+  /* D-448 — ONE CONSTRUCTOR FOR EVERY REFUSAL THE REVIEW COPY MAKES (REC-79's single-helper shape, as
+     `BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates DEC-49), reading the canned translation off the
+     catalogue row rather than repeating a sentence here. IT IS STATIC, and `#leadRefusal` is the precedent:
+     this family's eleven refusals are spread over SIX methods — `reviewAct`, `#caseDraft`, `#reviewGrant`,
+     `#reviewRevoke`, `reviewComment` and the two static dead answers — so a `const refusal` local to one
+     method, which is what every single-method family uses, could not reach the other five. D-507's finding
+     is the reason the declaration sits ABOVE every one of them: a helper a return cannot see is a helper
+     that return does not use, and that is exactly how six `op=statementack` codes reached a member with no
+     translation. ADDITIVE ON THE WIRE: `reason`, each site's own `detail` and its per-site keys are
+     unchanged; `code`, `check` and `translation` join them. */
+  static #reviewRefusal(code, detail, extra) {
+    const row = REVIEW_COPY_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+             detail, ...(extra || {}) };
+  }
+
   static #noReviewCopy() {
-    return { ok: false, reason: "NO_REVIEW_COPY",
-             detail: "no review copy answers to this request. A review copy is read through the grant that "
-                   + "was issued for it, or by a member with standing in the project that produced it; a "
-                   + "grant that was withdrawn, or whose draft has moved to another edition, answers exactly "
-                   + "as one that was never issued." };
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
+    /* DEC-49 REGION is-no-review-copy */
+    return refusal("NO_REVIEW_COPY",
+             "no review copy answers to this request. A review copy is read through the grant that "
+           + "was issued for it, or by a member with standing in the project that produced it; a "
+           + "grant that was withdrawn, or whose draft has moved to another edition, answers exactly "
+           + "as one that was never issued.");
+    /* END DEC-49 REGION is-no-review-copy */
   }
 
   /* THE THREE AUTHORING ACTS — draft, grant, revoke — ENTER THROUGH ONE DOOR, and
@@ -9971,6 +10358,7 @@ export class Store extends DurableObject {
      A machine is refused BY NAME before any act is chosen: the act is ADDRESSED
      and ATTRIBUTED (§6A.2), so the record must name the person who did it. */
   reviewAct({ act = "", author = null, ...args } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-review — REC-126/C-32.16. The fence alone. */
     if (!who || isMachineIdentity(who))
@@ -9982,8 +10370,10 @@ export class Store extends DurableObject {
     if (act === "draft") return this.#caseDraft(who, args);
     if (act === "grant") return this.#reviewGrant(who, args);
     if (act === "revoke") return this.#reviewRevoke(who, args);
-    return { ok: false, reason: "REVIEW_UNKNOWN_ACT", act,
-             detail: "the review copy's authoring acts are draft, grant and revoke." };
+    /* DEC-49 REGION is-review-unknown-act */
+    return refusal("REVIEW_UNKNOWN_ACT",
+             "the review copy's authoring acts are draft, grant and revoke.", { act });
+    /* END DEC-49 REGION is-review-unknown-act */
   }
 
   /* NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER: a caller without the act's
@@ -10006,15 +10396,20 @@ export class Store extends DurableObject {
           + "one is (BIO_Publication §6A.2). An administrator sees every project and directs none of them.",
   };
   static #notReviewOwner(act) {
-    return { ok: false, reason: "REVIEW_NOT_PROJECT_OWNER",
-             detail: `${Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over `
-                   + "is answered exactly as one that does not exist." };
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
+    /* DEC-49 REGION is-review-authority */
+    return refusal("REVIEW_NOT_PROJECT_OWNER",
+             `${Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over `
+           + "is answered exactly as one that does not exist.");
+    /* END DEC-49 REGION is-review-authority */
   }
 
   /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
      never taken from the caller — `publishCase`'s own rule (DEC-12 as DEC-44
      rehomes it). A draft naming an existing case stands at that case's next
-     edition; a draft naming none is a new case at edition 1. */
+     edition; a draft naming none stands at edition 1, the edition a MINTED case has — which is the case only
+     when it asks for a new one or the derivation finds nothing (D-538: the identity SENTENCE says which; this
+     `edition` does not, and is kept because grants and acknowledgements are keyed on it). */
   #draftIdentity(row) {
     const named = String(row.case_id ?? "").trim() || null;
     if (!named) return { caseId: null, edition: 1 };
@@ -10022,15 +10417,46 @@ export class Store extends DurableObject {
     return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
   }
 
-  static #caseIdentitySentence(caseId, edition) {
-    return caseId
-      ? `the next edition (${edition}) of ${caseId}`
-      : "a new case, whose identity is not yet allocated — a case id is minted only by publication";
+  /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
+     off the act's own record (`case_documents.draft_id`, with the act's `authored_by` and `authored_at` as who and
+     when), signed or not — or null where no publisher has named it. One row at most by construction: `op=publish`
+     refuses a second binding of one draft (PUBLISH_DRAFT_ALREADY_BOUND), so `LIMIT 1` states the key, not a cut. */
+  #draftLinkOf(draftId) {
+    return this.#one(`SELECT case_id, edition, authored_by, authored_at, sig_armored FROM case_documents
+                      WHERE draft_id=? LIMIT 1`, String(draftId ?? ""));
+  }
+
+  /* D-538 (BIO_Publication_v0_1.md 6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE SENTENCE
+     TAKES THE DRAFT'S `newCase`, BECAUSE A CASE ID OF null IS TWO DIFFERENT DRAFTS. It read *a new case*
+     for every draft naming no case, while `publishCase` MINTS only when `newCase` is set or the
+     derivation finds nothing — so a draft over findings a published case already serves was told it was a
+     new case as its own gates derived that case and refused ALREADY_A_CASE_MEMBER (REC-199's block 10,
+     draft DD). With no case named and `newCase` unset the case is DERIVED AT PUBLICATION, from a record
+     that can change before then, so which case it becomes is UNDETERMINED here and the sentence says the
+     route instead of guessing its answer. And a draft that names a case AND asks for a new one is not
+     "the next edition" of anything: publication refuses the pair together (CASE_IDENTITY_AMBIGUOUS).
+     `newCase` is read for truthiness, as `publishCase` reads it. THE SENTENCE IS A MEMBER'S AND A
+     RECIPIENT'S TO READ, so it carries no code: the surfaces draw it verbatim, and their DEC-49 guards
+     refuse a SHOUTY_CODE on the page (measured: civicos-ui review-copy and statement-ack went red on
+     this change's first spelling, which named the refusal's code). */
+  static #caseIdentitySentence(caseId, edition, newCase) {
+    if (caseId && newCase)
+      return `the next edition (${edition}) of ${caseId} — but this draft also asks for a new case, and `
+           + `publication refuses those two instructions together, so which case it is stays UNDETERMINED `
+           + `until one of them is withdrawn`;
+    if (caseId) return `the next edition (${edition}) of ${caseId}`;
+    if (newCase) return "a new case, whose identity is not yet allocated — a case id is minted only by publication";
+    return "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED "
+         + "here: the draft names no case and does not ask for a new one, so publication reads the record at "
+         + "that moment — a further edition of the one case its findings already serve, a refusal to choose "
+         + "if they serve several, and a new case only if they serve none and no prepared, unsigned edition "
+         + "claims them";
   }
 
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
      2026-09-17: *"An editor must be able to edit"*). */
   #caseDraft(who, { draft = null, project = null, viewer = null, ...rest } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const proj = String(project ?? "").trim();
     /* REC-149: a NEW draft under a DISCOVERABLE project its caller is outside is refused positionally (C-70.1);
@@ -10040,13 +10466,17 @@ export class Store extends DurableObject {
     if (draft && !existing) return Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
     if (!owning)
-      return { ok: false, reason: "REVIEW_NO_PROJECT",
-               detail: "a draft case is a production of a project, as a published case is (DEC-72): pass "
-                     + "project=<project id>." };
+      /* DEC-49 REGION is-review-no-project */
+      return refusal("REVIEW_NO_PROJECT",
+               "a draft case is a production of a project, as a published case is (DEC-72): pass "
+             + "project=<project id>.");
+      /* END DEC-49 REGION is-review-no-project */
     if (existing && proj && proj !== existing.project_id)
-      return { ok: false, reason: "REVIEW_DRAFT_CHANGES_PROJECT",
-               detail: `this draft is ${existing.project_id}'s production, and a case does not change hands `
-                     + `(DEC-72). Draft this material as a new case under the other project instead.` };
+      /* DEC-49 REGION is-review-draft-changes-project */
+      return refusal("REVIEW_DRAFT_CHANGES_PROJECT",
+               `this draft is ${existing.project_id}'s production, and a case does not change hands `
+             + `(DEC-72). Draft this material as a new case under the other project instead.`);
+      /* END DEC-49 REGION is-review-draft-changes-project */
     if (!this.#isProjectEditor(owning, a.who)) return Store.#notReviewOwner("draft");
     const params = {};
     for (const k of Store.REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
@@ -10054,17 +10484,21 @@ export class Store extends DurableObject {
     if (named) {
       const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, named);
       if (!owned || owned.project_id !== owning)
-        return { ok: false, reason: "REVIEW_NO_SUCH_CASE", caseId: named,
-                 detail: `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its `
-                       + `next edition, and a case this project did not publish is answered exactly as one `
-                       + `that does not exist.` };
+        /* DEC-49 REGION is-review-no-such-case */
+        return refusal("REVIEW_NO_SUCH_CASE",
+                 `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its `
+               + `next edition, and a case this project did not publish is answered exactly as one `
+               + `that does not exist.`, { caseId: named });
+        /* END DEC-49 REGION is-review-no-such-case */
       params.caseId = named;
     }
     const json = JSON.stringify(params);
     if (json.length > 64 * 1024)
-      return { ok: false, reason: "REVIEW_DRAFT_TOO_LARGE",
-               detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept." };
-    const when = new Date().toISOString();
+      /* DEC-49 REGION is-review-draft-too-large */
+      return refusal("REVIEW_DRAFT_TOO_LARGE",
+               "a draft's arguments are at most 64 KiB, the size of what op=publish would accept.");
+      /* END DEC-49 REGION is-review-draft-too-large */
+    const when = stampInstant("millisecond");
     /* REC-193 / §3 rule 13 (BOB #32, 2026-09-23) — THE STATEMENT'S AUTHOR IS THE MEMBER WHO WROTE ITS
        CURRENT BYTES, AND THE SERVER SAYS WHO THAT IS. Stamped here, at the write, from the session the act
        runs as (`a.who`); no caller-supplied field reaches it. An edit that leaves the statement text alone
@@ -10100,7 +10534,7 @@ export class Store extends DurableObject {
     const ident = this.#draftIdentity({ case_id: named });
     return { ok: true, draftId: id, project: owning, edited: !!existing,
              caseId: ident.caseId, edition: ident.edition,
-             caseIdentity: Store.#caseIdentitySentence(ident.caseId, ident.edition),
+             caseIdentity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
              read: `op=reviewcopy&draft=${id}` };
   }
 
@@ -10204,20 +10638,25 @@ export class Store extends DurableObject {
   }
 
   #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
     if (!d || !this.#isProjectOwner(d.project_id, a.who)) return Store.#notReviewOwner("grant");
     const to = String(recipient ?? "").trim();
     if (!to || to.length > Store.REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
-      return { ok: false, reason: "REVIEW_NO_RECIPIENT",
-               detail: `name the person or group this copy is addressed to, in one line of at most `
-                     + `${Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not `
-                     + `attributed, and the grant is the record of who was handed what.` };
+      /* DEC-49 REGION is-review-recipient */
+      return refusal("REVIEW_NO_RECIPIENT",
+               `name the person or group this copy is addressed to, in one line of at most `
+             + `${Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not `
+             + `attributed, and the grant is the record of who was handed what.`);
+      /* END DEC-49 REGION is-review-recipient */
     const s = String(secretSha ?? "");
     if (!/^[0-9a-f]{64}$/.test(s))
-      return { ok: false, reason: "REVIEW_NO_SECRET",
-               detail: "the read secret's fingerprint is set by the control plane and was absent." };
-    const when = new Date().toISOString();
+      /* DEC-49 REGION is-review-secret */
+      return refusal("REVIEW_NO_SECRET",
+               "the read secret's fingerprint is set by the control plane and was absent.");
+      /* END DEC-49 REGION is-review-secret */
+    const when = stampInstant("millisecond");
     const ident = this.#draftIdentity(d);
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7) — a grant is its project owner's alone. */
     const id = this.#mintOpaqueId("RVG", when.slice(0, 4), "",
@@ -10228,24 +10667,28 @@ export class Store extends DurableObject {
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, a.who, when);
     return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId, edition: ident.edition,
              recipient: to, issuedBy: a.who, issuedAt: when,
-             boundTo: `this grant reads ${Store.#caseIdentitySentence(ident.caseId, ident.edition)} and nothing `
+             boundTo: `this grant reads ${Store.#caseIdentitySentence(ident.caseId, ident.edition,
+                                                                     !!JSON.parse(d.params).newCase)} and nothing `
                     + `else. It ends when it is revoked, and when that edition is published and signed.` };
   }
 
   #reviewRevoke(who, { grant = null } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const gid = String(grant ?? "").trim();
     /* An ABSENT argument says nothing about what exists, so it is named as the
        payload complaint it is rather than answered as a grant nobody owns. */
     if (!gid)
-      return { ok: false, reason: "REVIEW_NO_GRANT",
-               detail: "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>." };
+      /* DEC-49 REGION is-review-grant-named */
+      return refusal("REVIEW_NO_GRANT",
+               "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>.");
+      /* END DEC-49 REGION is-review-grant-named */
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
     if (!g || !this.#isProjectOwner(g.project_id, a.who)) return Store.#notReviewOwner("revoke");
     if (g.revoked_at)
       return { ok: true, existed: true, grantId: g.grant_id, revokedBy: g.revoked_by, revokedAt: g.revoked_at };
-    const when = new Date().toISOString();
+    const when = stampInstant("millisecond");
     this.sql.exec(`UPDATE review_grants SET revoked_by=?, revoked_at=? WHERE grant_id=? AND revoked_at IS NULL`,
                   a.who, when, g.grant_id);
     return { ok: true, existed: false, grantId: g.grant_id, revokedBy: a.who, revokedAt: when };
@@ -10272,12 +10715,14 @@ export class Store extends DurableObject {
      Any of the three can move the hash without moving this date. Naming them is the honest scope of the
      rule, and closing them would take a dated fact the answer does not hold.
 
-     TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant:
-     a draft edit, a comment and a grant are stamped `new Date().toISOString()` (with milliseconds), and an
-     acknowledgement is stamped with the milliseconds cut off (`acknowledgeStatement`). Sorted as STRINGS
-     those two spellings rank WRONG inside one second — `…:00Z` sorts after `…:00.123Z`, because `Z` is
-     above `.` — so candidates are ranked by `Date.parse`, and anything unparseable is not ranked at all
-     rather than sorted as zero. Equal instants keep the FIRST candidate in the order above (edit, comment,
+     TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant,
+     `…:00Z` and `…:00.123Z`, and sorted as STRINGS they rank WRONG inside one second — `…:00Z` sorts after
+     `…:00.123Z`, because `Z` is above `.` — so candidates are ranked by `instantOrder` (D-543), and anything
+     unparseable is not ranked at all rather than sorted as zero. Since D-543 every act these bytes carry
+     is stamped `stampInstant("millisecond")` — the acknowledgement was the one cut to the second, which
+     dated an acknowledgement made in the same second as the act before it EARLIER than that act — but an
+     acknowledgement recorded before D-543 keeps its whole-second stamp, so the two spellings still meet
+     here and the instant compare is load-bearing, not tidiness. Equal instants keep the FIRST candidate in the order above (edit, comment,
      grant, acknowledgement), which is the order the answer itself presents them in.
 
      THE AUTHOR DOES NOT MOVE WITH IT, and that is a decision rather than an oversight: BOB #32 ruled on the
@@ -10302,7 +10747,7 @@ export class Store extends DurableObject {
       add(a.at, a.kind === "recipient" ? a.recipient : a.by,
           a.kind === "recipient" ? "recipient" : "member", "statement acknowledgement");
     let last = null;
-    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;
+    for (const c of cand) if (!last || instantOrder(c.at, last.at) > 0) last = c;
     const act = !last ? "UNDETERMINED: these bytes carry no dated act at all"
       : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft"
           : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
@@ -10343,13 +10788,18 @@ export class Store extends DurableObject {
     const gate = viewerPredicate(`member:${d.updated_by}`);
     const findings = targets.map((raw) => {
       const id = String(raw ?? "").trim();
+      /* D-539: THE DESIGNATION IS THE DRAFT'S OWN AUTHORED FACT, not the finding's, so it is said
+         back whether or not the finding can be read. The absent branch dropped it, and an edit
+         written from the answer then wrote the member's load_bearing back as nothing — the UI
+         files a finding with no role under "undesignated" — so the designation was gone by the
+         time the finding could be read. It discloses nothing the target id beside it does not. */
+      const role = params.roles && typeof params.roles === "object" ? params.roles[id] ?? null : null;
       const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
                            WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
-      if (!b) return { target: id, present: false,
+      if (!b) return { target: id, present: false, role,
                        detail: "this draft names a finding its editor cannot read, or one that does not exist." };
       const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-      return { target: id, present: true, object_type: b.object_type, state: b.current_state,
-               role: params.roles && typeof params.roles === "object" ? params.roles[id] ?? null : null,
+      return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
                text: md ? md.content : null };
     });
     const gates = this.#reviewGates(d);
@@ -10462,11 +10912,11 @@ export class Store extends DurableObject {
          ANSWERED AS THE GATES READ IT, a boolean: `publishCase` consults `newCase` for truthiness
          alone, so `!!` is exactly route-preserving for every spelling a caller may have stored
          (`"false"` is truthy here as it is there, and an absent field is the derivation, not an
-         UNDETERMINED). WHAT IT DOES NOT SAY is the identity SENTENCE beside it: with no case named,
-         that sentence reads *a new case* whether or not this field is set, which is REC-199's
-         reported finding and is `#caseIdentitySentence`'s to fix, in the three answers that print it. */
+         UNDETERMINED). THE IDENTITY SENTENCE BESIDE IT READS THE SAME FIELD (D-538): before it, with no
+         case named, that sentence read *a new case* whether or not this field was set — REC-199's
+         reported finding, fixed in `#caseIdentitySentence` for every answer that prints it. */
       case: { case_id: ident.caseId, edition: ident.edition,
-              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition),
+              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
               newCase: !!params.newCase },
       authored: { scope: params.scope ?? null, statement: params.statement ?? null,
                   excluded: params.excluded ?? null, subjectPosition: params.subjectPosition ?? null,
@@ -10496,6 +10946,7 @@ export class Store extends DurableObject {
   }
 
   reviewComment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
+    const refusal = (code, detail, extra) => Store.#reviewRefusal(code, detail, extra);
     let d, kind, author, grantId = null;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
@@ -10509,9 +10960,11 @@ export class Store extends DurableObject {
     }
     const body = String(text ?? "").trim();
     if (!body || body.length > Store.REVIEW_TEXT_MAX)
-      return { ok: false, reason: "REVIEW_NO_COMMENT_TEXT",
-               detail: `a comment says something: at least one character and at most ${Store.REVIEW_TEXT_MAX}.` };
-    const when = new Date().toISOString();
+      /* DEC-49 REGION is-review-comment-text */
+      return refusal("REVIEW_NO_COMMENT_TEXT",
+               `a comment says something: at least one character and at most ${Store.REVIEW_TEXT_MAX}.`);
+      /* END DEC-49 REGION is-review-comment-text */
+    const when = stampInstant("millisecond");
     this.sql.exec(`INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at) VALUES (?,?,?,?,?,?)`,
                   d.draft_id, kind, author, grantId, body, when);
     const row = this.#one(`SELECT last_insert_rowid() AS id`);
@@ -10759,17 +11212,25 @@ export class Store extends DurableObject {
        WHAT THIS COSTS, AND IT IS NOT HIDDEN: the acknowledgement is still recorded (below) and the review
        copy still lists it, and `#statementAcknowledgements` states it as an UNBINDABLE reading rather
        than letting a case document say nobody read the sentence. The fix that would bind it — `op=publish`
-       naming the draft it publishes — is a design question, reported and not invented here.
+       naming the draft it publishes — was ruled by BOB #33 and is BUILT (REC-217): the found read below
+       reaches the document a publisher named this draft for.
        THE BOUND AND ITS REFUSAL ARE KEPT AND ARE NOW UNREACHABLE BY CONSTRUCTION, WHICH IS SAID RATHER
        THAN LEFT TO BE NOTICED: `(case_id, edition)` is `case_documents`' PRIMARY KEY, so a read naming
        both returns at most one row and `found.length` cannot exceed 1. IC-246's refusal is retained as a
        guard over this read — deleting it would move the DEC-49 refusal floor and drop C-82.1 from the
        catalogue, which is a landing of its own — and the removal is reported as a nameable fix. */
-    const found = ident.caseId == null ? [] : this.#rows(
-                            `SELECT case_id, edition, doc_sha, text FROM case_documents
-                              WHERE sig_armored IS NULL AND edition=? AND case_id=?
+    /* REC-217 / §3 rule 13 (BOB #33): AND A DRAFT A PUBLISHER NAMED REACHES THE DOCUMENT IT WAS NAMED FOR.
+       REC-194's "a draft naming none reaches NOTHING" was true while nothing linked a draft to its case; the
+       link is that act, recorded on the case document's row (`draft_id`), so a reading given through the
+       named draft after publication re-authors that unsigned document exactly as a reading given there
+       before publication is listed in it. Still ONE document at most: the link names one (case, edition),
+       and `op=publish` refuses a second (PUBLISH_DRAFT_ALREADY_BOUND). */
+    const found = this.#rows(
+                            `SELECT case_id, edition, doc_sha, text, draft_id, authored_by, authored_at
+                               FROM case_documents
+                              WHERE sig_armored IS NULL AND edition=? AND (case_id IS ? OR draft_id = ?)
                                 AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
-                             ident.edition, ident.caseId, needle, projectLine, ackMax + 1);
+                             ident.edition, ident.caseId ?? null, draftId ?? "", needle, projectLine, ackMax + 1);
     /* DEC-49 REGION is-statement-ack-documents-bound */
     if (found.length > ackMax)
       return refusal("STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
@@ -10779,11 +11240,19 @@ export class Store extends DurableObject {
                      + `holds. Nothing was written: sign or supersede some of them, then acknowledge.`,
                { limit: ackMax, statement_sha: statementSha, edition: ident.edition, case_id: ident.caseId ?? null });
     /* END DEC-49 REGION is-statement-ack-documents-bound */
+    /* REC-217: AT NO CASE IDENTITY THE DRAFT IS PART OF WHAT WAS READ. REC-194 made a draft naming no case
+       its own identity for the LISTING and left this idempotence key without it, so a participant who
+       acknowledged the same sentence on two such drafts was told the second `existed` and was recorded on
+       the first draft alone — absent from the second draft's review copy, and, now that a draft can be
+       named at publication, absent from the case the second draft produced. A reading at a case identity
+       is keyed as before: that identity is the whole match there. */
     const same = this.#one(`SELECT ack_id, at FROM statement_acknowledgements
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
-                              AND acknowledger_kind=? AND acknowledger=?`,
-                           project, statementSha, ident.caseId ?? null, ident.edition, kind, by);
-    const when = same ? same.at : new Date().toISOString().replace(/\.\d+Z$/, "Z");
+                              AND acknowledger_kind=? AND acknowledger=?
+                              AND (? IS NOT NULL OR draft_id IS ?)`,
+                           project, statementSha, ident.caseId ?? null, ident.edition, kind, by,
+                           ident.caseId ?? null, draftId);
+    const when = same ? same.at : stampInstant("millisecond");
     if (!same)
       this.sql.exec(`INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
                      acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -10792,6 +11261,9 @@ export class Store extends DurableObject {
     const docs = found
       .filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
+    /* REC-217: WHICH CASE, IF ANY, A PUBLISHER HAS NAMED THIS DRAFT FOR — read off the act's own record,
+       signed or not, so the answer below states the link instead of REC-194's "bound to no case". */
+    const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return { ok: true, existed: !!same,
              acknowledgement: { kind, by, recipient, grant_id: grantId, at: when, project,
                                 case_id: ident.caseId ?? null, edition: ident.edition, draft_id: draftId,
@@ -10806,8 +11278,21 @@ export class Store extends DurableObject {
                 other. One given for a draft that names NO case is a reading of the DRAFT: the review copy
                 lists it, and no case document can — a case id is minted only by publication, so nothing
                 here can say which case the draft became, and naming one would be inventing a referent. */
-             bound_to_a_case: ident.caseId != null,
-             listed: ident.caseId != null
+             bound_to_a_case: ident.caseId != null || !!linkedTo,
+             ...(linkedTo ? { draft_link: { case_id: linkedTo.case_id, edition: Number(linkedTo.edition),
+                                            named_by: linkedTo.authored_by ?? null,
+                                            named_at: linkedTo.authored_at ?? null,
+                                            signed: !!linkedTo.sig_armored } } : {}),
+             listed: linkedTo
+               ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of `
+                   + `edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), `
+                   + `so it is a reading of that case (BIO_Publication §3 rule 13). `
+                   + (linkedTo.sig_armored
+                     ? `That edition is already SIGNED, and its list is what the signature covers: this reading `
+                       + `can appear in no signed document of it, and is recorded as the act it was.`
+                     : `Its case document is authored and unsigned, so it now lists this reading (case_documents), `
+                       + `re-authored; its owner signs the new bytes.`)
+               : ident.caseId != null
                ? `the completeness block of ${Store.#caseIdentitySentence(ident.caseId, ident.edition)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `
                    + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
@@ -10818,11 +11303,11 @@ export class Store extends DurableObject {
                    + `publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy `
                    + `lists it for this draft. NO case document lists it, and that is deliberate: a case `
                    + `document that named you would be claiming you read ITS statement, which this record `
-                   + `cannot establish of any case (§3 rule 13). A reading reaches a case's signed bytes only `
-                   + `when it is given FOR that case, at its prepared and unsigned document — a door open to a `
-                   + `member of this project holding a session, and NOT to the holder of a review grant, which is `
-                   + `a gap in the design and is recorded as one rather than worked around here. A statement `
-                   + `edited afterwards is a different sentence, and this acknowledgement is not listed under it.` };
+                   + `cannot establish of any case (§3 rule 13) — UNTIL the case is published naming this draft `
+                   + `(op=publish&draft=${draftId}): at that act this reading binds to the case it produced, `
+                   + `and its document lists it with the link stated (REC-217, BOB #33). Published without `
+                   + `draft=, it is counted there as undetermined and never named. A statement edited `
+                   + `afterwards is a different sentence, and this acknowledgement is not listed under it.` };
   }
 
   /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
@@ -10845,7 +11330,10 @@ export class Store extends DurableObject {
         `  - kind: ${a.kind}`,
         `    by: ${a.by}`,
         `    recipient: ${a.recipient == null ? "null" : `"${Store.#fmSafe(a.recipient)}"`}`,
-        `    at: "${a.at}"`])];
+        `    at: "${a.at}"`,
+        /* REC-217: a reading this case holds BY THE PUBLISHER'S LINK carries the draft it was given on, so
+           the signed list says which of its rows rest on that act and which were given at this case. */
+        ...(a.draft ? [`    draft: ${a.draft}`] : [])])];
   }
   static ACK_PROSE_HEAD = "**Who else read this statement.**";
   /* REC-194 / §3 rule 13 — THE UNBINDABLE READINGS TRAVEL WITH THE LIST, WHATEVER THE LIST SAYS. They
@@ -10859,20 +11347,36 @@ export class Store extends DurableObject {
       `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact `
       + `statement in ${project} given for a case whose identity was not yet allocated — a draft — and whether `
       + "any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and "
-      + "no draft is bound to the case it became, so a reading of a draft is not a reading of this case. They "
+      + "none of them was given on a draft that any publisher named as a case's draft at publication, so a "
+      + "reading of a draft is not a reading of this case. They "
       + "are counted here and deliberately not named, because naming them would claim they read THIS case's "
       + "statement, which this record does not establish (BIO_Publication §3 rule 13)."];
   }
   static #ackBodyLines(acks, project) {
-    return [...Store.#ackBodyHeadLines(acks, project), ...Store.#ackUnboundLines(acks, project)];
+    return [...Store.#ackBodyHeadLines(acks, project), ...Store.#ackLinkLines(acks),
+            ...Store.#ackUnboundLines(acks, project)];
+  }
+  /* REC-217 / §3 rule 13 (BOB #33, 2026-09-24 19:14Z): THE LINK, IN WORDS, whenever the publisher named a
+     draft — whether or not any reading was given on it, because the act happened either way and the owner
+     who signs is signing it. The sentence is the ruling's own: *readings given on draft <id>, which
+     <publisher> named as this case's draft at publication*. */
+  static #ackLinkLines(acks) {
+    if (!acks.link) return [];
+    return ["",
+      `Readings given on draft ${acks.link.draft}, which ${acks.link.by} named as this case's draft at `
+      + `publication on ${acks.link.at}, are readings of this case, and each one listed above says so. That `
+      + `link is ${acks.link.by}'s act, recorded with the publication, and not an inference from the statement's `
+      + `words: another draft or case carrying the same sentence binds nothing here (BIO_Publication §3 rule 13).`];
   }
   static #ackBodyHeadLines(acks, project) {
     return acks.rows.length
       ? [`${Store.ACK_PROSE_HEAD} Acknowledged, as a second reader of what this case leaves out, by:`, "",
-         ...acks.rows.map((a) => a.kind === "recipient"
+         ...acks.rows.map((a) => (a.kind === "recipient"
            ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${Store.#fmSafe(a.recipient)}', `
              + `on ${a.at}`
-           : `- ${a.by}, a participant of ${project}, on ${a.at}`),
+           : `- ${a.by}, a participant of ${project}, on ${a.at}`)
+             /* REC-217: the row's link, on the row, so a reader never has to work out which rows it covers. */
+             + (a.draft ? ` — given on draft ${a.draft}` : "")),
          ...(acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this "
                                 + "document lists)"] : [])]
       : acks.unbound
@@ -10953,8 +11457,12 @@ export class Store extends DurableObject {
     const writer = Object.prototype.hasOwnProperty.call(c, "statement_by")
       ? { by: typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null }
       : null;
+    /* REC-217 / §3 rule 13: THE LINK IS READ OFF THE ROW'S OWN RECORD OF THE ACT — the draft named, and the
+       publisher and time of the act that named it — so a splice lists exactly what `op=publish` would. */
+    const link = doc.draft_id ? { draft: doc.draft_id, by: doc.authored_by ?? null, at: doc.authored_at ?? null }
+                              : null;
     const acks = this.#statementAcknowledgements(project, doc.case_id, doc.edition, c.statement ?? "",
-                                                 String(c.author ?? "").trim() || null, writer);
+                                                 String(c.author ?? "").trim() || null, writer, null, link);
     const text = [...lines.slice(0, f0), ...Store.#ackFrontmatterLines(acks), ...lines.slice(f1, b0),
                   ...Store.#ackBodyLines(acks, project), ...lines.slice(b1 - 1)].join("\n");
     if (text === doc.text) return { case_id: doc.case_id, edition: doc.edition, reauthored: false, doc_sha: doc.doc_sha };
@@ -11013,10 +11521,17 @@ export class Store extends DurableObject {
      publisher exclusion, `writer` is REC-212's writer exclusion, and `draftId` is REC-194's identity
      match. They are THREE DIFFERENT QUESTIONS about one list and none subsumes another: the first two
      decide WHOM the list may name, the third decides WHICH readings are this case's at all. */
+  /* REC-217 / §3 rule 13 (BOB #33, 2026-09-24 19:14Z) — `link` IS THE FOURTH, AND IT IS AN ACT, NOT A MATCH.
+     `{ draft, by, at }`: the draft the publisher NAMED as this case edition's draft at `op=publish`, who named
+     it and when. With it, a case document ALSO lists the readings recorded at NO case identity THROUGH THAT
+     DRAFT — and through no other, however byte-identical its sentence — each carrying `draft` so the signed
+     list says which rows rest on the link. It is null everywhere no draft was named, and then this read is
+     REC-194's exactly: the named arms below match `draft_id = ''`, which no row carries. */
   #statementAcknowledgements(project, caseId, edition, statement, exceptAuthor = null, writer = null,
-                            draftId = null) {
+                            draftId = null, link = null) {
     const sha = Store.#statementSha(statement);
     const unallocated = caseId == null;
+    const linked = !unallocated && link && link.draft ? String(link.draft) : "";
     /* THE DRAFT FILTER IS IN THE SQL RATHER THAN IN A TERNARY AROUND THE CALL, and that is a MEASURED
        requirement rather than a style: `derivation-bounds.test.mjs`' truncation grader pairs a `truncated`
        claim with the `rows = this.#rows(` assignment that produced it, so wrapping the call in a ternary
@@ -11029,11 +11544,13 @@ export class Store extends DurableObject {
        by a branch around it. */
     const draftMatch = unallocated ? String(draftId ?? "") : "*";
     const rows = this.#rows(
-                           `SELECT acknowledger_kind, acknowledger, recipient, at FROM statement_acknowledgements
-                             WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS ?
-                               AND (? = '*' OR draft_id = ?)
+                           `SELECT acknowledger_kind, acknowledger, recipient, at, case_id, draft_id
+                              FROM statement_acknowledgements
+                             WHERE project_id=? AND statement_sha=? AND edition=?
+                               AND ((case_id IS ? AND (? = '*' OR draft_id = ?))
+                                    OR (case_id IS NULL AND draft_id = ?))
                              ORDER BY at, ack_id LIMIT ?`,
-                            project, sha, edition, caseId ?? null, draftMatch, draftMatch,
+                            project, sha, edition, caseId ?? null, draftMatch, draftMatch, linked,
                             Store.STATEMENT_ACK_MAX + 1);
     const truncated = rows.length > Store.STATEMENT_ACK_MAX;
     const all = rows.slice(0, Store.STATEMENT_ACK_MAX);
@@ -11048,12 +11565,25 @@ export class Store extends DurableObject {
        identity — a draft naming no case. Asked only for a case document: a draft's own read has no
        case to be unbound from. Counted, never listed: naming somebody as a reader of THIS case is
        exactly the claim that cannot be made of them. */
+    /* REC-217: A READING TAKEN THROUGH A DRAFT SOME PUBLISHER NAMED IS NO LONGER UNBINDABLE — it is bound, to
+       the case edition that draft produced: listed there when that is this case (the arm above), and a reading
+       of ANOTHER production when it is not, which is not a reading of this case and not undetermined either.
+       So both leave this count, and what remains is REC-194's remainder exactly: readings of a draft nobody
+       has named. The link is read off `case_documents.draft_id`, the act's own record, and an unsigned edition
+       re-authored without `draft=` drops its link there — so its readings return to this count, as they must. */
     const unboundRow = unallocated ? null
       : this.#one(`SELECT COUNT(*) AS n FROM statement_acknowledgements
                    WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
-                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)`,
-                  project, sha, edition, exceptAuthor ?? null);
+                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)
+                     AND (draft_id IS NULL
+                          OR draft_id NOT IN (SELECT draft_id FROM case_documents WHERE draft_id IS NOT NULL))
+                     AND (draft_id IS NULL OR draft_id <> ?)`,
+                  project, sha, edition, exceptAuthor ?? null, linked);
     return { statementSha: sha, truncated,
+             /* REC-217: the link this read was asked under, carried so every rendering states one act. */
+             link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null } : null,
+             /* REC-217: how many LISTED rows rest on the link (the rest were given at this case identity). */
+             boundByLink: linked ? listed.filter((r) => r.case_id == null).length : 0,
              /* UNCHANGED IN MEANING: the publisher's own, counted apart from every exclusion added since,
                 so a caller reading this number reads the same fact it has read since D-150. */
              byAuthor: all.filter(byPublisher).length,
@@ -11061,7 +11591,10 @@ export class Store extends DurableObject {
              withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
              unbound: unboundRow ? Number(unboundRow.n) : 0,
              rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
-                                        recipient: r.recipient ?? null, at: r.at })) };
+                                        recipient: r.recipient ?? null, at: r.at,
+                                        /* REC-217: only a row the LINK brought in carries its draft; the
+                                           review copy's own read and every unlinked document are unchanged. */
+                                        ...(linked && r.case_id == null ? { draft: r.draft_id } : {}) })) };
   }
 
   /* REC-212 / IC-272 / BIO_Publication_v0_1.md §3 rule 13 — WHO WROTE THE STATEMENT THIS CASE IS ABOUT
@@ -11181,14 +11714,15 @@ export class Store extends DurableObject {
               : Store.REVIEW_LIST_MAX;
     const counted = this.#one(`SELECT COUNT(*) AS n FROM case_drafts WHERE project_id=?`, pid);
     const total = counted ? Number(counted.n) : 0;
-    const rows = this.#rows(`SELECT draft_id, case_id, created_by, created_at, updated_by, updated_at,
+    const rows = this.#rows(`SELECT draft_id, case_id, params, created_by, created_at, updated_by, updated_at,
                              statement_by FROM case_drafts WHERE project_id=? ORDER BY created_at, draft_id
                              LIMIT ?`, pid, cap);
     const drafts = rows.map((d) => {
       const ident = this.#draftIdentity(d);
       return { draft_id: d.draft_id,
                case: { case_id: ident.caseId, edition: ident.edition,
-                       identity: Store.#caseIdentitySentence(ident.caseId, ident.edition) },
+                       identity: Store.#caseIdentitySentence(ident.caseId, ident.edition,
+                                                             !!JSON.parse(d.params).newCase) },
                created_by: d.created_by, created_at: d.created_at,
                updated_by: d.updated_by, updated_at: d.updated_at,
                /* REC-193 / §3 rule 13: null where the draft predates the stamp — UNDETERMINED, not the editor. */
@@ -11446,8 +11980,16 @@ export class Store extends DurableObject {
           acknowledgements: Array.isArray(fm.completeness_acknowledgements)
             ? fm.completeness_acknowledgements.filter((a) => a && typeof a === "object")
                 .map((a) => ({ kind: a.kind ?? null, by: a.by ?? null,
-                               recipient: a.recipient === "null" ? null : a.recipient ?? null, at: a.at ?? null }))
+                               recipient: a.recipient === "null" ? null : a.recipient ?? null, at: a.at ?? null,
+                               /* REC-217: a row the publisher's link brought in says so, from the signed bytes. */
+                               ...(typeof a.draft === "string" && a.draft && a.draft !== "null"
+                                 ? { draft: a.draft } : {}) }))
             : null,
+          /* REC-217 / §3 rule 13 (BOB #33): THE LINK AS SIGNED — the draft the publisher named, who and when —
+             committed from the signed bytes and present only where the document states one. */
+          ...(typeof fm.completeness.draft === "string" && fm.completeness.draft && fm.completeness.draft !== "null"
+            ? { draft: { draft_id: fm.completeness.draft, named_by: fm.completeness.draft_named_by ?? null,
+                         named_at: fm.completeness.draft_named_at ?? null } } : {}),
           acknowledgements_truncated: Array.isArray(fm.completeness_acknowledgements)
             ? fm.completeness.acknowledgements_truncated === true : null,
         }) : null,
@@ -11787,7 +12329,7 @@ export class Store extends DurableObject {
                      + "a reason, which is the act that takes material out of a question." };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     /* D-436: THE CHILDREN ARE CREATIONS, written AFTER the parent's revision — so whether each can name its producing
        group is asked HERE, before anything moves, and never discovered by a child refused after the parent is
        already divided. A child's bytes are derived from the parent's and carry its `group:` line; `promote` stamps
@@ -12311,7 +12853,7 @@ export class Store extends DurableObject {
     }
 
     /* ------------------------------------------- the stamp, and what carries */
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const ordsOf = (label) => standingLabel.reduce((a, g, i) => (g === label ? [...a, i] : a), []);
     const same = (a, c) => a.length === c.length && a.every((v, i) => v === c[i]);
     const rowsOut = asked.map((a) => {
@@ -12562,6 +13104,15 @@ export class Store extends DurableObject {
      project's CURRENT declaration; `publishCase` calls it once and freezes the
      answer into the bytes the member signs, so a later amendment to the project
      never moves a case that is already published. */
+  /* D-450 / BIO_Publication_v0_1.md §3 rule 14 (BOB #32, 2026-09-23): AN AXIS NOBODY SET IS STATED IN WORDS.
+     The frozen pair keeps both keys and writes the unset one `null`; the prose a reader meets says
+     "no bar set on the <axis> axis" rather than a grade, a dash or "null" — never a default. */
+  static #barAxisWords(bar) {
+    return ["capture", "connection"]
+      .map((axis) => bar[axis] == null ? `no bar set on the ${axis} axis` : `${axis} ${bar[axis]}`)
+      .join(", ");
+  }
+
   #projectBar(projectId) {
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, projectId);
     const pfm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
@@ -12586,7 +13137,7 @@ export class Store extends DurableObject {
       return { declared: true, source: "project", project: projectId,
                capture: declared.capture, connection: declared.connection,
                detail: `required by ${projectId}, the project whose production this case is: capture `
-                     + `${declared.capture ?? "not set"}, connection ${declared.connection ?? "not set"}. `
+                     + `${Store.#barAxisWords(declared)}. `
                      + `The bar is the project's own declaration about its own work, stated in advance, and `
                      + `is never set by who a reader is.` };
     /* Undetermined is first-class and must be STATED. An absent bar gates
@@ -13339,7 +13890,7 @@ export class Store extends DurableObject {
                        + "names no part means the whole document, which is always a legal thing to cite." };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
 
     /* Nothing to do is a SUCCESS that writes nothing. Citing has to be safely
        retryable, because drift is reported rather than fatal and an operator
@@ -13757,7 +14308,7 @@ export class Store extends DurableObject {
               EXISTS (SELECT 1 FROM resolutions r
                        WHERE r.capture_sha = rr.capture_sha AND r.ref = rr.ref AND r.entity_id = ?) AS named
          FROM reading_refs rr
-        WHERE rr.capture_sha=? AND rr.pos_kind IS NOT NULL ORDER BY rr.ref LIMIT ?`, subject ?? "", cap, max * 4 + 1);
+        WHERE rr.capture_sha=? AND rr.pos_kind IS NOT NULL ORDER BY rr.ref, rr.seq LIMIT ?`, subject ?? "", cap, max * 4 + 1);
     if (refRows.length > max * 4) truncated = true;
     for (const r of refRows) {
       const pos = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
@@ -14581,7 +15132,7 @@ export class Store extends DurableObject {
       : typeof v === "boolean" ? String(v)
       : Array.isArray(v) && v.every((n) => typeof n === "number" && Number.isFinite(n)) ? `[${v.join(", ")}]`
       : q(v);
-    const nowIso = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const nowIso = stampInstant("second");
     const vr = src.vrow;
     const vRow = [`  - name: ${q(nameWritten)}`,
                   `    description: ${q(description)}`,
@@ -15351,7 +15902,7 @@ export class Store extends DurableObject {
       ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address`
       : "";
     const stamp = (from) => ({
-      at: at || new Date().toISOString().replace(/\.\d+Z$/, "Z"),
+      at: at || stampInstant("second"),
       by: "op=provenancechain (REC-54)",
       basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
       from,
@@ -15443,7 +15994,7 @@ export class Store extends DurableObject {
     if (!docs)
       return { ok: false, reason: "NO_DOCUMENTS", detail: 'data/provenance.json must be {"documents": [...]}' };
 
-    const at = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second");
     const instanceName = (this.env && this.env.INSTANCE_NAME) || "unnamed";
     const report = [], refused = [];
     let changed = 0;
@@ -15735,7 +16286,7 @@ export class Store extends DurableObject {
        established is one where the reader cannot tell which half. */
     const finding = (registerState !== "readable" || undetermined > 0)
       ? "LOOKED_INDETERMINATE" : "PRESENT";
-    const at = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second");
     const docsJson = JSON.stringify(documents);
 
     const prev = this.#latestRouteMark(bundleId);
@@ -16239,6 +16790,82 @@ export class Store extends DurableObject {
     };
   }
 
+  /** D-525 — THE DRIVE SHELL SWEEP. Every bundle this viewer may see whose
+   *  `source.locator` is a harvestable Drive DOCUMENT address, with its baseline
+   *  classified by `classifyDriveBaseline` (`drive.mjs` carries the reasoning).
+   *  READ-ONLY: it lists and names the remedy, and never re-acquires — the
+   *  re-acquire is `op=acquire` on the document address, which CAP-8 routes
+   *  through the export and files as a NEW capture beside the old one.
+   *
+   *  WHAT THIS SWEEP CAN AND CANNOT SEE, stated because the sentence is
+   *  load-bearing: it sees bundles by the PROJECTED `source_locator` column
+   *  (`projectionOf`), so a bundle whose projection was never written is not
+   *  walked; it walks ONE PAGE (`limit`, then `after: cursor`), and its counts are that page's, and it sees a register only when `data/provenance.json` is held
+   *  INLINE (a register spilled to R2 is named in `unreadable`, never scored).
+   *  A Drive address that is not a document (folder, file, published, unknown)
+   *  is COUNTED in `not_documents` by shape — CAP-8 refuses to watch those, so
+   *  they carry no shell baseline this remedy could fix. */
+  static DRIVE_SHELLS_LIMIT_DEFAULT = 200;
+  static DRIVE_SHELLS_LIMIT_MAX = 1000;
+  /* A baseline sha's retrieval rows are one per (address, via) it was seen at — a handful. Bounded so the
+     per-row read cannot amplify; a sha that reaches the bound is judged on what was read and SAYS it was cut. */
+  static DRIVE_SHELLS_RETRIEVALS_MAX = 50;
+  driveShells({ viewer = null, limit = null, after = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    /* PAGED, op=projection's envelope: the per-bundle reads below run once per row, so the row source is
+       BOUNDED at the source (LIMIT, keyset on bundle_id) and the answer carries the bound actually applied and
+       the cursor to continue. The LIKE is a PREFILTER only — every Drive host contains `google.com/`, and the
+       verdict of what is Drive is `readDriveAddress`'s alone, applied to every row the prefilter admits. */
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0
+      ? Math.min(Store.DRIVE_SHELLS_LIMIT_MAX, Math.floor(asked)) : Store.DRIVE_SHELLS_LIMIT_DEFAULT;
+    const where = [`b.source_locator LIKE '%google.com/%'`, `(${gate.sql})`, ...(after ? [`b.bundle_id > ?`] : [])];
+    const raw = this.#rows(
+      `SELECT b.bundle_id AS id, b.source_locator AS locator, b.monitor_enabled AS monitored
+         FROM bundles b WHERE ${where.join(" AND ")} ORDER BY b.bundle_id LIMIT ?`,
+      ...gate.args, ...(after ? [after] : []), cap + 1);
+    /* One row past the bound, so `truncated` says MORE EXIST rather than "the page happened to be full". */
+    const truncated = raw.length > cap;
+    const rows = truncated ? raw.slice(0, cap) : raw;
+    const shells = [], exported = [], undetermined = [], noBaseline = [], unreadable = [], notDocuments = {};
+    let driveLinked = 0;
+    for (const r of rows) {
+      const drive = readDriveAddress(r.locator);
+      if (!drive) continue;
+      driveLinked++;
+      if (!drive.harvestable) { notDocuments[drive.shape] = (notDocuments[drive.shape] || 0) + 1; continue; }
+      const f = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
+      const base = { bundle: r.id, locator: r.locator, monitored: r.monitored === 1,
+                     export_address: drive.exportAddress, kind: drive.kind };
+      let reg = null;
+      if (f && typeof f.content === "string") { try { reg = JSON.parse(f.content); } catch { reg = null; } }
+      else if (f) { unreadable.push({ ...base, reason: "the register is not held inline" }); continue; }
+      if (f && !reg) { unreadable.push({ ...base, reason: "the register is not parsable JSON" }); continue; }
+      const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
+      const row = driveBaselineRow(docs, drive, r.locator);
+      const sha = row && row.capture && typeof row.capture.sha256 === "string" ? row.capture.sha256 : null;
+      const retrievals = sha ? this.#rows(
+        `SELECT address, via, retrieval_locator FROM captured_locators WHERE capture_sha=?
+           ORDER BY address_norm, via LIMIT ?`, sha, Store.DRIVE_SHELLS_RETRIEVALS_MAX) : [];
+      const c = classifyDriveBaseline({ drive, locator: r.locator, rows: docs, retrievals });
+      const entry = { ...base, ...c,
+        ...(retrievals.length === Store.DRIVE_SHELLS_RETRIEVALS_MAX ? { retrievals_truncated: true } : {}) };
+      if (c.verdict === "shell")
+        entry.reacquire = { op: "acquire", locator: r.locator, fetches: drive.exportAddress,
+          files: "a NEW capture of the export, under the document address, beside the shell's; nothing is overwritten",
+          then: "append the answer's `document` to data/provenance.json — op=monitor prefers the row naming the export address" };
+      ({ shell: shells, export: exported, undetermined, no_baseline: noBaseline })[c.verdict].push(entry);
+    }
+    return { ok: true, generated: stampInstant("second"),
+             swept: rows.length, limit: cap, truncated,
+             cursor: truncated ? rows[rows.length - 1].id : null,
+             drive: driveLinked, shells, export: exported, undetermined, no_baseline: noBaseline, unreadable,
+             not_documents: notDocuments,
+             counts: { drive: driveLinked, shells: shells.length, export: exported.length, undetermined: undetermined.length,
+                       no_baseline: noBaseline.length, unreadable: unreadable.length } };
+  }
+
+
   /** REC-25: may this viewer see this bundle at all? The D-15 predicate over a
    *  single row, used to gate the whole-image and single-file reads, which are
    *  not SQL over the projection and so cannot carry the predicate inline.
@@ -16699,9 +17326,29 @@ export class Store extends DurableObject {
        bytes are hashed and registered, so the sha it returns is the sha of what it holds; a document that
        already carries a top-level `id:` is refused (the catalog's own parser decides what one is, so a
        nested key or a body line is not one). Every other type still names its own id, unchanged. */
+    /* ===== D-526 (`BIO_Case_Making_v0_1.md` §2; D-510, C-86.1) — THE PROMOTED TYPE IS DERIVED ONCE, HERE, BEFORE
+       EVERY FENCE THAT ASKS IT. D-510 made the DOCUMENT's own `object_type` the record's word on what a promotion
+       IS and refused an envelope that contradicts it (ENVELOPE_TYPE_DISAGREES) — but it parsed `bundle.md` below
+       the fences, so REC-141's mint decision, D-85's surfacing gate, REC-173's migration stamp, the project name
+       scan (NAME_TAKEN), REC-181's `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward still read the
+       CALLER'S envelope. Nothing wrong could land (D-510's fence is still ahead of the first write), but WHICH
+       refusal a caller met depended on a label D-510 ruled untrusted: an action filed under an `information`
+       envelope met ENVELOPE_TYPE_DISAGREES where the same action correctly labelled met GOVERNING_LAWS_REWRITTEN.
+       So every fence reads `promotedType`: the document's type through the catalogue's `normalizeType`, the
+       envelope only as the FALLBACK where the bytes state none (a blob-held or type-less bundle.md), exactly as
+       D-510's projections already read it. Read from the bytes the caller SENT: REC-141's mint and D-436's group
+       stamp below rewrite `id:` and `group:`, never `object_type`. D-510's refusal itself stays where it was, so a
+       disagreement no fence speaks to still meets it, by name, before the first write. ===== */
+    const typeStated = (v) => (typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null);
+    const sentMd = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
+    const sentFm = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
+    const documentType = sentFm && typeof sentFm === "object" ? typeStated(sentFm.object_type) : null;
+    const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
+    const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);
+    /* ===== END D-526 derivation ===== */
     const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object"
-      && (normalizeType(meta.object_type) === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
+      && (promotedType === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
     const refusal = (code, detail) => {
       const row = PROJECT_ID_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
@@ -16807,7 +17454,7 @@ export class Store extends DurableObject {
        bound's consumption are written inside the transaction below, on the creation's own success path. Only a
        creation carrying the `ai`-only `assistantPrincipal` stamp is asked; a member's is untouched. */
     let surfacing = null;
-    if (base === null && meta && typeof meta === "object" && normalizeType(meta.object_type) === "inquiry"
+    if (base === null && meta && typeof meta === "object" && promotedType === "inquiry"
         && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()) {
       const refusedSurface = this.#surfacingGate(pkg);
       if (refusedSurface) return refusedSurface;
@@ -16819,7 +17466,7 @@ export class Store extends DurableObject {
        was not asked; the fact is recorded in the creation's own transaction below, so the question's read can say
        WHY no run is recorded. A stamp with no capture is not one. */
     const migration = (base === null && !surfacing && meta && typeof meta === "object"
-        && normalizeType(meta.object_type) === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
+        && promotedType === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
         && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture)
       ? { capture: pkg.migrationReplay.capture,
           promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null }
@@ -16957,7 +17604,7 @@ export class Store extends DurableObject {
        * unique index, which needs a backfill and would not catch collisions
        * against projects promoted before the column existed. Projects are few
        * relative to Information and this runs only for them. */
-      if (meta.object_type === "project") {
+      if (promotedType === "project") {
         const key = Store.projectNameKey(meta.title);
         if (!key)
           return { ok: false, reason: "NO_TITLE",
@@ -17033,6 +17680,31 @@ export class Store extends DurableObject {
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
       /* END DEC-49 REGION is-promote-cas */
 
+      /* ===== D-547 (`BIO_Case_Making_v0_1.md` §2; D-510/D-526's derivation, C-2.5, C-86.2) — A REVISION DOES NOT
+         RETYPE THE BUNDLE IT REVISES. `bundles.object_type` below is written from `promotedType` (the document's own
+         type, D-510), and nothing compared it with the HEAD's: a revision whose document stated a different type
+         rewrote the column in place, so every fence that asks "is this an action / a project / a bias set" answered
+         for a machine the bundle's history never was — an information revised into a project skipped REC-134's
+         joined check above, which reads the NEW type. C-2.5 pins a type to its id prefix, but the catalogue is not
+         run here, so that pin was never an answer at the write. Asked after the compare-and-swap (a stale base
+         answers CAS_STALE: the head it would be compared with is not the one the caller saw) and before the first
+         write. Both sides go through `normalizeType`, so `focus`/`problem` revised as `inquiry` is not a retype.
+         Only a STATED type is compared: a revision stating none anywhere leaves `promotedType` undefined, which is
+         not this refusal's question. REPLAY IS EXEMPT for D-510's reason — the record's own history must stay
+         holdable verbatim, and a replay's claim to be one is caller-asserted (D-511). A bundle ALREADY retyped
+         before this line is not rewritten (M-156 counted none, in either register, on 2026-09-25). ===== */
+      /* DEC-49 REGION is-promote-retypes-bundle */
+      if (cur && typeof promotedType === "string" && promotedType !== normalizeType(cur.object_type) && !pkg.replay) {
+        const rtRow = PROMOTED_TYPE_CHECKS.REVISION_RETYPES_BUNDLE;
+        return { ok: false, reason: "REVISION_RETYPES_BUNDLE", code: "REVISION_RETYPES_BUNDLE",
+                 check: rtRow.check, translation: rtRow.translation,
+                 head_type: normalizeType(cur.object_type), revision_type: promotedType,
+                 detail: `${String(bundleId).slice(0, 80)} is '${normalizeType(cur.object_type)}' and this revision `
+                       + `says '${String(promotedType).slice(0, 40)}'. A revision changes what a document says, `
+                       + `never what kind of thing it is. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promote-retypes-bundle */
+
       /* REC-181: A TRANSITION INTO `retired` ASKS RETIRE'S OWN QUESTION, here and before any
          write (asked first, so a refusal writes nothing; REC-180's rollback is the net under it). `op=retire`
          refuses `CITED` while a live edge cites the item; `promote` is the write path it runs
@@ -17041,7 +17713,7 @@ export class Store extends DurableObject {
          code and the same offenders' shape. Only a move INTO retired: an edit of an item ALREADY
          retired changes no state, and a leg that predates this rule stays untouched (D-168 §3). */
       if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired")
-          && (cur ? cur.object_type : normalizeType(meta.object_type)) === "information") {
+          && (cur ? cur.object_type : promotedType) === "information") {
         const citedBy = this.#retirementCitedBy(bundleId);
         if (citedBy.length)
           return { ok: false, reason: "CITED", to: "retired", offenders: [{ id: bundleId, citedBy }],
@@ -17096,7 +17768,7 @@ export class Store extends DurableObject {
          are one state, undetermined. Every other writer in this file splices other keys and carries the block
          forward byte-for-byte. */
       if (!pkg[LAWS_ACT] && ((cur && normalizeType(cur.object_type) === "action")
-                             || (!cur && normalizeType(meta.object_type) === "action"))) {
+                             || (!cur && promotedType === "action"))) {
         const lawsOf = (text) => {
           if (typeof text !== "string") return "unreadable";
           const fm = parseFrontmatter(text).data;
@@ -17212,17 +17884,12 @@ export class Store extends DurableObject {
        * basis and correspondence projected, rather than as mislabelled information. That exemption is
        * CALLER-ASSERTED, which is D-505's declared residue and D-511's subject, and nothing here closes it.
        *
-       * WHAT IS ABOVE THIS LINE AND STILL READS THE ENVELOPE, stated rather than left to be found: the project
-       * name scan, the `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward run before `bundle.md` is
-       * parsed, so a divergent envelope reaches them on the envelope's word. Nothing they let through can LAND
-       * — this refusal is still ahead of the first write, and REC-180's rollback is the net under it — so the
-       * only thing undecided is WHICH refusal a caller meets when both apply. Moving them would mean parsing
-       * the document at the top of `act`, which is a bigger change than this row, and `isAction` (D-505) stays
-       * a UNION for the same reason it was built as one: a union can only add refusals, and it is still
-       * reachable where the envelope states no type at all. ===== */
-      const typeStated = (v) => (typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null);
-      const documentType = docFmW && typeof docFmW === "object" ? typeStated(docFmW.object_type) : null;
-      const envelopeType = typeStated(meta.object_type);
+       * WHAT IS ABOVE THIS LINE NO LONGER READS THE ENVELOPE (D-526): D-510 left the project name scan, the
+       * `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward reading it, so WHICH refusal a caller met
+       * depended on the label. `documentType`, `envelopeType` and `promotedType` are now derived ONCE at the top
+       * of `promote`, from the bytes the caller sent, and every fence above reads `promotedType`; this refusal
+       * still speaks for a disagreement no earlier fence answers. `isAction` (D-505) stays a UNION: a union can
+       * only add refusals, and it is still reachable where the envelope states no type at all. ===== */
       /* DEC-49 REGION is-promoted-type-disagrees */
       if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {
         const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES;
@@ -17237,10 +17904,9 @@ export class Store extends DurableObject {
                        + `the document names, or change the document first. Nothing was written.` };
       }
       /* END DEC-49 REGION is-promoted-type-disagrees */
-      /* The one value every projection below reads. The envelope is the FALLBACK and not the authority: a
-         bundle.md held as a blob, or one stating no type, leaves the record nothing else to go on, and that
-         case is byte-identical to what this line did before D-510. */
-      const promotedType = documentType ?? normalizeType(meta.object_type);
+      /* `promotedType` (D-526, derived at the top of `promote`) is the one value every projection below reads. The
+         envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
+         the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
       const isInquiry = promotedType === "inquiry";
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis)
@@ -17421,21 +18087,34 @@ export class Store extends DurableObject {
            Where no member ever set one (the held tier is undetermined) the machine may leave it undetermined. A held
            1, 2 or 3 is read as a member's: since this fence, no other writer can put one there. */
         const heldTierSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
-        /* DEC-49 REGION is-machine-set-risk-tier */
-        if ((!tierWho || isMachineIdentity(tierWho))
-            && ((nextTier === 1 || nextTier === 2 || nextTier === 3) || heldTierSet)
-            && nextTier !== heldTier)
-          return { ok: false, reason: "MACHINE_CANNOT_SET_RISK_TIER", risk_tier: nextTier,
-                   held: cur ? heldTier : null,
-                   detail: (cur ? `this revision states risk_tier ${nextTier} where the version it replaces states `
-                                  + `${heldTier}.`
-                                : `this creation states risk_tier ${nextTier}.`)
-                         + ` A risk tier is a member's assessment of the legal exposure of filing `
-                         + `this action, and only a member's authored act sets 1, 2 or 3. A machine credential `
-                         + `may carry a member's tier forward unchanged, and may leave the tier unstated `
-                         + `(undetermined) only where no member has set one; it may not remove a member's tier. `
-                         + `Nothing was written.` };
-        /* END DEC-49 REGION is-machine-set-risk-tier */
+        const machineTier = this.#machineRiskTierRefusal({ who: tierWho, nextTier, heldTier, cur: !!cur, act: false });
+        if (machineTier) return machineTier;
+        /* REC-214 / C-90.1 — AFTER INTAKE, A TIER CHANGES THROUGH `op=actionrisktier` AND NOTHING ELSE (BOB #33,
+           2026-09-24: a revision is an AUTHORED act with a REQUIRED reason, APPEND-ONLY, never a silent overwrite).
+           Asked of a MEMBER's revision here, after the machine fence above answered the machine's: a revision that
+           states a different tier than the version it replaces, or a `risk_tier_history` that differs from the one
+           it holds, and does not carry RISK_TIER_ACT, is refused — a plain promote from 3 to 1 would otherwise put
+           "file freely" over "do not file without counsel" with nothing recording that counsel was ever named but
+           an older snapshot. A CREATION may state a tier (that is intake: UI-85, D-483) and may not state a
+           history, because nobody revised a tier that did not exist. Both sides read through `riskTierState` and
+           the catalogue's one history reader, so a respelling is not a change. Replay is exempt with the block. */
+        if (!pkg[RISK_TIER_ACT]) {
+          const histKey = (fmX) => JSON.stringify(fmX && typeof fmX === "object" && Array.isArray(fmX.risk_tier_history)
+            ? fmX.risk_tier_history : (fmX && typeof fmX === "object" && fmX.risk_tier_history !== undefined
+                                        && fmX.risk_tier_history !== null ? fmX.risk_tier_history : []));
+          const tierMoved = cur ? nextTier !== heldTier : false;
+          const histMoved = histKey(docFmW) !== (cur ? histKey(heldTierFm) : "[]");
+          /* DEC-49 REGION is-promote-risk-tier */
+          if (tierMoved || histMoved)
+            return { ok: false, reason: "RISK_TIER_REWRITTEN", bundleId,
+                     ...(cur ? { held: heldTier } : {}), risk_tier: nextTier,
+                     detail: (tierMoved
+                       ? `this revision of ${bundleId} states risk_tier ${nextTier} where the version it replaces states ${heldTier}`
+                       : `this ${cur ? "revision" : "creation"} of ${bundleId} ${cur ? "changes" : "states"} its risk_tier_history`)
+                       + " without op=actionrisktier. After intake a risk tier is revised by that act alone — it records "
+                       + "who, when and why, and keeps every earlier tier readable. Nothing was written." };
+          /* END DEC-49 REGION is-promote-risk-tier */
+        }
         const af = [];
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");
@@ -17720,6 +18399,70 @@ export class Store extends DurableObject {
         /* END DEC-49 REGION is-basis-acyclic */
       }
 
+      /* D-468 / C-26.12 — THE BIAS MACHINE, ASKED OF THE HEAD, AT THE WRITE PATH.
+         `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": a bias set is a BUNDLE so that it
+         inherits *"append-only history, member-authored transitions, convergent promotion"* without
+         inventing governance — and `STATES.bias`'s own comment says *"NO EDGE OUT OF `adopted` EXCEPT
+         `retired`"*, with the reason: a published case names the revision it was held to, so a set that
+         could slide backwards makes *"the lens this case was produced under"* unresolvable after the fact.
+         NOTHING ASKED THE TABLE. `promote` writes `meta.current_state` into the bundles row, and the only
+         state questions it carried were entry requirements for ONE destination (`retired` for information,
+         the project 7.11 pair). So `adopted -> proposed` was accepted and moved the head — REC-187's worker
+         found it (F4), and `d84-case-manifest.test.mjs` §4 DROVE it and read the new head back, which is
+         the measurement this row opens on rather than a reading of the comment.
+         THE TABLE IS THE CATALOGUE'S AND THIS PATH HOLDS NO COPY, through `vocabFor` over the DECLARED
+         spelling (the MAP RULE), exactly as op=actionmove and op=conclude take it. Only a MOVE is asked: `from ===
+         to` is a revision and not a transition, which is the doctrine's own way to amend an adopted set —
+         *"Amending an adopted set is a NEW REVISION of the same bundle under append-only history — which
+         re-pins"* — and `bias.test.mjs` §11 and `d84-case-manifest.test.mjs` §3 both drive that amendment.
+         A CREATION IS NOT A TRANSITION EITHER (`cur` is null and there is no head to move from), so this
+         does not decide which state a set may be BORN in; that question is the gate's and is NOT asked here.
+         THE TYPE IS D-510's `promotedType` AND THIS HOLDS NO SECOND DERIVATION OF IT. D-510 (2026-09-24,
+         reached by merging main into this branch) made the DOCUMENT's own type the one value every projection
+         reads and refuses an envelope contradicting it (`is-promoted-type-disagrees`) ahead of this line, so
+         the document-versus-envelope question is already answered here and re-deriving it would be the
+         two-readings drift this repository has measured five times. This item's first spelling DID re-derive
+         it, and folding it onto `promotedType` is what the merge was for.
+         ASKED WHENEVER THE PROMOTED TYPE IS BIAS **OR** THE HEAD IS A BIAS SET, so a promotion that also
+         retypes the bundle cannot step around the machine by renaming it: from a bias head the legal moves
+         are the bias table's whatever the incoming document calls itself. (That a revision can retype a
+         bundle AT ALL is a separate, wider defect D-510 did NOT close — `promotedType` is written into
+         `bundles.object_type` with no comparison anywhere to `cur.object_type` — and is reported rather than
+         fixed here.)
+         `replay` IS NOT AN EXEMPTION, on REC-179's reasoning and not by oversight: `index.mjs` verifies a
+         replay only for a CREATION (REC-173), so on a revision the flag is a caller's assertion, and a fence
+         a caller can turn off by asserting is not a fence. The gathering check's exemption exists because a
+         faithfully replayed history must be holdable verbatim; a backwards move was never legally written,
+         so an honest replay does not meet this.
+         REFUSED BEFORE ANY WRITE of this transaction, beside its `BIAS_REFUSED` sibling and for that
+         refusal's reason: a refusal returned inside `transactionSync` rolls nothing back, so a state the
+         record will not honour must be refused before it can land in append-only history. */
+      /* DEC-49 REGION bias-state-edge */
+      const biasSpelling = promotedType === "bias" ? promotedType
+                         : (cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null);
+      if (cur && biasSpelling) {
+        const from = cur.current_state, to = meta.current_state;
+        const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
+        /* BUILT AS A LITERAL rather than through `#biasRefuse`, and the DEC-49 guard is why: a verdict
+           INHERITED THROUGH A SPREAD is one the guard's outcome walk cannot resolve until run time, so
+           it reads this span as a governed region containing no refusal at all. Its ceiling on such
+           returns may only ever move DOWN. The code is a STRING LITERAL at its site and the check and
+           the translation are read from the catalogue's own row — one place, as `BIAS_REFUSED` does it
+           four hundred lines below. */
+        if (to !== from && !legalFrom.includes(to))
+          return { ok: false, reason: "BIAS_ILLEGAL_TRANSITION",
+                   check: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.check,
+                   translation: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.translation,
+                   from, to: to ?? null, object_type: biasSpelling, legal_from: legalFrom,
+                   detail: `${bundleId} stands at '${from}' and this promotion names `
+                     + `'${to === undefined || to === null ? "no state" : to}'. `
+                     + `A bias set at '${from}' moves to ${legalFrom.length ? legalFrom.join(" or ") : "no other state"}`
+                     + `${legalFrom.length ? "" : " — it is terminal"}, and a revision that leaves it where it stands is `
+                     + `how an adopted set is amended. The table is the catalogue's and this path holds no copy of it. `
+                     + `Nothing was written.` };
+      }
+      /* END DEC-49 REGION bias-state-edge */
+
       /* REC-176 — THE HISTORY LAW AT THE WRITE (§2.4: "History is append-only; nothing in _history/ is ever modified
          or deleted"). The two manifest writes below, and the history snapshot, are keyed (bundle_id, snap_key) and
          were INSERT OR REPLACE: a second promotion naming a key this bundle already held REPLACED the first
@@ -17743,6 +18486,9 @@ export class Store extends DurableObject {
          the one place they live.
          The replay exemption is the gathering check's, for the gathering check's
          reason: the record's own history must be holdable verbatim. */
+      /* D-526: the gate below asks the DOCUMENT's type (`promotedType`) as well as the envelope's: a UNION, D-505's
+         shape, so a bias document under another envelope meets BIAS_REFUSED as it would correctly labelled, and
+         nothing refused before is let through. */
       /* DEC-49 REGION bias-set-refusal
        *
        * THE SPAN `BIAS_CHECKS.BIAS_REFUSED`'s `where` NAMES (REC-71), on the same
@@ -17768,7 +18514,7 @@ export class Store extends DurableObject {
        * `checkObservation`, `checkCondition` and `checkBound` in `airun.mjs`. It is
        * not true of `promote`, and it is unlikely ever to be true of any function
        * that both validates and writes. */
-      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+      if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {
         const bf = [];
         checkBiasExtension({ fm: docFmW, files: new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
         const errs = bf.filter((x) => x.severity === "error");
@@ -18500,7 +19246,9 @@ export class Store extends DurableObject {
          reassign it, which is why this hangs off `!cur`. */
       const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
       let owner = null;
-      if (!cur && ownerMemberId && meta.object_type === "project") {
+      /* D-526: `promotedType`, the document's type, as the control plane's `create_projects` gate that stamped
+         `ownerMemberId` now asks it: keyed on the raw envelope, an unlabelled creation landed owned by nobody. */
+      if (!cur && ownerMemberId && promotedType === "project") {
         const ts = new Date().toISOString();
         this.sql.exec(
           `INSERT OR REPLACE INTO project_participants
@@ -18551,7 +19299,7 @@ export class Store extends DurableObject {
          a pure INSERT — it refuses nothing and can fail no promotion, because a
          member revising their own finding is never the act to refuse. */
       this.#flagCasesOnRevision(bundleId, base ?? null,
-        new Date().toISOString().replace(/\.\d+Z$/, "Z"));
+        stampInstant("second"));
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner,
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
@@ -18824,6 +19572,10 @@ export class Store extends DurableObject {
       const fmtKey = prof && prof.format && typeof prof.format === "object"
         && typeof prof.format.format === "string" && prof.format.format.trim()
         ? prof.format.format.trim() : null;
+      /* D-536 — BOTH READINGS ARE KEPT, AND NEITHER OVERWRITES (BOB #33, 21:25Z). The row below
+         REPLACES this capture's reading, so the history is written FIRST, while the reading it replaces
+         is still in hand, in the same transaction. */
+      const kept = this.#keepReading(bundleId, sha, reading);
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at,capture_format)
          VALUES (?,?,?,?,?,?,?,?,COALESCE(?, (SELECT capture_format FROM readings WHERE capture_sha=?)))`,
@@ -18853,15 +19605,40 @@ export class Store extends DurableObject {
            ALL THREE COLUMNS MOVE TOGETHER: `readingSource` returns the whole
            canonical object or nothing, so a row can never carry a kind with no
            form or a form with no fields. */
-        const pos = readingSource(e.source);
-        this.sql.exec(
-          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref)
-           VALUES (?,?,?,?,?,?,?,?,?)`,
-          sha, bundleId, ref,
-          e.kind == null ? null : String(e.kind),
-          e.key == null ? null : String(e.key),
-          e.label == null ? null : String(e.label),
-          pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null);
+        /* D-454 — EVERY OCCURRENCE, NOT THE LAST. The key was (capture_sha, ref) and this was
+           an INSERT OR REPLACE, so a reference read at several places kept one row; the readers
+           had already dropped every sighting but the first, so which one survived was never
+           tested. Now a reader's `occurrences` (every place, in reading order, `source` first)
+           writes one row per DISTINCT place, `seq` counting them from 0, and a reference read
+           once writes exactly the one row it always did (`source`, seq 0). `source` leads even
+           where a provenance document's `occurrences` omits it, because it is the field every
+           reader before this one emitted. Two reads of one place are one occurrence (the key is
+           the place), and every unplaced read is the one '' occurrence. A document naming
+           `occurrences` and no `source` is taken at its list: prepending the absent `source`
+           would record an unplaced read nobody claimed. */
+        const all = Array.isArray(e.occurrences) ? e.occurrences : [];
+        const listed = all.slice(0, Store.#OCCURRENCES_PER_REF);
+        const places = (e.source || !listed.length ? [e.source] : []).concat(listed).map(readingSource);
+        /* PAST THE BOUND, THE REST ARE READS THIS PROJECTION DOES NOT PLACE — so they are the '' (unplaced)
+           occurrence, which is exactly true of them here, and which the unchosen-mention check reads as
+           possibly inside any part (C-49.4). Dropping them instead would let a portion answer a definite
+           outside while a dropped read sat inside it. */
+        if (all.length > listed.length) places.push(null);
+        const wrote = new Set();
+        for (const pos of places) {
+          const occ = readingOccurrenceKey(pos);
+          if (wrote.has(occ)) continue;
+          this.sql.exec(
+            `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref,occurrence,seq)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+            sha, bundleId, ref,
+            e.kind == null ? null : String(e.kind),
+            e.key == null ? null : String(e.key),
+            e.label == null ? null : String(e.label),
+            pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null,
+            occ, wrote.size);
+          wrote.add(occ);
+        }
         /* REC-36/REC-40: the name index, written in the SAME transaction as the
            row it projects, exactly as the row is a projection of the document
            (D-21). A string the reader did not carry produces no terms and no
@@ -18875,7 +19652,7 @@ export class Store extends DurableObject {
               `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
               sha, bundleId, ref, src, term);
       }
-      return { staled, indexed, extraction };
+      return { staled, indexed, extraction, kept };
   }
 
   /* ===================================================================== *
@@ -18944,6 +19721,8 @@ export class Store extends DurableObject {
       const out = this.#writeOneReading(row.bundle_id, sha, doc, reading, author);
       const ex = out.extraction || {};
       return { ok: true, held: true,
+               /* D-536: the re-read against the reading it replaced, attributed — both kept. */
+               compared: out.kept ? out.kept.compared : null,
                staled: out.staled || 0,
                indexed: out.indexed ? { written: out.indexed.written ?? 0, offered: out.indexed.offered ?? 0,
                                         over_bound: out.indexed.over_bound ?? 0 } : null,
@@ -18951,6 +19730,84 @@ export class Store extends DurableObject {
                            refused: Array.isArray(ex.refused) ? ex.refused.length : 0,
                            unclassified: ex.unclassified ?? null } };
     });
+  }
+
+  /* D-536 — KEEP THIS READING, AND COMPARE IT WITH THE ONE BEFORE IT (Part II §16, "Reading
+   * provenance"; BOB #33's ruling of 2026-09-24 21:25Z).
+   *
+   * `readings` holds one row per capture and `#writeOneReading` REPLACES it, so until this landed a
+   * re-read that classified different text left no trace of what it replaced: M-143 measured the class
+   * of a document moving between two walks of one sample and nothing in the record could say which
+   * tier's text had moved. `reading_history` keeps every DISTINCT reading, in order.
+   *
+   * THE READING THIS ONE REPLACES IS KEPT FIRST, when it predates the history. A capture read before
+   * D-536 has a `readings` row and no history, and writing only the incoming reading would lose the one
+   * it replaces — the overwrite the ruling forbids, done by the table built to prevent it. Its
+   * provenance is whatever it carries, and a reading from before D-536 carries none: UNDETERMINED,
+   * stated, and never inferred from its `text_tier` or its chain.
+   *
+   * A READING EQUAL TO THE LATEST KEPT ONE IS NOT KEPT AGAIN. An ordinary revision of a bundle
+   * re-submits the same `data/provenance.json`, and that is the same reading promoted twice, not a
+   * re-read; keeping it twice would make "how many times was this read" count revisions. Compared by a
+   * SHA-256 of the reading's JSON, the bytes `readings.reading` stores. A reading that goes A -> B -> A
+   * is kept three times, because the third IS a re-read that disagreed with the second.
+   *
+   * THE COMPARISON IS STORED, NOT RE-DERIVED ON READ, so what the record said at the moment of the
+   * re-read is what it says later, whatever `compareProvenance` becomes. */
+  #keepReading(bundleId, sha, reading) {
+    const json = JSON.stringify(reading);
+    const digest = sha256HexSync(json);
+    const provOf = (r) => (r && typeof r === "object" && r.provenance && typeof r.provenance === "object"
+                           && r.provenance.scheme === PROVENANCE_SCHEME ? r.provenance : null);
+    const textShaOf = (p) => (p && typeof p.text_sha256 === "string" ? p.text_sha256 : null);
+    const now = stampInstant("second");
+    let last = this.#one(
+      `SELECT seq, reading_sha256, provenance FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
+    if (!last) {
+      const prior = this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha);
+      if (prior) {
+        const pr = safeJson(prior.reading);
+        const pp = provOf(pr);
+        const pd = sha256HexSync(prior.reading);
+        this.sql.exec(
+          `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
+           VALUES (?,?,?,?,?,?,?,NULL,?)`,
+          sha, 1, prior.bundle_id, pd, prior.reading, pp ? JSON.stringify(pp) : null, textShaOf(pp), now);
+        last = { seq: 1, reading_sha256: pd, provenance: pp ? JSON.stringify(pp) : null };
+      }
+    }
+    if (last && last.reading_sha256 === digest) return { seq: last.seq, added: false, compared: null };
+    const np = provOf(reading);
+    const compared = last ? compareProvenance(safeJson(last.provenance), np) : null;
+    const seq = last ? last.seq + 1 : 1;
+    this.sql.exec(
+      `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      sha, seq, bundleId, digest, json, np ? JSON.stringify(np) : null, textShaOf(np),
+      compared ? JSON.stringify(compared) : null, now);
+    return { seq, added: true, compared };
+  }
+
+  /* D-536: the kept readings of one capture, newest first, as `op=reading` serves them — the
+     provenance and the attribution of each, not the readings themselves (the latest IS the
+     `readings` row, and the rest are one row each here). BOUNDED AT BIRTH, `limit` beside
+     `truncated`, the plane's own spelling (REC-60/REC-70). */
+  #readingHistoryOf(captureSha, cap = 16) {
+    const page = this.#rows(
+      `SELECT seq, reading_sha256, provenance, text_sha256, compared, kept_at FROM reading_history
+        WHERE capture_sha=? ORDER BY seq DESC LIMIT ?`, captureSha, cap + 1);
+    const n = this.#one(`SELECT count(*) c FROM reading_history WHERE capture_sha=?`, captureSha).c;
+    return { kept: n, limit: cap, truncated: page.length > cap,
+             readings: page.slice(0, cap).map((r) => {
+               const prov = safeJson(r.provenance);
+               return { seq: r.seq, kept_at: r.kept_at, reading_sha256: r.reading_sha256,
+                        text_sha256: r.text_sha256,
+                        provenance: prov || { state: "undetermined",
+                          why: "this reading carries no reading provenance (it was written before D-536, or by a "
+                             + "caller that did not carry it), so the tier, the member and the text it classified "
+                             + "are UNDETERMINED and are not inferred" },
+                        compared: safeJson(r.compared) };
+             }) };
   }
 
   /* CPDF-10: PROJECT THE TRANSCRIPTION CHAIN INTO COLUMNS.
@@ -19093,8 +19950,18 @@ export class Store extends DurableObject {
        taken from each unit's own `seq` rather than from the array's order --
        otherwise "the first 2 MiB in reading order" would mean whatever a caller
        shuffled the array to. */
+    /* D-531 -- A UNIT WITH NO GLYPH IS NOT A UNIT WITH TEXT. This filter read
+       `u.text.length`, so a unit of pure whitespace was written, indexed and
+       COUNTED toward `PRESENT` -- the record saying it holds a searchable passage
+       where it holds none, and a capture whose every unit was blank reading as
+       fully indexed rather than as `LOOKED_ABSENT`. It is the same judgment
+       D-514 moved onto `glyphCount` at every other site that asks it, and this
+       is the site a caller's authored `provenance.json` reaches directly, so the
+       acquire-side filter in `index.mjs` cannot stand in for it. A dropped blank
+       unit is not counted in `offered`, exactly as an empty one never was. */
     const ordered = list
-      .filter((u) => u && typeof u === "object" && typeof u.text === "string" && u.text.length)
+      .filter((u) => u && typeof u === "object" && typeof u.text === "string"
+                     && glyphCount(u.text) > 0)
       .map((u, i) => ({ extent: u.extent, text: u.text,
                         seq: Number.isInteger(u.seq) ? u.seq : i }))
       .sort((a, b) => a.seq - b.seq);
@@ -20531,7 +21398,7 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-testify-act */
     const text = typeof words === "string" ? words : "";
     const bytes = new TextEncoder().encode(text);
-    const recorded = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const recorded = stampInstant("second");
     const obs = typeof observedAt === "string" ? observedAt.trim() : "";
     const obsMs = Store.#observedMs(obs);
     /* DEC-49 REGION is-testify-words */
@@ -21132,7 +21999,7 @@ export class Store extends DurableObject {
             : `pass project=<PROJ-…>: the project to share this lead to`,
         { lead: L.lead_id, project: pid || null });
     /* END DEC-49 REGION is-lead-share */
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     this.sql.exec(`INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
                   L.lead_id, pid, who, at);
     const r = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
@@ -21166,7 +22033,7 @@ export class Store extends DurableObject {
         + `${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather `
         + `than cut`, { limit: CAPTURE_TEXT_UNIT_CAP });
     /* END DEC-49 REGION is-lead-act */
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     /* `LEAD-YYYY-MMDD-hex`: the bundle-id SHAPE with a prefix `BUNDLE_ID_RE` does
        not admit, so the id reads as a record id to a person and as nothing
        citable to every leg grammar. */
@@ -21474,7 +22341,7 @@ export class Store extends DurableObject {
         + `one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
         { limit: CAPTURE_TEXT_UNIT_CAP });
     /* END DEC-49 REGION is-theme-declare */
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     /* `THEME-YYYY-MMDD-hex`: the lead's shape under its own prefix, which
        `BUNDLE_ID_RE` does not admit and `ENTITY_KINDS` does not name — so it
        reads as a record id to a person and as nothing citable to every leg. */
@@ -21506,7 +22373,7 @@ export class Store extends DurableObject {
     const T = src.row;
     const tgt = this.#themeTarget(target, note, viewer);
     if (!tgt.ok) return tgt;
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     const before = this.#one(`SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
                              T.theme_id, tgt.target);
     if (!before)
@@ -21552,7 +22419,7 @@ export class Store extends DurableObject {
     const T = src.row;
     const tgt = this.#themeTarget(target, note, viewer);
     if (!tgt.ok) return tgt;
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     /* WHETHER ANYTHING STANDS THERE is read BEFORE the write, `themePlace`'s way — never inferred
        from the row afterwards, which cannot tell a fresh hunch from the same proposer's second
        proposal inside one second. */
@@ -22674,7 +23541,7 @@ export class Store extends DurableObject {
     const stale = this.#rows(
       `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_key, rr.label
          FROM reading_refs rr
-        WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+        WHERE rr.seq = 0 AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
                            WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)
         ORDER BY rr.capture_sha, rr.ref LIMIT ?`, limit);
     let n = 0;
@@ -22703,7 +23570,7 @@ export class Store extends DurableObject {
       limit,
       remaining: this.#one(
         `SELECT count(*) c FROM reading_refs rr
-          WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+          WHERE rr.seq = 0 AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
                              WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)`).c,
     };
   }
@@ -22718,6 +23585,15 @@ export class Store extends DurableObject {
     else this.sql.exec(`DELETE FROM reading_ref_terms`);
     return { ok: true, cleared: captureSha || "ALL",
              remaining: this.#one(`SELECT count(*) c FROM reading_ref_terms`).c };
+  }
+  /* D-536: test support on `readingTermsClear`'s precedent — clear a capture's kept readings so its
+     `readings` row looks like one written before D-536, which is the only way to drive the path that
+     KEEPS a pre-D-536 reading rather than overwriting it. DO-only; no control-plane op reaches it. */
+  readingHistoryClear({ captureSha = null } = {}) {
+    if (captureSha) this.sql.exec(`DELETE FROM reading_history WHERE capture_sha=?`, captureSha);
+    else this.sql.exec(`DELETE FROM reading_history`);
+    return { ok: true, cleared: captureSha || "ALL",
+             remaining: this.#one(`SELECT count(*) c FROM reading_history`).c };
   }
   reindexNames({ limit = 500 } = {}) {
     return { ok: true, ...this.#backfillRefTerms(limit) };
@@ -22761,7 +23637,12 @@ export class Store extends DurableObject {
                   is a third answer and the one this record is obliged to state. */
                : { recorded: false,
                    why: `this reading carries no text provenance, which is not the same as its `
-                      + `text not having been transcribed -- nobody recorded how it was produced` } };
+                      + `text not having been transcribed -- nobody recorded how it was produced`  },
+             /* D-536: every reading this record has held for this capture, with each re-read's
+                attribution against the one before it. `kept: 0` is a capture promoted before D-536
+                and not read since — its one reading is the `readings` row above, provenance
+                UNDETERMINED. */
+             reading_history: this.#readingHistoryOf(row.capture_sha) };
   }
 
   /* CPDF-10: THE INDEX HALF. Which captured documents' text a machine produced,
@@ -23320,7 +24201,7 @@ export class Store extends DurableObject {
       `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label,
               rr.pos_kind, rr.pos, rr.pos_ref, r.content_type
          FROM reading_refs rr LEFT JOIN readings r ON r.capture_sha = rr.capture_sha
-        WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha`, ref);
+        WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha, rr.seq`, ref);
     /* REC-30: the reverse index answers WHICH DOCUMENTS carry a reference — a
        fact about captures. The bundle back-reference is withheld where the
        viewer may not see the bundle; `count` counts documents, not names.
@@ -23338,10 +24219,22 @@ export class Store extends DurableObject {
        internal, and a projection nothing outside the store can ask for is a
        projection the next session cannot verify. */
     const keep = this.#bundleRedactor(viewer);
-    return { ok: true, ref, count: rows.length,
-             documents: rows.map((r) => ({ capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
-               ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
-               position: readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref) })) };
+    /* D-454: `reading_refs` holds one row per OCCURRENCE, and this read answers per DOCUMENT
+       (`count` counts documents). So the rows fold by capture: the entry is the first
+       occurrence's, `position` exactly what it was before the re-key, and a document that read
+       the reference at more than one place lists EVERY place in `occurrences`, in reading
+       order — carried only then, so a reference read once answers in its old shape. */
+    const byDoc = new Map();
+    for (const r of rows) {
+      const position = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
+      const cur = byDoc.get(r.capture_sha);
+      if (cur) { (cur.occurrences ||= [cur.position]).push(position); continue; }
+      byDoc.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
+        ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
+        position });
+    }
+    const documents = [...byDoc.values()];
+    return { ok: true, ref, count: documents.length, documents };
   }
 
   /** REC-36: THE REVERSE READ FOR A NAME-ONLY MENTION — every captured document
@@ -23794,7 +24687,7 @@ export class Store extends DurableObject {
   static #refTermsSql(nTerms, gateSql) {
     return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
               FROM reading_ref_terms t
-              JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref
+              JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref AND rr.seq = 0
               LEFT JOIN readings r ON r.capture_sha = t.capture_sha
              WHERE t.term IN (${new Array(nTerms).fill("?").join(",")}) AND (${gateSql})
              GROUP BY t.capture_sha, t.ref, t.src
@@ -24150,6 +25043,14 @@ export class Store extends DurableObject {
    * complete answer, and the complete answer needs the query surface D-222/REC-62 is for. */
   static #MEANING_LIMIT_DEFAULT = 500;
   static #MEANING_LIMIT_MAX = 5000;
+  /* D-454: the most occurrences of ONE reference a promotion projects. A provenance document is
+     something a caller can author, so its `occurrences` list is bounded here like every list
+     this store takes from one; a real reader's list is the number of times one file number or
+     instrument is printed in one document. The figure is a CHOSEN bound, not a measured one:
+     no census of occurrences per reference has been taken. Past it the reading blob still
+     carries every entry, and the projection keeps the first 256 places and records the rest
+     as the one unplaced occurrence (`#writeReadings` says why). */
+  static #OCCURRENCES_PER_REF = 256;
 
   /* Upsert one resolution with the improvable-grade rule: a first resolution INSERTs; a
      re-resolution at a STRONGER grade RAISES in place (recording raised_from); an equal
@@ -24309,14 +25210,15 @@ export class Store extends DurableObject {
       if (typeof ref !== "string" || !ref)
         return { ok: false, reason: "NO_REF", detail: "resolve a single reference by its raw kind:key, or omit ref to resolve all" };
       const one = this.#one(
-        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`,
         captureSha, ref);
       if (!one) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
         detail: "this captured document's reading carries no such reference (nothing to resolve)" };
       refs = [one];
     } else {
       refs = this.#rows(
-        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? ORDER BY ref`,
+        /* D-454: seq 0 — a resolution is of the REFERENCE, and its occurrences are one reference. */
+        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND seq=0 ORDER BY ref`,
         captureSha);
     }
     const resolved = [], unresolved = [];
@@ -24709,8 +25611,14 @@ export class Store extends DurableObject {
     for (const e of ends) {
       e.pos = null;
       if (!e.ref) continue;
+      /* D-454: a reference may be read at several places now, and the pair records ONE — the
+         FIRST read (seq 0), which is the only place any pair recorded before the re-key, so a
+         derivation over an unchanged reading writes the row it always wrote. It is a machine
+         selection among occurrences exactly as the strongest grade is among references, and
+         `connectionGradeForContent` treats the other occurrences as other mentions (C-49.4)
+         until a member chooses one. */
       const rr = this.#one(
-        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT 1`,
         e.capture_sha, e.ref);
       if (rr) e.pos = readingSourceFromColumns(rr.pos_kind, rr.pos, rr.pos_ref);
     }
@@ -24983,13 +25891,18 @@ export class Store extends DurableObject {
     const mentionsOf = (entityId) => {
       if (mentionCache.has(entityId)) return mentionCache.get(entityId);
       const rows = this.#rows(
-        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+        /* D-454: one row per OCCURRENCE — a reference read at three places is three mentions,
+           each carrying the `occurrence` a member names to choose it. A resolution whose
+           reading carries no row for it (re-read since) is one mention with no occurrence. */
+        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
+                rp.occurrence AS occurrence
            FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref LIMIT ?`,
+          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref, rp.seq LIMIT ?`,
         row.capture_sha, entityId, Store.#MEANING_LIMIT_MAX + 1);
       const cut = rows.length > Store.#MEANING_LIMIT_MAX;
       const got = { cut, mentions: (cut ? rows.slice(0, Store.#MEANING_LIMIT_MAX) : rows).map((m) => ({
-        ref: m.ref, grade: m.grade, position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) })) };
+        ref: m.ref, occurrence: m.occurrence ?? null, grade: m.grade,
+        position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) })) };
       mentionCache.set(entityId, got);
       return got;
     };
@@ -25024,13 +25937,36 @@ export class Store extends DurableObject {
       const mine = choices[side];
       let lapsed = null;
       if (mine) {
-        const m = this.#one(
-          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+        /* D-454: THE CHOICE IS OF AN OCCURRENCE. Its place is read here from the reading, never
+           from the choice row, so a re-read that no longer reads the reference AT THAT PLACE
+           lapses the choice rather than letting it slide to another read of the same string.
+           A choice made before D-454 names no occurrence: it answers while its reference has
+           exactly one, and where the document now reads it at several it is AMBIGUOUS — the
+           member chose a string when the record could show only one place for it, and which
+           place they meant is not recoverable — so it is stated and read as unchosen. */
+        const reads = this.#rows(
+          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
+                  rp.occurrence AS occurrence
              FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=?`, row.capture_sha, c.entity_id, mine.ref);
-        if (!m) {
-          lapsed = { ref: mine.ref, chosen_by: mine.chosen_by, at: mine.at, lapsed: true,
+            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=? ORDER BY rp.seq LIMIT ?`,
+          row.capture_sha, c.entity_id, mine.ref, Store.#OCCURRENCES_PER_REF + 1);
+        const ambiguous = mine.occurrence == null && reads.length > 1;
+        const m = mine.occurrence == null
+          ? (reads.length === 1 ? reads[0] : null)
+          : (reads.find((x) => (x.occurrence ?? "") === mine.occurrence) || null);
+        const occ = mine.occurrence != null ? { occurrence: mine.occurrence } : {};
+        if (ambiguous) {
+          lapsed = { ref: mine.ref, chosen_by: mine.chosen_by, at: mine.at, lapsed: true, ambiguous: true,
+                     occurrences: reads.map((x) => ({ occurrence: x.occurrence ?? null,
+                       position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref) })),
+                     why: `a member chose ${mine.ref} as on point before the record kept which read of a `
+                        + `reference a choice meant, and this document reads it at ${reads.length} places, `
+                        + `so the choice cannot say which and the machine's selection is read as unchosen. `
+                        + `Choosing again, naming the occurrence, settles it` };
+        } else if (!m) {
+          lapsed = { ref: mine.ref, ...occ, chosen_by: mine.chosen_by, at: mine.at, lapsed: true,
                      why: "a member chose this mention as on point, and this document no longer carries it "
+                        + (mine.occurrence != null ? "at that place " : "")
                         + "for this subject, so the choice cannot answer and the machine's selection is "
                         + "read as unchosen" };
         } else {
@@ -25041,7 +25977,7 @@ export class Store extends DurableObject {
             `SELECT grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
             otherSha, c.entity_id, theirs.ref)?.grade) || (side === "a" ? c.b_grade : c.a_grade);
           const grade = Store.#weakerGrade(m.grade, theirGrade);
-          const onPoint = { ref: m.ref, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
+          const onPoint = { ref: m.ref, ...occ, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
           const chosenEntry = { ...entry, grade, on_point: onPoint };
           const said = `a member (${mine.chosen_by}) chose ${m.ref} as the on-point mention on this end`;
           const verdict = checkConnectionPairCovers(
@@ -25073,6 +26009,9 @@ export class Store extends DurableObject {
       if (!bad || bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT") {
         const unchosen = checkConnectionMentionUnchosen({
           pairRef: side === "a" ? view.determining_pair.a_ref : view.determining_pair.b_ref,
+          /* D-454: the pair's OWN place, so another read of its string is another mention. */
+          pairOccurrence: readingOccurrenceKey(side === "a" ? view.determining_pair.a_position
+                                                            : view.determining_pair.b_position),
           pairGrade: side === "a" ? c.a_grade : c.b_grade, pairReached: !bad,
           ...mentionsOf(c.entity_id), extentKind: row.extent_kind, extent,
           covers: readingPositionInExtent, rank: (g) => Store.#GRADE_RANK[g] || 0 });
@@ -25164,11 +26103,12 @@ export class Store extends DurableObject {
      choice answers — never an older one by scan order. */
   #currentPairChoices(aSha, bSha, entityId) {
     const rows = this.#rows(
-      `SELECT side, ref, chosen_by, at FROM connection_pair_choices
+      `SELECT side, ref, occurrence, chosen_by, at FROM connection_pair_choices
         WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side IN ('a','b')
           AND superseded_at IS NULL ORDER BY choice_id DESC LIMIT 2`, aSha, bSha, entityId);
     const out = { a: null, b: null };
-    for (const r of rows) if (!out[r.side]) out[r.side] = { ref: r.ref, chosen_by: r.chosen_by, at: r.at };
+    for (const r of rows)
+      if (!out[r.side]) out[r.side] = { ref: r.ref, occurrence: r.occurrence ?? null, chosen_by: r.chosen_by, at: r.at };
     return out;
   }
 
@@ -25186,6 +26126,9 @@ export class Store extends DurableObject {
     const other = String(args.other ?? "").trim().toLowerCase();
     const entityId = String(args.entity ?? "").trim();
     const ref = String(args.ref ?? "").trim();
+    /* D-454: WHICH read of `ref`. Optional while the reference was read at one place (every
+       REC-122 caller's shape), required once it was read at several (C-74.4). */
+    const named = args.occurrence == null ? null : String(args.occurrence).trim() || null;
     const aSha = capture < other ? capture : other, bSha = capture < other ? other : capture;
     const conn = (capture && other && entityId && capture !== other)
       ? this.#one(`SELECT a_capture_sha, b_capture_sha, entity_id, a_bundle_id, b_bundle_id, a_ref, b_ref
@@ -25198,6 +26141,26 @@ export class Store extends DurableObject {
       ? this.#one(`SELECT ref, grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
                   capture, entityId, ref)
       : null;
+    /* D-454: the mention's OCCURRENCES, in reading order. The member names one by the key the
+       record lists (`occurrence`, on every mention `op=connections&content=` names) or by the
+       place's human form where exactly one occurrence carries it — correct work in the spelling
+       a person reads must pass. With none named, a reference read at ONE place is that place
+       (REC-122's shape, unchanged) and one read at several is refused, never defaulted. */
+    const reads = mention
+      ? this.#rows(`SELECT occurrence, seq, pos_kind, pos, pos_ref FROM reading_refs
+                     WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT ?`,
+                   capture, mention.ref, Store.#OCCURRENCES_PER_REF + 1)
+      : [];
+    const byForm = named ? reads.filter((x) => x.pos_ref === named) : [];
+    const pick = named
+      ? (reads.find((x) => x.occurrence === named) || (byForm.length === 1 ? byForm[0] : null))
+      : (reads.length <= 1 ? (reads[0] || null) : null);
+    /* Bounded like every list this store publishes, and SAYS when it was cut: the read asks for one more than
+       the bound, and a reference read past it answers `truncated` rather than a list that reads as complete. */
+    const occCut = reads.length > Store.#OCCURRENCES_PER_REF;
+    const listed = () => (occCut ? reads.slice(0, Store.#OCCURRENCES_PER_REF) : reads).map((x) => ({
+      occurrence: x.occurrence, position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref) }));
+    const placeName = (x) => x.pos_ref || "a place the reading did not record";
     /* DEC-49 REGION is-connection-choice */
     if (!who || isMachineIdentity(who))
       return refusal("CONNECTION_CHOICE_NOT_A_MEMBER",
@@ -25219,14 +26182,32 @@ export class Store extends DurableObject {
               + `are the references the record resolved to that subject in it.`
             : `pass ref=: the mention, as the reading recorded it, that is on point for this connection.`,
         { capture, entity_id: entityId, ref: ref || null });
+    if (named && !pick)
+      return refusal("CONNECTION_CHOICE_NOT_A_MENTION",
+        `this document does not read '${mention.ref.slice(0, 80)}' at '${named.slice(0, 120)}'`
+        + (byForm.length > 1 ? ` alone — that place is ${byForm.length} occurrences, so name one by its key` : ``)
+        + `. It reads it at: ${reads.map(placeName).join(", ") || "no place the reading recorded"}.`,
+        { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed(),
+          limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
+    if (!named && reads.length > 1)
+      return refusal("CONNECTION_CHOICE_OCCURRENCE_UNNAMED",
+        `this document reads '${mention.ref.slice(0, 80)}' at ${reads.length} places `
+        + `(${reads.map(placeName).join(", ")}), and each is its own mention. Pass occurrence= naming `
+        + `the one on point.`,
+        { capture, entity_id: entityId, ref: mention.ref, occurrences: listed(),
+          limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
     /* END DEC-49 REGION is-connection-choice */
     const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
-    const pos = this.#one(`SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
-                          capture, mention.ref);
-    const position = pos ? readingSourceFromColumns(pos.pos_kind, pos.pos, pos.pos_ref) : null;
+    /* The chosen occurrence's key, and NULL only where the reading holds no row for the mention
+       at all (a resolution outliving its reading's reference), which names no place to key. */
+    const occurrence = pick ? pick.occurrence : null;
+    const position = pick ? readingSourceFromColumns(pick.pos_kind, pick.pos, pick.pos_ref) : null;
     const answer = (wrote, prior) => ({
       ok: true, wrote, a_capture_sha: aSha, b_capture_sha: bSha, entity_id: entityId, side,
-      chosen: { ref: mention.ref, grade: mention.grade, position,
+      /* D-454: every place this document reads the chosen reference, so a member (and a surface) sees the
+         other occurrences beside the one chosen. */
+      occurrences: listed(), limit: Store.#OCCURRENCES_PER_REF, truncated: occCut,
+      chosen: { ref: mention.ref, occurrence, grade: mention.grade, position,
                 chosen_by: wrote ? who : cur.chosen_by, at: wrote ? at : cur.at },
       superseded: prior,
       machine_pair_ref: side === "a" ? conn.a_ref : conn.b_ref,
@@ -25236,18 +26217,21 @@ export class Store extends DurableObject {
         + `, as chosen by ${wrote ? who : cur.chosen_by}. A citation of a part of this document now `
         + `answers from this mention; the machine's strongest-graded pair is kept beside it, unchanged` });
     const at = new Date().toISOString();
-    if (cur && cur.ref === mention.ref) return answer(false, null);
+    /* D-454: the same choice is the same REFERENCE AT THE SAME PLACE. A choice made before D-454
+       (occurrence NULL) naming this reference is superseded by one that names its place. */
+    if (cur && cur.ref === mention.ref && (cur.occurrence ?? null) === occurrence) return answer(false, null);
     this.ctx.storage.transactionSync(() => {
       if (cur)
         this.sql.exec(`UPDATE connection_pair_choices SET superseded_at=?
                         WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side=?
                           AND superseded_at IS NULL`, at, aSha, bSha, entityId, side);
       this.sql.exec(`INSERT INTO connection_pair_choices
-                       (a_capture_sha,b_capture_sha,entity_id,side,ref,a_bundle_id,b_bundle_id,chosen_by,at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`,
-                    aSha, bSha, entityId, side, mention.ref, conn.a_bundle_id, conn.b_bundle_id, who, at);
+                       (a_capture_sha,b_capture_sha,entity_id,side,ref,occurrence,a_bundle_id,b_bundle_id,chosen_by,at)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                    aSha, bSha, entityId, side, mention.ref, occurrence, conn.a_bundle_id, conn.b_bundle_id, who, at);
     });
-    return answer(true, cur ? { ref: cur.ref, chosen_by: cur.chosen_by, at: cur.at } : null);
+    return answer(true, cur ? { ref: cur.ref, ...(cur.occurrence != null ? { occurrence: cur.occurrence } : {}),
+                                chosen_by: cur.chosen_by, at: cur.at } : null);
   }
 
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
@@ -25438,6 +26422,57 @@ export class Store extends DurableObject {
     return { definition_version: recorded ? Number(d.definition_version) : null,
              definition_version_state: recorded ? "recorded" : "not recorded",
              current_definition_version: current, applies, applies_because: because };
+  }
+
+  /* D-552: THE DECISION RIDES ON THE FINDING IT JUDGED, on every read that publishes the finding.
+     `proposalsFeed` was the only reader of `proposal_dispositions`, so op=instance (and the
+     op=thread/op=discharge echoes, and op=captureprogressions) listed a finding a member had
+     already dismissed or deferred as a bare open question: the record holding a decision and the
+     read saying nothing about it. D-79 is that a decision AGES a finding and never makes it
+     vanish, so this PUBLISHES and never filters: every finding stays listed, and carries the
+     decision about its (progression, stage) -- or null where nobody has decided -- with the
+     version view `#dispositionVersionView` computes. `applies: true` means the decision governs
+     the definition in force (the finding is aged, not open); `applies: false` means it judged an
+     earlier definition (the finding is open again, and the decision is its history). The object
+     is the one `proposalsFeed` publishes as `prior_disposition` (and D-527 on op=queue), with the
+     same keys; it is named `disposition` here because, unlike there, it may still govern.
+     Keyed per progression, instance-wide, exactly as the act writes it (DEC-16, D-266): a
+     disposition is about the shared record, not a project's thinking, so the viewer scoping
+     (Membership 7.9, project bundles only) withholds nothing in it and `decided_by` reads as
+     op=proposals and op=queue publish it to the same classes -- a member id, or `class:<cls>`
+     for a machine credential, never a person's name the record did not already hold. */
+  static #dispositionOnFinding(d, cur) {
+    const v = Store.#dispositionVersionView(d, cur);
+    return { state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+             definition_version: v.definition_version, definition_version_state: v.definition_version_state,
+             applies: v.applies, applies_because: v.applies_because };
+  }
+
+  /* D-552: stage_key -> the published decision, for ONE progression, read once per instance. */
+  #dispositionsByStage(progressionKey) {
+    const cur = this.#definitionVersionOf(progressionKey);
+    const byStage = new Map();
+    for (const d of this.#rows(
+      `SELECT stage_key, state, reason, decided_by, at, definition_version
+         FROM proposal_dispositions WHERE progression_key=?`, progressionKey))
+      byStage.set(d.stage_key, Store.#dispositionOnFinding(d, cur));
+    return byStage;
+  }
+
+  /* D-552: an assembled instance with each finding carrying its decision, and the count of the
+     findings no decision governs. `finding_count` still counts EVERY finding: nothing is hidden. */
+  #withDispositions(inst) {
+    if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
+    const byStage = this.#dispositionsByStage(inst.progression_key);
+    const findings = inst.findings.map((f) => ({ ...f, disposition: byStage.get(f.stage_key) ?? null }));
+    return { ...inst, findings,
+             open_finding_count: findings.filter((f) => !(f.disposition && f.disposition.applies)).length };
+  }
+
+  /* D-552: the ONE answer op=instance returns, and the op=thread / op=discharge echoes with it
+     (REC-30: a write's receipt is a read and takes the read's projection). */
+  #instanceAnswer(progressionKey, entityId, viewer) {
+    return this.#redactInstance(this.#withDispositions(this.#assembleInstance(progressionKey, entityId)), viewer);
   }
 
   /* D-128: the CURRENT version of a definition -- the one every instance and finding is derived
@@ -26119,7 +27154,7 @@ export class Store extends DurableObject {
     /* REC-30: the echo a write returns is a READ, and it goes through the same
        projection op=instance does — a caller must not learn from a write's
        receipt what the read would withhold. */
-    const inst = this.#redactInstance(this.#assembleInstance(key, eid), viewer);
+    const inst = this.#instanceAnswer(key, eid, viewer);
     /* REC-8: a newly threaded instance may create a FUTURE overdue deadline (a placed, dated
        predecessor with a required successor still absent). ARM the reconciling alarm so the
        overdue-scan consumer wakes at that deadline — the producer/consumer split REC-5 established
@@ -26173,7 +27208,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_KEY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
-    return this.#redactInstance(this.#assembleInstance(progressionKey.trim(), entityId.trim()), viewer);
+    return this.#instanceAnswer(progressionKey.trim(), entityId.trim(), viewer);
   }
 
   /* op=discharge (FW-10): record an EXCEPTION DOCUMENT that discharges a lawful SKIP -- a real
@@ -26240,7 +27275,7 @@ export class Store extends DurableObject {
        the stage moves from a missing-predecessor finding to a discharged state (when it was in
        fact missing-and-required). */
     /* REC-30: the write's echo is a read and takes op=instance's projection. */
-    const inst = this.#redactInstance(this.#assembleInstance(key, eid), viewer);
+    const inst = this.#instanceAnswer(key, eid, viewer);
     return { ...inst, discharged_stage: sk, exception_document: cs, reason: rsn.slice(0, 4000),
              citation: cite.slice(0, 2000), declared_by: by, at };
   }
@@ -26634,14 +27669,17 @@ export class Store extends DurableObject {
       let a = assembled.get(ck);
       if (!a) {
         const inst = this.#assembleInstance(r.progression_key, r.entity_id);
-        a = { inst, overdue: (inst && inst.found) ? this.#overdueFindings(inst, now) : [] };
+        a = { inst, overdue: (inst && inst.found) ? this.#overdueFindings(inst, now) : [],
+              /* D-552: each finding carries the decision about its stage, as op=instance's do */
+              decided: (inst && inst.found) ? this.#dispositionsByStage(inst.progression_key) : new Map() };
         assembled.set(ck, a);
       }
       const inst = a.inst;
       if (!inst || !inst.found) continue;   // definition gone, or nothing threaded -> not a membership
       const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
       const missing = (inst.findings || []).filter((f) => f.kind === "missing_predecessor");
-      const findings = [...missing, ...a.overdue].map(project);
+      const findings = [...missing, ...a.overdue].map(project)
+        .map((f) => ({ ...f, disposition: a.decided.get(f.stage_key) ?? null }));
       instances.push({
         progression_key: inst.progression_key, progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -27159,7 +28197,7 @@ export class Store extends DurableObject {
    *  about a capture rather than about a document. */
   #conditionsPartialCapture(viewer, now, identity = null) {
     const out = [];
-    const nowIso = new Date(now).toISOString().split(".")[0] + "Z";
+    const nowIso = stampInstant("second", now);
     const redact = this.#bundleRedactor(viewer);
     for (const r of this.#rows(
       `SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, nowIso)) {
@@ -28438,12 +29476,23 @@ export class Store extends DurableObject {
                && Number.isInteger(item.subject.definition_version)
       ? item.subject.definition_version : null;
     if (item.class === "OBLIGATION")
+      /* REC-207: AND `instead` NAMES THE DOOR THIS ITEM ACTUALLY HAS. `op=taskresolve` addresses rows in
+         `tasks` by id; a bias-debt obligation is keyed by the RUN it is about and has no task row, so
+         every bias-debt item published before this named a door it could not go through — the row's own
+         headline. The kind decides, not a list of exceptions to keep in step: a producer whose items are
+         resolved somewhere else will need its own answer here and will find this line when it does. */
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
-               instead: "taskresolve",
+               instead: item.kind === "bias-debt" ? "biasdebtresolve" : "taskresolve",
                detail: "an OBLIGATION is something a named person must do for the record to proceed "
                      + "and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it "
-                     + "is not a narrower version of that act, it is a different one." };
+                     + "is not a narrower version of that act, it is a different one."
+                     + (item.kind === "bias-debt"
+                        ? " This one is a bias debt, which is keyed by the RUN it is about rather than by "
+                        + "a task, so it is settled through op=biasdebtresolve with a stated reason — or "
+                        + "by a re-run under the lens now in force, or by the lens moving back "
+                        + "(BOB #32, 2026-09-23)."
+                        : "") };
     if (item.class === "CONDITION")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_condition_is_acknowledged_or_muted",
@@ -29558,11 +30607,53 @@ export class Store extends DurableObject {
        progression that has nothing to do with what they clicked. The catalogue already knows the
        first segment is a FINDING kind, so this says what is actually missing. It infers NOTHING
        about which project: it refuses, and names the two arguments to send. */
-    if (!scoped && pk && classOfKind(pk) === "FINDING")
+    /* REC-205 WIDENS THE BRIDGE IN TWO DIRECTIONS, and both are the same defect as the paragraph
+       above — a refusal that is true and useless — met by the two things a SELECTION puts in front
+       of this act that a single Adopt button never did.
+         · THE OTHER SPELLING OF THE SAME MISTAKE. A surface composing `key` from the item's own
+           published id sends the WHOLE id, `FINDING::<kind>::<rest>`, not the id with its class
+           segment stripped; then `pk` is the literal "FINDING", the catalogue knows no such kind,
+           and the answer was NO_SUCH_PROGRESSION again. `itemClassOf` is the lookup that reads a
+           published id, and using it here means the bridge does not depend on WHICH of the two
+           spellings a page happened to build.
+         · A CONDITION OR AN OBLIGATION IN THE SELECTION. `#dispositionOf` already publishes, per
+           item, that neither is disposed and WHICH act does reach it (`instead`), so a set arriving
+           here with one is a surface that did not read that block — and under the per-item weight it
+           is ONE item of a selection whose other items are being handled. It is retained with a
+           refusal naming its own act rather than being told to define a progression. The `instead`
+           values are read from the catalogue's class, never listed a second time here.
+       NOTHING IS INFERRED ABOUT THE SUBJECT IN EITHER ARM: nothing is written, and the refusal names
+       the act or the arguments to send. */
+    const keyed = typeof key === "string" ? key.trim() : "";
+    /* A PUBLISHED ID CARRIES ITS CLASS IN ITS FIRST SEGMENT AND ITS KIND IN ITS SECOND; a key with the
+       class segment stripped carries the kind in the FIRST. Both are read here so the bridge does not
+       depend on which spelling a page built, and the kind reported is the item's own either way. */
+    const byId = !scoped && keyed ? itemClassOf(keyed) : null;
+    const keyClass = byId || (!scoped ? classOfKind(pk) : null);
+    const keyKind = byId ? (keyed.split("::")[1] || null) : (keyClass ? pk : null);
+    /* DEC-49 REGION is-dispose-class — REC-205/C-33.44. The code is a STRING LITERAL at its site and the
+       translation comes off the row, so the guard can grade it and a member reads the same sentence
+       wherever this act is reached. */
+    if (keyClass === "CONDITION" || keyClass === "OBLIGATION") {
+      const row = ACT_SHAPE_CHECKS.CLASS_NOT_DISPOSED;
+      return { ok: false, reason: "CLASS_NOT_DISPOSED", code: "CLASS_NOT_DISPOSED",
+               check: row.check, translation: row.translation,
+               class: keyClass, kind: keyKind,
+               instead: keyClass === "CONDITION" ? "queuemute" : "taskresolve",
+               detail: `this names ${keyClass === "CONDITION" ? "a CONDITION" : "an OBLIGATION"} and `
+                     + `${keyClass === "CONDITION" ? "a" : "an"} ${keyClass} is not DISPOSED: a disposition is `
+                     + "an authored record act on a FINDING, and op=queue publishes the act that does "
+                     + "reach this item as its `disposition.instead`. Nothing was written. The rest of "
+                     + "a selection is unaffected — under the per-item weight this item alone is kept, "
+                     + "carrying this reason." };
+    }
+    /* END DEC-49 REGION is-dispose-class */
+    if (keyClass === "FINDING")
       return { ok: false, reason: "NO_PROJECT_SCOPE",
-               finding: `FINDING::${pk}::${sk}`, kind: pk,
+               finding: byId ? keyed : `FINDING::${pk}::${sk}`,
+               kind: keyKind,
                requires: ["project", "finding"],
-               detail: `'${pk}' is a FINDING kind rather than a progression, so this is the `
+               detail: "this names a FINDING that carries no progression stage, so this is the "
                      + "project-scoped disposition and it needs the project you are acting for. "
                      + "Send `project` (one of op=queue's disposition.projects for this item) and "
                      + "`finding` (its disposition.finding) instead of `key`. Nothing was written "
@@ -31809,6 +32900,10 @@ export class Store extends DurableObject {
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
                     "readings", "reading_refs", "reading_ref_terms",
                     "reading_text_source", "text_attestations", "resolutions", "progression_instances",
+                    /* D-536 / D-113: `reading_history` is DERIVED from the readings the corpus carried and
+                       carries bundle_id, so it clears in BOTH arms here. Left out, a purge reporting scope
+                       ALL would keep every earlier reading of documents the record no longer holds. */
+                    "reading_history",
                     "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
                     "inquiry_basis_versions", "inquiry_basis_version_legs",
                     "action_basis", "correspondence", "bias_statements", "bias_adoptions",
@@ -32277,6 +33372,9 @@ export class Store extends DurableObject {
         /* D-86 / D-113: a run's bias debt goes with the run it is about, and the sweep's place with the lens it
            was reading — a debt outliving its run would name a run nobody can open. */
         this.sql.exec(`DELETE FROM bias_debts`);
+        /* REC-207: and what SETTLED each of them. A settlement outliving its debt would name a run nobody can
+           open, which is the same leftover the line above refuses one table over. */
+        this.sql.exec(`DELETE FROM bias_debt_settlements`);
         this.sql.exec(`DELETE FROM bias_debt_sweeps`);
         this.sql.exec(`DELETE FROM ai_runs`);
         /* PL-3 / IS-4 / D-113. F10's stored refusals go with the corpus they are
@@ -33189,9 +34287,43 @@ export class Store extends DurableObject {
         out.historical++; continue;
       }
       if (here) { out.superseded++; continue; }
-      out.unresolved.push({ ...r, class: "unresolved" });
+      out.unresolved.push({ ...r, class: "unresolved", named_parts: this.#partsNamedFor(r.bundle_id, r.capture_sha) });
     }
     return { ok: true, ...out, needsCaptureProbe: out.unresolved.length };
+  }
+
+  /* D-533 (BOB #33, 2026-09-24 21:17Z; Intake Doctrine section 8): WHICH PARTS DOES THE RECORD NAME FOR A
+   * CAPTURE IT HOLDS IN PARTS? `op=acquire` stores a multi-part document ONLY as its parts, each under its own
+   * hash, and never the whole under the whole's; the one place the record names those parts is the holding
+   * bundle's intake provenance register, `data/provenance.json`, whose document for that `capture_sha` carries
+   * `parts: [{file, sha256, bytes}]` (the shape C-18.1 checks). So the audit's R2 probe of the WHOLE key can
+   * only ever miss for such a row, and it called held bytes missing.
+   *
+   *   none        the register document names no parts for this sha (or the bundle has no register): the
+   *               whole key is the only place the record says the bytes live
+   *   named       the parts, as the record names them, for the control plane to head and verify
+   *   unreadable  the register exists and could not be read to an answer, with why: the row resolves
+   *               NEITHER way, and the ruling counts it UNDETERMINED, outside `sound`
+   *
+   * It reads the live image only (`files`), which is what the audit's `live` class reads too. */
+  #partsNamedFor(bundleId, sha) {
+    const f = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, bundleId);
+    if (!f) return { state: "none" };
+    if (typeof f.content !== "string")
+      return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
+    let reg;
+    try { reg = JSON.parse(f.content); } catch {
+      return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
+    }
+    const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    const doc = (Array.isArray(reg?.documents) ? reg.documents : [])
+      .find((d) => d && bare(d.capture?.sha256) === sha && d.parts !== undefined);
+    if (!doc) return { state: "none" };
+    const ok = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) =>
+      p && /^[0-9a-f]{64}$/.test(bare(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
+    if (!ok) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
+    return { state: "named", parts: doc.parts.map((p) => ({ file: typeof p.file === "string" ? p.file : null,
+                                                            sha256: bare(p.sha256), bytes: p.bytes })) };
   }
 
   /* ---- project participation, Architecture section 7 ----
@@ -33902,14 +35034,26 @@ export class Store extends DurableObject {
    *  register answers for documents the record REGISTERED, and a prior acquire
    *  never promoted leaves parts in R2 and no register row. `registered: false` is
    *  that one fact and nothing more; `registered: null` is no question asked.
+   *
+   *  D-530 - AND THE PLANE'S OWN RECEIPT, `acquired`. `captured_locators` has one
+   *  writer, `op=acquire`, and the hash in it is the one the plane computed as the
+   *  bytes ARRIVED; nothing deletes a store's captures. So a receipt for a whole
+   *  hash that has no object under it says the plane took the document and keeps
+   *  it in parts, and no caller can write it. The register cannot say that: a
+   *  register row is written by `op=promote` from what its CALLER names, and
+   *  promote does not read R2 (D-45). `op=attest` attests on the receipt and not on
+   *  the register alone; the ratify gate names a whole-hash row held in parts
+   *  rather than calling its bytes absent. One bounded read on the
+   *  `captured_locators_sha` index, and like `registered` it names no bundle.
    */
   registerHolds({ sha = null } = {}) {
     const s = typeof sha === "string" && sha.trim()
       ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
-    if (!s) return { ok: true, sha: null, asked: false, registered: null };
+    if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
     return { ok: true, sha: s, asked: true, registered: !!this.#one(
       `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
-        WHERE r.capture_sha = ? LIMIT 1`, s) };
+        WHERE r.capture_sha = ? LIMIT 1`, s),
+      acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s) };
   }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
@@ -36193,7 +37337,7 @@ export class Store extends DurableObject {
        ratified. Stamped once and never re-stamped: a re-ratification of the
        same bytes is a retry, not a revision. */
     if (complete && !c.ratified_at) {
-      const at = findings.reduce((mx, x) => (x.ratified_at > mx ? x.ratified_at : mx), findings[0].ratified_at);
+      const at = findings.reduce((mx, x) => (instantOrder(x.ratified_at, mx) > 0 ? x.ratified_at : mx), findings[0].ratified_at);
       this.sql.exec(`UPDATE published_cases SET ratified_at=? WHERE case_id=? AND edition=?`, at, caseId, ed);
       c.ratified_at = at;
     }
@@ -37556,7 +38700,7 @@ export class Store extends DurableObject {
    *  run that will die first and a mean would hide it. */
   recordRuntimeObservation({ metric, ms, detail = null, at = null }) {
     if (!metric || typeof ms !== "number" || !Number.isFinite(ms)) return { recorded: false };
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const cur = [...this.sql.exec(`SELECT * FROM runtime_observations WHERE metric = ?`, metric)][0] || null;
     if (!cur) {
       this.sql.exec(
@@ -37632,7 +38776,7 @@ export class Store extends DurableObject {
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
   renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
     /* CEILED, never floored: a reservation rounded DOWN is a reservation short of the cost it
@@ -37677,7 +38821,7 @@ export class Store extends DurableObject {
    *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
    *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
   renderSpend({ ms, releaseMs = 0, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
     const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
@@ -37720,7 +38864,7 @@ export class Store extends DurableObject {
   }
 
   recordCpuProbeStep({ step, elapsedMs, iterations, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     this.sql.exec(
       `INSERT INTO cpu_probe (step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?)
        ON CONFLICT(step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
@@ -40164,7 +41308,7 @@ export class Store extends DurableObject {
           { target, version: vname, project: projectId });
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const hidden = act === "hide"
       ? !(a.hidden === false || a.hidden === "false" || a.hidden === "0")
       : (row.hidden === true);
@@ -40563,7 +41707,7 @@ export class Store extends DurableObject {
       refused_state_by: args.state_by ?? null, refused_state_at: args.state_at ?? null,
       refused_state_reason: args.state_reason ?? null, refused_at: args.at ?? null,
     });
-    const nowIso = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const nowIso = stampInstant("second");
     const prior = this.#one(
       `SELECT * FROM suggest_refusals WHERE target=? AND base_sha=? AND submission=?`,
       target, b.bundle_sha, submission);
@@ -42217,7 +43361,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: code, code, check: row.check,
                translation: row.translation, detail, ...(extra || {}) };
     };
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
 
@@ -42292,7 +43436,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: code, code, check: row.check,
                translation: row.translation, detail, ...(extra || {}) };
     };
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const id = String(tokenId ?? "").trim();
 
     /* DEC-49 REGION is-ai-credential-revoke
@@ -42402,7 +43546,7 @@ export class Store extends DurableObject {
    *  bytes and do not change; a second filing is a re-run, not new information. */
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] }) {
     if (!sourceCapture) return { recorded: 0 };
-    const now = new Date().toISOString().split(".")[0] + "Z";
+    const now = stampInstant("second");
     this.sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
     let n = 0;
     for (const l of links) {
@@ -42611,7 +43755,7 @@ export class Store extends DurableObject {
   /** Append a verdict. Never an update: a verdict that changed is a fact about
    *  the record, and the current answer is simply the newest row. */
   recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     this.sql.exec(
       `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
@@ -42631,7 +43775,7 @@ export class Store extends DurableObject {
    *  that walks away costs one row until its hour is up. */
   saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 3600000, at = null }) {
     const now = at ? new Date(at) : new Date();
-    const iso = (d) => d.toISOString().split(".")[0] + "Z";
+    const iso = (d) => stampInstant("second", d);
     this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
     if (!session || !state) return { session: null, saved: false };
     const cur = [...this.sql.exec(`SELECT ticks FROM capture_sessions WHERE session = ?`, session)][0];
@@ -42649,7 +43793,7 @@ export class Store extends DurableObject {
 
   loadCaptureSession({ session, at = null }) {
     const now = at ? new Date(at) : new Date();
-    const iso = now.toISOString().split(".")[0] + "Z";
+    const iso = stampInstant("second", now);
     this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso);
     const r = [...this.sql.exec(`SELECT * FROM capture_sessions WHERE session = ?`, session)][0] || null;
     if (!r) return { session, found: false,
@@ -42795,7 +43939,7 @@ export class Store extends DurableObject {
   static AI_RUNS_LIMIT_DEFAULT = 200;
   static AI_RUNS_LIMIT_MAX = 1000;
 
-  static #aiIso(ms) { return new Date(ms).toISOString().split(".")[0] + "Z"; }
+  static #aiIso(ms) { return stampInstant("second", ms); }
 
   /* ==================================================================== *
    * REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE.
@@ -42862,7 +44006,7 @@ export class Store extends DurableObject {
     };
     const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));
     if (bad) return bad;
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     /* `seq` is assigned by SQLite as the rowid, which is store-wide and
        monotonic — §3's requirement. It is not reused, because nothing deletes a
        row: the only DELETE is the whole-store purge, after which the table is
@@ -45195,6 +46339,12 @@ export class Store extends DurableObject {
               principalPlane = null, principalClaude = null, principalClaudeRef = null,
               skillVersion = null, biasManifest = null, standardPair = null,
               bounds = null, state = null, leaseMs = null, at = null,
+              /* REC-207 (BOB #32, 2026-09-23 23:42Z): WHICH RUN THIS ONE RE-RUNS, the opener's own word
+                 and nothing derived. It is what makes discharge (2) addressable at all — without it there
+                 is no link in the record between a re-run and the debt it settles, and a plane inferring
+                 one from a context and a clock would be guessing at a judgement. Optional and additive: a
+                 run that names none is exactly the run this op opened before. */
+              rerunOf = null,
               /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
                  `index.mjs` and empty for a machine credential. Never a
                  caller's word — a principal a caller can name is not one, which
@@ -45371,13 +46521,56 @@ export class Store extends DurableObject {
                translation: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
                note: "a run with this id already exists" };
 
+    /* REC-207 — THE RE-RUN LINK IS JUDGED BEFORE IT IS WRITTEN, because a link the record cannot stand
+       behind is worse than none: `aiRunClose` settles a bias debt on the strength of this field, so a
+       `rerun_of` naming a run that is not there, or that is somewhere else, would be a discharge resting
+       on the caller's word. Asked LAST of the open's guards — after authority and after shape — so a
+       caller with no standing here learns nothing about which runs exist.
+       NO `DEC-49 REGION` MARKER HERE, and the absence is a CORRECTION this item's own guard run forced —
+       the same shape as the note at this function's project gate, one cause down. The three rows'
+       `where` is the WHOLE FUNCTION, as its three existing rows' are, because `check-refusal-codes.mjs`
+       judges a region's refusals at the region AND again at an enclosing whole-function site, where the
+       code is not one of that site's rows: a region inside a function that keeps a whole-function `where`
+       fails all three by name. Measured on the first run of this item. The row's own header in
+       bio-checks.mjs carries the argument and names the honest fix as REC-71's work. */
+    const reRuns = String(rerunOf ?? "").trim();
+    if (reRuns) {
+      if (reRuns === String(run))
+        return { run, started: false,
+                 code: "AI_RUN_RERUN_SELF",
+                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.check,
+                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.translation,
+                 note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's "
+                     + "work this one repeats, and a self-reference would let one run discharge its own "
+                     + "bias debt" };
+      const target = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, reRuns);
+      /* UNSEEN ANSWERS AS ABSENT, byte for byte — `aiRunClose`'s own posture and REC-25/REC-30's rule.
+         A caller must not be able to establish that a run exists by offering to re-run it. */
+      if (!target || !this.#aiRunInSight(reRuns, viewer))
+        return { run, started: false,
+                 code: "AI_RUN_RERUN_UNKNOWN",
+                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.check,
+                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.translation,
+                 note: "no such run: it either never existed, was purged, or is not one this caller can "
+                     + "open" };
+      if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
+        return { run, started: false,
+                 code: "AI_RUN_RERUN_OTHER_CONTEXT",
+                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.check,
+                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.translation,
+                 note: "a re-run runs the same question or project again. The lens a bias debt is owed "
+                     + "against is the one in force for the INDEBTED run's context, so a re-run somewhere "
+                     + "else would be measured against a different lens entirely" };
+    }
+
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : Store.AI_RUN_LEASE_MS;
     this.ctx.storage.transactionSync(() => {
       this.sql.exec(
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
-           bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+           bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
+           rerun_of)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
         run, label, mode, String(contextType), String(contextId),
         /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
            a value that survives a falsiness guard while naming nothing reads as
@@ -45386,7 +46579,10 @@ export class Store extends DurableObject {
         String(principalPlane), String(principalClaude), principalClaudeRef,
         String(skillVersion).trim(),
         biasManifest, standardPair, now, now, Store.#aiIso(nowMs + lease),
-        JSON.stringify(state == null ? {} : state), lensAtOpen);
+        JSON.stringify(state == null ? {} : state), lensAtOpen,
+        /* REC-207: judged above, and stored as every empty case on this open is stored — absent rather
+           than defaulted. A run that names no re-run reads `rerun_of` NULL, which is what it is. */
+        reRuns || null);
       for (const b of Array.isArray(bounds) ? bounds : []) {
         if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
         this.sql.exec(
@@ -45404,7 +46600,13 @@ export class Store extends DurableObject {
        that never ran. Stating it is the same obligation as stating which
        absence was found. */
     return { run, started: true, status: "running", ticks: 1, created: now,
-             expires: Store.#aiIso(nowMs + lease), ...Store.#aiRunGateStated(gate) };
+             expires: Store.#aiIso(nowMs + lease),
+             /* REC-207: the link, echoed, and ONLY when there is one. A caller that named a re-run should
+                be able to see that the record took it, because the discharge at this run's close rests on
+                it — and an echo that appeared as `null` on every other open would be a new key on an
+                answer every existing reader parses, for no fact. */
+             ...(reRuns ? { rerun_of: reRuns } : {}),
+             ...Store.#aiRunGateStated(gate) };
   }
 
   /** REC-152 — CAN THIS VIEWER SEE THIS RUN? `aiRunRead`'s own predicate (D-15's `#bundleGate` over the
@@ -45550,7 +46752,13 @@ export class Store extends DurableObject {
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
    *  to the one exit, and a caller who names no bound is refused by C-22.5
    *  rather than having "completed" inferred from its silence. */
-  aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null,
+  /* REC-207 — ASYNC, and the change is one `await` at the foot. A re-run's own close is where discharge
+     (2) is taken (see `#biasDebtDischargeByRerun` for why the close and not the open), and reading what
+     lens this run was formed under goes through `#biasForRun`, which is async because `biasManifest` is.
+     ADDITIVE ON THE WIRE: the DO's dispatch already `await`s every op, `#aiRunTerminate` is untouched and
+     still synchronous, and the REAPER still calls it directly — so a lapsed run is closed by the clock on
+     exactly the path it was before, with no member and no discharge. */
+  async aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null,
                /* REC-152: the caller's PRINCIPAL, stamped server-side — see `aiRunTick`. */
                caller = null } = {}) {
     const now = at ? Store.#aiIso(Date.parse(at)) : Store.#aiIso(Date.now());
@@ -45600,7 +46808,16 @@ export class Store extends DurableObject {
                      + "(DEC-63), and the contribute capability is only the floor beneath "
                      + "that. The run is untouched and is still running" };
     }
-    return this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
+    const ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
+    /* REC-207 — THE DISCHARGE, AND ONLY OVER A RUN THAT ACTUALLY ENDED HERE. A refused close and a run
+       that was already closed both leave `terminated` other than true, and neither is a re-run having
+       run. The block is attached only when there was a link to follow, so an ordinary close answers
+       byte-for-byte what it answered before this item. */
+    if (ended && ended.terminated === true) {
+      const discharge = await this.#biasDebtDischargeByRerun({ run, at: now });
+      if (discharge) return { ...ended, bias_debt: discharge };
+    }
+    return ended;
   }
 
   /* ---- the reaper's three parts, and none of them decides anything ----
@@ -46550,7 +47767,11 @@ export class Store extends DurableObject {
     const from = st && st.target === fp ? String(st.cursor || "") : "";
     const rows = this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`, from, cap + 1);
     const batch = rows.slice(0, cap);
-    const out = { read: 0, raised: [], restated: [], cleared: [], undetermined: [], unchanged: 0,
+    /* REC-207: `held` is the fifth outcome and it is NOT a kind of `unchanged`. A debt SETTLED by an
+       authored act (a re-run, a member's resolve) whose lens delta has not moved is deliberately left
+       settled — see the branch below — and a sweep that reported that as "nothing to do" would make the
+       one outcome this item added invisible to the instrument that watches the sweep. */
+    const out = { read: 0, raised: [], restated: [], cleared: [], held: [], undetermined: [], unchanged: 0,
                   complete: rows.length <= cap, batch: cap };
     for (const { run } of batch) {
       const read = await this.aiRunRead({ run, viewer: Store.BIAS_DEBT_VIEWER });
@@ -46574,19 +47795,44 @@ export class Store extends DurableObject {
              VALUES (?,?,?,?,?,?,?,?,?,NULL)`,
             run, session.context.type, session.context.id, bias.moved_basis ?? null, then, now, recipients, at, at);
           out.raised.push(run);
+        } else if (prior.cleared_at != null && SETTLED_BY_AN_ACT.has(prior.settled_kind)
+                   && prior.lens_now === now && prior.lens_then === then) {
+          /* REC-207 — SETTLED BY AN AUTHORED ACT, OVER EXACTLY THIS LENS DELTA, SO IT STAYS SETTLED.
+             D-86's rule that a cleared debt found moved again is NEW debt is UNCHANGED and is the branch
+             below; it is written for the settlement D-86 had, the lens moving BACK, where the delta
+             genuinely reappearing is a new fact about the lens. The two acts this item adds settle a
+             STATED delta — the member resolved *this* change, the re-run ran under *this* lens — so
+             re-raising the identical `lens_then`/`lens_now` pair would be asking the same member the same
+             question again, which is the nagging DEC-69 refuses. A lens that moves ONWARDS moves `now` and
+             falls through to the branch below as new debt, which is the whole of what keeps this honest.
+             The recipients are refreshed without re-opening: a settled debt is in nobody's queue, so the
+             list is a fact about the run's readers rather than about anyone's attention. */
+          if (prior.recipients !== recipients)
+            this.sql.exec(`UPDATE bias_debts SET recipients = ?, observed = ? WHERE run = ?`,
+              recipients, at, run);
+          out.held.push(run);
         } else if (prior.cleared_at != null || prior.lens_now !== now || prior.lens_then !== then
                    || prior.recipients !== recipients) {
-          /* A CLEARED debt that moves again is NEW debt and ages from now; a live one restated keeps its age. */
+          /* A CLEARED debt that moves again is NEW debt and ages from now; a live one restated keeps its age.
+             REC-207: and `settled_kind` is cleared with `cleared_at`, because the settlement it named is a
+             fact about the debt that just ended and not about the one being raised now. The settlement ROW
+             stays where it is — `bias_debt_settlements` is append-only and this is not a write to it. */
           this.sql.exec(
             `UPDATE bias_debts SET moved_basis = ?, lens_then = ?, lens_now = ?, recipients = ?, observed = ?,
-                    raised = CASE WHEN cleared_at IS NULL THEN raised ELSE ? END, cleared_at = NULL
+                    raised = CASE WHEN cleared_at IS NULL THEN raised ELSE ? END, cleared_at = NULL,
+                    settled_kind = NULL
               WHERE run = ?`,
             bias.moved_basis ?? null, then, now, recipients, at, at, run);
           out.restated.push(run);
         } else out.unchanged++;
       } else if (moved === false) {
         if (prior && prior.cleared_at == null) {
-          this.sql.exec(`UPDATE bias_debts SET cleared_at = ?, observed = ? WHERE run = ?`, at, at, run);
+          /* REC-207: THROUGH THE ONE WRITER, so the lens moving back leaves a row saying so. It wrote a bare
+             `cleared_at` before this item, which is the silent clearing BOB #32's ruling names — and the
+             settlement that was ALREADY built is the one that most needed the record, because it is the one
+             no member is present for. The two hashes recorded are the debt's own, as it stood. */
+          this.#biasDebtSettle({ run, kind: "lens_returned", at,
+                                 lensThen: prior.lens_then, lensNow: prior.lens_now });
           out.cleared.push(run);
         } else out.unchanged++;
       } else out.undetermined.push(run);
@@ -46647,6 +47893,262 @@ export class Store extends DurableObject {
     return items;
   }
   static BIAS_DEBT_QUEUE_MAX = 200;
+
+  /* ==================================================================== REC-207
+   * WHAT SETTLES A BIAS-DEBT OBLIGATION — BOB #32's ruling of 2026-09-23 23:42Z
+   * (`BIO_Declared_Bias_v0_1.md`, "Bias debt, and HUNCH DEBT"):
+   *
+   *   *"Three acts settle a bias-debt obligation, and each is RECORDED; none clears it silently.
+   *   (1) The lens moves back, as built. (2) A re-run under the CURRENT lens discharges the debt of
+   *   the run it re-runs, and the obligation is closed with the discharging run's id and lens pins,
+   *   so a reader sees WHICH run settled it. A re-run under any other lens discharges nothing.
+   *   (3) A member's resolve with a REQUIRED stated reason: an authored act, attributed, dated and
+   *   append-only. It needs no re-run, because a member may judge that the lens change does not bear
+   *   on the finding. Derived informs, authored binds (DEC-24), and a member is never forced (DEC-69)."*
+   *
+   * WHAT WAS WRONG BEFORE THIS, measured on `1a7f0bcc0`: D-86 raised the obligation and NOTHING but the
+   * lens moving back took it out of the queue. `op=taskresolve` addresses rows in `tasks` and a bias debt
+   * is not a task — `#dispositionOf` pointed every OBLIGATION at that op, so the queue named a door a
+   * bias-debt item cannot go through. And the one settlement that did exist wrote a bare `cleared_at`, so
+   * a reader who came afterwards could see THAT the obligation had gone and never WHY.
+   *
+   * THE THREE ACTS GO THROUGH ONE WRITER, `#biasDebtSettle`, and that is the structural half of
+   * "each is RECORDED". A second writer is how one of the three comes to clear a debt without a row —
+   * exactly the silent clearing the ruling forbids — so there is one, and the sweep's own clear was moved
+   * onto it rather than left as the UPDATE it was.
+   *
+   * WHAT A SETTLEMENT IS NOT: a state a later sweep may overwrite. The lens moving AGAIN raises NEW debt
+   * (D-86's rule, unchanged) and writes a further settlement row when that one is settled in turn; the
+   * settled row is never edited and never deleted. So the sequence for a run IS its history.
+   * ==================================================================== */
+
+  /** The longest reason this store will hold, stated rather than hidden. A bound, not a judgement about
+   *  what a good reason looks like: DEC-69 and the ruling require a reason to be STATED, and a floor on
+   *  its length would be this plane grading a member's sentence, which is a fence tighter than its rule. */
+  static BIAS_DEBT_REASON_MAX = 4000;
+  /** The settlements `op=biasdebt` publishes for one run, and the bound is published with them. */
+  static BIAS_DEBT_SETTLEMENTS_MAX = 50;
+
+  /** THE ONE WRITER OF A SETTLEMENT. Every act that settles a bias debt — the sweep's lens-return, a
+   *  re-run's discharge, a member's resolve — appends its row HERE and stamps `bias_debts` from the same
+   *  values, so the append-only record and the debt's own state cannot disagree about which act closed it.
+   *  Synchronous, like every write on the sweep's path. */
+  #biasDebtSettle({ run, kind, at, actor = null, reason = null, byRun = null, lensThen = null, lensNow = null }) {
+    this.sql.exec(
+      `INSERT INTO bias_debt_settlements (run, kind, at, actor, reason, by_run, lens_then, lens_now)
+       VALUES (?,?,?,?,?,?,?,?)`,
+      run, kind, at, actor, reason, byRun, lensThen, lensNow);
+    this.sql.exec(
+      `UPDATE bias_debts SET cleared_at = ?, settled_kind = ?, observed = ? WHERE run = ?`,
+      at, kind, at, run);
+    return { run, kind, at, actor, reason, by_run: byRun, lens_then: lensThen, lens_now: lensNow };
+  }
+
+  /** The settlements on record for one run, oldest first, BOUNDED and the bound stated. Rows only — the
+   *  gate is the caller's, because this is called from two doors that have already asked it. */
+  #biasDebtSettlements(run, limit) {
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.BIAS_DEBT_SETTLEMENTS_MAX),
+                                     Store.BIAS_DEBT_SETTLEMENTS_MAX));
+    const rows = this.#rows(
+      `SELECT seq, kind, at, actor, reason, by_run, lens_then, lens_now
+         FROM bias_debt_settlements WHERE run = ? ORDER BY seq LIMIT ?`, run, cap + 1);
+    return { settlements: rows.slice(0, cap).map((r) => ({
+               seq: r.seq, kind: r.kind, at: r.at, actor: r.actor ?? null, reason: r.reason ?? null,
+               by_run: r.by_run ?? null, lens_then: r.lens_then ?? null, lens_now: r.lens_now ?? null })),
+             limit: cap, truncated: rows.length > cap };
+  }
+
+  /** How a SETTLED debt row reads. `cleared_at` set with NO `settled_kind` is a debt cleared before this
+   *  item existed, when the lens moving back was the only act there was — and it reads UNDETERMINED rather
+   *  than being attributed to that act, because a back-filled attribution is an invented one (D-85's rule
+   *  one table over, and `CLAUDE.md` §4: undetermined is first-class and must be STATED). */
+  static #biasDebtSettledView(row) {
+    if (row.cleared_at == null) return { settled: false };
+    if (row.settled_kind == null)
+      return { settled: true, at: row.cleared_at, kind: null, kind_state: "undetermined",
+               stated: "this debt was settled before the record kept which act settled it. The only act "
+                     + "there was then is the lens moving back, and naming it here would be attributing "
+                     + "the settlement to an act nobody recorded" };
+    return { settled: true, at: row.cleared_at, kind: row.settled_kind, kind_state: "determined" };
+  }
+
+  /** op=biasdebtresolve — DISCHARGE (3): A MEMBER'S RESOLVE, WITH A REQUIRED STATED REASON.
+   *
+   *  *"It needs no re-run, because a member may judge that the lens change does not bear on the finding"*
+   *  (BOB #32). So this act does not ask for evidence and does not re-open anything; what it requires is
+   *  that the judgement be SAID, by a named member, on a date, in a row nothing later edits. DEC-24's
+   *  authored half, and DEC-69: a member is never forced to re-run.
+   *
+   *  WHY A DOOR OF ITS OWN AND NOT `op=taskresolve`. That op addresses `tasks` by id and a bias debt is
+   *  keyed by the RUN it is about; there is no task row to resolve, and manufacturing one would put a
+   *  second writer on the obligation. The row's own headline is this sentence.
+   *
+   *  WHO MAY: any member the debt's own read gate admits — `#bundleGate` over the run's context, the SAME
+   *  predicate `#obligationsBiasDebt` compiles to decide who is shown the item. Deliberately NOT narrowed
+   *  to the producer's `recipients`: that list is who the item is OFFERED to, and D-86 already states that
+   *  where it can name nobody the obligation is offered to everyone who can read the run. A fence tighter
+   *  than that would refuse a member the queue had just asked. WHO resolved it is recorded either way.
+   *
+   *  A MACHINE MAY NOT, by SHAPE and before the row is read — `taskResolve`'s MACHINE_CANNOT_RESOLVE
+   *  precedent exactly: settling an obligation is a named member's judgement, and a credential with no
+   *  person behind it cannot hold one. */
+  biasDebtResolve({ run = null, reason = null, actor = null, viewer = null, at = null } = {}) {
+    /* NAMED `refusal`, shadowing the module helper, and the name is LOAD-BEARING rather than a style:
+       `check-refusal-codes.mjs` arm C reads a family helper's call sites by that identifier, so a helper
+       called anything else makes every refusal in this method invisible to the guard and each region
+       `where` below reads as a marker that has drifted off its arm. Measured on this item's first run:
+       both regions printed `0 judged, 0 code(s) checked` and the guard failed naming them. `aiRunsInContext`
+       shadows it the same way and for the same reason. Every code inside is a STRING LITERAL at its site. */
+    const refusal = (code, detail, extra = {}) => {
+      const row = BIAS_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
+    };
+    const id = String(run ?? "").trim();
+    const who = String(actor ?? "").trim();
+    const said = typeof reason === "string" ? reason.trim() : "";
+    /* DEC-49 REGION is-bias-debt-resolve-shape — the four conditions that are about the ACT rather than
+       about the debt, asked BEFORE the record is read, so a caller who may not see the run learns nothing
+       from the order of the answers. */
+    if (!id)
+      return refusal("BIAS_DEBT_NO_RUN",
+        "a bias debt is keyed by the run it is about, so the act has to name one");
+    if (!who)
+      return refusal("BIAS_DEBT_NO_ACTOR",
+        "a resolution is recorded under the member who made it, and there is no member on this call");
+    if (isMachineStamp(who))
+      return refusal("BIAS_DEBT_MACHINE_CANNOT_RESOLVE",
+        "settling a bias debt is a judgement that the lens change does not bear on the finding, and that "
+        + "is a named member's judgement (DEC-24: derived informs, authored binds). A machine credential "
+        + "may raise the obligation, surface it and prepare what it needs, and may not answer it");
+    if (!said)
+      return refusal("BIAS_DEBT_NO_REASON",
+        "this act settles an obligation the record raised, and the whole of what it records is the "
+        + "member's stated ground for settling it. Without the reason the row would say that somebody "
+        + "decided and not what they decided");
+    if (said.length > Store.BIAS_DEBT_REASON_MAX)
+      return refusal("BIAS_DEBT_REASON_TOO_LONG",
+        `the stated reason is ${said.length} characters and this record holds at most `
+        + `${Store.BIAS_DEBT_REASON_MAX}`, { limit: Store.BIAS_DEBT_REASON_MAX, length: said.length });
+    /* END DEC-49 REGION is-bias-debt-resolve-shape */
+    const seen = this.#bundleGate("bd.context_id", viewer);
+    const row = this.#one(`SELECT bd.* FROM bias_debts bd WHERE bd.run = ? AND (${seen.sql})`, id, ...seen.args);
+    /* DEC-49 REGION is-bias-debt-resolve-subject — the two conditions about the debt itself. A debt this
+       viewer may not see answers EXACTLY as one that was never raised (REC-25/REC-30: a refusal that tells
+       "not yours" apart from "does not exist" has told the caller the thing it was withholding). */
+    if (!row)
+      return refusal("BIAS_DEBT_NO_SUCH_DEBT",
+        "no open bias debt stands against this run here: it either never carried one, it has already been "
+        + "settled, or this reader cannot open the run it is about", { run: id });
+    if (row.cleared_at != null)
+      return refusal("BIAS_DEBT_ALREADY_SETTLED",
+        "this obligation has already been settled, and a settlement is appended rather than replaced",
+        { run: id, settled: Store.#biasDebtSettledView(row) });
+    /* END DEC-49 REGION is-bias-debt-resolve-subject */
+    const when = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
+    const settled = this.#biasDebtSettle({ run: id, kind: "resolved", at: when, actor: who, reason: said,
+                                           lensThen: row.lens_then, lensNow: row.lens_now });
+    return { ok: true, run: id, settled };
+  }
+
+  /** op=biasdebt — THE READ, and it is what makes "RECORDED, never cleared silently" a fact a reader can
+   *  check rather than a promise. One run's debt and every settlement on it, in order.
+   *
+   *  GATED on the run's context through `#bundleGate`, the one predicate `#obligationsBiasDebt` and
+   *  `op=airun` compile. A debt the viewer may not see answers BYTE-IDENTICALLY to a run that never
+   *  carried one — one answer, not two.
+   *
+   *  BOUNDED, and the bound is PUBLISHED: `limit` and `truncated` beside the rows. */
+  biasDebtRead({ run = null, viewer = null, limit = null } = {}) {
+    const id = String(run ?? "").trim();
+    const absent = { ok: true, run: id || null, found: false,
+                     note: "no bias debt is on record for this run: it either never carried one, or the "
+                         + "run is not one this reader can open" };
+    if (!id) return absent;
+    const seen = this.#bundleGate("bd.context_id", viewer);
+    const row = this.#one(`SELECT bd.* FROM bias_debts bd WHERE bd.run = ? AND (${seen.sql})`, id, ...seen.args);
+    if (!row) return absent;
+    const s = this.#biasDebtSettlements(id, limit);
+    return {
+      ok: true, run: id, found: true,
+      open: row.cleared_at == null,
+      context: { type: row.context_type, id: row.context_id },
+      raised: row.raised, observed: row.observed,
+      moved_basis: row.moved_basis ?? null, lens_then: row.lens_then ?? null, lens_now: row.lens_now ?? null,
+      settled: Store.#biasDebtSettledView(row),
+      settlements: s.settlements, limit: s.limit, truncated: s.truncated,
+      stated: "bias debt is DISCLOSED and blocks nothing (DEC-20). Three acts settle it and each is on "
+            + "record here: the lens moving back, a re-run under the lens now in force, and a member's "
+            + "resolve with a stated reason (BOB #32, 2026-09-23)",
+    };
+  }
+
+  /** DISCHARGE (2): A RE-RUN UNDER THE CURRENT LENS, taken at the re-run's OWN CLOSE.
+   *
+   *  WHY AT THE CLOSE AND NOT AT THE OPEN, and this is the load-bearing choice in the whole discharge.
+   *  The obligation says a RE-RUN is owed. A run that was opened and never ran has not re-run anything, so
+   *  discharging at the open would settle a debt on the strength of a row EXISTING rather than of anything
+   *  having happened — *"a mechanism believed on the strength of its EXISTENCE rather than its behaviour is
+   *  the defect this project meets most"* (`kickoffs/WORKER.md`). The LINK is authored at the open
+   *  (`ai_runs.rerun_of`, the opener's own word about what this re-runs) and the DISCHARGE is taken here.
+   *
+   *  AND ONLY THROUGH THE MEMBER'S DOOR. The reaper closes a lapsed run by calling `#aiRunTerminate`
+   *  directly and never comes through `aiRunClose`, so a re-run that ran out of lease discharges nothing.
+   *  That is the honest reading and it is stated rather than left to be inferred from the call graph.
+   *
+   *  "UNDER THE CURRENT LENS" IS ONE COMPARISON AND IT IS NOT MADE HERE. `#biasForRun` — the one reader
+   *  `op=airun` publishes, and the one D-86's sweep already follows — answers what this run was FORMED
+   *  under (the manifest it was handed) and what is in force NOW for its context. This method reads those
+   *  two hashes and compares nothing else. A second comparison of its own would agree with that reader
+   *  today and be the thing that drifts, which is D-86's own recorded liar.
+   *
+   *  AND AN EQUALITY THAT COSTS NOTHING IS NOT EVIDENCE. Where either side has no hash — nothing was
+   *  handed to this run, or no lens is in force — the two absences are NOT read as agreement: the answer
+   *  is UNDETERMINED, stated, and nothing is discharged. Two empty digests agree on nothing.
+   *
+   *  THE CONTEXT IS ALREADY THE SAME ONE: `aiRunOpen` refuses a `rerun_of` naming a run in another context
+   *  (AI_RUN_RERUN_OTHER_CONTEXT), so the lens in force for this run IS the lens the debt is owed against.
+   *  Without that fence a re-run in another project would be measured against another project's lens. */
+  async #biasDebtDischargeByRerun({ run, at }) {
+    const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
+    const target = row && row.rerun_of != null && String(row.rerun_of).trim()
+      ? String(row.rerun_of).trim() : null;
+    if (!target) return null;
+    const debt = this.#one(`SELECT * FROM bias_debts WHERE run = ? AND cleared_at IS NULL`, target);
+    /* `outcome`, NOT `reason`, and the three values are lower case. Neither is style: this is a SUCCESS
+       answer stating what the discharge attempt found, and a `reason` key holding an upper-case word is
+       exactly what `check-refusal-codes.mjs`'s census reads as a
+       refusal the plane can mint — and it reads the source TEXT, so the pattern must not appear even in
+       a comment explaining it, which is why this sentence describes it in words. Measured on this item's
+       first run the three values, then spelled in upper case, entered the census as untranslated refusal
+       codes and moved its floor — codes no member can ever be refused with. A word that means "refusal"
+       to the instruments must not be used for anything else. */
+    if (!debt)
+      return { re_ran: target, discharged: false, outcome: "no_open_debt",
+               stated: "no open bias debt stands against the run this one re-ran" };
+    const bias = await this.#biasForRun(row, Store.BIAS_DEBT_VIEWER);
+    const formed = bias && bias.in_force === true && bias.manifest
+                   && typeof bias.manifest.statements_sha === "string"
+      ? bias.manifest.statements_sha : null;
+    const inForce = bias && bias.now && bias.now.in_force === true
+                    && typeof bias.now.statements_sha === "string"
+      ? bias.now.statements_sha : null;
+    if (formed == null || inForce == null)
+      return { re_ran: target, discharged: false, outcome: "lens_undetermined",
+               lens_ran_under: formed, lens_in_force: inForce,
+               stated: formed == null
+                 ? "this run was handed no lens that can be read, so whether it ran under the lens now in "
+                 + "force is undetermined and it discharges nothing"
+                 : "no lens is in force for this run's context, so whether it ran under the current one is "
+                 + "undetermined and it discharges nothing" };
+    if (formed !== inForce)
+      return { re_ran: target, discharged: false, outcome: "other_lens",
+               lens_ran_under: formed, lens_in_force: inForce,
+               stated: "this run was formed under a lens other than the one now in force, so it discharges "
+                     + "nothing (BOB #32: a re-run under any other lens discharges nothing)" };
+    const settled = this.#biasDebtSettle({ run: target, kind: "rerun", at, byRun: run,
+                                           lensThen: debt.lens_then, lensNow: formed });
+    return { re_ran: target, discharged: true, lens_ran_under: formed, lens_in_force: inForce, settled };
+  }
 
   /** op=airunspawn — THE FENCE, AS CODE.
    *
@@ -46974,7 +48476,7 @@ export class Store extends DurableObject {
    *  having to go looking. */
   recordSiteAssets({ host, primarySha, observations = [], at = null }) {
     if (!host || !primarySha) return { host: null, recorded: 0 };
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     let added = 0, changedCount = 0;
     const changed = [];
     /* CAP-14: the capture a REUSED observation names as its source is the one the
@@ -47092,12 +48594,17 @@ export class Store extends DurableObject {
    *  so the tick and the suite read the same rule.
    *
    *  `actorClass`/`actor` come from the QUERY STRING, where the control plane stamped them. */
-  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null } = {}) {
+  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null, scope = null } = {}) {
     const cap = typeof baseline === "string" && /^[0-9a-f]{64}$/.test(baseline) ? baseline : null;
+    /* D-567: a rendered capture's tick compares the SHELL, so its look is about the FRAME and
+       the referent is the pair's shell digest; the detail says so, and says the content is
+       undetermined, so the log never reads a frame match as the document unchanged. */
+    const frame = scope === "frame" ? "frame " : "";
+    const tail = scope === "frame" ? "; content undetermined" : "";
     switch (outcome) {
       /* The zero-payload revisit: the record's own capture, confirmed at a date. */
       case "unchanged":
-        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: "unchanged" } : null;
+        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: `${frame}unchanged${tail}` } : null;
       /* The substance moved. §4.1 says `result_ref` = the NEW sha — but a tick does not
          capture the new version, so the record does not hold it, and naming it as a
          `capture` would be the log claiming a document the record lacks. The referent is
@@ -47105,7 +48612,7 @@ export class Store extends DurableObject {
          (A DESIGN GAP against §4.1, raised in D-65's report.) */
       case "changed":
         return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap,
-                       detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}` } : null;
+                       detail: `${frame}changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}${tail}` } : null;
       case "removed":
         return { state: "LOOKED_ABSENT", detail: `gone; the source answered ${httpStatus ?? "unknown"}` };
       case "unreachable":
@@ -47122,15 +48629,15 @@ export class Store extends DurableObject {
   }
 
   recordMonitorLook({ bundleId = null, address = null, outcome = null, baseline = null, seen = null,
-                      httpStatus = null, reason = null, actorClass = "plane", actor = null } = {}) {
+                      httpStatus = null, reason = null, scope = null, actorClass = "plane", actor = null } = {}) {
     if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
-    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason });
+    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason, scope });
     if (!row) return { ok: true, written: false,
                        why: outcome === "unchanged" || outcome === "changed"
                          ? "no captured baseline, so the look has no capture to refer to and is not recorded"
                          : `no observation is recorded for the outcome '${String(outcome)}'` };
     const cls = actorClass === "member" || actorClass === "machine" ? actorClass : "plane";
-    const now = new Date().toISOString().split(".")[0] + "Z";
+    const now = stampInstant("second");
     const bad = this.#observe({
       actorClass: cls, actor: cls === "plane" ? null : actor,
       authorityKind: "sweep", authority: String(bundleId),
@@ -47150,7 +48657,7 @@ export class Store extends DurableObject {
    *  network traffic (VERIFICATION.md), so it does the fetching and hashing and
    *  hands the store the verdicts to commit; the store invents none of them. */
   recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     let recorded = 0;
     const refusals = [];
     for (const v of verdicts) {
@@ -47279,7 +48786,7 @@ export class Store extends DurableObject {
    *  never refused, which is NOT evidence about where the ceiling is and only
    *  advances the counter toward the next probe. */
   recordCaptureLimit({ runtime = "subrequests", observed = null, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const cur = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
     if (observed == null) {
       if (cur) this.sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
@@ -47335,7 +48842,7 @@ export class Store extends DurableObject {
        rendered as quoted data by anything that shows it. */
     const text = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
-    const now = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
+    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
     const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
     if (existing) {
       /* Still in the queue, so the consumer still owes it a drain: (re-)arm the
@@ -47444,7 +48951,7 @@ export class Store extends DurableObject {
    *  exists, and inventing a refers_to would be worse than being patient. */
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 50)));
-    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const queued = this.#rows(`SELECT * FROM task_queue ORDER BY enqueued, capture_sha LIMIT ?`, cap);
     const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
     for (const q of queued) {
@@ -47703,7 +49210,7 @@ export class Store extends DurableObject {
     const target = this.#one(`SELECT member_id FROM members WHERE member_id=? AND status='active'`, to);
     if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
     if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
-    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "forwarded", actor });
     task.assignee = target.member_id;
@@ -47749,7 +49256,7 @@ export class Store extends DurableObject {
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
     const fenced = this.#refuseNotYours(row, actor, "resolve");
     if (fenced) return fenced;
-    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "resolved", actor });
     task.status = "resolved";
@@ -47788,6 +49295,24 @@ export class Store extends DurableObject {
    * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
    * `reason`, `to` or disposition — and an item may override it for itself.
    *
+   * REC-205 — A SHARED IDENTITY OF ONE SHAPE MUST NOT REACH AN ITEM OF ANOTHER, and this is what lets a
+   * MIXED selection be one act. `op=proposedispose` has three identity shapes (`key`;
+   * `progressionKey`+`stageKey`; `project`+`finding`) and it decides WHICH ACT IT IS by what the caller
+   * SENT. In a set, "what the caller sent" for an item is the shared body plus the item — so a caller
+   * that names the project ONCE for a selection all in one team (a legitimate shape: the item then
+   * carries only its `finding`) was silently making every OTHER item in that set project-scoped too. A
+   * progression finding beside it, naming a perfectly good `key`, came back NO_FINDING: *"a project with
+   * no finding names a team and no decision"* — true of the body the helper built and false of the act
+   * the member asked for. MEASURED at 1a7f0bcc0 before the fix, not inferred.
+   *
+   * SO THE NARROWING IS BY THE PUBLISHED SHAPES AND NOT BY A LIST HERE. `item_keys` already declares each
+   * act's identity groups and `op=affordances` already publishes them; an item that NAMES a key from one
+   * or more groups keeps the shared values of THOSE groups' keys and of `shared_keys`, and the shared
+   * values of the other groups' identity keys are dropped for that item alone. An item naming no identity
+   * at all is unchanged, so the wholly-shared subject still reaches the act to be refused in its own
+   * words. This is a no-op for the three acts with ONE identity group (`taskresolve`, `taskforward`) or
+   * whose second group's extra key is shared anyway (`resolve`'s `ref`) — measured, not assumed.
+   *
    * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
    * at most once, after all of its own refusals, so an item that is refused has written nothing. */
   static PER_ITEM_MAX = PER_ITEM_MAX;   /* affordances.mjs: ONE number, published as set_acts[].max_items */
@@ -47819,6 +49344,29 @@ export class Store extends DurableObject {
       }
       return o;
     };
+    /* REC-205 — THE SHARED BODY, NARROWED TO WHAT THIS ITEM'S OWN SHAPE ADMITS (the reasoning is in the
+       block comment above). `groups` is the act's published `item_keys`; `identity` is every key those
+       groups name that is NOT also a published `shared_key`, so a key an act declares shareable (op=resolve's
+       `ref`) is never taken away from an item that relies on it. NAMED is read the way the acts themselves
+       read an identity — a trimmed, non-empty string — so an item carrying `project: ""` has named nothing
+       and is not told it meant a project. An act not in the catalogue narrows nothing and behaves exactly
+       as it did before this landing; that it cannot happen is asserted structurally in the suite rather
+       than assumed here. */
+    const published = PER_ITEM_ACTS.find((a) => a.id === act) || null;
+    const groups = (published && Array.isArray(published.item_keys)) ? published.item_keys : [];
+    const shareable = new Set((published && Array.isArray(published.shared_keys)) ? published.shared_keys : []);
+    const identity = new Set(groups.flat().filter((k) => !shareable.has(k)));
+    const namesIt = (o, k) => o && typeof o[k] === "string" && o[k].trim() !== "";
+    const sharedFor = (it) => {
+      if (identity.size === 0) return shared;
+      const named = [...identity].filter((k) => namesIt(it, k));
+      if (named.length === 0) return shared;
+      const reach = new Set();
+      for (const g of groups) if (g.some((k) => named.includes(k))) for (const k of g) reach.add(k);
+      const narrowed = { ...shared };
+      for (const k of identity) if (!reach.has(k)) delete narrowed[k];
+      return narrowed;
+    };
     const outcomes = [];
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
@@ -47832,7 +49380,7 @@ export class Store extends DurableObject {
       /* END DEC-49 REGION is-per-item-malformed */
       let r;
       /* `items: undefined` LAST: an item cannot smuggle a nested set back into the act. */
-      try { r = one({ ...shared, ...it, ...stamped, items: undefined }); }
+      try { r = one({ ...sharedFor(it), ...it, ...stamped, items: undefined }); }
       catch (e) {
         /* DEC-49 REGION is-per-item-failed */
         r = refusal("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: `
@@ -48069,8 +49617,8 @@ export class Store extends DurableObject {
     this.#tickRunning.add("archive-monitor");
     try {
     const nowIso = Number.isFinite(now)
-      ? new Date(now).toISOString().split(".")[0] + "Z"
-      : new Date().toISOString().split(".")[0] + "Z";
+      ? stampInstant("second", now)
+      : stampInstant("second");
     const rows = this.#rows(
       `SELECT address_norm FROM source_reachability
         WHERE consecutive_failures >= ? ORDER BY first_failure_since LIMIT ?`,
@@ -48183,7 +49731,7 @@ export class Store extends DurableObject {
     this.sql.exec(
       `INSERT INTO monitor_tick_epoch (consumer, epoch, opened_at) VALUES (?, ?, ?)
        ON CONFLICT(consumer) DO UPDATE SET epoch=excluded.epoch, opened_at=excluded.opened_at`,
-      consumer, epoch, new Date(epoch).toISOString().split(".")[0] + "Z");
+      consumer, epoch, stampInstant("second", epoch));
     /* Any fired rows left from an older epoch are spent: the key only has to hold
        WITHIN one tick, and a fired-set that accumulated across ticks would stop a
        document ever being checked twice. */
@@ -48205,7 +49753,7 @@ export class Store extends DurableObject {
                   consumer, subject, epoch)) return false;
     this.sql.exec(
       `INSERT INTO monitor_fired (consumer, subject, epoch, fired_at) VALUES (?, ?, ?, ?)`,
-      consumer, subject, epoch, new Date().toISOString().split(".")[0] + "Z");
+      consumer, subject, epoch, stampInstant("second"));
     return true;
   }
 
@@ -48316,8 +49864,8 @@ export class Store extends DurableObject {
     this.#tickRunning.add("monitor-cadence");
     try {
     const at = Number.isFinite(now)
-      ? new Date(now).toISOString().split(".")[0] + "Z"
-      : new Date().toISOString().split(".")[0] + "Z";
+      ? stampInstant("second", now)
+      : stampInstant("second");
     const plan = this.#monitorCadencePlan(now);
     /* An open cadence tick is a retry only within the SHORTEST cadence this
        plane schedules at: past that, a document is genuinely due again and the
@@ -48410,7 +49958,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
       return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
+    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
     const st = Number.isInteger(status) ? status : null;
     this.sql.exec(
       `INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?)
@@ -48467,7 +50015,7 @@ export class Store extends DurableObject {
                governed_refusals: 0, fallback_eligible: false,
                basis: "no attempt on this address has ever been recorded" };
     }
-    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const TH = this.#thresholds();
     const byCount = row.consecutive_failures >= TH.failures;
     /* Staleness runs from the FIRST failure in the current run, not from the
@@ -48628,7 +50176,7 @@ export class Store extends DurableObject {
        provenance nobody has. */
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
     const fm = md && typeof md.content === "string" ? (parseFrontmatter(md.content).data || {}) : {};
-    const now = at ? String(at) : new Date().toISOString().split(".")[0] + "Z";
+    const now = at ? String(at) : stampInstant("second");
     this.sql.exec(
       `INSERT OR REPLACE INTO bias_adoptions
          (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256)
@@ -49255,6 +50803,9 @@ export class Store extends DurableObject {
                                        limit: url.searchParams.get("limit"),
                                        viewer: url.searchParams.get("viewer") }),
         index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
+        /* D-525: the Drive shell sweep, under the same D-15 stamp as the index. */
+        driveshells: () => this.driveShells({ viewer: url.searchParams.get("viewer"),
+          limit: url.searchParams.get("limit"), after: url.searchParams.get("after") || null }),
         /* REC-25: the gated backlink read — reverse edges into a bundle,
            filtered by the viewer's position (7.9). */
         backlinks: () => this.backlinks({ target: url.searchParams.get("target"),
@@ -49461,6 +51012,7 @@ export class Store extends DurableObject {
         readingnameplan: () => this.readingNamePlan(
           (url.searchParams.get("terms") || "").split(",").map((s) => s.trim()).filter(Boolean)),
         readingtermsclear: () => this.readingTermsClear(body || {}),
+        readinghistoryclear: () => this.readingHistoryClear(body || {}),
         reindexnames: () => this.reindexNames(body || {}),
         /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY. Create an entity
            (with inline aliases), attach an alias, declare a constitutive relation;
@@ -49527,6 +51079,8 @@ export class Store extends DurableObject {
           other: (body && body.other) || url.searchParams.get("other"),
           entity: (body && body.entity) || url.searchParams.get("entity"),
           ref: (body && body.ref) || url.searchParams.get("ref"),
+          /* D-454: which read of `ref`, required once it was read at more than one place (C-74.4). */
+          occurrence: (body && body.occurrence) || url.searchParams.get("occurrence"),
           author: url.searchParams.get("author"),
           viewer: url.searchParams.get("viewer"),
         }),
@@ -49985,6 +51539,15 @@ export class Store extends DurableObject {
                                             caller: url.searchParams.get("principal") }),
         airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
                                       viewer: url.searchParams.get("viewer") }),
+        /* REC-207: the two doors BOB #32's ruling needs. `actor` rides in the BODY, stamped there by
+           index.mjs on `op=taskresolve`'s precedent, so the store sees a machine credential honestly
+           named `token:<class>` and can refuse it BY SHAPE; `viewer` is the query stamp every gated read
+           here takes, set after the body's spread so a caller's own is overwritten rather than believed. */
+        biasdebtresolve: () => this.biasDebtResolve({ ...(body || {}),
+                                                      viewer: url.searchParams.get("viewer") }),
+        biasdebt: () => this.biasDebtRead({ run: url.searchParams.get("run"),
+                                            viewer: url.searchParams.get("viewer"),
+                                            limit: url.searchParams.get("limit") }),
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
                                         viewer: url.searchParams.get("viewer"),
                                         limit: url.searchParams.get("limit") }),
@@ -50047,6 +51610,13 @@ export class Store extends DurableObject {
            query string is a poor place for them. `author` and `viewer` are the control plane's stamps. */
         actionlaws: () => this.actionLaws({ target: url.searchParams.get("target") || (body || {}).target,
           laws: (body || {}).laws,
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
+        /* REC-214: the member's revision of a risk tier. `tier` and `reason` from the query or the POST body (a
+           reason is prose); `author` and `viewer` are the control plane's stamps, never a caller's field. */
+        actionrisktier: () => this.actionRiskTier({ target: url.searchParams.get("target") || (body || {}).target,
+          tier: url.searchParams.get("tier") ?? (body || {}).tier ?? null,
+          reason: url.searchParams.get("reason") ?? (body || {}).reason ?? null,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         /* REC-195: the PROPOSAL, beside the act. `proposer` is the control plane's stamp and never a caller's
@@ -50435,6 +52005,9 @@ export class Store extends DurableObject {
              to designation, which a query string cannot express honestly — the
              same reason `excluded[]` has never had one. */
           project: url.searchParams.get("project") || (body || {}).project || null,
+          /* REC-217 / §3 rule 13 (BOB #33): the draft this act publishes, named by the publisher — optional
+             and additive, on the search params as the one-line form a probe can reach, like `project`. */
+          draft: url.searchParams.get("draft") || (body || {}).draft || null,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         /* REC-16, publishcase's shape exactly: the BODY carries the authored

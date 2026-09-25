@@ -213,9 +213,15 @@ t("(f) and the fence it rests on is real: taskforward/taskresolve refuse a machi
   [val(S.enforcement.get("taskforward"), "fenced"), val(S.enforcement.get("taskresolve"), "fenced")],
   [true, true]);
 /* `taskdrain` sits in the same set and is deliberately UNFENCED — routing an event into a
-   task is the daemon's job. The sweep must show the difference rather than average it. */
+   task is the daemon's job. The sweep must show the difference rather than average it.
+   CORRECTED 2026-09-24 BY REC-207, never exempted: `biasdebtresolve` joined this body-stamp site,
+   because settling a bias-debt obligation is a member's act stamped server-side on `taskresolve`'s
+   precedent and it carries the same machine fence by SHAPE (BIAS_DEBT_MACHINE_CANNOT_RESOLVE). The
+   old expectation was not wrong about the two it named — it was wrong about the SET, which is now
+   three enforced and one deliberately not, and the split this arm exists to show is unchanged. */
 t("(f) and `taskdrain`, in the same set, is deliberately unfenced — the sweep shows the split",
-  [val(taskSite, "enforcedOps"), val(taskSite, "unfencedOps")], [["taskforward", "taskresolve"], ["taskdrain"]]);
+  [val(taskSite, "enforcedOps"), val(taskSite, "unfencedOps")],
+  [["taskforward", "taskresolve", "biasdebtresolve"], ["taskdrain"]]);
 
 /* =====================================================================
    BLOCK 2 — THE RECORD NAMES THE MACHINE. Driven, not read.

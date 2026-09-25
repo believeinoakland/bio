@@ -445,8 +445,20 @@ ok("A REVOKED SECRET READS NOTHING: the page draws no copy — no marking, no sc
    && !dRevoked.includes(direct2.authored.scope) && !dRevoked.includes("ledger you cite"));
 ok("ONE ANSWER: the withdrawn, the never-issued and the malformed link draw BYTE-IDENTICAL pages",
    dRevoked === dNever && dNever === dMalformed && dRevoked.length > 40, JSON.stringify([dRevoked.length, dNever.length, dMalformed.length]));
-ok("NEUTRAL: the dead page says neither 'revoked' nor 'expired', and prints no code",
-   !/revoked|expired/i.test(dRevoked) && shouty(strip(dRevoked)).length === 0 && strip(dRevoked).includes(flat(plane5.detail)),
+/* CORRECTED 2026-09-24 by D-448, never exempted, and the old assertion was WRONG rather than merely
+   stale. It required the dead page to carry the plane's raw `detail`, which was the only sentence the
+   plane sent for NO_REVIEW_COPY when this was written. C-87.1 now gives that code a CANNED TRANSLATION,
+   and under DEC-49 a surface renders the translation in preference to the plane's own words — so the
+   page carries the sentence a member is meant to READ, and demanding the `detail` would have pinned the
+   surface to the machine-facing half of the answer and made D-448 impossible to land. What the arm is
+   ABOUT is unchanged and is what matters: the dead page must disclose NOTHING about which of the four
+   dead states obtains. So the three neutrality clauses stand exactly as they were, and the floor on the
+   sentence's length is added for the reason this repository keeps meeting — an `includes("")` is true of
+   every page, so a blanked translation would have satisfied a bare comparison for free. */
+ok("NEUTRAL: the dead page says neither 'revoked' nor 'expired', prints no code, and carries the CANNED "
+ + "TRANSLATION a member reads (C-87.1) rather than the plane's raw detail",
+   !/revoked|expired/i.test(dRevoked) && shouty(strip(dRevoked)).length === 0
+   && flat(plane5.translation || "").length > 60 && strip(dRevoked).includes(flat(plane5.translation)),
    strip(dRevoked));
 const R2 = page("#reviewcopy/" + SECRET, null, null);
 await drawn("the withdrawn link's page settling", () => R2.U.RVS && !R2.U.RVS.busy);
@@ -460,8 +472,14 @@ J.ctx.location.hash = "#draft/" + draftId;
 J.U.draftRouteFromHash();
 await drawn("the outsider's draft page settling", () => J.U.RVC && !J.U.RVC.busy);
 const jp = J.html("#content");
-ok("NO STANDING: a member outside the project opening the draft's address reads no copy, only the plane's sentence",
-   !/data-rvc-copy/.test(jp) && strip(jp).includes(flat(plane5.detail)) && shouty(strip(jp)).length === 0, strip(jp).slice(0, 200));
+/* CORRECTED 2026-09-24 by D-448 for the reason given at the neutrality arm above: the member-side dead
+   answer is the SAME `#noReviewCopy` bytes, so it too now carries C-87.1's canned translation instead of
+   the plane's raw detail. The arm's subject — an outsider reads NO copy and meets no machine vocabulary
+   — is unchanged, and both of its clauses are kept. */
+ok("NO STANDING: a member outside the project opening the draft's address reads no copy, only the canned "
+ + "sentence (C-87.1)",
+   !/data-rvc-copy/.test(jp) && flat(plane5.translation || "").length > 60
+   && strip(jp).includes(flat(plane5.translation)) && shouty(strip(jp)).length === 0, strip(jp).slice(0, 200));
 
 /* ============================================================
    6b. UI-92 — THE WORKSPACE LISTS THIS PROJECT'S DRAFTS, AND EACH ONE OPENS.

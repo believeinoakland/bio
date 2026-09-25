@@ -1,3 +1,10 @@
+/* NEGATIVE CONTROL: RE-RUN 2026-09-24 by D-559's worker, `node test/nc-rec129.mjs` whole, after re-anchoring the wire count
+ * (D-486 split it across lines) and the op=stats route (now two lines, `viewer` forwarded only when present). Before:
+ * statsleadrows, statsadminleads, statsdropall, routeproof and keyboth DID NOT ARM (5 arms; the driver printed
+ * "10 finding(s)" because it counted each unarmed arm twice, corrected in the same landing). After: `nc-rec129: 19 of 19
+ * arm(s) armed, 0 finding(s)`, every restore YES. statsbaseline 36/0, statsleadrows 29/7, statsadminleads 30/6,
+ * statsdropall 19/17, routeproof 13/23, purgethin 33/3, dbbytesmember 30/6, dbbytesall 27/9, dbbytesnone 30/6,
+ * capacitycaller 29/7, keyboth 26/10: every figure the REC-131 line below records, unchanged. */
 /* NEGATIVE CONTROL: (run 2026-09-18, REC-131 resumed) `node test/nc-rec129.mjs statsbaseline|statsleadrows|statsadminleads|statsdropall|routeproof|purgethin|dbbytesmember|dbbytesall|capacitycaller|keyboth`
  * from `bio-plane/`, one arm at a time, each restored from a per-arm pristine copy (sha256 + cmp YES).
  * All ARMED on the declared match count, all AS DECLARED (`nc-rec129: 0 finding(s) across 19 arm(s)`):

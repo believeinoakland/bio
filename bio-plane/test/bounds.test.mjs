@@ -613,7 +613,12 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      the one arrival whose answer grows with the record and each NAMED this fix rather than taking it. Its cap is
      PROJECT_DIRECTORY_LIMIT beside `LIMIT ?`, declared BELOW the method (REC-116's finding), with `limit` and
      `truncated` published; DRIVEN below with a real bite, and carried in DRIVEN_ELSEWHERE for the reason there. */
-  OPS.size, 45);
+  /* MOVED 45 -> 46 on 2026-09-25 by D-525, from THIS ARM'S OWN FAILURE OUTPUT (`want 45 / got 46`), never by adding
+     one: op=driveshells, the Drive shell sweep. Its first cut walked every located bundle UNBOUNDED with per-row
+     reads, and `derivation-bounds` and `meaning-bounds` each named it; it was fixed at the cause — LIMIT cap+1
+     under DRIVE_SHELLS_LIMIT_DEFAULT/MAX, a keyset cursor, `limit` and `truncated` published. Its envelope is in
+     the map below and its BITE in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
+  OPS.size, 46);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1434,6 +1439,12 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    answered at the ceiling. Building a second corpus here would be two fixtures for
    one fact, and the second would rot first. */
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest",
+                                  /* D-525: the bite needs Drive-linked bundles with registers and the
+                                     plane's retrieval records; `test/d525-driveshells.test.mjs` drives it in
+                                     this file's shape — a bite of 2 over six, `truncated` TRUE with a cursor,
+                                     the pages unioned to the whole, FALSE at the default, and an over-ask
+                                     answered at the ceiling with `limit` read back as the bound applied. */
+                                  "driveshells",
                                   "capturerequests", "capturerequestdrain", "versionstrength",
                                   "textprovenance", "textattest", "caseflags",
                                   /* REC-116 / IC-120: the ENVELOPE and bound-published arms are
@@ -1960,6 +1971,9 @@ const answersByOp = new Map([
      neither door admits — the review copy's one dead answer, an object. */
   ["groupidentity", GI_BITE],
   ["statementack", await POST("op=statementack&token=mem-r57&draft=DRAFT-2026-0000")],
+  /* D-525: the envelope of the Drive shell sweep over a store holding no Drive-linked bundle — an object with its
+     named lists, never an array. The bite is driven in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
+  ["driveshells", await GET("op=driveshells&token=mem-r57&limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

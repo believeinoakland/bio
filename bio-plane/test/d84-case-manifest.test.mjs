@@ -51,6 +51,62 @@
    ALONE, restored and verified the same way (4dac91af…, 903,635 bytes). Declared: MUST fail
    /2-STILL-RATIFIES by name and nothing else -> **26 pass, 1 fail**: /2-STILL-RATIFIES, as declared.
 
+   (i) D-548 (declared and RUN 2026-09-24, WORKER D-548 (SCHEDULER #21)), THE RECORDER — every section now runs in
+   `block()`, and the subject is the SUITE, so the arms break a section's FIXTURE (a promote the plane refuses
+   ENVELOPE_TYPE_DISAGREES). Re-run in one step: `node test/d548-block.control.mjs` from bio-plane/, which arms a
+   COPY in a temporary mirror of the repository and hashes this file before and after (unchanged on every run). BASELINE -> **35 pass, 0 fail**, per section 0/0, 5/0, 7/0, 5/0, 8/0, 10/0, foot reached.
+   (i) SECTION 4's FIXTURE BROKEN — declared: section 4 DIES by name with tally -1, every other section reports its
+   baseline tally -> **27 pass, 1 fail**, `BLOCK 4 DIED: (fixture) promote BIAS-2026-8400-amended -> draft`, as
+   declared. THE SAME ARM ON THE PRE-D-548 SUITE -> **17 pass, 1 fail [FIXTURE ABORTED]**: section 5's ten
+   assertions never ran — the measured failure this row moves.
+   (j) SECTION 2's FIXTURE BROKEN — declared: 2 DIES, and 3 and 5, which read its case, die NAMING the section they
+   rest on (never a bare TypeError); 1 and 4 report -> **13 pass, 3 fail**, as declared. Its first run, before
+   `needs()`, killed 3 and 5 on `Cannot read properties of undefined` — recorded, but naming nothing.
+   (k) THE RECORDER DISARMED (`block()` rethrows) over (i)'s fixture — declared: NO foot and no section tally
+   -> no foot, exit 1, no tallies, as declared: the driver cannot read an early end as a finished run.
+
+   D-468 (declared and RUN 2026-09-24, WORKER D-468 (SCHEDULER #19)) — THREE ARMS PLUS A BASELINE, each
+   armed ALONE by an anchor asserted to match EXACTLY ONCE, the suite run directly, every restore by `cp`
+   from a uniquely-named per-arm pristine copy and verified by sha256 AND `cmp` with a byte floor. The
+   harness lives OUTSIDE the worktree (BOB #32, 2026-09-24). Declared before arming: (i) MUST fail the
+   D-468 REFUSAL row and the WITNESS row by name and MUST NOT fail section 1; (ii) MUST fail an
+   amendment that moves no state; (iii) MUST fail the two rows that read the C-number and nothing else.
+   (0) BASELINE, nothing armed -> **44 pass, 0 fail**, foot reached.
+   (i) THE ROW'S OWN ARM — DROP THE EDGE CHECK (`&& false` on the `bias-state-edge` condition in
+   `src/store.mjs`) -> **22 pass, 3 fail, AND THE RUN DID NOT REACH ITS FOOT**: the D-468 REFUSAL row and
+   the WITNESS row failed by name as declared (the census read 19 promotions and 19 manifest rows where
+   the baseline read 18 and 18 — the backwards move LANDED), and then the fixture aborted, because with
+   the head moved to the refused revision the amendment below it was refused `CAS_STALE`. **RECORDED, NOT
+   SMOOTHED: the abort is the defect's own shape** — the third declared failure (section 6's
+   refusal sweep) was therefore NOT MEASURED under this arm, and its tally is -1 rather than 0. The
+   instrument is why: this suite does not wrap its sections in a `block()` recorder, so one fixture
+   failure ends the run — D-93's class, which `bias.test.mjs` already learned and this suite has not.
+   Arm (iii) below measures the same sweep to the foot.
+   (ii) OVER-STRICTNESS — the `to !== from` guard removed, so a revision that MOVES NO STATE is refused
+   too -> **12 pass, 1 fail**, aborting at section 3's `adopted -> adopted` amendment with
+   `BIAS_ILLEGAL_TRANSITION` — correct work in a spelling the fence must not refuse, and the doctrine's
+   own way to amend an adopted set. (The harness's "arm marker gone" line read FALSE on the restore and
+   that is the HARNESS citing its own correction: the armed string is a SUBSTRING of the restored one.
+   The restore itself is verified by sha256 and `cmp`, both identical, and `node --check` passed.)
+   (iii) THE CATALOGUE'S NUMBER MOVED — `BIAS_ILLEGAL_TRANSITION.check` set to `C-99.9` in
+   `checks/bio-checks.mjs` -> **42 pass, 2 fail**, foot reached: the D-468 refusal row and section 6's
+   sweep, both on the number and nothing else, which is what proves those rows read the CATALOGUE's
+   C-number rather than a constant this suite typed.
+   **AN ARM THAT COULD NEVER HAVE BEEN HONOURED, recorded because it is a finding about the ARM:** (iii)
+   was first spelled as *drop the code from the refusal at its site in `store.mjs`* and came back **44
+   pass, 0 fail**. Nothing was wrong with the subject — `dec49Decorate` in `index.mjs` stamps `check` and
+   `translation` onto EVERY `ok:false` answer from the `_CHECKS` catalogue keyed by `reason`, so the
+   number on the wire cannot be removed at the site at all. The arm was re-asked of the catalogue row,
+   which is where the number actually lives. (A first attempt at that same arm also broke the module's
+   syntax and was thrown away rather than read: a control that moves a second variable refutes nothing.)
+
+   RE-RUN IN FULL after D-468 merged `origin/main` (9f8b69e67) into its branch and FOLDED its type derivation
+   onto D-510's `promotedType`: the subject changed, so its control was re-armed rather than believed. Every
+   figure is the same — BASELINE 44/0 foot reached, (i) 22/3 with the same two rows by name and the same abort,
+   (ii) 12/1 at the same amendment, (iii) 42/2 foot reached — and every restore verified by sha256 AND `cmp` on
+   the merged files (3,327,022 bytes for store.mjs, 961,420 for bio-checks.mjs). The rule that made this
+   necessary: a suite coupled to BEHAVIOUR survives a refactor that disarms a control coupled to SHAPE.
+
    ---
 
    D-84 — THE BIAS MANIFEST IS STAMPED INTO THE SIGNED CASE DOCUMENT, FROZEN.
@@ -65,8 +121,10 @@
      - a case published under an adopted set names EACH PAIR and the HASH          -> section 2
      - adopting a new revision afterwards leaves the published bytes IDENTICAL     -> section 3
      - with nothing adopted the document says NO MANIFEST WAS IN FORCE             -> section 1
-     - REC-187: across propose -> adopt -> LATER propose, the stamped hash equals one recomputed from
+     - REC-187: across propose -> adopt -> amend, the stamped hash equals one recomputed from
        exactly the stamped sha's bytes, and the sha is the ADOPTED one                  -> section 4
+     - D-468: `adopted` -> `proposed` is refused by name at the write path and writes nothing,
+       and every declared edge (and a revision that moves no state) still passes         -> section 4
    HOW A LIAR PASSES IT: recompute at read time. So section 3 MOVES THE LENS after publishing — a new
    revision of the instance set, re-adopted, which moves op=biasmanifest's hash — and asserts the
    signed bytes, their sha, and the pairs they name did not move.
@@ -88,7 +146,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
-import { parseFrontmatter, checkCaseDocument } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, checkCaseDocument, STATES, vocabFor } from "../checks/bio-checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- d84-case-manifest ---");
@@ -113,12 +171,32 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`);
-  fail++;
-  console.log(`\nd84-case-manifest: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-548: EVERY SECTION RUNS INSIDE `block()` — bias.test.mjs's recorder, adopted. Before it, `bail()` disposed the
+   sandbox and exited on the FIRST fixture failure, so one broken fixture ended the run and every later section went
+   unmeasured for a round (found by D-468's worker). Now a fixture failure is a THROW that `block()` records as ONE
+   failure naming its section, and the sections after it still run and report. Each section's own tally is kept and
+   printed at the foot; a section that DIED prints its tally as -1, never as the partial count it reached, because a
+   partial count read as a tally is the claim-more-than-it-measured this recorder exists to stop. A section resting on
+   an earlier one's values (3 and 5 read 1 and 2) dies BY NAME when that one died — recorded, never silent. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+/* A section that reads an earlier one's values asks for them first, so it dies naming the section it rests on
+   rather than on a TypeError that names nothing. */
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -153,16 +231,20 @@ const enrol = async (memberId, role, capabilities) => {
 };
 /* Two administrators before any member (4.2/4.3). NADIA authors the instance lens; IRIS owns the
    publishing project, authors its project lens, and publishes. */
-const NADIA = await enrol("nadia", "admin", ["contribute", "publish", "create_projects"]);
-await enrol("omar", "admin", ["contribute", "publish"]);
-const IRIS = await enrol("iris", "member", ["contribute", "publish"]);
-await POST("op=signeradd&token=adm-d84", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" });
-
-const PROJ = await makePublishingProject({
-  post: async (q, b) => (await mf.dispatchFetch(`http://x/api/?${q}`,
-    { method: "POST", body: JSON.stringify(b ?? {}) })).json(),
-  mf, sha, machineToken: "adm-d84", owner: "iris",
-  name: "PROJ-2026-8400-lens", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+let NADIA, IRIS, PROJ;
+console.log("\n--- 0. setup: members, the signer, the publishing project ---");
+await block("0 (setup)", async () => {
+  NADIA = await enrol("nadia", "admin", ["contribute", "publish", "create_projects"]);
+  await enrol("omar", "admin", ["contribute", "publish"]);
+  IRIS = await enrol("iris", "member", ["contribute", "publish"]);
+  await POST("op=signeradd&token=adm-d84", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" });
+  PROJ = await makePublishingProject({
+    post: async (q, b) => (await mf.dispatchFetch(`http://x/api/?${q}`,
+      { method: "POST", body: JSON.stringify(b ?? {}) })).json(),
+    mf, sha, machineToken: "adm-d84", owner: "iris",
+    name: "PROJ-2026-8400-lens", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  if (typeof PROJ !== "string" || !PROJ) bail("makePublishingProject", PROJ);
+});
 
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
@@ -268,14 +350,20 @@ const lensOf = async () => GET(`op=biasmanifest&token=${IRIS}&scope=project&scop
 /* ===========================================================================
    1. NOTHING ADOPTED — the document SAYS no manifest was in force.
    =========================================================================== */
+/* The values later sections read, hoisted so each section can run inside block(). */
+let pubA, docA, FA, L1, pubB, docB, FB, L2, FC;
+const BI = "BIAS-2026-8400-instance", BP = "BIAS-2026-8400-project";
+const pairsOf = (fm) => (fm.bias_manifest_bundles || []).map((r) => [r.bundle_id, r.revision, r.scope]);
+
 console.log("\n--- 1. with nothing adopted, the signed document says NO MANIFEST WAS IN FORCE ---");
+await block("1", async () => {
 const L0 = await lensOf();
 t("REACH: the project's lens is genuinely not in force before anything is adopted",
   [L0?.in_force, L0?.stated], [false, "no manifest was in force"]);
 
-const pubA = await publishAndSign(await ground("none"), "A");
-const docA = await readDoc(pubA);
-const FA = parseFrontmatter(docA.text).data;
+pubA = await publishAndSign(await ground("none"), "A");
+docA = await readDoc(pubA);
+FA = parseFrontmatter(docA.text).data;
 t("the case is SIGNED and what a stranger reads is the ratified document",
   [docA.ratified, typeof docA.sig_armored === "string"], [true, true]);
 t("NO-MANIFEST ARM: the signed frontmatter states the lens was NOT in force, in the sentence "
@@ -289,12 +377,13 @@ t("and a PERSON reads it: the body carries the manifest under its own heading an
   [true, true]);
 t("op=publish echoed the same stamp it wrote",
   [pubA.bias_manifest?.in_force, pubA.bias_manifest?.stated], [false, "no manifest was in force"]);
+});
 
 /* ===========================================================================
    2. A LENS ADOPTED — the document NAMES EACH PAIR AND THE HASH.
    =========================================================================== */
 console.log("\n--- 2. under an adopted set, the signed document names each (bundle, revision) pair and the hash ---");
-const BI = "BIAS-2026-8400-instance", BP = "BIAS-2026-8400-project";
+await block("2", async () => {
 const TXT_I1 = "Claims from the city attorney's office need a second record.";
 const TXT_P1 = "Budget figures quoted by the office are checked against the adopted budget.";
 for (const st of ["draft", "proposed"]) await promote(NADIA, BI, biasMd(BI, st, "i1", TXT_I1), "bias", st);
@@ -303,17 +392,16 @@ const ADOPTED_I = (await promote(NADIA, BI, biasMd(BI, "adopted", "i1", TXT_I1),
 for (const st of ["draft", "proposed"]) await promote(IRIS, BP, biasMd(BP, st, "p1", TXT_P1), "bias", st);
 const adP = await GET(`op=biasadopt&token=${IRIS}&bundleId=${BP}&scope=project&scopeId=${PROJ}`);
 const ADOPTED_P = (await promote(IRIS, BP, biasMd(BP, "adopted", "p1", TXT_P1), "bias", "adopted")).bundleSha;
-const L1 = await lensOf();
+L1 = await lensOf();
 t("REACH: both adoptions landed and the project's lens is IN FORCE with TWO pairs — one instance, one "
 + "project — so every arm below compares something real",
   [adI?.ok, adP?.ok, L1?.in_force, (L1?.bundles || []).map((b) => [b.bundle_id, b.scope]),
    /^[0-9a-f]{64}$/.test(L1?.statements_sha || "")],
   [true, true, true, [[BI, "instance"], [BP, "project"]], true]);
 
-const pubB = await publishAndSign(await ground("lensed"), "B");
-const docB = await readDoc(pubB);
-const FB = parseFrontmatter(docB.text).data;
-const pairsOf = (fm) => (fm.bias_manifest_bundles || []).map((r) => [r.bundle_id, r.revision, r.scope]);
+pubB = await publishAndSign(await ground("lensed"), "B");
+docB = await readDoc(pubB);
+FB = parseFrontmatter(docB.text).data;
 t("NAMED-LENS ARM: the signed document names EACH (bias bundle id, revision) pair in force for the "
 + "project's scope, exactly as op=biasmanifest answered before publishing",
   pairsOf(FB), (L1.bundles || []).map((b) => [b.bundle_id, b.revision, b.scope]));
@@ -343,17 +431,20 @@ t("the manifest sits BESIDE the authored acknowledgement and does not replace it
   [typeof FB.bias_acknowledgement, /^## Bias Acknowledgement$/m.test(docB.text)], ["string", true]);
 t("and the gate accepts the document it signed — no finding of any kind",
   checkCaseDocument(FB, { body: docB.text }).filter((f) => f.severity === "error").map((f) => f.check), []);
+});
 
 /* ===========================================================================
    3. THE LENS MOVES AFTER PUBLISHING — the signed bytes do NOT.
    =========================================================================== */
 console.log("\n--- 3. a new revision adopted afterwards moves op=biasmanifest and never the published bytes ---");
+await block("3", async () => {
+needs("1 and 2", { pubA, docA, pubB, docB, FB, L1 });
 const beforeB = { text: docB.text, sha: sha(docB.text), doc_sha: docB.doc_sha };
 const beforeA = sha(docA.text);
 const TXT_I2 = "Claims from the city attorney's office need TWO independent records.";
 await promote(NADIA, BI, biasMd(BI, "adopted", "i1", TXT_I2), "bias", "adopted");
 const reI = await GET(`op=biasadopt&token=${NADIA}&bundleId=${BI}`);
-const L2 = await lensOf();
+L2 = await lensOf();
 t("THE LENS REALLY MOVED: a new revision of the instance set is adopted, and op=biasmanifest now names "
 + "that revision and a different hash — so the next rows measure frozen bytes, not an unmoved lens",
   [reI?.ok, L2?.in_force, L2?.statements_sha !== L1.statements_sha,
@@ -377,31 +468,40 @@ t("the case published with no lens still says so after one was adopted — nothi
 /* A case published NOW carries the NEW lens — which is what proves the frozen rows above are frozen
    rather than a stamp that never reads the lens at all. */
 const pubC = await publishAndSign(await ground("moved"), "C");
-const FC = parseFrontmatter((await readDoc(pubC)).text).data;
+FC = parseFrontmatter((await readDoc(pubC)).text).data;
 t("OVER-STRICTNESS ARM: a case published after the lens moved stamps the lens in force AT ITS OWN "
 + "publication — the new revision and hash — so freezing is per edition, not a stamp that stopped reading",
   [FC.bias_manifest?.statements_sha, pairsOf(FC).map((p) => p[1])],
   [L2.statements_sha, (L2.bundles || []).map((b) => b.revision)]);
+});
 
 /* ===========================================================================
-   4. REC-187 — PROPOSE -> ADOPT -> A LATER PROPOSAL: the stamp names the ADOPTED revision, and its
+   4. REC-187 — PROPOSE -> ADOPT -> AN AMENDMENT: the stamp names the ADOPTED revision, and its
       hash is recomputable from EXACTLY that revision's bytes.
+      AND D-468 — the backwards move this section used to drive is REFUSED BY NAME.
    BOB #31, `BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at export": *"Promotion
    to `adopted` re-pins the adoption to the adopted bundle_sha, the case stamps that sha, and
    op=biasmanifest hashes THAT revision's statements — one quantity under one name."*
-   HOW A LIAR PASSES IT: hash the latest projection. So after adoption a NEWER revision is PROPOSED
-   with a different statement, the case is published then, and the expectation is recomputed by THIS
-   SUITE from the bytes of the stamped shas alone — its own reading of the frontmatter and its own
-   SHA-256, never the plane's helper — so a hash of the head, of the projection, or of anything but
-   the named revision disagrees with it.
+   HOW A LIAR PASSES IT: hash the latest projection. So after the case is published the set is AMENDED
+   with a different statement, and every expectation is recomputed by THIS SUITE from the bytes of the
+   stamped shas alone — its own reading of the frontmatter and its own SHA-256, never the plane's
+   helper — so a hash of the head, of the projection, or of anything but the named revision disagrees.
+   D-468's rows sit between the adoption and the publication: the same `adopted -> proposed` promotion
+   REC-187 drove is still sent, and what is asserted of it is the refusal and the record's stillness.
    =========================================================================== */
 /* WHAT SECTION 4 CANNOT SEE, stated: (1) the RESIDUE is now read from the pinned revision too, but this
    fixture writes the same `## What This Does Not Enforce` text into every revision, so no row here can tell
    a head's residue from a pin's; (2) op=biasmanifest's UNDETERMINED answer (a pin whose bytes the store
    cannot produce) is not reachable through the ops — promote() snapshots every outgoing revision into
    `history`, and purge clears a purged set's adoptions — so it is written and NOT driven; (3) the recompute
-   does not model a project NULLIFICATION and refuses rather than guesses if one appears. */
-console.log("\n--- 4. REC-187: propose -> adopt -> a LATER proposal; the stamp names the ADOPTED revision and hashes exactly its bytes ---");
+   does not model a project NULLIFICATION and refuses rather than guesses if one appears.;
+   (4) D-468: the WITNESS under the refusal is the census's STORE-WIDE promotion and manifest-row totals, so
+   it sees "no row was written anywhere", not "no row was written for this bundle" — a write that added a row
+   and removed another would pass it, and no such path exists at promote; (5) with the edge closed, an
+   ADOPTED set's head and its pin cannot diverge at all, so the "a later proposal does not move the lens"
+   reading REC-187 asserted here is no longer a reachable state and nothing below claims it. */
+console.log("\n--- 4. REC-187 + D-468: propose -> adopt -> amend; the stamp names the ADOPTED revision, and the backwards move is refused ---");
+await block("4", async () => {
 /* The recompute. Each stamped (bundle, revision) pair is resolved to bytes BY THE REVISION, and the
    bytes are proved to BE that revision (their sha256 is the pin) before a statement is read. The
    plane's formula, restated here from its doctrine rather than imported: every statement of every
@@ -428,18 +528,58 @@ const PROPOSED_Q = (await promote(IRIS, BQ, biasMd(BQ, "proposed", "q1", TXT_Q1)
 const adQ = await GET(`op=biasadopt&token=${IRIS}&bundleId=${BQ}&scope=project&scopeId=${PROJ}`);
 const ADOPTED_Q = (await promote(IRIS, BQ, biasMd(BQ, "adopted", "q1", TXT_Q1), "bias", "adopted")).bundleSha;
 const L3 = await lensOf();
-const LATER_Q = (await promote(IRIS, BQ, biasMd(BQ, "proposed", "q1", TXT_Q2), "bias", "proposed")).bundleSha;
 const revOf = (bundles, id) => (bundles || []).find((b) => b.bundle_id === id)?.revision;
-t("REACH: three DISTINCT revisions of one set — proposed, adopted, and a later proposal that is now the "
-+ "HEAD with a different statement — op=biasadopt pinned the PROPOSED one, and at adoption the lens "
-+ "named the adopted one; so the rows below separate three candidate answers, not one",
-  [new Set([PROPOSED_Q, ADOPTED_Q, LATER_Q]).size, adQ?.ok, adQ?.pinned?.bundle_sha, HEAD.get(BQ),
+t("REACH: TWO DISTINCT revisions of one set — the PROPOSED one op=biasadopt pinned, and the ADOPTED one "
++ "the promotion re-pinned to — so the rows below separate two candidate answers, not one, and a third "
++ "arrives at the amendment at the foot of this section",
+  [new Set([PROPOSED_Q, ADOPTED_Q]).size, adQ?.ok, adQ?.pinned?.bundle_sha, HEAD.get(BQ),
    revOf(L3?.bundles, BQ)],
-  [3, true, PROPOSED_Q, LATER_Q, ADOPTED_Q]);
+  [2, true, PROPOSED_Q, ADOPTED_Q, ADOPTED_Q]);
+
+/* ---------------------------------------------------------------------------
+   D-468 — CORRECTION, 2026-09-24. THE MOVE THIS SECTION USED TO DRIVE IS REFUSED.
+
+   REC-187 reached its "the head moved and the lens did not" reading by promoting the adopted set BACK to
+   `proposed` and reading a new head. THE OLD ASSERTION WAS WRONG, and its own worker said so (its F4):
+   `STATES.bias` has no edge out of `adopted` except `retired`, so `adopted -> proposed` is a move the
+   record was never supposed to accept — `op=promote` consulted no edge table and accepted it anyway. A
+   suite that drives an illegal move to reach a legal reading is asserting over a state the machine
+   forbids, so the reading was resting on the defect. D-468 closes the edge; these rows replace the three
+   that rested on it, and they are a CORRECTION rather than an exemption — the same promotion is still
+   sent, and what is asserted about it is now the refusal and the record's stillness.
+
+   WHAT IS LOST AND IS SAID PLAINLY: with the edge closed, an ADOPTED set's head and its pin cannot
+   diverge at all — the only moves left are `retired` and a revision that stays at `adopted`, and that
+   revision RE-PINS (REC-187). So "a later PROPOSAL neither moves nor lifts the adopted lens" is no longer
+   a reachable state of this plane, and nothing below claims to test it. What REC-187's mechanism is still
+   held to is the part that IS reachable and is what the case stamp rests on: the pin follows adoption (the
+   over-strictness arm), the stamp equals a recompute from exactly the stamped revision's bytes (the
+   equality arm), and a liar recomputing at read time is caught by the amendment's different hash.
+   --------------------------------------------------------------------------- */
+const censusOf = async () => GET("op=snapkeycensus&token=adm-d84");
+const cen0 = await censusOf();
+const backQ = await POST(`op=promote&token=${IRIS}`, {
+  bundleId: BQ, base: HEAD.get(BQ),
+  snapKey: "20260923T235959Z_d468back",
+  meta: { object_type: "bias", group: "believe-in-oakland", title: `Bundle ${BQ}`,
+          current_state: "proposed", created: NOW, last_updated: LATER },
+  files: [{ path: "bundle.md", text: biasMd(BQ, "proposed", "q1", TXT_Q2),
+            bytes: biasMd(BQ, "proposed", "q1", TXT_Q2).length, sha256: sha(biasMd(BQ, "proposed", "q1", TXT_Q2)) }] });
+t("D-468 / C-26.12: AN ADOPTED SET MAY NOT BE MOVED BACK TO `proposed` — refused BY NAME at the write "
++ "path, with the head it stands at, the state asked for, and the moves the catalogue's own table allows",
+  [backQ?.ok, backQ?.reason, backQ?.check, backQ?.from, backQ?.to, backQ?.legal_from,
+   typeof backQ?.translation === "string" && backQ.translation.length > 0],
+  [false, "BIAS_ILLEGAL_TRANSITION", "C-26.12", "adopted", "proposed", ["retired"], true]);
+const cen1 = await censusOf();
 const L4 = await lensOf();
-t("A LATER PROPOSAL DOES NOT UNSEAT THE ADOPTED LENS, and does not move it: op=biasmanifest still names "
-+ "the ADOPTED revision and the SAME hash it gave at adoption — the head moved and the lens in force did not",
-  [L4?.in_force, revOf(L4?.bundles, BQ), L4?.statements_sha], [true, ADOPTED_Q, L3?.statements_sha]);
+t("AND NOTHING WAS WRITTEN — the WITNESS, not the absence of an error: the record's own counters "
++ "(promotions, manifest rows) read the same before and after, and the lens still names the ADOPTED "
++ "revision with the hash it gave at adoption",
+  [[cen1?.promotions, cen1?.manifest_rows], L4?.in_force, revOf(L4?.bundles, BQ), L4?.statements_sha],
+  [[cen0?.promotions, cen0?.manifest_rows], true, ADOPTED_Q, L3?.statements_sha]);
+t("THE COUNTERS COULD HAVE MOVED: the census read a corpus with promotions and manifest rows in it, so "
++ "the equality above is not two zeroes agreeing",
+  [cen0?.promotions > 0, cen0?.manifest_rows > 0], [true, true]);
 
 const pubD = await publishAndSign(await ground("amended"), "D");
 const docD = await readDoc(pubD);
@@ -449,31 +589,42 @@ t("EQUALITY ARM: the case stamps the ADOPTED sha, and its statements hash EQUALS
 + "suite from EXACTLY the stamped shas' bytes — one quantity under one name",
   [revOf(FD.bias_manifest_bundles, BQ), FD.bias_manifest?.statements_sha],
   [ADOPTED_Q, recompute(pairsD)]);
-t("THE ARM COSTS SOMETHING: the same recompute over the LATER proposal's bytes — the hash a liar reading "
-+ "the latest projection would stamp — is a DIFFERENT hash, so the equality above could not hold by accident",
-  [recompute(pairsD.map(([b, r]) => [b, b === BQ ? LATER_Q : r])) !== FD.bias_manifest?.statements_sha,
-   /^[0-9a-f]{64}$/.test(recompute(pairsD.map(([b, r]) => [b, b === BQ ? LATER_Q : r])))],
-  [true, true]);
 t("the stamp and op=biasmanifest are ONE quantity: the same pairs and the same hash, read by two readers",
   [pairsD, FD.bias_manifest?.statements_sha],
   [(L4?.bundles || []).map((b) => [b.bundle_id, b.revision]), L4?.statements_sha]);
-t("a PERSON reads the adopted revision in the body, and the proposed and later shas appear nowhere in it",
-  [docD.text.includes(`- ${BQ} (project) at revision ${ADOPTED_Q}`),
-   docD.text.includes(PROPOSED_Q), docD.text.includes(LATER_Q)],
-  [true, false, false]);
+t("a PERSON reads the adopted revision in the body, and the proposed sha appears nowhere in it",
+  [docD.text.includes(`- ${BQ} (project) at revision ${ADOPTED_Q}`), docD.text.includes(PROPOSED_Q)],
+  [true, false]);
 
-/* OVER-STRICTNESS: the re-pin must FOLLOW a real adoption, not freeze on the first one. The later
-   proposal is promoted to `adopted`; the lens and the next case now name IT, with its own hash. */
+/* OVER-STRICTNESS: the re-pin must FOLLOW a real adoption, not freeze on the first one. D-468 CHANGED
+   HOW THIS ARM IS SPELLED AND NOT WHAT IT TESTS: the amended statement used to arrive as a later
+   PROPOSAL and then be promoted, which took the illegal edge to get there. It now arrives the way the
+   doctrine says an adopted set is amended — *"a NEW REVISION of the same bundle under append-only
+   history — which re-pins"* (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption") — a revision that
+   leaves the set at `adopted`, which is a revision and not a transition and so is not the machine's
+   question at all. The lens and the next case must name IT, with its own hash. */
 const ADOPTED_Q2 = (await promote(IRIS, BQ, biasMd(BQ, "adopted", "q1", TXT_Q2), "bias", "adopted")).bundleSha;
 const L5 = await lensOf();
 const pubE = await publishAndSign(await ground("readopted"), "E");
 const FE = parseFrontmatter((await readDoc(pubE)).text).data;
-t("OVER-STRICTNESS ARM: once the later revision is itself promoted to `adopted`, the lens and the next "
+t("A REVISION THAT LEAVES THE SET AT `adopted` IS NOT A MOVE, and D-468 does not refuse it — the "
++ "amendment landed, and it is a THIRD distinct revision",
+  [typeof ADOPTED_Q2 === "string", new Set([PROPOSED_Q, ADOPTED_Q, ADOPTED_Q2]).size], [true, 3]);
+t("OVER-STRICTNESS ARM: once the amended revision is itself adopted, the lens and the next "
 + "case name THAT revision and hash exactly its bytes — the pin follows adoption, it does not stick",
   [revOf(L5?.bundles, BQ), revOf(FE.bias_manifest_bundles, BQ), FE.bias_manifest?.statements_sha],
   [ADOPTED_Q2, ADOPTED_Q2, recompute(pairsOf(FE).map((p) => [p[0], p[1]]))]);
-t("and case D, published under the earlier adoption, still names it — frozen, never recomputed",
-  [revOf(parseFrontmatter((await readDoc(pubD)).text).data.bias_manifest_bundles, BQ)], [ADOPTED_Q]);
+t("THE EQUALITY ARM COSTS SOMETHING: the same recompute over the AMENDED revision's bytes — the hash a "
++ "liar reading the latest projection would stamp onto case D — is a DIFFERENT hash, so case D's "
++ "equality above could not have held by accident",
+  [recompute(pairsD.map(([b, r]) => [b, b === BQ ? ADOPTED_Q2 : r])) !== FD.bias_manifest?.statements_sha,
+   /^[0-9a-f]{64}$/.test(recompute(pairsD.map(([b, r]) => [b, b === BQ ? ADOPTED_Q2 : r])))],
+  [true, true]);
+t("and case D, published under the earlier adoption, still names it — frozen, never recomputed — and the "
++ "amended sha appears nowhere in its bytes",
+  [revOf(parseFrontmatter((await readDoc(pubD)).text).data.bias_manifest_bundles, BQ),
+   (await readDoc(pubD)).text.includes(ADOPTED_Q2)], [ADOPTED_Q, false]);
+});
 
 /* ===========================================================================
    5. REC-188 — `bio-case-document/3`: THE GATE REFUSES THE ABSENCE.
@@ -500,7 +651,8 @@ t("and case D, published under the earlier adoption, still names it — frozen, 
    through op=caseratify, because no op authors /2 any more and this plane has no SQL surface to plant one.
    =========================================================================== */
 console.log("\n--- 5. REC-188: a published case reads /3, and the gate refuses a /3 document silent about the lens or its second readers ---");
-{
+await block("5", async () => {
+  needs("1, 2 and 3", { FA, docA, FB, docB, FC });
   const { runCaseGate } = await import("../src/gate.mjs");
   const gateOf = (fm, body = null) => runCaseGate({ caseId: fm.case_id, edition: fm.case_edition, fm, priorCase: null,
                                                      body });
@@ -549,8 +701,135 @@ console.log("\n--- 5. REC-188: a published case reads /3, and the gate refuses a
                    completeness_acknowledgements: [{ kind: "recipient", by: "RG-1", recipient: "a reader",
                                                      at: "2026-07-02T00:00:00Z" }] }, docB.text)),
     []);
-}
+});
 
-console.log(`\nd84-case-manifest: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
+/* ===========================================================================
+   6. D-468 — THE WHOLE DECLARED TABLE, DRIVEN THROUGH op=promote.
+
+   The row's accepts-when is *"`adopted` -> `proposed` is refused by name; every declared edge still
+   passes"*, and section 4 answers the first clause at the site that exercised the defect. This section
+   answers the second, and answers it BY INVERSION rather than by a list of spellings: the corpus is
+   `vocabFor(STATES, "bias")` ITSELF — every ordered pair of legal states is driven, the pair is
+   expected to LAND exactly when the table declares the edge and to be REFUSED exactly when it does
+   not, and the walk to each starting state is computed from the same table. A state added to the
+   machine tomorrow enlarges this sweep on its own; a hand list would have gone stale that day.
+
+   WHAT IT CAN AND CANNOT SEE, plainly. It sees every move BETWEEN legal states, driven through the op
+   under a member's token, and the birth state is the table's `legal[0]` — the same derivation
+   `setup.mjs` makes (FIRST_STATE). It does NOT see: a target state the vocabulary does not carry at
+   all (the catalogue refuses that at the gate, and this row does not claim it is refused at the write
+   path); which state a set may be BORN in, because a creation has no head to move from and is not this
+   fence's question; and anything about the OTHER object types' machines, which `promote` still does not
+   ask — reported as a finding rather than fixed here.
+   =========================================================================== */
+console.log("\n--- 6. D-468: every ordered pair of bias states, driven from the catalogue's own table ---");
+await block("6", async () => {
+  const MACHINE = vocabFor(STATES, "bias");
+  const LEGAL = MACHINE?.legal || [], EDGES = MACHINE?.edges || {};
+  const BIRTH = LEGAL[0];
+  /* The walk to any state, taken from the table rather than written down. */
+  const pathTo = (target) => {
+    if (target === BIRTH) return [];
+    const q = [[BIRTH, []]], seen = new Set([BIRTH]);
+    while (q.length) {
+      const [st, acc] = q.shift();
+      for (const nx of (EDGES[st] || [])) {
+        if (seen.has(nx)) continue;
+        const next = [...acc, nx];
+        if (nx === target) return next;
+        seen.add(nx); q.push([nx, next]);
+      }
+    }
+    return null;
+  };
+  let seq = 0;
+  const TEXT = "Figures the office cites are checked against the executed contract.";
+  const mv = async (id, state, base) => {
+    const text = biasMd(id, state, "e1", TEXT);
+    return POST(`op=promote&token=${IRIS}`, {
+      bundleId: id, base,
+      snapKey: `20260924T${String(100000 + (++seq)).slice(-6)}Z_${sha(`d468-${seq}`).slice(0, 8)}`,
+      meta: { object_type: "bias", group: "believe-in-oakland", title: `Bundle ${id}`,
+              current_state: state, created: NOW, last_updated: LATER },
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }] });
+  };
+  /* A fresh set walked to `from`, then the pair under test sent. Returns the plane's answer, or the
+     reason the fixture could not be built — which is a FINDING and is reported, never scored zero. */
+  const drive = async (from, to, tag) => {
+    const id = `BIAS-2026-8468-${tag}`;
+    const walk = pathTo(from);
+    if (walk === null) return { unreachable: from };
+    let r = await mv(id, BIRTH, null);
+    if (!r || r.ok === false) return { fixture: `birth ${BIRTH}`, answer: r };
+    for (const st of walk) {
+      r = await mv(id, st, r.bundleSha);
+      if (!r || r.ok === false) return { fixture: `walk to ${st}`, answer: r };
+    }
+    return { answer: await mv(id, to, r.bundleSha) };
+  };
+
+  const declared = [], undeclared = [];
+  for (const from of LEGAL) for (const to of LEGAL) {
+    if (from === to) continue;
+    ((EDGES[from] || []).includes(to) ? declared : undeclared).push([from, to]);
+  }
+  t("REACH: the corpus is the CATALOGUE'S TABLE, not a list this suite typed — every ordered pair of "
+  + "the bias machine's legal states, split into the declared edges and the rest, and BOTH sides have "
+  + "members (a sweep with an empty half proves nothing)",
+    [LEGAL.length, declared.length + undeclared.length, declared.length > 0, undeclared.length > 0,
+     LEGAL.length * (LEGAL.length - 1)],
+    [4, 12, true, true, 12]);
+  t("and every state is REACHABLE from the birth state by the table's own edges, so no pair below is "
+  + "skipped for want of a fixture",
+    LEGAL.filter((st) => pathTo(st) === null), []);
+
+  const landed = [], refused = [], broken = [];
+  for (const [from, to] of declared) {
+    const r = await drive(from, to, `d-${from}-${to}`);
+    if (r.unreachable || r.fixture) { broken.push([from, to, r.fixture ?? `unreachable ${r.unreachable}`]); continue; }
+    landed.push([from, to, r.answer?.ok === true || typeof r.answer?.bundleSha === "string"]);
+  }
+  for (const [from, to] of undeclared) {
+    const r = await drive(from, to, `u-${from}-${to}`);
+    if (r.unreachable || r.fixture) { broken.push([from, to, r.fixture ?? `unreachable ${r.unreachable}`]); continue; }
+    refused.push([from, to, r.answer?.reason ?? null, r.answer?.check ?? null]);
+  }
+  t("NO FIXTURE FAILED TO BUILD — anything this sweep could not stand up is NAMED here rather than "
+  + "scored as a pass or a refusal",
+    broken, []);
+  t("EVERY DECLARED EDGE STILL PASSES: each one driven on its own set, walked to its `from` state by "
+  + "the table's own path, and each landed",
+    [landed.length, landed.filter(([, , ok]) => !ok)], [6, []]);
+  t("AND EVERY MOVE THE TABLE DOES NOT DECLARE IS REFUSED BY NAME, with C-26.12 — six of them, "
+  + "`adopted` -> `proposed` among them, and the two out of the terminal state as well",
+    [refused.length, refused.filter(([, , reason, check]) =>
+       reason !== "BIAS_ILLEGAL_TRANSITION" || check !== "C-26.12"),
+     refused.map(([from, to]) => `${from}->${to}`).sort()],
+    [6, [],
+     ["adopted->draft", "adopted->proposed", "draft->adopted",
+      "retired->adopted", "retired->draft", "retired->proposed"]]);
+
+  const same = [];
+  for (const st of LEGAL) {
+    const r = await drive(st, st, `s-${st}`);
+    same.push([st, r.fixture ?? r.unreachable ?? (r.answer?.ok !== false)]);
+  }
+  t("OVER-STRICTNESS ARM: A REVISION THAT MOVES NO STATE IS NOT A TRANSITION and is NOT refused — in "
+  + "EVERY legal state, including `adopted`, which is how the doctrine says an adopted set is amended "
+  + "(*a NEW REVISION of the same bundle under append-only history — which re-pins*)",
+    same, LEGAL.map((st) => [st, true]));
+});
+
+/* D-548: every section's own tally, -1 for one that DIED; and a section that never recorded at all is named
+   missing rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "1", "2", "3", "4", "5", "6"];  /* "6": D-468's sweep, wrapped at c21-batch28 */
+console.log("\n--- per-section tallies (D-548: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nd84-case-manifest: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

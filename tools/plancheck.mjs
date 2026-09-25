@@ -130,12 +130,27 @@ if (!LOCAL_ONLY) {
          the artifact, because both artifacts were telling the truth about different places.
          A reader who greps from one tree and acts on behalf of another is exactly this gate's
          reader (CONDUCT #2; the receipt is in strandedwork.mjs's header). */
-      fail(`UNPUSHED — ${ahead} commit(s) on ${branch} are not on origin/main. Verify from\n`
+      /* THE GRADE IS NOW WHAT THE TEXT SAYS IT IS (D-569, 2026-09-25). This arm said "a failure on main
+         and a note anywhere else" and called `fail()` on every branch, so every worker's required
+         "plancheck 0 fail" was unmeetable on its own PUSHED `land/` branch (D-559's, D-541's and
+         M0-188's workers each read the same 1 fail). It FAILS on main, and on any branch whose HEAD
+         no ref on origin carries — local-only work is the loss D-288 names, wherever it sits. A
+         HEAD some origin ref carries, under ANY name (workers push `HEAD:refs/heads/land/…` from a
+         checkout whose branch is called something else), is a NOTE. The predicate is
+         `unpushedGrade` in strandedwork.mjs, imported, so the suite drives the grade plancheck uses. */
+      const { unpushedGrade } = await import("./strandedwork.mjs").catch(() => ({}));
+      const graded = unpushedGrade
+        ? unpushedGrade({ branch, head })
+        : { grade: "fail", carrier: null, why: "strandedwork.mjs could not be loaded — graded fail" };
+      const text = `UNPUSHED — ${ahead} commit(s) on ${branch} are not on origin/main. Verify from\n`
          + `        the REMOTE, never from your own tree: a local commit is not a published one.\n`
          + `        (On a worker's own branch this is EXPECTED — workers commit and CONDUCT\n`
          + `        integrates. It is a failure on main and a note anywhere else.)\n`
+         + `        GRADE: ${graded.grade.toUpperCase()} — ${graded.why}\n`
          + `        SCOPE: THIS CHECKOUT ONLY (origin/main..HEAD in ${branch}). It says nothing\n`
-         + `        about any other worktree — the STRANDED WORK arm is the estate-wide one.`);
+         + `        about any other worktree — the STRANDED WORK arm is the estate-wide one.`;
+      if (graded.grade === "note") notes.push(text.replace(/\n\s+/g, " "));
+      else fail(text);
     } else {
       warn(`local main is behind origin/main — fetch and rebase before writing.`);
     }

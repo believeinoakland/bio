@@ -1149,6 +1149,20 @@ export function readingSourceJson(source) {
   return JSON.stringify(rest);
 }
 
+/** D-454 — WHICH OCCURRENCE of a reference a `reading_refs` row is: the place it was read,
+ *  as `<kind>:<canonical fields>`, and `''` where the reading could not say. It is the third
+ *  column of the table's key, so one reference string read on three pages is three rows and
+ *  a member can choose between them. Built from the SAME two values the writer stores in
+ *  `pos_kind` and `pos` and no others, so the migration can compute it in SQL from rows
+ *  already written (`pos_kind || ':' || pos`) and the two cannot disagree. The human form
+ *  (`pos_ref`) is NOT part of it: two reads of one place are one place however it is
+ *  spelled. Every unplaced read of a reference is ONE occurrence — the record cannot tell
+ *  two reads it cannot place apart, and claiming it could would be inventing a distinction. */
+export function readingOccurrenceKey(source) {
+  const s = readingSource(source);
+  return s ? `${s.kind}:${readingSourceJson(s)}` : "";
+}
+
 /** Rebuild a reading position from the three projected columns. The inverse of
  *  the writer, kept beside it so the two cannot drift. */
 export function readingSourceFromColumns(posKind, pos, posRef) {

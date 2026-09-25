@@ -634,9 +634,10 @@ for (const [k, v] of table)
   console.log(`      ${k.padEnd(21)} ${v.dir.padEnd(7)} ${String(v.set).padStart(5)} · measured ${String(v.measured).padStart(5)} — `
     + (v.dir === "ceiling" ? `raised by one, MUST FAIL naming it`
        : v.exempt ? `EXEMPT: lowered by one, MUST PASS and print it EXEMPT` : `lowered by one, MUST FAIL naming it`));
-report("(s) PRECONDITION: the pristine ratchet table is NOT EMPTY — every key the guard ratchets, 16 floors and 3 ceilings, "
+/* CORRECTED 2026-09-24 by D-550: 3 -> 4 ceilings, arm G's `multiSiteCodes` — the (s2) loop arms it like the rest. */
+report("(s) PRECONDITION: the pristine ratchet table is NOT EMPTY — every key the guard ratchets, 16 floors and 4 ceilings, "
      + "each at its measured figure but the exempt one (a table read as empty would make every arm below vacuous)",
-  floorKeys.length >= 16 && ceilingKeys.length >= 3
+  floorKeys.length >= 16 && ceilingKeys.length >= 4
     && [...table.values()].every(v => v.exempt ? v.dir === "floor" : v.slack === 0),
   `read ${floorKeys.length} floor(s), ${ceilingKeys.length} ceiling(s): ${[...table].map(([k, v]) => `${k}=${v.slack}`).join(" ")}`);
 
@@ -708,10 +709,16 @@ arm("(s5)", [{ file: F.guard, from: measureLine(F.guard, "vocabularyTerms") + "\
 const SUITE = path.join(HERE, "refusal-codes.test.mjs");
 const suiteArmsFailing = out => [...new Set([...out.matchAll(/^ {2}FAIL (ARM [^:]+):/gm)].map(x => x[1]))].sort();
 for (const [id, from, to, want] of [
-  ["(m1)", "    if (slack > s.bound) {", "    if (false) {", ["ARM 11a", "ARM 11h", "ARM 11j"]],
+  /* (m1) CORRECTED 2026-09-24 by D-550: + ARM 12b. 12b asserts a consolidated candidate leaves CEILING slack,
+     which is this comparison's to see; the old list was true of a suite with no ARM 12. Measured by the
+     harness's own first run with arm G in place: [ARM 11a, ARM 11h, ARM 11j, ARM 12b]. */
+  ["(m1)", "    if (slack > s.bound) {", "    if (false) {", ["ARM 11a", "ARM 11h", "ARM 11j", "ARM 12b"]],
   ["(m2)", "    if (!s) { lose(", "    if (!s) { continue; lose(", ["ARM 11c"]],
   ["(m3)", "    if (!m) {\n", "    if (!m) { continue; } if (false) {\n", ["ARM 11d"]],
   ["(m4)", "    if (slack > s.bound) {", "    if (slack > 0) {", ["ARM 11i"]],
+  /* D-550: arm G's by-name check neutered — the count still breaches, so ARM 12a still exits 1, and fails
+     only where it asserts the code is NAMED and that arm G's two failures are the only ones. */
+  ["(m5)", "  for (const c of open.filter(c => !MULTI_SITE_CANDIDATES.has(c))) {", "  for (const c of []) {", ["ARM 12a"]],
 ]) {
   console.log(`\n${id} THE SLACK ARM BROKEN IN THE GUARD — its suite must fail at exactly ${want.join(", ")}`);
   arm(id, [{ file: F.guard, from, to }], () => run(SUITE), r => {
@@ -720,6 +727,29 @@ for (const [id, from, to, want] of [
              what: `refusal-codes.test.mjs exits 1 failing at exactly [${want.join(", ")}] (measured [${got.join(", ")}])` };
   });
 }
+
+/* ================================================================ D-550
+   (g1) ONE CATALOGUED CODE, ONE MINT SITE — ARMED AGAINST THE REAL store.mjs. The row's negative control:
+   plant a second mint site of a single-site code, and arm G fails NAMING THE CODE. MACHINE_CANNOT_MOVE_VERSION
+   is minted once in store.mjs today (not in MULTI_SITE_CANDIDATES). The plant sits at module scope beside the
+   default export, OUTSIDE every governed span, so arms C and F read nothing new and the census (a SET of
+   codes) does not move. DECLARED BEFORE ARMING: MUST FAIL on exactly two lines, both arm G's — the code
+   named with its two sites, and the ceiling breached; MUST NOT fail anything else. */
+console.log("\n(g1) A SECOND MINT SITE OF A SINGLE-SITE CODE in the real store.mjs — arm G fails naming it");
+arm("(g1)", [{
+  file: F.store,
+  from: `export default {\n  fetch(req, env) {\n    return env.STORE.get(env.STORE.idFromName("bio")).fetch(req);`,
+  to: `const d550Control = () => ({ ok: false, reason: "MACHINE_CANNOT_MOVE_VERSION" });\n`
+    + `export default {\n  fetch(req, env) {\n    return env.STORE.get(env.STORE.idFromName("bio")).fetch(req);`,
+}], guard, r => {
+  const f = failLines(r.out);
+  return {
+    ok: r.exit === 1 && f.length === 2 && f.every(l => /^FAIL: arm G: /.test(l))
+      && /arm G: VERSION_ACT_CHECKS\.MACHINE_CANNOT_MOVE_VERSION is now minted at 2 literal sites/.test(r.out),
+    what: `the guard exits 1 naming MACHINE_CANNOT_MOVE_VERSION at 2 sites, and nothing but arm G fails `
+        + `(${f.length} FAIL line(s): ${f.map(l => l.slice(6, 60)).join(" | ")})`,
+  };
+});
 
 /* ---------------------------------------------------------------- */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");

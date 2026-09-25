@@ -26,7 +26,7 @@
  * (`rec171-surface-token`, `rec173-migration-replay`); (iv) a migration REVISION whose Drive-era history changes the
  * value between revisions is refused by this rule too — whether the Drive corpus holds any such history is not
  * measured here (the corpus is not in the tree), and REC-173 verifies only a creation as a replay.
- * ========================================================================= */
+ * ========================================================================= RE-RUN 2026-09-24 BY D-512, which CORRECTED ARM F4 to a replay the plane VERIFIES (a bare flag is now refused C-66.6 before this rule is asked): 7/7 AS DECLARED, exit 0 — baseline 22/0, drop-comparison 7/15, one-direction 15/7, line-scan 18/4, exempt-replay 20/2 (F4 by name: the verified replay now reaches the store as the server's word, so the liar that exempts it is seen), allow-drop 19/3, same-rule-respelt 22/0 — on origin/main 9f8b69e6 + D-512, real sources untouched: YES. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -35,6 +35,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { withSurfacingRun } from "./surfacing-run.mjs";
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 
 /* The control driver points this at an armed COPY of the sources. */
 const SRC_DIR = process.env.REC179_SRC || fileURLToPath(new URL("../src", import.meta.url));
@@ -134,6 +135,11 @@ const create = async (who, wrote = "human") => {
 /* A REAL edit (a session-log line) plus whatever `surfaced_by` lines the arm writes. */
 const revise = (who, q, surfacedLines, extra = {}) =>
   POST(`op=promote&${who}`, { ...pkg(q.id, q.sha, inquiryMd(q.id, surfacedLines, `- revised by REC-179 arm ${seq}`)), ...extra });
+/* D-512: the same revision as a replay the plane VERIFIES — it names a held drive-provenance capture listing this
+   bundle and these bytes (`replay-proof.mjs`), so `replay` reaches the store as the server's word, not the caller's. */
+const reviseAsVerifiedReplay = async (who, q, surfacedLines) =>
+  POST(`op=promote&${who}`, await withReplayProof(mf, who,
+    { ...pkg(q.id, q.sha, inquiryMd(q.id, surfacedLines, `- revised by REC-179 arm ${seq}`)), replay: true }));
 
 const C = SURFACE_CHECKS.SURFACED_BY_REWRITTEN;
 const refusedByName = (r) => [r?.ok, r?.reason, r?.code, r?.check, r?.translation === C?.translation && typeof C?.translation === "string"];
@@ -189,9 +195,15 @@ console.log("\n--- FLIPS: each direction refused by name, the record unchanged -
 }
 {
   const q = await agentQuestion(), before = await witness(q.id);
-  const r = await revise(ADMIN, q, ["surfaced_by: human"], { replay: true });
-  t("ARM F4 (THE REPLAY LIAR): a revision saying `replay: true` is refused by name — on a revision that is the "
-    + "caller's word, never a verified replay", refusedByName(r), REFUSED);
+  /* CORRECTED 2026-09-24 by D-512, never exempted, and made STRONGER. This sent a bare `replay: true` under the admin
+     token: on REC-179's tree the plane verified no revision's replay, so the flag was the caller's word and the
+     refusal was C-66.5. Since BOB #33's step (2) a bare flag is refused earlier, REPLAY_UNVERIFIED (C-66.6), so the old
+     package no longer reaches this rule at all and the arm would measure the wrong refusal. The subject — `replay`
+     exempts NOTHING from C-66.5 — is now driven with a replay the plane VERIFIES: the flag reaches the store as the
+     server's word, and the origin still may not be rewritten (a Drive-era history that changes it is BOB's case). */
+  const r = await reviseAsVerifiedReplay(ADMIN, q, ["surfaced_by: human"]);
+  t("ARM F4 (THE REPLAY LIAR): a revision saying `replay: true` is refused by name — even a replay the plane VERIFIED "
+    + "(D-512) is not an exemption from who surfaced the question", refusedByName(r), REFUSED);
   t("ARM F4: the bundle is BYTE-IDENTICAL after", await witness(q.id), before);
 }
 {

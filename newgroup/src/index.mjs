@@ -327,6 +327,18 @@ const INSTANCE_AI_RE = /^[\x21-\x7e]{16,512}$/;
 export const instanceAiOk = (v) => typeof v === "string" && INSTANCE_AI_RE.test(v);
 const instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: v }] : [];
 
+/* DIST-7 (D-54's installer half) — THE PLANE'S LIMITS, AS THE RELEASE STATES THEM.
+ *
+ * `bio-plane/wrangler.jsonc` states `limits.subrequests` with its reason, and `deploy.mjs` carries it to this project's
+ * instance (read back live at 0.79.0: 10000). Until DIST-7 both upload paths here sent NO `limits`, so every group's
+ * instance ran at whatever Cloudflare's default was that month. The value is carried the way the plane's
+ * `compatibility_date` is: declared here and PINNED to the plane's config by the wizard suite, so an installer built from
+ * a tree whose config states a different ceiling fails its own tests. Both paths send it — the update too, because an
+ * instance installed before DIST-7 has no limit to keep. UNDETERMINED, NOT BUILT: carrying it at RUNTIME from the signed
+ * release (an installer installing a later release with a different ceiling still sends this one); the signed manifest
+ * has no plane-limits field, and adding one to the fleet statement would fail every older installer's verification. */
+export const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
+
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
    the script the same PUT creates, and nothing here can prove Cloudflare accepts
    that self-reference without a real install, which is deploy-gated. So the
@@ -336,6 +348,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
     compatibility_flags: ["nodejs_compat"],
+    /* DIST-7 (D-54): the plane's subrequest ceiling, a decision the release states, never Cloudflare's default. */
+    limits: { ...PLANE_LIMITS },
     bindings: [
       { type: "durable_object_namespace", name: "STORE", class_name: "Store" },
       { type: "plain_text", name: "VERSION", text: release.version },
@@ -391,6 +405,8 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
     compatibility_flags: ["nodejs_compat"],
+    /* DIST-7 (D-54): the plane's subrequest ceiling, a decision the release states, never Cloudflare's default. */
+    limits: { ...PLANE_LIMITS },
     bindings: [
       { type: "plain_text", name: "VERSION", text: release.version },
       /* D-102: bound on UPDATE as well as install, which is what retro-names

@@ -72,7 +72,9 @@ try {
     const row = { key: m.key, sha: m.sha, bytes: m.bytes, ms: Date.now() - t0, err,
       text_tier: rd.text_tier ?? null, read_from_text: rd.read_from_text ?? null, found: rd.found ?? null,
       content_type: rd.content_type ?? null, entities: Array.isArray(rd.entities) ? rd.entities.length : null,
-      tier3_candidate: rd.tier3_candidate ?? null, basis: rd.basis ?? null, also: rd.also ?? rd.facts?.also_satisfies ?? null };
+      tier3_candidate: rd.tier3_candidate ?? null, basis: rd.basis ?? null, also: rd.also ?? rd.facts?.also_satisfies ?? null,
+      /* D-536: the reading's own provenance — tier, member, pages and the digest of the text it classified. */
+      reading_provenance: rd.provenance ?? null };
     /* The text the reading was made from, kept beside the census so a reader can
        check the decode is text and not glyph noise (an equality that costs nothing). */
     if (process.env.FW20_TEXT_DIR && doc) {
@@ -80,6 +82,9 @@ try {
         const st = await (await mf.dispatchFetch(`http://x/api/pdfstructure?token=mem-c&sha256=${m.sha}`)).json();
         const pages = (st.text && Array.isArray(st.text.pages)) ? st.text.pages : [];
         row.structure_tier = st.text ? (st.text.tier ?? null) : null;
+        /* D-536: the provenance of THIS text — the text a census classifies — so two reads of one document
+           that disagree can say which tier's text moved (M-143's re-walk). */
+        row.structure_provenance = st.provenance ?? null;
         row.chars = pages.reduce((n, p) => n + String(p.text || "").length, 0);
         writeFileSync(`${process.env.FW20_TEXT_DIR}/${m.sha}.txt`, pages.map((p) => String(p.text || "")).join("\n\f\n"));
         if (st.text) writeFileSync(`${process.env.FW20_TEXT_DIR}/${m.sha}.i2.json`, JSON.stringify(st.text));

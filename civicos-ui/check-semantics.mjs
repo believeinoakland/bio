@@ -64,6 +64,10 @@
  *         FAIL: PHASE names 'divided', which is not a legal inquiry state
  *         FAIL: SEMANTICS.types.inquiry declares the state 'divided', ...
  *       so the guard runs in BOTH directions, not only catalog -> UI.
+ *
+ *   §3's harvest (D-545) is controlled by its own suite and driver, `test/semantics-harvest.test.mjs` and
+ *   `test/semantics-harvest.control.mjs`: the pre-D-545 raw harvest -> a planted `typeof` guard is read
+ *   as the state `string` and FAILS by name; RUN 2026-09-24, figures in `measurements/M-148.md`.
  */
 import fs from "fs";
 import vm from "vm";
@@ -73,6 +77,8 @@ import {
   /* UI-61 / IC-84 (1): the extent grammar's kind set. */
   CONTENT_EXTENT_KINDS,
 } from "../bio-plane/checks/bio-checks.mjs";
+/* D-545: the estate's ONE lexer (`status.mjs` and the census read through it), not a second one written here. */
+import { stripComments } from "../bio-plane/scripts/walkfloor.mjs";
 
 const appPath = new URL("./app.html", import.meta.url).pathname;
 const storePath = process.argv[2] || new URL("../bio-plane/src/store.mjs", import.meta.url).pathname;
@@ -342,22 +348,71 @@ for (const [t, row] of Object.entries(S.types)) {
     if (!readable.includes(st)) bad(`SEMANTICS.types.${t} declares the state '${st}', which the catalog does not call legal or legacy for it`);
 }
 
-/* ---- 3. the store's literals, as a second instrument ---- */
+/* ---- 3. the store's literals, as a second instrument ----
+   D-545, CORRECTED 2026-09-24, not exempted: this section harvested over the RAW store text, comments
+   included, and took whatever followed `current_state ===` as a state. So a `typeof x.current_state ===
+   "string"` guard was read as a state named `string`, and a COMMENT quoting the pattern was read as one
+   too, and the check went RED with "states the store writes with no semantics row" naming a state nobody
+   wrote (REC-210 paid two full gate rounds for it, the second from a comment). Measured on main 9f8b69e6:
+   `published` was in this set ONLY because two comments (store.mjs ~4760, ~30487) quote the retired guard.
+   Now the harvest reads the store with its comments BLANKED, and a match is a STATE only when its
+   right-hand side is a state the catalogue declares and no `typeof` precedes it. Every other match is an
+   UNRECOGNISED MATCH, printed by line, never added to the set. One kind still FAILS, by name: a literal in
+   CODE that is not a catalogue state — that is a store writing or gating on something the catalogue never
+   blessed, which is exactly what this instrument exists to catch, so refusing to call it a state must not
+   become refusing to see it. */
 const store = fs.readFileSync(storePath, "utf8");
+const storeCode = stripComments(store);          // same length, same offsets; strings kept
+const CATALOGUE_STATES = new Set(Object.values(STATES).flatMap((s) => [...s.legal, ...(s.legacy || [])]));
+const lineOf = (i) => store.slice(0, i).split("\n").length;
+const unrecognised = [];                         // { at, text, why, fails }
+const harvestReach = {};
 const planeStates = new Set();
+function harvestStates(label, re) {
+  const inCode = new Set();
+  let n = 0;
+  for (const m of storeCode.matchAll(re)) {
+    inCode.add(m.index); n++;
+    const at = "store.mjs:" + lineOf(m.index), text = m[0].replace(/\s+/g, " ");
+    if (/\btypeof\s+[\w$.?[\]]*$/.test(storeCode.slice(Math.max(0, m.index - 120), m.index)))
+      unrecognised.push({ at, text, fails: false,
+        why: "a `typeof` guard: its right-hand side is a JavaScript type name, not a state" });
+    else if (!CATALOGUE_STATES.has(m[1]))
+      unrecognised.push({ at, text, fails: true,
+        why: `'${m[1]}' is not a state the catalogue declares for any type, so it is not counted as one; `
+           + "the store writes or gates on it in CODE, and a literal the catalogue never blessed has no semantics row" });
+    else planeStates.add(m[1]);
+  }
+  for (const m of store.matchAll(re)) if (!inCode.has(m.index))
+    unrecognised.push({ at: "store.mjs:" + lineOf(m.index), text: m[0].replace(/\s+/g, " "), fails: false,
+      why: "blanked by the lexer (a comment or a regex literal): a quote of the pattern, not code the store runs" });
+  harvestReach[label] = n;
+}
 // explicit state arrays, e.g. INQUIRY_STATES = ["open", ...]
-for (const arr of store.matchAll(/_STATES\s*=\s*\[([^\]]*)\]/g))
+for (const arr of storeCode.matchAll(/_STATES\s*=\s*\[([^\]]*)\]/g))
   for (const w of arr[1].matchAll(/"([a-z_]+)"/g)) planeStates.add(w[1]);
 // literals the store writes or gates on
-for (const w of store.matchAll(/current_state\s*[!=]==?\s*"([a-z_]+)"/g)) planeStates.add(w[1]);
-for (const w of store.matchAll(/#setScalar\([^,]+,\s*"current_state",\s*"([a-z_]+)"\)/g)) planeStates.add(w[1]);
+harvestStates("current_state compared", /current_state\s*[!=]==?\s*"([a-z_]+)"/g);
+harvestStates("#setScalar current_state", /#setScalar\([^,]+,\s*"current_state",\s*"([a-z_]+)"\)/g);
 /* CORRECTED 2026-09-23 by CONDUCT #17 at c17-batch5, not exempted: without a word boundary these two read
    CAP-14's `reused_from_state: "undetermined"` (a reuse's provenance state, not a lifecycle state) as a
-   from_state and demanded a semantics row for it. The key is anchored so only a real transition field reads. */
-for (const w of store.matchAll(/\bto_state:\s*"([a-z_]+)"/g)) planeStates.add(w[1]);
-for (const w of store.matchAll(/\bfrom_state:\s*"([a-z_]+)"/g)) planeStates.add(w[1]);
+   from_state and demanded a semantics row for it. The key is anchored so only a real transition field reads.
+   D-545: they are the same class as the two above, so they take the same two guards (measured on main
+   9f8b69e6: 5 to_state matches, 0 from_state, none in a comment, every one a catalogue state — no change). */
+harvestStates("to_state", /\bto_state:\s*"([a-z_]+)"/g);
+harvestStates("from_state", /\bfrom_state:\s*"([a-z_]+)"/g);
 const planeCrit = new Set();
-for (const w of store.matchAll(/criticality\s*[!=]==?\s*"([a-z_]+)"/g)) planeCrit.add(w[1]);
+for (const w of storeCode.matchAll(/criticality\s*[!=]==?\s*"([a-z_]+)"/g)) planeCrit.add(w[1]);
+/* A matcher narrowed to nothing reports 100% of nothing: the lexer eating the store would empty this set
+   and read GREEN. The first harvest is floored on its own reach. */
+if (!harvestReach["current_state compared"])
+  bad("the store harvest found NO `current_state` comparison in code — the lexer or the path is wrong, not the store clean");
+console.log("store harvest reach: ", Object.entries(harvestReach).map(([k, v]) => `${k} ${v}`).join(" · "));
+console.log(`unrecognised matches: ${unrecognised.length} (never counted as states)`);
+for (const u of unrecognised) {
+  const line = `  UNRECOGNISED MATCH ${u.at} \`${u.text}\` — ${u.why}`;
+  if (u.fails) bad(line.trim()); else console.log(line);
+}
 
 const missingInUi = [...planeStates].filter((s) => !uiStates.has(s));
 const critMissing = [...planeCrit].filter((c) => !uiCrit.has(c));

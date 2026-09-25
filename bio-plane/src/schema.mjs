@@ -811,6 +811,17 @@ CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- absence it is, so the null is never bare.
 -- The column arrives WITH its writer (schema.mjs's own standing rule): the
 -- agenda reader emits a position and op=promote projects it in the same landing.
+-- D-454: ONE ROW PER OCCURRENCE, keyed (capture_sha, ref, occurrence). Until this
+-- the key was (capture_sha, ref), so a reference string read on three pages was
+-- ONE row at the first page, and a member choosing a connection's on-point mention
+-- (REC-122) could not choose page 9. occurrence is the place (pos_kind:pos, the
+-- two columns beside it, so it is computable from them), and every unplaced read of
+-- one reference is the ONE row with an empty occurrence -- the record cannot tell
+-- apart reads it cannot place. seq is the reading order, and seq 0 is the FIRST read,
+-- which is exactly the one row every store held before this: a read asking about the
+-- REFERENCE (resolve, the name index, the frontier) reads seq 0, and a read asking
+-- about its MENTIONS reads every row. The re-key keeps every existing row (the
+-- migration renames, recreates and copies forward, store.mjs #migrate).
 CREATE TABLE IF NOT EXISTS reading_refs (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
@@ -821,7 +832,9 @@ CREATE TABLE IF NOT EXISTS reading_refs (
   pos_kind     TEXT,   -- IC-1's discriminator: pdf-page | sheet-cell | slide-shape | doc-para
   pos          TEXT,   -- the per-arm fields as canonical JSON, key-ordered so two reads of one place compare equal
   pos_ref      TEXT,   -- IC-1's REQUIRED human form, produced by the container that knows it
-  PRIMARY KEY (capture_sha, ref)
+  occurrence   TEXT NOT NULL DEFAULT '',  -- D-454: WHICH read of ref this row is, pos_kind:pos, empty = unplaced
+  seq          INTEGER NOT NULL DEFAULT 0, -- D-454: reading order among ref's occurrences, 0 = the first read
+  PRIMARY KEY (capture_sha, ref, occurrence)
 );
 CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
 CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
@@ -1160,6 +1173,12 @@ CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
 -- about (D-113). No position is stored: WHERE the mention was read is the reading's
 -- fact (reading_refs), read at answer time, so a choice cannot freeze a position the
 -- record later corrects.
+-- D-454: the choice NAMES ITS OCCURRENCE, because one reference string may be read at
+-- several places and a choice of the string alone is not a choice between them. The key
+-- is stored, never the position read off it: the answer still joins reading_refs, so a
+-- re-read that no longer carries that occurrence LAPSES the choice rather than moving it
+-- to another. A row chosen before D-454 has NULL here and answers only while its
+-- reference has exactly one occurrence.
 CREATE TABLE IF NOT EXISTS connection_pair_choices (
   choice_id     INTEGER PRIMARY KEY AUTOINCREMENT,
   a_capture_sha TEXT NOT NULL,
@@ -1167,6 +1186,7 @@ CREATE TABLE IF NOT EXISTS connection_pair_choices (
   entity_id     TEXT NOT NULL,
   side          TEXT NOT NULL,  -- which end the choice is about, a or b
   ref           TEXT NOT NULL,  -- the chosen mention, as resolutions.ref holds it
+  occurrence    TEXT,           -- D-454: WHICH read of ref, reading_refs.occurrence. NULL = chosen before D-454, naming the string only
   a_bundle_id   TEXT,
   b_bundle_id   TEXT,
   chosen_by     TEXT NOT NULL,  -- the member, stamped by the control plane
@@ -1967,6 +1987,12 @@ CREATE TABLE IF NOT EXISTS case_documents (
   delivered_by    TEXT,            -- REC-128 WHO DELIVERED, from the session. NULL means not recorded, never the signer
   gate_version    TEXT,
   ratified_at     TEXT,
+  -- REC-217 / BIO_Publication_v0_1.md section 3 rule 13 (BOB #33, 2026-09-24 19:14Z): THE DRAFT THE PUBLISHER
+  -- NAMED as this case edition's draft at op=publish (draft=), or NULL where none was named. The link is an ACT:
+  -- its author is authored_by and its time authored_at, the publisher and the moment of the same op=publish, and
+  -- the document's own bytes state it in words. Readings taken through this draft bind to this case edition.
+  -- NULL on a row written before this column is MEASURED, not back-filled: no act could name a draft until now.
+  draft_id        TEXT,
   PRIMARY KEY (case_id, edition)
 );
 -- D-442 / BIO_Publication_v0_1.md section 3 rule 12: WHICH CASES EXCLUDED THIS DOCUMENT, projected
@@ -4050,6 +4076,61 @@ CREATE TABLE IF NOT EXISTS action_law_proposals (
   citation    TEXT NOT NULL,   -- as the proposer wrote it, and never parsed for a rule
   proposed_at TEXT NOT NULL,
   PRIMARY KEY (bundle_id, proposed_by, ord)
+);
+
+-- REC-207 (BIO_Declared_Bias_v0_1.md, "Bias debt, and HUNCH DEBT", BOB #32's ruling of 2026-09-23 23:42Z):
+-- WHAT SETTLED A BIAS-DEBT OBLIGATION, ONE APPEND-ONLY ROW PER SETTLING ACT. Three acts settle a debt and each is
+-- RECORDED, and none clears it silently. Before this table the only settlement was the lens moving back and it wrote
+-- a timestamp on bias_debts and nothing else, so a reader who came later could see THAT the obligation had gone and
+-- never WHY -- which is the record saying less than it knows.
+-- kind is one of three words. lens_returned is the sweep reading moved false again, derived, with no member behind
+-- it. rerun is a run that NAMES the indebted run as the one it re-runs, CLOSED under the lens in force, where by_run
+-- is that run and lens_now is the sha it ran under. resolved is a member's authored act with a REQUIRED stated
+-- reason, where actor is that member.
+-- APPEND-ONLY BY USE, not by a trigger. Nothing in the store updates or deletes a row here, and a debt raised again
+-- after a settlement (the lens moved once more) writes a FURTHER row rather than editing this one, so the sequence
+-- IS the history. seq orders and keys it, and a settlement is never addressed by anything but its run and its seq.
+-- actor is NULL for lens_returned, because a sweep is not a person and attributing it to one would be an invented
+-- attribution, and reason is NULL for the two acts that state their ground in the record rather than in words.
+-- A run is purged only by the whole-store arm, which takes this with it, beside bias_debts.
+CREATE TABLE IF NOT EXISTS bias_debt_settlements (
+  seq        INTEGER PRIMARY KEY,
+  run        TEXT NOT NULL,
+  kind       TEXT NOT NULL CHECK (kind IN ('lens_returned','rerun','resolved')),
+  at         TEXT NOT NULL,
+  actor      TEXT,
+  reason     TEXT,
+  by_run     TEXT,
+  lens_then  TEXT,
+  lens_now   TEXT
+);
+CREATE INDEX IF NOT EXISTS bias_debt_settlements_run ON bias_debt_settlements(run, seq);
+
+-- D-536 (BIO_Content_Framework_v0_10.md Part II section 16, Reading provenance -- BOB #33's
+-- ruling of 2026-09-24): EVERY READING OF A CAPTURE IS KEPT. The readings table holds ONE row per
+-- capture and a re-promotion or a re-extraction replaces it, so a re-read that returned different text
+-- used to leave no trace of the text it replaced. This table is the history: one row per DISTINCT
+-- reading the record has held for a capture, in the order it arrived, never updated and never
+-- deleted but by a purge. A reading equal byte for byte to the latest kept one is not kept twice --
+-- an ordinary revision of a bundle re-submits the same provenance document and that is not a re-read.
+-- reading is the whole reading as JSON, as the readings row held it. provenance is its
+-- reading-provenance object (readingprov.mjs) or NULL, and NULL is UNDETERMINED -- a reading written
+-- before D-536, or by a caller that carried none -- never inferred from text_tier or from the chain.
+-- compared is the attribution against the row before it (compareProvenance), NULL for the first row
+-- of a capture. text_sha256 is projected out of provenance so the comparison is a column, NULL when
+-- undetermined or when no text was classified. DERIVED from the readings the corpus carried, and it
+-- carries bundle_id, so a purge clears it in both arms (D-113).
+CREATE TABLE IF NOT EXISTS reading_history (
+  capture_sha    TEXT NOT NULL,
+  seq            INTEGER NOT NULL,
+  bundle_id      TEXT NOT NULL,
+  reading_sha256 TEXT NOT NULL,
+  reading        TEXT NOT NULL,
+  provenance     TEXT,
+  text_sha256    TEXT,
+  compared       TEXT,
+  kept_at        TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, seq)
 );
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant

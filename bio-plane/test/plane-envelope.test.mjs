@@ -717,9 +717,13 @@ function rawInRatify(src) {
      moved VERBATIM out of the ratify handler into the module function `assembleCaseContainer`, because under
      rule 12 op=caseratify can complete a case too and must assemble it by the same code. So the region carries
      seven, and the moved fetch is held to detector D's rule at its new home, in the arm right after this one. */
+  /* CORRECTED 2026-09-24 (D-530), never exempted: 7 -> 8 IN THE REGION. The ratify gate's `hasCapture` now asks
+     the store's `registerholds` on a whole-hash miss, so that it can name a capture held in parts rather than call
+     its bytes absent. That is a real eighth Durable Object read in this handler, and it goes through the
+     chokepoint: detectors D and D2 below read all eight and pass. The old pin counted a handler that no longer exists. */
   ok(`the ratify region is found and is the whole handler — ${region.text.split("\n").length} lines `
      + `carrying ${inBlock.length} Durable Object fetches`,
-     region && inBlock.length === 7);
+     region && inBlock.length === 8);
   {
     const from = SRC.indexOf("async function assembleCaseContainer(");
     let i = SRC.indexOf("{", SRC.indexOf(")", from)), depth = 0, to = -1;

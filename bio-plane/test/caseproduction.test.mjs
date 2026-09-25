@@ -32,6 +32,9 @@
    (G) THE COMPOSITION RESTORED, AND IT IS THE REMOVAL'S OWN CONTROL. Re-add a `#requiredStrengthFor`-shaped cross-citer walk in src/store.mjs and call it from `#projectBar` when the project declares nothing -> the group default and other projects' bars reach a publication again. MUST FAIL: §7's removal arms and §5's supporting arm (the exempt member's project acquires a bar it never declared). MUST NOT FAIL: §2, §3.
    (H) THE RATIFY COMMIT TAKEN OFF THE SIGNED BYTES. In src/store.mjs publish() replace `caseProject` with a literal project id -> the `cases` row records an attribution nobody signed. MUST FAIL: §8's committed-from-bytes arm. MUST NOT FAIL: anything in §2-§6, WHICH IS THE POINT: every act-side arm stays green while the record commits a fact no signature covers.
    (I) BASELINE. Every arm restored, suite re-run, full green.
+   (J) D-450 · THE BOTH-AXES DEMAND PUT BACK — the row's own named control. In checks/bio-checks.mjs C-41.12's arm replace `rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])` with `!BASIS_GRADES.includes(rq[axis])` -> a one-axis bar publishes and can never be signed. MUST FAIL: §10's ceremony, check-level, op=ratify and cases-row arms. MUST NOT FAIL: §10's publish arm and fixture guard, §10's pair and words arms (they read the authored document with a participant's token, so they do not ride the ceremony), and §5/§8's two-axis case.
+   (K) D-450 · THE UNSET AXIS AS A BLANK. In src/store.mjs `#barAxisWords` write `${axis} not set` for a null axis -> MUST FAIL: §10's words arm ALONE. MUST NOT FAIL: the pair, the ceremony, op=ratify.
+   ==== RUN 2026-09-25 by WORKER D-450 over origin/main 8bdf20e6, ALL TEN ARMS, `node test/caseproduction.control.mjs`, exit 0, 10 of 10 AS DECLARED: BASELINE caseproduction 84/0, publish 99/0, d280-strengthbar 35/0; (A) 82/2, (B) 67/17, (C) 81/3, (D) 81/3, (E) 73/11, (F) 82/2, (G) 83/1, (H) 73/11, (J) 81/3, (K) 83/1; every restore verified by sha256, content and cmp x2. FINDING ABOUT MY OWN ARM, recorded not smoothed: on (J)'s FIRST run the pair and words arms failed too, because `op=casedocument` without a credential serves only a SIGNED document — they were coupled to the ceremony. Corrected by reading with PILAR's token and adding a non-empty fixture guard; then the check-level arm joined §10 (85 assertions). RE-RUN (J) 81/4 and (K) 84/1, both AS DECLARED, the pair and words arms GREEN under (J).
    ==== RUN 2026-08-10, case2-publication-production. See the driver's header for the measured result of each arm.
  * ========================================================================= */
 /* CASE-2 — **PUBLICATION IS A PRODUCTION OF A PROJECT**, enacting DEC-72 and
@@ -101,7 +104,7 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CASE_MEMBER_ROLES } from "../checks/bio-checks.mjs";
+import { CASE_MEMBER_ROLES, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { SCHEMA } from "../src/schema.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -1130,6 +1133,92 @@ console.log("\n--- 9. the expectations come from documents this item did not wri
     (/static MEMBER_ROLES = \[([^\]]*)\]/.exec(STORE_SRC)?.[1] ?? "")
       .split(",").map((s) => s.trim().replace(/^"|"$/g, "")).filter(Boolean),
     declared);
+}
+
+/* ===== 10. D-450 · A BAR ON ONE AXIS PUBLISHES, RATIFIES, AND SAYS WHICH AXIS NOBODY SET ======
+   BIO_Publication_v0_1.md §3 rule 14 (BOB #32, 2026-09-23 23:08Z): *"the pair stays a pair — both keys
+   present, an unset axis null, stated in words 'no bar set on the <axis> axis'"*. REC-148's worker found
+   the three sites disagreeing: `publishCase` admitted a one-axis bar (an unset axis gates nothing),
+   `#caseDocumentText` froze the unset axis as `null`, and C-41.12 demanded a grade on BOTH axes of a
+   declared bar — so the case published and could never be signed. Requiring both would force a member to
+   invent a bar on an axis they hold no view on (CLAUDE.md §4), so the CHECK moved, not the act.
+   Its own project and its own member, for §1's reason: an arm that can only be read through another
+   arm's wreckage is not armed alone. */
+console.log("\n--- 10. D-450: a bar declared on ONE axis publishes, ratifies, and states the unset axis in words ---");
+{
+  const INQ_ONE = "INQ-2026-2200-oneaxis";
+  await mustPromote(INQ_ONE, inquiryMd(INQ_ONE,
+    { question: "Was the memo circulated?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }), "inquiry", "open");
+  const PROJ_ONE = await createProject("PROJ-2026-2200-oneaxis", projectMd(null,
+    { name: "PROJ-2026-2200-oneaxis",
+      bar: { capture: "B", connection: "null", author: "nadia", at: "2026-07-03T00:00:00Z" } }), NADIA);
+  {
+    const stub = await mf.getDurableObjectNamespace("STORE");
+    const obj = stub.get(stub.idFromName("bio"));
+    const doGet = async (op, qs) => rP(await (await obj.fetch(`http://x/${op}?${qs}`)).json());
+    for (const [op, qs] of [["projectinvite", `projectId=${PROJ_ONE}&handle=pilar&by=nadia`],
+                            ["projectjoin", `projectId=${PROJ_ONE}&by=pilar`],
+                            ["projectowneradd", `projectId=${PROJ_ONE}&handle=pilar&by=nadia`]]) {
+      const r = await doGet(op, qs);
+      if (r.ok !== true) throw new Error(`${op} ${PROJ_ONE}: ${JSON.stringify(r)}`);
+    }
+  }
+  await conclude(PILAR, { target: INQ_ONE, conclusion: "Undetermined on the present record.",
+    falsifier: "A circulation list would settle it." });
+  const barOne = rP(await GET(`op=strengthbarof&token=${PILAR}&project=${PROJ_ONE}`)).bar || {};
+  t("FIXTURE GUARD: the project declares a bar on CAPTURE ONLY, read back through the op — declared, "
+  + "capture B, connection null (an axis nobody set, not a grade)",
+    [barOne.declared ?? null, barOne.capture ?? null, barOne.connection], [true, "B", null]);
+  t("FIXTURE GUARD: the member clears capture B and derives connection C — so it would be REFUSED under a "
+  + "(B, B) bar and publishes here only because the connection axis gates nothing",
+    [(await strengthOf(INQ_ONE)).capture.grade, (await strengthOf(INQ_ONE)).connection.grade], ["B", "C"]);
+
+  const one = await publish(PILAR, { ...CEREMONY,
+    scope: "Whether the memo was circulated, on the documents in hand.",
+    statement: "This case covers the circulation question only, at edition 1.",
+    targets: [INQ_ONE], project: PROJ_ONE, roles: { [INQ_ONE]: "load_bearing" } });
+  t("A ONE-AXIS BAR PUBLISHES: op=publish admits it, since an axis the project left unset gates nothing",
+    [one.ok, one.edition ?? null], [true, 1]);
+  t("AND THE CASE CEREMONY COMPLETES — op=caseratify signs it. Before D-450 C-41.12 demanded a grade on "
+  + "BOTH axes of a declared bar and refused the document op=publish had just authored, so the case "
+  + "published and could never be signed",
+    one.ratifyRefused ?? null, null);
+  /* READ WITH A PARTICIPANT'S TOKEN, so the two arms below read the document op=publish AUTHORED whether
+     or not the ceremony signed it — arm (J)'s first run found them failing only because an unsigned
+     document is not served to a caller holding no credential, which coupled them to the ceremony arm. */
+  const docOne = one.caseId
+    ? rP(await GET(`op=casedocument&token=${PILAR}&case=${one.caseId}&edition=${one.edition}`)).text || "" : "";
+  t("(fixture) the authored case document was READ — the two arms below cannot pass over an empty string",
+    docOne.length > 500, true);
+  t("THE PAIR STAYS A PAIR IN THE SIGNED BYTES: both keys present, the unset one null — never defaulted "
+  + "to a grade and never omitted",
+    /required_strength:\n\s+declared: true\n[\s\S]{0,120}?\n\s+capture: B\n\s+connection: null\n/.test(docOne), true);
+  t("and the document SAYS it in words, where a reader meets the standard: \"no bar set on the "
+  + "connection axis\" — a null a reader has to interpret is not a statement",
+    /## Standard Of Evidence\n\n[^\n]*no bar set on the connection axis/.test(docOne), true);
+  /* C-41.12 ADMITS null AND NOTHING ELSE MOVES: driven over the REAL one-axis document, mutated one key at a
+     time. What rule 14 keeps refused — an OMITTED key (silence is not "unset"), a value that is no grade, and
+     a bar declared on NEITHER axis (it gates nothing while claiming a standard) — must still fire; the
+     document as authored must draw no C-41.12 finding at all. */
+  const fmOne = parseFrontmatter(docOne).data || {};
+  const bar12 = (mutate) => checkCaseDocument(mutate(structuredClone(fmOne)),
+    { caseId: one.caseId, edition: one.edition }).filter((x) => x.check === "C-41.12").length;
+  t("C-41.12 over the authored one-axis document: admitted as written (0), and it still FIRES on an omitted "
+  + "key, a non-grade value, and a declared bar with no axis set (1 each)",
+    [bar12((d) => d),
+     bar12((d) => { delete d.required_strength.connection; return d; }),
+     bar12((d) => { d.required_strength.connection = "E"; return d; }),
+     bar12((d) => { d.required_strength.capture = null; return d; })],
+    [0, 1, 1, 1]);
+  const bundleSha = await shaOf(INQ_ONE);
+  const rat = rP(await POST(`op=ratify&token=${PILAR}`,
+    { bundleId: INQ_ONE, expectedSha: bundleSha, sig: signRatify(INQ_ONE, bundleSha) }));
+  t("AND op=ratify PUBLISHES ITS MEMBER — the act the row found answering GATE_REFUSED on C-41.12",
+    [rat.ok, rat.reason ?? null,
+     (rat.findings || []).filter((x) => x.check === "C-41.12").map((x) => x.detail)], [true, null, []]);
+  const manOne = rP(await GET(`op=publishedmanifest&token=${PILAR}`));
+  t("and the `cases` row is written for the one-axis project — the case is on the published record",
+    (manOne.cases || []).some((c) => c.case_id === one.caseId && c.project_id === PROJ_ONE), true);
 }
 
 console.log(`\ncaseproduction: ${pass} pass, ${fail} fail`);

@@ -89,7 +89,13 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
    expression it cannot resolve. That is the instrument's blind spot, not a pen defect (routed to SCHEDULER #21:
    the sweep should tell a copy source from a destination). nc-d463/nc-d475/nc-d490/d444 were MOVED to controlPen
    in the same landing rather than counted. */
-t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus D-510's copy source (<= 15)", g("UNCLASSIFIED").length <= 15, true);
+/* MOVED 15 -> 18 at c21-batch28 (CONDUCT #21), BY NAME, never as slack: d526-refusal-order.control,
+   d547-revision-retype.control and d548-block.control landed in one batch, each the SAME shape as D-510's copy
+   source already allowed here — its one unresolvable expression is the plane-root READ
+   `fileURLToPath(new URL("..", import.meta.url))`, and every write goes to a `mkdtempSync(join(tmpdir(), …))`
+   mirror (read at each driver). The fix that lets this fall again is the walk resolving that expression as a
+   tree READ; it is routed to SCHEDULER as a row, not taken here. */
+t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus the copy sources of D-510, D-526, D-547 and D-548 (<= 18)", g("UNCLASSIFIED").length <= 18, true);
 /* The named drivers this row moved FIRST, each by name rather than by a count. */
 t("the six drivers that owned those seven pens are all graded, and none is dirty",
   ["coord.control.mjs", "delegations.control.mjs", "entries.control.mjs", "m0107-budget.control.mjs",

@@ -246,6 +246,22 @@
  *   3 ceilings raised by one fails the same way; (s3a) the plant with its floor left
  *   behind fails on that floor alone; (s4) a key with no slack line and (s5) a key
  *   with no recorded figure fail by name. After: exactly (c), (e), (r2), (r6) fail.
+ *
+ *   D-550's, RUN 2026-09-24 by cloud WORKER D-550 (branch land/worker/D-550), base origin/main @ 8bdf20e6 —
+ *   ARM G holds a catalogued DEC-49 code to ONE literal site in store.mjs/index.mjs (ceiling 59 = the sweep's
+ *   62 less three closures declared by name). This suite 115 assertions before, 127/0 after (ARM 12's twelve).
+ *   CORRECTED, NEVER EXEMPTED, each at its site: ARM 10c, 11a and 11b plant a second site of a fixture code,
+ *   which arm G now refuses, so each declares it as a landing meaning it would; ARM 11g's key count 19 -> 20.
+ *   ON THE REAL TREE (`refusal-codes.control.mjs`), each arm ALONE, every restore by hash AND content:
+ *   (g1) THE ROW'S — a second mint site of MACHINE_CANNOT_MOVE_VERSION planted in store.mjs at module scope.
+ *        DECLARED MUST FAIL on exactly two lines, both arm G's, naming the code. RUN: exit 1,
+ *          FAIL: arm G: VERSION_ACT_CHECKS.MACHINE_CANNOT_MOVE_VERSION is now minted at 2 literal sites …
+ *          FAIL: arm G: 60 DEC-49 codes are minted at more than one site, ceiling 59 …
+ *        and nothing else.
+ *   (m5) ARM G'S BY-NAME CHECK NEUTERED. DECLARED MUST FAIL this suite at ARM 12a alone. RUN: ARM 12a only.
+ *   (s2 multiSiteCodes) the ceiling raised 59 -> 60 fails on CEILING SLACK alone (the generic (s2) loop).
+ *   (m1) now fails ARM 12b too — measured, and corrected at its site in the harness.
+ *   After: exactly (c), (e), (r2), (r6) fail, the four that fail on the untouched base.
  * ============================================================================
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
@@ -478,7 +494,16 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
        ceiling compares `n > undefined` -> false and never fails, so leaving it
        out would be a ceiling that silently does not exist — the generous
        direction this file exists to refuse. The default tree spreads nothing. */
-    { reachGap: 0, unclassifiedOutcomes: 0, inheritedVerdicts: 0 }, over.ceiling || {}))};`);
+    /* `multiSiteCodes: 0` (D-550, arm G) STATED for the same reason: the default tree names each code once. */
+    { reachGap: 0, unclassifiedOutcomes: 0, inheritedVerdicts: 0, multiSiteCodes: 0 }, over.ceiling || {}))};`);
+  /* D-550 — ARM G's tables name the REAL plane's codes and files, so the fixture states its own: the walk
+     reads the fixture's governed source, no closure is declared, and the candidates are whatever an arm
+     names (none by default — the default tree mints each code at one site). */
+  guard = guard.replace(/const MULTI_SITE_FILES = \[[^\]]*\];/, `const MULTI_SITE_FILES = ["fixture.mjs"];`);
+  guard = guard.replace(/const MULTI_SITE_CLOSED = new Map\(\[[\s\S]*?\n\]\);/,
+    `const MULTI_SITE_CLOSED = new Map(${JSON.stringify(Object.entries(over.multiClosed || {}))});`);
+  guard = guard.replace(/const MULTI_SITE_CANDIDATES = new Set\(\[[\s\S]*?\n\]\);/,
+    `const MULTI_SITE_CANDIDATES = new Set(${JSON.stringify(over.multiCandidates || [])});`);
   guard = guard.replace(/PART_REASON: "src\/subresources\.mjs"/, `PART_REASON: "src/parts.mjs"`);
   guard = guard.replace(/const VOCABULARY_MODULES = new Map\(Object\.entries\(\{[\s\S]*?\n\}\)\);/,
     `const VOCABULARY_MODULES = new Map(Object.entries({ "src/vocab.mjs": "the fixture's vocabularies" }));`);
@@ -1312,7 +1337,13 @@ console.log("\n--- ARM 10c · the SAME computed verdict, CODED, is accepted (the
    untouched: a codeless one would still fail as CODELESS, which ARM 10b shows. */
 withTree({ fixtureSrc: withExtra(
   `  if (input.late) return { ok: !input.fine, handle: "h", ...(input.fine ? {} : { reason: "FIXTURE_NO_ADDRESS" }) };`),
-  floor: { outcomeReturns: 4, refusalsJudged: 4, codesChecked: 4 } }, tree => {
+  floor: { outcomeReturns: 4, refusalsJudged: 4, codesChecked: 4 },
+  /* CORRECTED 2026-09-24 by D-550, never exempted: the extra return names FIXTURE_NO_ADDRESS at a SECOND
+     literal site, which arm G (one catalogued code, one mint site) now refuses — the old assertion was
+     written before anything held a code to one site. The claim tested here is the classifier's, not arm G's,
+     so the arm declares the second site the way a landing that meant it would: the code named a candidate
+     and the ceiling at the figure arm G prints over this tree (1). ARM 12 drives arm G itself. */
+  multiCandidates: ["FIXTURE_NO_ADDRESS"], ceiling: { multiSiteCodes: 1 } }, tree => {
   const r = runGuard(tree);
   t("ARM 10c: exits 0 — a computed verdict carrying a coded refusal is exactly what DEC-49 asks for", r.exit, 0);
 });
@@ -1406,7 +1437,12 @@ withTree({ mutateReader: r => r.replace("function verdictOf(objText) {", "functi
 const CODED_LATE = withExtra(`  if (input.late) return { ok: false, code: "FIXTURE_BAD_ANCHOR", detail: "late" };`);
 
 console.log("\n--- ARM 11a · a correct landing that grows three figures and moves NO floor FAILS, naming each (M0-79) ---");
-withTree({ fixtureSrc: CODED_LATE }, tree => {
+/* CORRECTED 2026-09-24 by D-550, never exempted: CODED_LATE names FIXTURE_BAD_ANCHOR at a SECOND site,
+   which arm G now refuses, so "nothing else fails" was true only while nothing held a code to one site. The
+   arm isolates SLACK, so it declares that second site as a landing meaning it would (a named candidate, the
+   ceiling at arm G's printed 1); ARM 12a is the same tree WITHOUT the declaration, failing by name. */
+const CODED_LATE_DECLARED = { multiCandidates: ["FIXTURE_BAD_ANCHOR"], ceiling: { multiSiteCodes: 1 } };
+withTree({ fixtureSrc: CODED_LATE, ...CODED_LATE_DECLARED }, tree => {
   const r = runGuard(tree);
   /* The planted refusal is CORRECT — coded, the code a row of this site's family —
      so the only thing wrong with the tree is the three floors it left behind. */
@@ -1420,7 +1456,8 @@ withTree({ fixtureSrc: CODED_LATE }, tree => {
 });
 
 console.log("\n--- ARM 11b · the SAME landing with its floors moved IN THE SAME TURN stays GREEN ---");
-withTree({ fixtureSrc: CODED_LATE, floor: { outcomeReturns: 4, refusalsJudged: 4, codesChecked: 4 } }, tree => {
+withTree({ fixtureSrc: CODED_LATE, floor: { outcomeReturns: 4, refusalsJudged: 4, codesChecked: 4 }, ...CODED_LATE_DECLARED },
+  tree => {   /* D-550: declared as 11a is, for the reason given there. */
   const r = runGuard(tree);
   t("ARM 11b: exits 0 — a landing that moves its floors from the printed figures passes", r.exit, 0);
   t("ARM 11b: and says no ratchet carries slack beyond its bound",
@@ -1468,8 +1505,10 @@ withTree({}, tree => {
   t("ARM 11g: the default tree passes with `bodyLines` far below its measurement", r.exit, 0);
   t("ARM 11g: and prints `bodyLines` as EXEMPT with its reason, beside the slack it carries",
     /ratchet:\s+bodyLines\s+floor\s+6 · measured\s+\d+ · slack\s+[1-9]\d* · EXEMPT — DELIBERATELY NOT A RATCHET/.test(r.out), true);
-  t("ARM 11g: and all 19 of the fixture's keys — 16 floors and 3 ceilings — are accounted for",
-    /19 ratchet key\(s\) \(16 floor\(s\), 3 ceiling\(s\)\), EVERY one accounted for: 18 gated/.test(r.out), true);
+  /* CORRECTED 2026-09-24 by D-550: 19 -> 20 keys and 3 -> 4 ceilings, because arm G added the ceiling
+     `multiSiteCodes`; the old figure was true of a guard with one ratchet fewer. */
+  t("ARM 11g: and all 20 of the fixture's keys — 16 floors and 4 ceilings — are accounted for",
+    /20 ratchet key\(s\) \(16 floor\(s\), 4 ceiling\(s\)\), EVERY one accounted for: 19 gated/.test(r.out), true);
 });
 
 console.log("\n--- ARM 11h · CEILING slack FAILS too — a ceiling above its subject lets the subject get worse ---");
@@ -1497,6 +1536,62 @@ withTree({ fixtureSrc: SUCCESS_LATE }, tree => {
   t("ARM 11j: naming `outcomeReturns` alone",
     [/FLOOR SLACK — `outcomeReturns`: floor 3, measured 4/.test(r.out),
      r.out.split("\n").filter(l => /^FAIL: /.test(l)).length], [true, 1]);
+});
+
+/* ============================================================
+   ARM 12 — D-550: ONE CATALOGUED CODE, ONE MINT SITE (arm G).
+
+   `dec49-onecode-twoconditions.sweep.mjs` measured DEC-49 codes at more than one literal site and gated
+   nothing. Arm G gates it: a ceiling that only falls, the candidates NAMED so a new one fails by name, and
+   the closures declared by name. Driven both ways over the fixture; the same claim against the REAL tree is
+   `refusal-codes.control.mjs`'s D-550 arm.
+   ============================================================ */
+const CODED_LATE_FLOORS = { outcomeReturns: 4, refusalsJudged: 4, codesChecked: 4 };
+console.log("\n--- ARM 12a · a SECOND mint site of a single-site code FAILS, naming the code and both sites ---");
+withTree({ fixtureSrc: CODED_LATE, floor: CODED_LATE_FLOORS }, tree => {
+  const r = runGuard(tree);
+  t("ARM 12a: exits 1", r.exit, 1);
+  t("ARM 12a: naming the code, its family and its count of sites",
+    /arm G: FIXTURE_CHECKS\.FIXTURE_BAD_ANCHOR is now minted at 2 literal sites \(src\/fixture\.mjs stripped-line \d+, src\/fixture\.mjs stripped-line \d+\) and was ONE/.test(r.out), true);
+  const failed = r.out.split("\n").filter(l => /^FAIL: /.test(l));
+  t("ARM 12a: and ONLY arm G fails — the code by name, and the ceiling it breached",
+    [failed.length, failed.every(l => /^FAIL: arm G: /.test(l))], [2, true]);
+});
+
+console.log("\n--- ARM 12b · a candidate CONSOLIDATED back to one site FAILS until it leaves the set — slack is not a ratchet ---");
+withTree({ multiCandidates: ["FIXTURE_BAD_ANCHOR"], ceiling: { multiSiteCodes: 1 } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 12b: exits 1", r.exit, 1);
+  t("ARM 12b: naming the consolidated code as still listed",
+    /arm G: FIXTURE_BAD_ANCHOR is named in MULTI_SITE_CANDIDATES but is now at one site or none/.test(r.out), true);
+  t("ARM 12b: and the ceiling as carrying slack",
+    /CEILING SLACK — `multiSiteCodes`: ceiling 1, measured 0 — 1 below the ceiling/.test(r.out), true);
+});
+
+console.log("\n--- ARM 12c · a DECLARED closure passes, and a STALE one fails by name ---");
+withTree({ fixtureSrc: CODED_LATE, floor: CODED_LATE_FLOORS,
+  multiClosed: { FIXTURE_BAD_ANCHOR: "the fixture's two sites are one condition, declared to drive the arm" } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 12c: a declared closure's second site exits 0", r.exit, 0);
+  t("ARM 12c: and the arm G line counts it as a closure, not a candidate",
+    /arm G: ONE CODE, ONE MINT SITE — 1 of 3 DEC-49 codes at 2\+ literal sites .* 1 DECLARED closure\(s\) \(FIXTURE_BAD_ANCHOR\); 0 candidate\(s\) against ceiling 0/.test(r.out), true);
+});
+withTree({ multiClosed: { FIXTURE_BAD_ANCHOR: "a closure whose second site was consolidated away" } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 12c: a closure that is no longer multi-site exits 1", r.exit, 1);
+  t("ARM 12c: naming the stale declaration",
+    /arm G: FIXTURE_BAD_ANCHOR is declared in MULTI_SITE_CLOSED but is not multi-site on this tree/.test(r.out), true);
+});
+
+console.log("\n--- ARM 12d · OVER-STRICTNESS: one refusal naming its code TWICE on a line, and a code named in a comment, PASS ---");
+withTree({ fixtureSrc: mutated("ARM 12d's double-named line",
+  withExtra(`  // FIXTURE_BAD_ANCHOR is "FIXTURE_BAD_ANCHOR" in prose, and prose is not a site`), x => x.replace(
+  `return { ok: false, code: "FIXTURE_BAD_ANCHOR", detail: String(input.at) };`,
+  `return { ok: false, reason: "FIXTURE_BAD_ANCHOR", code: 'FIXTURE_BAD_ANCHOR', detail: String(input.at) };`)) }, tree => {
+  const r = runGuard(tree);
+  t("ARM 12d: exits 0 — the same site twice and a comment are ONE site", r.exit, 0);
+  t("ARM 12d: and the arm G line reads zero candidates over three codes",
+    /arm G: ONE CODE, ONE MINT SITE — 0 of 3 DEC-49 codes/.test(r.out), true);
 });
 
 console.log("\n--- ARM 8 · the arms above actually ran ---");
@@ -1539,5 +1634,8 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `its measured value (11a) and the same landing with its floors moved passes (11b); a ratchet key with no stated `
   + `bound (11c), with no recorded figure (11d), a bound for a key no table holds (11e) and a bound with no reason (11f) `
   + `each fail by name; the one exempt key says why on every run (11g); ceiling slack fails too (11h); and a non-zero `
-  + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j)`);
+  + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j). AND SINCE `
+  + `D-550 a catalogued code is held to ONE mint site: a second site fails naming the code (12a), a consolidated `
+  + `candidate left in the set fails as slack (12b), a declared closure passes and a stale one fails (12c), and a `
+  + `code named twice on one line or in a comment is one site (12d)`);
 if (bad) process.exit(1);

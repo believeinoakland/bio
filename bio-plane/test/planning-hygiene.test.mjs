@@ -49,7 +49,15 @@
    — it stamped today onto lines already carrying today, so the forged register and the honest
    one were byte-identical, which is the arm's own thesis arriving as a bug in the arm; it was
    corrected to drive the round trip rather than relaxed. A1 was also wrong first: it expected
-   the block's line alone and the message correctly names the affirming line too. */
+   the block's line alone and the message correctly names the affirming line too.
+   RE-RUN 2026-09-24 by D-537, the first run since the coord cutover (M0-110): the driver had read
+   and rewritten the worktree's 218-byte pointer stub and refused at its first keep. It now reads the
+   register through `readState` and plants each CLAIMS arm as a LOCAL coord commit named by
+   `BIO_COORD_REF`, never touching the worktree or origin/coord. 26 of 26 checks as declared at coord
+   1ca39551, corpus 121 blocks, after two arms were CORRECTED rather than relaxed: the first open block
+   now carries two dated affirmations so aging one armed nothing, and the forgery arm compared a count
+   of lines with a count of blocks. The row's own control, the read pointed back at the worktree path,
+   refuses at the coord byte floor by name with exit 2 before any arm. */
 /* NEGATIVE CONTROL: (M0-30, run 2026-09-14, worktree agent-a12296b3767e15401) the §4.7
    row-design arm, driven by `test/rowdesign.control.mjs` — COMMITTED, so it re-runs in one
    step. **25 of 25 checks as declared FIRST RUN across five arms plus a baseline**, each armed

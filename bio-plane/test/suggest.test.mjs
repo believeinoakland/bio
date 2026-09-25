@@ -111,6 +111,7 @@
  *  6. OVER-STRICTNESS: the fence does not refuse correct work.
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
@@ -1637,14 +1638,17 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
        under the ADMIN class with NO SESSION — ruth is an admin-ROLE member, so her session reads `cls === "admin"`
        too and it is the session test alone that tells her browser from the root of trust. The arm's subject — what
        the read publishes for a leg the record already holds — does not move; the credential that may put such a
-       leg there does. It is a REVISION, so no surfacing run is asked of it. */
-    const replayed = await POST(`op=promote&token=adm-pl3`, {
+       leg there does. It is a REVISION, so no surfacing run is asked of it.
+       CORRECTED AGAIN 2026-09-24 by D-512, never exempted: the root of trust's flag was itself still the caller's
+       word (D-511's stated residue). BOB #33's step (2) honours `replay` only over a drive-provenance capture the
+       plane verifies, so the replay now carries one (`withReplayProof`); the arm's subject does not move. */
+    const replayed = await POST(`op=promote&token=adm-pl3`, await withReplayProof(mf, "token=adm-pl3", {
       bundleId: RINQ, base: await shaOf(RINQ), replay: true,
       snapKey: `${RINQ}-replay`,
       files: [{ path: "bundle.md", text: withUnlabelledLeg,
                 bytes: withUnlabelledLeg.length, sha256: sha(withUnlabelledLeg) }],
       meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${RINQ}`,
-              current_state: "open", created: NOW, last_updated: LATER } });
+              current_state: "open", created: NOW, last_updated: LATER } }));
     const held = ((await GET(`op=basisversions&token=${RUTH}&id=${RINQ}&limit=10`)).versions ?? [])[0];
     t("D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE, DRIVEN END TO END: a "
     + "replayed document carrying a leg that names no part projects that leg with `ground: \"\"`, and "

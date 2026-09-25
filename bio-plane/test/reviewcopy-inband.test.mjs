@@ -195,8 +195,11 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 /* THE PUBLISHING PROJECT declares BOTH floors, and DIFFERENT ones — capture C, connection D — which the lead
    clears (its legs are caseflip's: an earned capture B, a hunch connection C), so a swap of the axes is
    visible on the published side too. A SECOND project declares CONNECTION ONLY, so block 2 sees two
-   floors that differ and a swap of the axes is visible; it is drafted and never published, because a
-   one-axis bar cannot be SIGNED today (C-41.12 refuses the frozen `capture: null` — reported by REC-148). */
+   floors that differ and a swap of the axes is visible; it is drafted and never published.
+   CORRECTED by D-450 (2026-09-25): this said a one-axis bar "cannot be SIGNED today (C-41.12 refuses the
+   frozen `capture: null` — reported by REC-148)". That was true when written and is no longer: C-41.12
+   admits null for an axis nobody set (Publication §3 rule 14), and caseproduction §10 publishes and
+   ratifies one. The fixture still only drafts it because this suite's subject is the review copy. */
 const PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r148", owner: "iris",
   name: "PROJ-2026-1480-inband", created: NOW, updated: LATER,
@@ -547,10 +550,14 @@ console.log("\n--- 7. REC-200: the date is the copy's LAST CHANGE, act by act, o
   + "date is the copy's last change, never the moment of the read",
     [r3b.sha === r3.sha, r3b.date === r3.date], [true, true]);
 
-  /* AN ACKNOWLEDGEMENT'S STAMP IS CUT TO THE SECOND (`acknowledgeStatement`), and every other act here is
-     stamped with milliseconds. So an acknowledgement made in the SAME SECOND as the act before it is DATED
-     EARLIER than it, and the copy's last change is honestly still that earlier act — a fact about the
-     record's two spellings, not a flake to paper over. The wait for the clock to cross into the next second
+  /* CORRECTED 2026-09-25 (D-543), NOT EXEMPTED: this comment said an acknowledgement's stamp is CUT TO THE
+     SECOND while every other act here carries milliseconds, so one made in the same second as the act before
+     it was dated EARLIER than that act. That was the record's two spellings, and D-543 removed it at the
+     source: `acknowledgeStatement` now stamps `stampInstant("millisecond")` like the other three acts
+     (`d543-instant-precision.test.mjs` block 3), and `#reviewLastChange` ranks by `instantOrder` for the
+     whole-second rows recorded before it (block 2 there). The wait is KEPT: it still guarantees the
+     acknowledgement is strictly later than the comment, and without it two acts inside one millisecond
+     would tie and the tie keeps the comment, as it should. The wait for the clock to cross into the next second
      is M0-107's `until` with its result read by `budgetAssert`, never a hand-rolled deadline: an expiry
      measured nothing, so it reads NOT MEASURED and the acknowledgement arms below are SKIPPED rather than
      failing as though the plane were wrong. */
