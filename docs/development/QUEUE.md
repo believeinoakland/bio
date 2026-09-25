@@ -1099,8 +1099,8 @@ scope: the `envelope` extent and its projection; index each item labelled as its
 accepts-when: a passage search finds a tracked-change author and speaker-note text, each labelled as envelope. NEGATIVE CONTROL: drop the envelope arm, and the tracked-change-author search returns 0 by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-375 · running — **`OBSERVATION-LOG-DESIGN.md` §4.2's FOURTH OUTCOME HAS NO PRODUCER: the persisted reading carries no character count, so `contentObservationsFor` cannot write LOOKED_ABSENT for a scan read to nothing, and it reads PRESENT.** `counts.chars` exists at acquire and is dropped. — owner CAPTURE, then RECORD.
-status: running — SCHEDULER #22 06:46Z spawns WORKER D-375 (depth 2)
+### D-375 · integrated — **`OBSERVATION-LOG-DESIGN.md` §4.2's FOURTH OUTCOME HAS NO PRODUCER: the persisted reading carries no character count, so `contentObservationsFor` cannot write LOOKED_ABSENT for a scan read to nothing, and it reads PRESENT.** `counts.chars` exists at acquire and is dropped. — owner CAPTURE, then RECORD.
+status: integrated — SCHEDULER #23 08:00Z: tip 9a5df6e6 on 5e8a65a8, GATE 80/80 GREEN FULLREUSE (6535 assertions; 377 units reused from 384/385, its red corrected), tree b2988081; reading text_chars/text_glyphs/text_undetermined; LOOKED_ABSENT only when tier 3 ran and no residue; construct 9.content-absent BUILT; I5 additive IC the integrator's; adjacent-line merge with D-374; below-floor provisional with BOB
 order: after D-346: a read that claims more than it holds, CLAUDE.md §2's worst class (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M3
 interface: I5 additive — the reading's count; the integrator mints and classifies the IC.
@@ -1263,6 +1263,17 @@ depends-on: none (stacked on land/worker/D-626 @ 2a5d4ed8, integrated; its rewor
 scope: in is-publish-draft-this-case, a draft with neither caseId nor newCase passes when the act's case equals the derived case; a named case differing from the derived one is refused by name with both; the signed document carries derived-at-publication or named-and-confirmed.
 accepts-when: a derivation draft publishes as a further edition of the derived case, and a mismatched named case is refused with both cases (moves: `predicted !== 1` refusing a further edition). NEGATIVE CONTROL: restore `predicted !== 1` for the derivation arm and rec217-draft-binding's new further-edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, on BOB #35's 07:35Z ruling).
+
+### D-633 · running — **WHEN TIER 2 WINS A PAGE, `mergeTier2Text` REPLACES ITS MARKERS, SO D-627's `image_content_unread` IS LOST AND THE PAGE ROUTES NOWHERE.** Reproduced through op=acquire with an answering tier-2 stub (the held INFO-2026-0301 does not escalate, so D-627's own pages are routed today). Found by D-627's worker (minted on land/worker/D-627). — owner CONTENT-PDF.
+status: running — SCHEDULER #23 08:00Z: spawned, stacked on land/worker/D-627 @ 056d3092
+order: head of the backlog, before D-635 — a correction to just-landed work (D-627 integrated) outranks new work, and D-635 builds on the same routed pages (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: none expected (a marker kept, not a new one); the integrator classifies if the chain's wire moves.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (tier markers; D-627's image-content rule, folded there by D-627).
+depends-on: none (stacked on land/worker/D-627 @ 056d3092, integrated, itself on D-608 @ ffcc300b).
+scope: in `textchain.mjs`, carry the base page's `image_content_*` markers onto a page tier 2 wins — they are facts about its images, not about the decode; tier-2's own markers otherwise unchanged.
+accepts-when: a page carrying `image_content_unread` that tier 2 wins keeps the marker and still routes to OCR through op=acquire (moves: the marker dropped at the tier-2 merge). NEGATIVE CONTROL: drop the carry and the tier-2-wins arm fails by name, reading no marker.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-627's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
