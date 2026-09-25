@@ -53287,7 +53287,8 @@ ${words}`;
     ) : [];
     const byForm = named ? reads.filter((x) => x.pos_ref === named) : [];
     const pick = named ? reads.find((x) => x.occurrence === named) || (byForm.length === 1 ? byForm[0] : null) : reads.length <= 1 ? reads[0] || null : null;
-    const listed = () => reads.map((x) => ({
+    const occCut = reads.length > _Store.#OCCURRENCES_PER_REF;
+    const listed = () => (occCut ? reads.slice(0, _Store.#OCCURRENCES_PER_REF) : reads).map((x) => ({
       occurrence: x.occurrence,
       position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref)
     }));
@@ -53313,13 +53314,28 @@ ${words}`;
       return refusal7(
         "CONNECTION_CHOICE_NOT_A_MENTION",
         `this document does not read '${mention.ref.slice(0, 80)}' at '${named.slice(0, 120)}'` + (byForm.length > 1 ? ` alone \u2014 that place is ${byForm.length} occurrences, so name one by its key` : ``) + `. It reads it at: ${reads.map(placeName).join(", ") || "no place the reading recorded"}.`,
-        { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed() }
+        {
+          capture,
+          entity_id: entityId,
+          ref: mention.ref,
+          occurrence: named,
+          occurrences: listed(),
+          limit: _Store.#OCCURRENCES_PER_REF,
+          truncated: occCut
+        }
       );
     if (!named && reads.length > 1)
       return refusal7(
         "CONNECTION_CHOICE_OCCURRENCE_UNNAMED",
         `this document reads '${mention.ref.slice(0, 80)}' at ${reads.length} places (${reads.map(placeName).join(", ")}), and each is its own mention. Pass occurrence= naming the one on point.`,
-        { capture, entity_id: entityId, ref: mention.ref, occurrences: listed() }
+        {
+          capture,
+          entity_id: entityId,
+          ref: mention.ref,
+          occurrences: listed(),
+          limit: _Store.#OCCURRENCES_PER_REF,
+          truncated: occCut
+        }
       );
     const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
     const occurrence = pick ? pick.occurrence : null;
@@ -53331,6 +53347,11 @@ ${words}`;
       b_capture_sha: bSha,
       entity_id: entityId,
       side,
+      /* D-454: every place this document reads the chosen reference, so a member (and a surface) sees the
+         other occurrences beside the one chosen. */
+      occurrences: listed(),
+      limit: _Store.#OCCURRENCES_PER_REF,
+      truncated: occCut,
       chosen: {
         ref: mention.ref,
         occurrence,

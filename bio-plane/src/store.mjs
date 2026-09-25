@@ -25208,8 +25208,11 @@ export class Store extends DurableObject {
     const pick = named
       ? (reads.find((x) => x.occurrence === named) || (byForm.length === 1 ? byForm[0] : null))
       : (reads.length <= 1 ? (reads[0] || null) : null);
-    const listed = () => reads.map((x) => ({ occurrence: x.occurrence,
-      position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref) }));
+    /* Bounded like every list this store publishes, and SAYS when it was cut: the read asks for one more than
+       the bound, and a reference read past it answers `truncated` rather than a list that reads as complete. */
+    const occCut = reads.length > Store.#OCCURRENCES_PER_REF;
+    const listed = () => (occCut ? reads.slice(0, Store.#OCCURRENCES_PER_REF) : reads).map((x) => ({
+      occurrence: x.occurrence, position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref) }));
     const placeName = (x) => x.pos_ref || "a place the reading did not record";
     /* DEC-49 REGION is-connection-choice */
     if (!who || isMachineIdentity(who))
@@ -25237,13 +25240,15 @@ export class Store extends DurableObject {
         `this document does not read '${mention.ref.slice(0, 80)}' at '${named.slice(0, 120)}'`
         + (byForm.length > 1 ? ` alone — that place is ${byForm.length} occurrences, so name one by its key` : ``)
         + `. It reads it at: ${reads.map(placeName).join(", ") || "no place the reading recorded"}.`,
-        { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed() });
+        { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed(),
+          limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
     if (!named && reads.length > 1)
       return refusal("CONNECTION_CHOICE_OCCURRENCE_UNNAMED",
         `this document reads '${mention.ref.slice(0, 80)}' at ${reads.length} places `
         + `(${reads.map(placeName).join(", ")}), and each is its own mention. Pass occurrence= naming `
         + `the one on point.`,
-        { capture, entity_id: entityId, ref: mention.ref, occurrences: listed() });
+        { capture, entity_id: entityId, ref: mention.ref, occurrences: listed(),
+          limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
     /* END DEC-49 REGION is-connection-choice */
     const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
     /* The chosen occurrence's key, and NULL only where the reading holds no row for the mention
@@ -25252,6 +25257,9 @@ export class Store extends DurableObject {
     const position = pick ? readingSourceFromColumns(pick.pos_kind, pick.pos, pick.pos_ref) : null;
     const answer = (wrote, prior) => ({
       ok: true, wrote, a_capture_sha: aSha, b_capture_sha: bSha, entity_id: entityId, side,
+      /* D-454: every place this document reads the chosen reference, so a member (and a surface) sees the
+         other occurrences beside the one chosen. */
+      occurrences: listed(), limit: Store.#OCCURRENCES_PER_REF, truncated: occCut,
       chosen: { ref: mention.ref, occurrence, grade: mention.grade, position,
                 chosen_by: wrote ? who : cur.chosen_by, at: wrote ? at : cur.at },
       superseded: prior,

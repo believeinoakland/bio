@@ -1348,7 +1348,13 @@ t("REACH: the OPAQUE roster is a CEILING too — an op that SCANS ROWS, is DISPA
 + "2026-08-07; correcting the success-marker gate left 8, correcting REFUSAL_CALL's spelling on "
 + "2026-08-08 revealed a 9th, and REC-67's string-trim correction a 10th — every one of them "
 + "already hiding inside the bare roster. A NEW one fails here",
-  OPAQUE.length <= 9, true);
+  /* MOVED 9 -> 10 ON 2026-09-25 (D-454), and unlike PL-15's and REC-67's moves this one IS new plane work, stated as
+     such: `op=connectionchoose` gained ONE row scan — the chosen reference's occurrences, `LIMIT ?` at
+     #OCCURRENCES_PER_REF + 1 — so a member names which read of a string is on point (C-74.4). The scan is BOUNDED and
+     its answer publishes `occurrences` with `limit` and `truncated`, but every success return is built by the act's
+     local `answer` closure, which this walk does not read, and its other returns are refusals it excludes by design —
+     so it lands here: a WRITE path scanning rows for its own logic, the residual's own class. Pinned by name below. */
+  OPAQUE.length <= 10, true);
 t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so it fails if the op "
 + "is ever returned to the state this item found it in",
   OPAQUE.filter((e) => e.startsWith("airunlog->")), []);
@@ -1370,7 +1376,9 @@ t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so 
    enjoyed quietly. */
 t("REACH: and the residual is NAMED, not merely counted — a bare count is satisfied by ANY eight "
 + "ops, so the identities are pinned and a swap fails here",
-  OPAQUE, ["projectfork->forkProject", "projectionplan->projectionPlan",
+  OPAQUE, [/* ADDED 2026-09-25 (D-454): the write path's bounded occurrence read; the ceiling above says why. */
+           "connectionchoose->chooseConnectionPair",
+           "projectfork->forkProject", "projectionplan->projectionPlan",
            "projectowneradd->projectOwnerAdd",
            "registeraudit->registerAudit", "select->selectionCreate",
            "selectionrelease->selectionRelease", "taskdrain->taskDrain",
