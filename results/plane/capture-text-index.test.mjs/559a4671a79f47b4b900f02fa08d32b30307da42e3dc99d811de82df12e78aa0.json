@@ -1,0 +1,16 @@
+{
+ "unit": "plane:capture-text-index.test.mjs",
+ "inputHash": "559a4671a79f47b4b900f02fa08d32b30307da42e3dc99d811de82df12e78aa0",
+ "verdict": "PASS",
+ "run": "715db50300e49b054f1a3a66f9055a971830ffc5.1790306210426.31820.json",
+ "tree": "715db50300e49b054f1a3a66f9055a971830ffc5",
+ "head": "c2524ad87a1a4943020557a72c467dbe6e7c0673",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 186,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "94cfe2cf-d8e4-534f-b452-c35fbc9d2fa1",
+ "at": "2026-09-25T03:16:50.442Z"
+}
