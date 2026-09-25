@@ -1,0 +1,16 @@
+{
+ "unit": "ui:project-workspace.test.mjs",
+ "inputHash": "026398b4398025e1bdd3dc37dea2c254d4ba50f3be1b1916570c7e1a313c4ca5",
+ "verdict": "PASS",
+ "run": "02b54447ecff7a8615a18cbe86047dde09255bb4.1790330200707.2814.json",
+ "tree": "02b54447ecff7a8615a18cbe86047dde09255bb4",
+ "head": "8c55a9c237ac4e42f58e7033189af842c3421e42",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 4,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4e77d62c-dcdb-554c-867b-570089c80bb0",
+ "at": "2026-09-25T09:56:40.720Z"
+}
