@@ -51,7 +51,10 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 /* The three sites exactly as they stand in the sources. */
 const FENCE = `    if (GOVERNANCE_ACTIONS.includes(op) && !viaSession)`;
-const STAMP = `      inner.searchParams.set("by", viaSession ? sessMember : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`;
+/* RE-ANCHORED 2026-09-25 (D-631): REC-164 added a second, identical stamp line for IDENTITY_ACTIONS, and the
+   bare line matched 2 times — the harness refused to arm. The anchor now carries the condition's last line,
+   which only the governance/custodial stamp has; the arm still widens that ONE stamp, never the identity one. */
+const STAMP = `        || CUSTODIAL_ACTIONS.includes(op))\n      inner.searchParams.set("by", viaSession ? sessMember : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`;
 /* RE-ANCHORED 2026-09-23 (REC-159): the member set's spread was followed by REC-146's comment; REC-159
    put `...CUSTODIAL_ACTIONS` (with its own comment) between them, and the old anchor matched 0 times —
    the harness refused to arm, as it is built to, and that refusal is recorded on the suite's line. */

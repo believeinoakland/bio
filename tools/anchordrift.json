@@ -2,14 +2,6 @@
  "_about": "M0-197 (BOB #35, 2026-09-25): the dated debts tools/anchordrift.mjs forgives. `allowances`: a drifted arm already rowed, keyed on driver, arm AND the head of its anchor, so it forgives only that anchor; it prints ALLOWED every run and STALE once its row lands (drop it then). `unreadable`: drivers that could not expose their anchors as data the day this landed; each is NAMED every run, a new one FAILS, and one that becomes readable FAILS until it is dropped here. `inflight`: drivers an unlanded branch adds, written before the convention.",
  "allowances": [
   {
-   "driver": "bio-plane/test/adminvote.control.mjs",
-   "arm": "stamp-dropped",
-   "anchor": "      inner.searchParams.set(\"by\", viaSession ? ",
-   "row": "D-631",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/index.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/aicredential.control.mjs",
    "arm": "3",
    "anchor": "  return !!spec && Array.isArray(spec.classes) &",
