@@ -585,6 +585,60 @@ ARMS["10c"] = {
   }),
 };
 
+/* ---- D-560's ARMS (the release assembler's NO_ARTIFACT refusal), APPENDED. No earlier arm edited.
+ * Each edits `tools/release-assemble.mjs` in THIS worktree and restores it by content and sha256;
+ * the suite drives the assembler only against its own sandboxed fixture, never `release/`. */
+const ASSEMBLER = join(REPO, "tools/release-assemble.mjs");
+const NOART_NOW = "    `Rebuild them all with \\`node tools/bundles.mjs\\` from the repository root, and commit the artifacts.`);";
+const NOART_OLD = "    `Run \\`npm run build\\` in ${missingArtifacts[0].dir}/ and commit the artifact.`);";
+const NOART_SET_NOW = "const missingArtifacts = all.filter((m) => !existsSync(join(m.abs, m.bundle.outfile)));";
+
+ARMS["11"] = {
+  label: "(11) D-560's OWN ARM — restore the pre-D-560 remedy sentence (`npm run build` in ONE member's "
+    + "directory) in the NO_ARTIFACT refusal. Nothing else changes: every missing asset is still named.",
+  run: () => withReplacedOnce(ASSEMBLER, NOART_NOW, NOART_OLD, () => {
+    const r = report("11", runSuite(), {
+      mustFail: "exit non-zero on FOUR (k) assertions: the remedy-names-`node tools/bundles.mjs` arm, the "
+        + "none-names-`npm run build` arm, the TOTAL over the assembler's source (1, not 0), and its "
+        + "corpus floor (0, not >= 1), because the one remedy there moved",
+      mustNot: "the (k) names-BOTH-missing arm or the BASELINE row: the set is still reported, only the command moved",
+    });
+    const red = failingLabels(r.out);
+    const fired = (prefix) => red.some((l) => l.startsWith(prefix));
+    console.log(`     the TOTAL arm fired by name: ${fired("(k) TOTAL: no remedy in tools/release-assemble.mjs names the one-bundle command")}`);
+    console.log(`     the behavioural arm fired by name: ${fired("(k) NONE of the refusal names the one-bundle command")}`);
+    console.log(`     names-both held: ${!fired("(k) and that one refusal NAMES BOTH missing assets")}`);
+    return r;
+  }),
+};
+
+ARMS["11b"] = {
+  label: "(11b) THE OTHER HALF OF THE ROW — the refusal reports only the FIRST missing artifact (the "
+    + "one-at-a-time failure), the command left correct.",
+  run: () => withReplacedOnce(ASSEMBLER, NOART_SET_NOW, NOART_SET_NOW.replace(";", ".slice(0, 1);"), () => {
+    const r = report("11b", runSuite(), {
+      mustFail: "exit non-zero on the (k) names-BOTH-missing arm, by name",
+      mustNot: "the remedy arms or the TOTAL: the command did not move",
+    });
+    console.log(`     names-both fired by name: ${failingLabels(r.out).some((l) => l.startsWith("(k) and that one refusal NAMES BOTH missing assets"))}`);
+    return r;
+  }),
+};
+
+ARMS["11c"] = {
+  label: "(11c) OVER-STRICTNESS — the remedy reworded around the SAME command. Correct work in an "
+    + "unanticipated spelling must PASS.",
+  run: () => withReplacedOnce(ASSEMBLER, NOART_NOW,
+    "    `Fix: \\`node tools/bundles.mjs\\` rebuilds every stale or missing bundle; commit what it writes.`);", () => {
+    const r = report("11c", runSuite(), {
+      mustFail: "nothing",
+      mustNot: "any (k) assertion",
+    });
+    console.log(`     no (k) assertion fired: ${failingLabels(r.out).filter((l) => l.startsWith("(k) ")).length === 0}`);
+    return r;
+  }),
+};
+
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);
 for (const n of names) {

@@ -17,6 +17,10 @@
    (10) **THE ROW'S OWN ARM — RESTORE ONE SITE'S PRE-M0-188 SENTENCE.** Put `Run \`npm run build\` in ${member.dir}/ and commit the artifact with the change.` back on the (b) input-hash finding, ALONE, leaving that finding's DIAGNOSIS half untouched -> **92 pass, 4 FAIL, exit 1**, and all four are (j): the behavioural `npm run build` arm, the behavioural at-least-four-name-`node tools/bundles.mjs` arm (3, not >= 4), the TOTAL over the guard's source (1, not 0), and the TOTAL's corpus floor (11, not >= 12). **Every DIAGNOSIS assertion HELD as declared** — (b) STALE BUNDLE, (d) the manifest mismatch, (g)/(h)/(i) the upload parts, every byte-identity arm: the remedy is the only thing that moved. The anchor is the remedy sentence PLUS the line above it, because the sentence alone occurs TWICE (here and in `verifyFresh`) and an anchor matching both would arm two sites. **THE ARM'S OWN PROBES WERE WRONG FIRST AND `m025-arm-anchor-witness.test.mjs` CAUGHT IT IN THE GATE — recorded, not smoothed:** they read the suite's output through `r.out.includes("FAIL  (b) and says it is a STALE BUNDLE")`, and that literal exists in NO candidate subject (the `FAIL  ` prefix is a runtime marking, not text in this file), so A4 fired at the D-276 class — a quote that could never match. The probes now select FAIL lines with the driver's own `failingLabels` helper and quote this suite's LABEL text, each occurring EXACTLY ONCE here, so the quote dies loudly if a label is ever changed in place. A control's probes are held to the rule the control exists to enforce.
    (10b) **OVER-STRICTNESS, A SPELLING THE ARM WAS NOT WRITTEN FOR** — the same site reworded around the SAME command (`Rebuild with \`node tools/bundles.mjs\` — it rebuilds every bundle this change staled — and commit the artifacts.`) -> **96 pass, 0 fail, exit 0**. **THIS ARM CAME BACK WRONG THE FIRST TIME AND IS RECORDED RATHER THAN SMOOTHED, and it is the most useful thing this control found:** (j)'s first draft SELECTED its corpus with a filter for the SENTENCE SHAPE of a remedy (`/\bRun \`|\band run \`/`), the reworded site fell OUT of that corpus, and a PASSING over-strictness arm went red at **95 pass, 1 FAIL** on the corpus floor. A filter of sentence shapes is the list-of-spellings defect one layer in from the defect this row exists to fix, so the filter was REMOVED: (j) now asserts over EVERY finding produced, which no rewording can move.
    (10c) **OVER-STRICTNESS, AND IT ASSERTS THE MATCHER'S DECLARED BLIND SPOT RATHER THAN PROMISING IT** — append a plain COMMENT to the guard naming `npm run build` unescaped -> **96 pass, 0 fail, exit 0**. The TOTAL arm's stated reach is the backtick-ESCAPED spelling inside a template literal, which is what a remedy looks like and what a comment is not; this arm is that sentence driven instead of asserted.
+   ---- D-560's ARMS (the RELEASE ASSEMBLER's NO_ARTIFACT refusal, section 9 · (k)), RUN 2026-09-25 IN THIS WORKTREE, APPENDED — no earlier arm edited. **BASELINE 106 pass / 0 fail, exit 0** before each arm; every restore of `tools/release-assemble.mjs` verified by CONTENT and by sha256 at 25348 B (9045cf64…). The assembler is driven ONLY against the suite's sandboxed fixture (two placeholder artifacts present, two absent), never `release/`.
+   (11) **THE ROW'S OWN ARM — RESTORE THE OLD SENTENCE.** Put `Run \`npm run build\` in <dir>/ and commit the artifact.` back as the NO_ARTIFACT remedy, ALONE -> **102 pass, 4 FAIL, exit 1**, all four (k): the remedy-names-`node tools/bundles.mjs` arm, the none-names-`npm run build` arm, the TOTAL over the assembler's source (1, not 0) and its corpus floor (0, not >= 1). **The names-BOTH-missing arm and the BASELINE row HELD**, as declared: only the command moved. (First declared as THREE failures while listing four — the declaration's count was wrong, not the arm; corrected, recorded.)
+   (11b) **THE OTHER HALF — ONE AT A TIME.** The missing set cut to its first element (`.slice(0, 1)`) with the command left correct -> **105 pass, 1 FAIL, exit 1**, the (k) names-BOTH-missing arm by name; every remedy arm held.
+   (11c) **OVER-STRICTNESS** — the remedy reworded around the SAME command (`Fix: \`node tools/bundles.mjs\` rebuilds every stale or missing bundle; commit what it writes.`) -> **106 pass, 0 fail, exit 0**.
    ---- ARM 9 (FLEET #4 on BOB #29's diagnosis, 2026-09-23), APPENDED. **BASELINE 91 pass / 0 fail, exit 0.** (9) **THE INSTALL LAYOUT** — remove the `preserveSymlinks: true,` line from `optionsFor` in `scripts/fleet-bundle.mjs` and build through a SYMLINKED `pdf-worker/node_modules` (ambient in a worktree sharing another install; otherwise the harness parks the real directory and symlinks it) -> **84 pass, 7 FAIL, exit 1**: all four `… preserves symlinks …` recipe assertions, and pdf-worker's byte-identity, manifest-sha and comment-only assertions. agent-worker, ocr-worker and bio-plane byte arms held (none vendors from `node_modules`). Run on BOTH layouts, same tally; both restores verified by content and sha256. With the flag dropped on a REAL install (no symlink) the tally is **87 pass, 4 FAIL**, the four recipe assertions only, measured the same day: the byte arm cannot see the defect there, which is why they exist.
    ---- M0-152 (2026-09-25), arm 5(b) CORRECTED and two arms APPENDED beside it — no other arm edited. **(5b) READ THE GATE, NOT A RESTATEMENT OF IT.** Until M0-152, (5b) decided "doc-facing?" itself, `includes(<the prose directory>)` over this suite and its driver read WHOLE, comments included — the rule as it stood before M0-143 made `gates.mjs` read every file as CODE (comments blanked by `walkfloor.mjs` `stripComments`) and follow the tools a suite names in code, so the arm and the gate disagreed the moment either file grew such a comment, and the arm never saw the edge rule. It now runs `gates.mjs --explain` and reads the derived line; `--explain` prints that line in EVERY class since M0-152 (it printed only for DOCS, so a code diff — this control's own — left nothing to read). **BASELINE (5b), clean tree at this commit: class TARGETED (the branch's own committed diff is code — the case the old DOCS-only printing left unreadable), doc-facing false; driver baseline 91 pass / 0 fail, arm 5 (a) tree UNCHANGED, (c) coverage exit 0.** (5b-comment) **THE ROW'S NEGATIVE CONTROL** — append a comment naming the prose directory to this suite -> class TARGETED, **the gate says false, the superseded whole-file read says true: they DISAGREE**, as declared. (5b-code) **OVER-LENIENCY** — append CODE whose string names it -> the gate says **true**, so the verdict is not false for free. **THE ENABLING CHANGE DISARMED** (`|| EXPLAIN` removed from `gates.mjs`, restored sha256- and cmp-identical at 106,257 B): (5b-comment) reads the gate's verdict **null** and `held: false`, and `gates.test.mjs` fails EXACTLY "M0-152: ...and `--explain` prints the SAME derived doc-facing set there" (125 pass, 1 FAIL).
    ======================================================================== */
@@ -68,7 +72,8 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync, symlinkSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -401,7 +406,8 @@ console.log("\n--- 4 · THE GUARD PROVES IT CAN FAIL, on a subject this suite fu
      *     CANNOT:** a remedy that spells the command without backticks, one
      *     assembled from variables, or one in any other file. `release-assemble.mjs`
      *     carries the same class and is NOT in this matcher's reach — named in
-     *     M0-188's report rather than silently scored zero. */
+     *     M0-188's report rather than silently scored zero, and since D-560
+     *     covered by its OWN arm, section 9 · (k). */
     /* **THE FIRST DRAFT OF THIS ARM WAS WRONG AND ARM (10b) CAUGHT IT — recorded
      * rather than smoothed.** It selected its corpus with a filter for the
      * SENTENCE SHAPE of a remedy (/\bRun `|\band run `/) and then asserted over
@@ -593,6 +599,86 @@ console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because
     }
     const left = unresolvableSpecifiers(planeCommitted.toString("utf8"), plane.bundle.external);
     t("bio-plane: its committed artifact imports nothing outside its declared externals", left, []);
+  }
+}
+
+console.log("\n--- 9 · (k) D-560: the RELEASE ASSEMBLER names every missing artifact, and the one command, in ONE run ---");
+{
+  /* M0-188's sibling site. `tools/release-assemble.mjs` refused NO_ARTIFACT on
+   * the FIRST missing artifact and told the releaser to run `npm run build` in
+   * that one member's directory — so a releaser fixed one bundle, re-ran, and
+   * met the next. (j)'s TOTAL reaches only `scripts/fleet-bundle.mjs` and says so;
+   * this arm is the one it named as out of its reach.
+   *
+   * BEHAVIOURAL, and DRIVEN AGAINST A FIXTURE, NEVER `release/` OR THE REAL
+   * TREE: assembling is DIST's act. The fixture is the assembler's own import
+   * closure copied into this suite's sandbox, with `bio-plane/node_modules`
+   * symlinked for esbuild, and each discovered asset's MARKER copied from the
+   * real tree — so the set of assets is the real set, derived and not listed.
+   * Two artifacts are present as placeholder bytes (existence is all this
+   * refusal reads; it fires before any byte is read) and TWO are absent. If the
+   * closure grows an import the copy lacks, the assembler dies with
+   * ERR_MODULE_NOT_FOUND and the NO_ARTIFACT assertions go red by name — the
+   * fixture fails loudly, never green.
+   *
+   * WHAT THE TOTAL HALF CAN SEE: the backtick-escaped `npm run build` spelling in
+   * the assembler's source, (j)'s own matcher. WHAT IT CANNOT: an unescaped or
+   * assembled spelling. */
+  const fx = mkdtempSync(join(tmpdir(), "d560-assemble-"));
+  try {
+    const copy = (rel) => { mkdirSync(join(fx, rel, ".."), { recursive: true }); copyFileSync(join(REPO_ROOT, rel), join(fx, rel)); };
+    for (const rel of ["tools/release-assemble.mjs", "tools/jsonc.mjs", "tools/sign-sshsig.mjs",
+      "bio-plane/scripts/fleet-bundle.mjs", "bio-plane/scripts/provenance.mjs", "bio-plane/scripts/resolve-version.mjs",
+      "bio-plane/src/sshsig.mjs", "bio-plane/package.json"]) copy(rel);
+    symlinkSync(join(REPO_ROOT, "bio-plane/node_modules"), join(fx, "bio-plane/node_modules"));
+    const realMembers = discoverMembers().filter((m) => m.bundle);
+    for (const m of realMembers) copy(`${m.dir}/fleet-member.json`);
+    const assets = [planeMember(fx), ...discoverMembers(fx).filter((m) => m.bundle)];
+    t("(k) the fixture discovers the real asset set — at least four, so two present and two missing are both non-empty",
+      assets.length >= 4 && assets.length === realMembers.length + 1, true);
+    const present = assets.slice(0, assets.length - 2);
+    const absent = assets.slice(assets.length - 2);
+    const place = (m) => { mkdirSync(join(m.abs, m.bundle.outfile, ".."), { recursive: true }); writeFileSync(join(m.abs, m.bundle.outfile), "d560 placeholder\n"); };
+    for (const m of present) place(m);
+    console.log(`        present: ${present.map((m) => m.name).join(", ")} · absent: ${absent.map((m) => m.name).join(", ")}`);
+
+    const run = () => {
+      const r = spawnSync(process.execPath, [join(fx, "tools/release-assemble.mjs"), "--dry-run"], { cwd: fx, encoding: "utf8" });
+      return { status: r.status, err: r.stderr || "", out: r.stdout || "" };
+    };
+    const r = run();
+    for (const l of r.err.split("\n").filter(Boolean)) console.log(`         ! ${l}`);
+    const refusal = r.err.split("\n").filter((l) => l.startsWith("REFUSED [NO_ARTIFACT]"));
+    t("(k) with two artifacts missing, ONE run refuses NO_ARTIFACT exactly once, and exits non-zero",
+      [refusal.length, r.status !== 0], [1, true]);
+    t("(k) and that one refusal NAMES BOTH missing assets — the measured failure it moves: one at a time",
+      absent.filter((m) => !(refusal[0] || "").includes(m.name)).map((m) => m.name), []);
+    t("(k) and names no PRESENT asset as missing (over-strictness)",
+      present.filter((m) => (refusal[0] || "").includes(`${m.name} (`)).map((m) => m.name), []);
+    t("(k) the remedy names `node tools/bundles.mjs`, which rebuilds EVERY bundle — the positive half",
+      r.err.includes("node tools/bundles.mjs"), true);
+    t("(k) NONE of the refusal names the one-bundle command `npm run build` — the wrong command",
+      r.err.includes("npm run build"), false);
+
+    /* THE BASELINE ROW: every artifact present, and NO_ARTIFACT must NOT fire —
+       the check reads presence, not "always refuse". The assembler then refuses
+       for the next reason (the fixture has no manifests), which is not this arm's
+       subject; only that it is NOT NO_ARTIFACT is asserted. */
+    for (const m of absent) place(m);
+    const r0 = run();
+    t("(k) BASELINE: with every artifact present, NO_ARTIFACT does not fire",
+      r0.err.includes("REFUSED [NO_ARTIFACT]"), false);
+    t("(k) and the baseline really ran the assembler past discovery (it printed its asset list)",
+      r0.out.includes("assets discovered:"), true);
+
+    const asmSrc = readFileSync(join(REPO_ROOT, "tools/release-assemble.mjs"), "utf8");
+    const oneBundle = (asmSrc.match(/\\`npm run build\\`/g) || []).length;
+    const everyBundle = (asmSrc.match(/\\`node tools\/bundles\.mjs\\`/g) || []).length;
+    console.log(`        release-assemble.mjs remedies: ${everyBundle} name \`node tools/bundles.mjs\`, ${oneBundle} name \`npm run build\``);
+    t("(k) TOTAL: no remedy in tools/release-assemble.mjs names the one-bundle command", oneBundle, 0);
+    t("(k) and the corpus is non-empty — at least one remedy there names `node tools/bundles.mjs`", everyBundle >= 1, true);
+  } finally {
+    rmSync(fx, { recursive: true, force: true });
   }
 }
 
