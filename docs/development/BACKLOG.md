@@ -808,17 +808,6 @@ scope: C-25.11's composition carries the capture the run read onto each suggeste
 accepts-when: a run's suggestion names the capture it read, and an accepted suggestion keeps it (moves: bundle-only suggested legs). NEGATIVE CONTROL: drop `extent_capture` from the composition and the suggested-pin arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
 
-### D-597 · queued — **A CASE'S CITATION EDGE IS NOT PINNED INSIDE THE SIGNED DOCUMENT: `references[] rel: cites` names a bundle only.** D-579(a). BOB #34 RULED 2026-09-25 02:30Z (drained to `BOB-INBOX-drained.md`; cite until folded): pinned INSIDE the signed case document, riding REC-219's `bio-case-document/4` (ONE bump); a /3 document is never re-signed and its edges read "version undetermined (signed before capture pins)". REC-219 landed /4 without it (its report of 02:38Z). — owner RECORD.
-status: queued — HELD, DO NOT SPAWN: SCHEDULER #22 03:42Z: BUILT by REC-219's worker on land/worker/REC-219 @ b9528b03 (c2524ad8 + b9528b03 over REC-219's bf7e69ac), GATE 78/78 GREEN FULLREUSE on tree b191859d; C-41.15, signed case_citations[] in /4, CATALOG 1.30.0 (468 checks), derivation-bounds census 117->118; five-arm negative control. Take the branch at b9528b03 to land both.
-order: directly after REC-219, and trained WITH it if the batch allows: /4 must not be released twice (BOB #34 02:30Z) (SCHEDULER #21, 2026-09-25)
-milestone: M10
-interface: I3 — each cites edge in /4 carries `extent_capture`; the integrator classifies (with REC-219's /4 IC).
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 18 (REC-219's fold) and §18.1 of the Framework, with BOB #34's 02:30Z ruling.
-depends-on: REC-219, REC-220.
-scope: op=cite's case arm stamps the capture the record presents at the act (REC-220's stamp); op=publish writes it into each cites edge of a /4 document; C-41.14's family refuses a /4 cites edge without it where the record held one; /3 edges read as ruled.
-accepts-when: a /4 case's cites edge carries its capture and ratifies; one without it where the record held one is refused by name; a /3 still ratifies (moves: bundle-only case edges). NEGATIVE CONTROL: drop the pin from publish and the /4 edge arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
-
 ### REC-222 · queued — **A MEMBER HOLDING A REFERENCE IS NEVER TOLD A NEWER VERSION AFFECTS IT: `op=versionnotice` is a PULL read, and nothing is pushed.** Bob's 00:40Z doctrine, rule 2 (item 3). — owner RECORD.
 status: queued — REC-221 (01:51Z): notice-level affects reads 'undetermined' for chain_unread; REC-222 DECIDES whether chain_unread raises a notice (rule 2 says never silence; every address-less capture may be noisy) and states the decision
 order: after REC-221, whose grade it reads (SCHEDULER #21, 2026-09-25)
@@ -1092,4 +1081,24 @@ design: `docs/development/VERIFICATION.md` (the negative-control register).
 depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
 scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
 accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-150 · queued — **AN OP LEAVING THE BARE ROSTER INTO THE UNJUDGED BUCKET IS INVISIBLE TO THE FLOOR, which counts only what it still sees: `op=caseratify` was lost that way on `main`, found only by c20-batch11fix's RETURN-DELEGATE rule.** — owner M0.
+order: after M0-149, the same suite; the class behind a silent loss (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
+depends-on: land/conduct/c20-batch11fix on `main`.
+scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
+accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-156 · queued — **`check-refusal-codes` ARM C READS ONLY THE SPANS A `where` NAMES, so a code re-minted OUTSIDE every governed region is invisible, for all 170 governed sites.** Found by D-484's worker. — owner M0 (RECORD reviews).
+order: after M0-155, the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
+depends-on: D-484.
+scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plane/src` per region row, failing on any outside its claimed span.
+accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
