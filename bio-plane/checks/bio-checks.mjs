@@ -14767,6 +14767,7 @@ export const CONNECTION_CHOICE_CHECKS = {
 /* D-510 / C-86 — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE (`BIO_Case_Making_v0_1.md` §2; C-2.5 already
  * pins a document's type to its id prefix). ONE refusal, and the family is one row rather than padded out,
  * because there is exactly one way for the two statements to be wrong about each other.
+ * D-547 adds C-86.2 below: not a third statement, but the request against the RECORD's head.
  *
  * WHY IT IS A REFUSAL AND NOT A SILENT NORMALISATION, which was the alternative the row licensed: the
  * request carries TWO statements of what is being promoted — the document's own `object_type`, which every
@@ -14790,6 +14791,18 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'information — or the reverse — and index it as neither, it stops and tells you both answers. '
       + 'Nothing was written. Send it again with the request naming the type the document names, or change '
       + 'the document first.',
+  },
+  /* D-547 (2026-09-25) — the SECOND way a promotion's type can be wrong, and it is not the first one twice: C-86.1
+   * compares the two statements in ONE request; this compares the request with the RECORD. A revision whose document
+   * names a different type than the bundle already holds would rewrite `bundles.object_type` in place, and every
+   * type-scoped fence would then ask the wrong machine. Replay is exempt, as for C-86.1. */
+  REVISION_RETYPES_BUNDLE: {
+    check: 'C-86.2',
+    where: 'src/store.mjs promote > is-promote-retypes-bundle',
+    translation: 'This change would turn something the record already holds into a different kind of thing, '
+      + 'an item of information into an action, say. A change can alter what a document says, but not what it '
+      + 'is, because what it is decides which rules protect it. Nothing was written. To record it as the other '
+      + 'kind, create a new one of that kind and link the two.',
   },
 };
 
