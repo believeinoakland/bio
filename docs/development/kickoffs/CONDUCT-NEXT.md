@@ -73,3 +73,15 @@ is present verbatim. Before each train: status --check 0 drift, corpuscheck 0, c
 exit 0, plancheck only UNPUSHED, d470 test+control, and the suites where branches MEET. mergecarry needs a `Dropped-from-branch:`
 trailer per dropped path IN THE MERGE COMMIT — add it before pushing (a pushed merge can't be amended: no force-push); never
 filter-branch (it strips the SSH signatures and re-shas every worker commit).
+
+## 7. ARRIVED AFTER THE HANDOFF (03:54–04:09Z) — also batch29
+- D-455 **3db50421** CARRIES REC-191 (merge D-455 in REC-191's place): op=monitor `capture` on a changed tick; IC I3/I5; keep-both in
+  monitor-assess.test with D-338 (re-read D-455 arms' positions); OBSERVATION-LOG-DESIGN §4.1 + as-of; bundles after
+- D-191 9351b715 (part_fetch_spread on the capture manifest + snapshot; IC I5 additive; D-603 minted)
+- UI-76 37035a59 (Themes screen in app.html; a router — preauth-vocabulary WALK 2 count moves if another branch adds a router;
+  CIVICOS_UI_STATE v120 provisional; IC: none, consumer only)
+- D-465 32f6b13d (M-164 + tools/d465-search-bench.mjs + one RETRIEVAL-SUBSTRATE line; no IC)
+- bob/batch-0925c now **2e9d4f4e** (Publication §6A.3 pt 3 + §3 rule 17, Membership v2 REC-159 paragraph)
+- D-598: BOB #35 ruled rule 17 (04:03Z): a behaviour-only change moves the version; census rows declare `changed:`. At the union that
+  carries D-598, record C-21.2 in that version's `changed:` (and D-450's C-41.12 is already in 1.30.0's).
+- D-147 cad047f4: its report to SCHEDULER #21 was refused; relayed to SCHEDULER #22 by CONDUCT #21.
