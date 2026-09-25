@@ -1,0 +1,16 @@
+{
+ "unit": "plane:m051-driver-census.test.mjs",
+ "inputHash": "0baaeab780d685c3acd191c45036511f9586f23aff0da919cbcdce0a684cd767",
+ "verdict": "PASS",
+ "run": "bc528f2e75aef2ad84637b0c858afd9f7ba4934e.1790328510952.2513.json",
+ "tree": "bc528f2e75aef2ad84637b0c858afd9f7ba4934e",
+ "head": "9385caf7f448cdbb52a3959ae1e7c9b253b4dbf3",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1065,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4937c9c1-d6dc-50fb-b9f5-2df31910916d",
+ "at": "2026-09-25T09:28:30.980Z"
+}
