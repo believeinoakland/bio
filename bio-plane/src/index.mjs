@@ -4981,6 +4981,133 @@ function tier3Note(m, memberNote, layerPages) {
 }
 
 /* ===================================================================== *
+ * D-606 — THE CALLER LOOPS. ONE MEMBER INVOCATION PER PAGE, SEQUENTIAL.
+ * ===================================================================== *
+ *
+ * The member transcribes ONE page per invocation (`ocr-worker/src/contract.mjs`
+ * `chooseChunk`, CPDF-15's memory bound) and names the rest in `deferred`,
+ * with a note asking the caller to "call again per page". This seam called it
+ * ONCE and never read `deferred`, so a scanned document was read to its first
+ * image-only page and no further: M-165 measured 174 of 190 selected scanned
+ * pages never transcribed on FW-20's walk. The member contract is unchanged —
+ * the loop lives HERE, at the one `OCR_WORKER.fetch` call site.
+ *
+ * THE LOOP IS BOUNDED BY A BUDGET, AND THE BUDGET IS THE VENDOR'S CLAIM MINUS A
+ * RESERVE. Cloudflare's service-bindings page (read 2026-09-25, THEIR claim, not
+ * measured here): "A single request has a maximum of 32 Worker invocations, and
+ * each call to a Service binding counts towards this limit. Subsequent calls will
+ * throw an exception." That binds long before the plane's own subrequest ceiling
+ * (10,000, `wrangler.jsonc`, D-54) does. Miniflare does NOT enforce it — 60
+ * sequential binding calls from one request completed (M-175) — so no local run
+ * can find it, and a deployed measurement is DIST's to make. The reserve, 8, is
+ * for the other invocations one acquire can make or sit behind, counted from the
+ * code: the request itself, the store's `SELF` hop when a monitor drives the
+ * acquire, one `PDF_WORKER` tier-2 call, the render arm's `BROWSER`, and margin
+ * for what that count cannot see (whether the originating alarm counts is
+ * UNDETERMINED). So at most 24 OCR invocations per request, the first included.
+ *
+ * WHAT HAPPENS PAST THE BUDGET, AND ON A THROW. The tail is NOT asked: its pages
+ * keep their `no_text_layer` markers (`mergeTier3Text` already keeps a selected
+ * page nobody answered for), the reading's basis says how many and why, and
+ * `stillWanting` stays true, so the capture remains a tier-3 candidate. A binding
+ * call that THROWS ends the loop the same way — never the acquire: that is what
+ * the vendor says an over-budget call does, so a budget that turns out wrong
+ * degrades to "the rest stays unread, stated" rather than to a failed acquire.
+ * NOT BUILT: a continuation that reads the tail on a later request. The read
+ * path's re-read (`op=pdfstructure&ocr=1`) starts from tier 1's text, so it
+ * would ask for the same first pages again (D-616).
+ *
+ * WHAT IS MERGED. Every answer is kept only for the page that invocation ASKED
+ * for (a page answered to the wrong call is dropped and counted, the D-252
+ * rule applied per call), and only if its provenance — engine, version, cap,
+ * measured_by, confidence floor — is the FIRST ok answer's: one chain is
+ * composed over the merged pages, so a page read by a different build (a rollout
+ * mid-loop is per isolate, D-108) cannot be filed under another's provenance; it
+ * stays unread, stated. A page the member REFUSED keeps its marker, and a
+ * refused FIRST page no longer ends the document — the pages after it are still
+ * asked. The combined answer then goes through `ocrTextFromMember` and
+ * `mergeTier3Text` exactly as one answer always did. */
+const OCR_INVOCATIONS_PER_REQUEST = 24;
+const OCR_SAME_PROVENANCE = ["engine", "version", "cap", "measured_by", "confidence_floor"];
+
+async function askMemberPerPage(env, { sha, storeName, wantPages }) {
+  const call = (pages) => env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ capture_sha: sha, store: storeName, pages }),
+  });
+  /* The first call asks for every page, as it always did: a member that CAN do
+     more than one page answers them all and leaves nothing deferred. */
+  const r = await call(wantPages);
+  if (!r.ok) return { status: r.status };
+  const first = await r.json();
+  const wanted = new Set(wantPages);
+  const deferred = (first && Array.isArray(first.deferred) ? first.deferred : [])
+    .filter((p) => Number.isInteger(p) && wanted.has(p));
+  const answers = [{ asked: null, body: first }];
+  const loop = { invocations: 1, asked: 0, notAsked: [], threw: null, strays: [], mismatched: [], refused: [] };
+  for (let i = 0; i < deferred.length; i++) {
+    const page = deferred[i];
+    if (loop.invocations >= OCR_INVOCATIONS_PER_REQUEST) { loop.notAsked = deferred.slice(i); break; }
+    loop.invocations++; loop.asked++;
+    try {
+      const rp = await call([page]);
+      const body = rp.ok ? await rp.json() : { ok: false, reason: `HTTP_${rp.status}` };
+      answers.push({ asked: page, body });
+    } catch (e) {
+      loop.threw = { at: page, rest: deferred.slice(i) };
+      break;
+    }
+  }
+  if (answers.length === 1) return { status: r.status, answer: first, loop };
+
+  const ok = answers.filter((a) => a.body && a.body.ok === true);
+  for (const a of answers) if (!(a.body && a.body.ok === true))
+    loop.refused.push(a.asked != null ? a.asked : (Number.isInteger(a.body && a.body.page) ? a.body.page : wantPages[0]));
+  if (!ok.length) return { status: r.status, answer: first, loop };
+  const lead = ok[0].body;
+  const pages = [];
+  for (const a of ok) {
+    const own = (Array.isArray(a.body.pages) ? a.body.pages : []);
+    if (a.asked == null) { pages.push(...own); continue; }
+    if (OCR_SAME_PROVENANCE.some((k) => a.body[k] !== lead[k])) { loop.mismatched.push(a.asked); continue; }
+    for (const p of own) {
+      if (p && p.page === a.asked) pages.push(p);
+      else loop.strays.push(p && Number.isInteger(p.page) ? p.page : null);
+    }
+  }
+  return { status: r.status, answer: { ...lead, pages, deferred: [] }, loop };
+}
+
+/* D-606 — WHAT THE LOOP DID NOT DO, in the record's own sentence. `null` when
+   every deferred page was asked and nothing needs saying beyond the merge's own
+   account (which already counts the pages still unread). */
+function tier3LoopNote(loop) {
+  if (!loop) return null;
+  const say = [];
+  if (loop.notAsked.length)
+    say.push(`${loop.notAsked.length} of them (from page ${loop.notAsked[0]}) were not asked for in this `
+           + `request: the OCR member reads one page per call and one request may make at most `
+           + `${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker `
+           + `invocations per request — their claim, not measured on this runtime)`);
+  if (loop.threw)
+    say.push(`the call for page ${loop.threw.at} failed, so ${loop.threw.rest.length} page(s) from it on `
+           + `were not transcribed in this request`);
+  if (loop.refused.length)
+    say.push(`the OCR member declined ${loop.refused.length} page(s) it was asked for one at a time`);
+  if (loop.mismatched.length)
+    say.push(`${loop.mismatched.length} page(s) were answered under a different engine build than the `
+           + `first and were not merged, so no page is filed under another build's provenance`);
+  if (loop.strays.length)
+    say.push(`${loop.strays.length} page(s) the OCR member returned were not the page that call asked `
+           + `for, and were dropped`);
+  return say.length ? say.join("; ") : null;
+}
+const withLoopNote = (note, loop) => {
+  const extra = tier3LoopNote(loop);
+  return extra ? (note ? `${note}; ${extra}` : extra) : note;
+};
+
+/* ===================================================================== *
  * CPDF-19 / D-319 — THE TIER-3 SEAM AS ONE FUNCTION, SO THE ACQUIRE PATH AND
  * THE READ PATH COMPOSE ONE CHAIN BY ONE RULE.
  * ===================================================================== *
@@ -5012,7 +5139,7 @@ function tier3Note(m, memberNote, layerPages) {
  * engine that filled them. It never throws for a member's failure: that is an
  * `ocrNote`, exactly as it always was. */
 async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt }) {
-  let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [];
+  let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [], loop = null;
   const wanted = !!(i2text && needsTier3(i2text));
   if (i2text && needsTier3(i2text)) {
     /* D-252: WHICH pages, established before the member is called
@@ -5028,11 +5155,13 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
     const baseText = i2text;
     if (env.OCR_WORKER) {
       try {
-        const r = await env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
-          method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ capture_sha: sha, store: storeName,
-                                 pages: wantPages }),
-        });
+        /* D-606: the member is asked once for every page and then once per page it
+           DEFERRED, within the per-request budget; `asked` carries the first
+           call's status and one answer combining every page it may merge. */
+        const asked = await askMemberPerPage(env, { sha, storeName, wantPages });
+        loop = asked.loop || null;
+        const r = { ok: asked.status >= 200 && asked.status < 300, status: asked.status,
+                    json: async () => asked.answer };
         /* THE STATUS IS READ BEFORE THE BODY, and that ordering is
            the fix for a real defect this suite caught: parsing the
            body of a 500 THROWS, so the catch below reported "could
@@ -5199,8 +5328,11 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
               if (m.filled.length) wiredTier = 3;
               filled = m.filled; unanswered = m.unanswered || [];
               ocrNote = tier3Note(m, built.note, layerPages);
+              /* c22-batch29: D-607 passes `layerPages` to tier3Note (nc-rec102 anchors the line above verbatim);
+                 D-606 wraps the same note with the per-page loop's account — composed on two lines so both hold. */
+              ocrNote = withLoopNote(ocrNote, loop);
             }
-          } else ocrNote = built.why;
+          } else ocrNote = withLoopNote(built.why, loop);
         }
       } catch {
         ocrNote = "the OCR member could not be reached, so this document stays unread";
