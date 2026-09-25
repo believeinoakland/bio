@@ -237,7 +237,7 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
-/* CORRECTED 2026-09-25 (REC-219): 1.29.0 -> 1.30.0, C-41.14 joined the catalogue (466 -> 467). */
+/* CORRECTED 2026-09-25 (REC-219): 1.29.0 -> 1.30.0, C-41.14 and C-41.15 joined the catalogue (466 -> 468). */
 t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.30.0)");
 /* CORRECTED 2026-09-24 (D-491): 1.23.0 -> 1.24.0, and CORRECTED rather than exempted for the
    reason every note above says — the old literal named a catalogue that no longer exists once

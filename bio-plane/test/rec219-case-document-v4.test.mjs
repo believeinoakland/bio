@@ -1,21 +1,26 @@
-/* NEGATIVE CONTROL: (declared and RUN 2026-09-25, WORKER REC-219 under SCHEDULER #21) THREE ARMS PLUS A
-   BASELINE, each armed ALONE by an anchor asserted to match EXACTLY ONCE, the suite run directly (it loads
-   `src/index.mjs`, so no rebuild sits between the arm and the measurement), every restore by `cp` from a
-   uniquely-named per-arm pristine copy and verified by sha256 AND `cmp` (bio-checks.mjs e3c5e42c…, 971,294
-   bytes; store.mjs 7766ec09…, 3,353,399 bytes). The arms are lettered from (a) for `control-register.mjs`.
-   (0) BASELINE, nothing armed -> **26 pass, 0 fail**, foot reached.
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-25, WORKER REC-219 under SCHEDULER #21, RE-RUN WHOLE after D-579(a)
+   joined the row) FIVE ARMS PLUS A BASELINE, each armed ALONE by an anchor asserted to match EXACTLY ONCE, the
+   suite run directly (it loads `src/index.mjs`, so no rebuild sits between the arm and the measurement), every
+   restore by `cp` from a uniquely-named per-arm pristine copy and verified by sha256 AND `cmp` (bio-checks.mjs
+   4dbb1f34…, 974,715 bytes; store.mjs 4e54bae7…, 3,362,509 bytes). Lettered from (a) for `control-register.mjs`.
+   (0) BASELINE, nothing armed -> **39 pass, 0 fail**, foot reached.
    (a) THE ROW'S OWN ARM — OMIT THE REFUSAL: C-41.14's first `findings.push` (the absent count or list)
-   disabled in `checks/bio-checks.mjs`. Declared: MUST fail NO-PENDING-REFUSED by name; MUST NOT fail
-   sections 1, 3 or 4 -> **24 pass, 2 fail**: NO-PENDING-REFUSED and its no-count twin, exactly as declared.
-   (b) THE LIAR (i) — BUMP THE TOKEN AND STAMP NOTHING: `publishCase()`'s manifest carries `pins_proposed: []`
-   whatever op=biasmanifest said. Declared: MUST fail PENDING-NAMED by name; MUST NOT fail section 3 ->
-   **18 pass, 8 fail**: PENDING-NAMED first, then the sentence, the prose, the echo and the FROZEN arm, plus
-   three section-2 rows whose fixtures are derived FROM case A's list (the count lie, the no-revision row and
-   the two-row over-strictness), which read nothing once the list is empty — the arm's reach, named rather
-   than smoothed. Section 3 green, as declared.
-   (c) THE LIAR (ii) — THE OVER-STRICT GATE: `caseDocumentRequiresPendingAdoptions` true for EVERY format.
-   Declared: MUST fail /3-STILL-RATIFIES by name and nothing else -> **25 pass, 1 fail**: /3-STILL-RATIFIES.
-
+   disabled. Declared: MUST fail NO-PENDING-REFUSED by name; MUST NOT fail sections 1, 3, 4 or 5 ->
+   **37 pass, 2 fail**: NO-PENDING-REFUSED and its no-count twin, exactly as declared.
+   (b) THE LIAR (i) — BUMP THE TOKEN AND STAMP NOTHING: `publishCase()`'s manifest carries `pins_proposed: []`.
+   Declared: MUST fail PENDING-NAMED by name; MUST NOT fail sections 3 or 5 -> **31 pass, 8 fail**:
+   PENDING-NAMED first, the sentence, the prose, the echo and the FROZEN arm, plus three section-2 rows whose
+   fixtures derive FROM case A's list (the count lie, the no-revision row, the two-row over-strictness), which
+   read nothing once it is empty — the arm's reach, named rather than smoothed.
+   (c) THE LIAR (ii) — THE OVER-STRICT GATE: `caseDocumentRequiresV4Disclosures` true for EVERY format.
+   Declared: MUST fail /3-STILL-RATIFIES by name, and section 5's /3 row (the same predicate gates C-41.15) ->
+   **37 pass, 2 fail**: those two.
+   (d) D-579(a)'S OWN ARM — DROP THE PIN: op=cite's case arm stamps no `extent_capture`. Declared: MUST fail
+   PINNED-EDGE by name; MUST NOT fail sections 1-4 -> **34 pass, 5 fail**: the act's echo, the edge's bytes,
+   PINNED-EDGE (the edge now reads `undetermined`, never the later capture), the prose line, and
+   NO-PIN-REFUSED, whose fixture drops a capture from a row that no longer has one.
+   (e) D-579(a) — OMIT THE ROW REFUSAL: C-41.15's row `findings.push` disabled. Declared: MUST fail
+   NO-PIN-REFUSED by name -> **36 pass, 3 fail**: NO-PIN-REFUSED, the back-fill lie and the off-vocabulary row.
    ---
 
    REC-219 — `bio-case-document/4`: A PUBLISHED CASE STATES AN ADOPTION PINNING A PROPOSED REVISION.
@@ -33,6 +38,9 @@
                                                                             -> section 1 (PENDING-NAMED)
      - a /3 document still ratifies unchanged                              -> section 3 (/3-STILL-RATIFIES)
      - NEGATIVE CONTROL: omit the field and the new check refuses by name  -> section 2 (NO-PENDING-REFUSED)
+     - D-579(a), carried by this row (SCHEDULER #21 02:35Z, BOB #34 02:30Z): each citation edge of the case is
+       pinned INSIDE the signed /4 document, and C-41.15 refuses a /4 whose edge omits the pin
+                                                                           -> section 5 (PINNED-EDGE, NO-PIN-REFUSED)
    HOW A LIAR PASSES IT: (i) bump the token and stamp nothing, so the /4 rows read right and the block is
    as silent as /3's; (ii) require the list of EVERY format, so /3 documents already signed stop
    ratifying; (iii) stamp the list from a SECOND read of the adoption table rather than op=biasmanifest's
@@ -369,6 +377,87 @@ t("a case published NOW signs the lens in force, a ZERO count, an EMPTY list and
   ["bio-case-document/4", true, 0, [],
    "no adoption in this scope pinned a proposed revision when this case was signed", false]);
 t("and the gate accepts it — no finding of any kind", [gateOf(FB, docB.text).ok, idsOf(gateOf(FB, docB.text))], [true, []]);
+
+/* ===========================================================================
+   5. D-579(a) — A CASE'S CITATION EDGES ARE PINNED INSIDE THE SIGNED /4 DOCUMENT.
+   BOB #34, 2026-09-25 02:30Z: *"A published case must say which version it cited, and a pin kept outside
+   the signed bytes is one a reader cannot verify."* ONE edge per state the document can carry:
+     DOC_PIN   captured, then cited             -> op=cite stamps the capture; the row is `pinned`
+     DOC_ONE   cited with no capture, then ONE  -> no pin at the act; `only_capture`, naming the one
+     DOC_TWO   cited with no capture, then TWO  -> `undetermined`, and NOT back-filled with either
+     DOC_NONE  never captured                   -> `no_capture`
+     the question                               -> `no_bytes` (DEC-21)
+   =========================================================================== */
+console.log("\n--- 5. D-579(a): each citation edge of the case is signed with the version it rests on ---");
+const selectIds = async (ids) => {
+  const r = await POST(`op=select&token=${IRIS}`, { ids });
+  if (!r.handle) bail("select", r);
+  return r.handle;
+};
+const citeInto = async (ids) => GET(`op=cite&token=${IRIS}&project=${encodeURIComponent(PROJ)}&handle=${await selectIds(ids)}`);
+const CAP_PIN = sha("r219-cap-pin"), CAP_ONE = sha("r219-cap-one"), CAP_TWO_A = sha("r219-cap-two-a"), CAP_TWO_B = sha("r219-cap-two-b");
+const DOC_PIN = "INFO-2026-2190-citepin", DOC_ONE = "INFO-2026-2190-citeone", DOC_TWO = "INFO-2026-2190-citetwo",
+      DOC_NONE = "INFO-2026-2190-citenone", QN = "INQ-2026-2190-citeq";
+await promote("adm-r219", DOC_PIN, infoMd(DOC_PIN), "information", "collected", reg(CAP_PIN));
+for (const d of [DOC_ONE, DOC_TWO, DOC_NONE]) await promote("adm-r219", d, infoMd(d), "information", "collected");
+await promote("adm-r219", QN, inquiryMd(QN, DOC_PIN), "inquiry", "open");
+const c1 = await citeInto([DOC_PIN, DOC_ONE, DOC_TWO, DOC_NONE, QN]);
+t("REACH: op=cite landed all five edges on the case's project, and PINNED-AT-THE-ACT: it answers the capture "
++ "it stamped onto the one captured document and null for the rest",
+  [c1?.ok, (c1?.cited || []).length, c1?.pinned_captures],
+  [true, 5, { [DOC_NONE]: null, [DOC_ONE]: null, [DOC_PIN]: CAP_PIN, [DOC_TWO]: null, [QN]: null }]);
+const projRefs = parseFrontmatter((await GET(`op=image&token=${IRIS}&id=${PROJ}`))["bundle.md"] || "").data?.references || [];
+t("and the pin is IN THE EDGE'S BYTES, not only in the answer",
+  projRefs.filter((r) => r.rel === "cites").map((r) => [r.target, r.extent_capture ?? null]).sort(),
+  [[DOC_NONE, null], [DOC_ONE, null], [DOC_PIN, CAP_PIN], [DOC_TWO, null], [QN, null]]);
+/* The captures the record comes to hold AFTER the act — which is what makes an unpinned edge's version a
+   question: one capture of DOC_ONE, two of DOC_TWO, and a SECOND of DOC_PIN, which the pin must not follow. */
+const addCaps = async (id, caps) => promote("adm-r219", id, infoMd(id), "information", "collected", caps.flatMap(reg));
+await addCaps(DOC_ONE, [CAP_ONE]);
+await addCaps(DOC_TWO, [CAP_TWO_A, CAP_TWO_B]);
+await addCaps(DOC_PIN, [sha("r219-cap-pin-later")]);
+const pubC = await publishAndSign(await ground("cited"), "C");
+const docC = await readDoc(pubC);
+const FC = parseFrontmatter(docC.text).data;
+t("PINNED-EDGE ARM: the signed /4 document carries every edge with its version — the pin op=cite stamped "
++ "(never the later capture), the only capture, UNDETERMINED with no capture guessed, none held, and a question",
+  (FC.case_citations || []).map((r) => [r.target, r.version, r.capture ?? null]).sort(),
+  [[DOC_NONE, "no_capture", null], [DOC_ONE, "only_capture", CAP_ONE], [DOC_PIN, "pinned", CAP_PIN],
+   [DOC_TWO, "undetermined", null], [QN, "no_bytes", null]]);
+t("a PERSON reads each edge and its version under ## Citations",
+  [/^## Citations$/m.test(docC.text), docC.text.includes(`- ${DOC_PIN}: cited at capture ${CAP_PIN}`),
+   docC.text.includes(`- ${DOC_TWO}: version UNDETERMINED`)],
+  [true, true, true]);
+t("op=publish echoed the rows it signed, and op=casedocument serves them FROM THE SIGNED BYTES",
+  [JSON.stringify(pubC.case_citations?.map((r) => [r.target, r.version, r.capture])),
+   docC.citations?.state, JSON.stringify(docC.citations?.rows?.map((r) => [r.target, r.version, r.capture ?? null]))],
+  [JSON.stringify(FC.case_citations.map((r) => [r.target, r.version, r.capture ?? null])), "signed",
+   JSON.stringify(FC.case_citations.map((r) => [r.target, r.version, r.capture ?? null]))]);
+t("BASELINE: the ratify gate accepts the cited document; and case A, whose project cited nothing then, signed an EMPTY list",
+  [gateOf(FC, docC.text).ok, idsOf(gateOf(FC, docC.text)), FA.case_citations], [true, [], []]);
+const rowOf = (fm, target) => (fm.case_citations || []).find((r) => r.target === target) || {};
+const noPin = clone(FC); delete rowOf(noPin, DOC_PIN).capture;
+t("NO-PIN-REFUSED: the cited document with its PINNED edge's capture dropped is refused, by C-41.15 and by nothing else",
+  [gateOf(noPin).ok, idsOf(gateOf(noPin))], [false, ["C-41.15"]]);
+const noCites = clone(FC); delete noCites.case_citations;
+t("and without case_citations at all, by C-41.15",
+  [gateOf(noCites).ok, idsOf(gateOf(noCites))], [false, ["C-41.15"]]);
+const guessed = clone(FC); rowOf(guessed, DOC_TWO).capture = CAP_TWO_A;
+t("THE BACK-FILL LIE: an UNDETERMINED edge that names a capture anyway is refused, by C-41.15",
+  [gateOf(guessed).ok, idsOf(gateOf(guessed))], [false, ["C-41.15"]]);
+const offVocab = clone(FC); rowOf(offVocab, DOC_PIN).version = "latest";
+t("and a version outside the vocabulary, by C-41.15",
+  [gateOf(offVocab).ok, idsOf(gateOf(offVocab))], [false, ["C-41.15"]]);
+const v3cites = clone(FC); v3cites.format = "bio-case-document/3"; delete v3cites.case_citations;
+delete v3cites.bias_manifest_pins_proposed; delete v3cites.bias_manifest.pins_proposed; delete v3cites.bias_manifest.pins_proposed_stated;
+t("/3 is never asked: the same document as a /3 with no citation rows passes the gate — never re-signed",
+  [gateOf(v3cites, docC.text).ok, idsOf(gateOf(v3cites, docC.text))], [true, []]);
+t("the check is ONE family member, declared where the allocator reads it",
+  [CASE_DOCUMENT_FAMILY.CITATIONS?.check], ["C-41.15"]);
+const beforeC = sha(docC.text);
+await addCaps(DOC_TWO, [sha("r219-cap-two-c")]);
+t("FROZEN: a capture arriving after signing moves nothing in the signed document",
+  [sha((await readDoc(pubC)).text) === beforeC], [true]);
 
 console.log(`\nrec219-case-document-v4: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
 await mf.dispose();

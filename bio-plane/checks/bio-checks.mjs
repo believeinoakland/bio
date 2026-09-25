@@ -11674,10 +11674,11 @@ export const caseDocumentStatesMemberBlocks = (fm) =>
 export const caseDocumentRequiresDisclosures = (fm) =>
   fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V3;
 /* REC-219: is this document obliged to state, beside "no manifest was in force", every adoption of
-   its scope that pinned a PROPOSED revision at signing (C-41.14)? /4 and nothing older: a /3 document
-   was never obliged to, and is read as it is (BOB #34: *"/3 documents stay valid and are read as they
-   are, with no re-signing"*). */
-export const caseDocumentRequiresPendingAdoptions = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
+   its scope that pinned a PROPOSED revision at signing (C-41.14), and every citation edge of the case
+   with the version it rests on (C-41.15, D-579(a))? /4 and nothing older: a /3 document was never obliged
+   to, and is read as it is (BOB #34: *"/3 documents stay valid and are read as they are, with no
+   re-signing"*). */
+export const caseDocumentRequiresV4Disclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 
 /* REC-96 / D-196 / IC-112 — WHERE A CASE'S `searched` SECTION GOT ITS SUBJECTS,
    AND THE VOCABULARY IS THE FENCE RATHER THAN A LABEL.
@@ -11753,7 +11754,13 @@ export const CASE_DOCUMENT_FAMILY = {
   /* REC-219: BOB #34 named this check C-41.13, which /3's obligation above already holds, so it takes
      the next free member of the family. */
   PENDING:      { check: 'C-41.14', what: 'the adoptions pinning a PROPOSED revision at signing, stated beside bias_manifest, required of a bio-case-document/4 (REC-219)' },
+  /* REC-219 / D-579(a) (BOB #34, 2026-09-25 02:30Z): the case's citation edges, each pinned to the
+     version it was made against — one more /4 obligation, riding the same bump. */
+  CITATIONS:    { check: 'C-41.15', what: 'case_citations — each citation edge with the version it rests on, a pinned one naming its capture, required of a bio-case-document/4 (REC-219, D-579(a))' },
 };
+/* REC-219 / D-579(a): the states a case document's citation edge may carry, and which name a capture. */
+export const CASE_CITATION_VERSIONS = ['pinned', 'only_capture', 'undetermined', 'no_capture', 'no_bytes'];
+const CITATION_NAMES_CAPTURE = new Set(['pinned', 'only_capture']);
 const C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check]));
 
@@ -11998,7 +12005,7 @@ export function checkCaseDocument(fm, ctx = {}) {
      one and the list omits it" is enforced where the record IS read — op=publish, which authors this
      list from the same op=biasmanifest answer the manifest is stamped from — and a document's own
      disagreement with itself (a count that is not its list's length) is what is refused here. */
-  if (caseDocumentRequiresPendingAdoptions(fm)) {
+  if (caseDocumentRequiresV4Disclosures(fm)) {
     const bm = fm?.bias_manifest;
     if (bm && typeof bm === 'object' && !Array.isArray(bm)) {
       const list = fm?.bias_manifest_pins_proposed;
@@ -12021,6 +12028,34 @@ export function checkCaseDocument(fm, ctx = {}) {
           findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
             ['re-publish through op=publish']));
       }
+    }
+  }
+  /* REC-219 / D-579(a) — C-41.15, THE CITATION EDGES AND THEIR VERSIONS, a /4 obligation (BOB #34,
+     2026-09-25 02:30Z: *"A published case must say which version it cited, and a pin kept outside the
+     signed bytes is one a reader cannot verify"*). A /4 document carries `case_citations`, a list (EMPTY
+     legal: the project cited nothing), each row a target and a `version` from CASE_CITATION_VERSIONS:
+     `pinned` and `only_capture` NAME the 64-hex capture; `undetermined`, `no_capture` and `no_bytes` name
+     none and say why by their value. What is refused: the list absent, a row with no target or a version
+     outside the vocabulary, a row whose version says it names a capture and OMITS IT (the pin dropped),
+     and a row naming a capture its version says it has not.
+     WHAT THIS CANNOT SEE, as C-41.14 cannot: the RECORD. Whether the edge's bytes held a pin that this
+     row calls `undetermined` is op=publish's to get right, and is driven through the op. /3 and older are
+     never asked: read today their edges are "version undetermined (signed before capture pins)", which
+     op=casedocument states. */
+  if (caseDocumentRequiresV4Disclosures(fm)) {
+    const rows = fm?.case_citations;
+    if (!Array.isArray(rows)) {
+      findings.push(f(C41.CITATIONS, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal — an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication §3 rule 18)`,
+        ['re-publish through op=publish, which signs every cites edge of the project with its version']));
+    } else {
+      const bad = rows.filter((x) => !(x && typeof x === 'object' && typeof x.target === 'string' && x.target.trim()
+        && CASE_CITATION_VERSIONS.includes(x.version)
+        && (CITATION_NAMES_CAPTURE.has(x.version)
+          ? typeof x.capture === 'string' && /^[0-9a-f]{64}$/.test(x.capture)
+          : x.capture === null || x.capture === undefined)));
+      if (bad.length > 0)
+        findings.push(f(C41.CITATIONS, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's case_citations has ${bad.length} row(s) that do not state a target and a version from {${CASE_CITATION_VERSIONS.join(', ')}}, with the 64-hex capture exactly where the version names one (first: ${JSON.stringify(bad[0])}): a citation edge that says it is pinned and omits the pin, or names a capture its version disowns, states a version nobody can verify`,
+          ['re-publish through op=publish']));
     }
   }
   /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM

@@ -4354,6 +4354,7 @@ __export(bio_checks_exports, {
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
+  CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
@@ -4474,7 +4475,7 @@ __export(bio_checks_exports, {
   canonicalJson: () => canonicalJson,
   canonicalRange: () => canonicalRange,
   caseDocumentRequiresDisclosures: () => caseDocumentRequiresDisclosures,
-  caseDocumentRequiresPendingAdoptions: () => caseDocumentRequiresPendingAdoptions,
+  caseDocumentRequiresV4Disclosures: () => caseDocumentRequiresV4Disclosures,
   caseDocumentStatesMemberBlocks: () => caseDocumentStatesMemberBlocks,
   caseEditionClaimed: () => caseEditionClaimed,
   checkBiasExtension: () => checkBiasExtension,
@@ -12324,7 +12325,7 @@ var CASE_DOCUMENT_FORMATS_ACCEPTED = [
 ];
 var caseDocumentStatesMemberBlocks = (fm) => fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V3 || fm?.format === CASE_DOCUMENT_FORMAT_V2;
 var caseDocumentRequiresDisclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V3;
-var caseDocumentRequiresPendingAdoptions = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
+var caseDocumentRequiresV4Disclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 var SEARCHED_SUBJECT_SOURCES = {
   case_basis: "the subjects were taken from the CASE -- its members' basis legs and the content rows those legs name -- and the observation log was consulted only to ask what became of each. The log never supplies the subject set; a section computed the other way round is 100% searched by construction and says nothing about the case"
 };
@@ -12344,8 +12345,13 @@ var CASE_DOCUMENT_FAMILY = {
   DISCLOSURES: { check: "C-41.13", what: "bias_manifest, the statement's acknowledgement list and the statement's WRITER, required of a bio-case-document/3 or /4 (REC-188; the writer REC-212)" },
   /* REC-219: BOB #34 named this check C-41.13, which /3's obligation above already holds, so it takes
      the next free member of the family. */
-  PENDING: { check: "C-41.14", what: "the adoptions pinning a PROPOSED revision at signing, stated beside bias_manifest, required of a bio-case-document/4 (REC-219)" }
+  PENDING: { check: "C-41.14", what: "the adoptions pinning a PROPOSED revision at signing, stated beside bias_manifest, required of a bio-case-document/4 (REC-219)" },
+  /* REC-219 / D-579(a) (BOB #34, 2026-09-25 02:30Z): the case's citation edges, each pinned to the
+     version it was made against — one more /4 obligation, riding the same bump. */
+  CITATIONS: { check: "C-41.15", what: "case_citations \u2014 each citation edge with the version it rests on, a pinned one naming its capture, required of a bio-case-document/4 (REC-219, D-579(a))" }
 };
+var CASE_CITATION_VERSIONS = ["pinned", "only_capture", "undetermined", "no_capture", "no_bytes"];
+var CITATION_NAMES_CAPTURE = /* @__PURE__ */ new Set(["pinned", "only_capture"]);
 var C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check])
 );
@@ -12547,7 +12553,7 @@ function checkCaseDocument(fm, ctx = {}) {
       ));
     }
   }
-  if (caseDocumentRequiresPendingAdoptions(fm)) {
+  if (caseDocumentRequiresV4Disclosures(fm)) {
     const bm = fm?.bias_manifest;
     if (bm && typeof bm === "object" && !Array.isArray(bm)) {
       const list = fm?.bias_manifest_pins_proposed;
@@ -12583,6 +12589,26 @@ function checkCaseDocument(fm, ctx = {}) {
             ["re-publish through op=publish"]
           ));
       }
+    }
+  }
+  if (caseDocumentRequiresV4Disclosures(fm)) {
+    const rows = fm?.case_citations;
+    if (!Array.isArray(rows)) {
+      findings.push(f(
+        C41.CITATIONS,
+        "error",
+        `a ${CASE_DOCUMENT_FORMAT} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal \u2014 an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication \xA73 rule 18)`,
+        ["re-publish through op=publish, which signs every cites edge of the project with its version"]
+      ));
+    } else {
+      const bad = rows.filter((x) => !(x && typeof x === "object" && typeof x.target === "string" && x.target.trim() && CASE_CITATION_VERSIONS.includes(x.version) && (CITATION_NAMES_CAPTURE.has(x.version) ? typeof x.capture === "string" && /^[0-9a-f]{64}$/.test(x.capture) : x.capture === null || x.capture === void 0)));
+      if (bad.length > 0)
+        findings.push(f(
+          C41.CITATIONS,
+          "error",
+          `a ${CASE_DOCUMENT_FORMAT} case document's case_citations has ${bad.length} row(s) that do not state a target and a version from {${CASE_CITATION_VERSIONS.join(", ")}}, with the 64-hex capture exactly where the version names one (first: ${JSON.stringify(bad[0])}): a citation edge that says it is pinned and omits the pin, or names a capture its version disowns, states a version nobody can verify`,
+          ["re-publish through op=publish"]
+        ));
     }
   }
   const srch = typeof fm?.searched === "object" && fm.searched || null;
@@ -33251,6 +33277,9 @@ var Store = class _Store extends DurableObject {
      many would fit, never to decide the refusal, which is made on the real
      encoded length. */
   static CITE_EDGE_BYTES = 83;
+  /* REC-219 / D-579(a): the `    extent_capture: <64 hex>` line a pinned case edge adds — 85 bytes by
+     construction (20 + 64 + the newline), not measured, because it is fixed width. */
+  static CITE_PIN_BYTES = 85;
   /* How many ids a Session Log entry names before it summarises. Bounded for
      the same reason the audit bounds its offender list. */
   static CITE_LOG_SAMPLE = 20;
@@ -38504,6 +38533,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         pinned_state: x.pinned_state ?? null
       }))
     };
+    const citations = this.#caseCitations(proj);
     const writer = this.#statementWriter(proj, theCase, edition, stmt, who);
     const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who, writer);
     const docText = _Store.#caseDocumentText({
@@ -38533,7 +38563,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       /* D-84: the lens in force, computed above and stated in the signed bytes. */
       manifest,
       /* D-150 / §3 rule 11: the acknowledgements, read above and signed in. */
-      acks
+      acks,
+      /* REC-219 / D-579(a): the citation edges and the version each rests on. */
+      citations
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -38606,6 +38638,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       /* D-84: THE MANIFEST THE DOCUMENT CARRIES, echoed — the lens (computed) beside the
          acknowledgement (authored), two things that travel together and are not one. */
       bias_manifest: manifest,
+      /* REC-219 / D-579(a): the citation edges the document just signed, with their versions. */
+      case_citations: citations,
       completeness: {
         statement: stmt,
         subject_position: pos,
@@ -38673,6 +38707,54 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
        PURE AND STATIC ON PURPOSE. It takes everything it needs as arguments and
        touches no table, so the suite can render a document without a store and the
        gate can be exercised against bytes this method produced. */
+  /* REC-219 / D-579(a): the words the case document's prose gives each `version`. */
+  static CASE_CITATION_WORDS = {
+    pinned: "cited at capture",
+    only_capture: "no pin; the record held one capture at signing,",
+    undetermined: "version UNDETERMINED \u2014 no pin, and the record held several captures, so which one was cited is not known",
+    no_capture: "the record held no capture of it at signing",
+    no_bytes: "a question, which has no bytes (DEC-21)"
+  };
+  /** REC-219 / D-579(a) — A CASE'S CITATION EDGES AND THE VERSION EACH RESTS ON, read at op=publish.
+   *
+   *  The project's `references[]` entries of `rel: cites` that are not severed, in the document's own
+   *  order, each classified from ITS OWN BYTES first: an `extent_capture` on the edge is the pin (op=cite
+   *  writes it since this item; an author may write it too) and is carried as the bytes say it. Without
+   *  one, the edge was cited before capture pins, and what the record can honestly say depends on how
+   *  many captures it holds of the document NOW, at signing: one (there is only one version the edge
+   *  can rest on), several (UNDETERMINED, never back-filled by the resolver's answer) or none. A
+   *  question has no bytes. SET-BASED: the bytes once, and one grouped count per chunk of targets, under
+   *  D-36's variable ceiling — never one read per edge. */
+  #caseCitations(project) {
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
+    const refs = md && md.content !== null ? parseFrontmatter(md.content).data?.references || [] : [];
+    const edges = (Array.isArray(refs) ? refs : []).filter((r) => r && typeof r === "object" && r.rel === "cites" && r.status !== "severed" && typeof r.target === "string" && r.target.trim());
+    const docs = [...new Set(edges.map((r) => r.target.trim()).filter((t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "information"))];
+    const held = /* @__PURE__ */ new Map();
+    const half = Math.floor(_Store.SELECTION_ID_CHUNK / 2);
+    for (let i = 0; i < docs.length; i += half) {
+      const part = docs.slice(i, i + half), qs = part.map(() => "?").join(",");
+      for (const r of this.#rows(
+        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n, MIN(capture_sha) AS one FROM (
+           SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${qs})
+           UNION ALL
+           SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${qs}))
+         GROUP BY bundle_id`,
+        ...part,
+        ...part
+      )) held.set(r.t, { n: r.n, one: r.one });
+    }
+    return edges.map((r) => {
+      const target = r.target.trim();
+      const pin = typeof r.extent_capture === "string" && /^[0-9a-f]{64}$/.test(r.extent_capture.trim()) ? r.extent_capture.trim() : null;
+      if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "information")
+        return { target, version: "no_bytes", capture: null };
+      if (pin) return { target, version: "pinned", capture: pin };
+      const h = held.get(target);
+      if (!h || !h.n) return { target, version: "no_capture", capture: null };
+      return h.n === 1 ? { target, version: "only_capture", capture: h.one } : { target, version: "undetermined", capture: null };
+    });
+  }
   static #caseDocumentText({
     caseId,
     edition,
@@ -38727,7 +38809,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     manifest = null,
     /* D-150 / §3 rule 11: `#statementAcknowledgements`' answer — the
        acknowledgements of THIS statement by anybody but its author. */
-    acks = { statementSha: null, truncated: false, rows: [] }
+    acks = { statementSha: null, truncated: false, rows: [] },
+    /* REC-219 / D-579(a): `#caseCitations`' rows. */
+    citations = []
   }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
     const lens = manifest && manifest.in_force === true ? manifest : {
@@ -38780,6 +38864,20 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         `    revision: ${x.revision}`,
         `    scope: ${x.scope}`,
         `    pinned_state: ${x.pinned_state ?? "null"}`
+      ]),
+      /* REC-219 / D-579(a) / §3 rule 18 — THE CASE'S CITATION EDGES, EACH WITH THE VERSION IT RESTS ON
+         (C-41.15). An array of flat objects, `case_roles`' shape. `version` is REC-220's vocabulary for a
+         question's leg, plus the two cases that have no version to name: `pinned` (the edge's bytes name
+         the capture — op=cite stamped it at the act, or its author wrote it), `only_capture` (no pin, and
+         the record held exactly one capture at signing), `undetermined` (no pin, several captures: which
+         one the member cited is not a fact the record holds, and it is NOT guessed), `no_capture` (the
+         record held none) and `no_bytes` (a question — DEC-21). `capture` is a sha exactly where the first
+         two say one. */
+      "case_citations:",
+      ...citations.flatMap((x) => [
+        `  - target: ${x.target}`,
+        `    version: ${x.version}`,
+        `    capture: ${x.capture ?? "null"}`
       ]),
       `case_findings: [${roster.join(", ")}]`,
       "case_roles:",
@@ -39037,6 +39135,15 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         "",
         ...pending.map((x) => `- ${x.bundle_id} (${x.scope}) pinned revision ${x.revision}, standing at ${x.pinned_state ?? "an unrecorded state"}`)
       ] : [],
+      "",
+      /* REC-219 / D-579(a): the citation edges in prose, for the reason every section here is. */
+      "## Citations",
+      "",
+      ...citations.length ? [
+        "What this case cites, and the version of each it cites \u2014 pinned where the record holds the capture the citation was made against, and stated where it does not:",
+        "",
+        ...citations.map((x) => `- ${x.target}: ${_Store.CASE_CITATION_WORDS[x.version] ?? x.version}` + (x.capture ? ` ${x.capture}` : ""))
+      ] : ["This case's project cited nothing when it was published."],
       "",
       "## Bias Acknowledgement",
       "",
@@ -39476,7 +39583,24 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
          while the document is unsigned — there is no delivery yet, which
          is a different fact from a delivery nobody recorded. */
       delivered_by: d.ratified_at ? this.#deliveredBy(d) : null,
-      gate_version: d.gate_version ?? null
+      gate_version: d.gate_version ?? null,
+      /* REC-219 / D-579(a) (BOB #34, 2026-09-25 02:30Z): WHICH VERSION EACH CITATION RESTS ON, as the
+         SIGNED BYTES say it. A /4 document signed its edges with their versions, and they are read
+         straight out of the bytes above, never recomputed. An older document signed NO edge and no
+         version, so the answer states that rather than reading the project's edges as they stand
+         today — which would be the case claiming citations it never signed — and it is never
+         re-signed (rule 1). */
+      citations: _Store.#signedCitations(d.text)
+    };
+  }
+  static #signedCitations(text) {
+    const fm = parseFrontmatter(String(text || "")).data || {};
+    if (caseDocumentRequiresV4Disclosures(fm) && Array.isArray(fm.case_citations))
+      return { state: "signed", rows: fm.case_citations };
+    return {
+      state: "undetermined",
+      rows: null,
+      stated: "version undetermined (signed before capture pins): this document was signed before a case's citation edges were pinned to the capture they were made against, and it carries neither"
     };
   }
   /* ===== REC-126 / DEC-31 / IC-145 / IC-146: THE REVIEW COPY ================
@@ -42755,10 +42879,24 @@ ${lines.join("\n")}
         detail: "every member of the selection was already cited; nothing was written" + (authored.length ? ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan." : "")
       };
     let spliced = null, filled = [];
+    const edgePins = /* @__PURE__ */ new Map();
+    if (!ontoInquiry) {
+      for (const target of add)
+        if (normalizeType(OBJECT_TYPES[String(target).split("-")[0]]) === "information") {
+          const pin = this.#captureForContent(target);
+          if (pin) edgePins.set(target, pin);
+        }
+    }
     if (!ontoInquiry) {
       spliced = _Store.#spliceReferences(
         liveMd.content,
-        add.map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }))
+        add.map((target) => ({
+          rel: "cites",
+          target,
+          status: "confirmed",
+          note: nt,
+          ...edgePins.has(target) ? { extent_capture: edgePins.get(target) } : {}
+        }))
       );
       if (!spliced)
         return {
@@ -42829,7 +42967,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
     const bytes = new TextEncoder().encode(text);
     if (bytes.length > INLINE_MAX) {
-      const overhead = bytes.length - add.length * _Store.CITE_EDGE_BYTES;
+      const perEdge = _Store.CITE_EDGE_BYTES + (edgePins.size ? _Store.CITE_PIN_BYTES : 0);
+      const overhead = bytes.length - add.length * perEdge;
       return {
         ok: false,
         reason: "CITATION_TOO_LARGE",
@@ -42845,7 +42984,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
            real encoded length a few lines above — and an estimate that
            errs toward "fewer would fit" tells an operator something
            true. Stated rather than silently reused. */
-        roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / _Store.CITE_EDGE_BYTES)),
+        roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / perEdge)),
         detail: `citing this many records at once would push this ${ontoInquiry ? "question" : "case"}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.`
       };
     }
@@ -42882,6 +43021,11 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       cited: add.slice().sort(),
       alreadyCited: already.sort(),
       severed: [],
+      /* REC-219 / D-579(a): on the case arm, the capture each new edge was PINNED to at this act, or
+         null where none was (a question target; a document the record holds no capture of). */
+      ...ontoInquiry ? {} : { pinned_captures: Object.fromEntries(
+        add.slice().sort().map((t) => [t, edgePins.get(t) ?? null])
+      ) },
       bundleSha: promoted.bundleSha,
       rowVersion: promoted.rowVersion,
       gate: sel.gate,
@@ -44377,7 +44521,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const block = additions.map((a) => `  - rel: ${a.rel}
     target: ${a.target}
     status: ${a.status}
-    note: "${a.note ?? ""}"`);
+    note: "${a.note ?? ""}"` + (typeof a.extent_capture === "string" ? `
+    extent_capture: ${a.extent_capture}` : ""));
     let ref = -1;
     for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) {
       ref = i;
