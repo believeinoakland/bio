@@ -132,7 +132,34 @@
    the draft that asked for nothing and the fixed point catch it. AS DECLARED. (n) -> **82 pass, 0 fail**. AS
    DECLARED. ARMS (a)-(k) RE-RUN in the same driver run: a 77/5, b 81/1, c 80/2, d 80/2, e 80/2, f 81/1, g 74/8,
    h 81/1, i 76/6, j 79/3, k 82/0 — EVERY failure count unchanged from REC-198's measurement, the five new arms
-   landing whole in each tally's pass column. */
+   landing whole in each tally's pass column.
+
+   D-539 (a review copy's round trip must not demote a load-bearing finding the copy cannot show) ADDED BLOCK 11 AND
+   THREE ARMS. DECLARED 2026-09-25 BEFORE ARMING (results appended below when run):
+
+   (o) THE ROLE DROPPED — the absent branch of `findings[]` stops carrying `role`, which is the plane exactly as it
+   stood before D-539. MUST FAIL, by name: "THE COPY SAYS THE DESIGNATION BACK OF A FINDING IT CANNOT SHOW" and
+   "D-539 ACCEPTS-WHEN" (the trip writes both absent findings back undesignated, so once promoted they read `null`).
+   MUST NOT FAIL: the fixture arm, the trip-lands arm, and — THE ARM'S OWN FINDING about block 10's class property —
+   block 11's FIXED POINT, because a role the answer never says is absent before and after the trip and agrees for
+   free; nor any arm of blocks 1-10.
+
+   (p) OVER-STRICTNESS — the absent branch computes the same role in a spelling this suite did not write
+   (`(params.roles || {})[id] ?? null` inline, not the hoisted `role`). MUST PASS, every arm.
+
+   (q) THE LIAR'S CONSTANT — the absent branch answers `role: "load_bearing"` whatever the draft says. It agrees for
+   free about LATER_LB. MUST FAIL "THE COPY SAYS THE DESIGNATION BACK" and "D-539 ACCEPTS-WHEN" (LATER_SUP comes
+   back load_bearing: the liar's answer written into the draft, promoting a supporting finding into one the case
+   rests on). MUST NOT FAIL the fixture arm, the trip-lands arm or the fixed point.
+
+   MEASURED 2026-09-25 by WORKER D-539 (cloud session, SCHEDULER #21) with `node test/reviewcopy.control.mjs`, all
+   SEVENTEEN arms ALONE in one driver run, the pen in the session scratchpad via `BIO_NC_PEN`, 17 of 17 restores of
+   `src/store.mjs` (3,329,115 B) sha256 MATCH, content IDENTICAL, size ok: (0) BASELINE -> **87 pass, 0 fail**.
+   (o) -> **85 pass, 2 fail**: THE COPY SAYS THE DESIGNATION BACK and D-539 ACCEPTS-WHEN, by name; the fixture, the
+   trip-lands arm and the FIXED POINT GREEN — the fixed point's blindness measured, as declared. (p) -> **87 pass,
+   0 fail**. AS DECLARED. (q) -> **85 pass, 2 fail**: the same two by name. AS DECLARED. ARMS (a)-(n) RE-RUN in the
+   same driver run: a 82/5, b 86/1, c 85/2, d 85/2, e 85/2, f 86/1, g 79/8, h 86/1, i 81/6, j 84/3, k 87/0, l 84/3,
+   m 85/2, n 87/0 — EVERY failure count unchanged from REC-199's measurement. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -949,6 +976,81 @@ console.log("\n--- 10. REC-199: the copy says `newCase` back, so an edit does no
   + "verdict come back unchanged. A twelfth field the answer forgets fails this without a list to extend",
     [[okN, okD, ok1, ok2], JSON.stringify([bN, bD, b1, b2]) === JSON.stringify([aN, aD, a1, a2])],
     [[true, true, true, true], true]);
+}
+
+/* =========================================================================== 11
+ * D-539, `BIO_Publication_v0_1.md` §6A.4: A FINDING THE COPY CANNOT SHOW KEEPS ITS
+ * DESIGNATION. `findings[]`'s absent-target branch (`present: false` — the editor cannot
+ * read it, or it does not exist yet) answered `{target, present, detail}` and no `role`,
+ * so an edit written from the answer wrote the member's `load_bearing` back as NOTHING
+ * (`civicos-ui`'s `rvcFormFromCopy` files it under "undesignated"), and the designation
+ * was gone by the time the finding could be read.
+ *
+ * WHY BLOCK 10's FIXED POINT CANNOT SEE THIS, and so why this block reads the draft through
+ * a SECOND observer. The fixed point compares a copy with the copy after one trip; a field
+ * the answer NEVER says on this branch is absent on both sides and agrees for free. What
+ * differs is the STORED draft, and the one read that shows it is the copy AFTER THE FINDING
+ * EXISTS — so the target is named before it is promoted, the trip runs while it is absent,
+ * and the finding is promoted AFTERWARDS. Its role is then read on the present branch, which
+ * has always said it: a trip that lost it reads `null` there.
+ *
+ * TWO ABSENT TARGETS OF OPPOSITE ROLES, beside a present one, so a branch answering one
+ * constant designation cannot agree with both. The write-back is block 10's shape (the UI's
+ * `rvcFormFromCopy` + `rvcDraftBody` pair) restated here rather than shared, because it is
+ * block-scoped there: a finding with no role is written back with no role.
+ * ========================================================================= */
+console.log("\n--- 11. D-539: a finding the copy cannot show keeps its designation across an edit ---");
+{
+  const LATER_LB = "INQ-2026-1260-later-lb", LATER_SUP = "INQ-2026-1260-later-sup";
+  const writeBack = (c) => {
+    const b = { project: c?.project, draft: c?.draft };
+    const fs = Array.isArray(c?.findings) ? c.findings : [];
+    b.targets = fs.map((f) => f.target);
+    const roles = {};
+    for (const f of fs) if (f.role) roles[f.target] = f.role;
+    if (Object.keys(roles).length) b.roles = roles;
+    if (c?.case?.case_id) b.caseId = c.case.case_id;
+    if (c?.case?.newCase) b.newCase = c.case.newCase;
+    const a = c?.authored || {};
+    for (const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"])
+      if (a[k]) b[k] = a[k];
+    if (Array.isArray(a.excluded)) b.excluded = a.excluded;
+    return b;
+  };
+  const copyOf = async (id) => rP(await GET(`op=reviewcopy&draft=${id}&token=${IRIS}`));
+  const pick = (c) => (Array.isArray(c?.findings) ? c.findings : []).map((f) => [f.target, f.present, f.role]);
+
+  const DAr = await draft(IRIS, { ...args(11), targets: [LEAD, LATER_LB, LATER_SUP],
+                                  roles: { [LEAD]: "supporting", [LATER_LB]: "load_bearing", [LATER_SUP]: "supporting" } });
+  if (!DAr?.ok) bail("casedraft DA (a draft naming two findings that do not exist yet)", DAr);
+  const DA1 = await copyOf(DAr.draftId);
+  t("D-539 (fixture): THE ABSENT BRANCH IS REACHED — the draft names LEAD, which exists, and two findings "
+  + "that do not, and the copy answers the two as `present: false` with the absent branch's own detail",
+    [pick(DA1).map(([id, p]) => [id, p]),
+     (DA1?.findings || []).filter((f) => f.present === false).map((f) => typeof f.detail === "string" && f.detail.length > 0)],
+    [[[LEAD, true], [LATER_LB, false], [LATER_SUP, false]], [true, true]]);
+  t("D-539: THE COPY SAYS THE DESIGNATION BACK OF A FINDING IT CANNOT SHOW — the member's own authored role, "
+  + "load_bearing and supporting, on the absent branch as on the present one",
+    pick(DA1), [[LEAD, true, "supporting"], [LATER_LB, false, "load_bearing"], [LATER_SUP, false, "supporting"]]);
+
+  const wrote = await draft(IRIS, writeBack(DA1));
+  t("D-539: THE ROUND TRIP — `op=casedraft`'s body rebuilt from the answer alone and written back to the "
+  + "same draft while both findings are still absent, and the edit lands",
+    [wrote?.ok, wrote?.draftId, wrote?.edited], [true, DAr.draftId, true]);
+  const DA2 = await copyOf(DAr.draftId);
+  t("D-539: AND THE COPY IS A FIXED POINT OF THE TRIP (block 10's property, over the absent branch) — "
+  + "which a copy that NEVER said the role would also pass; the arm below is the one that sees the store",
+    JSON.stringify(pick(DA2)), JSON.stringify(pick(DA1)));
+
+  for (const id of [LATER_LB, LATER_SUP]) {
+    const r = await promote(id, inquiryMd(id, `Was ${id} answered?`, INFO), "inquiry", "open");
+    if (r?.ok === false) bail(`promote ${id} (after the trip)`, r);
+  }
+  const DA3 = await copyOf(DAr.draftId);
+  t("D-539 ACCEPTS-WHEN: ONCE THE FINDINGS EXIST, THE DRAFT STILL DESIGNATES THEM AS ITS MEMBER DID — read on "
+  + "the present branch, after an edit made while they were absent. A trip that lost the role reads `null` "
+  + "here, and the load-bearing finding the case was to rest on has been demoted to undesignated",
+    pick(DA3), [[LEAD, true, "supporting"], [LATER_LB, true, "load_bearing"], [LATER_SUP, true, "supporting"]]);
 }
 
 console.log(`\nreviewcopy: ${pass} pass, ${fail} fail`);

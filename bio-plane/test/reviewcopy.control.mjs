@@ -1,6 +1,7 @@
-/* REC-126's NEGATIVE CONTROL DRIVER — fourteen arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
+/* REC-126's NEGATIVE CONTROL DRIVER — seventeen arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
  * REC-133's, §6A.2's authority, (i)-(k) REC-198's, the list of a project's drafts, (l)-(n) REC-199's,
- * the copy saying `newCase` back), re-runnable in one step:
+ * the copy saying `newCase` back, (o)-(q) D-539's, the copy saying an absent finding's `role` back),
+ * re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -171,6 +172,23 @@ const ARMS = {
        apply: () => edit(STORE,
          "              newCase: !!params.newCase },",
          "              newCase: params.newCase ? true : false },") },
+
+  /* D-539 — the absent-target branch of `findings[]` says the draft's `role` back. Declarations in the
+     suite's header, made before arming. */
+  o: { files: [STORE],
+       label: "(o) THE ROLE DROPPED: a finding the copy cannot show is answered without its designation, which is "
+            + "the plane before D-539 — an edit written from the answer writes it back undesignated",
+       apply: () => edit(STORE, "present: false, role,", "present: false,") },
+
+  p: { files: [STORE],
+       label: "(p) OVER-STRICTNESS: the same role in a spelling this suite did not write — inline on the absent "
+            + "branch rather than the hoisted `role` — must PASS",
+       apply: () => edit(STORE, "present: false, role,", "present: false, role: (params.roles || {})[id] ?? null,") },
+
+  q: { files: [STORE],
+       label: "(q) THE LIAR'S CONSTANT: the absent branch answers `load_bearing` whatever the draft designated — "
+            + "right about one absent finding, and promotes the supporting one across the trip",
+       apply: () => edit(STORE, "present: false, role,", "present: false, role: \"load_bearing\",") },
 };
 
 const want = process.argv[2];
@@ -290,4 +308,16 @@ console.log(`\npen removed: ${PEN}`);
               arms are what caught it — recorded because it is the arm's finding, not a shortfall
      n 82/0   the unanticipated spelling passes
    Every (a)-(k) failure count is REC-198's, unchanged; the three new arms of block 10 are the only movement.
+
+   RE-MEASURED 2026-09-25 by WORKER D-539 (cloud, SCHEDULER #21), all SEVENTEEN arms, pen in the session
+   scratchpad via `BIO_NC_PEN`, 17 of 17 restores of a 3,329,115-byte `store.mjs` sha256 MATCH / content
+   IDENTICAL / size ok:
+     baseline  87/0
+     a 82/5   b 86/1   c 85/2   d 85/2   e 85/2   f 86/1   g 79/8   h 86/1
+     i 81/6   j 84/3   k 87/0   l 84/3   m 85/2   n 87/0
+     o 85/2   the role dropped — the says-back and accepts-when arms by name; block 11's fixed point GREEN,
+              which is the declared finding: a self-comparison cannot see a field the answer never says
+     p 87/0   the unanticipated spelling passes
+     q 85/2   the liar's constant — the supporting finding comes back load_bearing, caught by the same two
+   Every (a)-(n) failure count is REC-199's, unchanged; block 11's five arms are the only movement.
 */
