@@ -227,3 +227,4 @@ D-698	2026-09-25T09:14:21.995Z	land/worker/D-693
 D-699	2026-09-25T09:19:54.001Z	HEAD	
 D-700	2026-09-25T09:21:27.465Z	land/worker/D-674	
 D-701	2026-09-25T09:26:42.852Z	SCHEDULER-23	navchanges and op=links filter by the viewer (BOB #35 09:30Z)
+D-702	2026-09-25T09:26:47.545Z	SCHEDULER-23	link chrome needs containment AND recurrence (BOB #35 09:30Z)
