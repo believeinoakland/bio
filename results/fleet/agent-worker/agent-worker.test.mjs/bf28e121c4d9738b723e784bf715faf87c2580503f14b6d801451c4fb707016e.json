@@ -1,0 +1,16 @@
+{
+ "unit": "fleet:agent-worker/agent-worker.test.mjs",
+ "inputHash": "bf28e121c4d9738b723e784bf715faf87c2580503f14b6d801451c4fb707016e",
+ "verdict": "PASS",
+ "run": "02302d5b8bc0ddbc5cf67f679f1c272f8e4edca3.1790331993034.1518.json",
+ "tree": "02302d5b8bc0ddbc5cf67f679f1c272f8e4edca3",
+ "head": "ca653547201d503aa7a9f842168e43026f73ff2a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1139,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f3aadd4d-c05b-5e70-b262-b248d98fbb33",
+ "at": "2026-09-25T10:26:33.054Z"
+}
