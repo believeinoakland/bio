@@ -583,10 +583,10 @@ const SHARED_FINDING = `FINDING::${PKEY}::filed`;
   /* D-623 — SITE 1 OF 2. The refusal a MEMBER meets carries DEC-49's code, check and canned
      sentence, driven through the op; before D-623 it carried the plane's `detail` and nothing else. */
   t("D-623 SITE 1 (`finding` with no `project`): NO_PROJECT_SCOPE reaches a member in its DEC-49 words — "
-  + "code, C-33.48, and the catalogue's own translation",
+  + "code, C-33.49, and the catalogue's own translation",
     [noProject.code, noProject.check, noProject.translation,
      typeof noProject.translation === "string" && noProject.translation.length > 0],
-    ["NO_PROJECT_SCOPE", "C-33.48", ACT_SHAPE_CHECKS.NO_PROJECT_SCOPE?.translation, true]);
+    ["NO_PROJECT_SCOPE", "C-33.49", ACT_SHAPE_CHECKS.NO_PROJECT_SCOPE?.translation, true]);
   const noFinding = await dispose({ project: A, to: "dismissed", reason: "x" });
   t("a project named with NO FINDING is refused NO_FINDING — a team and no decision",
     [noFinding.ok, noFinding.reason], [false, "NO_FINDING"]);
@@ -617,10 +617,10 @@ const SHARED_FINDING = `FINDING::${PKEY}::filed`;
     [false, "NO_PROJECT_SCOPE", "stance-changed-here-not-elsewhere", ["project", "finding"], true]);
   /* D-623 — SITE 2 OF 2, IC-60's bridge: the same code, check and sentence as site 1, from the same helper. */
   t("D-623 SITE 2 (IC-60's `key` bridge): NO_PROJECT_SCOPE reaches a member in its DEC-49 words — "
-  + "code, C-33.48, and the catalogue's own translation",
+  + "code, C-33.49, and the catalogue's own translation",
     [oldShape.code, oldShape.check, oldShape.translation,
      typeof oldShape.translation === "string" && oldShape.translation.length > 0],
-    ["NO_PROJECT_SCOPE", "C-33.48", ACT_SHAPE_CHECKS.NO_PROJECT_SCOPE?.translation, true]);
+    ["NO_PROJECT_SCOPE", "C-33.49", ACT_SHAPE_CHECKS.NO_PROJECT_SCOPE?.translation, true]);
   t("and it WROTE NOTHING: the finding it named is still live for the team that has decided "
   + "nothing, which is what makes the refusal a refusal rather than a partial act",
     homesOf(byId(await queue(), STANCE_ABOUT_B)), [B]);

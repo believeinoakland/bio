@@ -201,7 +201,7 @@ export const CATALOG_VERSION = "1.31.0";
    those two collisions), D-512 (C-66.6), D-530 (C-89.1), D-547 (C-86.2), D-549 (C-68.5), REC-214 (C-90), D-454
    (C-74.4), REC-217 (C-44.3..5) and D-450 (C-41.12 CHANGED) — MINOR, since no check leaves; count and digest are
    the d470 suite's print on the merged tree. */
-/* 1.31.0 (D-623, 2026-09-25, branch land/worker/D-623 over origin/main 5e8a65a8): C-33.48 NO_PROJECT_SCOPE joins
+/* 1.31.0 (D-623, 2026-09-25, branch land/worker/D-623 over origin/main 5e8a65a8): C-33.49 NO_PROJECT_SCOPE joins
    ACT_SHAPE_CHECKS — op=proposedispose's judgment-layer disposition named with no project, at both of its sites
    through one helper (actNoProjectScope). ONE arrival, no departure, nothing moved: MINOR. 502 -> 503, count and
    digest from the d470 suite's print on this tree. If another branch also takes 1.31.0, the integrator takes the

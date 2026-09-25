@@ -10806,7 +10806,7 @@ export const ACT_SHAPE_CHECKS = {
      rejected) and a member who is not told it will read the refusal as a bug. The
      per-site `detail` still carries the particular — which arguments to send. */
   NO_PROJECT_SCOPE: {
-    check: 'C-33.48',
+    check: 'C-33.49',
     where: 'src/store.mjs actNoProjectScope > is-act-no-project-scope',
     translation: 'Setting this finding aside is a decision for one project\'s own list, not for the '
       + 'whole record: a finding of this kind is a judgment each team makes for itself, and another '

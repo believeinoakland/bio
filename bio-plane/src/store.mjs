@@ -650,7 +650,7 @@ function actNoCitation(detail, extra = {}) {
    `detail` and each site's own keys (`finding`, `kind`, `requires`) are unchanged; `code`,
    `check` and `translation` are new beside them. */
 function actNoProjectScope(detail, extra = {}) {
-  /* DEC-49 REGION is-act-no-project-scope — D-623 / C-33.48. The ONE site at which the plane
+  /* DEC-49 REGION is-act-no-project-scope — D-623 / C-33.49. The ONE site at which the plane
      says a disposition of a finding that is one project's own judgment names no project. */
   const row = ACT_SHAPE_CHECKS.NO_PROJECT_SCOPE;
   if (!row || typeof row.translation !== "string" || !row.translation)
