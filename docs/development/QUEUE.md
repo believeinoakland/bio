@@ -1027,7 +1027,8 @@ scope: take the tier-3 walk documents M-121 names as agendas or minutes that rea
 accepts-when: the named fix (then placed as its own row) or the refutation, recorded with date and instrument. NEGATIVE CONTROL: a two-page scanned fixture whose second page alone carries the agenda heading reads generic before the fix, or the refutation shows it read whole.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-596 · queued — **THE SETUP PAGE SERVED AT `/` READS THE GROUP'S SLUG ALONE (`index.mjs` `publicInstanceGroup` -> `setup.mjs` `groupLine`), so it shows neither the display name nor the verified domain, while `store.mjs` `groupNameSet`'s answer tells the administrator "every public surface shows it beside the slug".** Found by UI-78's worker (03:28Z). The construct's last NOT BUILT trace. — owner RECORD.
+### D-596 · running — **THE SETUP PAGE SERVED AT `/` READS THE GROUP'S SLUG ALONE (`index.mjs` `publicInstanceGroup` -> `setup.mjs` `groupLine`), so it shows neither the display name nor the verified domain, while `store.mjs` `groupNameSet`'s answer tells the administrator "every public surface shows it beside the slug".** Found by UI-78's worker (03:28Z). The construct's last NOT BUILT trace. — owner RECORD.
+status: running — SCHEDULER #22 03:33Z spawns WORKER D-596 (depth 2)
 order: after D-561, with the public-surface corrections ahead of features: an answer claiming a surface shows what it does not is the record claiming more than it supports (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
 milestone: M8
 interface: I3 consumer (op=groupidentity's public projection); the integrator classifies.
