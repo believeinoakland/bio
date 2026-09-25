@@ -542,6 +542,22 @@ console.log("\n--- 10 · THE READ-TIME RE-READ, on the REAL engine (CPDF-19 / D-
      cannot is that the lifted seam reaches a REAL member and composes the chain from
      its REAL answer; the refusals, the stale mark and the observation are driven
      there against a stub, deliberately, and are not repeated here. */
+  /* CORRECTED 2026-09-25 BY D-616, NEVER EXEMPTED. This section re-read the capture section 4 filed and
+     expected the engine to transcribe its page AGAIN. That capture's reading already holds the page's
+     transcription (the acquire read it at tier 3 and its text units were filed), and D-616's row is that a
+     transcribed page is never asked again: the re-read asks only for the pages the stored reading has NOT
+     transcribed, so a scan longer than the per-request budget advances instead of re-reading its first pages.
+     The old assertion was right about the seam reaching the real member and wrong about WHEN it should. So
+     the first arm now pins the new rule on the real path, and the real-engine arms below are driven where a
+     re-read SHOULD reach the engine: the same capture filed under a reading whose text the record does not
+     hold (no text units — a pre-REC-91 promote, or a unit dropped over the index bound), where the page is
+     asked again exactly as before. */
+  const again = await api(`op=pdfstructure&token=mem-e2e&sha256=${real.capture.sha256}&ocr=1`);
+  t("D-616: a capture whose page the record already holds transcribed is NOT sent to the engine again",
+    [again.reextraction?.performed, /already transcribed/.test(again.reextraction?.why || "")], [false, true]);
+  const { text_units: _held, ...noText } = real;
+  t("the same capture is filed under a reading whose text the record does not hold",
+    (await promoteDoc(noText)).promoted, true);
   const re = await api(`op=pdfstructure&token=mem-e2e&sha256=${real.capture.sha256}&ocr=1`);
   t("the read op now REACHES TIER 3 when asked", [re.ok, re.tier], [true, 3]);
   t("it was performed and written", [re.reextraction?.performed, re.reextraction?.written], [true, true]);
