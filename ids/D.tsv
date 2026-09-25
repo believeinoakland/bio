@@ -99,3 +99,4 @@ D-570	2026-09-25T00:06:32.351Z	land/worker/D-520
 D-571	2026-09-25T00:19:15.025Z	SCHEDULER #21	monitor-cadence final tick load-dependent (CONDUCT #20 00:16Z)
 D-572	2026-09-25T00:24:52.195Z	land/worker/D-451	
 D-573	2026-09-25T00:26:08.702Z	land/worker/D-543	
+D-574	2026-09-25T00:38:20.113Z	WORKER D-550	arm G / the one-code sweep walk only store.mjs+index.mjs; real multi-site DEC-49 codes in airun/textchain/calibration/skillpack are unwatched
