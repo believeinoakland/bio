@@ -1,0 +1,16 @@
+{
+ "unit": "ui:subject-view.test.mjs",
+ "inputHash": "58eee66b889d5f74b952163ac43b41d67d87dc58ab3a0b6800ac7b5feb143ea5",
+ "verdict": "PASS",
+ "run": "e018ac73c9f5bc5f38ac9e1ae1dc53a0041f77f8.1790320921625.13581.json",
+ "tree": "e018ac73c9f5bc5f38ac9e1ae1dc53a0041f77f8",
+ "head": "a351185228d06d30567b1519dec8cc4a04f4318f",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 13,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e7386331-9f9c-543f-b3cc-952d5c751e29",
+ "at": "2026-09-25T07:22:01.639Z"
+}

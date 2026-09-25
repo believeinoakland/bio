@@ -1,0 +1,16 @@
+{
+ "unit": "plane:strengthpair.test.mjs",
+ "inputHash": "adc4acb1ec40c1d2b84c0f4f9cb5e052d7bcaf9b64d08e2c9c6097d19d0d9cbf",
+ "verdict": "PASS",
+ "run": "e018ac73c9f5bc5f38ac9e1ae1dc53a0041f77f8.1790320921625.13581.json",
+ "tree": "e018ac73c9f5bc5f38ac9e1ae1dc53a0041f77f8",
+ "head": "a351185228d06d30567b1519dec8cc4a04f4318f",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 144,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e7386331-9f9c-543f-b3cc-952d5c751e29",
+ "at": "2026-09-25T07:22:01.639Z"
+}
