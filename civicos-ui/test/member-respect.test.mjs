@@ -736,6 +736,8 @@ const CHOOSERS = {
   /* D-126, 2026-09-23. */
   "queueSelBarHtml":       "the acts the record publishes (`set_acts`, weight per-item) over ONE held selection — `finderPaintSelection`'s shape on the queue; the per-item ticks that build the selection are `queueEntryControlsHtml`'s",
   "queueRetainedHtml":     "clears ONE retained item's note from this screen; it touches the record not at all (the item's own acts are still `queueEntryControlsHtml`'s)",
+  /* D-134, 2026-09-25. */
+  "openCustodialAct":      "D-134: the role radios and capability ticks composing ONE op=memberadd invitation; nothing is decided until the one act",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is
@@ -783,6 +785,11 @@ const SETS = {
      list is a SET of decisions — and leaving one is doing nothing, which needs no control at all. */
   "thmHunchHtml": { single: true, bulk: false, op: "themeplace",
     why: "UI-76 (carried): one 'It passes the test: place it' per hunch standing in a theme. `op=themeplace` takes ONE `target`, and each confirmation is its own attributed judgement that THAT document or passage passes the theme's test (framework §8.4 fence 3), recorded in the member's name beside who proposed it. A bulk path is the PLANE accepting a set, not this surface looping — N calls over N hunches is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `rvcGrantsHtml`'s note); and an 'all of these pass' control would put judgements in the record nobody made one by one. Leaving a hunch is the absence of an act, so no mode is forced." },
+  /* D-134, 2026-09-25. §4.9's standing acts, one control per roster row and per key row. */
+  "memberActHtml": { single: true, bulk: false, op: "memberset",
+    why: "D-134 (carried): one Deactivate or Reactivate per roster row. `op=memberset` takes ONE `memberId`, and each is a custodial act over ONE person's access that the record attributes to its actor (`status_by`, REC-159). A bulk path is the PLANE accepting a set, not this surface looping — N calls over N members is the forty-dialogs shape wearing a bulk control's clothes (DEC-52)." },
+  "keyActHtml": { single: true, bulk: false, op: "signerset",
+    why: "D-134 (carried): one Revoke or Reactivate per registered key. `op=signerset` takes ONE `keyB64`, each attributed to its actor (`status_by`, REC-159); a bulk path is the plane accepting a set, and a client-side loop is the forty-dialogs shape (DEC-52)." },
   "queueItemMuteHtml": { single: true, bulk: true, op: "queuemute",
     why: "UI-86. DEC-10's (b), 'stop notifying me about this one': ONE `{ item }` per control, keyed on the item's own id (D-125). It is the SINGLE-item mode; the case group's kind mute (`queueMuteHtml`, above) is the set mode over the same class rule (`queueMutableItem`), so neither is forced. Where an item has no case — an ungrouped condition (D-170) — the item form is the only mute the record has, and that is the plane's shape, not a mode withheld here." },
 };
@@ -807,7 +814,10 @@ const SETS = {
 /* 4c — THE AMENDMENT, BOTH WAYS. */
 for(const [host, s] of Object.entries(SETS)){
   ok(s.single, `ARM 4c: the set of decisions in '${host}' offers NO single-item path — a surface that only offers bulk takes the mode of judgment out of the member's hands just as surely as forty clicks do. ${s.why}`);
-  ok(s.bulk || /^UI-\d+ \(carried\)/.test(s.why),
+  /* CORRECTED 2026-09-25 by D-134, not exempted: this read `/^UI-\d+ \(carried\)/`, which is the rule's
+     SPELLING rather than the rule. The rule is "CARRIED AS A NAMED ITEM"; a UI-owned row whose id is in the
+     `D-` namespace (D-134, a debt row the area owns) is a named item, and the UI-only pattern refused it. */
+  ok(s.bulk || /^(?:UI|D)-\d+ \(carried\)/.test(s.why),
      `ARM 4c: the set of decisions in '${host}' offers NO bulk path and carries no reason — every missing mode is either built or CARRIED AS A NAMED ITEM with why it cannot be built here. ${s.why}`);
   console.log(`  ${host.padEnd(26)} single:${s.single?"yes":"NO "} bulk:${s.bulk?"yes":"NO "} · ${s.why}`);
 }

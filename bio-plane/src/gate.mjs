@@ -210,6 +210,12 @@ export const CATALOG_VERSION = "1.30.0";
    those two collisions), D-512 (C-66.6), D-530 (C-89.1), D-547 (C-86.2), D-549 (C-68.5), REC-214 (C-90), D-454
    (C-74.4), REC-217 (C-44.3..5) and D-450 (C-41.12 CHANGED) — MINOR, since no check leaves; count and digest are
    the d470 suite's print on the merged tree. */
+/* D-134 side, kept as history — took 1.30.0 (D-134, 2026-09-25, branch land/worker/D-134): the new CUSTODIAL_CHECKS family, C-96.1-.9 —
+   §4.9's custodial acts' refusals given canned translations, and `adminRemove`'s target case split to
+   TARGET_NOT_AN_ADMIN — so the catalogue moved 466 -> 475 and the stamp moves with it. NINE ARRIVALS, NO
+   DEPARTURES, so the bump is MINOR on this constant's own rule (Publication §3 rule 17). Figures are the
+   d470 suite's own print on this tree over origin/main 964da679. If another branch also took 1.30.0, the
+   union takes the next number once — ONE VERSION NAMES ONE CATALOGUE. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

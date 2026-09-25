@@ -98,6 +98,27 @@ reopened item's words kept it green with the set-aside row's sentence hidden. Ar
 row itself (corrected with a comment, not exempted); 4/4 again. The item's sentence is worded apart from
 `disposedFlowVersionHtml`'s so each control finds its own subject once.
 
+v120, 2026-09-25 session, thread UI, D-134 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/D-134` (base `origin/main` @ `964da6790`), in the commit that carries this entry; the version number is
+PROVISIONAL — UI-78, UI-69 and UI-75 were running or awaiting the train beside me, so CONDUCT renumbers if it collided.
+SURFACE: **the Members screen gains §4.9's custodial WRITE half for an administrator's session.** Invite a member
+(or, beyond the second administrator, propose one: the answer's own lists say who has endorsed and who it waits on),
+Deactivate / Reactivate on each roster row, and a Signing keys table with Register a signing key and Revoke /
+Reactivate per key — `op=memberadd`, `op=memberset`, `op=signeradd`, `op=signerset`, one call site each in
+`doCustodialAct`. The controls exist only for a session `op=whoami` says administers (`custodian()`), the founder's
+or an enrolled administrator's; a member's session renders none of them, and the lede's "this screen only SHOWS" is
+now said only to that session, where it is still true. The page sends no actor; the plane stamps `by` (REC-159).
+The role and capabilities of an invitation start unpicked and travel as choices (`custodialChoose`); a pasted
+`ssh-ed25519 AAAA… label` line is split into the key's base64 part and its label, because that is what the op takes.
+PLANE: every refusal the surface can receive now carries a canned translation — `CUSTODIAL_CHECKS`, C-96.1–.9 — and
+`adminRemove`'s target case is split to TARGET_NOT_AN_ADMIN, because `dec49Decorate` puts a family row's sentence on
+EVERY refusal carrying its code. SUITES: `civicos-ui/test/custodial-acts.test.mjs` (both administrators' sessions
+perform all four against the real plane, attributed; the member's renders none; each refusal in its words) and
+`bio-plane/test/d134-custodial-refusals.test.mjs` (each C-96 check named at the op). WHO INVITED: BOB #35 ruled it its
+own fact while this item ran, and it landed here — `members.invited_by`, written by every `memberadd` path, and each
+roster row says "invited by <who>", or "not recorded" where the plane says so. Controls and figures:
+`measurements/M-171.md`.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it

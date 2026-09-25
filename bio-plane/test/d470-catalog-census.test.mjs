@@ -341,6 +341,10 @@ const CATALOG_CENSUS = {
      Count and digest are THIS SUITE'S OWN PRINT on the item's tree, never 466 + 9. */
   /* REC-150 side, kept as history (branch row DROPPED at c22-batch29; CONDUCT takes the union's number once and re-reads
      count and digest from this suite's print): "1.31.0": { count: 475, digest: "3f2a8c5d60fd03c79db5560e4818ece84983c3a18223cddb0acc77162c09085a" } */
+  /* D-134 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue, and one version names one catalogue; CONDUCT takes the union's number once and re-reads count and digest
+     from this suite's print): 1.30.0 (D-134, 2026-09-25): CUSTODIAL_CHECKS C-96.1-.9 over 1.29.0;
+     "1.30.0": { count: 475, digest: "7792c2e9a57e10c68358c11e922932b08b9a42c2c2632959964d073e42037447" } */
   /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
      rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
      KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
@@ -524,6 +528,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
      [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
 */
+/* D-134 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, the C-96 rows); ours is kept
+   at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under

@@ -2252,10 +2252,15 @@ const SURFACES = {
   },
   members: {
     routes: ["screen:members"],
-    purpose: "Who holds what in this instance: the roster, each member's capabilities, and the invitations outstanding.",
+    purpose: "Who holds what in this instance: the roster, each member's capabilities, and the invitations outstanding — and, for an administrator's session, the custodial acts over membership and signing keys.",
     levels: [],
+    /* D-134: the four custodial acts this surface performs for an administrator — `memberadd`,
+       `memberset`, `signeradd`, `signerset` — are not in the plane's OBJECT-act catalogue (`ACTS` is
+       acts ON a record object, published per object by `op=affordances`), so they are not listed
+       here, where ARM A4a would rightly call them fiction. Their call sites are asserted by name,
+       each driven against the real plane, in `test/custodial-acts.test.mjs`. */
     acts: [],
-    reads: ["memberlist", "whoami"],
+    reads: ["memberlist", "whoami", "signerlist"],
   },
   add: {
     routes: ["screen:add"],
@@ -14397,7 +14402,7 @@ function founderReconcileHtml(liveAdmins, rosterAdminRows){
    unchanged and still rendered by `ballotDivergenceHtml`; only its home moved. */
 function governanceHtml(adminArith, rosterAdminRows){
   let out = `<section class="mm-gov"><h2>How power changes hands here</h2>`
-          + `<p class="mm-lede">These are the group&rsquo;s own rules, computed by the record. Nothing on this screen changes anything &mdash; it only shows you the arithmetic so you can check it yourself.</p>`;
+          + `<p class="mm-lede">These are the group&rsquo;s own rules, computed by the record. Nothing in this panel changes anything &mdash; it only shows you the arithmetic so you can check it yourself.</p>`;
   if(adminArith && adminArith.live){
     out += adminDenominatorHtml(adminArith.live);
     out += founderReconcileHtml(adminArith.live.administrators, rosterAdminRows);
@@ -14421,22 +14426,227 @@ function governanceHtml(adminArith, rosterAdminRows){
    browser, a cross-project participation view that REC-25 had just made the
    plane's to decide. The DELEGATION proposing an `owns` projection on
    op=memberlist is therefore withdrawn as unnecessary: nothing consumes it. */
-function rosterRow(m){
+/* D-134 (BOB #35, 2026-09-25): WHO INVITED this member, as the record holds it — `op=memberlist`'s own
+   `invited_by`, which reads `not recorded` for anyone invited before the plane kept it. Rendered in the
+   plane's words and never inferred; an older plane that does not send the field gets no line at all. */
+function memberInviterHtml(m){
+  if(!m || !Object.prototype.hasOwnProperty.call(m, "invited_by")) return "";
+  return `<div class="mm-cover">invited by ${esc(m.invited_by == null ? "not recorded" : String(m.invited_by))}</div>`;
+}
+function rosterRow(m, acts){
   const handle = m.handle || m.member_id || m.member || m.id || "";
   const cover  = m.cover || m.name || "";
   const pending = m.invite_pending ? ` <span class="chip collected" title="An invitation has been issued and not yet spent.">invite pending</span>` : "";
   return `<tr>
     <td class="ttl">${esc(handle)}${cover?`<div class="mm-cover">${esc(cover)}</div>`:""}</td>
     <td>${memberRoleBadge(m)}${pending}</td>
-    <td>${memberStatusBadge(m)}</td>
-    <td>${memberCapsHtml(m)}</td>
+    <td>${memberStatusBadge(m)}${memberInviterHtml(m)}</td>
+    <td>${memberCapsHtml(m)}</td>${acts ? `
+    <td>${memberActHtml(m)}</td>` : ""}
   </tr>`;
 }
 
+/*__CUSTODIAL_START__*/
+/* ============================================================
+   D-134 · §4.9's CUSTODIAL ACTS — the WRITE half of this screen, for an
+   administrator's own session (Membership Architecture v2 §4.9, *"What an
+   administrator does"*).
+
+   Four ops, each already built and each reaching both session sets since
+   REC-159 (`CUSTODIAL_ACTIONS` in index.mjs):
+     op=memberadd   invite a member (§6's burner link), or PROPOSE an
+                    administrator beyond the second (§4.7 — the answer lists
+                    who has endorsed it and who has not);
+     op=memberset   deactivate or reactivate a member (a row is never deleted);
+     op=signeradd   register a member's signing key;
+     op=signerset   revoke or reactivate a registered key.
+
+   WHO IS ASKING IS NEVER SENT FROM HERE. The control plane stamps `by` from the
+   signed-in session and the store asks the ROSTER (`Store#custodialBar`), so
+   the record names whoever is signed in and this surface has no field that
+   could name anybody else.
+
+   THE CONTROLS EXIST ONLY FOR A SESSION THE PLANE SAYS ADMINISTERS
+   (`op=whoami`'s `administer`, the same published position the rail and 7.13's
+   rescue read). A member's session renders NONE of the four — absent, never
+   greyed (DEC-69) — and nothing here predicts a refusal: what turns on a
+   parameter (an id already taken, an administrator who needs the §4.7 vote, a
+   key that is not a key) is said by the plane at the act, in its own canned
+   words (C-96, `actRefusalHtml`).
+   ============================================================ */
+function custodian(){
+  return !!(PLANE.session && PLANE.me && PLANE.me.session && PLANE.me.administer);
+}
+let CUSTODY = { members:[], signers:[] };   // what the roster and key reads answered, for the dialogs' pickers
+let CUSTODY_CTX = null;                      // { act, ...the row the member picked }
+
+function custodialBarHtml(){
+  return `<div class="rv-bar" style="margin:8px 0 0;gap:8px" data-custodial="bar">`
+    + `<button class="btn ghost" data-act="memberadd" onclick="openCustodialAct('memberadd')">Invite a member&hellip;</button>`
+    + `<button class="btn ghost" data-act="signeradd" onclick="openCustodialAct('signeradd')">Register a signing key&hellip;</button>`
+    + `</div>`;
+}
+/* One roster row's act: the status the plane reported decides which of the two
+   standings is offered, and the store decides whether it may be set. */
+function memberActHtml(m){
+  const id = m && m.member_id;
+  if(!id) return "";
+  const to = m.status === "revoked" ? "active" : "revoked";
+  return `<button class="btn ghost" data-act="memberset" onclick="openCustodialAct('memberset', ${esc(JSON.stringify(id))}, ${esc(JSON.stringify(to))})">${to==="active"?"Reactivate":"Deactivate"}&hellip;</button>`;
+}
+function keyActHtml(k){
+  const key = k && k.key_b64;
+  if(!key) return "";
+  const to = k.status === "revoked" ? "active" : "revoked";
+  return `<button class="btn ghost" data-act="signerset" onclick="openCustodialAct('signerset', ${esc(JSON.stringify(key))}, ${esc(JSON.stringify(to))})">${to==="active"?"Reactivate":"Revoke"}&hellip;</button>`;
+}
+function keysHtml(signers){
+  const rows = (signers||[]).map(k=>{
+    const who = k.member_id || "";
+    const m = CUSTODY.members.find(x=>x && x.member_id === who);
+    const name = (m && (m.handle || m.cover)) || who;
+    const fp = String(k.key_b64||"").slice(0,24);
+    return `<tr><td class="ttl">${esc(name)}${k.comment?`<div class="mm-cover">${esc(k.comment)}</div>`:""}</td>`
+      + `<td class="mono">${esc(fp)}&hellip;</td>`
+      + `<td>${k.status==="revoked"?`<span class="chip flag">Revoked</span>`:`<span class="chip verified">Active</span>`}`
+      + `${k.attests?"":` <span class="chip collected" title="This instance would refuse a signature from this key right now.">cannot sign now</span>`}</td>`
+      + `<td class="mm-cover">set by ${esc(k.status_by||"not recorded")}</td>`
+      + `<td>${keyActHtml(k)}</td></tr>`;
+  }).join("");
+  return rows
+    ? `<table class="rec mm-keys"><thead><tr><th>Member</th><th>Key</th><th>Standing</th><th>Recorded</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+    : `<div class="empty">No signing key is registered.</div>`;
+}
+
+/* THE DIALOGS. Every field starts EMPTY and nothing is preselected: the role and
+   the capabilities are the administrator's to choose, and a choice not made is
+   sent as not made. */
+function openCustodialAct(act, subject, to){
+  if(!custodian()) return;
+  CUSTODY_CTX = { act, subject: subject ?? null, to: to ?? null, role: null, caps: [] };
+  let title = "", what = "", body = "";
+  if(act === "memberadd"){
+    const vocab = Array.isArray(PLANE.me && PLANE.me.vocabulary) ? PLANE.me.vocabulary : [];
+    title = "Invite a member";
+    what = "An invitation is a link that works once. A second administrator is added by one administrator; an administrator beyond the second needs every existing administrator to endorse the proposal, and no link exists until they have.";
+    body = `<label class="fld" for="ca-id">A member id for them</label><input class="txt" id="ca-id" autocomplete="off">`
+      + `<label class="fld" for="ca-cover">A cover &mdash; your label for them, not a legal name</label><input class="txt" id="ca-cover" autocomplete="off">`
+      + `<div class="fld">Invite them as</div>`
+      + `<label class="ckline"><input type="radio" name="ca-role" id="ca-role-admin" onchange="custodialChoose('role','admin')"> An administrator</label>`
+      + `<label class="ckline"><input type="radio" name="ca-role" id="ca-role-member" onchange="custodialChoose('role','member')"> An ordinary member</label>`
+      + (vocab.length ? `<div class="fld">What they may do</div>` + vocab.map(c=>
+          `<label class="ckline"><input type="checkbox" id="ca-cap-${esc(c)}" onchange="custodialChoose('cap',${esc(JSON.stringify(c))},this.checked)"> ${esc(c)}</label>`).join("") : "");
+  } else if(act === "memberset"){
+    const m = CUSTODY.members.find(x=>x && x.member_id === subject) || {};
+    title = to === "active" ? "Reactivate a member" : "Deactivate a member";
+    what = to === "active"
+      ? "The same person comes back with the same handle and the same history. A former administrator comes back as an ordinary member; restoring the office is a group decision."
+      : "Deactivation ends their access and keeps their history: a member row is never deleted. An administrator is removed only by a vote of the administrators.";
+    body = `<div class="dz-what"><span class="dz-ttl">${esc(m.handle || m.cover || subject)}</span></div>`;
+  } else if(act === "signeradd"){
+    title = "Register a signing key";
+    what = "A signing key lets a member sign what the group publishes. Paste the public key line from the signing page.";
+    body = `<label class="fld" for="ca-who">Whose key</label><select class="txt" id="ca-who"><option value=""></option>`
+      + CUSTODY.members.map(m=>`<option value="${esc(m.member_id)}">${esc(m.handle || m.cover || m.member_id)}</option>`).join("")
+      + `</select>`
+      + `<label class="fld" for="ca-key">The public key</label><input class="txt" id="ca-key" autocomplete="off">`
+      + `<label class="fld" for="ca-comment">A note, if you want one</label><input class="txt" id="ca-comment" autocomplete="off">`;
+  } else if(act === "signerset"){
+    title = to === "active" ? "Reactivate a signing key" : "Revoke a signing key";
+    what = to === "active"
+      ? "The key signs again, if its member's own standing lets them sign."
+      : "The key stops signing now. What it signed before stays signed.";
+    body = `<div class="dz-what"><span class="mono">${esc(String(subject||"").slice(0,24))}&hellip;</span></div>`;
+  } else return;
+  $("#dlg").innerHTML =
+    `<h2>${esc(title)}</h2><p class="what">${esc(what)}</p>${body}
+     <div id="ca-err" class="teach hidden"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="ca-go" onclick="doCustodialAct()">${esc(title)}</button></div>`;
+  $("#dlg-wrap").classList.remove("hidden");
+}
+/* The invitation's two CHOICES, held as they are made and carried into the one op. A role not picked is
+   sent as not picked, and a capability not ticked is not granted. */
+function custodialChoose(kind, value, on){
+  const c = CUSTODY_CTX;
+  if(!c || c.act !== "memberadd") return;
+  if(kind === "role") c.role = value;
+  if(kind === "cap") c.caps = on ? [...new Set([...c.caps, value])] : c.caps.filter(x=>x!==value);
+}
+/* What the op is sent, read from the dialog as authored. A pasted key LINE is
+   split into its base64 part and its label, because that is what `op=signeradd`
+   takes; anything that is not such a line is sent as it was pasted and the
+   plane says what it makes of it. */
+function custodialBody(ctx){
+  const val = (id) => String((($("#"+id))||{}).value || "").trim();
+  if(ctx.act === "memberadd"){
+    const b = { memberId: val("ca-id"), cover: val("ca-cover") };
+    if(ctx.role) b.role = ctx.role;
+    const vocab = Array.isArray(PLANE.me && PLANE.me.vocabulary) ? PLANE.me.vocabulary : [];
+    if(vocab.length) b.capabilities = vocab.filter(c=>ctx.caps.includes(c));
+    return b;
+  }
+  if(ctx.act === "memberset") return { memberId: ctx.subject, status: ctx.to };
+  if(ctx.act === "signerset") return { keyB64: ctx.subject, status: ctx.to };
+  if(ctx.act === "signeradd"){
+    const raw = val("ca-key"), line = /^ssh-ed25519\s+(\S+)(?:\s+(.+))?$/.exec(raw);
+    const comment = val("ca-comment") || (line && line[2] ? line[2].trim() : "");
+    return { memberId: val("ca-who"), keyB64: line ? line[1] : raw, ...(comment ? { comment } : {}) };
+  }
+  return null;
+}
+/* THE COMMIT: one call site per op, spelled out so each act's call is a
+   separate line a reader (and the suite's control) can find by name. */
+async function doCustodialAct(){
+  const ctx = CUSTODY_CTX;
+  if(!ctx || !custodian()) return;
+  const body = custodialBody(ctx);
+  const go = $("#ca-go"); if(go){ go.disabled = true; }
+  let r;
+  if(ctx.act === "memberadd")      r = await actAskPost("memberadd", body);
+  else if(ctx.act === "memberset") r = await actAskPost("memberset", body);
+  else if(ctx.act === "signeradd") r = await actAskPost("signeradd", body);
+  else if(ctx.act === "signerset") r = await actAskPost("signerset", body);
+  else return;
+  if(!r.accepted){
+    const f = r.refusal || {};
+    const err = $("#ca-err");
+    /* §4.7's proposal is recorded even though the answer is a refusal: the
+       record's own lists say who has endorsed it and who it waits on. */
+    const lists = f.proposed && Array.isArray(f.have) && Array.isArray(f.awaiting)
+      ? `<div class="kv"><span class="k">Endorsed by</span><span class="v plain">${esc(f.have.join(", ") || "nobody yet")}</span></div>`
+        + `<div class="kv"><span class="k">Waiting on</span><span class="v plain">${esc(f.awaiting.join(", "))}</span></div>`
+      : "";
+    if(err){ err.innerHTML = actRefusalHtml(f) + lists; err.classList.remove("hidden"); }
+    if(go){ go.disabled = false; }
+    return { refused:true, reason: f.reason, refusal: f };
+  }
+  const res = r.result || {};
+  const link = (ctx.act === "memberadd" && res.invite)
+    ? `<p class="dz-rlede">Send them this link. It works once, it is not shown again, and it goes nowhere after it has been used.</p>`
+      + `<p class="mono" data-invite-link style="word-break:break-all">${esc(`${PLANE.base}/#invite=${encodeURIComponent(res.invite)}`)}</p>`
+    : "";
+  const rows = Object.keys(res).filter(k=>k!=="ok" && k!=="invite" && res[k]!==null && res[k]!==undefined)
+    .map(k=>`<div class="kv"><span class="k">${esc(k==="by"?"recorded as set by":k)}</span><span class="v plain">${esc(Array.isArray(res[k])?res[k].join(", "):String(res[k]))}</span></div>`).join("");
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt"><div class="dz-rhead">Recorded.</div>${link}
+       <p class="dz-rlede">What the record wrote, in its own fields.</p>
+       <div class="dz-rgrid">${rows}</div>
+       <div class="row-btns"><button class="btn" onclick="closeDialog();renderMembers()">Done</button></div>
+     </div>`;
+  return res;
+}
+/*__CUSTODIAL_END__*/
+
 async function renderMembers(){
+  /* D-134: an administrator's session carries §4.9's acts on this screen, so
+     "this screen only shows" is said only where it is still true. */
+  const acts = custodian();
   $("#content").innerHTML = `<h1 class="rec">Members &amp; governance</h1>`
-    + `<p class="lede">Who holds power in this group, and the rules by which it changes hands. Members sign in with a handle and password; a cover is a label, not a legal name; a password can never publish, only a registered key can. This screen only SHOWS &mdash; adding or removing a member, or a key, happens elsewhere, as a decision the group can check.</p>`
-    + `<div id="mm-gov"></div><h2 class="mm-rh">The roster</h2><div id="mm">Loading&hellip;</div>`;
+    + `<p class="lede">Who holds power in this group, and the rules by which it changes hands. Members sign in with a handle and password; a cover is a label, not a legal name; a password can never publish, only a registered key can.`
+    + (acts ? `</p>` : ` This screen only SHOWS &mdash; adding or removing a member, or a key, happens elsewhere, as a decision the group can check.</p>`)
+    + `<div id="mm-gov"></div><h2 class="mm-rh">The roster</h2>${acts ? custodialBarHtml() : ""}<div id="mm">Loading&hellip;</div>`
+    + (acts ? `<h2 class="mm-rh">Signing keys</h2><div id="mm-keys">Loading&hellip;</div>` : "");
   try{
     /* Read the roster and the administrator arithmetic together. A failure in
        one does not blank the other.
@@ -14445,19 +14655,23 @@ async function renderMembers(){
        and this screen's whole governance panel rendered "the administrator
        arithmetic could not be read with this account" against every real plane.
        `recR` opens the envelope; op=memberlist beside it always did. */
-    const [rosterR, adminR] = await Promise.all([
+    const [rosterR, adminR, keysR] = await Promise.all([
       recR("memberlist").catch(e=>({ __err:e })),
       recR("adminarith").catch(()=>null),
+      acts ? recR("signerlist").catch(e=>({ __err:e })) : null,
     ]);
     if(rosterR && rosterR.__err){ $("#mm").innerHTML = errPane(rosterR.__err); }
     const members = (rosterR && !rosterR.__err && (rosterR.members||rosterR)) || [];
+    CUSTODY = { members: Array.isArray(members) ? members : [],
+                signers: (keysR && !keysR.__err && Array.isArray(keysR.signers)) ? keysR.signers : [] };
     const rosterAdminRows = members.filter(m=>memberRole(m)==="admin" && (m.status?m.status==="active":true)).length;
     $("#mm-gov").innerHTML = governanceHtml(adminR, rosterAdminRows);
     if(!(rosterR && rosterR.__err)){
       $("#mm").innerHTML = members.length
-        ? `<table class="rec mm-roster"><thead><tr><th>Member</th><th>Class</th><th>Standing</th><th>May</th></tr></thead><tbody>${members.map(m=>rosterRow(m)).join("")}</tbody></table>`
+        ? `<table class="rec mm-roster"><thead><tr><th>Member</th><th>Class</th><th>Standing</th><th>May</th>${acts?"<th></th>":""}</tr></thead><tbody>${members.map(m=>rosterRow(m, acts)).join("")}</tbody></table>`
         : `<div class="empty">No members listed, or this account cannot read the roster.</div>`;
     }
+    if(acts) $("#mm-keys").innerHTML = (keysR && keysR.__err) ? errPane(keysR.__err) : keysHtml(CUSTODY.signers);
   }catch(e){ $("#mm").innerHTML = errPane(e); }
 }
 
