@@ -1218,11 +1218,17 @@ console.log("\n--- a resolved link becomes an edge, and says who asserted it ---
 
   /* Without a registered bundle there is nothing canonical to hang an edge on,
      and saying so beats inventing one. */
-  const orphan = (await call(`/projectlinks?capture=${A_SHA}`)).result;
+  /* CORRECTED 2026-09-25 (D-706, BOB #35), never exempted: both direct store calls to `projectlinks` below now
+     name `viewer=class:member`, the MACHINE viewer the control plane stamps for MEMBER_TOKEN, on D-701's reasoning
+     for `resolvelinks` above. The old calls named no viewer and were answered unfiltered, which was the defect: the
+     answer named captures and bundles in projects the caller could not see. They now fail CLOSED on an absent viewer
+     (d706-linkproject.test.mjs asserts it); what these assertions test — resolution, the unregistered and self
+     counts — is unchanged for the machine viewer, which D-15 does not filter. */
+  const orphan = (await call(`/projectlinks?viewer=class:member&capture=${A_SHA}`)).result;
   t("an unregistered capture projects nothing, and says why",
     [orphan.projected, /not registered to a bundle/.test(orphan.note || "")], [0, true]);
 
-  const proj = (await call(`/projectlinks?capture=${A_SHA}&bundle=INFO-2026-0001-a`)).result;
+  const proj = (await call(`/projectlinks?viewer=class:member&capture=${A_SHA}&bundle=INFO-2026-0001-a`)).result;
   /* The link RESOLVES: the record holds the target's bytes and the verdict is
      settled. It still does not project, because no bundle has registered those
      bytes, which is the state of everything acquired and not yet promoted. A

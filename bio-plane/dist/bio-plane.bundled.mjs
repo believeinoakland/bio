@@ -71700,7 +71700,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  A self-edge is dropped rather than recorded: a page linking to itself, which
    *  every paginated Legistar calendar does, is not a connection between two
    *  documents and would show up as a bundle citing itself. */
-  projectLinks({ sourceCapture, sourceBundle = null, at = null }) {
+  projectLinks({ sourceCapture, sourceBundle = null, at = null, viewer = null }) {
+    const seen = this.#resolveLinks({
+      sourceCapture,
+      at,
+      seenSource: this.#captureGate("l.source_capture", viewer),
+      seenTarget: this.#captureGate("cl.capture_sha", viewer)
+    });
+    if (!seen.links || !seen.links.length) return { projected: 0, edges: [] };
+    const gate = this.#captureGate("t.capture_sha", viewer);
+    const visible = (s) => !!s && [...this.sql.exec(
+      `SELECT 1 FROM (SELECT ? AS capture_sha) t WHERE (${gate.sql})`,
+      s,
+      ...gate.args
+    )].length > 0;
     const all = { sql: "1=1", args: [] };
     const res = this.#resolveLinks({ sourceCapture, at, seenSource: all, seenTarget: all });
     if (!res.links || !res.links.length) return { projected: 0, edges: [] };
@@ -71715,21 +71728,25 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on"
     };
     const edges = [];
-    let unregistered = 0;
+    let unregistered = 0, self = 0;
     for (const l of res.links) {
       if (l.resolution !== "linked") continue;
+      const said = visible(l.target_capture);
       if (!l.target_bundle) {
-        unregistered++;
+        if (said) unregistered++;
         continue;
       }
-      if (l.target_bundle === bundle) continue;
+      if (l.target_bundle === bundle) {
+        if (said) self++;
+        continue;
+      }
       this.sql.exec(
         `INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'links_to')
          ON CONFLICT(bundle_id, target_id, kind) DO NOTHING`,
         bundle,
         l.target_bundle
       );
-      edges.push({
+      if (said) edges.push({
         from: bundle,
         to: l.target_bundle,
         rel: "links_to",
@@ -71746,9 +71763,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       projected: edges.length,
       source_bundle: bundle,
       edges,
-      skipped_self: res.links.filter((l) => l.resolution === "linked" && l.target_bundle === bundle).length,
+      skipped_self: self,
       skipped_unregistered: unregistered,
-      unresolved: res.tally.offsite,
+      unresolved: seen.tally.offsite,
       note: "only resolved links project, and only to a target some bundle has registered. skipped_unregistered counts targets whose BYTES the record holds while no bundle claims them, which is every acquired-but-unpromoted capture: those become edges when the target is promoted, not before. The edge is links_to and never cites, because the source asserted it and not the group; a member promoting it to cites is a member's act."
     };
   }
@@ -78745,7 +78762,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         recordlinkverdict: () => this.recordLinkVerdict(body || {}),
         projectlinks: () => this.projectLinks({
           sourceCapture: url.searchParams.get("capture"),
-          sourceBundle: url.searchParams.get("bundle") || null
+          sourceBundle: url.searchParams.get("bundle") || null,
+          viewer: url.searchParams.get("viewer")
         }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
@@ -84473,13 +84491,14 @@ var index_default = {
         note: "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, the trail's highest step is the last one that fit and the ceiling lies just above its elapsed_ms."
       });
     }
+    const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
     if (op === "linkproject") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const capture = url.searchParams.get("capture");
       if (!/^[0-9a-f]{64}$/.test(capture || ""))
         return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
       const bundle = url.searchParams.get("bundle");
-      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "")));
+      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`));
       if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }
@@ -84510,7 +84529,6 @@ var index_default = {
       if (!r.answered) return storeSilent("governorconfig");
       return json({ ok: true, ...r.result });
     }
-    const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
     if (op === "navchanges") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const host = (url.searchParams.get("host") || "").trim().toLowerCase();

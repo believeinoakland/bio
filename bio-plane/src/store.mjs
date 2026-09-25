@@ -43961,10 +43961,28 @@ export class Store extends DurableObject {
    *  A self-edge is dropped rather than recorded: a page linking to itself, which
    *  every paginated Legistar calendar does, is not a connection between two
    *  documents and would show up as a bundle citing itself. */
-  projectLinks({ sourceCapture, sourceBundle = null, at = null }) {
-    /* D-701 leaves this WRITE's resolution UNFILTERED, as it was: it writes the record's edges, which must not
-       depend on who asked. Its ANSWER names bundles and captures across the viewer's sight and is not yet
-       gated — minted as its own row (see the D-701 report), not widened here. */
+  projectLinks({ sourceCapture, sourceBundle = null, at = null, viewer = null }) {
+    /* D-706 (BOB #35, 2026-09-25 09:30Z; MEMBER-KNOWLEDGE-DESIGN §5): THE ANSWER IS THE VIEWER'S. Two resolutions:
+       `seen`, through `#captureGate` exactly as op=links resolves for this viewer, decides what may be SAID; `res`,
+       unfiltered, decides what is WRITTEN, as D-701 left it.
+       - A source capture the viewer cannot see answers EXACTLY as one the record does not hold — `seen` is empty —
+         and so, like an absent capture, writes nothing. An absent viewer sees no source: fail closed.
+       - An edge is in `edges`, and counts toward `projected`, `skipped_self` or `skipped_unregistered`, only when
+         its target capture passes the same gate; `unresolved` is the VIEWER's offsite count, so a link whose only
+         capture is hidden is unresolved — the answer an uncaptured target gets — and no count moves with a hidden row.
+       - STATED, NOT DECIDED (the WRITE half, with BOB #36): the write below still resolves unfiltered, so an
+         outsider's act on a visible source writes a links_to edge INTO a bundle they cannot see, and `bundle=` may
+         name a bundle they cannot see as the edge's source. And when an address has BOTH a hidden and a visible
+         capture and the unfiltered bracket picks the hidden one, the edge written names the hidden bundle while the
+         viewer's own resolution names a visible one: that link is in NO count of the viewer's answer, because
+         reporting the visible edge would claim a write that did not happen and counting it anywhere else would say
+         something false. Which answer is right depends on the write half's ruling. */
+    const seen = this.#resolveLinks({ sourceCapture, at,
+      seenSource: this.#captureGate("l.source_capture", viewer), seenTarget: this.#captureGate("cl.capture_sha", viewer) });
+    if (!seen.links || !seen.links.length) return { projected: 0, edges: [] };
+    const gate = this.#captureGate("t.capture_sha", viewer);
+    const visible = (s) => !!s && [...this.sql.exec(
+      `SELECT 1 FROM (SELECT ? AS capture_sha) t WHERE (${gate.sql})`, s, ...gate.args)].length > 0;
     const all = { sql: "1=1", args: [] };
     const res = this.#resolveLinks({ sourceCapture, at, seenSource: all, seenTarget: all });
     if (!res.links || !res.links.length) return { projected: 0, edges: [] };
@@ -43976,7 +43994,7 @@ export class Store extends DurableObject {
     if (!bundle) return { projected: 0, edges: [],
       note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on" };
     const edges = [];
-    let unregistered = 0;
+    let unregistered = 0, self = 0;
     for (const l of res.links) {
       if (l.resolution !== "linked") continue;
       /* The record holds BYTES of the target but no bundle claims them yet. That
@@ -43984,20 +44002,21 @@ export class Store extends DurableObject {
          the locator, promote writes the register row. There is no canonical id to
          point an edge at, and inventing one would be worse than waiting, so it is
          counted and named rather than silently dropped. */
-      if (!l.target_bundle) { unregistered++; continue; }
-      if (l.target_bundle === bundle) continue;
+      const said = visible(l.target_capture);
+      if (!l.target_bundle) { if (said) unregistered++; continue; }
+      if (l.target_bundle === bundle) { if (said) self++; continue; }
       this.sql.exec(
         `INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'links_to')
          ON CONFLICT(bundle_id, target_id, kind) DO NOTHING`, bundle, l.target_bundle);
-      edges.push({ from: bundle, to: l.target_bundle, rel: "links_to",
+      if (said) edges.push({ from: bundle, to: l.target_bundle, rel: "links_to",
                    asserted_by: "source", address: l.address, fragment: l.fragment,
                    verdict: l.verdict, basis: l.basis,
                    target_capture: l.target_capture, target_retrieved: l.target_retrieved });
     }
     return { projected: edges.length, source_bundle: bundle, edges,
-      skipped_self: res.links.filter((l) => l.resolution === "linked" && l.target_bundle === bundle).length,
+      skipped_self: self,
       skipped_unregistered: unregistered,
-      unresolved: res.tally.offsite,
+      unresolved: seen.tally.offsite,
       note: "only resolved links project, and only to a target some bundle has registered. "
           + "skipped_unregistered counts targets whose BYTES the record holds while no bundle claims "
           + "them, which is every acquired-but-unpromoted capture: those become edges when the target "
@@ -51427,7 +51446,8 @@ export class Store extends DurableObject {
         linksto: () => this.linksTo({ address_norm: url.searchParams.get("address"), viewer: url.searchParams.get("viewer") }),
         recordlinkverdict: () => this.recordLinkVerdict(body || {}),
         projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
-                                                sourceBundle: url.searchParams.get("bundle") || null }),
+                                                sourceBundle: url.searchParams.get("bundle") || null,
+                                                viewer: url.searchParams.get("viewer") }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
            — the control plane runs it through `normalizeAddress`, the same

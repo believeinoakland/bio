@@ -7144,6 +7144,15 @@ export default {
             + "above its elapsed_ms." });
     }
 
+    /* D-701 (BOB #35, 2026-09-25 09:30Z): op=navchanges and op=links name capture shas and page addresses,
+       and a capture filed in a project the caller cannot see is that project's existence and what it holds.
+       So both take the D-15 viewer, decided by the SERVER from the credential exactly as the stamp block below
+       decides it (a member-scoped agent key stamps its principal), and the store passes every row through it
+       before ordering or counting; it fails CLOSED on an absent viewer. These two handlers build their own
+       store requests, so they stamp here rather than joining that list. D-706: op=linkproject's ANSWER names
+       the same shas and the target's bundle, so it takes this viewer too; defined here, above all three. */
+    const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+
     /* Project a capture's resolved links into edges. Separate from op=links
        because it writes, and the capability gate has to see that. */
     if (op === "linkproject") {
@@ -7158,7 +7167,7 @@ export default {
          done when nothing was written is the worst member of this class after
          the public reads, because the caller stops asking. */
       const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}`
-        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "")));
+        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`));
       if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }
@@ -7205,13 +7214,6 @@ export default {
       return json({ ok: true, ...r.result });
     }
 
-    /* D-701 (BOB #35, 2026-09-25 09:30Z): op=navchanges and op=links name capture shas and page addresses,
-       and a capture filed in a project the caller cannot see is that project's existence and what it holds.
-       So both take the D-15 viewer, decided by the SERVER from the credential exactly as the stamp block below
-       decides it (a member-scoped agent key stamps its principal), and the store passes every row through it
-       before ordering or counting; it fails CLOSED on an absent viewer. These two handlers build their own
-       store requests, so they stamp here rather than joining that list. */
-    const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
     if (op === "navchanges") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const host = (url.searchParams.get("host") || "").trim().toLowerCase();
