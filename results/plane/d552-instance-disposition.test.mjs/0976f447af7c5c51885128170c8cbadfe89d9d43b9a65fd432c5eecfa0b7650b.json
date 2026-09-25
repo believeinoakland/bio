@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d552-instance-disposition.test.mjs",
+ "inputHash": "0976f447af7c5c51885128170c8cbadfe89d9d43b9a65fd432c5eecfa0b7650b",
+ "verdict": "PASS",
+ "run": "673b179f8a3f129ad650f264837a18dd3d5ae1e2.1790330287563.1612.json",
+ "tree": "673b179f8a3f129ad650f264837a18dd3d5ae1e2",
+ "head": "8894350bd37cbc5afc25965284a3851a561349c4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "939a30af-cc2c-5f9f-86d2-148a26ea6277",
+ "at": "2026-09-25T09:58:07.574Z"
+}
