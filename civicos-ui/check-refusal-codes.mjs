@@ -1114,6 +1114,7 @@ const FLOOR = {
                        // measuring it, and REC-71 measured a floor with slack flipping a control
                        // from RED to GREEN.
   /* D-309 2026-09-10: 63 -> 64. pristine tree printed 64, this item's 64 — so 1 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
+  /* D-523 side, kept as history: vocabularyTerms 111 on its own branch (110 -> 111, queuestate.mjs QUEUE_CONDITION_KINDS gained `render-deferred`); the c22-batch29 union's figure is re-read from this guard's print. */
   vocabularyTerms: 112, /* D-516 (2026-09-24, worktree /home/user/bio on land/worker/D-516, cloud): MOVED 110 -> 112 from
      THIS GUARD'S OWN PRINT on the item's tree, every other ratchet key gated at zero slack in the same run. WHOSE GROWTH
      IT ABSORBS: exactly this item's own two terms and nothing else -- `watermark_band`, added to `MISSING_ROW_CAUSES` and

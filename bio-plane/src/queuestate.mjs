@@ -70,6 +70,8 @@
  * has not been built, or the first generator would silently widen what a member
  * may already have muted. store.mjs refuses at the MINT any CONDITION kind this
  * file does not name, so the two can only ever disagree in the safe direction.
+ * D-523 (2026-09-25) added a TWELFTH kind WITH its producer, `render-deferred`,
+ * so four of the twelve are now emitted by op=queue and the other eight are not.
  *
  * The keys are the catalogue's own slugs. NOTIFICATIONS.md is explicit that
  * "Ids are assigned when generators are built, in the catalogue, the way
@@ -89,6 +91,14 @@ export const QUEUE_CONDITION_KINDS = {
   "invitation-spent-or-expired":  "an invitation was spent, or expired unused",
   "governor-holding-host":        "the per-host governor is holding a host: the capture is PACED, not broken (D-103)",
   "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
+  /* D-523, LIVE from its landing: store.mjs #conditionsRenderDeferred, derived on read from
+     `capture_requests`. BOB #33 RULED 2026-09-24 19:54Z (CLIENT-RENDERED.md, "RULED 2026-09-24 by BOB #33"):
+     a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
+     recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
+     pacing is what holds it, a fact about our machinery and never about the page. */
+  "render-deferred":              "a render this instance could not do is held under its C-83 reason until its "
+                              + "request expires, and is then recorded undetermined (D-491, D-523) "
+                              + "— LIVE: store.mjs #conditionsRenderDeferred",
 };
 
 /* Every OTHER kind the catalogue names, with the class it belongs to — so a

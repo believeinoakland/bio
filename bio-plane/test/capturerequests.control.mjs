@@ -333,6 +333,57 @@ arm("(15) THE HOST'S SLOT, GIVEN BACK. Remove the rollback and a deferred render
   ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
    "a render flag that is neither true nor absent is REFUSED BY NAME"]);
 
+/* ====================== D-523: the expiry release and the condition kind ====== */
+
+arm("(16) THE ROW'S NEGATIVE CONTROL — LET EXPIRY DELETE THE ROW. At `expires` the sweep deletes the held "
+  + "render instead of recording it: the drain's own answer still names it, but the RECORD then holds "
+  + "nothing — no row reading undetermined, no item saying the render never happened. That is the "
+  + "measured failure D-523 moves (a hold ending in nothing recorded), reached on purpose.",
+  [["store", "            `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,\n"
+    + "            said.slice(0, 600), at, q.request);",
+    "            `DELETE FROM capture_requests WHERE request=? AND state='requested'`, q.request);"]],
+  ["THE ROW READS UNDETERMINED AFTER EXPIRY",
+   "and op=queue does not DROP it"],
+  ["D-523 WHILE HELD: op=queue SHOWS the deferred render",
+   "AT EXPIRY THE DRAIN RELEASES IT"]);
+
+arm("(17) THE HOLD UNBOUNDED — the state before D-523. Neuter the expiry sweep and a render this instance "
+  + "cannot do is asked for on every tick past its `expires`, and nothing ever says how it ended.",
+  [["store", "WHERE state='requested' AND render=1 AND expires <= ?\n",
+    "WHERE state='requested' AND render=1 AND 0 AND expires <= ?\n"]],
+  ["AT EXPIRY THE DRAIN RELEASES IT",
+   "THE RATE ARM AT EXPIRY",
+   "THE ROW READS UNDETERMINED AFTER EXPIRY"],
+  ["D-523 WHILE HELD: op=queue SHOWS the deferred render",
+   "the row publishes its render_deferral while held"]);
+
+arm("(18) THE FIRST DRAFT'S SWEEP — C-83 codes only. A render whose code the RATE rule overwrote on its "
+  + "last tick is let through past its expiry and asked AGAIN. Found by driving the sweep, and this arm "
+  + "keeps it found: the C-83 release must stay GREEN, only the rate-held render fails.",
+  [["store", "WHERE state='requested' AND render=1 AND expires <= ?\n",
+    "WHERE state='requested' AND render=1 AND expires <= ? AND code LIKE 'RENDER%'\n"]],
+  ["THE RATE ARM AT EXPIRY"],
+  ["AT EXPIRY THE DRAIN RELEASES IT",
+   "THE ROW READS UNDETERMINED AFTER EXPIRY"]);
+
+arm("(19) THE CONDITION KIND ABSENT — remove the producer from `#queueConditions`. The row still holds and "
+  + "still expires correctly, and no member is told a render waits or how it ended: the silence the "
+  + "ruling forbids, with the record otherwise right.",
+  [["store", "      ...this.#conditionsRenderDeferred(viewer, now, identity),\n", ""]],
+  ["D-523 WHILE HELD: op=queue SHOWS the deferred render",
+   "and op=queue does not DROP it"],
+  ["AT EXPIRY THE DRAIN RELEASES IT",
+   "THE ROW READS UNDETERMINED AFTER EXPIRY"]);
+
+arm("(20) TIGHTER THAN THE RULE — the item shows a held render only under a C-83 code. The render the "
+  + "RATE rule paused for one tick then VANISHES from the queue while it still waits; the C-83 hold "
+  + "stays shown, so only the rate arm's item assertion may fail.",
+  [["store", "AND (cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))",
+    "AND (cr.state = 'expired' OR (cr.state = 'requested' AND cr.code LIKE 'RENDER%'))"]],
+  ["a render the RATE rule paused is still SHOWN waiting"],
+  ["D-523 WHILE HELD: op=queue SHOWS the deferred render",
+   "and op=queue does not DROP it"]);
+
 /* ====================== the report ======================================= */
 
 console.log(`\n=== ${armsRun} arms run, ${armsWrong} behaved differently from their declaration`);
