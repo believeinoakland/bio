@@ -41424,6 +41424,87 @@ async function extractImages(doc, pageOrder) {
   }
   return { images: all, why: null };
 }
+var IMAGE_CONTENT_MAX_GLYPHS = 4;
+var IMAGE_CONTENT_MIN_SHARE = 0.18;
+var IMAGE_CONTENT_TEXT_GLYPHS = 22;
+function pageBox(doc, pageMap) {
+  const read = (key) => {
+    let p2 = pageMap, d2 = 0;
+    while (p2 && d2++ < 32) {
+      const a2 = doc.resolve(p2[key]);
+      if (a2 && a2.t === "arr" && a2.items.length === 4) {
+        const v2 = a2.items.map((x2) => doc.resolve(x2));
+        if (v2.every((x2) => typeof x2 === "number" && Number.isFinite(x2)))
+          return [Math.min(v2[0], v2[2]), Math.min(v2[1], v2[3]), Math.max(v2[0], v2[2]), Math.max(v2[1], v2[3])];
+        return null;
+      }
+      p2 = doc.dictOf(p2.Parent);
+    }
+    return null;
+  };
+  const mb = read("MediaBox");
+  if (!mb) return null;
+  const cb = read("CropBox");
+  return cb ? clipRect(cb, mb) : mb;
+}
+var clipRect = (a2, b2) => [Math.max(a2[0], b2[0]), Math.max(a2[1], b2[1]), Math.min(a2[2], b2[2]), Math.min(a2[3], b2[3])];
+var rectArea = (r2) => Math.max(0, r2[2] - r2[0]) * Math.max(0, r2[3] - r2[1]);
+function unionArea(rects) {
+  const rs2 = rects.filter((r2) => rectArea(r2) > 0);
+  const xs2 = [...new Set(rs2.flatMap((r2) => [r2[0], r2[2]]))].sort((a2, b2) => a2 - b2);
+  let total = 0;
+  for (let i2 = 0; i2 + 1 < xs2.length; i2++) {
+    const x0 = xs2[i2], x1 = xs2[i2 + 1];
+    const spans = rs2.filter((r2) => r2[0] <= x0 && r2[2] >= x1).map((r2) => [r2[1], r2[3]]).sort((a2, b2) => a2[0] - b2[0]);
+    let covered = 0, lo2 = null, hi2 = null;
+    for (const [a2, b2] of spans) {
+      if (lo2 === null || a2 > hi2) {
+        if (lo2 !== null) covered += hi2 - lo2;
+        lo2 = a2;
+        hi2 = b2;
+      } else hi2 = Math.max(hi2, b2);
+    }
+    if (lo2 !== null) covered += hi2 - lo2;
+    total += covered * (x1 - x0);
+  }
+  return total;
+}
+function markImageContent(doc, pageOrder, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const marks = Array.isArray(pg.undetermined) ? pg.undetermined : [];
+    if (marks.some((m2) => m2 && m2.reason === "no_text_layer")) continue;
+    let decoded = 0;
+    for (const ch2 of typeof pg.text === "string" ? pg.text : "") if (!/\s/u.test(ch2)) decoded++;
+    const glyphs = decoded + marks.reduce((n2, m2) => n2 + (m2 && Number.isFinite(m2.count) ? m2.count : 0), 0);
+    if (glyphs >= IMAGE_CONTENT_TEXT_GLYPHS) continue;
+    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[pg.page] });
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const share = box && rectArea(box) > 0 ? Math.round(unionArea(painted.map((im) => clipRect(im.rect, box))) / rectArea(box) * 1e4) / 1e4 : null;
+    const unread = share !== null && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
+    if (share === 0) continue;
+    const marker = {
+      page: pg.page,
+      reason: unread ? "image_content_unread" : "image_content_undetermined",
+      font: null,
+      codes: "",
+      count: 0,
+      image_share: share,
+      glyphs
+    };
+    pg.undetermined = [...marks, marker];
+    added++;
+  }
+  if (!added) return;
+  text.undetermined = [
+    ...text.pages.flatMap((p2) => p2.undetermined || []),
+    ...(text.undetermined || []).filter((m2) => m2 && !Number.isInteger(m2.page))
+  ];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
@@ -41491,6 +41572,7 @@ async function extractPdfStructure(bytes) {
   for (const l2 of links) counts[l2.partition]++;
   const text = await extractText2(doc, pageOrder);
   const imgs = await extractImages(doc, pageOrder);
+  if (imgs.images) markImageContent(doc, pageOrder, text, imgs.images);
   return {
     ok: true,
     container: "pdf",

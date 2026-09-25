@@ -4664,7 +4664,10 @@ function needsTier2(text) {
      genuinely helps with the second kind. So the test is "is EVERY marker a
      scan marker", never "is ANY marker a scan marker". */
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
-  if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
+  /* D-627: the image-content markers are scan markers too. Tier 2 reads no
+     image, and a marker is not an undecoded character. */
+  if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer"
+      || m.reason === "image_content_unread" || m.reason === "image_content_undetermined"))) return false;
   return true;
 }
 
@@ -4777,10 +4780,15 @@ function layerChainFor(i2text, { tier, container }) {
  * means "this document is a Tier-3 candidate" is never "this document is a
  * scan". Per-page routing is CPDF-12's to make real, because it needs a
  * producer that works a page at a time. */
+/* D-627 (BOB #35, 2026-09-25 05:50Z): a page an image fills while its text is
+   a folio is `image_content_unread` (pdfstructure.mjs, thresholds in M-178),
+   and it is routed exactly as a no-text page is. `image_content_undetermined`
+   is NOT routed: routing it would force it to the image side. */
+const TIER3_REASONS = Object.freeze(["no_text_layer", "image_content_unread"]);
 function needsTier3(text) {
   const marks = (text && Array.isArray(text.undetermined)) ? text.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return false;
-  return marks.some((m) => m && m.reason === "no_text_layer");
+  return marks.some((m) => m && TIER3_REASONS.includes(m.reason));
 }
 
 /* D-252 — WHICH PAGES WANT OCR, WHICH IS THE QUESTION `needsTier3` DOES NOT ASK.
@@ -4810,7 +4818,7 @@ function tier3Pages(text) {
   if (marks.some((m) => m && m.reason === "encrypted")) return [];
   const pages = [];
   for (const m of marks) {
-    if (!m || m.reason !== "no_text_layer") continue;
+    if (!m || !TIER3_REASONS.includes(m.reason)) continue;
     if (!Number.isInteger(m.page) || m.page < 0) continue;
     if (!pages.includes(m.page)) pages.push(m.page);
   }

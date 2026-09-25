@@ -25875,6 +25875,87 @@ async function extractImages(doc, pageOrder) {
   }
   return { images: all, why: null };
 }
+var IMAGE_CONTENT_MAX_GLYPHS = 4;
+var IMAGE_CONTENT_MIN_SHARE = 0.18;
+var IMAGE_CONTENT_TEXT_GLYPHS = 22;
+function pageBox(doc, pageMap) {
+  const read = (key) => {
+    let p = pageMap, d = 0;
+    while (p && d++ < 32) {
+      const a = doc.resolve(p[key]);
+      if (a && a.t === "arr" && a.items.length === 4) {
+        const v = a.items.map((x) => doc.resolve(x));
+        if (v.every((x) => typeof x === "number" && Number.isFinite(x)))
+          return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+        return null;
+      }
+      p = doc.dictOf(p.Parent);
+    }
+    return null;
+  };
+  const mb = read("MediaBox");
+  if (!mb) return null;
+  const cb = read("CropBox");
+  return cb ? clipRect(cb, mb) : mb;
+}
+var clipRect = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
+var rectArea = (r) => Math.max(0, r[2] - r[0]) * Math.max(0, r[3] - r[1]);
+function unionArea(rects) {
+  const rs = rects.filter((r) => rectArea(r) > 0);
+  const xs = [...new Set(rs.flatMap((r) => [r[0], r[2]]))].sort((a, b) => a - b);
+  let total = 0;
+  for (let i = 0; i + 1 < xs.length; i++) {
+    const x0 = xs[i], x1 = xs[i + 1];
+    const spans = rs.filter((r) => r[0] <= x0 && r[2] >= x1).map((r) => [r[1], r[3]]).sort((a, b) => a[0] - b[0]);
+    let covered = 0, lo = null, hi = null;
+    for (const [a, b] of spans) {
+      if (lo === null || a > hi) {
+        if (lo !== null) covered += hi - lo;
+        lo = a;
+        hi = b;
+      } else hi = Math.max(hi, b);
+    }
+    if (lo !== null) covered += hi - lo;
+    total += covered * (x1 - x0);
+  }
+  return total;
+}
+function markImageContent(doc, pageOrder, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const marks = Array.isArray(pg.undetermined) ? pg.undetermined : [];
+    if (marks.some((m) => m && m.reason === "no_text_layer")) continue;
+    let decoded = 0;
+    for (const ch of typeof pg.text === "string" ? pg.text : "") if (!/\s/u.test(ch)) decoded++;
+    const glyphs = decoded + marks.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0);
+    if (glyphs >= IMAGE_CONTENT_TEXT_GLYPHS) continue;
+    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[pg.page] });
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const share = box && rectArea(box) > 0 ? Math.round(unionArea(painted.map((im) => clipRect(im.rect, box))) / rectArea(box) * 1e4) / 1e4 : null;
+    const unread = share !== null && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
+    if (share === 0) continue;
+    const marker = {
+      page: pg.page,
+      reason: unread ? "image_content_unread" : "image_content_undetermined",
+      font: null,
+      codes: "",
+      count: 0,
+      image_share: share,
+      glyphs
+    };
+    pg.undetermined = [...marks, marker];
+    added++;
+  }
+  if (!added) return;
+  text.undetermined = [
+    ...text.pages.flatMap((p) => p.undetermined || []),
+    ...(text.undetermined || []).filter((m) => m && !Number.isInteger(m.page))
+  ];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
@@ -25942,6 +26023,7 @@ async function extractPdfStructure(bytes) {
   for (const l of links) counts[l.partition]++;
   const text = await extractText(doc, pageOrder);
   const imgs = await extractImages(doc, pageOrder);
+  if (imgs.images) markImageContent(doc, pageOrder, text, imgs.images);
   return {
     ok: true,
     container: "pdf",
@@ -86520,7 +86602,7 @@ function needsTier2(text) {
   const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
   if (!(c.undetermined > glyphs)) return false;
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
-  if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
+  if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer" || m.reason === "image_content_unread" || m.reason === "image_content_undetermined"))) return false;
   return true;
 }
 var LAYER_FIDELITY_CAP = null;
@@ -86549,17 +86631,18 @@ function layerChainFor(i2text, { tier, container }) {
   });
   return Array.isArray(ext) ? ext : base;
 }
+var TIER3_REASONS = Object.freeze(["no_text_layer", "image_content_unread"]);
 function needsTier3(text) {
   const marks = text && Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return false;
-  return marks.some((m) => m && m.reason === "no_text_layer");
+  return marks.some((m) => m && TIER3_REASONS.includes(m.reason));
 }
 function tier3Pages(text) {
   const marks = text && Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return [];
   const pages = [];
   for (const m of marks) {
-    if (!m || m.reason !== "no_text_layer") continue;
+    if (!m || !TIER3_REASONS.includes(m.reason)) continue;
     if (!Number.isInteger(m.page) || m.page < 0) continue;
     if (!pages.includes(m.page)) pages.push(m.page);
   }
