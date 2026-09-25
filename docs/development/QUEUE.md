@@ -767,7 +767,8 @@ scope: drop the edition condition from `here` (a no-case draft's identity reads 
 accepts-when: edition 2 published without draft= names ella as writer in the signed block (moves: the publisher credited with an editor's bytes). NEGATIVE CONTROL: restore `Number(edition) === 1` and the edition-2 writer arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-683's worker).
 
-### D-695 · running — **C-2.10's `law` ARM NEVER RUNS AT THE ACT: REC-201's recordsLawFindings is called only by the audit sweep (checkBundle), so op=promote LANDS a 250-character law (measured) and a law on a kind that is not records_request — the refusal REC-201 declared exists only in the catalogue.** Found by UI-119's worker (minted on land/worker/UI-119). — owner RECORD.
+### D-695 · integrated — **C-2.10's `law` ARM NEVER RUNS AT THE ACT: REC-201's recordsLawFindings is called only by the audit sweep (checkBundle), so op=promote LANDS a 250-character law (measured) and a law on a kind that is not records_request — the refusal REC-201 declared exists only in the catalogue.** Found by UI-119's worker (minted on land/worker/UI-119). — owner RECORD.
+status: integrated — SCHEDULER #24 11:07Z: tip b6ebf625 (on D-689 4ef3d303), GATE 387/387 GREEN FULLREUSE (21933 assertions; excludes 3 untallied), tree f274fe7c; promote runs recordsLawFindings, RECORDS_LAW_REFUSED C-73.6 (region is-promote-records-law); CATALOG 1.35.0 (union reconciles); union: UI-119 D-695 PINNED arm becomes a driven refusal; minted D-717
 order: spawned directly — a declared refusal the act does not enforce lets the record hold what its rules forbid (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 MAJOR-shaped — a refusal where an answer stood; the integrator mints and classifies.
@@ -894,6 +895,17 @@ depends-on: none (stacked on land/worker/D-703 @ 3401cd78, integrated, on D-683 
 scope: when draft= is given, the writer read consults THAT draft only; without draft=, keep D-703's behaviour and its stated disagreement. Remove the stated gap from rule 13 and construct 13.statement-ack once built.
 accepts-when: two same-bytes no-case drafts by different authors, one named by draft=: the publish names the named draft's author, never the other and never UNDETERMINED (moves: another draft's author named, or a needless UNDETERMINED). NEGATIVE CONTROL: read every project draft again and the named-draft arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (`node tools/mintid.mjs D`, D-703's stated gap).
+
+### D-717 · running — **FIVE ACTION-FAMILY CATALOGUE ARMS RUN ONLY IN THE AUDIT (checkBundle), so a member's op=promote SAVES what they forbid (measured by D-695's worker): an action_kind outside ACTION_KINDS; a risk_tier outside its vocabulary; a counterparty that is the placeholder "to be named" or incoherent; `resolved` with no resolution; a C-11.1 clock entry with no basis or malformed.** — owner RECORD.
+order: spawned directly, stacked on D-695 (same action block): a forbidden value landing in the record is a trustworthiness defect and D-695's own class (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:07Z: spawned, stacked on land/worker/D-695 @ b6ebf625
+milestone: M7
+interface: I3 — named refusals on op=promote for five action arms; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (the action object and its catalogue arms), with D-130 / DEC-13 and C-11.1.
+depends-on: none (stacked on land/worker/D-695 @ b6ebf625, integrated, on D-689 @ 4ef3d303).
+scope: refuse each of the five by name in promote's action block, as D-695 did for C-2.10's law (one DEC-49 region each or one region naming the arm); split checkCounterparty so a MISSING counterparty stays audit-only. Left to the audit by design: counterparty absent, and silently-past-due. STATE, do not classify: the non-action families.
+accepts-when: each of the five is refused by name at op=promote and nothing it forbids is saved (moves: five forbidden values saved); an absent counterparty still saves and the audit still reports it. NEGATIVE CONTROL: remove one refusal and its arm saves again, failing by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-695's worker).
 
 ### M0-171 · queued — **`versions.test.mjs` HARVESTS SCHEMA TABLES WITH A LOOSE PATTERN (`/CREATE TABLE IF NOT EXISTS (\w+)/g`, ~line 719), so it still counts the prose phantom `would` that M0-155 removed from the census.** Found by M0-155's worker. — owner M0.
 order: after M0-160, beside the probe-accuracy rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 17:07Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
