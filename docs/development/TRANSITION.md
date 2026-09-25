@@ -62,6 +62,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-25 · T2 · this plan, frozen old plan, index of 216 rows with first-pass classes · `land/bob/process-design` · next: T3
 - 2026-09-25 · T3 · canon list drafted by BOB #37: 38 canon documents plus the DEC rulings (4 mission, 12 level-1, 22 level-2; some by section), 10 reference, 5 retired · `requirements/README.md` · next: Bob approves the list
 - 2026-09-25 · T3 · DONE: Bob approved the canon list and its three calls; at his direction the superseded `BIO_Membership_Architecture_v1.md` was removed (the only older version of a document in the tree; readable on the snapshot) · `land/bob/process-design` · next: T4
+- 2026-09-25 · T4 · architecture drafted by BOB #37: 8 layers, 50 modules in total order (4 legacy: checks, store, index, ui), every `bio-plane/src` file owned once, every declared use earlier in the order; six calls for Bob · `build/layers.md`, `build/modules.json` · next: Bob approves
 
 ## 5. Challenges identified
 
@@ -75,3 +76,4 @@ Each: what it is, and how the plan handles it.
 - **C6 · The weekly token budget.** Tokens are scarce. Every step above fits in one or two sessions and is committed as it goes. No step starts that cannot finish. Usage is measured from T9 (P14).
 - **C7 · The live instance.** biosmoke7 runs release 0.79.0. Releases stay held until the new process produces one. The disclosure fixes that are built but not released (REC-196, D-706 and D-722, D-480) are rows for T5 to **carry**.
 - **C8 · Stale pointers to removed documents.** Two code comments still cite `BIO_Membership_Architecture_v1.md` (`bio-plane/src/schema.mjs` near the memberships table, `bio-plane/test/membership.test.mjs` header). Only a module job changes product code (P7), so they are not edited now: the membership module's extraction job repoints them to v2, and T5 carries it as an entry.
+- **C9 · A fourth monolith.** `bio-plane/checks/bio-checks.mjs` is 16,591 lines: the whole check catalogue, imported by modules in every layer. T4 registers it as the legacy module `legacy-checks`, first in the order; each extracted module takes its own checks as its invariants. Its size adds to C4.
