@@ -226,6 +226,8 @@ import { getFormat } from "./formats.mjs";
    denylisted DAEMON_TOKEN be chosen every tick and refused every tick. A second
    local answer to the same question would age apart from the gate's (REC-46). */
 import { liveToken, sha256hex, instanceAiCredential, instanceClaudeToken } from "./tokens.mjs";
+/* D-525: the Drive shell sweep reads the ONE classifier `op=driveshells` answers with. */
+import { readDriveAddress, driveBaselineRow, classifyDriveBaseline } from "./drive.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
    suite pinning the two identical; REC-11's folded chore flips the direction. */
@@ -16737,6 +16739,82 @@ export class Store extends DurableObject {
          FROM bundles b WHERE (${gate.sql}) ORDER BY b.bundle_id`, ...gate.args),
     };
   }
+
+  /** D-525 — THE DRIVE SHELL SWEEP. Every bundle this viewer may see whose
+   *  `source.locator` is a harvestable Drive DOCUMENT address, with its baseline
+   *  classified by `classifyDriveBaseline` (`drive.mjs` carries the reasoning).
+   *  READ-ONLY: it lists and names the remedy, and never re-acquires — the
+   *  re-acquire is `op=acquire` on the document address, which CAP-8 routes
+   *  through the export and files as a NEW capture beside the old one.
+   *
+   *  WHAT THIS SWEEP CAN AND CANNOT SEE, stated because the sentence is
+   *  load-bearing: it sees bundles by the PROJECTED `source_locator` column
+   *  (`projectionOf`), so a bundle whose projection was never written is not
+   *  walked; it walks ONE PAGE (`limit`, then `after: cursor`), and its counts are that page's, and it sees a register only when `data/provenance.json` is held
+   *  INLINE (a register spilled to R2 is named in `unreadable`, never scored).
+   *  A Drive address that is not a document (folder, file, published, unknown)
+   *  is COUNTED in `not_documents` by shape — CAP-8 refuses to watch those, so
+   *  they carry no shell baseline this remedy could fix. */
+  static DRIVE_SHELLS_LIMIT_DEFAULT = 200;
+  static DRIVE_SHELLS_LIMIT_MAX = 1000;
+  /* A baseline sha's retrieval rows are one per (address, via) it was seen at — a handful. Bounded so the
+     per-row read cannot amplify; a sha that reaches the bound is judged on what was read and SAYS it was cut. */
+  static DRIVE_SHELLS_RETRIEVALS_MAX = 50;
+  driveShells({ viewer = null, limit = null, after = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    /* PAGED, op=projection's envelope: the per-bundle reads below run once per row, so the row source is
+       BOUNDED at the source (LIMIT, keyset on bundle_id) and the answer carries the bound actually applied and
+       the cursor to continue. The LIKE is a PREFILTER only — every Drive host contains `google.com/`, and the
+       verdict of what is Drive is `readDriveAddress`'s alone, applied to every row the prefilter admits. */
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0
+      ? Math.min(Store.DRIVE_SHELLS_LIMIT_MAX, Math.floor(asked)) : Store.DRIVE_SHELLS_LIMIT_DEFAULT;
+    const where = [`b.source_locator LIKE '%google.com/%'`, `(${gate.sql})`, ...(after ? [`b.bundle_id > ?`] : [])];
+    const raw = this.#rows(
+      `SELECT b.bundle_id AS id, b.source_locator AS locator, b.monitor_enabled AS monitored
+         FROM bundles b WHERE ${where.join(" AND ")} ORDER BY b.bundle_id LIMIT ?`,
+      ...gate.args, ...(after ? [after] : []), cap + 1);
+    /* One row past the bound, so `truncated` says MORE EXIST rather than "the page happened to be full". */
+    const truncated = raw.length > cap;
+    const rows = truncated ? raw.slice(0, cap) : raw;
+    const shells = [], exported = [], undetermined = [], noBaseline = [], unreadable = [], notDocuments = {};
+    let driveLinked = 0;
+    for (const r of rows) {
+      const drive = readDriveAddress(r.locator);
+      if (!drive) continue;
+      driveLinked++;
+      if (!drive.harvestable) { notDocuments[drive.shape] = (notDocuments[drive.shape] || 0) + 1; continue; }
+      const f = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
+      const base = { bundle: r.id, locator: r.locator, monitored: r.monitored === 1,
+                     export_address: drive.exportAddress, kind: drive.kind };
+      let reg = null;
+      if (f && typeof f.content === "string") { try { reg = JSON.parse(f.content); } catch { reg = null; } }
+      else if (f) { unreadable.push({ ...base, reason: "the register is not held inline" }); continue; }
+      if (f && !reg) { unreadable.push({ ...base, reason: "the register is not parsable JSON" }); continue; }
+      const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
+      const row = driveBaselineRow(docs, drive, r.locator);
+      const sha = row && row.capture && typeof row.capture.sha256 === "string" ? row.capture.sha256 : null;
+      const retrievals = sha ? this.#rows(
+        `SELECT address, via, retrieval_locator FROM captured_locators WHERE capture_sha=?
+           ORDER BY address_norm, via LIMIT ?`, sha, Store.DRIVE_SHELLS_RETRIEVALS_MAX) : [];
+      const c = classifyDriveBaseline({ drive, locator: r.locator, rows: docs, retrievals });
+      const entry = { ...base, ...c,
+        ...(retrievals.length === Store.DRIVE_SHELLS_RETRIEVALS_MAX ? { retrievals_truncated: true } : {}) };
+      if (c.verdict === "shell")
+        entry.reacquire = { op: "acquire", locator: r.locator, fetches: drive.exportAddress,
+          files: "a NEW capture of the export, under the document address, beside the shell's; nothing is overwritten",
+          then: "append the answer's `document` to data/provenance.json — op=monitor prefers the row naming the export address" };
+      ({ shell: shells, export: exported, undetermined, no_baseline: noBaseline })[c.verdict].push(entry);
+    }
+    return { ok: true, generated: new Date().toISOString().split(".")[0] + "Z",
+             swept: rows.length, limit: cap, truncated,
+             cursor: truncated ? rows[rows.length - 1].id : null,
+             drive: driveLinked, shells, export: exported, undetermined, no_baseline: noBaseline, unreadable,
+             not_documents: notDocuments,
+             counts: { drive: driveLinked, shells: shells.length, export: exported.length, undetermined: undetermined.length,
+                       no_baseline: noBaseline.length, unreadable: unreadable.length } };
+  }
+
 
   /** REC-25: may this viewer see this bundle at all? The D-15 predicate over a
    *  single row, used to gate the whole-image and single-file reads, which are
@@ -50547,6 +50625,9 @@ export class Store extends DurableObject {
                                        limit: url.searchParams.get("limit"),
                                        viewer: url.searchParams.get("viewer") }),
         index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
+        /* D-525: the Drive shell sweep, under the same D-15 stamp as the index. */
+        driveshells: () => this.driveShells({ viewer: url.searchParams.get("viewer"),
+          limit: url.searchParams.get("limit"), after: url.searchParams.get("after") || null }),
         /* REC-25: the gated backlink read — reverse edges into a bundle,
            filtered by the viewer's position (7.9). */
         backlinks: () => this.backlinks({ target: url.searchParams.get("target"),

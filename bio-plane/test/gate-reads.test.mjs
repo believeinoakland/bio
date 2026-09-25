@@ -760,6 +760,9 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
      query.mjs's one compilation point. */
   const GATED = {
     list: "REC-25", index: "REC-25", projection: "REC-25", image: "REC-25", file: "REC-25",
+    /* D-525: the Drive shell sweep walks `bundles` under `viewerPredicate` exactly as
+       op=index does and names bundle ids, so it is gated for REC-25's reason. */
+    driveshells: "D-525: Store#driveShells selects from `bundles` under viewerPredicate(viewer), op=index's gate",
     search: "the first gated read", backlinks: "REC-25", affordances: "REC-25",
     /* CORRECTED 2026-09-18 BY REC-130 / IC-141, NEVER EXEMPTED: MOVED HERE FROM
        THE UNGATED LIST, and the entry it replaces was wrong. It read "An UNRATIFIED

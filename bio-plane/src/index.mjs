@@ -1496,6 +1496,12 @@ const OPS = {
      the D-15 viewer stamp in the store, never by the class here — the same line
      `airuns` draws two rows down. */
   frontier:           { classes: ["admin", "member", "probe"],      mutating: false },
+  /* D-525 — THE DRIVE SHELL SWEEP: which Drive-linked bundles hold a baseline
+     captured from Google's application page rather than the export (a pre-CAP-8
+     acquire), so their monitor reads `modified` on every tick. A READ that lists
+     and names the remedy; it never re-acquires. Classes and the D-15 stamp are
+     op=index's, because it walks the same working corpus and names bundle ids. */
+  driveshells:        { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS READ (`OBSERVATION-LOG-DESIGN.md`
      section 4.2, section 6 row 2): *which of the four content-axis states is this
      capture in, and why*. A READ, so `mutating: false`.
@@ -11546,6 +11552,9 @@ export default {
         || op === "stats"
         /* D-464: `op=selectionlist`'s `bytes` sums every owner's selection rows, so it takes the same stamp. */
         || op === "selectionlist"
+        /* D-525: the Drive shell sweep walks `bundles` and names bundle ids, so it takes
+           op=index's stamp for op=index's reason (REC-25): an invisible bundle is not walked. */
+        || op === "driveshells"
         /* REC-138 / D-426: the ROSTER acts name a project, so one the caller cannot see must
            answer exactly as one that does not exist — asked of SIGHT before any positional test
            (`Store#inSight`). `by` (below) stays the positional half; this is the visibility half.
