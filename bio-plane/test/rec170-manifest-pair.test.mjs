@@ -1,4 +1,20 @@
-/* NEGATIVE CONTROL: RUN BY `test/rec170-manifest-pair.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ while it runs). Each arm armed ALONE from a per-arm pristine copy, restored and verified by sha256, by content AND by cmp. RUN 2026-09-23 by the REC-170 worker: baseline 13/0 * (a) SERVE THE NULL AGAIN, the row's own control -> 7/6, failing BY NAME at both "PER CASE" arms, both "THE REASON" arms, "THE SCALAR: Q" and "EACH CASE'S ENTRY IS WHAT op=publishedcase SERVES" (the same six the b5ce975a store fails) * (b) THE LIAR, one case's pair served as THE pair beside the per-case list -> 11/2, the two "THE SCALAR" arms alone * (c) FLAG EVERYTHING -> 12/1, the over-strictness arm alone * (d) INVENTED per-case pairs (the stored column) -> 10/3, both "PER CASE" arms and the publishedcase equality * (e) OVER-STRICTNESS, the list in descending order -> 13/0. EVERY ARM AS DECLARED; every restore sha256 MATCH, content IDENTICAL, cmp SAME (store.mjs 2,836,204 B). */
+/* NEGATIVE CONTROL: RUN BY `test/rec170-manifest-pair.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ while it runs). Each arm armed ALONE from a per-arm pristine copy, restored and verified by sha256, by content AND by cmp. RUN 2026-09-23 by the REC-170 worker: baseline 13/0 * (a) SERVE THE NULL AGAIN, the row's own control -> 7/6, failing BY NAME at both "PER CASE" arms, both "THE REASON" arms, "THE SCALAR: Q" and "EACH CASE'S ENTRY IS WHAT op=publishedcase SERVES" (the same six the b5ce975a store fails) * (b) THE LIAR, one case's pair served as THE pair beside the per-case list -> 11/2, the two "THE SCALAR" arms alone * (c) FLAG EVERYTHING -> 12/1, the over-strictness arm alone * (d) INVENTED per-case pairs (the stored column) -> 10/3, both "PER CASE" arms and the publishedcase equality * (e) OVER-STRICTNESS, the list in descending order -> 13/0. EVERY ARM AS DECLARED; every restore sha256 MATCH, content IDENTICAL, cmp SAME (store.mjs 2,836,204 B).
+ *
+ *   D-667 (declared and RUN 2026-09-25, WORKER D-667; D-564's pattern), THE RECORDER — every section now runs in
+ *   `block()` (D-548's recorder, d84-case-manifest.test.mjs); `bail()` THROWS where it tallied, disposed and exited, so
+ *   the subject is the SUITE and the arms break a section's FIXTURE. Re-run in one step:
+ *   `node test/d564-block.control.mjs rec170-manifest-pair` from bio-plane/. BASELINE -> **13 pass, 0 fail**, per section 0 (setup) 0/0,
+ *   1 2/0, 2 3/0, 3 8/0, foot reached.
+ *   SECTION 2's FIXTURE BROKEN — Q0's re-grade is promoted under a type the plane refuses (ENVELOPE_TYPE_DISAGREES);
+ *     section 3 reads case Y, which 2 produces. Declared: 2 DIES by name with tally -1 and 3 dies NAMING section 2,
+ *     while 1 reports its baseline tally
+ *     -> **2 pass, 2 fail**, `BLOCK 2 DIED: (fixture) Q0 re-graded to C: {"ok":false,"reason":
+ *     "ENVELOPE_TYPE_DISAGREES",…`, `BLOCK 3 DIED: rests on section 2, which did not produce CASE_Y, ED_Y, yQ, yS`,
+ *     section 1 at 2/0, foot reached, exit 1, as declared.
+ *   THE RECORDER DISARMED (`block()` rethrows) over the same fixture — declared: NO foot and no section tally, exit 1
+ *     -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real
+ *     suite hashed unchanged before and after).
+ */
 /* REC-170 — `op=publishedmanifest` SERVES A FINDING'S FROZEN PAIR PER CASE WHERE THE CASE DOCUMENTS
  * PINNING IT DISAGREE, and never a bare null or one case's pair as THE pair.
  *
@@ -87,13 +103,30 @@ const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json());
-/* A FIXTURE FAILURE ENDS THE RUN WITH A TALLY, NEVER A BARE THROW. */
-const bail = async (what, r) => {
-  t(`FIXTURE: ${what}`, [r?.ok === true, r?.reason ?? null], [true, null]);
-  if (r && r.ok !== true) console.log(`         detail ${JSON.stringify(r).slice(0, 900)}`);
-  console.log(`\nrec170-manifest-pair.test.mjs: ${pass} pass, ${fail} fail`);
-  await mf.dispose();
-  process.exit(1);
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure, so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 const must = async (what, r) => { if (!r || r.ok !== true) await bail(what, r); return r; };
 
@@ -117,11 +150,7 @@ const enrol = async (memberId, role, caps) => {
   if (!lg?.token) await bail(`login ${memberId}`, lg);
   return lg.token;
 };
-/* ONE member owns both projects (D-442's and REC-166's precedent): what distinguishes the cases is the
-   PROJECT and the moment, not who acts. */
-const IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
-await must("register iris's signing key",
-  await POST("op=signeradd&token=adm-r170", { keyB64, memberId: "iris", comment: "iris laptop" }));
+let IRIS;
 
 /* ------------------------------------------------------------- DOCUMENTS (D-442's fixture shapes) */
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
@@ -206,27 +235,17 @@ const createProject = async (label, text) => {
 };
 
 const LEDGER = "INFO-2026-4170-ledger";
-await must(`promote ${LEDGER}`, await promote(LEDGER, infoMd(LEDGER), "information"));
 const Q0 = "INQ-2026-4170-under";   /* the sub-inquiry whose letter Q and S inherit */
 const q0Md = (grade, stamp) => inquiryMd(Q0, { title: "What does the ledger show?", stamp,
   basis: [{ target: LEDGER, grade }] });
-await must(`promote ${Q0}`, await promote(Q0, q0Md("B", LATER), "inquiry"));
 const V = { name: "the paper trail", claim: "The transfer followed the process the council adopted in 2024.",
             description: "The ledger shows the transfer was authorised." };
 const Q = "INQ-2026-4170-q", S = "INQ-2026-4170-s", R = "INQ-2026-4170-r";
-await must(`promote ${Q}`, await promote(Q, inquiryMd(Q, { title: "Did the transfer follow the process?",
-  basis: [{ target: Q0 }], version: V }), "inquiry"));
-await must(`promote ${S}`, await promote(S, inquiryMd(S, { title: "Was the vote taken?",
-  basis: [{ target: Q0 }], version: V }), "inquiry"));
-await must(`promote ${R}`, await promote(R, inquiryMd(R, { title: "Was the ledger filed?",
-  basis: [{ target: LEDGER, grade: "B" }], version: V }), "inquiry"));
 const FINDINGS = [Q, S, R];
-const A = await createProject("oversight", projectMd("Oversight", FINDINGS));
-const B = await createProject("neighbours", projectMd("Neighbours", FINDINGS));
+let A, B;
 
 const act = async (verb, target, version, extra = "") =>
   POST(`op=version${verb}&token=${IRIS}&target=${enc(target)}&version=${enc(version)}${extra}`, {});
-for (const f of FINDINGS) await must(`accept ${f}`, await act("accept", f, V.name, `&reason=${enc("the evidence holds")}`));
 const FALSIFIER = "a council minute showing the vote was never taken";
 const concludeAll = async (project) => {
   for (const f of FINDINGS) {
@@ -264,19 +283,42 @@ const LEGACY_KEYS = ["bundle_id", "edition", "title", "bundle_sha", "ratified_at
                      "strength", "required"];
 const capOf = (pair) => (pair || []).find((a) => a.axis === "capture")?.grade ?? null;
 
+await block("0 (setup)", async () => {
+/* ONE member owns both projects (D-442's and REC-166's precedent): what distinguishes the cases is the
+   PROJECT and the moment, not who acts. */
+IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
+await must("register iris's signing key",
+  await POST("op=signeradd&token=adm-r170", { keyB64, memberId: "iris", comment: "iris laptop" }));
+await must(`promote ${LEDGER}`, await promote(LEDGER, infoMd(LEDGER), "information"));
+await must(`promote ${Q0}`, await promote(Q0, q0Md("B", LATER), "inquiry"));
+await must(`promote ${Q}`, await promote(Q, inquiryMd(Q, { title: "Did the transfer follow the process?",
+  basis: [{ target: Q0 }], version: V }), "inquiry"));
+await must(`promote ${S}`, await promote(S, inquiryMd(S, { title: "Was the vote taken?",
+  basis: [{ target: Q0 }], version: V }), "inquiry"));
+await must(`promote ${R}`, await promote(R, inquiryMd(R, { title: "Was the ledger filed?",
+  basis: [{ target: LEDGER, grade: "B" }], version: V }), "inquiry"));
+A = await createProject("oversight", projectMd("Oversight", FINDINGS));
+B = await createProject("neighbours", projectMd("Neighbours", FINDINGS));
+for (const f of FINDINGS) await must(`accept ${f}`, await act("accept", f, V.name, `&reason=${enc("the evidence holds")}`));
+});
+
+let pubX, CASE_X, ED_X, PIN, xQ, xS, xR;
+
 /* =======================================================================
    1. PROJECT A PUBLISHES CASE X OVER {Q, S, R}; Q AND R RATIFY. S WAITS.
    ======================================================================= */
 console.log("\n--- 1. case X (project A) over Q, S, R; Q and R ratify under X alone ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, A });
 await concludeAll(A);
-const pubX = await publish(A);
+pubX = await publish(A);
 if (pubX?.ok !== true) await bail("A publishes case X", pubX);
 await ratifyCase(async (q, b) => POST(q, b), pubX, { dir, key: "iris", token: IRIS });
-const CASE_X = pubX.caseId, ED_X = pubX.caseDocument?.edition ?? pubX.edition;
-const PIN = Object.fromEntries(await Promise.all(FINDINGS.map(async (f) => [f, await shaOf(f)])));
+CASE_X = pubX.caseId; ED_X = pubX.caseDocument?.edition ?? pubX.edition;
+PIN = Object.fromEntries(await Promise.all(FINDINGS.map(async (f) => [f, await shaOf(f)])));
 await must("Q ratifies under X", await ratify(Q, PIN[Q]));
 await must("R ratifies under X", await ratify(R, PIN[R]));
-const xQ = await docPair(CASE_X, ED_X, Q), xS = await docPair(CASE_X, ED_X, S), xR = await docPair(CASE_X, ED_X, R);
+xQ = await docPair(CASE_X, ED_X, Q); xS = await docPair(CASE_X, ED_X, S); xR = await docPair(CASE_X, ED_X, R);
 t("(fixture) case X's document freezes a pair for each member, Q and S inheriting Q0's capture B — the non-empty "
 + "guard for every per-case arm",
   [xQ.length >= 2, capOf(xQ), capOf(xS), capOf(xR)], [true, "B", "B", "B"]);
@@ -286,20 +328,25 @@ t("(fixture) case X's document freezes a pair for each member, Q and S inheritin
     [Object.keys(row || {}).sort(), JSON.stringify(row?.strength) === JSON.stringify(xQ)],
     [[...LEGACY_KEYS].sort(), true]);
 }
+});
 
+let pubY, CASE_Y, ED_Y, yQ, yS, yR;
 /* =======================================================================
    2. Q0 IS RE-GRADED; PROJECT B PUBLISHES CASE Y OVER THE SAME THREE.
    ======================================================================= */
 console.log("\n--- 2. Q0 re-graded to C; case Y (project B) over the same three findings ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS, B });
+needs("1", { PIN, xQ, xR });
 await must("Q0 re-graded to C", await promote(Q0, q0Md("C", "2026-07-03T00:00:00Z"), "inquiry", await shaOf(Q0)));
 t("(fixture) re-grading Q0 moves NONE of Q, S, R — their bytes are what X pinned",
   await Promise.all(FINDINGS.map(async (f) => (await shaOf(f)) === PIN[f])), [true, true, true]);
 await concludeAll(B);
-const pubY = await publish(B, { newCase: true });
+pubY = await publish(B, { newCase: true });
 if (pubY?.ok !== true) await bail("B publishes case Y", pubY);
 await ratifyCase(async (q, b) => POST(q, b), pubY, { dir, key: "iris", token: IRIS });
-const CASE_Y = pubY.caseId, ED_Y = pubY.caseDocument?.edition ?? pubY.edition;
-const yQ = await docPair(CASE_Y, ED_Y, Q), yS = await docPair(CASE_Y, ED_Y, S), yR = await docPair(CASE_Y, ED_Y, R);
+CASE_Y = pubY.caseId; ED_Y = pubY.caseDocument?.edition ?? pubY.edition;
+yQ = await docPair(CASE_Y, ED_Y, Q); yS = await docPair(CASE_Y, ED_Y, S); yR = await docPair(CASE_Y, ED_Y, R);
 t("(fixture) Y pins the SAME shas as X, and its document freezes C for Q and S and X's own pair for R — the two "
 + "documents DISAGREE about Q and S and AGREE about R",
   [pubY.findings?.every((f) => f.version_sha ? f.version_sha === PIN[f.target] : true) ?? null,
@@ -311,6 +358,7 @@ t("(fixture) S ratifies for the FIRST time under both documents: the act says it
   [ratS?.ok, ratS?.frozenFrom, ratS?.strengthUndetermined], [true, "case_document", true]);
 await must("Q re-ratifies (existing bytes)", await ratify(Q, PIN[Q]));
 await must("R re-ratifies (existing bytes)", await ratify(R, PIN[R]));
+});
 
 /* =======================================================================
    3. THE MANIFEST: EVERY CASE ANSWERS, EACH NAMED; NONE IS PICKED.
@@ -331,6 +379,9 @@ const perCase = async (id, x, y, [perLabel, scalarLabel, reasonLabel]) => {
                   JSON.stringify(row?.strength) === JSON.stringify(y)], [null, false, false]);
   t(reasonLabel, row?.strengthUndetermined, "CASES_DISAGREE");
 };
+await block("3", async () => {
+needs("1", { CASE_X, ED_X, xQ, xS, xR });
+needs("2", { CASE_Y, ED_Y, yQ, yS });
 await perCase(S, xS, yS, [
   "PER CASE: S (first ratified under BOTH documents — the bare null) — each case's frozen pair, named by its case and edition",
   "THE SCALAR: S — strength is NULL, never one case's pair as THE pair",
@@ -357,7 +408,18 @@ await perCase(Q, xQ, yQ, [
     [Object.keys(row || {}).sort(), JSON.stringify(row?.strength) === JSON.stringify(xR)],
     [[...LEGACY_KEYS].sort(), true]);
 }
+});
 
-console.log(`\nrec170-manifest-pair.test.mjs: ${pass} pass, ${fail} fail`);
+/* D-667 (D-564's pattern): every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "1", "2", "3"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nrec170-manifest-pair.test.mjs: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

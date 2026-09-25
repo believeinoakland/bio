@@ -37,6 +37,15 @@
  *   RECIPIENT rows) is REC-212's subject, not this row's, and an arm there breaks the case document as
  *   well as the review copy — so it is not this suite's control and is named here so a reader does not
  *   read its absence as an untested claim. Block 3 asserts the recipient property positively instead.
+ *   D-667 (RUN 2026-09-25 by WORKER D-667, D-564's pattern), THE RECORDER — every section now runs in
+ *   `block()` (D-548's recorder), so the arms break a section's FIXTURE. Re-run in one step: `node
+ *   test/d564-block.control.mjs rec213-reviewcopy-writer` from bio-plane/. BASELINE -> **19 pass, 0 fail**, per
+ *   section 0 (setup) 0/0, 0b (corpus) 0/0, 1..6 3/0, 6/0, 3/0, 1/0, 4/0, 2/0, foot reached — the same 19 as before.
+ *     (d667-f) SECTION 5's FIXTURE BROKEN — the ED2 inquiry's promote type `"inquiry"` -> `"nosuchtype"`. MEASURED:
+ *       **15 pass, 1 fail**, exit 1, foot reached, `BLOCK 5 DIED: (fixture) promote INQ-2026-2130-ed2` (the plane
+ *       answered SURFACE_NO_RUN first); every other section at its baseline tally, 6 at 2/0 after it.
+ *     (d667-g) THE RECORDER DISARMED (`block()` rethrows) over (d667-f)'s fixture — MEASURED: no foot and no
+ *       section tally (-1), exit 1.
  *
  * REC-213 / BIO_Publication_v0_1.md §6A + §3 rule 11 (BOB #33 RULED, 2026-09-24 19:06Z) —
  * `op=reviewcopy`'s LIVE STATEMENT LIST COULD SHOW THE WRITER'S OWN ACKNOWLEDGEMENT AMONG THE
@@ -119,12 +128,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 700)}`);
-  fail++;
-  console.log(`\nrec213-reviewcopy-writer: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -144,14 +171,6 @@ const enrol = async (memberId, password, role, capabilities) => {
   if (!lg.token) bail(`login ${memberId}`, lg);
   return lg.token;
 };
-/* ADMINS_FIRST: administrative access is shared before any ordinary member exists, so the second
-   enrolment is an administrator too. omar takes no part in any block below. */
-await enrol("nadia", "nadia-passphrase-213", "admin", ["contribute", "publish", "create_projects"]);
-await enrol("omar", "omar-passphrase-213", "admin", ["contribute", "publish"]);
-/* iris OWNS the project (she issues grants and publishes); ella and pat are JOINED participants.
-   ella is the member who becomes the statement's writer AFTER acknowledging it; pat is the third
-   member the over-strictness arm needs, so that the withholding can be shown to bite on ONE name
-   and not on the class. */
 const dir = mkdtempSync(join(tmpdir(), "rec213-"));
 const mkKey = (who) => {
   execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", who, "-f", join(dir, who), "-q"]);
@@ -164,13 +183,25 @@ const signCase = (who, caseId, edition, docSha) => {
     { stdio: ["ignore", "ignore", "ignore"] });
   return readFileSync(f + ".sig", "utf8");
 };
-const IRIS = await enrol("iris", "iris-passphrase-213", "member", ["contribute", "publish"]);
-const ELLA = await enrol("ella", "ella-passphrase-213", "member", ["contribute", "publish"]);
-const PAT = await enrol("pat", "pat-passphrase-213", "member", ["contribute", "publish"]);
+/* D-667: the values a later section reads, declared once here and ASSIGNED inside the section that makes them. */
+let IRIS, ELLA, PAT, PROJ, TURN_ARGS, D1, CB;
+console.log("\n--- 0. setup: two administrators, iris, ella and pat, and the project ella and pat have joined ---");
+await block("0 (setup)", async () => {
+/* ADMINS_FIRST: administrative access is shared before any ordinary member exists, so the second
+   enrolment is an administrator too. omar takes no part in any block below. */
+await enrol("nadia", "nadia-passphrase-213", "admin", ["contribute", "publish", "create_projects"]);
+await enrol("omar", "omar-passphrase-213", "admin", ["contribute", "publish"]);
+/* iris OWNS the project (she issues grants and publishes); ella and pat are JOINED participants.
+   ella is the member who becomes the statement's writer AFTER acknowledging it; pat is the third
+   member the over-strictness arm needs, so that the withholding can be shown to bite on ONE name
+   and not on the class. */
+IRIS = await enrol("iris", "iris-passphrase-213", "member", ["contribute", "publish"]);
+ELLA = await enrol("ella", "ella-passphrase-213", "member", ["contribute", "publish"]);
+PAT = await enrol("pat", "pat-passphrase-213", "member", ["contribute", "publish"]);
 
 rP(await POST("op=signeradd&token=adm-r213", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 
-const PROJ = await makePublishingProject({
+PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r213", owner: "iris",
   name: "PROJ-2026-2130-second-reader", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 for (const [h, tok] of [["ella", ELLA], ["pat", PAT]]) {
@@ -179,6 +210,7 @@ for (const [h, tok] of [["ella", ELLA], ["pat", PAT]]) {
   const jn = rP(await GET(`op=projectjoin&token=${tok}&projectId=${encodeURIComponent(PROJ)}`));
   if (jn?.state !== "joined") bail(`projectjoin ${h}`, jn);
 }
+});
 
 /* ---- the corpus: d150's and rec212's shapes, lifted rather than invented ---- */
 let snapSeq = 0;
@@ -233,6 +265,8 @@ const INFO = "INFO-2026-2130-memo";
 const TURN = "INQ-2026-2130-turn";     /* blocks 1-4: ella acknowledges, then becomes the writer */
 const FRESH = "INQ-2026-2130-fresh";   /* block 1's zero arm: nobody has acknowledged anything */
 const Q = { [TURN]: "Was the transfer authorised?", [FRESH]: "Was notice given?" };
+console.log("\n--- 0b. the corpus: the memo, and the two inquiries concluded on it ---");
+await block("0b (corpus)", async () => {
 if ((await promote(INFO, infoMd(INFO), "information", "collected")).ok === false) bail("promote info", {});
 for (const id of Object.keys(Q)) {
   const r = await promote(id, withAdoptableReading(inquiryMd(id, Q[id], INFO)), "inquiry", "open");
@@ -243,6 +277,7 @@ for (const id of Object.keys(Q)) {
     + adoptedVersionParam()));
   if (!c.ok) bail(`conclude ${id}`, c);
 }
+});
 
 const S_ONE = "This case covers the FY2024 transfer only (rec213); the FY2023 memo is out of it.";
 const S_TWO = "This case covers the FY2024 transfer only (rec213, as ella reworded it); the memo is out.";
@@ -270,10 +305,12 @@ const listedOf = (copy) => (saOf(copy).acknowledgements || []).map((a) => [a.kin
 
 /* =========================================================================== 1 */
 console.log("\n--- 1. the plain case: a second reader is LISTED, and the withheld count says ZERO in words ---");
-const TURN_ARGS = args("turn");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
+TURN_ARGS = args("turn");
 const D1r = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...TURN_ARGS, targets: [TURN] })));
 if (!D1r?.ok) bail("casedraft TURN", D1r);
-const D1 = D1r.draftId;
+D1 = D1r.draftId;
 {
   const before = await copyOf(D1, IRIS);
   t("FIXTURE: iris wrote the statement, so the SERVER stamps her as its writer, and the fresh list is empty",
@@ -296,9 +333,13 @@ const D1 = D1r.draftId;
      /no acknowledgement of this statement by iris, who wrote it/.test(saOf(after).withheld_stated || "")],
     [[["participant", "ella"]], 0, true]);
 }
+});
 
 /* =========================================================================== 2 */
 console.log("\n--- 2. ACCEPTS-WHEN: the writer's own row is ABSENT from the list and COUNTED beside it ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS, ELLA });
+needs("1", { D1, TURN_ARGS });
 {
   /* ella rewords the sentence and puts it back. `statement_by` follows the BYTES (REC-193), so she is
      now the writer of a sentence she acknowledged while somebody else was. Nothing is deleted: the
@@ -344,10 +385,14 @@ console.log("\n--- 2. ACCEPTS-WHEN: the writer's own row is ABSENT from the list
      (await ack(`draft=${D1}&token=${ELLA}`))?.author],
     ["STATEMENT_ACK_BY_ITS_AUTHOR", "ella"]);
 }
+});
 
 /* =========================================================================== 3 */
 console.log("\n--- 3. OVER-STRICTNESS: the withholding bites on ONE name, not on the class ---");
 let G1 = null;
+await block("3", async () => {
+needs("0 (setup)", { IRIS, PAT });
+needs("1", { D1 });
 {
   const a2 = await ack(`draft=${D1}&token=${PAT}`);
   if (!a2?.ok) bail("pat acknowledges D1", a2);
@@ -373,10 +418,13 @@ let G1 = null;
      saOf(bySecret).withheld_stated === saOf(copy2).withheld_stated],
     [[["participant", "pat"], ["recipient", G1.grantId]], 1, true]);
 }
+});
 
 /* =========================================================================== 4 */
 console.log("\n--- 4. a NEW case's document is untouched by the draft's readings (REC-194's narrowing, held) ---");
-let CB = null;
+await block("4", async () => {
+needs("0 (setup)", { IRIS });
+needs("1", { TURN_ARGS });
 {
   const P = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...TURN_ARGS, targets: [TURN] })));
   if (P?.ok === false || !P?.caseDocument?.doc_sha) bail("publish TURN", P);
@@ -398,9 +446,13 @@ let CB = null;
       sig: signCase("iris", CB, 1, P.caseDocument.doc_sha) }));
   if (rr?.ok === false) bail("caseratify CB edition 1", rr);
 }
+});
 
 /* =========================================================================== 5 */
 console.log("\n--- 5. the two doors are ONE READ: at a BINDABLE identity both withhold the same member ---");
+await block("5", async () => {
+needs("0 (setup)", { IRIS, ELLA, PAT, PROJ });
+needs("4", { CB });
 {
   /* A DRAFT THAT NAMES AN EXISTING CASE STANDS AT THAT CASE'S NEXT EDITION, so every reading given
      through it is BOUND to a case identity and reaches `op=publish` (REC-194). That is the only
@@ -464,9 +516,13 @@ console.log("\n--- 5. the two doors are ONE READ: at a BINDABLE identity both wi
      (doc?.text || "").includes("- ella, a participant of " + PROJ)],
     [true, 1, ["pat"], "ella", "iris", false]);
 }
+});
 
 /* =========================================================================== 6 */
 console.log("\n--- 6. the corpus, and what this suite could NOT drive ---");
+await block("6", async () => {
+needs("0 (setup)", { IRIS, PAT });
+needs("1", { D1 });
 {
   const Dfr = rP(await POST(`op=casedraft&token=${PAT}`,
     withRoles({ ...args("fresh", { statement: S_ONE }), targets: [FRESH] })));
@@ -498,7 +554,18 @@ console.log("\n--- 6. the corpus, and what this suite could NOT drive ---");
   console.log("         NOT DRIVEN (said, never scored): the UNDETERMINED withholding (`statement_by` NULL on a "
     + "draft) — unreachable through any act since REC-193 stamps the column at every statement write.");
 }
+});
 
-console.log(`\nrec213-reviewcopy-writer: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
+/* D-667: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "0b (corpus)", "1", "2", "3", "4", "5", "6"];
+console.log("\n--- per-section tallies (D-667: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nrec213-reviewcopy-writer: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

@@ -6,7 +6,23 @@
    uniquely-named per-arm pristine copy taken INSIDE THIS WORKTREE (never a
    shared scratchpad: PL-10's harness was overwritten mid-turn by a concurrent
    worker, and UI-38 met an NC harness that reported a byte-identical restore
-   over a file it had not restored). */
+   over a file it had not restored).
+
+   D-667 (declared and RUN 2026-09-25, WORKER D-667), THE RECORDER — every section now runs in `block()` (D-564's
+   pattern, D-548's recorder), and the subject is the SUITE, so the arms break a section's FIXTURE. Re-run in one step:
+   `node test/d564-block.control.mjs caselifecycle` from bio-plane/. BASELINE -> **68 pass, 0 fail**, per section
+   0 (setup) 0/0, 0b (findings) 0/0, 0c (cases) 5/0, 1..10 5/0, 7/0, 5/0, 6/0, 8/0, 13/0, 4/0, 3/0, 6/0, 6/0, foot
+   reached, exit 0 — the same 68 labels, in the same order, as before the change.
+   (f) SECTION 8's FIXTURE BROKEN — the INFORMATION re-promote's type `"information"` -> `"nosuchtype"` (the plane
+     answers ENVELOPE_TYPE_DISAGREES) -> MEASURED **66 pass, 1 fail**, `BLOCK 8 DIED: (fixture) promote
+     INFO-2026-4400-left-out`, section 8 at -1 (it passed one arm before dying, hence 66), every other section at its
+     baseline tally, 9 and 10 at 6/0 after it, foot reached, exit 1. As declared.
+   (g) THE RECORDER DISARMED (`block()` rethrows) over (f)'s fixture -> MEASURED: no foot, no section tally, exit 1.
+     As declared.
+   NOTE FOR THE ARMS BELOW: arm (d)'s recorded figure (0 pass, 1 FAIL — the fixture's first `bail()` assertion) was
+   measured when `bail()` EXITED; it now THROWS inside block "0c (cases)", so re-run under D-667 the arm would read
+   0c DIED and the sections after it running (and failing) against a store with no cases. Not re-run here:
+   `caselifecycle.control.mjs` arms src/store.mjs, outside this landing's scope. */
 
 /* CASE-4 / DEC-72 — LIFECYCLE AND THE REVISION FLAG.
  *
@@ -122,6 +138,42 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted.
+   Before it, `bail()` printed the tally and EXITED on the FIRST fixture failure, and the other fixture helpers
+   (`enrol`, `mustPromote`, the setup's `conclude`) threw at top level, so one broken fixture ended the run and every
+   later section went unmeasured. Now a fixture failure is a THROW that `block()` records as ONE failure naming its
+   section, and the sections after it still run and report. Each section's own tally is printed at the foot; a
+   section that DIED prints -1, never the partial count it reached; a section expected but never reported fails by
+   name. A section resting on an earlier one's values asks for them with `needs()` and dies naming the section it
+   rests on.
+   THIS SUITE'S `bail(label, r)` KEEPS ITS OWN SEMANTICS: it is an ASSERTION first — `t(label, …)` scores the
+   fixture step PASS when the plane answered ok (five of the 68 passes are these), and FAIL with the plane's own
+   refusal when it did not — and only then, on a refusal, it THROWS where it used to exit. Control arm (d) at the foot
+   is why the labelled assertion stays: a fixture killed by an over-strict plane must fail at a NAME. */
+const bail = (label, r) => {
+  t(label, [r?.ok === true, r?.reason ?? null], [true, null]);
+  if (r?.ok !== true) throw new Error(`(fixture) ${label}: ${JSON.stringify(r).slice(0, 600)}`);
+  return r;
+};
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
+};
+/* D-667: the values a later section reads, declared once here and ASSIGNED inside the block that makes them. */
+let VERA, WREN, SIGNER_FOR, V_PROJECT, W_PROJECT, vE1, V_SIGNED_1, V_CASE, W_SIGNED_1, W_CASE;
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const GET = async (q) => (await mf.dispatchFetch(`http://x/api/?${q}`)).json();
@@ -154,17 +206,18 @@ const enrol = async (memberId, password, role, capabilities) => {
   const add = rP(await POST("op=memberadd&token=adm-case4",
     { memberId, cover: `cover for ${memberId}`, role, capabilities }));
   const en = rP(await POST("op=enroll", { invite: add.invite, handle: memberId, password }));
-  if (!en.ok) throw new Error(`enroll ${memberId}: ${JSON.stringify(en)}`);
+  if (!en.ok) throw new Error(`(fixture) enroll ${memberId}: ${JSON.stringify(en)}`);
   const lg = rP(await POST("op=login", { role: `member:${memberId}`, password }));
-  if (!lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg)}`);
+  if (!lg.token) throw new Error(`(fixture) login ${memberId}: ${JSON.stringify(lg)}`);
   return lg.token;
 };
 /* TWO administrators before any ordinary member (ADMINS_FIRST). vera and wren
    each own a project, because block 7's whole point is TWO owning projects. */
+await block("0 (setup)", async () => {
 await enrol("nadia", "nadia-passphrase-33", "admin", ["contribute", "publish", "create_projects"]);
 await enrol("omar", "omar-passphrase-33", "admin", ["contribute", "publish"]);
-const VERA = await enrol("vera", "vera-passphrase-33", "member", ["contribute", "publish"]);
-const WREN = await enrol("wren", "wren-passphrase-33", "member", ["contribute", "publish"]);
+VERA = await enrol("vera", "vera-passphrase-33", "member", ["contribute", "publish"]);
+WREN = await enrol("wren", "wren-passphrase-33", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-case4", { keyB64: mkKey("vera"), memberId: "vera", comment: "vera laptop" }));
 rP(await POST("op=signeradd&token=adm-case4", { keyB64: mkKey("wren"), memberId: "wren", comment: "wren laptop" }));
 
@@ -172,7 +225,8 @@ rP(await POST("op=signeradd&token=adm-case4", { keyB64: mkKey("wren"), memberId:
    two projects, two attestors — block 7's whole point is that one project acting
    does not discharge another's flags, so the two ceremonies must be signed by two
    different people or the arm would be over one production asked twice. */
-const SIGNER_FOR = { [VERA]: "vera", [WREN]: "wren" };
+SIGNER_FOR = { [VERA]: "vera", [WREN]: "wren" };
+});
 const listRow = async (id) => ((await GET(`op=list&token=${VERA}&limit=1000`)).result?.bundles
   || (await GET(`op=list&token=${VERA}&limit=1000`)).result || [])
   .find((b) => b.bundle_id === id);
@@ -249,7 +303,7 @@ const promote = async (tok, id, md, type, state = "open", extra = {}) => rP(awai
 }));
 const mustPromote = async (...a) => {
   const r = await promote(...a);
-  if (r.ok === false) throw new Error(`promote ${a[1]}: ${JSON.stringify(r)}`);
+  if (r.ok === false) throw new Error(`(fixture) promote ${a[1]}: ${JSON.stringify(r)}`);
   return r;
 };
 /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
@@ -279,11 +333,15 @@ const FREE = "INQ-2026-4400-never-published";
 const OPEN = "INQ-2026-4400-still-open";
 
 const DOC_CAP_SHA = sha("caselifecycle-INFO_A-bytes");
+const inqBody = (id) => inquiryMd(id, { question: "Was the sewer transfer authorised?",
+  refs: [INFO_A], legs: [{ target: INFO_A, grade: "B", axis: "capture", source: "capture" }] });
+/* D-667: the findings and the two projects are block "0b (findings)"; `inqBody` moved up out of it unchanged,
+   because section 8 reads it too. */
+await block("0b (findings)", async () => {
+needs("0 (setup)", { VERA, WREN });
 await mustPromote(VERA, INFO_A, infoMd(INFO_A), "information", "collected",
   { register: [{ path: "snapshots/source.bin", sha256: DOC_CAP_SHA, bytes: 512, encoding: "binary" }] });
 await mustPromote(VERA, INFO_B, infoMd(INFO_B), "information", "collected");
-const inqBody = (id) => inquiryMd(id, { question: "Was the sewer transfer authorised?",
-  refs: [INFO_A], legs: [{ target: INFO_A, grade: "B", axis: "capture", source: "capture" }] });
 /* REC-136: only the three this suite concludes carry an adoptable reading, so
    OPEN publishes exactly the act set it did. */
 for (const id of [V_PUB, W_PUB, FREE, OPEN])
@@ -292,17 +350,18 @@ for (const id of [V_PUB, W_PUB, FREE, OPEN])
 for (const [tok, id] of [[VERA, V_PUB], [WREN, W_PUB], [VERA, FREE]]) {
   const c = await conclude(tok, id, "The transfer rests on a memo nobody adopted.",
     "An adopted resolution naming the transfer would overturn this.");
-  if (!c.ok) throw new Error(`conclude ${id}: ${JSON.stringify(c)}`);
+  if (!c.ok) throw new Error(`(fixture) conclude ${id}: ${JSON.stringify(c)}`);
 }
 
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); the
    old ids are the fixtures' names and V_PROJECT / W_PROJECT are the returned, minted ids. */
-const V_PROJECT = await makePublishingProject({
+V_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case4", owner: "vera",
   name: "PROJ-2026-0400-vera", created: NOW, updated: LATER });
-const W_PROJECT = await makePublishingProject({
+W_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case4", owner: "wren",
   name: "PROJ-2026-0400-wren", created: NOW, updated: LATER });
+});
 
 /* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER — see caseceremony.mjs. The
    revision FLAG this suite is about is raised against a case edition, and a case
@@ -323,21 +382,13 @@ const publishCase = async (tok, project, body, { sign = true, key = null } = {})
    this fixture's first draft. That refusal is CASE-2's and this suite is not
    about it, so the fixture states this edition's limits in this edition's words
    rather than the suite reaching around the gate. */
-/* A FIXTURE FAILURE IS REPORTED BY NAME AND WITH A TALLY, NEVER THROWN — and
-   this helper exists because a control arm PROVED it matters rather than because
-   it reads tidier. Arm (d) widens the case relation to every `concluded`
-   finding, which is so over-strict that `op=publish` refuses the FIRST
-   publication (`ALREADY_A_CASE_MEMBER`) and the fixture cannot be built at all.
-   With a bare `throw` the suite died before printing its own summary and the
-   control read `(suite produced no tally)` — a crash names nothing, which is
-   CASE-2's recorded finding arriving here. Now the arm fails at a labelled
-   assertion carrying the plane's own refusal, and the run still ends with a
-   tally the driver can read. */
-const bail = (label, r) => {
-  t(label, [r?.ok === true, r?.reason ?? null], [true, null]);
-  if (r?.ok !== true) { console.log(`\ncaselifecycle: ${pass} pass, ${fail} fail`); process.exit(1); }
-  return r;
-};
+/* A FIXTURE FAILURE IS REPORTED BY NAME AND WITH A TALLY — and `bail()` exists because a control arm PROVED it
+   matters rather than because it reads tidier. Arm (d) widens the case relation to every `concluded` finding, which
+   is so over-strict that `op=publish` refuses the FIRST publication (`ALREADY_A_CASE_MEMBER`) and the fixture cannot
+   be built at all. With a bare `throw` the suite died before printing its own summary and the control read `(suite
+   produced no tally)` — a crash names nothing, which is CASE-2's recorded finding arriving here. D-667: `bail()` now
+   stands beside `block()` near the top of the file; it still fails at a labelled assertion carrying the plane's own
+   refusal, then throws, and `block()` records the section and lets the rest run. */
 
 const CEREMONY = (n) => ({
   scope: "Whether the FY2024 sewer transfer was authorised, on the documents in hand.",
@@ -353,19 +404,21 @@ const CEREMONY = (n) => ({
 /* ===================================================================== 0
  * THE FIXTURE, ARMED AND PROVED BEFORE ANYTHING IS ASSERTED.
  * =================================================================== */
-const vE1 = bail("FIXTURE: vera's project publishes its finding as a case at edition 1",
+await block("0c (cases)", async () => {
+needs("0b (findings)", { V_PROJECT, W_PROJECT });
+vE1 = bail("FIXTURE: vera's project publishes its finding as a case at edition 1",
   await publishCase(VERA, V_PROJECT, { target: V_PUB, ...CEREMONY(1) }));
 const vRat1 = bail("FIXTURE: and a member with a real ed25519 key ratifies it",
   await ratify("vera", VERA, V_PUB));
-const V_SIGNED_1 = vRat1.signedSha;           /* THE EXPECTATION, FROM THE SIGNATURE */
-const V_CASE = vE1.caseId;
+V_SIGNED_1 = vRat1.signedSha;           /* THE EXPECTATION, FROM THE SIGNATURE */
+V_CASE = vE1.caseId;
 
 const wE1 = bail("FIXTURE: wren's project publishes ITS finding as a SECOND case, at that case's edition 1",
   await publishCase(WREN, W_PROJECT, { target: W_PUB, ...CEREMONY(1) }));
 const wRat1 = bail("FIXTURE: and wren ratifies it under wren's own key",
   await ratify("wren", WREN, W_PUB));
-const W_SIGNED_1 = wRat1.signedSha;
-const W_CASE = wE1.caseId;
+W_SIGNED_1 = wRat1.signedSha;
+W_CASE = wE1.caseId;
 
 console.log("\n=== CASE-4 / DEC-72 · `published` leaves the state machine; the precondition and the flag stay ===");
 console.log(`  case ${V_CASE} (${V_PROJECT}) · member ${V_PUB} pinned at ${String(V_SIGNED_1).slice(0, 12)}…`);
@@ -376,12 +429,13 @@ t("FIXTURE ARMED: two cases exist, owned by two DIFFERENT projects, each with on
   [V_CASE !== W_CASE, V_PROJECT !== W_PROJECT,
    (await anonCase(`id=${V_PUB}`))?.project, (await anonCase(`id=${W_PUB}`))?.project],
   [true, true, V_PROJECT, W_PROJECT]);
+});
 
 /* ===================================================================== 1
  * `published` IS OUT OF THE MACHINE.
  * =================================================================== */
 console.log("\n--- 1. the state is gone from the inquiry machine, and nothing can enter it ---");
-{
+await block("1", async () => {
   t("`published` is no longer a state the inquiry machine PRODUCES: it is out of `legal`",
     STATES.inquiry.legal.includes("published"), false);
   /* THE LOAD-BEARING HALF. A state with no edge naming it as a destination is
@@ -411,13 +465,15 @@ console.log("\n--- 1. the state is gone from the inquiry machine, and nothing ca
   t("and the plane keeps NO second copy of the inquiry edge table: the store reads it through the "
   + "catalog's own vocabFor",
     /vocabFor\(STATES,/.test(STORE_SRC) && !/legal:\s*\[\s*["']open["']/.test(STORE_SRC), true);
-}
+});
 
 /* ===================================================================== 2
  * THE PRECONDITION SURVIVES THE STATE'S REMOVAL. THE ITEM'S CENTRAL ARM.
  * =================================================================== */
 console.log("\n--- 2. only a CONCLUDED finding may be a case member — proved, not asserted ---");
-{
+await block("2", async () => {
+needs("0 (setup)", { VERA });
+needs("0b (findings)", { V_PROJECT });
   /* PART ONE: the carrier is gone. With `published` out of every edge list, the
      old expression `legalFrom.includes("published")` is false from every state,
      so it cannot be what refuses below. */
@@ -461,13 +517,14 @@ console.log("\n--- 2. only a CONCLUDED finding may be a case member — proved, 
   t("(fixture) and it is picked back up and concluded again, so the over-strictness arms below are "
   + "over a genuinely publishable finding",
     [back.ok, rec.ok, await stateOf(FREE)], [true, true, "concluded"]);
-}
+});
 
 /* ===================================================================== 3
  * PUBLICATION MOVES NO STATE.
  * =================================================================== */
 console.log("\n--- 3. publishing is the CASE RELATION: the finding's lifecycle ends at `concluded` ---");
-{
+await block("3", async () => {
+needs("0c (cases)", { vE1, V_CASE });
   t("the published member's lifecycle state is exactly where conclude left it",
     await stateOf(V_PUB), "concluded");
   /* AND IT IS IN THE SIGNED BYTES, which is where it matters: a stranger reading
@@ -512,13 +569,14 @@ console.log("\n--- 3. publishing is the CASE RELATION: the finding's lifecycle e
   t("and `op=publish`'s own answer reports the RELATION it made and no destination state",
     [vE1.to ?? null, vE1.findings[0].state, vE1.findings[0].case_id, vE1.findings[0].case_edition],
     [null, "concluded", V_CASE, 1]);
-}
+});
 
 /* ===================================================================== 4
  * THE CASE RELATION CARRIES EVERY GUARD THE STATE USED TO CARRY.
  * =================================================================== */
 console.log("\n--- 4. the guards moved to the case relation, and they still bite ---");
-{
+await block("4", async () => {
+needs("0c (cases)", { V_CASE });   /* its subject, V_PUB, is a case member only once 0c published it */
   const div = rP(await POST(`op=inquirydivide&token=${VERA}&target=${V_PUB}`,
     { reason: "two questions in one, and the parent was malformed",
       children: [{ id: "INQ-2026-4400-a", question: "Was it authorised?", legs: [0] },
@@ -562,13 +620,14 @@ console.log("\n--- 4. the guards moved to the case relation, and they still bite
   t("and the op agrees: restructuring a finding in no case is NOT refused by the published fence",
     [grFree.reason !== "PUBLISHED_CANNOT_RESTRUCTURE", grFree.reason ?? null],
     [true, grFree.reason ?? null]);
-}
+});
 
 /* ===================================================================== 5
  * THE REVISION FLAG.
  * =================================================================== */
 console.log("\n--- 5. a revised member FLAGS its containing case, by name ---");
-{
+await block("5", async () => {
+needs("0c (cases)", { V_CASE, V_SIGNED_1 });
   t("before any revision, the case carries NO flag — so every count below is a measurement and not a "
   + "row that was always there",
     [(await anonFlags(`case=${V_CASE}`)).count, (await anonFlags()).count], [0, 0]);
@@ -617,13 +676,14 @@ console.log("\n--- 5. a revised member FLAGS its containing case, by name ---");
   + "one — pinned by shape, because this suite cannot mint a pre-DEC-72 case through the op surface",
     /project_id\s+TEXT,\s+-- the OWNING project that must act\. NULL for a pre-DEC-72 case, and STATED/
       .test(SCHEMA_SRC), true);
-}
+});
 
 /* ===================================================================== 6
  * SET-BUT-NEVER-CLEAR.
  * =================================================================== */
 console.log("\n--- 6. the flag is SET AND NEVER CLEARED: only an owning project's act discharges it ---");
-{
+await block("6", async () => {
+needs("0c (cases)", { V_CASE, V_SIGNED_1, W_CASE });
   /* A LATER READ DOES NOT CLEAR IT. This is the arm that would catch a
      derived-on-read implementation, which is the design that was tried first and
      rejected. */
@@ -720,13 +780,14 @@ console.log("\n--- 6. the flag is SET AND NEVER CLEARED: only an owning project'
   t("and the table rides the purge list, so a scratch reset does not report scope ALL while a case "
   + "still reads as flagged (D-113)",
     /"case_revision_flags"/.test(TABLES_ARR ? TABLES_ARR[1] : ""), true);
-}
+});
 
 /* ===================================================================== 7
  * D-266's SCOPING: ONE PROJECT ACTING IS NOT EVERY PROJECT ACTING.
  * =================================================================== */
 console.log("\n--- 7. a disposition is scoped to the key's own subject — one project acting clears one case ---");
-{
+await block("7", async () => {
+needs("0c (cases)", { V_CASE, W_CASE });
   /* WREN's member revises too, so two cases owned by two projects are flagged at
      once. THE SHAPE THIS PLANE CAN PRODUCE, and the suite header says why it is
      this shape: a case has exactly one owning project (CASE-1's key), so "several
@@ -770,13 +831,14 @@ console.log("\n--- 7. a disposition is scoped to the key's own subject — one p
      (await anonFlags(`case=${V_CASE}`)).flags[0]?.acted?.by,
      (await anonFlags()).outstanding],
     [true, true, true, 0, "wren", "vera", 0]);
-}
+});
 
 /* ===================================================================== 8
  * OVER-STRICTNESS: NOTHING ELSE IS FLAGGED.
  * =================================================================== */
 console.log("\n--- 8. over-strictness: an unrelated edit to a non-member flags nothing ---");
-{
+await block("8", async () => {
+needs("0 (setup)", { VERA });
   const before = (await anonFlags()).count;
   /* FREE has never been published and is in no case. It is edited through the
      SAME WRITE the flag hangs off — `op=promote`, which is the one write in the
@@ -809,13 +871,13 @@ console.log("\n--- 8. over-strictness: an unrelated edit to a non-member flags n
   t("and `outstanding=1` narrows without hiding: the discharged rows are still readable, so a "
   + "discharge never looks like a deletion",
     [outs.count, allF.count, allF.flags.every((x) => x.acted !== null)], [0, 2, true]);
-}
+});
 
 /* ===================================================================== 9
  * THE DESIGN DOCUMENT IS THE EXPECTATION.
  * =================================================================== */
 console.log("\n--- 9. the expectation is parsed from CASE-AS-PRODUCTION.md, not from this suite ---");
-{
+await block("9", async () => {
   /* IT LOOKS IN BOTH PLACES, because CASE-6's definition of done ARCHIVES this
      document to `docs/archive/` — where `decided.mjs` still scans it — and a
      suite that only knew one path would go red on a correct landing. CASE-1's
@@ -850,13 +912,13 @@ console.log("\n--- 9. the expectation is parsed from CASE-AS-PRODUCTION.md, not 
   t("and it is the same sentence the plane's own refusal prints, so the document and the record "
   + "cannot drift",
     /only a CONCLUDED finding may be a case member/.test(STORE_SRC), true);
-}
+});
 
 /* ==================================================================== 10
  * THE BOUND, DRIVEN HERE BECAUSE THE FIXTURE IS HERE.
  * ================================================================== */
 console.log("\n--- 10. op=caseflags' bound, in bounds.test.mjs's own loop shape ---");
-{
+await block("10", async () => {
   /* `bounds.test.mjs` holds the roster of every capped op and the rule that each
      one must be DRIVEN — *"an op that grows a cap tomorrow fails until somebody
      drives it"* — with an explicit refusal to keep an exception list. This op is
@@ -893,7 +955,7 @@ console.log("\n--- 10. op=caseflags' bound, in bounds.test.mjs's own loop shape 
   t("op=caseflags: an over-ask is answered at the CEILING and the ceiling is what is published — a "
   + "caller is never told they got more than they did",
     [over.limit, over.truncated], [500, false]);
-}
+});
 
 /* NEGATIVE CONTROL — RUN 2026-09-10 (case4-lifecycle-flag). SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, each RUN, and each restore verified by CONTENT and by sha256 against a uniquely-named per-arm pristine copy taken INSIDE THIS WORKTREE (store.mjs 1,764,229 bytes, sha256 496745342a0c8726…; this file's own sha is not quoted, because a file cannot state its own). The driver is `test/caselifecycle.control.mjs` — COMMITTED, so every arm re-runs in one step with `node test/caselifecycle.control.mjs [arm]`. WHOLE (baseline, nothing armed) = 66 pass, 0 fail. **THE FIGURES BELOW WERE RE-READ AFTER THE COMMIT AND THEY MOVED — recorded rather than left as first written, because a hand-carried number nobody re-measures is this project's most-repeated defect and an NC block is exactly where it hides.** Block 10 (the bound, driven here for `bounds.test.mjs`) was added after the first control run, so every tally rose by six.
    (a) THE ARM THIS ITEM EXISTS FOR — a revised member raises NO FLAG (`#flagCasesOnRevision` returns before it reads the roster) -> **49 pass, 17 FAIL**, and the first is the one written for it: `THE CONTAINING CASE IS FLAGGED, BY NAME`. Blocks 6, 7 and 8's discharge arms fall behind it, because there is nothing to discharge. This is the state the tree was in before this item, so the figure is the size of the hole it closed.
@@ -907,7 +969,17 @@ console.log("\n--- 10. op=caseflags' bound, in bounds.test.mjs's own loop shape 
 /* D-186 / hygiene: every workerd instance is shut down, and `hygiene.test.mjs`
    counts `.dispose()` against `new Miniflare(`. It is before the tally so a
    suite that fails still shuts down. */
+/* D-667: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "0b (findings)", "0c (cases)", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
 await mf.dispose();
-console.log(`\ncaselifecycle: ${pass} pass, ${fail} fail`);
+console.log(`\ncaselifecycle: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 process.exit(fail ? 1 : 0);
 

@@ -1,4 +1,12 @@
 /* NEGATIVE CONTROL: RUN BY `test/d442-publish-writes-nothing.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ and checks/ while it runs). Each arm armed ALONE from a per-arm pristine copy, restored and verified by sha256, by content AND by cmp. RUN 2026-09-23 by the D-442 worker: baseline 35/0 * (a) RESTORE THE MEMBER PROMOTION, the row's own control -> 16/19, failing BY NAME at "A's OWN prepare leaves Q's bundle_sha and bytes unmoved", "THE PIN: B's prepare leaves Q's bundle_sha at case X's pin" and "THE PIN, SAME PROJECT", with the byte-identical, no-flag, same-sha, pin-row, ratification and every downstream per-case read (its declaration was CORRECTED TWICE, each time adding arms the moved pin reached further on — recorded on the driver) * (b) THE LIAR, publishedcase's exclusions read off the finding's bytes -> 34/1, that arm alone * (c) THE LIAR, the ratify committer's pair from the finding's bytes -> 34/1, the publishedmanifest arm alone * (d) THE CHECK LEFT BEHIND, checkPublishedExtension not run per member -> 32/3, the three C-2.8 catalogue arms * (e) OVER-STRICTNESS, the receipt line re-worded -> 35/0 * (f) THE LIAR, excludedby off the members' bytes alone -> 33/2, the two excludedby arms. EVERY ARM AS DECLARED; every restore sha256 MATCH, content IDENTICAL, cmp SAME (store.mjs 2,810,573 B, index.mjs 710,297 B, bio-checks.mjs 822,889 B). */
+/* D-667 (declared and RUN 2026-09-25, WORKER D-667), THE RECORDER — every section now runs in `block()` (D-548's
+ * recorder, D-564's pattern), so the arms break a section's FIXTURE. Re-run in one step: `node test/d564-block.control.mjs
+ * d442-publish-writes-nothing` from bio-plane/. BASELINE -> 35 pass, 0 fail, per section (0 (setup), 1..5) 0/0, 4/0,
+ * 13/0, 4/0, 7/0, 7/0, foot reached. (g) SECTION 2's FIXTURE BROKEN — B's make-current names a reading Q does not
+ * hold (anchor on the driver) -> MEASURED 4 pass, 4 fail, `BLOCK 2 DIED: (fixture) B stands on reading 2` (VERSION_ACT_NO_SUCH_VERSION), `BLOCK 3
+ * DIED: rests on section 2, which did not produce pubB`, `BLOCK 4 DIED: ... pubB, fmB`, `BLOCK 5 DIED: ... pubB, fmB,
+ * bodyB`; section 1 at 4/0, foot reached, exit 1. (h) THE RECORDER DISARMED (`block()` rethrows) over (g)'s fixture ->
+ * MEASURED no foot and no section tally, exit 1. */
 /* D-442 — PUBLISHING WRITES NOTHING ON A MEMBER FINDING
  * (BIO_Publication_v0_1.md §3 rule 12, RULED 2026-09-22 by BOB #28; MEASURED by the REC-166
  * worker, MEASUREMENTS.md M-100.)
@@ -89,12 +97,30 @@ const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json());
-/* A FIXTURE FAILURE ENDS THE RUN WITH A TALLY, NEVER A BARE THROW. */
-const bail = async (what, r) => {
-  t(`FIXTURE: ${what}`, [r?.ok === true, r?.reason ?? null], [true, null]);
-  console.log(`\nd442-publish-writes-nothing.test.mjs: ${pass} pass, ${fail} fail`);
-  await mf.dispose();
-  process.exit(1);
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs),
+   adopted. Before it, `bail()` recorded one FIXTURE failure, printed the foot, disposed the sandbox and exited on the
+   FIRST fixture failure, so one broken fixture ended the run and every later section went unmeasured. Now a fixture
+   failure is a THROW that `block()` records as ONE failure naming its section, and the sections after it still run
+   and report. Each section's own tally is printed at the foot; a section that DIED prints -1, never the partial
+   count it reached; a section expected but never reported fails by name. A section resting on an earlier one's
+   values asks for them with `needs()` and dies naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 const must = async (what, r) => { if (!r || r.ok !== true) await bail(what, r); return r; };
 
@@ -119,10 +145,9 @@ const enrol = async (memberId, role, caps) => {
   return lg.token;
 };
 /* ONE member owns both projects (REC-166's precedent): what distinguishes A from B is the
-   PROJECT, and holding the member fixed keeps the joined-project authority out of it. */
-const IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
-await must("register iris's signing key",
-  await POST("op=signeradd&token=adm-d442", { keyB64, memberId: "iris", comment: "iris laptop" }));
+   PROJECT, and holding the member fixed keeps the joined-project authority out of it.
+   D-667: the values later sections read are declared here and ASSIGNED inside block "0 (setup)" below. */
+let IRIS, A, B;
 
 /* ------------------------------------------------------------- DOCUMENTS (REC-166's fixture) */
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
@@ -220,7 +245,6 @@ const caseDoc = async (caseId, edition) => GET(`op=casedocument&token=${IRIS}&ca
 
 const LEDGER = "INFO-2026-4442-ledger", MINUTES = "INFO-2026-4442-minutes", AUDIT = "INFO-2026-4442-audit";
 const MEMO = "INFO-2026-4442-memo";   /* the document every case here EXCLUDES, by id */
-for (const d of [LEDGER, MINUTES, AUDIT, MEMO]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
 const V1 = { name: "paper trail", claim: "The transfer followed the process the council adopted in 2024.",
   description: "The ledger and the minutes together show the transfer was authorised.",
   grounds: ["paper trail"],
@@ -230,14 +254,9 @@ const V2 = { name: "the audit", claim: "The transfer bypassed the council vote t
   grounds: ["the audit"], legs: [{ target: AUDIT, ground: "the audit" }] };
 
 const Q = "INQ-2026-4442-shared";
-await must(`promote ${Q}`, await promote(Q, inquiryMd(Q, { title: "Did the transfer follow the process?",
-  versions: [V1, V2], basis: [LEDGER] }), "inquiry"));
-const A = await createProject("oversight", projectMd("Oversight", [Q]));
-const B = await createProject("neighbours", projectMd("Neighbours", [Q]));
 
 const act = async (verb, target, version, extra = "") =>
   POST(`op=version${verb}&token=${IRIS}&target=${enc(target)}&version=${enc(version)}${extra}`, {});
-for (const v of [V1, V2]) await must(`accept ${v.name}`, await act("accept", Q, v.name, `&reason=${enc("the evidence holds")}`));
 const makeCurrent = (project, version) => act("current", Q, version, `&project=${enc(project)}`);
 const FALSIFIER = "a council minute showing the vote was never taken";
 const conclude = (project) =>
@@ -261,13 +280,32 @@ const ratifyQ = async (bundleSha) =>
   POST(`op=ratify&token=${IRIS}`, { bundleId: Q, expectedSha: bundleSha, sig: signRatify(Q, bundleSha) });
 const strip = (rows) => (rows || []).map(({ target, ...r }) => r);
 
+/* D-667: THE SETUP, in the order it always ran — the member and key, the documents, the question, the projects,
+   the acceptances — as block "0 (setup)"; only pure definitions stand outside it. */
+await block("0 (setup)", async () => {
+IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
+await must("register iris's signing key",
+  await POST("op=signeradd&token=adm-d442", { keyB64, memberId: "iris", comment: "iris laptop" }));
+for (const d of [LEDGER, MINUTES, AUDIT, MEMO]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
+await must(`promote ${Q}`, await promote(Q, inquiryMd(Q, { title: "Did the transfer follow the process?",
+  versions: [V1, V2], basis: [LEDGER] }), "inquiry"));
+A = await createProject("oversight", projectMd("Oversight", [Q]));
+B = await createProject("neighbours", projectMd("Neighbours", [Q]));
+for (const v of [V1, V2]) await must(`accept ${v.name}`, await act("accept", Q, v.name, `&reason=${enc("the evidence holds")}`));
+});
+/* D-667: the values a later section reads, declared once here and ASSIGNED inside the section that makes them. */
+let textBeforeA, CASE_X, PIN, pubB, fmB, bodyB;
+
 /* =======================================================================
    1. A PUBLISHES CASE X — and its OWN prepare moves nothing on Q.
    ======================================================================= */
 console.log("\n--- 1. A concludes, publishes case X over Q, ratifies it ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, A });
 await must("A stands on reading 1", await makeCurrent(A, V1.name));
 await must("A concludes", await conclude(A));
-const shaBeforeA = await shaOf(Q), textBeforeA = await textOf(Q);
+const shaBeforeA = await shaOf(Q);
+textBeforeA = await textOf(Q);
 const pubA = await publish(A);
 if (pubA?.ok !== true) await bail("A publishes case X", pubA);
 t("A's OWN prepare leaves Q's bundle_sha and bytes unmoved, and the pin it answers is that sha",
@@ -278,7 +316,7 @@ await ratifyCase(async (q, b) => POST(q, b), pubA, { dir, key: "iris", token: IR
 const ratA = await ratifyQ(pubA.bundleSha);
 t("(fixture) Q ratifies at X's pin, its edition and pair read from X's case document",
   [ratA?.ok, ratA?.edition, ratA?.frozenFrom], [true, 1, "case_document"]);
-const CASE_X = pubA.caseId, PIN = pubA.bundleSha;
+CASE_X = pubA.caseId; PIN = pubA.bundleSha;
 t("(fixture) case X is ratified and pins Q at its current bytes — the non-empty guard for every pin arm",
   [typeof CASE_X, /^[0-9a-f]{64}$/.test(PIN), (await shaOf(Q)) === PIN,
    typeof textBeforeA === "string" && textBeforeA.length > 500],
@@ -286,13 +324,18 @@ t("(fixture) case X is ratified and pins Q at its current bytes — the non-empt
 t("(fixture) before B acts, op=caseflags names nothing for Q or for case X",
   [(await flagsFor(`target=${enc(Q)}`)).count, (await flagsFor(`case=${enc(CASE_X)}`)).count], [0, 0]);
 
+});
+
 /* =======================================================================
    2. B — ANOTHER PROJECT — PUBLISHES A NEW CASE OVER THE SAME FINDING.
    ======================================================================= */
 console.log("\n--- 2. B concludes and publishes a new case over Q ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS, B });
+needs("1", { CASE_X, PIN, textBeforeA });
 await must("B stands on reading 2", await makeCurrent(B, V2.name));
 await must("B concludes", await conclude(B));
-const pubB = await publish(B, { newCase: true });
+pubB = await publish(B, { newCase: true });
 t("(fixture) B's publish succeeds as a NEW case", [pubB?.ok, pubB?.minted, pubB?.caseId !== CASE_X],
   [true, true, true]);
 t("THE PIN: B's prepare leaves Q's bundle_sha at case X's pin",
@@ -307,8 +350,8 @@ t("B's case pins Q at the SAME sha, and at Q's own published edition 1 (the same
 
 const docB = await caseDoc(pubB.caseId, pubB.edition);
 const parsedB = parseFrontmatter(String(docB?.text || ""));
-const fmB = parsedB.data || {};
-const bodyB = String(parsedB.body || "");
+fmB = parsedB.data || {};
+bodyB = String(parsedB.body || "");
 t("(fixture) B's case document is readable and non-empty", [docB?.ok, (docB?.text || "").length > 1000], [true, true]);
 {
   const row = (fmB.case_roles || []).find((r) => r && r.target === Q) || {};
@@ -349,10 +392,16 @@ t("and after B's whole ceremony Q is still at X's pin, and neither case carries 
   [(await shaOf(Q)) === PIN, (await flagsFor(`case=${enc(CASE_X)}`)).count,
    (await flagsFor(`case=${enc(pubB.caseId)}`)).count], [true, 0, 0]);
 
+});
+
 /* =======================================================================
    3. A SECOND CASE OF THE SAME PROJECT OVER THE SAME FINDING.
    ======================================================================= */
 console.log("\n--- 3. A publishes a second case over Q ---");
+await block("3", async () => {
+needs("0 (setup)", { IRIS, A });
+needs("1", { CASE_X, PIN, textBeforeA });
+needs("2", { pubB });
 const again = await publish(A, { caseId: CASE_X });
 t("(fixture) publishing into case X again, with nothing moved, is still refused — the fence REC-157 built "
 + "(the case is NAMED: Q now serves two cases, so an unnamed publish is CASE_IDENTITY_AMBIGUOUS, D-309)",
@@ -368,10 +417,16 @@ const caseA2 = await ratifyCase(async (q, b) => POST(q, b), pubA2, { dir, key: "
 const ratA2 = await ratifyQ(PIN);
 t("and it ratifies, case document and finding", [caseA2?.ok, ratA2?.ok, ratA2?.existed], [true, true, true]);
 
+});
+
 /* =======================================================================
    4. THE LIAR ARMS: EVERY MOVED FACT, READ THROUGH ITS PUBLIC OP, IS THE CASE DOCUMENT'S.
    ======================================================================= */
 console.log("\n--- 4. each moved fact read through its public op comes from the case document ---");
+await block("4", async () => {
+needs("0 (setup)", { IRIS });
+needs("1", { CASE_X });
+needs("2", { pubB, fmB });
 const qBytes = await textOf(Q);
 t("Q's own bytes carry NONE of the blocks (so a reader left on them would read nothing): no frozen "
 + "pair, no completeness block, no exclusions, no section, no publish receipt",
@@ -421,10 +476,14 @@ t("Q's own bytes carry NONE of the blocks (so a reader left on them would read n
     true);
 }
 
+});
+
 /* =======================================================================
    5. THE CATALOGUE FOLLOWS THE BLOCK.
    ======================================================================= */
 console.log("\n--- 5. C-2.8 and C-3.1 fire on the case document when a moved block is removed ---");
+await block("5", async () => {
+needs("2", { pubB, fmB, bodyB });
 const idsOf = (fs) => fs.filter((x) => x.severity === "error").map((x) => x.check);
 const ctx = { caseId: pubB.caseId, edition: pubB.edition, body: bodyB, memberBasis: { [Q]: [] } };
 t("the real /2 document passes the case gate (the non-empty guard for the arms below)",
@@ -454,6 +513,19 @@ t("a LEGACY /1 document's format is still accepted (rule 12 (e)), and the member
 t("an unknown format is refused C-41.1",
   idsOf(checkCaseDocument({ ...fmB, format: "bio-case-document/9" }, ctx)).includes("C-41.1"), true);
 
-console.log(`\nd442-publish-writes-nothing.test.mjs: ${pass} pass, ${fail} fail`);
+});
+
+/* D-667: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. The
+   `d442-publish-writes-nothing.control.mjs` driver reads `N pass, M fail` off the foot line; its prefix is unchanged. */
+const EXPECTED = ["0 (setup)", "1", "2", "3", "4", "5"];
+console.log("\n--- per-section tallies (D-667: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nd442-publish-writes-nothing.test.mjs: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

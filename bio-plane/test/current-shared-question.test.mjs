@@ -1,4 +1,12 @@
 /* NEGATIVE CONTROL: RUN BY `test/current-shared-question.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ while it runs). Each arm is armed ALONE, restored from a per-arm pristine copy and verified by sha256, by content AND by cmp; the declarations live on that driver, which checks each run against its declaration as a TOTAL. RUN 2026-09-22 by the REC-166 worker: baseline 18/0 * (a) RESTORE THE INQUIRY PROMOTION, the row's own control -> 10/8, the pin arms BY NAME ("THE PIN: after ANOTHER project's make-current", "THE PIN, AGAIN", the byte-identical arm), both flag arms, both fence arms and the unpublished make-current arm, the receipt arms green * (b) THE LIAR, no Reason: in the project -> 16/2, the two receipt arms alone * (c) THE REFUSED FIX (b), promotion restored and the flag exempted -> 12/6, the flag arms GREEN while the pins and fences fail * (d) OVER-STRICTNESS, the project's sentence re-worded -> 18/0. EVERY ARM AS DECLARED; every restore sha256 MATCH, content IDENTICAL, cmp SAME. */
+/* D-667 (declared and RUN 2026-09-25, WORKER D-667), THE RECORDER — every section now runs in `block()` (D-548's
+ * recorder, D-564's pattern), so the arms break a section's FIXTURE. Re-run in one step: `node test/d564-block.control.mjs
+ * current-shared-question` from bio-plane/. BASELINE -> 18 pass, 0 fail, per section (0 (setup), 1..4) 0/0, 4/0, 7/0,
+ * 5/0, 2/0, foot reached. (e) SECTION 1's FIXTURE BROKEN — A's make-current on Q names a reading Q does not hold (anchor on the driver) ->
+ * MEASURED 2 pass, 3 fail, `BLOCK 1 DIED: (fixture) A stands on reading 1` (VERSION_ACT_NO_SUCH_VERSION), `BLOCK 2 DIED:
+ * rests on section 1, which did not produce CASE, PIN, pinnedText` and the same for BLOCK 3; section 4 at 2/0, foot
+ * reached, exit 1. (f) THE RECORDER DISARMED (`block()` rethrows) over (e)'s fixture -> MEASURED no foot and no section
+ * tally, exit 1. */
 /* REC-166 — A PROJECT'S MAKE-CURRENT WRITES NOTHING ON THE SHARED QUESTION
  * (INVESTIGATIVE-SESSION.md §7, ruled 2026-09-22 by BOB #25, fix (a); IC-175.)
  *
@@ -101,12 +109,30 @@ const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json());
-/* A FIXTURE FAILURE ENDS THE RUN WITH A TALLY, NEVER A BARE THROW. */
-const bail = async (what, r) => {
-  t(`FIXTURE: ${what}`, [r?.ok === true, r?.reason ?? null], [true, null]);
-  console.log(`\ncurrent-shared-question.test.mjs: ${pass} pass, ${fail} fail`);
-  await mf.dispose();
-  process.exit(1);
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs),
+   adopted. Before it, `bail()` recorded one FIXTURE failure, printed the foot, disposed the sandbox and exited on the
+   FIRST fixture failure, so one broken fixture ended the run and every later section went unmeasured. Now a fixture
+   failure is a THROW that `block()` records as ONE failure naming its section, and the sections after it still run
+   and report. Each section's own tally is printed at the foot; a section that DIED prints -1, never the partial
+   count it reached; a section expected but never reported fails by name. A section resting on an earlier one's
+   values asks for them with `needs()` and dies naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 const must = async (what, r) => { if (!r || r.ok !== true) await bail(what, r); return r; };
 
@@ -133,10 +159,9 @@ const enrol = async (memberId, role, caps) => {
 };
 /* ONE member creates, owns and joins BOTH projects: what distinguishes A from B is
    the PROJECT, which is the whole subject of §7, and holding the member fixed
-   keeps the joined-project authority (REC-134) out of the measurement. */
-const IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
-await must("register iris's signing key",
-  await POST("op=signeradd&token=adm-r166", { keyB64, memberId: "iris", comment: "iris laptop" }));
+   keeps the joined-project authority (REC-134) out of the measurement.
+   D-667: the values later sections read are declared here and ASSIGNED inside block "0 (setup)" below. */
+let IRIS, A, B;
 
 /* ------------------------------------------------------------- DOCUMENTS */
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
@@ -245,7 +270,6 @@ const stanceOf = async (project, id) => {
 const stanceVersion = (s) => (s && typeof s === "object") ? (s.version ?? null) : s;
 
 const LEDGER = "INFO-2026-4166-ledger", MINUTES = "INFO-2026-4166-minutes", AUDIT = "INFO-2026-4166-audit";
-for (const d of [LEDGER, MINUTES, AUDIT]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
 
 const CLAIM_1 = "The transfer followed the process the council adopted in 2024.";
 const CLAIM_2 = "The transfer bypassed the council vote the adopted process requires.";
@@ -263,22 +287,11 @@ const V3 = { name: "the press account", claim: "A newspaper reported the vote wa
 const Q = "INQ-2026-4166-shared";        /* the published, shared question */
 const QT = "INQ-2026-4166-twin";         /* its unpublished twin: the affordances' non-empty guard */
 const QU = "INQ-2026-4166-unpublished";  /* section 4: the acts that DO write the question */
-await must(`promote ${Q}`, await promote(Q, inquiryMd(Q, { title: "Did the transfer follow the process?",
-  versions: [V1, V2], basis: [LEDGER] }), "inquiry"));
-await must(`promote ${QT}`, await promote(QT, inquiryMd(QT, { title: "Was the vote recorded?",
-  versions: [V1, V2], basis: [LEDGER] }), "inquiry"));
-await must(`promote ${QU}`, await promote(QU, inquiryMd(QU, { title: "Was the contract advertised?",
-  versions: [V1, V2, V3], basis: [LEDGER] }), "inquiry"));
-
-const A = await createProject("oversight", projectMd("Oversight", [Q, QU]));
-const B = await createProject("neighbours", projectMd("Neighbours", [Q]));
-
 const act = async (verb, target, version, extra = "") =>
   POST(`op=version${verb}&token=${IRIS}&target=${enc(target)}&version=${enc(version)}${extra}`, {});
 const accept = (target, version) => act("accept", target, version, `&reason=${enc("the evidence holds")}`);
 const makeCurrent = (project, target, version, reason = null) =>
   act("current", target, version, `&project=${enc(project)}${reason ? `&reason=${enc(reason)}` : ""}`);
-for (const id of [Q, QT]) for (const v of [V1, V2]) await must(`accept ${v.name} on ${id}`, await accept(id, v.name));
 
 const FALSIFIER = "a council minute showing the vote was never taken";
 let pubSeq = 0;
@@ -294,10 +307,44 @@ const publish = async (project, target) => {
     excluded: [{ target: null, description: `The 2025 transfers (publication ${n})`, reason: "Out of scope." }] });
 };
 
+/* D-667: THE SETUP, in the order it always ran — the member and key, the documents, the questions, the projects,
+   the acceptances — as block "0 (setup)"; only pure definitions stand outside it. */
+await block("0 (setup)", async () => {
+IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
+await must("register iris's signing key",
+  await POST("op=signeradd&token=adm-r166", { keyB64, memberId: "iris", comment: "iris laptop" }));
+for (const d of [LEDGER, MINUTES, AUDIT]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
+await must(`promote ${Q}`, await promote(Q, inquiryMd(Q, { title: "Did the transfer follow the process?",
+  versions: [V1, V2], basis: [LEDGER] }), "inquiry"));
+await must(`promote ${QT}`, await promote(QT, inquiryMd(QT, { title: "Was the vote recorded?",
+  versions: [V1, V2], basis: [LEDGER] }), "inquiry"));
+await must(`promote ${QU}`, await promote(QU, inquiryMd(QU, { title: "Was the contract advertised?",
+  versions: [V1, V2, V3], basis: [LEDGER] }), "inquiry"));
+
+A = await createProject("oversight", projectMd("Oversight", [Q, QU]));
+B = await createProject("neighbours", projectMd("Neighbours", [Q]));
+
+for (const id of [Q, QT]) for (const v of [V1, V2]) await must(`accept ${v.name} on ${id}`, await accept(id, v.name));
+});
+
+/* THE FENCES, ASSERTED TO HOLD BEFORE ANYTHING MOVES, and their affordances shown
+   to exist where nothing is pinned — so an absence below is a fence, not a missing act. */
+const fence = async () => {
+  const pv = await act("reject", Q, V2.name, `&reason=${enc("probe")}&preview=1`);
+  const a = await acts(Q);
+  const again = await publish(A, Q);
+  return [pv?.ok, pv?.reason ?? null, a.includes("inquirydivide"), a.includes("inquiryground"),
+          again?.ok, again?.reason ?? null];
+};
+const FENCE_HOLDS = [false, "PUBLISHED_CANNOT_MOVE_VERSION", false, false, false, "ALREADY_A_CASE_MEMBER"];
+let CASE, PIN, pinnedText;   /* D-667: section 1 makes them; 2 and 3 read them */
+
 /* =======================================================================
    1. THE PIN — A publishes case X over Q, and the fences are shown to HOLD.
    ======================================================================= */
 console.log("\n--- 1. A stands on reading 1, concludes, publishes and ratifies case X ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, A });
 
 await must("A stands on reading 1", await makeCurrent(A, Q, V1.name));
 await must("A concludes on it",
@@ -310,8 +357,8 @@ for (const f of pub.findings || []) {
     { bundleId: f.target, expectedSha: f.bundleSha, sig: signRatify(f.target, f.bundleSha) });
   if (!r?.ok) await bail(`ratify ${f.target}`, r);
 }
-const CASE = pub.caseId, PIN = pub.bundleSha;
-const pinnedText = await textOf(Q);
+CASE = pub.caseId; PIN = pub.bundleSha;
+pinnedText = await textOf(Q);
 t("(fixture) case X is ratified and pins Q at its current bytes — the non-empty guard for every pin arm",
   [typeof CASE, typeof PIN, (await shaOf(Q)) === PIN, typeof pinnedText === "string" && pinnedText.length > 500],
   ["string", "string", true, true]);
@@ -319,15 +366,8 @@ const flags0 = [(await flagsFor(`target=${enc(Q)}`)).count, (await flagsFor(`cas
 t("(fixture) before any stance moves, op=caseflags names nothing for Q or for case X", flags0, [0, 0]);
 
 /* THE FENCES, ASSERTED TO HOLD BEFORE ANYTHING MOVES, and their affordances shown
-   to exist where nothing is pinned — so an absence below is a fence, not a missing act. */
-const fence = async () => {
-  const pv = await act("reject", Q, V2.name, `&reason=${enc("probe")}&preview=1`);
-  const a = await acts(Q);
-  const again = await publish(A, Q);
-  return [pv?.ok, pv?.reason ?? null, a.includes("inquirydivide"), a.includes("inquiryground"),
-          again?.ok, again?.reason ?? null];
-};
-const FENCE_HOLDS = [false, "PUBLISHED_CANNOT_MOVE_VERSION", false, false, false, "ALREADY_A_CASE_MEMBER"];
+   to exist where nothing is pinned — so an absence below is a fence, not a missing act.
+   (D-667: `fence` and FENCE_HOLDS are defined above the sections, unchanged, since 2 and 3 call them too.) */
 t("(fixture) the case's fences HOLD on the pinned finding: a version move refused, divide and ground "
 + "not offered, publishing unchanged refused", await fence(), FENCE_HOLDS);
 const twinActs = await acts(QT);
@@ -335,10 +375,15 @@ t("(fixture) on the UNPUBLISHED twin, divide and ground ARE offered — so their
 + "fence, never an act that does not exist",
   [twinActs.includes("inquirydivide"), twinActs.includes("inquiryground")], [true, true]);
 
+});
+
 /* =======================================================================
    2. ANOTHER PROJECT MOVES ITS STANCE.
    ======================================================================= */
 console.log("\n--- 2. B, another project, makes reading 2 current with a reason ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS, A, B });
+needs("1", { CASE, PIN, pinnedText });
 
 const WHY_B = "the audit is the only document that addresses the vote";
 const bBefore = await textOf(B);
@@ -365,10 +410,15 @@ t("THE FENCES STILL HOLD on case X's member after B moved its stance", await fen
     [stanceVersion(await stanceOf(B, Q)), stanceVersion(await stanceOf(A, Q))], [V2.name, V1.name]);
 }
 
+});
+
 /* =======================================================================
    3. THE PUBLISHING PROJECT ITSELF MOVES ITS STANCE.
    ======================================================================= */
 console.log("\n--- 3. A, the publishing project, makes reading 2 current with a reason ---");
+await block("3", async () => {
+needs("0 (setup)", { IRIS, A });
+needs("1", { CASE, PIN, pinnedText });
 
 const WHY_A = "the team is examining the audit reading";
 const cA = await makeCurrent(A, Q, V2.name, WHY_A);
@@ -385,10 +435,14 @@ t("and the fences still hold", await fence(), FENCE_HOLDS);
     [e.length, e.length === 1 && e[0].includes(Q), e.length === 1 && e[0].includes(`'${V2.name}'`)], [1, true, true]);
 }
 
+});
+
 /* =======================================================================
    4. THE ACTS THAT CHANGE THE SHARED VERSION BLOCK STILL WRITE THE QUESTION.
    ======================================================================= */
 console.log("\n--- 4. on an unpublished question, accept and its siblings still move its bytes ---");
+await block("4", async () => {
+needs("0 (setup)", { IRIS, A });
 
 const moves = async (label, call) => {
   const before = await shaOf(QU);
@@ -416,6 +470,19 @@ t("op=versionaccept and each sibling (consider, revert, reject, hide) STILL prom
     [r?.ok, (await shaOf(QU)) === before, (await textOf(QU)) === beforeText], [true, true, true]);
 }
 
-console.log(`\ncurrent-shared-question.test.mjs: ${pass} pass, ${fail} fail`);
+});
+
+/* D-667: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. The
+   `current-shared-question.control.mjs` driver reads `N pass, M fail` off the foot line; its prefix is unchanged. */
+const EXPECTED = ["0 (setup)", "1", "2", "3", "4"];
+console.log("\n--- per-section tallies (D-667: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\ncurrent-shared-question.test.mjs: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);
