@@ -944,7 +944,7 @@ accepts-when: no op answering for a pair draft states an edition number (asserte
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-708's worker).
 
 ### D-720 · integrated — **A READING ACKNOWLEDGED ON A DRAFT THAT NAMES C1 AND ALSO SETS newCase IS KEYED UNDER C1's NEXT EDITION: #statementAcknowledgements lists every row at a case identity (draft match '*'), so C1's signed document can list a reading given on a draft that may become ANOTHER case — the record claiming a binding nobody made.** Diagnosed from the code by D-708's worker (statementack INSERT; #statementAcknowledgements' WHERE), not yet driven. BOB #36 RULED 2026-09-25 11:30Z, option (1) (drained by SCHEDULER #24; cite until folded). — owner RECORD.
-status: integrated — SCHEDULER #24 12:25Z: tip 8e04cbe9 (on D-708 656b0817), GATE 409/409 GREEN (22939 assertions; excludes 3 untallied), tree 460ce9fe; #ackKey keys a pair draft reading at (NULL,1) bound to the draft; link arm asks the draft not the edition; unbound count says Nobody acknowledged it FOR THIS CASE plus the undetermined count; reproduced first 27/5; STATED residue: readings recorded before this landing stay at C1 key (which rows is UNDETERMINED; live not measured)
+status: integrated — CONDUCT #23 12:26Z: worker report — tip 8e04cbe9 (on D-708 656b0817), GATE 409/409 GREEN FULLREUSE (22939 assertions); ack on C1+newCase draft keyed (NULL,1): case_id null/bound false where C1/true = IC MAJOR; rides batch30 after D-708
 order: first queued in the cache: a false binding listed in signed bytes outranks every feature (CLAUDE.md §2), and it corrects D-708 (SCHEDULER #24, 2026-09-25)
 milestone: M10
 interface: I3 — a pair draft's reading carries no case identity until a publish names the draft; the integrator classifies.
