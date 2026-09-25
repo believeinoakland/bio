@@ -639,17 +639,6 @@ scope: run the census instrument over the whole corpus with `M032_HALVES=bucket`
 accepts-when: MEASUREMENTS carries the whole-corpus counts with their instrument and date (the measured failure it moves: the order resting on sampled halves only). NEGATIVE CONTROL: fold FINANCIAL REPORT back into budget and the class count moves, by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs FW`).
 
-### DIST-14 · running — **THE CSV SIZE BOUND (20 MiB, reused from COFF-6) IS NOT SETTLED: node measured 254.5 MiB of heap at the bound against Cloudflare's documented 128 MiB isolate (their claim), and local workerd walked a 73.6 MB body without the production cap applying.** FW-23's worker (finding 2, via CONDUCT #20 21:52Z). — owner DIST.
-status: running — SCHEDULER #22 04:19Z spawns WORKER DIST-14 (depth 2)
-order: after FW-24, with the measurements: the deciding figure needs a deployed plane, so it follows FW-23's landing and DIST's next deploy (SCHEDULER #19, 2026-09-24)
-milestone: M2
-interface: none unless the bound moves (the integrator classifies).
-design: `docs/development/OFFICE-FORMATS.md` "CSV — DESIGNED 2026-09-24 by BOB #32", with `docs/development/VERIFICATION.md` (measure; do not recall; a vendor's documentation is their claim).
-depends-on: FW-23.
-scope: on the DEPLOYED plane, read a CSV just over 20 MiB in the scratch namespace (store=scratch named, counters witnessed before and after), record memory outcome and time in `measurements/<id>.md`; if it fails, set the bound from the measured ceiling and state it at the site. Costs 1 of 166 keys.
-accepts-when: the measurement is recorded with date, instrument and the build that answered, and the bound is either confirmed or re-set from it (the measured failure it moves: a bound resting on a node heap figure and a vendor claim). NEGATIVE CONTROL: a CSV just under the bound reads clean, so a failure above it is attributable to size.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs DIST`).
-
 ### D-321 · running — **NO REAL IMAGE-ONLY PAGE IN THE CORPUS CARRIES AGENDA-SHAPED TEXT, SO THE `reading_refs` JOIN OVER REAL OCR IS PROVED ONLY ON SYNTHETIC INK (`ocr-member-e2e.test.mjs`).** — owner CONTENT-PDF.
 status: running — SCHEDULER #22 04:03Z spawns WORKER D-321 (depth 2)
 order: after D-320; the page must come from bytes already held (the cloud proxy refuses Legistar) (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
@@ -713,6 +702,16 @@ depends-on: D-468.
 scope: (1) MEASURE the corpus first: per type, the count of recorded moves whose edge is undeclared today, with dates, in `measurements/<id>.md`; (2) lift D-468's fence to every type with a head: promote refuses any move its type's table does not declare, for every caller by a named DEC-49 code; (3) never rewrite, reverse or repair a stored move; where a reader meets one it is stated "made by a path the current rules do not allow (before <fence date>)", neither valid nor invalid, and never larger or smaller than the count shows; (4) `STATES` keeps its valid-but-unreachable states for reading old records, unreachable by promote.
 accepts-when: an undeclared move on a non-bias type is refused by name, a stored undeclared move reads with the dated sentence and is unchanged, and the measurement states the per-type counts (moves: promote asks no table but bias). NEGATIVE CONTROL: drop the fence for one type and its undeclared-move arm lands, failing by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
+
+### D-556 · queued — **A WHOLE-HASH REGISTER ROW HELD IN PARTS CANNOT RATIFY: the gate refuses it PLANE_HELD_IN_PARTS (D-530) because publication copies a capture by its whole hash, while the audit calls the same bytes SOUND (D-533).** Found by D-533's worker (M-150). BOB #34 RULED YES 2026-09-25 00:00Z (drained to `BOB-INBOX-drained.md`; cite until folded): BOTH halves in ONE landing, never the gate alone. — owner RECORD.
+order: after D-546, with the corrections: a gate that treats sound bytes as missing contradicts the record, but D-530's refusal is honest until both halves land (BOB #34 00:00Z) (SCHEDULER #21, 2026-09-25)
+milestone: M10
+interface: I3 — publication's copy and the gate's verdict; the integrator classifies.
+design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (D-530's parted capture), with BOB #33's D-533 ruling and BOB #34's 00:00Z ruling, folded by this row.
+depends-on: D-530, D-533.
+scope: (1) publication copies a parted capture part by part and re-verifies each digest at the destination; (2) the gate admits the row when every part is present and verifies, and refuses by name (the missing part, or the digest that failed) otherwise; reuse D-533's parts helper, never a third copy.
+accepts-when: a parted capture ratifies AND publishes, byte-verified; one missing a part is refused naming it (moves: PLANE_HELD_IN_PARTS on sound bytes). NEGATIVE CONTROL: drop the part-copy from publication and the publish arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-533's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

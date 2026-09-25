@@ -43,16 +43,6 @@ scope: `aiReachesAsMember` returns false for ops fenced to sessions, expressed a
 accepts-when: a machine-attest arm minting each of the five is refused by name, and a member op still mints (moves: a mint that records the impossible). NEGATIVE CONTROL: drop the session-fence test and the five arms mint, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by REC-162's worker).
 
-### D-556 · queued — **A WHOLE-HASH REGISTER ROW HELD IN PARTS CANNOT RATIFY: the gate refuses it PLANE_HELD_IN_PARTS (D-530) because publication copies a capture by its whole hash, while the audit calls the same bytes SOUND (D-533).** Found by D-533's worker (M-150). BOB #34 RULED YES 2026-09-25 00:00Z (drained to `BOB-INBOX-drained.md`; cite until folded): BOTH halves in ONE landing, never the gate alone. — owner RECORD.
-order: after D-546, with the corrections: a gate that treats sound bytes as missing contradicts the record, but D-530's refusal is honest until both halves land (BOB #34 00:00Z) (SCHEDULER #21, 2026-09-25)
-milestone: M10
-interface: I3 — publication's copy and the gate's verdict; the integrator classifies.
-design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (D-530's parted capture), with BOB #33's D-533 ruling and BOB #34's 00:00Z ruling, folded by this row.
-depends-on: D-530, D-533.
-scope: (1) publication copies a parted capture part by part and re-verifies each digest at the destination; (2) the gate admits the row when every part is present and verifies, and refuses by name (the missing part, or the digest that failed) otherwise; reuse D-533's parts helper, never a third copy.
-accepts-when: a parted capture ratifies AND publishes, byte-verified; one missing a part is refused naming it (moves: PLANE_HELD_IN_PARTS on sound bytes). NEGATIVE CONTROL: drop the part-copy from publication and the publish arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (id minted by D-533's worker).
-
 ### D-561 · queued — **FIVE REFUSAL CODES STILL REACH AN ANONYMOUS CALLER UNTRANSLATED ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase`, after D-549 translated NO_PUBLISHED_STORE (C-68.5).** Found by D-549's worker (land/worker/D-549 @ afcf1128; codes named in its report, not on the branch). Its sibling D-562 (check-refusal-codes grades public-op codes out of reach) is D-542's reach-by-op class and rides D-542. — owner RECORD.
 order: after D-567, with the corrections: a public caller shown a machine token is DEC-49's failure on the surface a stranger meets (SCHEDULER #21, 2026-09-25)
 milestone: M10
@@ -550,6 +540,17 @@ depends-on: REC-149 and REC-150.
 accepts-when: the harness requests, the owner grants, the requester sees `invited` and joins by the checkbox, all against the real plane; a hidden project never appears in the directory. … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 4).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-71» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### DIST-14 · blocked — **THE CSV SIZE BOUND (20 MiB, reused from COFF-6) IS NOT SETTLED: node measured 254.5 MiB of heap at the bound against Cloudflare's documented 128 MiB isolate (their claim), and local workerd walked a 73.6 MB body without the production cap applying.** FW-23's worker (finding 2, via CONDUCT #20 21:52Z). — owner DIST.
+status: blocked — SCHEDULER #22 04:23Z: BLOCKED until DIST deploys a build carrying FW-23 (live /version 0.79.0 at 04:18Z, cut dd324152; csvCellRef and csvEntry 0 hits in its bundle); releases held by Bob; re-spawn after that deploy with DIST-14 arms in the live checks; 0 keys spent
+order: after FW-24, with the measurements: the deciding figure needs a deployed plane, so it follows FW-23's landing and DIST's next deploy (SCHEDULER #19, 2026-09-24)
+milestone: M2
+interface: none unless the bound moves (the integrator classifies).
+design: `docs/development/OFFICE-FORMATS.md` "CSV — DESIGNED 2026-09-24 by BOB #32", with `docs/development/VERIFICATION.md` (measure; do not recall; a vendor's documentation is their claim).
+depends-on: FW-23.
+scope: on the DEPLOYED plane, read a CSV just over 20 MiB in the scratch namespace (store=scratch named, counters witnessed before and after), record memory outcome and time in `measurements/<id>.md`; if it fails, set the bound from the measured ceiling and state it at the site. Costs 1 of 166 keys.
+accepts-when: the measurement is recorded with date, instrument and the build that answered, and the bound is either confirmed or re-set from it (the measured failure it moves: a bound resting on a node heap figure and a vendor claim). NEGATIVE CONTROL: a CSV just under the bound reads clean, so a failure above it is attributable to size.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs DIST`).
 
 ### D-346 · queued — **THE THREE OPENDOCUMENT ENTRIES EMIT NO `core-properties` AND NO `intra` LINK: `odf.mjs` never reads `meta.xml` or the manifest and says so with `outside_content_xml_not_read` markers, while Content Framework §16 says the formats "preserve the same evidence".** — owner COFF.
 order: after D-320 (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
