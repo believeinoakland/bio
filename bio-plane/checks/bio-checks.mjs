@@ -6775,6 +6775,11 @@ export async function checkBundle(input, opts = {}) {
  *   - **Widening a `where` widens what must be translated TODAY.** If you find
  *     yourself widening one to cover a refusal, you are doing REC-64's sweep, in
  *     the worst possible place. Add the row, or narrow the `where`.
+ *   - **A REGION INSIDE A FUNCTION ANOTHER ROW NAMES WHOLE IS JUDGED ONCE, by
+ *     its own rows** (D-589, 2026-09-25): arm C takes every CLAIMED region out of
+ *     an enclosing whole-function span, so the innermost claim governs. Before
+ *     that the region was judged twice and failed at the function, which is why
+ *     REC-207's re-run refusals could not be narrowed inside `aiRunOpen`.
  *
  * THE GUARD PRINTS, EVERY RUN, the span of every governed site and how many
  * refusals it judged, so a `where` that has quietly stopped meaning anything is

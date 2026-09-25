@@ -246,6 +246,23 @@
  *   3 ceilings raised by one fails the same way; (s3a) the plant with its floor left
  *   behind fails on that floor alone; (s4) a key with no slack line and (s5) a key
  *   with no recorded figure fail by name. After: exactly (c), (e), (r2), (r6) fail.
+ *
+ * NEGATIVE CONTROL (D-589, 2026-09-25, `nestedRegionsIn` and `aiRunOpen`'s three regions), each arm ALONE,
+ *   restored by sha256 AND `cmp` against a per-arm pristine copy with its byte count printed:
+ *   (d1) THE DEFECT, ON THE UNION WITH REC-207 (land/conduct/c21-rec207-renumber @ 733dafe9 merged over this
+ *        item in a scratch worktree, REC-207's three rows C-33.45..47 still naming the WHOLE of `aiRunOpen`):
+ *        the exclusion removed. DECLARED MUST FAIL. RUN: exit 1 naming `src/store.mjs:<line> (in aiRunOpen)
+ *        refuses with code AI_RUN_NO_CONTEXT, which is NOT a row` and the same for AI_RUN_CAPABILITY_UNAVAILABLE
+ *        and AI_RUN_ALREADY_OPEN — each region judged a second time. Restored: exit 1 on floor slack ALONE
+ *        (the union's figures, CONDUCT's to re-read), no arm C failure, `aiRunOpen 238L (8 judged)` minus the
+ *        three regions.
+ *   (d2) THE ROW'S OWN ARM on this tree: C-33.31's `where` restored to the whole function. DECLARED MUST FAIL.
+ *        RUN: exit 1 naming the ORPHAN `src/store.mjs::is-airun-open-already`, plus four floors falling with the
+ *        region. It fails by the orphan, NOT by a double judgement: the whole-function row now excludes the two
+ *        claimed regions nested in it, which is the fix working.
+ *   (d3) the exclusion removed on THIS tree (origin/main 964da679 + this item). DECLARED MUST NOT FAIL, because
+ *        no whole-function site on main nests a claimed region (`arm C: NESTED — 0`). RUN: exit 0 under --strict.
+ *   In the suite: ARM 12b is (d1) over a fixture and runs every battery.
  * ============================================================================
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
