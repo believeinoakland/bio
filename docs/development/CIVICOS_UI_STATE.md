@@ -50,6 +50,29 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, UI-109 (a WORKER of SCHEDULER #21, cloud session). Landed on
+`land/worker/UI-109` (base `origin/main` @ `964da679`), in the commit that carries this entry; the number is
+PROVISIONAL — CONDUCT renumbers at integration. SURFACE: **a reopened finding on the queue shows the decision
+somebody already took on it** (`queueFindingPriorHtml`, drawn in `queueItemHtml` under the item's detail).
+
+**WHAT IT CLOSES.** D-527 put `prior_disposition` on `op=queue`'s FINDING item; no surface read it, so the
+reopened question was painted as one nobody had answered. The item now says, in the plane's words: set aside
+as what, by whom, when, their reason, the version judged (or `not recorded` in words, no number), the version
+standing now (`subject.definition_version`), that the decision no longer answers the question, and the
+plane's `applies_because` code verbatim beside a sentence reading it (an unknown code is printed as given). A
+`null` says nobody has decided; an ABSENT field renders nothing. **Who REVISED the flow and so reopened the
+question is not on the item** (`prior_disposition` names who DECIDED) and the page says so rather than naming
+anybody — the row's "who reopened" narrowed to what the item carries; the plane-side fix is D-592. UI-99's §8.2 residue sentence (v116
+below) is history, not state.
+
+**SUITE AND CONTROL.** `civicos-ui/test/reopened-finding.test.mjs`, real plane in miniflare, 4 arms, 26
+assertions; its control `reopened-finding.control.mjs` 4/4 AS DECLARED — (A) the row's arm, the render
+omitted: RED 12/26 naming THE ROW, every FIXTURE assertion green. **Who else reads it:** UI-99's
+`declared-flow-surface` control came back 3/4 — its arm 5 read `not recorded` over the WHOLE queue, and the
+reopened item's words kept it green with the set-aside row's sentence hidden. Arm 5 now reads the set-aside
+row itself (corrected with a comment, not exempted); 4/4 again. The item's sentence is worded apart from
+`disposedFlowVersionHtml`'s so each control finds its own subject once.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
