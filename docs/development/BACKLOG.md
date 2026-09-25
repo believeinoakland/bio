@@ -536,6 +536,16 @@ scope: reproduce under parallel load (name the instrument and the count of runs)
 accepts-when: N parallel runs pass with the cause named and removed (moves: a load-dependent verdict). NEGATIVE CONTROL: reintroduce the cause and the parallel trial fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch30 finding).
 
+### D-759 · queued — **`monitor-cadence.test.mjs`'s ROW "the archive host's bucket is SPENT first" FAILS UNDER BATTERY LOAD (66/1 in D-734's full gate; 67/0 alone): after the spend loop it re-reads the bucket across several async DO calls and asserts < 1 token, but the bucket refills at 0.4 tokens/s, so ~2.5 s of load turns it red.** Found by D-734's worker. "Flake" is not a root cause. — owner the lane holding monitor-cadence (D-571's).
+order: with D-716, the load-dependent suites in the test-trust rows: a verdict that depends on load cannot fail honestly (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — test-only.
+design: `docs/development/VERIFICATION.md` (measure; do not recall — admitted for M0 by name).
+depends-on: none.
+scope: assert that the spend loop ENDED ON A REFUSED governorAdmit (capture the last admit's admitted === false) instead of timing a re-read; W83 applies — fix the suite, never retry it.
+accepts-when: the row holds under a loaded full battery and alone (moves: a load-dependent red). NEGATIVE CONTROL: stop the loop one admit early and the row fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-734's worker).
+
 ### D-711 · queued — **A THROWN FIXTURE IN 65 SUITES ENDS THE RUN UNNAMED: they wrap the whole module in one try/catch printing "FAIL  the suite threw" with fail+1, so the sections after the throw are never run and never named (RED, not falsely green, but silent about what went unmeasured); casepin.test.mjs (~375) exits inline the same way.** Found by D-667's worker; the D-548/D-564/D-667 matcher sees neither shape. — owner M0.
 order: after D-716, with the test-trust rows: a run that does not say what it left unmeasured is the same class as the block() rows (SCHEDULER #24, 2026-09-25)
 milestone: M0
@@ -1062,13 +1072,3 @@ depends-on: none.
 scope: re-anchor `dropslides` on the current line (prefer an anchor keyed on `slideExtents(` so the next rewording is caught), re-run nc-cap12, and record the result on capture-container-extent's NEGATIVE CONTROL line.
 accepts-when: nc-cap12 reports `dropslides` ARMED and the slides arm fails by name (moves: 1 arm that never armed). NEGATIVE CONTROL: the re-anchored patch itself; revert the anchor and the driver reports ARMED NO again.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-535's worker).
-
-### D-666 · queued — **`bio-plane/test/rec168-capturerequest-principal.control.mjs`'s ARMS drop-gate, gate-sessions-only AND gate-credentials-only DO NOT ARM: their anchor matches 2 sites (since D-85), so the capture-request principal gate's controls refute nothing.** Found by CONDUCT #22 at batch29's union (06:28Z); the union re-anchored the no-stamp arm onto REC-147's RUN_PRODUCTION_ACTIONS literal. M0-197 (running) may have minted the same drift; if so, close this as its duplicate. — owner M0.
-order: after D-600, with the control-driver rows: a control that cannot arm is loud, not false (SCHEDULER #22, 2026-09-25)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the negative control: break the subject, watch the suite fail at a NAMED assertion).
-depends-on: none.
-scope: give the three arms a single-site anchor each; re-run the driver AS DECLARED and record it on the suite's NEGATIVE CONTROL line.
-accepts-when: all three arms report ARMED and fail by name (moves: 3 arms that never armed). NEGATIVE CONTROL: the arms themselves.
-added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; CONDUCT #22's union finding).
