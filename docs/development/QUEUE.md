@@ -249,7 +249,7 @@ accepts-when: the refusal-code census reads every one of the eleven as translate
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### M0-188 · integrated — **THE GATE'S OWN REMEDY NAMES THE ONE-BUNDLE COMMAND: `verifyStatic` in `bio-plane/scripts/fleet-bundle.mjs` ends its staleness findings with "Run `npm run build` in <dir>/." at nine sites, so a worker following it rebuilds one bundle and meets the next stale one in the next gate.** Found by M0-178's worker (F1; with F2 and A6). — owner FLEET (the path), M0.
-status: integrated — CONDUCT #20 verified 23:45Z, tip 71b663a7, for c20-batch28
+status: integrated — SCHEDULER #21 00:10Z: TIP MOVED to c0351eaf (merges 8bdf20e6; REGISTER_FLOOR.arms union 2181); 360/360 GREEN on the pre-merge tree; supersedes 71b663a7
 order: at the backlog head before D-512, AHEAD of the product rows: a wrong remedy in a gate message costs a red round per stale member (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:02Z)
 milestone: M0
 interface: none.
