@@ -82,3 +82,4 @@ IC-321	2026-09-25T06:41:15.633Z	CONDUCT#22	REC-186: op=projectleave refuses the 
 IC-322	2026-09-25T06:41:31.561Z	CONDUCT#22	REC-162: SESSION_ROLE_CANNOT_REACH_OP carries session+reachedBy where it carried role (c22-batch29)
 IC-323	2026-09-25T06:41:36.689Z	CONDUCT#22	REC-196: reads naming a discoverable project's own id answer C-70.1 at EXISTENCE (c22-batch29)
 IC-324	2026-09-25T06:41:41.805Z	CONDUCT#22	D-521b: C-82.1 retired; case_documents_limit/_truncated leave op=statementack's answer (c22-batch29)
+IC-325	2026-09-25T06:41:46.876Z	CONDUCT#22	D-561: op=publishedbytes NOT_FOUND->NO_PUBLISHED_PART, TOO_LARGE->CONTAINER_TOO_LARGE, OBJECT_MISSING (c22-batch29)
