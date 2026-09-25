@@ -4430,6 +4430,7 @@ __export(bio_checks_exports, {
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
+  REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   RISK_TIERS: () => RISK_TIERS,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
@@ -13637,6 +13638,63 @@ var STATEMENT_ACK_CHECKS = {
        be established, where "this draft" and "ask an editor to save it again" are both false. Generalised at the
        union to name both routes; to BOB #33 with the other. */
     translation: "The record does not say who wrote this statement, so it cannot tell whether you are its author. For a draft, ask an editor of the project to save the statement again; for a published case, it can be published again from a draft that records who wrote it. You can acknowledge it after that. The case can be published either way."
+  }
+};
+var REVIEW_COPY_CHECKS = {
+  NO_REVIEW_COPY: {
+    check: "C-87.1",
+    where: "src/store.mjs #noReviewCopy > is-no-review-copy",
+    translation: "No review copy answers to this request. A review copy is read through the grant issued for it, or by a member with standing in the project that produced it. A grant that was withdrawn, one whose draft has moved on to another edition, and one that never existed all answer the same way, so this answer tells you nothing about which of those is the case."
+  },
+  REVIEW_UNKNOWN_ACT: {
+    check: "C-87.2",
+    where: "src/store.mjs reviewAct > is-review-unknown-act",
+    translation: "That is not one of the things you can do to a review copy. There are three: draft the case that will be shown, grant someone a copy to read, and withdraw a grant you issued."
+  },
+  REVIEW_NOT_PROJECT_OWNER: {
+    check: "C-87.3",
+    where: "src/store.mjs #notReviewOwner > is-review-authority",
+    translation: "You do not hold this act's authority over this project. Drafting the case needs permission to edit the project's work; handing the draft to someone outside the group, and withdrawing a copy you handed over, are the project owner's own acts. A project, draft or grant you hold no such authority over is answered exactly as one that does not exist, so this answer does not tell you whether it is there."
+  },
+  REVIEW_NO_PROJECT: {
+    check: "C-87.4",
+    where: "src/store.mjs #caseDraft > is-review-no-project",
+    translation: "Say which project this draft belongs to. A draft case is a piece of a project's work, the same as a published case is, and it is not held by anybody until it names one."
+  },
+  REVIEW_DRAFT_CHANGES_PROJECT: {
+    check: "C-87.5",
+    where: "src/store.mjs #caseDraft > is-review-draft-changes-project",
+    translation: "This draft belongs to a different project, and a case does not change hands. If the other project should be making this case, draft it there as a case of its own."
+  },
+  REVIEW_NO_SUCH_CASE: {
+    check: "C-87.6",
+    where: "src/store.mjs #caseDraft > is-review-no-such-case",
+    translation: "This project has published no case by that name. A draft may name an existing case, which makes the draft that case's next edition; a case another project published is answered exactly as one that does not exist. Leave the name off and the draft is a new case."
+  },
+  REVIEW_DRAFT_TOO_LARGE: {
+    check: "C-87.7",
+    where: "src/store.mjs #caseDraft > is-review-draft-too-large",
+    translation: "This draft's arguments are larger than the plane will store: the limit is 64 KiB, the same size publishing the case would accept. Nothing was saved. Material this large belongs in the documents and content the case rests on rather than in the draft itself."
+  },
+  REVIEW_NO_RECIPIENT: {
+    check: "C-87.8",
+    where: "src/store.mjs #reviewGrant > is-review-recipient",
+    translation: "Say who this copy is for, in one line. Handing a draft to someone is an addressed act: the record says who it went to, and a grant addressed to nobody would leave no such record."
+  },
+  REVIEW_NO_SECRET: {
+    check: "C-87.9",
+    where: "src/store.mjs #reviewGrant > is-review-secret",
+    translation: "The reading secret that would let this recipient open the copy was not set. That secret is made for you when the grant is issued, so this is a fault in the request rather than something you supply; nothing was issued. Try issuing the grant again."
+  },
+  REVIEW_NO_GRANT: {
+    check: "C-87.10",
+    where: "src/store.mjs #reviewRevoke > is-review-grant-named",
+    translation: "Say which grant to withdraw, by the id you were given when it was issued. Nothing was withdrawn. This answer says only that no grant was named; it says nothing about which grants exist."
+  },
+  REVIEW_NO_COMMENT_TEXT: {
+    check: "C-87.11",
+    where: "src/store.mjs reviewComment > is-review-comment-text",
+    translation: "A comment has to say something, and at most 4000 characters of it. Nothing was recorded. What you have written is still yours to send once it is within that length."
   }
 };
 var THEME_CHECKS = {
@@ -39617,12 +39675,34 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
      argument at all, so the bytes cannot vary with anything the caller sent or with
      anything the record holds. `#noCaseDocument`'s rule one altitude over: a
      refusal that said REVOKED would tell the holder their access had existed. */
-  static #noReviewCopy() {
+  /* D-448 — ONE CONSTRUCTOR FOR EVERY REFUSAL THE REVIEW COPY MAKES (REC-79's single-helper shape, as
+     `BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates DEC-49), reading the canned translation off the
+     catalogue row rather than repeating a sentence here. IT IS STATIC, and `#leadRefusal` is the precedent:
+     this family's eleven refusals are spread over SIX methods — `reviewAct`, `#caseDraft`, `#reviewGrant`,
+     `#reviewRevoke`, `reviewComment` and the two static dead answers — so a `const refusal` local to one
+     method, which is what every single-method family uses, could not reach the other five. D-507's finding
+     is the reason the declaration sits ABOVE every one of them: a helper a return cannot see is a helper
+     that return does not use, and that is exactly how six `op=statementack` codes reached a member with no
+     translation. ADDITIVE ON THE WIRE: `reason`, each site's own `detail` and its per-site keys are
+     unchanged; `code`, `check` and `translation` join them. */
+  static #reviewRefusal(code, detail, extra) {
+    const row = REVIEW_COPY_CHECKS[code];
     return {
       ok: false,
-      reason: "NO_REVIEW_COPY",
-      detail: "no review copy answers to this request. A review copy is read through the grant that was issued for it, or by a member with standing in the project that produced it; a grant that was withdrawn, or whose draft has moved to another edition, answers exactly as one that was never issued."
+      reason: code,
+      code,
+      check: row.check,
+      translation: row.translation,
+      detail,
+      ...extra || {}
     };
+  }
+  static #noReviewCopy() {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
+    return refusal7(
+      "NO_REVIEW_COPY",
+      "no review copy answers to this request. A review copy is read through the grant that was issued for it, or by a member with standing in the project that produced it; a grant that was withdrawn, or whose draft has moved to another edition, answers exactly as one that was never issued."
+    );
   }
   /* THE THREE AUTHORING ACTS — draft, grant, revoke — ENTER THROUGH ONE DOOR, and
      the door is where the MACHINE FENCE (C-32.16) stands. That is measured rather
@@ -39633,6 +39713,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
      A machine is refused BY NAME before any act is chosen: the act is ADDRESSED
      and ATTRIBUTED (§6A.2), so the record must name the person who did it. */
   reviewAct({ act = "", author = null, ...args } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     const who = String(author ?? "").trim();
     if (!who || isMachineIdentity(who))
       return {
@@ -39643,12 +39724,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (act === "draft") return this.#caseDraft(who, args);
     if (act === "grant") return this.#reviewGrant(who, args);
     if (act === "revoke") return this.#reviewRevoke(who, args);
-    return {
-      ok: false,
-      reason: "REVIEW_UNKNOWN_ACT",
-      act,
-      detail: "the review copy's authoring acts are draft, grant and revoke."
-    };
+    return refusal7(
+      "REVIEW_UNKNOWN_ACT",
+      "the review copy's authoring acts are draft, grant and revoke.",
+      { act }
+    );
   }
   /* NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER: a caller without the act's
        authority cannot learn from this refusal whether the project, the draft or the
@@ -39667,11 +39747,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     revoke: "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing one is (BIO_Publication \xA76A.2). An administrator sees every project and directs none of them."
   };
   static #notReviewOwner(act) {
-    return {
-      ok: false,
-      reason: "REVIEW_NOT_PROJECT_OWNER",
-      detail: `${_Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.`
-    };
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
+    return refusal7(
+      "REVIEW_NOT_PROJECT_OWNER",
+      `${_Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.`
+    );
   }
   /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
      never taken from the caller — `publishCase`'s own rule (DEC-12 as DEC-44
@@ -39708,6 +39788,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
      2026-09-17: *"An editor must be able to edit"*). */
   #caseDraft(who, { draft = null, project = null, viewer = null, ...rest } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const proj = String(project ?? "").trim();
     if (!draft && proj) {
@@ -39718,17 +39799,15 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (draft && !existing) return _Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
     if (!owning)
-      return {
-        ok: false,
-        reason: "REVIEW_NO_PROJECT",
-        detail: "a draft case is a production of a project, as a published case is (DEC-72): pass project=<project id>."
-      };
+      return refusal7(
+        "REVIEW_NO_PROJECT",
+        "a draft case is a production of a project, as a published case is (DEC-72): pass project=<project id>."
+      );
     if (existing && proj && proj !== existing.project_id)
-      return {
-        ok: false,
-        reason: "REVIEW_DRAFT_CHANGES_PROJECT",
-        detail: `this draft is ${existing.project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.`
-      };
+      return refusal7(
+        "REVIEW_DRAFT_CHANGES_PROJECT",
+        `this draft is ${existing.project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.`
+      );
     if (!this.#isProjectEditor(owning, a.who)) return _Store.#notReviewOwner("draft");
     const params = {};
     for (const k of _Store.REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
@@ -39736,21 +39815,19 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (named) {
       const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, named);
       if (!owned || owned.project_id !== owning)
-        return {
-          ok: false,
-          reason: "REVIEW_NO_SUCH_CASE",
-          caseId: named,
-          detail: `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.`
-        };
+        return refusal7(
+          "REVIEW_NO_SUCH_CASE",
+          `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.`,
+          { caseId: named }
+        );
       params.caseId = named;
     }
     const json2 = JSON.stringify(params);
     if (json2.length > 64 * 1024)
-      return {
-        ok: false,
-        reason: "REVIEW_DRAFT_TOO_LARGE",
-        detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
-      };
+      return refusal7(
+        "REVIEW_DRAFT_TOO_LARGE",
+        "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
+      );
     const when = (/* @__PURE__ */ new Date()).toISOString();
     const priorStatement = existing ? _Store.#fmSafe(JSON.parse(existing.params).statement ?? "") : "";
     const nextStatement = _Store.#fmSafe(params.statement ?? "");
@@ -39905,23 +39982,22 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     );
   }
   #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
     if (!d || !this.#isProjectOwner(d.project_id, a.who)) return _Store.#notReviewOwner("grant");
     const to = String(recipient ?? "").trim();
     if (!to || to.length > _Store.REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
-      return {
-        ok: false,
-        reason: "REVIEW_NO_RECIPIENT",
-        detail: `name the person or group this copy is addressed to, in one line of at most ${_Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not attributed, and the grant is the record of who was handed what.`
-      };
+      return refusal7(
+        "REVIEW_NO_RECIPIENT",
+        `name the person or group this copy is addressed to, in one line of at most ${_Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not attributed, and the grant is the record of who was handed what.`
+      );
     const s = String(secretSha ?? "");
     if (!/^[0-9a-f]{64}$/.test(s))
-      return {
-        ok: false,
-        reason: "REVIEW_NO_SECRET",
-        detail: "the read secret's fingerprint is set by the control plane and was absent."
-      };
+      return refusal7(
+        "REVIEW_NO_SECRET",
+        "the read secret's fingerprint is set by the control plane and was absent."
+      );
     const when = (/* @__PURE__ */ new Date()).toISOString();
     const ident = this.#draftIdentity(d);
     const id = this.#mintOpaqueId(
@@ -39954,14 +40030,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     };
   }
   #reviewRevoke(who, { grant = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     const a = { who };
     const gid = String(grant ?? "").trim();
     if (!gid)
-      return {
-        ok: false,
-        reason: "REVIEW_NO_GRANT",
-        detail: "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>."
-      };
+      return refusal7(
+        "REVIEW_NO_GRANT",
+        "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>."
+      );
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
     if (!g || !this.#isProjectOwner(g.project_id, a.who)) return _Store.#notReviewOwner("revoke");
@@ -40218,6 +40294,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     };
   }
   reviewComment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#reviewRefusal(code, detail, extra);
     let d, kind, author, grantId = null;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
@@ -40235,11 +40312,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     }
     const body = String(text ?? "").trim();
     if (!body || body.length > _Store.REVIEW_TEXT_MAX)
-      return {
-        ok: false,
-        reason: "REVIEW_NO_COMMENT_TEXT",
-        detail: `a comment says something: at least one character and at most ${_Store.REVIEW_TEXT_MAX}.`
-      };
+      return refusal7(
+        "REVIEW_NO_COMMENT_TEXT",
+        `a comment says something: at least one character and at most ${_Store.REVIEW_TEXT_MAX}.`
+      );
     const when = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at) VALUES (?,?,?,?,?,?)`,

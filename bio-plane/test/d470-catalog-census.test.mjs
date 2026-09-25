@@ -348,6 +348,10 @@ const CATALOG_CENSUS = {
      refusals of a draft link that would be false (BIO_Publication §3 rule 13, BOB #33 19:14Z). THREE ARRIVALS, NO
      DEPARTURES. Count and digest are THIS SUITE'S PRINT on this branch; if another branch also took 1.29.0, the
      integrator re-reads the census on the union and one of them takes the next number. */
+  /* 1.29.0 (D-448, 2026-09-24): C-87 REVIEW_COPY_CHECKS, the review copy's eleven refusals, over 1.28.0.
+     1.28.0's row STAYS: each row is the census of the catalogue that stamped it. Count and digest are
+     THIS SUITE'S OWN PRINT on the item's tree; CONDUCT re-reads both at integration, where neither
+     branch's figure is the union's. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -460,6 +464,11 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 
   /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
 /* CORRECTED by D-547 (2026-09-25): 1.28.0 -> 1.29.0 — C-86.2 joined the catalogue, so 1.28.0 names the old one. */
+/* CORRECTED 2026-09-24 by D-448, never exempted: 1.28.0 -> 1.29.0, because C-87's eleven rows moved the
+   census 461 -> 472 and this arm's whole point is that the literal moves whenever the catalogue does.
+   FOUND BY THE GATE, not by reading: D-448 corrected `ratify.test.mjs`'s stamp pin and MISSED THIS ONE,
+   which is the second reader of the same constant inside this suite's own file — the rule that a fix
+   verified only where you changed it is not verified (CLAUDE.md §5), paid for once more here. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
