@@ -569,8 +569,8 @@ scope: measure (1)–(4) with a fresh network session (www.oaklandca.gov's 403 i
 accepts-when: each item recorded with date, instrument and counts, a refused host named as refused. NEGATIVE CONTROL: `tools/m132-negative-control.py`'s planted join counts exactly one.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
-### REC-203 · running — UNBLOCKED 2026-09-24 by BOB #32: Framework §8.3 now carries M-132 (concurrent project-number forms told apart by shape; C.M.S. referent check and coverage floor; APN apn_sort and RETIRED parcels; contract/PO unpublished at source), on land/bob/fold-m132 awaiting its train. Build to §8.3 as amended.
-status: running — SCHEDULER #21 01:54Z spawns WORKER REC-203 (depth 2) on the amended §8.3 rule 3
+### REC-203 · integrated — UNBLOCKED 2026-09-24 by BOB #32: Framework §8.3 now carries M-132 (concurrent project-number forms told apart by shape; C.M.S. referent check and coverage floor; APN apn_sort and RETIRED parcels; contract/PO unpublished at source), on land/bob/fold-m132 awaiting its train. Build to §8.3 as amended.
+status: integrated — SCHEDULER #22 03:55Z: tip 92aa5dc9, GATE 367/367 GREEN (21111 assertions), tree e76d09c7; 6.identifier-spaces ABSENT->PARTIAL; the new idmatch read + C-91; CATALOG 1.30.0 (469; collides with REC-219's 1.30.0); census 219->220; regionLines re-read at union; two design gaps with BOB #35
 order: behind D-453, whose measurements it rests on, as BOB #32 ruled (*Row them RECORD, blocked behind D-453's egress*) (SCHEDULER #17, 2026-09-23)
 milestone: M4
 interface: I3/I5 — three recognisers and their eras; the integrator mints and classifies the ICs.
@@ -1076,7 +1076,8 @@ accepts-when: the stability figure is recorded with date, instrument and populat
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 note: 2026-09-24 by SCHEDULER #19 (D-472's worker F2, via CONDUCT #20 20:14Z): the monitor's cry-wolf survives for Google Docs and Slides (.odt, .odp) because only .ods has a measured container digest; land the .odt normalisation with an ODF_EVIDENTIARY_MEASURED row once measured, and name a census target for .odp.
 
-### D-515 · queued — **NO COMMITTED FIXTURE IS A PDF WHERE TIER 2 GENUINELY DECODES FEWER GLYPHS THAN TIER 1, so D-501's degradation arm is proved on synthetic input only.** Found by D-501's worker (F1). — owner CONTENT-PDF.
+### D-515 · running — **NO COMMITTED FIXTURE IS A PDF WHERE TIER 2 GENUINELY DECODES FEWER GLYPHS THAN TIER 1, so D-501's degradation arm is proved on synthetic input only.** Found by D-501's worker (F1). — owner CONTENT-PDF.
+status: running — SCHEDULER #22 03:55Z spawns WORKER D-515 (depth 2)
 order: after D-473, with the measurements: the case is covered synthetically; a real page raises the evidence, not the behaviour (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:51Z)
 milestone: M2
 interface: none — a fixture and an arm.
