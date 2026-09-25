@@ -13357,7 +13357,7 @@ var PROJECT_VISIBILITY_CHECKS = {
 var PROJECT_JOIN_REQUEST_CHECKS = {
   PROJECT_REQUEST_NEEDS_A_MEMBER: {
     check: "C-95.1",
-    where: "src/store.mjs projectRequest > is-join-request-ask",
+    where: "src/store.mjs #noRequester > is-join-request-member",
     translation: "Asking to join a project, withdrawing that request and reading your own requests are things a signed-in member does for themselves. Sign in as yourself to do it. Nothing was changed."
   },
   PROJECT_REQUEST_NOT_OUTSIDE: {
@@ -13372,7 +13372,7 @@ var PROJECT_JOIN_REQUEST_CHECKS = {
   },
   PROJECT_REQUEST_NONE_OPEN: {
     check: "C-95.4",
-    where: "src/store.mjs projectRequestWithdraw > is-join-request-withdraw",
+    where: "src/store.mjs #noOpenRequest > is-join-request-none-open",
     translation: "There is no open request to join here to act on. It may already have been answered, withdrawn or lapsed. Nothing was changed."
   },
   PROJECT_REQUEST_ANSWER_NOT_THE_OWNER: {
@@ -61523,6 +61523,36 @@ ${words}`;
     if (me.member_id === _Store.ROOT_ADMIN) return viewer === _Store.ROOT_ADMIN ? me : null;
     return viewerPredicate(viewer).member === me.member_id ? me : null;
   }
+  /* C-95.1 and C-95.4 are each said at more than one act, so each is minted in ONE governed region and every act
+     RELAYS it (`#existenceOnly`'s shape): one row, one `where`, one place a translation can go missing. The DETAIL is
+     the act's own sentence, handed in; the code is the literal here. */
+  #joinRequestRefusal(code, projectId, detail, extra = {}) {
+    const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+    return {
+      ok: false,
+      reason: code,
+      code,
+      check: row.check,
+      translation: row.translation,
+      detail,
+      project: projectId ?? null,
+      ...extra
+    };
+  }
+  #noRequester(projectId, detail) {
+    const refusal7 = (code, d) => this.#joinRequestRefusal(code, projectId, d);
+    return refusal7(
+      "PROJECT_REQUEST_NEEDS_A_MEMBER",
+      `${detail} A request to join is a PERSON's act: it is made, withdrawn and read back by the member who asked, signed in as themselves (Membership Architecture v2 \xA77.14), and a machine credential, the operator's bearer and the member bearer have nobody behind them to ask.`
+    );
+  }
+  #noOpenRequest(projectId, detail, extra = {}) {
+    const refusal7 = (code, d) => this.#joinRequestRefusal(code, projectId, d, extra);
+    return refusal7(
+      "PROJECT_REQUEST_NONE_OPEN",
+      `${detail} A request is open until it is granted, declined, withdrawn, or lapsed by its project going hidden (Membership Architecture v2 \xA77.14), and each of those closes it for good; the member may ask again.`
+    );
+  }
   #openJoinRequest(projectId, memberId) {
     return this.#one(`SELECT seq, comment, asked_at FROM project_join_requests
                        WHERE project_id=? AND member_id=? AND state='open'`, projectId, memberId);
@@ -61577,8 +61607,8 @@ ${words}`;
     };
     const me = this.#requester(by, viewer);
     if (!me)
-      return refusal7(
-        "PROJECT_REQUEST_NEEDS_A_MEMBER",
+      return this.#noRequester(
+        projectId,
         "asking to join a project is a signed-in member's own act (Membership Architecture v2 \xA77.14). A credential with no active member behind it asks nothing. Nothing was written."
       );
     const b = this.#one(`SELECT object_type, title FROM bundles WHERE bundle_id=?`, projectId);
@@ -61621,27 +61651,15 @@ ${words}`;
    *  own record, so it asks no sight of the project: the request is what the caller names, and a caller with no
    *  open request to that id is answered ONE way whether the project is discoverable, hidden or absent. */
   projectRequestWithdraw({ projectId, by, viewer = null } = {}) {
-    const refusal7 = (code, detail) => {
-      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row.check,
-        translation: row.translation,
-        detail,
-        project: projectId ?? null
-      };
-    };
     const me = this.#requester(by, viewer);
     if (!me)
-      return refusal7(
-        "PROJECT_REQUEST_NEEDS_A_MEMBER",
+      return this.#noRequester(
+        projectId,
         "withdrawing a request to join is the requester's own act, and a credential with no active member behind it made none. Nothing was written."
       );
     if (!this.#openJoinRequest(projectId, me.member_id))
-      return refusal7(
-        "PROJECT_REQUEST_NONE_OPEN",
+      return this.#noOpenRequest(
+        projectId,
         "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written."
       );
     const at = (/* @__PURE__ */ new Date()).toISOString();
@@ -61688,8 +61706,8 @@ ${words}`;
     const target = this.#memberByHandle(handle);
     const open = target ? this.#openJoinRequest(projectId, target.member_id) : null;
     if (!open)
-      return refusal7(
-        "PROJECT_REQUEST_NONE_OPEN",
+      return this.#noOpenRequest(
+        projectId,
         `${JSON.stringify(String(handle ?? "").slice(0, 80))} has no open request to join this project, so there is nothing to answer. Nothing was written.`,
         { handle: handle ?? null }
       );
@@ -61757,8 +61775,8 @@ ${words}`;
     if (projectId === null || projectId === void 0 || projectId === "") {
       const me = this.#requester(by, viewer);
       if (!me)
-        return refusal7(
-          "PROJECT_REQUEST_NEEDS_A_MEMBER",
+        return this.#noRequester(
+          null,
           "a member's own requests to join are read by that member, signed in. A credential with no active member behind it has made none."
         );
       const mine = this.#rows(

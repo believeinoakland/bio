@@ -65,12 +65,16 @@ const ARMS = {
        missing on 2026-09-23 (see the note under `mustFail`), and it is the property D-497 had to keep while
        putting the directory's candidates into SQL. The patch reproduces the old arm's semantics exactly: no
        act reads DISCOVERABLE, an explicit `hidden` act is still honoured. */
-    patches: [["store.mjs", "                   THEN 'discoverable' ELSE 'hidden' END,",
+    /* ANCHOR CORRECTED 2026-09-25 by REC-150 (D-602): the anchor ended in a COMMA that D-497's own fix removed from the
+       statement (it dropped the `at` column that followed this CASE), so since D-497 this arm has matched ZERO times and
+       reported ARM DID NOT ARM — measured on pristine origin/main 964da679, not introduced here. The patch is the same
+       flip, without the comma, and the anchor now carries the next line so it is unique. */
+    patches: [["store.mjs", "                   THEN 'discoverable' ELSE 'hidden' END\n         FROM bundles b",
                "                   THEN 'discoverable'\n"
                + "                   WHEN (SELECT pv.setting FROM project_visibility pv\n"
                + "                          WHERE pv.project_id = b.bundle_id\n"
                + "                          ORDER BY pv.seq DESC LIMIT 1) = 'hidden' THEN 'hidden'\n"
-               + "                   ELSE 'discoverable' END,"]],
+               + "                   ELSE 'discoverable' END\n         FROM bundles b"]],
     /* FIRST RUN (2026-09-23) NOT AS DECLARED, and it was the SUBJECT that was wrong: 1e and 2e PASSED — the
        directory took its candidates from the visibility table, a second copy of "no record = hidden", so the flipped
        default never reached it. The directory now asks `#sight` over every project; re-run, as declared. */
