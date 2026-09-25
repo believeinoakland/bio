@@ -42,6 +42,7 @@
  *  (D) OVER-STRICTNESS — the path spelled `CASE-DOCUMENT-e<N>.md`: 12/0 and 72/0. A filename is not the contract.
  */
 import "./stdio.mjs";
+import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process (the pen below) and removes it on exit */
 import fs from "fs";
 import { createRequire } from "module";
 import { pathToFileURL } from "url";
@@ -295,4 +296,7 @@ t("and the published manifest lists exactly the two case_document rows",
   ((await GET("op=publishedmanifest"))?.shas || []).filter((s) => s.kind === "case_document")
     .map((s) => s.sha256).sort(), [D_OLD.doc_sha, D_NEW.doc_sha].sort());
 
-await finish();
+console.log(`\nd734-casedoc-published: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
+await mf.dispose();
+rmSync(PEN, { recursive: true, force: true });
+process.exit(fail ? 1 : 0);
