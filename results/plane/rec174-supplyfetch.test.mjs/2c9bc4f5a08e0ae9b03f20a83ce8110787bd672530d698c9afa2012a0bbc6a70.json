@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec174-supplyfetch.test.mjs",
+ "inputHash": "2c9bc4f5a08e0ae9b03f20a83ce8110787bd672530d698c9afa2012a0bbc6a70",
+ "verdict": "PASS",
+ "run": "d3866f13ac3a45a610bde7076dc03530c6691eae.1790309946200.32202.json",
+ "tree": "d3866f13ac3a45a610bde7076dc03530c6691eae",
+ "head": "674850fe50d9323fd9c43cbf1be58f58fa03e7e5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 154,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "28995656-fd0c-526d-ba2f-4859824ec24c",
+ "at": "2026-09-25T04:19:06.225Z"
+}
