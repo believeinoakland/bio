@@ -33,13 +33,13 @@
  *   · `128 * 1024` as a TEXT cap (128 KiB) or a `maxBuffer` — a byte count, not a memory share.
  *   · `524,288 / 128` — a unit resolution, not memory.
  *
- * NEGATIVE CONTROL: (RUN 2026-09-25 by WORKER D-312, baseline 19 pass / 0 fail) each arm ALONE against a
+ * NEGATIVE CONTROL: (RUN 2026-09-25 by WORKER D-312, RE-RUN after the ledger exclusion became a regex; baseline 21 pass / 0 fail) each arm ALONE against a
  * pristine copy of agent-worker/src/index.mjs (77,960 B), restored and verified by sha256 (e9ff3f31…) AND cmp.
- *   (N1) plant "120.4 MB of 128 MB" into the shipped BOUND_SOURCE string -> exit 1, **17 pass, 2 FAIL**: both
+ *   (N1) plant "120.4 MB of 128 MB" into the shipped BOUND_SOURCE string -> exit 1, **19 pass, 2 FAIL**: both
  *        section-1 arms fail NAMING `agent-worker/src/index.mjs:177` (a CODE site, comments stripped);
  *        sections 2 and 3 held, 3/3 reached. AS DECLARED.
  *   (N2) OVER-STRICTNESS — plant a closure spelled as nobody wrote one, "never a share of  128 MB" (two
- *        spaces) -> exit 0, 19 pass / 0 fail. AS DECLARED: the rule stated is not graded.
+ *        spaces) -> exit 0, 21 pass / 0 fail. AS DECLARED: the rule stated is not graded.
  * The cross-line spelling (INTERFACES.md's "120.4 MB against\na 128 MB ceiling") was MISSED by the first,
  * per-line draft of this matcher and found only by comparing its hits to the row's named sites — recorded
  * because a per-line grep reads that site clean.
