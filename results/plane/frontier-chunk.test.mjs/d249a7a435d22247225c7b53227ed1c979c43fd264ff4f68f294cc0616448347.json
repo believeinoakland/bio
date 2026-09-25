@@ -1,0 +1,16 @@
+{
+ "unit": "plane:frontier-chunk.test.mjs",
+ "inputHash": "d249a7a435d22247225c7b53227ed1c979c43fd264ff4f68f294cc0616448347",
+ "verdict": "PASS",
+ "run": "a2ff404c8074436516e5be4ac44f8cf1096d3ac8.1790326489863.30521.json",
+ "tree": "a2ff404c8074436516e5be4ac44f8cf1096d3ac8",
+ "head": "cbc5ae9bdecbebf31c8ce2bd592163862d47a1a9",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 160,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "84f36a10-614e-59ce-a789-d6454929813b",
+ "at": "2026-09-25T08:54:49.876Z"
+}
