@@ -1199,9 +1199,9 @@ scope: (1) correct §4.3 and the #writeCaptureText docblock to "every unit that 
 accepts-when: Z5's workbook reads S5 indexed and names S4 skipped over the bound; a capture under the bound names none (moves: a silent gap). NEGATIVE CONTROL: drop the skipped-key write and the Z5 arm fails naming S4.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-685's worker; BOB #36 inbox).
 
-### D-728 · running — **op=publish case=C1 draft=<a draft naming C1 AND setting newCase> PUBLISHES and binds that draft to C1's next edition (measured: ok:true, edition 2, completeness.draft = the pair draft), though D-618 ruled the pair UNDETERMINED and every pair sentence (D-708, D-721) says publication refuses the two instructions together — the record doing what its own sentences say it refuses.** Found by D-721's worker. — owner RECORD.
+### D-728 · integrated — **op=publish case=C1 draft=<a draft naming C1 AND setting newCase> PUBLISHES and binds that draft to C1's next edition (measured: ok:true, edition 2, completeness.draft = the pair draft), though D-618 ruled the pair UNDETERMINED and every pair sentence (D-708, D-721) says publication refuses the two instructions together — the record doing what its own sentences say it refuses.** Found by D-721's worker. — owner RECORD.
+status: integrated — SCHEDULER #24 13:26Z: tip 5ad02b3b (on D-721 3ef19436), GATE 409/409 GREEN FULLREUSE (22936 assertions; excludes 3 untallied), tree 85efb132; is-publish-draft-this-case compares #statedEdition so a pair draft is refused PUBLISH_DRAFT_NOT_THIS_CASE and writes nothing; reproduced first 26/3 -> 29/0; a C1-only draft still publishes; regionLines 4710->4712 (re-read at union); I3
 order: spawned directly, stacked on D-721 (same is-publish-draft-this-case region): a signed binding the record's own rule forbids, in signed bytes (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 12:43Z: spawned, stacked on land/worker/D-721 @ 3ef19436
 milestone: M10
 interface: I3 — a new refusal where a publish used to land; the integrator classifies.
 design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 and §6A.4 (D-618: a pair draft's case is UNDETERMINED; publication refuses the two instructions together).
