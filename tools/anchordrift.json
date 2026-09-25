@@ -66,14 +66,6 @@
    "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/dec65-strength-reach.control.mjs",
-   "arm": "a2",
-   "anchor": "  #strengthWalk(bundleId, depth, bound, legsOver",
-   "row": "D-638",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/fence-e2e.control.mjs",
    "arm": "(3)",
    "anchor": "  return !!spec && Array.isArray(spec.classes) &",

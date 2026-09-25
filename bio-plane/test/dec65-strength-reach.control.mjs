@@ -140,6 +140,16 @@
  * behaving perfectly. A positional index into an instrument's output is the same
  * staleness class this entire item is about, met inside the item's own control.
  * Keyed by the driver's own `(n)` headers since.
+ *
+ * D-638, RUN 2026-09-25 (base land/worker/M0-197 @ 11818309, and again on origin/main @ 95fe7bc7):
+ * arm (2)'s anchor had DRIFTED — `#strengthWalk` gained `captureBounds = null`, so it matched 0 times and the
+ * arm never armed (M0-197's `tools/anchordrift.mjs` named it). Re-anchored on the whole signature line, counted 1
+ * on both trees; its allowance is deleted. MEASURED, each arm alone, every restore VERIFIED by sha256 AND `cmp`:
+ * (0) 27/0 · (1) 22/5 AS DECLARED · (2) 27/0 AS DECLARED, NOW ARMED · (4) 24/3 AS DECLARED · (6) 27/0 AS DECLARED.
+ * (3) 26/1 — *** NOT AS DECLARED (22/5) *** on BOTH trees: only the desync self-check fires; the runaway no longer
+ * reaches the arithmetic. NOT corrected here (outside D-638): minted D-736.
+ * READER'S CONTROL: the old anchor put back with no allowance → `anchordrift --only` RED naming arm a2
+ * `matches 0 times`, exit 1; restored by sha256 AND `cmp`, GREEN.
  */
 /* `mkdtempSync`, `rmSync` and `tmpdir` were dropped on 2026-09-13 with arm (5),
    the only thing that used them. See that arm's retirement note below. */
@@ -254,9 +264,12 @@ say("    MUST NOT FAIL. A sweep that cites its own prose reports a reader that i
 say("    and this repository has already had a sweep arm fail by citing itself.");
 {
   const p = pristine("a2", STORE);
-  patch(STORE, `  #strengthWalk(bundleId, depth, bound, legsOverride = null) {`,
+  /* D-638 (2026-09-25): RE-ANCHORED. The signature gained `captureBounds = null`, so the old anchor
+     `legsOverride = null) {` matched 0 times and this arm never armed; M0-197's anchor-drift reader named it.
+     The new anchor is the whole signature line, counted 1 in store.mjs on this tree and on origin/main. */
+  patch(STORE, `  #strengthWalk(bundleId, depth, bound, legsOverride = null, captureBounds = null) {`,
                `  /* control arm 2: the words asserted_by, in a comment and nowhere else */\n`
-             + `  #strengthWalk(bundleId, depth, bound, legsOverride = null) {`);
+             + `  #strengthWalk(bundleId, depth, bound, legsOverride = null, captureBounds = null) {`);
   report("2", { pass: WHOLE, fail: 0 }, runSuite());
   restore("a2", STORE, p);
 }
