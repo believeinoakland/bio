@@ -1494,10 +1494,10 @@ export const ODF_EVIDENTIARY_VERSION = 1;
  *  (formats-odf.test.mjs pins that index.mjs spells none of them — D-70). */
 export const ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 export const ODF_EVIDENTIARY_MEASURED = Object.freeze({
-  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
 });
 const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
-  odt: "the .odt content.xml differs on every Google export (MEASUREMENTS.md 2026-09-14 §4; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
+  odt: "the .odt content.xml differs on every Google export (the MEASUREMENTS ledger 2026-09-14 §4; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
   odp: "no .odp export has been measured for content.xml stability (M-123: the census holds no Slides target), so no evidentiary digest is claimed for .odp",
 });
 

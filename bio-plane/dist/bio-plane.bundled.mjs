@@ -853,7 +853,7 @@ CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
 -- member surface and REC-18's earned grades were bounded to exact references.
 --
 -- WHY TERMS AND NOT A NORMALISED LABEL COLUMN, and it is MEASURED, not preferred
--- (MEASUREMENTS.md 2026-08-04, REC-36; instrument test/label-variance-probe.mjs).
+-- (the MEASUREMENTS ledger 2026-08-04, REC-36; instrument test/label-variance-probe.mjs).
 -- Over the one real captured document this repository holds -- a 33-page Oakland
 -- Legistar agenda read by the real doctype -- a subject name was the WHOLE label
 -- in 0 of 41 labels against 33 names taken from the document itself. The label is
@@ -2932,7 +2932,7 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
 -- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
 -- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no
 -- ANALYZE, which is this plane's live condition because nothing here ever
--- runs one). MEASUREMENTS.md M-41 carries the plans in full:
+-- runs one). The MEASUREMENTS ledger's M-41 carries the plans in full:
 --   the four existing readers     -- every one uses the PRIMARY KEY autoindex,
 --                                    none touches this index, and DROPPING it
 --                                    leaves all four plans IDENTICAL
@@ -3197,7 +3197,7 @@ CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bun
 --
 -- THE INPUTS AND THE SCORES ARE COLUMNS RATHER THAN PROSE, and that is the
 -- item. CPDF-10 shaped measured_by as a free STRING -- today
--- "MEASUREMENTS.md 2026-08-03 (CPDF-9)" -- which is better than a bare letter
+-- "the MEASUREMENTS ledger 2026-08-03 (CPDF-9)" -- which is better than a bare letter
 -- and is still not a binding: nothing checks the pointer resolves, and nothing
 -- can answer "which transcriptions rest on a measurement that has been
 -- superseded". A row here is that answer's other half.
@@ -3381,7 +3381,7 @@ CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
 --
 -- MEASURED 2026-09-15 (test/content-index-probe.mjs, node:sqlite, the statements
 -- DRIVEN out of compile() and every OTHER index DRIVEN out of schema.mjs AND
--- store.mjs rather than typed). MEASUREMENTS.md M-23 (filed as M-21, renumbered
+-- store.mjs rather than typed). The MEASUREMENTS ledger's M-23 (filed as M-21, renumbered
 -- at integration -- corrected here by REC-104) carries both corpus sizes,
 -- the instrument, the synthetic proportions and what the instrument cannot see.
 -- At 20,000 bundles / 40,002 content rows, 9 reps:
@@ -4147,7 +4147,7 @@ CREATE TABLE IF NOT EXISTS reading_history (
 -- makes one token bucket globally correct for the instance for free; a bucket
 -- in Worker memory governs nothing because every invocation is independent.
 -- appetite_per_min NULL means the configured default (a CHOSEN constant,
--- recorded in MEASUREMENTS.md, never a finding). cooloff_until is how a 429 or
+-- recorded in the MEASUREMENTS ledger, never a finding). cooloff_until is how a 429 or
 -- a refusal overrides the bucket entirely: while it is in the future, no token
 -- balance admits anything to that host. refusals counts CONSECUTIVE refusals
 -- and decays to zero on success, so the cool-off escalates the way the
@@ -7080,7 +7080,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
       `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ""}`,
       [
         `state NO capture grade on basis[${i}] \u2014 an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-        "or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns",
+        "or have the transcription measured (the MEASUREMENTS ledger, per engine, per version) and state the letter the record then earns",
         "or state this leg as testimony (grade D, with an author and a date) if it is a member's own account"
       ]
     ));
@@ -20739,10 +20739,10 @@ var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
 var ODF_EVIDENTIARY_VERSION = 1;
 var ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 var ODF_EVIDENTIARY_MEASURED = Object.freeze({
-  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)"
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)"
 });
 var ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
-  odt: "the .odt content.xml differs on every Google export (MEASUREMENTS.md 2026-09-14 \xA74; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
+  odt: "the .odt content.xml differs on every Google export (the MEASUREMENTS ledger 2026-09-14 \xA74; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
   odp: "no .odp export has been measured for content.xml stability (M-123: the census holds no Slides target), so no evidentiary digest is claimed for .odp"
 });
 function referencedMembers(contentXml, container) {
@@ -49416,7 +49416,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     } else if (r.over_bound > 0) {
       state = "partial";
       const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
-      bound = (byUnits ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on` : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20)`) + " or the acquire answer's own budget, whichever bit first -- the last is the smaller in bytes and is what the promote path's inline-file limit forces";
+      bound = (byUnits ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on` : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)`) + " or the acquire answer's own budget, whichever bit first -- the last is the smaller in bytes and is what the promote path's inline-file limit forces";
       detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; ${r.over_bound} unit(s) past the bound are NOT indexed`;
     } else if (r.written > 0) {
       state = "PRESENT";
@@ -56289,7 +56289,7 @@ ${words}`;
           captures: e.n,
           determined: false,
           undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
-          empty_level: "transcription fidelity \u2014 this document's text was derived by a machine and no step in that derivation carries a measured fidelity (MEASUREMENTS.md, per engine, per version)",
+          empty_level: "transcription fidelity \u2014 this document's text was derived by a machine and no step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, per version)",
           why: `${captureWord}, but every transcription of its text is UNMEASURED: no step in the provenance of this document's text carries a measured fidelity, so what a leg resting on that text may claim about how it was captured is undetermined. That is a statement, not a permission \u2014 DEC-4 bounds the capture axis by transcription fidelity as its weakest link, so an unmeasured derivation bounds it to nothing rather than to ${EARNED_CAPTURE_CEILING}. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter this record cannot support.`,
           ceiling
         };
@@ -83087,9 +83087,9 @@ function needsTier2(text) {
   return true;
 }
 var LAYER_FIDELITY_CAP = null;
-var LAYER_FIDELITY_SOURCE = "unmeasured: a text layer is itself an unverified transcription (CPDF-9, MEASUREMENTS.md 2026-08-03)";
+var LAYER_FIDELITY_SOURCE = "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)";
 var NAMED_ENGINE_CAP = null;
-var NAMED_ENGINE_SOURCE = "unmeasured: the engine is NAMED by the document's own /Info producer metadata (D-251; CPDF-9, MEASUREMENTS.md 2026-08-03), and no calibration of it exists here (CPDF-13)";
+var NAMED_ENGINE_SOURCE = "unmeasured: the engine is NAMED by the document's own /Info producer metadata (D-251; CPDF-9, the MEASUREMENTS ledger 2026-08-03), and no calibration of it exists here (CPDF-13)";
 function layerChainFor(i2text, { tier, container }) {
   const base = layerChain({
     tier,
@@ -84855,7 +84855,7 @@ var index_default = {
           tier2PerPage: readT2PerPage,
           fmt: "pdf"
         });
-        const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, MEASUREMENTS.md)";
+        const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)";
         if (!t3.filled.length) {
           structure.reextraction = {
             performed: false,

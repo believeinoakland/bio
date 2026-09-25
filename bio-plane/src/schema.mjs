@@ -846,7 +846,7 @@ CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
 -- member surface and REC-18's earned grades were bounded to exact references.
 --
 -- WHY TERMS AND NOT A NORMALISED LABEL COLUMN, and it is MEASURED, not preferred
--- (MEASUREMENTS.md 2026-08-04, REC-36; instrument test/label-variance-probe.mjs).
+-- (the MEASUREMENTS ledger 2026-08-04, REC-36; instrument test/label-variance-probe.mjs).
 -- Over the one real captured document this repository holds -- a 33-page Oakland
 -- Legistar agenda read by the real doctype -- a subject name was the WHOLE label
 -- in 0 of 41 labels against 33 names taken from the document itself. The label is
@@ -2925,7 +2925,7 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
 -- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
 -- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no
 -- ANALYZE, which is this plane's live condition because nothing here ever
--- runs one). MEASUREMENTS.md M-41 carries the plans in full:
+-- runs one). The MEASUREMENTS ledger's M-41 carries the plans in full:
 --   the four existing readers     -- every one uses the PRIMARY KEY autoindex,
 --                                    none touches this index, and DROPPING it
 --                                    leaves all four plans IDENTICAL
@@ -3190,7 +3190,7 @@ CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bun
 --
 -- THE INPUTS AND THE SCORES ARE COLUMNS RATHER THAN PROSE, and that is the
 -- item. CPDF-10 shaped measured_by as a free STRING -- today
--- "MEASUREMENTS.md 2026-08-03 (CPDF-9)" -- which is better than a bare letter
+-- "the MEASUREMENTS ledger 2026-08-03 (CPDF-9)" -- which is better than a bare letter
 -- and is still not a binding: nothing checks the pointer resolves, and nothing
 -- can answer "which transcriptions rest on a measurement that has been
 -- superseded". A row here is that answer's other half.
@@ -3374,7 +3374,7 @@ CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
 --
 -- MEASURED 2026-09-15 (test/content-index-probe.mjs, node:sqlite, the statements
 -- DRIVEN out of compile() and every OTHER index DRIVEN out of schema.mjs AND
--- store.mjs rather than typed). MEASUREMENTS.md M-23 (filed as M-21, renumbered
+-- store.mjs rather than typed). The MEASUREMENTS ledger's M-23 (filed as M-21, renumbered
 -- at integration -- corrected here by REC-104) carries both corpus sizes,
 -- the instrument, the synthetic proportions and what the instrument cannot see.
 -- At 20,000 bundles / 40,002 content rows, 9 reps:
@@ -4140,7 +4140,7 @@ CREATE TABLE IF NOT EXISTS reading_history (
 -- makes one token bucket globally correct for the instance for free; a bucket
 -- in Worker memory governs nothing because every invocation is independent.
 -- appetite_per_min NULL means the configured default (a CHOSEN constant,
--- recorded in MEASUREMENTS.md, never a finding). cooloff_until is how a 429 or
+-- recorded in the MEASUREMENTS ledger, never a finding). cooloff_until is how a 429 or
 -- a refusal overrides the bucket entirely: while it is in the future, no token
 -- balance admits anything to that host. refusals counts CONSECUTIVE refusals
 -- and decays to zero on success, so the cool-off escalates the way the

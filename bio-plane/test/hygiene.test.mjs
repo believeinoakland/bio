@@ -2393,7 +2393,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      file(s)`): the one is D-394's own suite (`test/versionnotice.test.mjs`, named above), the only walker it adds. */
   /* MOVED 42 -> 43 by CONDUCT #18 at D-394's merge onto c18-batch8, which carries D-179's walker (d179onehome): the
      merged tree PRINTED 43, d179onehome and versionnotice both walkers. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 45)`,
+  /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
+     (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
+     bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 47)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2406,7 +2409,9 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     /* MOVED 44 -> 45 by D-454, from the figure this suite PRINTED on the item's tree over origin/main 8bdf20e6
        (`45 walking file(s)`): the one is D-454's own suite (`test/reading-position-occurrences.test.mjs`, named above),
        the only walker the item adds (its control driver sits in the worker's scratchpad and is not committed). */
-    census.length >= 45, true);
+    /* MOVED 45 -> 47 by CONDUCT #22 at D-535's merge onto c22-batch29 (2026-09-25): D-454 and D-535 each moved 44 -> 45
+       on their own trees; the merged tree PRINTED `47 walking file(s)`. */
+    census.length >= 47, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
