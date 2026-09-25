@@ -192,6 +192,7 @@ export const CATALOG_VERSION = "1.29.0";
    457 + 10 = 467, and the count and digest recorded in d470-catalog-census.test.mjs are THAT SUITE'S
    OWN PRINT on this tree, never the arithmetic — the arithmetic would agree with itself for free. */
 export const CATALOG_VERSION = "1.26.0";
+/* 1.29.0 (D-530, 2026-09-24): the catalogue gained C-89.1 (ATTEST_CHECKS, CAPTURE_HELD_IN_PARTS), 461 -> 462, MINOR, its census read from the d470 suite's print. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -279,7 +280,18 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
   /* The plane's own remaining duty: bytes the register claims must exist. */
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
-    if (!probe.present)
+    /* D-530: a whole hash held only in parts is not missing bytes, and saying so was
+       false. It is still refused: publication copies a capture by the hash its row
+       names, and there is no object under this one. Registering each part, as the
+       setup surface does, is the shape that publishes. */
+    if (!probe.present && probe.heldInParts)
+      errors.push({ check: "PLANE_HELD_IN_PARTS",
+                    detail: `registered capture is held only in parts: this plane's acquisition receipt names `
+                          + `the whole hash, and the working bucket stores the document as its parts, each under `
+                          + `its own hash. Publication copies a capture by the hash its register row names, so `
+                          + `register the parts rather than the whole`,
+                    where: { path: r.path, sha256: r.capture_sha } });
+    else if (!probe.present)
       errors.push({ check: "PLANE_MISSING_BYTES", detail: `registered capture is absent from the working bucket`,
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (typeof r.bytes === "number" && probe.bytes !== r.bytes)

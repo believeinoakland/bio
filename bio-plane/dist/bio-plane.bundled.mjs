@@ -4339,6 +4339,7 @@ __export(bio_checks_exports, {
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_CHECKS: () => AI_RUN_CHECKS,
   ANN_ID_RE: () => ANN_ID_RE,
+  ATTEST_CHECKS: () => ATTEST_CHECKS,
   BASIS_GRADES: () => BASIS_GRADES,
   BASIS_ROLES: () => BASIS_ROLES,
   BASIS_VERSION_CHECKS: () => BASIS_VERSION_CHECKS,
@@ -12262,6 +12263,13 @@ var KNOCK_CHECKS = {
     translation: "This group's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again."
   }
 };
+var ATTEST_CHECKS = {
+  CAPTURE_HELD_IN_PARTS: {
+    check: "C-89.1",
+    where: "src/index.mjs fetch > is-attest-parts",
+    translation: "The record lists this document, but keeps it in parts rather than as one file, and this instance has no record of fetching it itself. A timestamp is only requested for bytes this instance can vouch for, so none was requested. Nothing is missing: do not capture the document again. If the instance fetches it from its address, it can then be co-attested."
+  }
+};
 var DRIVE_CAPTURE_CHECKS = {
   /* D-112, AND IT IS THE SPINE OF THE ITEM. The three facts this capture's hop
      carries — the export address, the export format, the producer — are derived
@@ -15926,7 +15934,13 @@ async function runGate({
   const errors = findings.filter((f2) => f2.severity === "error").map((f2) => ({ check: f2.check, detail: f2.message, ...f2.repairs ? { repairs: f2.repairs } : {} }));
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
-    if (!probe.present)
+    if (!probe.present && probe.heldInParts)
+      errors.push({
+        check: "PLANE_HELD_IN_PARTS",
+        detail: `registered capture is held only in parts: this plane's acquisition receipt names the whole hash, and the working bucket stores the document as its parts, each under its own hash. Publication copies a capture by the hash its register row names, so register the parts rather than the whole`,
+        where: { path: r.path, sha256: r.capture_sha }
+      });
+    else if (!probe.present)
       errors.push({
         check: "PLANE_MISSING_BYTES",
         detail: `registered capture is absent from the working bucket`,
@@ -62354,15 +62368,32 @@ ${words}`;
    *  register answers for documents the record REGISTERED, and a prior acquire
    *  never promoted leaves parts in R2 and no register row. `registered: false` is
    *  that one fact and nothing more; `registered: null` is no question asked.
+   *
+   *  D-530 - AND THE PLANE'S OWN RECEIPT, `acquired`. `captured_locators` has one
+   *  writer, `op=acquire`, and the hash in it is the one the plane computed as the
+   *  bytes ARRIVED; nothing deletes a store's captures. So a receipt for a whole
+   *  hash that has no object under it says the plane took the document and keeps
+   *  it in parts, and no caller can write it. The register cannot say that: a
+   *  register row is written by `op=promote` from what its CALLER names, and
+   *  promote does not read R2 (D-45). `op=attest` attests on the receipt and not on
+   *  the register alone; the ratify gate names a whole-hash row held in parts
+   *  rather than calling its bytes absent. One bounded read on the
+   *  `captured_locators_sha` index, and like `registered` it names no bundle.
    */
   registerHolds({ sha = null } = {}) {
     const s = typeof sha === "string" && sha.trim() ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
-    if (!s) return { ok: true, sha: null, asked: false, registered: null };
-    return { ok: true, sha: s, asked: true, registered: !!this.#one(
-      `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+    if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
+    return {
+      ok: true,
+      sha: s,
+      asked: true,
+      registered: !!this.#one(
+        `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
         WHERE r.capture_sha = ? LIMIT 1`,
-      s
-    ) };
+        s
+      ),
+      acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s)
+    };
   }
   static #promoteAbsent() {
     return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
@@ -84092,12 +84123,33 @@ var index_default = {
       const sha = typeof body2?.sha256 === "string" ? body2.sha256.toLowerCase() : "";
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" }, 400);
-      if (!await env.CAPTURES.head(`${storeName}/captures/${sha}`))
-        return json({
-          ok: false,
-          reason: "NO_SUCH_CAPTURE",
-          detail: "nothing in this store has that hash; capture the document before attesting it"
-        }, 404);
+      let held = null;
+      if (!await env.CAPTURES.head(`${storeName}/captures/${sha}`)) {
+        const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
+          `http://x/registerholds?sha256=${encodeURIComponent(sha)}`
+        ));
+        const holds = hOut.answered ? hOut.result : null;
+        if (holds && holds.acquired === true) {
+          held = {
+            form: "parts",
+            on: "acquisition_receipt",
+            detail: "no object is stored under this hash, because the document was captured in parts and only its parts are stored, each under its own hash. This plane hashed the whole document as it arrived and recorded that receipt, which is what this attestation rests on."
+          };
+        } else {
+          if (holds && holds.registered === true)
+            return json({
+              ok: false,
+              reason: "CAPTURE_HELD_IN_PARTS",
+              sha256: sha,
+              detail: "the record's register names these bytes, but no object is stored under this hash and this plane holds no receipt of having acquired them, which is the shape of a document kept only in parts. A register row is written from what the promoting caller named, so a timestamp is not rested on it alone. Nothing here says the bytes are missing."
+            }, 409);
+          return json({
+            ok: false,
+            reason: "NO_SUCH_CAPTURE",
+            detail: holds ? "no object is stored under that hash, the register holds no row for it under a bundle that exists, and this plane holds no receipt of having acquired it" : "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes"
+          }, 404);
+        }
+      }
       const attempts = [];
       let token = null, tokenSha = null, service = null;
       for (const endpoint of TSA_ENDPOINTS) {
@@ -84191,7 +84243,8 @@ var index_default = {
             bytes: token.length,
             over: sha
           },
-          note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature."
+          note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
+          ...held ? { held } : {}
         } : {
           reason: "NO_ATTESTATION",
           note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped."
@@ -84910,7 +84963,12 @@ var index_default = {
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
-          return h ? { present: true, bytes: h.size } : { present: false, bytes: 0 };
+          if (h) return { present: true, bytes: h.size };
+          const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
+            `http://x/registerholds?sha256=${encodeURIComponent(sha)}`
+          ));
+          const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
+          return { present: false, bytes: 0, ...inParts ? { heldInParts: true } : {} };
         }
       });
       if (!gate.ok)

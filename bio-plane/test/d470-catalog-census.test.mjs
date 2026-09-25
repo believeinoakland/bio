@@ -391,6 +391,7 @@ const CATALOG_CENSUS = {
      refusals at op=airunopen). MINOR on the rule above. The count and the digest below are THIS SUITE'S
      OWN PRINT on this tree and never 457 + 10: the figure is a measurement of the catalogue that is
      here, and the arithmetic would agree with it for free. */
+  /* 1.29.0 (D-530, 2026-09-24): C-89.1 CAPTURE_HELD_IN_PARTS over 1.28.0; count and digest are THIS SUITE'S PRINT on the D-530 tree. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
