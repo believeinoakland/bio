@@ -118,8 +118,8 @@
     },
     {
       "path": "src/affordances.mjs",
-      "bytes": 170069,
-      "sha256": "bbcf0c543efbf4e61acfde611da6c3ced7c02204508c66f2f6495defabb0a304"
+      "bytes": 171748,
+      "sha256": "5284cbd8a573d04125134c4f229d3e1a71e19b33605e5bf540c2cd7643fd6381"
     },
     {
       "path": "src/airun.mjs",
