@@ -571,26 +571,6 @@ scope: when renderings join `published_shas`, the verifying value is `pixels_sha
 accepts-when: a rendering published from workerd verifies against a Pillow-computed pixel hash. NEGATIVE CONTROL: verify by the file hash, and the cross-runtime arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
 
-### D-194 · queued — **A MEMBER'S LEAD HAS A PLANE AND NO SURFACE: `op=lead`, `leadlook`, `leadread` and `leadshare`, the `leads` table and the internet frontier's read of them are built (`status.mjs` 10.lead), and `app.html` makes no lead call.** — owner UI.
-order: after D-177, a member surface on a built plane (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
-milestone: M4
-interface: I3 consumer.
-design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (the lead's surface).
-depends-on: none — the plane half is built.
-scope: a member writes a lead, records a look, and sees the frontier's LOOKED_ABSENT against it; the lead is shared only by the member's act. New harness in `civicos-ui/test/`.
-accepts-when: a member writes a lead, records a look, and sees LOOKED_ABSENT against it. NEGATIVE CONTROL: stub `op=lead`, and the write-and-look arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; the plane half closed; keeps its `D-` id).
-
-### D-189 · queued — **NO SURFACE CAN SAY A PROJECT CARRIES ITS OWN BIAS: `op=biasmanifest` computes the effective set with project nullifications, `7.ui` is ABSENT, and `app.html` still says *"DECLARED BIAS is the HUNCH legs and nothing else"*.** — owner UI.
-order: after D-194 (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
-milestone: M8
-interface: I3 consumer.
-design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" (DEC-46).
-depends-on: none — the manifest read is built.
-scope: the project and publication surfaces read the manifest at project scope and state that the project carries its own bias; the hunch-only sentence is corrected. New harness in `civicos-ui/test/`.
-accepts-when: a project with an adopted set shows it; an empty manifest shows no indicator. NEGATIVE CONTROL: render the indicator on an empty manifest, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
-
 ### REC-201 · queued — **A RECORDS REQUEST CAN ONLY BE A CALIFORNIA ONE: the action kind is `cpra_request`, and sovereign groups sit outside California.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *DESIGN DIRECTION ADOPTED — a law-neutral `records_request` kind carrying a `law` field; `cpra_request` stays readable as written.* — owner RECORD.
 order: behind the current M9/M10 product rows, as ruled (SCHEDULER #17, 2026-09-23; D-149's builder)
 milestone: M10
@@ -1181,3 +1161,23 @@ depends-on: none — M0-119 is on `main`.
 scope: `write()` adds its automatic rebalance only when an intent changes a plan file's membership or size: `insert`, `row`, `refill`, `archive`, or an `append`, `line` or `replace` whose file is `QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`; a `status` word, a claim, a handoff or a DELEGATION does not. The explicit `rebalance` intent is unchanged; `coord.test.mjs` gains the arms.
 accepts-when: a write of only a `CLAIMS.md` append or a `-NEXT.md` replace leaves both plan files byte-identical even when the backlog is over budget; an `insert` over budget still moves the tail. NEGATIVE CONTROL: rebalance on every write again, and the claim-only arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (BOB #29's ruling in WORK-PIPELINE §2; `node tools/mintid.mjs M0`).
+
+### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two … (whole text: the cut archive)
+order: behind the product rows, first of the ledger tooling (Bob, 2026-09-22: *process is overhead*; SCHEDULER #12): AMBIGUITY STATED, not the record over-claiming — the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), and LED-7 folds around the two rows (SCHEDULER #2 + BOB #17, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullet "The legacy residue" … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `find` returns BOTH rows for a collided id and SAYS it collided; `mintid --audit` still reads 0 breaks; every existing citation of the four still resolves. How a liar passes … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER #2 (batch 4; found by CONDUCT #7; no-renumber ruling by BOB #17).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «LED-8» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### LED-9 · queued — **A PIPELINE INVARIANT READS `status.mjs`, SO A DEPENDENT CANNOT BE SEQUENCED ABOVE UNBUILT SUBSTRATE.** P4 fails the plan when a … (whole text: the cut archive)
+order: with LED-8, the ledger tooling: preventive, not a live defect — no row is mis-sequenced today, checked by hand. Earned by THREE catches in one day (D-60, D-115, D-116): a row read as done because the thing underneath it was (SCHEDULER #2 + BOB #17, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md`, the law this gate is an arm of, with `WORK-PIPELINE.md`'s P1–P5 … (whole text: the cut archive)
+depends-on: none.
+accepts-when: a row depending on a construct `status.mjs` reads ABSENT fails the plan NAMING both; one whose substrate is BUILT passes; **a row naming substrate only in prose is UNJUDGED** … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER #2 (D-404's fix, ruled by BOB #17).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «LED-9» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
