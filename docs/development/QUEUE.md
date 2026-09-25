@@ -898,9 +898,9 @@ scope: when draft= is given, the writer read consults THAT draft only; without d
 accepts-when: two same-bytes no-case drafts by different authors, one named by draft=: the publish names the named draft's author, never the other and never UNDETERMINED (moves: another draft's author named, or a needless UNDETERMINED). NEGATIVE CONTROL: read every project draft again and the named-draft arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (`node tools/mintid.mjs D`, D-703's stated gap).
 
-### D-717 · running — **FIVE ACTION-FAMILY CATALOGUE ARMS RUN ONLY IN THE AUDIT (checkBundle), so a member's op=promote SAVES what they forbid (measured by D-695's worker): an action_kind outside ACTION_KINDS; a risk_tier outside its vocabulary; a counterparty that is the placeholder "to be named" or incoherent; `resolved` with no resolution; a C-11.1 clock entry with no basis or malformed.** — owner RECORD.
+### D-717 · integrated — **FIVE ACTION-FAMILY CATALOGUE ARMS RUN ONLY IN THE AUDIT (checkBundle), so a member's op=promote SAVES what they forbid (measured by D-695's worker): an action_kind outside ACTION_KINDS; a risk_tier outside its vocabulary; a counterparty that is the placeholder "to be named" or incoherent; `resolved` with no resolution; a C-11.1 clock entry with no basis or malformed.** — owner RECORD.
+status: integrated — CONDUCT #23 12:20Z: worker report — tip 94cdeb45 (on D-695 b6ebf625), GATE 81/81 GREEN FULLREUSE (6611 assertions) after full run red fixed in 94cdeb45; C-101 ACTION_CATALOGUE_CHECKS five refusals on promote; IC owed (MAJOR: refusals where writes landed); rides batch30 after D-695
 order: spawned directly, stacked on D-695 (same action block): a forbidden value landing in the record is a trustworthiness defect and D-695's own class (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 11:07Z: spawned, stacked on land/worker/D-695 @ b6ebf625
 milestone: M7
 interface: I3 — named refusals on op=promote for five action arms; the integrator classifies.
 design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (the action object and its catalogue arms), with D-130 / DEC-13 and C-11.1.
