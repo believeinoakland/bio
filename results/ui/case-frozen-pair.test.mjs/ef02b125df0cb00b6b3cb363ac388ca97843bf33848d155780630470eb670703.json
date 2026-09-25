@@ -1,0 +1,16 @@
+{
+ "unit": "ui:case-frozen-pair.test.mjs",
+ "inputHash": "ef02b125df0cb00b6b3cb363ac388ca97843bf33848d155780630470eb670703",
+ "verdict": "PASS",
+ "run": "abc7310d972c88a298c0b2ca4da4470181379f61.1790300029005.28695.json",
+ "tree": "abc7310d972c88a298c0b2ca4da4470181379f61",
+ "head": "b253c01d823b1d9dbcbf9aa5aec821ddfb047c3a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 78,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "a76ae74b-30e7-5619-a0d7-ccdd01df929b",
+ "at": "2026-09-25T01:33:49.017Z"
+}
