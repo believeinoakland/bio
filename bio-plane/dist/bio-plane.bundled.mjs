@@ -30705,6 +30705,32 @@ function contentObservationsFor(reading, captureSha, tiersOf) {
   const { tiers, unclassified } = tiersOf(chain2);
   const terminal = chain2 && chain2.length ? chain2[chain2.length - 1].step : null;
   const shortfall = reading.tier3_candidate === true;
+  const empty = Number.isInteger(reading.text_glyphs) ? reading.text_glyphs === 0 : Number.isInteger(reading.text_chars) && reading.text_chars === 0 ? true : null;
+  if (empty === true) {
+    const ranTier3 = tiers.some((t) => t.tier === 3);
+    const rowsOf = (tierList) => tierList.map((t, i) => {
+      const last = i === tierList.length - 1;
+      const absent = last && ranTier3 && !shortfall && reading.text_undetermined === 0;
+      return {
+        tier: t.tier,
+        state: absent ? "LOOKED_ABSENT" : "LOOKED_INDETERMINATE",
+        condition: absent ? null : "text-undetermined",
+        resultKind: null,
+        resultRef: null,
+        detail: detailFor(
+          t.steps ? t : null,
+          terminal,
+          reading,
+          absent ? "no text: the engine that reads page images read every page it was sent and found nothing above the floor" : shortfall ? "no text read, and pages were left UNREAD \u2014 a page nobody read is not a page with no text" : last && ranTier3 ? "no text read above the floor, and the tiers left an undetermined residue (or did not count one), so what is on the page is undetermined" : last ? "no text read, and no tier that reads page images ran, so whether this document has text is undetermined" : "no text read by this tier; a later tier looked"
+        )
+      };
+    });
+    return {
+      rows: rowsOf(tiers.length ? tiers : [{ tier: null, covers: "all", steps: null }]),
+      unclassified,
+      why: null
+    };
+  }
   if (reading.read_from_text !== true) {
     return {
       rows: [{
@@ -82794,6 +82820,22 @@ var readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
      direction. NULL IS NEVER "the whole document was meant". */
   source: readingSource(e && e.source)
 })).filter((e) => e.key != null || e.kind != null);
+function textCountsOf(text) {
+  if (text == null) return null;
+  if (typeof text === "string")
+    return { text_chars: text.length, text_glyphs: glyphCount(text), text_undetermined: null };
+  if (typeof text !== "object") return null;
+  const c = text.counts;
+  const n = (v) => Number.isInteger(v) && v >= 0 ? v : null;
+  return {
+    text_chars: n(c && c.chars),
+    text_glyphs: typeof text.document === "string" ? glyphCount(text.document) : null,
+    /* THE RESIDUE: regions the producing tiers marked undetermined — a page with no text layer
+       nobody transcribed, an OCR region below the floor. Text that exists and was not read is
+       not an absence of text, so a non-zero residue keeps an empty reading from LOOKED_ABSENT. */
+    text_undetermined: n(c && c.undetermined)
+  };
+}
 function readingFromWire({
   wired,
   docType,
@@ -84353,6 +84395,10 @@ var index_default = {
             container: "pdf",
             planeVersion: env.VERSION || null
           });
+          {
+            const n = textCountsOf(t3.i2text);
+            if (n) Object.assign(reading, n);
+          }
           structureChain = chain2;
           reading.reextracted = {
             at: stampInstant("second"),
@@ -85521,6 +85567,10 @@ var index_default = {
         planeVersion: env.VERSION || null,
         member: canRead ? "plane" : null
       });
+      {
+        const n = textCountsOf(classifiedText);
+        if (n) Object.assign(reading, n);
+      }
       return json({
         ok: true,
         existed,

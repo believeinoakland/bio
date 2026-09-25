@@ -84,6 +84,30 @@
        TWO rows while entitled to THREE and is told the list is complete.
    (l) `unexplained` — drop the third disjunct alone. Declared STRUCTURAL-ONLY for (j)'s reason.
        ACTUAL: G5b, as declared.
+   (m)-(r) ADDED 2026-09-25 by D-375's worker, EXTENDING THIS BLOCK for (h)'s reason, and RUN
+       2026-09-25 through `node test/nc-d375.mjs [arm]` (harness nc-d536's: each arm ALONE, an
+       anchor matching exactly once, restores by sha256 AND byte comparison — airun.mjs 174,092 B,
+       index.mjs 890,454 B, both byte-identical). Six arms, 0 not as declared on the second run.
+   (m) `baseline` — nothing armed. Declared green. ACTUAL 90/0.
+   (n) `nocount` — THE ROW'S OWN: acquire no longer carries the count onto the reading. Declared
+       MUST FAIL K1 K2 K5, MUST NOT FAIL K3 K4 or any B8 arm. ACTUAL 87/3, exactly those. THE ROW
+       PREDICTED K2 WOULD READ PRESENT; declared before arming as measured, it reads
+       LOOKED_INDETERMINATE — the reader declines empty text, so the scan arrives
+       `read_from_text: false` and row 3 answers. PRESENT is what a count-less WHITESPACE reading reads.
+   (o) `noresidue` — LOOKED_ABSENT stops requiring a zero residue. Declared MUST FAIL K5 B8h. ACTUAL
+       88/2, exactly those: ink below the OCR floor filed as no text.
+   (p) `noshortfall` — LOOKED_ABSENT stops refusing a `tier3_candidate` reading. Declared MUST FAIL
+       B8c, MUST NOT FAIL K3 (the unread page also keeps its `no_text_layer` residue, so the second
+       guard holds). FIRST RUN: 90/0, NOT AS DECLARED — B8c carried no residue figure, so the residue
+       guard alone held it and the arm could not bite. A finding about the FIXTURE; B8c now carries
+       `text_undetermined: 0`. SECOND RUN 89/1, exactly B8c.
+   (q) `afterrow3` — the row-4 branch reached only when `read_from_text` is true, where it was first
+       written. Declared MUST FAIL K2 B8i. ACTUAL 88/2, exactly those — the defect K2 caught on this
+       item's own first run, when K2 read LOOKED_INDETERMINATE.
+   (r) `charsonly` — OVER-STRICTNESS: the reading carries the producer's `counts.chars` and no glyph
+       figure. Declared MUST FAIL K1 only. FIRST RUN: K1 and K5, NOT AS DECLARED — K5 pinned the glyph
+       figure it is not about; it now pins the character count. SECOND RUN 89/1, exactly K1: the
+       judgement reaches LOOKED_ABSENT off the producer's zero.
    THE ACTUAL RESULTS OF EVERY ARM ARE IN `CLAIMS.md`'s release line for REC-94 and REC-109,
    including the ones that came back other than declared — and two of REC-109's five did.
    WHAT THESE ARMS CANNOT SEE: they are all local to this plane's own source. Nothing here
@@ -163,6 +187,38 @@ const SRC = {
   self:   readFileSync(new URL("./observation-content.test.mjs", import.meta.url), "utf8"),
 };
 
+/* D-375 — section K's fixtures: `d536-reading-provenance.test.mjs`'s assembler and scan shape (a page
+   that paints one image and declares no font, so tier 1 marks it `no_text_layer`). Each scan differs
+   by its image width only, so each is its own capture. */
+function kPdf(objs) {
+  const chunks = [Buffer.from("%PDF-1.7\n", "latin1")];
+  for (const o of objs) {
+    chunks.push(Buffer.from(`${o.num} 0 obj\n`, "latin1"));
+    if (o.stream) {
+      chunks.push(Buffer.from(o.head + "\nstream\n", "latin1"));
+      chunks.push(o.stream);
+      chunks.push(Buffer.from("\nendstream\n", "latin1"));
+    } else chunks.push(Buffer.from(o.body + "\n", "latin1"));
+    chunks.push(Buffer.from("endobj\n", "latin1"));
+  }
+  chunks.push(Buffer.from("%%EOF\n", "latin1"));
+  return new Uint8Array(Buffer.concat(chunks));
+}
+function kScan(width) {
+  const img = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46]);
+  const content = Buffer.from("q 612 0 0 792 0 0 cm /Im0 Do Q", "latin1");
+  return kPdf([
+    { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Im0 100 0 R >> >> /Contents 4 0 R >>" },
+    { num: 4, head: `<< /Length ${content.length} >>`, stream: content },
+    { num: 100, head: `<< /Type /XObject /Subtype /Image /Width ${width} /Height 3300 /Filter /DCTDecode /Length ${img.length} >>`, stream: img },
+  ]);
+}
+const K_SCANS = { "/k-empty.pdf": kScan(3751), "/k-unread.pdf": kScan(3752), "/k-read.pdf": kScan(3753),
+                  "/k-floor.pdf": kScan(3754) };
+let OCR_SCRIPT = "http-500";
+
 const TOK = "mem-rec94";
 const ADM = "adm-rec94";
 const NOW = "2026-09-15T09:00:00Z";
@@ -173,8 +229,22 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
+  /* D-375 (section K): a stub OCR member answering CPDF-12's contract, and the three scans it is
+     asked about. Only `op=acquire` reaches either; every earlier section promotes readings it builds. */
+  serviceBindings: {
+    async OCR_WORKER(request) {
+      if (new URL(request.url).pathname !== "/transcribe") return new Response("no", { status: 404 });
+      if (OCR_SCRIPT === "http-500") return new Response("boom", { status: 500 });
+      return Response.json(OCR_SCRIPT);
+    } },
+  outboundService(request) {
+    const b = K_SCANS[new URL(request.url).pathname];
+    return b ? new Response(b, { headers: { "content-type": "application/pdf" } })
+             : new Response("unscripted", { status: 500 });
+  },
   bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: TOK, PROBE_TOKEN: "prb-rec94",
-              VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
+              VERSION: "test", TASK_DRAIN_DELAY_MS: "600000",
+              GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
 });
 
 let pass = 0, fail = 0, reachedFoot = false;
@@ -354,6 +424,68 @@ t("B8: `found: false` with text READ is PRESENT at the CONTENT level, not LOOKED
   contentObservationsFor(readingOf({ text_source: whole1, text_tier: 1, found: false }),
                          SHA1, tiersEvidenced).rows[0].state,
   "PRESENT");
+
+/* D-375 — §4.2 ROW 4 HAS A PRODUCER, AND IT SAYS WHICH ABSENCE. B8 holds one direction (no
+   ENTITIES is not no TEXT); these hold the other: a reading whose text holds no glyph is
+   LOOKED_ABSENT only when the engine that reads page images READ every page it was sent. */
+const scan3 = [{ step: "pixels", cap: "C" },
+               { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" } }];
+const statesOf = (over) => contentObservationsFor(readingOf(over), SHA1, tiersEvidenced).rows
+  .map((r) => [r.state, r.condition]);
+
+t("B8b: a SCAN READ TO NOTHING — tier 3 ran, left no page unread, and the text holds no glyph — is "
++ "LOOKED_ABSENT (§4.2 row 4), with no condition and no referent: it found out there is nothing",
+  (() => { const o = contentObservationsFor(readingOf({ text_source: scan3, text_tier: 3, text_chars: 0,
+                                                        text_glyphs: 0, text_undetermined: 0 }), SHA1, tiersEvidenced);
+           return [o.rows.map((r) => r.state), o.rows[0].condition, o.rows[0].resultRef,
+                   /found nothing above the floor/.test(o.rows[0].detail)]; })(),
+  [["LOOKED_ABSENT"], null, null, true]);
+
+t("B8c: AN UNREAD SCAN IS NOT ABSENT — the same empty text with pages left unread (`tier3_candidate`: no "
++ "OCR member, a failed member, or a tail past D-606's budget) is LOOKED_INDETERMINATE, §4.2 row 3",
+  /* `text_undetermined: 0` ON PURPOSE (nc-d375's `noshortfall` arm, first run): without it the residue
+     guard alone held this reading, and the arm removing the shortfall guard passed — the fixture could
+     not see the guard it names. */
+  statesOf({ text_source: scan3, text_tier: 3, text_chars: 0, text_glyphs: 0, text_undetermined: 0,
+             tier3_candidate: true }),
+  [["LOOKED_INDETERMINATE", "text-undetermined"]]);
+
+t("B8d: and NO tier that reads page images ran at all — a layer read to nothing — is "
++ "LOOKED_INDETERMINATE: nothing looked at the pictures, so whether it has text is undetermined",
+  statesOf({ text_source: whole1, text_tier: 1, text_chars: 0, text_glyphs: 0 }),
+  [["LOOKED_INDETERMINATE", "text-undetermined"]]);
+
+t("B8e: a MIXED chain read to nothing is a history — after tier 1 undetermined, after tier 3 absent",
+  statesOf({ text_source: mixed([0], [1]), text_tier: 3, page_count: 2, text_chars: 0, text_glyphs: 0,
+             text_undetermined: 0 }),
+  [["LOOKED_INDETERMINATE", "text-undetermined"], ["LOOKED_ABSENT", null]]);
+
+t("B8f: GLYPHS GOVERN (D-514/D-531) — whitespace the producer counted as characters holds no text, so "
++ "a scan OCR'd to whitespace is LOOKED_ABSENT; and the producer's zero alone, with no glyph figure, "
++ "is enough — a zero character count cannot hide a glyph",
+  [statesOf({ text_source: scan3, text_tier: 3, text_chars: 4, text_glyphs: 0, text_undetermined: 0 })[0][0],
+   statesOf({ text_source: scan3, text_tier: 3, text_chars: 0, text_undetermined: 0 })[0][0]],
+  ["LOOKED_ABSENT", "LOOKED_ABSENT"]);
+
+t("B8h: INK NOBODY COULD READ IS NOT NO TEXT — an empty reading with an undetermined residue (an OCR "
++ "region below the floor, a page no tier transcribed), or with no residue figure at all, is "
++ "LOOKED_INDETERMINATE and never LOOKED_ABSENT",
+  [statesOf({ text_source: scan3, text_tier: 3, text_chars: 0, text_glyphs: 0, text_undetermined: 2 }),
+   statesOf({ text_source: scan3, text_tier: 3, text_chars: 0, text_glyphs: 0 })],
+  [[["LOOKED_INDETERMINATE", "text-undetermined"]], [["LOOKED_INDETERMINATE", "text-undetermined"]]]);
+
+t("B8i: and the row-4 branch is reached when the reader DECLINED the empty text (`read_from_text: "
++ "false`, which is how a scan OCR'd to nothing actually arrives — section K measured it)",
+  statesOf({ read_from_text: false, text_source: scan3, text_tier: 3, text_chars: 0, text_glyphs: 0,
+             text_undetermined: 0 }),
+  [["LOOKED_ABSENT", null]]);
+
+t("B8g: B8 STILL HOLDS WITH A COUNT — a reading that found no entities in text that HOLDS glyphs is "
++ "PRESENT; and a reading with NO count (persisted before D-375) reads as it always did",
+  [statesOf({ text_source: scan3, text_tier: 3, found: false, text_chars: 900, text_glyphs: 700 })[0][0],
+   statesOf({ text_source: scan3, text_tier: 3 })[0][0],
+   statesOf({ text_source: scan3, text_tier: 3, text_chars: 12, text_glyphs: null })[0][0]],
+  ["PRESENT", "PRESENT", "PRESENT"]);
 
 t("B9: THE CUMULATIVE RULE — a mixed document whose two tiers together cover every page of a "
 + "KNOWN page set ends PRESENT, and the row before it says `partial`. Each row is the state AFTER "
@@ -1124,6 +1256,69 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
     [true, false]);
 }
 
+
+/* ========================================================================= *
+ *  K · D-375 — §4.2's FOURTH ROW, DRIVEN THROUGH `op=acquire` AND `op=promote`.
+ *  The count is taken at acquire and carried on the reading the caller files; the
+ *  frontier then says which absence. Four scans, one OCR answer each: no region at
+ *  all (READ, and absent), the member failing (UNREAD, never absent), a region below
+ *  the floor (ink nobody could read, never absent), and text (PRESENT) — the last so
+ *  the fixture cannot pass by reading everything as empty.
+ * ========================================================================= */
+console.log("\n--- K · D-375: a scan read to nothing, and a scan never read ---");
+{
+  const kAcquire = async (path) => (await POST(`op=acquire&token=${TOK}`,
+    { locator: "https://oakland.legistar.com" + path, authority: "City Clerk" }))?.document ?? null;
+  const kFile = async (id, d) => promote(id, { reading: d?.reading ?? null, captureSha: d?.capture?.sha256,
+                                               register: reg(d?.capture?.sha256 || "0".repeat(64)) });
+  const ocr = (lines) => ({ ok: true, engine: "tesseract", version: "5.3.4-fast", cap: "C",
+    measured_by: "MEASUREMENTS 2026-08-03 (CPDF-9)", confidence_floor: 0.6,
+    pages: [{ page: 0, regions: lines.map((l, i) => ({ text: l, confidence: { value: 0.97, basis: "engine" },
+      source: { kind: "pdf-page", ref: "p0", page: 0, rect: [72, 700 - i * 12, 540, 712 - i * 12] } })) }] });
+
+  OCR_SCRIPT = ocr([]);
+  const E = await kAcquire("/k-empty.pdf");
+  OCR_SCRIPT = "http-500";
+  const U = await kAcquire("/k-unread.pdf");
+  OCR_SCRIPT = ocr(["City of Oakland", "Office of the City Clerk", "Agenda"]);
+  const R = await kAcquire("/k-read.pdf");
+  OCR_SCRIPT = { ...ocr(["smudge"]), pages: [{ page: 0, regions: [{ text: "smudge",
+    confidence: { value: 0.2, basis: "engine" }, source: { kind: "pdf-page", ref: "p0", page: 0,
+                                                          rect: [72, 700, 540, 712] } }] }] };
+  const F = await kAcquire("/k-floor.pdf");
+  t("K0: the fixture is four distinct scans, each acquired to a reading — asserted, so an empty "
+  + "corpus cannot pass the arms below",
+    [new Set([E, U, R, F].map((d) => d?.capture?.sha256)).size,
+     [E, U, R, F].map((d) => typeof d?.reading?.read_from_text)],
+    [4, ["boolean", "boolean", "boolean", "boolean"]]);
+  t("K1: THE COUNT IS PERSISTED AT ACQUIRE — the scan OCR read to nothing carries zero glyphs, zero "
+  + "characters and zero residue, the one OCR read carries its glyphs, and each is on the reading the "
+  + "caller files",
+    [E?.reading?.text_glyphs, E?.reading?.text_chars, E?.reading?.text_undetermined,
+     (R?.reading?.text_glyphs ?? 0) > 0],
+    [0, 0, 0, true]);
+  t("K1b: and the UNREAD scan is flagged as still wanting OCR — the marker that keeps it from absence",
+    [U?.reading?.tier3_candidate, E?.reading?.tier3_candidate ?? false], [true, false]);
+
+  await kFile("INF-2026-0925-k-empty", E);
+  await kFile("INF-2026-0925-k-unread", U);
+  await kFile("INF-2026-0925-k-read", R);
+  await kFile("INF-2026-0925-k-floor", F);
+  const last = async (d) => { const r = await rowsFor(d?.capture?.sha256);
+                              return r.length ? [r[r.length - 1].state, r[r.length - 1].condition] : null; };
+  t("K2: A SCAN READ TO NOTHING WRITES LOOKED_ABSENT — tier 3 read every page it was sent and found "
+  + "nothing above the floor (§4.2 row 4), through the op",
+    await last(E), ["LOOKED_ABSENT", null]);
+  t("K3: AN UNREAD SCAN DOES NOT — the OCR member failed, the page was never read, and the record says "
+  + "LOOKED_INDETERMINATE rather than that the document has no text",
+    await last(U), ["LOOKED_INDETERMINATE", "text-undetermined"]);
+  t("K4: and the scan OCR read is PRESENT — the arms above are about the count, not about scans",
+    await last(R), ["PRESENT", null]);
+  t("K5: and a scan whose one region fell BELOW the floor is not absent either — the page holds ink "
+  + "nobody could read, carried as residue, so LOOKED_INDETERMINATE",
+    [F?.reading?.text_chars, (F?.reading?.text_undetermined ?? 0) > 0, await last(F)],
+    [0, true, ["LOOKED_INDETERMINATE", "text-undetermined"]]);
+}
 
 reachedFoot = true;
 
