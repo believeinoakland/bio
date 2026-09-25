@@ -10748,13 +10748,34 @@ export class Store extends DurableObject {
           a.kind === "recipient" ? "recipient" : "member", "statement acknowledgement");
     let last = null;
     for (const c of cand) if (!last || instantOrder(c.at, last.at) > 0) last = c;
+    const who = (c) => `${c.kind === "edit" ? "an edit of the draft" : `a ${c.kind}`} by `
+                     + `${c.by ?? "somebody this record does not name"}`;
     const act = !last ? "UNDETERMINED: these bytes carry no dated act at all"
-      : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft"
-          : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
+      : `the newest dated act these bytes carry is ${who(last)}`;
+    /* D-573 / BOB #34's ruling of 2026-09-25 01:05Z (§6A.3 point 1): A WHOLE-SECOND STAMP NAMES ITS SECOND AND
+       NOT WHERE IN IT THE ACT FELL, so beside another act inside that same second the order between the two is
+       one the record cannot support — BOB #33's D-516 band, which reads UNDETERMINED. The instant-order pick
+       above is KEPT as the one in-band date (DEC-31 needs one value), and the tie is STATED beside it rather
+       than chosen silently: each act in the pick's own second whose order against the pick turns on a stamp
+       cut to the second is named in `undetermined_within`, and `stated` says which of the two is undetermined
+       and why. Only acts recorded before D-543 carry such a stamp. Acts in different seconds are ordered by
+       the record and carry no statement, and so are two millisecond stamps inside one second. */
+    const WHOLE = /T\d{2}:\d{2}:\d{2}Z$/;
+    const second = (at) => Math.floor(Date.parse(at) / 1000);
+    const tied = !last ? [] : cand.filter((c) => c !== last && second(c.at) === second(last.at)
+                                               && (WHOLE.test(c.at) || WHOLE.test(last.at)));
+    const tieStated = tied.map((c) => {
+      const [a, b] = WHOLE.test(c.at) ? [c, last] : [last, c];
+      return ` Which of ${who(a)} (${a.at}) and ${who(b)} (${b.at}) came later is undetermined: `
+           + (WHOLE.test(b.at) ? "both were recorded to the second" : `${who(a)} was recorded to the second`)
+           + `, so the date this copy carries is the instant order's pick and not an order the record holds `
+           + `(BOB #34, 2026-09-25).`;
+    }).join("");
     return {
       at: last ? last.at : null, by: last ? last.by : null,
       by_kind: last ? last.by_kind : null, kind: last ? last.kind : null,
-      stated: `${act}. THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as `
+      undetermined_within: tied.map((c) => ({ at: c.at, by: c.by, by_kind: c.by_kind, kind: c.kind })),
+      stated: `${act}.${tieStated} THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as `
             + `BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an `
             + `acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy `
             + `draws live and dates nowhere — each finding's text, the publish gates' verdict, and the `
