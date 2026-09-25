@@ -79561,15 +79561,12 @@ function storeInternalError(e, op) {
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error("storeInternalError: STORE_INTERNAL_ERROR has no DISPATCH_CHECKS row with a canned translation (DEC-49).");
   const answer = internalAnswer(row, correlation);
-  try {
-    console.error(JSON.stringify({
-      event: answer.reason,
-      correlation,
-      op: String(op || ""),
-      stack: String(e && e.stack || e)
-    }));
-  } catch {
-  }
+  console.error(JSON.stringify({
+    event: answer.reason,
+    correlation,
+    op: String(op || ""),
+    stack: String(e && e.stack || e)
+  }));
   return answer;
 }
 function internalAnswer(row, correlation) {

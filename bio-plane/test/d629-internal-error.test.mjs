@@ -8,7 +8,7 @@
  *                         MUST fail P1:, P2:, L2:, L3:; every store arm stays green.
  *   (4) over-strict         — the same envelope with its keys in another order and a differently worded log line
  *                         carrying the same facts: NOTHING may fail.
- *   RESULTS (2026-09-25, WORKER D-629, worktree of land/worker/D-629 over origin/main 5e8a65a8): all four AS
+ *   RESULTS — every arm RAN 2026-09-25 (WORKER D-629, worktree of land/worker/D-629 over origin/main 5e8a65a8): all four AS
  *   DECLARED — baseline 17/0, store-stack-back 11/6 (M1 M2 U1 U2 L1 L3), plane-catch-removed 13/4 (P1 P2 L2 L3),
  *   over-strict 17/0; real sources untouched by hash.
  * =========================================================================
