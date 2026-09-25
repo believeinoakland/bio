@@ -2391,10 +2391,11 @@ async function extractImages(doc, pageOrder) {
  * that is a design gap, not a threshold to tune. With `images` NULL (a walk that
  * did not finish, or an encrypted file) no share can be measured and nothing is
  * said. A page already marked `no_text_layer` is left alone: it is routed.
- * Two consequences downstream are minted, not built here (M-178): when tier 2
- * wins a page, its merge replaces the page's markers and this one goes with
- * them (D-633); and the tier-3 merge will not fill a routed page whose folio
- * DECODED, because it holds a glyph (D-635). */
+ * Two consequences downstream were minted, not built here (M-178): when tier 2
+ * won a page, its merge replaced the page's markers and this one went with
+ * them (D-633, BUILT: `mergeTier2Text` now carries it onto the page); and the
+ * tier-3 merge will not fill a routed page whose folio DECODED, because it
+ * holds a glyph (D-635). */
 export const IMAGE_CONTENT_MAX_GLYPHS = 4;
 export const IMAGE_CONTENT_MIN_SHARE = 0.18;
 export const IMAGE_CONTENT_TEXT_GLYPHS = 22;

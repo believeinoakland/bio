@@ -110,6 +110,7 @@
 import {
   TEXT_CHAIN_CHECKS, BASIS_GRADES, EARNED_CAPTURE_CEILING, isMachineIdentity,
 } from "../checks/bio-checks.mjs";
+import { IMAGE_CONTENT_MAX_GLYPHS, IMAGE_CONTENT_MIN_SHARE, IMAGE_CONTENT_TEXT_GLYPHS } from "./pdfstructure.mjs";
 
 /* ------------------------------------------------------------------ *
  * The vocabulary
@@ -1447,6 +1448,26 @@ export function perPageTierWinner(p1, p2) {
   return (u2 < u1 && c2 > c1) ? "tier2" : "tier1";
 }
 
+/* D-633: the markers `pdfstructure.mjs`'s `markImageContent` writes (D-627). */
+const IMAGE_CONTENT_REASONS = Object.freeze(["image_content_unread", "image_content_undetermined"]);
+
+/* D-633 — RE-GRADE A CARRIED MARKER AGAINST THE TEXT THE RECORD HOLDS (BOB #35,
+   2026-09-25 08:05Z). Of the marker's two figures, the image share is a fact
+   about the page's images and carries over unchanged. The glyph count must be
+   the winning tier's, so it is re-read off tier 2's page and graded by
+   D-627's own measured thresholds, imported rather than restated: at most 4
+   keeps `image_content_unread` (with the share over its floor), 5 to 21 reads
+   `image_content_undetermined`, and 22 or more drops the marker. The count is
+   `markImageContent`'s: decoded glyphs plus the characters the page's
+   undetermined markers count, so the thresholds are applied to the figure they
+   were measured on. Returns null when the marker is dropped. */
+function regradeImageMark(u, glyphs) {
+  if (glyphs >= IMAGE_CONTENT_TEXT_GLYPHS) return null;
+  const share = u.image_share;
+  const unread = Number.isFinite(share) && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
+  return { ...u, reason: unread ? "image_content_unread" : "image_content_undetermined", glyphs };
+}
+
 /**
  * Merge tier 2's decode into tier 1's PAGE BY PAGE, and say which tier produced
  * each page. The D-283 answer, and the counterpart to `mergeTier3Text`.
@@ -1506,9 +1527,24 @@ export function mergeTier2Text(base, t2) {
     const winner = perPageTierWinner(b, cand);
     if (winner === "tier2" && cand) {
       replaced.push(b.page);
+      /* D-633 — THE PAGE KEEPS WHAT TIER 1 SAID ABOUT ITS IMAGES. D-627's
+         `image_content_*` markers are facts about the images the page paints
+         and its box, not about the decode, and tier 2 reads no image: taking
+         tier 2's markers alone dropped `image_content_unread`, so a page tier 2
+         won routed nowhere. They count 0 undetermined characters, so the award
+         above is unmoved. Tier 2's own markers are otherwise unchanged, and a
+         page where tier 2 already states an image marker is not given a second
+         (Content Framework §16). Each carried marker is RE-GRADED against tier
+         2's text (`regradeImageMark`), so it never says "the text is a folio"
+         beside a page holding more. */
+      const own = Array.isArray(cand.undetermined) ? cand.undetermined : [];
+      const t2Glyphs = glyphCount(cand.text) + undeterminedChars(cand);
+      const images = (Array.isArray(b.undetermined) ? b.undetermined : []).filter((u) =>
+        u && IMAGE_CONTENT_REASONS.includes(u.reason) && !own.some((o) => o && IMAGE_CONTENT_REASONS.includes(o.reason)))
+        .map((u) => regradeImageMark(u, t2Glyphs)).filter(Boolean);
       pages.push({ page: b.page,
                    text: typeof cand.text === "string" ? cand.text : "",
-                   undetermined: Array.isArray(cand.undetermined) ? cand.undetermined : [],
+                   undetermined: images.length ? [...own, ...images] : own,
                    tier: 2 });
     } else {
       kept.push(b.page);

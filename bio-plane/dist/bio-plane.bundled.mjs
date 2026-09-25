@@ -27188,6 +27188,13 @@ function perPageTierWinner(p1, p2) {
   const c1 = decodedChars(p1), c2 = decodedChars(p2);
   return u2 < u1 && c2 > c1 ? "tier2" : "tier1";
 }
+var IMAGE_CONTENT_REASONS = Object.freeze(["image_content_unread", "image_content_undetermined"]);
+function regradeImageMark(u, glyphs) {
+  if (glyphs >= IMAGE_CONTENT_TEXT_GLYPHS) return null;
+  const share = u.image_share;
+  const unread = Number.isFinite(share) && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
+  return { ...u, reason: unread ? "image_content_unread" : "image_content_undetermined", glyphs };
+}
 function mergeTier2Text(base, t2) {
   const basePages = base && Array.isArray(base.pages) ? base.pages : [];
   const usable = basePages.filter((p) => p && Number.isInteger(p.page));
@@ -27221,10 +27228,13 @@ function mergeTier2Text(base, t2) {
     const winner = perPageTierWinner(b, cand);
     if (winner === "tier2" && cand) {
       replaced.push(b.page);
+      const own = Array.isArray(cand.undetermined) ? cand.undetermined : [];
+      const t2Glyphs = glyphCount(cand.text) + undeterminedChars(cand);
+      const images = (Array.isArray(b.undetermined) ? b.undetermined : []).filter((u) => u && IMAGE_CONTENT_REASONS.includes(u.reason) && !own.some((o) => o && IMAGE_CONTENT_REASONS.includes(o.reason))).map((u) => regradeImageMark(u, t2Glyphs)).filter(Boolean);
       pages.push({
         page: b.page,
         text: typeof cand.text === "string" ? cand.text : "",
-        undetermined: Array.isArray(cand.undetermined) ? cand.undetermined : [],
+        undetermined: images.length ? [...own, ...images] : own,
         tier: 2
       });
     } else {
