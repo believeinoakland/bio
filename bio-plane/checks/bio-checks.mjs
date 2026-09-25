@@ -10824,19 +10824,19 @@ export const ACT_SHAPE_CHECKS = {
      itself, it names something that is not there, or it names work in another
      context whose lens is a different lens entirely.
 
-     A WHOLE-FUNCTION `where`, AND THE CHOICE IS MEASURED RATHER THAN LAZY.
-     These three were first written inside a narrowed REGION, which is what
-     `kickoffs/WORKER.md` asks for — and `check-refusal-codes.mjs` then FAILED
-     all three by name. `aiRunOpen`'s three existing rows carry a WHOLE-FUNCTION
-     `where`, and the guard does not subtract a region's span from the enclosing
-     function's: the region's refusals are judged TWICE, once at the region and
-     once at `aiRunOpen`, where the code is not one of that site's rows. So a
-     region inside a function that still has a whole-function `where` is not a
-     narrowing, it is a contradiction — the two sites disagree about who governs
-     the same lines. Narrowing ALL of `aiRunOpen`'s rows is the honest fix and
-     is REC-71's work rather than this item's, so these three join their three
-     neighbours at the function, and the residue is stated here rather than
-     left for the next reader to rediscover from a red guard.
+     A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
+     narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
+     `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
+     rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
+     region's refusals twice, once at the region and once at the enclosing
+     function, where their codes were not rows. So these three were written at
+     the whole function. D-589 (2026-09-25) then narrowed those three neighbours
+     into governed regions (`is-airun-open-context`, `-capability`, `-already`,
+     the rows above) and made arm C judge a claimed region once, by its own rows
+     (`nestedRegionsIn`). These three are now the ONLY rows naming `aiRunOpen`
+     as a whole, and the three regions' lines inside it are governed by the
+     regions, not by this site. Narrowing these three into a region of their own
+     is now possible and has not been done.
      --------------------------------------------------------------------------- */
   AI_RUN_RERUN_SELF: {
     check: 'C-33.45',
