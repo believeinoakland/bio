@@ -1264,8 +1264,8 @@ scope: in is-publish-draft-this-case, a draft with neither caseId nor newCase pa
 accepts-when: a derivation draft publishes as a further edition of the derived case, and a mismatched named case is refused with both cases (moves: `predicted !== 1` refusing a further edition). NEGATIVE CONTROL: restore `predicted !== 1` for the derivation arm and rec217-draft-binding's new further-edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, on BOB #35's 07:35Z ruling).
 
-### D-633 · running — **WHEN TIER 2 WINS A PAGE, `mergeTier2Text` REPLACES ITS MARKERS, SO D-627's `image_content_unread` IS LOST AND THE PAGE ROUTES NOWHERE.** Reproduced through op=acquire with an answering tier-2 stub (the held INFO-2026-0301 does not escalate, so D-627's own pages are routed today). Found by D-627's worker (minted on land/worker/D-627). — owner CONTENT-PDF.
-status: running — SCHEDULER #23 08:30Z: first landing at ae6d5a49 GATE 388/388 GREEN FULLREUSE (tree b8990290); BOB #35 08:05Z re-grade forwarded to the same worker, which is adding it — flip on that report
+### D-633 · integrated — **WHEN TIER 2 WINS A PAGE, `mergeTier2Text` REPLACES ITS MARKERS, SO D-627's `image_content_unread` IS LOST AND THE PAGE ROUTES NOWHERE.** Reproduced through op=acquire with an answering tier-2 stub (the held INFO-2026-0301 does not escalate, so D-627's own pages are routed today). Found by D-627's worker (minted on land/worker/D-627). — owner CONTENT-PDF.
+status: integrated — SCHEDULER #23 09:05Z: tip cbc5ae9b (ff over ae6d5a49; on D-627 056d3092), GATE 388/388 GREEN FULLREUSE (21956 assertions), tree a2ff404c; carries image_content_* across a tier-2 win and RE-GRADES by tier 2's glyphs (BOB #35 08:05Z); folded into §16; no IC
 order: head of the backlog, before D-635 — a correction to just-landed work (D-627 integrated) outranks new work, and D-635 builds on the same routed pages (SCHEDULER #23, 2026-09-25)
 milestone: M2
 interface: none expected (a marker kept, not a new one); the integrator classifies if the chain's wire moves.
@@ -1286,8 +1286,8 @@ scope: add `space` to the pdf-page arm; the checker refuses by name any space ot
 accepts-when: an OCR pixel rect proposed through op=extractpropose is refused or converted by name, never admitted as user space (moves: a pixel rect addressed as points). NEGATIVE CONTROL: drop `space` at `#posFields` and the pixel-rect arm admits it, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
-### D-672 · running — **A WORKBOOK'S SHEET-RANGE UNITS EXIST AND NOTHING INDEXES THEM: `textUnitsFor` (index.mjs) yields nothing for `sheets[]`, and the store says so ("nothing yet writes a workbook's sheet-range units into the index"); CONTENT-SEARCH-DESIGN §4.1's Incomplete bullet still says the index "waits on the sheet-range arm", which has existed since FW-19.** Found by D-415's worker (minted on land/worker/D-415). — owner RECORD.
-status: running — SCHEDULER #23 08:10Z: spawned, stacked on land/worker/D-415 @ 48245247 (D-671 waits: two parents, D-374 and D-320)
+### D-672 · integrated — **A WORKBOOK'S SHEET-RANGE UNITS EXIST AND NOTHING INDEXES THEM: `textUnitsFor` (index.mjs) yields nothing for `sheets[]`, and the store says so ("nothing yet writes a workbook's sheet-range units into the index"); CONTENT-SEARCH-DESIGN §4.1's Incomplete bullet still says the index "waits on the sheet-range arm", which has existed since FW-19.** Found by D-415's worker (minted on land/worker/D-415). — owner RECORD.
+status: integrated — SCHEDULER #23 09:05Z: tip f676a996 (on D-415 48245247), GATE 385/385 GREEN FULLREUSE (21883 assertions), tree 3444e188; one sheet-range unit per sheet indexed; store admits xlsx/ods/csv; §4.1 corrected; I3/I5 additive IC the integrator's; union with REC-204 on CAPTURE_TEXT_UNIT_CONTAINERS (take both sets); nc-rec91 nowire re-anchored; minted D-684, D-685
 order: after D-680 — it makes D-415's just-emitted units findable, on a unit §4.1 already designs (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3/I5 — the index admits sheet-range units; the integrator mints and classifies.
@@ -1394,6 +1394,27 @@ depends-on: none (on main; measured against D-542's union).
 scope: add `import "../bio-plane/test/stdio.mjs";` on line 2 after the shebang; remove the file from stdio-census.test.mjs RESIDUAL and shrink its header; do the same for check-semantics.mjs and check-mock-envelope.mjs (the same residual).
 accepts-when: 16 parallel runs x2 of the guard with a plant on the D-542 union lose no bytes (moves: 7 of 32 truncated). NEGATIVE CONTROL: remove the import and the truncation trial fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-664's worker).
+
+### D-684 · running — **A text/csv CAPTURE THROUGH op=acquire IS READ AS PROFILE TEXT AND NEVER REACHES THE FORMAT WIRE: the `canRead` branch wins, so a CSV gets no text_units and `reading.text_container` null — its cells are unsearchable though the csv format entry exists.** Measured in D-672's suite. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
+order: spawned directly after D-672 — it makes the same workbook-class search reach CSV, a correction to just-landed search work (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3/I5 additive — CSV text_units and text_container; the integrator classifies.
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.1 (a sheet's unit is a sheet-range; D-672 built it for xlsx/ods and admitted csv in the store).
+depends-on: none (stacked on land/worker/D-672 @ f676a996, integrated, itself on D-415 @ 48245247).
+scope: in op=acquire, run the registered format entry's text() and textUnitsFor for a FORMAT-axis match even when profile text exists; the profile reading is kept as today.
+accepts-when: a captured .csv is found by passage search in one sheet-range unit and its reading names its container (moves: text_units absent for CSV). NEGATIVE CONTROL: let the canRead branch short-circuit again and the CSV arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
+
+### UI-119 · running — **NO SURFACE LETS A MEMBER STATE A RECORDS REQUEST'S `law`: REC-201 added the `records_request` kind and its `law` field, and neither app.html's action intake nor setup.mjs's page offers it, so every request filed there reads law UNDETERMINED — honest, and thin.** From REC-201's worker's report. — owner UI.
+status: running — SCHEDULER #23 09:05Z: spawned, stacked on land/worker/REC-201 @ 45ce0bc5
+order: after D-689 — the member's statement surface, after the fence that keeps a machine from making it (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 consumer.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*; folded by REC-201), with BOB #35's 08:25Z machine fence (D-689).
+depends-on: none (stacked on land/worker/REC-201 @ 45ce0bc5, integrated; D-689 runs on the same base).
+scope: a `law` control on app.html's action intake and setup.mjs's page when the kind is records_request, nothing prefilled (DEC-69); the plane's refusal (C-2.10) renders in its DEC-49 words; a machine-proposed law (D-689) is shown as proposed, adopted only by the member's act.
+accepts-when: a member files a records_request naming a law and op=projection reads it verbatim (moves: law always undetermined from the surface). NEGATIVE CONTROL: drop the control's value from the act and the stated-law arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, REC-201's report).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

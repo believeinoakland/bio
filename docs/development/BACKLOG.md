@@ -86,15 +86,15 @@ scope: move D-454's bullet after D-517's sentence ends; no other text changes.
 accepts-when: both bullets read whole in the front matter; corpuscheck 0 fail (moves: a spliced sentence). NEGATIVE CONTROL: none meaningful for prose; state so.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
 
-### UI-119 · queued — **NO SURFACE LETS A MEMBER STATE A RECORDS REQUEST'S `law`: REC-201 added the `records_request` kind and its `law` field, and neither app.html's action intake nor setup.mjs's page offers it, so every request filed there reads law UNDETERMINED — honest, and thin.** From REC-201's worker's report. — owner UI.
-order: after D-689 — the member's statement surface, after the fence that keeps a machine from making it (SCHEDULER #23, 2026-09-25)
-milestone: M10
-interface: I3 consumer.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*; folded by REC-201), with BOB #35's 08:25Z machine fence (D-689).
-depends-on: REC-201 (integrated, land/worker/REC-201 @ 45ce0bc5).
-scope: a `law` control on app.html's action intake and setup.mjs's page when the kind is records_request, nothing prefilled (DEC-69); the plane's refusal (C-2.10) renders in its DEC-49 words; a machine-proposed law (D-689) is shown as proposed, adopted only by the member's act.
-accepts-when: a member files a records_request naming a law and op=projection reads it verbatim (moves: law always undetermined from the surface). NEGATIVE CONTROL: drop the control's value from the act and the stated-law arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, REC-201's report).
+### D-685 · queued — **THE ACQUIRE WIRE'S BUDGET LOOP DROPS A WHOLE UNIT whose text plus envelope exceeds the remaining budget (524,288 B), instead of carrying its per-unit-capped prefix (the store caps a unit at 128 KiB with truncated=1) — so a large sheet (M-20: 72.6 MB over 1,056 sheets) silently loses units from search.** Diagnosed at the code, not measured. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
+order: after D-684, the same acquire path, one worker at a time (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3 — a truncated unit carried where one was dropped; the integrator classifies.
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.1, with the store's per-unit cap (CAPTURE_TEXT_UNIT_CAP) and the truncated flag.
+depends-on: D-684 (running; the same acquire wire).
+scope: MEASURE first (a fixture over the budget) in measurements/<id>.md; charge min(bytes, CAPTURE_TEXT_UNIT_CAP) and carry the prefix with `truncated: true`, which the store honours; state what is still dropped when even prefixes exceed the budget.
+accepts-when: a unit over the remaining budget is carried truncated and marked so, and search finds its prefix (moves: a unit silently dropped). NEGATIVE CONTROL: charge the whole unit again and the carried-prefix arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
 
 ### D-628 · queued — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
 order: after D-615 — the same promote function as D-546, D-578 and D-615: one worker at a time (SCHEDULER #23, 2026-09-25)
