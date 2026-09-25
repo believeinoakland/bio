@@ -69,6 +69,7 @@ import { createHash } from "node:crypto";
 import * as S from "../../tools/statepaths.mjs";
 import * as C from "../../tools/coord.mjs";
 import { stripComments } from "../scripts/walkfloor.mjs";
+import { readGitProvenance, reportProvenance, repoPath } from "../scripts/provenance.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
@@ -236,7 +237,7 @@ section("THE PLANE CITES THE LEDGER AS PROSE — no plane string names MEASUREME
    blanked by the estate's one lexer; `dist/` is a build of the same sources. It cannot see a name ASSEMBLED from
    pieces ("MEASUREMENTS" + ".md") — which the gate's probes cannot see either, so it moves no selection. */
 {
-  const found = [];
+  const found = [], items = [];
   let files = 0, bytes = 0;
   const walk = (d) => {
     for (const n of readdirSync(d).sort()) {
@@ -245,6 +246,7 @@ section("THE PLANE CITES THE LEDGER AS PROSE — no plane string names MEASUREME
       if (!/\.(mjs|js)$/.test(n)) continue;
       const s = readFileSync(p, "utf8");
       files++; bytes += s.length;
+      items.push({ path: repoPath(REPO, p), what: "plane source scanned for a by-name citation", counted: 1 });
       stripComments(s).split("\n").forEach((l, i) => {
         if (l.includes("MEASUREMENTS.md") || /["'`/]MEASUREMENTS\/?["'`]/.test(l)) found.push(`${p.slice(REPO.length + 1)}:${i + 1}`);
       });
@@ -252,7 +254,12 @@ section("THE PLANE CITES THE LEDGER AS PROSE — no plane string names MEASUREME
   };
   for (const d of ["bio-plane/src", "bio-plane/checks"]) walk(join(REPO, d));
   console.log(`  corpus: ${files} files, ${bytes} bytes under bio-plane/src and bio-plane/checks`);
-  t(`the corpus is the plane (>= ${PLANE_FILES_FLOOR} files, >= 5,000,000 bytes)`, files >= PLANE_FILES_FLOOR && bytes >= 5_000_000, true);
+  /* GUARDED (hygiene's walk census): the floor is quoted from the files IN THE COMMIT, the figure another checkout
+     reproduces (scripts/provenance.mjs, D-238); the property itself is asked of every file found, committed or not. */
+  const prov = reportProvenance({ prov: readGitProvenance(REPO), items, instrument: "statepaths' plane-citation scan",
+    corpus: `${files} plane file(s)` });
+  const committed = prov.verified ? prov.inCommit.length : -1;
+  t(`the corpus is the plane (>= ${PLANE_FILES_FLOOR} committed files, >= 5,000,000 bytes)`, committed >= PLANE_FILES_FLOOR && bytes >= 5_000_000, true);
   t("no plane or check string names MEASUREMENTS by its file — cite it as prose, \"the MEASUREMENTS ledger\"", found, []);
 }
 

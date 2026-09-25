@@ -1067,8 +1067,12 @@ t("an impossible cell on a capture whose container extent was never recorded MIN
    reproduced both digits-for-digit across two runs. The HTML reading must be
    BYTE-IDENTICAL — this item adds no key to it at all — and the PDF reading must
    be byte-identical once the ONE key this item adds is removed. */
+/* CORRECTED by D-535 (2026-09-25), not exempted: the PDF reading's text chain carries index.mjs' LAYER_FIDELITY_SOURCE,
+   whose citation D-535 rewrote from "MEASUREMENTS.md" to "the MEASUREMENTS ledger". MEASURED by the D-535 worker: with
+   ONLY that one string reverted in index.mjs this suite passed the old pin (dfcf3384…) 56/0; with it restored the reading
+   digests a58dbbfb…, read from this assertion's own `got`. The HTML reading carries no text chain and did not move. */
 const PRISTINE = { html: "ee68a49fb010bba202ccbf1ab4786a2aaef8fdb4111aa5277313f743a1e733dc",
-                   pdf: "dfcf3384d44ebed29a4bdd2955e599c476b289319f97f3c1332c2ce39e1aea0d" };
+                   pdf: "a58dbbfb3acadce70826cca4c5a5f11936d9d3b43a1e2ca4765847d0834c8931" };
 const normDigest = (o) => createHash("sha256")
   .update(JSON.stringify(o).replace(/\d{4}-\d{2}-\d{2}T[0-9:.]+Z/g, "<T>")).digest("hex");
 const pdfReadingSansNew = { ...pdfdoc.reading };
