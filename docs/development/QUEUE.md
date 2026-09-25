@@ -842,7 +842,8 @@ scope: the set act sends each project-scoped item's own project; where an item h
 accepts-when: a project-scoped finding joins a selection and the set act carries its project; an item with two homes is not sent until the member names one (the measured failure it moves: null for scope=project). NEGATIVE CONTROL: return null again and the selection arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
-### D-576 · queued — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
+### D-576 · running — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
+status: running — SCHEDULER #22 05:30Z spawns WORKER D-576 (depth 2)
 order: after UI-110, with the surface corrections: a receipt reading a cut set as whole claims more than the record holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: none (reads op=connect's existing `truncated` and `documents`).
@@ -852,7 +853,8 @@ scope: when `r.truncated === true`, the receipt adds that the derivation was cut
 accepts-when: a truncated connect answer's receipt states the cut; an untruncated one does not (moves: a cut receipt reading as whole). NEGATIVE CONTROL: ignore `truncated` again and the cut-receipt arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by UI-95's worker).
 
-### D-575 · queued — **A CONNECTION'S PAIR SAYS "which nobody has chosen" WHILE A MEMBER'S CHOICE STANDS, AND NEVER STATES A LAPSE: `Store#pairSelection`'s `says` ends that way on every row on `op=connections&id=`/`&sha256=`, including one carrying a current `on_point`; that arm's `on_point` never states a lapse (only the `content=` arm does).** Found by UI-91's worker (01:25Z). — owner RECORD.
+### D-575 · running — **A CONNECTION'S PAIR SAYS "which nobody has chosen" WHILE A MEMBER'S CHOICE STANDS, AND NEVER STATES A LAPSE: `Store#pairSelection`'s `says` ends that way on every row on `op=connections&id=`/`&sha256=`, including one carrying a current `on_point`; that arm's `on_point` never states a lapse (only the `content=` arm does).** Found by UI-91's worker (01:25Z). — owner RECORD.
+status: running — SCHEDULER #22 05:30Z spawns WORKER D-575 (depth 2)
 order: after D-576, with the connection corrections: the record contradicting itself about a member's act (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: I3 additive — `lapsed`/`why` on `on_point[side]`, and the selection sentence's content; the integrator classifies.
@@ -862,7 +864,8 @@ scope: in `connectionsFor`'s `withChoice` (store.mjs, REC-122 block) check each 
 accepts-when: a chosen pair's sentence names the choice, and a choice whose resolution is gone reads lapsed with its why, on both arms (moves: a self-contradicting sentence). NEGATIVE CONTROL: drop the choice state from `#pairSelection` and the chosen-pair arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by UI-91's worker).
 
-### UI-112 · queued — **UI-91's ON-POINT CHOICE WILL BE REFUSED FOR A MENTION READ ON SEVERAL PAGES ONCE D-454 LANDS: D-454 makes `op=connectionchoose` take `occurrence=` and refuse C-74.4 CONNECTION_CHOICE_OCCURRENCE_UNNAMED when a string read at several places is named alone, and UI-91's `docChooseOnPoint` (both integrated, neither on main) sends no occurrence.** Found at SCHEDULER #21's reading of both reports (01:38Z). — owner UI.
+### UI-112 · running — **UI-91's ON-POINT CHOICE WILL BE REFUSED FOR A MENTION READ ON SEVERAL PAGES ONCE D-454 LANDS: D-454 makes `op=connectionchoose` take `occurrence=` and refuse C-74.4 CONNECTION_CHOICE_OCCURRENCE_UNNAMED when a string read at several places is named alone, and UI-91's `docChooseOnPoint` (both integrated, neither on main) sends no occurrence.** Found at SCHEDULER #21's reading of both reports (01:38Z). — owner UI.
+status: running — SCHEDULER #22 05:30Z spawns WORKER UI-112 (depth 2)
 order: after D-575, with the connection surface: a chooser that the plane refuses for the common case offers an act that fails (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: none (reads D-454's I3: `occurrence=`, `occurrences` on the act and on connections&content= mentions).
