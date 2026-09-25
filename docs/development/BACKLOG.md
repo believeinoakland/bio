@@ -204,6 +204,16 @@ scope: on the document page, a declare-origin control (nothing preselected; the 
 accepts-when: against the real plane a member declares an origin and sees it attributed and dated; an undeclared document reads undetermined (moves: no surface). NEGATIVE CONTROL: render the host as the system and the undetermined arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs UI`; BOB #35 04:20Z).
 
+### D-604 · queued — **THE CONTRADICTION JUDGEMENT HAS NO GATE THAT DISCRIMINATES: M0-71's 26-pair synthetic corpus is scored perfectly by both model families (M-162: 0/17 false conflicts, recall 9/9), so it cannot rank judgements or speak to real documents.** Found by REC-147's worker; BOB #35 RULED 04:50Z: M0-71's corpus is now a FLOOR, not a gate; THRESHOLD 0 stays PROVISIONAL. — owner the contradiction area (RECORD).
+order: after UI-114, with the M9 contradiction rows: it is the gate before any PRESENT surface puts a machine candidate in front of a member; BOB #35: *"make PRESENT's first row depend on it"* (no PRESENT row exists yet: it is not designed) (SCHEDULER #22, 2026-09-25)
+milestone: M9
+interface: none (a corpus, its labels and a measurement).
+design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §8 and §9, with BOB #35's 04:50Z ruling (this row's worker folds it).
+depends-on: REC-147 (on main).
+scope: a labelled corpus from REAL captured documents (minutes, staff reports, budget books), several times M0-71's size, with REC-147's hard negatives (a figure legitimately changed between dates; a summary dropping a qualifier; a rule and a compliant act reading opposite; across pages). Two independent labellers, each blind to the other and to the judgement's output, neither the prompt's author; a disagreed pair is EXCLUDED and reported undetermined; every label records who made it and whether a machine did. FOLD into §8: the ruling, plus REC-147's two gaps KEPT as built (version identity = frozen name + claim sha256; run context = the §6 viewer gate only), clearing their Incomplete entries.
+accepts-when: the corpus size, its hard-negative count and the labellers' agreement are measured into a measurement, and the judgement's score over it is reported against the lexical baseline. NEGATIVE CONTROL: score the judgement with the disagreed pairs included and the reported figure moves, by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by REC-147's worker; BOB #35 04:50Z).
+
 ### D-576 · queued — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
 order: after UI-110, with the surface corrections: a receipt reading a cut set as whole claims more than the record holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M4
@@ -1182,23 +1192,3 @@ depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `node tools/coord.mjs read docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
-order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
-depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
-accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own … (whole text: the cut archive)
-order: behind the product rows, first of the reading-budget rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: an over-budget kickoff costs every RECORD spawn context, not gate time, and blocks no product; SCHEDULER #12); not a defect in the product, cheap and mechanical (SCHEDULER #2, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` with CLAUDE.md §1's reading budget — *a file is either READ WHOLE … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
