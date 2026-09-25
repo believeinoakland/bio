@@ -90,3 +90,4 @@ IC-329	2026-09-25T06:42:07.784Z	CONDUCT#22	REC-219: bio-case-document/4: pins_pr
 IC-330	2026-09-25T06:42:12.756Z	CONDUCT#22	D-134: custodial refusals translated; TARGET_NOT_AN_ADMIN split; members.invited_by (c22-batch29)
 IC-331	2026-09-25T06:42:17.741Z	CONDUCT#22	D-520: C-83.8 RENDER_AT_CAPACITY at op=acquire; table render_slots (c22-batch29)
 IC-332	2026-09-25T06:42:23.219Z	CONDUCT#22	D-338: op=monitor grades no change for an unmonitorable shell (c22-batch29)
+IC-333	2026-09-25T06:42:29.146Z	CONDUCT#22	REC-191: monitor cadence per ADDRESS; table monitor_address_type (c22-batch29)
