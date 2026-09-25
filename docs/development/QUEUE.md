@@ -593,8 +593,8 @@ scope: `#monitorCadencePlan` groups monitored bundles by `captured_locators.addr
 accepts-when: three captures of one address give one due entry; two addresses sharing a title give two.; a calendar with no authored frequency is due a day after one tick. NEGATIVE CONTROL: restore the per-bundle select, and the one-address arm fails by name, and dropping the fallback fails the calendar arm.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
-### D-455 · running — **A `changed` MONITOR TICK DISCARDS THE BYTES IT FETCHED: it points its result at the baseline because the new document is not captured, though the monitor already held those bytes to see the change.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *a `changed` tick CAPTURES the new bytes (a monitor capture with its own provenance, through the governor), and its result_ref points at the new capture's sha* — superseding `OBSERVATION-LOG-DESIGN.md` §4.1's reason. — owner RECORD.
-status: running — SCHEDULER #21 02:01Z spawns WORKER D-455 FROM land/worker/REC-191 (same monitor path)
+### D-455 · integrated — **A `changed` MONITOR TICK DISCARDS THE BYTES IT FETCHED: it points its result at the baseline because the new document is not captured, though the monitor already held those bytes to see the change.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *a `changed` tick CAPTURES the new bytes (a monitor capture with its own provenance, through the governor), and its result_ref points at the new capture's sha* — superseding `OBSERVATION-LOG-DESIGN.md` §4.1's reason. — owner RECORD.
+status: integrated — SCHEDULER #22 04:03Z: tip 3db50421 (CARRIES REC-191 cfcb33e3), GATE 54/54 GREEN (reuse over 7216de32's full run), tree f56fc97f; op=monitor answer gains capture; OWED: the §4.1 fold of BOB #34 03:05Z (interim STANDS) is NOT on the branch, worker re-asked
 order: after REC-191, the same monitor path; evidence in hand is being thrown away (SCHEDULER #17, 2026-09-23; D-65's worker finding (b))
 milestone: M3
 interface: I3/I5 — a monitor capture and the observation's reference; the integrator mints and classifies the IC.
@@ -1110,7 +1110,8 @@ scope: on the DEPLOYED plane, read a CSV just over 20 MiB in the scratch namespa
 accepts-when: the measurement is recorded with date, instrument and the build that answered, and the bound is either confirmed or re-set from it (the measured failure it moves: a bound resting on a node heap figure and a vendor claim). NEGATIVE CONTROL: a CSV just under the bound reads clean, so a failure above it is attributable to size.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs DIST`).
 
-### D-321 · queued — **NO REAL IMAGE-ONLY PAGE IN THE CORPUS CARRIES AGENDA-SHAPED TEXT, SO THE `reading_refs` JOIN OVER REAL OCR IS PROVED ONLY ON SYNTHETIC INK (`ocr-member-e2e.test.mjs`).** — owner CONTENT-PDF.
+### D-321 · running — **NO REAL IMAGE-ONLY PAGE IN THE CORPUS CARRIES AGENDA-SHAPED TEXT, SO THE `reading_refs` JOIN OVER REAL OCR IS PROVED ONLY ON SYNTHETIC INK (`ocr-member-e2e.test.mjs`).** — owner CONTENT-PDF.
+status: running — SCHEDULER #22 04:03Z spawns WORKER D-321 (depth 2)
 order: after D-320; the page must come from bytes already held (the cloud proxy refuses Legistar) (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M2
 interface: none — a fixture and an arm.
