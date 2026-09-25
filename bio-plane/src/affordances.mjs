@@ -1909,6 +1909,7 @@ export const NON_ACTS = {
      act would put "propose the governing laws" beside "state the governing laws" on one object, which is the
      record offering a member the machine's half of a ruling that exists to keep the two apart. */
   actionlawspropose: "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labelled machine work and never the action's own list",
+  idmatch: "read: one identifier recognised in its space (C.M.S., project, fund, APN) — its form, its normalised value, a C.M.S. number's reach against Legistar's floor, an APN's standing — or a PAIR judged under Framework §8.3: counts only in two independent systems read from each capture's own addresses, with the referent agreeing; writes nothing",
   themeread: "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.

@@ -14887,6 +14887,36 @@ export const PROMOTED_TYPE_CHECKS = {
   },
 };
 
+/* REC-203 / C-91 — `op=idmatch`, the identifier-space judgement (`BIO_Content_Framework_v0_10.md` §8.3 "WHAT
+ * MAKES A SHARED IDENTIFIER COUNT"). THREE refusals, and each is a request the judgement cannot be asked, never
+ * a verdict: a pair that does not count (different forms, one system, an unread referent) is an ANSWER with
+ * `counts: false` and its reason, because "these do not join" is a fact about the record, not a fault in the
+ * question. The capture refusal answers a document the caller may not see EXACTLY as one the record does not
+ * hold, `contentmint`'s reason: otherwise the judgement is a way to learn that a document exists. */
+export const IDSPACE_CHECKS = {
+  IDSPACE_UNKNOWN: {
+    check: 'C-91.1',
+    where: 'src/store.mjs idMatch > is-idspace-unknown',
+    translation: 'That is not an identifier space the record knows how to judge. The spaces are the resolution '
+      + 'or ordinance number (cms), the project number (project), the fund code (fund) and the assessor\'s parcel '
+      + 'number (apn). Nothing was judged.',
+  },
+  IDSPACE_VALUE_NOT_IN_SPACE: {
+    check: 'C-91.2',
+    where: 'src/store.mjs idMatch > is-idspace-value-shape',
+    translation: 'The value given does not have the shape of any form of that identifier space, so the record '
+      + 'cannot say what it would join. Give the identifier as the document writes it (for a project, C329142 or '
+      + '1000858; for a parcel, 011-0836-017-00). Nothing was judged.',
+  },
+  IDSPACE_CAPTURE_NOT_HELD: {
+    check: 'C-91.3',
+    where: 'src/store.mjs idMatch > is-idspace-capture',
+    translation: 'Each value in a pair has to be named with the captured document it was read in, one the record '
+      + 'holds and you can see: which system published a document is read from where the record retrieved it, '
+      + 'never taken from the request. One of the two names no such document. Nothing was judged.',
+  },
+};
+
 /** May this connection's determining pair grade THIS content row's extent?
  *
  *  `pair` is the row's own `{a_ref, a_position, b_ref, b_position}` (the

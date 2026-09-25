@@ -1298,6 +1298,9 @@ const OPS = {
   themeplace:          { classes: ["admin", "member"],             mutating: true  },
   themepropose:        { classes: ["admin", "member", "probe"],    mutating: true  },
   themeread:           { classes: ["admin", "member", "probe"],    mutating: false },
+  /* REC-203: the identifier-space judgement (Framework §8.3). A READ: it writes nothing, and a pair's two
+     captures are gated by the viewer stamp, `themeread`'s posture. */
+  idmatch:             { classes: ["admin", "member", "probe"],    mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
      different cut from CPDF-10's above because a different thing is at stake.
 
@@ -2251,6 +2254,8 @@ const NEEDS = {
   leadread:            null,
   /* D-162: the theme read takes no capability, `leadread`'s posture; its placements are gated by the viewer. */
   themeread:           null,
+  /* REC-203: the identifier judgement takes no capability; it reads, and its captures are gated by the viewer. */
+  idmatch:             null,
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -11220,6 +11225,10 @@ export default {
            as one that does not exist — `contentmint`'s reason. Fails closed on an
            absent stamp. */
         || op === "themeplace" || op === "themepropose" || op === "themeread"
+        /* REC-203: a PAIR judgement names two CAPTURES and reads where the record retrieved each, so a
+           document the caller was never invited to must answer exactly as one the record does not hold
+           (C-91.3) — `contentmint`'s reason. Fails closed on an absent stamp. */
+        || op === "idmatch"
         /* REC-195: the governing-law proposal NAMES AN ACTION and reads it behind the fail-closed gate before
            it writes anything, so an action the caller may not see refuses NO_SUCH_BUNDLE identically to an
            absent one — `ACTION_ACTIONS`' own reason, arriving at an op that is not one of them. */
