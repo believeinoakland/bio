@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 07:45Z · BOB #35 · D-375's gap (OBSERVATION-LOG-DESIGN §4.2 row 4; D-375 @ 9a5df6e6), CONFIRMED as built.** Ink nobody could read is not an absence of text. A page whose only OCR regions fell below the confidence floor reads LOOKED_INDETERMINATE, with the regions kept as `ocr_below_floor` residue. LOOKED_ABSENT requires that tier 3 ran, no page was left unread, and zero residue. Row 4's words "nothing above the floor" are narrowed to "no region at all" when D-375 lands, and the §4.2 note that the table's row order is not the writer's test order stands. No row.
 
 
 
