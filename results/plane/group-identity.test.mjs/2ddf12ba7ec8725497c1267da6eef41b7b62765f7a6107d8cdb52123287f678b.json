@@ -1,0 +1,16 @@
+{
+ "unit": "plane:group-identity.test.mjs",
+ "inputHash": "2ddf12ba7ec8725497c1267da6eef41b7b62765f7a6107d8cdb52123287f678b",
+ "verdict": "PASS",
+ "run": "659be76cca5b72a3b447a8955eab7c5b3572baf3.1790300436561.2399.json",
+ "tree": "659be76cca5b72a3b447a8955eab7c5b3572baf3",
+ "head": "e9e522ae93723312826c5c1c4dd171d1f6848cf4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 136,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e2641721-c3a3-5637-8d1a-c157dca26e04",
+ "at": "2026-09-25T01:40:36.573Z"
+}
