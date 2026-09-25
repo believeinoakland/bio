@@ -64,7 +64,7 @@ const edit = (file, needle, replacement) => {
 
 const FAMILY_HEAD = "export const GOVERNING_LAW_CHECKS = {\n";
 const EMIT_C151 = "    findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
-const VERSION = 'export const CATALOG_VERSION = "1.28.0";'; /* CONDUCT #20 at c20-batch25: moved to the UNION's constant 1.28.0 — the needle must match the tree it arms; c20-batch22/23/25 moved the constant 1.24.0 -> 1.25.0 -> 1.26.0 -> 1.27.0 -> 1.28.0 and this needle was left at 1.24.0 (it would have thrown NOT ARMED). Branch histories: D-507 and c20-batch14 (ours), D-510 1.23.0 -> 1.24.0 for C-86.1 (theirs). */
+const VERSION = 'export const CATALOG_VERSION = "1.29.0";'; /* D-450 (2026-09-25): 1.28.0 -> 1.29.0, C-41.12 changed. */ /* CONDUCT #20 at c20-batch25: moved to the UNION's constant 1.28.0 — the needle must match the tree it arms; c20-batch22/23/25 moved the constant 1.24.0 -> 1.25.0 -> 1.26.0 -> 1.27.0 -> 1.28.0 and this needle was left at 1.24.0 (it would have thrown NOT ARMED). Branch histories: D-507 and c20-batch14 (ours), D-510 1.23.0 -> 1.24.0 for C-86.1 (theirs). */
 
 const A1 = "(A1) THE CENSUS IS NON-EMPTY AND FLOORED";
 const A2 = "(A2) EVERY EMISSION SITE RESOLVES";
@@ -97,6 +97,11 @@ const ARMS = {
        apply: () => edit(CATALOG, EMIT_C151,
          "    findings.push(f(\n      'C-15.1',\n      'error',\n      'every Problem, in every disposition including dismissed, carries at least one recheck trigger',\n      ['author a trigger, dual-audience shape, dated when time-bound']\n    ));"),
        mustFail: [], mustNotFail: ALL, expectGreen: true },
+  /* D-450 (2026-09-25): A4 keys on census + `changed`. Strip `changed` from 1.29.0, whose census is 1.28.0's
+     (a CHANGED check, nothing added) — the entry is then indistinguishable from 1.28.0 and A4 must name it. */
+  f: { files: [SUITE], label: "(F) A CHANGED-CHECK ENTRY THAT DOES NOT SAY WHAT CHANGED — `changed` dropped from 1.29.0",
+       apply: () => edit(SUITE, '              changed: ["C-41.12"] },', '              },'),
+       mustFail: [A4], mustNotFail: except(A4) },
 };
 
 const want = process.argv[2];

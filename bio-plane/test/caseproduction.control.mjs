@@ -47,7 +47,8 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const F = { store: ROOT + "src/store.mjs", index: ROOT + "src/index.mjs" };
+/* D-450 (2026-09-25): `checks` joins the restored set — arm (J) arms C-41.12 in the catalogue. */
+const F = { store: ROOT + "src/store.mjs", index: ROOT + "src/index.mjs", checks: ROOT + "checks/bio-checks.mjs" };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
@@ -388,6 +389,31 @@ arm("H", "THE `cases` ROW COMMITTED FROM A REQUEST RATHER THAN FROM THE SIGNED D
                    "A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED",
                    "THE SAME FINDING, THE SAME GRADES, THE SAME BAR",
                    "A LOAD-BEARING MEMBER BELOW THE PROJECT'S STANDARD IS REFUSED"] }]);
+
+/* ================================ (J) D-450 · THE BOTH-AXES DEMAND, PUT BACK */
+arm("J", "C-41.12 DEMANDS A GRADE ON BOTH AXES OF A DECLARED BAR AGAIN — the row's own named control. "
+  + "DECLARED: §10's ceremony, op=ratify and cases-row arms MUST fail — op=publish authors a document the "
+  + "catalogue then refuses. §10's publish arm and the fixture guards MUST stay green (the act admits a "
+  + "one-axis bar; only the check moved), and so must §5/§8's two-axis case.",
+  [["checks", "} else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {",
+              "} else if (!BASIS_GRADES.includes(rq[axis])) {"]],
+  [{ name: OWN,
+     mustFail: ["AND THE CASE CEREMONY COMPLETES", "AND op=ratify PUBLISHES ITS MEMBER",
+                "the `cases` row is written for the one-axis project",
+                "C-41.12 over the authored one-axis document"],
+     mustNotFail: ["A ONE-AXIS BAR PUBLISHES", "FIXTURE GUARD: the project declares a bar on CAPTURE ONLY",
+                   "THE SAME FINDING, THE SAME GRADES, THE SAME BAR",
+                   "THE `cases` ROW IS WRITTEN, AND IT NAMES THE PUBLISHING PROJECT",
+                   "THE PAIR STAYS A PAIR IN THE SIGNED BYTES", "and the document SAYS it in words"] }]);
+
+/* ===================== (K) D-450 · THE UNSET AXIS STATED AS A BLANK, NOT IN WORDS */
+arm("K", "THE UNSET AXIS WRITTEN 'not set' INSTEAD OF §3 rule 14's words. DECLARED: §10's words arm MUST "
+  + "fail, and nothing else — the pair in the frontmatter, the ceremony and ratify are untouched.",
+  [["store", "bar[axis] == null ? `no bar set on the ${axis} axis`", "bar[axis] == null ? `${axis} not set`"]],
+  [{ name: OWN,
+     mustFail: ["and the document SAYS it in words"],
+     mustNotFail: ["THE PAIR STAYS A PAIR IN THE SIGNED BYTES", "AND THE CASE CEREMONY COMPLETES",
+                   "AND op=ratify PUBLISHES ITS MEMBER"] }]);
 
 /* ------------------------------------------------------------------- RUN ALL
    The preflight first, over EVERY registered arm — the complete report is the

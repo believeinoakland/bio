@@ -195,8 +195,11 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 /* THE PUBLISHING PROJECT declares BOTH floors, and DIFFERENT ones — capture C, connection D — which the lead
    clears (its legs are caseflip's: an earned capture B, a hunch connection C), so a swap of the axes is
    visible on the published side too. A SECOND project declares CONNECTION ONLY, so block 2 sees two
-   floors that differ and a swap of the axes is visible; it is drafted and never published, because a
-   one-axis bar cannot be SIGNED today (C-41.12 refuses the frozen `capture: null` — reported by REC-148). */
+   floors that differ and a swap of the axes is visible; it is drafted and never published.
+   CORRECTED by D-450 (2026-09-25): this said a one-axis bar "cannot be SIGNED today (C-41.12 refuses the
+   frozen `capture: null` — reported by REC-148)". That was true when written and is no longer: C-41.12
+   admits null for an axis nobody set (Publication §3 rule 14), and caseproduction §10 publishes and
+   ratifies one. The fixture still only drafts it because this suite's subject is the review copy. */
 const PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r148", owner: "iris",
   name: "PROJ-2026-1480-inband", created: NOW, updated: LATER,

@@ -125,6 +125,14 @@
  * moved with it. 5 OF 5 AS DECLARED, unchanged in shape: baseline 9/0; (b) 8/1, A3
  * alone; (c) 8/1, A2 alone; (d) 7/2, A3 and A5; (e) 9/0. Every restore verified by
  * sha256, by content and by `cmp`, driver exit 0.
+ * (f) ADDED BY D-450, 2026-09-25 — A CHANGED-CHECK ENTRY THAT DOES NOT SAY WHAT
+ * CHANGED: `changed` stripped from 1.29.0, whose census equals 1.28.0's because
+ * C-41.12 changed and nothing was added; A4 MUST FAIL BY NAME and nothing else.
+ * RE-RUN IN FULL 2026-09-25 by D-450 after moving this suite's subject (1.28.0 ->
+ * 1.29.0, A4's collision key widened to census + `changed`, arm (d)'s needle moved
+ * with the constant): 6 OF 6 AS DECLARED — baseline 9/0; (b) 8/1; (c) 8/1; (d) 7/2;
+ * (e) 9/0; (f) 8/1, A4 alone. Every restore verified by sha256, by content and by
+ * `cmp`, driver exit 0.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
@@ -317,6 +325,16 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 1.29.0 (D-450, 2026-09-25, branch land/worker/D-450): NO ARRIVALS, NO DEPARTURES — ONE CHECK CHANGED.
+     C-41.12 admits `null` for an axis nobody set (BIO_Publication_v0_1.md §3 rule 14, BOB #32 2026-09-23),
+     so a one-axis bar that 1.28.0 refused now signs. Rule 17 moves the version for a CHANGED check too, and
+     a census of ids cannot see a change, so the entry NAMES it in `changed` and A4 keys on census + changes
+     (see A4). Count and digest are this suite's own print on the item's tree over origin/main 8bdf20e6.
+     **IF ANOTHER BRANCH IN THE SAME BATCH TAKES 1.29.0, THIS ROW IS NOT THE UNION'S: CONDUCT takes the next
+     number, re-reads count and digest from this suite's print on the merged tree, and CARRIES
+     `changed: ["C-41.12"]` onto that entry.** */
+  "1.29.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89",
+              changed: ["C-41.12"] },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -390,13 +408,20 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
     recorded ? { count: recorded.count, digest: recorded.digest } : null, { count, digest });
 }
 
-/* (A4) ONE VERSION, ONE CATALOGUE — this row's defect inverted. */
+/* (A4) ONE VERSION, ONE CATALOGUE — this row's defect inverted.
+   D-450 (2026-09-25): the collision key is the census AND the checks an entry says it CHANGED. Rule 17
+   moves the version for an added, removed OR CHANGED check, and a census of ids is blind to the third,
+   so before this line a version moved for a changed check could not be recorded at all (it collided
+   with its predecessor). An entry names what changed in `changed`; two entries with the same census and
+   the same (or no) `changed` still collide — laundering a past entry is refused exactly as before. The
+   limit the header states applies here too: `changed` is a record of intent, not a proof of it. */
 {
   const seen = new Map();
   const collisions = [];
   for (const [v, e] of Object.entries(CATALOG_CENSUS)) {
-    if (seen.has(e.digest)) collisions.push(`${seen.get(e.digest)} and ${v} record the same census`);
-    else seen.set(e.digest, v);
+    const key = `${e.digest}|${[...(e.changed || [])].sort().join(",")}`;
+    if (seen.has(key)) collisions.push(`${seen.get(key)} and ${v} record the same census`);
+    else seen.set(key, v);
   }
   for (const c of collisions) console.log(`          ${c}`);
   t("(A4) ONE VERSION, ONE CATALOGUE — no two recorded versions carry the same census", collisions, []);
@@ -414,8 +439,10 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
+/* CORRECTED by D-450 (2026-09-25), never exempted: C-41.12 changed what it admits, so the catalogue
+   under the stamp is no longer 1.28.0's and the stamp moves with it (rule 17). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
