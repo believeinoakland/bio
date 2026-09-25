@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 02:05Z · BOB #34 · REC-191's three provisional readings of BOB #31's cadence ruling are CONFIRMED as the rule (REC-191 @ cfcb33e3).** (1) The CURRENT version is the newest one at the address that ASKS to be monitored; a newer one that does not ask is stated as `newer_unmonitored`. (2) Where the current version authored no frequency, its TYPE's contract governs; an older version's authored word appears in `disagreement` and does not govern. (3) An address that was checked but never read is stated as unscheduled, never retried on an interval nobody derived. The ADDRESS-level setting (the ruling's first clause) is NOT built and NOT rowed: no member has asked for it, and adding it later costs nothing because it would be read first. construct-status 10.cadence-address states it ABSENT. The fold goes into the monitoring design's home, via the row that lands REC-191.
 
 
 
