@@ -1228,6 +1228,22 @@ console.log("\n--- a resolved link becomes an edge, and says who asserted it ---
   t("an unregistered capture projects nothing, and says why",
     [orphan.projected, /not registered to a bundle/.test(orphan.note || "")], [0, true]);
 
+  /* CORRECTED 2026-09-25 (D-722, BOB #36 11:15Z (C)), never exempted: `bundle=INFO-2026-0001-a` named a bundle this
+     store never held, and projectlinks used to hang edges on it anyway — a dangling source for every edge it wrote.
+     `bundle=` naming a bundle the caller cannot see now answers NO_SUCH_BUNDLE, byte for byte as for an id naming
+     nothing, so an id naming nothing is refused too (asserted first). The assertions below test resolution and the
+     unregistered and self counts, not the dangling id, so the bundle is promoted (with nothing registered) before
+     they run and they read exactly as before. */
+  const ghost = (await call(`/projectlinks?viewer=class:member&capture=${A_SHA}&bundle=INFO-2026-0001-a`)).result;
+  t("bundle= naming a bundle the record does not hold is refused (D-722 (C))",
+    [ghost.ok, ghost.reason], [false, "NO_SUCH_BUNDLE"]);
+  { const text = "---\nid: INFO-2026-0001-a\nobject_type: information\ncurrent_state: collected\n"
+      + "created: \"2026-07-29T00:00:00Z\"\nlast_updated: \"2026-07-29T00:00:00Z\"\n---\n\n## Summary\n\nA.\n";
+    const made = await call("/promote", { bundleId: "INFO-2026-0001-a", base: null, snapKey: "d722-a", author: "suite",
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { object_type: "information", group: "believe-in-oakland", title: "A", current_state: "collected",
+              created: "2026-07-29T00:00:00Z", last_updated: "2026-07-29T00:00:00Z" } });
+    if (!made.result?.ok) throw new Error(`promote INFO-2026-0001-a: ${JSON.stringify(made)}`); }
   const proj = (await call(`/projectlinks?viewer=class:member&capture=${A_SHA}&bundle=INFO-2026-0001-a`)).result;
   /* The link RESOLVES: the record holds the target's bytes and the verdict is
      settled. It still does not project, because no bundle has registered those
@@ -1246,6 +1262,10 @@ console.log("\n--- a resolved link becomes an edge, and says who asserted it ---
 
   t("resolution is unchanged by projecting: it is still computed at read time",
     (await call(`/resolvelinks?viewer=class:member&capture=${A_SHA}`)).result.links.length, 4);
+  /* D-722: the bundle promoted above for `bundle=` is removed again, so "intake writes nothing" below still counts
+     only what intake wrote. */
+  t("(the bundle promoted for bundle= is purged again)",
+    (await call(`/purge?bundleId=INFO-2026-0001-a`)).result?.removed?.bundles, 1);
 
   /* The catalog's contract for the new relation. */
   const { checkBundle } = await import("../checks/bio-checks.mjs");

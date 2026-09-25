@@ -38,7 +38,7 @@
  * through the op: the outsider's answer carried SX, M1 and the project's id, projected 3, and the hidden capture
  * answered with `source_bundle` = the project.
  *
- * NEGATIVE CONTROL (D-722, run 2026-09-25, D-722 worker; this suite, store.mjs arms, each ALONE, anchor matched exactly
+ * NEGATIVE CONTROL: (D-722, run 2026-09-25, D-722 worker; this suite, store.mjs arms, each ALONE, anchor matched exactly
  * once, restored by cp from a pristine copy and verified by sha256 AND cmp, store.mjs 613de8d4... 3,492,147 bytes):
  * BASELINE 32 pass 0 fail. (a) BOB #36's control, RESTORE THE UNFILTERED WRITE RESOLUTION (edges written from a
  * second, ungated resolution; the answer untouched) -> 28 pass 4 fail: "WRITE HALF (D-722): the outsider's act writes
