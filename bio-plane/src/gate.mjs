@@ -146,7 +146,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.30.0";
+export const CATALOG_VERSION = "1.31.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -201,6 +201,11 @@ export const CATALOG_VERSION = "1.30.0";
    those two collisions), D-512 (C-66.6), D-530 (C-89.1), D-547 (C-86.2), D-549 (C-68.5), REC-214 (C-90), D-454
    (C-74.4), REC-217 (C-44.3..5) and D-450 (C-41.12 CHANGED) — MINOR, since no check leaves; count and digest are
    the d470 suite's print on the merged tree. */
+/* 1.31.0 (D-623, 2026-09-25, branch land/worker/D-623 over origin/main 5e8a65a8): C-33.48 NO_PROJECT_SCOPE joins
+   ACT_SHAPE_CHECKS — op=proposedispose's judgment-layer disposition named with no project, at both of its sites
+   through one helper (actNoProjectScope). ONE arrival, no departure, nothing moved: MINOR. 502 -> 503, count and
+   digest from the d470 suite's print on this tree. If another branch also takes 1.31.0, the integrator takes the
+   next number at the union — one version names one catalogue. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

@@ -10787,6 +10787,34 @@ export const ACT_SHAPE_CHECKS = {
       + 'named beside this message, the earlier one still reads back in full, and nothing was '
       + 'recorded.',
   },
+  /* -------------------------------------------------------------------------
+     D-623, 2026-09-25 — THE JUDGMENT-LAYER DISPOSITION NAMED WITH NO PROJECT.
+
+     `op=proposedispose` minted NO_PROJECT_SCOPE at TWO sites — a `{finding}` sent
+     with no `project`, and IC-60's bridge for a surface that composes `key` from a
+     stance-scoped finding's id — with a `detail` and no code, check or sentence, so
+     a member met the plane's own prose (UI-110's worker found it, 2026-09-25). A
+     code at two sites cannot hold a row (one `where`), so it is consolidated behind
+     ONE helper, `actNoProjectScope`, on D-484's settled shape: one governed helper,
+     one region, one condition, and both sites call it.
+
+     THE SENTENCE IS TRUE AT BOTH SITES. Each is the same fact about the request —
+     the act is one project's own decision and it names no project — and neither
+     route lets the plane infer which. It says the choice is NOT MADE FOR THEM even
+     when one project is the only candidate, because that is D-266's ruling (a plane
+     choosing whose judgment the record carries is the single shared stance §7
+     rejected) and a member who is not told it will read the refusal as a bug. The
+     per-site `detail` still carries the particular — which arguments to send. */
+  NO_PROJECT_SCOPE: {
+    check: 'C-33.48',
+    where: 'src/store.mjs actNoProjectScope > is-act-no-project-scope',
+    translation: 'Setting this finding aside is a decision for one project\'s own list, not for the '
+      + 'whole record: a finding of this kind is a judgment each team makes for itself, and another '
+      + 'team looking at the same question may judge it differently. This request does not say which '
+      + 'project you are acting for, and the record will not choose one for you — even when only one '
+      + 'could apply — because whose judgment this is, is the decision being recorded. Choose the '
+      + 'project and decide again. Nothing was changed.',
+  },
 };
 
 /* =========================================================================

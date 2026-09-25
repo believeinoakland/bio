@@ -103,6 +103,20 @@
  *   as an UPSERT does — **and visible only in the feed**, so an arm declared against the
  *   act's answer would have gone green over a plane that told a member their re-triage
  *   landed and then kept the old decision.
+ *   (c) D-623 — NO_PROJECT_SCOPE's DEC-49 words at both sites (block 7's two `D-623 SITE` arms).
+ *   `cd bio-plane && node test/d623.control.mjs`, each arm ALONE, two instruments (this suite, driven
+ *   through the op, and `civicos-ui/check-refusal-codes.mjs --strict`), every restore by sha256 and byte
+ *   compare against a per-arm pristine copy in `controlPen("d623")`. RUN 2026-09-25 (land/worker/D-623):
+ *   BASELINE this suite 40/0, guard exit 0. ALL FIVE AS DECLARED: **rowempty** (the catalogue's
+ *   translation stripped) -> this suite 36/4, `D-623 SITE 1` and `D-623 SITE 2` FAIL BY NAME (with both
+ *   sites' reason arms, because the helper throws), NO_FINDING holds; guard FAILS "NO CANNED
+ *   TRANSLATION". **site1raw / site2raw** (one site back to a raw literal) -> this suite 40/0, guard
+ *   FAILS arm G "NO_PROJECT_SCOPE is now minted at 2 literal sites". **strip** (the helper stops sending
+ *   `translation`) -> 40/0 and guard exit 0: INVISIBLE TO BOTH, and harmless, because D-262's `json()`
+ *   decoration attaches the row's sentence to any refusal lacking one. **The first declaration of strip
+ *   and both raw arms was against this suite alone and all three came back green: the arms were right
+ *   and the declarations wrong** — through the op only the ROW is observable, and the SITE's shape is
+ *   the guard's. **reword** (over-strictness: the sentence reworded) -> 40/0, guard exit 0.
  * ========================================================================= */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -111,6 +125,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ACT_SHAPE_CHECKS } from "../checks/bio-checks.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -565,6 +580,13 @@ const SHARED_FINDING = `FINDING::${PKEY}::filed`;
   + "judgment the record carries is the single shared stance §7 rejected",
     [noProject.ok, noProject.reason, /not defaulted/.test(S(noProject.detail) || "")],
     [false, "NO_PROJECT_SCOPE", true]);
+  /* D-623 — SITE 1 OF 2. The refusal a MEMBER meets carries DEC-49's code, check and canned
+     sentence, driven through the op; before D-623 it carried the plane's `detail` and nothing else. */
+  t("D-623 SITE 1 (`finding` with no `project`): NO_PROJECT_SCOPE reaches a member in its DEC-49 words — "
+  + "code, C-33.48, and the catalogue's own translation",
+    [noProject.code, noProject.check, noProject.translation,
+     typeof noProject.translation === "string" && noProject.translation.length > 0],
+    ["NO_PROJECT_SCOPE", "C-33.48", ACT_SHAPE_CHECKS.NO_PROJECT_SCOPE?.translation, true]);
   const noFinding = await dispose({ project: A, to: "dismissed", reason: "x" });
   t("a project named with NO FINDING is refused NO_FINDING — a team and no decision",
     [noFinding.ok, noFinding.reason], [false, "NO_FINDING"]);
@@ -593,6 +615,12 @@ const SHARED_FINDING = `FINDING::${PKEY}::filed`;
     [oldShape.ok, oldShape.reason, oldShape.kind, oldShape.requires,
      /Nothing was written/.test(S(oldShape.detail) || "")],
     [false, "NO_PROJECT_SCOPE", "stance-changed-here-not-elsewhere", ["project", "finding"], true]);
+  /* D-623 — SITE 2 OF 2, IC-60's bridge: the same code, check and sentence as site 1, from the same helper. */
+  t("D-623 SITE 2 (IC-60's `key` bridge): NO_PROJECT_SCOPE reaches a member in its DEC-49 words — "
+  + "code, C-33.48, and the catalogue's own translation",
+    [oldShape.code, oldShape.check, oldShape.translation,
+     typeof oldShape.translation === "string" && oldShape.translation.length > 0],
+    ["NO_PROJECT_SCOPE", "C-33.48", ACT_SHAPE_CHECKS.NO_PROJECT_SCOPE?.translation, true]);
   t("and it WROTE NOTHING: the finding it named is still live for the team that has decided "
   + "nothing, which is what makes the refusal a refusal rather than a partial act",
     homesOf(byId(await queue(), STANCE_ABOUT_B)), [B]);
