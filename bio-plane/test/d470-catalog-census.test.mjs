@@ -343,6 +343,11 @@ const CATALOG_CENSUS = {
      C-86.2 `REVISION_RETYPES_BUNDLE`, the second row of PROMOTED_TYPE_CHECKS. 461 -> 462, count AND digest from
      THIS SUITE'S OWN PRINT on this tree. Other branches also take 1.29.0: CONDUCT takes the next number at the
      union and re-reads this suite's print on the merged tree. */
+  /* 1.29.0 (REC-217, 2026-09-24, branch land/worker/REC-217): C-44.3 PUBLISH_DRAFT_NOT_FOUND, C-44.4
+     PUBLISH_DRAFT_NOT_THIS_CASE and C-44.5 PUBLISH_DRAFT_ALREADY_BOUND joined CASE_DERIVATION_CHECKS — the three
+     refusals of a draft link that would be false (BIO_Publication §3 rule 13, BOB #33 19:14Z). THREE ARRIVALS, NO
+     DEPARTURES. Count and digest are THIS SUITE'S PRINT on this branch; if another branch also took 1.29.0, the
+     integrator re-reads the census on the union and one of them takes the next number. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the

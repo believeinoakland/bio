@@ -1967,6 +1967,12 @@ CREATE TABLE IF NOT EXISTS case_documents (
   delivered_by    TEXT,            -- REC-128 WHO DELIVERED, from the session. NULL means not recorded, never the signer
   gate_version    TEXT,
   ratified_at     TEXT,
+  -- REC-217 / BIO_Publication_v0_1.md section 3 rule 13 (BOB #33, 2026-09-24 19:14Z): THE DRAFT THE PUBLISHER
+  -- NAMED as this case edition's draft at op=publish (draft=), or NULL where none was named. The link is an ACT:
+  -- its author is authored_by and its time authored_at, the publisher and the moment of the same op=publish, and
+  -- the document's own bytes state it in words. Readings taken through this draft bind to this case edition.
+  -- NULL on a row written before this column is MEASURED, not back-filled: no act could name a draft until now.
+  draft_id        TEXT,
   PRIMARY KEY (case_id, edition)
 );
 -- D-442 / BIO_Publication_v0_1.md section 3 rule 12: WHICH CASES EXCLUDED THIS DOCUMENT, projected
