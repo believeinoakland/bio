@@ -98,14 +98,6 @@
    "why": "bio-plane/src/index.mjs: matches 0 times — queued: re-anchor dropslides"
   },
   {
-   "driver": "bio-plane/test/nc-coff12.mjs",
-   "arm": "slidesbyposition",
-   "anchor": "                    slides: sl ? slideExtents(sl",
-   "row": "D-642",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/nc-cpdf18.mjs",
    "arm": "textpin",
    "anchor": "        pieces.push(\"\\n\"); // a new text line",

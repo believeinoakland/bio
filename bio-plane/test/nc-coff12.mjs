@@ -104,7 +104,9 @@ function arm(file, find, replace) {
    matching is a LOUD finding rather than a silent no-op. */
 const SHEET_PASSTHROUGH = `                      rows: int(s && s.rows), cols: int(s && s.cols),`;
 const SLIDE_PASSTHROUGH = `                      out[u.slide - 1] = { shapes: int(u.shapes) };`;
-const SLIDE_KEYING = `                    slides: sl ? slideExtents(sl) : null,`;
+/* D-642: re-anchored on the line as COFF-13 (IC-207) left it — the keyed map now also takes the deck's
+   declared length — so the arm plants the positional map over the CURRENT subject, not a line that is gone. */
+const SLIDE_KEYING = `                    slides: sl || deckLen ? slideExtents(sl || []) : null,`;
 
 const ARMS = {
   baseline: {
@@ -167,22 +169,33 @@ const ARMS = {
        + "cannot be read, the stored array becomes slide 3's count at slide 2's index: the record "
        + "then bounds a slide it could not read by ANOTHER slide's figure, and refuses a TRUE "
        + "citation of the last slide as past a deck it is inside",
+    /* D-642 CORRECTED THIS DECLARATION, it did not exempt it. (1) and (2) were declared to fail when the
+       positional map was also the deck's LENGTH: a deck whose slide 2 was unreadable then read 2 slides long.
+       Since COFF-13 (IC-207) the deck length holds slide 3's slot on its own, so under the keying ALONE the
+       last slot is NULL, is skipped, and both mint — measured 2026-09-25, 3/5 seen with 0 held-open broken.
+       They measure the deck length, not the keying, so they are held OPEN here and checked as such. */
     mustFail: [
       "the RECORD keys the shape counts on the SLIDE NUMBER",
-      "(1) the LAST declared slide MINTS",
-      "(2) its LAST shape",
       "(3) one shape PAST it is REFUSED C-45.1 BY NAME",
       "(4) a shape on the UNREADABLE slide 2 MINTS",
     ],
     mustNotFail: [
+      "(1) the LAST declared slide MINTS",
+      "(2) its LAST shape",
       "cell A1048577 — one row PAST the measured grid",
       "shape 9,999 of a slide the deck HAS is now REFUSED",
       "a slide past the deck is REFUSED BY NAME",
       "the deck's reading carries one entry per SLIDE the fixture was BUILT with",
       "an HTML capture's whole reading is BYTE-IDENTICAL",
+      "a citation PAST the real deck (slide 4) is still REFUSED C-45.1 BY NAME",
+      "an OVER-THE-BOUND deck: no slide text was read",
     ],
     patch: () => arm(INDEX, SLIDE_KEYING,
-      `                    slides: sl ? sl.map((u) => ({ shapes: int(u && u.shapes) })) : null,`),
+      /* D-642: the positional map PADDED TO THE DECK'S LENGTH, so COFF-13's deck-length floor stays
+         carrying and only the keying moves — a map that also dropped `deckLen` took down six COFF-13
+         assertions besides its own five, and an arm that breaks two subjects isolates neither. */
+      `                    slides: sl || deckLen ? Array.from({ length: Math.max((sl || []).length, deckLen ?? 0) },
+                      (_, k) => ({ shapes: int((sl || [])[k] && sl[k].shapes) })) : null,`),
   },
 
   borrowgrid: {
