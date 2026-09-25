@@ -20,8 +20,9 @@
  *   5. and they are DERIVED: a whole-store purge clears both.
  *
  * NEGATIVE CONTROL: (run 2026-09-25, D-340 worker) two arms on bio-plane/src/store.mjs, each ALONE, restored by
- * cp from a pristine copy and verified by sha256 (2b8f7848...) AND cmp, 3,483,091 bytes; BASELINE 38 pass 0 fail (re-run on the final source
- * after the rescan was bounded; the first run, on 0ff51a21..., read 33/0, 27/6 and 23/10 with the same names).
+ * cp from a pristine copy and verified by sha256 (8708de7f...) AND cmp, 3,485,431 bytes; BASELINE 38 pass 0 fail (re-run on the final source
+ * after every scan was bounded; earlier runs on 0ff51a21... (33/0, 27/6, 23/10) and 2b8f7848... (38/0, 32/6, 28/10)
+ * failed the same assertions by the same names).
  * (a) derive per PAGE at the READ: `navChanges` compares adjacent observations only when they are of the same page
  * -> 32 pass 6 fail, by name: "the read names the link the host's nav lost", "naming the capture that last carried
  * it", "and the capture it was first missing from", "and saying the two were DIFFERENT pages of the host", "not

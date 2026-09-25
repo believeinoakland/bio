@@ -43585,17 +43585,29 @@ export class Store extends DurableObject {
    * (LINK-FIDELITY.md §"Chrome: rendering and connection are different problems")
    * ------------------------------------------------------------------ */
 
+  /** D-340's bounds. A page is on record at a handful of addresses, and a site's navigation carries tens
+   *  of links, a fat-tailed few hundred (LINK-FIDELITY.md's estimate, flagged there as unmeasured): these
+   *  are ceilings far past both, so reaching one is a finding, stated, never a silent cut. */
+  static CHROME_PAGES_PER_CAPTURE = 64;
+  static CHROME_LINKS_PER_CAPTURE = 2000;
+
   /** The hosts and pages a capture is on record at. DIRECT captures only: an
    *  archive capture's retrieval date is when WE asked the archive, not when the
    *  site served that navigation, so ordering it among direct observations would
    *  put a navigation at a date it was never seen. */
   #chromePagesOf(sourceCapture) {
     const out = [];
-    for (const r of this.#rows(
+    const pages = this.#rows(
       `SELECT address_norm, MIN(first_retrieved) AS first_retrieved, MAX(last_retrieved) AS last_retrieved
-         FROM captured_locators WHERE capture_sha = ? AND via = 'direct' GROUP BY address_norm`, sourceCapture)) {
-      let host = null;
-      try { host = new URL(r.address_norm).hostname.toLowerCase(); } catch { host = null; }
+         FROM captured_locators WHERE capture_sha = ? AND via = 'direct' GROUP BY address_norm
+        ORDER BY address_norm LIMIT ?`, sourceCapture, Store.CHROME_PAGES_PER_CAPTURE + 1);
+    /* Past the ceiling, NONE of its pages is an observation: a cut list would record the navigation at some
+       of the addresses it was served from and silently not at the rest. */
+    if (pages.length > Store.CHROME_PAGES_PER_CAPTURE) return null;
+    for (const r of pages) {
+      /* `normalizeAddress` keeps an unparseable locator verbatim; such a page names no host, so it is no
+         observation of any host's navigation. Asked, not caught. */
+      const host = URL.canParse(r.address_norm) ? new URL(r.address_norm).hostname.toLowerCase() : "";
       if (host) out.push({ host, page: r.address_norm, first: r.first_retrieved, last: r.last_retrieved });
     }
     return out;
@@ -43607,17 +43619,24 @@ export class Store extends DurableObject {
    *  nothing: a page with no <nav> says nothing about the site's navigation, and
    *  recording it as an empty navigation would report every nav link lost. */
   #chromeDeriveCapture(sourceCapture) {
-    const pages = this.#chromePagesOf(sourceCapture);
+    const pagesOrNull = this.#chromePagesOf(sourceCapture);
+    const pages = pagesOrNull || [];
     const touched = new Map();
-    for (const old of this.#rows(`SELECT host, fingerprint FROM site_chrome_refs WHERE source_capture = ?`, sourceCapture))
-      touched.set(`${old.host}\u0000${old.fingerprint}`, old);
+    const olds = this.#rows(`SELECT host, fingerprint FROM site_chrome_refs WHERE source_capture = ? LIMIT ?`,
+      sourceCapture, Store.CHROME_PAGES_PER_CAPTURE);
+    for (const old of olds) touched.set(`${old.host}\u0000${old.fingerprint}`, old);
     this.sql.exec(`DELETE FROM site_chrome_refs WHERE source_capture = ?`, sourceCapture);
     /* Anchors are excluded: a skip-link in the nav points into THIS page, so its
        address differs page to page and would read as navigation churn. */
+    /* BOUNDED (D-225's rule): one more than a navigation may carry is asked for, so an over-long one is
+       KNOWN to be over-long. Its fingerprint would be a digest of a cut set, so it is not recorded as an
+       observation at all, and the answer says why rather than fingerprinting a navigation nobody saw. */
     const chromeRows = this.#rows(
       `SELECT DISTINCT address_norm, chrome_basis FROM links
-        WHERE source_capture = ? AND chrome = 1 AND partition <> 'anchor'`, sourceCapture);
-    const links = [...new Set(chromeRows.map((r) => r.address_norm))].sort();
+        WHERE source_capture = ? AND chrome = 1 AND partition <> 'anchor'
+        ORDER BY address_norm LIMIT ?`, sourceCapture, Store.CHROME_LINKS_PER_CAPTURE + 1);
+    const overLong = chromeRows.length > Store.CHROME_LINKS_PER_CAPTURE;
+    const links = overLong ? [] : [...new Set(chromeRows.map((r) => r.address_norm))].sort();
     const basis = [...new Set(chromeRows.map((r) => r.chrome_basis).filter(Boolean))].sort();
     let observed = 0;
     if (links.length) {
@@ -43647,7 +43666,11 @@ export class Store extends DurableObject {
         `UPDATE site_chrome SET first_observed = ?, last_observed = ?, captures = ? WHERE host = ? AND fingerprint = ?`,
         agg.f, agg.l, agg.n, host, fingerprint);
     }
-    return { observed, chrome_links: links.length };
+    return { observed, chrome_links: links.length,
+             ...(pagesOrNull ? {} : { undetermined: `this capture is on record at more than ${Store.CHROME_PAGES_PER_CAPTURE} `
+               + "addresses, so which page of which host carried its navigation is not recorded" }),
+             ...(overLong ? { undetermined: `this capture's furniture carried more than ${Store.CHROME_LINKS_PER_CAPTURE} `
+               + "distinct links, so its navigation is not fingerprinted and it is not an observation" } : {}) };
   }
 
   /** Regenerate a host's chrome by SCAN, which is what makes it a derived table:
@@ -43667,12 +43690,13 @@ export class Store extends DurableObject {
       this.sql.exec(`DELETE FROM site_chrome_refs WHERE host = ?`, h);
       this.sql.exec(`DELETE FROM site_chrome WHERE host = ?`, h);
     }
+    const secure = "https://" + h + "/", plain = "http://" + h + "/";
     const found = this.#rows(
       `SELECT DISTINCT capture_sha FROM captured_locators
         WHERE via = 'direct' AND capture_sha > ?
           AND (substr(address_norm, 1, ?) = ? OR substr(address_norm, 1, ?) = ?)
         ORDER BY capture_sha LIMIT ?`,
-      from, `https://${h}/`.length, `https://${h}/`, `http://${h}/`.length, `http://${h}/`, cap + 1);
+      from, secure.length, secure, plain.length, plain, cap + 1);
     const page = found.slice(0, cap);
     for (const r of page) this.#chromeDeriveCapture(r.capture_sha);
     const truncated = found.length > cap;
@@ -43699,9 +43723,14 @@ export class Store extends DurableObject {
       `SELECT source_capture, page, first_observed, last_observed, fingerprint, basis
          FROM site_chrome_refs WHERE host = ? ORDER BY first_observed DESC, source_capture DESC LIMIT ?`, h, cap + 1);
     const seq = found.slice(0, cap).reverse();
+    /* Only the records the observations in hand name, which is at most one per observation, so the cap
+       that bounds the sequence bounds this read too. */
     const records = this.#rows(
       `SELECT fingerprint, links, first_observed, last_observed, captures
-         FROM site_chrome WHERE host = ? ORDER BY first_observed`, h)
+         FROM site_chrome WHERE host = ? AND fingerprint IN (
+           SELECT fingerprint FROM site_chrome_refs WHERE host = ?
+            ORDER BY first_observed DESC, source_capture DESC LIMIT ?)
+        ORDER BY first_observed LIMIT ?`, h, h, cap, cap)
       .map((r) => ({ ...r, links: JSON.parse(r.links || "[]") }));
     const linksOf = new Map(records.map((r) => [r.fingerprint, r.links]));
     const obs = (o) => ({ source_capture: o.source_capture, page: o.page, first_observed: o.first_observed,
