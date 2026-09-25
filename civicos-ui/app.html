@@ -24387,12 +24387,16 @@ try{ window.addEventListener("hashchange", ()=>{ if(!STANCE_HASH_LOCK) stanceRou
 
    WHAT THIS SURFACE MUST NEVER DO, and the harness (`review-copy.test.mjs`)
    asserts each by name:
-     - OFFER ANY WAY OUT OF THE INSTANCE. No download, no print, no file, no
-       blob or data link, no `beforeprint` hook, no print rule for this copy.
-       §6A.3 point 1 (DEC-31's bound rule, measured by BOB #16): a rendering
-       that leaves carries its hash, date, author and both threshold floors
-       in-band, and `op=reviewcopy` does not yet carry all four — so NO surface
-       offers to export a review copy. Reading it here needs none of that.
+     - OFFER ANY WAY OUT OF THE INSTANCE BUT ONE. UI-69: §6A.3 point 1's gate
+       is met — `op=reviewcopy` answers DEC-31's quartet in-band (REC-148,
+       IC-229; its date the copy's LAST CHANGE since REC-200) — so the member
+       door offers ONE act, `rvcExport`, and nothing else anywhere: no print
+       call or hook, no print rule for this copy, no blob, data or download
+       link outside `rvcDeliverFile`, and nothing at all on the recipient door.
+       The file is drawn from a FRESH answer and every page of it carries that
+       answer's `inband`, verbatim; an answer lacking any of the four is
+       refused and no file is made. §6A.3 point 2 is said in the export
+       act's own box, and nowhere else.
      - TELL A RECIPIENT WHY A COPY IS DEAD. The plane's dead answer is ONE answer
        for revoked, never issued, malformed and moved-on alike, and the page
        renders its one sentence and nothing that varies with the cause. The page
@@ -24734,8 +24738,8 @@ function rvcRecipientLink(secret){
 /* §6A.3 point 2, AT THE ACT: what the grant controls and what it does not. */
 const RVC_AT_THE_ACT = "This gives one named person a link to read this draft and comment on it, here, inside "
   + "this group's record. Nothing is sent anywhere and no file of it is made. Withdrawing the grant ends their "
-  + "access at once. What a withdrawal cannot reach is anything copied out of this page by hand: text pasted "
-  + "into an email, a screenshot, a page printed from the browser. That has left, and it cannot be revoked. "
+  + "access at once. What a withdrawal cannot reach is anything taken out of this page: a file exported from "
+  + "it, text pasted into an email, a screenshot, a page printed from the browser. That has left, and it cannot be revoked. "
   + "If what you need is confidentiality, the grant protects what stays here and nothing that leaves.";
 function rvcGrantsHtml(c){
   const gs = Array.isArray(c.grants) ? c.grants : [];
@@ -24768,6 +24772,156 @@ function rvcGrantsHtml(c){
     + '<input class="txt" id="rv-recipient" value="' + esc(RVC.recipient || "") + '" onchange="rvcField(\'recipient\', this.value)" placeholder="their name, or the group they speak for">'
     + (RVC.grantRefusal ? rvcRefusalHtml(RVC.grantRefusal) : '')
     + '<button class="btn" onclick="rvcGrant()">Give access</button></div>';
+}
+/* ---------------- UI-69 · THE EXPORT, AND THE ONE WAY OUT ----------------
+   §6A.3 point 1 (DEC-31's bound rule): a rendering that leaves the instance
+   addressed to someone carries its hash, its date, its author and both floors
+   IN-BAND. The plane computes all four in ONE function (`inbandQuartet`,
+   REC-148) and answers them as `inband`; this page computes NONE of them. Every
+   page of the file carries the answer's quartet twice, as words and as the
+   plane's own JSON verbatim (`JSON.stringify(inband, null, 1)`), so the stamp
+   on a page is byte-equal to what the plane said, and a reader holding a single
+   printed page still holds all four.
+
+   THE FILE IS DRAWN FROM THE ANSWER IT IS STAMPED WITH. `rvcExport` reads the
+   copy afresh at the act and draws the pages and the stamps from that ONE
+   answer; drawing the content from the copy on screen and the stamp from a
+   later read would put a hash on bytes it was not taken over.
+
+   WHAT THE FILE DOES NOT REPRODUCE, SAID ON ITS FIRST PAGE: who the copy was
+   given to and the comments on it (UI-69's provisional reading: a recipient's
+   name and words stay inside the instance unless someone chooses otherwise,
+   and the member exporting is not that someone for them). The hash is over the
+   whole answer, those included, so it identifies which state of the record the
+   file was drawn from and is re-checkable against the record, not against the
+   file alone — which the page says rather than lets a reader assume.
+
+   §6A.3 point 2 — THE STATEMENT AT THE ACT, AND NOWHERE ELSE. It stands in the
+   export box beside the one button, on the member door only. It is not on the
+   recipient door (a recipient holds no grant to withdraw), not in the grant box
+   (which says its own half), and not in the file (whose reader did not act). */
+const RVC_EXPORT_AT_THE_ACT = "Exporting makes a file of this copy on this device, stamped on every page with "
+  + "its hash, the date of its last change, its author and both floors. Once that file leaves this device "
+  + "— emailed, shared, uploaded or printed — it cannot be revoked: nothing done in this group’s "
+  + "record afterwards reaches it, and withdrawing a grant does not recall it. The grant is what can be revoked: "
+  + "withdrawing one ends that person’s access to the copy here, and nothing more. If what you need is "
+  + "confidentiality, a file is the act that gives it up.";
+const RVC_NO_QUARTET = "The record did not answer this copy with all four of its in-band marks (its hash, its date, "
+  + "its author and both floors), and a copy may not leave without them. No file was made.";
+const RVC_NOT_DELIVERED = "This browser did not accept the file, so none was made. Nothing left this page.";
+
+/* All four keys present, and the hash a real one. A date or author the record
+   answers as null is kept, and said as undetermined — never made up here. */
+function rvcQuartetOf(c){
+  const q = c && c.inband;
+  if(!q || typeof q !== "object" || !q.hash || typeof q.hash !== "object") return null;
+  if(!/^[0-9a-f]{64}$/.test(String(q.hash.sha256 || ""))) return null;
+  if(!("date" in q) || !("author" in q) || !q.floors || typeof q.floors !== "object") return null;
+  return q;
+}
+function rvcFloorText(g){ return (typeof g === "string" && g) ? g : "none declared"; }
+function rvcInbandHtml(q){
+  const fl = q.floors || {};
+  return '<div class="rvx-inband" data-rvx-inband>'
+    + '<div><b>Hash</b> <span class="mono">' + esc(q.hash.algorithm || "") + ':' + esc(q.hash.sha256) + '</span>, over '
+      + esc(q.hash.over || "") + ' (' + esc(String(q.hash.bytes)) + ' bytes).</div>'
+    + '<div><b>Date</b> <span class="mono">' + esc(q.date == null ? "not stated by the record" : q.date) + '</span>, the copy&rsquo;s last change.</div>'
+    + '<div><b>Author</b> <span class="mono">' + esc(q.author == null ? "not stated by the record" : q.author) + '</span>.</div>'
+    + '<div><b>Floors</b> ' + esc(AXIS_SHORT.capture) + ': ' + esc(rvcFloorText(fl.capture)) + ' &middot; '
+      + esc(AXIS_SHORT.connection) + ': ' + esc(rvcFloorText(fl.connection)) + '. ' + esc(fl.detail || "") + '</div>'
+    + '<pre class="rvx-quartet" data-rvx-quartet>' + esc(JSON.stringify(q, null, 1)) + '</pre>'
+    + '</div>';
+}
+/* THE PAGES. Each is one `<section>`, and `rvcExportPage` is the only way to
+   make one, so a page cannot be drawn without its stamp. */
+function rvcExportPage(q, n, inner){
+  return '<section class="rvx-page" data-rvx-page="' + n + '">' + rvcInbandHtml(q) + inner + '</section>';
+}
+function rvcExportAcksHtml(c){
+  const sa = (c && c.statement_acknowledgements) || {};
+  const list = Array.isArray(sa.acknowledgements) ? sa.acknowledgements : [];
+  return '<h2 class="sec">Who else has read this statement</h2>'
+    + (list.map(rvcAckWhoHtml).join("") || '<div class="empty">Nobody but its author had acknowledged this statement when this file was made.</div>')
+    + (sa.truncated === true ? '<p class="subj-note">Only the first acknowledgements are shown; the record holds more.</p>' : '')
+    + (typeof sa.withheld_stated === "string" && sa.withheld_stated ? '<p class="subj-note">' + esc(sa.withheld_stated) + '</p>' : '');
+}
+function rvcExportPages(c, q){
+  const a = c.authored || {};
+  const pages = [];
+  pages.push('<div class="rvc-marking">' + esc(c.marking || "") + '</div>'
+    + '<p class="subj-note">' + esc((c.signature && c.signature.detail) || "") + '</p>'
+    + '<p class="lede">This draft stands as ' + esc((c.case && c.case.identity) || "") + '.</p>'
+    + '<p class="subj-note" data-rvx-not-reproduced>This file does not reproduce who the copy was given to, or the '
+      + 'comments made on it. The hash above is over the record&rsquo;s whole answer, those included, so it names the '
+      + 'state of the record this file was drawn from; it can be checked against that record, not against this file alone.</p>'
+    + '<h2 class="sec">What this case leaves out</h2>' + rvcSaid(a.statement) + rvcExcludedHtml(a)
+    + rvcExportAcksHtml(c)
+    + '<h2 class="sec">What a publication would still need</h2>' + rvcMissingHtml(c));
+  pages.push('<h2 class="sec">What the case covers</h2>' + rvcSaid(a.scope)
+    + '<h2 class="sec">Putting it to its subject</h2>'
+    + (rvcText(a.subjectPosition) ? '<p><span class="mono">' + esc(a.subjectPosition) + '</span></p>' : '')
+    + rvcSaid(a.subjectJustification)
+    + '<h2 class="sec">The acknowledgement of bias</h2>' + rvcSaid(a.biasAcknowledgement));
+  const fs = Array.isArray(c.findings) ? c.findings : [];
+  if(!fs.length) pages.push('<h2 class="sec">The findings it rests on</h2><div class="q-gap">This draft names no findings yet.</div>');
+  for(const f of fs) pages.push('<h2 class="sec">A finding it rests on</h2>' + rvcFindingHtml(f));
+  return pages.map((inner, i) => rvcExportPage(q, i + 1, inner));
+}
+/* THE FILE: standalone, no script, its own styles, one section per page. */
+function rvcExportFile(c){
+  const q = rvcQuartetOf(c);
+  if(!q) return null;
+  const pages = rvcExportPages(c, q);
+  const name = "review-copy-" + String(c.draft || "draft").replace(/[^A-Za-z0-9._-]/g, "") + "-" + q.hash.sha256.slice(0, 12) + ".html";
+  const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>' + esc(c.marking || "Review copy") + '</title>'
+    + '<style>body{font:15px/1.5 Georgia,serif;margin:0;color:#111;background:#fff}'
+    + '.rvx-page{padding:24px 28px;border-top:2px solid #000;break-before:page}.rvx-page:first-of-type{break-before:auto}'
+    + '.rvx-inband{border:1px solid #000;padding:10px 12px;margin:0 0 18px;font-size:13px}'
+    + '.rvx-quartet{white-space:pre-wrap;word-break:break-all;font-size:10.5px;margin:8px 0 0}'
+    + '.mono{font-family:ui-monospace,Menlo,monospace}.rvc-marking{font-weight:700;border:2px solid #000;padding:8px 10px}'
+    + '.card{border:1px solid #bbb;padding:8px 10px;margin:8px 0}.subj-note{color:#444}.q-gap{font-style:italic}</style></head><body>'
+    + pages.join("") + '</body></html>';
+  return { name, html, pages: pages.length, sha256: q.hash.sha256 };
+}
+/* THE ONE WAY OUT. The only place in this surface a file is handed to the
+   browser; `review-copy.test.mjs` asserts nothing else in the block does. */
+function rvcDeliverFile(name, html){
+  try{
+    const u = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = u; a.download = name; a.rel = "noopener";
+    a.click();
+    setTimeout(() => { try{ URL.revokeObjectURL(u); }catch(_){} }, 60000);
+    return true;
+  }catch(_){ return false; }
+}
+async function rvcExport(){
+  if(!RVC || !RVC.copy || RVC.exporting) return;
+  RVC.exporting = true; RVC.exported = null; RVC.exportRefusal = null; rvcPaint();
+  let c = null;
+  try{ c = await recR("reviewcopy", { draft: RVC.draft }); }
+  catch(e){ RVC.exportRefusal = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(c){
+    RVC.copy = c;
+    const f = rvcExportFile(c);
+    if(!f) RVC.exportRefusal = { detail: RVC_NO_QUARTET };
+    else if(!rvcDeliverFile(f.name, f.html)) RVC.exportRefusal = { detail: RVC_NOT_DELIVERED };
+    else RVC.exported = { name: f.name, pages: f.pages, sha256: f.sha256 };
+  }
+  RVC.exporting = false; rvcPaint();
+}
+function rvcExportBoxHtml(){
+  const done = RVC.exported
+    ? '<div class="intent-box" data-rvc-exported><div class="intent-lede">A file was made: <span class="mono">' + esc(RVC.exported.name) + '</span></div>'
+      + '<p class="subj-note">Each of its ' + esc(String(RVC.exported.pages)) + ' pages carries the hash <span class="mono">'
+      + esc(RVC.exported.sha256) + '</span> and the three marks beside it, as the record answered them when it was made.</p></div>'
+    : '';
+  return '<h2 class="sec">A file of this copy</h2>'
+    + done
+    + '<div class="intent-box" data-rvc-export-box>'
+    + '<p class="subj-note" data-rvc-export-act>' + esc(RVC_EXPORT_AT_THE_ACT) + '</p>'
+    + (RVC.exportRefusal ? rvcRefusalHtml(RVC.exportRefusal) : '')
+    + '<button class="btn ghost" id="rv-export" onclick="rvcExport()">Export this copy to a file</button></div>';
 }
 function rvcFormHtml(){
   const f = RVC.form;
@@ -24825,6 +24979,7 @@ function rvcHtml(){
     + '<button class="btn ghost" onclick="rvcEdit()">Edit this draft</button>'
     + rvcCopyHtml(c, "member")
     + rvcGrantsHtml(c)
+    + rvcExportBoxHtml()
     + rvcCommentsHtml(c, "member");
 }
 function rvcPaint(){

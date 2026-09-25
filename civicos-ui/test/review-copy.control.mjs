@@ -9,14 +9,14 @@
  * GREEN; for a RED arm the text its failing lines MUST name, and the ones that MUST NOT fail (it broke one thing):
  *
  *   BASELINE                                                                        -> GREEN
- *   (A) THE ROW'S OWN — a download link added to the copy                           -> RED, naming "NO EXPORT";
+ *   (A) THE ROW'S OWN — a download link added to the copy                           -> RED, naming "ONE WAY OUT";
  *       MUST NOT fail "MARKING" or "A REVOKED SECRET READS NOTHING"
- *   (B) a print hook registered by the surface                                      -> RED, naming "NO EXPORT";
+ *   (B) a print hook registered by the surface                                      -> RED, naming "ONE WAY OUT";
  *       MUST NOT fail "MARKING"
  *   (C) THE DEAD LINK SAYS WHY — "this access was revoked" on every dead page       -> RED, naming "NEUTRAL";
  *       MUST NOT fail "ONE ANSWER" (every cause still draws the same bytes, which is why NEUTRAL exists)
  *   (D) the marking dropped from the copy                                           -> RED, naming "MARKING";
- *       MUST NOT fail "NO EXPORT"
+ *       MUST NOT fail "ONE WAY OUT"
  *   (E) the new-draft form prefilled with a scope                                   -> RED, naming "NOTHING PREFILLED";
  *       MUST NOT fail "DRAFT: saving sent op=casedraft"
  *   (F) a recipient's comment labelled as a member's                                -> RED, naming "LABELLED";
@@ -28,12 +28,31 @@
  * own header and never lived in this table:
  *
  *   (I) THE ROW'S OWN — the list stubbed EMPTY                                     -> RED, naming
- *       "EVERY DRAFT THE PLANE LISTS APPEARS"; MUST NOT fail "NO EXPORT" or "MARKING"
+ *       "EVERY DRAFT THE PLANE LISTS APPEARS"; MUST NOT fail "ONE WAY OUT" or "MARKING"
  *   (J) every row opens the FIRST draft                                            -> RED, naming "EACH OPENS"
  *       and "AND THEY ARE DIFFERENT DRAFTS"; MUST NOT fail "EVERY DRAFT THE PLANE LISTS APPEARS"
  *   (K) the list dropped from the invited member's SKELETON                        -> RED, naming
  *       "THE SKELETON CARRIES THE LIST"; MUST NOT fail "EVERY DRAFT THE PLANE LISTS APPEARS"
  *   (L) OVER-STRICTNESS — the list's heading re-worded and its local renamed       -> GREEN
+ *
+ * UI-69 (2026-09-25) CORRECTED the suite's section 7 from "NO EXPORT" to "ONE WAY OUT" (the gate §6A.3 point 1
+ * held was met by REC-148), so arms (A), (B), (D) and (I) name the renamed assertion; what they break is
+ * unchanged. It added section 6c, the export, and these arms:
+ *
+ *   (M) THE ROW'S OWN — the quartet dropped from ONE page (the second)              -> RED, naming
+ *       "EVERY PAGE CARRIES THE QUARTET"; MUST NOT fail "THE STATEMENT AT THE ACT" or "REACH: the file has"
+ *   (N) the stamp re-serialised here (JSON.stringify(q), no indent)                  -> RED, naming
+ *       "EVERY PAGE CARRIES THE QUARTET"; MUST NOT fail "IN WORDS TOO"
+ *   (O) the statement said on the recipient door too                                -> RED, naming "NOWHERE ELSE";
+ *       MUST NOT fail "THE STATEMENT AT THE ACT"
+ *   (P) the statement dropped from the act                                          -> RED, naming
+ *       "THE STATEMENT AT THE ACT"; MUST NOT fail "EVERY PAGE CARRIES THE QUARTET"
+ *   (Q) a second way out: an export button on the recipient door                    -> RED, naming "ONE WAY OUT";
+ *       MUST NOT fail "EVERY PAGE CARRIES THE QUARTET"
+ *   (R) the file drawn from the copy on screen, no fresh read at the act            -> RED, naming
+ *       "THE ACT READS AFRESH"; MUST NOT fail "EVERY PAGE CARRIES THE QUARTET" (nothing moved between the two
+ *       reads in the fixture, so byte-equality alone CANNOT see this — which is why the wire arm exists)
+ *   (S) OVER-STRICTNESS — the export's heading and button re-worded                 -> GREEN
  */
 import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
@@ -57,17 +76,17 @@ const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex")
 
 const ARMS = [
   { name: "BASELINE", declared: "GREEN", edits: [] },
-  { name: "(A) a download link on the copy", declared: "RED", names: ["NO EXPORT"],
+  { name: "(A) a download link on the copy", declared: "RED", names: ["ONE WAY OUT"],
     mustNotFail: ["MARKING", "A REVOKED SECRET READS NOTHING"],
     edits: [["    + '<p class=\"subj-note\" data-rvc-signature>'",
              "    + '<a href=\"#\" download=\"review-copy.html\">Download this copy</a>'\n    + '<p class=\"subj-note\" data-rvc-signature>'"]] },
-  { name: "(B) a print hook", declared: "RED", names: ["NO EXPORT"], mustNotFail: ["MARKING"],
+  { name: "(B) a print hook", declared: "RED", names: ["ONE WAY OUT"], mustNotFail: ["MARKING"],
     edits: [["try{ window.addEventListener(\"hashchange\", ()=>{ if(!RVC_HASH_LOCK) draftRouteFromHash(); }); }catch(_){}",
              "try{ window.addEventListener(\"hashchange\", ()=>{ if(!RVC_HASH_LOCK) draftRouteFromHash(); }); }catch(_){}\ntry{ window.addEventListener(\"beforeprint\", ()=>{ rvsPaint(); }); }catch(_){}"]] },
   { name: "(C) the dead link says why", declared: "RED", names: ["NEUTRAL"], mustNotFail: ["ONE ANSWER"],
     edits: [["if(!RVS.copy) return '<h1 class=\"rec\">Nothing to read here</h1>' + rvcRefusalHtml(RVS.dead);",
              "if(!RVS.copy) return '<h1 class=\"rec\">This access was revoked</h1>' + rvcRefusalHtml(RVS.dead);"]] },
-  { name: "(D) the marking dropped", declared: "RED", names: ["MARKING"], mustNotFail: ["NO EXPORT"],
+  { name: "(D) the marking dropped", declared: "RED", names: ["MARKING"], mustNotFail: ["ONE WAY OUT"],
     edits: [["    + '<div class=\"rvc-marking\" data-rvc-marking>' + esc(c.marking || \"\") + '</div>'\n", ""]] },
   { name: "(E) the form prefilled", declared: "RED", names: ["NOTHING PREFILLED"], mustNotFail: ["DRAFT: saving sent op=casedraft"],
     edits: [["           scope:\"\", statement:\"\", excluded:[], nothingLeftOut:false,",
@@ -85,7 +104,7 @@ const ARMS = [
              "'<button class=\"btn\" onclick=\"rvcGrant()\">Hand this draft to them</button></div>'"]] },
   /* ---- UI-92: the workspace's list of this project's drafts (section 6b) ---- */
   { name: "(I) the list stubbed empty", declared: "RED", names: ["EVERY DRAFT THE PLANE LISTS APPEARS"],
-    mustNotFail: ["NO EXPORT", "MARKING"],
+    mustNotFail: ["ONE WAY OUT", "MARKING"],
     edits: [["  const rows = (Array.isArray(r.drafts) ? r.drafts : []).filter(d => d && typeof d === \"object\" && d.draft_id);",
              "  const rows = [];"]] },
   { name: "(J) every row opens the first draft", declared: "RED",
@@ -100,6 +119,31 @@ const ARMS = [
             ["  const body = rows.map(d => {", "  const listRows = rows.map(d => {"],
             ["return `${bound}<div class=\"card\" data-project-drafts=\"${rows.length}\" style=\"padding:4px 18px\">${body}</div>`;",
              "return `${bound}<div class=\"card\" data-project-drafts=\"${rows.length}\" style=\"padding:4px 18px\">${listRows}</div>`;"]] },
+  /* ---- UI-69: the export (section 6c) and the one way out (section 7) ---- */
+  { name: "(M) the quartet dropped from one page", declared: "RED", names: ["EVERY PAGE CARRIES THE QUARTET"],
+    mustNotFail: ["THE STATEMENT AT THE ACT", "REACH: the file has"],
+    edits: [["  return pages.map((inner, i) => rvcExportPage(q, i + 1, inner));",
+             "  return pages.map((inner, i) => i === 1 ? '<section class=\"rvx-page\" data-rvx-page=\"' + (i + 1) + '\">' + inner + '</section>' : rvcExportPage(q, i + 1, inner));"]] },
+  { name: "(N) the stamp re-serialised here", declared: "RED", names: ["EVERY PAGE CARRIES THE QUARTET"],
+    mustNotFail: ["IN WORDS TOO"],
+    edits: [["data-rvx-quartet>' + esc(JSON.stringify(q, null, 1))", "data-rvx-quartet>' + esc(JSON.stringify(q))"]] },
+  { name: "(O) the statement on the recipient door too", declared: "RED", names: ["NOWHERE ELSE"],
+    mustNotFail: ["THE STATEMENT AT THE ACT"],
+    edits: [["    + rvcCopyHtml(c, \"recipient\")\n",
+             "    + '<p class=\"subj-note\">' + esc(RVC_EXPORT_AT_THE_ACT) + '</p>'\n    + rvcCopyHtml(c, \"recipient\")\n"]] },
+  { name: "(P) the statement dropped from the act", declared: "RED", names: ["THE STATEMENT AT THE ACT"],
+    mustNotFail: ["EVERY PAGE CARRIES THE QUARTET"],
+    edits: [["    + '<p class=\"subj-note\" data-rvc-export-act>' + esc(RVC_EXPORT_AT_THE_ACT) + '</p>'\n", ""]] },
+  { name: "(Q) a second way out on the recipient door", declared: "RED", names: ["ONE WAY OUT"],
+    mustNotFail: ["EVERY PAGE CARRIES THE QUARTET"],
+    edits: [["    + rvcCommentsHtml(c, \"recipient\");",
+             "    + '<button class=\"btn ghost\" onclick=\"rvcDeliverFile(&quot;copy.html&quot;, document.body.innerHTML)\">Export this copy</button>'\n    + rvcCommentsHtml(c, \"recipient\");"]] },
+  { name: "(R) no fresh read at the act", declared: "RED", names: ["THE ACT READS AFRESH"],
+    mustNotFail: ["EVERY PAGE CARRIES THE QUARTET"],
+    edits: [["  try{ c = await recR(\"reviewcopy\", { draft: RVC.draft }); }", "  try{ c = RVC.copy; }"]] },
+  { name: "(S) OVER-STRICTNESS: the export's heading and button re-worded", declared: "GREEN",
+    edits: [["'<h2 class=\"sec\">A file of this copy</h2>'", "'<h2 class=\"sec\">Taking this copy out of the record</h2>'"],
+            [">Export this copy to a file</button></div>'", ">Make a file of this copy</button></div>'"]] },
 ];
 
 fs.mkdirSync(SCRATCH, { recursive: true });

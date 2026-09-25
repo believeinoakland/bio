@@ -8,7 +8,7 @@
  *
  * ================= HOW A LIAR WOULD MAKE THIS SUITE GREEN =================
  *  (a) A HIDDEN EXPORT PATH — a download link, a blob or data URL, a print hook, a print rule for the copy. The
- *      page would still read and comment perfectly. So section 7 ("NO EXPORT") reads the surface's own source
+ *      page would still read and comment perfectly. So section 7 ("NO EXPORT"; "ONE WAY OUT" since UI-69) reads the surface's own source
  *      block AND every page it rendered here, and fails naming what it found. NEGATIVE CONTROL: add a download
  *      link and that arm fails by name.
  *  (b) A DEAD LINK THAT SAYS WHY — "this access was revoked" reads kindly and tells a withdrawn recipient their
@@ -79,6 +79,24 @@
  *       RED (57/1) and that is a finding about the ARM THAT WAS WATCHING, not about this one: the reach arm keyed
  *       on the heading's literal words, so correct work in a spelling nobody anticipated failed. The marker
  *       attribute is what replaced it.**
+ *
+ * ============== UI-69 (2026-09-25): SECTION 6c, THE EXPORT; SECTION 7 CORRECTED TO "ONE WAY OUT" ==============
+ * §6A.3 points 1 and 2 over REC-148's `inband` (IC-229). Section 6c's own header says how a liar passes it.
+ * NEGATIVE CONTROL: RUN 2026-09-25 by the UI-69 worker, `node civicos-ui/test/review-copy.control.mjs` — 19/19 AS
+ * DECLARED against app.html ceff5613a95844df… (1,626,056 B), IDENTICAL after every arm by sha256 AND cmp. Baseline
+ * 69/0 GREEN (58/0 before this item on origin/main 964da679 — the eleven are 6c's nine and section 7's two new
+ * REACH-and-seam terms folded into its arms). Arms (A)-(L) re-run unchanged but for the renamed assertion.
+ *   (M) THE ROW'S OWN — the quartet dropped from page 2 -> 67/2, at "EVERY PAGE CARRIES THE QUARTET" (and "IN WORDS
+ *       TOO", the same page's words going with it); "THE STATEMENT AT THE ACT" and the page-count REACH green.
+ *   (N) the stamp re-serialised here with no indent -> 68/1, at "EVERY PAGE CARRIES THE QUARTET"; "IN WORDS TOO"
+ *       green — the words agree and the bytes do not, which is exactly the drift byte-equality exists to catch.
+ *   (O) the statement said on the recipient door too -> 68/1, at "NOWHERE ELSE".
+ *   (P) the statement dropped from the act -> 67/2, at "THE STATEMENT AT THE ACT" and "NOWHERE ELSE".
+ *   (Q) an export button on the recipient door calling the seam -> 68/1, at "ONE WAY OUT".
+ *   (R) no fresh read at the act -> 68/1, at "THE ACT READS AFRESH" ONLY: every stamp stayed byte-equal, because
+ *       nothing moved between the two reads in this fixture. Recorded, not smoothed: byte-equality cannot see a
+ *       stale-content export here, and the wire arm is what does.
+ *   (S) OVER-STRICTNESS — the export's heading and button re-worded -> 69/0 GREEN.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: shared, for its side effect. */
 import fs from "fs";
@@ -559,9 +577,114 @@ ok("THE SKELETON CARRIES THE LIST: an invited-not-joined member, withheld the pa
    JSON.stringify({ plane: (planeListJon.drafts || []).map((d) => d.draft_id), page: rowIdsJ }));
 
 /* ============================================================
-   7. NO EXPORT — nothing on this surface leaves the instance
+   6c. UI-69 — THE EXPORT: EVERY PAGE CARRIES THE PLANE'S QUARTET, AND §6A.3 POINT 2 IS SAID AT THE ACT.
+
+   The acceptance in its own words: an exported copy carries the quartet on every page byte-equal to the plane's;
+   the statement renders at the act and nowhere else.
+
+   HOW A LIAR WOULD MAKE THIS GREEN, and what answers it:
+     - STAMP THE FIRST PAGE AND CALL IT THE FILE. So pages are counted from the file's own sections, the corpus is
+       printed and floored (>= 3: the copy, the authored sentences, one per finding), and stamps are counted
+       against pages in BOTH directions — a page without one, or a page with two, fails.
+     - COMPUTE A HASH HERE. The page could draw a plausible sha256 of its own. So every page's quartet is compared
+       BYTE FOR BYTE to `JSON.stringify(inband, null, 1)` of the plane's own answer read directly, and that
+       answer's hash is itself re-computed over the answer minus `inband` — the stamp is the plane's and the
+       plane's is honest.
+     - EXPORT WHAT IS ON SCREEN, STAMP WITH A LATER READ. So the page's wire must show ONE op=reviewcopy at the
+       act, and the delivered file is compared to the answer's content.
+     - SAY IT EVERYWHERE, SO IT IS "SAID". The statement is counted on every page this suite walked, the file
+       included: exactly once where the export button is, inside that button's own box, and nowhere else.
+   WHAT IT CANNOT SEE: what a real browser does with the download (the anchor's `download` name and the Blob's
+   bytes are read at the seam `rvcDeliverFile` hands them to), and how a printer paginates — a "page" here is the
+   file's own `<section class="rvx-page">`, which is the unit it asks to break on.
    ============================================================ */
-console.log("\n--- 7. no way out of the instance ---");
+console.log("\n--- 6c. exporting the copy to a file (UI-69) ---");
+const DELIVERED = [];
+M.ctx.Blob = class { constructor(parts, opts) { this.parts = parts; this.type = opts && opts.type; } };
+M.ctx.URL = class extends URL {
+  static createObjectURL(b) { DELIVERED.push({ blob: b }); return "blob:ui69-" + DELIVERED.length; }
+  static revokeObjectURL() {}
+};
+const realCreate = M.ctx.document.createElement;
+M.ctx.document.createElement = (tag) => {
+  const a = { tag, href: "", download: "", rel: "", click() { const d = DELIVERED[DELIVERED.length - 1]; if (d) { d.name = this.download; d.href = this.href; d.clicked = true; } } };
+  return a;
+};
+const before6c = M.html("#content");
+PAGES.push(["the member's copy offering the export", before6c]);
+const EXPORT_ACT = flat("Exporting makes a file of this copy on this device");
+M.WIRE.length = 0;
+await M.run(handler(before6c, "onclick", /rvcExport\(\)/));
+const after6c = M.html("#content");
+const direct6 = await GET(`op=reviewcopy&draft=${encodeURIComponent(draftId)}&token=${IRIS}`);
+const asked6 = M.WIRE.filter((w) => w.op === "reviewcopy");
+ok("THE ACT READS AFRESH: exporting asked op=reviewcopy ONCE, for this draft, and the page reports the file it made",
+   asked6.length === 1 && asked6[0].params.draft === draftId && /data-rvc-exported/.test(after6c),
+   JSON.stringify(asked6.map((w) => w.params)));
+const file = DELIVERED.length === 1 && DELIVERED[0].clicked ? DELIVERED[0] : null;
+const fileHtml = file ? file.blob.parts.join("") : "";
+ok("DELIVERED ONCE: one file was handed to the browser, as text/html, under a name that carries the draft and the hash",
+   !!file && file.blob.type.startsWith("text/html") && file.name.includes(draftId)
+   && direct6?.inband && file.name.includes(direct6.inband.hash.sha256.slice(0, 12)),
+   JSON.stringify(file && { name: file.name, type: file.blob.type, n: DELIVERED.length }));
+const planeQ = JSON.stringify(direct6.inband, null, 1);
+const { inband: _drop, ...rest6 } = direct6;
+ok("THE PLANE'S QUARTET IS HONEST: its sha256 re-computes over the answer minus `inband`, as JSON.stringify(rest, null, 1) UTF-8",
+   direct6.inband.hash.sha256 === sha(Buffer.from(JSON.stringify(rest6, null, 1), "utf8"))
+   && typeof direct6.inband.date === "string" && typeof direct6.inband.author === "string" && direct6.inband.floors,
+   JSON.stringify(direct6.inband).slice(0, 300));
+const filePages = [...fileHtml.matchAll(/<section class="rvx-page" data-rvx-page="(\d+)">([\s\S]*?)<\/section>/g)]
+  .map((m) => ({ n: Number(m[1]), inner: m[2] }));
+const nFindings = (direct6.findings || []).length;
+console.log(`  (the file: ${fileHtml.length} chars, ${filePages.length} pages; the draft names ${nFindings} finding(s))`);
+ok(`REACH: the file has ${filePages.length} pages, the copy's, the authored sentences' and one per finding (>= 3), numbered 1..n, and every section is a page`,
+   filePages.length >= 3 && filePages.length === 2 + Math.max(1, nFindings)
+   && filePages.every((p, i) => p.n === i + 1)
+   && (fileHtml.match(/<section\b/g) || []).length === filePages.length, JSON.stringify(filePages.map((p) => p.n)));
+const stamps = filePages.map((p) => [...p.inner.matchAll(/<pre class="rvx-quartet" data-rvx-quartet>([\s\S]*?)<\/pre>/g)].map((m) => unesc(m[1])));
+ok("EVERY PAGE CARRIES THE QUARTET: each page carries exactly ONE, and it is BYTE-EQUAL to the plane's `inband`",
+   stamps.length === filePages.length && stamps.every((s) => s.length === 1 && s[0] === planeQ)
+   && (fileHtml.match(/data-rvx-quartet/g) || []).length === filePages.length,
+   JSON.stringify(stamps.map((s, i) => ({ page: i + 1, stamps: s.length, equal: s[0] === planeQ }))));
+const fileText = strip(fileHtml);
+ok("IN WORDS TOO: every page names the hash, the date and the author as the plane answered them",
+   filePages.every((p) => strip(p.inner).includes(direct6.inband.hash.sha256) && strip(p.inner).includes(direct6.inband.date)
+                          && strip(p.inner).includes(direct6.inband.author)));
+ok("THE FILE IS THE ANSWER'S CONTENT: the marking, the statement, the scope and the finding's write-up are the plane's",
+   fileText.includes(flat(direct6.marking)) && fileText.includes(direct6.authored.statement)
+   && fileText.includes(direct6.authored.scope) && fileText.includes("Did the transfer follow the process the council adopted?"));
+ok("WHAT IT DOES NOT REPRODUCE IS SAID, and it is not reproduced: no recipient's name, no comment, no secret, no script",
+   /data-rvx-not-reproduced/.test(fileHtml) && !fileText.includes("Dana Ortiz") && !fileText.includes("ledger you cite")
+   && !fileText.includes(SECRET) && !/<script\b|\bon[a-z]+="/i.test(fileHtml));
+ok("NO RAW CODE on the file's words", shouty(fileText.replace(/\{[\s\S]*?\n\}/g, " ")).length === 0,
+   JSON.stringify(shouty(fileText.replace(/\{[\s\S]*?\n\}/g, " "))));
+PAGES.push(["the exported file", fileHtml]);
+
+/* §6A.3 point 2 — AT THE ACT AND NOWHERE ELSE. */
+const actCount = (h) => strip(h).split(EXPORT_ACT).length - 1;
+const btnCount = (h) => (String(h).match(/onclick="rvcExport\(\)"/g) || []).length;
+const box = (/<div class="intent-box" data-rvc-export-box>([\s\S]*?)<\/div>/.exec(before6c) || [])[1] || "";
+ok("THE STATEMENT AT THE ACT: said once, in the export button's own box, and it says what leaves cannot be revoked and the grant can",
+   actCount(before6c) === 1 && btnCount(before6c) === 1 && strip(box).includes(EXPORT_ACT) && /rvcExport\(\)/.test(box)
+   && /cannot be revoked/.test(strip(box)) && /The grant is what can be revoked/.test(strip(box)), strip(box).slice(0, 300));
+const where = PAGES.map(([n, h]) => ({ n, act: actCount(h), btn: btnCount(h) }));
+ok("NOWHERE ELSE: on every page walked, the statement appears exactly where the export act is — never on the recipient door, the dead link, the form, the list or the file",
+   where.every((w) => w.act === w.btn && w.act <= 1)
+   && where.filter((w) => /recipient|withdrawn|form|list|file/.test(w.n)).every((w) => w.act === 0),
+   JSON.stringify(where));
+M.ctx.document.createElement = realCreate;
+
+/* ============================================================
+   7. ONE WAY OUT — and it is the export act's
+   CORRECTED 2026-09-25 by UI-69, and why: this section was "NO EXPORT" and asserted that nothing on the surface
+   could leave the instance at all. That was right for UI-68, whose premise was §6A.3 point 1's measurement
+   (BOB #16): `op=reviewcopy` did not carry the in-band quartet, so no surface could offer a file. REC-148 built
+   the quartet and UI-69 is the export the gate was waiting for, so "no export" is no longer the rule — "ONE
+   export, the member's, stamped" is. What the old arm guarded is KEPT: no print call, hook or rule; no download,
+   blob or data link anywhere but the one seam (`rvcDeliverFile`), called from ONE site (`rvcExport`); and on
+   the recipient door, the dead link and the form, no export affordance at all.
+   ============================================================ */
+console.log("\n--- 7. one way out of the instance, and it is the export act ---");
 const EXPORT = [
   ["a download attribute", /\bdownload\s*=/i], ["a blob URL", /\bblob:|createObjectURL/], ["a data URL", /["'(]data:/i],
   ["a print call", /\bprint\s*\(/], ["a print hook", /beforeprint|afterprint/], ["a file saver", /showSaveFilePicker|saveAs\s*\(/],
@@ -570,16 +693,31 @@ const EXPORT = [
 ok("REACH: the review copy's own source block was found and is the real one",
    BLOCK_CODE.length > 5000 && BLOCK_CODE.includes("function rvcCopyHtml") && BLOCK_CODE.includes("function rvsHtml"),
    String(BLOCK_CODE.length));
-ok("REACH: the rendered pages walked are non-empty", PAGES.length >= 6 && PAGES.every(([, h]) => h.length > 40),
+ok("REACH: the rendered pages walked are non-empty", PAGES.length >= 8 && PAGES.every(([, h]) => h.length > 40),
    JSON.stringify(PAGES.map(([n, h]) => [n, h.length])));
+const SEAM = /function rvcDeliverFile\([^)]*\)\{[\s\S]*?\n\}\n/;
+const seamSrc = (SEAM.exec(BLOCK_CODE) || [""])[0];
+const outside = BLOCK_CODE.replace(SEAM, "");
 const found = [];
-for (const [what, re] of EXPORT) {
-  if (re.test(BLOCK_CODE)) found.push(`${what} in the surface's source`);
-  for (const [n, h] of PAGES) if (re.test(h)) found.push(`${what} on ${n}`);
+for (const [what, re] of EXPORT.slice(0, 6)) if (re.test(outside)) found.push(`${what} in the surface's source outside rvcDeliverFile`);
+for (const [n, h] of PAGES) {
+  if (/the exported file/.test(n)) continue;
+  for (const [what, re] of EXPORT) {
+    const hits = (String(h).match(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g")) || []).length;
+    /* The member's copy may carry EXACTLY ONE export control, and it is the export act's own button. */
+    const allowed = (what === "an export or download control" && /^the member's copy/.test(n) && btnCount(h) === 1) ? 1 : 0;
+    if (hits > allowed) found.push(`${what} on ${n}`);
+  }
 }
+const callers = (outside.match(/\brvcDeliverFile\(/g) || []).length;
+if (!seamSrc || !/createObjectURL/.test(seamSrc)) found.push("the seam rvcDeliverFile was not found, or is not where the file leaves");
+const actSrc = (/async function rvcExport\(\)\{[\s\S]*?\n\}\n/.exec(outside) || [""])[0];
+const fileSrc = (/function rvcExportFile\([^)]*\)\{[\s\S]*?\n\}\n/.exec(outside) || [""])[0];
+if (callers !== 1 || !/rvcExportFile\(c\)[\s\S]*rvcDeliverFile\(/.test(actSrc) || !/const q = rvcQuartetOf\(c\);\s*if\(!q\) return null;/.test(fileSrc))
+  found.push(`rvcDeliverFile is called from ${callers} site(s), not from rvcExport alone on a file drawn only after the quartet is checked`);
 const printCss = [...fs.readFileSync(new URL("../app.html", import.meta.url), "utf8").matchAll(/@media\s+print\s*\{([\s\S]*?)\n\}/g)].map((m) => m[1]).join("\n");
-if (/\.rvc-|data-rvc/.test(printCss)) found.push("a print rule for the review copy");
-ok("NO EXPORT: the review copy offers no download, no file, no blob or data link, no print call or hook and no print rule — FOUND: "
+if (/\.rvc-|\.rvx-|data-rvc/.test(printCss)) found.push("a print rule for the review copy");
+ok("ONE WAY OUT: no print call, hook or rule; no download, blob or data link but the one seam, called from the export act alone; no export control on any page but the member's one button — FOUND: "
    + (found.length ? found.join("; ") : "none"), found.length === 0 && printCss.length > 100);
 
 await finish();
