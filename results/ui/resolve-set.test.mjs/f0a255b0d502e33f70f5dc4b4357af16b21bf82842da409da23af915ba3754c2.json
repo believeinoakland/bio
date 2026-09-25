@@ -1,0 +1,16 @@
+{
+ "unit": "ui:resolve-set.test.mjs",
+ "inputHash": "f0a255b0d502e33f70f5dc4b4357af16b21bf82842da409da23af915ba3754c2",
+ "verdict": "PASS",
+ "run": "0fd711a429c61785c8c549d7318f952a00ba55e9.1790303342180.5798.json",
+ "tree": "0fd711a429c61785c8c549d7318f952a00ba55e9",
+ "head": "44a2694afa246d6834f5a458acef96ba0367a714",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 78,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "489caeaf-6f7d-5cb6-9ef0-da7219dbd580",
+ "at": "2026-09-25T02:29:02.204Z"
+}
