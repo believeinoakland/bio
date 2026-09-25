@@ -138,8 +138,8 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **Test through the op, and verify live** in your own instance's scratch namespace, swept after; a
   store-level test is not evidence a caller can reach the feature. **NAME `store=scratch` ON EVERY CALL — the namespace is
   not fenced for you** (D-325, `scopeFor`): PROBE alone is confined, and not on public ops; any other class lands in
-  `bio` unless the call names scratch. Public ops but invitelook/enroll/instancegroup/groupidentity REFUSE `store=scratch`
-  (NAMESPACE_PINNED, D-461): verifying them live touches the real record. A live verification's
+  `bio` unless the call names scratch. Every public op EXCEPT invitelook/enroll/instancegroup/groupidentity REFUSES `store=scratch`
+  (NAMESPACE_PINNED, D-461): verifying a refusing op live touches the real record. A live verification's
   no-write guarantee is the naming plus the WITNESS — the record's counters read before and after every arm — never a
   plane fence. D-463 confines a MINTED credential (never a binding class) to scratch; name scratch anyway. **A deploy verified is not a build
   serving**: rollout is per-isolate — if a live probe contradicts the suite, establish which build answered.
