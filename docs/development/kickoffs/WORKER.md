@@ -261,7 +261,7 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
    if you believe you did not touch the UI: CONDUCT once pushed `main` with it red at 32
    failures, and twice a fixture drawing a value at runtime was refused by a plane check that
    did not exist when the fixture was written.
-4. `node tools/plancheck.mjs` — clean but for UNPUSHED. It also refuses an unresolved merge
+4. `node tools/plancheck.mjs` — 0 fail once your branch is pushed (D-569). It also refuses an unresolved merge
    marker anywhere in the tree.
 5. Commit, **then PUSH** — `git push origin HEAD:refs/heads/land/worker/<your row id>` (the rule, and
    why, under "Your environment"). Then VERIFY it arrived by asking the REMOTE, not your tree:

@@ -344,6 +344,31 @@ export function carriedBy(repo, head, remoteMap, preferName = null) {
   return null;
 }
 
+/* D-569 — THE GRADE OF PLANCHECK §1's UNPUSHED ARM, which fires when HEAD is ahead of `origin/main`.
+   Its text always said "a failure on main and a note anywhere else"; its code called `fail()` on every
+   branch, so no worker could meet "plancheck 0 fail" on its own PUSHED `land/` branch. The grade:
+     - FAIL on `main`: main ahead of origin/main is unpublished integration, whatever else carries it;
+     - FAIL where NO ref on origin carries HEAD: local-only work is D-288's loss shape on any branch;
+     - NOTE where some origin ref carries HEAD, under ANY name — `carriedBy`, same-named ref first,
+       because a worker pushes `HEAD:refs/heads/land/worker/<id>` from a checkout whose own branch
+       may be called something else or be detached (S11 above is the same spelling defect).
+   `network: false` by default: plancheck has just run `git fetch origin`, so the tracking refs are
+   the remote as of this run and a second `ls-remote` would buy nothing. A remote object this clone
+   has not fetched cannot be tested for ancestry and reads NOT carried — toward FAIL, the direction
+   that costs a second look rather than the direction that loses work (as `carriedBy` states). */
+export function unpushedGrade({ repo = ROOT, branch, head, network = false } = {}) {
+  if (branch === "main")
+    return { grade: "fail", carrier: null,
+             why: "HEAD is main, and main ahead of origin/main is unpublished integration." };
+  const { map } = remoteHeads({ repo, network });
+  const carrier = carriedBy(repo, head, map, branch && branch !== "HEAD" ? branch : null);
+  return carrier
+    ? { grade: "note", carrier,
+        why: `origin/${carrier.ref} carries HEAD — pushed, awaiting integration.` }
+    : { grade: "fail", carrier: null,
+        why: `no ref on origin carries HEAD — push it: git push origin HEAD:refs/heads/land/<lane>/<id>.` };
+}
+
 export function strandedAudit({
   repo = ROOT, main = "origin/main", network = true, remote = "origin",
 } = {}) {
