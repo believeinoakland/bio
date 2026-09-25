@@ -89,6 +89,12 @@
  *     (`if (fm.current_state !== "adopted") continue;`) -> **136/2**, and the two
  *     are the READ arms by name: block 8's "and THE READ says so too" and block
  *     15b's "THE READ, AND THE WHOLE POINT". The ANSWER arms stayed green.
+     RE-RUN 2026-09-25 by CONDUCT #21 at c21-batch28, where block 15b was CORRECTED for D-468 (a later
+     proposal over an adopted head is now refused, so 15b's replacement is unreachable — see the block):
+     BASELINE **137 pass, 0 fail**; ARM A -> **134/3**: block 8's and block 9's answer arms and 15b's
+     corrected re-adoption arm (which now requires `pins_proposed` to be SAID false, so an absent field
+     fails it); ARM B -> **136/1**: block 8's read arm alone, because 15b's read arm drove the state D-468
+     closed and is gone. Each arm alone, store.mjs restored from a scratchpad copy, sha256 MATCH and cmp SAME.
  *     ARM C — OVER-STRICTNESS, two correct spellings this suite did not
  *     anticipate, armed together: `pins_proposed: b.current_state !== "adopted"`
  *     (equivalent, because C-26.10 admits only `proposed` and `adopted` at this
@@ -1187,7 +1193,7 @@ await block("15", async () => {
  * PLACED LAST, before the purge, because it moves the instance set's head and
  * lifts the instance lens: no block after it reads either.
  * ===================================================================== */
-console.log("\n--- 15b. REC-210: a LATER PROPOSAL adopted REPLACES the lens, and the record says so ---");
+console.log("\n--- 15b. REC-210 x D-468: a LATER PROPOSAL over an adopted set is REFUSED, and the lens stays as it was ---");
 await block("15b", async () => {
   /* The revision in force now — read rather than remembered, so this block does not rest on a sha
      another block happened to leave in a variable. */
@@ -1206,12 +1212,21 @@ await block("15b", async () => {
       justification: "The office is a party to several matters this group is examining.",
       citations: [], locked: true },
   ];
+  /* CORRECTED at c21-batch28 (CONDUCT #21), never exempted, where REC-210 (this block, batch27) first met
+     D-468. THE OLD ASSERTION WAS RIGHT FOR ITS TREE AND IS WRONG ON THIS ONE: it offered a later revision at
+     `proposed` over an ADOPTED head, and D-468 closed exactly that move — `op=promote` now holds a bias set to
+     the declared STATES edges read from its head, and `adopted` -> `proposed` is not one (C-26.12,
+     BIAS_ILLEGAL_TRANSITION). So the replacement this block drove is NO LONGER A REACHABLE STATE of this plane
+     (construct-status 7.manifest-stamped says so beside REC-210's text), and the block now asserts what the
+     plane does instead: the backwards move is refused BY NAME, nothing moves, a re-adoption pins the ADOPTED
+     revision with no marker, and an amendment that stays `adopted` re-pins (the over-strictness arm below,
+     unchanged). REC-210's marker itself is still driven where it IS reachable — a FIRST adoption of a set
+     standing at `proposed` — in blocks 8 and 9. */
   const later = await write(INSTANCE_ID, biasMd(instanceFm("proposed", { statements: laterStatements })),
                             "bias", "proposed", MEMBER);
-  const LATER_REV = later?.bundleSha ?? null;
-  t("a LATER revision is OFFERED — three distinct facts to separate: the adopted revision, the later "
-  + "proposal, and the statement text that tells their bytes apart",
-    [later.ok, typeof LATER_REV, LATER_REV !== ADOPTED_REV], [true, "string", true]);
+  t("D-468 AT THE UNION: a LATER revision at `proposed` over an ADOPTED head is REFUSED BY NAME — the move "
+  + "REC-210's replacement needed is not a declared edge, so nothing was written",
+    [later.ok, later.reason ?? null, later.check ?? null], [false, "BIAS_ILLEGAL_TRANSITION", "C-26.12"]);
 
   /* REC-187's guarantee, re-asserted here because this block's own arm depends on it: the mere
      PROPOSAL moves nothing. If it lifted the lens by itself, the marker below would be crediting the
@@ -1223,25 +1238,15 @@ await block("15b", async () => {
      m1.pins_proposed ?? null, m1.statements.some((x) => x.text.includes("TWO independent records"))],
     [true, ADOPTED_REV, true, null, false]);
 
-  /* THE ACT THE RULING IS ABOUT. */
+  /* THE ACT THE RULING WAS ABOUT, on the head that now exists: re-adopting pins the ADOPTED revision, so
+     nothing is replaced and nothing is marked — the lens stays in force at the same revision and hash. */
   const re = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
-  t("REC-210: the re-adoption is ACCEPTED (BOB #32: it is a REPLACEMENT, not a refusal), pins the "
-  + "LATER PROPOSED revision, answers the marker, and says in force FALSE",
-    [re.ok, re.pinned?.bundle_sha, re.pins_proposed, re.in_force,
-     /PINS A PROPOSED REVISION/.test(String(re.note)), /REPLACES this scope's lens/.test(String(re.note)),
-     /pre-authorising whatever the proposal becomes/.test(String(re.note))],
-    [true, LATER_REV, true, false, true, true, true]);
-
   const m2 = await get("biasmanifest", "scope=instance", MEMBER);
-  t("REC-210 — THE READ, AND THE WHOLE POINT: the adopted lens is LIFTED, and the answer no longer "
-  + "reads like a group that never adopted anything — the marker names the set, the proposed revision "
-  + "it pins, that revision's state and the member who adopted it, beside the unchanged sentence",
-    [m2.in_force, m2.stated, m2.statements_sha, m2.bundles,
-     m2.pins_proposed?.length ?? -1, m2.pins_proposed?.[0]?.bundle_id ?? null,
-     m2.pins_proposed?.[0]?.revision ?? null, m2.pins_proposed?.[0]?.pinned_state ?? null,
-     m2.pins_proposed?.[0]?.adopted_by ?? null,
-     /not a pre-authorisation of whatever the proposal becomes/.test(String(m2.pins_proposed_stated))],
-    [false, "no manifest was in force", null, [], 1, INSTANCE_ID, LATER_REV, "proposed", "mo", true]);
+  t("the re-adoption, on a head the refused proposal did not move, pins the ADOPTED revision and carries NO "
+  + "marker — and the read agrees: still in force, same revision, same hash, no pins_proposed",
+    [re.ok, re.pins_proposed ?? "ABSENT — the answer did not say", m2.in_force, m2.bundles?.find((b) => b.bundle_id === INSTANCE_ID)?.revision,
+     m2.statements_sha === m0.statements_sha, m2.pins_proposed ?? null],
+    [true, false, true, ADOPTED_REV, true, null]);
 
   /* OVER-STRICTNESS, in the direction that matters: the marker must not be a one-way latch. Promote
      the SAME later revision to `adopted` — promote() re-pins (REC-187) — and the marker must GO,
