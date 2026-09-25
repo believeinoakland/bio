@@ -51,3 +51,4 @@ M0-191	2026-09-24T22:09:32.996Z	HEAD	SCHEDULER #20: tools/slots.mjs (BOB #33 21:
 M0-192	2026-09-24T22:12:24.801Z	HEAD	SCHEDULER #20: d470-catalog-census control quotes CATALOG_VERSION (CONDUCT #20 22:09Z)
 M0-193	2026-09-24T22:16:30.341Z	HEAD	SCHEDULER #20: surfacing-run.mjs snapKey per second + purge cache clear on refusal (M0-187 F2/F3, CONDUCT #20 22:15Z)
 M0-194	2026-09-24T22:43:49.775Z	HEAD	SCHEDULER #20: WORKER.md states current rules one line each (BOB #34 22:50Z)
+M0-195	2026-09-25T04:03:57.948Z	SCHEDULER-22	census changed: + source-digest backstop (BOB #35 04:00Z, rule 17)
