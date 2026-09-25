@@ -96,6 +96,16 @@ scope: a revision carries the head's value for each field; a creation missing on
 accepts-when: each of the four fields absent on a creation is refused by name and on a revision is carried, with no stack in any answer (moves: a raw NOT NULL stack from promote). NEGATIVE CONTROL: remove the pre-write check and the creation arms fail by name, reading a stack.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
 
+### D-673 · queued — **C-4.2 AND A DOCUMENT'S IN-BYTES `state_history`: an undeclared edge in a document's OWN bytes has no reading under D-546's fence.** BOB #35 RULED 2026-09-25 08:00Z, option (b) (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): it gets D-546's sentence ("made by a path the current rules do not allow (before <fence date>)") ONLY where the record's own history corroborates the same move — the pair in D-546's `statemovecensus` chain-joined moves for that bundle, at or before the fence; otherwise C-4.2 keeps the ERROR. A writer's timestamp never buys the pre-fence reading alone. M-179: 11 in-bytes entries, 0 undeclared — nothing live changes today. Minted by D-546's worker. — owner RECORD.
+order: after D-628, with the promote corrections: it reads D-546's census and fence (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — C-4.2's corroborated reading; the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.7, with BOB #35's 08:00Z ruling, folded into §4.7 by this row (clearing its D-673 Incomplete-sections bullet).
+depends-on: D-546 (running, stacked on D-578; builds the fence and `statemovecensus`).
+scope: C-4.2 passes an undeclared in-bytes edge with D-546's sentence only when the census corroborates it at or before the fence; otherwise ERROR as today.
+accepts-when: the corroborated twin passes with the sentence and the uncorroborated one fails (moves: no reading for an in-bytes undeclared edge). NEGATIVE CONTROL: a fixture carrying a backdated undeclared edge with no record corroboration must fail C-4.2 by name, and the corroborated twin must pass with the sentence.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker; placed on BOB #35's 08:00Z ruling).
+
 ### D-641 · queued — **107 REFUSAL CODES A MEMBER CAN RECEIVE HAVE NO CANNED TRANSLATION: D-542's R5/R6 walk brought them into reach (reach 488->595) and they are the whole reachGap rise 39->146 — e.g. relationdeclare NO_ENDS / SELF_RELATION, queuemute NO_KINDS, progressiondefine NO_STAGES; the publishedbytes codes overlap D-561.** Listed by check-refusal-codes' `IN REACH ONLY BY OP` line. Found by D-542's worker (minted on land/worker/D-542). — owner RECORD (REC-64's sweep).
 order: after D-628 — a member told a bare code instead of words is DEC-49's own defect and product, ahead of the process rows (SCHEDULER #23, 2026-09-25)
 milestone: M7
@@ -1143,13 +1153,3 @@ depends-on: none. Sequence after M0-81.
 accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-120 · queued — **`mintid --audit --base` DIFFS `main` ONLY, SO AN ID ALLOCATED ON `coord` IS INVISIBLE TO THE INTEGRATION-SIDE CHECK.** `audit()` (`tools/mintid.mjs`) reads `git diff <base>...HEAD`; since M0-110's cutover every DEBT row, plan heading and ledger archive — the allocation sites — lands on `coord`. Found by M0-110's worker (CONDUCT #14). — owner M0.
-order: first of the ledger tooling, before LED-8: an id collision check blind to where ids are now minted is the costs-nothing green, latent until two lanes mint the same id on `coord`; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-110's finding)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §1 (the state moves to `coord`; every reader follows it), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-110 is done.
-scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
-accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).
