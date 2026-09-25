@@ -1,9 +1,14 @@
 /* NEGATIVE CONTROL: RUN 2026-09-25 by the D-681 worker with `node test/leadlist.control.mjs` from `bio-plane/`, the FIRST
  * run and unamended, against src/store.mjs b1c71234c174… (3,475,993 B), every restore EQUAL by sha256 AND byte compare,
- * driver exit 0, 5/5 AS DECLARED: BASELINE 23/0 · (bysubject) THE ROW'S OWN, the list grouped by subject again: 15/8,
- * failing "SAME WORDS, TWO LEADS" by name and sparing the never-followed, no-leak and ceiling arms · (wide) the fence
- * dropped: 20/3, "NO EXISTENCE LEAK" and vera's · (noshare) the share arm dropped: 22/1 · (uncapped) the page cut
- * removed: 22/1, "a page of 1 over three" · (respelled) OVER-STRICTNESS, the latest state through MAX(seq): 23/0 GREEN.
+ * driver exit 0, 5/5 AS DECLARED over a BASELINE of 23 pass, 0 fail. RE-RUN the same day after `leadList` returned its
+ * no-reach answer early (so `derivation-bounds` could grade its `#rows(` source), against store.mjs e2b15ce33f44…
+ * (3,476,264 B): 5/5 AS DECLARED again, every figure below identical, every restore EQUAL by sha256 AND byte compare:
+ *   (1) `bysubject`, THE ROW'S OWN, the list grouped by subject again -> 15 pass, 8 fail, failing "SAME WORDS, TWO
+ *       LEADS" by name and sparing the never-followed, no-leak and ceiling assertions;
+ *   (2) `wide`, the fence dropped -> 20 pass, 3 fail, "NO EXISTENCE LEAK" and vera's;
+ *   (3) `noshare`, the share arm of the fence dropped -> 22 pass, 1 fail, "AFTER the share, sam (joined)";
+ *   (4) `uncapped`, the page cut removed -> 22 pass, 1 fail, "a page of 1 over three";
+ *   (5) `respelled`, OVER-STRICTNESS, the latest state through MAX(seq) -> 23 pass, 0 fail, GREEN as declared.
  *
  * D-681 — op=leadlist: THE LEADS A MEMBER MAY READ, EACH ONCE, WITH ITS OWN LATEST STATE
  * (`MEMBER-KNOWLEDGE-DESIGN.md` §5, the lead's surface).

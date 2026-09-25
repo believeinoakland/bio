@@ -51444,7 +51444,16 @@ ${words}`;
       _Store.LEAD_LIST_LIMIT_MAX
     ));
     const reach = this.#leadReach(viewer, identity);
-    const rows = !reach ? [] : this.#rows(
+    if (!reach)
+      return {
+        ok: true,
+        limit: cap,
+        truncated: false,
+        leads: [],
+        empty: { cause: "no_leads_visible", says: _Store.LEAD_LIST_EMPTY },
+        note: _Store.LEAD_LIST_NOTE
+      };
+    const rows = this.#rows(
       `SELECT l.lead_id, l.author, l.words, l.locator, l.at,
               (SELECT o.state FROM observation_log o WHERE o.authority_kind = 'lead' AND o.authority = l.lead_id
                 ORDER BY o.seq DESC LIMIT 1) AS latest_state,

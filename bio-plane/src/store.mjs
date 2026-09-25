@@ -22218,7 +22218,11 @@ export class Store extends DurableObject {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.LEAD_LIST_LIMIT_DEFAULT),
                                      Store.LEAD_LIST_LIMIT_MAX));
     const reach = this.#leadReach(viewer, identity);
-    const rows = !reach ? [] : this.#rows(
+    /* A viewer who reaches no lead gets the same answer as one whose reach holds none. */
+    if (!reach)
+      return { ok: true, limit: cap, truncated: false, leads: [],
+               empty: { cause: "no_leads_visible", says: Store.LEAD_LIST_EMPTY }, note: Store.LEAD_LIST_NOTE };
+    const rows = this.#rows(
       `SELECT l.lead_id, l.author, l.words, l.locator, l.at,
               (SELECT o.state FROM observation_log o WHERE o.authority_kind = 'lead' AND o.authority = l.lead_id
                 ORDER BY o.seq DESC LIMIT 1) AS latest_state,

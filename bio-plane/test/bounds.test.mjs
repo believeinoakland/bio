@@ -618,7 +618,10 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      reads, and `derivation-bounds` and `meaning-bounds` each named it; it was fixed at the cause — LIMIT cap+1
      under DRIVE_SHELLS_LIMIT_DEFAULT/MAX, a keyset cursor, `limit` and `truncated` published. Its envelope is in
      the map below and its BITE in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
-  OPS.size, 46);
+  /* MOVED 46 -> 47 on 2026-09-25 by D-681, from THIS ARM'S OWN FAILURE OUTPUT (`want 46 / got 47`): op=leadlist,
+     the leads a viewer may read, capped at LEAD_LIST_LIMIT_DEFAULT/MAX beside `LIMIT ?` with `limit` and `truncated`
+     published. Its envelope is in the map below and its BITE in `test/leadlist.test.mjs` (DRIVEN_ELSEWHERE). */
+  OPS.size, 47);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
