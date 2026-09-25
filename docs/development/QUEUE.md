@@ -1076,6 +1076,26 @@ accepts-when: the stability figure is recorded with date, instrument and populat
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 note: 2026-09-24 by SCHEDULER #19 (D-472's worker F2, via CONDUCT #20 20:14Z): the monitor's cry-wolf survives for Google Docs and Slides (.odt, .odp) because only .ods has a measured container digest; land the .odt normalisation with an ODF_EVIDENTIARY_MEASURED row once measured, and name a census target for .odp.
 
+### D-515 · queued — **NO COMMITTED FIXTURE IS A PDF WHERE TIER 2 GENUINELY DECODES FEWER GLYPHS THAN TIER 1, so D-501's degradation arm is proved on synthetic input only.** Found by D-501's worker (F1). — owner CONTENT-PDF.
+order: after D-473, with the measurements: the case is covered synthetically; a real page raises the evidence, not the behaviour (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:51Z)
+milestone: M2
+interface: none — a fixture and an arm.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with `docs/development/VERIFICATION.md` (measure; do not recall).
+depends-on: D-501.
+scope: search the bytes already held for a page where tier 2 decodes fewer glyphs; commit one as a fixture and drive D-501's award over it, or record with date and instrument that the corpus holds none.
+accepts-when: a real page's award keeps tier 1 by glyph count, or the search is recorded empty. NEGATIVE CONTROL: award by raw length and the real-page arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
+
+### FW-24 · queued — **THE WHOLE-CORPUS DOCUMENT-TYPE CENSUS IS NOW TAKEABLE AND NOT TAKEN: Legistar answered during FW-22, so the census can run over the whole corpus (`M032_HALVES=bucket`) instead of the sampled halves.** FW-22's worker (finding 3, via CONDUCT #20 21:21Z). — owner FRAMEWORK.
+order: after D-515, with the measurements: EXTRACTION-BREADTH §2's rule that a count comes before any reader (SCHEDULER #19, 2026-09-24)
+milestone: M2
+interface: none — a measurement.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §2 "Readers beyond three — the rule, and the order".
+depends-on: FW-22.
+scope: run the census instrument over the whole corpus with `M032_HALVES=bucket`, FINANCIAL REPORT counted apart (FW-22); record each class's count with interval, date and instrument; restate §2's order if the counts move it.
+accepts-when: MEASUREMENTS carries the whole-corpus counts with their instrument and date (the measured failure it moves: the order resting on sampled halves only). NEGATIVE CONTROL: fold FINANCIAL REPORT back into budget and the class count moves, by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs FW`).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
