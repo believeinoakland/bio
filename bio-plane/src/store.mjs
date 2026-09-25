@@ -394,7 +394,7 @@ import { checkConsume } from "./airun.mjs";
    the reason nothing below re-derives any of it. */
 import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribed,
          terminalStep, describeChain, gradeCeiling, STEP_KINDS,
-         calibrationsOf, chainKindFor,
+         calibrationsOf, chainKindFor, CHAIN_LAST,
          /* REC-94: WHICH TIERS A CHAIN EVIDENCES, read off the step kinds' own
             declared tier. It lives in `textchain.mjs` because it is a question
             about a chain and a chain has ONE home -- the same boundary the
@@ -21260,8 +21260,9 @@ export class Store extends DurableObject {
 
     /* D-686: KEPT DOCUMENT-LEVEL (BOB #35) -- the last step of this document's chain, not how any given
        page was read -- and computed by the SAME function that gives `content.chain_kind` its per-unit
-       value, asked about no page. */
-    const chainKind = chainKindFor(chain) || "layer";
+       value, asked for the chain's last step (`CHAIN_LAST`). BOB #35's `mixed` (09:35Z) is a UNIT's
+       answer and is never written here. */
+    const chainKind = chainKindFor(chain, CHAIN_LAST) || "layer";
     const list = Array.isArray(units) ? units : [];
     /* READING ORDER IS THE RECORD'S, NOT THE CALLER'S. `provenance.json` is a
        document a caller can AUTHOR, so the order the units are indexed in is

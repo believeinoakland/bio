@@ -90,7 +90,8 @@ const ARMS = {
     mustFail: ["a TEXT-LAYER page of a mixed document reads `layer`",
                "every row is RECOMPUTED per unit", TEXT_LAYER_OP],
     mustPass: "every OCR'd-page and document-level arm — the whole chain's last step IS their answer",
-    patch: () => arm(TEXTCHAIN, "    if (page == null) return step.step;", "    return step.step;"),
+    patch: () => arm(TEXTCHAIN, "    if (ext === \"all\" || ext.includes(page)) return derivations[i].step;",
+                                "    return derivations[i].step;"),
   },
   nowrite: {
     files: [STORE],
@@ -116,23 +117,32 @@ const ARMS = {
     mustPass: "section 2 (a pre-REC-104 store has no column to hide) and section 3",
     patch: () => arm(STORE, "PRAGMA table_xinfo(content)", "PRAGMA table_info(content)"),
   },
+  lastkind: {
+    files: [TEXTCHAIN],
+    why: "BOB #35's ARM (09:35Z): the OLD answer for a unit with no page — the chain's last derivation step — "
+       + "put back in place of the single-kind-or-`mixed` rule. A mixed document's whole-document unit then "
+       + "reads the kind its chain happens to end on, and must fail BY NAME",
+    mustFail: ["a WHOLE-DOCUMENT unit of a mixed document reads `mixed`",
+               "the whole-document unit of a mixed document reads `mixed`",
+               "every row is RECOMPUTED per unit"],
+    mustPass: "every per-page arm and capture_text's `CHAIN_LAST` arm — the page question is untouched",
+    patch: () => arm(TEXTCHAIN, "    return kinds.size === 1 ? [...kinds][0] : CHAIN_KIND_MIXED;",
+                                "    return derivations[derivations.length - 1].step;"),
+  },
   overstrict: {
     files: [TEXTCHAIN],
-    why: "OVER-STRICTNESS: `chainKindFor` rewritten as a FORWARD scan keeping the last covering (or "
+    why: "OVER-STRICTNESS: the page question rewritten as a FORWARD scan keeping the last covering (or "
        + "unreadable) step — a different, correct spelling. The suites test what the function answers, "
        + "not how it walks, so everything MUST PASS",
     mustFail: [], mustPass: "everything", passArm: true,
     patch: () => arm(TEXTCHAIN,
-      "  for (let i = chain.length - 1; i >= 0; i--) {\n    const step = chain[i];\n"
-    + "    if (STEP_KINDS[step.step].role !== \"derivation\") continue;\n"
-    + "    if (page == null) return step.step;\n"
-    + "    const ext = extentOf(step);\n"
+      "  for (let i = derivations.length - 1; i >= 0; i--) {\n"
+    + "    const ext = extentOf(derivations[i]);\n"
     + "    if (ext === \"unreadable\") return null;\n"
-    + "    if (ext === \"all\" || ext.includes(page)) return step.step;\n"
+    + "    if (ext === \"all\" || ext.includes(page)) return derivations[i].step;\n"
     + "  }\n  return null;",
-      "  let kind = null;\n  for (const step of chain) {\n"
-    + "    if (STEP_KINDS[step.step].role !== \"derivation\") continue;\n"
-    + "    const ext = page == null ? \"all\" : extentOf(step);\n"
+      "  let kind = null;\n  for (const step of derivations) {\n"
+    + "    const ext = extentOf(step);\n"
     + "    if (ext === \"unreadable\") kind = null;\n"
     + "    else if (ext === \"all\" || ext.includes(page)) kind = step.step;\n"
     + "  }\n  return kind;"),
@@ -195,13 +205,17 @@ for (const name of names) {
 console.log(`\n${finding === 0 ? "every arm AS DECLARED" : `${finding} arm(s) NOT AS DECLARED — a surprising result is a finding about the ARM, recorded rather than smoothed`}`);
 process.exit(0);
 
-/* MEASURED 2026-09-25 by D-686's worker, on the final sources, the whole harness in one run:
- *   baseline    content-chain-kind 45/0 · content-arm 110/0                      AS DECLARED
- *   generated   content-chain-kind 35/10 (both text-layer op arms by name) · content-arm 110/0   AS DECLARED
- *   wholechain  content-chain-kind 35/10 (1b, 2b, 3 text-layer arms by name) · content-arm 110/0 AS DECLARED
- *   nowrite     content-chain-kind 40/5 · content-arm 104/6                       AS DECLARED
- *   nomigrate   content-chain-kind 36/9 (sections 2 and 2b's recomputed rows) · content-arm 110/0  AS DECLARED
- *   xinfo       content-chain-kind 40/5 (2b: the REC-104 store bricks) · content-arm 110/0  AS DECLARED
- *   overstrict  content-chain-kind 45/0 · content-arm 110/0                      AS DECLARED
- * Every restore byte-identical (store.mjs 3474681 bytes, schema.mjs 259456, textchain.mjs 93714, before
- * the grammar-sentence edit that followed). */
+/* MEASURED 2026-09-25 by D-686's worker, on the final sources (after BOB #35's 09:35Z `mixed` ruling), the
+ * whole harness in one run — content-chain-kind / content-arm, pass/fail:
+ *   baseline    48/0  · 110/0   AS DECLARED
+ *   generated   36/12 · 110/0   AS DECLARED  (both text-layer op arms and the `mixed` arms by name)
+ *   wholechain  36/12 · 110/0   AS DECLARED  (1b, 2b, 3 text-layer arms by name)
+ *   nowrite     42/6  · 104/6   AS DECLARED
+ *   nomigrate   39/9  · 110/0   AS DECLARED  (sections 2 and 2b's recomputed rows)
+ *   xinfo       43/5  · 110/0   AS DECLARED  (2b: the REC-104 store bricks)
+ *   lastkind    44/4  · 110/0   AS DECLARED  (exactly the four whole-document `mixed` arms)
+ *   overstrict  48/0  · 110/0   AS DECLARED
+ * Every restore byte-identical (store.mjs 3474857 bytes, schema.mjs 259517, textchain.mjs 95758).
+ * RECORDED, NOT SMOOTHED: the first run after the `mixed` ruling read baseline NOT AS DECLARED — content-arm's
+ * pin that the `chain` vocabulary is exactly STEP_KINDS failed on the new word. That pin was superseded by the
+ * ruling and is corrected at its site, and this run is the one after the correction. */

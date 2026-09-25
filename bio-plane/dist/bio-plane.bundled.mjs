@@ -3364,7 +3364,7 @@ CREATE TABLE IF NOT EXISTS content (
   at             TEXT NOT NULL,
   stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
   cited_as       TEXT    NOT NULL DEFAULT 'text', -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
-  chain_kind     TEXT               -- D-686. the kind of the last derivation step covering THIS unit's page, written at mint by chainKindFor. NULL = undetermined. See the index block below
+  chain_kind     TEXT               -- D-686. how THIS unit was read: the last derivation step covering its page, or for a unit with no page its pages' one kind or mixed. Written at mint by chainKindFor. NULL = undetermined. See the index block below
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis
@@ -27341,16 +27341,33 @@ function unionExtent(a, b) {
 function terminalStep(chain2) {
   return checkChain(chain2) ? null : chain2[chain2.length - 1].step;
 }
+var CHAIN_KIND_MIXED = "mixed";
+var CHAIN_LAST = "chain";
 function chainKindFor(chain2, target = null) {
   if (!Array.isArray(chain2) || !chain2.length || !chain2.every((s) => s && typeof s === "object" && Object.hasOwn(STEP_KINDS, s.step))) return null;
-  const page = target && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
-  for (let i = chain2.length - 1; i >= 0; i--) {
-    const step = chain2[i];
-    if (STEP_KINDS[step.step].role !== "derivation") continue;
-    if (page == null) return step.step;
-    const ext = extentOf(step);
+  const derivations = chain2.filter((s) => STEP_KINDS[s.step].role === "derivation");
+  const page = target && target !== CHAIN_LAST && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
+  if (target === CHAIN_LAST || page == null && derivations.every((s) => extentOf(s) === "all"))
+    return derivations.length ? derivations[derivations.length - 1].step : null;
+  if (page == null) {
+    const pages = /* @__PURE__ */ new Set();
+    for (const s of derivations) {
+      const ext = extentOf(s);
+      if (ext === "unreadable") return null;
+      if (ext !== "all") for (const p of ext) pages.add(p);
+    }
+    const kinds = /* @__PURE__ */ new Set();
+    for (const p of pages) {
+      const k = chainKindFor(chain2, { page: p });
+      if (k == null) return null;
+      kinds.add(k);
+    }
+    return kinds.size === 1 ? [...kinds][0] : CHAIN_KIND_MIXED;
+  }
+  for (let i = derivations.length - 1; i >= 0; i--) {
+    const ext = extentOf(derivations[i]);
     if (ext === "unreadable") return null;
-    if (ext === "all" || ext.includes(page)) return step.step;
+    if (ext === "all" || ext.includes(page)) return derivations[i].step;
   }
   return null;
 }
@@ -31018,10 +31035,13 @@ var MEANING = {
          about the chain rather than step kinds, so neither becomes a bare word
          (`content:does-not-apply` would read as a kind of content). The literal
          travels as an ARGUMENT, as every value here does. */
+      /* D-686 / BOB #35 09:35Z: `mixed` is a unit read in more than one way (a whole-document unit of a
+         mixed document) — a VALUE the column holds, so it is askable as `content:mixed`, from the
+         constant `textchain.mjs` owns rather than a literal here. */
       chain: {
         col: "chain_kind",
         case: "lower",
-        vocab: Object.keys(STEP_KINDS),
+        vocab: [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED],
         pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : null
       },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
@@ -51711,7 +51731,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  absence and not an error. */
   #writeCaptureText(bundleId, captureSha, units, chain2) {
     this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
-    const chainKind = chainKindFor(chain2) || "layer";
+    const chainKind = chainKindFor(chain2, CHAIN_LAST) || "layer";
     const list = Array.isArray(units) ? units : [];
     const ordered = list.filter((u) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0).map((u, i) => ({
       extent: u.extent,

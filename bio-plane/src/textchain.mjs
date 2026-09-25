@@ -830,21 +830,36 @@ export function terminalStep(chain) {
   return checkChain(chain) ? null : chain[chain.length - 1].step;
 }
 
-/** D-686 (BOB #35, 2026-09-25 09:05Z) — HOW WAS THIS UNIT READ? The kind of the LAST DERIVATION STEP
- *  COVERING the unit's page, and the ONE computation of `content.chain_kind` and `capture_text.chain_kind`:
- *  every writer and the migration call this and nothing else.
+/** The word `content.chain_kind` holds for a unit read in MORE THAN ONE way (BOB #35, 2026-09-25 09:35Z).
+ *  Not a step kind — no step is `mixed` — so it lives here beside the function that answers it, and the
+ *  query registry adds it to the `chain` vocabulary from this constant. A reader that labels machine-read
+ *  text treats it as CONTAINING machine-read text (DEC-4): some of the unit was not the publisher's typing. */
+export const CHAIN_KIND_MIXED = "mixed";
+
+/** `chainKindFor`'s target for `capture_text`'s DOCUMENT-level fact: the chain's last derivation step,
+ *  "the last step of this document's chain, not how any given page was read" (BOB #35, 09:05Z: KEEP). */
+export const CHAIN_LAST = "chain";
+
+/** D-686 (BOB #35, 2026-09-25 09:05Z and 09:35Z) — HOW WAS THIS UNIT READ? The ONE computation of
+ *  `content.chain_kind` and `capture_text.chain_kind`: every writer and the migration call this and
+ *  nothing else. Until D-686 `content.chain_kind` was the WHOLE chain's last step, so every unit of a mixed
+ *  document read `ocr` — a text-layer page of a document OCR also touched was labelled as OCR'd. The
+ *  extraction method is one of a content unit's two intrinsic facts (Part II §14.2), so it is asked of
+ *  the unit. Three targets:
  *
- *  Until D-686 `content.chain_kind` was the WHOLE chain's last step, so every unit of a mixed document
- *  read `ocr` — a text-layer page of a document OCR also touched was labelled as OCR'd. The extraction
- *  method is one of a content unit's two intrinsic facts (Part II §14.2), so it is asked of the unit.
+ *    `{ page }`     the kind of the LAST derivation step covering that page. Walked from the END, so on a
+ *                   page two parts share (D-635) the part appended last answers. A step whose extent this
+ *                   module cannot read, met before a covering one, could be covering the page, so the answer
+ *                   is UNDETERMINED (null), stated, as `derivationCap` answers it; so is a page no step covers.
+ *    `null`         a unit with NO page (a whole document, an office unit), which every page's reading
+ *                   covers. BOB #35 09:35Z: the single kind when every page the chain's scoped steps name was
+ *                   read the same way, and `mixed` when they differ — NOT null, because the record knows the
+ *                   answer. A chain with no scoped step has one provenance and answers its last derivation
+ *                   step, as it always did. A page among them that is undetermined makes the unit so.
+ *    `CHAIN_LAST`   `capture_text`'s document-level fact: the chain's last derivation step, whatever it covers.
  *
- *  `target` is `derivationCap`'s: `{ page }` asks about one page; `null` asks about the document, which
- *  every step covers, so it answers the chain's last derivation step — the DOCUMENT-level fact
- *  `capture_text.chain_kind` carries, "the last step of this document's chain, not how any given page was
- *  read" (whatever extent that step carries). Walked from the END, so on a page two parts share (D-635) the
- *  part appended last answers. Asked about a page, a step whose extent this module cannot read, met before
- *  a covering one, could be covering it, so the answer is UNDETERMINED (null), stated, as `derivationCap` answers it; so is a page no step covers
- *  and a chain holding a step of no known kind. A VERIFICATION step is not how the text was produced and is never the answer. */
+ *  A chain holding a step of no known kind is undetermined. A VERIFICATION step is not how the text was
+ *  produced and is never the answer. */
 export function chainKindFor(chain, target = null) {
   /* STRUCTURAL, NOT `checkChain`. The kind needs only each step's KIND and EXTENT, and a stored chain
      written before a later field rule (an `ocr` step minted before an engine was required) is a chain
@@ -853,14 +868,33 @@ export function chainKindFor(chain, target = null) {
      as undetermined, as `checkChain` would refuse it. */
   if (!Array.isArray(chain) || !chain.length
       || !chain.every((s) => s && typeof s === "object" && Object.hasOwn(STEP_KINDS, s.step))) return null;
-  const page = target && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
-  for (let i = chain.length - 1; i >= 0; i--) {
-    const step = chain[i];
-    if (STEP_KINDS[step.step].role !== "derivation") continue;
-    if (page == null) return step.step;
-    const ext = extentOf(step);
+  const derivations = chain.filter((s) => STEP_KINDS[s.step].role === "derivation");
+  /* A target with no readable page is the whole-unit question, exactly as `derivationCap` reads it. */
+  const page = target && target !== CHAIN_LAST && Number.isInteger(target.page) && target.page >= 0
+    ? target.page : null;
+  if (target === CHAIN_LAST || (page == null && derivations.every((s) => extentOf(s) === "all")))
+    return derivations.length ? derivations[derivations.length - 1].step : null;
+  if (page == null) {
+    /* EVERY PAGE THE CHAIN NAMES, each asked the page question below — so the whole-unit answer is built
+       from the per-page answers and cannot disagree with them. */
+    const pages = new Set();
+    for (const s of derivations) {
+      const ext = extentOf(s);
+      if (ext === "unreadable") return null;
+      if (ext !== "all") for (const p of ext) pages.add(p);
+    }
+    const kinds = new Set();
+    for (const p of pages) {
+      const k = chainKindFor(chain, { page: p });
+      if (k == null) return null;
+      kinds.add(k);
+    }
+    return kinds.size === 1 ? [...kinds][0] : CHAIN_KIND_MIXED;
+  }
+  for (let i = derivations.length - 1; i >= 0; i--) {
+    const ext = extentOf(derivations[i]);
     if (ext === "unreadable") return null;
-    if (ext === "all" || ext.includes(page)) return step.step;
+    if (ext === "all" || ext.includes(page)) return derivations[i].step;
   }
   return null;
 }

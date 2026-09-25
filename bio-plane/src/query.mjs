@@ -698,7 +698,10 @@ export const MEANING = {
          about the chain rather than step kinds, so neither becomes a bare word
          (`content:does-not-apply` would read as a kind of content). The literal
          travels as an ARGUMENT, as every value here does. */
-      chain:  { col: "chain_kind", case: "lower", vocab: Object.keys(STEP_KINDS),
+      /* D-686 / BOB #35 09:35Z: `mixed` is a unit read in more than one way (a whole-document unit of a
+         mixed document) — a VALUE the column holds, so it is askable as `content:mixed`, from the
+         constant `textchain.mjs` owns rather than a literal here. */
+      chain:  { col: "chain_kind", case: "lower", vocab: [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED],
                 pred: (cmp, v) => v === "undetermined"
                     ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] }
                   : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] }
@@ -995,7 +998,7 @@ import { parseFrontmatter, normalizeType, MACHINE_CLASS_PREFIX,
    here tests a step name against a literal — `content:chain=ocr` reads its
    vocabulary out of `STEP_KINDS` so a step kind added there is askable the same
    day, and one nobody classified is not a word this arm accepts. */
-import { STEP_KINDS } from "./textchain.mjs";
+import { STEP_KINDS, CHAIN_KIND_MIXED } from "./textchain.mjs";
 
 export const FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 
