@@ -54,6 +54,13 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside the source as `${file}.pristine-<arm>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("battery-residue");
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const RESIDUE = join(DIR, "..", "scripts", "residue.mjs");
@@ -88,7 +95,7 @@ const runSuite = () => {
 const arm = ({ name, file, edit, mustFail, mustNotFail, floor }) => {
   if (only && only !== name) return;
   armsRun++;
-  const pristine = `${file}.pristine-${name}`;
+  const pristine = `${PEN}/${file.split("/").pop()}.pristine-${name}`;
   copyFileSync(file, pristine);
   const before = readFileSync(file, "utf8");
   const after = edit(before);

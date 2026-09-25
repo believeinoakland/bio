@@ -25,6 +25,13 @@
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written into `test/.m071-pristine-<arm>-<file>.mjs`, relative to the cwd —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("contradiction-overstrict");
 
 const SRC = { store: "src/store.mjs", judge: "test/contradiction-judge-baseline.mjs",
               gate: "test/contradiction-gate.mjs",
@@ -123,7 +130,7 @@ for (const [name, arm] of Object.entries(ARMS)) {
   if (only && only !== name) continue;
   if (!arm.file) { rows.push({ name, patched: 0, ...tally(run()), restored: true, bytes: 0, sha: "n/a" }); continue; }
   const path = SRC[arm.file];
-  const pristine = `test/.m071-pristine-${name}-${arm.file}.mjs`;  /* REC-147's arms share M0-71's transient pen */
+  const pristine = `${PEN}/m071-pristine-${name}-${arm.file}.mjs`;  /* REC-147's arms share M0-71's transient pen */
   copyFileSync(path, pristine);
   const before = sha(path);
   const src = readFileSync(path, "utf8");

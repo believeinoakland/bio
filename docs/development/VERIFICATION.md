@@ -176,6 +176,15 @@ rename a subject to satisfy an instrument.** `hasDriver` is a POINTER, never a G
 not a percentage: NOT FOUND, HAVE IT AND CANNOT READ IT, NOT WHERE I LOOKED (e.g. `*.control.sh` shell
 drivers, named, not parsed). **A driver existing is not a driver having run.**
 
+### A DRIVER'S PEN: WHERE IT GOES, AND WHO EMPTIES IT (BOB #32, BOB #33; M0-182, M0-172)
+
+A driver's pristine copies go in a per-run pen outside the worktree, `controlPen(item)` in
+`bio-plane/test/pen.mjs` (M0-182), or in a DECLARED in-worktree pen, one `.gitignore` line named for its item
+(BOB #33, 2026-09-24 17:12Z). Never beside the source (`${file}.pristine-<arm>`): undeclared, it dirties the tree
+and an interrupted arm leaves a copy the next walk enrols as source. **A clean run empties its pen; a failed one
+keeps it and prints where** (`status.control.mjs` asserts its pen gone). The class is graded by
+`bio-plane/scripts/pensweep.mjs`; whether a run left its pen is a property of the RUN, which the sweep cannot read.
+
 ### RUN vs DECLARED — AND THE LIMIT IS THE FIRST THING STATED (M0-42, 2026-09-16)
 
 **Nothing here proves a control ran**; any artifact a worker can write it can write without running

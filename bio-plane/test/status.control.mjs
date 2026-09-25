@@ -8,7 +8,7 @@
  * red, the file restored by sha256 AND `cmp` AND a floored byte count after every arm. Built on
  * `owed.control.mjs`'s harness, reused rather than reinvented.
  */
-import { readFileSync, writeFileSync, mkdirSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, statSync, rmSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
@@ -200,6 +200,18 @@ console.log("\n--- ARM BASELINE (closing) · every arm restored ---");
   const s = suiteRun();
   t("closing · the suite is GREEN again, so no arm leaked", [s.fail, s.status], [0, 0]);
   console.log(`  closing suite: ${s.pass} pass, ${s.fail} fail`);
+}
+
+/* M0-172 (BOB #33, 2026-09-24 17:12Z): the pen is this driver's own DECLARED mechanism (`.gitignore`
+   names `.status-harness/`), and a declared pen is emptied by the run that made it. A CLEAN run removes
+   it — the pristine copy has done its work and every arm is restored. A FAILED run KEEPS it and says where:
+   the copy may be the only way back to `tools/status.mjs`. Before M0-172 every clean run left the 25 KB
+   `pristine.status` behind in the worktree. */
+if (!fail) {
+  rmSync(PEN, { recursive: true, force: true });
+  t("clean run · the pen `.status-harness/` is GONE (M0-172)", existsSync(PEN), false);
+} else {
+  console.log(`  PEN KEPT at ${PEN} — the run failed, so the pristine copy stays as the way back`);
 }
 
 console.log(`\nstatus.control: ${pass} pass, ${fail} fail`);

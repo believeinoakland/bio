@@ -22,6 +22,13 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside the source as `${file}.pristine-<arm>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("d249-port");
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -48,7 +55,7 @@ const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b
  * arriving through a mechanism D-93 never named. Raised as D-282. */
 function runHygiene() {
   let out = "";
-  const cap = join(ROOT, "test", ".d249-capture.txt");
+  const cap = join(PEN, "d249-capture.txt");  /* M0-172: the suite capture goes in the pen too, not the tree */
   try {
     execFileSync("sh", ["-c", `"$0" test/hygiene.test.mjs > "$1" 2>&1`, process.execPath, cap],
       { cwd: ROOT, stdio: ["ignore", "ignore", "ignore"] });
@@ -67,7 +74,7 @@ function runHygiene() {
 /* A pristine copy per ARM, uniquely named, so two arms can never restore each
    other's bytes — a class of error this project has paid for. */
 function pristine(file, armName) {
-  const p = `${file}.pristine-${armName}`;
+  const p = `${PEN}/${file.split("/").pop()}.pristine-${armName}`;
   copyFileSync(file, p);
   const bytes = readFileSync(p).length;
   if (bytes < 1000) throw new Error(`pristine copy for ${armName} is only ${bytes} bytes — refusing to proceed`);
@@ -198,7 +205,7 @@ console.log(`\n  ${results.length} arm(s) run · ${bad.length} behaved other tha
 /* A restore left behind is a defect the next session inherits. */
 for (const f of [HYG, VICTIM]) {
   for (const a of ["baseline", "plant", "neuter", "widen", "zero"]) {
-    if (existsSync(`${f}.pristine-${a}`)) console.log(`  *** LEFTOVER pristine copy: ${f}.pristine-${a}`);
+    if (existsSync(`${PEN}/${f.split("/").pop()}.pristine-${a}`)) console.log(`  *** LEFTOVER pristine copy: ${PEN}/${f.split("/").pop()}.pristine-${a}`);
   }
 }
 process.exit(bad.length ? 1 : 0);

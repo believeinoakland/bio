@@ -49,6 +49,13 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside each source as `<file>.d269-arm-<id>.pristine` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("analystvocab");
 
 const HERE = fileURLToPath(new URL("./", import.meta.url));
 const PLANE = HERE + "../";
@@ -91,7 +98,7 @@ function arm(id, mustFail, what, edits) {
   console.log(`  DECLARED: the suite MUST ${mustFail ? "FAIL" : "PASS"}.`);
   const pristines = [];
   for (const [path] of edits) {
-    const p = `${path}.d269-arm-${id}.pristine`;
+    const p = `${PEN}/${path.split("/").pop()}.d269-arm-${id}.pristine`;
     copyFileSync(path, p);
     pristines.push([path, p]);
   }
@@ -226,5 +233,5 @@ for (const [name, okArm] of results) { console.log(`  ${okArm ? "as declared" : 
 console.log(`\nanalystvocab.control: ${results.length - wrong} of ${results.length} arms behaved as declared.`);
 if (wrong) console.log("A SURPRISING RESULT IS A FINDING ABOUT THE ARM. Record it; do not smooth it.");
 for (const p of [STORE, SUITE, APP])
-  if (existsSync(p + ".d269-arm-1.pristine")) console.log(`  !! a pristine copy survived for ${p} — the tree may be mutated.`);
+  if (existsSync(`${PEN}/${p.split("/").pop()}.d269-arm-1.pristine`)) console.log(`  !! a pristine copy survived for ${p} — the tree may be mutated.`);
 process.exit(wrong ? 1 : 0);

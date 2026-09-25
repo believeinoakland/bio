@@ -33,6 +33,13 @@ import { spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside the source as `${arm.file}.pristine-<arm>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("tally-through-pipe");
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -257,7 +264,7 @@ for (const arm of chosen) {
 
   let pristine = null, before = null;
   if (arm.file) {
-    pristine = `${arm.file}.pristine-${arm.id}`;
+    pristine = `${PEN}/${arm.file.split("/").pop()}.pristine-${arm.id}`;
     copyFileSync(arm.file, pristine);
     before = sha(arm.file);
     const bytes = readFileSync(pristine).length;

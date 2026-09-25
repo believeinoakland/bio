@@ -31,6 +31,13 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside each source as `${p}.m057-pristine-<pid>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("m057-authority");
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TOOL = join(ROOT, "tools/corpuscheck.mjs");
@@ -47,7 +54,7 @@ const t = (label, ok, detail = "") => {
 };
 
 function stash(p) {
-  const copy = `${p}.m057-pristine-${process.pid}`;
+  const copy = `${PEN}/${p.split("/").pop()}.m057-pristine-${process.pid}`;
   copyFileSync(p, copy);
   pristine.set(p, { copy, sha: sha(p), bytes: statSync(p).size });
   if (statSync(p).size < FLOOR[p]) throw new Error(`${p} is below its floor before we start — refusing to run`);

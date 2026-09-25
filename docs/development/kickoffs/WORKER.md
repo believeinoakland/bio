@@ -29,7 +29,7 @@ from the old text's rules to these tags is `measurements/M-147.md`, checked by `
 - **W12** · No `node_modules`? `npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/`; read every exit status UNPIPED (id undetermined; `CLAUDE.md` §5, §6).
 - **W13** · Your worktree may be one merge behind `main`: check, and bring it level before you measure (id undetermined).
 - **W14** · Never `git stash` — `refs/stash` is shared by every checkout; need a clean tree, `git worktree add` one (id undetermined).
-- **W15** · Files YOU make — logs, baselines, copies of files, a clone of the repo — go in your session scratchpad, never the worktree (BOB #32, 2026-09-24).
+- **W15** · Files YOU make — logs, baselines, copies of files, a clone of the repo — go in your session scratchpad, never the worktree (BOB #32, 2026-09-24). A control driver's DECLARED, gitignored pen is not scratch: W16 (M0-172).
 - **W16** · A control driver's or tool's own pen, GITIGNORED and ITEM-NAMED, stays in the worktree: it is not scratch (BOB #33, 2026-09-24 17:12Z).
 - **W17** · The scratchpad is neither isolated nor durable: name files per item; COMMIT what a claim rests on (BOB #32; REC-194 F6).
 - **W18** · PUSH your own branch: `git push origin HEAD:refs/heads/land/worker/<row id>`; never to `main`, never force, never merge (D-288, BOB #12; M0-111).

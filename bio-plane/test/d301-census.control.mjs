@@ -34,6 +34,13 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside the source as `${arm.file}.pristine-<arm>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("d301-census");
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -246,7 +253,7 @@ for (const arm of arms) {
   let pristine = null, armedSource = false, armedFile = false, note = "";
 
   if (arm.file) {
-    pristine = `${arm.file}.pristine-${arm.id}`;
+    pristine = `${PEN}/${arm.file.split("/").pop()}.pristine-${arm.id}`;
     copyFileSync(arm.file, pristine);
     const beforeSha = sha(arm.file), beforeBytes = statSync(arm.file).size;
     console.log(`  pristine ${pristine.split("/").pop()} · ${beforeBytes} bytes · sha ${beforeSha.slice(0, 12)}…`);

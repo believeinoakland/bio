@@ -13,11 +13,18 @@ import { readFileSync, writeFileSync, copyFileSync, rmSync, openSync, closeSync 
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside `store.mjs` as `${STORE}.d389-pristine-<arm>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("d389-fullfetch");
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./d389-fullfetch.test.mjs", import.meta.url));
-const OUT = fileURLToPath(new URL("./.d389-control.out", import.meta.url));
+const OUT = `${PEN}/d389-control.out`;  /* M0-172: the suite output goes in the pen too, not the tree */
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 /* RE-POINTED 2026-09-23 BY REC-174: the full-fetch test moved into `#frontierFetch` (shared with the never-looked /
@@ -54,7 +61,7 @@ const want = process.argv[2] && process.argv[2] !== "all" ? [process.argv[2]] : 
 for (const name of want) {
   const arm = ARMS[name];
   if (!arm) { console.log(`no such arm: ${name}`); process.exit(2); }
-  const pristine = `${STORE}.d389-pristine-${name}`;
+  const pristine = `${PEN}/${STORE.split("/").pop()}.d389-pristine-${name}`;
   copyFileSync(STORE, pristine);
   const orig = readFileSync(pristine);
   if (orig.length < 1_000_000) { console.log(`ABORT ${name}: pristine copy is ${orig.length} bytes`); process.exit(2); }

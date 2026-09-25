@@ -124,6 +124,13 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside each source as `${p}.pristine.<arm>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("dec65-single-part");
 
 const CHECKS = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -177,7 +184,7 @@ for (const arm of ARMS) {
   const touched = [...new Set(arm.patches.map(([p]) => p))];
   const pristine = new Map();
   for (const p of touched) {
-    const snap = `${p}.pristine.${arm.id}`;
+    const snap = `${PEN}/${p.split("/").pop()}.pristine.${arm.id}`;
     copyFileSync(p, snap);
     const bytes = readFileSync(snap).length;
     const digest = sha(snap);

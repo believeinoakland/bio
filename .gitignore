@@ -15,8 +15,12 @@
 .wrangler/
 
 # NEGATIVE-CONTROL PENS. A control driver copies pristine sources into a pen
-# inside its own worktree (WORKER.md: never a shared scratchpad) and restores
-# from them;
+# and restores from them. A pen is the DRIVER's mechanism, not a session's
+# scratch: WORKER.md W15 sends files a SESSION makes to its scratchpad, and W16
+# keeps a driver's DECLARED pen — gitignored, item-named — in the worktree.
+# (CORRECTED by M0-172: this preamble read "inside its own worktree (WORKER.md:
+# never a shared scratchpad)", citing WORKER.md for a rule it does not state and
+# blurring the pen/scratch distinction BOB #33 drew.)
 # RULED 2026-09-24 (BOB #33, 17:12Z, M0-172; THE PEN RULE block below states it in full): a driver's
 # pen is the TOOL's own mechanism, not session scratch, so an in-worktree pen that is GITIGNORED and
 # ITEM-NAMED stands; BOB #32's out-of-tree rule governs files a SESSION makes by hand. A per-run
@@ -257,7 +261,13 @@ m035-census.txt
 .d404-harness/
 .d409-harness/
 # tools/status.mjs's negative control pen (bio-plane/test/status.control.mjs), 2026-09-18.
+# Since M0-172 a CLEAN run removes it and asserts it gone; a failed run keeps it as the way back.
 .status-harness/
+# D-255/D-258's pen (bio-plane/test/fieldread.control.mjs), DECLARED by M0-172. A FIXED path on
+# purpose, so not moved to a per-run temp pen: the driver's `--restore` mode and its armed-tree guard
+# recover an INTERRUPTED run from this directory, which a pen named anew each run could not offer.
+# The driver removes it on a clean run.
+bio-plane/test/.fieldread-pristine/
 .d408-harness/
 
 

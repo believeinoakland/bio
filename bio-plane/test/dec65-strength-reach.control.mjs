@@ -148,6 +148,13 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside each source as `${file}.pristine-<arm>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("dec65-strength-reach");
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const STORE = join(ROOT, "src", "store.mjs");
@@ -162,7 +169,7 @@ let problems = 0;
 const say = (s) => console.log(s);
 
 function pristine(arm, file) {
-  const copy = `${file}.pristine-${arm}`;
+  const copy = `${PEN}/${file.split("/").pop()}.pristine-${arm}`;
   if (existsSync(copy)) throw new Error(`a pristine copy for arm ${arm} already exists: ${copy}`);
   copyFileSync(file, copy);
   const d = sha(copy), n = bytes(copy);

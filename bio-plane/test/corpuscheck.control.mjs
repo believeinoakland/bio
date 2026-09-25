@@ -50,6 +50,13 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written beside the source as `${path}.m043-pristine` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("corpuscheck");
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..", "..");
@@ -61,7 +68,7 @@ const FLOOR = { [STD]: 8000, [TOOL]: 6000 };
 
 /* A pristine copy under a unique name, restored by CONTENT and verified three ways. */
 function guard(path) {
-  const keep = `${path}.m043-pristine`;
+  const keep = `${PEN}/${path.split("/").pop()}.m043-pristine`;
   copyFileSync(path, keep);
   const before = sha(path), bytes = statSync(path).size;
   if (bytes < (FLOOR[path] ?? 1000)) throw new Error(`ANCHOR FAILED: ${path} is ${bytes} B, below its floor — refusing to arm against a file that is not what it should be`);

@@ -161,6 +161,13 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+/* M0-172 (scope-add, BOB #33 2026-09-24 17:12Z): the pristine copies used to be written into `test/.m041-pristine-<tag>-<file>` —
+   an UNDECLARED in-worktree pen no `.gitignore` line covers, dirtying the tree for the whole run and
+   leaving an untracked copy of a source where the next walk enrols it if an arm is interrupted. They
+   now go in a per-run `mkdtempSync` pen outside the worktree, through M0-182's one spelling. */
+const PEN = controlPen("m041-instrument-census");
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -182,7 +189,7 @@ let armsNeverArmed = 0;
    arm-never-armed defect wearing a pass. */
 function armFile(rel, anchor, replacement, tag) {
   const abs = join(REPO, rel);
-  const pristine = join(HERE, `.m041-pristine-${tag}-${rel.replace(/[\/.]/g, "_")}`);
+  const pristine = join(PEN, `m041-pristine-${tag}-${rel.replace(/[\/.]/g, "_")}`);
   const src = readFileSync(abs, "utf8");
   const n = src.split(anchor).length - 1;
   if (n !== 1) {
