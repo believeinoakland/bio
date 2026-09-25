@@ -738,6 +738,8 @@ const CHOOSERS = {
   "queueRetainedHtml":     "clears ONE retained item's note from this screen; it touches the record not at all (the item's own acts are still `queueEntryControlsHtml`'s)",
   /* D-134, 2026-09-25. */
   "openCustodialAct":      "D-134: the role radios and capability ticks composing ONE op=memberadd invitation; nothing is decided until the one act",
+  /* UI-70 (Membership v2 §7.14, DEC-69). */
+  "visibilityChoiceHtml":  "UI-70: two radios choosing the ONE setting (discoverable or hidden) a project's creation, its fork or its owner's act sends; neither is preselected and the act carries the one chosen",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is

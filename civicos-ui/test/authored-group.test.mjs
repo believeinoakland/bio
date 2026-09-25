@@ -10,6 +10,8 @@
  *   `addGo` SENT arms, SOURCE NO-LITERAL, SOURCE NO-PLACE, WRITER addGo and three NONE arms failing (on a store recording
  *   none the literal is kept as the caller's statement, so the creation is WRITTEN — the defect's own consequence) ·
  *   (B) RED 32/40, all three SENT arms, MDFOR and the three NONE arms failing, the literal census GREEN · (C) GREEN 40/40.
+ *   RE-RUN 2026-09-25 by UI-70 after its correction (the project drive ticks the setting a member chooses): 4/4 AS
+ *   DECLARED, the same figures (40/40 · 31/40 · 32/40 · 40/40), app.html ef1d85cc… (1,625,805 bytes) restored IDENTICAL.
  */
 /* =========================================================================
  * UI-79 — THE MEMBER UI COMPOSES NO PRODUCING GROUP: A BUNDLE IT AUTHORS CARRIES THE GROUP THE INSTANCE RECORDS.
@@ -301,7 +303,13 @@ const drives = [
     await A.U.addGo(); return A.OPENED[A.OPENED.length - 1]; }],
   ["the Add surface, a project (the plane mints its id)", async () => {
     A.$$("#a-type").value = "project"; A.$$("#a-title").value = "The ward's paving money";
-    A.$$("#a-body").value = "Where it went."; await A.U.addGo(); return A.OPENED[A.OPENED.length - 1]; }],
+    A.$$("#a-body").value = "Where it went.";
+    /* CORRECTED 2026-09-25 BY UI-70 (REC-197; Membership v2 §7.14), never exempted: a project's creator now
+       CHOOSES discoverable or hidden, neither preselected, and the Add surface sends nothing until they have —
+       so this drive, which created a project without choosing, reached no op=promote at all. It ticks the
+       choice a member makes; this suite's subject (the group the surface states) is unchanged by it. */
+    A.$$("#a-vis-hidden").checked = true;
+    await A.U.addGo(); return A.OPENED[A.OPENED.length - 1]; }],
   ["the proposal adoption", async () => {
     vm.runInContext(`PROP_ADOPT_CTX = { key:"k1", kind:"inquiry", proposal:{ key:"k1", progression_label:"Budget cycle",
       stage_label:"Adoption", n:2, instances:[{ entity_label:"Fund A" }, { entity_label:"Fund B" }] } };`, A.ctx);
