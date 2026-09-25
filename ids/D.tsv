@@ -247,3 +247,4 @@ D-718	2026-09-25T10:29:35.185Z	WORKER D-700	C-17.2 classifyDivergence walks _his
 D-719	2026-09-25T10:29:39.219Z	WORKER D-700	setup.mjs bundle view lists _history entries sorted by snap key, not write order (seq since D-700)
 D-720	2026-09-25T10:41:52.028Z	WORKER D-708	pair draft (caseId+newCase) statementack records the reading at the named case's next-edition key; that case's document ('*' match) lists it though which case the draft becomes is UNDETERMINED
 D-721	2026-09-25T10:41:59.515Z	WORKER D-708	#caseIdentitySentence's pair branch still states 'the next edition (N) of C1' in casedraft/casedrafts/reviewcopy/reviewgrant beside edition:null
+D-722	2026-09-25T10:50:54.326Z	SCHEDULER #24	D-706's write half, BOB #36 10:50Z as corrected 10:58Z
