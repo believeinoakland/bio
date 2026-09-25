@@ -1047,7 +1047,7 @@ accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, a
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-723 · integrated — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
-status: integrated — CONDUCT #23 12:40Z: worker report — tip fe2b9a6d (on D-710 f34c4c9f), GATE 388/388 GREEN FULLREUSE (21995 assertions); shared page chain_kind mixed; rides IC-365 (D-686) meaning; rides batch30 after D-710
+status: integrated — SCHEDULER #24 12:48Z: tip fe2b9a6d, ONE commit on D-710 f34c4c9f, GATE 388/388 GREEN FULLREUSE (21995 assertions; excludes 3 untallied), tree b1fd6919; chainKindFor page branch asks every covering part, a D-635 shared page reads mixed; unreadable extent behind a covering part undetermined; nc-d723 arms as declared, nc-d686 two arms re-anchored; construct 4.unit-chain-kind-mixed ADDED as BUILT; rides D-686 IC
 order: directly behind D-710, which it completes: a correction to just-landed work outranks new work, and "less narrative" binds us first (SCHEDULER #24, 2026-09-25)
 milestone: M2
 interface: I3 — a shared page's content.chain_kind reads `mixed`; the integrator classifies.
@@ -1223,6 +1223,26 @@ added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-647 · queued — **`nc-rec114` arms b, c, e: ANCHOR DRIFT — match 2 each, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-646, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
+depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
+scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
+accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
+added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
+### D-648 · queued — **`nc-rec118` arms b, d: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+order: after D-647, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
+depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
+scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
+accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
+added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
+### D-649 · queued — **`nc-rec64` arm 1: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+order: after D-648, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
 design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.

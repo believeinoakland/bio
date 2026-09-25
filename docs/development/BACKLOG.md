@@ -125,26 +125,6 @@ scope: dec65-strength-reach arm 2 re-anchored on the body, not the signature (D-
 accepts-when: each of the four drivers runs whole with 0 arms NOT as declared (moves: four drivers whose arms do not bite). NEGATIVE CONTROL: the drivers' own arms, recorded on each suite's line.
 added: 2026-09-25 · SCHEDULER #24 (id minted by M0-172's worker).
 
-### D-648 · queued — **`nc-rec118` arms b, d: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-order: after D-647, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
-milestone: M0
-interface: none (test-only).
-design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
-depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
-scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
-accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
-added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
-
-### D-649 · queued — **`nc-rec64` arm 1: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-order: after D-648, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
-milestone: M0
-interface: none (test-only).
-design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
-depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
-scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
-accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
-added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
-
 ### D-650 · queued — **`nc-rec82` arms oob/nochain/overstrict: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-649, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -1151,3 +1131,43 @@ depends-on: none.
 scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
 accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
+order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (test through the op).
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
+accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-467 · queued — **`nc-m038.mjs` ARM (15) DOES NOT ARM ON `main`: its anchor no longer occurs, so the arm cannot fail.** Found by REC-187's worker (F2). — owner M0.
+order: with the M0 control rows, after D-466 (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a control that cannot fail refutes nothing).
+depends-on: none.
+scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)` closure.
+accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
+order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a census states what it reads).
+depends-on: none.
+scope: add both to `UI_HELPERS` in `tools/status.mjs`.
+accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-474 · queued — **`machine-fences.control.mjs` STILL DECLARES FIGURES FOR 12 OR 13 FENCES, AND THERE ARE NOW 14 (REC-189 added MACHINE_CANNOT_SET_RISK_TIER); the driver is REC-73's and is not in the battery.** — owner RECORD.
+order: with the M0 control rows, after D-471 (SCHEDULER #17, 2026-09-24; REC-189's worker F3 via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a control declares what it measures).
+depends-on: REC-189 (finished; rides the train after c19-batch9).
+scope: re-run the driver and move its declared figures to 14 fences.
+accepts-when: `node bio-plane/test/machine-fences.control.mjs` reports every arm as declared at 14. NEGATIVE CONTROL: the driver's own arms, recorded on its `NEGATIVE CONTROL:` line.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
