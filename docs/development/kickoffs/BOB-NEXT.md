@@ -32,6 +32,12 @@ Last built after batch27. The rebuild is BLOCKED on Bob's permission for the bui
 - 11:30Z D-720: a pair draft's statementack reading is keyed at no case, draft-bound, and binds only by REC-217's publish draft=.
 - Ordering, told to SCHEDULER #24: UI-121 must not reach main before D-712, or in the same train without it (a public page otherwise says a signed case is unsigned).
 - D-673's fence day: already ruled by BOB #35 ("before"); built as ruled.
+- 11:50Z D-731: the verify button on the signed case document: (a) in D-712 (it checks op=casedocument and says so), plus (b) as a RECORD row (the case document's sha goes into published_shas at caseratify; publishedbytes serves it). UI-121 and D-712 train only with (a) in.
+- 12:30Z D-717's sweep: no row; REC-23 stands (promote is not the gate) except where a harm is measured.
+- 12:35Z D-720's residue: a LOW read-only measurement row (the live count of pair-draft readings keyed at C1). Any re-keying comes to BOB before a write.
+- 12:40Z D-707's finding (GOVERNING_LAWS_REWRITTEN on unreadable front matter): readability is judged before any content fence; lawsOf answers UNDETERMINED and the fence abstains. Placed behind D-726.
+- 12:45Z per-link recurrence on op=links: no row; recurrence stays at the navchanges read (D-340).
+- Lanes at 12:37Z: CONDUCT #23 session_01NYMcSDBEBi7p1Ny3kfQJVW (CONDUCT #22 archived); SCHEDULER #24. BOB #36 at 37% context. Batch30 not yet landed (main 95fe7bc7).
 
 ## 6. OWED BY ME
 - When D-346 (ODF) is on main: fold its ODF column into OFFICE-FORMATS.md §"What each part-map offers". Batch30 has not landed; main is 95fe7bc7.
