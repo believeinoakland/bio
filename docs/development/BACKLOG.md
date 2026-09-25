@@ -56,6 +56,16 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
+### D-686 · blocked — **EVERY UNIT OF A MIXED DOCUMENT READS `chain_kind` 'ocr': `capture_text.chain_kind` and `content.chain_kind` are the WHOLE chain's last step, so a text-layer page of a document that OCR also touched is labelled as OCR'd — the record says more about how a page was read than it holds.** Predates D-635. Found by D-635's worker (minted on land/worker/D-635). — owner RECORD, CONTENT-PDF.
+order: provisional, after D-671 with the PDF corrections; BLOCKED on design — `content.chain_kind` is a GENERATED column, so the per-unit kind needs BOB's look (sent 2026-09-25 ~08:55Z) (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: I5 — a per-unit chain kind (schema); the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (the derivation chain and its parts, D-635's overlapping parts), pending BOB's ruling on the GENERATED column.
+depends-on: none — BLOCKED on BOB's design ruling, not on a row.
+scope (named fix, pending design): derive the unit's kind from the last derivation step covering its page (`partKeyOf` / `stepCovers`); how `content.chain_kind` (GENERATED) carries it is the design question.
+accepts-when: a text-layer page of a mixed document reads its own kind and an OCR'd page reads 'ocr' (moves: every unit 'ocr'). NEGATIVE CONTROL: read the whole chain's last step again and the text-layer arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-635's worker).
+
 ### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
 order: at the backlog head after D-682 — a correction joining two just-landed rows (D-625, UI-112) (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -75,16 +85,6 @@ depends-on: none.
 scope: move D-454's bullet after D-517's sentence ends; no other text changes.
 accepts-when: both bullets read whole in the front matter; corpuscheck 0 fail (moves: a spliced sentence). NEGATIVE CONTROL: none meaningful for prose; state so.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
-
-### UI-120 · queued — **NO SURFACE RENDERS A CITED IMAGE'S CROP: D-419 built the new content-crop read (the crop of a cited PDF image extent, through the pdf member's POST /crop) and no page asks for it.** D-419's own row: *a UI item renders it*. — owner UI.
-order: after D-677, with the display surfaces (SCHEDULER #23, 2026-09-25)
-milestone: M4
-interface: I3 consumer.
-design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.4 (the crop of a cited image; D-419 updated it).
-depends-on: D-419 (integrated, land/worker/D-419 @ 914bb380).
-scope: where a content row cites an image extent, the page offers its crop from the new content-crop read; C-99's refusals render in the plane's DEC-49 words; the crop is labelled as derived from the capture it names; nothing prefetched for a stranger.
-accepts-when: a member viewing a cited image extent sees its crop, and a non-image extent shows no control (moves: a built op no surface asks). NEGATIVE CONTROL: stub the new content-crop read and the render arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, D-419's owed surface).
 
 ### UI-119 · queued — **NO SURFACE LETS A MEMBER STATE A RECORDS REQUEST'S `law`: REC-201 added the `records_request` kind and its `law` field, and neither app.html's action intake nor setup.mjs's page offers it, so every request filed there reads law UNDETERMINED — honest, and thin.** From REC-201's worker's report. — owner UI.
 order: after D-689 — the member's statement surface, after the fence that keeps a machine from making it (SCHEDULER #23, 2026-09-25)
@@ -485,6 +485,16 @@ depends-on: none.
 scope: derive the expected N of N+1 from the baseline run instead of a literal; correct the arm with a comment saying why the literal was wrong.
 accepts-when: the phantom arm runs AS DECLARED at any corpus count (moves: a hard-coded 5 of 6). NEGATIVE CONTROL: break the subject and the phantom arm fails by name at the current count.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
+### D-687 · queued — **`nc-cpdf10` ARM (f) IS A SURPRISE (fails 0) ON D-635's BASE TOO: since D-627, a page that loses `no_text_layer` is still routed by `image_content_unread`, so the arm's break no longer reaches its subject.** Found by D-635's worker (minted on land/worker/D-635). — owner M0 (CONTENT-PDF's driver).
+order: after D-678, with M0-197's control-hygiene group (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name).
+depends-on: none (D-627, integrated at 056d3092, is the cause; build after it lands).
+scope: arm (f) also disarms the image_content route, so its break reaches the no_text_layer routing it names; record on the driver's line.
+accepts-when: arm (f) fails its subject by name, AS DECLARED (moves: a surprise arm). NEGATIVE CONTROL: this row is one.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-635's worker).
 
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
@@ -1072,14 +1082,4 @@ design: `docs/development/VERIFICATION.md` "The negative-control register" (brea
 depends-on: M0-157.
 scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
 accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
-order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
-depends-on: M0-158.
-scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
-accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

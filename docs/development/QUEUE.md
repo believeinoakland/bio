@@ -1297,8 +1297,8 @@ scope: `textUnitsFor` recognises `sheets[]` by shape and emits one unit per shee
 accepts-when: a passage search over a captured workbook finds a cell's text in one unit labelled sheet-range (moves: workbook text unsearchable). NEGATIVE CONTROL: drop the sheets[] arm and the workbook search arm returns 0 rows, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-415's worker).
 
-### D-635 · running — **A PAGE ROUTED TO OCR WHOSE FOLIO DECODED LOSES ITS DERIVATION-PART PLACEMENT: BOB #35 RULED 06:25Z APPEND — the page keeps its layer text, the transcription is appended, and the page is listed in BOTH derivation parts, because D-252's guarantee that layer text is never lost outranks the parts' partition.** Minted by D-627's worker (its full finding rides its report). — owner CONTENT-PDF.
-status: running — SCHEDULER #23 08:16Z: spawned, stacked on land/worker/D-627 @ 056d3092
+### D-635 · integrated — **A PAGE ROUTED TO OCR WHOSE FOLIO DECODED LOSES ITS DERIVATION-PART PLACEMENT: BOB #35 RULED 06:25Z APPEND — the page keeps its layer text, the transcription is appended, and the page is listed in BOTH derivation parts, because D-252's guarantee that layer text is never lost outranks the parts' partition.** Minted by D-627's worker (its full finding rides its report). — owner CONTENT-PDF.
+status: integrated — SCHEDULER #23 08:58Z: tip d31c52bf (on D-627 056d3092), GATE 388/388 GREEN FULLREUSE (21966 assertions), tree 78573944; APPEND: mergeTier3Text appends to a routed glyph page, both parts listed, extent.part on overlap; M-180 names every partition reader; I6 optional fields for the integrator; composes with D-633; minted D-686, D-687
 order: directly after D-627, which creates the routed-with-folio pages it concerns (SCHEDULER #22, 2026-09-25)
 milestone: M2
 interface: I6 — a page may appear in both derivation parts; the integrator classifies.
@@ -1373,6 +1373,17 @@ depends-on: none (on main today).
 scope: the generic DO forward (index.mjs, the `inner` URL build) stops passing `store` into the store's predicate set for op=content, as the new content-crop read already strips it — OR Store.CONTENT_READ_PARAMS admits it; SWEEP every other fixed-key read for the same refusal and fix each found; list them by name.
 accepts-when: op=content&id=<row>&store=scratch answers the scratch row, and store=bio the bio row, through the op (moves: FIXED_KEY_ONLY on store=). NEGATIVE CONTROL: pass `store` through again and the scratch arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-419's worker).
+
+### UI-120 · running — **NO SURFACE RENDERS A CITED IMAGE'S CROP: D-419 built the new content-crop read (the crop of a cited PDF image extent, through the pdf member's POST /crop) and no page asks for it.** D-419's own row: *a UI item renders it*. — owner UI.
+status: running — SCHEDULER #23 08:58Z: spawned, stacked on land/worker/D-419 @ 914bb380
+order: after D-677, with the display surfaces (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3 consumer.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.4 (the crop of a cited image; D-419 updated it).
+depends-on: none (stacked on land/worker/D-419 @ 914bb380, integrated).
+scope: where a content row cites an image extent, the page offers its crop from the new content-crop read; C-99's refusals render in the plane's DEC-49 words; the crop is labelled as derived from the capture it names; nothing prefetched for a stranger.
+accepts-when: a member viewing a cited image extent sees its crop, and a non-image extent shows no control (moves: a built op no surface asks). NEGATIVE CONTROL: stub the new content-crop read and the render arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, D-419's owed surface).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
