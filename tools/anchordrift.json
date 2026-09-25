@@ -170,30 +170,6 @@
    "why": "bio-plane/src/airun.mjs: matches 0 times — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/nc-rec114.mjs",
-   "arm": "b",
-   "anchor": "      return { ...r,\n               grade: res ?",
-   "row": "D-647",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/nc-rec114.mjs",
-   "arm": "c",
-   "anchor": "    const bounded = (r) => !!r && r.grade_axis =",
-   "row": "D-647",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/nc-rec114.mjs",
-   "arm": "e",
-   "anchor": "    return rows.map((r) => {\n      const res = b",
-   "row": "D-647",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/nc-rec118.mjs",
    "arm": "b",
    "anchor": "                 target_edition: l.target_editio",

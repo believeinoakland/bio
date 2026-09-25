@@ -61,6 +61,23 @@ const CENSUS_HELD_OPEN = [
   "`basisFor` is the raw seam",
 ];
 
+/* D-647: THE SUBJECT'S OWN HEADER, PREFIXED TO ARMS b, c AND e. `#versionLegsEarned` carries a body
+   byte-identical to `#legEarnedCapture`'s (the same `bounded`, the same `.map`), so an anchor quoting the body
+   alone matched TWICE and the arm refused (exit 4) instead of breaking the subject it names — M0-197's
+   anchor-drift reader found it. Anchoring from the method's own header makes each arm name its subject and
+   match once; the lines up to `: {};` are quoted verbatim so the arm still patches only the span it declares. */
+const LEC_HEAD = "  #legEarnedCapture(arm, rows) {\n"
+  + "    if (arm !== \"leg\" || !Array.isArray(rows) || !rows.length) return rows;\n";
+const LEC_BOUNDED = "    const bounded = (r) => !!r && r.grade_axis === \"capture\" && r.grade != null\n";
+const LEC_TO_MAP = "      && typeof r.target_id === \"string\" && !!r.target_id\n"
+  + "      && normalizeType(r.target_type) !== \"inquiry\";\n"
+  + "    const targets = new Set();\n"
+  + "    for (const r of rows) if (bounded(r)) targets.add(r.target_id);\n"
+  + "    const cap = targets.size\n"
+  + "      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})\n"
+  + "      : {};\n";
+const LEC_PRE_MAP = LEC_HEAD + LEC_BOUNDED + LEC_TO_MAP;
+
 /* THE ARMS. `find` must occur EXACTLY ONCE in the pristine source — an anchor
    that occurs twice patches the wrong site and an anchor that occurs zero times
    is an arm that never armed, and both have happened in this estate. */
@@ -111,9 +128,15 @@ const ARMS = {
         + "question, implemented. THIS IS THE ARM THAT PROVES THE RULING'S COMPROMISE IS REAL "
         + "rather than decorative: without it, a fix that silently replaced a member's authored "
         + "letter would pass every assertion about the earned one.",
-    find: "      return { ...r,\n               grade: res ? res.grade : (r ? r.grade : null),\n"
+    find: LEC_PRE_MAP
+        + "    return rows.map((r) => {\n"
+        + "      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;\n"
+        + "      return { ...r,\n               grade: res ? res.grade : (r ? r.grade : null),\n"
         + "               grade_authored: r ? r.grade : null,\n               grade_why: res ? res.why : null };",
-    with: "      return { ...r,\n               grade: res ? res.grade : (r ? r.grade : null) };",
+    with: LEC_PRE_MAP
+        + "    return rows.map((r) => {\n"
+        + "      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;\n"
+        + "      return { ...r,\n               grade: res ? res.grade : (r ? r.grade : null) };",
     mustFail: ["PUBLISHES THE EARNED LETTER, with the AUTHORED letter beside it and a reason",
                "READER 1 — the bare listing",
                "READER 2 — `leg:grade=B`",
@@ -122,6 +145,10 @@ const ARMS = {
                "`grade_why` is NULL rather than a filler",
                "BOTH DERIVED FIELDS ARE PRESENT",
                "and the member's authored B survives",
+               /* D-647: undeclared until this arm could arm again. Erasing `grade_authored` makes the clean
+                  control's `grade === grade_authored` agreement fail — correct behaviour, and now enforced:
+                  the verdict refuses an undeclared failure. */
+               "...and they AGREE on the clean control",
                "A CONNECTION-AXIS LEG ON A RE-READ DOCUMENT IS UNTOUCHED",
                "...while op=meaningrows, FIXED by this item"],
     /* The EARNED half is untouched by this arm and must stay green — that is
@@ -139,8 +166,8 @@ const ARMS = {
         + "only to capture-axis legs — the fence tighter than its rule, wearing the costume of "
         + "caution. A connection leg's earned answer is a VALUE the write already pins, so capping "
         + "it at a capture ceiling publishes a letter the record never asked anyone to bound.",
-    find: "    const bounded = (r) => !!r && r.grade_axis === \"capture\" && r.grade != null",
-    with: "    const bounded = (r) => !!r && r.grade != null",
+    find: LEC_HEAD + LEC_BOUNDED,
+    with: LEC_HEAD + "    const bounded = (r) => !!r && r.grade != null\n",
     mustFail: ["A CONNECTION-AXIS LEG ON A RE-READ DOCUMENT IS UNTOUCHED",
                "...and that is not free",
                "it applies the walk's OWN three conditions"],
@@ -195,14 +222,16 @@ const ARMS = {
         + "the same arithmetic, the same conditions and the same output, written the other way. "
         + "CORRECT WORK IN AN UNANTICIPATED SPELLING MUST PASS — an arm that fails here would mean "
         + "the suite is pinning a STYLE and calling it a rule.",
-    find: "    return rows.map((r) => {\n"
+    find: LEC_PRE_MAP
+        + "    return rows.map((r) => {\n"
         + "      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;\n"
         + "      return { ...r,\n"
         + "               grade: res ? res.grade : (r ? r.grade : null),\n"
         + "               grade_authored: r ? r.grade : null,\n"
         + "               grade_why: res ? res.why : null };\n"
         + "    });",
-    with: "    const out = [];\n"
+    with: LEC_PRE_MAP
+        + "    const out = [];\n"
         + "    for (const r of rows) {\n"
         + "      let res = null;\n"
         + "      if (bounded(r)) res = Store.#capturedAt(r.grade, cap[r.target_id], r.target_id);\n"
@@ -313,9 +342,13 @@ if (ARM === "none") {
 const hit = (needle) => res.failed.some((f) => f.includes(needle));
 const missedFail = spec.mustFail.filter((n) => !hit(n));
 const brokeHeldOpen = spec.mustPass.filter((n) => hit(n));
+/* D-647: THE HEADER'S "breaks MORE than it declared" HALF, ENFORCED. The verdict read only the two declared lists,
+   so a failure named in neither passed unseen — arm (b) carried one for as long as it could not arm. */
+const undeclared = res.failed.filter((f) => !spec.mustFail.some((n) => f.includes(n)));
 console.log(`\n  DECLARED vs ACTUAL`);
 console.log(`    must FAIL, and did NOT: ${missedFail.length ? missedFail.join(" | ") : "(none)"}`);
 console.log(`    must PASS, and BROKE:   ${brokeHeldOpen.length ? brokeHeldOpen.join(" | ") : "(none)"}`);
-const verdict = !missedFail.length && !brokeHeldOpen.length && res.reachedFoot;
+console.log(`    FAILED, UNDECLARED:     ${undeclared.length ? undeclared.join(" | ") : "(none)"}`);
+const verdict = !missedFail.length && !brokeHeldOpen.length && !undeclared.length && res.reachedFoot;
 console.log(`    VERDICT: ${verdict ? "AS DECLARED" : "*** NOT AS DECLARED — this is a finding about the ARM, record it, do not smooth it ***"}`);
 process.exit(verdict ? 0 : 7);
