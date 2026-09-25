@@ -38,6 +38,7 @@ const REVISION_SITE = "`SELECT writer, operation FROM manifest WHERE bundle_id=?
 const LATEST_SITE = "WHERE bundle_id=? ORDER BY rowid DESC LIMIT 1`, b.bundle_id);";
 const STARTED_SITE = "ORDER BY rowid LIMIT 1`, b.bundle_id, machine);";
 const CLOCK_SITE = "meta.last_updated || new Date().toISOString(),\n          JSON.stringify(files.map(";
+const CLOCK_TO = "new Date().toISOString(),\n          JSON.stringify(files.map(";
 const ALL = ["§1 ", "§2 ", "§3 ", "§4 ", "§5 ", "§6 "];
 const but = (...fail) => ALL.filter((p) => !fail.includes(p));
 /* `n` is how many times the anchor must match: the clock arm edits BOTH promote INSERTs (creation and revision). */
@@ -47,7 +48,9 @@ const ARMS = {
   revision: { from: REVISION_SITE, to: REVISION_SITE.replace("ORDER BY rowid DESC", "ORDER BY created DESC, rowid DESC"), mustFail: ["§3 "], mustHold: but("§3 ") },
   latest:   { from: LATEST_SITE, to: LATEST_SITE.replace("ORDER BY rowid DESC", "ORDER BY created DESC, rowid DESC"), mustFail: ["§4 "], mustHold: but("§4 ") },
   started:  { from: STARTED_SITE, to: STARTED_SITE.replace("ORDER BY rowid", "ORDER BY created, rowid"), mustFail: ["§5 "], mustHold: but("§5 ") },
-  clock:    { from: CLOCK_SITE, to: CLOCK_SITE.replace("meta.last_updated || new Date().toISOString()", "new Date().toISOString()"), n: 2,
+  /* Spelled as a literal, not `.replace(` on the anchor: the anchor occurs TWICE on purpose (both promote INSERTs, `n: 2`,
+     the driver's own count guard asserts it), and m025's A5 reads a `.replace(` argument as an exactly-once anchor. */
+  clock:    { from: CLOCK_SITE, to: CLOCK_TO, n: 2,
               mustFail: ["§6 "], mustHold: but("§6 ") },
   spelling: { from: EXPORT_SITE, to: EXPORT_SITE.replace("ORDER BY rowid", "ORDER BY _rowid_"), mustFail: [], mustHold: ALL },
 };
