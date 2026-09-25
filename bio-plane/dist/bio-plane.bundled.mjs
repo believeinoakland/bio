@@ -5192,12 +5192,12 @@ function parseFrontmatter(text) {
     findings.push(f("C-2.1", "error", "bundle.md does not begin with a --- frontmatter fence"));
     return { data: null, findings, body: text };
   }
-  let end = -1;
+  let end2 = -1;
   for (let i = 1; i < lines.length; i++) if (lines[i] === "---") {
-    end = i;
+    end2 = i;
     break;
   }
-  if (end === -1) {
+  if (end2 === -1) {
     findings.push(f("C-2.1", "error", "frontmatter fence is never closed"));
     return { data: null, findings, body: text };
   }
@@ -5208,7 +5208,7 @@ function parseFrontmatter(text) {
   const keyLine = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
   const indKeyLine = /^( +)([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
   const itemLine = /^( +)- (.*)$/;
-  for (let n = 1; n < end; n++) {
+  for (let n = 1; n < end2; n++) {
     const line = lines[n];
     const stripped = stripComment(line);
     if (stripped.trim() === "") continue;
@@ -5284,7 +5284,7 @@ function parseFrontmatter(text) {
     }
   }
   for (const k of Object.keys(data)) if (data[k] === void 0) data[k] = [];
-  return { data, findings, body: lines.slice(end + 1).join("\n") };
+  return { data, findings, body: lines.slice(end2 + 1).join("\n") };
 }
 function asText(v) {
   if (typeof v === "string") return v;
@@ -8505,8 +8505,8 @@ function bodySections(body) {
   let m, starts = [];
   while ((m = re.exec(body)) !== null) starts.push({ h: m[0].trimEnd(), i: m.index });
   for (let i = 0; i < starts.length; i++) {
-    const end = i + 1 < starts.length ? starts[i + 1].i : body.length;
-    out[starts[i].h] = body.slice(starts[i].i, end);
+    const end2 = i + 1 < starts.length ? starts[i + 1].i : body.length;
+    out[starts[i].h] = body.slice(starts[i].i, end2);
   }
   return out;
 }
@@ -13941,14 +13941,14 @@ function withProducingGroup(text, slug) {
   if (parseFrontmatter(text).data?.group === slug) return text;
   const lines = text.split("\n");
   if (lines[0] !== "---") return text;
-  const end = lines.indexOf("---", 1);
-  if (end === -1) return text;
-  for (let i = 1; i < end; i++)
+  const end2 = lines.indexOf("---", 1);
+  if (end2 === -1) return text;
+  for (let i = 1; i < end2; i++)
     if (lines[i].startsWith("group:")) {
       lines[i] = `group: ${slug}`;
       return lines.join("\n");
     }
-  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join("\n");
+  return [...lines.slice(0, end2), `group: ${slug}`, ...lines.slice(end2)].join("\n");
 }
 function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
@@ -17427,8 +17427,8 @@ function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
 `;
   const at = src.search(/<head\b[^>]*>/i);
   if (at !== -1) {
-    const end = src.indexOf(">", at) + 1;
-    return src.slice(0, end) + "\n" + head + src.slice(end);
+    const end2 = src.indexOf(">", at) + 1;
+    return src.slice(0, end2) + "\n" + head + src.slice(end2);
   }
   return head + src;
 }
@@ -18341,7 +18341,7 @@ function walkDocumentTables(xml) {
     const name = localOf(m[1]);
     const closing = m[0][1] === "/";
     const selfClosed = m[3] === "/";
-    const top = stack.length ? stack[stack.length - 1] : null;
+    const top2 = stack.length ? stack[stack.length - 1] : null;
     if (closing) {
       if (name === "tbl" && stack.length) {
         const t = stack.pop();
@@ -18350,19 +18350,19 @@ function walkDocumentTables(xml) {
           rows: t.rows,
           cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
         };
-      } else if (name === "tr" && top) {
-        if (top.tc > top.maxTc) top.maxTc = top.tc;
+      } else if (name === "tr" && top2) {
+        if (top2.tc > top2.maxTc) top2.maxTc = top2.tc;
       }
       continue;
     }
     if (name === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
     else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null };
-    else if (!top) continue;
-    else if (name === "gridCol") top.gridCols++;
+    else if (!top2) continue;
+    else if (name === "gridCol") top2.gridCols++;
     else if (name === "tr") {
-      top.rows++;
-      top.tc = 0;
-    } else if (name === "tc") top.tc++;
+      top2.rows++;
+      top2.tc = 0;
+    } else if (name === "tc") top2.tc++;
   }
   while (stack.length) {
     const t = stack.pop();
@@ -19878,9 +19878,9 @@ function readStoredMemberSync(bytes, container, name, maxBytes) {
   const nameLen = bytes[lh + 26] | bytes[lh + 27] << 8;
   const extraLen = bytes[lh + 28] | bytes[lh + 29] << 8;
   const start = lh + 30 + nameLen + extraLen;
-  const end = start + entry.compressedSize;
-  if (end > bytes.length) return null;
-  const out = bytes.subarray(start, end);
+  const end2 = start + entry.compressedSize;
+  if (end2 > bytes.length) return null;
+  const out = bytes.subarray(start, end2);
   if (out.length !== entry.uncompressedSize) return null;
   if (crc32(out) !== entry.crc32) return null;
   return UTF85.decode(out);
@@ -20170,7 +20170,7 @@ function walkOdfTables(bodyXml) {
     const name = localOf3(m[1]);
     const closing = m[0][1] === "/";
     const selfClosed = m[3] === "/";
-    const top = stack.length ? stack[stack.length - 1] : null;
+    const top2 = stack.length ? stack[stack.length - 1] : null;
     if (closing) {
       if (name === "table" && stack.length) {
         const t = stack.pop();
@@ -20183,10 +20183,10 @@ function walkOdfTables(bodyXml) {
       else stack.push({ table: next++, rows: 0, cols: 0 });
       continue;
     }
-    if (!top) continue;
+    if (!top2) continue;
     const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
-    if (name === "table-column") top.cols += rep(attrs["number-columns-repeated"]);
-    else if (name === "table-row") top.rows += rep(attrs["number-rows-repeated"]);
+    if (name === "table-column") top2.cols += rep(attrs["number-columns-repeated"]);
+    else if (name === "table-row") top2.rows += rep(attrs["number-rows-repeated"]);
   }
   while (stack.length) {
     const t = stack.pop();
@@ -22521,13 +22521,13 @@ async function collectBodies(conn, sessionId, entries, { now = () => Date.now() 
       e.body_unavailable = `the ${SUBRESOURCE_BUDGET}-byte body budget was spent`;
       continue;
     }
-    const left = deadline - now();
-    if (left <= 0) {
+    const left2 = deadline - now();
+    if (left2 <= 0) {
       e.body_unavailable = `the ${BODY_PHASE_MS} ms body-collection bound was spent`;
       continue;
     }
     try {
-      const b = await conn.send("Network.getResponseBody", { requestId: e.rid }, sessionId, Math.min(BODY_CALL_MS, left));
+      const b = await conn.send("Network.getResponseBody", { requestId: e.rid }, sessionId, Math.min(BODY_CALL_MS, left2));
       if (typeof b.body !== "string") {
         e.body_unavailable = "the browser answered with no body";
         continue;
@@ -23459,17 +23459,17 @@ var PdfDoc = class {
   streamRawBytes(streamObj) {
     if (!streamObj || streamObj.t !== "stream") return null;
     const start = streamObj.start;
-    let end;
+    let end2;
     const len = this.resolve(streamObj.dict.Length);
     if (typeof len === "number" && len >= 0 && start + len <= this.bytes.length) {
-      end = start + len;
-      const tail = this.s.indexOf("endstream", end - 2);
-      if (tail === -1 || tail > end + 4) end = this._scanEndstream(start);
+      end2 = start + len;
+      const tail = this.s.indexOf("endstream", end2 - 2);
+      if (tail === -1 || tail > end2 + 4) end2 = this._scanEndstream(start);
     } else {
-      end = this._scanEndstream(start);
+      end2 = this._scanEndstream(start);
     }
-    if (end == null || end < start) return null;
-    return this.bytes.subarray(start, end);
+    if (end2 == null || end2 < start) return null;
+    return this.bytes.subarray(start, end2);
   }
   _scanEndstream(start) {
     const idx = this.s.indexOf("endstream", start);
@@ -24281,6 +24281,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const content = await pageContent(doc, pageMap);
   const toks = tokenizeContent(content);
   const pieces = [];
+  const boxes = [];
+  const undecodedCenters = [];
+  let unpositioned = 0;
   const undetermined = [];
   let curFont = null;
   let curFontName = null;
@@ -24299,6 +24302,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     if (!curFont) {
       penKnown = false;
       inkValid = false;
+      unpositioned += bytes.length;
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -24309,7 +24313,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       return;
     }
     if (!curFont.toUni) {
-      advanceOver(bytes);
+      {
+        const before = penKnown ? tmat.slice() : null;
+        advanceOver(bytes);
+        if (before && penKnown) undecodedCenters.push(glyphBox(before, tmat).c);
+        else unpositioned += Math.ceil(bytes.length / (curFont.width || 1));
+      }
       endRun();
       undetermined.push({
         page: pageIdx,
@@ -24322,9 +24331,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      const before = penKnown ? tmat.slice() : null;
       advanceOne(code);
+      const box = before && penKnown ? glyphBox(before, tmat) : null;
+      if (!box) unpositioned++;
       const u = curFont.toUni.get(code);
       if (u == null) {
+        if (box) undecodedCenters.push(box.c);
         undetermined.push({
           page: pageIdx,
           reason: "unmapped_code",
@@ -24335,9 +24348,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       } else {
         if (softAt === pieces.length && /^\s/.test(u)) {
           pieces.pop();
+          boxes.pop();
           softAt = -1;
         }
         pieces.push(u);
+        boxes.push(box);
       }
     }
     endRun();
@@ -24372,9 +24387,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const breakLine = () => {
     if (softAt === pieces.length && pieces.length) {
       pieces.pop();
+      boxes.pop();
       softAt = -1;
     }
     pieces.push("\n");
+    boxes.push(null);
     lineY = baselineOf(tlm, ctm);
   };
   let tmat = IDENTITY_MATRIX.slice();
@@ -24392,11 +24409,22 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const m = matMul(tmat, ctm);
     return Math.abs(tfs) * th * Math.hypot(m[0], m[1]);
   };
+  const glyphBox = (m0, m1) => {
+    const a = matMul(m0, ctm), b = matMul(m1, ctm);
+    const pt = (m, x, y) => [x * m[0] + y * m[2] + m[4], x * m[1] + y * m[3] + m[5]];
+    const p0 = pt(a, 0, 0), p1 = pt(b, 0, 0), q0 = pt(a, 0, tfs), q1 = pt(b, 0, tfs);
+    const xs = [p0[0], p1[0], q0[0], q1[0]], ys = [p0[1], p1[1], q0[1], q1[1]];
+    return {
+      r: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)],
+      c: [(p0[0] + p1[0]) / 2 + 0.35 * (q0[0] - p0[0]), (p0[1] + p1[1]) / 2 + 0.35 * (q0[1] - p0[1])]
+    };
+  };
   const softSpace = () => {
     if (!pieces.length) return;
     const last = pieces[pieces.length - 1];
     if (last.endsWith(" ") || last.endsWith("\n")) return;
     pieces.push(" ");
+    boxes.push(null);
     softAt = pieces.length;
   };
   const judgeGap = (toX) => {
@@ -24583,7 +24611,71 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       count: 0
     });
   }
-  return { text, undetermined };
+  const lines = linesOf(pageIdx, pieces, boxes, text);
+  return {
+    text,
+    undetermined,
+    lines,
+    placed: { pieces, boxes, undecodedCenters, unpositioned }
+  };
+}
+var round3 = (v) => Math.round(v * 1e3) / 1e3;
+function linesOf(pageIdx, pieces, boxes, text) {
+  const out = [];
+  let chunk = [], placeable2 = true, r = null;
+  const flush = () => {
+    const t = chunk.join("");
+    if (t.length) out.push({
+      page: pageIdx,
+      text: t,
+      rect: placeable2 && r ? r.map(round3) : null
+    });
+    chunk = [];
+    placeable2 = true;
+    r = null;
+  };
+  for (let i = 0; i < pieces.length; i++) {
+    const p = pieces[i], b = boxes[i];
+    if (p === "\n" && b === null) {
+      flush();
+      continue;
+    }
+    chunk.push(p);
+    if (b === null) {
+      if (p !== " ") placeable2 = false;
+      continue;
+    }
+    if (/^\s*$/.test(p)) continue;
+    r = r ? [Math.min(r[0], b.r[0]), Math.min(r[1], b.r[1]), Math.max(r[2], b.r[2]), Math.max(r[3], b.r[3])] : b.r.slice();
+  }
+  flush();
+  return out.map((l) => l.text).join("\n") === text ? out : null;
+}
+function anchorOf(placed, source) {
+  if (!source || !Array.isArray(source.rect) || !Number.isInteger(source.page))
+    return { text: null, why: "no_rect", tier: 1 };
+  if (!placed) return { text: null, why: "text_not_read", tier: 1 };
+  const [a, b, c, d] = source.rect;
+  const x0 = Math.min(a, c), x1 = Math.max(a, c), y0 = Math.min(b, d), y1 = Math.max(b, d);
+  const inside = (pt) => pt[0] >= x0 && pt[0] <= x1 && pt[1] >= y0 && pt[1] <= y1;
+  let out = "", gap = false;
+  for (let i = 0; i < placed.pieces.length; i++) {
+    const p = placed.pieces[i], bx = placed.boxes[i];
+    if (bx && !/^\s*$/.test(p) && inside(bx.c)) {
+      if (gap && out.length) out += " ";
+      out += p;
+      gap = false;
+    } else gap = true;
+  }
+  out = out.replace(/\s+/g, " ").trim();
+  const undecodable = placed.undecodedCenters.some(inside);
+  if (!out.length)
+    return { text: null, why: placed.unpositioned ? "positions_unknown" : undecodable ? "undecodable" : "no_text_in_rect", tier: 1 };
+  return {
+    text: out,
+    why: undecodable ? "partly_undecodable" : placed.unpositioned ? "partly_unplaced" : null,
+    tier: 1
+  };
 }
 function pageDrawsImage(doc, resources) {
   const xo = resources ? doc.dictOf(resources.XObject) : null;
@@ -24594,7 +24686,7 @@ function pageDrawsImage(doc, resources) {
   }
   return false;
 }
-async function extractText(doc, pageOrder) {
+async function extractText(doc, pageOrder, placedByPage = /* @__PURE__ */ new Map()) {
   const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
@@ -24613,7 +24705,7 @@ async function extractText(doc, pageOrder) {
   for (let idx = 0; idx < pageOrder.length; idx++) {
     const pageMap = doc.dictOf({ t: "ref", n: pageOrder[idx] });
     if (!pageMap) {
-      pages.push({ page: idx, text: "", undetermined: [] });
+      pages.push({ page: idx, text: "", undetermined: [], lines: null, linesWhy: "text_not_read" });
       continue;
     }
     let res;
@@ -24623,7 +24715,14 @@ async function extractText(doc, pageOrder) {
       doc.note("text_extraction_error");
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
-    pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    pages.push({
+      page: idx,
+      text: res.text,
+      undetermined: res.undetermined,
+      lines: res.lines ?? null,
+      ...res.lines ? {} : { linesWhy: res.placed ? "lines_do_not_rejoin_to_text" : "text_not_read" }
+    });
+    if (res.placed) placedByPage.set(idx, res.placed);
     for (const u of res.undetermined) allUndetermined.push(u);
   }
   const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
@@ -24693,8 +24792,8 @@ async function pdfPageImages(doc, pageIdx) {
   const order = doc._pageOrder || [];
   const pageMap = pageIdx >= 0 && pageIdx < order.length ? doc.dictOf({ t: "ref", n: order[pageIdx] }) : null;
   if (!pageMap) return { images: null, why: `page_unreadable:${pageIdx}` };
-  const top = await decodeContentStreams(doc, pageMap.Contents);
-  if (top.text == null) return { images: null, why: `content_stream_undecodable:page ${pageIdx}` };
+  const top2 = await decodeContentStreams(doc, pageMap.Contents);
+  if (top2.text == null) return { images: null, why: `content_stream_undecodable:page ${pageIdx}` };
   const images = [];
   const walk = async (content, resources, ctm0, depth, formChain) => {
     const xobjects = resources ? doc.dictOf(resources.XObject) : null;
@@ -24782,7 +24881,7 @@ async function pdfPageImages(doc, pageIdx) {
     }
   };
   try {
-    await walk(top.text, pageResources(doc, pageMap), [1, 0, 0, 1, 0, 0], 0, []);
+    await walk(top2.text, pageResources(doc, pageMap), [1, 0, 0, 1, 0, 0], 0, []);
   } catch (e) {
     return { images: null, why: String(e && e.message || e).slice(0, 120) };
   }
@@ -24863,7 +24962,9 @@ async function extractPdfStructure(bytes) {
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l of links) counts[l.partition]++;
-  const text = await extractText(doc, pageOrder);
+  const placedByPage = /* @__PURE__ */ new Map();
+  const text = await extractText(doc, pageOrder, placedByPage);
+  for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
   const imgs = await extractImages(doc, pageOrder);
   return {
     ok: true,
@@ -26073,6 +26174,105 @@ function tier2Note(m) {
   if (m.replaced.length && m.kept.length)
     say.push(`this document's text layer is a merge of two decodes and its chain names the tier per page`);
   return say.length ? say.join("; ") : null;
+}
+
+// src/membership.mjs
+var MEMBERSHIP_LABEL = Object.freeze({
+  derived: "containment",
+  work: "machine",
+  asserted_by: "system",
+  grade: "C",
+  standing: "inferred",
+  established: false
+});
+var MEMBERSHIP_SHAPES = Object.freeze([
+  Object.freeze({
+    shape: "legistar-gateway",
+    item: /^https?:\/\/[a-z0-9-]+\.legistar\.com\/gateway\.aspx\?m=l&id=\/matter\.aspx\?key=\d+/i,
+    file: /^https?:\/\/[a-z0-9-]+\.legistar\.com\/gateway\.aspx\?m=f&id=[^&#]+/i
+  })
+]);
+var top = (rect) => Math.max(rect[1], rect[3]);
+var left = (rect) => Math.min(rect[0], rect[2]);
+var placeable = (l) => l && l.source && Number.isInteger(l.source.page) && Array.isArray(l.source.rect) && l.source.rect.length === 4 && l.source.rect.every(Number.isFinite);
+var end = (l) => ({
+  url: l.target.url,
+  anchor: l.anchor ?? { text: null, why: "no_anchor_carried", tier: null },
+  source: l.source ?? null
+});
+function deriveMembership(structure) {
+  const links = structure && Array.isArray(structure.links) ? structure.links : [];
+  const urlOf = (l) => l && l.target && typeof l.target.url === "string" ? l.target.url : null;
+  const shape = MEMBERSHIP_SHAPES.find((s) => links.some((l) => urlOf(l) && s.item.test(urlOf(l))));
+  if (!shape) return { membership: null, why: "no_item_links_of_a_known_shape" };
+  const items = [], files = [], unplaced = [];
+  for (const l of links) {
+    const u = urlOf(l);
+    if (!u) continue;
+    const kind = shape.item.test(u) ? "item" : shape.file.test(u) ? "file" : null;
+    if (!kind) continue;
+    if (!placeable(l)) {
+      unplaced.push({ kind, ...end(l), why: "no_page_rect" });
+      continue;
+    }
+    (kind === "item" ? items : files).push(l);
+  }
+  const order = (a, b) => a.source.page - b.source.page || top(b.source.rect) - top(a.source.rect) || left(a.source.rect) - left(b.source.rect);
+  items.sort(order);
+  files.sort(order);
+  const at = (l) => [l.source.page, top(l.source.rect)];
+  const before = (p, q) => p[0] < q[0] || p[0] === q[0] && p[1] > q[1];
+  const groups = items.map((it, i) => ({
+    ...MEMBERSHIP_LABEL,
+    item: end(it),
+    region: {
+      from: { page: at(it)[0], top: at(it)[1] },
+      to: i + 1 < items.length ? { page: at(items[i + 1])[0], top: at(items[i + 1])[1] } : null
+    },
+    files: []
+  }));
+  for (const f2 of files) {
+    const p = at(f2);
+    let g = -1;
+    for (let i = 0; i < items.length; i++) {
+      const s = at(items[i]);
+      if (before(p, s)) break;
+      g = i;
+    }
+    if (g < 0) unplaced.push({ kind: "file", ...end(f2), why: "above_the_first_item" });
+    else groups[g].files.push(end(f2));
+  }
+  return {
+    membership: {
+      ...MEMBERSHIP_LABEL,
+      shape: shape.shape,
+      basis: "each file link is assigned to the item link whose region contains the top edge of its rect; a region runs from an item link's top edge down to the next item link's, in page order. The publisher linked neither end to the other: this pairing is the plane's inference from position, to be confirmed, never the publisher's own link.",
+      counts: {
+        items: groups.length,
+        placed: groups.reduce((n, g) => n + g.files.length, 0),
+        unplaced: unplaced.length
+      },
+      items: groups,
+      unplaced
+    },
+    why: null
+  };
+}
+function checkMembershipLabel(m) {
+  if (m == null) return null;
+  const bad = (o) => {
+    for (const [k, v] of Object.entries(MEMBERSHIP_LABEL)) if (!o || o[k] !== v) return k;
+    return null;
+  };
+  const top2 = bad(m);
+  if (top2) return `membership.${top2}`;
+  for (const [i, g] of (Array.isArray(m.items) ? m.items : []).entries()) {
+    const k = bad(g);
+    if (k) return `membership.items[${i}].${k}`;
+    if (g.item && Object.prototype.hasOwnProperty.call(g.item, "partition"))
+      return `membership.items[${i}].item.partition`;
+  }
+  return null;
 }
 
 // src/cdx.mjs
@@ -27580,12 +27780,12 @@ var meeting_minutes_default = {
         heading = prev;
         break;
       }
-      let end = lines.length;
+      let end2 = lines.length;
       for (let j = i + 1; j < lines.length; j++) if (MINUTES_FILE_LINE.test(lines[j])) {
-        end = j;
+        end2 = j;
         break;
       }
-      const window = flatten(lines.slice(i + 1, end).join("\n"));
+      const window = flatten(lines.slice(i + 1, end2).join("\n"));
       const mo = /\bA motion was made by\s+(.+?),\s*seconded by\s+(.+?),\s*that\s+this matter be\s+(.+?)\.\s*The motion\s+(carried|failed)\b/i.exec(window);
       const di = /\bThis\s+([A-Z][\w ]{2,40}?)\s+be\s+([^.]{2,90})\./.exec(window);
       let outcome = null, moved_by = null, seconded_by = null, result = null;
@@ -36953,8 +37153,8 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
   static #appendConclusionEntry(text, inquiryId, f2) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     const q = (s) => `"${_Store.#fmSafe(String(s ?? ""))}"`;
     const block = f2.act === "withdrawn" ? [
       `  - inquiry: ${q(inquiryId)}`,
@@ -36979,18 +37179,18 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
       `    by: ${q(f2.who)}`
     ];
     let at = -1;
-    for (let i2 = 1; i2 < end; i2++) if (/^conclusions:/.test(lines[i2])) {
+    for (let i2 = 1; i2 < end2; i2++) if (/^conclusions:/.test(lines[i2])) {
       at = i2;
       break;
     }
     if (at === -1)
-      return [...lines.slice(0, end), "conclusions:", ...block, ...lines.slice(end)].join("\n");
+      return [...lines.slice(0, end2), "conclusions:", ...block, ...lines.slice(end2)].join("\n");
     const rest = lines[at].slice("conclusions:".length).trim();
     if (rest === "[]")
       return [...lines.slice(0, at), "conclusions:", ...block, ...lines.slice(at + 1)].join("\n");
     if (rest !== "") return null;
     let i = at + 1;
-    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) i++;
+    while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) i++;
     return [...lines.slice(0, i), ...block, ...lines.slice(i)].join("\n");
   }
   /* The conclusion record's ONE writer, paired with `#conclusionRecordOf`, its
@@ -38247,23 +38447,23 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
   static #replaceGoverningLaws(text, entries) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     const block = ["governing_laws:", ...entries.flatMap((e) => [
       `  - level: ${e.level}`,
       `    citation: "${e.citation}"`
     ])];
     let gi = -1;
-    for (let i = 1; i < end; i++) if (/^governing_laws:/.test(lines[i])) {
+    for (let i = 1; i < end2; i++) if (/^governing_laws:/.test(lines[i])) {
       gi = i;
       break;
     }
-    if (gi === -1) return [...lines.slice(0, end), ...block, ...lines.slice(end)].join("\n");
+    if (gi === -1) return [...lines.slice(0, end2), ...block, ...lines.slice(end2)].join("\n");
     const rest = lines[gi].slice("governing_laws:".length).trim();
     if (rest !== "" && rest !== "[]") return null;
     let last = gi;
     if (rest === "")
-      for (let i = gi + 1; i < end; i++) {
+      for (let i = gi + 1; i < end2; i++) {
         if (lines[i].trim() === "") continue;
         if (/^\s/.test(lines[i])) {
           last = i;
@@ -38454,8 +38654,8 @@ Reason: ${why}
   static #appendRiskTierHistory(text, entry) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     const rows = entry ? [
       `  - tier: ${entry.tier}`,
       `    prior: ${entry.prior}`,
@@ -38464,16 +38664,16 @@ Reason: ${why}
       `    reason: "${entry.reason}"`
     ] : [];
     let hi = -1;
-    for (let i = 1; i < end; i++) if (/^risk_tier_history:/.test(lines[i])) {
+    for (let i = 1; i < end2; i++) if (/^risk_tier_history:/.test(lines[i])) {
       hi = i;
       break;
     }
-    if (hi === -1) return [...lines.slice(0, end), "risk_tier_history:", ...rows, ...lines.slice(end)].join("\n");
+    if (hi === -1) return [...lines.slice(0, end2), "risk_tier_history:", ...rows, ...lines.slice(end2)].join("\n");
     const rest = lines[hi].slice("risk_tier_history:".length).trim();
     if (rest !== "" && rest !== "[]") return null;
     let last = hi;
     if (rest === "")
-      for (let i = hi + 1; i < end; i++) {
+      for (let i = hi + 1; i < end2; i++) {
         if (lines[i].trim() === "") continue;
         if (/^\s/.test(lines[i])) {
           last = i;
@@ -38852,8 +39052,8 @@ Changes: responds_to edge added to ${actionId}.
   static #spliceCorrespondence(text, e) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     const block = [
       `  - direction: ${e.direction}`,
       `    at: ${e.at}`,
@@ -38873,18 +39073,18 @@ Changes: responds_to edge added to ${actionId}.
       `    recorded_at: "${e.recorded_at}"`
     ];
     let ci = -1;
-    for (let i = 1; i < end; i++) if (/^correspondence:/.test(lines[i])) {
+    for (let i = 1; i < end2; i++) if (/^correspondence:/.test(lines[i])) {
       ci = i;
       break;
     }
     if (ci === -1)
-      return [...lines.slice(0, end), "correspondence:", ...block, ...lines.slice(end)].join("\n");
+      return [...lines.slice(0, end2), "correspondence:", ...block, ...lines.slice(end2)].join("\n");
     const rest = lines[ci].slice("correspondence:".length).trim();
     if (rest === "[]")
       return [...lines.slice(0, ci), "correspondence:", ...block, ...lines.slice(ci + 1)].join("\n");
     if (rest !== "") return null;
     let last = ci;
-    for (let i = ci + 1; i < end; i++) {
+    for (let i = ci + 1; i < end2; i++) {
       if (lines[i].trim() === "") continue;
       if (/^\s/.test(lines[i])) {
         last = i;
@@ -39566,8 +39766,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         ratified: !!ownedBy,
         detail: `case ${theCase} is ${claimedProject}'s production, and a case does not change hands between editions (DEC-72). The bar a case is held to is read from its publishing project at the moment of publication, so letting edition 2 name a different project would change this case's standard of evidence with nobody authoring the change. Publish the new edition as ${claimedProject}, or publish this material as a new case.`
       };
-    const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, theCase);
-    const edition = (top && top.m != null ? Number(top.m) : 0) + 1;
+    const top2 = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, theCase);
+    const edition = (top2 && top2.m != null ? Number(top2.m) : 0) + 1;
     const memberEditions = /* @__PURE__ */ new Map();
     for (const id of members) {
       const mt = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, id);
@@ -40837,8 +41037,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
   #draftIdentity(row) {
     const named = String(row.case_id ?? "").trim() || null;
     if (!named) return { caseId: null, edition: 1 };
-    const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, named);
-    return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
+    const top2 = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, named);
+    return { caseId: named, edition: (top2 && top2.m != null ? Number(top2.m) : 0) + 1 };
   }
   /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
      off the act's own record (`case_documents.draft_id`, with the act's `authored_by` and `authored_at` as who and
@@ -43302,17 +43502,17 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
   static #spliceBasisGround(text, byOrd) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     let at = -1;
-    for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) {
+    for (let i = 1; i < end2; i++) if (/^basis:/.test(lines[i])) {
       at = i;
       break;
     }
     if (at === -1) return null;
     const starts = [];
     let blockEnd = at;
-    for (let i = at + 1; i < end; i++) {
+    for (let i = at + 1; i < end2; i++) {
       if (lines[i].trim() === "") continue;
       if (/^ {2}- /.test(lines[i])) {
         starts.push(i);
@@ -43585,8 +43785,8 @@ ${lines.join("\n")}
     if (at === -1) return text.replace(/\s*$/, "\n") + "\n" + body;
     const start = at + 1;
     const nxt = text.indexOf("\n## ", start + 1);
-    const end = nxt === -1 ? text.length : nxt + 1;
-    return text.slice(0, start) + body + "\n" + text.slice(end);
+    const end2 = nxt === -1 ? text.length : nxt + 1;
+    return text.slice(0, start) + body + "\n" + text.slice(end2);
   }
   /* A frontmatter BLOCK (a map or an array of objects), written whole. The
      scalar setters cannot express either, and a block that is edited in place
@@ -43596,16 +43796,16 @@ ${lines.join("\n")}
   static #removeBlock(text, key) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return text;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return text;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return text;
     let at = -1;
-    for (let i = 1; i < end; i++) if (lines[i].startsWith(key + ":")) {
+    for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
       at = i;
       break;
     }
     if (at === -1) return text;
     let last = at;
-    for (let i = at + 1; i < end; i++) {
+    for (let i = at + 1; i < end2; i++) {
       if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
       else break;
     }
@@ -43615,9 +43815,9 @@ ${lines.join("\n")}
     const t = _Store.#removeBlock(text, key);
     const lines = t.split("\n");
     if (lines[0] !== "---") return t;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return t;
-    return [...lines.slice(0, end), `${key}:`, ...block, ...lines.slice(end)].join("\n");
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return t;
+    return [...lines.slice(0, end2), `${key}:`, ...block, ...lines.slice(end2)].join("\n");
   }
   /* Rewrite the `status` and `note` of specific `cites` entries in place,
      touching nothing else. Walks the references block entry by entry, tracking
@@ -43627,23 +43827,23 @@ ${lines.join("\n")}
   static #spliceEdgeStatus(text, changes) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     let ref = -1;
-    for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) {
+    for (let i = 1; i < end2; i++) if (/^references:/.test(lines[i])) {
       ref = i;
       break;
     }
     if (ref === -1) return null;
     const starts = [];
-    for (let i = ref + 1; i < end; i++) {
+    for (let i = ref + 1; i < end2; i++) {
       if (/^ {2}- /.test(lines[i])) starts.push(i);
       else if (!/^\s/.test(lines[i]) && lines[i].trim() !== "") break;
     }
     if (!starts.length) return null;
     const blockEnd = (() => {
       let last = ref;
-      for (let i = ref + 1; i < end; i++) {
+      for (let i = ref + 1; i < end2; i++) {
         if (lines[i].trim() === "") continue;
         if (/^\s/.test(lines[i])) {
           last = i;
@@ -45489,8 +45689,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   static #appendStateHistory(text, e) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     const block = [
       `  - timestamp: "${e.timestamp}"`,
       `    from_state: ${e.from_state}`,
@@ -45499,16 +45699,16 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       `    author: ${e.author}`
     ];
     let at = -1;
-    for (let i = 1; i < end; i++) if (/^state_history:/.test(lines[i])) {
+    for (let i = 1; i < end2; i++) if (/^state_history:/.test(lines[i])) {
       at = i;
       break;
     }
-    if (at === -1) return [...lines.slice(0, end), "state_history:", ...block, ...lines.slice(end)].join("\n");
+    if (at === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
     const rest = lines[at].slice("state_history:".length).trim();
     if (rest === "[]") return [...lines.slice(0, at), "state_history:", ...block, ...lines.slice(at + 1)].join("\n");
     if (rest !== "") return null;
     let last = at;
-    for (let i = at + 1; i < end; i++) {
+    for (let i = at + 1; i < end2; i++) {
       if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
       else break;
     }
@@ -45516,8 +45716,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   }
   static #setScalar(text, key, value) {
     const lines = text.split("\n");
-    const end = lines.indexOf("---", 1);
-    for (let i = 1; i < (end === -1 ? lines.length : end); i++) {
+    const end2 = lines.indexOf("---", 1);
+    for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
       if (lines[i].startsWith(key + ":")) {
         lines[i] = `${key}: ${value}`;
         return lines.join("\n");
@@ -45546,14 +45746,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   static #setOrAddScalar(text, key, value) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return text;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return text;
-    for (let i = 1; i < end; i++)
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return text;
+    for (let i = 1; i < end2; i++)
       if (lines[i].startsWith(key + ":")) {
         lines[i] = `${key}: ${value}`;
         return lines.join("\n");
       }
-    return [...lines.slice(0, end), `${key}: ${value}`, ...lines.slice(end)].join("\n");
+    return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
   }
   /* PL-2 / IS-2 — SET ONE FIELD ON ONE ROW OF AN ARRAY-OF-OBJECTS BLOCK.
    *
@@ -45572,10 +45772,10 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   static #setVersionField(text, rowName, key, value) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     let at = -1;
-    for (let i2 = 1; i2 < end; i2++) if (/^basis_versions:\s*$/.test(lines[i2])) {
+    for (let i2 = 1; i2 < end2; i2++) if (/^basis_versions:\s*$/.test(lines[i2])) {
       at = i2;
       break;
     }
@@ -45583,7 +45783,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const unquote = (s) => String(s).trim().replace(/^"(.*)"$/, "$1").trim();
     const lit = typeof value === "boolean" ? String(value) : `"${_Store.#fmSafe(String(value ?? ""))}"`;
     let i = at + 1, rowStart = -1, rowEnd = -1;
-    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) {
+    while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) {
       if (/^\s{2}- /.test(lines[i])) {
         if (rowStart !== -1 && rowEnd === -1) rowEnd = i;
         const m = /^\s{2}- name:\s*(.+)$/.exec(lines[i]);
@@ -45616,8 +45816,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   static #setCurrentVersionRow(text, inquiryId, vname, who2, when) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     const q = (s) => `"${_Store.#fmSafe(String(s ?? ""))}"`;
     const block = [
       `  - inquiry: ${q(inquiryId)}`,
@@ -45626,19 +45826,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       `    by: ${q(who2)}`
     ];
     let at = -1;
-    for (let i2 = 1; i2 < end; i2++) if (/^current_versions:/.test(lines[i2])) {
+    for (let i2 = 1; i2 < end2; i2++) if (/^current_versions:/.test(lines[i2])) {
       at = i2;
       break;
     }
     if (at === -1)
-      return [...lines.slice(0, end), "current_versions:", ...block, ...lines.slice(end)].join("\n");
+      return [...lines.slice(0, end2), "current_versions:", ...block, ...lines.slice(end2)].join("\n");
     const rest = lines[at].slice("current_versions:".length).trim();
     if (rest === "[]")
       return [...lines.slice(0, at), "current_versions:", ...block, ...lines.slice(at + 1)].join("\n");
     if (rest !== "") return null;
     const unquote = (s) => String(s).trim().replace(/^"(.*)"$/, "$1").trim();
     let i = at + 1, rowStart = -1, rowEnd = -1;
-    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) {
+    while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) {
       if (/^\s{2}- /.test(lines[i])) {
         if (rowStart !== -1 && rowEnd === -1) rowEnd = i;
         const m = /^\s{2}- inquiry:\s*(.+)$/.exec(lines[i]);
@@ -45667,21 +45867,21 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     if (!rowLines.length) return text;
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     let at = -1;
-    for (let i2 = 1; i2 < end; i2++) if (new RegExp(`^${key}:`).test(lines[i2])) {
+    for (let i2 = 1; i2 < end2; i2++) if (new RegExp(`^${key}:`).test(lines[i2])) {
       at = i2;
       break;
     }
     if (at === -1)
-      return [...lines.slice(0, end), `${key}:`, ...rowLines, ...lines.slice(end)].join("\n");
+      return [...lines.slice(0, end2), `${key}:`, ...rowLines, ...lines.slice(end2)].join("\n");
     const rest = lines[at].slice(key.length + 1).trim();
     if (rest === "[]")
       return [...lines.slice(0, at), `${key}:`, ...rowLines, ...lines.slice(at + 1)].join("\n");
     if (rest !== "") return null;
     let i = at + 1;
-    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) i++;
+    while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) i++;
     return [...lines.slice(0, i), ...rowLines, ...lines.slice(i)].join("\n");
   }
   /* PL-2's two write sites both append their Session Log entry through REC-24's
@@ -45702,25 +45902,25 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   static #spliceReferences(text, additions) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     const block = additions.map((a) => `  - rel: ${a.rel}
     target: ${a.target}
     status: ${a.status}
     note: "${a.note ?? ""}"`);
     let ref = -1;
-    for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) {
+    for (let i = 1; i < end2; i++) if (/^references:/.test(lines[i])) {
       ref = i;
       break;
     }
     if (ref === -1)
-      return [...lines.slice(0, end), "references:", ...block, ...lines.slice(end)].join("\n");
+      return [...lines.slice(0, end2), "references:", ...block, ...lines.slice(end2)].join("\n");
     const rest = lines[ref].slice("references:".length).trim();
     if (rest === "[]")
       return [...lines.slice(0, ref), "references:", ...block, ...lines.slice(ref + 1)].join("\n");
     if (rest !== "") return null;
     let last = ref;
-    for (let i = ref + 1; i < end; i++) {
+    for (let i = ref + 1; i < end2; i++) {
       if (lines[i].trim() === "") continue;
       if (/^\s/.test(lines[i])) {
         last = i;
@@ -45776,8 +45976,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     if (!legs.length) return text;
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
+    const end2 = lines.indexOf("---", 1);
+    if (end2 === -1) return null;
     const block = legs.map((l) => [
       `  - target: ${l.target}`,
       `    role: ${l.role}`,
@@ -45808,18 +46008,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       ..._Store.#legExtentLines(l)
     ].join("\n"));
     let bi = -1;
-    for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) {
+    for (let i = 1; i < end2; i++) if (/^basis:/.test(lines[i])) {
       bi = i;
       break;
     }
     if (bi === -1)
-      return [...lines.slice(0, end), "basis:", ...block, ...lines.slice(end)].join("\n");
+      return [...lines.slice(0, end2), "basis:", ...block, ...lines.slice(end2)].join("\n");
     const rest = lines[bi].slice("basis:".length).trim();
     if (rest === "[]")
       return [...lines.slice(0, bi), "basis:", ...block, ...lines.slice(bi + 1)].join("\n");
     if (rest !== "") return null;
     let last = bi;
-    for (let i = bi + 1; i < end; i++) {
+    for (let i = bi + 1; i < end2; i++) {
       if (lines[i].trim() === "") continue;
       if (/^\s/.test(lines[i])) {
         last = i;
@@ -48635,14 +48835,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
            ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + 1`,
           surfacing.run
         );
-        const left = this.#one(
+        const left2 = this.#one(
           `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = 'surfaces'`,
           surfacing.run
         );
         surfacedIn = {
           run: surfacing.run,
           at: ts,
-          bound: { bound: "surfaces", allowed: Number(left.allowed), consumed: Number(left.consumed) }
+          bound: { bound: "surfaces", allowed: Number(left2.allowed), consumed: Number(left2.consumed) }
         };
       }
       let migrated = null;
@@ -65339,8 +65539,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         }
         if (refused) return refused;
       }
-      const top = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, bundleId);
-      const highest = top && top.m != null ? Number(top.m) : 0;
+      const top2 = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, bundleId);
+      const highest = top2 && top2.m != null ? Number(top2.m) : 0;
       const already = this.#one(
         `SELECT edition FROM published_bundles WHERE bundle_id=? AND bundle_sha=?`,
         bundleId,
@@ -65963,8 +66163,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       if (want != null) ed = want;
     }
     if (theCase && ed == null) {
-      const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, theCase);
-      ed = top && top.m != null ? Number(top.m) : null;
+      const top2 = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, theCase);
+      ed = top2 && top2.m != null ? Number(top2.m) : null;
     }
     let state = theCase && ed != null ? this.#caseEditionState(theCase, ed) : null;
     if (!state && (asked || sha2562 || id)) {
@@ -66309,9 +66509,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   #soleCase(list) {
     const ids = [...new Set((list || []).map((x) => x.case_id))];
     if (ids.length !== 1) return null;
-    let top = null;
-    for (const x of list) if (top == null || Number(x.edition) > top) top = Number(x.edition);
-    return { case_id: ids[0], edition: top };
+    let top2 = null;
+    for (const x of list) if (top2 == null || Number(x.edition) > top2) top2 = Number(x.edition);
+    return { case_id: ids[0], edition: top2 };
   }
   /* D-309: THE READ SURFACE'S HALF OF CLAUSE 6 — one case to serve, chosen by the
        READER and never by this plane.
@@ -67005,11 +67205,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  and the ceiling is above everything tried. */
   cpuProbeState() {
     const rows = [...this.sql.exec(`SELECT * FROM cpu_probe ORDER BY step`)];
-    const top = rows[rows.length - 1] || null;
+    const top2 = rows[rows.length - 1] || null;
     return {
       steps: rows.length,
-      highest_completed: top ? top.step : 0,
-      elapsed_at_highest_ms: top ? top.elapsed_ms : 0,
+      highest_completed: top2 ? top2.step : 0,
+      elapsed_at_highest_ms: top2 ? top2.elapsed_ms : 0,
       rows,
       note: rows.length ? "the isolate completed every step listed. If a later probe was killed, the ceiling lies above elapsed_at_highest_ms and below whatever the next step would have cost." : "the probe has never run, so nothing is known about the ceiling by measurement"
     };
@@ -71723,8 +71923,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   #observationReferent(entry) {
     if (!entry || entry.result_kind !== "observation") return null;
     const ref = entry.result_ref == null ? "" : String(entry.result_ref);
-    const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
-    const next_seq = (top && top.m != null ? Number(top.m) : 0) + 1;
+    const top2 = this.#one(`SELECT MAX(seq) m FROM observation_log`);
+    const next_seq = (top2 && top2.m != null ? Number(top2.m) : 0) + 1;
     if (!/^[1-9][0-9]*$/.test(ref)) return { found: false, seq: null, next_seq };
     const row = this.#one(
       `SELECT seq, authority_kind, authority, state FROM observation_log WHERE seq = ?`,
@@ -75858,8 +76058,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       detail: row.detail
     }, now);
     if (bad) return { ok: false, written: false, refusal: bad };
-    const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
-    return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail };
+    const top2 = this.#one(`SELECT MAX(seq) m FROM observation_log`);
+    return { ok: true, written: true, seq: top2 ? top2.m : null, at: now, state: row.state, detail: row.detail };
   }
   /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.
    *  Appended and dated, never overwritten: a re-ratification is a fresh attempt
@@ -84304,6 +84504,12 @@ var index_default = {
         }
       }
       structure.tier = structureTier;
+      {
+        const dm = deriveMembership(structure);
+        const bad = checkMembershipLabel(dm.membership);
+        structure.membership = bad ? null : dm.membership;
+        if (!structure.membership) structure.membershipWhy = bad ? `label_check_failed:${bad}` : dm.why;
+      }
       let structureChain = null;
       if (ocrAsked) {
         const stored = reBasis && reBasis.reading || {};
@@ -87122,9 +87328,9 @@ var index_default = {
           if (bm) {
             const want = viaSession ? "human" : "agent";
             const lines = bm.text.split("\n");
-            const end = lines.indexOf("---", 1);
+            const end2 = lines.indexOf("---", 1);
             let changed = false;
-            for (let i = 1; i < (end === -1 ? lines.length : end); i++) {
+            for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
               if (lines[i].startsWith("surfaced_by:")) {
                 lines[i] = "surfaced_by: " + want;
                 changed = true;

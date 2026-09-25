@@ -25,8 +25,8 @@
     },
     {
       "path": "../bio-plane/src/pdfstructure.mjs",
-      "bytes": 104517,
-      "sha256": "0597514d5d468c7ba7b80a2291cd9a5296a0b77be22a592280d28972eebbadba"
+      "bytes": 112654,
+      "sha256": "f095a014966bcaeb07e9814ee890832c1cec51fc2c4587882bd8751f363aa917"
     },
     {
       "path": "../bio-plane/src/subresources.mjs",

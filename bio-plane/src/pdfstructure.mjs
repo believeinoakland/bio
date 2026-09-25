@@ -1449,6 +1449,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const toks = tokenizeContent(content);
 
   const pieces = [];
+  /* REC-206 — WHERE EACH PIECE'S INK IS, PARALLEL TO `pieces` (see `glyphBox`).
+     A separator this reader inserts has no ink and holds null; a glyph shown
+     while the pen was unknown holds null too, and is COUNTED in `unpositioned`
+     so nothing downstream reads "no box" as "no glyph". */
+  const boxes = [];
+  const undecodedCenters = []; // ink of shown codes that decode to nothing
+  let unpositioned = 0;        // glyphs shown while the pen was unknown
   const undetermined = [];
   let curFont = null;      // font info, or null
   let curFontName = null;  // the resource name last selected by Tf
@@ -1468,6 +1475,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     if (!bytes || bytes.length === 0) return;
     if (!curFont) {
       penKnown = false; inkValid = false; // D-502: nothing says how far this moved the pen
+      unpositioned += bytes.length;       // REC-206: and nothing says where they are
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -1481,7 +1489,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       /* D-502: the text is undecodable, the ADVANCE is not \u2014 a width is
          looked up by CODE and needs no /ToUnicode. So the pen survives a run
          this reader cannot read, and the gap after it is still judged. */
-      advanceOver(bytes);
+      { /* REC-206: the run cannot be read and CAN be placed; its ink is kept so
+           an anchor over it is known to be partly undecodable, never complete. */
+        const before = penKnown ? tmat.slice() : null;
+        advanceOver(bytes);
+        if (before && penKnown) undecodedCenters.push(glyphBox(before, tmat).c);
+        else unpositioned += Math.ceil(bytes.length / (curFont.width || 1));
+      }
       endRun();
       undetermined.push({
         page: pageIdx,
@@ -1494,9 +1508,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      const before = penKnown ? tmat.slice() : null;
       advanceOne(code);
+      const box = (before && penKnown) ? glyphBox(before, tmat) : null;
+      if (!box) unpositioned++;
       const u = curFont.toUni.get(code);
       if (u == null) {
+        if (box) undecodedCenters.push(box.c);
         undetermined.push({
           page: pageIdx,
           reason: "unmapped_code",
@@ -1513,8 +1531,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
            separator ONLY where the document wrote none. (D-502 for a
            positioning operator's jump; SINCE D-517 for a TJ displacement too,
            which until then pushed its space past both halves of this rule.) */
-        if (softAt === pieces.length && /^\s/.test(u)) { pieces.pop(); softAt = -1; }
-        pieces.push(u);
+        if (softAt === pieces.length && /^\s/.test(u)) { pieces.pop(); boxes.pop(); softAt = -1; }
+        pieces.push(u); boxes.push(box);
       }
     }
     endRun();
@@ -1595,8 +1613,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
        M-145: 122 space characters and 12 whitespace-only lines leave the
        corpus, and not one token, word, glue token or non-whitespace character
        moves.] */
-    if (softAt === pieces.length && pieces.length) { pieces.pop(); softAt = -1; }
-    pieces.push("\n");
+    if (softAt === pieces.length && pieces.length) { pieces.pop(); boxes.pop(); softAt = -1; }
+    pieces.push("\n"); boxes.push(null);
     lineY = baselineOf(tlm, ctm);
   };
 
@@ -1654,12 +1672,34 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const m = matMul(tmat, ctm);
     return Math.abs(tfs) * th * Math.hypot(m[0], m[1]);
   };
+  /* REC-206 — THE INK OF ONE SHOWN CODE, IN THE PAGE'S DEFAULT USER SPACE.
+   *
+   * The same space and the same [x0,y0,x1,y1] order as an annotation's /Rect
+   * and CPDF-18's image rect: the content stream's CTM starts at identity, so
+   * `ctm` here IS default user space, and one rectangle means one place
+   * whichever arm names it. The box is the glyph's EM BOX — the pen's advance
+   * across, one em (the font size) up from the baseline — and not its outline:
+   * a descender below the baseline is outside it, a text rise (`Ts`) is not
+   * applied, and the font's own bounding box is not read. That is the most
+   * this reader can place without inventing a figure, and it is stated rather
+   * than dressed up. `c` is the point an anchor asks about: mid-advance, 0.35 em
+   * up, inside the ink of any glyph of an ordinary face. */
+  const glyphBox = (m0, m1) => {
+    const a = matMul(m0, ctm), b = matMul(m1, ctm);
+    const pt = (m, x, y) => [x * m[0] + y * m[2] + m[4], x * m[1] + y * m[3] + m[5]];
+    const p0 = pt(a, 0, 0), p1 = pt(b, 0, 0), q0 = pt(a, 0, tfs), q1 = pt(b, 0, tfs);
+    const xs = [p0[0], p1[0], q0[0], q1[0]], ys = [p0[1], p1[1], q0[1], q1[1]];
+    return {
+      r: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)],
+      c: [(p0[0] + p1[0]) / 2 + 0.35 * (q0[0] - p0[0]), (p0[1] + p1[1]) / 2 + 0.35 * (q0[1] - p0[1])],
+    };
+  };
   /** Push a separator unless one is already there. Never opens a line. */
   const softSpace = () => {
     if (!pieces.length) return;
     const last = pieces[pieces.length - 1];
     if (last.endsWith(" ") || last.endsWith("\n")) return;
-    pieces.push(" ");
+    pieces.push(" "); boxes.push(null);
     softAt = pieces.length;
   };
   /** A positioning operator landed on the CURRENT baseline: is the distance it
@@ -1869,7 +1909,102 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       page: pageIdx, reason: "no_text_layer", font: null, codes: "", count: 0,
     });
   }
-  return { text, undetermined };
+  const lines = linesOf(pageIdx, pieces, boxes, text);
+  return { text, undetermined, lines,
+           placed: { pieces, boxes, undecodedCenters, unpositioned } };
+}
+
+const round3 = (v) => Math.round(v * 1000) / 1000;
+
+/* REC-206 — THE TIER-1 TEXT UNIT, WITH ITS POSITION (BOB #32, 2026-09-23 23:30Z;
+ * `BIO_Content_Framework_v0_10.md` §16, "Positional text").
+ *
+ * The unit is the LINE this reader already makes — D-481's baseline line, with
+ * D-502's same-baseline separations inside it — so a page's `lines[]` joined by
+ * newlines IS its `text`, character for character. That equality is CHECKED
+ * rather than assumed: a decoded code whose /ToUnicode yields a newline would
+ * break it, and then the page says `lines: null` with `linesWhy` rather than
+ * units that do not add up to the text beside them.
+ *
+ * `rect` is the union of the EM BOXES (`glyphBox`) of the line's non-whitespace
+ * glyphs, in default user space, rounded to a thousandth of a point. It is NULL
+ * when any glyph on the line was shown with the pen unknown (no font, no
+ * widths, a partial code — D-502's `penKnown`), because a box drawn round the
+ * glyphs that could be placed would claim the line ends where the reader lost
+ * track of it; and null on a line holding no glyph but whitespace. */
+function linesOf(pageIdx, pieces, boxes, text) {
+  const out = [];
+  let chunk = [], placeable = true, r = null;
+  const flush = () => {
+    const t = chunk.join("");
+    if (t.length) out.push({ page: pageIdx, text: t,
+      rect: placeable && r ? r.map(round3) : null });
+    chunk = []; placeable = true; r = null;
+  };
+  for (let i = 0; i < pieces.length; i++) {
+    const p = pieces[i], b = boxes[i];
+    if (p === "\n" && b === null) { flush(); continue; }
+    chunk.push(p);
+    if (b === null) {
+      /* A null box on a GLYPH is an unplaced glyph; on a separator this reader
+         inserted it is nothing. The inserted separators are exactly the
+         single-space and newline pieces pushed with a null box. */
+      if (p !== " ") placeable = false;
+      continue;
+    }
+    if (/^\s*$/.test(p)) continue;
+    r = r ? [Math.min(r[0], b.r[0]), Math.min(r[1], b.r[1]), Math.max(r[2], b.r[2]), Math.max(r[3], b.r[3])]
+          : b.r.slice();
+  }
+  flush();
+  return out.map((l) => l.text).join("\n") === text ? out : null;
+}
+
+/* REC-206 — WHAT TEXT A LINK SITS OVER: its ANCHOR TEXT, read off tier 1's
+ * placed glyphs, never off the link's target and never guessed.
+ *
+ * A glyph belongs to the anchor when its ink point (`glyphBox`'s `c`) lies in
+ * the annotation's /Rect. The glyphs are taken in the order the page SHOWED
+ * them, and any separator, whitespace or glyph outside the rect between two
+ * that are inside reads as ONE space; the result is trimmed. So the anchor is
+ * the link's own words in content-stream order — which is reading order for
+ * every producer this corpus holds and is not promised for one that paints out
+ * of order.
+ *
+ * `why` IS NULL ONLY FOR A COMPLETE READING. It names, when not:
+ *   no_rect          — the link has no page rect (a document-level file);
+ *   text_not_read    — tier 1 read no text on that page (encrypted, an error);
+ *   no_text_in_rect  — every glyph on the page was placed and none is inside;
+ *   positions_unknown— none placed inside, and the page has glyphs it could
+ *                      not place, so absence is not established;
+ *   partly_unplaced  — text found, and the page has glyphs it could not place;
+ *   undecodable      — nothing decoded inside, and a code under the rect decoded to nothing;
+ *   partly_undecodable — text found, and a code under the rect decoded to nothing.
+ * `tier` is 1 always: when tier 2 later replaces a page's text (op=pdfstructure,
+ * `mergeTier2Text`), the anchor stays tier 1's reading and says so. */
+function anchorOf(placed, source) {
+  if (!source || !Array.isArray(source.rect) || !Number.isInteger(source.page))
+    return { text: null, why: "no_rect", tier: 1 };
+  if (!placed) return { text: null, why: "text_not_read", tier: 1 };
+  const [a, b, c, d] = source.rect;
+  const x0 = Math.min(a, c), x1 = Math.max(a, c), y0 = Math.min(b, d), y1 = Math.max(b, d);
+  const inside = (pt) => pt[0] >= x0 && pt[0] <= x1 && pt[1] >= y0 && pt[1] <= y1;
+  let out = "", gap = false;
+  for (let i = 0; i < placed.pieces.length; i++) {
+    const p = placed.pieces[i], bx = placed.boxes[i];
+    if (bx && !/^\s*$/.test(p) && inside(bx.c)) {
+      if (gap && out.length) out += " ";
+      out += p; gap = false;
+    } else gap = true;
+  }
+  out = out.replace(/\s+/g, " ").trim();
+  const undecodable = placed.undecodedCenters.some(inside);
+  if (!out.length)
+    return { text: null, why: placed.unpositioned ? "positions_unknown"
+                            : undecodable ? "undecodable" : "no_text_in_rect", tier: 1 };
+  return { text: out,
+           why: undecodable ? "partly_undecodable" : placed.unpositioned ? "partly_unplaced" : null,
+           tier: 1 };
 }
 
 /** Does this page's resource dictionary declare an image XObject? The second
@@ -1888,7 +2023,7 @@ function pageDrawsImage(doc, resources) {
 }
 
 /** Document text (Tier 1). Extends the I2 output; see the module header. */
-async function extractText(doc, pageOrder) {
+async function extractText(doc, pageOrder, placedByPage = new Map()) {
   /* D-251: WHO MADE THIS LAYER. Read ONCE, from the file's own /Info, and
      carried on the text shape rather than on the document — because the claim
      it bounds is a claim about the TEXT, and a consumer holding the text is the
@@ -1911,7 +2046,7 @@ async function extractText(doc, pageOrder) {
   const allUndetermined = [];
   for (let idx = 0; idx < pageOrder.length; idx++) {
     const pageMap = doc.dictOf({ t: "ref", n: pageOrder[idx] });
-    if (!pageMap) { pages.push({ page: idx, text: "", undetermined: [] }); continue; }
+    if (!pageMap) { pages.push({ page: idx, text: "", undetermined: [], lines: null, linesWhy: "text_not_read" }); continue; }
     let res;
     try {
       res = await extractPageText(doc, idx, pageMap, fontCache);
@@ -1919,7 +2054,10 @@ async function extractText(doc, pageOrder) {
       doc.note("text_extraction_error");
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
-    pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    pages.push({ page: idx, text: res.text, undetermined: res.undetermined,
+                 lines: res.lines ?? null,
+                 ...(res.lines ? {} : { linesWhy: res.placed ? "lines_do_not_rejoin_to_text" : "text_not_read" }) });
+    if (res.placed) placedByPage.set(idx, res.placed);
     for (const u of res.undetermined) allUndetermined.push(u);
   }
   const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
@@ -2262,7 +2400,11 @@ export async function extractPdfStructure(bytes) {
   for (const l of links) counts[l.partition]++;
 
   // Tier 1 text (CPDF-4): extends this same I2 output object; do not fork it.
-  const text = await extractText(doc, pageOrder);
+  /* REC-206: the placed glyphs of each page, kept off the output, from which
+     every link's anchor text is read below. */
+  const placedByPage = new Map();
+  const text = await extractText(doc, pageOrder, placedByPage);
+  for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
 
   /* CPDF-18: the images each page PAINTS, as IC-1 `image {page, rect}`
      references. TOP-LEVEL on the structure object rather than on `text`,

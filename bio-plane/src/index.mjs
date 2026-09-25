@@ -140,6 +140,7 @@ import { layerChain, appendStep, describeChain, checkChain, checkAnchor,
             what makes the rule reach the plane; the two call sites below are the
             wire CPDF-20's DELEGATION (CLAIMS.md 2026-09-14) names exactly. */
          mergeTier2Text, tier2Note, glyphCount } from "./textchain.mjs";
+import { deriveMembership, checkMembershipLabel } from "./membership.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 /* docprofile is READ here, never copied. This is the FIRST plane consumer of it
    (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
@@ -7454,6 +7455,19 @@ export default {
       }
       structure.tier = structureTier;
       /*__REC98_TIER2_WIRE_STRUCTURE_END__*/
+      /* REC-206 — THE ITEM-TO-FILE MEMBERSHIP, DERIVED AND LABELLED (`membership.mjs`).
+         A SIBLING of `links[]`, never inside it: the publisher's link graph is
+         served exactly as the publisher linked it, and what the plane infers from
+         position sits beside it under MEMBERSHIP_LABEL — machine work, asserted by
+         the system, grade C, inferred, not established. A membership that fails its
+         own label check is WITHHELD with the failing property named, because an
+         unlabelled pairing is the one thing the ruling forbids this op to serve. */
+      {
+        const dm = deriveMembership(structure);
+        const bad = checkMembershipLabel(dm.membership);
+        structure.membership = bad ? null : dm.membership;
+        if (!structure.membership) structure.membershipWhy = bad ? `label_check_failed:${bad}` : dm.why;
+      }
       /* CPDF-19 / D-319 — THE RE-READ, reached only with `ocr=1` and only after
          every refusal above has had its chance. THE SAME SEAM, THE SAME MERGE, THE
          SAME CHAIN RULE AND THE SAME READING RULE AS `op=acquire`, because each is
