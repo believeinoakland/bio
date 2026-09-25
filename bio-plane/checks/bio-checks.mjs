@@ -9420,9 +9420,10 @@ export const AI_CREDENTIAL_CHECKS = {
   AI_SCOPE_BEYOND_MEMBER_REACH: {
     check: 'C-29.9',
     where: 'src/index.mjs aiScopeDeclaration > is-ai-scope-declaration',
-    translation: 'An agent may only be given things a member of this group could do themselves, and '
-      + 'this is not one of them. The background worker\'s own jobs are outside what anybody can hand '
-      + 'to an agent, so this cannot be written into a credential at all.',
+    translation: 'An agent may only be given things a member of this group could hand to it, and '
+      + 'this is not one of them. The background worker\'s own jobs, and the acts a member performs '
+      + 'only from their own signed-in session, are outside what anybody can hand to an agent, so '
+      + 'this cannot be written into a credential at all.',
   },
   /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
      A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
@@ -11206,13 +11207,21 @@ export const ADMISSION_CHECKS = {
      `signerset` — were answered with the row above, which told a member to go
      and find a machine credential for an act an administrator performs from
      their own browser. There is no such credential to find. This sentence names
-     the person to ask instead, because that is the action actually available. */
+     the person to ask instead, because that is the action actually available.
+     CORRECTED 2026-09-25 by REC-162 (Membership v2 §4.9, BOB #23): it read "but an
+     administrator of this group, and this session is not one … ask an administrator".
+     After REC-159 the one op it answers is `governorconfig`, which the FOUNDER'S session
+     alone reaches — an enrolled administrator holds a member's session and was told they
+     were not an administrator. The sentence now names the SESSION, as the refusal's own
+     `reachedBy` does. */
   SESSION_ROLE_CANNOT_REACH_OP: {
     check: 'C-38.7',
     where: 'src/index.mjs sessionOpGate > is-session-op-gate',
-    translation: 'A signed-in person does perform this operation, but an administrator of this '
-      + 'group, and this session is not one. No machine credential is needed and finding one is '
-      + 'not the way through: ask an administrator.',
+    translation: 'A signed-in person does perform this operation, but from a different session than '
+      + 'this one, and this refusal names which. Where it names the founder\'s session, being an '
+      + 'administrator of this group does not reach it: every enrolled member, an administrator '
+      + 'included, signs in with a member\'s session. No machine credential is needed and finding '
+      + 'one is not the way through: ask the person who holds the session it names.',
   },
   /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
      otherwise have to cover a case neither is true of.

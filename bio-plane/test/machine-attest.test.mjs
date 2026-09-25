@@ -225,6 +225,17 @@ for (const op of ["attest", "attesttext", "transcriptionattest", "expertiseconfi
 const beyond = await mint("rec123-beyond", ["adminendorse", "signeradd", "signerset"]);
 t("adminendorse / signeradd / signerset cannot even be WRITTEN into a scope: AI_SCOPE_BEYOND_MEMBER_REACH (C-29.9)",
   [codeOf(beyond), beyond && beyond.check], ["AI_SCOPE_BEYOND_MEMBER_REACH", "C-29.9"]);
+/* SCOPE-ADD to REC-162 (BOB #32, 2026-09-24): since REC-159 `signeradd` carries `member` for an enrolled
+   administrator's OWN session, so the detail "not reachable by a member" had become loosely false of it.
+   The detail must say what IS true — a member reaches it only from their own session, and no agent
+   credential is among those its row admits — and the old sentence must be gone. */
+const beyondCust = await mint("rec162-beyond-custodial", ["signeradd"]);
+console.log(`  signeradd in a scope: ${JSON.stringify({ code: codeOf(beyondCust), detail: beyondCust && beyondCust.detail })}`);
+t("signeradd in a scope: AI_SCOPE_BEYOND_MEMBER_REACH, and its detail says a member reaches it only from their "
++ "own session — never that no member reaches it",
+  [codeOf(beyondCust), /only from that member's own signed-in session/.test(String(beyondCust && beyondCust.detail)),
+   /is not reachable by a member/.test(String(beyondCust && beyondCust.detail))],
+  ["AI_SCOPE_BEYOND_MEMBER_REACH", true, false]);
 for (const op of ["adminendorse", "signeradd", "signerset"]) {
   const r = await POST(`op=${op}&token=${AI_A}`, { memberId: "iris", keyB64: mkKey(`x-${op}`) });
   TRACE.push([op, verdict(r, okTrue)]);

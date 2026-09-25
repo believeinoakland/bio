@@ -3432,12 +3432,21 @@ function aiScopeDeclaration(writes) {
         + `nothing recognises would sit in the record looking like a permission and meaning nothing, `
         + `which is exactly what declaring the scope on the record rather than in a settings row is `
         + `for (D-199 (2)).`, { op });
+    /* SCOPE-ADD to REC-162 (BOB #32, 2026-09-24): since REC-159 the four custodial acts carry
+       `member` for an enrolled administrator's OWN session and `machineClasses` for every
+       credential, so "not reachable by a member" was loosely false of them. The detail now says
+       which of the two properties refused the op, each read off its OPS row. */
     if (!aiReachesAsMember(OPS[op]))
       return refusal("AI_SCOPE_BEYOND_MEMBER_REACH",
-        `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed to `
-        + `an agent. This is a property of the operation and not a list of forbidden ones: the `
-        + `unattended worker's own verbs carry no member class by construction, so they are outside `
-        + `every scope anybody can author.`,
+        Array.isArray(OPS[op].machineClasses)
+          ? `'${op.slice(0, 60)}' is reached by a member only from that member's own signed-in `
+            + `session, and no agent credential is among the credentials it admits, so it cannot be `
+            + `handed to an agent. This is a property of the operation and not a list of forbidden `
+            + `ones: its OPS row names the credentials that reach it, and an agent's is not one.`
+          : `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed `
+            + `to an agent. This is a property of the operation and not a list of forbidden ones: the `
+            + `unattended worker's own verbs carry no member class by construction, so they are `
+            + `outside every scope anybody can author.`,
         { op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null });
   }
   /* END DEC-49 REGION is-ai-scope-declaration */
@@ -4166,9 +4175,13 @@ const dispatchRow = (code) => {
  * suppresses.
  *
  * **THAT CASE IS NOW DISCHARGED, AND THE TENSE IS THE POINT (D-136, 2026-09-19).**
- * The three ops hold `SESSION_OPS.admin` reach and a server-stamped `by`, so an
- * administrator's session refuses nothing and a member's session gets (b) —
- * `SESSION_ROLE_CANNOT_REACH_OP`, which names the administrator as the route.
+ * The three ops hold reach in BOTH session sets and a server-stamped `by`, so no
+ * session is refused at this gate and the ROSTER answers a non-administrator
+ * `NOT_AN_ADMIN`. (CORRECTED 2026-09-25 by REC-162: this read "`SESSION_OPS.admin`
+ * reach … a member's session gets (b), which names the administrator as the
+ * route" — false of D-136's landing, which put them in both sets; and (b) now
+ * names the SESSION that reaches the op, the founder's where the admin set alone
+ * holds it, because an enrolled administrator holds a member's session.)
  * They are no longer examples of (c) and `d270-refusal-truth.test.mjs`' arm was
  * CORRECTED rather than exempted. **THE PARAGRAPH IS KEPT IN THE PAST TENSE
  * BECAUSE IT IS THE ARGUMENT FOR (c), NOT A LIST OF ITS MEMBERS**: the reason (c)
@@ -4300,15 +4313,30 @@ function sessionOpGate(kind, op, spec, method) {
    * true without consulting any record. Only then ask whether a decision is
    * recorded. And if none is, say so — do not fall back on the design claim,
    * because the fallback IS the defect. */
-  if (SESSION_OPS.admin.has(op) || SESSION_OPS.member.has(op))
+  /* REC-162 (Membership v2 §4.9, BOB #23): THE SENTENCE SAYS WHICH SESSION REACHES THE OP, DERIVED
+     FROM THE SET THAT HOLDS IT. Reaching here means exactly ONE set holds `op` and it is not this
+     session's. `SESSION_OPS.admin` is the FOUNDER'S password session and nothing else — an enrolled
+     administrator signs in as `member:<id>` — so an op the admin set alone holds is *reserved to the
+     founder's session*, and the old sentence (*"reserved to an administrator of this group"*, with
+     `role: 'member'`) was FALSE of every enrolled administrator it refused. `role` is gone for that
+     reason: `session` names the session's kind, which is true of anybody who holds it. */
+  if (SESSION_OPS.admin.has(op))
     return refusal("SESSION_ROLE_CANNOT_REACH_OP",
-      "this operation is reserved to an administrator of this group",
-      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only an `
-      + `administrator's, and this session's role is '${String(kind).slice(0, 20)}'. There is no `
-      + `machine credential to go and find: an administrator performs this from their own browser. `
-      + `This is section 4's role boundary rather than a credential boundary, and the plane said `
-      + `otherwise until D-270 measured the difference.`,
-      { role: kind });
+      "this operation is reserved to the founder's session",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only the founder's: `
+      + `the password session made when this instance was claimed with its root credential. This is `
+      + `a member's session, which is what every enrolled member signs in with, an administrator of `
+      + `this group included — so an administrator's session is refused this exactly as this one is, `
+      + `and nothing here says whether you are one. There is no machine credential to go and find: `
+      + `the founder performs this from their own browser.`,
+      { session: kind, reachedBy: "founder" });
+  if (SESSION_OPS.member.has(op))
+    return refusal("SESSION_ROLE_CANNOT_REACH_OP",
+      "this operation is reserved to a member's own session",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only a member's `
+      + `own, and this is the founder's session. There is no machine credential to go and find: `
+      + `a member performs this from their own browser.`,
+      { session: kind, reachedBy: "member" });
   const recorded = UNATTENDED_BY_DECISION[op];
   if (recorded)
     return refusal("MACHINE_CREDENTIAL_REQUIRED",
