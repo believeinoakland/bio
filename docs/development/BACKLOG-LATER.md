@@ -9,6 +9,16 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
+### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
+order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
+depends-on: M0-158.
+scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
+accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
 ### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
 order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0

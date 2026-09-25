@@ -33,6 +33,16 @@ scope: (1) a SOURCE capture the caller cannot see answers not-held and writes no
 accepts-when: an outsider's linkproject on a hidden source writes nothing and answers not-held; on a shared source linking into a hidden project it writes the edge and its answer and counts are byte-identical to an unresolved link; a later links read by that outsider shows no hidden target (moves: an outsider acting through a hidden source). NEGATIVE CONTROL: drop the viewer stamp and the outsider arm names the hidden project by name.
 added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
 
+### D-723 · queued — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
+order: directly behind D-710, which it completes: a correction to just-landed work outranks new work, and "less narrative" binds us first (SCHEDULER #24, 2026-09-25)
+milestone: M2
+interface: I3 — a shared page's content.chain_kind reads `mixed`; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14 (chain_kind, as D-686 and D-710 write it), with BOB #36's 11:05Z ruling.
+depends-on: D-710 (same function; stack on land/worker/D-710 once integrated).
+scope: `textchain.mjs` chainKindFor's page branch answers `mixed` for a page covered by two steps of different kinds; a page read one way keeps its one kind. Correct content-chain-kind.test.mjs 1b, 2b and 3 with a comment saying why the old assertion was wrong; move construct 4.unit-chain-kind-mixed to BUILT; fold the rule into the Content Framework's chain_kind section. Unchanged (CONFIRMED): content:ocr stays an equality and never names a mixed unit; content:mixed names it; capture_text.chain_kind stays the chain's LAST step and never reads mixed.
+accepts-when: a D-635 appended page reads `mixed` and a text-layer-only or OCR-only page keeps its one kind (moves: a shared page reading `ocr`). NEGATIVE CONTROL: restore the last-appended rule and the shared-page arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
+
 ### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
 order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0
@@ -1091,14 +1101,4 @@ design: `docs/development/VERIFICATION.md` "The negative-control register" (brea
 depends-on: M0-157.
 scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
 accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
-order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
-depends-on: M0-158.
-scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
-accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
