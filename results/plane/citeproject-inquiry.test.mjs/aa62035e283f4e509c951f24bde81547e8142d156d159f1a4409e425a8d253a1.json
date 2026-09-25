@@ -1,0 +1,16 @@
+{
+ "unit": "plane:citeproject-inquiry.test.mjs",
+ "inputHash": "aa62035e283f4e509c951f24bde81547e8142d156d159f1a4409e425a8d253a1",
+ "verdict": "PASS",
+ "run": "b97cfcebc62b89a6202d269b0d69100c59636a72.1790327855524.6586.json",
+ "tree": "b97cfcebc62b89a6202d269b0d69100c59636a72",
+ "head": "95fe7bc7f373d97d592616be4d789f771cb6e7f5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 144,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "04dcd90d-f895-5de4-afc9-f21f2b074f93",
+ "at": "2026-09-25T09:17:35.540Z"
+}

@@ -1,0 +1,16 @@
+{
+ "unit": "plane:doorbell.test.mjs",
+ "inputHash": "3e7594e9403b9477eb9459d44a959a9cc665d70a69c8749add18b0cadebb63a9",
+ "verdict": "PASS",
+ "run": "b97cfcebc62b89a6202d269b0d69100c59636a72.1790327855524.6586.json",
+ "tree": "b97cfcebc62b89a6202d269b0d69100c59636a72",
+ "head": "95fe7bc7f373d97d592616be4d789f771cb6e7f5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 152,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "04dcd90d-f895-5de4-afc9-f21f2b074f93",
+ "at": "2026-09-25T09:17:35.541Z"
+}
