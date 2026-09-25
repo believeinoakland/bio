@@ -11501,6 +11501,18 @@ export const RENDER_CAPTURE_CHECKS = {
       + 'it, so nothing was filed: the page\'s empty frame is never filed as its content. The reason the '
       + 'renderer gave is beside this message.',
   },
+  /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a cap from the
+     vendor's stated limit, and a render over it WAITS, never dropped). Decided in the
+     admission span, before the shell is fetched, and distinct from C-83.4 on purpose: the
+     day's allowance is untouched and may have room, so the sentence must not say it is
+     used. The unattended drain holds the row under this code and asks again next tick. */
+  RENDER_AT_CAPACITY: {
+    check: 'C-83.8',
+    where: 'src/index.mjs fetch > is-render-admit',
+    translation: 'This instance is already rendering as many pages at once as it allows, so this render '
+      + 'is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. '
+      + 'A scheduled capture asks again on its own; try again in a minute.',
+  },
 };
 
 /* ===========================================================================

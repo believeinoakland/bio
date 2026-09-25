@@ -807,6 +807,9 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     /* D-64: the instance's daily render allowance and its deferrals, an operational
        budget in runtime_observations' family — no bundle_id, nothing corpus-derived. */
     render_allowance:     "the daily render allowance spent and the renders deferred (D-64); an operational budget, not corpus-derived",
+    /* D-520: the renders RUNNING now, one row each, for the concurrency cap. The same family
+       as render_allowance: an operational fact about this instance, nothing corpus-derived. */
+    render_slots:         "the renders running now, for the concurrency cap (D-520); operational state that expires with each render, not corpus-derived",
     /* CPDF-13 / D-183. The three calibration tables sit in `runtime_observations`'
        family and NOT in `reading_text_source`'s, and the distinction is the whole
        reason the exemption is defensible rather than convenient.

@@ -151,6 +151,10 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    MINOR and additive. NOT 1.30.0: CONDUCT #21's c21-batch28 (integrated, not yet on main) already published a
    DIFFERENT catalogue under 1.30.0, and one version names one catalogue. Figures are the d470 suite's print on this
    item's tree over origin/main 964da679; the integrator takes the union's number once and re-reads it. */
+/* D-520 side, kept as history — took 1.29.0 (D-520, 2026-09-25): C-83.8 RENDER_AT_CAPACITY joins RENDER_CAPTURE_CHECKS — a render over the concurrency
+   cap WAITS (BOB #33) — so the catalogue moved 461 -> 462 checks and the stamp moves with it, MINOR and additive on
+   this constant's own rule (Publication §3 rule 17): one check arrives, none moves and none leaves. Figures are the d470
+   suite's own print on the item's tree over origin/main 8bdf20e6; CONDUCT reconciles the number at the union. */
 export const CATALOG_VERSION = "1.30.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

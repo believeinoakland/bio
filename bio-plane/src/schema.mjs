@@ -4068,6 +4068,20 @@ CREATE TABLE IF NOT EXISTS render_allowance (
   last_at    TEXT NOT NULL
 );
 
+-- D-520: THE RENDERS RUNNING NOW, one row per admitted render, so the
+-- instance can CAP how many run at once (CLIENT-RENDERED.md, RULED by BOB #33:
+-- a concurrency cap from the vendor's stated limit, labelled; over the cap a
+-- render WAITS). render_allowance is an ACCOUNT of browser time and cannot say
+-- how many are in flight. A slot is released when its render reports, and
+-- EXPIRES at its admission plus its reservation (the most time the asked
+-- environment permits it), so a render that never reports cannot hold a slot
+-- for ever. An operational fact about this instance, not corpus-derived.
+CREATE TABLE IF NOT EXISTS render_slots (
+  slot        TEXT PRIMARY KEY,
+  admitted_at TEXT NOT NULL,
+  expires_ms  INTEGER NOT NULL
+);
+
 -- REC-195 (D-149's remaining half, BIO_Case_Making_v0_1.md §2): A MACHINE'S
 -- PROPOSAL OF THE LAWS GOVERNING AN ACTION, STORED APART FROM THE MEMBER'S LIST.
 --

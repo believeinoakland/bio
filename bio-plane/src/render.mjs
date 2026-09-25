@@ -29,6 +29,9 @@
 import { originOf, SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "./subresources.mjs";
 import { browserBindingRenderer } from "./browserrender.mjs";
 
+/* D-520: the navigation bound's figure, from M-151 (see RENDER_DEFAULTS below). */
+export const RENDER_NAVIGATION_TIMEOUT_MS = 10000;
+
 /* The environment this instance asks for. Recorded on every capture whether or not
    the renderer honoured it: `render.*` carries what the renderer SAID it used, and
    `render.asked` what was asked, so a disagreement is visible rather than averaged. */
@@ -36,14 +39,20 @@ export const RENDER_DEFAULTS = Object.freeze({
   /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
      ALLOWANCE. A render's maximum browser cost is the time it may spend getting to
      the page plus the time the wait condition may burn once there, so the two
-     together are what `renderReserveMs` reserves at admission. CHOSEN, NOT MEASURED,
-     and stated as chosen for the same reason the daily allowance is: no instrument
-     here has timed a navigation, and no platform enforces this number for us. What
-     it buys is that the reservation is a bound the renderer was ASKED to hold, not
-     one this module invented for the arithmetic — a renderer that overruns its own
-     asked bounds overruns the reservation too, and `renderSpend` then records the
-     time it REPORTED, which is the only figure the plane ever has. */
-  navigation_timeout_ms: 30000,
+     together are what `renderReserveMs` reserves at admission.
+     D-520: SET FROM A MEASUREMENT, `docs/development/measurements/M-151.md`. It was
+     30,000 ms and CHOSEN; M-151 timed Page.navigate to commit over the client-rendered
+     sources the corpus names (local headless Chromium, 2026-09-25): the slowest of 24
+     navigations committed in 1,300 ms. Its rule, applied to that printed tail: twice the
+     tail, plus 5,000 ms held for the session acquisition nobody has measured, rounded UP
+     to the next whole 5,000 ms — 2 x 1,300 + 5,000 = 7,600, so 10,000. The doubling is
+     the stated allowance for the instrument not being Cloudflare's browser or network;
+     the 5,000 ms is CHOSEN, NOT MEASURED (no instance holds the binding), and is the
+     term the first live render's figure replaces. AND IT IS NOW HONOURED: until D-520 the in-plane driver never
+     read this field (`browserrender.mjs` bounded Page.navigate by the WAIT timeout and
+     every setup command by a 30,000 ms default), so the reservation was a bound the
+     renderer was asked for and did not hold. */
+  navigation_timeout_ms: RENDER_NAVIGATION_TIMEOUT_MS,
   viewport: Object.freeze({ width: 1280, height: 800 }),
   dpr: 1,
   locale: "en-US",
@@ -132,6 +141,36 @@ export function renderAllowanceMs(env) {
   if (v === undefined || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
+}
+
+/* D-520 — HOW MANY RENDERS MAY RUN AT ONCE (BOB #33, 2026-09-24 19:10Z, folded into
+   CLIENT-RENDERED.md as a RULED section: a concurrency cap from the vendor's stated
+   limit, labelled; a render over the cap WAITS). The allowance above is an ACCOUNT of
+   browser time; this is the THROTTLE it never was.
+
+   THE FIGURE IS THE VENDOR'S CLAIM, LABELLED AS THEIRS, and it is NOT MEASURED: no
+   instance here has ever held a browser, so nothing has run two at once. Cloudflare's
+   pricing page (last updated 2026-04-21, read 2026-09-25) says Workers Paid INCLUDES
+   10 concurrent browsers, averaged monthly from the daily peak, then $2.00 for each
+   additional one; its limits page (last updated 2026-08-20, read 2026-09-25) states a
+   hard limit of 200 per account and 3 new browser instances per second. The default is
+   the INCLUDED 10, not the limit of 200, for the reason the daily allowance takes the
+   included hours: the cap exists so an unattended sweep cannot run up a bill, and a
+   figure the platform bills above is the one that fence is about. The limit is PER
+   ACCOUNT and this cap is PER INSTANCE, which agree only because `newgroup` installs one
+   plane per account; a second consumer of the same account's browsers is invisible here.
+   The new-instance RATE (3/s) is not capped by this. An instance overrides the figure
+   with `RENDER_CONCURRENCY_CAP`. */
+export const RENDER_CONCURRENCY_CAP_DEFAULT = 10;
+
+export function renderConcurrencyCap(env) {
+  const v = env && env.RENDER_CONCURRENCY_CAP;
+  if (v === undefined || v === null || v === "") return RENDER_CONCURRENCY_CAP_DEFAULT;
+  const n = Number(v);
+  /* A cap of 0 or a figure that is not a positive whole number falls back to the
+     default rather than to "no renders" or "no cap": either reading of a typo would
+     change what the instance does without anyone having decided it. */
+  return Number.isInteger(n) && n > 0 ? n : RENDER_CONCURRENCY_CAP_DEFAULT;
 }
 
 /* D-492: WHAT ONE RENDER RESERVES AT ADMISSION — its MAXIMUM cost, not its expected

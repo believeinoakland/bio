@@ -128,7 +128,11 @@ const mf = new Miniflare({
                  no renderer bound it would stop one gate earlier at C-83.3 and the
                  row's accepts-when could not be driven at all. Nothing else in
                  this suite asks for a render, so no other arm can see this value. */
-              RENDER_DAILY_ALLOWANCE_MS: "0" },
+              RENDER_DAILY_ALLOWANCE_MS: "0",
+              /* D-520: A CONCURRENCY CAP OF ONE, read only by block 7d. The cap is decided
+                 BEFORE the allowance, so with no slot taken this changes nothing 7c sees;
+                 7d takes the one slot by hand and the drain then meets the cap first. */
+              RENDER_CONCURRENCY_CAP: "1" },
   serviceBindings: { SELF: async (request) => MF.dispatchFetch(request),
     /* D-491: A RENDERER THAT MUST NEVER BE REACHED. Miniflare has no browser, and
        this fixture does not need one: the allowance above defers before anything
@@ -972,6 +976,66 @@ console.log("\n--- 7c. a request can ask for the RENDERED page, and a render thi
     + "answered with the one that expired",
       [again.ok, again.already === true, again.request === ID_RENDER], [true, false, false]);
   }
+}
+
+/* ====================================================================== 7d
+ * D-520 — OVER THE CONCURRENCY CAP A RENDER WAITS IN THE ALARM, NEVER DROPPED.
+ *
+ * BOB #33 (2026-09-24 19:10Z, folded into CLIENT-RENDERED.md as a RULED section):
+ * a concurrency cap from the vendor's stated limit, labelled, and a render over it
+ * WAITS. The unattended half is this block: the drain meets C-83.8, HOLDS the row
+ * under it with the tick's word `waiting`, and asks again next tick.
+ *
+ * THE SLOT IS TAKEN BY HAND, through the store's own admission (`renderAdmit`, the
+ * method op=acquire's render arm calls), because this fixture has no renderer that
+ * can be admitted — its allowance is zero on purpose (7c). WHAT THIS CANNOT SEE: an
+ * unattended render that then SUCCEEDS, which no fixture here can drive (7c's
+ * header); the second tick is shown to pass the CAP and meet the next gate, the
+ * allowance, by name — the wait was re-asked, not dropped and not answered stale.
+ * The member-facing burst (K at once against a cap of J) is `rendered-capture`'s
+ * block K.
+ * ====================================================================== */
+console.log("\n--- 7d. D-520: a render over the concurrency cap WAITS in the alarm and is asked again ---");
+{
+  /* CONDUCT #22 (c22-batch29), composing D-520's block with D-523's: D-523's arms (inside 7c) EXPIRE
+     CR-D491-1-RENDER and then open a fresh render request for the same address, so the render that
+     waits here is that LIVE one, found by what it is rather than by the id 7c minted. */
+  const liveRenders = (await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`)).requests
+    .filter((r) => r.render === true && r.state === "requested");
+  t("7d-pre exactly one render request is live for this block to drive (D-523 expired 7c's)",
+    liveRenders.length, 1);
+  const ID_RENDER = liveRenders.length === 1 ? liveRenders[0].request : null;
+  /* 7c's LAST arm left a PLAIN request queued on the render's host, and CONDUCT 3 admits
+     one load per host per tick: drained first, it would take the tick's slot and answer the
+     render CAPTURE_CONDUCT_TICK_SPENT before the cap was ever asked (measured: the first
+     run of this block read exactly that). One tick here clears it. */
+  await drain();
+  const taken = await doStub.renderAdmit({ allowanceMs: 1e9, reserveMs: 3600000, cap: 1 });
+  t("7d0 the fixture's one slot is taken through the store's own admission",
+    [taken.state, typeof taken.slot === "string" && taken.slot.length > 0], ["admitted", true]);
+  const seenBefore = SEEN.length, renderedBefore = RENDER_CALLS;
+  const d = await drain();
+  const h = (d.held || []).find((x) => x.request === ID_RENDER);
+  t("7d1 THE ACCEPTS-WHEN, unattended half: the render request is HELD as RENDER_AT_CAPACITY, C-83.8, "
+  + "and the tick's word is WAITING — not deferred, because nothing was taken from the day",
+    h && [h.code, h.check, h.render], ["RENDER_AT_CAPACITY", "C-83.8", { state: "waiting", content: "undetermined" }]);
+  t("7d2 it is not refused and not captured, nothing left this instance for it, and the renderer was never reached",
+    [(d.refused || []).some((r) => r.request === ID_RENDER), (d.captured || []).some((c) => c.request === ID_RENDER),
+     SEEN.length - seenBefore,
+     RENDER_CALLS - renderedBefore],
+    [false, false, 0, 0]);
+  {
+    const rows = await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`);
+    const row = rows.requests.find((r) => r.request === ID_RENDER);
+    t("7d3 the ROW waits: `requested`, C-83.8's code, no capture", row && [row.state, row.code, row.capture_sha],
+      ["requested", "RENDER_AT_CAPACITY", null]);
+  }
+  /* THE SLOT FREES — the render holding it reports — and the NEXT TICK ASKS AGAIN. */
+  await doStub.renderSpend({ ms: 0, releaseMs: 3600000, slot: taken.slot });
+  const d2 = await drain();
+  const h2 = (d2.held || []).find((x) => x.request === ID_RENDER);
+  t("7d4 the next tick ASKED AGAIN and passed the cap: the row now meets the allowance (zero here) by name",
+    h2 && [h2.code, h2.check, h2.render.state], ["RENDER_DEFERRED", "C-83.4", "deferred"]);
 }
 
 /* ====================================================================== 8

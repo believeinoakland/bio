@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: re-run with `node test/nc-d490.mjs` (one arm: `node test/nc-d490.mjs <arm>`); pristine copies go to `BIO_NC_SCRATCH` or a run-unique temp directory, never into the worktree (BOB #32). Run 2026-09-24 on base origin/main 58293bf31 plus this item, EIGHT rows — six arms each armed ALONE, a baseline first and last — every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (6 of 6 MATCH/IDENTICAL). BASELINE 44 pass 0 fail; BASELINE-LAST 44/0. (1) `nodriver` — THE ROW'S CONTROL — `rendererFor`'s BROWSER branch put back to `{kind:"browser-binding-without-driver", render:null}`, so a bound browser is again a binding with nothing behind it: DECLARED red on A1 A2 A3 A3b A4 A5 A6 A7 A8 A8b A8c A8d A8e A8f A8g and nothing else; ACTUAL 29/15, exactly those, AS DECLARED — A9/A10 (the UNBOUND arm, which is the row's named control as an arm rather than a patch) and B-H (the driver reached directly through the harness worker) stay green, which is what tells a missing DRIVER from a missing binding. (2) `emptyrequests` — a ledger nobody could record read as `[]`: DECLARED C1; ACTUAL 43/1 C1, AS DECLARED. (3) `emptyscripts` — a script set nobody could record read as `[]` (BOB #31's exact case): DECLARED C3; ACTUAL 43/1 C3, AS DECLARED. (4) `blockedasfailed` — a rule that stopped a request reported as the request failing: DECLARED B1; ACTUAL 43/1 B1, AS DECLARED. (5) `noclose` — the session left open: DECLARED F2 F3; ACTUAL 42/2 F2 F3, AS DECLARED. (6) `lowercasetypes` — OVER-STRICTNESS — CDP resource types arriving lowercase, a correct spelling this driver did not anticipate: DECLARED nothing fails; ACTUAL 44/0, AS DECLARED. THAT ARM EARNED ITS PLACE: its FIRST run, before the fix, failed A8c, because the driver compared `p.type === "Document"` against the capitalised literal and the main document's status read `null` on a correct render. The comparison now goes through `resourceType`. RE-RUN 2026-09-24 after this suite's foot gained the comma `battery.mjs`'s tally needs (and `nc-d490.mjs`'s own matcher with it): the same eight rows, the same six verdicts, baseline and baseline-last 44/0 — recorded because a control whose READER changed is a control that has to be re-run, not one whose old transcript still stands. */
 /* NEGATIVE CONTROL (D-529): `node test/nc-d490.mjs`, RE-RUN IN FULL 2026-09-25 on base origin/main 8bdf20e6 plus this item, NINE rows — seven arms each ALONE, a baseline first and last, every patch matched EXACTLY ONCE, every restore sha256 MATCH and cmp IDENTICAL (26535 / 35512 bytes). BASELINE 47/0; BASELINE-LAST 47/0. NEW ARM `nobodies` — the driver never asks the browser for a body: DECLARED A8h A8i B7; ACTUAL 44/3 A8h A8i B7, AS DECLARED. `nodriver` WIDENED by A8h A8i (the digests of the same render): ACTUAL 30/17, AS DECLARED. emptyrequests C1, emptyscripts C3, blockedasfailed B1, noclose F2 F3, lowercasetypes none: each AS DECLARED, unchanged. */
+/* NEGATIVE CONTROL (D-520, the NAVIGATION BOUND): run 2026-09-25 00:12Z on base origin/main 8bdf20e6 plus this item (b7fedee6), harness in the session scratchpad (BOB #32), baseline first and last 45/0. ARM `navbywait` — Page.navigate bounded by the WAIT timeout again, the driver's behaviour before D-520: DECLARED E6 alone; ACTUAL 44/1 failing E6, AS DECLARED; the patch matched exactly once and the restore verified by sha256 AND cmp (26024 bytes, MATCH/IDENTICAL). */
 /* D-490 — THE IN-PLANE RENDERER OVER THE BROWSER RENDERING BINDING, driven THROUGH
  * THE OP and, for the driver's own rules, through a harness worker that imports it.
  *
@@ -122,6 +123,8 @@ const PAGES = ${JSON.stringify({
                   scripts: [{ url: `https://${HOST}/app.js` }] },
   "/navfail": { requests: [], scripts: [], navError: "net::ERR_NAME_NOT_RESOLVED" },
   "/noload": { requests: [], scripts: [], noLoad: true },
+  /* D-520: a navigation the browser never answers — the site that never commits. */
+  "/navhang": { requests: [], scripts: [], navHang: true },
   "/noserialise": { requests: [], scripts: [], noHtml: true },
 })};
 const RENDERED = (p) => ${JSON.stringify("<!DOCTYPE html>\n<html><head><title>Portal</title></head><body><main><h1>Council agenda</h1><p>Rendered for ")} + p + ${JSON.stringify(".</p></main></body></html>")};
@@ -159,6 +162,7 @@ export default {
             page = PAGES[pageKey] || null;
             if (!page) return ok({ frameId: "F1" });
             if (page.navError) return ok({ frameId: "F1", errorText: page.navError });
+            if (page.navHang) return;   /* D-520: no answer, ever */
             ok({ frameId: "F1", loaderId: "L1" });
             if (env.MODE !== "nonetwork") for (let i = 0; i < page.requests.length; i++) {
               const r = page.requests[i], id = "R" + i;
@@ -434,6 +438,20 @@ console.log("\n--- E. every way the binding can fail says WHICH call failed and 
   const e = (await render({ url: `https://${HOST}/noserialise`, wait: { until: "networkidle", timeout_ms: 2000 } })).answer;
   t("E5 a browser that returns no document is a failed render, never an empty capture",
     [e.ok, /no serialised document/.test(e.error || "")], [false, true]);
+}
+
+{
+  /* D-520 — THE NAVIGATION BOUND IS HONOURED. Before D-520 the driver never read
+     `navigation_timeout_ms`: Page.navigate was bounded by the WAIT timeout, so a site that
+     never commits held the render for the wait's 4,000 ms here, not the 1,000 ms of
+     navigation it was asked for and reserved against. The wall clock is the discriminator,
+     with the arms far enough apart (1,000 vs 4,000) that a loaded machine cannot blur them. */
+  const t0 = Date.now();
+  const g = (await render({ url: `https://${HOST}/navhang`, navigation_timeout_ms: 1000,
+                            wait: { until: "networkidle", timeout_ms: 4000 } })).answer;
+  const took = Date.now() - t0;
+  t("E6 a navigation that never commits fails BY NAME inside the asked navigation bound, not the wait's",
+    [g.ok, /CDP Page\.navigate did not answer within \d+ ms/.test(g.error || ""), took < 3000], [false, true, true]);
 }
 
 /* ====================================================================== F */

@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: re-run with `node test/nc-d64.mjs` (one arm: `node test/nc-d64.mjs <arm>`). RE-RUN IN FULL 2026-09-24 for D-499 on base origin/main 58293bf3 plus this item, EIGHT rows — six arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy OUTSIDE this worktree (corrected by D-499, BOB #32's scratch ruling), every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (6 of 6 MATCH/IDENTICAL, 19715 and 802628 bytes). BASELINE 76 pass 0 fail; BASELINE-LAST 76/0. (1) `determined` — D-64's control — force `determined` on a page drawing data from a second origin: DECLARED B1 by name, B2-B4, E1; ACTUAL 71/5 B1 B2 B3 B4 E1, AS DECLARED. (2) `emptyscripts` — a script set nobody recorded read as `[]`: DECLARED D1 D2 D4; ACTUAL 73/3, AS DECLARED. (3) `shellprimary` — the shell kept as the PRIMARY: DECLARED A2 A3 A4; ACTUAL 73/3, AS DECLARED. (4) `overstrict` — OVER-STRICTNESS — the host's own data read as foreign: DECLARED A16 and, since D-499, J7; ACTUAL 74/2 A16 J7, AS DECLARED — the arm's set WIDENED by one because D-499 asserts the same property a second time (J7, on the timeout page), not because the arm breaks anything new; it read A16 alone before this item and that is a change in the SUITE, recorded rather than smoothed. (5) `waitcondition` — D-499'S CONTROL, the row's own words: record every wait as `condition`: DECLARED J2 J3 J4 J4b J6 (the timeout page), J10 J11 (an unrecognised word), J12 (no wait reported), and NOT J0 J1 J5 J7 J8 J9 J13 or A-I; ACTUAL 68/8 failing exactly J2 J3 J4 J4b J6 J10 J11 J12, AS DECLARED — the capture is still filed, still graded and still determined under the arm, which is the point: the arm removes the RECORD of which wait fired and nothing else. (6) `waitcase` — D-499'S OVER-STRICTNESS ARM — drop the normalisation so `  NetworkIdle  ` no longer reads as the asked condition: DECLARED J13 ALONE; ACTUAL 75/1 J13, AS DECLARED. */
 /* NEGATIVE CONTROL (D-492, the RESERVATION): re-run with `node test/nc-d492.mjs` (one arm: `node test/nc-d492.mjs <arm>`). Run 2026-09-24 on base origin/main 58293bf31 plus this item — RE-RUN after the concurrency wait moved from a hand-rolled `Date.now()` deadline to `until`+`budgetAssert` (M0-107), which `budget-sweep.test.mjs` graded UNCHECKED by name and which added the budget's own assertion (68 -> 69); the first run read every arm identically at one tally lower — SIX rows — four arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy OUTSIDE the worktree (BOB #32), every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). BASELINE 69 pass 0 fail; BASELINE-LAST 69/0. (1) `noreserve` — THE ROW'S CONTROL — drop the reservation and admit on what has been SPENT, the rule D-492 replaced: DECLARED red on J1 by name, with J2 J3 J4 J5 H2 H3 H4, nothing else — and the wait's `stop` (all K renderers inside means every request was ADMITTED, so no deferral can still be coming) is what keeps this arm pointed at J1 rather than reporting the budget NOT MEASURED; ACTUAL 61/8 failing exactly H2 H3 H4 J1 J2 J3 J4 J5, AS DECLARED — the four concurrent admits all succeed against one `spent_ms`. (2) `norelease` — the reservation is never given back: DECLARED H1 H3 J6; ACTUAL 66/3 H1 H3 J6, AS DECLARED. (3) `releaseunreported` — an unreported render hands its reservation back, D-492's rule inverted: DECLARED J5 ALONE; ACTUAL 68/1 J5, AS DECLARED. (4) `overstrict` — OVER-STRICTNESS — a CORRECT reservation spelled as a JSON string rather than a number must be admitted exactly as before: DECLARED nothing fails; ACTUAL 69/0, the baseline's own tally, AS DECLARED. */
 /* NEGATIVE CONTROL (D-529, the SUBRESOURCE DIGEST): re-run with `node test/nc-d64.mjs <arm>` for `nodigest`, `rendererclaim`, `textstrict`. Run 2026-09-25 on base origin/main 8bdf20e6 plus this item, each arm ALONE with a baseline first and last, every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp (sha256 de1f6240b2ae MATCH, cmp IDENTICAL, 31010 bytes, 3 of 3). BASELINE 95 pass 0 fail; BASELINE-LAST 95/0. (1) `nodigest` — THE ROW'S CONTROL, its own words: drop the digest from each recorded subresource: DECLARED K0 K2 K3 (THE VERIFY ARM, by name) K4 K5 K6 K7 K8 K9 K10 and NOT A13 or A-J; ACTUAL 85/10 failing exactly K0 K2 K3 K4 K5 K6 K7 K8 K9 K10, AS DECLARED. (2) `rendererclaim` — the rule D-529 replaced, a renderer-REPORTED digest recorded as the digest: DECLARED A13 K0 K3 K4 K6 K7 K8, NOT K2 K5 K9 K10; ACTUAL 88/7 failing exactly A13 K0 K3 K4 K6 K7 K8, AS DECLARED — K3 catches it because the store holds no bytes under a claimed digest. (3) `textstrict` — OVER-STRICTNESS — a correct `body_text` (the form CDP gives a text body) treated as missing: DECLARED K0 K3 K4 K5 K6 K8; ACTUAL 89/6 exactly those, AS DECLARED. */
+/* NEGATIVE CONTROL (D-520, the CONCURRENCY CAP): run 2026-09-25 00:12Z on base origin/main 8bdf20e6 plus this item (b7fedee6), by a harness held in the session scratchpad and never in this worktree (BOB #32) — SIX rows: four arms each armed ALONE, a baseline first and last over this suite, `capturerequests` and `browser-render`, each file copied to a UNIQUELY-NAMED per-arm pristine copy, every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). BASELINE 92/0, 121/0, 45/0; BASELINE-LAST the same. (1) `nocap` — THE ROW'S CONTROL — `renderAdmit` reads no cap (`capN = null`): DECLARED K1 BY NAME with K2 K3 K4, and in `capturerequests` 7d1 7d3 (7d2 uncertain); ACTUAL 88/4 failing exactly K1 K2 K3 K4 — K1 reads the burst's PEAK above the cap — and `capturerequests` 119/2 failing 7d1 7d3, AS DECLARED; 7d2 stayed green because without the cap the drain meets the zero allowance, which also fetches nothing, so 7d2 is not about the cap. (2) `norelease` — a slot is never given back when its render reports: DECLARED K5 K6; ACTUAL 86/6 failing K5 K6 AND J10 J11 J12 J13 — UNDER-DECLARED, and a finding about the declaration rather than the arm: D-499's J block runs after K on the suite's SHARED plane, whose renders then each leak a slot until it expires 25,000 ms later, so the default cap of 10 fills and the later J renders WAIT. The arm moved one variable; the second detection is that variable's consequence. (3) `navbywait` is `browser-render`'s (its own NEGATIVE CONTROL line). (4) `overstrict-stringcap` — OVER-STRICTNESS — the cap handed to the store as a STRING, a correct spelling this item did not use: DECLARED nothing fails; ACTUAL 92/0, AS DECLARED. */
 /* D-64 — THE RENDER ARM OF op=acquire, driven THROUGH THE OP.
  *
  * Design: `CLIENT-RENDERED.md` (a development design, cited here and never read by this suite) §"What must be recorded on a
@@ -192,16 +193,19 @@ const acquire = acq(mf), capture = held(mf);
 
 /* ====================================================================== 0 */
 console.log("\n--- 0. the family and the fixture are what they claim ---");
-t("C-83 has seven rows, each with a C-number and a sentence",
+/* CORRECTED 2026-09-25 BY D-520, NEVER EXEMPTED: this read SEVEN rows. D-520 minted the
+   eighth, C-83.8 RENDER_AT_CAPACITY (a render over the concurrency cap WAITS, BOB #33), so
+   the old count was right about the family it was written against and is superseded. */
+t("C-83 has eight rows, each with a C-number and a sentence",
   Object.values(RENDER_CAPTURE_CHECKS).map((r) => /^C-83\.\d+$/.test(r.check) && r.translation.length > 40),
-  [true, true, true, true, true, true, true]);
+  [true, true, true, true, true, true, true, true]);
 /* THE C-NUMBERS AS LITERALS, so a renumber or a swapped row fails here by name rather
    than agreeing with itself through row() below. */
 t("each code carries the C-number this item minted for it",
   Object.fromEntries(Object.entries(RENDER_CAPTURE_CHECKS).map(([k, r]) => [k, r.check])),
   { RENDER_FLAG_MALFORMED: "C-83.1", RENDER_ARM_CONFLICT: "C-83.2", RENDER_NO_RENDERER: "C-83.3",
     RENDER_DEFERRED: "C-83.4", RENDER_HOST_COOLING_OFF: "C-83.5", RENDER_NOT_A_PAGE: "C-83.6",
-    RENDER_FAILED: "C-83.7" });
+    RENDER_FAILED: "C-83.7", RENDER_AT_CAPACITY: "C-83.8" });
 t("the method string is the one BOB #32 ruled", RENDERED_METHOD, "rendered");
 t("code and layout are the only non-data axes (inverted list)", Object.values(NON_DATA_TYPES).sort(),
   ["code", "layout", "layout"]);
@@ -386,8 +390,14 @@ console.log("\n--- H. the daily allowance: committed means DEFERRED, recorded, n
    third does not) and makes the third's deferral the allowance's doing and not the
    reservation's: at 46,000 the second render's 1,000 ms plus one reservation is exactly
    the allowance and fits, and the third's 2,000 ms plus one reservation is 1 ms over.
+   (D-520: the figures in this paragraph are for the 45,000 ms reservation of its day; the
+   arithmetic is the same at RESERVE = 25,000 — the allowance is RESERVE + 1,000.)
    Block J drives the reservation itself. */
-const RESERVE = 45000;            /* the wait timeout (15,000) plus the navigation bound (30,000) */
+/* CORRECTED 2026-09-25 BY D-520, NEVER EXEMPTED: this read 45000, the wait's 15,000 plus a
+   navigation bound of 30,000 that was CHOSEN. D-520 set the bound from measurement M-151
+   (10,000 ms), so the old figure is superseded, not wrong for its day. Every arm below that
+   sizes an allowance in reservations reads this one literal, which is why only it moved. */
+const RESERVE = 25000;            /* the wait timeout (15,000) plus the navigation bound (10,000, M-151) */
 {
   /* PINNED AS A LITERAL, not read from the module into both sides of the comparison: a
      figure the suite takes from the code agrees with the code for free (WORKER.md). If
@@ -510,6 +520,90 @@ console.log("\n--- J. D-492: the allowance is RESERVED at admission, so renders 
   t("J6 a shell that is not a page releases the reservation without charge, and the next render is admitted",
     [refusal(n1), n2.ok, n2.document && n2.document.capture.method], [row("RENDER_NOT_A_PAGE"), true, RENDERED_METHOD]);
   await notpage.dispose();
+}
+
+/* ====================================================================== K */
+console.log("\n--- K. D-520: a CONCURRENCY CAP — a burst above it renders no more than the cap at once ---");
+/* ACCEPTS-WHEN (QUEUE.md D-520): a burst above the cap renders no more than the cap at once,
+   with the rest completing later. NEGATIVE CONTROL: remove the cap and the burst arm counts
+   more concurrent renders than the cap, failing by name (K1).
+   The ALLOWANCE here is ample on purpose (a hundred reservations), so every refusal below is
+   the CAP's and none is the account's — the two axes kept apart, as the store keeps them.
+   The member path is refused BY NAME and asks again; the unattended path HOLDS the row and
+   the alarm asks again (`capturerequests.test.mjs` block 7d).
+   WHAT THIS BLOCK CANNOT SEE: the vendor's own limit. The cap's default is Cloudflare's stated
+   included concurrency (render.mjs, labelled as theirs), and no browser here ever ran. */
+{
+  const K = 5, CAP = 2;
+  let entered = 0, running = 0, peak = 0, settled = 0, release = null;
+  const gate = new Promise((r) => { release = r; });
+  const heldR = async (request) => {
+    const q = await request.json();
+    entered++; running++; peak = Math.max(peak, running);
+    await gate;
+    running--;
+    return Response.json({
+      ok: true, html: rendered("/same"), engine: "chromium", engine_version: "fixture-1",
+      viewport: q.viewport, dpr: q.dpr, locale: q.locale, timezone: q.timezone,
+      wait: { condition: q.wait, fired: "networkidle" }, elapsed_ms: 1000,
+      navigated_to: q.url, status: 200, requests: PAGES["/same"].requests, scripts: PAGES["/same"].scripts });
+  };
+  const capped = plane({ RENDER_CONCURRENCY_CAP: String(CAP), RENDER_DAILY_ALLOWANCE_MS: String(RESERVE * 100) },
+                       { RENDERER: heldR });
+  const ka = acq(capped);
+  const hitsBefore = pageHits["/same"] || 0;
+  const flight = Array.from({ length: K }, () =>
+    ka({ locator: `https://${HOST}/same`, render: true }).then((v) => { settled++; return v; }));
+  /* Released once CAP renderers are inside AND the other K-CAP were already answered, so the
+     refusals happen WHILE the admitted renders are running. `stop` ends the wait the moment
+     MORE than CAP are inside — the cap did not hold, and K1 then names it rather than the
+     wait reporting NOT MEASURED. */
+  const WAIT_MS = 20000;
+  const waited = await until(() => entered >= CAP && settled >= K - CAP, WAIT_MS,
+    { stepMs: 25, stop: () => entered > CAP });
+  const atRelease = [entered, settled];
+  release();
+  const out = await Promise.all(flight);
+  if (budgetAssert(t, "K the wait for CAP renderers in flight with the other K-CAP already answered",
+      waited, WAIT_MS, "K1 K2 K3 K4 — the peak, the refusals by name, their word and the fetches")) {
+    t("K1 A BURST OF K AGAINST A CAP OF CAP: no more than CAP renders were ever running at once",
+      [K, CAP, peak], [5, 2, CAP]);
+    const waiting = out.filter((r) => r.reason === "RENDER_AT_CAPACITY");
+    t("K2 CAP were admitted and every other one is RENDER_AT_CAPACITY by name, while the CAP were running",
+      [out.filter((r) => r.ok === true).length, waiting.length, atRelease], [CAP, K - CAP, [CAP, K - CAP]]);
+    t("K3 each waiting render says WAITING, content undetermined, and names the running count and the cap",
+      [waiting.length, ...waiting.map((r) => [refusal(r), r.render.state, r.render.content, r.render.running, r.render.cap])],
+      [K - CAP, ...waiting.map(() => [row("RENDER_AT_CAPACITY"), "waiting", "undetermined", CAP, CAP])]);
+    t("K4 nothing was fetched for a waiting render: only the CAP admitted ones loaded the shell",
+      (pageHits["/same"] || 0) - hitsBefore, CAP);
+  }
+  /* THE REST COMPLETE LATER. The slots came back when the renders reported, so asking again
+     is admitted — the refusal was a wait, not a verdict. */
+  /* ONE AT A TIME: asked all at once, K-CAP = 3 retries against a cap of 2 would leave the
+     third waiting again — correct behaviour, and exactly what this block's first run of this
+     arm measured before the arm was corrected to ask the way a waiting caller does. */
+  const later = [];
+  for (let i = 0; i < K - CAP; i++) later.push(await ka({ locator: `https://${HOST}/same`, render: true }));
+  t("K5 the rest COMPLETE LATER: asked again once the running renders finished, each is filed",
+    later.map((r) => [r.ok, r.document && r.document.capture.method]), later.map(() => [true, RENDERED_METHOD]));
+  await capped.dispose();
+}
+{
+  /* AN UNREPORTED RENDER GIVES ITS SLOT BACK, even though D-492 keeps its reservation: the
+     slot counts renders RUNNING, and one that came back failed is not running. Under a cap of
+     one, a render after it must be admitted, not left waiting behind a render that ended. */
+  const one = plane({ RENDER_CONCURRENCY_CAP: "1", RENDER_DAILY_ALLOWANCE_MS: String(RESERVE * 100) });
+  const oa = acq(one);
+  const f = await oa({ locator: `https://${HOST}/fail`, render: true });
+  const n = await oa({ locator: `https://${HOST}/same`, render: true });
+  t("K6 a failed render releases its slot: under a cap of one, the next render is admitted and filed",
+    [refusal(f), n.ok], [row("RENDER_FAILED"), true]);
+  /* OVER-STRICTNESS: a cap that is not a positive whole number is the DEFAULT, never "no
+     renders" — a typo must not switch rendering off. */
+  const typo = plane({ RENDER_CONCURRENCY_CAP: "0" });
+  const ta = await acq(typo)({ locator: `https://${HOST}/same`, render: true });
+  t("K7 OVER-STRICTNESS: RENDER_CONCURRENCY_CAP=0 reads as the default and renders", ta.ok, true);
+  await one.dispose(); await typo.dispose();
 }
 
 /* ====================================================================== I */
