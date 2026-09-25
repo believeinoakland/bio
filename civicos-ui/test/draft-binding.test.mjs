@@ -21,7 +21,10 @@
  *  (b) A SURFACE THAT WRITES THE SENTENCE ITSELF. Each expected phrase is written out HERE, in the plane's
  *      words as D-680's suite pins them, and the page must carry the signed document's own line VERBATIM —
  *      compared against `op=casedocument`'s `text` read here as a stranger, which is the signed bytes (the page
- *      reads it through the same op; `op=publishedcase` does not carry the text). Arm (C) paraphrases it.
+ *      reads it through the same op). Arm (C) paraphrases it. CORRECTED 2026-09-25 (D-712): this said
+ *      `op=publishedcase` does not carry the text — true when written, because `publishedCase()` never named the
+ *      `document` its state built; since D-712 it serves it, text and doc sha included. The page still quotes
+ *      through `op=casedocument`, and this suite still compares against that op's read.
  *  (c) A PAGE THAT CALLS THE ABSENCE OF A RECORD A BINDING. Section 6 renders a stated link whose `case` is
  *      null (a document signed before D-680) and asserts it is stated as the absence, not as any of the five.
  *  (d) AN ACT WITH NO CALL SITE (`CIVICOS_UI_STATE.md` v50/v45/v76). Sections 1-5 render through `pubOpen`,
@@ -42,8 +45,11 @@
  *    from a built answer, as the guard it is.
  *  - It asserts the page carries the plane's sentence, not that the plane's sentence is right: that is
  *    `bio-plane/test/rec217-draft-binding.test.mjs` block 8's.
- *  - The page does not check the text it quotes against a doc sha: `op=publishedcase` serves none (D-712 — the
- *    same missing key makes the page's "case document signed" line read "not signed yet" for every stranger).
+ *  - The page does not check the text it quotes against a doc sha. CORRECTED 2026-09-25 (D-712): this said
+ *    `op=publishedcase` serves none, and the same missing key made the page's signed-document line read "not
+ *    signed yet" for every stranger. D-712 serves `document`; each live binding below now asserts the stranger's
+ *    page names the signer and the doc sha `op=casedocument` reports. The quoted text is still not checked
+ *    against that sha by the page — stated, not built here.
  *
  * NEGATIVE CONTROL: `node civicos-ui/test/draft-binding.control.mjs` from the repo root — each arm ALONE, each
  * anchor matched EXACTLY ONCE, restored from a uniquely-named per-arm pristine copy and verified by sha256 AND
@@ -54,6 +60,13 @@
  * sha256 AND `cmp` after every arm; driver exit 0, 6/6 AS DECLARED: BASELINE GREEN 38/0 · (A) RED 31/7 — the five
  * "HOW THE CASE WAS BOUND" rows plus section 6's "unquoted" and "found twice" rows (a stated binding read as never
  * stated), sparing every link row · (B) RED 28/10 · (C) RED 33/5 · (D) RED 28/10 · (E) GREEN 38/0.
+ * D-712's ARM, RUN 2026-09-25 by the D-712 worker, by hand, the ONE line `document: state.document,` deleted from
+ * `Store.publishedCase()`'s success return in `bio-plane/src/store.mjs` (anchor matched exactly once) and the file
+ * restored from a per-arm copy, IDENTICAL by sha256 (59abe06a…) AND `cmp` (3,480,319 B): 48/0 whole -> 38/10, the
+ * five "THE CASE DOCUMENT IS SIGNED, AND THE STRANGER'S PAGE SAYS SO" rows and the five "THE LIVE WIRE'S SHAPE" rows,
+ * and nothing else. OVER-STRICTNESS: the same line spelled `document: state.document ?? null,` -> 48/0. The fixture
+ * half of the anchor has its own arm in `publishedcase.test.mjs` (the mock's `delivered_by` dropped -> 246/1).
+ * UI-121's six arms above were measured at 38 rows, before these ten were added, and are not re-run here.
  */
 import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
@@ -66,6 +79,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { appScript } from "./extract.mjs";
+import { PUBLISHED_CASE_KEYS, PUBLISHED_CASE_DOCUMENT_KEYS, keysOf } from "./publishedcase-wire.mjs";
 import { until, budgetAssert } from "../../bio-plane/test/budget.mjs";
 import { makePublishingProject, allLoadBearing } from "../../bio-plane/test/publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "../../bio-plane/test/adoptable-reading.mjs";
@@ -318,7 +332,28 @@ const openCase = async (caseId, edition, what) => {
 const signedLine = (signed, phrase) => String(signed).split("\n").find((l) => l.includes(phrase)) || null;
 /* The one assertion every live binding makes, row-labelled by the binding. */
 const bindingRows = async (label, caseId, edition, draftId, token, phrase) => {
-  const { html, t, b, bt, cm, signed } = await openCase(caseId, edition, label);
+  const { html, t, b, bt, cm, signed, wire, doc } = await openCase(caseId, edition, label);
+  /* D-712: THE SIGNED-DOCUMENT LINE, READ BY A STRANGER. Every case here is signed through op=caseratify, and
+     until D-712 op=publishedcase served no `document`, so this same page told every stranger each of them was
+     "not been signed yet" (data-casedoc="none", measured by UI-121's worker on all five). The signer and the
+     doc sha are taken from op=casedocument — the signed bytes' own read — never from the answer the page drew. */
+  ok(`THE LIVE WIRE'S SHAPE (${label}): op=publishedcase answers exactly the keys publishedcase.test.mjs's mock is `
+   + `held to (publishedcase-wire.mjs), and its signed document exactly its seven`,
+     !!wire && JSON.stringify(keysOf(wire)) === JSON.stringify([...PUBLISHED_CASE_KEYS].sort())
+     && JSON.stringify(keysOf(wire.document)) === JSON.stringify([...PUBLISHED_CASE_DOCUMENT_KEYS].sort()),
+     JSON.stringify({ extra: keysOf(wire).filter((k) => !PUBLISHED_CASE_KEYS.includes(k)),
+                      missing: PUBLISHED_CASE_KEYS.filter((k) => !keysOf(wire).includes(k)),
+                      document: keysOf(wire && wire.document) }));
+  const casedoc = (html.match(/<div class="pub-file" data-casedoc="signed"[\s\S]*?<\/div><\/div>/) || [""])[0];
+  ok(`THE CASE DOCUMENT IS SIGNED, AND THE STRANGER'S PAGE SAYS SO (${label}): the signing line names `
+   + `${doc && doc.attestor_member} and the signed document's sha, and never "not been signed yet"`,
+     !!doc && doc.ratified === true && !!doc.doc_sha && !!doc.attestor_member
+     && !!wire && !!wire.document && wire.document.doc_sha === doc.doc_sha
+     && !/data-casedoc="none"/.test(html) && !/has not been signed yet/.test(strip(html))
+     && casedoc.includes(`signed by ${doc.attestor_member}`) && casedoc.includes(`sha256:${doc.doc_sha}`),
+     JSON.stringify({ wire: wire && wire.document ? { doc_sha: wire.document.doc_sha } : wire && wire.document,
+                      doc: doc && { ratified: doc.ratified, doc_sha: doc.doc_sha, by: doc.attestor_member },
+                      casedoc: (html.match(/data-casedoc="[a-z]+"/) || [""])[0] }));
   ok(`LIVE, THROUGH THE OP (${label}): the plane serves the link and its binding off the signed bytes to a caller `
    + `with no credential — draft ${draftId}, named by iris, case "${token}"`,
      cm && cm.draft && cm.draft.draft_id === draftId && cm.draft.named_by === "iris" && cm.draft.case === token,

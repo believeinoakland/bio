@@ -37936,6 +37936,16 @@ export class Store extends DurableObject {
                + "which case the case claims no cleared standard and says so, because undetermined is "
                + "first-class here and is never rounded to a number nobody chose.",
              bias_acknowledgement: state.bias_acknowledgement ?? null,
+             /* D-712: THE SIGNED CASE DOCUMENT, SERVED. `#caseEditionState` has built
+                `document` since CASE-5b for exactly this read (its own comment: the
+                ratify path and the public read must not be able to disagree), and
+                this return — which picks its fields by name since IC-22 — never
+                named it. So every stranger's published case page read a signed,
+                ratified case as "not been signed yet": the record claiming LESS
+                than it holds, on the one page a stranger reads. NULL UNTIL
+                RATIFIED, never a partial, as the state builds it; and null on the
+                loose branch, which is not a case and has no case document. */
+             document: state.document,
              /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
                 the instant the case edition was opened, and NOTHING read it —
                 re-measured across the whole repository rather than inherited
@@ -38037,6 +38047,9 @@ export class Store extends DurableObject {
        bias. */
     return { caseId: null, edition: ed, scope: null, completeness: null,
              bias_acknowledgement: null,
+             /* D-712: no case document — this is not a case. Stated as null so the
+                loose branch answers the same key set as a case edition. */
+             document: null,
              /* CASE-5: `project` and `bar` null here for the reason `scope` and
                 `completeness` already are — whose production a thing is and what
                 standard it was held to are CASE assertions, and this is not a

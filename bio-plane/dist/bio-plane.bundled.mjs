@@ -66132,6 +66132,16 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       bar: state.bar ?? null,
       bar_detail: state.bar ? "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it." : "NO BAR IS RECORDED for this case edition, and that is not a bar of zero. Either the case was published before a case carried its own standard, or no bar was ever declared \u2014 in which case the case claims no cleared standard and says so, because undetermined is first-class here and is never rounded to a number nobody chose.",
       bias_acknowledgement: state.bias_acknowledgement ?? null,
+      /* D-712: THE SIGNED CASE DOCUMENT, SERVED. `#caseEditionState` has built
+         `document` since CASE-5b for exactly this read (its own comment: the
+         ratify path and the public read must not be able to disagree), and
+         this return — which picks its fields by name since IC-22 — never
+         named it. So every stranger's published case page read a signed,
+         ratified case as "not been signed yet": the record claiming LESS
+         than it holds, on the one page a stranger reads. NULL UNTIL
+         RATIFIED, never a partial, as the state builds it; and null on the
+         loose branch, which is not a case and has no case document. */
+      document: state.document,
       /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
                       the instant the case edition was opened, and NOTHING read it —
                       re-measured across the whole repository rather than inherited
@@ -66236,6 +66246,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       scope: null,
       completeness: null,
       bias_acknowledgement: null,
+      /* D-712: no case document — this is not a case. Stated as null so the
+         loose branch answers the same key set as a case edition. */
+      document: null,
       /* CASE-5: `project` and `bar` null here for the reason `scope` and
          `completeness` already are — whose production a thing is and what
          standard it was held to are CASE assertions, and this is not a

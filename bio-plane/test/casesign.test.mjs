@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (D-712's arm, RUN 2026-09-25 by the D-712 worker, by hand, apart from `casesign.control.mjs`'s five) the ONE line `document: state.document,` deleted from `Store.publishedCase()`'s success return in src/store.mjs (anchor matched exactly once), restored from a per-arm copy IDENTICAL by sha256 (59abe06a…) AND `cmp` (3,480,319 B): 76/0 whole -> 75/1, "D-712: op=publishedcase serves the SIGNED case document to a stranger" and nothing else. publishedcase.test.mjs stays GREEN (114/0) under the same arm, and that is the arm's finding rather than a gap in it: its key-set pin compares the case branch with the LOOSE branch, which answer through the ONE success return, so deleting the line removes the key from both. Its companion arm — `document: null,` deleted from `#looseEditionState` — turns that pin red (113/1, "the two branches answer with the SAME top-level key set"). */
 /* NEGATIVE CONTROL: FIVE ARMS PLUS A BASELINE, each armed ALONE with every other
    defence held OPEN, RUN, and recorded at the foot of this file with the count it
    MEASURED rather than the count it was expected to. The driver is
@@ -889,6 +890,16 @@ console.log("\n--- 5. a stranger verifies the CASE and its members with the inst
 {
   const cs = await anon(`op=publishedcase&id=${CASE}`);
   if (!cs || !cs.manifest_sha) bail("the container was not assembled", cs);
+  /* D-712: THE PUBLIC READ SERVES THE SIGNED DOCUMENT ITSELF, not only the container that carries it.
+     `#caseEditionState` built `document` for this read since CASE-5b and `publishedCase()` never named it,
+     so every stranger's published case page said this signed case was "not been signed yet". Pinned here,
+     through the op and to a caller holding nothing, against the sha captured BEFORE ratification. */
+  t("D-712: op=publishedcase serves the SIGNED case document to a stranger — its sha, its signer and its "
+  + "signature — and not a missing key the page reads as unsigned",
+    ["document" in cs, cs.document?.doc_sha === SIGNED_DOC_SHA, cs.document?.attestor?.member ?? null,
+     String(cs.document?.sig_armored ?? "").startsWith("-----BEGIN SSH SIGNATURE-----"),
+     typeof cs.document?.ratified_at === "string"],
+    [true, true, "iris", true, true]);
   const manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(
     await (await anonRaw(`op=publishedbytes&sha256=${cs.manifest_sha}`)).arrayBuffer())));
   t("the container names its format and carries the SIGNED CASE DOCUMENT — the bytes, their hash, the "

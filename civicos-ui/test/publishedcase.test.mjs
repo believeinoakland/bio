@@ -174,6 +174,7 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { fileURLToPath } from "url";   /* UI-40: the consumer walk resolves the repo root from this file */
 import { appScript } from "./extract.mjs";
+import { PUBLISHED_CASE_KEYS, PUBLISHED_CASE_DOCUMENT_KEYS, keysOf } from "./publishedcase-wire.mjs";   /* D-712: the fixture's shape, anchored to the live wire */
 import { requiredArgumentWire } from "./plane-refusal-wire.mjs";   /* UI-100: C-61.1's envelope DERIVED from the plane's own
       call site and the DEC-49 catalogue, never typed. */
 /* D-257 — UI-40's consumer walk reads the WHOLE REPOSITORY off the working tree
@@ -471,11 +472,23 @@ function caseEdition(ed){
        two halves (the plane says so at the field: a bar with no publisher is a
        requirement nobody asserted), and `document` is CASE-5b's signed case
        document, NULL UNTIL RATIFIED and never a partial. `CASE_WAIT` carries null
-       for it below, which is the unratified branch. */
+       for it below, which is the unratified branch.
+
+       CORRECTED 2026-09-25 (D-712), AND THE SENTENCE ABOVE WAS FALSE ABOUT `document` WHEN IT WAS WRITTEN.
+       `#caseEditionState` built `document` from CASE-5b on, but `publishedCase()` picks its fields by name
+       (IC-22) and never named it, so op=publishedcase served NO `document` key at all. This fixture carried one
+       the live op did not — D-173's class, running the other way from the column census in
+       `check-mock-envelope.mjs` arm C, which reports a fixture NARROWER than the wire and cannot see one WIDER.
+       So this suite rendered "The case document · signed by vera" while every stranger's page read a signed,
+       ratified case as "not been signed yet" (measured live by UI-121's worker on five cases). D-712 serves
+       it, and this fixture is now ANCHORED TO THE LIVE WIRE, measured 2026-09-25 over miniflare through
+       `civicos-ui/test/draft-binding.test.mjs`'s five signed cases: the answer's top-level keys are these 23
+       exactly, and `document`'s are the seven below — `delivered_by` added here, the one the fixture lacked. */
     project:PROJ, bar:BAR_DECLARED, bar_detail:BAR_DETAIL_DECLARED,
     document:{ doc_sha:CASE_DOC_SHA, text:"The case's own authored assertions, as signed.",
       sig_armored:"-----BEGIN SSH SIGNATURE-----\nAAAA\n-----END SSH SIGNATURE-----",
       attestor:{ member:"vera", key_b64:"AAAAC3NzaC1lZDI1NTE5AAAAIexamplekeyforthecasedocument" },
+      delivered_by:{ kind:"member", member:"vera" },
       gate_version:"1.20.0", ratified_at: ed === 1 ? "2026-07-01T10:00:00Z" : "2026-07-20T10:00:00Z" },
     completeness:{ statement: ed === 1 ? STMT1 : STMT2,
       subject_justification:"We put the four claims to the City Administrator on 2026-06-20 and printed what came back.",
@@ -520,6 +533,7 @@ const SOLO = {
   document:{ doc_sha:SOLO_DOC_SHA, text:"The solo case document, as signed.",
     sig_armored:"-----BEGIN SSH SIGNATURE-----\nAAAA\n-----END SSH SIGNATURE-----",
     attestor:{ member:"dan", key_b64:"AAAAC3NzaC1lZDI1NTE5AAAAIexamplekeyforthesolodocument" },
+    delivered_by:{ kind:"member", member:"dan" },
     gate_version:"1.20.0", ratified_at:"2026-07-05T09:00:00Z" },
   completeness:{ statement:"This case covers the lease extension only.",
     subject_justification:"The officer named declined to answer in writing.",
@@ -1520,6 +1534,26 @@ ok("no request this surface made carried a credential", WIRE.every(w => !w.token
      && !/there is no case-level signature/.test(t)
      && /Two signatures over two different things, neither standing in for the other/.test(t)
      && /data-casedoc="signed"/.test(page));
+}
+
+/* ---- D-712: THE FIXTURE IS THE WIRE'S SHAPE, NOT A SHAPE THE WIRE NEVER SENT ----
+   `caseEdition()` carried a `document` op=publishedcase did not serve, and this suite drew "signed by vera" while
+   every stranger's page read "not been signed yet". The list is the live answer's, measured and re-asserted in
+   `draft-binding.test.mjs` over miniflare; here the MOCK is held to it, so a fixture wider or narrower than the
+   wire fails by name instead of agreeing with a surface the plane never feeds.
+   NEGATIVE CONTROL: (D-712, RUN 2026-09-25 by hand, restored by sha256 AND `cmp`) the mock's `delivered_by` line
+   in `caseEdition()` deleted -> 246/247, "D-712: and its signed `document` carries exactly the live op's keys" alone.
+   The WIRE half is armed in draft-binding.test.mjs's header (`document` dropped from the plane -> 38/10). */
+{
+  const e1 = caseEdition(1), e2 = caseEdition(2);
+  ok("D-712: the mock case answer carries EXACTLY the live op's top-level keys (both editions)",
+     JSON.stringify(keysOf(e1)) === JSON.stringify([...PUBLISHED_CASE_KEYS].sort())
+     && JSON.stringify(keysOf(e2)) === JSON.stringify([...PUBLISHED_CASE_KEYS].sort()),
+     JSON.stringify({ extra: keysOf(e2).filter((k) => !PUBLISHED_CASE_KEYS.includes(k)),
+                      missing: PUBLISHED_CASE_KEYS.filter((k) => !keysOf(e2).includes(k)) }));
+  ok("D-712: and its signed `document` carries exactly the live op's keys",
+     JSON.stringify(keysOf(e2.document)) === JSON.stringify([...PUBLISHED_CASE_DOCUMENT_KEYS].sort()),
+     JSON.stringify(keysOf(e2.document)));
 }
 
 /* ---- THE TWO PAIRS, DISTINCTLY, AND NO CASE-LEVEL STRENGTH ANYWHERE ----
