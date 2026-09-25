@@ -113,6 +113,46 @@ scope: the level observation carries `question` (one or several); the table targ
 accepts-when: a run whose level observation names Q2 files exactly one level-empty candidate on Q2; one naming nothing is refused and counted unattributed (moves: SUGGEST_NO_TARGET on every multi-question run). NEGATIVE CONTROL: target every cited question and the named-only arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-451's worker).
 
+### D-582 · queued — **A RENDER RESULT CODE IS TREATED AS "fetched nothing": C-83.6 RENDER_NOT_A_PAGE and C-83.7 RENDER_FAILED are decided AFTER the shell was fetched (index.mjs `is-render-result`), yet the drain gives the host slot back and holds the row, so a PDF asked for as a render is re-fetched every tick until expiry.** Found by D-523's worker (02:02Z). — owner CAPTURE.
+order: after D-572, with the capture corrections: a fetch repeated every tick spends a source's courtesy for nothing (SCHEDULER #21, 2026-09-25)
+milestone: M2
+interface: none unless a request's state changes on the wire (the integrator classifies).
+design: `docs/development/CLIENT-RENDERED.md` (BOB #33's 19:54Z ruling as D-523 folded it), with `docs/development/NOTIFICATIONS.md` for the condition kinds.
+depends-on: D-523.
+scope: split admit codes from result codes in the drain; a result code spends the slot; RENDER_NOT_A_PAGE is terminal (refused).
+accepts-when: a PDF asked as a render is fetched once and refused RENDER_NOT_A_PAGE (moves: a re-fetch every tick). NEGATIVE CONTROL: treat result codes as admit codes again and the once-only arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-523's worker).
+
+### D-583 · queued — **A RUN WAITING ON A RENDER THAT EXPIRES IS NOT WOKEN: FL-4's `#aiRunWakeRuns` reads `captured` and `refused` only, so D-523's `expired` reaches the run's log and never wakes it.** Found by D-523's worker (02:02Z). — owner RECORD (FL-4's wake).
+order: after D-582, with the capture corrections: a run left waiting on an ask that has ended (SCHEDULER #21, 2026-09-25)
+milestone: M6
+interface: none unless the wake detail's vocabulary is published (the integrator classifies).
+design: `docs/development/CLIENT-RENDERED.md` (BOB #33's 19:54Z ruling as D-523 folded it), with `docs/development/NOTIFICATIONS.md` for the condition kinds.
+depends-on: D-523.
+scope: count `expired` as a completion under its own name in the wake detail, driven in scheduler.test.mjs.
+accepts-when: a run waiting on a render request that expires is woken with "expired" named (moves: a run never woken). NEGATIVE CONTROL: drop `expired` from the wake set and the expiry arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-523's worker).
+
+### D-584 · queued — **CAPTURE_FETCH_FAILED IS WRITTEN TO `capture_requests.code` AND CATALOGUED IN NO DEC-49 FAMILY, so D-523's render-deferred condition and op=capturerequests can show a member a code with no canned translation.** Found by D-523's worker (02:02Z). — owner CAPTURE.
+order: after D-583, with the capture corrections: a code reaching a member untranslated is DEC-49's failure (SCHEDULER #21, 2026-09-25)
+milestone: M2
+interface: I3 additive — code, check and translation; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` (BOB #33's 19:54Z ruling as D-523 folded it), with `docs/development/NOTIFICATIONS.md` for the condition kinds.
+depends-on: D-523.
+scope: catalogue CAPTURE_FETCH_FAILED as a C-28 row at one governed site, or keep it off the code column and say why.
+accepts-when: a failed fetch's row carries a catalogued code with its translation (moves: an uncatalogued code on the column). NEGATIVE CONTROL: strip the row and the translation arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-523's worker).
+
+### D-581 · queued — **A PLAIN CAPTURE REQUEST PAST ITS `expires` IS STILL DRAINED AND FETCHED: the drain reads `expires` only for render rows (D-523); and `#conditionsRenderDeferred` and `#conditionsCaptureRequested` walk `capture_requests` unbounded while terminal rows stay forever.** Found by D-523's worker (02:02Z; the unbounded walks admitted in derivation-bounds' census note, folded here). — owner CAPTURE, RECORD.
+order: after D-584, with the capture corrections: an ask that has lapsed is still acted on (SCHEDULER #21, 2026-09-25)
+milestone: M2
+interface: I3 — a plain request's terminal `expired` state and op=queue's cut; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` (BOB #33's 19:54Z ruling as D-523 folded it), with `docs/development/NOTIFICATIONS.md` for the condition kinds.
+depends-on: D-523.
+scope: release an expired plain row as D-523 released a render row (state `expired`, its code kept, LOOKED_INDETERMINATE in the run log); bound both condition producers and publish the cut on op=queue. If what a lapsed PLAIN ask records needs a ruling, send it to BOB and build the render rule meanwhile.
+accepts-when: a plain request past `expires` is not fetched and reads expired; the producers state their bound (moves: a lapsed ask fetched; unbounded walks). NEGATIVE CONTROL: skip the expiry test for plain rows and the lapsed-ask arm fetches, failing by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-523's worker).
+
 ### D-568 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
 order: after D-573, with the review-copy corrections: an edition stated for a case the record has not chosen claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M10
@@ -255,16 +295,6 @@ depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds.te
 scope: add `max|[a-z_]*_max` to BOUND_KEY.
 accepts-when: actionquotes' `max` counts as a bound. NEGATIVE CONTROL: remove actionquotes' published max, and the arm names it bare.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### D-535 · queued — **THE PLANE'S MEMBER-FACING STRINGS CITE `MEASUREMENTS.md` BY NAME, so every suite importing the check catalogue or the plane's index counts as a MEASUREMENTS reader and a MEASUREMENTS-only diff selects it: `bio-plane/checks/bio-checks.mjs` and `bio-plane/src/index.mjs` carry four citations (one DEC-49 refusal translation, three OCR cost sentences), and gates.mjs §2e reads a directly-imported runtime module's text for path mentions.** Found by M0-176's worker (M-146 §"D-535, ISOLATED HERE"); M0-176 is NARROWED to this. — owner RECORD (index.mjs), CHECKS (bio-checks.mjs).
-order: after M0-193, with the process rows behind the product rows: it trims the doc-facing selection by two units (39 → 37, M-146), which is not an appreciable gate-time effect (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24; via CONDUCT #20 22:31Z)
-milestone: M0
-interface: I3 — one DEC-49 translation's words change; the integrator classifies.
-design: `docs/development/VERIFICATION.md` (a gate selects by what a suite reads), with DEC-49 as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it for the translation.
-depends-on: M0-176.
-scope: rewrite the four citations as prose ("the MEASUREMENTS ledger"), the correction M0-165 made to calibration.test.mjs's `measured_by` labels one level down. Extend `statepaths.test.mjs`'s pin of this property from the TEST side to `bio-plane/src/` and `bio-plane/checks/`, so a by-name citation there cannot return (M0-176's worker). CAUTION: one is a DEC-49 refusal translation, so check its governed region, `regionLines`, and every refusal-wire pin that quotes the sentence.
-accepts-when: a MEASUREMENTS-only diff no longer selects `calibration.test.mjs` and selects 37 units (the measured failure it moves: 39, M0-176's unmet accepts-when). NEGATIVE CONTROL: restore one citation by name and the selection re-admits the importing suites, failing by name.
-added: 2026-09-24 · SCHEDULER #20 (id minted by M0-176's worker).
 
 ### D-542 · queued — **THE DEC-49 GUARD SCORES A CODE "OUT OF REACH" WHEN ITS SURFACE RENDERS THE PLANE'S OWN WORDS: `check-refusal-codes.mjs` puts a code in reach only by R1 (a catalogue row), R2 (a code LITERAL in `app.html`) or R3 (a harness mock), so UI-68's review-copy surface, which renders `detail` and keys on no literal, left TEN of D-448's eleven codes scored out of reach for a day while a member could meet them.** Found by D-448's worker (branch `land/worker/D-448` 5eadd905: the Publication front matter and `13.review-copy` both carry "D-542 carries that fix (reach-by-op) and is NOT BUILT"). — owner M0 (the guard).
 order: after D-550, with the DEC-49 instrument rows behind the product rows: it makes a false gate result (a reachable code read as unreachable) visible, which is product quality, but nothing regresses today since D-448 catalogues all eleven (Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-24)
@@ -1202,33 +1232,3 @@ depends-on: none.
 scope: consolidate each multi-site code behind one helper, one code per slice, starting with `NO_SUCH_BUNDLE` (15 sites); re-read the partition each slice.
 accepts-when: the sliced code reads single-site and the F4 count falls by one. NEGATIVE CONTROL: restore one inline literal, and arm F fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-344 · queued — **THE CONTROL REGISTER CANNOT SEE A QUALIFIED `NEGATIVE CONTROL` DECLARATION: `control-register.mjs` `markerPositions` counts the phrase only when a separator follows it directly, so `NEGATIVE CONTROL (…)` (over sixty suites) and `NEGATIVE CONTROL, …` (three in `corpuscheck.test.mjs`) are invisible, and `register-grammar.test.mjs` C5e works around the blind spot rather than fixing it.** — owner M0 (VERIFICATION).
-order: after D-272: the register every suite's control is counted by under-reads, so coverage is claimed on less than it reads (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` §"The negative-control register".
-depends-on: none.
-scope: `markerPositions` admits one parenthesised or comma qualifier before a separator on the same line; a bare phrase with no separator still does not count; C5e corrected in the same change.
-accepts-when: `corpuscheck.test.mjs` reads five declarations and C5e's workaround falls, in `register-grammar.test.mjs`. NEGATIVE CONTROL: restore the strict separator check, and the "a qualified marker is a declaration" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-357 · queued — **THE DEC-49 GUARD'S REGION MATCHER ENDS IN A WORD BOUNDARY, SO A REGION NAMED `x-y` OPENS REGION `x` TOO: `civicos-ui/check-refusal-codes.mjs` `REGION_START`/`REGION_END`.** A live latent pair exists (`is-capture-request` in `store.mjs`, `is-capture-request-arm` in `index.mjs`), harmless only while they sit in different files. — owner UI.
-order: after D-344 (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard's section, *what a refusal is in principle*).
-depends-on: none.
-scope: end both patterns in a lookahead for whitespace, a comment close or end of line instead of the word boundary; a sibling-region fixture.
-accepts-when: a file holding regions `x` and `x-y` passes with one opener each, and the `regionLines` floors do not move. NEGATIVE CONTROL: restore the word boundary, and the "one opener per name" arm fails naming two opening markers.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-300 · queued — **A SUITE THAT READS THE WALL CLOCK CAN TURN RED UNTOUCHED, AND THE SWEEP THAT WOULD SAY SO IS RUN BY NOBODY: three suites of about three hundred bind `BIO_NOW_MS`; `clockadvance.control.mjs` exists and no tool, script or gate runs it.** — owner M0.
-order: after D-357; the cheap half (run the sweep) first; threading the clock through every constructor is a later row if the sweep finds decay (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md`.
-depends-on: none.
-scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
-accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
