@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: four arms, run 2026-09-25 by the D-454 worker, each armed ALONE by a driver that counts its anchor (each occurred exactly once, so each ARMED), each restored by `cp` from a uniquely named per-arm pristine copy and verified by sha256 AND `cmp` with the byte count printed (schema.mjs d7d9e53a…ee8c8dbb 253,440 B; bio-checks.mjs 9d042d84…7733cf20 959,460 B; store.mjs f73020ab…42ae5f6d 3,341,911 B; meeting-agenda.mjs 613b9999…adb84644 16,012 B; every restore byte-identical). Baseline 39/0. (a) `twokey` — THE ROW'S OWN CONTROL: schema.mjs `PRIMARY KEY (capture_sha, ref, occurrence)` -> `PRIMARY KEY (capture_sha, ref)`, the two-column key restored. DECLARED: section 1's three-places arm and section 3's acceptance arms FAIL BY NAME; section 0 (the readers, which never touch the table) STAYS GREEN. RESULT 17/22: the three-occurrences arm FAILED BY NAME ("A read it on three pages…" got one place), and so did every section 3 acceptance arm, section 4's lapse, and the migration's key/choice arms — section 0 STAYED GREEN. NOT PREDICTED, and recorded rather than smoothed: section 2's GROUND (op=connect wrote 0) also failed, because under the two-column key INSERT OR REPLACE keeps the LAST write (seq 2) and no seq-0 row survives, so op=resolve (which reads seq 0) resolved nothing — the seq-0 convention the per-reference reads rest on holds only under the three-column key, which this arm proves the suite would catch. On the first run of this arm the suite THREW (tally -1: `withStore` left the instance disposed when its callback threw on an empty connections table); the suite was made null-robust (try/finally, a guarded insert) and the arm re-run to the figure above. (b) `pairexclude` — bio-checks.mjs `checkConnectionMentionUnchosen` reverted to excluding EVERY mention with the pair's ref (the pre-D-454 rule). DECLARED: page 9 of A (a second read of the pair's own string) stops being UNDETERMINED and its mention list empties; page 3's tie arm fails. RESULT 35/4 AS DECLARED, plus section 5's AMBIGUOUS arm, whose fallback is the same check. (c) `noindexdrop` — store.mjs `#migrate`, the two `DROP INDEX IF EXISTS` after the rename removed. DECLARED: the both-indexes-on-the-new-table arm FAILS and nothing else (the table works without its indexes, which is why this trap fails nothing else). RESULT 38/1 AS DECLARED. (d) `reader` — meeting-agenda.mjs's repeat branch back to `continue` (a repeat dropped). DECLARED: section 0's `occurrences` arm FAILS, everything else STAYS (the plane is fed by provenance documents). RESULT 38/1 AS DECLARED. Over-strictness is held in-suite, not by an arm: the place's human form ('p.9') must name the occurrence, and a reference read ONCE must still record with none named (REC-122's shape). Driver: the D-454 worker's scratchpad `d454-nc/drive.py`, not committed. */
+/* NEGATIVE CONTROL: four arms, run 2026-09-25 by the D-454 worker, each armed ALONE by a driver that counts its anchor (each occurred exactly once, so each ARMED), each restored by `cp` from a uniquely named per-arm pristine copy and verified by sha256 AND `cmp` with the byte count printed (schema.mjs d7d9e53a…ee8c8dbb 253,440 B; bio-checks.mjs 9d042d84…7733cf20 959,460 B; store.mjs f73020ab…42ae5f6d 3,341,911 B; meeting-agenda.mjs 613b9999…adb84644 16,012 B; every restore byte-identical). Baseline 39/0. (a) `twokey` — THE ROW'S OWN CONTROL: schema.mjs `PRIMARY KEY (capture_sha, ref, occurrence)` -> `PRIMARY KEY (capture_sha, ref)`, the two-column key restored. DECLARED: section 1's three-places arm and section 3's acceptance arms FAIL BY NAME; section 0 (the readers, which never touch the table) STAYS GREEN. RESULT 17/22: the three-occurrences arm FAILED BY NAME ("A read it on three pages…" got one place), and so did every section 3 acceptance arm, section 4's lapse, and the migration's key/choice arms — section 0 STAYED GREEN. NOT PREDICTED, and recorded rather than smoothed: section 2's GROUND (op=connect wrote 0) also failed, because under the two-column key INSERT OR REPLACE keeps the LAST write (seq 2) and no seq-0 row survives, so op=resolve (which reads seq 0) resolved nothing — the seq-0 convention the per-reference reads rest on holds only under the three-column key, which this arm proves the suite would catch. On the first run of this arm the suite THREW (tally -1: `withStore` left the instance disposed when its callback threw on an empty connections table); the suite was made null-robust (try/finally, a guarded insert) and the arm re-run to the figure above. (b) `pairexclude` — bio-checks.mjs `checkConnectionMentionUnchosen` reverted to excluding EVERY mention with the pair's ref (the pre-D-454 rule). DECLARED: page 9 of A (a second read of the pair's own string) stops being UNDETERMINED and its mention list empties; page 3's tie arm fails. RESULT 35/4 AS DECLARED, plus section 5's AMBIGUOUS arm, whose fallback is the same check. (c) `noindexdrop` — store.mjs `#migrate`, the two `DROP INDEX IF EXISTS` after the rename removed. DECLARED: the both-indexes-on-the-new-table arm FAILS and nothing else (the table works without its indexes, which is why this trap fails nothing else). RESULT 38/1 AS DECLARED. (d) `reader` — meeting-agenda.mjs's repeat branch back to `continue` (a repeat dropped). DECLARED: section 0's `occurrences` arm FAILS, everything else STAYS (the plane is fed by provenance documents). RESULT 38/1 AS DECLARED. Over-strictness is held in-suite, not by an arm: the place's human form ('p.9') must name the occurrence, and a reference read ONCE must still record with none named (REC-122's shape). Driver: the D-454 worker's scratchpad `d454-nc/drive.py`, not committed. D-625 ADDED TWO ARMS, run 2026-09-25 by the D-625 worker, each ALONE (anchor counted exactly once), each restored by `cp` from a per-arm pristine copy and verified by sha256 AND `cmp` (store.mjs b3b54c3b… 3,472,474 B, byte-identical both times); baseline 47/0. (e) `collapse` — THE ROW'S OWN CONTROL: the act's `named` given back its `|| null`, so an empty occurrence is none named. DECLARED: section 6's acceptance, portion-grade, query-spelling, whitespace and no-unplaced-read arms FAIL; its fixture and absent arms and sections 0-5 STAY. RESULT 41/6: those five FAILED BY NAME, plus the placed-key arm (its `superseded` names the '' choice the act could no longer record, a knock-on, not a sixth cause); everything else stayed green. (f) `plumbing` — the op's argument line back to `(body && body.occurrence) || …`, so a body's "" falls through to an absent query key. DECLARED: the body-spelled acceptance, portion-grade and no-unplaced-read arms FAIL; the query-spelling arm STAYS (it never used the body key), and so does the whitespace arm ("  " is truthy). RESULT 43/4 AS DECLARED plus the same placed-key knock-on. Driver: the D-625 worker's scratchpad `d625-nc/drive.py`, not committed. */
 
 /* D-454 — ONE STRING READ ON SEVERAL PAGES IS SEVERAL MENTIONS, AND A MEMBER CAN CHOOSE BETWEEN THEM.
  *
@@ -21,6 +21,8 @@
  *      shape, re-keyed on boot with every row kept at seq 0 and both lookup indexes on the new table; a
  *      choice from before D-454 (no occurrence) answers while its reference has one place and is stated
  *      AMBIGUOUS once it has several.
+ *   6. THE UNPLACED OCCURRENCE IS CHOOSABLE (D-625): an `occurrence=` PRESENT and empty names the one ''
+ *      read, an ABSENT one is still none named, and the portion grade answers from the chosen read.
  *
  * WHAT THIS CANNOT SEE, stated: a real PDF through the pdf worker (the readers are driven over
  * `flattenText`'s page map, the seam `reading-position.test.mjs` pins); a store written by the OLD CODE
@@ -337,6 +339,51 @@ t("pre-FW-17: every row kept, each unplaced ('' occurrence, no position) at seq 
   [afterOld.length, afterOld.every((r) => r.occurrence === "" && r.pos_kind === null && r.seq === 0),
    JSON.stringify(afterOld.map(({ pos_kind, occurrence, seq, ...r }) => r))],
   [beforeOld.length, true, JSON.stringify(beforeOld)]);
+
+/* ======================= 6. THE UNPLACED OCCURRENCE IS CHOOSABLE (D-625) ======================= */
+console.log("\n--- 6. a string read at a place AND unplaced: the unplaced read is chosen by its '' key (D-625) ---");
+/* Every unplaced read is the one '' occurrence, and the record LISTS it by that key. Before D-625 the act
+   read a present-but-empty `occurrence=` as NONE NAMED, so this read could never be chosen and the member
+   was refused C-74.4 for a place the plane itself had listed. Last in the suite: it adds connections,
+   and section 5 re-creates a pre-D-454 choice on the FIRST connection it finds. */
+const SU = sha("d625-U");
+const U = await promoteReading(SU, [{ ...ORD, source: pg(2), occurrences: [pg(2), null] }]);
+await post("resolve", { captureSha: SU });
+const d6 = await post("connect", { entityId: E });
+const chooseU = (body) => choose(body, SU, SB);
+const unnamedU = await chooseU({});
+t("FIXTURE: U reads the string at p.2 and UNPLACED, and the act with none named lists both, the unplaced by its '' key",
+  [d6.ok, codeOf(unnamedU), (unnamedU?.occurrences || []).map((o) => [o.occurrence, o.position?.ref ?? null])],
+  [true, "CONNECTION_CHOICE_OCCURRENCE_UNNAMED", [[readingOccurrenceKey(pg(2)), "p.2"], ["", null]]]);
+t("an ABSENT occurrence is still none named: `occurrence: null` is refused C-74.4, never defaulted",
+  [codeOf(await chooseU({ occurrence: null })), codeOf(await chooseU({ occurrence: undefined }))],
+  ["CONNECTION_CHOICE_OCCURRENCE_UNNAMED", "CONNECTION_CHOICE_OCCURRENCE_UNNAMED"]);
+const emptyU = await chooseU({ occurrence: "" });
+t("THE ACCEPTANCE — an EMPTY occurrence names the unplaced read: recorded, keyed '', at no place",
+  [emptyU.ok, emptyU.wrote, emptyU.chosen?.occurrence, emptyU.chosen?.position ?? null, codeOf(emptyU)],
+  [true, true, "", null, null]);
+const [ku2, eu2] = entryFor(await grade(U, 2), SB);
+t("…and the portion grade ANSWERS FROM IT: page 2 of U is undetermined C-49.2 (the chosen read has no place), on_point the '' read, the member's",
+  [ku2, eu2?.check, eu2?.on_point?.occurrence, eu2?.on_point?.position ?? null, eu2?.on_point?.chosen_by, !!eu2?.on_point?.lapsed],
+  ["undetermined", CONNECTION_PAIR_CHECKS.CONNECTION_PAIR_UNPLACED.check, "", null, "ines", false]);
+const p2U = await chooseU({ occurrence: readingOccurrenceKey(pg(2)) });
+const [kp2] = entryFor(await grade(U, 2), SB);
+t("the placed read is still chosen by its key, superseding the unplaced choice, and page 2 then REACHES",
+  [p2U.ok, p2U.wrote, p2U.superseded?.occurrence, kp2], [true, true, "", "reaching"]);
+/* The query-string spelling: `occurrence=` present and empty, no body key. `searchParams.get` answers ""
+   for it and null for an absent one, which is the distinction the act now keeps. */
+const viaQuery = rP(await (await mf.dispatchFetch(`http://x/api/?op=connectionchoose&token=${INES}&occurrence=`,
+  { method: "POST", body: JSON.stringify({ capture: SU, other: SB, entity: E, ref: ORD.ref }) })).json());
+t("OVER-STRICTNESS: the other spelling, `&occurrence=` empty in the query, names the unplaced read too",
+  [viaQuery.ok, viaQuery.wrote, viaQuery.chosen?.occurrence, viaQuery.superseded?.occurrence],
+  [true, true, "", readingOccurrenceKey(pg(2))]);
+const sameU = await chooseU({ occurrence: "  " });
+t("…and whitespace alone is the same '' key: the same choice again writes nothing", [sameU.ok, sameU.wrote], [true, false]);
+/* B is re-read at its one place first: 5b's pre-FW-17 migration left every earlier row unplaced. */
+await promoteReading(SB, [{ ...ORD, source: pg(5) }]);
+const onceP = await choose({ occurrence: "" }, SB, SU);
+t("an empty occurrence where the document has NO unplaced read is refused C-74.3 BY NAME, never slid to its one place",
+  [codeOf(onceP), onceP?.check], ["CONNECTION_CHOICE_NOT_A_MENTION", "C-74.3"]);
 
 } catch (err) {
   console.log(`  FAIL  the suite threw before its foot: ${err && err.stack || err}`);

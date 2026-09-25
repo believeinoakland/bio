@@ -27712,8 +27712,12 @@ export class Store extends DurableObject {
     const entityId = String(args.entity ?? "").trim();
     const ref = String(args.ref ?? "").trim();
     /* D-454: WHICH read of `ref`. Optional while the reference was read at one place (every
-       REC-122 caller's shape), required once it was read at several (C-74.4). */
-    const named = args.occurrence == null ? null : String(args.occurrence).trim() || null;
+       REC-122 caller's shape), required once it was read at several (C-74.4).
+       D-625: ABSENT and EMPTY are two answers. Every unplaced read is the one '' occurrence
+       (`#writeReadings`) and the record lists it by that key, so an `occurrence=` PRESENT and
+       empty names it and only an absent one is none named. Collapsing the two left the key the
+       plane itself lists unreachable: a member was refused C-74.4 for a place it offered. */
+    const named = args.occurrence == null ? null : String(args.occurrence).trim();
     const aSha = capture < other ? capture : other, bSha = capture < other ? other : capture;
     const conn = (capture && other && entityId && capture !== other)
       ? this.#one(`SELECT a_capture_sha, b_capture_sha, entity_id, a_bundle_id, b_bundle_id, a_ref, b_ref
@@ -27737,7 +27741,7 @@ export class Store extends DurableObject {
                    capture, mention.ref, Store.#OCCURRENCES_PER_REF + 1)
       : [];
     const byForm = named ? reads.filter((x) => x.pos_ref === named) : [];
-    const pick = named
+    const pick = named != null
       ? (reads.find((x) => x.occurrence === named) || (byForm.length === 1 ? byForm[0] : null))
       : (reads.length <= 1 ? (reads[0] || null) : null);
     /* Bounded like every list this store publishes, and SAYS when it was cut: the read asks for one more than
@@ -27767,14 +27771,15 @@ export class Store extends DurableObject {
               + `are the references the record resolved to that subject in it.`
             : `pass ref=: the mention, as the reading recorded it, that is on point for this connection.`,
         { capture, entity_id: entityId, ref: ref || null });
-    if (named && !pick)
+    if (named != null && !pick)
       return refusal("CONNECTION_CHOICE_NOT_A_MENTION",
-        `this document does not read '${mention.ref.slice(0, 80)}' at '${named.slice(0, 120)}'`
+        `this document does not read '${mention.ref.slice(0, 80)}' `
+        + (named ? `at '${named.slice(0, 120)}'` : `at a place it did not record (an empty occurrence= names that read)`)
         + (byForm.length > 1 ? ` alone — that place is ${byForm.length} occurrences, so name one by its key` : ``)
         + `. It reads it at: ${reads.map(placeName).join(", ") || "no place the reading recorded"}.`,
         { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed(),
           limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
-    if (!named && reads.length > 1)
+    if (named == null && reads.length > 1)
       return refusal("CONNECTION_CHOICE_OCCURRENCE_UNNAMED",
         `this document reads '${mention.ref.slice(0, 80)}' at ${reads.length} places `
         + `(${reads.map(placeName).join(", ")}), and each is its own mention. Pass occurrence= naming `
@@ -54167,8 +54172,10 @@ export class Store extends DurableObject {
           other: (body && body.other) || url.searchParams.get("other"),
           entity: (body && body.entity) || url.searchParams.get("entity"),
           ref: (body && body.ref) || url.searchParams.get("ref"),
-          /* D-454: which read of `ref`, required once it was read at more than one place (C-74.4). */
-          occurrence: (body && body.occurrence) || url.searchParams.get("occurrence"),
+          /* D-454: which read of `ref`, required once it was read at more than one place (C-74.4).
+             D-625: PRESENT is not TRUTHY. A body's empty `occurrence` is the unplaced read's key and
+             reaches the act as "", so only an ABSENT one falls through to the query string. */
+          occurrence: (body && body.occurrence != null) ? body.occurrence : url.searchParams.get("occurrence"),
           author: url.searchParams.get("author"),
           viewer: url.searchParams.get("viewer"),
         }),
