@@ -557,8 +557,8 @@ scope: adopt `bias.test.mjs`'s `block()` (one call per section) and report a mis
 accepts-when: with one section's fixture broken, every other section still reports its tally (the measured failure it moves: the run ends at the first failure). NEGATIVE CONTROL: break one section's fixture and the run names that section failed while the others report.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
 
-### D-522 · running — **AN UNATTENDED RENDER THAT SUCCEEDS IS DRIVEN NOWHERE, AND THE MONITORING SWEEP (CAP-3) CANNOT SET THE RENDER FLAG, though BOB #32 ruled *an unattended sweep MAY render* within the allowance and through the governor.** D-491's residue (via CONDUCT #20 19:47Z). — owner CAPTURE.
-status: running — SCHEDULER #21 23:52Z spawns WORKER D-522 (depth 2); D-520 runs beside it on the render path
+### D-522 · integrated — **AN UNATTENDED RENDER THAT SUCCEEDS IS DRIVEN NOWHERE, AND THE MONITORING SWEEP (CAP-3) CANNOT SET THE RENDER FLAG, though BOB #32 ruled *an unattended sweep MAY render* within the allowance and through the governor.** D-491's residue (via CONDUCT #20 19:47Z). — owner CAPTURE.
+status: integrated — SCHEDULER #21 00:23Z: tip f9599896, GATE 90/90 GREEN (TARGETED); NARROWED: CAP-3 writes no capture request; D-567 to BOB (design)
 order: after D-520, with D-64's render rows: it waits on a renderer that can answer (SCHEDULER #19, 2026-09-24)
 milestone: M3
 interface: I3/I5 — the sweep's render request; the integrator classifies.
@@ -676,6 +676,16 @@ depends-on: REC-122 (`integrated` on c17-batch7).
 scope: re-key `reading_refs` by position with a migration that keeps every existing row; each resolution names its occurrence; the connection's mentions list every occurrence.
 accepts-when: a ref read on three pages yields three mentions, each choosable. NEGATIVE CONTROL: restore the two-column key, and the three-occurrences arm reads one by name. Extend the reading suite (`bio-plane/test/reading-position*.test.mjs`).
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-571 · queued — **`bio-plane/test/monitor-cadence.test.mjs`'s LAST SECTION (~520, "one whole cadence later") DEPENDS ON LOAD: its tick waits on the plane completing a real fallback fetch, so under two concurrent full gates 2 arms failed ("and re-checks the address", "so the second genuine check is a second genuine observation") while the same tree ran it alone 4 of 4 at 0 failures.** Measured by CONDUCT #20 on c20-batch27's full gate (00:16Z); the suite's header already fixed the STRAY alarm arm this way. — owner CAPTURE (the suite).
+order: at the head of the backlog, AHEAD of product by Bob's 17:41Z rule: a false red on a full gate costs a whole integration round (SCHEDULER #21, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a verdict independent of load; the named cause, never a retry).
+depends-on: none.
+scope: drive the final tick's fetch the way the stray arm is driven (a stubbed fetch or governor under the test's control), so the verdict does not depend on load.
+accepts-when: the section passes with the fetch artificially delayed past the tick, and alone (moves: 2 arms red under concurrent gates). NEGATIVE CONTROL: restore the real fetch under an artificial delay and those 2 arms fail by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
