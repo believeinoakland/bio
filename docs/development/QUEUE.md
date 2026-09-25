@@ -987,8 +987,8 @@ accepts-when: the harness declares, tests and places against the real plane, the
 added: 2026-09-21 · SCHEDULER #9 (BOB #23's inbox entry, item 2, drained this commit; `node tools/mintid.mjs UI`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-235 · running — **`op=basisversions` DOES NOT PUBLISH A VERSION'S `kind`: `basisVersions` selects every column of `inquiry_basis_versions`, `kind` among them, and the answer carries no `kind` key, so the same version reads a kind from `op=suggest` and none from here.** — owner RECORD.
-status: running — SCHEDULER #22 03:14Z spawns WORKER D-235 (depth 2)
+### D-235 · integrated — **`op=basisversions` DOES NOT PUBLISH A VERSION'S `kind`: `basisVersions` selects every column of `inquiry_basis_versions`, `kind` among them, and the answer carries no `kind` key, so the same version reads a kind from `op=suggest` and none from here.** — owner RECORD.
+status: integrated — SCHEDULER #22 03:52Z: tip 6e8c8f9a, GATE 366/366 GREEN FULLREUSE (21064 assertions), tree 519618d3; op=basisversions kind (I3 additive); suggest.control arms (3)..D-235f re-anchored (were not running)
 order: after D-241 (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M3
 interface: I3 additive — one field; the integrator mints and classifies the IC.
@@ -1064,7 +1064,8 @@ scope: measure the query time at a real instance's size; if it matters, compute 
 accepts-when: the figure is recorded with date, instrument and size, and either the fix brings it back or the record states why none is owed. NEGATIVE CONTROL: the measurement at 2,000 documents reproduces the 210 ms figure within tolerance.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-473 · queued — **`.odt` AND `.odp` EXPORTS STAY UNDETERMINED FOR BYTE STABILITY: D-351's `.odt` normalisation (strip `xml:id` on `text:list`) was never re-measured over the population, because the worker's pull of CAP-11's scratch captures was refused (PII) and it did not route around the refusal.** — owner CAPTURE.
+### D-473 · running — **`.odt` AND `.odp` EXPORTS STAY UNDETERMINED FOR BYTE STABILITY: D-351's `.odt` normalisation (strip `xml:id` on `text:list`) was never re-measured over the population, because the worker's pull of CAP-11's scratch captures was refused (PII) and it did not route around the refusal.** — owner CAPTURE.
+status: running — SCHEDULER #22 03:52Z spawns WORKER D-473 (depth 2)
 order: with the M0 measurements, after D-465: widening to `.odt` is a measurement first (SCHEDULER #17, 2026-09-24; D-351's worker via CONDUCT #19)
 milestone: M0 (a measurement)
 interface: none until widened.
