@@ -556,6 +556,8 @@ import { RISK_TIERS, riskTierState } from "../checks/bio-checks.mjs";
 /* REC-214: the ONE reader of an action's tier history and the act's two bounds, from the catalogue that judges them
    (C-2.10's history arm) — the act, the promote fence and the read cannot disagree about the shape. */
 import { riskTierHistoryOf, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX } from "../checks/bio-checks.mjs";
+/* REC-215: the label a proposed risk tier is read under, and the bound on its basis — one composer, the catalogue's. */
+import { riskProposalLabel, RISK_PROPOSAL_BASIS_MAX } from "../checks/bio-checks.mjs";
 
 /* MK-1 / D-184 / IC-134 — THE TESTIMONY PATH'S KEY, AND IT IS A SYMBOL ON
    PURPOSE. `promote` honours the register's `authored` flag, and writes the
@@ -2217,6 +2219,9 @@ export class Store extends DurableObject {
          member's statement or its honest undetermined, and this is machine work labelled as machine work
          (D-149). Nothing here is evidence that the list came from a proposal, and nothing derives one. */
       governing_laws_proposals: this.#lawProposalsFor(row.bundle_id),
+      /* REC-215: AND WHAT TIER WAS PROPOSED, APART FROM BOTH `risk_tier` AND `risk_tier_history` above. Machine work
+         labelled as machine work (BOB #33, item 3); never the tier, never a revision, and nothing derives one. */
+      risk_tier_proposals: this.#riskProposalsFor(row.bundle_id),
       /* DEC-14, derived by the catalog's own function so no reader composes it. */
       consequence: consequenceState(fm),
       /* REC-24 (g)'s CONSUMER: the documents that point back at this action. */
@@ -7372,17 +7377,13 @@ export class Store extends DurableObject {
     const fm = parseFrontmatter(liveMd.content).data || {};
     const held = riskTierState(fm.risk_tier);
     const before = riskTierHistoryOf(fm);
-    /* The query string carries every value as a string; the act's tier is a NUMBER in the bytes (a quoted "2" is
-       refused by C-2.10), so the wire's "2" is read as 2 here and nowhere else. */
-    const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
-    const next = riskTierState(asked);
+    /* REC-215: the tier's grammar is the ONE helper this act and the proposal both ask (C-90.2's `where`). */
+    const asked = this.#riskTierAsked(tier);
+    if (!asked.ok) return { ...asked, target };
+    const next = asked.tier;
     const why = typeof reason === "string" ? reason.trim() : "";
     const text0 = Store.#appendRiskTierHistory(liveMd.content, null);
     /* DEC-49 REGION is-risk-tier-act */
-    if (next !== 1 && next !== 2 && next !== 3)
-      return { ok: false, reason: "BAD_RISK_TIER", target, tier: tier ?? null, legal: [1, 2, 3],
-               detail: "the act states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file without "
-                     + "counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set." };
     if (!why || why.length > RISK_TIER_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "RISK_TIER_REASON_REFUSED", target, max: RISK_TIER_REASON_MAX,
                detail: `a revision of a risk tier carries a reason of 1 to ${RISK_TIER_REASON_MAX} characters, with no `
@@ -7430,6 +7431,118 @@ export class Store extends DurableObject {
     return { ok: true, target, risk_tier: next, risk_tier_words: RISK_TIERS[next], prior: held,
              prior_words: RISK_TIERS[held] ?? null, by: who, at: when, reason: why,
              risk_tier_history: riskTierHistoryOf(after), weight: "single" };
+  }
+
+  /* REC-215 — THE ONE GRAMMAR OF A TIER A CALLER ASKS FOR, moved out of `actionRiskTier` so the member's act and a
+   * proposal are judged by the same span (C-90.2's `where`; `#lawEntries`' reason at REC-195). The query string
+   * carries every value as a string; a tier is a NUMBER in the bytes (a quoted "2" is refused by C-2.10), so the
+   * wire's "2" is read as 2 here and nowhere else. `undetermined` is not a tier anybody states or proposes: it is
+   * what an action reads when nobody has assessed it. Instance, not static, for `#lawEntries`' reason. */
+  #riskTierAsked(tier) {
+    const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
+    const next = riskTierState(asked);
+    /* DEC-49 REGION is-risk-tier-grammar */
+    if (next !== 1 && next !== 2 && next !== 3)
+      return { ok: false, reason: "BAD_RISK_TIER", tier: tier ?? null, legal: [1, 2, 3],
+               detail: "a tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). "
+                     + "Undetermined is what an action reads when nobody has assessed it, not a tier to set or propose." };
+    /* END DEC-49 REGION is-risk-tier-grammar */
+    return { ok: true, tier: next };
+  }
+
+  /** op=actionriskpropose — REC-215 (BOB #33's risk-tier ruling, item 3; `BIO_Case_Making_v0_1.md` §2,
+   *  `risk_tier`: *a machine may PROPOSE that a tier be reconsidered, as labelled machine work*): A PROPOSAL OF A
+   *  RISK TIER WITH ITS BASIS, STORED APART FROM THE MEMBER'S VALUE AND LABELLED MACHINE WORK. `actionLawsPropose`'s
+   *  shape, one field over, and every line of it is about the difference between the two halves.
+   *
+   *  IT NEVER SETS THE TIER, AND THAT IS STRUCTURAL RATHER THAN POLICED. This method does not call `promote`, it
+   *  writes no file, and it never touches `risk_tier` or `risk_tier_history`. The tier is the member's and moves
+   *  only through `actionRiskTier`; the fence that keeps any other writer from moving it (C-90.1) is untouched and
+   *  unreachable from here, because nothing here writes bytes at all. The suite's named control arms this method
+   *  to write the tier, and the arm that fails is the one whose name says the tier is the member's.
+   *
+   *  ANY CREDENTIAL MAY PROPOSE, AND THE LABEL CARRIES THE MEANING — `actionLawsPropose`'s cut, for its reason: the
+   *  ruling says a machine MAY propose, not that nobody else may, and a fence admitting only machines would be
+   *  tighter than its rule. `riskProposalLabel` composes the label in one place.
+   *
+   *  ONE STANDING PROPOSAL PER PROPOSER, REPLACED WHOLE. A proposer restating replaces its OWN proposal and nobody
+   *  else's. There is no act that adopts one: revising is `op=actionrisktier`, a member's authored act with its own
+   *  REQUIRED reason, and **NOTHING HERE OR IN THE READ DERIVES A RELATION BETWEEN A PROPOSAL AND THE TIER**, even
+   *  when they hold the same number — that a member's revision came FROM a machine's proposal is a claim about why
+   *  somebody acted, and the record cannot support it. A proposal of the tier already held is not refused: it says
+   *  the proposer read the same exposure, and refusing it would be a fence tighter than the ruling. */
+  actionRiskPropose({ target, tier = null, basis = null, proposer = null, viewer = null } = {}) {
+    const who = String(proposer ?? "").trim();
+    if (!who)
+      return { ok: false, reason: "NO_AUTHOR",
+               detail: "this call carries nobody. The plane stamps the proposer from the credential that "
+                     + "asked, and a proposal nobody can be named for is one the record could say nothing "
+                     + "about: the label IS the act." };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const asked = this.#riskTierAsked(tier);
+    if (!asked.ok) return { ...asked, target };
+    const why = typeof basis === "string" ? basis.trim() : "";
+    /* DEC-49 REGION is-risk-propose-basis */
+    if (!why || why.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "RISK_PROPOSAL_BASIS_REFUSED", target, max: RISK_PROPOSAL_BASIS_MAX,
+               detail: `a proposed risk tier carries its basis, 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no `
+                     + "quote, backslash or line break: what the proposer read the tier from, kept beside the "
+                     + "proposal. Nothing was written." };
+    /* END DEC-49 REGION is-risk-propose-basis */
+
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
+               detail: "a risk tier belongs to an action: it is the legal exposure of filing it." };
+    const at = stampInstant("second", this.#nowMs(null));
+    /* REPLACE THIS PROPOSER'S OWN ROW AND NOBODY ELSE'S. Keyed on both columns, never on the bundle alone. */
+    this.sql.exec(`DELETE FROM action_risk_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
+    this.sql.exec(
+      `INSERT INTO action_risk_proposals (bundle_id, proposed_by, tier, basis, proposed_at) VALUES (?, ?, ?, ?, ?)`,
+      target, who, asked.tier, why, at);
+
+    /* THE ACT'S OWN ANSWER SAYS WHAT IT DID NOT DO, read through the ONE reader of the tier (`riskTierState` over
+       the document's own bytes) so the act and the action's read cannot disagree about whose the tier is. */
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    const fm = liveMd && liveMd.content !== null ? (parseFrontmatter(liveMd.content).data || {}) : {};
+    const held = riskTierState(fm.risk_tier);
+    return { ok: true, target, weight: "single",
+             proposal: { ...riskProposalLabel(who), at, tier: asked.tier,
+                         tier_words: RISK_TIERS[asked.tier] ?? null, basis: why },
+             risk_tier: held, risk_tier_words: RISK_TIERS[held] ?? null, evidence: false,
+             says: `risk tier ${asked.tier} (${RISK_TIERS[asked.tier]}) is proposed for this action. This is not `
+                 + `the action's risk tier and did not change it: that tier `
+                 + `${held === "undetermined" ? "is UNDETERMINED" : `is ${held}`}, and only a member's own `
+                 + "revision, with its reason, changes it." };
+  }
+
+  /** REC-215: THE RISK-TIER PROPOSALS STANDING AGAINST ONE ACTION, for `op=projection`'s action block, BESIDE
+   *  `risk_tier` and `risk_tier_history` and never inside either. `#lawProposalsFor`'s shape and for its reasons:
+   *  the empty answer is a STATEMENT, the read is bounded and publishes its cut, and it has no viewer gate of its
+   *  own because its one caller already resolved the action through the viewer's gate. */
+  #riskProposalsFor(bundleId) {
+    const cap = Store.RISK_PROPOSALS_READ_MAX;
+    const rows = this.#rows(
+      `SELECT proposed_by, tier, basis, proposed_at FROM action_risk_proposals
+        WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by LIMIT ?`, bundleId, cap + 1);
+    const proposals = rows.slice(0, cap).map((r) => ({
+      ...riskProposalLabel(r.proposed_by), at: r.proposed_at, tier: r.tier,
+      tier_words: RISK_TIERS[r.tier] ?? null, basis: r.basis }));
+    const machine = proposals.filter((p) => p.machine_work).length;
+    return {
+      proposals, limit: cap, truncated: rows.length > cap,
+      says: proposals.length
+        ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of this action's risk tier, `
+          + `${machine} of them machine work. A proposal is not this action's risk tier and is not in its `
+          + `history: the tier is a member's authored act, and it is stated beside this one.`
+        : "no proposal of this action's risk tier stands in the record. That is a statement about proposals "
+          + "and about nothing else: the action's tier is answered beside this, and a member states it.",
+    };
   }
 
   /* REC-214: APPEND one entry to the top-level `risk_tier_history:` block, or open the block before the closing
@@ -22505,6 +22618,9 @@ export class Store extends DurableObject {
   /* REC-195: the most PROPOSALS one action's read returns (each at most GOVERNING_LAWS_MAX citations). A cut,
      published beside the answer — never a claim that no more exist. */
   static LAW_PROPOSALS_READ_MAX = 12;
+  /* REC-215: the most risk-tier PROPOSALS one action's read returns, one per proposer. A cut, published beside the
+     answer — never a claim that no more exist. */
+  static RISK_PROPOSALS_READ_MAX = 12;
   static THEME_READ_LIMIT_MAX = 2000;
 
   /* ====================================================================== *
@@ -31393,6 +31509,8 @@ export class Store extends DurableObject {
       /* REC-195: the standing proposals of an action's governing laws, a purge's PROOF only (D-113). Not on
          op=stats: how many citations a machine has proposed is not an operator fact. */
       ...(proof ? { actionLawProposals: n("action_law_proposals", "bundle_id") } : {}),
+      /* REC-215: the standing risk-tier proposals, a purge's PROOF only (D-113), for the line above's reason. */
+      ...(proof ? { actionRiskProposals: n("action_risk_proposals", "bundle_id") } : {}),
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -32918,6 +33036,9 @@ export class Store extends DurableObject {
                        reporting scope ALL would leave citations standing against a request the record no
                        longer holds — and they are the one kind of row here that nobody authored. */
                     "action_law_proposals",
+                    /* REC-215 / D-113: `action_risk_proposals`, the same reason one field over — a proposed tier
+                       outliving its action would stand against whatever bundle was next allocated that id. */
+                    "action_risk_proposals",
                     /* REC-63 / D-113: the route markers are keyed on `bundle_id`, so they
                        ride this list and are cleared in BOTH arms — a marker outliving the
                        document it doubts would attach itself to whatever bundle was next
@@ -33439,6 +33560,8 @@ export class Store extends DurableObject {
                  themes: d("themes"), themePlacements: d("themePlacements"),
                  /* REC-195 / D-113: the governing-law proposals a purge took. */
                  actionLawProposals: d("actionLawProposals"),
+                 /* REC-215 / D-113: the risk-tier proposals a purge took. */
+                 actionRiskProposals: d("actionRiskProposals"),
                  /* PL-3 / IS-4 / D-113: the stored refusals a purge took, proved
                     by consequence rather than asserted. */
                  suggestRefusals: d("suggestRefusals"),
@@ -51621,6 +51744,14 @@ export class Store extends DurableObject {
           author: url.searchParams.get("author") }),
         /* REC-195: the PROPOSAL, beside the act. `proposer` is the control plane's stamp and never a caller's
            field (themepropose's route); there is no `author` here, because nothing here is authored. */
+        /* REC-215: the PROPOSAL of a risk tier, beside the member's revision act. `proposer` is the control
+           plane's stamp and never a caller's field (actionlawspropose's route); nothing here is authored. */
+        actionriskpropose: () => this.actionRiskPropose({
+          target: url.searchParams.get("target") || (body || {}).target,
+          tier: url.searchParams.get("tier") ?? (body || {}).tier ?? null,
+          basis: url.searchParams.get("basis") ?? (body || {}).basis ?? null,
+          viewer: url.searchParams.get("viewer"),
+          proposer: url.searchParams.get("proposer") }),
         actionlawspropose: () => this.actionLawsPropose({
           target: url.searchParams.get("target") || (body || {}).target,
           laws: (body || {}).laws,

@@ -4078,6 +4078,27 @@ CREATE TABLE IF NOT EXISTS action_law_proposals (
   PRIMARY KEY (bundle_id, proposed_by, ord)
 );
 
+-- REC-215 (BOB #33's risk-tier ruling, item 3; BIO_Case_Making_v0_1.md section 2, risk_tier): A PROPOSAL OF
+-- AN ACTION'S RISK TIER, WITH ITS BASIS, STORED APART FROM THE MEMBER'S VALUE. action_law_proposals' shape
+-- and for its reason: the tier is set only by a member's authored act (op=actionrisktier), which writes the
+-- action's own bytes and appends to risk_tier_history, and a proposal written into either would be the
+-- record claiming a member assessed what a machine suggested. So nothing here is in the bytes, and
+-- op=projection's action block serves risk_tier_proposals BESIDE risk_tier and its history, never inside.
+--
+-- KEYED (bundle_id, proposed_by): ONE STANDING PROPOSAL PER PROPOSER. A proposer restating replaces its own
+-- row and nobody else's. tier is 1, 2 or 3 (judged before the write by the same grammar the member's act
+-- is), and basis is what the proposer read the tier from, in its own words, never parsed.
+--
+-- Carries bundle_id, so it clears in BOTH purge arms through the TABLES list (D-113).
+CREATE TABLE IF NOT EXISTS action_risk_proposals (
+  bundle_id   TEXT NOT NULL,   -- the action
+  proposed_by TEXT NOT NULL,   -- the control plane's stamp: class:<cls>, class:ai/<tokenId>, or a member handle
+  tier        INTEGER NOT NULL,-- 1, 2 or 3, judged before the write
+  basis       TEXT NOT NULL,   -- as the proposer wrote it
+  proposed_at TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, proposed_by)
+);
+
 -- REC-207 (BIO_Declared_Bias_v0_1.md, "Bias debt, and HUNCH DEBT", BOB #32's ruling of 2026-09-23 23:42Z):
 -- WHAT SETTLED A BIAS-DEBT OBLIGATION, ONE APPEND-ONLY ROW PER SETTLING ACT. Three acts settle a debt and each is
 -- RECORDED, and none clears it silently. Before this table the only settlement was the lens moving back and it wrote

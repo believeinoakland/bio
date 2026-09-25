@@ -707,6 +707,10 @@ const OPS = {
      its minted `writes` name it, and the store refuses NOBODY by class here. The fence that matters is one op
      up: a machine is refused at `actionlaws` BY NAME (C-32.18), and this op writes no list at all. */
   actionlawspropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-215 (BOB #33's risk-tier ruling, item 3): the PROPOSAL of a risk tier, `actionlawspropose`'s cut for its
+     reason — the store refuses nobody by class here; a machine is refused one op over, at `actionrisktier`
+     (C-32.19), and this op writes no tier at all. */
+  actionriskpropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -2124,6 +2128,8 @@ const SESSION_OPS = {
                       proposer is stamped from the credential that asked, and the session route is the one
                       that produces a member's own name for a member's proposal. */
                    "actionlawspropose",
+                   /* REC-215: the risk-tier PROPOSAL, a session op for `actionlawspropose`'s reason. */
+                   "actionriskpropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2170,6 +2176,8 @@ const SESSION_OPS = {
                       proposer is stamped from the credential that asked, and the session route is the one
                       that produces a member's own name for a member's proposal. */
                    "actionlawspropose",
+                   /* REC-215: the risk-tier PROPOSAL, a session op for `actionlawspropose`'s reason. */
+                   "actionriskpropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2407,6 +2415,8 @@ const NEEDS = {
   /* REC-195: proposing takes `contribute` beside the act it proposes to, and the capability is the only gate
      it has — who proposed is RECORDED and labelled rather than fenced (D-149: the machine may propose). */
   actionlawspropose: "contribute",
+  /* REC-215: proposing a risk tier takes `contribute`, `actionlawspropose`'s reason. */
+  actionriskpropose: "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -11545,6 +11555,8 @@ export default {
            it writes anything, so an action the caller may not see refuses NO_SUCH_BUNDLE identically to an
            absent one — `ACTION_ACTIONS`' own reason, arriving at an op that is not one of them. */
         || op === "actionlawspropose"
+        /* REC-215: the risk-tier proposal names an action too, and reads it behind the same fail-closed gate. */
+        || op === "actionriskpropose"
         /* D-464: the COUNTS. Every counter `op=stats` serves names rows, and a row naming a project the caller
            cannot see is that project's existence (§7.9) — so the counts are taken through the caller's own
            sight, and fail closed on an absent stamp. `op=selftest` relays the same answer and stamps the same
@@ -11796,7 +11808,7 @@ export default {
        write the field, and grades it a DEFECT where nothing refuses a machine identity. Nothing refuses one
        here BY DESIGN — D-149 says the machine MAY propose — so a comment claiming otherwise would be the
        instrument reading this site correctly. The fence is one op up, at the act that SETS the list. */
-    if (op === "actionlawspropose")
+    if (op === "actionlawspropose" || op === "actionriskpropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`

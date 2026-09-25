@@ -401,6 +401,12 @@ const CATALOG_CENSUS = {
      Count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.30.0": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f",
               changed: ["C-41.12"] },
+  /* 1.31.0 (REC-215, 2026-09-25, branch land/worker/REC-215): ONE ARRIVAL, NO DEPARTURES — C-90.6
+     RISK_PROPOSAL_BASIS_REFUSED in RISK_TIER_REVISION_CHECKS (`op=actionriskpropose`'s basis). C-90.2 changed only its
+     `where` (the tier grammar moved into `#riskTierAsked`, which the act and the proposal both ask), not its condition,
+     so it is not `changed`. 502 -> 503, count AND digest from THIS SUITE'S OWN PRINT on the item's tree over
+     origin/main 5e8a65a8. If another branch in the batch also takes 1.31.0, CONDUCT re-reads the union's census. */
+  "1.31.0": { count: 503, digest: "09239cfca95d61558d253e79daa3dbaf257cafe95bad71f11a4130f7e091a62e" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -506,8 +512,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 /* CORRECTED at c21-batch28 (CONDUCT #21): 1.29.0 -> 1.30.0, the union's one number for this batch's rows. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
+/* CORRECTED 2026-09-25 by REC-215: 1.30.0 -> 1.31.0, C-90.6 under the stamp. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under
