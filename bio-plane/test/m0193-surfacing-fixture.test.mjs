@@ -26,6 +26,7 @@
  * WHAT THIS SUITE CANNOT SEE: two PROCESSES sharing one persisted store (the counter is module-scoped); a purge answer
  * the plane does not give today (an `ok:true` that removed nothing would clear the cache, and cost only a spare run).
  * ========================================================================= */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -39,8 +40,8 @@ const FIXTURE = process.env.M0193_FIXTURE || fileURLToPath(new URL("./surfacing-
 const { withSurfacingRun } = await import(FIXTURE);
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

@@ -23,6 +23,7 @@
  *
  * Every arm drives the REAL runner, copied into a scratch estate (battery-residue's
  * method and reason: a fixture copy of the report would agree with itself). */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync, openSync, closeSync, readFileSync, existsSync } from "node:fs";
@@ -49,9 +50,9 @@ const REAL_MODULES = moduleClosure({ repo: join(DIR, "..", ".."), roots: ["bio-p
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   if (ok) { pass++; console.log(`  PASS  ${name}`); }
-  else { fail++; console.log(`  FAIL  ${name}\n          got  ${JSON.stringify(got)}\n          want ${JSON.stringify(want)}`); }
+  else { fail++; console.log(`  FAIL  ${name}\n          got  ${statedJSON(got)}\n          want ${statedJSON(want)}`); }
 };
 
 const LSOF_BUDGET_MS = 10_000, RUN_BUDGET_MS = 120_000, READY_BUDGET_MS = 30_000, REFUSE_BUDGET_MS = 60_000;

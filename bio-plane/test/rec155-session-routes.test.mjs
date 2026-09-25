@@ -48,6 +48,7 @@
  *     does not grade it (D-587, minted by REC-155 and sent to SCHEDULER; not built here).
  *   - IT IS NOT A LIVE PROBE. A green harness is not a serving build (D-108).
  * ========================================================================= */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -72,8 +73,8 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 let pass = 0, fail = 0, reachedFoot = false;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const GATE_CODES = new Set(["MACHINE_CREDENTIAL_REQUIRED", "SESSION_ROLE_CANNOT_REACH_OP",

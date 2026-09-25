@@ -39,6 +39,7 @@
  *       promote body; both are deleted and re-stamped by the control plane, so both still match.
  *   (4) narrow SIGHT for machines. §5 pins that the ADMIN and MEMBER tokens still act on the project.
  * ========================================================================= */
+import { statedJSON } from "./stated.mjs";
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -54,8 +55,8 @@ const IDX = join(SRC_DIR, "index.mjs");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 
@@ -727,9 +728,9 @@ console.log("\n--- 10. D-480: a hidden project's CITATIONS take no slot in vera'
   const NOWMS = Date.parse("2026-07-03T00:00:00Z");
   const readQ = async (tok) => RAW(`op=queue&token=${tok}&limit=500&now=${NOWMS}`);
   const paths = (x, y, at = "") => {
-    if (JSON.stringify(x) === JSON.stringify(y)) return [];
+    if (statedJSON(x) === statedJSON(y)) return [];
     if (x === null || y === null || typeof x !== "object" || typeof y !== "object" || Array.isArray(x) !== Array.isArray(y))
-      return [`${at} ${JSON.stringify(x)?.slice(0, 60)} -> ${JSON.stringify(y)?.slice(0, 60)}`];
+      return [`${at} ${statedJSON(x)?.slice(0, 60)} -> ${statedJSON(y)?.slice(0, 60)}`];
     const ks = [...new Set([...Object.keys(x), ...Object.keys(y)])];
     return ks.flatMap((k) => (k in x && k in y) ? paths(x[k], y[k], `${at}.${k}`) : [`${at}.${k} (added or removed)`]);
   };

@@ -66,6 +66,7 @@
  *    seven reads are driven past the ceiling by the D-443 block below. The verdicts above are D-390's day.)
  */
 
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
 /* D-445: the three shared fixtures the case ceremony owes — the publishing project (CASE-2), the
@@ -99,8 +100,8 @@ const mf = new Miniflare({
 
 let pass = 0, fail = 0, reachedFoot = false;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got).slice(0, 600)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got).slice(0, 600)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");

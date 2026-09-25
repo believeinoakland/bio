@@ -63,6 +63,7 @@
  *     `chain_kind`, so the index would still have no reader, and adding a filter
  *     to justify an index is building the reader backwards.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -103,8 +104,8 @@ let SEC = "S0", seq = 0;
 const section = (code, title) => { SEC = code; seq = 0; console.log(`\n--- ${code} · ${title} ---`); };
 const t = (label, got, want) => {
   const id = `${SEC}${++seq}`;
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${id}: ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${id}: ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");

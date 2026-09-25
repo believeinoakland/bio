@@ -14,6 +14,7 @@
  * The folio strings are the stub's, not read off the capture: the fixture's folios are in a font with no
  * /ToUnicode, which is why tier 1 counts them undetermined and why tier 2 can win the page at all.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";               /* D-186 */
 import { Miniflare } from "miniflare";
@@ -28,8 +29,8 @@ const FIXTURE = fileURLToPath(new URL("./fixtures/d627/fy2325-budget-p633-651.pd
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha256 = (v) => createHash("sha256").update(v).digest("hex");

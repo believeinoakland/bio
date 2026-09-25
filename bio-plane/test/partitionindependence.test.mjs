@@ -22,6 +22,7 @@
  * NEGATIVE CONTROL: three arms, RUN 2026-09-23 by WORKER REC-161 with `node test/nc-rec161.mjs` from bio-plane/, each armed ALONE against a patched copy of src/store.mjs (2,911,504 bytes, sha256 b2369af69dcb…), every restore verified by sha256 AND cmp against a uniquely-named per-arm pristine copy, byte count printed and a minimum guarded. (0) BASELINE first and last -> 18 pass, 0 fail both times. (1) SECOND DERIVATION — `partitionIndependence` computes its own origin walk that agrees on bundles and captures and OMITS the ADDRESS branch, instead of calling `#independenceOf` -> 16/2, FAILS ARM D2 (the equality over an address-shared partition) and ARM E1 (the pin), AS DECLARED; A1, B1, C1 and D1 stay green, which is the liar's case: it agrees on everything but one branch. (2) OVER-STRICT — `#independenceOf` reports every pair of groups as sharing -> 13/5, FAILS B1, B2, D1, AS DECLARED, plus D2 and WITNESS, UNDECLARED and explained: the write gate (CHECK 4, the same function) now refuses the suggestions block D writes, so the correct fixture cannot be written — a fence this wide makes correct work unwritable. (3) DROP THE TOTALITY FENCE -> 17/1, FAILS ARM F4 ALONE, AS DECLARED.
  * NEGATIVE CONTROL (REC-192, the VERSION arm, block H): RUN 2026-09-24 by WORKER REC-192 with `node test/nc-rec192.mjs` from bio-plane/, each arm ALONE against src/store.mjs (2,955,366 bytes, sha256 3a6b4cdf8adb…), every restore verified by sha256 AND cmp against a per-arm pristine copy. (0) BASELINE first and last -> 27 pass, 0 fail both times. (1) A STRENGTH FIELD ON THE VERSION-ARM ANSWER (`pair: {capture, connection, testimony}` added to its head) -> 25/2, FAILS ARM H2 (NO STRENGTH KEY) and ARM H3 (the whole answer), AS DECLARED; H0, H1, H4-H8, D1, D2, E1 stay green. (2) OVER-STRICT — versionstrength's default state set borrowed onto the version arm (a reading not `accepted` refused as absent) -> 23/4, FAILS H1, H3, H4, H5, AS DECLARED; H6 (the accepted reading) stays green, which is what tells a borrowed gate from a broken read. REC-161's three arms RE-RUN on this tree after nc-rec161.mjs was RE-ANCHORED (the partition arm moved one block in): all AS DECLARED — second-derivation 24/3 (D2, E1, and now H1: the version arm goes through the same call), overstrict 15/12 (B1, B2, D1 declared; D2, WITNESS and H0-H6 because CHECK 4 then refuses block D's writes, so the readings H reads are never written — REC-161's explanation, extended), no-totality 26/1 (F4 alone).
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
@@ -36,8 +37,8 @@ const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");

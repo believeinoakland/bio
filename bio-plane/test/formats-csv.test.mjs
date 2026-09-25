@@ -34,6 +34,7 @@
  *     the name and must carry NONE (the D-70 property)
  */
 /* NEGATIVE CONTROL: five arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-fw23.mjs [arm]` from `bio-plane/` (the pristine copies go to the SESSION SCRATCHPAD, never into the worktree — BOB #32, 2026-09-24). (1) `guessdelimiter` — THE ROW'S OWN DECLARED ARM: when the signature determines nothing, fall back to a comma. MUST FAIL the undetermined-delimiter assertions BY NAME; MUST NOT move any body whose delimiter IS determined. (2) `guessencoding` — emit the cells of the undetermined-encoding body ANYWAY, i.e. hand out the byte transport's own decoding (latin-1) as if it were the text, instead of stating the undetermined. MUST FAIL the per-cell undetermined assertions and the never-mojibake assertion; MUST NOT move any determined-encoding body. (3) `sniffbytes` — let detect() answer `csv` from the delimiter signature over BYTES, which is the shape this item MEASURED to be dishonest. MUST FAIL the planted-prose assertions and the bytes-answer-null assertions; MUST NOT move the content-type pass. (4) `headerrow` — consume record 1 as a header, so row 1 is not row 1. MUST FAIL the row-1 and the cell-address assertions. (5) OVER-STRICTNESS, the sibling entries: `formats-xlsx`, `formats-odf`, `formats-docx`, `formats-pptx`, `ooxml` and `formats` must be UNMOVED by every arm, because an arm inside csv.mjs that moves another entry's output is an arm that moved two variables. RUN 2026-09-24, ALL FOUR AS DECLARED, baseline csv 75/0 · xlsx 88/0 · odf 142/0 · docx 82/0 · pptx 118/0 · ooxml 167/0 · registry 35/0, every restore verified by sha256 AND by `cmp` against a uniquely-named per-arm pristine copy with a 31,642-byte count printed and an 18,000-byte floor guarded: guessdelimiter 2/2 declared (2 failing), guessencoding 4/4 (4), sniffbytes 3/3 (3), headerrow 5/5 (13). NO SIBLING MOVED UNDER ANY ARM. TWO THINGS RECORDED RATHER THAN SMOOTHED: (a) `headerrow` also broke EIGHT assertions nobody declared — dropping record 1 moves nearly every reading in the suite, which says the row-1 rule is load-bearing rather than decorative, and the five declared ones all fired; (b) the harness's own BASELINE ROW earned its place on its first run, reading `ooxml -1/-1` because that suite prints "N passed, M failed" where every other prints "N pass, M fail" — a green suite reported as no-tally, caught by the baseline and not by any arm. */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
@@ -50,8 +51,8 @@ import { xlsxEntry } from "../src/formats-xlsx.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

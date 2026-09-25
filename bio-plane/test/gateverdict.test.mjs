@@ -27,6 +27,7 @@
  * `::notice` handling, the check run, the annotation API — is not exercised here (pushguard-check.test.mjs reads
  * annotations through a `file://` fixture of the API).
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, readFileSync, rmSync } from "node:fs";
@@ -48,9 +49,9 @@ let pass = 0, fail = 0, reached = 0;
 const SECTIONS = 4;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   if (ok) { pass++; console.log(`  PASS  ${name}`); }
-  else { fail++; console.log(`  FAIL  ${name}\n          got  ${JSON.stringify(got)}\n          want ${JSON.stringify(want)}`); }
+  else { fail++; console.log(`  FAIL  ${name}\n          got  ${statedJSON(got)}\n          want ${statedJSON(want)}`); }
 };
 const T1 = "1".repeat(40);
 const RECORD = (v) => `gates: RECORDED ${v} for tree 11111111 (class FULL) — x; the push guard reads it (D-293)`;

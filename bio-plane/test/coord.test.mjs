@@ -75,6 +75,7 @@
  * because a restored reader finds nothing and says so by name. It does NOT show the archive is readable; that is
  * `ledger.test.mjs` §6's `find D-5 answers the DEBT ARCHIVE` arm, on a fixture holding no live DEBT file at all.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
@@ -93,9 +94,9 @@ const PG = await import(join(REPO, "tools/pushguard.mjs"));
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   ok ? pass++ : fail++;
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
 };
 const section = (s) => console.log(`\n--- ${s} ---`);
 const git = (cwd, ...args) => {

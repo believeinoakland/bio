@@ -28,6 +28,7 @@
  *      placement naming one answers exactly as a target that does not exist;
  *   6. search, the bound, and the whole-store purge.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -52,8 +53,8 @@ const mf = new Miniflare({
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -299,15 +300,25 @@ const h1 = await post("themepropose", { theme: TID, target: DOC_C, note: "mentio
                       "mem-d162");
 t("ACCEPTS-WHEN: the member token's proposal READS AS A HUNCH — grade C, membership false, proposed_by the "
   + "machine's stamp (a body `proposer` is not honoured), nobody placed it",
-  [h1 && h1.ok, h1 && h1.hunch, h1 && h1.membership, h1 && h1.grade, h1 && h1.proposed_by, h1 && h1.placed_by],
-  [true, true, false, "C", "class:member", null]);
+  /* CORRECTED 2026-09-25 BY D-620, never exempted: this arm read `h1.placed_by` and wanted `null` — "nobody placed
+     it". A reader who does not administer is NEVER shown `placed_by` (`#themePerson`, IC-241: the member id is paired
+     for an administrator alone), so the key was ABSENT, and `JSON.stringify` wrote the absent array element as `null`:
+     the arm passed on a field the answer withheld, and would have passed had a member placed it. What this reader IS
+     told about the placer is `placed_by_handle`, and that it is not told the id is asserted as such. */
+  [h1 && h1.ok, h1 && h1.hunch, h1 && h1.membership, h1 && h1.grade, h1 && h1.proposed_by, h1 && h1.placed_by_handle,
+   !!h1 && "placed_by" in h1],
+  [true, true, false, "C", "class:member", null, false]);
 const R2 = await get("themeread", `id=${TID}`, OTTO);
 t("on the reading the hunch is listed APART, and is NOT among the members",
   [targetsOf(R2 && R2.hunches), targetsOf(R2 && R2.members).includes(DOC_C),
    (R2 && R2.hunches || []).map((x) => [x.membership, x.grade])], [[DOC_C], false, [[false, "C"]]]);
 const h2 = await post("themepropose", { theme: TID, target: DOC_A }, "mem-d162");
 t("a proposal at a document already a MEMBER changes nothing — it is never demoted to a hunch",
-  [h2 && h2.ok, h2 && h2.already, h2 && h2.membership, h2 && h2.grade, h2 && h2.proposed_by], [true, true, true, "D", null]);
+  /* CORRECTED 2026-09-25 BY D-620, never exempted: `h2.proposed_by` is withheld from this non-administering reader
+     exactly as `placed_by` is above, so the old `null` was the absent key read as one. Nobody proposed DOC_A (a member
+     placed it): `proposed_by_handle` states that, and the id is ABSENT. */
+  [h2 && h2.ok, h2 && h2.already, h2 && h2.membership, h2 && h2.grade, h2 && h2.proposed_by_handle,
+   !!h2 && "proposed_by" in h2], [true, true, true, "D", null, false]);
 const h3 = await post("themepropose", { theme: TID, target: DOC_C }, SAM);
 t("a MEMBER proposing is a hunch too, and a second proposal does not overwrite the first proposer",
   [h3 && h3.hunch, h3 && h3.already, h3 && h3.proposed_by], [true, true, "class:member"]);

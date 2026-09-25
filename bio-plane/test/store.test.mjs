@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) disable the compare-and-swap on `base` in promote (guard `cur.bundle_sha !== base` with `false`, so a stale-base write is no longer refused CAS_STALE) -> 7 assertions fail (the lost-update / CAS-ladder refusals); restored, 43 pass. */
 /* The store core: content-addressed promote, the CAS ladder, and the image projection.
  * Negative-control detail: disable the compare-and-swap on `base` in promote (guard `cur.bundle_sha !== base` with `false`, so a stale-base write is no longer refused CAS_STALE) -> 7 assertions fail (the lost-update / CAS-ladder refusals); restored, 43 pass. */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -22,8 +23,8 @@ const call = async (p, body) => (await (await mf.dispatchFetch("http://x" + p,
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

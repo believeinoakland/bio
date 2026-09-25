@@ -25,6 +25,7 @@
  * the real ops. The two fleet members are stubs, as in D-627's suite: tier 2 declines and the OCR member answers
  * for exactly the pages it is asked about.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";               /* D-186 */
 import { Miniflare } from "miniflare";
@@ -39,8 +40,8 @@ const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha256 = (v) => createHash("sha256").update(v).digest("hex");

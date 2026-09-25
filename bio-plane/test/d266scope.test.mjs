@@ -118,6 +118,7 @@
  *   and the declarations wrong** — through the op only the ROW is observable, and the SITE's shape is
  *   the guard's. **reword** (over-strictness: the sentence reworded) -> 40/0, guard exit 0.
  * ========================================================================= */
+import { statedJSON } from "./stated.mjs";
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { Miniflare } from "miniflare";
@@ -132,8 +133,8 @@ const SRC = (f) => join(DIR, "..", "src", f);
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");

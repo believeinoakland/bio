@@ -69,6 +69,7 @@
    the arms they guarded are gone, and `debt-floor.control.mjs` is DELETED with them (it patched `tools/coord.mjs`
    at two anchors neither of which exists now). The runs above stand as what was measured on the day. */
 
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, existsSync } from "node:fs";
@@ -83,8 +84,8 @@ import { allocations, collisions } from "../../tools/mintid.mjs";
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const SECTIONS = 13;

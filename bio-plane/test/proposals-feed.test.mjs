@@ -22,6 +22,7 @@
  * op=proposals on the control-plane surface, not only the store (D-43).
  */
 /* NEGATIVE CONTROL: in store.mjs proposalsFeed drop the instance-walk (replace the `for (const p of pairs)` body with a no-op so `instances`/`proposals` stay empty) -> the feed returns NOTHING for a store known to carry a solicitation gap. RUN 2026-07-31 record-agent-6: with the walk dropped the "gap-carrying store surfaces one aggregated proposal", "N instances -> one entry", "weakest grade" and discharged/undetermined assertions FAIL (proposal_count 0 where >0 is required); restored -> full suite green. */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -40,8 +41,8 @@ const mf = new Miniflare({
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");

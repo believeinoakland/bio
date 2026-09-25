@@ -9,6 +9,7 @@
  *
  * Negative-control detail: neuter rowRefusal to always return null (admit every archive row) -> 12 assertions fail (the three measured refusals, the whole selection block, the derived instant) and the suite then throws TypeError at the considered-rows check; restored, 37 pass.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { parseCdx, selectCapture, replayLocator, cdxQuery, cdxTimestampToIso,
          rowRefusal, archiveHop, EMPTY_BODY_DIGEST } from "../src/cdx.mjs";
@@ -16,8 +17,8 @@ import { createHash } from "node:crypto";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

@@ -31,6 +31,7 @@
  * corpus (166 `.csv` keys) and none carried either, so both are FIXTURE ONLY.
  */
 /* NEGATIVE CONTROL: three arms and a baseline in `test/nc-rec218.mjs`, re-runnable in one step with `node test/nc-rec218.mjs [arm]` from `bio-plane/`; each arm edits ONE real source ALONE, declares before it runs what MUST fail and what MUST NOT, checks BOTH halves, and restores from a uniquely-named per-arm pristine copy in the session scratchpad verified by sha256 AND by content with a byte count printed and a floor guarded. (1) `droppersist` — THE ROW'S DECLARED ARM: the wire keeps the dialect and never writes it onto the reading (what the record held before this item). MUST FAIL the acquire arms and the read-back arm BY NAME; MUST NOT move the HTML/PDF absence arms. (2) `inextent` — write the dialect INSIDE `container_extent` instead of beside it (the option BOB #33 did not take). MUST FAIL the acquire and read-back arms and the beside-not-inside arm; MUST NOT move the absence arms. (3) `guessencoding` — OVER-CLAIM: the projection fills a null encoding with "latin-1". MUST FAIL the undetermined-encoding arm and its read-back; MUST NOT move the determined bodies. (4) `wiresource` — drop the FORMAT WIRE's own source (`readDialect = readingDialect(i2text.dialect)`), so only the intake slot answers. MUST FAIL the wire arm and the two-sources arm; MUST NOT move the intake arms. OVER-STRICTNESS: `formats-csv` and `formats` (the registry) must be UNMOVED by every arm. RUN 2026-09-25 by the REC-218 worker, ALL FOUR AS DECLARED, 0 held-open assertions broken in any arm, siblings unmoved under every arm, every restore verified by sha256 AND `cmp` with a floor guarded (`src/index.mjs` 860,229 B sha256 392ad4f6216a…, `src/formats.mjs` 14,290 B sha256 082945811732…): baseline dialect 20/0 · csv 75/0 · registry 35/0 GREEN; droppersist 12/12 declared (12 failing); inextent 6/6 (14 — every dialect-reading arm, as the key is gone from the reading); wiresource 2/2 (2); guessencoding 2/2 (2). ONE CAME BACK WRONG ON THE FIRST RUN AND IS KEPT AT ITS SITE: `droppersist` did not fire the two-sources arm, because its first spelling compared `d && {...}` and two ABSENT dialects compared equal — an equality that costs nothing. The ASSERTION was the defect and was strengthened to require both present. */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { withSurfacingRun } from "./surfacing-run.mjs";
@@ -86,8 +87,8 @@ const mf = withSurfacingRun(new Miniflare({
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");

@@ -149,6 +149,7 @@
  * restore verified by sha256, by content and by `cmp` (bio-checks.mjs 1,006,173 B; gate.mjs 24,856 B; this
  * file 50,959 B at the run, before this record was written), driver exit 0.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -168,10 +169,10 @@ const say = (...xs) => { printed.push(xs.join(" ")); console.log(...xs); };
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   ok ? pass++ : fail++;
   console.log(`  ${ok ? "ok  " : "FAIL"}  ${name}`);
-  if (!ok) console.log(`          got:  ${JSON.stringify(got)}\n          want: ${JSON.stringify(want)}`);
+  if (!ok) console.log(`          got:  ${statedJSON(got)}\n          want: ${statedJSON(want)}`);
 };
 
 const C_NUMBER = /^C-\d+\.\d+[a-zA-Z]*$/;

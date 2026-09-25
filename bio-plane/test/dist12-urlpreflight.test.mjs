@@ -20,14 +20,15 @@
  * DISCRIMINATES: in the same hour the same 14 URLs read 14/14 LIVE through the session's real egress (M-136), so
  * the arm's REFUSED comes from the dead proxy and not from the origins.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { parsePreflight, renderEntry, runPreflight } from "../../tools/urlpreflight-entry.mjs";
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   ok ? pass++ : fail++;
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : `  want ${JSON.stringify(want)} got ${JSON.stringify(got)}`}`);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : `  want ${statedJSON(want)} got ${statedJSON(got)}`}`);
 };
 
 console.log("\n--- (A) a refused host is recorded REFUSED, never NOT_FOUND (the row's control, through the REAL preflight) ---");

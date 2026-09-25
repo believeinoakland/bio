@@ -12,7 +12,16 @@
    -> FAIL 47/49 at section 7 (a confined credential files a knock in the REAL record's inbox) and at section 8's
    structural pin, so the ORDER is load-bearing and not incidental; (0) BASELINE, nothing patched -> GREEN 49/49.
    The driver is deliberately NOT a `.test.mjs`: it EDITS REAL SOURCES while it runs and the battery must not discover
-   it (PL-3's and PL-4's precedent). */
+   it (PL-3's and PL-4's precedent).
+   D-620 ARMS, RUN 2026-09-25 by WORKER D-620 by hand (not in nc-d463.mjs), each ALONE, restores sha256 AND cmp MATCH
+   (src/index.mjs 887,726 B sha256 18ff08d6383a; this file 26,795 B sha256 8e2d51effc8f). BASELINE -> 49 passed, 0
+   failed. (H) THE DROPPED KEY: op=whoami's `confinedTo` for a non-`ai` credential written `undefined` instead of
+   `null`, so the key is ABSENT on the wire -> FAIL 47/49 by name: "op=whoami from the ADMIN binding says confinedTo
+   null and store bio" and "the PROBE binding still reads scratch by its CLASS, with confinedTo null". DECLARED three;
+   the unconfined credential's arm stayed GREEN because it is an `ai` credential, whose null comes from
+   `aiCred.confinedTo ?? null`, which the arm did not touch — a finding about the ARM, not the comparator. (H0) THE
+   SAME DROPPED KEY read by the suite's pre-D-620 comparator (`JSON.stringify` equality) -> 49 passed, 0 failed: the
+   defect D-620 closes, an absent key passing as a stated null. */
 /* D-463 · A CREDENTIAL MINTED CONFINED TO `scratch` ADDRESSES `scratch` ON EVERY CALL, AND A `store=` NAMING
  * ANYTHING ELSE IS REFUSED BY NAME (C-78.3 / C-29.10).
  *
@@ -45,6 +54,7 @@
  *      site (a gate that can be reached around is a mechanism believed on the strength of its existence), and
  *      `scopeFor` holds NO confinement of its own — one decider, not two that can age apart.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -87,8 +97,8 @@ const STATUS = async (q, body) => {
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

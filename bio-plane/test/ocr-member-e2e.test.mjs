@@ -61,6 +61,7 @@
  * NEGATIVE CONTROL: RE-RUN 2026-09-25 by D-320 against a baseline of 77 pass / 0 fail with a FOURTH arm — a NO-OP DCT decoder (right dimensions, no picture) -> 70/7: section 11's DCT page stops reaching tier 3, the Pillow-digest arm fails BY NAME, and every CCITT and ink-page arm is spared; arms (1)-(3) on the new baseline 42/35, 76/1, 67/10, all as declared; 4 of 4, every restore sha256 AND cmp identical. The original run follows.
  * NEGATIVE CONTROL: RUN 2026-09-12 by `node test/ocr-member-e2e.control.mjs`. THREE ARMS — the three the QUEUE ROW names — each armed ALONE on the REAL path (real plane, real binding, real engine, real scanned page), each rebuilding the member's committed artifact, each declared before arming, each restored by `cp` from a per-arm pristine copy verified by sha256 AND by `cmp` with byte counts printed and floored — never by `git checkout --`, which restores to HEAD and would silently discard uncommitted work (CLAUDE.md, measured twice in two days). BASELINE 63 pass / 0 fail / exit 0 / foot reached. (1) STRIP THE `text_source` MARKER — the member stops naming what performed the derivation, so the plane has nothing to compose a chain from -> **35/28**: the chain arms, the PROJECTION, the INDEX and the EXPORT distinguishability arms all red, and the MUST-NOT held (the text-layer document's own arms never touch the member and stayed green); (2) DROP THE CONFIDENCE FLOOR — the member stops reporting the floor its instance is configured with, so a region the engine could barely read reaches the record as a best guess -> **62/1**, the section-9 floor arm, and only it; (3) COLLAPSE THE CHAIN TO ONE LABEL — the wire records a single `ocr` step with no `pixels` before it (deliberately NOT a literal string: `checkChain` refuses that outright and the arm would then prove the type check rather than the rule) -> **55/8**, every arm asserting the chain names EACH step, in the acquire path AND in the export, **while the index and the terminal-step projection stayed GREEN as declared — they read only the LAST step and structurally cannot see this collapse, which is worth knowing about what those two surfaces can and cannot tell you**. 3 arms run, 0 not as declared, every restore byte-identical, tree re-green at 63/0. Arm (3) mutates `bio-plane/src/index.mjs`, which this item does not own; it is copied aside and restored under verification, on `nc-cpdf10.mjs`'s precedent. The fleet gates' own arms are declared in `fleetbundles.test.mjs`, and the member's six in `ocr-worker/test/ocr-worker.test.mjs`.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -91,8 +92,8 @@ process.on("exit", () => {
   if (!footReached) console.log(`\nocr-member-e2e: ${pass} passed, ${fail + 1} failed — SUITE ENDED BEFORE ITS OWN FOOT`);
 });
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 /* NULL-TOLERANT CHAIN READERS — `textchain.test.mjs`'s, and for its reason: a

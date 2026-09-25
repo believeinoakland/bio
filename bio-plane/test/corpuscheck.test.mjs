@@ -113,6 +113,7 @@
  * real bound on this instrument, it is the reason the control was run after the commit
  * rather than before, and a retrofit checked only pre-commit is checked less than it looks.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: the suite's temp fixtures live in a sandbox the battery sweeps */
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
@@ -129,8 +130,8 @@ const { ROOT, governed, checkFile, writeContents, parseFront, bodyHeadings, rend
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const SECTIONS = 10;  /* M0-43 added the coverage section; M0-57 the design-status authority; M0-61 the predicate's gap */

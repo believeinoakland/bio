@@ -144,6 +144,7 @@
    EXPECTATIONS ARE NOT DERIVED FROM THE THING UNDER TEST: every statement is the string this suite
    passed in, and every fingerprint is computed here with node:crypto, sharing no code with `src/`. */
 
+import { statedJSON } from "./stated.mjs";
 import { withSurfacingRun } from "./surfacing-run.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -177,8 +178,8 @@ const mf = withSurfacingRun(new Miniflare({
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 /* D-564: EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,

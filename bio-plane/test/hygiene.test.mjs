@@ -54,6 +54,7 @@
  * no runtime, and it catches the mistake at the moment it is made rather
  * than the next time somebody wonders why the battery is slow.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -107,8 +108,8 @@ import { scanFinallyExits } from "../scripts/finallyexit.mjs";
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 
@@ -2326,6 +2327,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        floored figure only when a file minting it on that op is IN THE COMMIT AT HEAD (`inCommit`, D-257), and prints the
        working-tree figure beside it, so a phantom source can raise the printed figure but never the floored one. */
     "civicos-ui/reach-by-op.mjs",                 // bio-plane/src, for the guard's R5/R6; its caller floors only committed mints
+    /* D-620 (2026-09-25): walks its OWN directory, `bio-plane/test/`, for every `*.test.mjs`, to sweep for a suite that asserts
+       a null literal and still compares raw. It floors its corpus (>= 376 suites, >= 200 asserting a null) and names every
+       offender, and declares the read (`GATE: reads bio-plane/test/`); nothing it walks is a figure anybody else floors on. */
+    "bio-plane/test/stated-null.test.mjs",          // its own directory, the null-asserting sweep; corpus floored and printed
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2433,6 +2438,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        (`47 walking file(s)`). ONE is D-542's own walk (`civicos-ui/reach-by-op.mjs`, named above). THE OTHER WAS ALREADY
        THERE: the same census on origin/main 5e8a65a8, untouched, printed `46 file(s)` against this floor of 45, so one
        walker landed without moving it; closed here rather than carried. */
+    /* BRANCH HISTORY (c22-batch30 union; the floor stays OURS): MOVED 45 -> 47 by D-620, from the figure this suite PRINTED on the item's tree over origin/main 5e8a65a8 (`class
+       census: 47 file(s)`), never by adding to the number in the file. ONE is D-620's own suite (`test/stated-null.test.mjs`,
+       named above), the only walker the item adds; the floor therefore carried ONE slack on main before it, from a walker
+       that landed without moving it. Main's own print was NOT re-taken by this item; the slack is closed here, not carried. */
     census.length >= 47, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);

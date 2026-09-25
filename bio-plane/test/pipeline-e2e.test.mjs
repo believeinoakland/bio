@@ -40,6 +40,7 @@
  * COMPOSITION break at the resolve/thread boundary, not an endpoint that stopped answering.
  */
 /* NEGATIVE CONTROL: set NC_BREAK_CAPTURE_JOIN=true (line ~50) -> op=resolve/op=thread for document A consume a divergent capture_sha instead of the one op=acquire produced -> the downstream stages fail (resolve grades nothing, connection 1->0, thread NOT_CONCERNED, instance found:false, no proposal, JOIN-KEYS equalities fail): 23 of 53 fail while STAGES 1-2 stay green. RUN 2026-07-31 m0-agent-m07; restored (false) -> 53 pass, 0 fail. */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -102,8 +103,8 @@ const mf = new Miniflare({
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");
