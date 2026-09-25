@@ -1948,8 +1948,11 @@ const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest"];
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
 /* REC-136 adds `withdrawconclusion`: it writes the project's own conclusion record, so it is conclude's position. */
+/* D-722 adds `linkproject` (BOB #36, 2026-09-25 11:15Z): edges it hangs on a PROJECT's source bundle are that project's,
+   so it is cite's position. Its handler stamps the identity itself (it returns above the stamp site); listed here so the
+   set of positional acts is read in one place. */
 const POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude",
-                         "withdrawconclusion"];
+                         "withdrawconclusion", "linkproject"];
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is
@@ -7166,8 +7169,13 @@ export default {
          as a successful projection carrying no counts. A write reported as
          done when nothing was written is the worst member of this class after
          the public reads, because the caller stops asking. */
+      /* D-722 (BOB #36, 2026-09-25 11:15Z): where the source bundle is a PROJECT the store asks REC-134's JOINED
+         test, as `cite` does, of the POSITIONAL identity. linkproject is in POSITIONAL_ACTS, but this handler builds
+         its own store request and returns above that list's stamp site, so it stamps here, the same expression. */
+      const linkIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
       const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}`
-        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`));
+        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`
+        + `&identity=${encodeURIComponent(linkIdentity)}`));
       if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }

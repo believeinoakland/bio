@@ -12,9 +12,18 @@
  *   - an edge whose target capture the viewer cannot see is not in `edges`, and no count moves with it: `projected`,
  *     `skipped_self` and `skipped_unregistered` count only visible targets, and `unresolved` is the viewer's own
  *     offsite count — a link whose only capture is hidden is unresolved, the answer an uncaptured target gets.
- * WHAT IT DOES NOT DECIDE (the WRITE half, with BOB #36): whether an outsider's act may WRITE an edge to a bundle they
- * cannot see. The write still resolves unfiltered, as D-701 left it, and the "write half" block below MEASURES what is
- * written rather than asserting what should be. Nor whether `bundle=` may name a bundle the caller cannot see.
+ * AND, SINCE D-722, THE WRITE HALF (BOB #36's FINAL ruling, 2026-09-25 11:15Z, (A)+(C); LINK-FIDELITY.md §The write
+ * is the viewer's): the op resolves ONCE, through the viewer, and writes exactly the edges its answer names.
+ *   - an outsider's arms leave the hidden project's refs BYTE-IDENTICAL (the `projRefs` witness, read before and
+ *     after, non-empty before, so its equality costs something);
+ *   - the hidden-plus-visible address (/mixed.html) writes the VISIBLE edge, and op=links' tally equals the counts;
+ *   - `bundle=` naming a bundle the caller cannot see answers NO_SUCH_BUNDLE, as an id naming nothing does; a
+ *     DISCOVERABLE one answers C-70.1 (REC-149's existence answer, asked before sight at every act);
+ *   - where the source bundle is a PROJECT, REC-134's JOINED test applies, as at cite: an administrator sees the
+ *     project and is refused PROJECT_ACT_NOT_A_PARTICIPANT;
+ *   - a member who sees both ends (the owner) and the machine credential still write the hidden target's edge.
+ * The arm that pinned the old write ("WRITE HALF, measured not ruled", which asserted the outsider's act wrote
+ * INFO -> PROJ) is INVERTED, not kept beside: it measured a defect BOB #36 ruled one, and asserting it would hold it.
  *
  * The fixture, one host:
  *   /mixed.html   first capture M1                                       filed in carol's PROJECT
@@ -29,7 +38,20 @@
  * through the op: the outsider's answer carried SX, M1 and the project's id, projected 3, and the hidden capture
  * answered with `source_bundle` = the project.
  *
- * NEGATIVE CONTROL: (run 2026-09-25, D-706 worker) four arms, each ALONE, anchor matched exactly once, restored by cp
+ * NEGATIVE CONTROL (D-722, run 2026-09-25, D-722 worker; this suite, store.mjs arms, each ALONE, anchor matched exactly
+ * once, restored by cp from a pristine copy and verified by sha256 AND cmp, store.mjs 613de8d4... 3,492,147 bytes):
+ * BASELINE 32 pass 0 fail. (a) BOB #36's control, RESTORE THE UNFILTERED WRITE RESOLUTION (edges written from a
+ * second, ungated resolution; the answer untouched) -> 28 pass 4 fail: "WRITE HALF (D-722): the outsider's act writes
+ * NO links_to edge into the hidden project", "and the hidden project's refs are byte-identical before and after the
+ * outsider's act", "(C) none of the outsider's arms moved the hidden project's refs", "(2) and the refused acts wrote
+ * nothing" — every answer arm stays GREEN, which is the point: the defect was in what was WRITTEN. (b) DROP (C) (bundle=
+ * checks existence, not sight) -> 29 pass 3 fail: the three "(C) ..." NO_SUCH_BUNDLE arms. (c) DROP THE JOINED TEST ->
+ * 30 pass 2 fail: the two "(2) ..." refusal arms. (d) OVER-STRICT: the joined test asked of EVERY source bundle, not only
+ * a project's -> 25 pass 7 fail, among them "the outsider's call is served" and "the project's owner sees what the
+ * machine sees" (a links_to edge on shared Information changes no project; BOB #36 10:58Z part (2)).
+ *
+ * D-706's NEGATIVE CONTROL, as that worker recorded it on this suite before D-722 (its arm names and figures are of
+ * the 20-assertion suite): (run 2026-09-25, D-706 worker) four arms, each ALONE, anchor matched exactly once, restored by cp
  * from pristine copies and verified by sha256 AND cmp (store.mjs d2288c57... 3,491,743 bytes; index.mjs dcbb431f...
  * 890,257 bytes); BASELINE 20 pass 0 fail. (a) DROP THE STAMP: the handler sends no viewer -> 13 pass 7 fail, among
  * them "the outsider's edges name only a bundle they can see", "the machine credential sees the hidden edges" and
@@ -101,7 +123,7 @@ const member = async (id, caps, role = "member") => {
   if (!lg.result?.token) throw new Error(`login ${id}: ${JSON.stringify(lg)}`);
   return lg.result.token;
 };
-await member("ruth", ["contribute"], "admin");
+const ruthTok = await member("ruth", ["contribute"], "admin");
 await member("gus", ["contribute"], "admin");
 const carol = await member("carol", ["contribute", "create_projects"]);
 const dave = await member("dave", ["contribute"]);
@@ -137,6 +159,10 @@ const file = async (id, type, tok, shas, label) => {
 const INFO = await file("INFO-2026-0706-shared", "information", "mem-d706", [S1], "INFO-2026-0706-shared");
 const OPEN2 = await file("INFO-2026-0706-open", "information", "mem-d706", [SO, M2], "INFO-2026-0706-open");
 const PROJ = await file(null, "project", carol, [SX, M1], "d706-secret-project");
+/* D-722: a second project of carol's, set DISCOVERABLE, so `bundle=` has an existence-level target too. */
+const DISC = await file(null, "project", carol, [], "d722-discoverable-project");
+const vis = await api(`op=projectvisibilityset&token=${carol}&projectId=${encodeURIComponent(DISC)}&setting=discoverable`, {});
+if (!vis.result?.ok) throw new Error(`projectvisibilityset: ${JSON.stringify(vis)}`);
 
 const listed = await api(`op=list&token=${dave}`);
 t("FIXTURE: dave cannot see carol's project (op=list)",
@@ -156,6 +182,12 @@ const store = async (path) => ((await (await st.fetch("http://x" + path)).json()
 /* What the record holds pointing INTO the hidden project, read with the machine viewer, which D-15 does not filter. */
 const intoProject = async () => ((await store(`/backlinks?target=${encodeURIComponent(PROJ)}&viewer=class:member`)).backlinks || [])
   .filter((b) => b.rel === "links_to").map((b) => b.from);
+/* D-722's WITNESS: every refs row that touches the hidden project, from or into it, read from the store's own export
+   (machine-only, unfiltered), as one string. Byte-identical before and after is the claim; the fixture asserts it is
+   non-empty first, so the equality is not two empty lists agreeing on nothing. */
+const projRefs = async () => JSON.stringify(((await store(`/export`)).bundles || []).flatMap((b) =>
+  (b.refs || []).filter((r) => b.bundle_id === PROJ || r.target_id === PROJ)
+    .map((r) => [b.bundle_id, r.target_id, r.kind])).sort());
 const lp = (tok, cap, extra = "") => api(`op=linkproject&token=${tok}&capture=${cap}${extra}`);
 const shape = (r) => ({ projected: r.projected, skipped_self: r.skipped_self, skipped_unregistered: r.skipped_unregistered,
   unresolved: r.unresolved, to: (r.edges || []).map((e) => e.to).sort() });
@@ -165,22 +197,58 @@ const shape = (r) => ({ projected: r.projected, skipped_self: r.skipped_self, sk
 console.log("\n--- op=linkproject on a SHARED capture: the answer is the viewer's ---");
 {
   t("FIXTURE: before anyone projects, nothing links_to the hidden project", await intoProject(), []);
+  /* The owner projects the hidden capture FIRST, so the witness holds a row (PROJ -> OPEN2) before dave acts. */
+  await lp(carol, SX);
+  const before = await projRefs();
+  t("FIXTURE: the witness is non-empty before the outsider acts", JSON.parse(before).length > 0, true);
   const out = await lp(dave, S1);
-  /* THE WRITE HALF, MEASURED (BOB #36 decides it; this does not): the outsider's own act wrote INFO -> PROJ. */
-  t("WRITE HALF, measured not ruled: the outsider's act still writes a links_to edge INTO the hidden project",
-    await intoProject(), [INFO]);
+  /* D-722 INVERTS D-706's "WRITE HALF, measured not ruled" arm, which asserted [INFO] here: the outsider's act
+     wrote a links_to edge INTO a project they cannot see. BOB #36 ruled that a defect (11:15Z, (A)): the op writes
+     exactly the edges its answer names, and this answer names none into PROJ. */
+  t("WRITE HALF (D-722): the outsider's act writes NO links_to edge into the hidden project", await intoProject(), []);
+  t("and the hidden project's refs are byte-identical before and after the outsider's act", await projRefs(), before);
   t("the outsider's call is served (a member with contribute may project an open capture)", out.ok, true);
   t("nothing of the hidden project is in the outsider's answer", leaks(out), []);
-  t("the outsider's edges name only a bundle they can see", shape(out).to, [OPEN2]);
-  t("and no count moves with a row they cannot see: /secret.html reads as uncaptured (unresolved), the mixed "
-    + "address as nothing", [out.projected, out.skipped_self, out.skipped_unregistered, out.unresolved], [1, 0, 1, 2]);
+  /* /mixed.html has a hidden capture (M1, PROJ) and a visible one (M2, OPEN2): resolved through the viewer, the
+     bracket is taken over M2 alone, so the edge WRITTEN is the visible one the answer names. */
+  t("the outsider's edges name only a bundle they can see, the mixed address's among them (the VISIBLE edge)",
+    [shape(out).to, (out.edges || []).some((e) => e.target_capture === M2)], [[OPEN2, OPEN2], true]);
+  t("and no count moves with a row they cannot see: /secret.html reads as uncaptured (unresolved)",
+    [out.projected, out.skipped_self, out.skipped_unregistered, out.unresolved], [2, 0, 1, 2]);
+  const links = await api(`op=links&token=${dave}&capture=${S1}`);
+  t("op=links' tally equals linkproject's counts for the same viewer (the tally residue is closed)",
+    [links.tally?.linked, links.tally?.offsite],
+    [out.projected + out.skipped_self + out.skipped_unregistered, out.unresolved]);
   t("the outsider's source bundle is the open one", out.source_bundle, INFO);
+
+  /* (C): bundle= naming a bundle the caller cannot see is an id naming nothing. */
+  const ghost = "PROJ-2026-0722-no-such-bundle";
+  const hiddenB = await lp(dave, S1, `&bundle=${encodeURIComponent(PROJ)}`);
+  const absentB = await lp(dave, S1, `&bundle=${encodeURIComponent(ghost)}`);
+  t("(C) bundle= naming the hidden project answers NO_SUCH_BUNDLE", [hiddenB.ok, hiddenB.reason], [false, "NO_SUCH_BUNDLE"]);
+  t("(C) byte for byte as for an id naming nothing (the id itself echoed aside)",
+    JSON.stringify({ ...hiddenB, target: null }), JSON.stringify({ ...absentB, target: null }));
+  t("(C) and nothing of the hidden project is in it but the id the caller sent", leaks({ ...hiddenB, target: null }), []);
+  const discB = await lp(dave, S1, `&bundle=${encodeURIComponent(DISC)}`);
+  t("(C) a DISCOVERABLE project answers REC-149's existence answer, as every act naming one does",
+    [discB.ok, discB.reason], [false, "PROJECT_SEEN_NOT_A_PARTICIPANT"]);
+  t("(C) none of the outsider's arms moved the hidden project's refs", await projRefs(), before);
+
+  /* (2): the JOINED test where the source bundle is a project. ruth is an administrator: she SEES the project and
+     has not joined it, so her refusal says nothing she did not know (sight before position). */
+  const ruthHidden = await lp(ruthTok, SX);
+  t("(2) an administrator who has not joined is refused on the project's own capture, as at cite",
+    [ruthHidden.ok, ruthHidden.reason, ruthHidden.act], [false, "PROJECT_ACT_NOT_A_PARTICIPANT", "linkproject"]);
+  const ruthNamed = await lp(ruthTok, S1, `&bundle=${encodeURIComponent(PROJ)}`);
+  t("(2) and when she names the project as bundle=", [ruthNamed.ok, ruthNamed.reason], [false, "PROJECT_ACT_NOT_A_PARTICIPANT"]);
+  t("(2) and the refused acts wrote nothing", await projRefs(), before);
 
   const machine = await lp("mem-d706", S1);
   t("the machine credential sees the hidden edges (the control: the rows are really there)",
     shape(machine), { projected: 3, skipped_self: 0, skipped_unregistered: 1, unresolved: 1, to: [OPEN2, PROJ, PROJ].sort() });
   const owner = await lp(carol, S1);
   t("the project's owner sees what the machine sees", shape(owner), shape(machine));
+  t("a member who sees both ends (and the machine) still writes the hidden target's edge", await intoProject(), [INFO]);
   t("and the owner's answer names the hidden capture it resolved to",
     (owner.edges || []).some((e) => e.target_capture === SX), true);
 }
@@ -203,11 +271,10 @@ console.log("\n--- op=linkproject on a HIDDEN capture: the record's not-held ans
 
 /* ------------------------------------------------ the write half, measured */
 
-console.log("\n--- the WRITE half (BOB #36): measured, not decided ---");
+console.log("\n--- the WRITE half at the store (D-722) ---");
 {
-  /* The outsider's call on S1 above wrote INFO -> PROJ, as it did before this landing: the write resolves
-     unfiltered (D-701's note, kept). Whether it may is the design question with BOB #36; this reads the machine's
-     view of the edges so the report can state it, and pins that the outsider's DISCLOSURE does not depend on it. */
+  /* D-706 measured the write here and left it undecided; D-722 decided it (BOB #36, 11:15Z) and the shared-capture
+     block above now asserts it. What stays here is the store's own fail-closed posture. */
   const none = await store(`/projectlinks?capture=${S1}`);
   t("a store call with no viewer projects nothing and names nothing (fail closed)", none, { projected: 0, edges: [] });
   const hiddenWrite = await store(`/projectlinks?capture=${SX}&viewer=${encodeURIComponent("member:dave")}`);

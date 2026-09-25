@@ -71700,7 +71700,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  A self-edge is dropped rather than recorded: a page linking to itself, which
    *  every paginated Legistar calendar does, is not a connection between two
    *  documents and would show up as a bundle citing itself. */
-  projectLinks({ sourceCapture, sourceBundle = null, at = null, viewer = null }) {
+  projectLinks({ sourceCapture, sourceBundle = null, at = null, viewer = null, identity = null }) {
     const seen = this.#resolveLinks({
       sourceCapture,
       at,
@@ -71708,17 +71708,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       seenTarget: this.#captureGate("cl.capture_sha", viewer)
     });
     if (!seen.links || !seen.links.length) return { projected: 0, edges: [] };
-    const gate = this.#captureGate("t.capture_sha", viewer);
-    const visible = (s) => !!s && [...this.sql.exec(
-      `SELECT 1 FROM (SELECT ? AS capture_sha) t WHERE (${gate.sql})`,
-      s,
-      ...gate.args
-    )].length > 0;
-    const all = { sql: "1=1", args: [] };
-    const res = this.#resolveLinks({ sourceCapture, at, seenSource: all, seenTarget: all });
-    if (!res.links || !res.links.length) return { projected: 0, edges: [] };
     let bundle = sourceBundle;
-    if (!bundle) {
+    if (bundle) {
+      const named = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundle);
+      {
+        const existence = named ? this.#existenceAct(bundle, viewer) : null;
+        if (existence) return existence;
+      }
+      if (!named || !this.#inSight(bundle, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: bundle };
+    } else {
       const reg = [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, sourceCapture)][0];
       bundle = reg ? reg.bundle_id : null;
     }
@@ -71727,17 +71725,21 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       edges: [],
       note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on"
     };
+    const src = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundle);
+    if (src && src.object_type === "project") {
+      const denied = this.#projectAuthority(bundle, identity, "joined", "linkproject");
+      if (denied) return denied;
+    }
     const edges = [];
     let unregistered = 0, self = 0;
-    for (const l of res.links) {
+    for (const l of seen.links) {
       if (l.resolution !== "linked") continue;
-      const said = visible(l.target_capture);
       if (!l.target_bundle) {
-        if (said) unregistered++;
+        unregistered++;
         continue;
       }
       if (l.target_bundle === bundle) {
-        if (said) self++;
+        self++;
         continue;
       }
       this.sql.exec(
@@ -71746,7 +71748,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         bundle,
         l.target_bundle
       );
-      if (said) edges.push({
+      edges.push({
         from: bundle,
         to: l.target_bundle,
         rel: "links_to",
@@ -78763,7 +78765,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         projectlinks: () => this.projectLinks({
           sourceCapture: url.searchParams.get("capture"),
           sourceBundle: url.searchParams.get("bundle") || null,
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
@@ -81357,7 +81360,8 @@ var POSITIONAL_ACTS = [
   "proposedispose",
   "biasadopt",
   "conclude",
-  "withdrawconclusion"
+  "withdrawconclusion",
+  "linkproject"
 ];
 var BIAS_ACTIONS = ["biasadopt"];
 var BIAS_DEBT_ACTIONS = ["biasdebtresolve"];
@@ -84498,7 +84502,8 @@ var index_default = {
       if (!/^[0-9a-f]{64}$/.test(capture || ""))
         return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
       const bundle = url.searchParams.get("bundle");
-      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`));
+      const linkIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}&identity=${encodeURIComponent(linkIdentity)}`));
       if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }

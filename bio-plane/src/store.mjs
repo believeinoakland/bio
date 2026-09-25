@@ -43961,54 +43961,58 @@ export class Store extends DurableObject {
    *  A self-edge is dropped rather than recorded: a page linking to itself, which
    *  every paginated Legistar calendar does, is not a connection between two
    *  documents and would show up as a bundle citing itself. */
-  projectLinks({ sourceCapture, sourceBundle = null, at = null, viewer = null }) {
-    /* D-706 (BOB #35, 2026-09-25 09:30Z; MEMBER-KNOWLEDGE-DESIGN §5): THE ANSWER IS THE VIEWER'S. Two resolutions:
-       `seen`, through `#captureGate` exactly as op=links resolves for this viewer, decides what may be SAID; `res`,
-       unfiltered, decides what is WRITTEN, as D-701 left it.
-       - A source capture the viewer cannot see answers EXACTLY as one the record does not hold — `seen` is empty —
-         and so, like an absent capture, writes nothing. An absent viewer sees no source: fail closed.
-       - An edge is in `edges`, and counts toward `projected`, `skipped_self` or `skipped_unregistered`, only when
-         its target capture passes the same gate; `unresolved` is the VIEWER's offsite count, so a link whose only
-         capture is hidden is unresolved — the answer an uncaptured target gets — and no count moves with a hidden row.
-       - STATED, NOT DECIDED (the WRITE half, with BOB #36): the write below still resolves unfiltered, so an
-         outsider's act on a visible source writes a links_to edge INTO a bundle they cannot see, and `bundle=` may
-         name a bundle they cannot see as the edge's source. And when an address has BOTH a hidden and a visible
-         capture and the unfiltered bracket picks the hidden one, the edge written names the hidden bundle while the
-         viewer's own resolution names a visible one: that link is in NO count of the viewer's answer, because
-         reporting the visible edge would claim a write that did not happen and counting it anywhere else would say
-         something false. Which answer is right depends on the write half's ruling. */
+  projectLinks({ sourceCapture, sourceBundle = null, at = null, viewer = null, identity = null }) {
+    /* D-706 (BOB #35, 2026-09-25 09:30Z; MEMBER-KNOWLEDGE-DESIGN �5): THE ANSWER IS THE VIEWER'S, and D-722
+       (BOB #36's FINAL ruling, 2026-09-25 11:15Z, (A)+(C); LINK-FIDELITY.md �The write is the viewer's): SO IS THE
+       WRITE. ONE resolution, through `#captureGate` exactly as op=links resolves for this viewer, decides what is
+       said AND what is written; the unfiltered second resolution D-706 kept for the write is GONE, because an act
+       whose effect depends on a hidden bundle's existence is what �7.9 (REC-138) forbids at the ACTS.
+       - A source capture the viewer cannot see answers EXACTLY as one the record does not hold and writes nothing.
+         An absent viewer sees no source: fail closed.
+       - A link whose only captures are hidden is `offsite` for this viewer and writes NO edge: a links_to edge is
+         a resolution of the source's URL, never a claim of completeness, so a missing one is NOT YET PROJECTED and a
+         member who sees the target writes it from the same capture. Where an address has a hidden AND a visible
+         capture, the bracket is taken over the visible ones, so the edge written is the one the answer names and
+         op=links' `tally.linked` equals projected + skipped_self + skipped_unregistered.
+       - (C) `bundle=` naming a bundle the caller cannot see is refused NO_SUCH_BUNDLE, byte for byte as for an id
+         naming nothing (and so is an id naming nothing, which before D-722 wrote a dangling edge).
+       - (2) The JOINED test (REC-134, `#projectAuthority`, as `cite`): where the source bundle is a PROJECT, the
+         edges it gains are that project's, so the actor must have joined it. Sight BEFORE position. A links_to edge
+         on shared Information changes no project; the `contribute` capability governs it as before. */
     const seen = this.#resolveLinks({ sourceCapture, at,
       seenSource: this.#captureGate("l.source_capture", viewer), seenTarget: this.#captureGate("cl.capture_sha", viewer) });
     if (!seen.links || !seen.links.length) return { projected: 0, edges: [] };
-    const gate = this.#captureGate("t.capture_sha", viewer);
-    const visible = (s) => !!s && [...this.sql.exec(
-      `SELECT 1 FROM (SELECT ? AS capture_sha) t WHERE (${gate.sql})`, s, ...gate.args)].length > 0;
-    const all = { sql: "1=1", args: [] };
-    const res = this.#resolveLinks({ sourceCapture, at, seenSource: all, seenTarget: all });
-    if (!res.links || !res.links.length) return { projected: 0, edges: [] };
     let bundle = sourceBundle;
-    if (!bundle) {
+    if (bundle) {
+      const named = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundle);
+      { const existence = named ? this.#existenceAct(bundle, viewer) : null; if (existence) return existence; }   /* REC-149 */
+      if (!named || !this.#inSight(bundle, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: bundle };
+    } else {
       const reg = [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, sourceCapture)][0];
       bundle = reg ? reg.bundle_id : null;
     }
     if (!bundle) return { projected: 0, edges: [],
       note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on" };
+    const src = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundle);
+    if (src && src.object_type === "project") {
+      const denied = this.#projectAuthority(bundle, identity, "joined", "linkproject");
+      if (denied) return denied;
+    }
     const edges = [];
     let unregistered = 0, self = 0;
-    for (const l of res.links) {
+    for (const l of seen.links) {
       if (l.resolution !== "linked") continue;
       /* The record holds BYTES of the target but no bundle claims them yet. That
          is the normal state of anything acquired and not promoted: acquire files
          the locator, promote writes the register row. There is no canonical id to
          point an edge at, and inventing one would be worse than waiting, so it is
          counted and named rather than silently dropped. */
-      const said = visible(l.target_capture);
-      if (!l.target_bundle) { if (said) unregistered++; continue; }
-      if (l.target_bundle === bundle) { if (said) self++; continue; }
+      if (!l.target_bundle) { unregistered++; continue; }
+      if (l.target_bundle === bundle) { self++; continue; }
       this.sql.exec(
         `INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'links_to')
          ON CONFLICT(bundle_id, target_id, kind) DO NOTHING`, bundle, l.target_bundle);
-      if (said) edges.push({ from: bundle, to: l.target_bundle, rel: "links_to",
+      edges.push({ from: bundle, to: l.target_bundle, rel: "links_to",
                    asserted_by: "source", address: l.address, fragment: l.fragment,
                    verdict: l.verdict, basis: l.basis,
                    target_capture: l.target_capture, target_retrieved: l.target_retrieved });
@@ -51447,7 +51451,8 @@ export class Store extends DurableObject {
         recordlinkverdict: () => this.recordLinkVerdict(body || {}),
         projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
                                                 sourceBundle: url.searchParams.get("bundle") || null,
-                                                viewer: url.searchParams.get("viewer") }),
+                                                viewer: url.searchParams.get("viewer"),
+                                                identity: url.searchParams.get("identity") }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
            — the control plane runs it through `normalizeAddress`, the same
