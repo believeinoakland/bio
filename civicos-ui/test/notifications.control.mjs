@@ -24,8 +24,17 @@
  *   - EVERY RESTORE IS VERIFIED BY sha256 AND BY `cmp`, against a PER-ARM
  *     pristine copy whose filename carries the ARM ID as well as the path, AND
  *     against a pristine-of-record taken before any arm ran.
- *   - THE HARNESS DIRECTORY IS INSIDE THIS WORKTREE (`.ui45-harness/`), never a
- *     shared scratchpad two sessions can collide in.
+ *   - THE HARNESS DIRECTORY IS OUTSIDE THIS WORKTREE, in a per-run `mkdtemp`
+ *     under the session's own temp root. CORRECTED 2026-09-24 by UI-97, never
+ *     exempted: this read *"INSIDE THIS WORKTREE (`.ui45-harness/`), never a
+ *     shared scratchpad two sessions can collide in"* and the collision half was
+ *     RIGHT and is kept — `mkdtemp` answers it by UNIQUENESS rather than by
+ *     location. What was wrong is the location: BOB #32 RULED on 2026-09-24
+ *     (WORKER.md, "KEEP EVERY SCRATCH FILE OUT OF YOUR WORKTREE") that a file in
+ *     a worktree is not inert — repository-walking suites WALK IT, it trips
+ *     `gates.mjs` §2e, and it makes the tree DIRTY, so D-293 refuses to RECORD a
+ *     GREEN verdict. THREE ITEMS PAID FOR THAT IN ONE NIGHT. This driver put two
+ *     full copies of `app.html` in the worktree for the length of every run.
  *
  * ------------------------------------------------------------ RESULTS, RUN
  *
@@ -97,6 +106,7 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
    import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
@@ -105,8 +115,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI = path.join(HERE, "..");
 const APP = path.join(UI, "app.html");
 const SUITE = path.join(HERE, "notifications.test.mjs");
-const PEN = path.join(UI, ".ui45-harness");
-fs.mkdirSync(PEN, { recursive: true });
+/* UI-97: per-run and OUTSIDE the worktree (see the practices above). `UI45_PEN`
+   lets a caller name the root; a session scratchpad is the right one to name. */
+const PEN = fs.mkdtempSync(path.join(process.env.UI45_PEN || os.tmpdir(), "ui45-harness-"));
 
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 const same = (a, b) => { try { execFileSync("cmp", ["-s", a, b]); return true; } catch (_) { return false; } };
@@ -291,6 +302,45 @@ const ARMS = [
       if (t.split(a).length - 1 !== 1) return null;
       return t.replace(a, '    const parts = ["on the run ", `<span class="mono">${esc(s.id||"")}</span>`, where];\n'
         + '    return `<span class="q-on">` + parts.join("") + `</span>` + note;');
+    } },
+
+  /* UI-97's arms (numbered 15/16/16b/17 on its own branch; renumbered 18/19/19b/20 by CONDUCT #20 at
+     c20-batch27 because UI-93 holds 15/15b/16). 18 is the state this item FOUND — a member with no way
+     back; 19 is the row's own NEGATIVE CONTROL (omit `unmute:true`, and the round trip fails by name);
+     19b is the honesty half, a case undo drawn over kinds this surface cannot see; 20 is the
+     over-strictness arm. */
+  { id: "18-report-offers-no-undo", file: APP, mustFail: true, says: "carries a per-item undo",
+    what: "THE REPORT OFFERS NO UNDO — the state this item found: `op=queuemute` takes `unmute` in both forms and the app never sends it, so a member who mutes something here has no way back",
+    patch: (t) => {
+      const a = "  if(PLANE.me && PLANE.me.session){";
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, "  if(false){");
+    } },
+
+  { id: "19-undo-omits-the-flag", file: APP, mustFail: true, says: "AS THE ITEM FORM CARRYING unmute",
+    what: "THE ROW'S OWN ARM — the undo sends `{ item }` and omits `unmute: true`. The plane's item form is an idempotent UPSERT, so the undo silently RE-MUTES and the member stays silenced",
+    patch: (t) => {
+      const a = '    const res = await recPostR("queuemute", { item: itemId, unmute: true });';
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, '    const res = await recPostR("queuemute", { item: itemId });');
+    } },
+
+  { id: "19b-case-undo-guesses-kinds", file: APP, mustFail: true, says: "draws NO undo control",
+    what: "THE CASE UNDO IS DRAWN OVER KINDS THE SURFACE CANNOT SEE — `op=queue` publishes `mute.cases` as case ids and the muted KINDS nowhere, so a control drawn where none is suppressed would send a set this page guessed at (D-534)",
+    patch: (t) => {
+      const a = "      if(!kinds.length)\n        return `<div class=\"q-unmute q-unmute-none\"";
+      if (t.split(a).length - 1 !== 1) return null;
+      return t.replace(a, "      if(false)\n        return `<div class=\"q-unmute q-unmute-none\"");
+    } },
+
+  { id: "20-over-strictness-unmute", file: APP, mustFail: false,
+    what: "OVER-STRICTNESS — both undo acts send the flag in a spelling this suite's author did not choose (`Boolean(1)`), which is the same body and must PASS",
+    patch: (t) => {
+      const a = '    const res = await recPostR("queuemute", { item: itemId, unmute: true });';
+      const b = '    const res = await recPostR("queuemute", { case: caseId, kinds: named, unmute: true });';
+      if (t.split(a).length - 1 !== 1 || t.split(b).length - 1 !== 1) return null;
+      return t.replace(a, '    const res = await recPostR("queuemute", { item: itemId, unmute: Boolean(1) });')
+              .replace(b, '    const res = await recPostR("queuemute", { case: caseId, kinds: named, unmute: Boolean(1) });');
     } },
 
   { id: "11-baseline", file: APP, mustFail: false,

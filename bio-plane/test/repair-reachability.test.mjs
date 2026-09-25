@@ -267,7 +267,12 @@ const opsIn = (text) => [...String(text).matchAll(/\bop=([a-z]+)\b/g)].map((m) =
 const probeFacts = (machine, state, caseMember = false) => ({
   ok: true, object_type: normalizeType(machine), declared_type: machine, current_state: state,
   case_member: caseMember,
-  cites_in: { confirmed: [], severed: [] }, cites_out: { confirmed: 0, severed: 0 },
+  /* D-444 added `severed_reinstatable` — how many of a project's severed edges
+     could be put back — and the probe carries it for the same reason it carries
+     `cited_by_case`: the store always states it, so a fixture that omitted it
+     would be exercising the rule's `?? 0` fallback instead of the shape. */
+  cites_in: { confirmed: [], severed: [] },
+  cites_out: { confirmed: 0, severed: 0, severed_reinstatable: 0 },
   /* REC-72: `cited_by_case` is what `sever`/`reinstate` are now derived over.
      Stated rather than left to the rule's `?? 0` default — see the arm below
      that asserts `actsAt` did not silently swallow a throw. */

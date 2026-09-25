@@ -35,12 +35,13 @@ import { readFileSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
+import { controlPen } from "./pen.mjs";
 
 const ARM = (process.argv[2] || "none").toLowerCase();
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const QUERY = fileURLToPath(new URL("../src/query.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./rec114-leg-earned.test.mjs", import.meta.url));
-const PEN = fileURLToPath(new URL("../../.rec114-control-pristine/", import.meta.url));
+const PEN = `${controlPen("rec114")}/`;
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 /* Assertions that are properties of OTHER code and must survive every arm:

@@ -21,6 +21,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const P = (rel) => fileURLToPath(new URL(rel, import.meta.url));
 const STORE = P("../src/store.mjs");
@@ -109,12 +110,13 @@ const tally = (out) => {
 const firstFailures = (out, n) => out.split("\n").filter((l) => l.includes("FAIL  ")).slice(0, n)
   .map((l) => l.replace(/^\s*FAIL\s+/, "").slice(0, 96));
 
+const PEN = controlPen("rec72");
 const rows = [];
 for (const arm of ARMS) {
   console.log(`\n=== ARM ${arm.id} ===\n  DECLARED: ${arm.declared}`);
   let before = null, backup = null;
   if (arm.file) {
-    backup = `${arm.file}.pristine.${arm.id}`;
+    backup = `${PEN}/${arm.file.split("/").pop()}.pristine.${arm.id}`;
     copyFileSync(arm.file, backup);
     before = sha(arm.file);
     const src = readFileSync(arm.file, "utf8");

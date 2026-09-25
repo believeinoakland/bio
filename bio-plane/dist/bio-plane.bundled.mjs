@@ -2829,7 +2829,22 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
   minted_by       TEXT NOT NULL,    -- the MEMBER who minted it. D-199 (3): never a machine
   minted_at       TEXT NOT NULL,
   revoked_at      TEXT,
-  revoked_by      TEXT
+  revoked_by      TEXT,
+  -- D-463: THE NAMESPACE THIS CREDENTIAL IS CONFINED TO FOR ITS WHOLE LIFE, or NULL for
+  -- a credential that is not confined. The only value it may hold is 'scratch'. The name
+  -- bio is not a confinement but the default, and a row saying so would be a sentence in
+  -- the record that fences nothing -- D-199 (2)'s whole complaint about a settings row,
+  -- arriving one column over. The vocabulary is NOT restated here: index.mjs owns
+  -- NAMESPACES and judges the value at the mint edge (aiConfinementDeclaration), the way
+  -- scope_writes arrives already judged by aiScopeDeclaration, because a second copy
+  -- of the namespace set is the third unsynchronised answer REC-46 spent an item removing.
+  --
+  -- NULLABLE AND NEVER BACK-FILLED. A credential minted before this column existed was
+  -- minted unconfined, and NULL is that fact rather than an absence of one: the only other
+  -- value a backfill could reach for is 'scratch', which would silently narrow authorities
+  -- members already granted. What reads it is one gate at the front door
+  -- (confinedNamespaceGate), and an unconfined credential meets no gate at all.
+  confined_to     TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
@@ -10918,6 +10933,21 @@ var AI_CREDENTIAL_CHECKS = {
     check: "C-29.9",
     where: "src/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
     translation: "An agent may only be given things a member of this group could do themselves, and this is not one of them. The background worker's own jobs are outside what anybody can hand to an agent, so this cannot be written into a credential at all."
+  },
+  /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
+     A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
+     `bio` is refused with the rest, and that is the decision rather than an omission: `bio` is where every
+     unconfined credential already lands, so a row saying "confined to bio" would be a sentence in the record
+     that reads like a fence and constrains nothing — D-199 (2)'s complaint about a settings row, arriving as
+     a column. The value is matched EXACTLY — nothing trimmed, nothing case-folded — on D-456's rule one layer in,
+     because a Durable Object name is an exact string and folding it would be the code guessing what a member meant.
+     ABSENT (the field omitted, or null) is the ONLY silence, and it is the case every caller written before this item
+     is in; a PRESENT empty string is a value and is refused with the rest, because an empty `store=` is one of the
+     values D-456 measured addressing the real record. */
+  AI_CONFINEMENT_NOT_SCRATCH: {
+    check: "C-29.10",
+    where: "src/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration",
+    translation: "A credential can be confined to the scratch area and to nothing else, spelt exactly. Leaving the confinement out altogether makes an ordinary credential that reaches the record itself; naming the record itself is not a confinement, so it is refused rather than written down as one. Nothing was created."
   }
 };
 var VERSION_STRENGTH_CHECKS = {
@@ -12085,6 +12115,18 @@ var NAMESPACE_CHECKS = {
     check: "C-78.2",
     where: "src/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate",
     translation: "This request asked for the scratch area, but this operation only ever answers from the record itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area out of the request, knowing it then reaches the real record."
+  },
+  /* D-463 (C-78.3): the credential itself is confined to the scratch area for its whole life, and this request
+     named a different part of the record. C-78.1 and C-78.2 are both properties of the REQUEST — a name that
+     does not exist, an operation that has no scratch version; this one is a property of the CALLER, which is
+     why it is a third row and not a widening of either. Confinement is by REFUSAL and never by silent
+     redirection when a store is NAMED (`scopeFor`'s rule for the probe class, and D-456's for everyone): a
+     caller who believes it addressed the record must be told it did not. An ABSENT `store=` is not a refusal —
+     the credential's own confinement is its default, which is the whole point of minting one. */
+  NAMESPACE_CONFINED: {
+    check: "C-78.3",
+    where: "src/index.mjs confinedNamespaceGate > is-confined-namespace-gate",
+    translation: "The credential used for this request can only ever reach the scratch area kept apart for testing, and this request asked for a different part of the record, so nothing was read or changed. Leave the part out of the request and it reaches scratch, which is the only place this credential goes."
   }
 };
 var DISPATCH_CHECKS = {
@@ -12104,6 +12146,26 @@ var KNOCK_CHECKS = {
     check: "C-85.2",
     where: "src/store.mjs knock > is-knock-rate",
     translation: "This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you \u2014 the cap exists so that no one sender can fill the inbox \u2014 and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. If it keeps happening, the group's members can be told the doorbell is saturated."
+  },
+  /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
+     `where` names a module-scope helper in the CONTROL plane and the region
+     inside it, because that is where each refusal is enforced; the two oversize
+     rows are two conditions and deliberately not one row with a widened
+     sentence. */
+  KNOCK_ENVELOPE_TOO_LARGE: {
+    check: "C-85.3",
+    where: "src/index.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large",
+    translation: "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged \u2014 its size was read off the request and it stopped there. The size this instance will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read."
+  },
+  KNOCK_PAYLOAD_TOO_LARGE: {
+    check: "C-85.4",
+    where: "src/index.mjs knockPayloadTooLarge > is-knock-payload-too-large",
+    translation: "This group's inbox read your material and cannot keep it, because it is larger than this instance stores. That is a fact about how this group has set its instance up rather than a judgement about what you sent \u2014 a group that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them."
+  },
+  KNOCK_EMPTY: {
+    check: "C-85.5",
+    where: "src/index.mjs knockEmpty > is-knock-empty",
+    translation: "This group's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again."
   }
 };
 var DRIVE_CAPTURE_CHECKS = {
@@ -15592,7 +15654,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.28.0";
+var CATALOG_VERSION = "1.29.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -21519,16 +21581,30 @@ var ACTS = [
     applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0 && f2.project_participant !== false
   },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
-     refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
-     is not. The PROJECT arm is not narrowed: `cites_out.severed` is a count and does not say whether
-     every severed target is retired, so a project whose only severed edges point at retired items is
-     still offered an act the store refuses — a stated residue, not a rule. */
+       refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
+       is not.
+  
+       D-444 NARROWS THE PROJECT ARM, which REC-183 left as a stated residue. The two arms ask the
+       same question from the two ends of the edge. From the TARGET's end `current_state` answers it
+       outright. From the PROJECT's end it cannot be answered by `cites_out.severed` at all: that is a
+       count of the project's own severed edges and says nothing about what their targets have BECOME,
+       so a project whose only severed edges point at retired items was offered an act the store then
+       refused — a pre-flight disagreeing with the refusal it fronts. The store now states
+       `severed_reinstatable`, counted through `#retiredNotCitable`, the predicate `#edgeTransition`
+       itself runs; the arm keys on it and the offer cannot drift from the refusal.
+  
+       IT IS NARROWED AND NOT DROPPED, which is the whole of the accepts-when: a project holding a
+       severed edge onto a LIVE target must still be offered `reinstate`, and the store must still
+       accept it. Withholding the act from every project would satisfy "never offer what is refused"
+       and cost a case the one recorded way to take a citation back up. `?? 0` for the posture every
+       fact added since REC-16 takes: absent reads as ZERO, the safe direction, because `deriveActs`
+       is exported and two suites call it with hand-built facts. */
   {
     id: "reinstate",
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f2.current_state === "retired") || ty === "project" && (f2.cites_out.severed_reinstatable ?? 0) > 0 && f2.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -23448,6 +23524,7 @@ function matMul(a, b) {
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
 var WORD_GAP_EM = 0.25;
+var TJ_WORD_GAP_EM = 0.1;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -23653,7 +23730,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           if (!inArr) continue;
           if (it.t === "str") show(it.bytes);
           else if (it.t === "num") {
-            if (it.v < -100) pieces.push(" ");
+            if (-it.v / 1e3 > TJ_WORD_GAP_EM) softSpace();
             advanceBy(it.v);
           }
         }
@@ -24084,6 +24161,400 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   return acc;
 }
 
+// src/csv.mjs
+var CSV_CONTENT_TYPE = "text/csv";
+var CSV_CONTENT_TYPE_SYNONYMS = ["application/csv", "text/comma-separated-values"];
+var CSV_SHEET_NAME = "csv";
+var MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
+var SIGNATURE_WINDOW_BYTES = 1 << 20;
+var SIGNATURE_LINES = 50;
+var DELIMITERS = [
+  { ch: ",", name: "comma" },
+  { ch: ";", name: "semicolon" },
+  { ch: "	", name: "tab" },
+  { ch: "|", name: "pipe" }
+];
+function readBom(b) {
+  if (b.length >= 3 && b[0] === 239 && b[1] === 187 && b[2] === 191)
+    return { encoding: "utf-8", bomBytes: 3, signal: "BOM: EF BB BF" };
+  if (b.length >= 4 && b[0] === 255 && b[1] === 254 && b[2] === 0 && b[3] === 0)
+    return null;
+  if (b.length >= 2 && b[0] === 255 && b[1] === 254)
+    return { encoding: "utf-16le", bomBytes: 2, signal: "BOM: FF FE" };
+  if (b.length >= 2 && b[0] === 254 && b[1] === 255)
+    return { encoding: "utf-16be", bomBytes: 2, signal: "BOM: FE FF" };
+  return null;
+}
+function hasHighBytes(b) {
+  for (let i = 0; i < b.length; i++) if (b[i] >= 128) return true;
+  return false;
+}
+function isValidUtf8(b) {
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(b);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function encodingSignature(bytes) {
+  const bom = readBom(bytes);
+  if (bom) {
+    return {
+      encoding: bom.encoding,
+      confidence: "certain",
+      bomBytes: bom.bomBytes,
+      signals: [bom.signal, "declared by the producer in the bytes"],
+      undetermined: null
+    };
+  }
+  const window = bytes.subarray(0, SIGNATURE_WINDOW_BYTES);
+  if (!hasHighBytes(window)) {
+    return {
+      encoding: "us-ascii",
+      confidence: "certain",
+      bomBytes: 0,
+      signals: [
+        `no byte >= 0x80 in the first ${window.length} bytes`,
+        "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+      ],
+      undetermined: null
+    };
+  }
+  if (isValidUtf8(window)) {
+    return {
+      encoding: "utf-8",
+      confidence: "likely",
+      bomBytes: 0,
+      signals: [
+        "no BOM",
+        "every multi-byte sequence in the signature window is valid utf-8",
+        "likely, not certain: validity is evidence, not the producer's declaration"
+      ],
+      undetermined: null
+    };
+  }
+  return {
+    encoding: null,
+    confidence: "none",
+    bomBytes: 0,
+    signals: ["no BOM", "a byte >= 0x80 that is not part of a valid utf-8 sequence"],
+    undetermined: "encoding_undetermined"
+  };
+}
+function countOutsideQuotes(line, ch) {
+  let n = 0, inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') inQuotes = !inQuotes;
+    else if (!inQuotes && c === ch) n++;
+  }
+  return n;
+}
+function delimiterSignature(text) {
+  const raw = text.split("\n");
+  const complete = raw.slice(0, -1).map((l) => l.endsWith("\r") ? l.slice(0, -1) : l);
+  const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
+  if (lines.length < 2) {
+    return {
+      delimiter: null,
+      name: null,
+      confidence: "none",
+      lines: lines.length,
+      signals: [`${lines.length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything`],
+      undetermined: "delimiter_undetermined_too_few_lines",
+      tied: []
+    };
+  }
+  const consistent = [];
+  const counted = {};
+  for (const d of DELIMITERS) {
+    const per = lines.map((l) => countOutsideQuotes(l, d.ch));
+    counted[d.name] = per[0];
+    if (per[0] >= 1 && per.every((n) => n === per[0])) consistent.push(d);
+  }
+  if (consistent.length === 1) {
+    const d = consistent[0];
+    return {
+      delimiter: d.ch,
+      name: d.name,
+      confidence: "certain",
+      lines: lines.length,
+      signals: [`${d.name} occurs ${counted[d.name]} time(s) outside quotes on every one of the first ${lines.length} complete lines`],
+      undetermined: null,
+      tied: []
+    };
+  }
+  if (consistent.length > 1) {
+    return {
+      delimiter: null,
+      name: null,
+      confidence: "none",
+      lines: lines.length,
+      signals: [`${consistent.length} candidates are equally consistent over ${lines.length} lines: ` + consistent.map((d) => `${d.name} (${counted[d.name]}/line)`).join(", ")],
+      undetermined: "delimiter_undetermined_tied",
+      tied: consistent.map((d) => d.name)
+    };
+  }
+  return {
+    delimiter: null,
+    name: null,
+    confidence: "none",
+    lines: lines.length,
+    signals: [`no candidate (${DELIMITERS.map((d) => d.name).join(", ")}) occurs a consistent, non-zero number of times over ${lines.length} lines`],
+    undetermined: "delimiter_undetermined_none_consistent",
+    tied: []
+  };
+}
+function walkRecords(text, delimiter) {
+  const records = [];
+  let row = [], field = "", inQuotes = false, started = false;
+  const endField = () => {
+    row.push(field);
+    field = "";
+  };
+  const endRecord = () => {
+    endField();
+    records.push(row);
+    row = [];
+    started = false;
+  };
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    started = true;
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else inQuotes = false;
+      } else field += c;
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+      continue;
+    }
+    if (delimiter && c === delimiter) {
+      endField();
+      continue;
+    }
+    if (c === "\r") {
+      if (text[i + 1] === "\n") i++;
+      endRecord();
+      continue;
+    }
+    if (c === "\n") {
+      endRecord();
+      continue;
+    }
+    field += c;
+  }
+  if (started || field !== "" || row.length) endRecord();
+  return records;
+}
+var BYTE_TRANSPORT = new TextDecoder("latin1");
+async function csvParts(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  if (!b.length) {
+    return { ok: false, why: "empty_body" };
+  }
+  const enc2 = encodingSignature(b);
+  const body = b.subarray(enc2.bomBytes);
+  const head = body.subarray(0, SIGNATURE_WINDOW_BYTES);
+  let headText;
+  try {
+    headText = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(head) : BYTE_TRANSPORT.decode(head);
+  } catch {
+    return { ok: false, why: `decoder_unavailable:${enc2.encoding}`, encoding: enc2 };
+  }
+  const delim = delimiterSignature(headText);
+  const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES ? {
+    ok: false,
+    text: "undetermined",
+    why: "over_size_bound",
+    size: body.length,
+    bound: MEASURED_CSV_TEXT_BOUND_BYTES,
+    boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
+    metric: "body_bytes"
+  } : null;
+  let records = null;
+  if (!guard) {
+    const text = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(body) : BYTE_TRANSPORT.decode(body);
+    records = walkRecords(text, delim.delimiter);
+  }
+  return {
+    ok: true,
+    format: "csv",
+    bytes: b,
+    bodyBytes: body.length,
+    encoding: enc2,
+    delimiter: delim,
+    guard,
+    records
+  };
+}
+function dialectOf(parts) {
+  return {
+    encoding: parts.encoding.encoding,
+    encodingConfidence: parts.encoding.confidence,
+    encodingSignals: parts.encoding.signals,
+    delimiter: parts.delimiter.name,
+    delimiterConfidence: parts.delimiter.confidence,
+    delimiterSignals: parts.delimiter.signals,
+    undetermined: [parts.encoding.undetermined, parts.delimiter.undetermined].filter(Boolean)
+  };
+}
+function csvStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "csv", reason: parts ? parts.why : "PARTS_ABSENT" };
+  }
+  const dialect = dialectOf(parts);
+  const notes = [
+    "the csv format declares no relationships, so the zero link counts are the format's and not a walk's",
+    "a url in a cell is text, not a declared link: reading it as one would be this entry deciding what a string means"
+  ];
+  if (parts.guard) notes.push("text_body_over_bound");
+  return {
+    ok: true,
+    container: "csv",
+    sheets: [{ sheet: 0, name: CSV_SHEET_NAME, sheetId: null, state: "visible", hidden: false }],
+    links: [],
+    counts: { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 },
+    /* The IC-2 envelope in the shape the office entries accepted. A CSV
+       carries none of DEC-5's extras — no formula beside a value, no tracked
+       change, no comment, no hidden row, no core properties — because the
+       format has no place for any of them. `kinds: []` is exhaustive by the
+       FORMAT's definition, which the note records. */
+    evidentiary: {
+      container: "csv",
+      kinds: [],
+      items: [],
+      undetermined: parts.guard ? [{ part: "(body)", why: "over_size_bound", guard: parts.guard }] : [],
+      counts: {}
+    },
+    dialect,
+    notes
+  };
+}
+function asciiClean(s) {
+  for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) >= 128) return false;
+  return true;
+}
+function csvText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const dialect = dialectOf(parts);
+  const base = {
+    ok: true,
+    container: "csv",
+    /* Exhaustive and EMPTY, not null: the format has no media container to
+       have looked in, so this is a zero of the format and not of a walk. */
+    images: [],
+    dialect
+  };
+  if (parts.guard) {
+    return {
+      ...base,
+      document: null,
+      sheets: [],
+      undetermined: [parts.guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const undetermined = [];
+  const lines = [];
+  let cellCount = 0, usedRows = 0, usedCols = 0;
+  const encodingUndetermined = parts.encoding.encoding == null;
+  parts.records.forEach((record, r0) => {
+    const row = r0 + 1;
+    const vals = [];
+    record.forEach((field, c0) => {
+      const col = c0 + 1;
+      if (encodingUndetermined && !asciiClean(field)) {
+        undetermined.push({
+          sheet: 0,
+          cell: `${columnLetters(col)}${row}`,
+          reason: "encoding_undetermined"
+        });
+        if (row > usedRows) usedRows = row;
+        if (col > usedCols) usedCols = col;
+        return;
+      }
+      if (field === "") return;
+      cellCount++;
+      if (row > usedRows) usedRows = row;
+      if (col > usedCols) usedCols = col;
+      vals.push(field);
+    });
+    if (vals.length) lines.push(vals.join("	"));
+  });
+  const text = lines.join("\n");
+  const sheet = {
+    sheet: 0,
+    name: CSV_SHEET_NAME,
+    hidden: false,
+    /* THE BOUND IS NULL — `.ods`'s reason exactly: RFC 4180 fixes no maximum
+       number of rows or columns, so a CSV has no capacity to state, and
+       borrowing OOXML's grid would be this reader inventing a bound the
+       format never fixed. The USED range is measured and emitted beside it. */
+    rows: null,
+    cols: null,
+    usedRows,
+    usedCols,
+    range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
+    text,
+    undetermined
+  };
+  return {
+    ...base,
+    document: text,
+    sheets: [sheet],
+    undetermined,
+    counts: {
+      chars: text.length,
+      cells: cellCount,
+      formulas: 0,
+      undetermined: undetermined.length
+    }
+  };
+}
+var csvEntry = {
+  format: "csv",
+  detect(bytes, contentType) {
+    if (bytes) return null;
+    if (typeof contentType !== "string") return null;
+    const ct = contentType.trim().toLowerCase();
+    if (ct === CSV_CONTENT_TYPE) {
+      return { format: "csv", confidence: "likely", signals: [
+        `content type "${contentType}"`,
+        "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
+        "measured: 166 of 166 .csv keys in s3://cao-94612 were served this type exactly (M-144)"
+      ] };
+    }
+    if (CSV_CONTENT_TYPE_SYNONYMS.includes(ct)) {
+      return { format: "csv", confidence: "likely", signals: [
+        `content type "${contentType}"`,
+        `an older spelling of ${CSV_CONTENT_TYPE}; UNMEASURED in s3://cao-94612, where all 166 keys declared ${CSV_CONTENT_TYPE}`
+      ] };
+    }
+    return null;
+  },
+  parts: (bytes) => csvParts(bytes),
+  /* Accept either parts() output or raw bytes, exactly as the office entries
+     do, so detect->structure works uniformly at the registry seam while a
+     caller that already paid for parts() does not pay twice. */
+  structure: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await csvParts(partsOrBytes) : partsOrBytes;
+    return csvStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await csvParts(partsOrBytes) : partsOrBytes;
+    return csvText(parts);
+  }
+};
+
 // src/formats.mjs
 var REGISTRY = /* @__PURE__ */ new Map();
 function registerFormat(entry) {
@@ -24196,6 +24667,7 @@ registerFormat(pptxEntry);
 registerFormat(odtEntry);
 registerFormat(odsEntry);
 registerFormat(odpEntry);
+registerFormat(csvEntry);
 
 // src/textchain.mjs
 var STEP_KINDS = {
@@ -29199,6 +29671,7 @@ var CONTENT_AXIS_STATES = {
   not_extracted: "nobody has tried to extract this capture's text. This is the ABSENCE of an observation and not a finding about the document (D-129's NEVER_LOOKED at the content level)"
 };
 var CONTENT_AXIS_UNDETERMINED = "undetermined";
+var WATERMARK_BAND_CAUSE = "watermark_band";
 var MISSING_ROW_CAUSES = {
   pre_log: "this capture was extracted BEFORE the observation log carried the content level, so the look is recorded in the readings table and not here. It is not a capture nobody read",
   /* CORRECTED BY REC-107, and the old sentence is quoted in the reason rather than
@@ -29214,7 +29687,13 @@ var MISSING_ROW_CAUSES = {
      `not_ruled_out` rather than asserted in prose here**, so this sentence describes
      the cause and stops claiming what it cannot. */
   purged: "this capture predates the earliest content-level row this log holds, so the log may not yet have existed for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked at all. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW, and they are different facts",
-  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement"
+  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement",
+  /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE FOURTH WORD, AND IT IS NOT A FOURTH
+     SECTION 5.1 CAUSE. Section 5.1 has three causes and this word names none of
+     them: it says WHICH TWO OF THEM THE STORED PRECISION LEFT OPEN, and it exists
+     because the alternative was the reader PICKING between them. `not_ruled_out`
+     is still drawn from `ALL_MISSING_ROW_CAUSES`, which stays at three. */
+  [WATERMARK_BAND_CAUSE]: "this capture entered the record in the clock second IMMEDIATELY BEFORE the earliest content-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the capture entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them. The uncertainty is in the STORED VALUE and no comparison can remove it. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW"
 };
 function contentAxisFor({
   observed = null,
@@ -29357,7 +29836,11 @@ var MEANING_MISSING_ROW_CAUSES = {
      `evidence_one_sided` map a caller had to remember to join to the row. Both now
      sit ON the row, in `not_ruled_out` and `evidence_one_sided`. */
   purged: "this subject entered the record before the earliest meaning-level row this log holds, so the log may not yet have carried this level for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked -- and at a reference or an entity a pre-log look that found NOTHING is live too, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
-  never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement"
+  never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement",
+  /* D-516 — THE SAME FOURTH WORD AT THIS LEVEL, and the sentence differs because
+     the row it is measured against differs, which is A3b's rule applied to the
+     word this item adds rather than inherited by it. */
+  [WATERMARK_BAND_CAUSE]: "this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the subject entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them; at a reference or an entity a pre-log look that found NOTHING is live in the set as well, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT"
 };
 var MEANING_EVIDENCE_IS_ONE_SIDED = {
   capture: false,
@@ -29384,7 +29867,8 @@ var ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]
 function causesNotRuledOut(missingCause, { evidenceOneSided = void 0 } = {}) {
   if (missingCause === "pre_log") return ["pre_log"];
   if (missingCause === "never_looked") return ["never_looked"];
-  if (missingCause !== "purged") return [...ALL_MISSING_ROW_CAUSES];
+  if (missingCause !== "purged" && missingCause !== WATERMARK_BAND_CAUSE)
+    return [...ALL_MISSING_ROW_CAUSES];
   if (evidenceOneSided === false) return ["purged", "never_looked"];
   return [...ALL_MISSING_ROW_CAUSES];
 }
@@ -29393,11 +29877,16 @@ var WATERMARK_HAS_FRACTION = /\.\d+Z?$/;
 function watermarkUncertaintyMs(firstAt) {
   return WATERMARK_HAS_FRACTION.test(String(firstAt ?? "")) ? 0 : WATERMARK_SECOND_MS;
 }
+var WATERMARK_AFTER = "after";
+var WATERMARK_BEFORE = "before";
+var WATERMARK_WITHIN_BAND = "within_band";
 function enteredAfterFirstRow(enteredAt, firstAt) {
   const entered = Date.parse(String(enteredAt ?? ""));
   const first = Date.parse(String(firstAt ?? ""));
-  if (!Number.isFinite(entered) || !Number.isFinite(first)) return false;
-  return entered >= first - watermarkUncertaintyMs(firstAt);
+  if (!Number.isFinite(entered) || !Number.isFinite(first)) return WATERMARK_BEFORE;
+  if (entered >= first) return WATERMARK_AFTER;
+  if (entered < first - watermarkUncertaintyMs(firstAt)) return WATERMARK_BEFORE;
+  return WATERMARK_WITHIN_BAND;
 }
 function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
@@ -29550,6 +30039,15 @@ function derivationStatement(row = null, missingCause = null) {
       documents: null,
       derived: "pre_log",
       says: "derived before the observation log recorded derivations: the connection rows exist, and whether that derivation was cut is NOT recorded"
+    };
+  if (cause === WATERMARK_BAND_CAUSE)
+    return {
+      state: null,
+      cut: null,
+      at: null,
+      documents: null,
+      derived: "undetermined",
+      says: "undetermined: no derivation over this subject is recorded, and this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row the log holds. `observation_log.at` stores whole seconds, so the record cannot tell which side of that row the subject entered on, and it does not pick"
     };
   return {
     state: null,
@@ -31060,7 +31558,14 @@ var Store = class _Store extends DurableObject {
          DEFAULT because it is a running total and not an attribution: a store written before this
          column existed had no renders in flight at the moment it gained the column, so 0 is the
          MEASURED truth for every old row rather than a value a backfill reached for. */
-      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"]
+      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
+      /* D-463: the namespace an `ai` credential is confined to for its whole life, or NULL for one that is
+         not confined. NULLABLE AND NEVER BACK-FILLED, and here the direction matters more than usual: a
+         credential minted before this column existed was minted UNCONFINED, and the only value a backfill
+         could reach for is 'scratch', which would silently narrow an authority a member already granted and
+         granted on the record. NULL reads back as not confined, which is what it is. schema.mjs says why the
+         vocabulary is not restated in this file. */
+      ["ai_credentials", "confined_to", "TEXT"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -32349,14 +32854,21 @@ var Store = class _Store extends DurableObject {
         const c = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
         if (c && normalizeType(c.object_type) === "project") citedByCase[key]++;
       }
-    const citesOut = { confirmed: 0, severed: 0 };
+    const citesOut = { confirmed: 0, severed: 0, severed_reinstatable: 0 };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     const docFm = md && md.content !== null ? parseFrontmatter(md.content).data || {} : {};
     if (normalizeType(b.object_type) === "project") {
       const refs = docFm.references;
       for (const r of Array.isArray(refs) ? refs : [])
-        if (r && typeof r === "object" && r.rel === "cites")
-          citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
+        if (r && typeof r === "object" && r.rel === "cites") {
+          if (r.status !== "severed") {
+            citesOut.confirmed++;
+            continue;
+          }
+          citesOut.severed++;
+          if (typeof r.target === "string" && !this.#retiredNotCitable(r.target))
+            citesOut.severed_reinstatable++;
+        }
     }
     const rested = normalizeType(b.object_type) === "inquiry" ? this.#restsOnLive(target) : { confirmed: [], frozen: [], severed: [] };
     return {
@@ -33722,10 +34234,7 @@ var Store = class _Store extends DurableObject {
       };
     if (to === "confirmed") {
       const retiredMembers = [];
-      for (const id of sel.members) {
-        const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-        if (b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
-      }
+      for (const id of sel.members) if (this.#retiredNotCitable(id)) retiredMembers.push(id);
       if (retiredMembers.length)
         return {
           ok: false,
@@ -34556,6 +35065,30 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
   static RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire.";
   #retirementCitedBy(id) {
     return this.#citesInto(id).confirmed;
+  }
+  /* D-444: REINSTATEMENT'S ONE RETIRED-TARGET PREDICATE, shared by
+   * `#edgeTransition`'s RETIRED_NOT_CITABLE refusal (REC-183) and by
+   * `affordanceFacts`' `cites_out.severed_reinstatable`. §4.1 of State Rules
+   * v1.5 (BOB #30): a retired item is not citable, and moving an edge INTO
+   * `confirmed` is a citation made now.
+   *
+   * IT IS EXTRACTED FOR THE REASON `#citesInto` AND `#retirementCitedBy` WERE:
+   * the pre-flight publishes `reinstate` over a COUNT of severed edges, and a
+   * count cannot say whether every one of those targets has since been retired
+   * — so a project whose only severed edges point at retired items was offered
+   * an act this very predicate then refused, which is the drift DEC-8 forbids.
+   * The fact now asks THIS, so the offer and the refusal cannot answer
+   * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
+   *
+   * `source_status` is not read, as at cite and at reinstate: a removed or
+   * modified source stays citable, and `retired` is the other axis. Only
+   * Information has the state — an inquiry target answers false, exactly as
+   * `#edgeTransition` leaves it un-refused — and an id with no row answers
+   * false too, because an absent target is refused by another door and this
+   * one claims nothing about it. */
+  #retiredNotCitable(id) {
+    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+    return !!b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired";
   }
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
    *
@@ -39407,19 +39940,29 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       }));
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
+    const writer = { by: d.statement_by ?? null };
     const acks = this.#statementAcknowledgements(
       d.project_id,
       ident.caseId,
       ident.edition,
       params.statement ?? "",
       null,
-      null,
+      writer,
       d.draft_id
     );
+    const withheld = acks.byWriter + acks.withheldWriterUndetermined;
     const statementAcks = {
       statement_sha: acks.statementSha,
       acknowledgements: acks.rows,
       truncated: acks.truncated,
+      /* THE COUNT IS ALWAYS A NUMBER AND THE REASON IS ALWAYS A SENTENCE, zero included —
+         `acknowledged: 0` is D-150's own precedent that a zero is a STATEMENT and never a
+         blank. The two keys below are the publish answer's spellings, reused rather than
+         re-invented, so one fact is not named two ways across two doors (REC-213). */
+      withheld,
+      ...acks.byWriter ? { acknowledgements_by_statement_writer_not_listed: acks.byWriter } : {},
+      ...acks.withheldWriterUndetermined ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined } : {},
+      withheld_stated: _Store.#withheldWriterStated(withheld, writer.by),
       act: "op=statementack&draft=" + d.draft_id
     };
     const lastChange = _Store.#reviewLastChange({
@@ -39799,6 +40342,26 @@ case_project: ${project}
       ...acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this document lists)"] : []
     ] : acks.unbound ? [`${_Store.ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`] : [`${_Store.ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish \u2014 a group may be one person \u2014 and its absence is stated rather than left for a reader to infer.`];
   }
+  /* REC-213 / §6A + §3 rule 11 (BOB #33, 2026-09-24) — WHAT THE REVIEW COPY'S LIST LEFT OUT, IN ONE
+     SENTENCE A READER READS RATHER THAN A KEY THEY DECODE. `#ackBodyLines` is the case document's
+     spelling of the same obligation and this is the review copy's; they are two renderings because a
+     case document is signed prose and a review copy is an answer, and they must never disagree about
+     the FACT. Four states, each named and none a fallback:
+       - nothing withheld, a writer known — the plain case, said so a reader never infers it;
+       - nothing withheld, the writer UNDETERMINED — said too, because a short list with no participant
+         row in it looks identical whether the withholding bit or there was nothing to withhold;
+       - rows withheld by a NAMED writer — the row's own reason, in §3 rule 11's words;
+       - rows withheld because the writer is UNDETERMINED — stated as undetermined and NEVER as
+         *by the writer*, which would name a reading this record cannot attribute.
+     A RECIPIENT's row is never withheld by either arm (a grant's holder is never the writer), so this
+     sentence speaks only of participants and says so. */
+  static #withheldWriterStated(withheld, writerBy) {
+    const n = Number(withheld) || 0;
+    const rows = `${n} acknowledgement${n === 1 ? "" : "s"}`;
+    if (!n)
+      return writerBy ? `Nothing is withheld from this list: this record holds no acknowledgement of this statement by ${writerBy}, who wrote it.` : `Nothing is withheld from this list: this record holds no participant's acknowledgement of this statement at this production, so there is none that might be its writer's own.`;
+    return writerBy ? `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, by the statement's writer, ${writerBy}: a reading by its own writer is not a SECOND reading of it (BIO_Publication \xA73 rule 11). It is counted here rather than hidden \u2014 everything recorded is shown or stated (\xA76A).` : `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, and the reason is UNDETERMINED rather than the writer's own: this draft predates the recording of the statement's author, so any participant's acknowledgement of it may be the writer's and this list cannot rule that out (BIO_Publication \xA73 rule 11). They are counted here rather than hidden \u2014 everything recorded is shown or stated (\xA76A).`;
+  }
   /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
      DOCUMENT, because the list must be inside the signature and `op=publish` cannot run twice over
      one prepared edition (ALREADY_A_CASE_MEMBER). Only the list's two runs change; the document's
@@ -39861,8 +40424,13 @@ case_project: ${project}
      act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
      since D-150. `writer` is the member who wrote the SENTENCE (`#statementWriter`), which rule 11's
      exclusion is actually about and which nothing here could see until rule 13 gave it a name.
-       - `writer === null` means NOT ASKED, and is the review copy's live list: it shows a reader every
-         acknowledgement recorded, ahead of any act that decides what a document may print.
+       - `writer === null` means NOT ASKED. CORRECTED BY REC-213 (BOB #33, 2026-09-24), never exempted,
+         because the old sentence here named the wrong caller: it read *and is the review copy's live
+         list*, and that is no longer true and was never right. The review copy ASKS — a row by the
+         sentence's own writer is not a second reading at any moment, so showing it overclaims whether
+         or not a document has been authored yet. The one caller left that does not ask is
+         `#reauthorAcknowledgements` over a case document carrying NO `statement_by` KEY, which
+         predates rule 13 and is read in its own shape.
        - `{ by: '<member>' }` withholds that member's own.
        - `{ by: null }` is UNDETERMINED, and withholds EVERY participant row, because any one of them
          may BE the writer's own and a list that cannot rule that out is the record claiming a second
@@ -56452,6 +57020,23 @@ ${words}`;
           definition_version: p.definition_version,
           bundles: subjects.slice(0, _Store.QUEUE_OPTION_SUBJECTS_MAX)
         },
+        /* D-527: THE EARLIER DECISION TRAVELS WITH THE REOPENED QUESTION.
+           `proposalsFeed` already builds this object for a proposal a revision put
+           back in the open feed (REC-184, framework §8.2) and it is published here
+           UNCHANGED — the same object, no second derivation, `null` where nobody
+           has ever decided. It rode only on `op=proposals`, which NO surface reads
+           (UI-14 retired it for this op), so the one feed a member opens by habit
+           carried the reopened question and said nothing about the answer somebody
+           had already given it — a member meeting it is shown a question nobody
+           has answered when the record holds a decision, which is the record
+           claiming less than it holds. The `disposed` block below does carry the
+           row, and that is not the same fact reaching the reader: it is a JOIN on
+           a list bounded by QUEUE_DISPOSED_MAX, so a member with sixty-four
+           standing decisions meets the reopened item with its prior decision cut
+           off the end of the answer. `applies` is false wherever this is non-null
+           by construction and not by assertion — a decision that still governed
+           would have aged this finding out of the feed before it reached here. */
+        prior_disposition: p.prior_disposition,
         summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
         detail: `${p.n} instance${p.n === 1 ? "" : "s"} of this progression reach${p.n === 1 ? "es" : ""} '${p.stage_label}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : ""),
         basis: {
@@ -68444,6 +69029,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     taskScope = null,
     writes = [],
     note = null,
+    confinedTo = null,
     at = null
   } = {}) {
     const refusal7 = (code, detail, extra) => {
@@ -68481,10 +69067,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         { tokenId: id || null }
       );
     const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
+    const confinement = confinedTo === null || confinedTo === void 0 ? null : String(confinedTo);
     this.sql.exec(
       `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
-         scope_writes, scope_note, minted_by, minted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         scope_writes, scope_note, minted_by, minted_at, confined_to)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       String(secretSha ?? ""),
       kind,
@@ -68493,7 +69080,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       JSON.stringify(declared),
       String(note ?? ""),
       String(who),
-      now
+      now,
+      confinement
     );
     return { ok: true, minted: true, credential: this.#aiCredentialPublic(
       this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)
@@ -68625,7 +69213,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       mintedAt: row.minted_at,
       revokedAt: row.revoked_at || null,
       revokedBy: row.revoked_by || null,
-      revoked: !!row.revoked_at
+      revoked: !!row.revoked_at,
+      /* D-463: WHICH NAMESPACE THIS CREDENTIAL CAN EVER ADDRESS. `null` is "not confined" and is
+         stated as a value rather than left off the object, because an absent key reads the same as a
+         key nobody thought about — and this is the one property of a credential a member has to be
+         able to read back to know whether an agent can touch the record at all. The gate reads the
+         same field through `aiCredentialLook`, which spreads this projection, so what a member sees
+         and what the plane enforces are one string and cannot disagree. */
+      confinedTo: row.confined_to || null
     };
   }
   /** File the links a captured document made. Replaces this capture's rows
@@ -69340,7 +69935,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstContentAt) return "purged";
     const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
     if (!reg) return "purged";
-    return enteredAfterFirstRow(reg, firstContentAt) ? "never_looked" : "purged";
+    const order = enteredAfterFirstRow(reg, firstContentAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
   #missingContentCause(captureSha, registeredAt = null) {
     if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
@@ -70262,7 +70860,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (!firstAt) return "purged";
     const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
     if (!entered) return "purged";
-    return enteredAfterFirstRow(entered, firstAt) ? "never_looked" : "purged";
+    const order = enteredAfterFirstRow(entered, firstAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
    *  every level's frontier, through the one function in `airun.mjs` that decides
@@ -74453,7 +75054,29 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          second condition to be discovered would be the overclaim this
          project's whole threat model is about. */
       in_force: b.current_state === "adopted",
-      note: b.current_state === "adopted" ? "this set is in force for that scope" : "recorded and pinned; the set is in force once the bundle itself stands at 'adopted', which is a member-authored transition through op=promote"
+      /* REC-210 — THE MARKER. Ruled by BOB #32 on 2026-09-24 and folded into
+                      `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": *"Adopting a proposed,
+                      not-yet-accepted revision is a REPLACEMENT: the adopter's lens becomes those bytes,
+                      and it stays on them whatever later happens to the proposal. It is never a
+                      pre-authorisation of whatever the proposal becomes. The adoption and its read SAY
+                      that they pin a proposed revision."*
+      
+                      IT IS A FACT ABOUT THE PIN, NOT A SECOND SPELLING OF `in_force`. The two agree in
+                      THIS answer because the pin is the head at this instant; they come apart at the
+                      READ, in both directions. promote() re-pins an adoption taken at `proposed` to the
+                      sha the promotion to `adopted` mints (REC-187), so this row stops pinning a proposed
+                      revision with nobody adopting again — and a re-adoption of an ALREADY ADOPTED set on
+                      a later proposal moves the pin back onto proposed bytes and LIFTS a lens that was in
+                      force. `in_force: false` says no lens stands over this scope's work; the marker says
+                      what was frozen instead, and that the group has not accepted it.
+      
+                      STATED RATHER THAN LEFT TO BE INFERRED, for the reason `in_force` itself is:
+                      `pinned.bundle_sha` is 64 hex characters that no reader can tell from an adopted
+                      revision's without going and fetching the bytes, so an answer without this field
+                      lets a REPLACEMENT read exactly like an ordinary adoption — the record claiming more
+                      than it can support, which is the defect this project ranks worst. */
+      pins_proposed: b.current_state === "proposed",
+      note: b.current_state === "adopted" ? "this set is in force for that scope" : "PINS A PROPOSED REVISION: this adoption froze bytes the group has offered and not yet accepted, so it REPLACES this scope's lens with them rather than pre-authorising whatever the proposal becomes; a lens is in force once the revision THIS ROW PINS stands at 'adopted', which is a member-authored transition through op=promote"
     };
   }
   /* NOT a literal. `MACHINE_AUTHOR_PREFIX` is the catalogue's, imported at the
@@ -74565,6 +75188,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const pinned = [];
     const pinnedText = /* @__PURE__ */ new Map();
     const unresolved = [];
+    const pinsProposed = [];
     const adoptionsFor = (type, id) => {
       const out = [];
       const rows = this.#rows(
@@ -74583,7 +75207,18 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           continue;
         }
         const fm = parseFrontmatter(text).data || {};
-        if (fm.current_state !== "adopted") continue;
+        if (fm.current_state !== "adopted") {
+          const pinnedState = fm.current_state;
+          pinsProposed.push({
+            bundle_id: a.bundle_id,
+            revision: a.bundle_sha,
+            scope: a.scope_type,
+            pinned_state: typeof pinnedState === "string" ? pinnedState : null,
+            adopted_by: a.author,
+            adopted_at: a.at
+          });
+          continue;
+        }
         pinned.push([a.bundle_id, fm]);
         pinnedText.set(a.bundle_id, text);
         out.push(a);
@@ -74593,6 +75228,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const instanceAdoptions = adoptionsFor("instance", "");
     const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
     const adoptions = [...instanceAdoptions, ...projectAdoptions];
+    const marker = pinsProposed.length === 0 ? {} : {
+      pins_proposed: pinsProposed,
+      pins_proposed_stated: "each entry is an adoption whose PINNED REVISION is one the group has offered and not accepted: the member's act REPLACED that scope's lens with those bytes and is not a pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin puts no lens in force until the revision it names stands at 'adopted'"
+    };
     if (unresolved.length > 0)
       return {
         ok: true,
@@ -74605,6 +75244,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         lock_violations: [],
         statements_sha: null,
         unresolved_pins: unresolved,
+        ...marker,
         count: 0,
         total: 0,
         limit: 0,
@@ -74623,6 +75263,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         residue: [],
         lock_violations: [],
         statements_sha: null,
+        ...marker,
         count: 0,
         total: 0,
         limit: 0,
@@ -74716,6 +75357,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       /* Stated in the answer rather than left to be inferred: the hash covers
          the whole set even when the page does not. */
       statements_sha_covers: "the whole effective set, before any bound was applied",
+      /* REC-210: A LENS IN FORCE AND AN ADOPTION PINNING A PROPOSED REVISION ARE NOT EXCLUSIVE —
+         one set's pin may stand at `adopted` while another's was moved onto a later proposal, and
+         the instance and project layers can differ. So the marker travels here too, and the
+         statements above are the effective set of the pins that ARE adopted, never of these. */
+      ...marker,
       statements: page,
       residue,
       lock_violations: lockViolations,
@@ -78706,6 +79352,45 @@ var KNOCK = {
 };
 KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
+function knockEnvelopeTooLarge() {
+  const row = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockEnvelopeTooLarge: KNOCK_ENVELOPE_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return {
+    ok: false,
+    reason: "KNOCK_ENVELOPE_TOO_LARGE",
+    code: "KNOCK_ENVELOPE_TOO_LARGE",
+    check: row.check,
+    translation: row.translation,
+    maxBytes: KNOCK.maxBytes
+  };
+}
+function knockPayloadTooLarge(cap, r2) {
+  const row = KNOCK_CHECKS.KNOCK_PAYLOAD_TOO_LARGE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockPayloadTooLarge: KNOCK_PAYLOAD_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return {
+    ok: false,
+    reason: "KNOCK_PAYLOAD_TOO_LARGE",
+    code: "KNOCK_PAYLOAD_TOO_LARGE",
+    check: row.check,
+    translation: row.translation,
+    maxBytes: cap,
+    detail: r2 ? void 0 : "this instance stores knocks inline; large material needs its evidence storage configured"
+  };
+}
+function knockEmpty() {
+  const row = KNOCK_CHECKS.KNOCK_EMPTY;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return {
+    ok: false,
+    reason: "KNOCK_EMPTY",
+    code: "KNOCK_EMPTY",
+    check: row.check,
+    translation: row.translation
+  };
+}
 var SCRATCH = "scratch";
 var PUBLISHED_STORE = "bio";
 async function fingerprint(v) {
@@ -78931,6 +79616,52 @@ function pinnedNamespaceGate(url, op, spec) {
     pinned: "bio"
   }, 400);
 }
+function confinedNamespaceGate(url, cred) {
+  if (!cred || cred.confinedTo !== SCRATCH) return null;
+  if (url.searchParams.has("store") && url.searchParams.get("store") !== SCRATCH) {
+    return json({
+      ok: false,
+      reason: "NAMESPACE_CONFINED",
+      ...namespaceRow("NAMESPACE_CONFINED"),
+      error: `credential '${String(cred.tokenId).slice(0, 60)}' is confined to the ${SCRATCH} namespace for its whole life and cannot address ${JSON.stringify(String(url.searchParams.get("store")).slice(0, 80))}; nothing was read or written`,
+      tokenId: cred.tokenId,
+      asked: String(url.searchParams.get("store")).slice(0, 80),
+      confinedTo: SCRATCH
+    }, 403);
+  }
+  url.searchParams.set("store", SCRATCH);
+  return null;
+}
+async function aiCredentialPresented(url, env) {
+  const t = url.searchParams.get("token");
+  if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
+  const st = env.STORE.get(env.STORE.idFromName("bio"));
+  const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
+  if (!out.answered) return { silent: "aicredentiallook" };
+  return { cred: out.result?.found ? out.result.credential : null };
+}
+function aiConfinementDeclaration(confinedTo) {
+  const refusal7 = (code, detail, extra) => {
+    const row = AI_CREDENTIAL_CHECKS[code];
+    return { error: {
+      reason: code,
+      code,
+      check: row.check,
+      translation: row.translation,
+      detail,
+      ...extra || {}
+    } };
+  };
+  if (confinedTo === null || confinedTo === void 0) return { confinedTo: null };
+  const asked = String(confinedTo);
+  if (asked !== SCRATCH)
+    return refusal7(
+      "AI_CONFINEMENT_NOT_SCRATCH",
+      `'${asked.slice(0, 80)}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${JSON.stringify(SCRATCH)}; ${JSON.stringify("bio")} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.`,
+      { asked: asked.slice(0, 80), confinements: [SCRATCH] }
+    );
+  return { confinedTo: SCRATCH };
+}
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 function aiReachesAsMember(spec) {
   return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member") && !Array.isArray(spec.machineClasses);
@@ -79029,7 +79760,7 @@ async function reviewAnswer(out, op) {
   }
   return json({ ok: true, ...r }, 200);
 }
-async function caseReader(url, env, storeName) {
+async function caseReader(url, env, storeName, presentedAi) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
   const cls = await classify(t, env);
@@ -79040,9 +79771,12 @@ async function caseReader(url, env, storeName) {
   }
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   if (AI_TOKEN_SHAPE.test(t)) {
-    const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
-    if (!aOut.answered) return { silent: "aicredentiallook" };
-    const cred = aOut.result?.found ? aOut.result.credential : null;
+    let cred = presentedAi === void 0 ? void 0 : presentedAi;
+    if (cred === void 0) {
+      const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
+      if (!aOut.answered) return { silent: "aicredentiallook" };
+      cred = aOut.result?.found ? aOut.result.credential : null;
+    }
     const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
     return { viewer: scoped && !scoped.error ? scoped.viewer : "", cls: "ai" };
   }
@@ -80036,6 +80770,10 @@ var index_default = {
     }, 400);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
+    const presentedAi = await aiCredentialPresented(url, env);
+    if (presentedAi.silent) return storeSilent(presentedAi.silent);
+    const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
+    if (confinedNamespace) return confinedNamespace;
     const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
     if (pinnedNamespace) return pinnedNamespace;
     if (spec.classes === null) {
@@ -80116,7 +80854,7 @@ var index_default = {
         const heldCls = held ? await classify(held, env) : null;
         const heldScope = heldCls ? scopeFor(heldCls, url) : null;
         const igStore = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-        const igReader = await caseReader(url, env, igStore);
+        const igReader = await caseReader(url, env, igStore, presentedAi.cred);
         if (igReader.silent) return storeSilent(igReader.silent);
         if (igReader.viewer) {
           const igOut = await doAnswer(env.STORE.get(env.STORE.idFromName(igStore)).fetch("http://do/instancegroup"));
@@ -80132,7 +80870,7 @@ var index_default = {
         const heldCls = held ? await classify(held, env) : null;
         const heldScope = heldCls ? scopeFor(heldCls, url) : null;
         const giStore = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-        const giReader = await caseReader(url, env, giStore);
+        const giReader = await caseReader(url, env, giStore, presentedAi.cred);
         if (giReader.silent) return storeSilent(giReader.silent);
         const giOut = await doAnswer(env.STORE.get(env.STORE.idFromName(giStore)).fetch(giReader.viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
         if (!giOut.answered) return storeSilent("groupidentity");
@@ -80164,7 +80902,7 @@ var index_default = {
             reason: "MALFORMED",
             detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>"
           }, 400);
-        const reader = await caseReader(url, env, "bio");
+        const reader = await caseReader(url, env, "bio", presentedAi.cred);
         if (reader.silent) return storeSilent(reader.silent);
         const docSecret = url.searchParams.has("secret") ? await sha256Hex5(url.searchParams.get("secret") || "") : "";
         const out2 = await doAnswer(stub2.fetch(
@@ -80203,7 +80941,7 @@ var index_default = {
           q.set("bySecret", "1");
           q.set("secretSha", await sha256Hex5(url.searchParams.get("secret") || ""));
         } else {
-          const reader = await caseReader(url, env, "bio");
+          const reader = await caseReader(url, env, "bio", presentedAi.cred);
           if (reader.silent) return storeSilent(reader.silent);
           q.set("viewer", reader.viewer);
         }
@@ -80437,7 +81175,7 @@ var index_default = {
         if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
         const raw = await req.arrayBuffer();
         if (raw.byteLength > KNOCK.maxBytes + 4096)
-          return json({ ok: false, reason: "TOO_LARGE", maxBytes: KNOCK.maxBytes }, 413);
+          return json(knockEnvelopeTooLarge(), 413);
         let body2;
         try {
           body2 = JSON.parse(new TextDecoder().decode(raw));
@@ -80462,16 +81200,11 @@ var index_default = {
             "contentB64 is not valid base64"
           ) }, 400);
         }
-        if (bytes.length === 0) return json({ ok: false, reason: "EMPTY" }, 400);
+        if (bytes.length === 0) return json(knockEmpty(), 400);
         const r2 = typeof env.CAPTURES?.put === "function";
         const cap = r2 ? KNOCK.maxBytes : KNOCK.maxInline;
         if (bytes.length > cap)
-          return json({
-            ok: false,
-            reason: "TOO_LARGE",
-            maxBytes: cap,
-            detail: r2 ? void 0 : "this instance stores knocks inline; large material needs its evidence storage configured"
-          }, 413);
+          return json(knockPayloadTooLarge(cap, r2), 413);
         const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
         const nowMs = Date.now();
         const win = Math.floor(nowMs / KNOCK.windowMs);
@@ -80534,18 +81267,9 @@ var index_default = {
     let sessMember = null, sessRights = null, sessCaps = null;
     let sessViewer = null, sessIdentity = null;
     let aiCred = null;
-    if (!cls) {
-      const t = url.searchParams.get("token");
-      if (t && AI_TOKEN_SHAPE.test(t)) {
-        const st = env.STORE.get(env.STORE.idFromName("bio"));
-        const sha = await sha256Hex5(t);
-        const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${sha}`));
-        if (!aOut.answered) return storeSilent("aicredentiallook");
-        if (aOut.result?.found) {
-          cls = "ai";
-          aiCred = aOut.result.credential;
-        }
-      }
+    if (!cls && presentedAi.cred) {
+      cls = "ai";
+      aiCred = presentedAi.cred;
     }
     if (!cls) {
       const t = url.searchParams.get("token");
@@ -80633,6 +81357,14 @@ var index_default = {
         rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
         capabilities: viaSession ? [...sessCaps].sort() : null,
         vocabulary: Store.CAPABILITIES,
+        /* D-463: WHETHER THIS CREDENTIAL CAN EVER REACH THE RECORD, answered as a value rather than left for a
+           caller to infer from the `store` beside it. The two are different facts and an instrument needs both:
+           `store` is where THIS call landed, `confinedTo` is where every call it will ever make lands. `null` is
+           "not confined", which is the honest answer for a session (a member is not a confined credential) and
+           for the four binding classes (an operator sets them in the hosting dashboard, and there is no row to
+           carry the property — the probe class's confinement is its CLASS's, read out of `scopeFor`, and is
+           reported as `store` on every one of its answers). */
+        confinedTo: cls === "ai" && aiCred ? aiCred.confinedTo ?? null : null,
         detail: viaSession ? "capabilities are set by an administrator and gate what this account may DO, not what it may see" : "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead"
       }, store: storeName, tokenClass: cls }, 200);
     }
@@ -83926,6 +84658,8 @@ var index_default = {
       }
       const declared = aiScopeDeclaration(asked.writes);
       if (declared.error) return json({ ok: false, ...declared.error, op, cls }, 403);
+      const confinement = aiConfinementDeclaration(asked.confinedTo);
+      if (confinement.error) return json({ ok: false, ...confinement.error, op, cls }, 403);
       const raw = new Uint8Array(32);
       crypto.getRandomValues(raw);
       const secret = "aik-" + [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -83933,7 +84667,11 @@ var index_default = {
       inner.searchParams.set("secretSha", await sha256Hex5(secret));
       const minted = await doAnswer(stub.fetch(new Request(
         inner,
-        { method: req.method, body: JSON.stringify({ ...asked, writes: declared.writes }) }
+        { method: req.method, body: JSON.stringify({
+          ...asked,
+          writes: declared.writes,
+          confinedTo: confinement.confinedTo
+        }) }
       )));
       if (!minted.answered) return storeSilent("aicredentialmint");
       if (!minted.result || minted.result.ok !== true)

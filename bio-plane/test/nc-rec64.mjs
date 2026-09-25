@@ -1,7 +1,10 @@
 #!/usr/bin/env node
-/* nc-rec64.mjs — REC-64's NEGATIVE CONTROL HARNESS. Lives INSIDE this worktree,
- * never in a shared scratchpad, because a control that writes outside its own
- * tree is a control another session can be destroyed by.
+/* nc-rec64.mjs — REC-64's NEGATIVE CONTROL HARNESS. The DRIVER is committed INSIDE
+ * this worktree so the next session re-runs it in one step. Its PEN is not: since
+ * M0-182 the pristine copies go to `controlPen("rec64")`, a fresh `mkdtemp` outside
+ * the tree — which answers the old reason for keeping them in (a control must not
+ * write where another session can be destroyed by it) better than a shared
+ * scratchpad or a fixed `/tmp` name ever did, neither being isolated per session.
  *
  * FOUR ARMS, EACH ARMED ALONE WITH THE OTHERS HELD OPEN. That is not
  * ceremony: an arm armed alongside another cannot tell you which one the
@@ -25,6 +28,7 @@ import path from "path";
 import crypto from "crypto";
 import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
+import { controlPen } from "./pen.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, "..", "..");
@@ -33,7 +37,7 @@ const P = {
   catalog: path.join(ROOT, "bio-plane", "checks", "bio-checks.mjs"),
   guard:   path.join(ROOT, "civicos-ui", "check-refusal-codes.mjs"),
 };
-const PRISTINE = path.join(HERE, ".nc-rec64-pristine");
+const PRISTINE = controlPen("rec64");
 
 const sha = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex");
 

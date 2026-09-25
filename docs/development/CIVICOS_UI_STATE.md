@@ -50,6 +50,170 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
+is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
+did for v113. SURFACE: **the published case page now names the member who WROTE the exclusion statement apart from
+the member who PREPARED AND PUBLISHED the case.**
+
+**WHAT IT CLOSES, and it is a sentence that claimed more than the record supports.** Page 2 read `Written by
+${c.completeness.author}` under a note promising *"the member who wrote it"*. `completeness.author` is the
+PUBLISHER. REC-212 (IC-272) split the two acts on the plane the same day — BOB #32 ruled (b), *two acts, two names,
+never conflated*, and BOB #33 ruled REC-212's three determinations — and raised the delegation this item
+discharges (`CLAIMS.md`, "DELEGATION 2026-09-24 RECORD (REC-212) -> UI"). So on the ordinary shape of a project
+that reviews its own work — an editor writes the statement, the owner publishes — a CREDENTIAL-FREE page told a
+stranger the publisher wrote a sentence they did not write. That is the overclaim this record exists to refuse, in
+the one place a stranger reads.
+
+**THE DATE WENT WITH IT, and it is the same defect's second half rather than a tidy-up.** `completeness.at` is
+stamped at the PUBLISHING act (`op=publish` writes `author: who, at: when` together), so *"Written by X on <at>"*
+dated the writing by the publishing. The date is kept and now prints against the act it measures.
+
+**WHAT LANDED**, three sites in `app.html` and nothing else of the surface: a new `pubStatementWriterHtml` beside
+`pubStatementAcksHtml`; the `p2` block of `pubCaseHtml` calling it, with the old sentence gone; and
+`pubCaseAuthors`, whose entries now name their own acts (`(prepared and published the case)`, and the writer as
+its own entry when the record names one that is not the publisher) where one read `(completeness, for the case)`.
+No `DEC-49 REGION`, no act dialog, no router, no `SURFACES` key, no review-copy surface was touched.
+
+**THE THREE STATES ARE RENDERED AS THREE, which is UI-89's rule (`[]` is not `null`) arriving at the name beside
+the list.** `op=publishedcase` serves `completeness.statement_by` — a name, or `null` — together with
+`completeness.statement_by_stated`, ONE sentence the plane committed from the SIGNED bytes at ratification. That
+sentence is what tells the plane's two nulls apart (a document that SAYS it could not establish the writer, and a
+document authored before rule 13 that says NOTHING about one), so it is rendered AS THE PLANE WROTE IT — DEC-8,
+and the area's own rule: render the record's own words or render nothing.
+
+**AND A FOURTH STATE THIS SURFACE CAN MEET AND THE PLANE CANNOT, found by asking who else reads the field.** A
+published record COMMITTED before `statement_by_stated` existed carries no such key at all, so there is no plane
+sentence to render. It is not the plane's stated undetermined and is not drawn as it: the page says the question
+was never put to this record, and takes no name off the publisher. `publishedcase.test.mjs`'s fixtures are exactly
+that state, which is why its two affected assertions were CORRECTED rather than exempted, each with a dated
+comment saying why the old one was wrong — one of them was asserting the defect (`/Written by vera on 2026-07-20/`).
+
+**MEASURED.** `civicos-ui/test/statement-writer.test.mjs`, 25/0, NEW: three cases drafted, published, SIGNED and
+ratified through the real plane under miniflare, then read back by the page through `op=publishedcase` as a caller
+holding NO credential — kai's draft statement published by iris (two names), a statement no draft holds (one
+member, two acts), and two drafts disagreeing (the plane's stated undetermined). `publishedcase.test.mjs` 244 ->
+245. UI harness and the full gate green; figures in the report.
+
+**WHAT IT CANNOT SEE, stated.** The no-key state cannot be driven live — `ratifyCaseDocument` writes the key
+unconditionally now — so it is rendered from a built answer and over `publishedcase.test.mjs`'s own pre-rule-13
+fixtures, and said rather than scored. `#statementWriter`'s `drafts_unbounded` and `draft_unreadable` answers are
+not reached (they need >500 drafts of one project, or a `case_drafts.params` no op writes); both are the PLANE's
+gap and `rec212-statement-writer.test.mjs` says the same of them. And rule 13's OWN residue is untestable by
+construction: a publisher who retypes a sentence an editor wrote in a draft SINCE EDITED is credited with it,
+because no record keeps a draft's statement history — the page prints the record's provenance sentence beside the
+name so a reader weighs it, and cannot do better than the record.
+
+**THE CONTROL FOUND THE INSTRUMENT WRONG, and it is recorded rather than smoothed.** Arm (A) — the row's own, the
+writer read off `author` again — came back RED at the right count with one DECLARED row GREEN. The row whose words
+are *"it is not read off the publisher"* read the PLANE's sentence and the HEADER's list and never asked what the
+page rendered as the writer, so the one row named for the defect could not see it. The row was corrected and the
+arm re-run against the corrected instrument: 7/7 AS DECLARED.
+(Renumbered v114 -> v119 by CONDUCT #20 at c20-batch27: the versions below it were taken first.)
+
+v118, 2026-09-24 session, thread UI, UI-94 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-94` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number is
+PROVISIONAL — UI-97 was running beside me and may have taken v114, so CONDUCT renumbers if it collided. SURFACE:
+**the queue FORWARDS A SELECTION of obligations to one member in ONE act.**
+
+**WHAT IT CLOSES.** D-126 (IC-235) gave `op=taskforward` a set form on the plane and left this surface's forward
+picker PER ITEM, and said so in four places rather than leaving it to be found: `NOTIFICATIONS.md`'s Incomplete
+section, `construct-status.json`'s `12.per-item` note, `member-respect.test.mjs`'s `queueEntryControlsHtml` row,
+and `queue-peritem.test.mjs`'s own "what this suite cannot see". A member holding ten obligations for one
+colleague had ten pickers and ten calls — the forty-dialogs shape (DEC-52) whichever button starts it. **All four
+statements are CORRECTED IN PLACE in this landing, each with why, and none exempted.**
+
+**WHAT LANDED**, all of it in `app.html`'s queue block and none of it on the plane (I3 consumer only):
+`queueSetOpFor` became **`queueSetOpsFor`**, answering the SET of published set acts an item can be handed to
+rather than one op — that singular return is the whole reason the bulk forward could not exist, since an
+OBLIGATION had to choose between `taskresolve` and `taskforward` and always answered the first. Beside it:
+`queueForwardOpen` / `queueForwardTo` / `queueForwardSet` / `queueForwardCancel`, `queueForwardCandidates`, one
+`QUEUE_FWD` state cell, the bar's branch and four wiring attributes of its own. The act is ONE `op=taskforward`
+carrying `items[]` with the chosen member as the shared key; every retained item keeps the record's own refusal
+(`NOT_YOURS` and who holds it now, `ALREADY_THEIRS`) through the path D-126 already built.
+
+**TWO DECISIONS THAT WERE MINE.**
+
+**(1) The picker withholds a member the WHOLE selection already belongs to, and nobody else.** The alternative was
+to withhold nobody and let the record refuse per item, which is the per-item weight's own posture — but naming
+someone who provably cannot receive ANY of it is *a control the record cannot honour*, which this area has a
+standing rule against (`v83`). The rule is keyed on the SELECTED ITEMS' assignees rather than on who is asking,
+which is the only spelling that stays right when the selection is not all one person's.
+
+**(2) The picker's state lives in `QUEUE_FWD`, not in the DOM.** The queue repaints whole, so a `<select>`'s value
+would not survive the repaint its own `onchange` triggers.
+
+**WHAT THE WORK FOUND, and both are about the fixture rather than the subject.** (a) A first draft of the
+spanning-selection arm claimed to drive a selection spanning assignees and **did not** — `queueFeed` carries a
+member her OWN tasks plus honestly `unassigned` ones, so every task selectable here is already hers, and
+`#routeTask` returns `unassigned` only when there is no active administrator, which `memberSet` will not produce
+without a section 4.7 vote (`ADMIN_REQUIRES_VOTE`). The arm is now driven as a UNIT with that stated at the site,
+rather than left as a green section measuring something else. (b) A retained item that DRIFTED away is **not**
+still selected — `queuePaint` drops from the selection every id the feed no longer carries — so the assertion
+says that, instead of the tidier sentence I first wrote.
+
+**NUMBERS.** `queue-peritem.test.mjs` 16 -> **36 pass / 0 fail**; `member-respect.test.mjs` 495/0 after its row's
+correction; the UI harness and the full battery green (the gate line is on the landing commit). The negative
+control is **7 arms, every one as declared**, recorded on the suite's `NEGATIVE CONTROL:` lines: UI-94's own
+`fwdloop` (the row's control — loop per item, and the one-act arms fail BY NAME), `fwdofferall` (the candidate
+rule), `fwdspelling` (OVER-STRICTNESS, green), plus D-126's `baseline`, `allornone`, `silentdrop`, `ncalls`
+re-run. **Two of D-126's three moved**, because the bulk forward goes through the same `queueApplySet`, and their
+declarations were amended FROM THE PRINTED FIGURES rather than the figures smoothed.
+(Renumbered v114 -> v118 by CONDUCT #20 at c20-batch27: the versions below it were taken first.)
+
+v117, 2026-09-24 session, thread UI, UI-97 (a WORKER of SCHEDULER #19 under BOB #33's 21:10Z dispatch, cloud
+session). Landed on `land/worker/UI-97` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry;
+the version number is provisional, since a concurrent UI worker may take v114 on main first — renumber it at
+integration and keep both entries in full and in version order. SURFACE: **the QUEUE's mute report now carries the
+two UNDO controls, so a member can take a mute back.**
+
+**WHAT IT CLOSES.** D-125 gave `op=queuemute` `unmute: true` in BOTH forms on 2026-09-23 and UI-86 gave the member
+both ways to MUTE on 2026-09-24. Nothing ever sent the flag. So the app had a one-way door: a member could silence
+a finding or a held host from the queue and had no way back, and `NOTIFICATIONS.md`'s own front matter said so
+(*"UNMUTE … has NO surface"*).
+
+**WHERE THE CONTROLS HAD TO GO, and it is the item's one real design point.** Not on the item: a muted item is NOT
+IN THE FEED, so there is nothing there to carry a control. The mute REPORT (`queueMuteReportHtml`) is the only
+place a member's own mutes are named at all, which makes it the only place an undo can live. Each form keeps its
+own attribute — `data-unmuteitem` sends `{ item, unmute:true }`, `data-unmutecase` sends `{ case, kinds,
+unmute:true }` — for the reason UI-86 gave for the mute's two: an undo of one item must never be picked up by a
+selector that hands a case to the plane.
+
+**AND WHAT THE SURFACE CANNOT NAME IS SAID RATHER THAN GUESSED AT.** `op=queue` publishes `mute.cases` as case IDS
+and publishes the muted KINDS nowhere; the only kinds this page can see are the ones on `suppressed[]`, which exist
+for a kind holding something back TODAY. So a case whose mute is suppressing nothing gets NO undo control and a
+sentence saying why. An "Unmute" over kinds this page had to guess would let back in something other than what the
+member muted, and *a control the record cannot honour is worse than no control* (`v83`). The gap is the PLANE's and
+is minted as **D-534**, sent to SCHEDULER — not a mode this surface withheld.
+
+**THE ACCEPTS-WHEN IS AGAINST A REAL PLANE**, in a new suite rather than folded into the mock one: `queue-unmute.test.mjs`
+(19/0) runs `bio-plane/src/index.mjs` under miniflare with two enrolled members, a threaded progression under a real
+case and a real held host, and drives both round trips through the surface's own acts — mute, undo, the item back
+on the painted feed AND read back from `op=queue`, with ben's feed asserted unmoved at every stage. It is its own
+file because `notifications.test.mjs`'s fixture rule is that NOTHING IS DRAWN AT RUNTIME, and a real plane mints
+ids, instants and tokens at runtime; the two instruments cannot share a file without one of them lying about itself.
+
+**CONTROLS.** `queue-unmute.control.mjs`, five arms on the EXTRACTED script (app.html never edited): baseline 19/0;
+`noflagitem` and `noflagcase` (the row's own — omit `unmute:true`, and the plane's idempotent upsert silently
+RE-MUTES) 15/4 each, exactly the declared arms; `noreport` (no undo drawn at all — the state this item found) 17/2;
+`overstrict` (the flag as `Boolean(1)`) GREEN. `notifications.control.mjs` re-run whole with four new arms: 20 of 20
+as declared, exit 0, every restore verified by sha256 and cmp.
+
+**AND ONE CORRECTION TO A DRIVER, never an exemption.** `notifications.control.mjs` kept its pristine copies in
+`.ui45-harness/` INSIDE the worktree — two full copies of `app.html` there for the length of every run. BOB #32
+ruled on 2026-09-24 that a file in a worktree is not inert (repository-walking suites walk it, it trips `gates.mjs`
+§2e, and it makes the tree dirty, so D-293 refuses to record a GREEN verdict; three items paid for it in one night).
+The pen is now a per-run `mkdtemp` outside the worktree, and the driver's own practice line says why it moved. Its
+collision reasoning was right and is KEPT — `mkdtemp` answers it by uniqueness rather than by location.
+
+Suites, each baseline RE-MEASURED at `1a7f0bcc0` in a scratch worktree rather than taken from the brief:
+`notifications.test.mjs` 75/0 -> 86/0 (§2, eleven new assertions, and its §6 sweep floor MOVED 11 -> 22 from the
+figure the run printed — the corpus was already 18, so the floor had SEVEN phases of slack before this item added
+four); `member-respect.test.mjs` 495/0 -> 503/0 (one new `SETS` row, `queueMuteReportHtml`, which the walk finds at
+three sites, plus two ARM 4d measurements of the plane's `unmute`); `queue-unmute.test.mjs` NEW, 19/0.
+`construct-status.json` gains `12.unmute`.
+(Renumbered v114 -> v117 by CONDUCT #20 at c20-batch27: UI-102, UI-101 and UI-99 took v114-v116 in c20-batch26.)
+
 v116, 2026-09-24 session, thread UI, UI-99 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-99` (base `origin/main` @ `1a7f0bcc`, the c20-batch24c train), in the commit that carries this
 entry. It was written as `v113` against `origin/main` @ `e9b21be6` and RENUMBERED to `v114` when the rebase onto

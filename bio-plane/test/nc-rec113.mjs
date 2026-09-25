@@ -39,6 +39,11 @@ import { readFileSync, writeFileSync, copyFileSync, existsSync, unlinkSync } fro
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
+import { controlPen } from "./pen.mjs";
+
+const PEN = controlPen("rec113");
+/* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
+const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const ROOT   = fileURLToPath(new URL("../..", import.meta.url));
 const STORE  = `${ROOT}bio-plane/src/store.mjs`;
@@ -167,7 +172,7 @@ function armOne(name) {
   if (!arm) return { name, ...runSuite(), identity: runIdentity(), armed: false };
 
   const { file, find, repl } = arm;
-  const keep = `${file}.pristine-rec113-${name}`;
+  const keep = penPath(file, `pristine-rec113-${name}`);
   copyFileSync(file, keep);
   const before = readFileSync(file, "utf8");
   const beforeSha = sha(file);

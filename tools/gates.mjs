@@ -25,6 +25,11 @@
  *      A hand-maintained list is the D-93/D-113 defect — it silently falls
  *      behind the directory — so the set is grepped fresh from test/ on every
  *      run, and the suites named are printed so the selection is auditable.
+ *      WHICH prose each of those suites then TAKES is §2f's answer (M0-176): the
+ *      paths it names, the directories it names, and the whole tree only for a
+ *      suite that names neither — because a door that took ANY docs/ change ran
+ *      every doc-facing suite for every note, which is the same "falls behind the
+ *      directory" defect one level down, in the PATH rather than in the SET.
  *
  *   3. plancheck ALWAYS runs (as --local mid-turn; the bare run is owed after
  *      the push — publication is the handoff gate's half).
@@ -65,8 +70,8 @@
  * estate's one lexer (`walkfloor.mjs` `stripComments`, strings kept, since a path is a
  * string) — a file a unit imports and, since M0-116, the unit's own source and control too;
  * which tools and scripts a unit RUNS is still read off its whole text. An unmeasured `docs/` path also brings
- * in DOCS's own doc-facing set, so TARGETED never checks prose more narrowly than DOCS
- * does. REACH, stated: the plane's runtime code is
+ * in DOCS's own doc-facing set — since M0-176, the doc-facing units that TAKE it (§2f), which is the same rule
+ * DOCS itself now applies, so TARGETED still never checks prose more narrowly than DOCS does. REACH, stated: the plane's runtime code is
  * not read (it cannot read a repository file at run time; its dependencies are
  * imports inside the FULL set); a path assembled at run time from pieces none of
  * which is its name, its stem or its directory is invisible; a comment naming a
@@ -601,6 +606,7 @@ function selectReaders(paths, among = UNITS) {
 
 /* ---- 2c · TARGETED, and --since --------------------------------------- */
 let selection = null;      // Map id -> { unit, why }
+let docsSel = { plane: [], ui: [] };   // M0-176: the doc-facing units a DOCS diff's own paths select
 let sinceInfo = null;
 let sinceNote = "";
 
@@ -620,11 +626,19 @@ function readersOf(paths, among = UNITS, { docs: docsMode = "net" } = {}) {
   const docs = paths.filter((p) => p.startsWith("docs/"));
   const rest = paths.filter((p) => !p.startsWith("docs/"));
   const out = selectReaders(docsMode === "cap" ? rest : paths, among);
-  if (docs.length && docsMode === "cap")
-    for (const [id, v] of selectReaders(docs, among.filter((u) => DOC_FACING.has(u.id)))) if (!out.has(id)) out.set(id, v);
-  if (docs.length && docsMode === "net") for (const unit of among)
-    if (!out.has(unit.id) && DOC_FACING.has(unit.id))
-      out.set(unit.id, { unit, why: `doc-facing, and ${docs[0]}${docs.length > 1 ? ` (+${docs.length - 1} more)` : ""} changed` });
+  /* M0-176: BOTH bounds now ask §2f which prose a doc-facing unit takes, instead of handing it the whole tree.
+     "net" LOSES its blanket — a doc-facing unit that takes none of the changed prose is not selected. "cap"
+     GAINS §2f's clause 3: it was `selectReaders` over the docs paths, MENTION alone, so a unit reading prose by
+     assembly was already dropped there — a narrower answer than DOCS itself gave, which is the direction this
+     cap was never meant to go. The two still differ where they did: "net" also puts the docs paths through the
+     ALL-units `selectReaders` above (a unit that names the prose is selected whether or not it is doc-facing),
+     "cap" does not. */
+  if (docs.length && docsMode !== "fine") for (const unit of among) {
+    if (out.has(unit.id) || !DOC_FACING.has(unit.id)) continue;
+    const takes = docs.filter((p) => docsTakenBy(unit).has(p));
+    if (takes.length)
+      out.set(unit.id, { unit, why: `doc-facing, and it takes ${takes[0]}${takes.length > 1 ? ` (+${takes.length - 1} more)` : ""}` });
+  }
   return out;
 }
 function targetedSelection(paths) {
@@ -641,8 +655,10 @@ function targetedSelection(paths) {
    imports), every path a closure file names by basename or by stem as a quoted token, every directory a walker
    names (a file that enumerates, naming the directory's path, or its parent's last segment), and a unit's own
    walker's own directory — PLUS, where MENTION is blind by construction:
-     - a doc-facing unit (DOCS's own rule, §2) takes every `docs/` path: it reads prose through tools whose paths
-       are assembled at run time;
+     - a doc-facing unit (DOCS's own rule, §2) takes the `docs/` paths §2f resolves for it — every path its reach
+       already covers, every path under a `docs/` DIRECTORY it names, and the whole tree if it names NEITHER
+       (M0-176; until that row it took every `docs/` path, on the reasoning that prose is read through tools whose
+       paths are assembled at run time — which is true of some units and is now asked of each one);
      - a plane or fleet unit takes the whole FULL-class runtime set (§3a): the plane's roots and shipped build, the
        code it imports from outside `bio-plane/`, every fleet member, and `bio-plane/`'s own package/config files.
    The universe is every TRACKED file present on disk plus every untracked, unignored one. What a unit reads that
@@ -816,7 +832,7 @@ function deriveInputs(unit) {
     if (U.set.has(r)) out.add(r);
     for (const [p, how] of edges(f, false)) if (how === "import" && !seenRt.has(p)) { seenRt.add(p); stack.push(p); }
   }
-  if (DOC_FACING.has(unit.id)) for (const p of U.under.get("docs") || []) out.add(p);
+  if (DOC_FACING.has(unit.id)) for (const p of docsTaken(unit, out)) out.add(p);
   if (unit.kind === "plane" || unit.kind === "fleet") for (const p of runtimeSet()) out.add(p);
   /* A UI HARNESS CHECK is a check OVER the UI suites (`check-mock-envelope.mjs` re-runs every one with a probe
      preloaded): a check whose set holds a UI suite's source takes that suite's whole input set (measured 2026-09-23:
@@ -830,6 +846,81 @@ function deriveInputs(unit) {
   }
   return out;
 }
+/* ---- 2f · M0-176: WHICH `docs/` PATHS A DOC-FACING UNIT TAKES ----------------------------------------------
+   §2 answers WHETHER a unit reads prose. This answers WHICH prose — the same question §2b answers for every other
+   path — so it is answered by the SAME forward reach `deriveInputs` just derived, never by a second rule.
+
+   Until this row the answer was THE WHOLE TREE, at every site that asked it: the key above, the DOCS class's own
+   step, and both of `readersOf`'s bounds. MEASURED on this estate at 21d69e60 (`docs/development/measurements/M-146.md`): a
+   MEASUREMENTS-only diff and a kickoffs-only diff selected the SAME 42 units (plane 38 · ui 4) — identical lists,
+   because the door never looked at the path. `calibration.test.mjs` was in both, and its only prose is
+   `docs/development/kickoffs/SCHEDULER.md`; M0-165 had already cut its FALSE reader edge to MEASUREMENTS.md, and
+   this door put it straight back.
+
+   WHAT A DOC-FACING UNIT TAKES. The first clause is the narrowing; the other two are what keep it from being a
+   FALSE GREEN, which is the only way this row can go wrong:
+     1 · every `docs/` path its forward reach already covers — the path itself, its basename, its stem as a quoted
+         token, a directory it WALKS (§2b's one rule, comments blanked by the estate's one lexer);
+     2 · every path under a `docs/` DIRECTORY its closure NAMES as a quoted token, WALKER OR NOT — because
+         `join(REPO, "docs/development", name)` is prose read by ASSEMBLY and nothing in clause 1 sees it. The
+         shape deliberately mirrors §2b's walker branch: the directory's repo-relative path takes everything
+         BENEATH it, its last segment alone takes the files DIRECTLY in it;
+     3 · and if clauses 1 and 2 together resolve to NOTHING, the whole tree — a unit that spells `docs/` but names
+         no path and no directory under it reads prose by a route MENTION cannot see, and narrowing it is exactly
+         the false green. The backstop is INVERTED, never a list of units: it asks what makes a unit's prose
+         RECOGNISABLE and keeps the old behaviour for precisely those it cannot recognise.
+
+   THE KEY AND THE SELECTION CANNOT DRIFT APART, because the selection READS THE KEY (`docsTakenBy` is the docs
+   half of `inputsOf`) instead of re-deriving it. That is also what makes the narrowing SELF-POLICING rather than
+   merely argued: a PASS record is written only for a unit whose run TRACED CLEAN against this very set (§3a
+   condition 2), so a set that misses prose the unit really reads cannot produce a PASS — the trace FAILS it by
+   name. A wrong answer here costs a RED gate naming the unit; it cannot cost a silent green.
+
+   REACH, stated. Clause 2 sees a directory spelled as a QUOTED TOKEN, so one assembled from pieces (a template
+   with an interpolated segment, a name held in a variable) is invisible to it — and that is precisely the unit
+   clause 3 catches, since such a unit names no `docs/` path either. A `docs/` path inside a REGEX literal is
+   blanked with the comments, as everywhere else in this file. And a unit reading prose only through
+   `bio-plane/scripts/` is outside §2's own reach and so was never doc-facing to begin with: this row narrows
+   that blind spot nowhere and widens it nowhere. */
+const DOCS_DIRS = (() => {
+  let d = null;
+  return () => (d ??= [...universe().under].filter(([k]) => k === "docs" || k.startsWith("docs/")));
+})();
+const QT_MEMO = new Map();
+const quotedTokensOf = (abs) => {
+  if (!QT_MEMO.has(abs)) { const s = codeOf(abs); QT_MEMO.set(abs, s ? quotedTokens(s) : new Set()); }
+  return QT_MEMO.get(abs);
+};
+/* Clause 2: the prose under every `docs/` directory the unit's closure NAMES. */
+function docsDirsTaken(unit) {
+  const U = universe();
+  const out = new Set();
+  for (const f of closure(unit).keys()) {
+    const toks = quotedTokensOf(f);
+    if (!toks.size) continue;
+    for (const [d, ps] of DOCS_DIRS()) {
+      if (toks.has(d)) for (const p of ps) out.add(p);
+      else if (d.includes("/") && toks.has(d.slice(d.lastIndexOf("/") + 1))) for (const p of U.inDir.get(d) || []) out.add(p);
+    }
+  }
+  return out;
+}
+/* The docs half of a doc-facing unit's input set: clause 1 (`reached`, the forward reach already derived),
+   clause 2, and clause 3's backstop when the two together resolve to nothing. */
+function docsTaken(unit, reached) {
+  const out = new Set();
+  for (const p of reached) if (p.startsWith("docs/")) out.add(p);
+  for (const p of docsDirsTaken(unit)) out.add(p);
+  return out.size ? out : new Set(universe().under.get("docs") || []);
+}
+const DOCS_TAKEN = new Map();
+/* What SELECTION asks. It is read back OUT of the unit's key, so the two cannot answer differently. */
+function docsTakenBy(unit) {
+  if (!DOCS_TAKEN.has(unit.id))
+    DOCS_TAKEN.set(unit.id, new Set([...inputsOf(unit)].filter((p) => p.startsWith("docs/"))));
+  return DOCS_TAKEN.get(unit.id);
+}
+
 /* NEVER CACHED (§3a condition 1): a unit whose own source or control carries `GATE: never-cache (<reason>)`, and —
    decided here, §3a naming plancheck alone — a unit that RUNS plancheck (its closure names `tools/plancheck.mjs`): it
    reads what plancheck reads, the whole tree and `origin/coord`, and a verdict resting on a never-cached tool is itself
@@ -1062,9 +1153,19 @@ if (cls === "FULL") {
   STEPS.push({ label: "coverage --strict", units: ["coverage"], cmd: "node", args: ["scripts/coverage.mjs", "--strict"], cwd: join(REPO, "bio-plane") });
   STEPS.push({ label: "civicos-ui (all)", units: ["ui:*"], cmd: "node", args: ["civicos-ui/test/run.mjs"] });
 } else if (cls === "DOCS") {
-  if (planeDoc.length)
-    STEPS.push({ label: "battery (doc-facing)", units: batteryRuns(planeDoc), cmd: "node", args: ["scripts/battery.mjs", ...planeDoc], cwd: join(REPO, "bio-plane"), names: planeDoc });
-  for (const f of uiDoc)
+  /* M0-176: the DOCS class runs the doc-facing units that take a CHANGED path, not every doc-facing unit. An
+     EMPTY diff has no path to be granular about — `classify` reads it DOCS because nothing beyond prose can have
+     moved — so nothing is narrowed there and the whole derived set runs, exactly as it did before this row. */
+  const docsChanged = [...changed].filter((p) => p.startsWith("docs/"));
+  const byUnitId = new Map(UNITS.map((u) => [u.id, u]));
+  const takes = (id) => {
+    const u = byUnitId.get(id);
+    return !!u && (!docsChanged.length || docsChanged.some((p) => docsTakenBy(u).has(p)));
+  };
+  docsSel = { plane: planeDoc.filter((f) => takes(`plane:${f}`)), ui: uiDoc.filter((f) => takes(`ui:${f}`)) };
+  if (docsSel.plane.length)
+    STEPS.push({ label: "battery (doc-facing)", units: batteryRuns(docsSel.plane), cmd: "node", args: ["scripts/battery.mjs", ...docsSel.plane], cwd: join(REPO, "bio-plane"), names: docsSel.plane });
+  for (const f of docsSel.ui)
     STEPS.push({ label: `ui (doc-facing) ${f}`, units: [`ui:${f}`], cmd: "node", args: [join("civicos-ui/test", f)] });
 } else {
   const picked = [...selection.values()].map((v) => v.unit);
@@ -1199,6 +1300,10 @@ if (NEVER_CACHED) {
 }
 if (cls === "DOCS")
   console.log(`gates: doc-facing suites derived fresh, read as code${stripComments ? ", comments blanked (strings kept)" : " — THE LEXER DID NOT LOAD, so comments count too (over-selection)"} — plane [${planeDoc.join(", ")}] · ui [${uiDoc.join(", ")}]`);
+/* M0-176: and WHICH of them this diff's own prose selects — printed beside the derived set, so a narrowing is as
+   auditable as the derivation it narrows, and a selection that collapsed to nothing says so by name. */
+if (cls === "DOCS")
+  console.log(`gates: doc-facing selection is PATH-GRANULAR (M0-176) — ${docsSel.plane.length + docsSel.ui.length} of ${planeDoc.length + uiDoc.length} doc-facing unit(s) take a changed path${[...changed].filter((p) => p.startsWith("docs/")).length ? "" : " (EMPTY diff: nothing to narrow by, so the whole set runs)"} — plane [${docsSel.plane.join(", ")}] · ui [${docsSel.ui.join(", ")}]`);
 if (cls === "TARGETED" || cls === "SINCE" || cls === "RERUN") {
   console.log(`gates: FULL is derived too — plane imports from outside bio-plane/: [${planeForeign.roots.join(", ")}]`
     + `${planeForeign.files.length ? ` + [${planeForeign.files.join(", ")}]` : ""} · fleet: [${FLEET.map((m) => m.dir).join(", ")}]`);

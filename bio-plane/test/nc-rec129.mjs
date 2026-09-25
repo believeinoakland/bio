@@ -10,9 +10,10 @@
  * fail before it runs; each reports whether it ARMED (a match count other than
  * the one declared is a finding, never a retry); every restore is verified
  * against a uniquely-named per-arm pristine copy by sha256 AND by content —
- * never `git checkout --`. Pristine copies live in `$REC129_PEN` (default: a
- * `.rec129-harness/pen` inside THIS worktree — WORKER.md: the shared scratchpad and
- * `/tmp` are not isolated between sessions), used by nothing else.
+ * never `git checkout --`. Pristine copies live in `$REC129_PEN` (default:
+ * `controlPen("rec129")`, a fresh `mkdtemp` OUTSIDE the worktree — M0-182, BOB #32;
+ * `mkdtemp` is what makes it isolated, which a fixed name under `/tmp` was not),
+ * used by nothing else.
  *
  * TWO SUITES, one driver: the internet frontier's arms run
  * `frontier-internet.test.mjs`; the op=stats arms (`stats*`, `routeproof`, `purgethin`, `dbbytes*`,
@@ -24,11 +25,12 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-const SAFE = process.env.REC129_PEN || join(REPO, ".rec129-harness", "pen");
+const SAFE = process.env.REC129_PEN || controlPen("rec129");
 mkdirSync(SAFE, { recursive: true });
 const STORE = join(PLANE, "src/store.mjs");
 const INDEX = join(PLANE, "src/index.mjs");

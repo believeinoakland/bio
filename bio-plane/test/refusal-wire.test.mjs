@@ -412,7 +412,14 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
 + "must be looked at, and one that disappears must be struck with its reason. It does NOT see a "
 + "second site forwarding a name already on this list, which is why the count is printed beside it",
   [...new Set(FWD.map((f) => f.names))].sort(),
-  ["arm.refusal", "built", "c", "declared.error", "facts", "r", "rec.result", "scoped.error", "zip"]);
+  /* CORRECTED 2026-09-24 by D-463, never exempted: `confinement.error` joins the set, and the arm working is
+     WHY it is here. `op=aicredentialmint` now forwards a SECOND declaration refusal beside `declared.error` —
+     `aiConfinementDeclaration`'s, the confinement judged before anything is written (C-29.10) — and it is the
+     same KIND of forward as the one beside it: a `{ error: { reason, code, check, translation, detail } }`
+     built by a named declaration judge and spread at the mint edge with the op and the class added. The old
+     set was right for the tree it was written on. */
+  ["arm.refusal", "built", "c", "confinement.error", "declared.error", "facts", "r", "rec.result",
+   "scoped.error", "zip"]);
 
 /* ====================================================================== 3
  * THE TWELVE — HARVESTED FROM `store.mjs`, SO A THIRTEENTH CANNOT ARRIVE

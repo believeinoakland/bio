@@ -15,21 +15,37 @@
  *
  * `overstrict` is the other direction: an aliased json_each spelling nobody would choose, applied to the one
  * read D443-7 pins structurally. Correct work in an unanticipated spelling must stay GREEN.
+ *
+ * D-445 (2026-09-24) ADDED THE DRIVEN TWIN TO `casereg`'s DECLARATION. That arm used to be able to fail one
+ * assertion only — D443-7, a regex over the source — so it proved the pin was coupled to the SHAPE and
+ * nothing more. With D443-7b in the suite the same restored spread must also stop a real op: 120 ratified
+ * cases pinning one version of one finding, gated through op=ratify. A control that can only break a
+ * matcher is the case `CLAUDE.md` §5 names — a suite coupled to shape surviving a change to behaviour —
+ * and this is that gap closed from the other side.
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { tmpdir } from "node:os";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
 const STORE = join(PLANE, "src/store.mjs");
-const SAFE = join(PLANE, ".d443-control");   /* inside this worktree, never a shared /tmp name */
+/* THE PEN IS OUTSIDE THE WORKTREE — CORRECTED 2026-09-24 (D-445), on BOB #32's ruling of the same day.
+   It was `bio-plane/.d443-control`, and its comment said "inside this worktree, never a shared /tmp name":
+   the second half was right and the first was the trap. A file in the worktree is not inert — repository
+   walkers walk it, `gates.mjs` §2e counts it, and it makes the tree DIRTY so D-293 refuses to record a
+   green verdict; three items paid for that in one night. `mkdtempSync` answers the shared-name half
+   properly: a directory nobody else can collide with, named for this control, and removed on the way out. */
+const SAFE = mkdtempSync(join(tmpdir(), "d443-control-"));
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const J = "IN (SELECT value FROM json_each(?))";
 const ALL = ["D390-0", "D390-1", "D390-2", "D390-3", "D390-4", "D390-5",
-             "D443-0", "D443-1", "D443-2", "D443-3", "D443-4", "D443-5", "D443-6", "D443-7"];
+             "D443-0", "D443-1", "D443-2", "D443-3", "D443-4", "D443-5", "D443-6", "D443-7",
+             /* D-445: the driven half of D443-7 and its own liar's clause. */
+             "D443-0b", "D443-7b"];
 
 /* Each arm: [anchor as it stands, the spread it restores], mustFail, and mustNotFail = ALL minus the
    downstream set named in `mayFail` (arms of the SAME op, which refuses whole). */
@@ -71,11 +87,15 @@ const ARMS = {
         JSON.stringify(sup));`,
              "        `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (${sup.map(() => \"?\").join(\",\")})`,\n        ...sup);"]],
     mustFail: ["D443-6"], mayFail: [] },
-  casereg: {     /* `publishedCaseRegistryFor`: pinned structurally (D443-7). */
+  casereg: {     /* `publishedCaseRegistryFor`: pinned structurally (D443-7) AND driven (D443-7b, D-445).
+                    D443-0b is read BEFORE the drive and through ops that never reach this function
+                    (op=publishedcase, op=list, op=casedocument), so it must HOLD — that is what tells a
+                    broken read apart from a fixture that never built its 120 cases. */
     edits: [[`       WHERE case_id ${J} AND ratified_at IS NOT NULL ORDER BY case_id, edition\`, JSON.stringify(ids))) {`,
              "       WHERE case_id IN (${ids.map(() => \"?\").join(\",\")}) AND ratified_at IS NOT NULL ORDER BY case_id, edition`, ...ids)) {"]],
-    mustFail: ["D443-7"], mayFail: [] },
-  overstrict: {  /* a CORRECT aliased spelling of the same bind; declared GREEN. */
+    mustFail: ["D443-7", "D443-7b"], mayFail: [] },
+  overstrict: {  /* a CORRECT aliased spelling of the same bind; declared GREEN — D443-7b included, since
+                    an aliased `json_each` binds one variable too and the BEHAVIOUR is unmoved. */
     edits: [[`       WHERE case_id ${J} AND ratified_at IS NOT NULL`,
              "       WHERE case_id IN (SELECT j.value FROM json_each(?) AS j) AND ratified_at IS NOT NULL"]],
     mustFail: [], mayFail: [] },
@@ -88,14 +108,16 @@ const run = () => {
   catch (e) { out = (e.stdout || "") + (e.stderr || ""); code = e.status ?? -1; }
   const failed = new Set(), passed = new Set();
   for (const L of out.split("\n")) {
-    const m = /^\s+(PASS|FAIL)\s+(D\d+-\d+):/.exec(L);
+    /* D-445: the trailing letter of a driven twin (`D443-7b`). Without it the new arms were harvested as
+       neither passed nor failed, which this file scores UNSEEN — the right answer, reached for the wrong
+       reason, and one that would have read as the suite not running them. */
+    const m = /^\s+(PASS|FAIL)\s+(D\d+-\d+[a-z]?):/.exec(L);
     if (m) (m[1] === "PASS" ? passed : failed).add(m[2]);
   }
   const foot = /frontier-chunk: (\d+) passed, (\d+) failed(.*)$/m.exec(out);
   return { code, failed, passed, foot: foot ? foot[0] : "NO FOOT", reached: !!foot && !/DID NOT REACH/.test(foot[0]) };
 };
 
-mkdirSync(SAFE, { recursive: true });
 const want = process.argv[2] ? [process.argv[2]] : Object.keys(ARMS);
 const pristineSha = sha(STORE);
 const pristineBytes = readFileSync(STORE).length;

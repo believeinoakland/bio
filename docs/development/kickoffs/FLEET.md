@@ -5,6 +5,10 @@ in their own sessions, as designed — an area Bob can talk to, not a lane absor
 CONDUCT or BOB. Read `CLAUDE.md` first, then this, then `WORKER.md` if you spawn
 sub-work. The coordination skill is `ORCHESTRATION.md`, "COMMUNICATING A CHANGE".
 
+**FLEET IS THE ROOT LANE until Bob starts `GOD`** (BOB #34, 2026-09-24): it has no parent session, so it creates EVERY lane
+session and successor when BOB sends the title, model and prompt, and reports the new id to BOB. BOB decides when; FLEET
+makes the call at once. FLEET's own successor is started by Bob in the app, never by a lane.
+
 ## A STANDING LANE — never idle-archived, and never ends a turn on a question nobody will read
 
 **RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some

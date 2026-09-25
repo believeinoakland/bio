@@ -626,9 +626,19 @@ console.log("\n--- D · op=contentaxis, and the withholding that is DRIVEN rathe
   t("D2c: WHAT THIS SUITE CANNOT DRIVE, NAMED: a store holding a reading with no observation — "
   + "§5.1's cause (1), and the state of every capture on every instance that predates this "
   + "landing. It needs a pre-item build or a delete on an append-only table. The cause "
-  + "vocabulary is PUBLISHED on the answer, so a reader can at least see that the three exist "
+  + "vocabulary is PUBLISHED on the answer, so a reader can at least see that the causes exist "
   + "and that the state they are reading rests on one of them",
-    Object.keys(held.missing_causes || {}).length, 3);
+    /* CORRECTED BY D-516 FROM 3 TO 4, WITH THE REASON RATHER THAN BY WIDENING A
+       BOUND. The old figure was right about §5.1, which has three causes, and wrong
+       about the FIELD, which is the vocabulary a `missing_cause` may carry. BOB #33
+       (2026-09-24 17:58Z) added a fourth word to that vocabulary — `watermark_band`,
+       which names not a cause but WHICH TWO OF THE THREE the stored watermark's
+       whole-second precision left open. §5.1's own set is `ALL_MISSING_ROW_CAUSES`
+       and is still three; this arm asserts the PUBLISHED map, and it is counted from
+       the constant so the two can never be confused again. */
+    [Object.keys(held.missing_causes || {}).length, ALL_MISSING_ROW_CAUSES.length,
+     Object.keys(MISSING_ROW_CAUSES).length],
+    [4, 3, 4]);
 }
 
 {
@@ -704,10 +714,15 @@ console.log("\n--- E · op=frontier at the content level: bounded, and the re-ex
   + "The answer publishes the cause vocabulary as it publishes the state vocabulary, and the two "
   + "lists are DISJOINT — a subject in both would be the split not having happened",
     [Array.isArray(f.missing_unexplained), typeof f.missing_unexplained_count === "number",
+     /* CORRECTED BY D-516 FROM 3 TO 4 — the published vocabulary gained BOB #33's
+        band word; §5.1's own three are `ALL_MISSING_ROW_CAUSES` and did not move.
+        Read from the constant rather than typed, so a fifth word arriving beside
+        the writer moves this arm with it instead of silently passing. */
+     Object.keys(f.missing_causes || {}).length === Object.keys(MISSING_ROW_CAUSES).length,
      Object.keys(f.missing_causes || {}).length,
      (f.never_looked || []).every((r) => !(f.missing_unexplained || [])
        .map((u) => u.subject).includes(r.subject))],
-    [true, true, 3, true]);
+    [true, true, true, 4, true]);
 
   t("E4: the candidate list names the document we got HALF of and does NOT name the one we got — "
   + "both directions, because a candidate list that names everything is not a list",

@@ -32,11 +32,12 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-const SAFE = join(REPO, ".rec100-control-pristine");
+const SAFE = controlPen("rec100");
 mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");

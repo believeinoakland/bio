@@ -45,12 +45,13 @@ import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync, mkdirS
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const SUITE = fileURLToPath(new URL("./doorbell.test.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
-/* THE PEN, and it is a DIRECTORY with a .gitignore line for the reason the
-   standing rule at `.rec84-control-pristine/` gives and that every pen in that
-   file repeats: this driver's `limiter-off` arm copies a 3.1 MB `src/store.mjs`
+/* THE PEN, and since M0-182 it is a DIRECTORY OUTSIDE THE WORKTREE rather than one
+   with a `.gitignore` line — THE PEN RULE at the head of `.gitignore` gives the reason
+   and BOB #32 ruled it: this driver's `limiter-off` arm copies a 3.1 MB `src/store.mjs`
    aside, INTO `bio-plane/test/` — the one directory both `coverage.mjs`'s
    register and the battery's discovery read by walking rather than from a list.
    An interrupted run leaving that copy loose is a SECOND plane source for the
@@ -59,7 +60,7 @@ const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
    Each copy is removed as its restore verifies; the pen itself is removed on
    exit ONLY IF EMPTY, so a run that left something behind leaves the evidence
    with it (LED-2's rule) and the ignore line covers the rest. */
-const DIR = fileURLToPath(new URL("./.nc-d487-pen/", import.meta.url));
+const DIR = `${controlPen("d487")}/`;
 mkdirSync(DIR, { recursive: true });
 process.on("exit", () => { try { rmdirSync(DIR); } catch { /* not empty: evidence stays */ } });
 const MIN_BYTES = 6000;                       /* the suite is ~9KB; a restore smaller than this is a bug */

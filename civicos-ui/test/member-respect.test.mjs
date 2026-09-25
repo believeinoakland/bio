@@ -704,7 +704,7 @@ const SETS = {
      under the `per-item` weight (`store.mjs #perItem`) and built the bulk path here, so the carry's own
      premise is gone and the row now states both modes as built. */
   "queueEntryControlsHtml": { single: true, bulk: true, op: "proposedispose",
-    why: "CLEAN since D-126: a per-item tick on every obligation and every instance-keyed finding feeds ONE held selection, and `queueSelBarHtml` sends it as ONE `op=taskresolve` or ONE `op=proposedispose` carrying `items[]` under the plane's `per-item` weight — each item applied or kept in the list with the record's own reason, none stopping the others. The single controls (Forward, Mark resolved, Adopt, Defer, Dismiss) are untouched. A project-scoped finding takes no tick: its act needs the member to name the project it acts for, per item. `op=taskforward` takes a set on the plane and has NO bulk control here yet — forwarding needs a chosen member, and that picker is per item today." },
+    why: "CLEAN since D-126: a per-item tick on every obligation and every instance-keyed finding feeds ONE held selection, and `queueSelBarHtml` sends it as ONE `op=taskresolve` or ONE `op=proposedispose` carrying `items[]` under the plane's `per-item` weight — each item applied or kept in the list with the record's own reason, none stopping the others. The single controls (Forward, Mark resolved, Adopt, Defer, Dismiss) are untouched. A project-scoped finding takes no tick: its act needs the member to name the project it acts for, per item. CORRECTED 2026-09-24 by UI-94, not exempted: this row's last sentence read \"`op=taskforward` takes a set on the plane and has NO bulk control here yet — forwarding needs a chosen member, and that picker is per item today.\" That was TRUE on D-126's landing and named its own remedy; UI-94 built it. The selection now also goes as ONE `op=taskforward`: the member is chosen ONCE in the selection bar and rides as the act's shared key, each obligation forwarded or kept in the list with that act's own refusal. The per-item picker is untouched, so neither mode is forced." },
   "paintReview": { single: true, bulk: true, op: "release",
     why: "CLEAN, and it is the shape the other two are measured against: a per-row tick with a select-all, ONE `op=select` lease carrying the whole array into ONE `op=release` — and a single document released from its own page, which the empty-state line names ('or open one and release it from its page'). Crucial material carries a seal instead of a tick, so it is structurally unbulkable, and the page-bound note says select-all does not reach rows the record held back." },
   "finderRowsHtml": { single: true, bulk: true, op: "select",
@@ -719,6 +719,14 @@ const SETS = {
     why: "UI-68 (carried): one Withdraw per live grant on a review copy. `op=reviewrevoke` takes ONE `grant`, and each withdrawal is its own attributed act on the record (BIO_Publication §6A.2: the grant names who issued it, to whom and when; the withdrawal names who withdrew it). A bulk path is the PLANE accepting a set, not this surface looping — N calls over N grants is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `loadResolveCandidates`' own note)." },
   "queueMuteHtml": { single: true, bulk: true, op: "queuemute",
     why: "CORRECTED IN PLACE by UI-55. This was the amendment's BULK-ONLY half: one control muted every condition kind on the case and the member could not say 'just this one'. `op=queuemute` already took an arbitrary subset, so the single-kind path was one parameter away and no plane change was owed. UI-86 widened it to FINDING kinds (BOB #26, D-125)." },
+  /* UI-97, 2026-09-24. The mute REPORT became a repeated-control site the day it
+     grew the two UNDO controls, and it is a SET of decisions for the same reason
+     the two mute sites are: every muted item and every muted case is let back in
+     on its own. Both modes exist and neither is forced — and the SINGLE mode is
+     the one that had to exist here, because a muted item is not in the feed to
+     carry a control of its own. */
+  "queueMuteReportHtml": { single: true, bulk: true, op: "queuemute",
+    why: "UI-97. THE UNDO, which `op=queuemute` has taken as `unmute: true` in BOTH forms since D-125 and which no client sent. ONE `{ item, unmute:true }` per muted item is the single mode; ONE `{ case, kinds, unmute:true }` naming the kinds is the set mode, over the same class rule as the mute (`queueMutableItem`). Nothing is looped: the case control sends one call carrying its kinds, which is why this is a mode and not the forty-dialogs shape (DEC-52). NAMED LIMIT, not a mode withheld: the case control names only the kinds on `suppressed[]`, because `op=queue` publishes `mute.cases` as case IDS and the muted kinds NOWHERE — so a case whose mute is holding nothing back today gets no control and a sentence saying why, rather than an undo over kinds this surface guessed at. That gap is the plane's and is D-534." },
   "queueItemMuteHtml": { single: true, bulk: true, op: "queuemute",
     why: "UI-86. DEC-10's (b), 'stop notifying me about this one': ONE `{ item }` per control, keyed on the item's own id (D-125). It is the SINGLE-item mode; the case group's kind mute (`queueMuteHtml`, above) is the set mode over the same class rule (`queueMutableItem`), so neither is forced. Where an item has no case — an ungrouped condition (D-170) — the item form is the only mute the record has, and that is the plane's shape, not a mode withheld here." },
 };
@@ -802,6 +810,16 @@ for(const [host, s] of Object.entries(SETS)){
      "ARM 4d: `op=queuemute` still takes an `item` — the single-item mute's SETS row rests on that");
   ok(!!wire && /data-muteitem/.test(wire.body),
      "ARM 4d: the per-item mute is WIRED — a control the surface draws and never binds is worse than none");
+  /* UI-97: the UNDO's row rests on the plane taking `unmute` in both forms, so
+     that claim is re-read from the plane's own source the way the two above are.
+     If `queueMute` ever stops taking the flag, this goes RED at the claim rather
+     than leaving a control that sends a field the plane ignores. */
+  ok(/queueMute\(\{[^}]*\bunmute\s*=\s*false/.test(store)
+     && /if \(unmute\) this\.sql\.exec\(\s*`DELETE FROM queue_item_mutes/.test(store)
+     && /const next = unmute \? had\.filter/.test(store),
+     "ARM 4d: `op=queuemute` no longer takes `unmute` in BOTH forms — the item form's DELETE and the case form's DIFFERENCE are what `queueMuteReportHtml`'s two undo controls send. Re-measure the act before trusting either control.");
+  ok(!!wire && /data-unmuteitem/.test(wire.body) && /data-unmutecase/.test(wire.body),
+     "ARM 4d: the two UNDO controls are WIRED — a control the surface draws and never binds is worse than none");
 }
 
 /* ========================================================================== */

@@ -22,12 +22,14 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = `${ROOT}test/browser-render.test.mjs`;
-const PRISTINE = process.env.BIO_NC_SCRATCH
-  ? join(process.env.BIO_NC_SCRATCH, `nc-d490-${randomUUID().slice(0, 8)}`)
-  : join(tmpdir(), `nc-d490-${process.pid}-${randomUUID().slice(0, 8)}`);
+/* M0-182's one spelling (moved at c20-batch27 by CONDUCT #20): the old env-var-first expression was a pen
+   the sweep could not resolve (UNCLASSIFIED in the floored nc-* class). controlPen is mkdtemp under the
+   system temp root, outside the worktree. */
+const PRISTINE = controlPen("d490");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 /* DECLARED BEFORE ARMING. `must` is what the arm is FOR; `mustNot` is the

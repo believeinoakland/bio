@@ -1455,8 +1455,27 @@ ok("no request this surface made carried a credential", WIRE.every(w => !w.token
      && /what the case is ABOUT is a different claim from what it leaves OUT/i.test(t));
   ok("both are the CASE's and are made ONCE for the edition, not repeated per finding (DEC-44 (d))",
      cps.some(p => strip(p).includes(STMT2)) && findingPages(page).every(p => !strip(p).includes(STMT2)));
-  ok("the completeness assertion carries the member who wrote it and the date, and says it is the case's",
-     /Written by vera on 2026-07-20/.test(t) && /It is the CASE's assertion, made once for this edition/.test(t));
+  /* CORRECTED 2026-09-24 (UI-103, BIO_Publication_v0_1.md §3 rule 13), NEVER EXEMPTED, AND THE OLD
+     ASSERTION WAS ASSERTING THE DEFECT. It read `/Written by vera on 2026-07-20/` over a page whose
+     sentence was `Written by ${c.completeness.author} on ${c.completeness.at}` — and `completeness.author`
+     is the member who PREPARED AND PUBLISHED the case, not the member who wrote the exclusion statement
+     (REC-212, IC-272; BOB #32 ruled (b) 2026-09-24: two acts, two names, never conflated). `at` is stamped
+     at the PUBLISHING act too (`op=publish` writes `author: who, at: when` together), so the date dated
+     the wrong act as well. This fixture's `completeness` carries NO `statement_by` key at all — it is a
+     published record written before rule 13, which is a real state and is now rendered as ITS OWN: the
+     page says the bytes say nothing about the writer, and takes no name off the publisher. What is
+     asserted here is therefore STRONGER than what was here: the publishing act is named WITH its date,
+     the case's own altitude is still stated, AND vera is not named as the writer of anything. */
+  ok("the publishing act is named for itself, with the date the bytes carry for it, and the assertion is "
+   + "still said to be the CASE's",
+     /vera prepared and published this case, on 2026-07-20/.test(t)
+     && /It is the CASE's assertion, made once for this edition/.test(t));
+  ok("§3 rule 13: a published record written before the writer was told apart from the publisher SAYS SO, "
+   + "and no name is read off the publisher — vera is never called the writer of the exclusion statement",
+     /data-pub-writer="unstated"/.test(page)
+     && /say nothing about who wrote it/.test(t) && /No name is read off the publisher here/.test(t)
+     && !/vera wrote it/.test(t) && !/Written by vera/.test(t),
+     t.slice(t.indexOf("Who wrote this"), t.indexOf("Who wrote this") + 400));
   ok("the subject position travels with it", /sought_and_answered/.test(t));
 }
 
@@ -1677,10 +1696,19 @@ ok("no request this surface made carried a credential", WIRE.every(w => !w.token
   ok("declared bias is a real answer either way, and it is stated PER FINDING and never totalled",
      /1 declared hunch/.test(page) && /INFO-2026-8004/.test(page)
      && new RegExp(FIND_B + ": none declared").test(strip(page)));
-  ok("the case-level header LISTS its authors rather than merging them into one",
-     /vera \(completeness, for the case\)/.test(strip(page))
+  /* CORRECTED 2026-09-24 (UI-103, §3 rule 13), never exempted, and the correction is to the LABEL rather
+     than to the rule this row asserts. The list is still a list and is still never merged. The entry read
+     "(completeness, for the case)", which named the BLOCK and not an act — so on a case one member wrote
+     and another published, a reader of this line met one name where the record holds two, with nothing
+     saying which act it was. Each entry now names its own act in words. `statement_by` is absent from this
+     fixture (a record written before rule 13), so there is no writer entry to find here and the assertion
+     says so in both directions; `statement-writer.test.mjs` drives the two-name case against a live plane. */
+  ok("the case-level header LISTS its authors rather than merging them into one, and each entry names ITS "
+   + "OWN act — the publishing, and each finding's attestation",
+     /vera \(prepared and published the case\)/.test(strip(page))
      && /vera \(attested INQ-2026-4101\)/.test(strip(page))
-     && /dan \(attested INQ-2026-4102\)/.test(strip(page)));
+     && /dan \(attested INQ-2026-4102\)/.test(strip(page))
+     && !/wrote the statement of what this case leaves out/.test(strip(page)));
 }
 
 /* ---- the in-band block: DEC-31's bound rule, and it is TEXT ---- */

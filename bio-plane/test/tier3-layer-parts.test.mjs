@@ -621,11 +621,19 @@ console.log("\n--- 6. D-514: the real witness, measured at the counter ---");
   t("the fixture is present and tier 1 ordered its pages", !!p1, true);
   /* THE FIGURE FROM M-140, RE-MEASURED HERE RATHER THAN QUOTED. A number copied
      from a measurement agrees with it for free. */
-  t("legistar-73550 p1 reads 39 characters", p1 ? p1.text.length : -1, 39);
-  t("...and ZERO glyphs — the whole of it is whitespace (M-140, re-measured)",
+  /* CORRECTED at c20-batch27 (CONDUCT #20), never exempted: this page read 39 characters and ZERO glyphs
+     when D-514 wrote the arm (M-140), and ALL 39 were this reader's OWN emitted spaces. D-517 (same batch)
+     stopped emitting them (`softSpace`, M-145: legistar-73550 119 -> 29 characters, every one whitespace),
+     so on this tree the page reads 0 characters. The REAL witness of a whitespace-only page is therefore
+     gone from this corpus — the defect's source was closed one layer down — and the property it stood for
+     (the layer filter reads GLYPHS, not raw length) is driven by §5's synthesised pair, which does not
+     depend on any reader's spacing. What this section still asserts is what is TRUE of the real page. */
+  t("legistar-73550 p1 reads 0 characters (D-517 withdrew the 39 spaces this reader used to emit)",
+    p1 ? p1.text.length : -1, 0);
+  t("...and ZERO glyphs — nothing was derived from it, then or now (M-140, re-measured)",
     p1 ? glyphCount(p1.text) : -1, 0);
-  t("so the counter the layer filter now reads excludes it, while raw length would not",
-    [glyphCount(p1.text) > 0, p1.text.length > 0], [false, true]);
+  t("so neither the glyph counter nor raw length can place it in a layer part",
+    [glyphCount(p1.text) > 0, p1.text.length > 0], [false, false]);
 }
 
 /* ===================================================================== *

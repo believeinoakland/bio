@@ -14381,25 +14381,37 @@ let QUEUE_SET_ACTS = new Map();   // op -> the plane's published set act (weight
 let QUEUE_SEL = new Set();        // ids of items the member has selected
 let QUEUE_RETAINED = new Map();   // id -> { why, summary } from the last set act's retained outcomes
 let QUEUE_SET_ERR = "";           // a refusal of the SET itself (it had no items to judge)
+/* UI-94: the BULK FORWARD's picker, held in state rather than in the DOM, because the queue repaints
+   whole and a `<select>`'s value would not survive it. `null` is "not open"; `to` is the member the
+   forward would name, and it is read back out of here by the act, never off the element. */
+let QUEUE_FWD = null;             // null, or { members:[…the roster as op=memberlist gave it…], to }
 /* Read off the act source boot already loaded (`loadActSource`, one `op=affordances` read for the whole
    surface), never a second call — and never awaited ahead of the feeds, so the queue is not held back by it. */
 function queueSetActsFrom(src){
   const acts = (src && Array.isArray(src.setActs)) ? src.setActs : [];
   QUEUE_SET_ACTS = new Map(acts.filter(a => a && a.weight === "per-item" && a.id).map(a => [a.id, a]));
 }
-/* WHICH op a selected item's set act is, from the item's own class and the record's own disposition
-   publication. A finding keyed by (project, finding) is NOT selectable: its act needs the member to name
-   the project it is acting for, one item at a time, and a set would have to choose it for them. */
-function queueSetOpFor(it){
-  if(!it) return null;
-  if(it.class === "OBLIGATION") return canContribute() && QUEUE_SET_ACTS.has("taskresolve") ? "taskresolve" : null;
+/* WHICH set acts a selected item can be handed to, from the item's own class and the record's own
+   disposition publication. A finding keyed by (project, finding) is NOT selectable: its act needs the
+   member to name the project it is acting for, one item at a time, and a set would have to choose it
+   for them.
+
+   UI-94 WIDENED THIS FROM ONE OP TO THE SET OF THEM, and that is the whole shape of the change: an
+   OBLIGATION takes BOTH of the acts the plane publishes over it — resolve the selection, or forward the
+   selection to one member — and a function that could answer only one of them is why the queue had no
+   bulk forward. Each op is offered only where `set_acts` carries it, so a plane that cannot take a set
+   is still never handed one. */
+function queueSetOpsFor(it){
+  if(!it) return [];
+  if(it.class === "OBLIGATION")
+    return canContribute() ? ["taskresolve", "taskforward"].filter(op => QUEUE_SET_ACTS.has(op)) : [];
   if(it.class === "FINDING"){
     const d = it.disposition || null;
-    if(d && d.available === true && d.scope === "project") return null;
-    if(!notifDispositionKeyed(it) || !queueFindingKey(it) || !canProposalAct()) return null;
-    return QUEUE_SET_ACTS.has("proposedispose") ? "proposedispose" : null;
+    if(d && d.available === true && d.scope === "project") return [];
+    if(!notifDispositionKeyed(it) || !queueFindingKey(it) || !canProposalAct()) return [];
+    return QUEUE_SET_ACTS.has("proposedispose") ? ["proposedispose"] : [];
   }
-  return null;
+  return [];
 }
 function queueSelectionToggle(id, on){
   id = String(id);
@@ -14407,11 +14419,11 @@ function queueSelectionToggle(id, on){
   if(on) QUEUE_SEL.add(id); else QUEUE_SEL.delete(id);
   queuePaint();
 }
-function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_SET_ERR = ""; queuePaint(); }
+function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_SET_ERR = ""; QUEUE_FWD = null; queuePaint(); }
 function queueRetainedClear(id){ QUEUE_RETAINED.delete(String(id)); queuePaint(); }
 /* The selected ids a set op would take, in the order the member sees them. */
 function queueSelFor(op){
-  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id); return it && queueSetOpFor(it) === op; });
+  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id); return it && queueSetOpsFor(it).includes(op); });
 }
 /* ONE call for the whole selection. `shared` is what every item shares (a disposition, a reason); each
    item carries only its own identity. The actor and the decider are the plane's stamps and are never sent. */
@@ -14452,7 +14464,7 @@ async function queueApplySet(op, shared){
 }
 /* The per-item tick, drawn only where a published set act can take this item. */
 function queueSelTickHtml(it){
-  if(!queueSetOpFor(it)) return "";
+  if(!queueSetOpsFor(it).length) return "";
   const id = String(it.id);
   /* The tick FEEDS THE SET the act sends (member-respect ARM 1d's item selector): its value is the
      item's membership of `items[]`, nothing else. */
@@ -14475,14 +14487,84 @@ function queueRetainedGoneHtml(){
     ${gone.map(([id, r]) => `<div class="q-item" data-id="${esc(id)}"><div class="q-summary">${esc(r.summary||"")}</div>${queueRetainedHtml(id)}</div>`).join("")}
   </section>`;
 }
+/* ---- UI-94: THE BULK FORWARD (NOTIFICATIONS.md §Applying a handler to a selection) ----
+   D-126 gave `op=taskforward` a set form on the plane and left the surface's forward picker PER ITEM, so a
+   member holding ten obligations for one colleague had ten pickers and ten calls. That client-side loop is
+   the forty-dialogs shape (DEC-52) whichever button starts it, and the plane already takes the set. So the
+   selection names ONE member ONCE and goes as ONE `op=taskforward` carrying `items[]` under the `per-item`
+   weight: each obligation forwarded, or kept in the list with that act's own refusal — ALREADY_THEIRS,
+   NOT_YOURS and who holds it now — exactly as `taskresolve` already is. The per-item picker is untouched.
+
+   The forward is still a HUMAN judgement the plane fences (`MACHINE_CANNOT_FORWARD`), and this changes
+   nothing about that: the member chooses the person, and the actor is the plane's stamp, never sent. */
+function queueFwdMemberId(m){ return (m && (m.member_id || m.member || m.id || m.handle)) || null; }
+/* Who a bulk forward may name. A forward of an item the target ALREADY HOLDS is refused by the record
+   (ALREADY_THEIRS), so a member the WHOLE selection already belongs to is left out — naming them could
+   move nothing at all, and a control the record cannot honour is worse than none. Where the selection
+   SPANS assignees they are offered, and the record refuses the items that are already theirs in its own
+   words while the rest go through; that is what the per-item weight is for, and the bar says so. */
+function queueForwardCandidates(){
+  const ids = queueSelFor("taskforward");
+  const held = ids.map(id => (QUEUE_ITEMS.get(id) || {}).assignee);
+  return ((QUEUE_FWD && QUEUE_FWD.members) || []).filter(m => {
+    const mid = queueFwdMemberId(m);
+    if(!mid) return false;
+    if(m.status && m.status !== "active") return false;
+    return !(held.length && held.every(a => a === mid));
+  });
+}
+/* The picker reads the roster through op=memberlist, the same op the per-item picker reads. If this
+   credential cannot read it, the bar says so rather than offering a control that cannot work. */
+async function queueForwardOpen(){
+  if(QUEUE_BUSY) return;
+  QUEUE_SET_ERR = "";
+  try{
+    const r = await recR("memberlist");
+    QUEUE_FWD = { members: (r && (r.members || r)) || [], to: "" };
+  }catch(e){
+    QUEUE_FWD = null;
+    QUEUE_SET_ERR = "This account cannot read the member roster, so it cannot choose who to forward to.";
+  }
+  queuePaint();
+}
+function queueForwardTo(to){ if(QUEUE_FWD){ QUEUE_FWD.to = String(to || ""); queuePaint(); } }
+function queueForwardCancel(){ QUEUE_FWD = null; queuePaint(); }
+/* ONE call for the whole selection, with the chosen member as the act's SHARED key. */
+async function queueForwardSet(){
+  const to = QUEUE_FWD && QUEUE_FWD.to;
+  if(!to) return;
+  await queueApplySet("taskforward", { to });
+  QUEUE_FWD = null;
+  queuePaint();
+}
+
 /* The selection bar: what is selected, and the published set acts over it. */
 function queueSelBarHtml(){
   const ids = [...QUEUE_SEL].filter(id => QUEUE_ITEMS.has(id));
   if(!ids.length && !QUEUE_SET_ERR) return "";
   const tasks = queueSelFor("taskresolve"), finds = queueSelFor("proposedispose");
+  const fwds = queueSelFor("taskforward");
   const res = QUEUE_SET_ACTS.get("taskresolve"), disp = QUEUE_SET_ACTS.get("proposedispose");
+  const fwd = QUEUE_SET_ACTS.get("taskforward");
   const bits = [];
   if(tasks.length && res) bits.push(`<button class="btn" data-qset="taskresolve">${esc(res.label)} (${tasks.length})</button>`);
+  /* UI-94: the bulk forward. Closed, it is one button carrying the PLANE's published label; open, it is
+     the roster and ONE act over the whole selection. Its attributes are its own, for the reason the
+     per-kind mute's are: a selection-wide control must never be picked up by the per-item forward. */
+  if(fwds.length && fwd){
+    if(!QUEUE_FWD) bits.push(`<button class="btn ghost" data-qsetfwdopen>${esc(fwd.label)} (${fwds.length})</button>`);
+    else {
+      const cands = queueForwardCandidates();
+      const opts = cands.map(m => { const mid = queueFwdMemberId(m); const label = m.handle || m.cover || mid;
+        return `<option value="${esc(mid)}"${QUEUE_FWD.to === mid ? " selected" : ""}>${esc(label)}</option>`; }).join("");
+      bits.push(opts
+        ? `<span class="q-setfwd"><select data-qsetfwdpick><option value="">Choose a member&hellip;</option>${opts}</select> `
+          + `<button class="btn" data-qsetfwdgo>${esc(fwd.label)} (${fwds.length})</button> `
+          + `<button class="tbtn" data-qsetfwdcancel>Cancel</button></span>`
+        : `<span class="q-setfwd">There is no other active member to forward these to. `
+          + `<button class="tbtn" data-qsetfwdcancel>Cancel</button></span>`);
+    }
+  }
   if(finds.length && disp) bits.push(`<span class="q-setdisp">${esc(disp.label)} (${finds.length}): `
     + `<input class="q-setreason" data-qsetreason placeholder="Your reason, in your own words"> `
     + `<button class="btn ghost" data-qsetdisp="deferred">Defer</button> <button class="btn ghost" data-qsetdisp="dismissed">Dismiss</button></span>`);
@@ -14504,6 +14586,7 @@ async function renderQueue(){
   /* D-126: whether the plane takes a selection. From the loaded act source; if boot has not loaded it
      yet, it loads beside the feeds and the screen repaints when it lands. */
   queueSetActsFrom(ACT_SOURCE);
+  QUEUE_FWD = null;   /* UI-94: the bulk picker is transient — a fresh paint of the screen closes it. */
   if(!ACT_SOURCE.loaded) loadActSource().then(src => { queueSetActsFrom(src); queuePaint(); });
   await queueRun(QUEUE_FEEDS.map(f=>f.id));
 }
@@ -15093,7 +15176,77 @@ function queueMuteReportHtml(){
         : (n === 0 ? `None of them is on your list right now; if one comes back it stays muted for you.`
                    : `${n} of them ${n===1?"is":"are"} live, and not shown to you below.`)));
   }
-  return `<div class="q-muted"><b>${parts.join(" ")}</b> ${esc(m.detail||"")}</div>`;
+  /* UI-97 · UNDOING A MUTE, FROM THE ONE PLACE THAT KNOWS WHAT IS MUTED.
+     `op=queuemute` has taken `unmute: true` in BOTH of its forms since D-125
+     and NO CLIENT EVER SENT IT: a member could silence something from this
+     surface and had no way back, which is a door the plane opens and the app
+     kept shut. The controls belong HERE and nowhere else, because a muted item
+     is NOT IN THE FEED to carry one — this report is the only place a member's
+     own mutes are named at all.
+
+     THE TWO FORMS STAY APART, exactly as the mute's two do: `{ item,
+     unmute:true }` on its own attribute and `{ case, kinds, unmute:true }` on
+     another, so undoing one item can never be read as undoing a case. Each
+     control sends ONE call and nothing is looped.
+
+     AND THE CASE FORM NAMES ONLY THE KINDS THIS ANSWER CAN NAME. `op=queue`
+     publishes `mute.cases` as case IDS and publishes the muted KINDS nowhere;
+     the only kinds this surface can see are the ones on `suppressed[]` rows,
+     which exist for a kind that is holding something back TODAY. So a case
+     whose mute is suppressing nothing right now gets NO control and a sentence
+     saying why: an "Unmute" over kinds this page had to guess at would let back
+     in something other than what the member muted, and a control the record
+     cannot honour is worse than no control. THAT GAP IS THE PLANE'S, MINTED AS
+     D-534 and sent to SCHEDULER, not a choice taken here. */
+  const undo = [];
+  if(PLANE.me && PLANE.me.session){
+    if(cases.length) undo.push(cases.map(cid => {
+      const kinds = [...new Set(byCase.filter(s => s.case === cid).map(s => s.kind).filter(Boolean))].sort();
+      if(!kinds.length)
+        return `<div class="q-unmute q-unmute-none" data-unmutenone="${esc(cid)}">
+    <span class="q-mute-what">Nothing you muted on <span class="mono">${esc(cid)}</span> is being kept from you right now, so this page cannot name those kinds back to you — the record's answer names the case you muted and not the kinds. There is no undo control here rather than one that would let back in something other than what you chose.</span>
+  </div>`;
+      return `<div class="q-unmute q-unmute-case">
+    <button class="tbtn q-unmutebtn" data-unmutecase="${esc(cid)}" data-unmutekinds="${esc(kinds.join(","))}">Let these reach me again</button>
+    <span class="q-mute-what">Only for you, and only these: ${kinds.map(k=>`<span class="mono">${esc(k)}</span>`).join(", ")} on <span class="mono">${esc(cid)}</span>. Anything else you muted on this case stays muted, and nothing about the record changes.</span>
+    <div class="q-mute-err" data-unmutecaseerr="${esc(cid)}"></div>
+  </div>`;
+    }).join(""));
+    if(muted.length) undo.push(muted.map(id => `<div class="q-unmute q-unmute-item">
+    <button class="tbtn q-unmuteitembtn" data-unmuteitem="${esc(id)}">Let this reach me again</button>
+    <span class="q-mute-what"><span class="mono">${esc(id)}</span> — only this one, and only for you. It comes back to your list as soon as the record has it to show you.</span>
+    <div class="q-mute-err" data-unmuteitemerr="${esc(id)}"></div>
+  </div>`).join(""));
+  }
+  return `<div class="q-muted"><b>${parts.join(" ")}</b> ${esc(m.detail||"")}${undo.join("")}</div>`;
+}
+/* UI-97 · the two undo acts. Each is `queueMuteItem`/`queueMuteCase` with
+   `unmute: true` added and NOTHING else changed — the same op, the same
+   server-side member stamp, the same rule that the plane's refusal is rendered
+   rather than one composed here. */
+async function queueUnmuteItem(itemId){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  const host = document.querySelector(`[data-unmuteitemerr="${itemId}"]`);
+  try{
+    const res = await recPostR("queuemute", { item: itemId, unmute: true });
+    if(res && res.ok === false){ if(host) host.textContent = queueReason(res); return; }
+    await queueRun(["queue"]);
+  }catch(e){ if(host) host.textContent = queueReason(e); }
+  finally{ QUEUE_BUSY = false; }
+}
+/* The kinds travel on the control as the record's own slugs, comma-joined,
+   which is safe for the reason the plane states at the write: a kind is a slug
+   and MAY NOT CONTAIN A COMMA, because the stored set is comma-separated. */
+async function queueUnmuteCase(caseId, kinds){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  const host = document.querySelector(`[data-unmutecaseerr="${caseId}"]`);
+  try{
+    const named = String(kinds||"").split(",").filter(Boolean);
+    const res = await recPostR("queuemute", { case: caseId, kinds: named, unmute: true });
+    if(res && res.ok === false){ if(host) host.textContent = queueReason(res); return; }
+    await queueRun(["queue"]);
+  }catch(e){ if(host) host.textContent = queueReason(e); }
+  finally{ QUEUE_BUSY = false; }
 }
 
 /* ---- DEC-16's receipts: what became of an item that is no longer here ---- */
@@ -15316,9 +15469,21 @@ function queueWire(){
     const r = document.querySelector("#q [data-qsetreason]");
     queueApplySet("proposedispose", { to: b.dataset.qsetdisp, reason: (r && r.value) || "" });
   });
+  /* UI-94: the BULK forward, on four attributes of its own — `data-fwd` above is the PER-ITEM picker and
+     the two must never select each other. The chosen member is held in state (`QUEUE_FWD.to`), so the
+     repaint the pick triggers cannot lose it. */
+  document.querySelectorAll("#q [data-qsetfwdopen]").forEach(b=>b.onclick=()=>queueForwardOpen());
+  document.querySelectorAll("#q [data-qsetfwdpick]").forEach(sel=>sel.onchange=()=>queueForwardTo(sel.value));
+  document.querySelectorAll("#q [data-qsetfwdgo]").forEach(b=>b.onclick=()=>queueForwardSet());
+  document.querySelectorAll("#q [data-qsetfwdcancel]").forEach(b=>b.onclick=()=>queueForwardCancel());
   /* UI-86: the ITEM form, on its own attribute for the same reason — a per-item
      button must never be read as a case or a kind. */
   document.querySelectorAll("#q [data-muteitem]").forEach(b=>b.onclick=()=>queueMuteItem(b.dataset.muteitem));
+  /* UI-97: the two UNDO controls, each on its own attribute for the reason the
+     mute's two are — an undo of one item must never be picked up by a selector
+     that would hand a case to the plane, and the other way round. */
+  document.querySelectorAll("#q [data-unmuteitem]").forEach(b=>b.onclick=()=>queueUnmuteItem(b.dataset.unmuteitem));
+  document.querySelectorAll("#q [data-unmutecase]").forEach(b=>b.onclick=()=>queueUnmuteCase(b.dataset.unmutecase, b.dataset.unmutekinds));
 }
 /*__QUEUE_END__*/
 
@@ -19698,10 +19863,28 @@ function pubAuthors(f){
 /* PER CASE: a LIST and never a merge. The completeness assertion has one author
    — it is the case's claim — and every member finding has its own attestor. A
    case with two attestors has two, and saying "the author" would be composing
-   two people into one the same way a case-level letter composes two strengths. */
+   two people into one the same way a case-level letter composes two strengths.
+
+   UI-103 / BIO_Publication_v0_1.md §3 rule 13 — AND THE LIST NOW HAS A THIRD KIND
+   OF ENTRY, BECAUSE THE CASE HAS A THIRD ACT. `completeness.author` PREPARED AND
+   PUBLISHED the case; `completeness.statement_by` WROTE its exclusion statement
+   (REC-212, IC-272; BOB #32 ruled (b): *two acts, two names, never conflated*).
+   The label read "(completeness, for the case)", which was true of the block and
+   said nothing about which act it named — so on a case one member wrote and
+   another published, a reader of this line met one name where the record holds
+   two. Each entry now names ITS act in words, and the writer is added as its own
+   entry, which is this function's own rule (a list, never a merge) applied to the
+   split rather than a new rule. The writer is listed only when the record NAMES
+   one and it is not already the publisher: a stated UNDETERMINED belongs beside
+   the statement, in the plane's own sentence (`pubStatementWriterHtml`), and never
+   as a name-shaped absence in a list of names. */
 function pubCaseAuthors(c){
   const names = [];
-  if(c && c.completeness && c.completeness.author) names.push(String(c.completeness.author) + " (completeness, for the case)");
+  const cm = (c && c.completeness) || null;
+  const pub = (cm && typeof cm.author === "string" && cm.author.trim()) ? cm.author.trim() : null;
+  const by = (cm && typeof cm.statement_by === "string" && cm.statement_by.trim()) ? cm.statement_by.trim() : null;
+  if(pub) names.push(pub + " (prepared and published the case)");
+  if(by && by !== pub) names.push(by + " (wrote the statement of what this case leaves out)");
   for(const f of (c && c.findings) || []) if(f.attestor && f.attestor.member) names.push(String(f.attestor.member) + " (attested " + String(f.bundle_id) + ")");
   return names.length ? names.join(", ") : "not named in the published bytes";
 }
@@ -19834,6 +20017,72 @@ function pubAckRowHtml(a){
     : (a && a.by) ? '<span class="mono">' + esc(a.by) + '</span>' : 'unnamed in the record';
   return '<li data-pub-ack data-ack-kind="' + esc((a && a.kind) || "") + '">' + who
     + ' &mdash; ' + kind + ', on <span class="mono">' + esc((a && a.at) || "an unrecorded date") + '</span>.</li>';
+}
+/* UI-103 / BIO_Publication_v0_1.md §3 rule 13 — WHO WROTE THE SENTENCE, AND WHO PUBLISHED THE CASE.
+   TWO ACTS, TWO NAMES (REC-212, IC-272; BOB #32 ruled (b), 2026-09-24, and BOB #33 ruled REC-212's
+   three determinations the same day).
+
+   THE DEFECT THIS REPLACES, stated so the correction is not mistaken for a rewording. Page 2 read
+   `Written by ${c.completeness.author}` under a note promising "the member who wrote it" — and
+   `completeness.author` is the member who PREPARED AND PUBLISHED the case, which rule 13 rules is not
+   the same act as writing what the case leaves out. On a case an editor wrote and an owner published,
+   a credential-free published page told a stranger that the publisher wrote a sentence they did not
+   write. That is the record claiming more than it can support, in the one place a stranger reads.
+
+   THE DATE WENT WITH IT, and it is the second half of the same defect rather than a tidy-up:
+   `completeness.at` is stamped at the PUBLISHING act (`op=publish` writes `author: who, at: when`
+   together), so "Written by X on <at>" dated the writing by the publishing. The date is kept and is
+   now printed against the act it measures.
+
+   THREE STATES AND NOT TWO, which is UI-89's rule for the acknowledgement list arriving at the name
+   beside it: `op=publishedcase` serves `completeness.statement_by` — a NAME, or `null` — together with
+   `completeness.statement_by_stated`, ONE SENTENCE the plane committed from the signed bytes at
+   ratification. That sentence is what tells the two nulls apart: a document that SAYS it could not
+   establish the writer, and a document authored before rule 13 that says NOTHING about one. Both are
+   `null` and they are different facts, so the sentence is rendered AS THE PLANE WROTE IT (DEC-8: the
+   plane's words are not paraphrased, translated or blanked here) rather than reduced to a word this
+   surface chose.
+
+   AND A FOURTH STATE THIS SURFACE CAN MEET AND THE PLANE CANNOT: a case whose published record was
+   committed before `statement_by_stated` existed carries NO such key, so there is no plane sentence to
+   render. That is not the plane's stated undetermined and is not rendered as it — it is this record
+   having been written before the distinction, said in those terms. In none of the three is a name read
+   off the publisher: an absent writer is stated, never back-filled (§3 rule 13; CLAUDE.md §4). */
+function pubStatementWriterHtml(c){
+  /* Bytes that are not a member of any published case carry no case completeness assertion at all —
+     the page says so above, and no authorship sentence is invented for them either. */
+  if(!pubCaseId(c) || !(c && c.completeness)) return "";
+  const cm = c.completeness;
+  const pub = (typeof cm.author === "string" && cm.author.trim()) ? cm.author.trim() : null;
+  const by = (typeof cm.statement_by === "string" && cm.statement_by.trim()) ? cm.statement_by.trim() : null;
+  /* `hasOwnProperty` and not truthiness, for the plane's own reason at the committer: a record that
+     SAYS undetermined and one that never held the key are two facts, and testing for truth would make
+     the second read as the first. */
+  const said = Object.prototype.hasOwnProperty.call(cm, "statement_by_stated")
+    && typeof cm.statement_by_stated === "string" && cm.statement_by_stated.trim()
+      ? cm.statement_by_stated.trim() : null;
+  const state = !said ? "unstated" : (by ? "named" : "undetermined");
+  const published = pub
+    ? esc(pub) + " prepared and published this case"
+      + (cm.at ? ", on <span class=\"mono\">" + esc(String(cm.at)) + "</span>" : ", and the bytes carry no date for the act")
+      + "."
+    : "The published bytes do not name who prepared and published this case, and no name is invented for it here.";
+  const written = state === "named"
+    ? "<b>" + esc(by) + "</b> wrote it. " + esc(said)
+    : state === "undetermined"
+      ? esc(said)
+      : "These published bytes say nothing about who wrote it. This case's published record was written "
+        + "before the record told the statement's writer apart from the case's publisher, so the question "
+        + "was never put to it — which is the absence of a record, and not a record of "
+        + (pub ? esc(pub) : "whoever published the case") + " having written the sentence. No name is read "
+        + "off the publisher here.";
+  return '<h2>Who wrote this, and who published it</h2>'
+    + '<p class="subj-note">Writing the sentence above and preparing and publishing this case are two '
+    + 'different acts. One member may have done both, and on this case that is a fact about this case '
+    + 'rather than the way it works &mdash; so each act is named for itself, and neither name is read off '
+    + 'the other.</p>'
+    + '<div class="pub-excl" data-pub-published-by="' + (pub ? "named" : "unnamed") + '">' + published + '</div>'
+    + '<div class="pub-excl" data-pub-writer="' + state + '">' + written + '</div>';
 }
 function pubStatementAcksHtml(c){
   /* Bytes that are not a member of any published case carry no case completeness
@@ -20860,9 +21109,9 @@ function pubCaseHtml(c, floors){
      (d)), which is the altitude C-21.1 checks it at. */
   const p2 = pubPage(c, floors, null,
     `<h2>What this case excludes</h2>
-     <p class="subj-note">Printed verbatim from the signed bytes, with the member who wrote it and the date it was written. It is the CASE's assertion, made once for this edition, and not a claim any one finding makes on its own.
-       Written by ${esc((c.completeness && c.completeness.author) || "an unnamed member")} on ${esc((c.completeness && c.completeness.at) || "an unrecorded date")}.</p>
+     <p class="subj-note">Printed verbatim from the signed bytes. It is the CASE's assertion, made once for this edition, and not a claim any one finding makes on its own. Who wrote it, and who prepared and published the case, are said below &mdash; two acts, named apart (UI-103, §3 rule 13).</p>
      <div class="pub-excl">${esc((c.completeness && c.completeness.statement) || (pubCaseId(c) ? "The published bytes carry no completeness statement for this case." : "These bytes are not a member of any published case and carry no case completeness assertion."))}</div>
+     ${pubStatementWriterHtml(c)}
      <p class="subj-note">Position on putting this case to its subject: ${esc((c.completeness && c.completeness.subject_position) || "not stated")}. ${esc((c.completeness && c.completeness.subject_justification) || "")}</p>
      ${pubStatementAcksHtml(c)}`);
 

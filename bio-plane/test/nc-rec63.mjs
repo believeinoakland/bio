@@ -21,12 +21,18 @@
  *    for every arm INCLUDING the baseline has been sighted here; without a
  *    baseline row, six-broken and six-working look identical.
  *  - RESTORE VERIFIED BY sha256 AND BY `cmp`, against a pristine copy named
- *    UNIQUELY PER ARM, inside this worktree and never in a shared scratchpad.
+ *    UNIQUELY PER ARM, in a pen OUTSIDE this worktree — `controlPen("rec63")`,
+ *    a fresh `mkdtemp` and so never a shared scratchpad either (M0-182).
  */
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+const PEN = controlPen("rec63");
+/* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
+const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const STORE = HERE + "../src/store.mjs";
@@ -121,7 +127,7 @@ if (baseT.fail !== 0 || !footOf(base.out)) {
 
 let wrong = 0;
 for (const arm of ARMS) {
-  const pristine = `${arm.file}.pristine.rec63-${arm.id}`;   // UNIQUE PER ARM
+  const pristine = penPath(arm.file, `pristine.rec63-${arm.id}`);   // UNIQUE PER ARM
   copyFileSync(arm.file, pristine);
   const beforeSha = sha(arm.file);
 

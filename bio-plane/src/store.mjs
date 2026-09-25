@@ -357,6 +357,12 @@ import { runPrincipalGate } from "./airun.mjs";
    level — decided ONCE in `airun.mjs`, beside the cause vocabulary it answers into, and asked by the content
    and meaning readers below. Its own import line, for the reason REC-152's gives. */
 import { enteredAfterFirstRow } from "./airun.mjs";
+/* D-516 / BOB #33: that rule now answers THREE ways, so the two readers below map an ANSWER to a cause
+   word instead of reading a boolean. The words and the band's cause key are imported rather than spelled
+   at either site, for the reason the line above gives: the point of D-500 was one rule in one place, and a
+   literal `"within_band"` typed at two readers is that rule growing two spellings again. Its own import
+   line, for the reason REC-152's gives. */
+import { WATERMARK_AFTER, WATERMARK_WITHIN_BAND, WATERMARK_BAND_CAUSE } from "./airun.mjs";
 /* REC-169: a figure written into a run's bound is a non-negative integer and never a plane-counted bound's — decided
    once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives.
    REC-172: the tick hands it its `consume` whole (`map: true` — a MAP of named bounds) and the open its `bounds`
@@ -1242,6 +1248,13 @@ export class Store extends DurableObject {
          column existed had no renders in flight at the moment it gained the column, so 0 is the
          MEASURED truth for every old row rather than a value a backfill reached for. */
       ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
+      /* D-463: the namespace an `ai` credential is confined to for its whole life, or NULL for one that is
+         not confined. NULLABLE AND NEVER BACK-FILLED, and here the direction matters more than usual: a
+         credential minted before this column existed was minted UNCONFINED, and the only value a backfill
+         could reach for is 'scratch', which would silently narrow an authority a member already granted and
+         granted on the record. NULL reads back as not confined, which is what it is. schema.mjs says why the
+         vocabulary is not restated in this file. */
+      ["ai_credentials", "confined_to", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -2883,7 +2896,7 @@ export class Store extends DurableObject {
       }
     /* A project's OWN citation edges by status, from its document — the same
        source cite/sever read (the projection carries no status). */
-    const citesOut = { confirmed: 0, severed: 0 };
+    const citesOut = { confirmed: 0, severed: 0, severed_reinstatable: 0 };
     /* The document is read for a project's own edge statuses, and (REC-13) for
        the DECLARED object_type. `bundles.object_type` is the NORMALIZED type —
        promote projects it through normalizeType — so the row alone cannot
@@ -2912,8 +2925,38 @@ export class Store extends DurableObject {
     if (normalizeType(b.object_type) === "project") {
       const refs = docFm.references;
       for (const r of (Array.isArray(refs) ? refs : []))
-        if (r && typeof r === "object" && r.rel === "cites")
-          citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
+        if (r && typeof r === "object" && r.rel === "cites") {
+          if (r.status !== "severed") { citesOut.confirmed++; continue; }
+          citesOut.severed++;
+          /* D-444: HOW MANY OF THOSE SEVERED EDGES COULD ACTUALLY BE PUT BACK —
+             the fact the `reinstate` act is derived over, because `severed` is a
+             COUNT and a count cannot say what its targets have BECOME. REC-183
+             closed reinstate's third door onto a retired item
+             (RETIRED_NOT_CITABLE) and left this side un-narrowed, so a project
+             whose only severed edges point at retired items was offered an act
+             the store refuses — DEC-8's headline failure, arriving by the
+             pre-flight instead of by the op.
+
+             ASKED THROUGH `#retiredNotCitable`, THE PREDICATE `#edgeTransition`
+             ITSELF RUNS, never a second copy of the same question: that is the
+             `#citesInto` discipline (retire's CITED refusal and its
+             publication) applied to reinstate, and a copy here would be the
+             defect one layer on. A non-string target is not counted
+             reinstatable — `#edgeTransition` builds its edge map from
+             `typeof r.target === "string"` entries only, so such an edge cannot
+             be moved by the op at all, and claiming it could be is the same
+             overclaim in miniature.
+
+             A COUNT AND NEVER IDS, `cited_by_case`'s precedent one block up:
+             op=affordances answers about the TARGET, and naming which of a
+             project's edges point at retired material is op=backlinks' gated,
+             viewer-filtered question. `severed` is KEPT beside it rather than
+             replaced — it is what the project's own document says, and a
+             consumer asking "are there severed edges at all" is asking a
+             different question from "is there one to put back". */
+          if (typeof r.target === "string" && !this.#retiredNotCitable(r.target))
+            citesOut.severed_reinstatable++;
+        }
     }
     /* REC-16: HOW MANY LEGS this question rests on, read from the document like
        every other fact here (inquiry_basis is a projection of it, never a second
@@ -4312,14 +4355,13 @@ export class Store extends DurableObject {
        (cite > is-cite-retired) and the guard refuses a marker no row claims, so
        this second site of the same code is outside the region walk (the
        guard's F4 MULTI-SITE shape). rec-183-reinstate-retired.test.mjs asserts
-       the code, check and translation arrive through the op. */
+       the code, check and translation arrive through the op.
+       D-444: the question itself moved to `#retiredNotCitable` so the
+       pre-flight's `cites_out.severed_reinstatable` asks THIS one and not a
+       copy of it. The refusal is unchanged. */
     if (to === "confirmed") {
       const retiredMembers = [];
-      for (const id of sel.members) {
-        const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-        if (b && normalizeType(b.object_type) === "information"
-            && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
-      }
+      for (const id of sel.members) if (this.#retiredNotCitable(id)) retiredMembers.push(id);
       if (retiredMembers.length)
         return { ok: false, reason: "RETIRED_NOT_CITABLE", code: "RETIRED_NOT_CITABLE",
                  check: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.check,
@@ -5154,6 +5196,32 @@ export class Store extends DurableObject {
     + "sever the edge with a reason. Sever first, then retire.";
   #retirementCitedBy(id) {
     return this.#citesInto(id).confirmed;
+  }
+
+  /* D-444: REINSTATEMENT'S ONE RETIRED-TARGET PREDICATE, shared by
+   * `#edgeTransition`'s RETIRED_NOT_CITABLE refusal (REC-183) and by
+   * `affordanceFacts`' `cites_out.severed_reinstatable`. §4.1 of State Rules
+   * v1.5 (BOB #30): a retired item is not citable, and moving an edge INTO
+   * `confirmed` is a citation made now.
+   *
+   * IT IS EXTRACTED FOR THE REASON `#citesInto` AND `#retirementCitedBy` WERE:
+   * the pre-flight publishes `reinstate` over a COUNT of severed edges, and a
+   * count cannot say whether every one of those targets has since been retired
+   * — so a project whose only severed edges point at retired items was offered
+   * an act this very predicate then refused, which is the drift DEC-8 forbids.
+   * The fact now asks THIS, so the offer and the refusal cannot answer
+   * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
+   *
+   * `source_status` is not read, as at cite and at reinstate: a removed or
+   * modified source stays citable, and `retired` is the other axis. Only
+   * Information has the state — an inquiry target answers false, exactly as
+   * `#edgeTransition` leaves it un-refused — and an id with no row answers
+   * false too, because an absent target is refused by another door and this
+   * one claims nothing about it. */
+  #retiredNotCitable(id) {
+    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+    return !!b && normalizeType(b.object_type) === "information"
+        && String(b.current_state ?? "").trim() === "retired";
   }
 
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
@@ -10329,14 +10397,48 @@ export class Store extends DurableObject {
        parameter between them, and passing six positionals here would have bound `d.draft_id` to
        `writer`, which is a member handle: every participant row would have been withheld as the
        writer's own and the review copy would have shown an EMPTY list to a reader whose whole
-       purpose is seeing who has read the statement. `writer` is NULL here on purpose (REC-212: not
-       asked) — the review copy is the LIVE list, shown before any act decides what a document may
-       print. (Composed at c20-batch26 by CONDUCT #20: REC-200 hoisted this read out of the return
-       with the pre-REC-194 four arguments; the hoisted read carries REC-194's.) */
+       purpose is seeing who has read the statement. (Composed at c20-batch26 by CONDUCT #20: REC-200
+       hoisted this read out of the return with the pre-REC-194 four arguments; the hoisted read carries
+       REC-194's. Composed again at c20-batch27: REC-213 made `writer` ASKED here, in the return, and
+       its argument, count and sentence now live in this hoisted read, so REC-200's last-change date
+       reads the rows the answer SERVES, the writer's own withheld.)
+
+       REC-213 (BOB #33 RULED, 2026-09-24 19:06Z) — `writer` IS ASKED HERE, AND IT USED TO BE NULL.
+       REC-212 left it NOT ASKED on the reasoning that the review copy is the LIVE list; that was
+       wrong in one direction and the direction matters. The live list is about WHEN the list is
+       read, not about what it may CLAIM: an acknowledgement is *I read what this case leaves out
+       and I stand as its SECOND reader* (§3 rule 11), so a row by the sentence's own writer is not
+       a second reading at any moment, and listing it overclaims in the artifact a reviewer is
+       being asked to attack. The case document had withheld it since REC-212 while this surface
+       still showed it, which is one fact stated two ways — the defect §6A's *the list a reviewer
+       sees and the list a case document prints are one read* exists to refuse.
+         WHAT REACHES IT: `d.statement_by`, the member who wrote the statement's current bytes
+       (REC-193, stamped by the SERVER at the write that changed them), in the same `{ by }` shape
+       `#reauthorAcknowledgements` builds — never `updated_by`, which is the draft's last editor
+       and a different fact. `{ by: null }` is UNDETERMINED and withholds EVERY participant row,
+       because any one of them may be the writer's own; that is the same answer the case document
+       gives, and it is stated below rather than left as a short list.
+         §6A's *show everything recorded* HOLDS, and this is why the count is not optional: nothing
+       recorded is hidden, it is COUNTED and its reason is printed beside the list. A row left out
+       and not stated would make the review copy show fewer readers than the record holds, which is
+       the record claiming less than it can support — the same defect one direction over. */
+    const writer = { by: d.statement_by ?? null };
     const acks = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition,
-                                                 params.statement ?? "", null, null, d.draft_id);
+                                                 params.statement ?? "", null, writer, d.draft_id);
+    const withheld = acks.byWriter + acks.withheldWriterUndetermined;
     const statementAcks = { statement_sha: acks.statementSha, acknowledgements: acks.rows,
-                            truncated: acks.truncated, act: "op=statementack&draft=" + d.draft_id };
+                            truncated: acks.truncated,
+                            /* THE COUNT IS ALWAYS A NUMBER AND THE REASON IS ALWAYS A SENTENCE, zero included —
+                               `acknowledged: 0` is D-150's own precedent that a zero is a STATEMENT and never a
+                               blank. The two keys below are the publish answer's spellings, reused rather than
+                               re-invented, so one fact is not named two ways across two doors (REC-213). */
+                            withheld,
+                            ...(acks.byWriter ? { acknowledgements_by_statement_writer_not_listed: acks.byWriter } : {}),
+                            ...(acks.withheldWriterUndetermined
+                              ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined }
+                              : {}),
+                            withheld_stated: Store.#withheldWriterStated(withheld, writer.by),
+                            act: "op=statementack&draft=" + d.draft_id };
     /* REC-200: the copy's LAST CHANGE, over the rows this answer carries — the recipient's own grant where
        that is all it carries, the roster where it carries one. */
     const lastChange = Store.#reviewLastChange({
@@ -10789,6 +10891,40 @@ export class Store extends DurableObject {
            + "for a reader to infer."];
   }
 
+  /* REC-213 / §6A + §3 rule 11 (BOB #33, 2026-09-24) — WHAT THE REVIEW COPY'S LIST LEFT OUT, IN ONE
+     SENTENCE A READER READS RATHER THAN A KEY THEY DECODE. `#ackBodyLines` is the case document's
+     spelling of the same obligation and this is the review copy's; they are two renderings because a
+     case document is signed prose and a review copy is an answer, and they must never disagree about
+     the FACT. Four states, each named and none a fallback:
+       - nothing withheld, a writer known — the plain case, said so a reader never infers it;
+       - nothing withheld, the writer UNDETERMINED — said too, because a short list with no participant
+         row in it looks identical whether the withholding bit or there was nothing to withhold;
+       - rows withheld by a NAMED writer — the row's own reason, in §3 rule 11's words;
+       - rows withheld because the writer is UNDETERMINED — stated as undetermined and NEVER as
+         *by the writer*, which would name a reading this record cannot attribute.
+     A RECIPIENT's row is never withheld by either arm (a grant's holder is never the writer), so this
+     sentence speaks only of participants and says so. */
+  static #withheldWriterStated(withheld, writerBy) {
+    const n = Number(withheld) || 0;
+    const rows = `${n} acknowledgement${n === 1 ? "" : "s"}`;
+    if (!n)
+      return writerBy
+        ? `Nothing is withheld from this list: this record holds no acknowledgement of this statement by `
+          + `${writerBy}, who wrote it.`
+        : `Nothing is withheld from this list: this record holds no participant's acknowledgement of this `
+          + `statement at this production, so there is none that might be its writer's own.`;
+    return writerBy
+      ? `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, by the `
+        + `statement's writer, ${writerBy}: a reading by its own writer is not a SECOND reading of it `
+        + `(BIO_Publication §3 rule 11). It is counted here rather than hidden — everything recorded is `
+        + `shown or stated (§6A).`
+      : `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, and the reason `
+        + `is UNDETERMINED rather than the writer's own: this draft predates the recording of the `
+        + `statement's author, so any participant's acknowledgement of it may be the writer's and this `
+        + `list cannot rule that out (BIO_Publication §3 rule 11). They are counted here rather than `
+        + `hidden — everything recorded is shown or stated (§6A).`;
+  }
+
   /* AN ACKNOWLEDGEMENT THAT LANDS WHILE ITS CASE DOCUMENT IS AUTHORED AND UNSIGNED RE-AUTHORS THAT
      DOCUMENT, because the list must be inside the signature and `op=publish` cannot run twice over
      one prepared edition (ALREADY_A_CASE_MEMBER). Only the list's two runs change; the document's
@@ -10839,8 +10975,13 @@ export class Store extends DurableObject {
      act, so their own acknowledgement of it is not a second reading, and `op=publish` has left it out
      since D-150. `writer` is the member who wrote the SENTENCE (`#statementWriter`), which rule 11's
      exclusion is actually about and which nothing here could see until rule 13 gave it a name.
-       - `writer === null` means NOT ASKED, and is the review copy's live list: it shows a reader every
-         acknowledgement recorded, ahead of any act that decides what a document may print.
+       - `writer === null` means NOT ASKED. CORRECTED BY REC-213 (BOB #33, 2026-09-24), never exempted,
+         because the old sentence here named the wrong caller: it read *and is the review copy's live
+         list*, and that is no longer true and was never right. The review copy ASKS — a row by the
+         sentence's own writer is not a second reading at any moment, so showing it overclaims whether
+         or not a document has been authored yet. The one caller left that does not ask is
+         `#reauthorAcknowledgements` over a case document carrying NO `statement_by` KEY, which
+         predates rule 13 and is read in its own shape.
        - `{ by: '<member>' }` withholds that member's own.
        - `{ by: null }` is UNDETERMINED, and withholds EVERY participant row, because any one of them
          may BE the writer's own and a list that cannot rule that out is the record claiming a second
@@ -28531,6 +28672,23 @@ export class Store extends DurableObject {
                    progression_key: p.progression_key, stage_key: p.stage_key,
                    definition_version: p.definition_version,
                    bundles: subjects.slice(0, Store.QUEUE_OPTION_SUBJECTS_MAX) },
+        /* D-527: THE EARLIER DECISION TRAVELS WITH THE REOPENED QUESTION.
+           `proposalsFeed` already builds this object for a proposal a revision put
+           back in the open feed (REC-184, framework §8.2) and it is published here
+           UNCHANGED — the same object, no second derivation, `null` where nobody
+           has ever decided. It rode only on `op=proposals`, which NO surface reads
+           (UI-14 retired it for this op), so the one feed a member opens by habit
+           carried the reopened question and said nothing about the answer somebody
+           had already given it — a member meeting it is shown a question nobody
+           has answered when the record holds a decision, which is the record
+           claiming less than it holds. The `disposed` block below does carry the
+           row, and that is not the same fact reaching the reader: it is a JOIN on
+           a list bounded by QUEUE_DISPOSED_MAX, so a member with sixty-four
+           standing decisions meets the reopened item with its prior decision cut
+           off the end of the answer. `applies` is false wherever this is non-null
+           by construction and not by assertion — a decision that still governed
+           would have aged this finding out of the feed before it reached here. */
+        prior_disposition: p.prior_disposition,
         summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
         detail: `${p.n} instance${p.n === 1 ? "" : "s"} of this progression reach${p.n === 1 ? "es" : ""} `
               + `'${p.stage_label}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : ""),
@@ -42053,7 +42211,7 @@ export class Store extends DurableObject {
    *  is its own business and nobody else's. */
   aiCredentialMint({ who = null, tokenId = null, secretSha = null, principalKind = null,
                      principalMember = null, taskScope = null, writes = [], note = null,
-                     at = null } = {}) {
+                     confinedTo = null, at = null } = {}) {
     const refusal = (code, detail, extra) => {
       const row = AI_CREDENTIAL_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check,
@@ -42111,12 +42269,17 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-ai-credential-mint */
 
     const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
+    /* D-463: `confinedTo` ARRIVES ALREADY JUDGED, by `aiConfinementDeclaration` in index.mjs, for
+       `writes`' reason one field over: the set of namespaces is index.mjs's `NAMESPACES` and a copy of it
+       here would be a second answer to "which namespaces exist" that ages separately. What this method
+       does with it is the record's business — it stores 'scratch' or it stores NULL, and nothing between. */
+    const confinement = confinedTo === null || confinedTo === undefined ? null : String(confinedTo);
     this.sql.exec(
       `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
-         scope_writes, scope_note, minted_by, minted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         scope_writes, scope_note, minted_by, minted_at, confined_to)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id, String(secretSha ?? ""), kind, principal, String(taskScope ?? "investigative"),
-      JSON.stringify(declared), String(note ?? ""), String(who), now);
+      JSON.stringify(declared), String(note ?? ""), String(who), now, confinement);
     return { ok: true, minted: true, credential: this.#aiCredentialPublic(
       this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)) };
   }
@@ -42224,7 +42387,14 @@ export class Store extends DurableObject {
              taskScope: row.task_scope, writes: this.#aiCredentialWrites(row),
              note: row.scope_note || null, mintedBy: row.minted_by, mintedAt: row.minted_at,
              revokedAt: row.revoked_at || null, revokedBy: row.revoked_by || null,
-             revoked: !!row.revoked_at };
+             revoked: !!row.revoked_at,
+             /* D-463: WHICH NAMESPACE THIS CREDENTIAL CAN EVER ADDRESS. `null` is "not confined" and is
+                stated as a value rather than left off the object, because an absent key reads the same as a
+                key nobody thought about — and this is the one property of a credential a member has to be
+                able to read back to know whether an agent can touch the record at all. The gate reads the
+                same field through `aiCredentialLook`, which spreads this projection, so what a member sees
+                and what the plane enforces are one string and cannot disagree. */
+             confinedTo: row.confined_to || null };
   }
 
   /** File the links a captured document made. Replaces this capture's rows
@@ -42915,7 +43085,17 @@ export class Store extends DurableObject {
        watermark's real one-second uncertainty instead. Every answer this suite
        and the case document's `searched` section drive is unmoved; what moved is
        that the answer no longer depends on where the second fell. */
-    return enteredAfterFirstRow(reg, firstContentAt) ? "never_looked" : "purged";
+    /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE ANSWER IS THREE-WAY AND THIS SITE
+       MAPS IT, it does not re-decide it. The band is the one clock second before
+       the watermark's own second, where the stored precision leaves REC-94's tie
+       open; the reader states that rather than choosing a side, and the reason is
+       at the rule. A TERNARY HERE WOULD BE SILENTLY WRONG — every one of the three
+       answers is a truthy string — which is why the three arms are spelled out and
+       why arm M1b pins that no reader of this rule tests it as a boolean. */
+    const order = enteredAfterFirstRow(reg, firstContentAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
 
   #missingContentCause(captureSha, registeredAt = null) {
@@ -43995,7 +44175,14 @@ export class Store extends DurableObject {
        watermark moved this level's `never_looked` and `missing_unexplained` keys
        on one run and not on the next (M-131). The reasoning, and REC-94's tie
        narrowed to an equality of instants, are at the function. */
-    return enteredAfterFirstRow(entered, firstAt) ? "never_looked" : "purged";
+    /* D-516 — THE SAME THREE-WAY ANSWER MAPPED THE SAME WAY, and the mapping is
+       the only thing this arm spells: the band's meaning-level sentence is in
+       `MEANING_MISSING_ROW_CAUSES` beside the other three, and the set it cannot
+       narrow comes from `causesNotRuledOut` exactly as `purged`'s does. */
+    const order = enteredAfterFirstRow(entered, firstAt);
+    if (order === WATERMARK_AFTER) return "never_looked";
+    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
+    return "purged";
   }
 
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
@@ -48465,10 +48652,41 @@ export class Store extends DurableObject {
                 second condition to be discovered would be the overclaim this
                 project's whole threat model is about. */
              in_force: b.current_state === "adopted",
+             /* REC-210 — THE MARKER. Ruled by BOB #32 on 2026-09-24 and folded into
+                `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": *"Adopting a proposed,
+                not-yet-accepted revision is a REPLACEMENT: the adopter's lens becomes those bytes,
+                and it stays on them whatever later happens to the proposal. It is never a
+                pre-authorisation of whatever the proposal becomes. The adoption and its read SAY
+                that they pin a proposed revision."*
+
+                IT IS A FACT ABOUT THE PIN, NOT A SECOND SPELLING OF `in_force`. The two agree in
+                THIS answer because the pin is the head at this instant; they come apart at the
+                READ, in both directions. promote() re-pins an adoption taken at `proposed` to the
+                sha the promotion to `adopted` mints (REC-187), so this row stops pinning a proposed
+                revision with nobody adopting again — and a re-adoption of an ALREADY ADOPTED set on
+                a later proposal moves the pin back onto proposed bytes and LIFTS a lens that was in
+                force. `in_force: false` says no lens stands over this scope's work; the marker says
+                what was frozen instead, and that the group has not accepted it.
+
+                STATED RATHER THAN LEFT TO BE INFERRED, for the reason `in_force` itself is:
+                `pinned.bundle_sha` is 64 hex characters that no reader can tell from an adopted
+                revision's without going and fetching the bytes, so an answer without this field
+                lets a REPLACEMENT read exactly like an ordinary adoption — the record claiming more
+                than it can support, which is the defect this project ranks worst. */
+             pins_proposed: b.current_state === "proposed",
              note: b.current_state === "adopted"
                ? "this set is in force for that scope"
-               : "recorded and pinned; the set is in force once the bundle itself stands at 'adopted', "
-                 + "which is a member-authored transition through op=promote" };
+               /* CORRECTED by REC-210, and the correction is not cosmetic: this sentence read
+                  "recorded and pinned; the set is in force once THE BUNDLE ITSELF stands at
+                  'adopted'", which was true of a first adoption and false of a re-adoption on a
+                  later proposal — that bundle already stands at `adopted`, and what governs is the
+                  state of the REVISION THIS ROW PINS. It also said nothing about the lens the act
+                  had just displaced. */
+               : "PINS A PROPOSED REVISION: this adoption froze bytes the group has offered and not "
+                 + "yet accepted, so it REPLACES this scope's lens with them rather than "
+                 + "pre-authorising whatever the proposal becomes; a lens is in force once the "
+                 + "revision THIS ROW PINS stands at 'adopted', which is a member-authored "
+                 + "transition through op=promote" };
   }
   /* NOT a literal. `MACHINE_AUTHOR_PREFIX` is the catalogue's, imported at the
      top of this file and already reused by the queue's own machine-author test
@@ -48577,6 +48795,16 @@ export class Store extends DurableObject {
     const pinned = [];
     const pinnedText = new Map();
     const unresolved = [];
+    /* REC-210 — BOB #32, 2026-09-24: AN ADOPTION WHOSE PIN IS A PROPOSED REVISION, which this read
+       DROPPED IN SILENCE. *"Adopting a proposed, not-yet-accepted revision is a REPLACEMENT … The
+       adoption and its read SAY that they pin a proposed revision."* The silence was the defect the
+       ruling is about: a scope whose only adoption pins proposed bytes answered `in_force: false`
+       and *"no manifest was in force"* with nothing beside it, which is indistinguishable from a
+       group that never adopted anything — and for a set already in force whose adoption was moved
+       onto a later proposal, it is the record reporting an absence where a member's authored act
+       had REPLACED the lens. The sentence stays exactly as it is, because it is TRUE and
+       `INVESTIGATIVE-SESSION.md` §3 requires it verbatim; the marker is its own field beside it. */
+    const pinsProposed = [];
     const adoptionsFor = (type, id) => {
       const out = [];
       const rows = this.#rows(
@@ -48591,7 +48819,31 @@ export class Store extends DurableObject {
            occurs it is UNDETERMINED and said so, never dropped into "not in force". */
         if (text === null) { unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type }); continue; }
         const fm = parseFrontmatter(text).data || {};
-        if (fm.current_state !== "adopted") continue;
+        if (fm.current_state !== "adopted") {
+          /* REC-210: RECORDED, not dropped. `pinned_state` is the pinned revision's OWN state and
+             is carried rather than assumed `proposed`: op=biasadopt refuses a set that is in
+             neither `proposed` nor `adopted` (C-26.10), so `proposed` is the only state this plane
+             can produce here — but a state it cannot produce must be NAMED if it ever appears
+             rather than silently scored as the expected one.
+
+             THE STATE IS HOISTED INTO A LOCAL BEFORE IT IS TYPE-CHECKED, and that is not style.
+             `civicos-ui/check-semantics.mjs` harvests the states this plane writes by matching the
+             field name followed by an equality and a quoted lower-case word, over the RAW file. So
+             the ordinary spelling of this guard — a `typeof` comparison of `fm`'s field against the
+             name of the string type — is read by that walk as the plane writing a state CALLED
+             after that type, and the gate goes RED naming a state nobody wrote. Measured on this
+             landing, at the cost of one gate round; and then a SECOND round, because the first
+             version of this comment EXPLAINED the trap by quoting the expression, which re-armed it
+             — the walk reads comments, and a correction that spells the token it is correcting is a
+             receipt `kickoffs/WORKER.md` already carries. Written through `pinnedState` the guard is
+             identical and the walk sees nothing. The walk's own over-match is reported as its own
+             defect rather than worked around in silence. */
+          const pinnedState = fm.current_state;
+          pinsProposed.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type,
+                              pinned_state: typeof pinnedState === "string" ? pinnedState : null,
+                              adopted_by: a.author, adopted_at: a.at });
+          continue;
+        }
         pinned.push([a.bundle_id, fm]);
         pinnedText.set(a.bundle_id, text);
         out.push(a);
@@ -48603,10 +48855,25 @@ export class Store extends DurableObject {
     const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
     const adoptions = [...instanceAdoptions, ...projectAdoptions];
 
+    /* REC-210: SPREAD INTO EVERY ANSWER BELOW THAT COULD CARRY IT, and ABSENT when the list is
+       empty — `unresolved_pins`' own shape, for its reason: a key that is always present teaches a
+       consumer nothing by being there, and BOB #32's rule is that the read of an adoption pinning a
+       proposed revision SAYS SO, while an ordinary adoption's read does not. The sentence states
+       what the list MEANS, the way `statements_sha_covers` does, so no consumer has to reconstruct
+       the doctrine from a field name. */
+    const marker = pinsProposed.length === 0 ? {} : {
+      pins_proposed: pinsProposed,
+      pins_proposed_stated:
+        "each entry is an adoption whose PINNED REVISION is one the group has offered and not "
+        + "accepted: the member's act REPLACED that scope's lens with those bytes and is not a "
+        + "pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin "
+        + "puts no lens in force until the revision it names stands at 'adopted'",
+    };
+
     if (unresolved.length > 0)
       return { ok: true, scope: st, scope_id: sid, in_force: null,
                bundles: [], statements: [], residue: [], lock_violations: [],
-               statements_sha: null, unresolved_pins: unresolved,
+               statements_sha: null, unresolved_pins: unresolved, ...marker,
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
                stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce, "
                      + "so which statements are in force cannot be computed" };
@@ -48614,7 +48881,7 @@ export class Store extends DurableObject {
     if (adoptions.length === 0)
       return { ok: true, scope: st, scope_id: sid, in_force: false,
                bundles: [], statements: [], residue: [], lock_violations: [],
-               statements_sha: null,
+               statements_sha: null, ...marker,
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
                stated: "no manifest was in force" };
 
@@ -48734,6 +49001,11 @@ export class Store extends DurableObject {
       /* Stated in the answer rather than left to be inferred: the hash covers
          the whole set even when the page does not. */
       statements_sha_covers: "the whole effective set, before any bound was applied",
+      /* REC-210: A LENS IN FORCE AND AN ADOPTION PINNING A PROPOSED REVISION ARE NOT EXCLUSIVE —
+         one set's pin may stand at `adopted` while another's was moved onto a later proposal, and
+         the instance and project layers can differ. So the marker travels here too, and the
+         statements above are the effective set of the pins that ARE adopted, never of these. */
+      ...marker,
       statements: page,
       residue,
       lock_violations: lockViolations,

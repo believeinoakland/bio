@@ -31,13 +31,18 @@ import { readFileSync, mkdirSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCHEMA_PATH = join(HERE, "..", "src", "schema.mjs");
 const SRC = readFileSync(SCHEMA_PATH, "utf8");
-/* Scratch stays INSIDE the worktree: a battery running concurrently walks the
-   shared temp roots and attributes strays to whichever suite was live. */
-const DIR = join(HERE, ".nc-rec112");
+/* THE PEN IS OUTSIDE THE WORKTREE (M0-182, BOB #32). `controlPen` is `mkdtempSync` under the system
+   temp root, so neither the battery's discovery nor the fleet walk can enrol what it holds, and the
+   tree stays CLEAN while the control runs — which matters because since D-293 a gate on a dirty tree
+   RECORDS NOTHING. `mkdtemp`, not a fixed name, is what keeps it isolated: the shared scratchpad and
+   `/tmp` are not isolated between sessions, and a harness there was once overwritten mid-turn by a
+   concurrent worker. */
+const DIR = controlPen("rec112");
 const DB = join(DIR, "plan.db");
 
 let pass = 0, fail = 0;

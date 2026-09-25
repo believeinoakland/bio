@@ -1,8 +1,8 @@
 # Spreadsheets, word-processing and presentation documents
 
-**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. as of 2026-09-24.
+**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. **A NINTH ENTRY landed 2026-09-24 (FW-23): `csv`, the first on this axis that is not a container** — BOB #32's design, written from all 166 `.csv` keys of `s3://cao-94612` measured whole (M-144), with the delimiter and the encoding found by signature and RECORDED on the reading, and byte detection REFUSED because prose wears a CSV's shape. as of 2026-09-24.
 
-**Place in the system** · A level-2 design serving construct 5 of `BIO_System_Design.md` §3, *document profile and the extraction substrate*, whose level-1 home is `BIO_Content_Framework_v0_10.md` **Part I**; §3 row 5 lists this document beside `DOCUMENT-PROFILES.md` as the two level-2 designs under it, and Part II §16 places the format entries in the extraction process as built ("delegated to format entries and members"). It is the FORMAT axis — framework §4's third axis, the one D-70 said had never been exercised — so it is also the evidence for a claim the framework makes about itself. Interfaces: it created I7 (the registry entry shape) and it drove IC-1 against I2, the element reference union that legs, connections and citations will share. What depends on it: `formats.mjs`, `ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`, and `CONTENT-EXTENT-DESIGN-SPACE.md`, which treats IC-1's union as D-164's per-container leaf.
+**Place in the system** · A level-2 design serving construct 5 of `BIO_System_Design.md` §3, *document profile and the extraction substrate*, whose level-1 home is `BIO_Content_Framework_v0_10.md` **Part I**; §3 row 5 lists this document beside `DOCUMENT-PROFILES.md` as the two level-2 designs under it, and Part II §16 places the format entries in the extraction process as built ("delegated to format entries and members"). It is the FORMAT axis — framework §4's third axis, the one D-70 said had never been exercised — so it is also the evidence for a claim the framework makes about itself. Interfaces: it created I7 (the registry entry shape) and it drove IC-1 against I2, the element reference union that legs, connections and citations will share. What depends on it: `formats.mjs`, `ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`, `odf.mjs`, `csv.mjs`, and `CONTENT-EXTENT-DESIGN-SPACE.md`, which treats IC-1's union as D-164's per-container leaf.
 
 **Incomplete sections** ·
 - §What to build — now a record rather than an instruction: step 1 is COFF-1, step 2 COFF-2, steps 3–4 COFF-3/4/5, step 5 COFF-6, step 6 the DEC-5 extras carried alongside 3–4 plus COFF-7 (hidden slides, the pptx analogue of hidden sheets). What the section cannot say is what step 5 RETURNED, and the answers now govern steps 2 and 7 — see the next three bullets.
@@ -13,6 +13,15 @@
 - §What changes in I2 — superseded on both halves. `INTERFACE-CHANGES.md` exists and IC-1 was its first use, exactly as predicted; but the landed union is `{kind: pdf-page | sheet-cell | slide-shape | doc-para | dom, ref}` with `kind` and `ref` both REQUIRED, not the `{sheet, cell}` / `{slide, shape}` pair sketched here. `doc-para` exists for a case this section does not anticipate — a DOCX has no pages in its bytes, so a page reference would claim something the captured bytes do not say — and the `dom` arm has no producer anywhere in the plane.
 - §What these formats carry — what the axis EXTRACTS today is narrower than what it enumerates, and the difference is the honest frontier. Extracted: text, outbound and internal links with element references, and the DEC-5 envelope (formulas beside cached values, tracked changes, comments, speaker notes, hidden rows, columns, sheets and slides, core properties). NOT extracted: TABLES and IMAGES as content, both [GESTURED] corpus-wide with no object, no extraction step and no debt row scoped to them (framework Part II §15) — so a workbook's grid is reachable as cells and as text and never as a table; charts, drawings and other embedded media, which are not read at all; and the CONTENT of embedded files, which are content-addressed into `intra` links by sha256 and never opened.
 
+- §CSV — the SIZE BOUND in it is NOT SETTLED, and the section says so rather than reading as finished. The metric is
+  the format's own (body bytes); the FIGURE is COFF-6's 20 MiB reused, and FW-23 measured two instruments
+  disagreeing about it — node's walk at the bound costs 254.5 MiB of heap against a documented 128 MiB isolate
+  limit (Cloudflare's claim), while local workerd read the whole 73,585,498-byte body without dying and cannot see
+  the production cap. **The deciding measurement is a DEPLOYED plane reading a > 20 MiB CSV in its own scratch
+  namespace; deploying is DIST's and FW-23 did not take it.** Until it is taken the bound excludes exactly 1 of the
+  166 corpus keys, with that body's dialect still stated. Also unmeasured, and stated at the suite: no corpus body
+  carried a UTF-16 BOM or a semicolon, tab or pipe delimiter, so those four arms are driven by fixture only.
+
 **Contents**
 - [The finding that shapes everything: three formats, one container](#the-finding-that-shapes-everything-three-formats-one-container)
 - [What each part-map offers, and where it maps onto I2](#what-each-part-map-offers-and-where-it-maps-onto-i2)
@@ -20,7 +29,7 @@
 - [The risk that comes with it, and it is Bob's](#the-risk-that-comes-with-it-and-it-is-bobs)
 - [The architectural answer: a FORMAT axis, not a fifth if-branch](#the-architectural-answer-a-format-axis-not-a-fifth-if-branch)
 - [What changes in I2, and it needs the protocol](#what-changes-in-i2-and-it-needs-the-protocol)
-- [CSV — DESIGNED 2026-09-24 by BOB #32 (D-66's worker: 166 `.csv` keys unread)](#csv-designed-2026-09-24-by-bob-32-d-66s-worker-166-csv-keys-unread)
+- [CSV — BUILT 2026-09-24 by FW-23, from BOB #32's design and a measured page](#csv-built-2026-09-24-by-fw-23-from-bob-32s-design-and-a-measured-page)
 - [Legacy binary formats are a SEPARATE and LATER decision](#legacy-binary-formats-are-a-separate-and-later-decision)
 - [Bounds and the size guard](#bounds-and-the-size-guard)
 - [What to build, in order](#what-to-build-in-order)
@@ -41,7 +50,8 @@ per-container element references, text, and the DEC-5 evidentiary envelope; **an
 `OOXML_FLAVOURS` in the container tier and COFF-10 added the `.odt` / `.ods` / `.odp`
 registry entries (`bio-plane/src/odf.mjs`), in the same I2 shape and DEC-5 envelope and
 with no new I2 union member. **COUNT THE REGISTRY RATHER THAN TRUST THIS SENTENCE:**
-`grep -cE '^registerFormat\(' bio-plane/src/formats.mjs` — eight entries on 2026-09-14.
+`grep -cE '^registerFormat\(' bio-plane/src/formats.mjs` — eight entries on 2026-09-14, NINE since
+FW-23 added `csv` on 2026-09-24.
 What the axis still does NOT extract is stated in §What these formats carry and in this
 document's Incomplete list, not here. The one technical fact everything rests on was
 MEASURED on 2026-07-31 rather than assumed; every other number below is marked as
@@ -195,14 +205,59 @@ is unchanged — so consumers that only read `{page, rect}` keep working. Additi
 not, it is I2's owner's call and FRAMEWORK is dormant, so `ARCH`/CONDUCT answers for it
 in writing (protocol step 3).
 
-## CSV — DESIGNED 2026-09-24 by BOB #32 (D-66's worker: 166 `.csv` keys unread)
+## CSV — BUILT 2026-09-24 by FW-23, from BOB #32's design and a measured page
 
-A `csv` entry in the format registry, owned by FRAMEWORK, on this document's format axis. The delimiter and encoding are
-found by signature and RECORDED on the reading; when either cannot be determined the reading says so (undetermined) and
-nothing is guessed. The file is ONE sheet. Row 1 is row 1 whether or not it looks like a header, because a header is a
-reading and is never assumed. Cells are addressed with the existing `sheet-cell` / `sheet-range` extent kinds, 1-based
-row and column. It carries the capture's grade, since the bytes are the publisher's. NOT BUILT (rowed behind D-66). The
-50 legacy `.xls` keys wait on the section below.
+**DESIGNED 2026-09-24 by BOB #32** (D-66's worker had just counted 166 `.csv` keys held and never read): a `csv` entry in
+the format registry, owned by FRAMEWORK, on this document's format axis. The delimiter and encoding are found by signature
+and RECORDED on the reading; when either cannot be determined the reading says so (undetermined) and nothing is guessed.
+The file is ONE sheet. Row 1 is row 1 whether or not it looks like a header, because a header is a reading and is never
+assumed. Cells are addressed with the existing `sheet-cell` / `sheet-range` extent kinds, 1-based row and column. It
+carries the capture's grade, since the bytes are the publisher's.
+
+**[BUILT] 2026-09-24 by FW-23** — `bio-plane/src/csv.mjs`, ONE `registerFormat(csvEntry)` call in `formats.mjs` and
+nothing anywhere else (`index.mjs` does not carry the substring `csv` at all, which `formats-csv.test.mjs` greps for), so
+I7 is CONFIRMED by a ninth entry rather than changed. No new IC-1 union member: the references are `sheet-cell` and
+`sheet-range`, and the sheet carries the same four extent keys `.xlsx` and `.ods` carry — pinned against the xlsx entry's
+OWN OUTPUT, not against a key list spelled again. **It is the first entry on this axis that is not a container**: there
+is no `parts` walk over a ZIP, and the four-slot entry shape absorbed that without changing.
+
+**EVERY DECISION IN IT WAS TAKEN AGAINST A MEASURED PAGE — all 166 `.csv` keys of `s3://cao-94612`, fetched WHOLE
+(90,402,768 B), read through the plane's own registry (M-144).** 166 of 166 declare `text/csv`; 166 of 166 are
+comma-delimited; 146 carry a UTF-8 BOM, 18 are ASCII throughout, 1 is UTF-8 by validity and **1 is ENCODING
+UNDETERMINED**; 778,830 cells read.
+
+**THE ONE FINDING THAT SHAPES THE ENTRY: A CSV IS NOT BYTE-DETECTABLE, AND THAT IS MEASURED RATHER THAN ASSUMED.** A CSV
+has no magic bytes, only a SHAPE, and prose wears that shape: 5 of 8 planted non-CSV text bodies fired the candidate
+signature at a two-line minimum — a hard-wrapped paragraph with one comma a line, a minutes roll-call, an ini file, an
+apache log, a Markdown table. Over 198 real non-CSV bodies from the same bucket it fired 0 times, and **that result is
+not a licence to sniff**: the bucket holds ONE `.txt` in 43,283 keys, so what a signature would false-positive on is
+exactly what the corpus is missing. So `detect` returns null for ANY bytes and the format is claimed from the declared
+content type alone — which is where the registry's magic-bytes-first doctrine meets a format that has none, and the
+honest answer is the xlsx entry's own at its prefix seam, reached from the other side. **WHAT IT COSTS, STATED: a CSV
+captured with no declared content type is `undetermined` at the FORMAT axis and this reader never runs on it** (0 of 166
+here).
+
+**WHAT AN UNDETERMINED ENCODING DOES, and it is deliberately narrow:** the GRID survives — delimiters, quotes and line
+breaks are ASCII — and only the cells that actually hold a high byte are undetermined, each named with its own
+`sheet-cell` address and a null text, never mojibake. `data/20230609update2.csv` is the corpus's case: byte `0x96`, no
+BOM, which is an en dash in windows-1252 and the letter ñ in Mac Roman, so the byte narrows the encoding and does not
+tell it. 138 cells in that one file.
+
+**WHAT IS NOT SETTLED, and it is the size bound.** The metric is this format's own (the body's bytes), but the FIGURE is
+COFF-6's 20 MiB reused, and FW-23 measured that it does not transfer cleanly in either direction: node's record walk at
+the bound costs 254.5 MiB of heap, against Cloudflare's documented 128 MiB isolate limit (their claim), while local
+workerd walked the whole 73,585,498-byte body without dying — and local workerd does not apply the production memory cap,
+so it cannot see the limit that matters. **The deciding measurement — a deployed plane reading a > 20 MiB CSV in its own
+scratch namespace — has NOT been taken, because deploying is DIST's.** The bound stands meanwhile and excludes exactly 1
+of 166 keys, whose dialect is still stated. M-144 §5 carries the figures.
+
+**THE INTERFACE HALF IS `IC-283`** (I2 2.7.0 → 2.8.0 proposed, MINOR ADDITIVE: the `dialect` key on the entry's
+`structure()` and `text()`), and its RESIDUE is the part to carry forward: **the dialect is EMITTED AND NOT
+PERSISTED.** The acquire wire's `container_extent` projection writes a named key list and `dialect` is not in it,
+so the delimiter and the encoding reach a caller that invokes the entry and do NOT reach the record — COFF-11's
+finding one construct over, and the passthrough is rowed rather than done.
+
+The 50 legacy `.xls` keys wait on the section below.
 
 ## Legacy binary formats are a SEPARATE and LATER decision
 

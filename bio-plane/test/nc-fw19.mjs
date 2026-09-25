@@ -24,8 +24,8 @@
  *     digest pin MUST fail while every FW-19 arm holds — proving the pin can
  *     see a change to the arms this item promised not to move.
  *
- * Pristine copies live in `.fw19-control-pristine/` at the worktree root (named,
- * not globbed, in `.gitignore`), are UNIQUELY NAMED per arm, and every restore
+ * Pristine copies live in a pen OUTSIDE the worktree — `controlPen("fw19")` from
+ * `test/pen.mjs` (M0-182, BOB #32) — are UNIQUELY NAMED per arm, and every restore
  * is verified by sha256 AND by content with a byte count printed and a minimum
  * guarded — never `git checkout --`.
  */
@@ -34,11 +34,12 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-const SAFE = join(REPO, ".fw19-control-pristine");
+const SAFE = controlPen("fw19");
 mkdirSync(SAFE, { recursive: true });
 
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");

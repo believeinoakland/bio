@@ -26,10 +26,10 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
 ## Opening a CONDUCT session
 
 1. **Fetch, and confirm your handoff is on the remote** (its line 1, read from `coord`, names you). Trust the remote over it.
-2. **Integrate your predecessor's live workers first, then archive it** (D-401). Workers are SUBAGENTS of the session
-   that spawned them — archiving it stops them mid-item and their reports arrive THERE. Wait until each branch is on the
+2. **Integrate your predecessor's live workers first, then archive it** (D-401). In the cloud, workers are separate sessions and
+   archiving their parent does NOT stop them (measured 2026-09-24); CONDUCT's successor is created by the ROOT lane (BOB.md, the session tree). Wait until each branch is on the
    remote with a `released:` line (or `isRunning` reads false), integrate from the PUSHED branches, then re-check D-398's
-   three conditions AT THE MOMENT YOU ACT (`isRunning` false; worktree porcelain EMPTY; tip an ANCESTOR of `origin/main`),
+   three conditions AT THE MOMENT YOU ACT (`isRunning` false; worktree porcelain EMPTY; every pushed branch on `origin` and on `main` by content or riding the next train),
    `archive_session`, `git worktree remove`, and report the disk before and after, measured. **Then READ the `locked` line
    of every agent worktree it spawned** — the archive does not always release them (D-398). A lock whose pid is not in
    `ps` is stale: `unlock` only after re-verifying CLEAN and ANCESTOR. Never touch a live pid's lock, or another session's

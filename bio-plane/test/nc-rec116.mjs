@@ -29,12 +29,13 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 import { join, dirname } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 const STORE = join(ROOT, "src", "store.mjs");
-const PRISTINE_DIR = join(HERE, ".rec116-nc");   /* INSIDE this worktree, never a shared scratchpad */
+const PRISTINE_DIR = controlPen("rec116");       /* M0-182: OUTSIDE the worktree (BOB #32) */
 
 /* The base commit this branch built on — the PRE-ITEM build for arm (f). Read
    from git rather than hard-coded to a sha, so a rebase cannot silently make the
@@ -212,7 +213,7 @@ console.log(`    DECLARED MUST-NOT-FAIL: anything. Pre-item build taken from mer
    since the merge-base, which is exactly this item's claimed footprint. If that
    ever stops holding, this arm fails LOUDLY instead of quietly comparing two
    builds that differ somewhere the arm is not looking. */
-const preDir = join(ROOT, ".rec116-preitem-src");
+const preDir = join(controlPen("rec116-preitem"), "src");
 try { rmSync(preDir, { recursive: true, force: true }); } catch {}
 mkdirSync(preDir, { recursive: true });
 

@@ -5,7 +5,8 @@
  *   node bio-plane/test/m0107-budget.control.mjs          (from anywhere; one arm: add its id, e.g. B1)
  *
  * ARM TALLY DECLARED: 7 (asserted at the foot). Every arm is armed ALONE against a pristine copy kept in
- * `.m0107-harness/` (which ignores itself), restored by sha256 AND `cmp` AND a floored byte count — never
+ * `controlPen("m0107")`, OUTSIDE the worktree (M0-182: its pen used to be `.m0107-harness/`, which NO `.gitignore`
+ * line covered), restored by sha256 AND `cmp` AND a floored byte count — never
  * `git checkout --`. An exit hook restores an armed file on EVERY exit. No arm touches a ref, a remote or any
  * file but its one subject. Each arm declares BEFORE it runs what MUST fail and what MUST NOT, and asserts the
  * DOWNSTREAM failure, never merely its patch count (M-60 Q9).
@@ -31,11 +32,12 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const DECLARED_ARMS = 7;
 const PLANE = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const REPO = join(PLANE, "..");
-const PEN = join(REPO, ".m0107-harness");
+const PEN = controlPen("m0107");
 const F = {
   owed: join(PLANE, "test/owed-controls.test.mjs"),
   battery: join(PLANE, "scripts/battery.mjs"),

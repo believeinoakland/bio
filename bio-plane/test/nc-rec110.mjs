@@ -1,6 +1,7 @@
 /* REC-110's NEGATIVE CONTROL DRIVER — `node test/nc-rec110.mjs [arm|all]`.
  *
- * INSIDE THIS WORKER'S OWN WORKTREE, never a shared scratchpad.
+ * THE DRIVER is committed INSIDE THIS WORKTREE; its PEN is not — since M0-182 the
+ * pristine copies go to `controlPen("rec110")`, a fresh `mkdtemp` outside the tree.
  *
  * **WHAT THIS DRIVER HAS TO PROVE IS UNUSUAL AND IS WORTH SAYING FIRST.** REC-110
  * ruled D-386 (a): the `tally` STAYS UNGATED. A decided-NOT-to-act outcome leaves
@@ -33,6 +34,11 @@ import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync } from 
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+const PEN = controlPen("rec110");
+/* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
+const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const SUITES = [
@@ -139,7 +145,7 @@ report("BASELINE");
 
 for (const [name, [file, anchor, repl, declared]] of Object.entries(ARMS)) {
   if (want !== "all" && want !== name) continue;
-  const pristine = `${file}.pristine-rec110-${name}`;
+  const pristine = penPath(file, `pristine-rec110-${name}`);
   copyFileSync(file, pristine);
   const before = readFileSync(file, "utf8");
   const beforeSha = sha(file);
