@@ -72,3 +72,4 @@ ID COLLISION: REC-205 C-33.44 (CLASS_NOT_DISPOSED) vs REC-207 C-33.44/.45/.46 �
   hygiene reach 45, meaning-bounds OPAQUE 10. app.html __DOCPROFILE__ regenerated (UI path) — regenerate on the union. ICs: I5 (reading_refs
   PK, connection_pair_choices.occurrence) + I3 (occurrence=, C-74.4, answer fields occurrences/limit/truncated/chosen.occurrence, lapsed/ambiguous).
   Touches the on-point choice UI-91 builds on — check UI-91's suite on the union.
+- UI-96 013d80c2 — app.html version-notice surface; ONE edit in shared basisLegRow leg-referent line (watch UI-91/UI-95); r3Fed 80->81 AGAIN (with UI-91): re-read from --strict on the union; 4.cross-version-ui BUILT; Content Framework §18.1. D-588 minted.
