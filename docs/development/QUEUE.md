@@ -458,8 +458,8 @@ scope: re-anchor the arm on the current line; done in REC-196's landing.
 accepts-when: the arm reports ARMED and fails by name (moves: 1 arm that never armed). NEGATIVE CONTROL: the arm itself, re-run AS DECLARED 96/61.
 added: 2026-09-25 · SCHEDULER #22 (id minted by REC-196's worker).
 
-### REC-197 · running — **CREATE AND FORK DO NOT CARRY THE DISCOVERABLE SETTING, AND A MACHINE CREDENTIAL'S OWNERLESS PROJECT HAS NO RULE.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *create and fork take one optional `visibility` (`discoverable` or `hidden`), absent means HIDDEN; a MACHINE credential never sets it (an ownerless project has no owner to choose): its creation is HIDDEN and `visibility=discoverable` from one is refused by name.* — owner RECORD.
-status: running — SCHEDULER #22 03:48Z spawns WORKER REC-197 (depth 2), REC-196 integrated at 82f604d2
+### REC-197 · integrated — **CREATE AND FORK DO NOT CARRY THE DISCOVERABLE SETTING, AND A MACHINE CREDENTIAL'S OWNERLESS PROJECT HAS NO RULE.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *create and fork take one optional `visibility` (`discoverable` or `hidden`), absent means HIDDEN; a MACHINE credential never sets it (an ownerless project has no owner to choose): its creation is HIDDEN and `visibility=discoverable` from one is refused by name.* — owner RECORD.
+status: integrated — SCHEDULER #22 05:10Z: tip e88ef9d1 (CARRIES REC-196 82f604d2), GATE 366/366 GREEN FULLREUSE (21138 assertions), tree ae3fe673; visibility on create and fork, absent = HIDDEN, machine discoverable refused C-97.1; CATALOG 1.30.0 (a FIFTH claimant; M0-195's A9 applies)
 order: directly after REC-196 (SCHEDULER #17, 2026-09-23)
 milestone: M8
 interface: I3 additive — the `visibility` field and one refusal; the integrator mints and classifies the IC.
@@ -502,7 +502,8 @@ scope: key `publishedRegistryFor` on object_type, so only a published INQUIRY is
 accepts-when: a second finding over published observations lands with its own grade, and a leg onto a published INQUIRY still inherits (moves: evidence legs forced to inherit). NEGATIVE CONTROL: drop the object_type key, and the evidence arm is refused C-21.2 by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by MK-7's worker; BOB #34 03:00Z).
 
-### UI-70 · queued — **DISCOVERABLE OR HIDDEN, 3 of 4: the create and fork forms ASK, with neither preselected, and cannot submit without the choice** … (whole text: the cut archive)
+### UI-70 · running — **DISCOVERABLE OR HIDDEN, 3 of 4: the create and fork forms ASK, with neither preselected, and cannot submit without the choice** … (whole text: the cut archive)
+status: running — SCHEDULER #22 05:10Z spawns WORKER UI-70 (depth 2), stacked on land/worker/REC-197 @ e88ef9d1
 order: after REC-149, and after UI-66 on the same forms (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 consumer (REC-149's IC)
