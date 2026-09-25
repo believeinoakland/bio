@@ -502,8 +502,8 @@ scope: key `publishedRegistryFor` on object_type, so only a published INQUIRY is
 accepts-when: a second finding over published observations lands with its own grade, and a leg onto a published INQUIRY still inherits (moves: evidence legs forced to inherit). NEGATIVE CONTROL: drop the object_type key, and the evidence arm is refused C-21.2 by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by MK-7's worker; BOB #34 03:00Z).
 
-### UI-70 · running — **DISCOVERABLE OR HIDDEN, 3 of 4: the create and fork forms ASK, with neither preselected, and cannot submit without the choice** … (whole text: the cut archive)
-status: running — SCHEDULER #22 05:10Z spawns WORKER UI-70 (depth 2), stacked on land/worker/REC-197 @ e88ef9d1
+### UI-70 · integrated — **DISCOVERABLE OR HIDDEN, 3 of 4: the create and fork forms ASK, with neither preselected, and cannot submit without the choice** … (whole text: the cut archive)
+status: integrated — SCHEDULER #22 06:14Z: tip bca3a5f7 (CARRIES REC-197 e88ef9d1 and REC-196), GATE 100/100 GREEN FULLREUSE (7436 assertions), tree 4a543570; create/fork ask Discoverable/Hidden with neither preselected; owner setting control; surface-registry A3/A4d/A4e 35/31/31
 order: after REC-149, and after UI-66 on the same forms (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 consumer (REC-149's IC)
@@ -996,6 +996,16 @@ depends-on: D-550.
 scope: widen `MULTI_SITE_FILES` to every `bio-plane/src` file, excluding by stated reason each file that PUBLISHES codes as data rather than minting them (affordances.mjs first); move the ceiling and candidate set to the printed figures.
 accepts-when: arm G reads every src mint site and names the codes above (moves: two files walked of the plane's many). NEGATIVE CONTROL: plant a second site of a single-site code in textchain.mjs and arm G fails naming it.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-550's worker).
+
+### D-560 · queued — **`tools/release-assemble.mjs` (~140) STILL NAMES THE ONE-BUNDLE COMMAND: its NO_ARTIFACT detail says "Run `npm run build` in <dir>/", and the assembler dies on the FIRST missing artifact, so a releaser fixes one bundle at a time.** M0-188's sibling site (found by M0-188's worker, via CONDUCT #20 23:45Z). — owner DIST (the path), M0.
+order: after D-548, with the process rows behind the product rows: it costs a release round, not a gate round, and no release is cut until the plan's current scope is done (BOB #34 22:30Z) (SCHEDULER #21, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a remedy an instrument prints must be the whole remedy), with M0-178's `node tools/bundles.mjs`.
+depends-on: M0-188.
+scope: the NO_ARTIFACT sentence names `node tools/bundles.mjs`, and the assembler reports every missing artifact before it dies; extend fleetbundles' TOTAL arm to cover it, or give release-assemble its own arm.
+accepts-when: with two artifacts missing, one run names both and the one command (the measured failure it moves: one-at-a-time, the wrong command). NEGATIVE CONTROL: restore the old sentence and the arm fails by name.
+added: 2026-09-24 · SCHEDULER #21 (id minted by M0-188's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
