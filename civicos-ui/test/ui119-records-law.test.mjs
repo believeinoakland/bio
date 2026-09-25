@@ -363,7 +363,9 @@ ok("the plane refuses a dangling leg with a C-2.10 finding carrying its own deta
 const why = setupPage().ui.refusedWhy(refused);
 ok("UI-119 SETUP WORDS: the setup page renders that refusal in the PLANE's words, verbatim, and not its code",
    why.includes(detail) && !why.includes(refused.reason), why.slice(0, 200));
-const coded = setupPage().ui.refusedWhy({ ok: false, reason: "GROUP_UNDETERMINED", translation: "The plane's own sentence." });
+/* A SYNTHETIC code, deliberately: this arm tests the page's PRECEDENCE (translation before code), and a real code
+   carrying a sentence typed here would feed check-refusal-codes a translation the plane never sends. */
+const coded = setupPage().ui.refusedWhy({ ok: false, reason: "UI119_SYNTHETIC", translation: "The plane's own sentence." });
 ok("…and a refusal carrying a canned translation renders the translation, not the code",
    coded === "The plane's own sentence.");
 ok("…and one carrying nothing else still says it was refused and nothing was written (the code is all it has)",
