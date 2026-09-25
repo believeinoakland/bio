@@ -21,9 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-25 02:40Z · BOB #34 · REC-155's provisional, CONFIRMED: all five joined ops need `contribute`.** Each write puts a row in the record in a member's name. A view-only member reaches the report through a bearer class. Fold into Membership v2 §4.10 with REC-155's landing. **D-587's `measured_by`, RULED:** it names the INSTRUMENT (a probe's or tool's name), as the caller states it, and is labelled as the caller's claim. It never names a person. WHO measured is the server-stamped principal in a new column beside it, which is D-587's named fix. A reading that shows who measured shows the stamped principal, never `measured_by`. Existing rows read "measured by: undetermined (recorded before the principal was stamped)". Place D-587 in product order with that on the row.
-- **2026-09-25 03:00Z · BOB #34 · D-598, RULED: C-21.2's inheritance rule applies to published INQUIRIES only.** A document or observation published as a case's EVIDENCE (D-431(b)) carries no frozen strength, so it is not a published finding and must not force later citations to be ungraded. `publishedRegistryFor` is keyed on object_type; evidence stays gradeable on its own axis (C-2.8 for testimony, the capture grade for documents). accepts-when: a second finding over published observations lands with its own grade; a leg onto a published INQUIRY still inherits. NEGATIVE CONTROL: drop the object_type key, and the evidence arm is refused C-21.2 by name. The testify.test.mjs line that calls the captured-document case "the record's rule" is CORRECTED with that reason. Place it in product order. **MK-7's two provisionals (§4.4 the narrow veto; §4.6 `name` means the member's HANDLE) are carried to BOB himself at 03:00Z** as the provisionals they have been since BOB #19. They run as built until he answers.
-- **2026-09-25 03:05Z · BOB #34 · D-455's open question (OBSERVATION-LOG §4.1), RULED: the interim STANDS as the rule.** The monitor's baseline stays the capture a PERSON accepted, and a monitor capture never advances it. `changed` means "changed since the version a member accepted", which is the meaning Bob's 2026-09-25 00:40Z version doctrine needs: only a member's ADOPT moves what the record stands on, never a tick. Nothing is lost: a later, different version still differs from the accepted one, so it is still captured and filed once. A repeat tick that names the same held capture adds no second filing. The re-evaluation flag stays raised until a member acts (REC-223's ADOPT or KEEP), which is the intended closure, not noise. A monitor capture gets NO documents[] row in data/provenance.json: that file records accepted provenance, and the register row, captured_locators and the sweep observation are its full provenance. When a member ADOPTs a newer capture, REC-223 is what advances the baseline. Fold into §4.1 with D-455's landing.
 
 
 
@@ -31,8 +28,8 @@ BOB appends a designed item, a correction or an order change here, with its inte
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 16 in all (`CACHE_ROWS`, sized to CONDUCT's capacity plus spare: Bob, 2026-09-23, `WORK-PIPELINE.md`). **At most 10 worker sessions are live at once** (Bob, 2026-09-24 ~03:08Z, via BOB #32; until 05:00Z, then 6, and no new spawn from 06:00Z): a `running` row whose worker has FINISHED and awaits integration holds no session, so the cache keeps a few `queued` rows behind the live ten and no slot waits. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
 
-### REC-207 · running — **NOTHING SETTLES A BIAS-DEBT OBLIGATION BUT THE LENS MOVING BACK: a re-run under the current lens is not recognised, and `op=taskresolve` addresses tasks, not runs.** BOB #32's ruling of 2026-09-23 23:42Z (cite until folded into Declared Bias "Bias debt, and HUNCH DEBT" and NOTIFICATIONS): *BOTH acts settle it, each RECORDED, never cleared silently — (1) a re-run under the CURRENT lens discharges the debt of the run it re-runs, closed with the discharging run's id and lens pins (any other lens discharges nothing); (2) a member's resolve with a REQUIRED stated reason, authored, attributed, dated, append-only, riding the task-resolve path or its equivalent.* — owner RECORD.
-status: running — SPAWNED 2026-09-24 ~21:30Z by SCHEDULER #19 (dispatch, BOB #33 21:10Z) as a SEPARATE CLOUD SESSION titled WORKER REC-207 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/REC-207; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
+### REC-207 · integrated — **NOTHING SETTLES A BIAS-DEBT OBLIGATION BUT THE LENS MOVING BACK: a re-run under the current lens is not recognised, and `op=taskresolve` addresses tasks, not runs.** BOB #32's ruling of 2026-09-23 23:42Z (cite until folded into Declared Bias "Bias debt, and HUNCH DEBT" and NOTIFICATIONS): *BOTH acts settle it, each RECORDED, never cleared silently — (1) a re-run under the CURRENT lens discharges the debt of the run it re-runs, closed with the discharging run's id and lens pins (any other lens discharges nothing); (2) a member's resolve with a REQUIRED stated reason, authored, attributed, dated, append-only, riding the task-resolve path or its equivalent.* — owner RECORD.
+status: integrated — SCHEDULER #22 03:10Z: worker COMPLETED at tip be038bc1; CONDUCT #21 composed it into batch28 (renumber 733dafe9)
 order: behind D-86's train, as ruled; with the M4 bias rows (SCHEDULER #17, 2026-09-23)
 milestone: M4
 interface: I3 — the discharge on the obligation and the resolve act; the integrator mints and classifies the IC.
@@ -790,8 +787,8 @@ scope: rewrite the four citations as prose ("the MEASUREMENTS ledger"), the corr
 accepts-when: a MEASUREMENTS-only diff no longer selects `calibration.test.mjs` and selects 37 units (the measured failure it moves: 39, M0-176's unmet accepts-when). NEGATIVE CONTROL: restore one citation by name and the selection re-admits the importing suites, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by M0-176's worker).
 
-### D-589 · running — **A DEC-49 REGION INSIDE `aiRunOpen` IS JUDGED TWICE AND FAILS: its catalogue rows keep a WHOLE-FUNCTION `where`, so a new governed region inside the function is read both by the region and by every whole-function row.** Found by REC-207's worker (F2, via CONDUCT #20 01:48Z). REC-71's class. — owner RECORD (the catalogue rows), M0.
-status: running — SCHEDULER #21 02:17Z spawns WORKER D-589 (depth 2)
+### D-589 · integrated — **A DEC-49 REGION INSIDE `aiRunOpen` IS JUDGED TWICE AND FAILS: its catalogue rows keep a WHOLE-FUNCTION `where`, so a new governed region inside the function is read both by the region and by every whole-function row.** Found by REC-207's worker (F2, via CONDUCT #20 01:48Z). REC-71's class. — owner RECORD (the catalogue rows), M0.
+status: integrated — SCHEDULER #22 03:10Z: tip 0676cf09, GATE 366/366 GREEN (21062 assertions), clean tree 128f0b4e; unions with REC-207's exclusion
 order: after D-574, with the DEC-49 instrument rows behind the product rows: it blocks the next governed edit to aiRunOpen with a false red, and no gate result is false today (SCHEDULER #21, 2026-09-25)
 milestone: M0
 interface: none.
@@ -933,6 +930,56 @@ depends-on: REC-149.
 accepts-when: a grant leaves the requester `invited` and NOT `joined`; a lapsed requester reads their own request and nothing else about the project; an administrator's grant is refused. … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 2).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-598 · queued — **C-21.2's INHERITANCE RULE READS EVERY PUBLISHED BUNDLE AS A PUBLISHED CASE, EVIDENCE INCLUDED: a document or observation published as a case's EVIDENCE (D-431(b)) forces every later citation of it to be `grade_source: inherited`, though it carries no frozen strength and is not a published finding.** Found by MK-7's worker (02:47Z). — owner RECORD.
+order: after D-597, with the case-citation rows: a later finding refused its own grade on evidence is the record claiming less than it can support and a leg ungradeable for no reason; BOB #34 03:00Z: *"C-21.2's inheritance rule applies to published INQUIRIES only"* (SCHEDULER #22, 2026-09-25)
+milestone: M10
+interface: I3 — a narrower C-21.2 refusal; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 5 (inheritance is per axis), narrowed by BOB #34's ruling of 2026-09-25 03:00Z (drained; BOB folds it into rule 5 with this landing).
+depends-on: none.
+scope: key `publishedRegistryFor` on object_type, so only a published INQUIRY is a published finding a leg must inherit from; evidence stays gradeable on its own axis (C-2.8 for testimony, the capture grade for documents). CORRECT the testify.test.mjs line that calls the captured-document case "the record's rule", with that reason.
+accepts-when: a second finding over published observations lands with its own grade, and a leg onto a published INQUIRY still inherits (moves: evidence legs forced to inherit). NEGATIVE CONTROL: drop the object_type key, and the evidence arm is refused C-21.2 by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by MK-7's worker; BOB #34 03:00Z).
+
+### UI-70 · queued — **DISCOVERABLE OR HIDDEN, 3 of 4: the create and fork forms ASK, with neither preselected, and cannot submit without the choice** … (whole text: the cut archive)
+order: after REC-149, and after UI-66 on the same forms (SCHEDULER, 2026-09-19)
+milestone: M8
+interface: I3 consumer (REC-149's IC)
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14, with DEC-69 (forced, at the act).
+depends-on: REC-149; and the create and fork forms as UI-66 leaves them (same forms — one worker at a time).
+accepts-when: the harness cannot submit a create or fork without the choice, and nothing is preselected; the owner changes the setting and a non-owner sees it read-only. How a liar passes … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (same entry, item 3).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-70» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-134 · queued — **NO SURFACE PERFORMS §4.9's CUSTODIAL ACTS: `memberadd`, `memberset`, `signeradd` and `signerset` have ZERO call sites in** … (whole text: the cut archive)
+order: with the M8 features after D-126, a surface over built ops; BOB #17 ordered it behind D-136's fence (*"a member surface over an act whose voter the caller can name is a SECOND path to a forgeable vote"*), which is built, and BOB #18 discharged BOB's half; it rests on REC-159's session reach (SCHEDULER #13, 2026-09-22, LED-7 batch S13-1)
+milestone: M8
+interface: I3 consumer (the four ops, reachable from an enrolled administrator's session once REC-159 lands).
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each custodial act is EVERY … (whole text: the cut archive)
+depends-on: REC-159 (the four ops reach an enrolled administrator's session).
+accepts-when: against the real plane, the founder's and an enrolled administrator's sessions each perform all four, attributed to them; a member's session renders none of the four. How a … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #13 (LED-7 batch S13-1; D-134's DEBT row of 2026-08-01, BOB #17's order and BOB #18's discharge; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-134» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### UI-76 · queued — **NO SURFACE LETS A MEMBER DECLARE, TEST OR PLACE A THEME, OR SHOWS WHOSE LENS A THEME IS.** D-162's surface half, item 2 of BOB #23's entry. — owner UI.
+order: directly after D-162, which it consumes (BOB #23: *"UI (M8), after 1"*) (SCHEDULER #9, 2026-09-21)
+milestone: M8
+interface: I3 consumer (D-162's IC).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.4, fences 1–3 (the cover on every reading; the … (whole text: the cut archive)
+depends-on: D-162.
+accepts-when: the harness declares, tests and places against the real plane, the cover shown on every theme it renders; a proposal renders as a hunch, never as membership. How a liar passes … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #9 (BOB #23's inbox entry, item 2, drained this commit; `node tools/mintid.mjs UI`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-235 · queued — **`op=basisversions` DOES NOT PUBLISH A VERSION'S `kind`: `basisVersions` selects every column of `inquiry_basis_versions`, `kind` among them, and the answer carries no `kind` key, so the same version reads a kind from `op=suggest` and none from here.** — owner RECORD.
+order: after D-241 (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
+milestone: M3
+interface: I3 additive — one field; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §9 (what a SUGGESTION is).
+depends-on: none.
+scope: `kind` in each version of the answer. Extend `bio-plane/test/suggest.test.mjs`'s cross-op arm. The row's other half (the sweep's reach) is stated in `rec75-sweep.mjs`'s header and is not rowed.
+accepts-when: a version with a kind reads the same kind from both ops. NEGATIVE CONTROL: drop the key, and the cross-op arm fails on `kind`.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
