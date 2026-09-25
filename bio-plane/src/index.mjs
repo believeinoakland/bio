@@ -3013,8 +3013,10 @@ async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, 
    assumed): the framework names the ORDER — a list's membership is time-sensitive, a
    record's substance is not — and no interval, so `membership` is checked daily and
    `substance` weekly. `unmonitorable` (a shell) has no clock: watching bytes that carry
-   no substance proves nothing, so the answer says so rather than scheduling it. */
-const CONTRACT_FREQUENCY = { membership: "daily", substance: "weekly", unmonitorable: null };
+   no substance proves nothing, so the answer says so rather than scheduling it.
+   REC-191: the table lives ONCE, on `Store`, because the cadence plan schedules by it too;
+   two copies were how the tick and the plan came to disagree about one document. */
+const CONTRACT_FREQUENCY = Store.CONTRACT_FREQUENCY;
 
 /* What cadence governs a monitored document, and WHICH SOURCE SET IT. REC-26's authored
    `monitoring.frequency` stays the choice when the document states one the catalog knows;
@@ -3086,7 +3088,15 @@ async function monitorRecordLook(stub, o) {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ bundleId: o.bundleId, address: o.address, outcome: o.outcome, baseline: o.baseline,
                            seen: o.seen, httpStatus: o.httpStatus, reason: o.reason,
-                           ...(o.scope ? { scope: o.scope } : {}) }) })));
+                           ...(o.scope ? { scope: o.scope } : {}),
+                           /* REC-191: what the look read the document as, for the cadence plan's
+                              contract fallback; omitted (never null) when the look read nothing. */
+                           ...(o.content !== undefined ? { locator: o.locator, content: o.content,
+                                                           contentBasis: o.contentBasis ?? null } : {}),
+                           /* D-455: the capture a `changed` tick filed (the store checks the register
+                              before naming it), or why the served bytes were not filed. */
+                           ...(o.captured ? { captured: o.captured, locator: o.locator } : {}),
+                           ...(o.uncaptured ? { uncaptured: String(o.uncaptured) } : {}) }) })));
   return out.answered ? out.result : { ok: false, written: false, why: "the store did not answer the observation write" };
 }
 
@@ -10197,7 +10207,7 @@ export default {
       let status = null, note = null, seen = null, compared = null, comparedBasis = null, frame = null;
       /* D-65 — what `assess` said, the type the fetched document reads as, and the look. */
       let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
-      const monitorLook = (o) => monitorRecordLook(stub0, { bundleId, address: normalizeAddress(locator),
+      const monitorLook = (o) => monitorRecordLook(stub0, { bundleId, address: normalizeAddress(locator), locator,
         baseline, seen, httpStatus, ...(renderTick ? { scope: "frame" } : {}), ...o,
         actorClass: viaSession ? "member" : "machine",
         actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
@@ -10400,11 +10410,56 @@ export default {
         beforeAt: baselineAt, afterAt: checked });
       const cadence = monitorCadence(fm.monitoring.frequency, graded.content);
 
+      /* D-455 — A `changed` TICK CAPTURES THE BYTES IT FETCHED (BOB #32, 2026-09-23 23:08Z;
+         OBSERVATION-LOG-DESIGN.md §4.1). The tick already HOLDS them — it hashed them to see the
+         change — so discarding them discarded evidence the record had in hand, and the look could
+         only point at the baseline. They are held here under the one capture key, exactly as
+         fetched and hashed (the fetch above went through the per-host governor, so the capture is
+         governed with it and no second request is made), and the promotion below files them in
+         this bundle's `snapshots/` — the mechanical envelope C-20.1 already admits for a sweeping
+         writer — with a register row, so the observation can name a capture the record HOLDS.
+         Every way that fails is STATED on the look and in the answer, and the look then falls back
+         to D-65's form (the baseline, the served sha in `detail`): an uncaptured sha is never named
+         as a capture. */
+      let monCap = null;
+      /* CONDUCT #22 (c22-batch29), composing D-455 with D-567: a RENDERED capture's tick fetched the
+         SHELL, and its `modified` is about the frame only (BOB #34 (b)); filing that shell as the
+         monitor's new capture would have the look name a new version of a document the tick never
+         rendered. So a render tick captures nothing and keeps D-567's frame form. */
+      if (status === "modified" && !renderTick && fetchedBytes && seen && seen !== baseline) {
+        const leaf = (locator.split("?")[0].split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 80) || "capture";
+        monCap = { sha256: seen, file: `snapshots/monitor-${seen.slice(0, 12)}-${leaf}`, bytes: fetchedBytes.length,
+                   content_type: fetchedCtx?.content_type || null, retrieved: checked, fetched_address: tickAddress,
+                   taken_by: "op=monitor, from the bytes this tick fetched through the per-host governor",
+                   held: false, existed: null, registered: false, why: null };
+        if (typeof env.CAPTURES?.put !== "function")
+          monCap.why = "R2 is not configured on this instance, so the served bytes could not be held";
+        else {
+          try {
+            const key = captureKey(storeName, seen);
+            monCap.existed = !!(await env.CAPTURES.head(key));
+            if (!monCap.existed)
+              await env.CAPTURES.put(key, fetchedBytes, { sha256: await crypto.subtle.digest("SHA-256", fetchedBytes) });
+            monCap.held = true;
+          } catch (e) {
+            monCap.why = "the served bytes could not be written to R2: " + String(e && e.message || e).slice(0, 90);
+          }
+        }
+      }
+
       /* THE LOOK, written to the observation log (OBSERVATION-LOG-DESIGN.md §4.1). */
-      const observation = await monitorLook({
+      const lookArgs = {
         outcome: status === "unchanged" || frame === "unchanged" ? "unchanged" : status === "modified" ? "changed"
                : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
-        reason: unreachable });
+        reason: unreachable,
+        /* REC-191: only a look that READ a document says what the document is; an
+           unreachable or gone source leaves the address's reading as it was. */
+        ...(fetchedBytes ? { content: graded.content, contentBasis: graded.basis } : {}) };
+      /* D-455: a look that captured is written AFTER the promotion that registers the capture, so
+         the store can check the register rather than take the tick's word for it. */
+      const lookAfterPromote = !!(monCap && monCap.held);
+      let observation = lookAfterPromote ? null
+        : await monitorLook(monCap ? { ...lookArgs, uncaptured: monCap.why } : lookArgs);
 
       /* Rewrite ONLY the permitted fields, line by line, so nothing else can
          move by accident. A mechanical writer that rebuilt the document from a
@@ -10436,23 +10491,30 @@ export default {
         text = text.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
 
       /* The Session Log is the one body surface a mechanical writer may add to,
-         and C-13.2 requires an entry whenever last_updated moves. */
-      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked")
-        + (compared ? ` (compared ${compared})` : "")
-        /* D-472: the durable record says WHICH bytes were compared. A Drive tick
-           reads Google's export, not the page at the document's own address, and
-           a Session Log that does not say so leaves a reader to assume the page. */
-        + (driveTick && driveTick.harvestable
-            ? ` — fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed `
-              + `from the Drive ${driveTick.kind} in ${driveTick.address}`
-            : "") + "\n";
-      const at = text.indexOf("## Session Log");
-      if (at < 0) text += "\n## Session Log\n\n" + entry;
-      else {
-        const nxt = text.indexOf("\n## ", at + 1);
-        const cut = nxt === -1 ? text.length : nxt + 1;
-        text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
-      }
+         and C-13.2 requires an entry whenever last_updated moves. D-455: `withEntry` is
+         called once per promotion ATTEMPT, because the entry says whether the served bytes
+         were filed, and a promotion retried without the capture must not say they were. */
+      const head = text;
+      const withEntry = (capLine) => {
+        const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked")
+          + (compared ? ` (compared ${compared})` : "")
+          /* D-472: the durable record says WHICH bytes were compared. A Drive tick
+             reads Google's export, not the page at the document's own address, and
+             a Session Log that does not say so leaves a reader to assume the page. */
+          + (driveTick && driveTick.harvestable
+              ? ` — fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed `
+                + `from the Drive ${driveTick.kind} in ${driveTick.address}`
+              : "") + (capLine ? ` — ${capLine}` : "") + "\n";
+        let t2 = head;
+        const at = t2.indexOf("## Session Log");
+        if (at < 0) t2 += "\n## Session Log\n\n" + entry;
+        else {
+          const nxt = t2.indexOf("\n## ", at + 1);
+          const cut = nxt === -1 ? t2.length : nxt + 1;
+          t2 = t2.slice(0, cut) + entry + "\n" + t2.slice(cut);
+        }
+        return t2;
+      };
 
       const carried = [];
       for (const [path, v] of Object.entries(img)) {
@@ -10465,32 +10527,74 @@ export default {
       }
       const liveSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(live)))]
         .map((x) => x.toString(16).padStart(2, "0")).join("");
-      const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))]
-        .map((x) => x.toString(16).padStart(2, "0")).join("");
       const stamp = checked.replace(/[-:]/g, "") + "_" +
         [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
 
-      const promoted = await doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
-        bundleId, base: liveSha, snapKey: stamp, author: "bio-monitor",
-        writer: "mechanical", operation: "monitor-tick",
-        /* D-436: no `group` — a tick is a REVISION, and the store keeps the group the document's creation wrote.
-           This was a literal fallback. */
-        meta: { object_type: fm.object_type,
-                title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
-                created: fm.created, last_updated: checked },
-        /* Every OTHER file carried forward untouched. promote writes a whole
-           image, so a writer that mentions one file deletes the rest: the first
-           version of this tick removed the provenance register, which took the
-           monitoring baseline with it and left an information@2 bundle with no
-           register at all. A mechanical writer silently destroying evidence is
-           the worst thing in this system, and the shape of promote made it the
-           DEFAULT behaviour of a careless caller. */
-        files: [
-          { path: "bundle.md", text, bytes: new TextEncoder().encode(text).length, sha256: textSha },
-          ...carried,
-        ],
-        register: [],
-      }) }));
+      /* D-455: the capture joins the image as a blob under `snapshots/` with its register row,
+         unless the image already carries those bytes (a later tick seeing the same new bytes), in
+         which case the bundle already holds and registers them and nothing is added twice. */
+      const capCarried = !!(lookAfterPromote && carried.some((f) => f.sha256 === monCap.sha256));
+      const promoteWith = async (withCap) => {
+        const text2 = withEntry(!monCap ? null
+          : withCap ? `the served bytes were captured as ${monCap.file} (sha256 ${monCap.sha256})`
+          : `the served bytes (sha256 ${monCap.sha256}) were not filed: ${monCap.why}`);
+        const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text2)))]
+          .map((x) => x.toString(16).padStart(2, "0")).join("");
+        const addCap = withCap && !capCarried;
+        return doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
+          bundleId, base: liveSha, snapKey: stamp, author: "bio-monitor",
+          writer: "mechanical", operation: "monitor-tick",
+          /* D-436: no `group` — a tick is a REVISION, and the store keeps the group the document's creation wrote.
+             This was a literal fallback. */
+          meta: { object_type: fm.object_type,
+                  title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
+                  created: fm.created, last_updated: checked },
+          /* Every OTHER file carried forward untouched. promote writes a whole
+             image, so a writer that mentions one file deletes the rest: the first
+             version of this tick removed the provenance register, which took the
+             monitoring baseline with it and left an information@2 bundle with no
+             register at all. A mechanical writer silently destroying evidence is
+             the worst thing in this system, and the shape of promote made it the
+             DEFAULT behaviour of a careless caller. */
+          files: [
+            { path: "bundle.md", text: text2, bytes: new TextEncoder().encode(text2).length, sha256: textSha },
+            ...carried,
+            ...(addCap ? [{ path: monCap.file, blobSha: monCap.sha256, sha256: monCap.sha256, bytes: monCap.bytes }] : []),
+          ],
+          register: addCap ? [{ sha256: monCap.sha256, path: monCap.file, encoding: "binary", bytes: monCap.bytes }] : [],
+        }) }));
+      };
+      /* D-455: the FIRST attempt is its own name, and `promoted` is only ever the attempt that stands.
+         The handler tests whether the STANDING attempt was answered in one place, REC-52's guard below,
+         so plane-envelope's D-240 (c) — which strips that guard and expects the answer's computed
+         verdict to read unguarded — still sees it; a second spelling of that test would hide it. */
+      const first = await promoteWith(lookAfterPromote);
+      let promoted = first;
+      if (lookAfterPromote) {
+        if (!first.answered) monCap.why = "the store did not answer the promotion that would have filed them";
+        /* A promotion REFUSED with the capture in it is retried once without it, so the tick is still
+           recorded; the refusal is kept as the reason the bytes were not filed. The one refusal this is
+           for is D-179's (C-53.13): those bytes are already another bundle's capture, and one capture
+           has one home. */
+        else if (first.result && first.result.ok === false) {
+          const r = first.result;
+          monCap.why = `the promotion filing them was refused (${r.reason || r.code || "no reason given"}`
+            + `${r.detail ? `: ${String(r.detail).slice(0, 160)}` : ""})`;
+          promoted = await promoteWith(false);
+        } else if (first.result?.ok) monCap.registered = true;
+      }
+      if (lookAfterPromote) {
+        observation = await monitorLook(monCap.registered
+          ? { ...lookArgs, captured: { sha256: monCap.sha256, retrieved: monCap.retrieved,
+                                       retrievalLocator: monCap.fetched_address } }
+          : { ...lookArgs, uncaptured: monCap.why });
+        /* The OUTCOME, not the intent: `registered` is what the store's register check let the
+           look name, so a promotion that landed without filing the capture cannot read as filed. */
+        if (monCap.registered && !(observation && observation.captured === monCap.sha256)) {
+          monCap.registered = false;
+          monCap.why = (observation && observation.uncaptured) || "the observation log did not name the capture";
+        }
+      }
       /* REC-52: a store silence produced `ok:false` at 409 with `reason` and
          `detail` both undefined — a CONFLICT status over an empty refusal —
          while the monitoring verdict above it (`status`, `note`, `seen`) was
@@ -10512,6 +10616,14 @@ export default {
            and the look as the observation log recorded it. */
         assessment: graded.assessment, assessment_basis: graded.basis,
         cadence, observation,
+        /* D-455: on a `changed` tick, the capture of the served bytes — its sha, the file it was
+           filed as, whether it was held and registered, and why not when it was not. Null on
+           every other tick, which captures nothing. */
+        capture: monCap ? { sha256: monCap.sha256, file: monCap.registered ? monCap.file : null,
+                            bytes: monCap.bytes, content_type: monCap.content_type, retrieved: monCap.retrieved,
+                            fetched_address: monCap.fetched_address, taken_by: monCap.taken_by,
+                            held: monCap.held, existed: monCap.existed, registered: monCap.registered,
+                            why: monCap.registered ? null : monCap.why } : null,
         /* D-472: for a Drive-linked document, which address this tick actually
            fetched and the three facts the plane derived to compose it. Absent for
            every other document, where the locator is the address. */

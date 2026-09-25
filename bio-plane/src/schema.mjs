@@ -4162,6 +4162,35 @@ CREATE TABLE IF NOT EXISTS reading_history (
   PRIMARY KEY (capture_sha, seq)
 );
 
+-- REC-191: THE CONTENT TYPE A MONITOR TICK LAST READ AT AN ADDRESS, which is what
+-- the cadence plan falls back on when no version authored a frequency (the
+-- contract sets the check frequency, BIO_Content_Framework section 6, and
+-- CONTRACT_FREQUENCY gives it an interval). op=monitor determines the type on
+-- every tick and, until this table, told only its caller -- so a document
+-- stating no frequency read UNSCHEDULED in the plan though the tick had answered
+-- it by its contract (D-65's worker finding a).
+-- Keyed on the NORMALISED address, which is the key captured_locators and the
+-- version chain use, so every version at one address shares one reading. The raw
+-- address is kept beside it because a bundle with no captured address is matched
+-- on its own source.locator, which is raw.
+-- A row is replaced only by a tick that DETERMINED a contract, or when none is
+-- held: an unreachable source says nothing about what the document is, so it
+-- must not erase what an earlier tick read. content_type and contract NULL is a
+-- tick that read the address and could not say, with basis saying why.
+-- DERIVED from ticks over the corpus: a whole-store purge clears it. A per-bundle
+-- purge does not, because an address outlives any one of its versions, the same
+-- reasoning as source_reachability.
+CREATE TABLE IF NOT EXISTS monitor_address_type (
+  address_norm  TEXT PRIMARY KEY,
+  address       TEXT NOT NULL,   -- the locator as the ticked document states it
+  content_type  TEXT,            -- the doctype key, NULL when undetermined or a shell
+  confidence    TEXT,
+  contract      TEXT,            -- substance, membership or unmonitorable, NULL when undetermined
+  basis         TEXT,            -- why no type was read, when none was
+  read_at       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS monitor_address_type_raw ON monitor_address_type(address);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

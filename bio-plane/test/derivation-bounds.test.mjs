@@ -581,7 +581,11 @@ const D384_LEAVES = [
   { name: "#frontierMeaning", why: "the same shape: #frontierVerification and #missingMeaningCause per "
       + "row over a (cap+1)*3 page and three LIMIT cap+1 scans; the only unbounded scan is the tally, "
       + "read ONCE. REC-95's admission states the bound itself" },
-  { name: "#monitorCadencePlan", why: "one linear pass over monitored bundles, arithmetic per row" },
+  /* CORRECTED 2026-09-25 (REC-191), not exempted: the plan's row source moved into
+     #monitorSubjects, which groups monitored bundles by ADDRESS; the old reason named a pass
+     over bundles, which the method no longer makes. It still makes one linear pass. */
+  { name: "#monitorCadencePlan", why: "one linear pass over the address subjects #monitorSubjects builds "
+      + "(three linear reads, grouped in memory in one pass over the chain — REC-191), arithmetic per row" },
   { name: "#queueMutes", why: "one linear pass, a parse of each row's own column" },
   { name: "#queueRenotifyWake", why: "one linear pass computing a minimum" },
   { name: "#searchedForCase", why: "every scan is batched per chunk of 50 subjects (linear in "
