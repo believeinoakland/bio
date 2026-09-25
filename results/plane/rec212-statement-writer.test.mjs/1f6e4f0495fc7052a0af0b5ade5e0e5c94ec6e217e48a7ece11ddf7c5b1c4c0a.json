@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec212-statement-writer.test.mjs",
+ "inputHash": "1f6e4f0495fc7052a0af0b5ade5e0e5c94ec6e217e48a7ece11ddf7c5b1c4c0a",
+ "verdict": "PASS",
+ "run": "83e3a8639c10e809efe956fb9cef43ebcd78e305.1790314586566.2037.json",
+ "tree": "83e3a8639c10e809efe956fb9cef43ebcd78e305",
+ "head": "c17b4ee3da81db0466af692d725418b524eba881",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 149,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4f0c4e86-3cf5-5caa-9d2f-e463924368f0",
+ "at": "2026-09-25T05:36:26.584Z"
+}

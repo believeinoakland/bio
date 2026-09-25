@@ -1,0 +1,16 @@
+{
+ "unit": "plane:reading-wire.test.mjs",
+ "inputHash": "854b719edbb79bf254c94c097599c08e7b627cd60eaa80125975190cee2c9bc0",
+ "verdict": "PASS",
+ "run": "83e3a8639c10e809efe956fb9cef43ebcd78e305.1790314586566.2037.json",
+ "tree": "83e3a8639c10e809efe956fb9cef43ebcd78e305",
+ "head": "c17b4ee3da81db0466af692d725418b524eba881",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 148,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4f0c4e86-3cf5-5caa-9d2f-e463924368f0",
+ "at": "2026-09-25T05:36:26.584Z"
+}
