@@ -249,7 +249,7 @@ effect (M-60 Q9; `CLAUDE.md` §5).
 
 ### TWO SESSIONS AT THE ARTIFACT CAN DISAGREE IF THE INSTRUMENT WILL NOT SAY WHERE IT STOOD (2026-09-17)
 
-STRANDED WORK is estate-wide; UNPUSHED is `origin/main..HEAD` here; pushed, a note (D-569). **Read a finding's
+STRANDED WORK is estate-wide; UNPUSHED is `origin/main..HEAD`; pushed, a note (D-569). **Read a finding's
 `SCOPE:` before acting on it for another tree**, and make any instrument you build declare its vantage:
 two disagreeing readings may both be true of different places (`strandedwork.test.mjs` §9).
 

@@ -39,7 +39,9 @@ export const BUDGET = {
      own budget, set above its 45 KB size with room for a row per construct, and armed from the day it is set. */
   /* 48 KiB -> 50 KiB (c19-unionfix stopgap, BOB #32 ruling (a), 2026-09-24 02:10Z) -> BACK TO 48 KiB with (b): status.mjs caps
      each cell's first sentence at CELL_CAP (240) at a word boundary, so the map read 44,617 B at 130 claims on 548eb2c5. */
-  map: 48 * 1024,
+  /* 48 KiB -> 52 KiB (BOB #34, 2026-09-25): the map grows as constructs are BUILT, each §3 cell up to CELL_CAP, so a
+     budget the product's own progress breaks blocks trains for finishing work. c21-batch28 read 50,427 B. */
+  map: 52 * 1024,
 };
 
 /* A WORD budget for one file, on top of its class's byte budget (M0-194, BOB #34 2026-09-24 22:50Z): WORKER.md, read by
