@@ -244,7 +244,32 @@
    pass, 0 fail**. (x) -> **101 pass, 1 fail**: "D-618 ACCEPTS-WHEN: DRAFT DB'S EDITION IS UNDETERMINED", by name.
    AS DECLARED. (y) -> **101 pass, 1 fail**: the same arm, by name. AS DECLARED. (z) -> **102 pass, 0 fail**. AS
    DECLARED. Arms c, r and v each fail MORE than before, all in block 14 and in the arm's own direction (c 6, r 4,
-   v 5; the driver's foot names them); every other arm's failure count unchanged. */
+   v 5; the driver's foot names them); every other arm's failure count unchanged.
+   D-708 (the acknowledgement's `listed` sentence for the pair; §6A.4, BOB #32's ruling, D-618's `#statedEdition`) ADDED
+   TWO ARMS TO BLOCK 14 and FOUR CONTROL ARMS. DECLARED 2026-09-25 BEFORE ARMING:
+
+   (aa) THE ROW'S NEGATIVE CONTROL — the pair's own branch removed AND `newCase` dropped from the call: the plane
+   exactly as before D-708. MUST FAIL, by name: "D-708 ACCEPTS-WHEN". MUST NOT FAIL: D-708's names-C1-only arm or any
+   D-618 arm (the stated `edition` is `#statedEdition`'s, untouched).
+
+   (ab) THE ALTERNATIVE THE ROW OFFERED, ALONE — the pair's branch removed, `newCase` still passed to
+   `#caseIdentitySentence`. Declared: MUST FAIL "D-708 ACCEPTS-WHEN" — that sentence still states "the next edition
+   (N) of C1" and the clause around it still promises a listing, which is why D-708 branched. MUST NOT FAIL the others.
+
+   (ac) THE BRANCH TAKEN FOR EVERY NAMED-CASE DRAFT — its `draftNewCase` test dropped. MUST FAIL, by name: "D-708: A
+   DRAFT NAMING C1 ONLY KEEPS ITS `listed` SENTENCE". MUST NOT FAIL "D-708 ACCEPTS-WHEN".
+
+   (ad) OVER-STRICTNESS — the pair's sentence reworded in a spelling this suite did not write. MUST PASS, every arm.
+
+   MEASURED 2026-09-25 by WORKER D-708 (cloud, SCHEDULER #23) with `node test/reviewcopy.control.mjs`, all THIRTY arms
+   ALONE in one driver run, the pen in the session scratchpad via `BIO_NC_PEN`, 30 of 30 restores of `src/store.mjs`
+   (3,656,661 B, sha256 817e1c30…) sha256 MATCH, content IDENTICAL, size ok: (0) BASELINE -> **104 pass, 0 fail**.
+   (aa) -> **103 pass, 1 fail**: "D-708 ACCEPTS-WHEN", by name. AS DECLARED. (ab) -> **103 pass, 1 fail**: the same
+   arm, by name — passing `newCase` alone does not meet the row. AS DECLARED. (ac) -> **103 pass, 1 fail**: "D-708: A
+   DRAFT NAMING C1 ONLY KEEPS ITS `listed` SENTENCE", by name. AS DECLARED. (ad) -> **104 pass, 0 fail**. AS DECLARED.
+   Arms c and v each fail ONE MORE than D-618 measured (c 7, v 6), both "D-708 ACCEPTS-WHEN": each kills DB's grant,
+   so the recipient's reading is refused and states no `listed` — the arm's own declared direction. Every other arm's
+   failure count unchanged. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -1329,6 +1354,23 @@ console.log("\n--- 14. D-618: a draft naming a case and asking for a new one sta
     [null, null, null, null, null, null, null]);
   t("D-618: AND ITS KEY STILL BINDS — DB's grant is LIVE and its recipient reads DB's copy with no credential",
     [gRow(cB, gB)?.live, rRead?.draft, rRead?.reader, ackR?.ok], [true, DBr.draftId, "recipient", true]);
+  /* D-708 (§6A.4, BOB #32's newCase ruling, D-618's `#statedEdition`): THE ACKNOWLEDGEMENT'S `listed` SENTENCE is
+     the fourth place DB's edition was stated. It called `#caseIdentitySentence` without `newCase` and told Ella
+     "the completeness block of the next edition (N) of C1 lists this acknowledgement…" — an edition and a listing
+     for a case the record has not chosen, beside `edition: null`. Both readings (a participant's and a
+     recipient's) are read, because both reach the same branch. */
+  const noEdition = (s) => typeof s === "string" && s.length > 0 && !/edition \(\d+\)|edition \d+|completeness block of/i.test(s);
+  t("D-708 ACCEPTS-WHEN: DB'S ACKNOWLEDGEMENTS' `listed` SENTENCE NAMES NO EDITION AND NO LISTING — it says the pair "
+  + "is refused together and the case stays UNDETERMINED until one instruction is withdrawn",
+    [noEdition(ackP?.listed), noEdition(ackR?.listed), /UNDETERMINED/.test(ackP?.listed ?? ""),
+     /withdrawn/.test(ackP?.listed ?? ""), /asks for a new case/.test(ackP?.listed ?? ""), ackP?.listed === ackR?.listed],
+    [true, true, true, true, true, true]);
+  /* D-708: AND A DRAFT NAMING C1 ONLY KEEPS ITS SENTENCE — C1's next edition, by number, and the listing its
+     document gives. An arm that branched every named-case draft to the pair's sentence fails here. */
+  const ack1 = rP(await POST(`op=statementack&draft=${D1}&token=${ELLA}`, {}));
+  t("D-708: A DRAFT NAMING C1 ONLY KEEPS ITS `listed` SENTENCE — the completeness block of C1's next edition, by number",
+    [ack1?.ok, (ack1?.listed ?? "").startsWith(`the completeness block of the next edition (${c1?.case?.edition}) of ${C1} lists`)],
+    [true, true]);
   t("D-618: A DRAFT NAMING C1 ONLY IS UNCHANGED — C1's next edition, a number, in its copy, its reviewgrant answer "
   + "and its LIVE grant's row",
     [Number.isInteger(c1?.case?.edition) && c1.case.edition >= 2, g1.edition, gRow(c1, g1)?.live,
