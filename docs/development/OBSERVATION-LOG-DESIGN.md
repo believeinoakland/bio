@@ -165,6 +165,14 @@ held capture adds no second filing. (c) The re-evaluation flag stays raised unti
 (d) A monitor capture gets NO `documents[]` row in `data/provenance.json`; its `register` row, its `captured_locators` row and
 the sweep observation are its whole provenance. (e) Advancing the baseline on ADOPT is REC-223's, not the monitor's.
 
+**RULED 2026-09-25 09:15Z by BOB #35 (confirming CONDUCT #22's batch29 composition): a tick on a RENDERED capture captures nothing, and D-338's withdrawal does not
+apply to it.** Such a tick compares shell with shell and states the content UNDETERMINED (D-567, `CLIENT-RENDERED.md`
+"RULED 2026-09-25 by BOB #34"), so the D-455 capture above would file the served shell as new content bytes, which the
+record cannot support: the tick writes its look, and its content reading stays UNDETERMINED. For the same reason D-338's
+`unmonitorable` withdrawal (the status withdrawn, the look `LOOKED_INDETERMINATE`) does not apply: a rendered capture is
+monitorable at the shell. BUILT at the c22-batch29 composition (`op=monitor`, both guarded by `!renderTick`); no suite
+names either exclusion as its subject.
+
 ### 4.2 The content level — the content-axis frontier
 
 This is the enumeration Part II §16's closing table calls ABSENT: *documents held but unextracted, or extracted below what is now available*. One row per extraction attempt per capture per tier:
