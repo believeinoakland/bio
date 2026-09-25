@@ -988,7 +988,7 @@ accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, a
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-707 · integrated — **op=promote STILL RETURNS A RAW NOT NULL STACK for a missing snapKey (manifest.snap_key), a file with no path (files.path) and a blob file with no bytes (files.bytes)** — the three fields D-578/D-628 did not reach. Found by D-628's worker. — owner RECORD.
-status: integrated — CONDUCT #23 12:27Z: worker report — tip 95839afa (on D-692 332c594e), GATE 391/391 GREEN FULLREUSE (22115 assertions); C-86.10..13 on promote (IC MAJOR tightening); CATALOG/floors/pen-sweep 24 re-read at union; rides batch30 after D-692
+status: integrated — SCHEDULER #24 12:29Z: tip 95839afa (on D-692 332c594e), GATE 391/391 GREEN FULLREUSE (22115 assertions; excludes 3 untallied), tree 89405417; four refusals before the transaction C-86.10..13 (snapKey, file path, file content, blob bytes), reproduced first; declared tightening I3; CATALOG 1.36.0->1.37.0; GOVERNING_LAWS_REWRITTEN misattribution measured and STATED (with BOB #36)
 order: after D-692, the same promote function, one worker at a time: a raw stack on a public op breaks DEC-49 and leaks internals (SCHEDULER #24, 2026-09-25)
 milestone: M7
 interface: I3 — three named refusal codes on op=promote; the integrator classifies.
@@ -1129,6 +1129,17 @@ depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds thi
 scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
+### D-726 · running — **A REVISION WHOSE BYTES RESTATE A DIFFERENT `group` LANDS, and bundles.group_id keeps the creation's (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured through op=promote in a local Miniflare: row group_id believe-in-oakland, head bytes `group: some-other-group`.** D-692's class, one column over. Live-corpus count UNDETERMINED. Found by D-692's worker. — owner RECORD.
+order: after D-707, the same promote function, one worker at a time (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 12:29Z: spawned, stacked on land/worker/D-707 @ 95839afa
+milestone: M7
+interface: I3 — a new named refusal on op=promote where a revision used to land; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5; D-692's C-86.9 shape), with State Rules v1.5 §4.7.
+depends-on: none (stacked on land/worker/D-707 @ 95839afa, integrated, on D-692 @ 332c594e).
+scope: refuse a non-replay revision whose document's `group` differs from the head's group_id (REVISION_REGROUPS_BUNDLE), replay exempt, after CAS and before the first write, as C-86.9 does. Measure the live-corpus count if reachable, else state it undetermined. STATE, do not sweep further: other columns written only at creation.
+accepts-when: a revision restating a different group is refused by name and nothing is written; the same group respelt, and a revision stating none, still land (moves: a row and its head bytes disagreeing on group). NEGATIVE CONTROL: drop the refusal and the regroup arm lands, failing by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-692's worker).
 
 ### D-644 · queued — **`nc-fw17` arm nullhonest: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-643, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)

@@ -33,16 +33,6 @@ scope: at caseratify register the case document's sha in published_shas (kind ca
 accepts-when: op=verify on each of the 6 ratified editions' doc_sha answers published:true, kind case_document; publishedbytes serves bytes whose sha256 equals it; an unratified draft's document sha still answers not published (moves: 6 ratified documents reading never-ratified). NEGATIVE CONTROL: skip the registration and the 6-edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (`node tools/mintid.mjs D`, D-731 part (b), BOB #36 inbox).
 
-### D-726 · queued — **A REVISION WHOSE BYTES RESTATE A DIFFERENT `group` LANDS, and bundles.group_id keeps the creation's (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured through op=promote in a local Miniflare: row group_id believe-in-oakland, head bytes `group: some-other-group`.** D-692's class, one column over. Live-corpus count UNDETERMINED. Found by D-692's worker. — owner RECORD.
-order: after D-707, the same promote function, one worker at a time (SCHEDULER #24, 2026-09-25)
-milestone: M7
-interface: I3 — a new named refusal on op=promote where a revision used to land; the integrator classifies.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5; D-692's C-86.9 shape), with State Rules v1.5 §4.7.
-depends-on: D-707 (same function; stack on its branch once integrated).
-scope: refuse a non-replay revision whose document's `group` differs from the head's group_id (REVISION_REGROUPS_BUNDLE), replay exempt, after CAS and before the first write, as C-86.9 does. Measure the live-corpus count if reachable, else state it undetermined. STATE, do not sweep further: other columns written only at creation.
-accepts-when: a revision restating a different group is refused by name and nothing is written; the same group respelt, and a revision stating none, still land (moves: a row and its head bytes disagreeing on group). NEGATIVE CONTROL: drop the refusal and the regroup arm lands, failing by name.
-added: 2026-09-25 · SCHEDULER #24 (id minted by D-692's worker).
-
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
@@ -1121,3 +1111,23 @@ depends-on: M0-179.
 scope: pin a known-good gate-results tip in the tree, which a fresh clone's gate checks its descent from; FIRST re-measure whether any clone has met a pre-clone rewrite, and if none has, close this row as not owed with that measurement.
 accepts-when: the pin is checked by a fresh clone, OR the measurement closes the row (the measured failure it moves: none yet, which is why the measurement comes first). NEGATIVE CONTROL: a fixture tip not descending from the pin is refused by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### D-446 · queued — **`nc-m040.mjs` ARM 1 DECLARES FIVE FAILURES AND MEASURES ONE (derivation-bounds 71/1 on `main`), AND FIVE SUITES NAME INFORMATION FIXTURES `INF-…` WHERE `OBJECT_TYPES` HAS `INFO`.** The fixtures: `frontier-chunk` (D-390's), `d389-fullfetch`, `observation-content`, `observation-log`, `cap14-reused-from`. — owner M0.
+order: after M0-139, among the control-hygiene rows; after c17-batch7 lands (SCHEDULER #17, 2026-09-23; via CONDUCT #18 22:27Z (4), measured by SCHEDULER #17's verifier)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a control declares what it measures; correct superseded tests, never exempt them).
+depends-on: D-443 (`integrated`; its branch moved ARM 1's anchor).
+scope: rewrite ARM 1's declaration to the measured outcome with a comment saying why the old one was wrong; rename every `INF-` fixture id to `INFO-`.
+accepts-when: `node bio-plane/test/nc-m040.mjs` reports every arm as declared, and no suite names an `INF-` id. NEGATIVE CONTROL: restore the five-failure declaration, and ARM 1 reads NOT as declared by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-449 · queued — **`project-sight.control.mjs`'s `promote-stamp-dropped` ARM CANNOT RUN: it throws SURFACE_NO_RUN (0/1), identically on `main` `02603e88`, because since REC-171 removing the stamp also breaks the harness's surfacing-run creation.** — owner M0.
+order: after D-446, among the control-hygiene rows (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (break only the thing: a control that moves a second variable refutes nothing).
+depends-on: none.
+scope: narrow the arm's patch to revisions, keeping the stamp when the base is null.
+accepts-when: the arm runs and fails as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
