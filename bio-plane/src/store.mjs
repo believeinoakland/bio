@@ -17056,6 +17056,31 @@ export class Store extends DurableObject {
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
       /* END DEC-49 REGION is-promote-cas */
 
+      /* ===== D-547 (`BIO_Case_Making_v0_1.md` §2; D-510/D-526's derivation, C-2.5, C-86.2) — A REVISION DOES NOT
+         RETYPE THE BUNDLE IT REVISES. `bundles.object_type` below is written from `promotedType` (the document's own
+         type, D-510), and nothing compared it with the HEAD's: a revision whose document stated a different type
+         rewrote the column in place, so every fence that asks "is this an action / a project / a bias set" answered
+         for a machine the bundle's history never was — an information revised into a project skipped REC-134's
+         joined check above, which reads the NEW type. C-2.5 pins a type to its id prefix, but the catalogue is not
+         run here, so that pin was never an answer at the write. Asked after the compare-and-swap (a stale base
+         answers CAS_STALE: the head it would be compared with is not the one the caller saw) and before the first
+         write. Both sides go through `normalizeType`, so `focus`/`problem` revised as `inquiry` is not a retype.
+         Only a STATED type is compared: a revision stating none anywhere leaves `promotedType` undefined, which is
+         not this refusal's question. REPLAY IS EXEMPT for D-510's reason — the record's own history must stay
+         holdable verbatim, and a replay's claim to be one is caller-asserted (D-511). A bundle ALREADY retyped
+         before this line is not rewritten (M-156 counted none, in either register, on 2026-09-25). ===== */
+      /* DEC-49 REGION is-promote-retypes-bundle */
+      if (cur && typeof promotedType === "string" && promotedType !== normalizeType(cur.object_type) && !pkg.replay) {
+        const rtRow = PROMOTED_TYPE_CHECKS.REVISION_RETYPES_BUNDLE;
+        return { ok: false, reason: "REVISION_RETYPES_BUNDLE", code: "REVISION_RETYPES_BUNDLE",
+                 check: rtRow.check, translation: rtRow.translation,
+                 head_type: normalizeType(cur.object_type), revision_type: promotedType,
+                 detail: `${String(bundleId).slice(0, 80)} is '${normalizeType(cur.object_type)}' and this revision `
+                       + `says '${String(promotedType).slice(0, 40)}'. A revision changes what a document says, `
+                       + `never what kind of thing it is. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promote-retypes-bundle */
+
       /* REC-181: A TRANSITION INTO `retired` ASKS RETIRE'S OWN QUESTION, here and before any
          write (asked first, so a refusal writes nothing; REC-180's rollback is the net under it). `op=retire`
          refuses `CITED` while a live edge cites the item; `promote` is the write path it runs

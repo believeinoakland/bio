@@ -339,6 +339,10 @@ const CATALOG_CENSUS = {
      tree — the figure below is this branch's catalogue and is not the union's. */
 
   /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
+  /* 1.29.0 (D-547, 2026-09-25, branch land/worker/D-547 over land/worker/D-526): ONE ARRIVAL, NO DEPARTURES —
+     C-86.2 `REVISION_RETYPES_BUNDLE`, the second row of PROMOTED_TYPE_CHECKS. 461 -> 462, count AND digest from
+     THIS SUITE'S OWN PRINT on this tree. Other branches also take 1.29.0: CONDUCT takes the next number at the
+     union and re-reads this suite's print on the merged tree. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -450,6 +454,7 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    assertions pinning two versions of one constant could never both pass. */
 
   /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
+/* CORRECTED by D-547 (2026-09-25): 1.28.0 -> 1.29.0 — C-86.2 joined the catalogue, so 1.28.0 names the old one. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

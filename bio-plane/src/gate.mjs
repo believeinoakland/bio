@@ -148,6 +148,7 @@ export const CATALOG_VERSION = "1.29.0";
    so ONE VERSION NAMES ONE CATALOGUE (A4) makes the number at the union CONDUCT's to take once, from
    the d470 suite's print on the merged tree — this branch's figure is this branch's catalogue. */
 /* 1.29.0 AT THE UNION ALSO CARRIES D-513 (CONDUCT #20, c20-batch27): D-513 took 1.26.0 over its own base; the union's ONE new number for this batch is 1.29.0, holding D-463's and D-513's checks together, its census read from the d470 suite's print. */
+/* 1.29.0 (D-547, 2026-09-25, branch land/worker/D-547 over land/worker/D-526): C-86.2 REVISION_RETYPES_BUNDLE joins PROMOTED_TYPE_CHECKS — one check ADDED, none moved or removed, MINOR. Census from the d470 suite's print on this tree. OTHER BRANCHES ALSO TAKE 1.29.0: one version names one catalogue, so the integrator takes the next number at the union and re-reads the print. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

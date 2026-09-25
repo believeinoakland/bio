@@ -14128,6 +14128,15 @@ var PROMOTED_TYPE_CHECKS = {
     check: "C-86.1",
     where: "src/store.mjs promote > is-promoted-type-disagrees",
     translation: "The document being filed says what kind of thing it is, and the request that carried it says something different. The record goes by the document, so rather than file an action as information \u2014 or the reverse \u2014 and index it as neither, it stops and tells you both answers. Nothing was written. Send it again with the request naming the type the document names, or change the document first."
+  },
+  /* D-547 (2026-09-25) — the SECOND way a promotion's type can be wrong, and it is not the first one twice: C-86.1
+   * compares the two statements in ONE request; this compares the request with the RECORD. A revision whose document
+   * names a different type than the bundle already holds would rewrite `bundles.object_type` in place, and every
+   * type-scoped fence would then ask the wrong machine. Replay is exempt, as for C-86.1. */
+  REVISION_RETYPES_BUNDLE: {
+    check: "C-86.2",
+    where: "src/store.mjs promote > is-promote-retypes-bundle",
+    translation: "This change would turn something the record already holds into a different kind of thing, an item of information into an action, say. A change can alter what a document says, but not what it is, because what it is decides which rules protect it. Nothing was written. To record it as the other kind, create a new one of that kind and link the two."
   }
 };
 function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
@@ -46103,6 +46112,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
+      if (cur && typeof promotedType === "string" && promotedType !== normalizeType(cur.object_type) && !pkg.replay) {
+        const rtRow = PROMOTED_TYPE_CHECKS.REVISION_RETYPES_BUNDLE;
+        return {
+          ok: false,
+          reason: "REVISION_RETYPES_BUNDLE",
+          code: "REVISION_RETYPES_BUNDLE",
+          check: rtRow.check,
+          translation: rtRow.translation,
+          head_type: normalizeType(cur.object_type),
+          revision_type: promotedType,
+          detail: `${String(bundleId).slice(0, 80)} is '${normalizeType(cur.object_type)}' and this revision says '${String(promotedType).slice(0, 40)}'. A revision changes what a document says, never what kind of thing it is. Nothing was written.`
+        };
+      }
       if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired") && (cur ? cur.object_type : promotedType) === "information") {
         const citedBy = this.#retirementCitedBy(bundleId);
         if (citedBy.length)
