@@ -169,9 +169,10 @@ Three consequences give the construct its shape. The record must be able to prov
     binds to the new case and the document says the new case was the publisher's ask. A newCase ask asserts nothing
     the record contradicts, because the act itself makes the new case one those findings serve; a named existing case
     that derivation does not yield would assert a case the findings do not lead to, which is false, and that is why
-    (ii) refuses it. NOT BUILT (D-683): a reading of a no-case draft
-    is not counted UNDETERMINED on a further edition published WITHOUT `draft=`, because that count asks the edition too
-    (`bio-plane/test/rec217-draft-binding.test.mjs` blocks 7 and 8).
+    (ii) refuses it. **As built 2026-09-25 (D-683; I3):** a reading of a no-case
+    draft is counted UNDETERMINED on a further edition published WITHOUT `draft=` as on a first: the unbound count asks
+    no edition either, since that reading is recorded at edition 1 (D-568) (`bio-plane/test/rec217-draft-binding.test.mjs`
+    block 9).
 
 14. **THE BAR IS A PAIR, AND AN AXIS NOBODY SET IS NULL** (BOB #32, 2026-09-23, D-450 on SCHEDULER #17's 22:56Z questions). A project may
     set a bar on one axis only. Both keys are always present, the unset one is `null`, and the case document says in

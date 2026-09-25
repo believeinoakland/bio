@@ -41935,14 +41935,13 @@ case_project: ${project}
     const listed = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
     const unboundRow = unallocated ? null : this.#one(
       `SELECT COUNT(*) AS n FROM statement_acknowledgements
-                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                   WHERE project_id=? AND statement_sha=? AND case_id IS NULL
                      AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)
                      AND (draft_id IS NULL
                           OR draft_id NOT IN (SELECT draft_id FROM case_documents WHERE draft_id IS NOT NULL))
                      AND (draft_id IS NULL OR draft_id <> ?)`,
       project,
       sha,
-      edition,
       exceptAuthor ?? null,
       linked
     );

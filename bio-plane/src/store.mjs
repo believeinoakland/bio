@@ -11650,14 +11650,17 @@ export class Store extends DurableObject {
        So both leave this count, and what remains is REC-194's remainder exactly: readings of a draft nobody
        has named. The link is read off `case_documents.draft_id`, the act's own record, and an unsigned edition
        re-authored without `draft=` drops its link there — so its readings return to this count, as they must. */
+    /* D-683 (BIO_Publication §3 rule 13): THIS COUNT ASKS NO EDITION, for D-680's reason. A no-case draft's reading
+       is recorded at edition 1 (D-568), so `edition=?` here dropped it from every further edition published without
+       `draft=`, and that document printed "Nobody but its author" over a record holding a reading of its sentence. */
     const unboundRow = unallocated ? null
       : this.#one(`SELECT COUNT(*) AS n FROM statement_acknowledgements
-                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                   WHERE project_id=? AND statement_sha=? AND case_id IS NULL
                      AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)
                      AND (draft_id IS NULL
                           OR draft_id NOT IN (SELECT draft_id FROM case_documents WHERE draft_id IS NOT NULL))
                      AND (draft_id IS NULL OR draft_id <> ?)`,
-                  project, sha, edition, exceptAuthor ?? null, linked);
+                  project, sha, exceptAuthor ?? null, linked);
     return { statementSha: sha, truncated,
              /* REC-217: the link this read was asked under, carried so every rendering states one act. */
              link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null, case: link.case ?? null } : null,
