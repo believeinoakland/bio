@@ -303,9 +303,22 @@ function extentOf(step) {
   if (e == null) return "all";
   if (e && typeof e === "object" && !Array.isArray(e) && e.kind === "pages"
       && Array.isArray(e.pages) && e.pages.length
-      && e.pages.every((p) => Number.isInteger(p) && p >= 0))
+      && e.pages.every((p) => Number.isInteger(p) && p >= 0)
+      /* D-635: a `part` that is present must be a readable index, or the extent is unreadable. */
+      && (e.part === undefined || (Number.isInteger(e.part) && e.part >= 0)))
     return e.pages;
   return "unreadable";
+}
+
+/* D-635 — WHICH PART A SCOPED STEP BELONGS TO. Until D-635 the parts PARTITIONED the pages, so a part was
+   named by its page list. BOB #35 ruled at 06:25Z that a routed page whose folio decoded keeps its layer text
+   and gains the transcription, and is listed in BOTH parts. Two parts can then share a page, and can even
+   share their whole page list (a scanned book with a decoded folio on every page). So `mergedChain` stamps
+   each part's index as `extent.part` whenever its parts overlap, and a part is named by that index. A chain
+   whose parts partition carries no `part`, byte for byte as before, and is still named by its pages. */
+function partKeyOf(step) {
+  const e = step.extent;
+  return Number.isInteger(e && e.part) ? `#${e.part}` : extentOf(step).join(",");
 }
 
 /** "page 3" / "pages 0-2" / "pages 0-1, 4" — contiguous runs collapsed, because
@@ -363,7 +376,15 @@ export function mergedChain(parts) {
     return bad || parts[0].chain;
   }
   const out = [];
-  for (const part of parts) {
+  /* D-635: do any two parts share a page? Only then is each part's index stamped (see `partKeyOf`). */
+  const seen = new Set();
+  let overlap = false;
+  for (const part of parts)
+    for (const p of new Set(Array.isArray(part && part.pages) ? part.pages : [])) {
+      if (seen.has(p)) overlap = true;
+      seen.add(p);
+    }
+  for (const [index, part] of parts.entries()) {
     const bad = checkChain(part && part.chain);
     if (bad) return bad;
     const pages = Array.isArray(part.pages)
@@ -374,7 +395,8 @@ export function mergedChain(parts) {
          own extent, checked by `extentCovers`, and stamping a second one on it
          would give one fact two homes that can disagree. */
       out.push(STEP_KINDS[step.step].role === "derivation"
-        ? { ...step, extent: { kind: "pages", pages } } : { ...step });
+        ? { ...step, extent: overlap ? { kind: "pages", pages, part: index } : { kind: "pages", pages } }
+        : { ...step });
     }
   }
   return out;
@@ -613,7 +635,8 @@ export function derivationCap(chain, target = null) {
   const measured = (s) => (s.cap != null && rank(s.cap) != null ? s.cap : null);
   let cap = null, unreadable = false;
   /* D-252: the parts, collected by the pages they cover. A document whose steps
-     are all unscoped has none of these and takes the original path exactly. */
+     are all unscoped has none of these and takes the original path exactly.
+     D-635: collected by `partKeyOf`, because two parts may now share pages. */
   const parts = new Map();
   for (const step of chain) {
     if (STEP_KINDS[step.step].role !== "derivation") continue;
@@ -641,6 +664,15 @@ export function derivationCap(chain, target = null) {
          report answers undetermined, each about itself. */
       if (ext !== "all" && !ext.includes(page)) continue;
       const m = measured(step);
+      /* D-635: a SCOPED step is collected by its part, as the document branch does, because a page
+         listed in two parts holds two stretches of text with different provenance. Below, one part
+         answers exactly as before; two or more answer by the document's partition rule. */
+      if (ext !== "all") {
+        const key = partKeyOf(step);
+        if (!parts.has(key)) parts.set(key, null);
+        if (m) parts.set(key, parts.get(key) == null ? m : weaker(parts.get(key), m));
+        continue;
+      }
       if (m) cap = cap == null ? m : weaker(cap, m);
       continue;
     }
@@ -653,7 +685,7 @@ export function derivationCap(chain, target = null) {
        unchanged: an unmeasured step neither raises nor lowers, and the part's
        cap is the weakest MEASURED step in it. A part with no measured step at
        all is the undetermined one. */
-    const key = ext.join(",");
+    const key = partKeyOf(step);
     const m = measured(step);
     if (!parts.has(key)) parts.set(key, null);
     if (m) parts.set(key, parts.get(key) == null ? m : weaker(parts.get(key), m));
@@ -664,7 +696,22 @@ export function derivationCap(chain, target = null) {
      unmeasured head conversion, above — the flag is shared because the answer is
      the same sentence.) */
   if (unreadable) return null;
-  if (page != null) return cap;
+  if (page != null) {
+    /* D-635 — ONE PART covering the page is the rule it always was: its unmeasured steps neither raise
+       nor lower. TWO OR MORE are a page whose text is a folio from the layer plus a transcription
+       appended after it, and a part with no measured cap makes that page undetermined, for the reason
+       the document branch gives: some of the page's text is bounded by nothing measured. */
+    if (parts.size <= 1) {
+      for (const one of parts.values())
+        if (one != null) cap = cap == null ? one : weaker(cap, one);
+      return cap;
+    }
+    for (const each of parts.values()) {
+      if (each == null) return null;
+      cap = cap == null ? each : weaker(cap, each);
+    }
+    return cap;
+  }
   /* THE MIXED DOCUMENT'S CAP: the weakest over the parts, and a part with NO
      measured cap makes the whole undetermined — see the header. This is the step
      that refuses to resolve a text layer's `null` into an OCR pass's letter. */

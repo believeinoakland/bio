@@ -4847,6 +4847,13 @@ function tier3Pages(text) {
  *      character count, exactly as the routing predicate reads it.
  *   2. THE PAGE HAS NOTHING TO LOSE. Its base text is empty.
  *
+ * D-635 (BOB #35, 2026-09-25 06:25Z) CHANGED WHAT CONDITION 2 DECIDES. It used
+ * to decide whether the page was filled at all, so a routed page whose folio
+ * decoded was refused and its content stayed unread. It now decides HOW: a page
+ * with nothing to lose is FILLED, and a page holding a glyph keeps every glyph it
+ * held and has the transcription APPENDED after it. The guarantee below is
+ * unchanged, because appending loses nothing. Condition 1 still refuses.
+ *
  * The second is not redundant and it is the one that makes the guarantee
  * UNCONDITIONAL. Condition 1 is a claim by a producer about its own output;
  * condition 2 is a fact about the text in hand. With both, this function CANNOT
@@ -4925,15 +4932,32 @@ function mergeTier3Text(base, ocr, eligible) {
        The clause is corrected anyway because condition 2 exists precisely to
        survive a future tier's marker vocabulary, and a condition kept for that
        reason has to be right in the unit the question is asked in. */
+    /* D-635 (BOB #35, 2026-09-25 06:25Z: APPEND). A SELECTED page that holds a glyph is no longer
+       refused. It is a page `image_content_unread` routed (D-627): an image fills it and its only text is
+       a folio that DECODED. Refusing it left the page's content unread on 8 of M-178's 17 pages. So the
+       page keeps its layer text and the transcription is APPENDED after it. D-252's guarantee still holds
+       whole: no glyph the page held is lost or replaced. A page nobody asked about is still refused. */
     const empty = target && !(typeof target.text === "string" && glyphCount(target.text) > 0);
-    if (!target || !wanted.has(p.page) || !empty) { refused.push(p.page); continue; }
-    byPage.set(p.page, p);
+    if (!target || !wanted.has(p.page)) { refused.push(p.page); continue; }
+    byPage.set(p.page, { ocr: p, append: !empty });
   }
 
-  const filled = [], pages = [], undetermined = [];
+  const filled = [], appended = [], pages = [], undetermined = [];
   for (const b of usable) {
-    const got = byPage.get(b.page);
-    if (got) {
+    const hit = byPage.get(b.page);
+    const got = hit && hit.ocr;
+    if (got && hit.append) {
+      /* D-635: the layer text first, the transcription after it. The page's own markers stay, except
+         the one it was ROUTED on: the engine has now read its content, so it is no longer unread (a
+         filled page loses its `no_text_layer` the same way). The engine's own markers are added. */
+      filled.push(b.page); appended.push(b.page);
+      const said = typeof got.text === "string" ? got.text : "";
+      pages.push({ ...b, text: said.length ? `${b.text}\n${said}` : b.text,
+                   undetermined: [
+                     ...(Array.isArray(b.undetermined) ? b.undetermined : [])
+                       .filter((u) => !(u && TIER3_REASONS.includes(u.reason))),
+                     ...(Array.isArray(got.undetermined) ? got.undetermined : []) ] });
+    } else if (got) {
       filled.push(b.page);
       pages.push({ page: b.page, text: typeof got.text === "string" ? got.text : "",
                    undetermined: Array.isArray(got.undetermined) ? got.undetermined : [] });
@@ -4952,7 +4976,7 @@ function mergeTier3Text(base, ocr, eligible) {
   const text = { ...base, document, pages, undetermined,
                  counts: { chars: document.length, undetermined: undetermined.length } };
   if (regions.length) text.regions = regions;
-  return { ok: true, text, filled, refused, unanswered, wholesale: false };
+  return { ok: true, text, filled, appended, refused, unanswered, wholesale: false };
 }
 
 /* D-252 — WHAT THE MERGE DID, IN THE RECORD'S OWN SENTENCE.
@@ -4978,6 +5002,12 @@ function tier3Note(m, memberNote, layerPages) {
     say.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into `
            + `this document's own text`
            + (kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : ""));
+  /* D-635: a page whose folio decoded kept that text AND gained the transcription, and says so. */
+  if (!m.wholesale && Array.isArray(m.appended) && m.appended.length)
+    say.push(`${m.appended.length} of those page(s) already held a little text of their own (an image `
+           + `fills the page and its text is a folio), and kept it: the transcription was appended after it, `
+           + `so ${m.appended.length === 1 ? "that page is" : "those pages are"} credited to both the text `
+           + `layer and the OCR member`);
   if (m.unanswered.length)
     say.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay `
            + `honestly unread`);
@@ -5262,8 +5292,13 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
                  the reason already stated there: it has no
                  provenance to record, because nothing produced
                  anything for it. */
+              /* D-635 (BOB #35, 06:25Z): a page the merge APPENDED to kept its layer text, so it is in
+                 the layer part AND in the engine's part below. The parts no longer partition the pages;
+                 `mergedChain` names each part by its index when they overlap. */
+              const appendedTo = Array.isArray(m.appended) ? m.appended : [];
               const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : [])
-                .filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page)
+                .filter((p) => p && Number.isInteger(p.page)
+                            && (!m.filled.includes(p.page) || appendedTo.includes(p.page))
                             && typeof p.text === "string" && glyphCount(p.text) > 0)
                 .map((p) => p.page);
               const parts = [];

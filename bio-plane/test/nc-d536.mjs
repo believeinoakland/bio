@@ -56,12 +56,12 @@ const ARMS = {
   baseline: { patches: [], mustFail: [], mustPass: [ATTRIB, UNDET] },
   nodigest: {
     patches: [[PROV, "  out.text_sha256 = flat.text.length ? await sha256Hex(flat.text) : null;\n", "  out.text_sha256 = null;\n"],
-              [PROV, "chars: pt.length, text_sha256: pt.length ? await sha256Hex(pt) : null });", "chars: pt.length, text_sha256: null });"]],
+              [PROV, "chars: pt.length, text_sha256: pt.length ? await sha256Hex(pt) : null };", "chars: pt.length, text_sha256: null };"]],
     mustFail: [ATTRIB, "the document digest is the SHA-256 of the text the reader was handed", "the page digest agrees"],
     mustPass: [UNDET],
   },
   nochain: {
-    patches: [[PROV, "function chainTierOf(chain, page) {\n  if (!Array.isArray(chain)) return null;", "function chainTierOf(chain, page) {\n  return null;"]],
+    patches: [[PROV, "function chainTiersOf(chain, page) {\n  if (!Array.isArray(chain)) return [];", "function chainTiersOf(chain, page) {\n  return [];"]],
     mustFail: ["each page's tier is read off the CHAIN"],
     mustPass: [ATTRIB, "the re-read's answer carries its ATTRIBUTION"],
   },
