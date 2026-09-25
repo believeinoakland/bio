@@ -52,6 +52,14 @@
    DECLARED — a GREEN 33/0 · b RED 27/6 naming governorconfig and provenanceroute · c RED 30/3 ·
    d RED 32/1 · e RED 30/3 · f RED 21/12 · g RED 32/1 · h GREEN 33/0**, every restore sha256 MATCH and
    `cmp` clean (index.mjs 743,212 B; this suite 45,891 B).
+   RE-RUN 2026-09-25 BY THE REC-162 WORKER (branch `land/worker/REC-162`, base `8bdf20e6`). Arm (b) was
+   CORRECTED — the ROLE outcome became two returns, one per set, so it now arms three sites — and two arms
+   were ADDED, declared before arming: (i) THE ROW'S OWN CONTROL, the administrator sentence restored for a
+   founder-only op, MUST FAIL naming `governorconfig`; (j) OVER-STRICTNESS, the founder's-session `detail`
+   respelled, MUST PASS. **10/10 AS DECLARED — a GREEN 34/0 · b RED 26/8 armed 3/3 · c RED 31/3 · d RED 33/1 ·
+   e RED 31/3 · f RED 22/12 · g RED 33/1 · h GREEN 34/0 · i RED 33/1 naming governorconfig · j GREEN 34/0**,
+   every restore sha256 MATCH and `cmp` clean (index.mjs 840,734 B; this suite 48,254 B at the run, before this
+   paragraph was written).
    (h) OVER-STRICTNESS, and this file exists to survive it: a REAL site rewritten to spell its code in
        `code` with NO `reason` at all, the row IMPORTED rather than hand-copied, and an extra key the
        grader has never seen. It MUST PASS. A grader that reports correct work as a violation teaches
@@ -318,7 +326,8 @@ console.log(`    (c) OMISSION        ${OMITTED.length}: ${OMITTED.join(" ")}`);
    REC-159 moved them into BOTH session sets on D-136's footing (the roster refuses a non-administrator
    NOT_AN_ADMIN, against a stamped `by`), so they DEPARTED this arm — pinned below in the both-sets arm
    by name. `governorconfig` stays: it is the OPERATOR's act, RULED by BOB #23 (§4.9), and the one op
-   the founder's session alone reaches. What its refusal SAYS is REC-162's item. Still a literal. */
+   the founder's session alone reaches. What its refusal SAYS was REC-162's item (2026-09-25): the founder's session, graded in
+   §5. Still a literal. */
 t("the ROLE-GATED arm is exactly the one op the FOUNDER'S session alone reaches — `governorconfig`, "
 + "the operator's (§4.9, BOB #23) — after REC-159 moved D-270's other four into both sets; pinned as "
 + "a literal SET so an arrival or a departure is looked at",
@@ -419,7 +428,7 @@ const gateAnswer = async (op, session) => {
   const r = await POST(`op=${op}&${session}`, {});
   return { reason: r.reason ?? r.code ?? null, translation: r.translation ?? null,
            check: r.check ?? null, error: r.error ?? null, detail: r.detail ?? null,
-           recorded: r.recorded ?? null };
+           recorded: r.recorded ?? null, reachedBy: r.reachedBy ?? null, role: r.role ?? null };
 };
 /* RE-POINTED 2026-09-23 (REC-159), never exempted: this pair drove `op=memberset`, which now reaches
    BOTH sets — `dot` would pass the gate and be refused by the ROSTER, so the pair would read
@@ -449,7 +458,7 @@ const gateAnswer = async (op, session) => {
  * one object — and section 7 asserts that the three codes are actually
  * DIFFERENT across the arms. One generic code for all of them fails there.
  * ==================================================================== */
-console.log("\n--- 5. (b) the five: a signed-in person DOES perform these, but an administrator ---");
+console.log("\n--- 5. (b) a signed-in person DOES perform these, from the session the set names (the founder's since REC-162) ---");
 const roleAnswers = {};
 for (const op of ROLE_OPS) roleAnswers[op] = await gateAnswer(op, DOT);
 t("each of the five answers a MEMBER session with SESSION_ROLE_CANNOT_REACH_OP — pinned BY NAME "
@@ -477,8 +486,29 @@ t("and NONE of the five still CLAIMS a machine credential is required — that s
     .test(String(roleAnswers[o].error || "") + " " + String(roleAnswers[o].translation || ""))), []);
 /* THE POSITIVE HALF, so the narrowing above does not merely buy a green: the
    refusal must say the thing that IS true. */
-t("and each names the administrator as the route, which is the fact that replaces the false one",
-  ROLE_OPS.filter((o) => !/administrator/i.test(String(roleAnswers[o].translation || ""))), []);
+/* CORRECTED 2026-09-25 BY REC-162, NEVER EXEMPTED. This asserted each translation matched
+   `/administrator/` — "names the administrator as the route". After REC-159 the ROLE arm is
+   `governorconfig` alone, which the FOUNDER'S session alone reaches (Membership v2 §4.9, RULED the
+   operator's by BOB #23), and an enrolled administrator holds a MEMBER'S session: the sentence that
+   named the administrator as the route was false of every enrolled administrator it refused. The
+   route is a SESSION, derived from the set that holds the op, so the assertion now reads the
+   sentence and the `reachedBy` the gate derived, and the member-session refusal is driven to say
+   the founder's session. */
+t("and each names the SESSION that reaches it, derived from the set that holds it — the founder's "
++ "where `SESSION_OPS.admin` alone holds the op — and never calls the op an administrator's",
+  ROLE_OPS.filter((o) => {
+    const founderOnly = ADMIN_SET.has(o) && !MEMBER_SET.has(o);
+    const want = founderOnly ? /reserved to the founder's session/ : /reserved to a member's own session/;
+    return !want.test(String(roleAnswers[o].error || ""))
+      || /administrator of this group/i.test(String(roleAnswers[o].error || ""))
+      || /this session's role is/i.test(String(roleAnswers[o].detail || ""));
+  }), []);
+/* REC-162: the field the gate derived agrees with the set, and `role` — which read 'member' of an
+   enrolled administrator — is not sent at all. */
+t("and each carries `reachedBy` naming that session, and no `role` field calling the caller a member",
+  Object.fromEntries(ROLE_OPS.map((o) => [o, [roleAnswers[o].reachedBy, roleAnswers[o].role]])),
+  Object.fromEntries(ROLE_OPS.map((o) => [o,
+    [ADMIN_SET.has(o) && !MEMBER_SET.has(o) ? "founder" : "member", null]])));
 
 /* ====================================================================== 6
  * (a) THIS VERB IS NOT FOR A PERSON — only where RECORDED, and the refusal

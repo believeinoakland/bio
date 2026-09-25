@@ -148,7 +148,7 @@ console.log("\n--- C-38.3 · A PERSON ASKING FOR SOMETHING ONLY AN UNATTENDED WR
 /* D-270, 2026-09-19. THE TWO ARMS BELOW EXIST BECAUSE THE ROW ABOVE USED TO
    ANSWER THEIR CONDITIONS TOO, and was false for both. One sentence was doing
    three jobs: the C-38.3 arm above is the one job it was right about. */
-console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY AN ADMINISTRATOR DOES ---");
+console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY ANOTHER SESSION DOES (the founder's, REC-162) ---");
 {
   /* `ada` is enrolled with `role: "admin"` but holds `member:ada`, so the plane
      reads this session's KIND as member — which is exactly the caller this
@@ -160,14 +160,21 @@ console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY AN ADMINISTRATOR
      NOT_AN_ADMIN (`adminvote.test.mjs` §9). Driving it here would assert C-38.7 over an op that no
      longer produces it. `op=governorconfig` is the one mutating op still in the founder's set alone
      (§4.9, RULED the operator's by BOB #23), so it is the op this refusal is still for. What its
-     sentence SHOULD say is REC-162's item, not this arm's. */
+     sentence says was REC-162's item, landed 2026-09-25 and corrected below. */
   const r = await POST(`op=governorconfig&${CAI}`, { host: "example.org", appetite: 1 });
-  admits("a member's session on an op only an administrator's session reaches", r, "SESSION_ROLE_CANNOT_REACH_OP");
-  t("and it says there is nothing to go and find, rather than sending them after a credential "
-  + "that would not help — the old sentence sent them after one",
-    /ask an administrator/i.test(r.translation || ""), true);
-  t("and it names the role it judged, so a caller can tell which fact refused them",
-    r.role, "member");
+  admits("a member's session on an op only the founder's session reaches", r, "SESSION_ROLE_CANNOT_REACH_OP");
+  /* CORRECTED 2026-09-25 BY REC-162, NEVER EXEMPTED. These asserted `/ask an administrator/` and
+     `role: "member"`. `governorconfig` is the FOUNDER'S session's alone (§4.9, BOB #23), and `cai`'s
+     session is the kind every enrolled administrator holds too — so "ask an administrator" sent the
+     caller to people who are refused exactly as they are, and `role: member` called an enrolled
+     administrator a non-administrator. The refusal now names the SESSION that reaches the op. */
+  t("and it says there is nothing to go and find, and names whose session to ask — the founder's — "
+  + "rather than an administrator, who is refused this exactly as a member is",
+    [/ask the person who holds the session it names/i.test(r.translation || ""),
+     /reserved to the founder's session/.test(r.error || ""), /ask an administrator/i.test(r.translation || "")],
+    [true, true, false]);
+  t("and it names the session kind it judged and the session that reaches the op, and no `role`",
+    [r.session, r.reachedBy, r.role], ["member", "founder", undefined]);
   /* THE MIRROR. Without it this arm passes over a gate that refuses everybody. */
   const m = await POST("op=governorconfig&token=t-admin-1", { host: "example.org", appetite: 1 });
   t("NEGATIVE CONTROL: the same op is NOT refused admission to a credential that reaches it",

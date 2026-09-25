@@ -58,15 +58,18 @@ const ARMS = [
      `memberadd` and `signeradd` joined BOTH session sets, so the gate returns early for them and
      collapsing the split changes nothing they are told. `governorconfig` (the ROLE arm's one op now)
      and `provenanceroute` (an OMISSION) replace them — still two ops, from two different arms. */
-  { id: "b", file: SRC, expect: "RED", armedExpect: 2, mustName: ["governorconfig", "provenanceroute"],
+  /* CORRECTED 2026-09-25 (REC-162): the ROLE outcome became TWO returns, one per set that can hold the
+     op (the founder's session, a member's own), so the collapse now disarms both guards and the
+     declaration: armedExpect 3, the same two names. */
+  { id: "b", file: SRC, expect: "RED", armedExpect: 3, mustName: ["governorconfig", "provenanceroute"],
     what: "THE SPLIT COLLAPSED — sessionOpGate's three outcomes reduced to the single "
         + "MACHINE_CREDENTIAL_REQUIRED `main` sent before D-270. This is the arm the row's "
         + "accepts-when demands: it proves the suite grades the DISTINCTION, not a code's presence.",
     patch: (s) => {
       let n = 0;
       const out = s.replace(
-        /if \(SESSION_OPS\.admin\.has\(op\) \|\| SESSION_OPS\.member\.has\(op\)\)/,
-        (m) => { n++; return "if (false && (SESSION_OPS.admin.has(op) || SESSION_OPS.member.has(op)))"; })
+        /if \(SESSION_OPS\.(admin|member)\.has\(op\)\)\n/g,
+        (m, set) => { n++; return `if (false && SESSION_OPS.${set}.has(op))\n`; })
         .replace(/const recorded = UNATTENDED_BY_DECISION\[op\];/,
         (m) => { n++; return "const recorded = UNATTENDED_BY_DECISION[op] || 'collapsed';"; });
       return [out, n];
@@ -153,6 +156,29 @@ const ARMS = [
                   error: "no signed-in session reaches this operation, and no decision on record says why",
                   detail: "Nope — nobody decided this one either way." }, 403); }
   return refusal("SESSION_ROUTE_NOT_RECORDED",`; });
+      return [out, n];
+    } },
+
+  /* REC-162 (2026-09-25), DECLARED BEFORE ARMING. */
+  { id: "i", file: SRC, expect: "RED", mustName: ["governorconfig"],
+    what: "THE ROW'S OWN CONTROL — the ADMINISTRATOR sentence restored for a founder-only op: the "
+        + "founder's-session return's `error` put back to 'reserved to an administrator of this group'. "
+        + "MUST FAIL naming governorconfig at §5's session-naming assertion, and nowhere else.",
+    patch: (s) => {
+      let n = 0;
+      const out = s.replace(/"this operation is reserved to the founder's session",/,
+        (m) => { n++; return '"this operation is reserved to an administrator of this group",'; });
+      return [out, n];
+    } },
+
+  { id: "j", file: SRC, expect: "GREEN",
+    what: "OVER-STRICTNESS for REC-162 — the founder's-session `detail` rewritten in words the suite "
+        + "never saw, still true, still naming no role. MUST PASS: the suite grades the sentence and "
+        + "`reachedBy`, not one spelling of the explanation.",
+    patch: (s) => {
+      let n = 0;
+      const out = s.replace(/`'\$\{String\(op\)\.slice\(0, 60\)\}' is reachable from a signed-in session, but only the founder's: `/,
+        (m) => { n++; return "`Only the session opened with the founder's password performs this; enrolled members, administrators among them, sign in otherwise. `"; });
       return [out, n];
     } },
 ];

@@ -50,7 +50,10 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 /* The three sites exactly as they stand in the sources. */
 const FENCE = `    if (GOVERNANCE_ACTIONS.includes(op) && !viaSession)`;
-const STAMP = `      inner.searchParams.set("by", viaSession ? sessMember : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`;
+/* RE-ANCHORED 2026-09-25 (REC-162): REC-164 added a byte-identical stamp line for IDENTITY_ACTIONS, so
+   this anchor matched TWICE on `main` and `stamp-dropped` refused to arm (measured on REC-162's first full
+   run). It now carries the preceding line of the GOVERNANCE stamp's own condition, which occurs once. */
+const STAMP = `        || CUSTODIAL_ACTIONS.includes(op))\n      inner.searchParams.set("by", viaSession ? sessMember : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`;
 /* RE-ANCHORED 2026-09-23 (REC-159): the member set's spread was followed by REC-146's comment; REC-159
    put `...CUSTODIAL_ACTIONS` (with its own comment) between them, and the old anchor matched 0 times —
    the harness refused to arm, as it is built to, and that refusal is recorded on the suite's line. */
@@ -139,7 +142,17 @@ const L = {
   c9memberBearer: (op) => `9f op=${op}: the MEMBER_TOKEN bearer is refused CLASS_FORBIDDEN`,
   c9store: "9h the STORE",
   struct9Reach: "STRUCTURE: the four reach BOTH session sets",
+  /* REC-162 — §10, `governorconfig`'s refusal. */
+  c10refused: (who) => `10a ${who} is REFUSED governorconfig at the gate`,
+  c10sentence: (who) => `10a ${who} reads the FOUNDER'S-SESSION sentence`,
+  c10nothing: "10a and NOTHING either of them asked for landed",
+  c10positive: "10b the founder's session and the ADMIN_TOKEN bearer still set an appetite",
 };
+const C10_WHO = ["ruth (an ENROLLED administrator)", "cai (an ordinary member)"];
+const GOV_SENTENCE = `      "this operation is reserved to the founder's session",`;
+const GOV_MEMBER_SET = `"inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",\n`;
+const GOV_CLASSES = `  governorconfig: { classes: ["admin", "probe"],                     mutating: true  },`;
+const GOV_DETAIL = "`'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only the founder's: `";
 /* The eight §9 arms that read WHO the record names for ruth's four acts. */
 const C9_ATTRIB = [L.c9forgeAdd, L.c9addBack, L.c9set, L.c9setBack, L.c9kAdd, L.c9kAddBack, L.c9kSet, L.c9kSetBack];
 const bearerLabels = (ops, classes) =>
@@ -369,6 +382,36 @@ const ARMS = {
     file: IDX,
     edits: [[CU_MACHINE, `    } else if (!spec.classes.includes(cls) /* ARMED */) {`]],
     mustFail: [...CUST4.map(L.c9memberBearer), L.c9store],
+  },
+  /* REC-162 ADDS THREE ARMS, DECLARED BEFORE ARMING (2026-09-25), for §10.
+     (p) THE ROW'S OWN CONTROL: the administrator sentence restored for a founder-only op. Both
+     sentence arms MUST FAIL by name; the refusals, the nothing-landed read-back and the positive pair
+     stay green, because the gate still refuses — only what it SAYS moved. */
+  "founder-sentence-reverted": {
+    file: IDX,
+    edits: [[GOV_SENTENCE, `      "this operation is reserved to an administrator of this group", /* ARMED */`]],
+    mustFail: C10_WHO.map(L.c10sentence),
+  },
+  /* (q) THE LIAR THE ROW NAMES: `governorconfig` moved into the MEMBER set too, so nobody is told
+     anything false because nobody is refused. Both refusal arms, both sentence arms and the
+     nothing-landed read-back MUST FAIL; the positive pair stays green.
+     FIRST RUN (2026-09-25) NOT AS DECLARED, 83/4, and it was a finding about the DECLARATION: with the
+     member set alone widened, the nothing-landed read-back stayed GREEN, because the OPS row's
+     `classes: ["admin", "probe"]` is a second fence — a member session passes the session gate and is
+     refused by the class check. The liar that makes an administrator's session actually set an
+     appetite has to widen BOTH, which is D-136's "reach" in full; re-declared onto that. */
+  "governorconfig-both-sets": {
+    file: IDX,
+    edits: [[GOV_MEMBER_SET, `"inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate", "governorconfig" /* ARMED */,\n`],
+            [GOV_CLASSES, `  governorconfig: { classes: ["admin", "member", "probe"] /* ARMED */,          mutating: true  },`]],
+    mustFail: [...C10_WHO.map(L.c10refused), ...C10_WHO.map(L.c10sentence), L.c10nothing],
+  },
+  /* (r) OVER-STRICTNESS (required): the founder's-session `detail` rewritten in words the suite never
+     saw, still true and naming no role. MUST PASS whole. */
+  "founder-detail-respelled": {
+    file: IDX,
+    edits: [[GOV_DETAIL, "`Only the session opened with the founder's password performs this; enrolled members, administrators among them, sign in otherwise. ` /* ARMED */"]],
+    mustFail: [],
   },
 };
 

@@ -10917,7 +10917,7 @@ var AI_CREDENTIAL_CHECKS = {
   AI_SCOPE_BEYOND_MEMBER_REACH: {
     check: "C-29.9",
     where: "src/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
-    translation: "An agent may only be given things a member of this group could do themselves, and this is not one of them. The background worker's own jobs are outside what anybody can hand to an agent, so this cannot be written into a credential at all."
+    translation: "An agent may only be given things a member of this group could hand to it, and this is not one of them. The background worker's own jobs, and the acts a member performs only from their own signed-in session, are outside what anybody can hand to an agent, so this cannot be written into a credential at all."
   }
 };
 var VERSION_STRENGTH_CHECKS = {
@@ -11901,11 +11901,17 @@ var ADMISSION_CHECKS = {
      `signerset` — were answered with the row above, which told a member to go
      and find a machine credential for an act an administrator performs from
      their own browser. There is no such credential to find. This sentence names
-     the person to ask instead, because that is the action actually available. */
+     the person to ask instead, because that is the action actually available.
+     CORRECTED 2026-09-25 by REC-162 (Membership v2 §4.9, BOB #23): it read "but an
+     administrator of this group, and this session is not one … ask an administrator".
+     After REC-159 the one op it answers is `governorconfig`, which the FOUNDER'S session
+     alone reaches — an enrolled administrator holds a member's session and was told they
+     were not an administrator. The sentence now names the SESSION, as the refusal's own
+     `reachedBy` does. */
   SESSION_ROLE_CANNOT_REACH_OP: {
     check: "C-38.7",
     where: "src/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "A signed-in person does perform this operation, but an administrator of this group, and this session is not one. No machine credential is needed and finding one is not the way through: ask an administrator."
+    translation: "A signed-in person does perform this operation, but from a different session than this one, and this refusal names which. Where it names the founder's session, being an administrator of this group does not reach it: every enrolled member, an administrator included, signs in with a member's session. No machine credential is needed and finding one is not the way through: ask the person who holds the session it names."
   },
   /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
        otherwise have to cover a case neither is true of.
@@ -78958,7 +78964,7 @@ function aiScopeDeclaration(writes) {
     if (!aiReachesAsMember(OPS[op]))
       return refusal7(
         "AI_SCOPE_BEYOND_MEMBER_REACH",
-        `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.`,
+        Array.isArray(OPS[op].machineClasses) ? `'${op.slice(0, 60)}' is reached by a member only from that member's own signed-in session, and no agent credential is among the credentials it admits, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: its OPS row names the credentials that reach it, and an agent's is not one.` : `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.`,
         { op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null }
       );
   }
@@ -79272,12 +79278,19 @@ function sessionOpGate(kind, op, spec, method) {
   const refusal7 = (code, error, detail, extra) => json({ ok: false, reason: code, ...admissionRow(code), error, detail, op, ...extra || {} }, 403);
   if (!spec.mutating || op === "capture" && method === "GET" || SESSION_OPS[kind].has(op))
     return null;
-  if (SESSION_OPS.admin.has(op) || SESSION_OPS.member.has(op))
+  if (SESSION_OPS.admin.has(op))
     return refusal7(
       "SESSION_ROLE_CANNOT_REACH_OP",
-      "this operation is reserved to an administrator of this group",
-      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only an administrator's, and this session's role is '${String(kind).slice(0, 20)}'. There is no machine credential to go and find: an administrator performs this from their own browser. This is section 4's role boundary rather than a credential boundary, and the plane said otherwise until D-270 measured the difference.`,
-      { role: kind }
+      "this operation is reserved to the founder's session",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only the founder's: the password session made when this instance was claimed with its root credential. This is a member's session, which is what every enrolled member signs in with, an administrator of this group included \u2014 so an administrator's session is refused this exactly as this one is, and nothing here says whether you are one. There is no machine credential to go and find: the founder performs this from their own browser.`,
+      { session: kind, reachedBy: "founder" }
+    );
+  if (SESSION_OPS.member.has(op))
+    return refusal7(
+      "SESSION_ROLE_CANNOT_REACH_OP",
+      "this operation is reserved to a member's own session",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only a member's own, and this is the founder's session. There is no machine credential to go and find: a member performs this from their own browser.`,
+      { session: kind, reachedBy: "member" }
     );
   const recorded = UNATTENDED_BY_DECISION[op];
   if (recorded)
