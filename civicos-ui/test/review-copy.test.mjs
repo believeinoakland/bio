@@ -84,8 +84,9 @@
  * §6A.3 points 1 and 2 over REC-148's `inband` (IC-229). Section 6c's own header says how a liar passes it.
  * NEGATIVE CONTROL: RUN 2026-09-25 by the UI-69 worker, `node civicos-ui/test/review-copy.control.mjs` — 19/19 AS
  * DECLARED against app.html ceff5613a95844df… (1,626,056 B), IDENTICAL after every arm by sha256 AND cmp. Baseline
- * 69/0 GREEN (58/0 before this item on origin/main 964da679 — the eleven are 6c's nine and section 7's two new
- * REACH-and-seam terms folded into its arms). Arms (A)-(L) re-run unchanged but for the renamed assertion.
+ * 69/0 GREEN (58/0 before this item on origin/main 964da679 — the eleven are ALL section 6c's; section 7 still
+ * makes three assertions, its new seam terms folded into them). Arms (A)-(L) re-run unchanged but for the renamed
+ * assertion.
  *   (M) THE ROW'S OWN — the quartet dropped from page 2 -> 67/2, at "EVERY PAGE CARRIES THE QUARTET" (and "IN WORDS
  *       TOO", the same page's words going with it); "THE STATEMENT AT THE ACT" and the page-count REACH green.
  *   (N) the stamp re-serialised here with no indent -> 68/1, at "EVERY PAGE CARRIES THE QUARTET"; "IN WORDS TOO"
