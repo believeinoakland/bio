@@ -1,0 +1,16 @@
+{
+ "unit": "plane:monitor-substance.test.mjs",
+ "inputHash": "439f9a98494024a0a2cec2d21a14dcfcecdd3e025ec5d58b9b6691e7e8779ab6",
+ "verdict": "PASS",
+ "run": "c9e20156faccae65d0c82640493e7dfa34e065ca.1790320277076.2100.json",
+ "tree": "c9e20156faccae65d0c82640493e7dfa34e065ca",
+ "head": "7b9991140fff4836bb3192f8a4ba944b348cdb0d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 145,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "0541bc2a-502a-57b7-93d3-634506d564b1",
+ "at": "2026-09-25T07:11:17.088Z"
+}
