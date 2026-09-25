@@ -1,0 +1,16 @@
+{
+ "unit": "plane:queue-state.test.mjs",
+ "inputHash": "8cc1d3c2ede9a00d4d4f412ed862684cfbe19cc3d1aa2bdba26e6ef4652eb1f4",
+ "verdict": "PASS",
+ "run": "6f795f5f732d599c1cd6bede4d8b0d89275804a4.1790330349713.2175.json",
+ "tree": "6f795f5f732d599c1cd6bede4d8b0d89275804a4",
+ "head": "566afe3d27dc8b2d404cd97eba9e4128d8a39e76",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 145,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4d0200a3-437d-5ec6-b1eb-83d42d15dbdb",
+ "at": "2026-09-25T09:59:09.731Z"
+}
