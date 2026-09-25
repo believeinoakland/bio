@@ -1,0 +1,16 @@
+{
+ "unit": "plane:fence.test.mjs",
+ "inputHash": "a2f787bea254b9f2e6804e48a3d1bb2804c3cbf409647a09d564d155faaca9d4",
+ "verdict": "PASS",
+ "run": "1b15d9860334051143cb99071a22faedc4b9119b.1790309711291.351.json",
+ "tree": "1b15d9860334051143cb99071a22faedc4b9119b",
+ "head": "1c973c06ec0282356a0a7cf6425fff1b7eee4ff7",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 141,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "3955d33c-56ab-52b9-b3f9-57949ee5510c",
+ "at": "2026-09-25T04:15:11.304Z"
+}
