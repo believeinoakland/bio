@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec217-draft-binding.test.mjs",
+ "inputHash": "9ccd3d0a2e9cbfcf5eaed6a8e770f8500c52788ee87fc477c3e139e4d2545e10",
+ "verdict": "PASS",
+ "run": "b92b9d1b7801fb1f254f02f82e27980fbb602e84.1790329741409.2127.json",
+ "tree": "b92b9d1b7801fb1f254f02f82e27980fbb602e84",
+ "head": "c9c136e8bbc50e6be0b669936ce2939edd6c2679",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 149,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "31cf288a-f424-558f-ab63-85084aca7fb6",
+ "at": "2026-09-25T09:49:01.423Z"
+}
