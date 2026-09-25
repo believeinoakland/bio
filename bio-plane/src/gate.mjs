@@ -146,7 +146,13 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.30.0";
+/* 1.31.0 (D-668, 2026-09-25, branch land/worker/D-668, on land/worker/D-574): SEVEN ARRIVALS, NO DEPARTURES —
+   C-22.17, C-35.15, C-35.16, C-35.17, C-42.8, C-42.9, C-42.10, each a condition that answered another row's code whose
+   translation was untrue of it (DEC-49, D-484). Six rows NARROWED to the condition their words are true of and are
+   named in the census row's `changed` (C-22.10, C-35.5 — also reworded —, C-35.10, C-35.11, C-42.2, C-42.4). MINOR
+   on this constant's own rule. If another branch in the batch also moves this constant, CONDUCT takes the next
+   number and re-reads the census from the d470 suite's print on the merged tree. */
+export const CATALOG_VERSION = "1.31.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
