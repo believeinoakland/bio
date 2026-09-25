@@ -776,15 +776,15 @@ function decodeScan(e2, t2, n2, r2, i2, a2, o2, s2, c2, l2, u2 = false) {
   }
   let b3 = i2.length, x2, S2, C2, w2, T2, E2;
   E2 = f2 ? o2 === 0 ? c2 === 0 ? decodeDCFirst : decodeDCSuccessive : c2 === 0 ? decodeACFirst : decodeACSuccessive : decodeBaseline;
-  let D2 = 0, O2, k2 = b3 === 1 ? i2[0].blocksPerLine * i2[0].blocksPerColumn : d2 * r2.mcusPerColumn, j2, ee2;
-  for (; D2 <= k2; ) {
-    let r4 = a2 ? Math.min(k2 - D2, a2) : k2;
+  let D3 = 0, O2, k2 = b3 === 1 ? i2[0].blocksPerLine * i2[0].blocksPerColumn : d2 * r2.mcusPerColumn, j2, ee2;
+  for (; D3 <= k2; ) {
+    let r4 = a2 ? Math.min(k2 - D3, a2) : k2;
     if (r4 > 0) {
       for (S2 = 0; S2 < b3; S2++) i2[S2].pred = 0;
-      if (g2 = 0, b3 === 1) for (x2 = i2[0], T2 = 0; T2 < r4; T2++) decodeBlock(x2, E2, D2), D2++;
+      if (g2 = 0, b3 === 1) for (x2 = i2[0], T2 = 0; T2 < r4; T2++) decodeBlock(x2, E2, D3), D3++;
       else for (T2 = 0; T2 < r4; T2++) {
-        for (S2 = 0; S2 < b3; S2++) for (x2 = i2[S2], j2 = x2.h, ee2 = x2.v, C2 = 0; C2 < ee2; C2++) for (w2 = 0; w2 < j2; w2++) decodeMcu(x2, E2, D2, C2, w2);
-        D2++;
+        for (S2 = 0; S2 < b3; S2++) for (x2 = i2[S2], j2 = x2.h, ee2 = x2.v, C2 = 0; C2 < ee2; C2++) for (w2 = 0; w2 < j2; w2++) decodeMcu(x2, E2, D3, C2, w2);
+        D3++;
       }
     }
     if (h2 = 0, O2 = findNextFileMarker(e2, t2, n2), !O2) break;
@@ -1984,9 +1984,9 @@ function createCmapTable(e2, t2, n2) {
     }
     E2 = new DataBuilder({ exactLength: 16 }), E2.setArray([0, 12]), E2.skip(2), E2.setInt32(T2.length + 16), E2.skip(4), E2.setInt32(T2.length / 12);
   }
-  let D2 = 4 + w2 * 8, O2 = S2 ? 4 + x2.length : 0, k2 = new DataBuilder({ exactLength: D2 });
+  let D3 = 4 + w2 * 8, O2 = S2 ? 4 + x2.length : 0, k2 = new DataBuilder({ exactLength: D3 });
   k2.skip(2), k2.setInt16(w2);
-  let j2 = D2;
+  let j2 = D3;
   S2 && (k2.setArray([0, 3]), k2.setArray([0, 1]), k2.setInt32(j2), j2 += O2), C2 && (k2.setArray([0, 3]), k2.setArray([0, 10]), k2.setInt32(j2));
   let ee2 = new DataBuilder({ exactLength: k2.length + O2 + (E2?.length ?? 0) + (T2?.length ?? 0) });
   return ee2.setArray(k2.data), S2 && (ee2.setArray([0, 4]), ee2.setInt16(x2.length + 4), ee2.setArray(x2.data)), C2 && (ee2.setArray(E2.data), ee2.setArray(T2.data)), ee2.data;
@@ -3420,11 +3420,11 @@ function calculateSHA512(e2, t2, n2, r2 = false) {
   m2 < g2 && (m2 = g2), m2 += 11, p2[m2++] = n2 >>> 29 & 255, p2[m2++] = n2 >> 21 & 255, p2[m2++] = n2 >> 13 & 255, p2[m2++] = n2 >> 5 & 255, p2[m2++] = n2 << 3 & 255;
   let _2 = Array(80);
   for (m2 = 0; m2 < 80; m2++) _2[m2] = new Word64(0, 0);
-  let { k: v2 } = co, y2 = new Word64(0, 0), b3 = new Word64(0, 0), x2 = new Word64(0, 0), S2 = new Word64(0, 0), C2 = new Word64(0, 0), w2 = new Word64(0, 0), T2 = new Word64(0, 0), E2 = new Word64(0, 0), D2 = new Word64(0, 0), O2 = new Word64(0, 0), k2 = new Word64(0, 0), j2 = new Word64(0, 0), ee2;
+  let { k: v2 } = co, y2 = new Word64(0, 0), b3 = new Word64(0, 0), x2 = new Word64(0, 0), S2 = new Word64(0, 0), C2 = new Word64(0, 0), w2 = new Word64(0, 0), T2 = new Word64(0, 0), E2 = new Word64(0, 0), D3 = new Word64(0, 0), O2 = new Word64(0, 0), k2 = new Word64(0, 0), j2 = new Word64(0, 0), ee2;
   for (m2 = 0; m2 < f2; ) {
     for (h2 = 0; h2 < 16; ++h2) _2[h2].high = p2[m2] << 24 | p2[m2 + 1] << 16 | p2[m2 + 2] << 8 | p2[m2 + 3], _2[h2].low = p2[m2 + 4] << 24 | p2[m2 + 5] << 16 | p2[m2 + 6] << 8 | p2[m2 + 7], m2 += 8;
     for (h2 = 16; h2 < 80; ++h2) ee2 = _2[h2], littleSigmaPrime(ee2, _2[h2 - 2], j2), ee2.add(_2[h2 - 7]), littleSigma(k2, _2[h2 - 15], j2), ee2.add(k2), ee2.add(_2[h2 - 16]);
-    for (y2.assign(i2), b3.assign(a2), x2.assign(o2), S2.assign(s2), C2.assign(c2), w2.assign(l2), T2.assign(u2), E2.assign(d2), h2 = 0; h2 < 80; ++h2) D2.assign(E2), sigmaPrime(k2, C2, j2), D2.add(k2), ch(k2, C2, w2, T2, j2), D2.add(k2), D2.add(v2[h2]), D2.add(_2[h2]), sigma(O2, y2, j2), maj(k2, y2, b3, x2, j2), O2.add(k2), ee2 = E2, E2 = T2, T2 = w2, w2 = C2, S2.add(D2), C2 = S2, S2 = x2, x2 = b3, b3 = y2, ee2.assign(D2), ee2.add(O2), y2 = ee2;
+    for (y2.assign(i2), b3.assign(a2), x2.assign(o2), S2.assign(s2), C2.assign(c2), w2.assign(l2), T2.assign(u2), E2.assign(d2), h2 = 0; h2 < 80; ++h2) D3.assign(E2), sigmaPrime(k2, C2, j2), D3.add(k2), ch(k2, C2, w2, T2, j2), D3.add(k2), D3.add(v2[h2]), D3.add(_2[h2]), sigma(O2, y2, j2), maj(k2, y2, b3, x2, j2), O2.add(k2), ee2 = E2, E2 = T2, T2 = w2, w2 = C2, S2.add(D3), C2 = S2, S2 = x2, x2 = b3, b3 = y2, ee2.assign(D3), ee2.add(O2), y2 = ee2;
     i2.add(y2), a2.add(b3), o2.add(x2), s2.add(S2), c2.add(C2), l2.add(w2), u2.add(T2), d2.add(E2);
   }
   let M2;
@@ -4156,17 +4156,17 @@ function drawTriangle(e2, t2, n2, r2, i2, a2, o2, s2) {
   c2[n2 * 2 + 1] > c2[r2 * 2 + 1] && (f2 = n2, n2 = r2, r2 = f2, f2 = a2, a2 = o2, o2 = f2), c2[r2 * 2 + 1] > c2[i2 * 2 + 1] && (f2 = r2, r2 = i2, i2 = f2, f2 = o2, o2 = s2, s2 = f2), c2[n2 * 2 + 1] > c2[r2 * 2 + 1] && (f2 = n2, n2 = r2, r2 = f2, f2 = a2, a2 = o2, o2 = f2);
   let p2 = (c2[n2 * 2] + t2.offsetX) * t2.scaleX, m2 = (c2[n2 * 2 + 1] + t2.offsetY) * t2.scaleY, h2 = (c2[r2 * 2] + t2.offsetX) * t2.scaleX, g2 = (c2[r2 * 2 + 1] + t2.offsetY) * t2.scaleY, _2 = (c2[i2 * 2] + t2.offsetX) * t2.scaleX, v2 = (c2[i2 * 2 + 1] + t2.offsetY) * t2.scaleY;
   if (m2 >= v2) return;
-  let y2 = l2[a2 * 4], b3 = l2[a2 * 4 + 1], x2 = l2[a2 * 4 + 2], S2 = l2[o2 * 4], C2 = l2[o2 * 4 + 1], w2 = l2[o2 * 4 + 2], T2 = l2[s2 * 4], E2 = l2[s2 * 4 + 1], D2 = l2[s2 * 4 + 2], O2 = Math.round(m2), k2 = Math.round(v2), j2, ee2, M2, te2, ne2, re2, ie2, N2;
+  let y2 = l2[a2 * 4], b3 = l2[a2 * 4 + 1], x2 = l2[a2 * 4 + 2], S2 = l2[o2 * 4], C2 = l2[o2 * 4 + 1], w2 = l2[o2 * 4 + 2], T2 = l2[s2 * 4], E2 = l2[s2 * 4 + 1], D3 = l2[s2 * 4 + 2], O2 = Math.round(m2), k2 = Math.round(v2), j2, ee2, M2, te2, ne2, re2, ie2, N2;
   for (let e3 = O2; e3 <= k2; e3++) {
     if (e3 < g2) {
       let t4 = e3 < m2 ? 0 : (m2 - e3) / (m2 - g2);
       j2 = p2 - (p2 - h2) * t4, ee2 = y2 - (y2 - S2) * t4, M2 = b3 - (b3 - C2) * t4, te2 = x2 - (x2 - w2) * t4;
     } else {
       let t4;
-      t4 = e3 > v2 ? 1 : g2 === v2 ? 0 : (g2 - e3) / (g2 - v2), j2 = h2 - (h2 - _2) * t4, ee2 = S2 - (S2 - T2) * t4, M2 = C2 - (C2 - E2) * t4, te2 = w2 - (w2 - D2) * t4;
+      t4 = e3 > v2 ? 1 : g2 === v2 ? 0 : (g2 - e3) / (g2 - v2), j2 = h2 - (h2 - _2) * t4, ee2 = S2 - (S2 - T2) * t4, M2 = C2 - (C2 - E2) * t4, te2 = w2 - (w2 - D3) * t4;
     }
     let t3;
-    t3 = e3 < m2 ? 0 : e3 > v2 ? 1 : (m2 - e3) / (m2 - v2), ne2 = p2 - (p2 - _2) * t3, re2 = y2 - (y2 - T2) * t3, ie2 = b3 - (b3 - E2) * t3, N2 = x2 - (x2 - D2) * t3;
+    t3 = e3 < m2 ? 0 : e3 > v2 ? 1 : (m2 - e3) / (m2 - v2), ne2 = p2 - (p2 - _2) * t3, re2 = y2 - (y2 - T2) * t3, ie2 = b3 - (b3 - E2) * t3, N2 = x2 - (x2 - D3) * t3;
     let n3 = Math.round(Math.min(j2, ne2)), r4 = Math.round(Math.max(j2, ne2)), i3 = d2 * e3 + n3 * 4;
     for (let e4 = n3; e4 <= r4; e4++) t3 = (j2 - e4) / (j2 - ne2), t3 < 0 ? t3 = 0 : t3 > 1 && (t3 = 1), u2[i3++] = ee2 - (ee2 - re2) * t3 | 0, u2[i3++] = M2 - (M2 - ie2) * t3 | 0, u2[i3++] = te2 - (te2 - N2) * t3 | 0, u2[i3++] = 255;
   }
@@ -4382,7 +4382,7 @@ function getNetworkStream(e2) {
   return isValidFetchUrl(e2) ? PDFFetchStream : vo ? PDFNodeStream : PDFNetworkStream;
 }
 function getDocument(e2 = {}) {
-  let t2 = new Ns(), { docId: n2 } = t2, r2 = e2.url ? getUrlProp(e2.url) : null, i2 = e2.data ? getDataProp(e2.data) : null, a2 = e2.httpHeaders || null, o2 = e2.withCredentials === true, s2 = e2.password ?? null, c2 = e2.range instanceof PDFDataRangeTransport ? e2.range : null, l2 = Number.isInteger(e2.rangeChunkSize) && e2.rangeChunkSize > 0 ? e2.rangeChunkSize : 2 ** 16, u2 = e2.worker instanceof Is ? e2.worker : null, d2 = e2.verbosity, f2 = typeof e2.docBaseUrl == `string` && !isDataScheme(e2.docBaseUrl) ? e2.docBaseUrl : null, p2 = getFactoryUrlProp(e2.cMapUrl), m2 = e2.cMapPacked !== false, h2 = getFactoryUrlProp(e2.iccUrl), g2 = getFactoryUrlProp(e2.standardFontDataUrl), _2 = getFactoryUrlProp(e2.wasmUrl), v2 = e2.stopAtErrors !== true, y2 = Number.isInteger(e2.maxImageSize) && e2.maxImageSize > -1 ? e2.maxImageSize : -1, b3 = typeof e2.isOffscreenCanvasSupported == `boolean` ? e2.isOffscreenCanvasSupported : !vo, x2 = typeof e2.isImageDecoderSupported == `boolean` ? e2.isImageDecoderSupported : !vo, S2 = Number.isInteger(e2.canvasMaxAreaInBytes) ? e2.canvasMaxAreaInBytes : -1, C2 = typeof e2.disableFontFace == `boolean` ? e2.disableFontFace : vo, w2 = e2.fontExtraProperties === true, T2 = e2.enableXfa === true, E2 = e2.ownerDocument || globalThis.document, D2 = e2.disableRange === true, O2 = e2.disableStream === true, k2 = e2.disableAutoFetch === true, j2 = e2.pdfBug === true, ee2 = e2.CanvasFactory || (vo ? NodeCanvasFactory : DOMCanvasFactory), M2 = e2.FilterFactory || (vo ? NodeFilterFactory : DOMFilterFactory), te2 = e2.BinaryDataFactory || (vo ? NodeBinaryDataFactory : DOMBinaryDataFactory), ne2 = e2.enableHWA === true, re2 = e2.enableWebGPU === true ? initGPU() : Promise.resolve(false), ie2 = e2.useWasm !== false, N2 = e2.pagesMapper || new PagesMapper(), ae2 = typeof e2.useSystemFonts == `boolean` ? e2.useSystemFonts : !vo && !C2, oe2 = typeof e2.useWorkerFetch == `boolean` ? e2.useWorkerFetch : !!(te2 === DOMBinaryDataFactory && p2 && m2 && g2 && _2 && isValidFetchUrl(p2, document.baseURI) && isValidFetchUrl(g2, document.baseURI) && isValidFetchUrl(_2, document.baseURI));
+  let t2 = new Ns(), { docId: n2 } = t2, r2 = e2.url ? getUrlProp(e2.url) : null, i2 = e2.data ? getDataProp(e2.data) : null, a2 = e2.httpHeaders || null, o2 = e2.withCredentials === true, s2 = e2.password ?? null, c2 = e2.range instanceof PDFDataRangeTransport ? e2.range : null, l2 = Number.isInteger(e2.rangeChunkSize) && e2.rangeChunkSize > 0 ? e2.rangeChunkSize : 2 ** 16, u2 = e2.worker instanceof Is ? e2.worker : null, d2 = e2.verbosity, f2 = typeof e2.docBaseUrl == `string` && !isDataScheme(e2.docBaseUrl) ? e2.docBaseUrl : null, p2 = getFactoryUrlProp(e2.cMapUrl), m2 = e2.cMapPacked !== false, h2 = getFactoryUrlProp(e2.iccUrl), g2 = getFactoryUrlProp(e2.standardFontDataUrl), _2 = getFactoryUrlProp(e2.wasmUrl), v2 = e2.stopAtErrors !== true, y2 = Number.isInteger(e2.maxImageSize) && e2.maxImageSize > -1 ? e2.maxImageSize : -1, b3 = typeof e2.isOffscreenCanvasSupported == `boolean` ? e2.isOffscreenCanvasSupported : !vo, x2 = typeof e2.isImageDecoderSupported == `boolean` ? e2.isImageDecoderSupported : !vo, S2 = Number.isInteger(e2.canvasMaxAreaInBytes) ? e2.canvasMaxAreaInBytes : -1, C2 = typeof e2.disableFontFace == `boolean` ? e2.disableFontFace : vo, w2 = e2.fontExtraProperties === true, T2 = e2.enableXfa === true, E2 = e2.ownerDocument || globalThis.document, D3 = e2.disableRange === true, O2 = e2.disableStream === true, k2 = e2.disableAutoFetch === true, j2 = e2.pdfBug === true, ee2 = e2.CanvasFactory || (vo ? NodeCanvasFactory : DOMCanvasFactory), M2 = e2.FilterFactory || (vo ? NodeFilterFactory : DOMFilterFactory), te2 = e2.BinaryDataFactory || (vo ? NodeBinaryDataFactory : DOMBinaryDataFactory), ne2 = e2.enableHWA === true, re2 = e2.enableWebGPU === true ? initGPU() : Promise.resolve(false), ie2 = e2.useWasm !== false, N2 = e2.pagesMapper || new PagesMapper(), ae2 = typeof e2.useSystemFonts == `boolean` ? e2.useSystemFonts : !vo && !C2, oe2 = typeof e2.useWorkerFetch == `boolean` ? e2.useWorkerFetch : !!(te2 === DOMBinaryDataFactory && p2 && m2 && g2 && _2 && isValidFetchUrl(p2, document.baseURI) && isValidFetchUrl(g2, document.baseURI) && isValidFetchUrl(_2, document.baseURI));
   setVerbosityLevel(d2);
   let F2 = { canvasFactory: new ee2({ ownerDocument: E2, enableHWA: ne2 }), filterFactory: new M2({ docId: n2, ownerDocument: E2 }), binaryDataFactory: oe2 ? null : new te2({ cMapUrl: p2, standardFontDataUrl: g2, wasmUrl: _2 }) };
   u2 || (u2 = Is.create({ verbosity: d2, port: GlobalWorkerOptions.workerPort }), t2._worker = u2);
@@ -4391,8 +4391,8 @@ function getDocument(e2 = {}) {
     if (u2.destroyed) throw Error(`Worker was destroyed`);
     L2.evaluatorOptions.hasGPU = e3;
     let s3 = u2.messageHandler.sendWithPromise(`GetDocRequest`, L2, i2 ? [i2.buffer] : null), d3;
-    if (!i2) if (c2) d3 = new PDFDataTransportStream({ pdfDataRangeTransport: c2, disableRange: D2, disableStream: O2 });
-    else if (r2) d3 = new (getNetworkStream(r2))({ url: r2, httpHeaders: a2, withCredentials: o2, rangeChunkSize: l2, disableRange: D2, disableStream: O2 });
+    if (!i2) if (c2) d3 = new PDFDataTransportStream({ pdfDataRangeTransport: c2, disableRange: D3, disableStream: O2 });
+    else if (r2) d3 = new (getNetworkStream(r2))({ url: r2, httpHeaders: a2, withCredentials: o2, rangeChunkSize: l2, disableRange: D3, disableStream: O2 });
     else throw Error("getDocument - expected either `data`, `range`, or `url` parameter.");
     return s3.then((e4) => {
       if (u2.destroyed) throw Error(`Worker was destroyed`);
@@ -6168,7 +6168,7 @@ var init_pdfjs = __esm({
               i2 += 2, c2 = n2.getUint16(i2), i2 += 2;
               break;
             case 65498:
-              let D2 = ++l2 === 1 && !t2;
+              let D3 = ++l2 === 1 && !t2;
               i2 += 2;
               let O2 = e2[i2++], k2 = [];
               for (m2 = 0; m2 < O2; m2++) {
@@ -6179,7 +6179,7 @@ var init_pdfjs = __esm({
               }
               let j2 = e2[i2++], ee2 = e2[i2++], M2 = e2[i2++];
               try {
-                let t3 = decodeScan(e2, n2, i2, s2, k2, c2, j2, ee2, M2 >> 4, M2 & 15, D2);
+                let t3 = decodeScan(e2, n2, i2, s2, k2, c2, j2, ee2, M2 >> 4, M2 & 15, D3);
                 i2 += t3;
               } catch (t3) {
                 if (t3 instanceof DNLMarkerError) return warn$1(`${t3.message} -- attempting to re-parse the JPEG image.`), this.parse(e2, { dnlScanLines: t3.scanLines });
@@ -6712,17 +6712,17 @@ var init_pdfjs = __esm({
         _2.push([0, Util$1.makeHexColor(S2, C2, w2)]);
         let T2 = 1;
         y2[0] = c2 + g2, h2(y2, 0, v2, 0), s2.getRgb(v2, 0, x2);
-        let [E2, D2, O2] = x2, k2 = E2 - S2 + 1, j2 = D2 - C2 + 1, ee2 = O2 - w2 + 1, M2 = E2 - S2 - 1, te2 = D2 - C2 - 1, ne2 = O2 - w2 - 1;
+        let [E2, D3, O2] = x2, k2 = E2 - S2 + 1, j2 = D3 - C2 + 1, ee2 = O2 - w2 + 1, M2 = E2 - S2 - 1, te2 = D3 - C2 - 1, ne2 = O2 - w2 - 1;
         for (let e3 = 2; e3 < 840; e3++) {
           y2[0] = c2 + e3 * g2, h2(y2, 0, v2, 0), s2.getRgb(v2, 0, x2);
           let [t3, n3, r4] = x2, i3 = e3 - b3;
           if (k2 = Math.min(k2, (t3 - S2 + 1) / i3), j2 = Math.min(j2, (n3 - C2 + 1) / i3), ee2 = Math.min(ee2, (r4 - w2 + 1) / i3), M2 = Math.max(M2, (t3 - S2 - 1) / i3), te2 = Math.max(te2, (n3 - C2 - 1) / i3), ne2 = Math.max(ne2, (r4 - w2 - 1) / i3), !(M2 <= k2 && te2 <= j2 && ne2 <= ee2)) {
-            let e4 = Util$1.makeHexColor(E2, D2, O2);
-            _2.push([T2 / 840, e4]), k2 = t3 - E2 + 1, j2 = n3 - D2 + 1, ee2 = r4 - O2 + 1, M2 = t3 - E2 - 1, te2 = n3 - D2 - 1, ne2 = r4 - O2 - 1, b3 = T2, S2 = E2, C2 = D2, w2 = O2;
+            let e4 = Util$1.makeHexColor(E2, D3, O2);
+            _2.push([T2 / 840, e4]), k2 = t3 - E2 + 1, j2 = n3 - D3 + 1, ee2 = r4 - O2 + 1, M2 = t3 - E2 - 1, te2 = n3 - D3 - 1, ne2 = r4 - O2 - 1, b3 = T2, S2 = E2, C2 = D3, w2 = O2;
           }
-          T2 = e3, E2 = t3, D2 = n3, O2 = r4;
+          T2 = e3, E2 = t3, D3 = n3, O2 = r4;
         }
-        _2.push([1, Util$1.makeHexColor(E2, D2, O2)]);
+        _2.push([1, Util$1.makeHexColor(E2, D3, O2)]);
         let re2 = e2.has(`Background`) ? s2.getRgbHex(e2.get(`Background`), 0) : `transparent`;
         d2 || (_2.unshift([0, re2]), _2[1][0] += BaseShading.SMALL_NUMBER), f2 || (_2.at(-1)[0] -= BaseShading.SMALL_NUMBER, _2.push([1, re2])), this.colorStops = _2;
       }
@@ -6741,9 +6741,9 @@ var init_pdfjs = __esm({
         if (!c2) throw new FormatError$1(`FunctionBasedShading: missing /Function`);
         let l2 = i2.create(c2, true), [u2, d2, p2, m2] = lookupRect(e2.getArray(`Domain`), [0, 1, 0, 1]), h2 = lookupMatrix(e2.getArray(`Matrix`), ue);
         this.bounds = t.slice(), Util$1.axialAlignedBoundingBox([u2, p2, d2, m2], h2, this.bounds);
-        let g2 = this.bounds[2] - this.bounds[0], _2 = this.bounds[3] - this.bounds[1], v2 = MathClamp$1(Math.ceil(g2), 1, FunctionBasedShading.MAX_STEP_COUNT), y2 = MathClamp$1(Math.ceil(_2), 1, FunctionBasedShading.MAX_STEP_COUNT), b3 = v2 + 1, x2 = (y2 + 1) * b3, S2 = this.coords = new Float32Array(x2 * 2), C2 = this.colors = new Uint8ClampedArray(x2 * 4), w2 = new Float32Array(2), T2 = new Float32Array(s2.numComps), E2 = (d2 - u2) / v2, D2 = (m2 - p2) / y2, O2 = E2 / 2, k2 = D2 / 2, j2 = 0, ee2 = 0;
+        let g2 = this.bounds[2] - this.bounds[0], _2 = this.bounds[3] - this.bounds[1], v2 = MathClamp$1(Math.ceil(g2), 1, FunctionBasedShading.MAX_STEP_COUNT), y2 = MathClamp$1(Math.ceil(_2), 1, FunctionBasedShading.MAX_STEP_COUNT), b3 = v2 + 1, x2 = (y2 + 1) * b3, S2 = this.coords = new Float32Array(x2 * 2), C2 = this.colors = new Uint8ClampedArray(x2 * 4), w2 = new Float32Array(2), T2 = new Float32Array(s2.numComps), E2 = (d2 - u2) / v2, D3 = (m2 - p2) / y2, O2 = E2 / 2, k2 = D3 / 2, j2 = 0, ee2 = 0;
         for (let e3 = 0; e3 <= y2; e3++) {
-          let t2 = p2 + D2 * e3;
+          let t2 = p2 + D3 * e3;
           w2[1] = e3 === y2 ? t2 - k2 : t2;
           for (let e4 = 0; e4 <= v2; e4++) {
             let n3 = u2 + E2 * e4;
@@ -14221,13 +14221,13 @@ var init_pdfjs = __esm({
             }, a3);
           };
           n2.ensureNotTerminated(), x2.reset();
-          let s3 = {}, c3, S2, C2, w2, D2, O2;
+          let s3 = {}, c3, S2, C2, w2, D3, O2;
           for (; !(c3 = x2.check()) && (s3.args = null, b3.read(s3)); ) {
             let e4 = s3.args, a4 = s3.fn;
             switch (a4 | 0) {
               case T.paintXObject:
-                if (O2 = e4[0] instanceof N, D2 = e4[0].name, O2) {
-                  let t2 = f2.getByName(D2);
+                if (O2 = e4[0] instanceof N, D3 = e4[0].name, O2) {
+                  let t2 = f2.getByName(D3);
                   if (t2) {
                     addCachedImageOps(i2, t2), e4 = null;
                     continue;
@@ -14235,7 +14235,7 @@ var init_pdfjs = __esm({
                 }
                 next(new Promise(function(e5, t2) {
                   if (!O2) throw new FormatError$1(`XObject must be referred to by name.`);
-                  let a5 = _2.getRaw(D2);
+                  let a5 = _2.getRaw(D3);
                   if (a5 instanceof L) {
                     let t3 = f2.getByRef(a5) || u2._regionalImageCache.getByRef(a5) || u2.globalImageCache.getData(a5, u2.pageIndex);
                     if (t3) {
@@ -14253,7 +14253,7 @@ var init_pdfjs = __esm({
                     }, t2);
                     return;
                   } else if (o3.name === `Image`) {
-                    u2.buildPaintImageXObject({ resources: r2, image: a5, operatorList: i2, cacheKey: D2, localImageCache: f2, localColorSpaceCache: p2 }).then(e5, t2);
+                    u2.buildPaintImageXObject({ resources: r2, image: a5, operatorList: i2, cacheKey: D3, localImageCache: f2, localColorSpaceCache: p2 }).then(e5, t2);
                     return;
                   } else if (o3.name === `PS`) info$1(`Ignored XObject subtype PS`);
                   else throw new FormatError$1(`Unhandled XObject subtype ${o3.name}`);
@@ -14413,8 +14413,8 @@ var init_pdfjs = __esm({
                 e4 = [j2], a4 = T.shadingFill;
                 break;
               case T.setGState:
-                if (O2 = e4[0] instanceof N, D2 = e4[0].name, O2) {
-                  let t2 = m2.getByName(D2);
+                if (O2 = e4[0] instanceof N, D3 = e4[0].name, O2) {
+                  let t2 = m2.getByName(D3);
                   if (t2) {
                     t2.length > 0 && i2.addOp(T.setGState, [t2]), e4 = null;
                     continue;
@@ -14424,9 +14424,9 @@ var init_pdfjs = __esm({
                   if (!O2) throw new FormatError$1(`GState must be referred to by name.`);
                   let a5 = r2.get(`ExtGState`);
                   if (!(a5 instanceof F)) throw new FormatError$1(`ExtGState should be a dictionary.`);
-                  let o3 = a5.get(D2);
+                  let o3 = a5.get(D3);
                   if (!(o3 instanceof F)) throw new FormatError$1(`GState should be a dictionary.`);
-                  u2.setGState({ resources: r2, gState: o3, operatorList: i2, cacheKey: D2, task: n2, stateManager: y2, localGStateCache: m2, localColorSpaceCache: p2, seenRefs: l2 }).then(e5, t2);
+                  u2.setGState({ resources: r2, gState: o3, operatorList: i2, cacheKey: D3, task: n2, stateManager: y2, localGStateCache: m2, localColorSpaceCache: p2, seenRefs: l2 }).then(e5, t2);
                 }).catch(function(e5) {
                   if (!(e5 instanceof AbortException$1)) {
                     if (u2.options.ignoreErrors) {
@@ -14562,7 +14562,7 @@ var init_pdfjs = __esm({
         function resetLastChars() {
           y2[0] = y2[1] = ` `, b3 = 0;
         }
-        let x2 = 0.25, S2 = this, C2 = this.xref, w2 = [], E2 = null, D2 = new LocalImageCache(), O2 = new LocalGStateCache(), k2 = new Er(e2, C2, i2), j2, ee2;
+        let x2 = 0.25, S2 = this, C2 = this.xref, w2 = [], E2 = null, D3 = new LocalImageCache(), O2 = new LocalGStateCache(), k2 = new Er(e2, C2, i2), j2, ee2;
         function pushWhitespace({ width: e3 = 0, height: t3 = 0, transform: n3 = v2.prevTransform, fontName: r2 = v2.fontName }) {
           m2?.addExtraChar(` `), _2.items.push({ str: ` `, dir: `ltr`, width: e3, height: t3, transform: n3, fontName: r2, hasEOL: false });
         }
@@ -14779,12 +14779,12 @@ var init_pdfjs = __esm({
                 j2.wordSpacing = y3[0], j2.charSpacing = y3[1], j2.carriageReturn(), buildTextContentItem({ chars: y3[2], extraSpacing: 0 });
                 break;
               case T.paintXObject:
-                if (flushTextContentItem(), E2 ??= n2.get(`XObject`) || F.empty, v3 = y3[0] instanceof N, h3 = y3[0].name, v3 && D2.getByName(h3)) break;
+                if (flushTextContentItem(), E2 ??= n2.get(`XObject`) || F.empty, v3 = y3[0] instanceof N, h3 = y3[0].name, v3 && D3.getByName(h3)) break;
                 next(new Promise(function(e6, r5) {
                   if (!v3) throw new FormatError$1(`XObject must be referred to by name.`);
                   let p5 = E2.getRaw(h3);
                   if (p5 instanceof L) {
-                    if (D2.getByRef(p5)) {
+                    if (D3.getByRef(p5)) {
                       e6();
                       return;
                     }
@@ -14798,7 +14798,7 @@ var init_pdfjs = __esm({
                   let { dict: m5 } = p5, _3 = m5.get(`Subtype`);
                   if (!(_3 instanceof N)) throw new FormatError$1(`XObject should have a Name subtype`);
                   if (_3.name !== `Form`) {
-                    D2.set(h3, m5.objId, true), e6();
+                    D3.set(h3, m5.objId, true), e6();
                     return;
                   }
                   let y4 = new StateManager(i2.state.clone()), b4 = lookupMatrix(m5.getArray(`Matrix`), null);
@@ -14807,7 +14807,7 @@ var init_pdfjs = __esm({
                   enqueueChunk();
                   let w3 = textSinkWrapper(o2);
                   S2.getTextContent({ stream: p5, task: t2, resources: x3 instanceof F ? x3 : n2, stateManager: y4, includeMarkedContent: a2, sink: w3, seenStyles: s2, viewBox: c2, lang: l2, markedContentData: u2, disableNormalization: d2, keepWhiteSpace: f2, prevRefs: g2 }).then(function() {
-                    w3.enqueueInvoked || D2.set(h3, m5.objId, true), e6();
+                    w3.enqueueInvoked || D3.set(h3, m5.objId, true), e6();
                   }, r5);
                 }).catch(function(e6) {
                   if (!(e6 instanceof AbortException$1)) {
@@ -15267,8 +15267,8 @@ var init_pdfjs = __esm({
         }
         let w2 = lookupMatrix(t2.getArray(`FontMatrix`), r), T2 = lookupNormalRect(e2.getArray(`FontBBox`) || t2.getArray(`FontBBox`), u2 ? [0, 0, 0, 0] : void 0), E2 = e2.get(`Ascent`);
         typeof E2 != `number` && (E2 = void 0);
-        let D2 = e2.get(`Descent`);
-        typeof D2 != `number` && (D2 = void 0);
+        let D3 = e2.get(`Descent`);
+        typeof D3 != `number` && (D3 = void 0);
         let O2 = e2.get(`XHeight`);
         typeof O2 != `number` && (O2 = 0);
         let k2 = e2.get(`CapHeight`);
@@ -15277,7 +15277,7 @@ var init_pdfjs = __esm({
         Number.isInteger(j2) || (j2 = 0);
         let ee2 = e2.get(`ItalicAngle`);
         typeof ee2 != `number` && (ee2 = 0);
-        let M2 = { type: a2, name: d2.name, subtype: _2, file: h2, fontFileN: g2, length1: v2, length2: y2, length3: b3, isInternalFont: x2, loadedName: n2.loadedName, composite: i2, fixedPitch: false, fontMatrix: w2, firstChar: o2, lastChar: s2, toUnicode: c2, bbox: T2, ascent: E2, descent: D2, xHeight: O2, capHeight: k2, flags: j2, italicAngle: ee2, isType3Font: u2, cssFontInfo: l2, scaleFactors: S2, systemFontInfo: C2 };
+        let M2 = { type: a2, name: d2.name, subtype: _2, file: h2, fontFileN: g2, length1: v2, length2: y2, length3: b3, isInternalFont: x2, loadedName: n2.loadedName, composite: i2, fixedPitch: false, fontMatrix: w2, firstChar: o2, lastChar: s2, toUnicode: c2, bbox: T2, ascent: E2, descent: D3, xHeight: O2, capHeight: k2, flags: j2, italicAngle: ee2, isType3Font: u2, cssFontInfo: l2, scaleFactors: S2, systemFontInfo: C2 };
         if (i2) {
           let e3 = n2.get(`Encoding`);
           e3 instanceof N && (M2.cidEncoding = e3.name), M2.cMap = await CMapFactory.create({ encoding: e3, fetchBuiltInCMap: this._fetchBuiltInCMapBound, useCMap: null }), M2.vertical = M2.cMap.vertical;
@@ -15735,12 +15735,12 @@ var init_pdfjs = __esm({
         for (let e3 of l2) C2.push(`0 -${T2} Td <${stringToUTF16HexString(e3)}> Tj`);
         C2.push(`ET`, `Q`);
         let E2 = C2.join(`
-`), D2 = new F(this.xref);
-        if (D2.setIfName(`Subtype`, `Form`), D2.setIfName(`Type`, `XObject`), D2.set(`BBox`, [0, 0, h2, g2]), D2.set(`Length`, E2.length), D2.set(`Resources`, w2), n2) {
+`), D3 = new F(this.xref);
+        if (D3.setIfName(`Subtype`, `Form`), D3.setIfName(`Type`, `XObject`), D3.set(`BBox`, [0, 0, h2, g2]), D3.set(`Length`, E2.length), D3.set(`Resources`, w2), n2) {
           let e3 = getRotationMatrix(n2, h2, g2);
-          D2.set(`Matrix`, e3);
+          D3.set(`Matrix`, e3);
         }
-        return new StringStream(E2, D2);
+        return new StringStream(E2, D3);
       }
     };
     Or = [`m/d`, `m/d/yy`, `mm/dd/yy`, `mm/yy`, `d-mmm`, `d-mmm-yy`, `dd-mmm-yy`, `yy-mm-dd`, `mmm-yy`, `mmmm-yy`, `mmm d, yyyy`, `mmmm d, yyyy`, `m/d/yy h:MM tt`, `m/d/yy HH:MM`];
@@ -23540,9 +23540,9 @@ var init_pdfjs = __esm({
           for (let e4 of r4) n3 += e4.width * C2;
           w2 = Math.max(w2, n3);
         }
-        let E2 = w2 > b3 ? b3 / w2 : 1, D2 = 1, O2 = i * l2, k2 = (i - a) * l2, j2 = O2 * S2.length;
-        j2 > x2 && (D2 = x2 / j2);
-        let ee2 = l2 * Math.min(E2, D2), M2, te2, ne2;
+        let E2 = w2 > b3 ? b3 / w2 : 1, D3 = 1, O2 = i * l2, k2 = (i - a) * l2, j2 = O2 * S2.length;
+        j2 > x2 && (D3 = x2 / j2);
+        let ee2 = l2 * Math.min(E2, D3), M2, te2, ne2;
         switch (d2) {
           case 0:
             ne2 = [1, 0, 0, 1], te2 = [u2[0], u2[1], b3, x2], M2 = [u2[0], u2[3] - k2];
@@ -25073,9 +25073,9 @@ var init_pdfjs = __esm({
         for (let e3 of v2) (S2 || C2 && e3.mustBeViewed(o2, b3) && e3.mustBeViewedWhenEditing(x2, s2) || w2 && e3.mustBePrinted(o2)) && T2.push(e3.getOperatorList(f2, n2, r2, o2).catch(function(e4) {
           return warn$1(`getOperatorList - ignoring annotation data during "${n2.name}" task: "${e4}".`), { opList: null, separateForm: false, separateCanvas: false };
         }));
-        let E2 = await Promise.all(T2), D2 = false, O2 = false;
-        for (let { opList: e3, separateForm: t3, separateCanvas: n3 } of E2) _2.addOpList(e3), D2 ||= t3, O2 ||= n3;
-        return _2.flush(true, { form: D2, canvas: O2 }), { length: _2.totalLength };
+        let E2 = await Promise.all(T2), D3 = false, O2 = false;
+        for (let { opList: e3, separateForm: t3, separateCanvas: n3 } of E2) _2.addOpList(e3), D3 ||= t3, O2 ||= n3;
+        return _2.flush(true, { form: D3, canvas: O2 }), { length: _2.totalLength };
       }
       async extractTextContent({ handler: e2, task: t2, includeMarkedContent: n2, disableNormalization: r2, sink: i2, intersector: a2 = null }) {
         let o2 = this.getContentStream(), s2 = this.loadResources(fe), c2 = this.pdfManager.ensureCatalog(`lang`), [l2, , u2] = await Promise.all([o2, s2, c2]), d2 = await this.#a(l2.dict, fe);
@@ -32715,8 +32715,8 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
               this.paintChar(e2, b4.fontChar, t3, n4, v2, y2);
             }
           }
-          let D2 = p2 ? C3 * g2 - d3 * u2 : C3 * g2 + d3 * u2;
-          T2 += D2, a3 && o2.restore();
+          let D3 = p2 ? C3 * g2 - d3 * u2 : C3 * g2 + d3 * u2;
+          T2 += D3, a3 && o2.restore();
         }
         p2 ? n2.y -= T2 : n2.x += T2 * d2, o2.restore(), this.compose(), this.dependencyTracker?.recordShowTextOperation(e2), this.#g(a2);
       }
@@ -40438,7 +40438,7 @@ function textShowBytes(toks) {
       if (tk.t === "str") pending.push(tk.bytes.length);
       continue;
     }
-    if (tk.v === "Tj" || tk.v === "TJ" || tk.v === "'" || tk.v === '"') for (const b2 of pending) n2 += b2;
+    if (tk.v === "Tj" || tk.v === "TJ" || tk.v === "'" || tk.v === '"') for (const b3 of pending) n2 += b3;
     pending.length = 0;
   }
   return n2;
@@ -40746,6 +40746,28 @@ function pageResources(doc, pageMap) {
   }
   return null;
 }
+function inheritedAttr(doc, pageMap, key) {
+  let map = pageMap, seen = 0;
+  while (map && seen < 64) {
+    if (map[key] !== void 0) return doc.resolve(map[key]);
+    const parent = doc.resolve(map.Parent);
+    map = parent && parent.t === "dict" ? parent.map : null;
+    seen++;
+  }
+  return null;
+}
+function pdfPageBox(doc, pageMap) {
+  if (!pageMap) return null;
+  const m2 = inheritedAttr(doc, pageMap, "MediaBox");
+  if (!m2 || m2.t !== "arr" || m2.items.length !== 4) return null;
+  const v2 = m2.items.map((x2) => numOf(doc, x2));
+  if (v2.some((x2) => x2 == null || !Number.isFinite(x2))) return null;
+  const box = [Math.min(v2[0], v2[2]), Math.min(v2[1], v2[3]), Math.max(v2[0], v2[2]), Math.max(v2[1], v2[3])];
+  if (!(box[2] > box[0] && box[3] > box[1])) return null;
+  const r2 = numOf(doc, inheritedAttr(doc, pageMap, "Rotate"));
+  const rotate = r2 == null ? 0 : Number.isInteger(r2) && r2 % 90 === 0 ? (r2 % 360 + 360) % 360 : null;
+  return { media_box: box, w: box[2] - box[0], h: box[3] - box[1], rotate };
+}
 async function pageContent(doc, pageMap) {
   const c2 = doc.resolve(pageMap.Contents);
   if (!c2) return "";
@@ -40913,9 +40935,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     return Math.abs(tfs) * th * Math.hypot(m2[0], m2[1]);
   };
   const glyphBox = (m0, m1) => {
-    const a2 = matMul(m0, ctm), b2 = matMul(m1, ctm);
+    const a2 = matMul(m0, ctm), b3 = matMul(m1, ctm);
     const pt2 = (m2, x2, y2) => [x2 * m2[0] + y2 * m2[2] + m2[4], x2 * m2[1] + y2 * m2[3] + m2[5]];
-    const p0 = pt2(a2, 0, 0), p1 = pt2(b2, 0, 0), q0 = pt2(a2, 0, tfs), q1 = pt2(b2, 0, tfs);
+    const p0 = pt2(a2, 0, 0), p1 = pt2(b3, 0, 0), q0 = pt2(a2, 0, tfs), q1 = pt2(b3, 0, tfs);
     const xs2 = [p0[0], p1[0], q0[0], q1[0]], ys2 = [p0[1], p1[1], q0[1], q1[1]];
     return {
       r: [Math.min(...xs2), Math.min(...ys2), Math.max(...xs2), Math.max(...ys2)],
@@ -41200,31 +41222,31 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
 var round3 = (v2) => Math.round(v2 * 1e3) / 1e3;
 function linesOf(pageIdx, pieces, boxes, text) {
   const out = [];
-  let chunk = [], placeable = true, r2 = null;
+  let chunk2 = [], placeable = true, r2 = null;
   const flush = () => {
-    const t2 = chunk.join("");
+    const t2 = chunk2.join("");
     if (t2.length) out.push({
       page: pageIdx,
       text: t2,
       rect: placeable && r2 ? r2.map(round3) : null
     });
-    chunk = [];
+    chunk2 = [];
     placeable = true;
     r2 = null;
   };
   for (let i2 = 0; i2 < pieces.length; i2++) {
-    const p2 = pieces[i2], b2 = boxes[i2];
-    if (p2 === "\n" && b2 === null) {
+    const p2 = pieces[i2], b3 = boxes[i2];
+    if (p2 === "\n" && b3 === null) {
       flush();
       continue;
     }
-    chunk.push(p2);
-    if (b2 === null) {
+    chunk2.push(p2);
+    if (b3 === null) {
       if (p2 !== " ") placeable = false;
       continue;
     }
     if (/^\s*$/.test(p2)) continue;
-    r2 = r2 ? [Math.min(r2[0], b2.r[0]), Math.min(r2[1], b2.r[1]), Math.max(r2[2], b2.r[2]), Math.max(r2[3], b2.r[3])] : b2.r.slice();
+    r2 = r2 ? [Math.min(r2[0], b3.r[0]), Math.min(r2[1], b3.r[1]), Math.max(r2[2], b3.r[2]), Math.max(r2[3], b3.r[3])] : b3.r.slice();
   }
   flush();
   return out.map((l2) => l2.text).join("\n") === text ? out : null;
@@ -41233,8 +41255,8 @@ function anchorOf(placed, source) {
   if (!source || !Array.isArray(source.rect) || !Number.isInteger(source.page))
     return { text: null, why: "no_rect", tier: 1 };
   if (!placed) return { text: null, why: "text_not_read", tier: 1 };
-  const [a2, b2, c2, d2] = source.rect;
-  const x0 = Math.min(a2, c2), x1 = Math.max(a2, c2), y0 = Math.min(b2, d2), y1 = Math.max(b2, d2);
+  const [a2, b3, c2, d2] = source.rect;
+  const x0 = Math.min(a2, c2), x1 = Math.max(a2, c2), y0 = Math.min(b3, d2), y1 = Math.max(b3, d2);
   const inside = (pt2) => pt2[0] >= x0 && pt2[0] <= x1 && pt2[1] >= y0 && pt2[1] <= y1;
   let out = "", gap = false;
   for (let i2 = 0; i2 < placed.pieces.length; i2++) {
@@ -41523,6 +41545,24 @@ async function extractImages(doc, pageOrder) {
   }
   return { images: all, why: null };
 }
+function extractPageBoxes(doc, pageOrder) {
+  if (!pageOrder.length) return null;
+  const boxes = [], key = /* @__PURE__ */ new Map(), of_page = [];
+  for (let idx = 0; idx < pageOrder.length; idx++) {
+    const b3 = pdfPageBox(doc, doc.dictOf({ t: "ref", n: pageOrder[idx] }));
+    if (!b3) {
+      of_page.push(null);
+      continue;
+    }
+    const k2 = JSON.stringify(b3);
+    if (!key.has(k2)) {
+      key.set(k2, boxes.length);
+      boxes.push(b3);
+    }
+    of_page.push(key.get(k2));
+  }
+  return { boxes, of_page };
+}
 var IMAGE_CONTENT_MAX_GLYPHS = 4;
 var IMAGE_CONTENT_MIN_SHARE = 0.18;
 var IMAGE_CONTENT_TEXT_GLYPHS = 22;
@@ -41546,22 +41586,22 @@ function pageBox(doc, pageMap) {
   const cb = read("CropBox");
   return cb ? clipRect(cb, mb) : mb;
 }
-var clipRect = (a2, b2) => [Math.max(a2[0], b2[0]), Math.max(a2[1], b2[1]), Math.min(a2[2], b2[2]), Math.min(a2[3], b2[3])];
+var clipRect = (a2, b3) => [Math.max(a2[0], b3[0]), Math.max(a2[1], b3[1]), Math.min(a2[2], b3[2]), Math.min(a2[3], b3[3])];
 var rectArea = (r2) => Math.max(0, r2[2] - r2[0]) * Math.max(0, r2[3] - r2[1]);
 function unionArea(rects) {
   const rs2 = rects.filter((r2) => rectArea(r2) > 0);
-  const xs2 = [...new Set(rs2.flatMap((r2) => [r2[0], r2[2]]))].sort((a2, b2) => a2 - b2);
+  const xs2 = [...new Set(rs2.flatMap((r2) => [r2[0], r2[2]]))].sort((a2, b3) => a2 - b3);
   let total = 0;
   for (let i2 = 0; i2 + 1 < xs2.length; i2++) {
     const x0 = xs2[i2], x1 = xs2[i2 + 1];
-    const spans = rs2.filter((r2) => r2[0] <= x0 && r2[2] >= x1).map((r2) => [r2[1], r2[3]]).sort((a2, b2) => a2[0] - b2[0]);
+    const spans = rs2.filter((r2) => r2[0] <= x0 && r2[2] >= x1).map((r2) => [r2[1], r2[3]]).sort((a2, b3) => a2[0] - b3[0]);
     let covered = 0, lo2 = null, hi2 = null;
-    for (const [a2, b2] of spans) {
+    for (const [a2, b3] of spans) {
       if (lo2 === null || a2 > hi2) {
         if (lo2 !== null) covered += hi2 - lo2;
         lo2 = a2;
-        hi2 = b2;
-      } else hi2 = Math.max(hi2, b2);
+        hi2 = b3;
+      } else hi2 = Math.max(hi2, b3);
     }
     if (lo2 !== null) covered += hi2 - lo2;
     total += covered * (x1 - x0);
@@ -41720,6 +41760,9 @@ async function extractPdfStructure(bytes) {
     text,
     images: imgs.images,
     ...imgs.images ? {} : { imagesWhy: imgs.why },
+    /* D-374: each page's MediaBox, top-level for `images`' reason (Tier 2
+       replaces `text`). The bound a `pdf-page` rect is checked against. */
+    pageBoxes: extractPageBoxes(doc, pageOrder),
     notes: doc.notes
   };
 }
@@ -41756,6 +41799,644 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   return acc;
 }
 
+// src/dctdecode.mjs
+var DctRefusal = class extends Error {
+  constructor(code, detail = {}) {
+    super(`${code}${detail.note ? `: ${detail.note}` : ""}`);
+    this.code = code;
+    this.detail = detail;
+  }
+};
+var SOF_PROCESS = {
+  192: "baseline",
+  193: "extended-sequential-huffman",
+  194: "progressive-huffman",
+  195: "lossless-huffman",
+  197: "differential-sequential-huffman",
+  198: "differential-progressive-huffman",
+  199: "differential-lossless-huffman",
+  201: "extended-sequential-arithmetic",
+  202: "progressive-arithmetic",
+  203: "lossless-arithmetic",
+  205: "differential-sequential-arithmetic",
+  206: "differential-progressive-arithmetic",
+  207: "differential-lossless-arithmetic"
+};
+var DECODED_SOF = /* @__PURE__ */ new Set([192, 193]);
+var ZIGZAG = Int32Array.from([
+  0,
+  1,
+  8,
+  16,
+  9,
+  2,
+  3,
+  10,
+  17,
+  24,
+  32,
+  25,
+  18,
+  11,
+  4,
+  5,
+  12,
+  19,
+  26,
+  33,
+  40,
+  48,
+  41,
+  34,
+  27,
+  20,
+  13,
+  6,
+  7,
+  14,
+  21,
+  28,
+  35,
+  42,
+  49,
+  56,
+  57,
+  50,
+  43,
+  36,
+  29,
+  22,
+  15,
+  23,
+  30,
+  37,
+  44,
+  51,
+  58,
+  59,
+  52,
+  45,
+  38,
+  31,
+  39,
+  46,
+  53,
+  60,
+  61,
+  54,
+  47,
+  55,
+  62,
+  63
+]);
+function readJpegHeader(d2) {
+  if (!(d2 instanceof Uint8Array) || d2.length < 4 || d2[0] !== 255 || d2[1] !== 216)
+    throw new DctRefusal("NOT_A_JPEG", { note: "no SOI" });
+  const qt2 = [];
+  const hts = { dc: [], ac: [] };
+  let frame = null, jfif = false, adobe = null, restart = 0;
+  let p2 = 2;
+  for (; ; ) {
+    while (p2 < d2.length && d2[p2] !== 255) p2++;
+    while (p2 < d2.length && d2[p2] === 255) p2++;
+    if (p2 >= d2.length) throw new DctRefusal("TRUNCATED", { note: "no SOS before the end of the stream" });
+    const m2 = d2[p2++];
+    if (m2 === 216 || m2 >= 208 && m2 <= 215 || m2 === 1) continue;
+    if (m2 === 217) throw new DctRefusal("TRUNCATED", { note: "EOI before SOS" });
+    if (p2 + 2 > d2.length) throw new DctRefusal("TRUNCATED", { note: "marker length past end" });
+    const len = d2[p2] << 8 | d2[p2 + 1];
+    const seg = d2.subarray(p2 + 2, p2 + len);
+    if (p2 + len > d2.length) throw new DctRefusal("TRUNCATED", { note: `marker 0x${m2.toString(16)} runs past end` });
+    if (m2 in SOF_PROCESS) {
+      if (!DECODED_SOF.has(m2))
+        throw new DctRefusal("UNSUPPORTED_PROCESS", { process: SOF_PROCESS[m2], marker: `0x${m2.toString(16)}` });
+      const precision = seg[0];
+      if (precision !== 8)
+        throw new DctRefusal("UNSUPPORTED_PRECISION", { precision });
+      const height = seg[1] << 8 | seg[2], width = seg[3] << 8 | seg[4], n2 = seg[5];
+      if (!width || !height) throw new DctRefusal("UNSUPPORTED_FRAME", { note: "zero dimension (DNL) is not read", width, height });
+      const comps = [];
+      for (let i2 = 0; i2 < n2; i2++) {
+        const b3 = 6 + i2 * 3;
+        comps.push({ id: seg[b3], h: seg[b3 + 1] >> 4, v: seg[b3 + 1] & 15, tq: seg[b3 + 2] });
+      }
+      frame = { process: SOF_PROCESS[m2], precision, width, height, comps };
+    } else if (m2 === 219) {
+      let q2 = 0;
+      while (q2 < seg.length) {
+        const pq = seg[q2] >> 4, tq = seg[q2] & 15;
+        const t2 = new Int32Array(64);
+        for (let i2 = 0; i2 < 64; i2++) {
+          t2[ZIGZAG[i2]] = pq ? seg[q2 + 1 + 2 * i2] << 8 | seg[q2 + 2 + 2 * i2] : seg[q2 + 1 + i2];
+        }
+        qt2[tq] = t2;
+        q2 += 1 + (pq ? 128 : 64);
+      }
+    } else if (m2 === 196) {
+      let q2 = 0;
+      while (q2 < seg.length) {
+        const tc2 = seg[q2] >> 4, th = seg[q2] & 15;
+        const counts = seg.subarray(q2 + 1, q2 + 17);
+        let total = 0;
+        for (let i2 = 0; i2 < 16; i2++) total += counts[i2];
+        const symbols = seg.subarray(q2 + 17, q2 + 17 + total);
+        (tc2 === 0 ? hts.dc : hts.ac)[th] = buildHuffman(counts, symbols);
+        q2 += 17 + total;
+      }
+    } else if (m2 === 204) {
+      throw new DctRefusal("UNSUPPORTED_PROCESS", { process: "arithmetic-conditioning (DAC)" });
+    } else if (m2 === 222 || m2 === 223) {
+      throw new DctRefusal("UNSUPPORTED_PROCESS", { process: "hierarchical (DHP/EXP)" });
+    } else if (m2 === 221) {
+      restart = seg[0] << 8 | seg[1];
+    } else if (m2 === 224) {
+      if (seg.length >= 5 && seg[0] === 74 && seg[1] === 70 && seg[2] === 73 && seg[3] === 70 && seg[4] === 0) jfif = true;
+    } else if (m2 === 238) {
+      if (seg.length >= 12 && seg[0] === 65 && seg[1] === 100 && seg[2] === 111 && seg[3] === 98 && seg[4] === 101) adobe = { transform: seg[11] };
+    } else if (m2 === 218) {
+      if (!frame) throw new DctRefusal("UNSUPPORTED_FRAME", { note: "SOS before SOF" });
+      const ns2 = seg[0];
+      const scomps = [];
+      for (let i2 = 0; i2 < ns2; i2++) scomps.push({ id: seg[1 + 2 * i2], td: seg[2 + 2 * i2] >> 4, ta: seg[2 + 2 * i2] & 15 });
+      return { frame, qt: qt2, hts, jfif, adobe, restart, scan: { comps: scomps, dataAt: p2 + len } };
+    }
+    p2 += len;
+  }
+}
+function buildHuffman(counts, symbols) {
+  const maxcode = new Int32Array(18).fill(-1);
+  const valptr = new Int32Array(17);
+  const mincode = new Int32Array(17);
+  let code = 0, k2 = 0;
+  for (let l2 = 1; l2 <= 16; l2++) {
+    valptr[l2] = k2;
+    mincode[l2] = code;
+    code += counts[l2 - 1];
+    k2 += counts[l2 - 1];
+    maxcode[l2] = counts[l2 - 1] ? code - 1 : -1;
+    code <<= 1;
+  }
+  maxcode[17] = 2147483647;
+  const FAST = 9;
+  const fast = new Int32Array(1 << FAST).fill(-1);
+  code = 0;
+  k2 = 0;
+  for (let l2 = 1; l2 <= FAST; l2++) {
+    for (let i2 = 0; i2 < counts[l2 - 1]; i2++, k2++) {
+      const shift = FAST - l2;
+      for (let j2 = 0; j2 < 1 << shift; j2++) fast[code << shift | j2] = l2 << 8 | symbols[k2];
+      code++;
+    }
+    code <<= 1;
+  }
+  return { maxcode, valptr, mincode, symbols: Uint8Array.from(symbols), fast, FAST };
+}
+var Bits = class {
+  constructor(d2, at2) {
+    this.d = d2;
+    this.p = at2;
+    this.acc = 0;
+    this.n = 0;
+    this.marker = null;
+    this.fed0 = 0;
+  }
+  fill() {
+    while (this.n <= 24) {
+      let b3 = 0;
+      if (this.marker === null && this.p < this.d.length) {
+        b3 = this.d[this.p];
+        if (b3 === 255) {
+          let q2 = this.p + 1;
+          while (q2 < this.d.length && this.d[q2] === 255) q2++;
+          const nx = q2 < this.d.length ? this.d[q2] : 217;
+          if (nx === 0) {
+            this.p = q2 + 1;
+          } else {
+            this.marker = nx;
+            this.p = q2 + 1;
+            b3 = 0;
+            this.fed0++;
+          }
+        } else this.p++;
+      } else {
+        b3 = 0;
+        this.fed0++;
+      }
+      this.acc = (this.acc << 8 | b3) >>> 0;
+      this.n += 8;
+    }
+  }
+  bits(k2) {
+    if (k2 === 0) return 0;
+    if (this.n < k2) this.fill();
+    this.n -= k2;
+    return this.acc >>> this.n & (1 << k2) - 1;
+  }
+  peek(k2) {
+    if (this.n < k2) this.fill();
+    return this.acc >>> this.n - k2 & (1 << k2) - 1;
+  }
+  skip(k2) {
+    this.n -= k2;
+  }
+  decode(h2) {
+    if (this.n < 16) this.fill();
+    const f2 = h2.fast[this.peek(h2.FAST)];
+    if (f2 >= 0) {
+      this.skip(f2 >> 8);
+      return f2 & 255;
+    }
+    let code = this.bits(h2.FAST), l2 = h2.FAST;
+    for (; ; ) {
+      code = code << 1 | this.bits(1);
+      l2++;
+      if (l2 > 16) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman code longer than 16 bits" });
+      if (h2.maxcode[l2] >= 0 && code <= h2.maxcode[l2]) return h2.symbols[h2.valptr[l2] + code - h2.mincode[l2]];
+    }
+  }
+  receiveExtend(s2) {
+    if (s2 === 0) return 0;
+    const v2 = this.bits(s2);
+    return v2 < 1 << s2 - 1 ? v2 - (1 << s2) + 1 : v2;
+  }
+  /** Bits handed out that were NOT in the stream — libjpeg's zero-fill past a
+   *  marker. Any at all means the data ran out before the decode did. */
+  fabricated() {
+    return Math.max(0, this.fed0 * 8 - this.n);
+  }
+  /** Consume the RSTn a restart interval ends on. */
+  restart() {
+    this.acc = 0;
+    this.n = 0;
+    this.fed0 = 0;
+    if (this.marker === null) {
+      let q2 = this.p;
+      while (q2 < this.d.length && this.d[q2] !== 255) q2++;
+      while (q2 < this.d.length && this.d[q2] === 255) q2++;
+      if (q2 < this.d.length) {
+        this.marker = this.d[q2];
+        this.p = q2 + 1;
+      }
+    }
+    const m2 = this.marker;
+    if (m2 !== null && m2 >= 208 && m2 <= 215) this.marker = null;
+    return m2;
+  }
+};
+var CONST_BITS = 13;
+var PASS1_BITS = 2;
+var F_0_298 = 2446;
+var F_0_390 = 3196;
+var F_0_541 = 4433;
+var F_0_765 = 6270;
+var F_0_899 = 7373;
+var F_1_175 = 9633;
+var F_1_501 = 12299;
+var F_1_847 = 15137;
+var F_1_961 = 16069;
+var F_2_053 = 16819;
+var F_2_562 = 20995;
+var F_3_072 = 25172;
+var D1 = CONST_BITS - PASS1_BITS;
+var R1 = 1 << D1 - 1;
+var D2 = CONST_BITS + PASS1_BITS + 3;
+var R2 = 1 << D2 - 1;
+var IDCT_LIMIT = (() => {
+  const t2 = new Uint8Array(1024);
+  for (let v2 = 0; v2 < 1024; v2++) {
+    const s2 = v2 < 512 ? v2 : v2 - 1024;
+    t2[v2] = Math.max(0, Math.min(255, s2 + 128));
+  }
+  return t2;
+})();
+var WS = new Int32Array(64);
+function idctIslow(coef, q2, out, o2, stride) {
+  const ws2 = WS;
+  for (let c2 = 0; c2 < 8; c2++) {
+    const i1 = coef[8 + c2], i2 = coef[16 + c2], i3 = coef[24 + c2], i4 = coef[32 + c2], i5 = coef[40 + c2], i6 = coef[48 + c2], i7 = coef[56 + c2];
+    if ((i1 | i2 | i3 | i4 | i5 | i6 | i7) === 0) {
+      const dc = coef[c2] * q2[c2] << PASS1_BITS;
+      for (let r2 = 0; r2 < 8; r2++) ws2[r2 * 8 + c2] = dc;
+      continue;
+    }
+    let z2 = i2 * q2[16 + c2], z3 = i6 * q2[48 + c2];
+    let z1 = (z2 + z3) * F_0_541;
+    let tmp2 = z1 + z3 * -F_1_847;
+    let tmp3 = z1 + z2 * F_0_765;
+    z2 = coef[c2] * q2[c2];
+    z3 = i4 * q2[32 + c2];
+    let tmp0 = (z2 + z3) * 8192, tmp1 = (z2 - z3) * 8192;
+    const t10 = tmp0 + tmp3, t13 = tmp0 - tmp3, t11 = tmp1 + tmp2, t12 = tmp1 - tmp2;
+    tmp0 = i7 * q2[56 + c2];
+    tmp1 = i5 * q2[40 + c2];
+    tmp2 = i3 * q2[24 + c2];
+    tmp3 = i1 * q2[8 + c2];
+    z1 = tmp0 + tmp3;
+    z2 = tmp1 + tmp2;
+    z3 = tmp0 + tmp2;
+    let z4 = tmp1 + tmp3;
+    const z5 = (z3 + z4) * F_1_175;
+    tmp0 *= F_0_298;
+    tmp1 *= F_2_053;
+    tmp2 *= F_3_072;
+    tmp3 *= F_1_501;
+    z1 *= -F_0_899;
+    z2 *= -F_2_562;
+    z3 *= -F_1_961;
+    z4 *= -F_0_390;
+    z3 += z5;
+    z4 += z5;
+    tmp0 += z1 + z3;
+    tmp1 += z2 + z4;
+    tmp2 += z2 + z3;
+    tmp3 += z1 + z4;
+    ws2[c2] = t10 + tmp3 + R1 >> D1;
+    ws2[56 + c2] = t10 - tmp3 + R1 >> D1;
+    ws2[8 + c2] = t11 + tmp2 + R1 >> D1;
+    ws2[48 + c2] = t11 - tmp2 + R1 >> D1;
+    ws2[16 + c2] = t12 + tmp1 + R1 >> D1;
+    ws2[40 + c2] = t12 - tmp1 + R1 >> D1;
+    ws2[24 + c2] = t13 + tmp0 + R1 >> D1;
+    ws2[32 + c2] = t13 - tmp0 + R1 >> D1;
+  }
+  const L2 = IDCT_LIMIT;
+  for (let r2 = 0; r2 < 8; r2++) {
+    const w2 = r2 * 8, d2 = o2 + r2 * stride;
+    let z2 = ws2[w2 + 2], z3 = ws2[w2 + 6];
+    let z1 = (z2 + z3) * F_0_541;
+    let tmp2 = z1 + z3 * -F_1_847;
+    let tmp3 = z1 + z2 * F_0_765;
+    let tmp0 = (ws2[w2] + ws2[w2 + 4]) * 8192, tmp1 = (ws2[w2] - ws2[w2 + 4]) * 8192;
+    const t10 = tmp0 + tmp3, t13 = tmp0 - tmp3, t11 = tmp1 + tmp2, t12 = tmp1 - tmp2;
+    tmp0 = ws2[w2 + 7];
+    tmp1 = ws2[w2 + 5];
+    tmp2 = ws2[w2 + 3];
+    tmp3 = ws2[w2 + 1];
+    z1 = tmp0 + tmp3;
+    z2 = tmp1 + tmp2;
+    z3 = tmp0 + tmp2;
+    let z4 = tmp1 + tmp3;
+    const z5 = (z3 + z4) * F_1_175;
+    tmp0 *= F_0_298;
+    tmp1 *= F_2_053;
+    tmp2 *= F_3_072;
+    tmp3 *= F_1_501;
+    z1 *= -F_0_899;
+    z2 *= -F_2_562;
+    z3 *= -F_1_961;
+    z4 *= -F_0_390;
+    z3 += z5;
+    z4 += z5;
+    tmp0 += z1 + z3;
+    tmp1 += z2 + z4;
+    tmp2 += z2 + z3;
+    tmp3 += z1 + z4;
+    out[d2] = L2[t10 + tmp3 + R2 >> D2 & 1023];
+    out[d2 + 7] = L2[t10 - tmp3 + R2 >> D2 & 1023];
+    out[d2 + 1] = L2[t11 + tmp2 + R2 >> D2 & 1023];
+    out[d2 + 6] = L2[t11 - tmp2 + R2 >> D2 & 1023];
+    out[d2 + 2] = L2[t12 + tmp1 + R2 >> D2 & 1023];
+    out[d2 + 5] = L2[t12 - tmp1 + R2 >> D2 & 1023];
+    out[d2 + 3] = L2[t13 + tmp0 + R2 >> D2 & 1023];
+    out[d2 + 4] = L2[t13 - tmp0 + R2 >> D2 & 1023];
+  }
+}
+var FIX16 = (x2) => Math.floor(x2 * 65536 + 0.5);
+var CR_R = new Int32Array(256);
+var CB_B = new Int32Array(256);
+var CR_G = new Float64Array(256);
+var CB_G = new Float64Array(256);
+for (let i2 = 0, x2 = -128; i2 < 256; i2++, x2++) {
+  CR_R[i2] = Math.floor((FIX16(1.402) * x2 + 32768) / 65536);
+  CB_B[i2] = Math.floor((FIX16(1.772) * x2 + 32768) / 65536);
+  CR_G[i2] = -FIX16(0.71414) * x2;
+  CB_G[i2] = -FIX16(0.34414) * x2 + 32768;
+}
+var clamp8 = (v2) => v2 < 0 ? 0 : v2 > 255 ? 255 : v2;
+function colourTransformOf(h2) {
+  const ids = h2.frame.comps.map((c2) => c2.id);
+  if (h2.jfif) return { ycc: true, why: "JFIF" };
+  if (h2.adobe) return { ycc: h2.adobe.transform !== 0, why: `Adobe APP14 transform=${h2.adobe.transform}` };
+  if (ids[0] === 82 && ids[1] === 71 && ids[2] === 66) return { ycc: false, why: "component ids R,G,B" };
+  return { ycc: true, why: "libjpeg's default for three components" };
+}
+function decodeBaselineJpeg(d2, { rotate = 0, expectComps = null, colorTransform = null } = {}) {
+  const h2 = readJpegHeader(d2);
+  const { frame, qt: qt2, hts, scan } = h2;
+  const nc2 = frame.comps.length;
+  if (nc2 !== 1 && nc2 !== 3)
+    throw new DctRefusal("UNSUPPORTED_COMPONENTS", { components: nc2 });
+  if (expectComps != null && expectComps !== nc2)
+    throw new DctRefusal("COMPONENT_MISMATCH", { declared: expectComps, stream: nc2 });
+  let colour = null;
+  if (nc2 === 3) {
+    colour = colourTransformOf(h2);
+    if (colorTransform != null && colorTransform !== 0 !== colour.ycc)
+      throw new DctRefusal("COLOR_TRANSFORM_CONFLICT", { pdf: colorTransform, stream: colour });
+  }
+  if (scan.comps.length !== nc2)
+    throw new DctRefusal("UNSUPPORTED_PROCESS", { process: "multi-scan sequential", note: `${scan.comps.length} of ${nc2} components in the first scan` });
+  const hmax = Math.max(...frame.comps.map((c2) => c2.h)), vmax = Math.max(...frame.comps.map((c2) => c2.v));
+  const sampling = frame.comps.map((c2) => `${c2.h}x${c2.v}`).join(",");
+  for (const c2 of frame.comps) {
+    const hx = hmax / c2.h, vx = vmax / c2.v;
+    const ok = (hx === 1 || hx === 2) && (vx === 1 || vx === 2) && Number.isInteger(hx) && Number.isInteger(vx);
+    if (!ok || c2.h < 1 || c2.v < 1) throw new DctRefusal("UNSUPPORTED_SAMPLING", { sampling });
+    if (!qt2[c2.tq]) throw new DctRefusal("CORRUPT_DATA", { note: `quantisation table ${c2.tq} missing` });
+  }
+  const mcux = Math.ceil(frame.width / (8 * hmax)), mcuy = Math.ceil(frame.height / (8 * vmax));
+  const planes = frame.comps.map((c2, i2) => {
+    const sc = scan.comps.find((s2) => s2.id === c2.id);
+    if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table missing for component ${c2.id}` });
+    const bw = mcux * c2.h, bh = mcuy * c2.v;
+    return {
+      c: c2,
+      i: i2,
+      dc: hts.dc[sc.td],
+      ac: hts.ac[sc.ta],
+      q: qt2[c2.tq],
+      pred: 0,
+      stride: bw * 8,
+      rows: bh * 8,
+      data: new Uint8Array(bw * 8 * bh * 8),
+      dw: Math.ceil(frame.width * c2.h / hmax),
+      dh: Math.ceil(frame.height * c2.v / vmax)
+    };
+  });
+  const br2 = new Bits(d2, scan.dataAt);
+  const coef = new Int32Array(64);
+  const decodeBlock = (pl, bx, by) => {
+    coef.fill(0);
+    const t2 = br2.decode(pl.dc);
+    const diff = br2.receiveExtend(t2);
+    pl.pred += diff;
+    coef[0] = pl.pred << 16 >> 16;
+    for (let k2 = 1; k2 < 64; ) {
+      const rs2 = br2.decode(pl.ac);
+      const r2 = rs2 >> 4, s2 = rs2 & 15;
+      if (s2 === 0) {
+        if (r2 === 15) {
+          k2 += 16;
+          continue;
+        }
+        break;
+      }
+      k2 += r2;
+      if (k2 > 63) break;
+      coef[ZIGZAG[k2]] = br2.receiveExtend(s2) << 16 >> 16;
+      k2++;
+    }
+    idctIslow(coef, pl.q, pl.data, by * 8 * pl.stride + bx * 8, pl.stride);
+  };
+  const single = nc2 === 1;
+  const totalUnits = single ? Math.ceil(frame.width / 8) * Math.ceil(frame.height / 8) : mcux * mcuy;
+  const unitsPerRow = single ? Math.ceil(frame.width / 8) : mcux;
+  let restartsLeft = h2.restart, rstExpect = 0;
+  for (let u2 = 0; u2 < totalUnits; u2++) {
+    if (h2.restart) {
+      if (restartsLeft === 0) {
+        if (br2.fabricated())
+          throw new DctRefusal("TRUNCATED", { note: "a restart interval's data ended before its last MCU" });
+        const m2 = br2.restart();
+        if (m2 !== 208 + rstExpect)
+          throw new DctRefusal("CORRUPT_DATA", { note: `expected RST${rstExpect}, saw ${m2 === null ? "none" : `0x${m2.toString(16)}`}` });
+        rstExpect = rstExpect + 1 & 7;
+        restartsLeft = h2.restart;
+        for (const pl of planes) pl.pred = 0;
+      }
+      restartsLeft--;
+    }
+    const ux = u2 % unitsPerRow, uy = (u2 - ux) / unitsPerRow;
+    if (single) decodeBlock(planes[0], ux, uy);
+    else for (const pl of planes)
+      for (let v2 = 0; v2 < pl.c.v; v2++) for (let hh = 0; hh < pl.c.h; hh++)
+        decodeBlock(pl, ux * pl.c.h + hh, uy * pl.c.v + v2);
+  }
+  if (br2.fabricated())
+    throw new DctRefusal("TRUNCATED", { note: `entropy-coded data ended before the last MCU (${br2.fabricated()} bits zero-filled)` });
+  const W2 = frame.width, H2 = frame.height;
+  const full = planes.map((pl) => upsample(pl, W2, H2, hmax, vmax));
+  const deg = ((rotate | 0) % 360 + 360) % 360;
+  if (deg % 90) throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
+  const [W22, H22] = deg === 90 || deg === 270 ? [H2, W2] : [W2, H2];
+  const out = new Uint8Array(W22 * H22 * nc2);
+  for (let y2 = 0; y2 < H2; y2++) {
+    for (let x2 = 0; x2 < W2; x2++) {
+      let X2, Y2;
+      if (deg === 0) {
+        X2 = x2;
+        Y2 = y2;
+      } else if (deg === 90) {
+        X2 = H2 - 1 - y2;
+        Y2 = x2;
+      } else if (deg === 180) {
+        X2 = W2 - 1 - x2;
+        Y2 = H2 - 1 - y2;
+      } else {
+        X2 = y2;
+        Y2 = W2 - 1 - x2;
+      }
+      const o2 = (Y2 * W22 + X2) * nc2;
+      if (nc2 === 1) {
+        out[o2] = full[0].data[y2 * full[0].stride + x2];
+        continue;
+      }
+      const a2 = full[0].data[y2 * full[0].stride + x2], b3 = full[1].data[y2 * full[1].stride + x2], c2 = full[2].data[y2 * full[2].stride + x2];
+      if (colour.ycc) {
+        out[o2] = clamp8(a2 + CR_R[c2]);
+        out[o2 + 1] = clamp8(a2 + Math.floor((CB_G[b3] + CR_G[c2]) / 65536));
+        out[o2 + 2] = clamp8(a2 + CB_B[b3]);
+      } else {
+        out[o2] = a2;
+        out[o2 + 1] = b3;
+        out[o2 + 2] = c2;
+      }
+    }
+  }
+  return {
+    width: W22,
+    height: H22,
+    comps: nc2,
+    samples: out,
+    source: {
+      width: W2,
+      height: H2,
+      process: frame.process,
+      sampling,
+      restart: h2.restart,
+      colour: colour ? colour.why + (colour.ycc ? " -> YCbCr" : " -> no transform") : "grey"
+    }
+  };
+}
+function upsample(pl, W2, H2, hmax, vmax) {
+  const hx = hmax / pl.c.h, vx = vmax / pl.c.v;
+  if (hx === 1 && vx === 1) return { data: pl.data, stride: pl.stride };
+  const { data: src, stride: ss2, dw, dh } = pl;
+  const row = (y2) => (y2 < 0 ? 0 : y2 >= dh ? dh - 1 : y2) * ss2;
+  const outW = dw * hx;
+  const dst = new Uint8Array(outW * dh * vx);
+  if (vx === 1) {
+    for (let y2 = 0; y2 < dh; y2++) {
+      const r2 = row(y2), o2 = y2 * outW;
+      h2v1Row(src, r2, dw, dst, o2);
+    }
+  } else if (hx === 1) {
+    for (let y2 = 0; y2 < dh; y2++) {
+      const r0 = row(y2);
+      for (let v2 = 0; v2 < 2; v2++) {
+        const r1 = row(v2 === 0 ? y2 - 1 : y2 + 1), bias = v2 === 0 ? 1 : 2, o2 = (2 * y2 + v2) * outW;
+        for (let x2 = 0; x2 < dw; x2++) dst[o2 + x2] = src[r0 + x2] * 3 + src[r1 + x2] + bias >> 2;
+      }
+    }
+  } else if (dw <= 2) {
+    for (let y2 = 0; y2 < dh * 2; y2++) {
+      const r2 = row(y2 >> 1), o2 = y2 * outW;
+      for (let x2 = 0; x2 < dw; x2++) dst[o2 + 2 * x2] = dst[o2 + 2 * x2 + 1] = src[r2 + x2];
+    }
+  } else {
+    for (let y2 = 0; y2 < dh; y2++) {
+      const r0 = row(y2);
+      for (let v2 = 0; v2 < 2; v2++) {
+        const r1 = row(v2 === 0 ? y2 - 1 : y2 + 1), o2 = (2 * y2 + v2) * outW;
+        let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
+        dst[o2] = thiscol * 4 + 8 >> 4;
+        dst[o2 + 1] = thiscol * 3 + nextcol + 7 >> 4;
+        let q2 = o2 + 2;
+        for (let x2 = 2; x2 < dw; x2++) {
+          lastcol = thiscol;
+          thiscol = nextcol;
+          nextcol = src[r0 + x2] * 3 + src[r1 + x2];
+          dst[q2++] = thiscol * 3 + lastcol + 8 >> 4;
+          dst[q2++] = thiscol * 3 + nextcol + 7 >> 4;
+        }
+        lastcol = thiscol;
+        thiscol = nextcol;
+        dst[q2++] = thiscol * 3 + lastcol + 8 >> 4;
+        dst[q2] = thiscol * 4 + 7 >> 4;
+      }
+    }
+  }
+  return { data: dst, stride: outW };
+}
+function h2v1Row(src, r2, dw, dst, o2) {
+  if (dw <= 2) {
+    for (let x2 = 0; x2 < dw; x2++) dst[o2 + 2 * x2] = dst[o2 + 2 * x2 + 1] = src[r2 + x2];
+    return;
+  }
+  let v2 = src[r2];
+  dst[o2] = v2;
+  dst[o2 + 1] = v2 * 3 + src[r2 + 1] + 2 >> 2;
+  let q2 = o2 + 2;
+  for (let x2 = 1; x2 < dw - 1; x2++) {
+    v2 = src[r2 + x2] * 3;
+    dst[q2++] = v2 + src[r2 + x2 - 1] + 1 >> 2;
+    dst[q2++] = v2 + src[r2 + x2 + 1] + 2 >> 2;
+  }
+  v2 = src[r2 + dw - 1];
+  dst[q2++] = v2 * 3 + src[r2 + dw - 2] + 1 >> 2;
+  dst[q2] = v2;
+}
+
 // src/pagepixels.mjs
 var LATIN12 = new TextDecoder("latin1");
 var REFUSALS = {
@@ -41771,7 +42452,8 @@ var REFUSALS = {
   UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",
   UNSUPPORTED_SAMPLES: "the image's sample layout has no decoder here",
   TRUNCATED_IMAGE_DATA: "the decoded image is short of its declared height",
-  DECODE_FAILED: "the decoder could not read the image data"
+  DECODE_FAILED: "the decoder could not read the image data",
+  UNSUPPORTED_JPEG_PROCESS: "the JPEG is not baseline (progressive, arithmetic-coded, lossless, hierarchical or not 8-bit); only baseline is decoded here"
 };
 var refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
@@ -41812,6 +42494,7 @@ async function decodeImage(doc, im, opts) {
     if (!(raw[0] === 255 && raw[1] === 216)) {
       return refuse("DECODE_FAILED", { filters, note: "DCT stream does not start with SOI" });
     }
+    if (opts.decodeDct) return decodeDct(doc, im, raw, opts.rotate || 0);
     return {
       ok: true,
       route: "passthrough-dct",
@@ -41906,17 +42589,62 @@ async function decodeImage(doc, im, opts) {
       };
     }
     if (bpc === 8) {
+      const rot = rotate8(data.subarray(0, need), im.width, im.height, comps, opts.rotate || 0);
       return {
         ok: true,
         route: comps === 3 ? "raw-samples-rgb8" : "raw-samples-grey8",
         mediaType: "image/png",
-        upright: (opts.rotate || 0) === 0,
-        bytes: await encodePng8(data.subarray(0, need), im.width, im.height, comps)
+        upright: true,
+        width: rot.width,
+        height: rot.height,
+        pixelsSha256: await sha256Hex2(rot.samples),
+        bytes: await encodePng8(rot.samples, rot.width, rot.height, comps)
       };
     }
     return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs2, bpc, comps, filters });
   }
   return refuse("UNSUPPORTED_FILTER", { filters });
+}
+var DCT_TO_REFUSAL = {
+  UNSUPPORTED_PROCESS: "UNSUPPORTED_JPEG_PROCESS",
+  UNSUPPORTED_PRECISION: "UNSUPPORTED_JPEG_PROCESS",
+  UNSUPPORTED_COMPONENTS: "UNSUPPORTED_SAMPLES",
+  COMPONENT_MISMATCH: "UNSUPPORTED_SAMPLES",
+  UNSUPPORTED_SAMPLING: "UNSUPPORTED_SAMPLES",
+  COLOR_TRANSFORM_CONFLICT: "UNSUPPORTED_SAMPLES",
+  UNSUPPORTED_ROTATION: "UNSUPPORTED_SAMPLES",
+  TRUNCATED: "TRUNCATED_IMAGE_DATA",
+  NOT_A_JPEG: "DECODE_FAILED",
+  CORRUPT_DATA: "DECODE_FAILED",
+  UNSUPPORTED_FRAME: "DECODE_FAILED"
+};
+async function decodeDct(doc, im, raw, rotate) {
+  const filters = im.filters;
+  const dict = im.obj.dict;
+  if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a DCT image is not applied here" });
+  const cs2 = im.colorSpace;
+  const expectComps = cs2 === "DeviceGray" ? 1 : cs2 === "DeviceRGB" ? 3 : cs2 === "DeviceCMYK" ? 4 : null;
+  const p2 = decodeParms(doc, dict, filters.length - 1);
+  const colorTransform = p2 ? numOf2(doc, p2.ColorTransform) : null;
+  let out;
+  try {
+    out = decodeBaselineJpeg(raw, { rotate, expectComps, colorTransform });
+  } catch (e2) {
+    if (!(e2 instanceof DctRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
+    return refuse(DCT_TO_REFUSAL[e2.code] || "DECODE_FAILED", { filters, jpeg: e2.code, ...e2.detail });
+  }
+  const bytes = await encodePng8(out.samples, out.width, out.height, out.comps);
+  return {
+    ok: true,
+    route: "decoded-dct",
+    mediaType: "image/png",
+    bytes,
+    width: out.width,
+    height: out.height,
+    upright: true,
+    pixelsSha256: await sha256Hex2(out.samples),
+    dct: { ...out.source, comps: out.comps, stream_bytes: raw.length }
+  };
 }
 var WHITE_CODES = {
   "8:00110101": 0,
@@ -42290,6 +43018,31 @@ function setBit(packed, rowBytes, x2, y2, v2) {
   if (v2) packed[i2] |= m2;
   else packed[i2] &= ~m2;
 }
+function rotate8(samples, width, height, comps, deg) {
+  const d2 = (deg % 360 + 360) % 360;
+  if (d2 === 0) return { samples, width, height };
+  if (d2 !== 90 && d2 !== 180 && d2 !== 270) throw new Error(`unsupported rotation ${deg}`);
+  const [w2, h2] = d2 === 180 ? [width, height] : [height, width];
+  const out = new Uint8Array(samples.length);
+  for (let Y2 = 0; Y2 < h2; Y2++) {
+    for (let X2 = 0; X2 < w2; X2++) {
+      let sx, sy;
+      if (d2 === 90) {
+        sx = Y2;
+        sy = height - 1 - X2;
+      } else if (d2 === 180) {
+        sx = width - 1 - X2;
+        sy = height - 1 - Y2;
+      } else {
+        sx = width - 1 - Y2;
+        sy = X2;
+      }
+      const o2 = (Y2 * w2 + X2) * comps, i2 = (sy * width + sx) * comps;
+      for (let c2 = 0; c2 < comps; c2++) out[o2 + c2] = samples[i2 + c2];
+    }
+  }
+  return { samples: out, width: w2, height: h2 };
+}
 function rotateBilevel(packed, width, height, deg) {
   const d2 = (deg % 360 + 360) % 360;
   if (d2 === 0) return { packed, width, height };
@@ -42365,13 +43118,15 @@ function chunk(type, data) {
   return out;
 }
 async function buildPng(raw, width, height, bitDepth, colorType) {
+  return buildPngFromIdat(await deflateZlib(raw), width, height, bitDepth, colorType);
+}
+function buildPngFromIdat(idat, width, height, bitDepth, colorType) {
   const ihdr = new Uint8Array(13);
   const dv = new DataView(ihdr.buffer);
   dv.setUint32(0, width);
   dv.setUint32(4, height);
   ihdr[8] = bitDepth;
   ihdr[9] = colorType;
-  const idat = await deflateZlib(raw);
   const parts = [
     new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
     chunk("IHDR", ihdr),
@@ -42410,12 +43165,36 @@ function normalisePacked(packed, width, height) {
 }
 async function encodePng8(samples, width, height, comps) {
   const rowBytes = width * comps;
-  const raw = new Uint8Array((rowBytes + 1) * height);
-  for (let y2 = 0; y2 < height; y2++) {
-    raw[y2 * (rowBytes + 1)] = 0;
-    raw.set(samples.subarray(y2 * rowBytes, (y2 + 1) * rowBytes), y2 * (rowBytes + 1) + 1);
+  const band = Math.max(1, Math.floor((1 << 20) / (rowBytes + 1)));
+  const cs2 = new CompressionStream("deflate");
+  const w2 = cs2.writable.getWriter();
+  const reading = (async () => {
+    const chunks2 = [];
+    const rd = cs2.readable.getReader();
+    for (; ; ) {
+      const { done, value } = await rd.read();
+      if (done) break;
+      chunks2.push(value);
+    }
+    return chunks2;
+  })();
+  for (let y0 = 0; y0 < height; y0 += band) {
+    const n2 = Math.min(band, height - y0);
+    const raw = new Uint8Array((rowBytes + 1) * n2);
+    for (let k2 = 0; k2 < n2; k2++) {
+      raw.set(samples.subarray((y0 + k2) * rowBytes, (y0 + k2 + 1) * rowBytes), k2 * (rowBytes + 1) + 1);
+    }
+    await w2.write(raw);
   }
-  return buildPng(raw, width, height, 8, comps === 3 ? 2 : 0);
+  await w2.close();
+  const chunks = await reading;
+  const idat = new Uint8Array(chunks.reduce((n2, c2) => n2 + c2.length, 0));
+  let o2 = 0;
+  for (const c2 of chunks) {
+    idat.set(c2, o2);
+    o2 += c2.length;
+  }
+  return buildPngFromIdat(idat, width, height, 8, comps === 3 ? 2 : 0);
 }
 
 // src/imagecrop.mjs
