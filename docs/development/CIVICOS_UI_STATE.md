@@ -50,6 +50,26 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, D-576 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/D-576` (base `origin/main` @ `5e8a65a8`, which carries UI-95), in the commit that carries this entry;
+the version number is PROVISIONAL — concurrent UI workers (UI-112, UI-108, UI-110, UI-70) may take v120 first, and
+CONDUCT renumbers at integration. SURFACE: **the `op=connect` receipt on the subject view now states when the
+derivation was CUT.**
+
+**WHAT IT CLOSES.** `connectGo` read *"The record derived N connections among the documents that concern this
+subject"* and ignored the answer's `truncated`, which `deriveConnections` (store.mjs) documents as whether the
+DERIVATION was cut. A cut derivation's receipt read as every connection through the subject when it was part of
+them — the record claiming more than it holds. When `truncated === true` the receipt now adds UI-95's sentence in
+the plane's own wording (`derivationStatement`, airun.mjs): *"The derivation was CUT by its bound after D of this
+subject's documents: the connections here are true but are part of the set through this subject, not all of it."*
+An uncut answer's receipt is unchanged. op=connect publishes `truncated` and `documents` but no `derivation.says`,
+so the sentence is composed here from those two fields rather than rendered verbatim.
+
+**TESTED THROUGH THE REAL PLANE** (`civicos-ui/test/intent-write.test.mjs`, miniflare): the bridge adds `limit:1`
+to one connect body, so the real plane cuts a real derivation after 2 documents; the cut receipt, the uncut
+receipt and the unbounded re-derivation are each asserted, with the suite's NEGATIVE CONTROL line recording three
+arms.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
