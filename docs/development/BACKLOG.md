@@ -135,6 +135,16 @@ scope: lift the containerExtent projection out of the wire block into one functi
 accepts-when: a CSV citation naming a sheet it lacks is refused by name, and its version notice reads its sheet list (moves: an undetermined skip where a refusal is owed). NEGATIVE CONTROL: call the projection on the wire path only again and the CSV refusal arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-684's worker).
 
+### D-735 · queued — **FOUR CONTROL DRIVERS HAVE DECAYED AGAINST MOVED SUBJECTS (identical at base 95fe7bc7), so their arms no longer break what they name: dec65-strength-reach arm 2 anchors on #strengthWalk's full signature (it gained captureBounds; throws mid-arm); m057-authority arm 6 hard-codes "1 cited pair(s) evaluated" (corpuscheck now evaluates 6); corpuscheck.control arm 6 rewrites a MILESTONES.md UNDECIDED row D-388 moved; m041-instrument-census arms 2/3 plant into corpora that left main or were frozen (M0-110, M0-100).** Found by M0-172's worker. — owner M0.
+order: at the head of the anchor-drift group: a control that cannot fail is worse than none (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — test-only.
+design: `docs/development/VERIFICATION.md` (a negative control must be able to fail; admitted for M0 by name).
+depends-on: M0-172 (its controlPen moves touch two of these drivers; stack on land/worker/M0-172 until it lands).
+scope: dec65-strength-reach arm 2 re-anchored on the body, not the signature (D-301's lesson); m057-authority arm 6 asserts N>=1 read from the output; corpuscheck.control arm 6 plants its own UNDECIDED row; m041-instrument-census arms 2/3 re-targeted to a corpus the census still reads. Each arm run alone fails its subject by name.
+accepts-when: each of the four drivers runs whole with 0 arms NOT as declared (moves: four drivers whose arms do not bite). NEGATIVE CONTROL: the drivers' own arms, recorded on each suite's line.
+added: 2026-09-25 · SCHEDULER #24 (id minted by M0-172's worker).
+
 ### D-646 · queued — **`nc-rec113` arm blind: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-645, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -424,6 +434,16 @@ depends-on: M0-139 (current.control's split arms 8a/8b; stack on land/worker/M0-
 scope: (a) current.test.mjs: a member whose D-15 gate hides the shared question while both projects stay visible, asserting neither producer mints for that member; point arm 8b at it. (b) conclude-project.test.mjs: purge the concluded question and the concluded-elsewhere item goes quiet; conclude-project.control.mjs gains an arm removing that guard. STATE, do not fix: other *.control.mjs drivers may declare must-fail names no assertion carries (M0-25/M0-51's census is the place).
 accepts-when: arm 8b and the new conclude-project arm each fail by name (moves: two guards with no witness). NEGATIVE CONTROL: the two arms themselves, recorded on each suite's line.
 added: 2026-09-25 · SCHEDULER #24 (id minted by M0-139's worker).
+
+### D-730 · queued — **38 CONTROL DRIVERS STILL KEEP AN UNDECLARED IN-WORKTREE PEN (pensweep IN-WORKTREE/DIRTY, pen-shaped path): 25 bio-plane (the case*/conclude-project/drive*/multicase/projection-noproject/rec170/reviewcopy .nc-* dirs, d125, d270, d277/declared-corpus, identity-claims, calibration .cpdf13-pristine, provenance-floor .m0-18-pristine, query, retirement, run-conditions), 3 agent-worker, 9 civicos-ui, tools/nc-m039.** Found by M0-172's worker. — owner M0 (UI and agent-worker paths are their owners', by DELEGATION).
+order: after D-727, with the test-trust rows; hygiene that neither cuts gate time nor unblocks product (CLAUDE.md §2) (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — test-only.
+design: `docs/development/VERIFICATION.md` (a driver cleans up after a clean run), with BOB #33's 17:12Z pen ruling as `.gitignore` and bio-plane/test/pen.mjs state it.
+depends-on: M0-172 (controlPen and the pen preamble; stack on land/worker/M0-172 until it lands).
+scope: per driver, move to controlPen(<item>) or give it one item-named .gitignore line (BOB #33); then floor pensweep's DIRTY-pen count for all *.control.mjs as it floors nc-*. STATE: VERIFICATION.md does not state the pen rule and has 2 B of budget (M0-184 is its cut).
+accepts-when: pensweep reads 0 undeclared DIRTY pens for bio-plane and tools drivers, with the floor armed (moves: 38 undeclared pens). NEGATIVE CONTROL: restore one driver's in-worktree pen and the floor fails naming it.
+added: 2026-09-25 · SCHEDULER #24 (id minted by M0-172's worker).
 
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
@@ -1101,43 +1121,3 @@ depends-on: M0-179.
 scope: pin a known-good gate-results tip in the tree, which a fresh clone's gate checks its descent from; FIRST re-measure whether any clone has met a pre-clone rewrite, and if none has, close this row as not owed with that measurement.
 accepts-when: the pin is checked by a fresh clone, OR the measurement closes the row (the measured failure it moves: none yet, which is why the measurement comes first). NEGATIVE CONTROL: a fixture tip not descending from the pin is refused by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### D-446 · queued — **`nc-m040.mjs` ARM 1 DECLARES FIVE FAILURES AND MEASURES ONE (derivation-bounds 71/1 on `main`), AND FIVE SUITES NAME INFORMATION FIXTURES `INF-…` WHERE `OBJECT_TYPES` HAS `INFO`.** The fixtures: `frontier-chunk` (D-390's), `d389-fullfetch`, `observation-content`, `observation-log`, `cap14-reused-from`. — owner M0.
-order: after M0-139, among the control-hygiene rows; after c17-batch7 lands (SCHEDULER #17, 2026-09-23; via CONDUCT #18 22:27Z (4), measured by SCHEDULER #17's verifier)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control declares what it measures; correct superseded tests, never exempt them).
-depends-on: D-443 (`integrated`; its branch moved ARM 1's anchor).
-scope: rewrite ARM 1's declaration to the measured outcome with a comment saying why the old one was wrong; rename every `INF-` fixture id to `INFO-`.
-accepts-when: `node bio-plane/test/nc-m040.mjs` reports every arm as declared, and no suite names an `INF-` id. NEGATIVE CONTROL: restore the five-failure declaration, and ARM 1 reads NOT as declared by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-449 · queued — **`project-sight.control.mjs`'s `promote-stamp-dropped` ARM CANNOT RUN: it throws SURFACE_NO_RUN (0/1), identically on `main` `02603e88`, because since REC-171 removing the stamp also breaks the harness's surfacing-run creation.** — owner M0.
-order: after D-446, among the control-hygiene rows (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (break only the thing: a control that moves a second variable refutes nothing).
-depends-on: none.
-scope: narrow the arm's patch to revisions, keeping the stamp when the base is null.
-accepts-when: the arm runs and fails as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-369 · queued — **FIVE IN-MEMORY `truncated` SHAPES ARE NEVER DRIVEN PAST THEIR CEILING: only `op=connect` has a live over-the-ceiling arm in `derivation-bounds.test.mjs`; `queueFeed`, `biasInhale`, `documentsNamingEntity` and `#backfillLegContent` are pinned by roster alone (now 10 names).** — owner RECORD.
-order: with the M0 control rows: a verification instrument (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (test through the op), with `INVESTIGATIVE-SESSION.md` §14c.
-depends-on: none.
-scope: a live driven arm per shape. In `bio-plane/test/derivation-bounds.test.mjs`.
-accepts-when: each shape is driven past its ceiling and states `truncated`. NEGATIVE CONTROL: drop a paging LIMIT in `queueFeed`, and its live arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-441 · queued — **`tools/decided.mjs` CANNOT SEE A RULING WHOSE MARKER OPENS A LINE IN TITLE CASE: `MARKER` is uppercase only, so `decided.mjs "severance"` misses Case Making's ruling and two Bob rulings read "No RULING".** — owner M0.
-order: with the M0 instrument rows; M0-97, M0-99 and D-341, which it waited on, are done (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` §"WHAT COMPOSES THE INSTRUMENTS".
-depends-on: none.
-scope: the marker admits a title-case label arm; `**Settled by:**` stays unfiled. Extend `tools/decided.test.mjs`.
-accepts-when: the three missed rulings are found. NEGATIVE CONTROL: remove the label arm, and those rulings go unfiled by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
