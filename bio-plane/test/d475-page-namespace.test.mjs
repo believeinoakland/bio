@@ -116,7 +116,9 @@ console.log("\n--- 0 · the routes that answer BEFORE the op front door, and whi
 {
   const raw = readFileSync(SRC("index.mjs"), "utf8");
   const code = stripComments(raw);                                   /* M0-155's lexer: a comment is not code */
-  const open = code.indexOf("export default {\n  async fetch(req, env) {");
+  /* RE-ANCHORED by D-629 (2026-09-25), not exempted: the request handler is no longer the module's default export
+     but `const PLANE`, which the default export wraps in the one outermost catch. The span it opens is the same. */
+  const open = code.indexOf("const PLANE = {\n  async fetch(req, env) {");
   const gate = code.indexOf("const path = url.pathname.replace(", open);   /* no regex in the anchor: the lexer blanks regex literals too */
   const span = open >= 0 && gate > open ? code.slice(open, gate) : "";
   const routes = [...span.matchAll(/url\.pathname === "([^"]*)"/g)].map((m) => m[1]);

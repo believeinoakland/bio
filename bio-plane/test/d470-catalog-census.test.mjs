@@ -568,6 +568,10 @@ const CATALOG_CENSUS = {
      CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
      1.31.0 (D-623, 2026-09-25, branch land/worker/D-623): ONE ARRIVAL, NO DEPARTURES — C-33.49 NO_PROJECT_SCOPE in ACT_SHAPE_CHECKS (renumbered from C-33.48 at c22-d623-renumber); 502 -> 503 by this suite's print on the item's tree over origin/main 5e8a65a8.
      "1.31.0": { count: 503, digest: "9ee8ba79920cbb97ca6f4b9a10875172ca6cc2a6205c8848e487014a671d1997" }, */
+  /* D-629 side, kept as history (branch row DROPPED at c22-batch30 — ours holds "1.31.0" for the union catalogue;
+     CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.31.0 (D-629, 2026-09-25, branch land/worker/D-629): TWO ARRIVALS, NO DEPARTURES — C-69.3 STORE_INTERNAL_ERROR and C-69.4 PLANE_INTERNAL_ERROR in DISPATCH_CHECKS (renumbered from C-69.2/.3 at c22-d629-renumber); 502 -> 504 by this suite's print on the item's tree over origin/main 5e8a65a8.
+     "1.31.0": { count: 504, digest: "908b2e716592d3ee40422dddef428c8cd863cccfa8326dc37792699949d490d7" }, */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -795,6 +799,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* D-615 side, kept as history — its A5 pin read 1.34.0 on its own branch (C-86.7, one arrival); ours is
    kept at c22-batch30 and CONDUCT moves this literal with the constant once. */
 /* D-623 side, kept as history — its A5 pin read 1.31.0 on its own branch (C-33.49, one arrival); ours is
+   kept at c22-batch30 and CONDUCT moves this literal with the constant once. */
+/* D-629 side, kept as history — its A5 pin read 1.31.0 on its own branch (C-69.3/C-69.4, two arrivals); ours is
    kept at c22-batch30 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives

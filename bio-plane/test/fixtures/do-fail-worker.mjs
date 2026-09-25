@@ -10,11 +10,17 @@
  * So this module is the real worker with a real store BEHIND a subclass that
  * refuses named Durable Object paths in the store's OWN failure envelope:
  *
- *     { ok: false, error: <string> }   at HTTP 500
+ *     { ok: false, reason: "STORE_INTERNAL_ERROR", code, check, translation, correlation }   at HTTP 500
  *
- * which is byte-for-byte the shape `Store.fetch`'s own catch block produces
- * (store.mjs: `return Response.json({ ok: false, error: String(e && e.stack ||
- * e) }, { status: 500 })`). Nothing here simulates the control plane, and
+ * which is the envelope `Store.fetch`'s own catch block produces, BUILT BY THE
+ * SAME FUNCTION (store.mjs `storeInternalError`) from a real thrown Error.
+ * D-629 CORRECTED THIS: the fixture used to hand-write `{ ok: false, error:
+ * "Error: … at Store.fetch" }` as a byte-for-byte copy of the old catch, which
+ * answered the caller the stack; that envelope was the disclosure D-629 closed,
+ * so a copy of it is no longer the store's shape and would have gone on
+ * testing the control plane against an envelope the store never sends. Calling
+ * the helper keeps the fixture honest when the envelope moves again.
+ * Nothing here simulates the control plane, and
  * NOTHING ON DISK IS MUTATED — `src/index.mjs` and `src/store.mjs` are imported
  * exactly as they ship, so what the suite drives is the shipped code.
  *
@@ -35,6 +41,7 @@
  * by a failure that actually happened.
  */
 import worker, { Store as RealStore } from "../../src/index.mjs";
+import { storeInternalError } from "../../src/store.mjs";
 
 export class Store extends RealStore {
   async fetch(req) {
@@ -45,9 +52,8 @@ export class Store extends RealStore {
       return Response.json({ ok: true, result: { failing: this.__failPaths } });
     }
     if ((this.__failPaths || []).includes(path))
-      /* The store's own catch-block envelope, not an invented one. */
-      return Response.json({ ok: false,
-        error: `Error: REC-52 injected Durable Object failure at /${path}\n    at Store.fetch` },
+      /* The store's own catch-block envelope, built by the store's own helper (D-629). */
+      return Response.json(storeInternalError(new Error(`REC-52 injected Durable Object failure at /${path}`), path),
         { status: 500 });
     return super.fetch(req);
   }

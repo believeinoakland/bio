@@ -238,9 +238,16 @@ t("and a refused claim claimed nothing — the right token still claims afterwar
  * ==================================================================== */
 console.log("\n--- 6. the rows' `where` resolve ---");
 const regionOf = (where) => (String(where).match(/> ([a-z0-9-]+)$/) || [])[1];
-t("every new row's `where` names a DEC-49 REGION present, opened and closed, in src/index.mjs",
-  ROWS.map(([c, r]) => [c, regionOf(r.where)]).filter(([, reg]) => !reg
-    || !INDEX_SRC.includes(`DEC-49 REGION ${reg}`) || !INDEX_SRC.includes(`END DEC-49 REGION ${reg}`)).map(([c]) => c), []);
+/* CORRECTED BY D-629 (2026-09-25), not exempted: this read every C-68/C-69 row's region out of `src/index.mjs`,
+   which was true while all five of D-278's rows fired in the control plane. D-629 added C-69.3
+   (STORE_INTERNAL_ERROR), whose smallest span is in the STORE (`src/store.mjs internalAnswer`), so "in index.mjs"
+   was an assumption about where the family's rows live rather than the rule. The rule is that the region is in the
+   file the row's `where` names, and that is what is asserted now. */
+const srcOf = (where) => { const f = (String(where).match(/^src\/([\w.-]+\.mjs)\s/) || [])[1];
+  return f === "index.mjs" ? INDEX_SRC : f ? readFileSync(new URL(`../src/${f}`, import.meta.url), "latin1") : ""; };
+t("every new row's `where` names a DEC-49 REGION present, opened and closed, in the file its `where` names",
+  ROWS.map(([c, r]) => [c, regionOf(r.where), srcOf(r.where)]).filter(([, reg, src]) => !reg
+    || !src.includes(`DEC-49 REGION ${reg}`) || !src.includes(`END DEC-49 REGION ${reg}`)).map(([c]) => c), []);
 
 console.log(`\n${fail === 0 ? "OK" : "FAILED"}  ${pass} pass, ${fail} fail`);
 } finally {

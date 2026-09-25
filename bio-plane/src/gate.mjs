@@ -200,6 +200,10 @@ export const CATALOG_VERSION = "1.31.0";
 /* D-561 side, kept as history — took 1.31.0 (D-561, 2026-09-25, branch land/worker/D-561): the new PUBLISHED_READ_CHECKS family (C-98.1..8, the public
    door's refusals at op=publishedbytes and op=publishedcase) and C-69.2 STORE_DID_NOT_ANSWER join the catalogue — nine
    arrivals, none moved or removed, MINOR on this constant's own rule. 502 -> 511 from the d470 suite's print. */
+/* D-629 side, kept as history — took 1.31.0 on its own base (D-629, 2026-09-25, branch land/worker/D-629; renumbered C-69.2/.3 -> C-69.3/.4 at c22-d629-renumber); the union's 1.31.0 (c22-batch30) names a different catalogue: TWO ARRIVALS, NO DEPARTURES — C-69.3 STORE_INTERNAL_ERROR
+   and C-69.4 PLANE_INTERNAL_ERROR joined DISPATCH_CHECKS (an op that threw answers a named code, never its stack).
+   MINOR and additive on this constant's own rule; 502 -> 504, the d470 suite's own print. If another branch in the
+   batch also moves this constant, CONDUCT takes the next number and re-reads the census on the union. */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

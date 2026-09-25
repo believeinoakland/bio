@@ -3918,7 +3918,7 @@ function dec49Attach(o) {
    reconstruct it. The Durable Object answers in exactly one envelope:
 
        { ok: true,  result: <whatever the method returned> }        // it answered
-       { ok: false, error: <stack> }                       500      // it threw
+       { ok: false, reason: "STORE_INTERNAL_ERROR", … }   500      // it threw (D-629: no stack)
        { ok: false, error: "unknown op: <op>" }            400      // no such method
        { ok: false, reason: "BAD_JSON", detail: … }        400      // unreadable body
 
@@ -3956,8 +3956,8 @@ function dec49Attach(o) {
    WHAT THE CALLER IS TOLD, and why it says so little. `storeSilent` reports
    the state of the EXCHANGE and makes no statement about the record at all,
    because there is none to make. It does NOT echo the Durable Object's
-   `error`: that field is a raw stack trace (`String(e && e.stack || e)`),
-   and every op below that can reach this refusal — verify, publishedcase,
+   `error`: that field WAS a raw stack trace (`String(e && e.stack || e)`) until
+   D-629 replaced it with a named code and a correlation id, and every op below that can reach this refusal — verify, publishedcase,
    publishedbytes, publishedmanifest, bootstrap — is reachable with NO
    credential of any kind. An anonymous stack trace is a disclosure, and a
    diagnostic a stranger cannot act on is not worth one. */
@@ -6463,7 +6463,9 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
             : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
 }
 
-export default {
+/* D-629: the control plane's request handler. It is NOT the module's default export any more: the default
+   export (at the foot of this file) wraps it in the one outermost catch, `planeInternalError`. */
+const PLANE = {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (req.method === "OPTIONS")
@@ -13878,5 +13880,39 @@ export default {
     const res = await stub.fetch(new Request(inner, { method: req.method, body: passBody }));
     const body = await res.json();
     return json({ ...body, store: storeName, tokenClass: cls }, res.status);
+  },
+};
+
+/* D-629 / DEC-49 (C-69.4) — THE CONTROL PLANE'S OUTERMOST CATCH, which it did not have. A throw anywhere in
+   `PLANE.fetch` reached the Workers runtime as an uncaught exception (the platform's own "error code: 1101"
+   page), which is no BIO answer at all; and the pass-through route directly above relayed the store's envelope
+   verbatim, which until D-629 carried the Durable Object's stack (see `storeInternalError` in store.mjs). Now a
+   throw here is logged server-side with its stack under a CORRELATION id, and the caller receives the code, the
+   canned translation and the id — no stack, no message, no path. `ok` is false and the status 500, so it
+   reads as a failure to every client, never as an answer. No named refusal passes through here: those are
+   RETURNED by `PLANE.fetch`, and a returned Response is handed back untouched. */
+function planeInternalError(e, req) {
+  const correlation = crypto.randomUUID();
+  let op = "";
+  try { const u = new URL(req.url); op = u.searchParams.get("op") || u.pathname; } catch { /* no op to name */ }
+  const answer = planeInternalAnswer(correlation);
+  /* The log line names the code by READING the answer, never by a second literal: one code, one mint site (arm G). */
+  try {
+    console.error(JSON.stringify({ event: answer.reason, correlation, op: String(op).slice(0, 200),
+                                   stack: String(e && e.stack || e) }));
+  } catch { /* a log that cannot be written never changes what the caller is told */ }
+  return json(answer, 500);
+}
+function planeInternalAnswer(correlation) {
+  /* DEC-49 REGION is-plane-internal-error */
+  return { ok: false, error: "internal error", reason: "PLANE_INTERNAL_ERROR", ...dispatchRow("PLANE_INTERNAL_ERROR"),
+           correlation };
+  /* END DEC-49 REGION is-plane-internal-error */
+}
+
+export default {
+  async fetch(req, env) {
+    try { return await PLANE.fetch(req, env); }
+    catch (e) { return planeInternalError(e, req); }
   },
 };
