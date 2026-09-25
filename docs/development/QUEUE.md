@@ -624,8 +624,8 @@ scope: measure the query time at a real instance's size; if it matters, compute 
 accepts-when: the figure is recorded with date, instrument and size, and either the fix brings it back or the record states why none is owed. NEGATIVE CONTROL: the measurement at 2,000 documents reproduces the 210 ms figure within tolerance.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-473 · running — **`.odt` AND `.odp` EXPORTS STAY UNDETERMINED FOR BYTE STABILITY: D-351's `.odt` normalisation (strip `xml:id` on `text:list`) was never re-measured over the population, because the worker's pull of CAP-11's scratch captures was refused (PII) and it did not route around the refusal.** — owner CAPTURE.
-status: running — SCHEDULER #22 03:52Z spawns WORKER D-473 (depth 2)
+### D-473 · integrated — **`.odt` AND `.odp` EXPORTS STAY UNDETERMINED FOR BYTE STABILITY: D-351's `.odt` normalisation (strip `xml:id` on `text:list`) was never re-measured over the population, because the worker's pull of CAP-11's scratch captures was refused (PII) and it did not route around the refusal.** — owner CAPTURE.
+status: integrated — SCHEDULER #22 05:58Z: tip 737913b0, GATE 367/367 GREEN (21093 assertions), tree 59cbdf3a; .odt WIDENED (normalised 6/8 stable, raw 3/8); .odp UNDETERMINED with its census target named; M-167; scratch residue 36 captures; wip/worker/D-473 is not for the train; minted D-612
 order: with the M0 measurements, after D-465: widening to `.odt` is a measurement first (SCHEDULER #17, 2026-09-24; D-351's worker via CONDUCT #19)
 milestone: M0 (a measurement)
 interface: none until widened.
@@ -635,6 +635,17 @@ scope: re-measure the `.odt` and `.odp` normalisation over a population the lane
 accepts-when: the stability figure is recorded with date, instrument and population, and the formats are widened or stated undetermined on it. NEGATIVE CONTROL: skip the `xml:id` strip, and the re-fetch pair reads unstable by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 note: 2026-09-24 by SCHEDULER #19 (D-472's worker F2, via CONDUCT #20 20:14Z): the monitor's cry-wolf survives for Google Docs and Slides (.odt, .odp) because only .ods has a measured container digest; land the .odt normalisation with an ODF_EVIDENTIARY_MEASURED row once measured, and name a census target for .odp.
+
+### D-612 · running — **EVERY REAL GOOGLE DOC EXPORT EMBEDS `Fonts/fontN.ttf`, REFERENCED BY `svg:font-face-uri`, AND D-351's MEMBER RULE REFUSES THOSE REFERENCES, so the .odt digest reads UNDETERMINED on ALL 8 real Docs (M-167) and the monitor's false "changed" alarm for Docs survives D-473.** Found by D-473's worker (05:49Z). — owner CAPTURE.
+status: running — SCHEDULER #22 05:58Z spawns WORKER D-612 (depth 2), stacked on land/worker/D-473 @ 737913b0
+order: directly after D-473, which it completes: D-473's widening reaches no real Doc until fonts are admitted (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: none unless a digest's grade changes on the wire (the integrator classifies).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` (the ODF evidentiary rule, D-351 §5: a presentational part, as styles.xml).
+depends-on: none (stacked on D-473's branch).
+scope: in `referencedMembers`, do not count an href on a font-face-uri element (by local name); Pictures/ and Object N/ references still refuse.
+accepts-when: a real-shaped .odt with Fonts/ and no image reads determined, and one with an image still refuses (moves: 8 of 8 real Docs undetermined). NEGATIVE CONTROL: count fonts again and the fonts arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-473's worker).
 
 ### D-515 · integrated — **NO COMMITTED FIXTURE IS A PDF WHERE TIER 2 GENUINELY DECODES FEWER GLYPHS THAN TIER 1, so D-501's degradation arm is proved on synthetic input only.** Found by D-501's worker (F1). — owner CONTENT-PDF.
 status: integrated — SCHEDULER #22 04:18Z: tip 24546c6b, GATE 86/86 GREEN TARGETED (6246 assertions), tree 434cb08f; M-166: 0 of 2,107 held pages degrade at tier 2, D-501's arm stays synthetic; minted D-608
