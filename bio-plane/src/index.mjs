@@ -9548,6 +9548,33 @@ export default {
            * CAP-9's reasoning unchanged, on a table I5 assigns to FRAMEWORK. */
         reading.container_extent = containerExtent;
       }
+      /* D-684 — A TEXTUAL CAPTURE THE FORMAT AXIS ALSO ITEMISES GETS ITS UNITS. The three branches
+         above are exclusive and the FORMAT wire lives in the third, so a document read as text at
+         intake — a `text/csv` body under PROFILE_TEXT_MAX — took the first or second and never reached
+         the entry that knows its sheet: no `text_units`, no `text_container`, and the store recorded a
+         capture whose container it does not hold, its cells unsearchable though the csv entry exists.
+         (A CSV over the bound took the third branch and WAS indexed; the small ones, the common case,
+         were not.) THE READING IS KEPT AS IT WAS beyond naming its container: the content-type reader
+         read the profile text and that stays what it read — `classifiedText`, the provenance digest,
+         the entities. What is added is what only the FORMAT axis can say: the units, by the one
+         `textUnitsFor` both other paths call, and the container, the key `readingFromWire` writes.
+         The bytes are the ones the profile already read WHOLE (`profileBytes`); nothing is fetched
+         twice. HTML's entry declares no `text()` and is unmoved. A throw or a refused `text()` leaves
+         the record as it was before this block — no unit, no container claimed. */
+      if (profileText && profileBytes && !multipart) {
+        const pfmt = profile.format && profile.format.format;
+        const pentry = pfmt && pfmt !== "undetermined" ? getFormat(pfmt) : null;
+        if (pentry && typeof pentry.text === "function") {
+          try {
+            const pparts = typeof pentry.parts === "function" ? await pentry.parts(profileBytes) : profileBytes;
+            const ptext = await pentry.text(pparts);
+            if (ptext && ptext.ok !== false) {
+              ({ textUnits, textUnitsOverBound } = textUnitsFor(ptext));
+              reading.text_container = pfmt;
+            }
+          } catch { /* the entry could not read what the profile read: no unit, no container claimed */ }
+        }
+      }
       /* D-536 — THE READING'S OWN PROVENANCE, at ONE site for every branch above (BOB #33, 21:25Z;
          Part II §16 "Reading provenance"): the tier and the producing member of each page, the pages
          transcribed, and a SHA-256 of the exact text the content-type reader was handed. A reading no

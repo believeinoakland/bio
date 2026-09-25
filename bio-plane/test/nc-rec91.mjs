@@ -374,6 +374,54 @@ const ARMS = {
       "            (u && u.range && typeof u.range.sheet === \"string\" && typeof u.range.range === \"string\"",
       "            (u && u.range && Number.isInteger(u.rows) /* ARMED */ && typeof u.range.sheet === \"string\" && typeof u.range.range === \"string\""),
   },
+
+  /* D-684's DECLARED CONTROL (the row's own NEGATIVE CONTROL): let the content-type
+     reader's branch short-circuit again — the block that hands a textual capture to its
+     format entry does not run, which is the tree exactly as it was before D-684. A
+     `text/csv` body then carries no unit and no container, and its cell is not found. */
+  d684shortcircuit: {
+    files: [INDEX], suite: SUBJECT,
+    why: "skip D-684's block, so a text/csv capture read as profile text never reaches the csv "
+       + "entry's text() again: no text_units, no text_container, the cell unsearchable",
+    mustFail: ["Y1: a `text/csv` capture read as text at intake",
+               "Y3: PROMOTED, it reads FULLY indexed"],
+    mustPass: "`Y2` (the profile reading is the same reading either way — the block adds, it "
+            + "does not replace) and `Y4` (HTML never reached the block), and every earlier arm",
+    patch: () => arm(INDEX,
+      "      if (profileText && profileBytes && !multipart) {",
+      "      if (false /* ARMED */ && profileText && profileBytes && !multipart) {"),
+  },
+
+  /* D-684's OVER-STRICTNESS DIRECTION: a plausible tightening — "only itemise a textual
+     capture whose format was detected with CERTAINTY" — is wrong, because a CSV has no
+     magic bytes and its detection is `likely` BY CONSTRUCTION (csv.mjs's `detect`: bytes
+     never answer). Correct work in that spelling must still be done, so the CSV arms fail. */
+  d684certain: {
+    files: [INDEX], suite: SUBJECT,
+    why: "admit the format entry only on a CERTAIN detection, so a csv (likely by construction: "
+       + "a declared type with no magic bytes) is never itemised",
+    mustFail: ["Y1: a `text/csv` capture read as text at intake",
+               "Y3: PROMOTED, it reads FULLY indexed"],
+    mustPass: "`Y2`, `Y4`, and every earlier arm",
+    patch: () => arm(INDEX,
+      "        const pentry = pfmt && pfmt !== \"undetermined\" ? getFormat(pfmt) : null;",
+      "        const pentry = pfmt && pfmt !== \"undetermined\" && profile.format.confidence === \"certain\" /* ARMED */ ? getFormat(pfmt) : null;"),
+  },
+
+  /* D-684's SCOPE ARM: claim the container for EVERY textual capture whose format was
+     detected, whether or not its entry itemises anything. HTML's entry declares no
+     `text()`, so this would tell the store an HTML reading's container is known where the
+     wire never ran — the over-reach the row's "keep the profile reading" forbids. */
+  d684overreach: {
+    files: [INDEX], suite: SUBJECT,
+    why: "write text_container for any detected format before the text() guard, so an HTML "
+       + "page's reading claims a container the format wire never read",
+    mustFail: ["Y4: SCOPE"],
+    mustPass: "`Y1`, `Y2`, `Y3` — the CSV is itemised exactly as before",
+    patch: () => arm(INDEX,
+      "        if (pentry && typeof pentry.text === \"function\") {",
+      "        if (pentry) reading.text_container = pfmt;   /* ARMED */\n        if (pentry && typeof pentry.text === \"function\") {"),
+  },
 };
 
 const want = process.argv[2];

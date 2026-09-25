@@ -85713,6 +85713,21 @@ var index_default = {
         reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
         reading.container_extent = containerExtent;
       }
+      if (profileText && profileBytes && !multipart) {
+        const pfmt = profile.format && profile.format.format;
+        const pentry = pfmt && pfmt !== "undetermined" ? getFormat(pfmt) : null;
+        if (pentry && typeof pentry.text === "function") {
+          try {
+            const pparts = typeof pentry.parts === "function" ? await pentry.parts(profileBytes) : profileBytes;
+            const ptext = await pentry.text(pparts);
+            if (ptext && ptext.ok !== false) {
+              ({ textUnits, textUnitsOverBound } = textUnitsFor(ptext));
+              reading.text_container = pfmt;
+            }
+          } catch {
+          }
+        }
+      }
       reading.provenance = await readingProvenance({
         text: classifiedText,
         chain: Array.isArray(reading.text_source) ? reading.text_source : null,
