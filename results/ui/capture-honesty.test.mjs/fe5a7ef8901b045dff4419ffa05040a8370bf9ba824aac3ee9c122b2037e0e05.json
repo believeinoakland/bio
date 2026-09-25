@@ -1,0 +1,16 @@
+{
+ "unit": "ui:capture-honesty.test.mjs",
+ "inputHash": "fe5a7ef8901b045dff4419ffa05040a8370bf9ba824aac3ee9c122b2037e0e05",
+ "verdict": "PASS",
+ "run": "6df62a750c23f723b52ed355a5040052e556b807.1790308417839.15162.json",
+ "tree": "6df62a750c23f723b52ed355a5040052e556b807",
+ "head": "5e8a65a837ec8eec9117b2828da07e8f894326c1",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 27,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "3962bd78-728d-5bf7-8cc7-23b78f091037",
+ "at": "2026-09-25T03:53:37.854Z"
+}
