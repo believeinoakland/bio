@@ -64,6 +64,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-25 · T3 · DONE: Bob approved the canon list and its three calls; at his direction the superseded `BIO_Membership_Architecture_v1.md` was removed (the only older version of a document in the tree; readable on the snapshot) · `land/bob/process-design` · next: T4
 - 2026-09-25 · T4 · architecture drafted by BOB #37: 8 layers, 50 modules in total order (4 legacy: checks, store, index, ui), every `bio-plane/src` file owned once, every declared use earlier in the order; six calls for Bob · `build/layers.md`, `build/modules.json` · next: Bob approves
 - 2026-09-25 · T4 · Bob ruled the six calls (no size limit, only a watched metric; UI is a placeholder worked on elsewhere; the checks are carried into modules, never dropped); BOB proposed layer 7 Understanding (intent, reevaluation) from Content Framework §12, in answer to Bob's question · `build/layers.md` · next: Bob rules on Understanding, then modules.json is renumbered and T4 closes
+- 2026-09-25 · T4 · an interactive view of the draft (nine layers with Understanding shown as proposed; tap a module for its uses and users; the code share of the legacy files, 76% of 158,185 lines) was published for Bob as a private artifact · https://claude.ai/artifact/CJ4jg9m9rDBeJdd84irrnX · —
 
 ## 5. Challenges identified
 
