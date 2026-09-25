@@ -109,8 +109,12 @@ const ARMS = {
      here would mean something else is reading the log behind the index's back — which is the second copy
      D-497 exists to remove. */
   "act-not-reindexed": {
-    patches: [["store.mjs", "    this.#reindexProjectSight(projectId);\n    return { ok: true, projectId, setting: want, set_by: by, reason: why, at };",
-               "    return { ok: true, projectId, setting: want, set_by: by, reason: why, at };"]],
+    /* ANCHOR MOVED 2026-09-25 by REC-150, and only the anchor: the owner's act now lapses the project's open join
+       requests between the re-derivation and the return (§7.14), so the old anchor — the call followed directly by
+       the return — no longer occurred. The patch still removes exactly the one re-derivation after the act and
+       nothing else, so the arm's subject and declaration are unchanged. */
+    patches: [["store.mjs", "    this.#reindexProjectSight(projectId);\n    /* REC-150 (§7.14, \"The request to join\"): SETTING",
+               "    /* REC-150 (§7.14, \"The request to join\"): SETTING"]],
     /* RUN 2026-09-24: 112/44, and the FIRST declaration was WRONG in both directions — recorded rather than
        smoothed, because what it got wrong is the useful part. I declared `3a:` and `6f:`, and BOTH PASSED:
        §3a is P's own owner reading P, which needs no sight of an index, and §6f is a refusal vera gets either

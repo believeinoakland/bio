@@ -3910,6 +3910,35 @@ CREATE TABLE IF NOT EXISTS project_sight (
 CREATE INDEX IF NOT EXISTS project_sight_setting ON project_sight(setting, project_id);
 -- =========================================================================
 
+-- REC-150 (Membership Architecture v2 section 7, item 7.14, "The request to join", BOB #16): a member outside a
+-- DISCOVERABLE project asks to be added. ONE ROW PER REQUEST, and the record is APPEND-ONLY AT THE FIELD: the
+-- asking fields (project, member, the name the member was shown, the comment, the date) are written once at the
+-- ask and never touched, and the closing fields (state, closed_by, closed_comment, closed_at) are written ONCE,
+-- by the one statement that moves an OPEN row to a terminal state -- every closing UPDATE carries
+-- WHERE state = 'open', so a closed row is never rewritten and nothing is ever deleted but by purge.
+-- project_name is the name AS SHOWN when the member asked: after a project goes HIDDEN the requester keeps sight
+-- of their own request, which names only what they already saw, so it must not read the live title.
+-- AT MOST ONE OPEN REQUEST PER MEMBER PER PROJECT is the partial unique index below, held by the schema and
+-- asked again by the store (which refuses by name before the index would). Keyed on project_id, a bundle id, so
+-- both purge arms clear it with the project (the project_visibility precedent).
+CREATE TABLE IF NOT EXISTS project_join_requests (
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id     TEXT NOT NULL,
+  member_id      TEXT NOT NULL,
+  project_name   TEXT,
+  comment        TEXT,
+  asked_at       TEXT NOT NULL,
+  state          TEXT NOT NULL CHECK (state IN ('open','withdrawn','granted','declined','lapsed')),
+  closed_by      TEXT,
+  closed_comment TEXT,
+  closed_at      TEXT
+);
+CREATE INDEX IF NOT EXISTS project_join_requests_project ON project_join_requests(project_id, seq);
+CREATE INDEX IF NOT EXISTS project_join_requests_member ON project_join_requests(member_id, project_id, seq);
+CREATE UNIQUE INDEX IF NOT EXISTS project_join_requests_one_open
+  ON project_join_requests(project_id, member_id) WHERE state = 'open';
+-- =========================================================================
+
 -- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
 -- blocking, DEC-20, with BIO_Content_Framework_v0_10.md section 13): the BIAS DEBT a run carries once the lens it
 -- was formed under has moved. ONE ROW PER RUN, keyed by the run and nothing else, so the sweep is idempotent by
@@ -4420,6 +4449,7 @@ __export(bio_checks_exports, {
   PER_ITEM_CHECKS: () => PER_ITEM_CHECKS,
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
+  PROJECT_JOIN_REQUEST_CHECKS: () => PROJECT_JOIN_REQUEST_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
   PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
@@ -13324,6 +13354,53 @@ var PROJECT_VISIBILITY_CHECKS = {
     translation: "The list of projects you can ask to join is for a signed-in member. Sign in as yourself to see it."
   }
 };
+var PROJECT_JOIN_REQUEST_CHECKS = {
+  PROJECT_REQUEST_NEEDS_A_MEMBER: {
+    check: "C-95.1",
+    where: "src/store.mjs projectRequest > is-join-request-ask",
+    translation: "Asking to join a project, withdrawing that request and reading your own requests are things a signed-in member does for themselves. Sign in as yourself to do it. Nothing was changed."
+  },
+  PROJECT_REQUEST_NOT_OUTSIDE: {
+    check: "C-95.2",
+    where: "src/store.mjs projectRequest > is-join-request-ask",
+    translation: "You can already see this project, so there is nothing to ask. If you were invited, join it with its checkbox. Nothing was changed."
+  },
+  PROJECT_REQUEST_ALREADY_OPEN: {
+    check: "C-95.3",
+    where: "src/store.mjs projectRequest > is-join-request-ask",
+    translation: "You already have a request open to join this project. Its owners answer it; you can withdraw it and ask again. Nothing was changed."
+  },
+  PROJECT_REQUEST_NONE_OPEN: {
+    check: "C-95.4",
+    where: "src/store.mjs projectRequestWithdraw > is-join-request-withdraw",
+    translation: "There is no open request to join here to act on. It may already have been answered, withdrawn or lapsed. Nothing was changed."
+  },
+  PROJECT_REQUEST_ANSWER_NOT_THE_OWNER: {
+    check: "C-95.5",
+    where: "src/store.mjs projectRequestAnswer > is-join-request-answer",
+    translation: "Only an owner of this project can grant or decline a request to join it. Administrators see requests and answer none. Nothing was changed."
+  },
+  PROJECT_REQUEST_UNKNOWN_ANSWER: {
+    check: "C-95.6",
+    where: "src/store.mjs projectRequestAnswer > is-join-request-answer",
+    translation: "A request to join is either granted or declined, and nothing else. Choose one of the two. Nothing was changed."
+  },
+  PROJECT_REQUEST_REQUESTER_INACTIVE: {
+    check: "C-95.7",
+    where: "src/store.mjs projectRequestAnswer > is-join-request-answer",
+    translation: "The member who asked is no longer active, so they cannot be invited. The request stays open; you can decline it. Nothing was changed."
+  },
+  PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT: {
+    check: "C-95.8",
+    where: "src/store.mjs projectRequestAnswer > is-join-request-answer",
+    translation: "The member who asked is already a participant of this project, so granting would invite nobody new. You can decline the request, or they can withdraw it. Nothing was changed."
+  },
+  PROJECT_REQUESTS_NOT_VISIBLE: {
+    check: "C-95.9",
+    where: "src/store.mjs projectRequests > is-join-requests-project",
+    translation: "A project's requests to join are seen by the people who asked, its owners and administrators. You can read your own requests without naming a project."
+  }
+};
 var CASE_AUTHORITY_CHECKS = {
   CASE_SIGNER_NOT_AN_OWNER: {
     check: "C-57.1",
@@ -15654,7 +15731,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.29.0";
+var CATALOG_VERSION = "1.31.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -59842,6 +59919,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_visibility WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_sight WHERE project_id=?`, bundleId);
+        this.sql.exec(`DELETE FROM project_join_requests WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM bias_adoptions WHERE scope_id=?`, bundleId);
         this.sql.exec(`DELETE FROM queue_state WHERE case_id=?`, bundleId);
         this.sql.exec(`DELETE FROM published_edges WHERE from_bundle=? OR to_bundle=?`, bundleId, bundleId);
@@ -59862,6 +59940,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM project_owner_votes`);
         this.sql.exec(`DELETE FROM project_visibility`);
         this.sql.exec(`DELETE FROM project_sight`);
+        this.sql.exec(`DELETE FROM project_join_requests`);
         this.sql.exec(`DELETE FROM case_documents WHERE ratified_at IS NULL`);
         this.sql.exec(`DELETE FROM case_exclusions WHERE NOT EXISTS (SELECT 1 FROM case_documents d
                          WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)`);
@@ -61312,7 +61391,16 @@ ${words}`;
       at
     );
     this.#reindexProjectSight(projectId);
-    return { ok: true, projectId, setting: want, set_by: by, reason: why, at };
+    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at) : 0;
+    return {
+      ok: true,
+      projectId,
+      setting: want,
+      set_by: by,
+      reason: why,
+      at,
+      ...want === "hidden" ? { requests_lapsed: lapsed } : {}
+    };
   }
   /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
    *  founder: §7.14, "administrators and the founder see the setting and its history"). A READ, so it does not
@@ -61339,9 +61427,10 @@ ${words}`;
    *  else. A hidden project is never in it, so its absence here is one answer for "hidden" and "does not
    *  exist". Every row is asked through `#sight` — the one predicate — and listed only at EXISTENCE, so a
    *  project this caller can see fully (it is in it, or it is an administrator) is not listed as one to join.
-   *  THE REQUEST LIFECYCLE IS NOT BUILT (item 7.14's decomposition, step 2): no request can exist yet, so
-   *  `request` is null on every row and the answer says why rather than letting null read as a fact about the
-   *  caller. A viewer that names no member has no directory: it is refused by name, never answered empty. */
+   *  REC-150 BUILT THE REQUEST (item 7.14's decomposition, step 2): `request` is the state of the caller's own
+   *  latest request to that project, and null only where it has never asked — so null is now a fact about the
+   *  caller, and the `requests: "NOT_BUILT…"` field that said otherwise is gone. A viewer that names no member has
+   *  no directory: it is refused by name, never answered empty. */
   projectDirectory({ viewer = null, limit = null } = {}) {
     const gate = viewerPredicate(viewer);
     const member = gate.member;
@@ -61356,14 +61445,22 @@ ${words}`;
       );
     const cap = Math.max(1, Math.min(Number(limit) || _Store.PROJECT_DIRECTORY_LIMIT, _Store.PROJECT_DIRECTORY_LIMIT));
     const projects = this.#rows(
-      `SELECT b.bundle_id AS id, b.title
+      `SELECT b.bundle_id AS id, b.title, r.state AS rstate, r.asked_at AS rasked, r.closed_at AS rclosed
          FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
+         LEFT JOIN project_join_requests r
+           ON r.seq = (SELECT MAX(r2.seq) FROM project_join_requests r2
+                        WHERE r2.member_id = ? AND r2.project_id = b.bundle_id)
         WHERE b.object_type = 'project' AND s.setting = 'discoverable' AND NOT (${gate.sql})
         ORDER BY b.bundle_id
         LIMIT ?`,
+      member,
       ...gate.args,
       cap + 1
-    ).map((r) => ({ id: r.id, name: r.title ?? null, request: null }));
+    ).map((r) => ({
+      id: r.id,
+      name: r.title ?? null,
+      request: r.rstate ? { state: r.rstate, asked: r.rasked, closed: r.rclosed ?? null } : null
+    }));
     const truncated = projects.length > cap;
     const page = truncated ? projects.slice(0, cap) : projects;
     return {
@@ -61375,8 +61472,7 @@ ${words}`;
          is outside, in `bundle_id` order, and a caller who needs the rest lowers `limit` and asks
          again from what it already holds — the order is stable, so a page means the same thing twice. */
       limit: cap,
-      truncated,
-      requests: "NOT_BUILT: the request to join is not built yet (Membership Architecture v2 \xA77.14, step 2), so no request exists and `request` is null on every row."
+      truncated
     };
   }
   /* D-479 — THE DIRECTORY'S PAGE SIZE (§7.14 "The directory"; SCHEDULER #17's finding on REC-149, 2026-09-24).
@@ -61388,6 +61484,331 @@ ${words}`;
      teaches people to ignore it. It is a CEILING, not a target — a caller may ask for less and an over-ask is
      answered here, with the ceiling published, so nobody is told they got more than they did. */
   static PROJECT_DIRECTORY_LIMIT = 200;
+  /* ===== REC-150 — THE REQUEST TO JOIN (Membership v2 §7, item 7.14, "The request to join"; step 2 of its
+   * decomposition, on REC-149's EXISTENCE level) =====
+   *
+   * Bob, 2026-09-18: *"somebody who sees the project can ask to be added as a member"*. The lifecycle, and where
+   * each clause of the design lands:
+   *   ASK       `projectRequest` — a member SESSION at EXISTENCE sight (uninvited, active, not a participant), at
+   *             most ONE OPEN request per member per project, an optional short comment (§7.6's precedent). A
+   *             hidden project, or one the caller cannot see, is answered `#noSuchProject` byte for byte.
+   *   WITHDRAW  `projectRequestWithdraw` — the requester's own open request. After it they may ask again.
+   *   ANSWER    `projectRequestAnswer` — an OWNER's (§7.2: only owners invite). GRANT IS AN INVITATION: it writes
+   *             the participation `invited` with `invited_by` = the granting owner, exactly the row `projectInvite`
+   *             writes, and NEVER `joined` — joining is the member's own act by the checkbox (§7.4), and a grant
+   *             that wrote `joined` would make the owner's act the member's. DECLINE is recorded with an optional
+   *             comment. Administrators and the founder see requests (§7.3) and answer none.
+   *   LAPSE     `#lapseJoinRequests`, from `projectVisibilitySet` — setting a project HIDDEN lapses every open
+   *             request to it, recorded.
+   *   READ      `projectRequests` — a project's requests to its owners and administrators; with no project, the
+   *             caller's OWN requests, which it keeps sight of after a lapse, naming only what it already saw.
+   * The record is `project_join_requests` (schema.mjs, REC-150's block): append-only at the field. */
+  static JOIN_REQUEST_ANSWERS = ["grant", "decline"];
+  /* The member a request is ABOUT is the server-stamped `by` (PROJECT_ACTIONS), never a name the caller supplies;
+     a machine credential stamps `class:<cls>` and names nobody, so it resolves to no member and is refused. */
+  #activeMemberRow(memberId) {
+    if (memberId === null || memberId === void 0 || String(memberId).startsWith(MACHINE_CLASS_PREFIX)) return null;
+    if (memberId === _Store.ROOT_ADMIN) return { member_id: _Store.ROOT_ADMIN, handle: null, status: "active" };
+    const m = this.#one(`SELECT member_id, handle, status FROM members WHERE member_id=?`, memberId);
+    return m && m.status === "active" ? m : null;
+  }
+  /* THE PERSON ASKING: the stamped `by` names an active member AND the stamped viewer names the SAME person — the
+     control plane stamps both from one session, so a disagreement is a caller that is not a member session (an
+     `ai` credential stamps its principal as viewer and `class:ai` as `by`) and asks nothing. The founder's viewer
+     is the bare `admin` (index.mjs, the founder's session), `viewerPredicate`'s operator spelling, so it is
+     matched by that spelling; every other member by `viewerPredicate`'s own parse, never a second one. */
+  #requester(by, viewer) {
+    const me = this.#activeMemberRow(by);
+    if (!me) return null;
+    if (me.member_id === _Store.ROOT_ADMIN) return viewer === _Store.ROOT_ADMIN ? me : null;
+    return viewerPredicate(viewer).member === me.member_id ? me : null;
+  }
+  #openJoinRequest(projectId, memberId) {
+    return this.#one(`SELECT seq, comment, asked_at FROM project_join_requests
+                       WHERE project_id=? AND member_id=? AND state='open'`, projectId, memberId);
+  }
+  /* THE ONE STATEMENT THAT CLOSES A REQUEST. Every terminal state is written here, and only an OPEN row moves:
+     the `WHERE state='open'` is what makes the closing fields write-once, so an answered request cannot be
+     answered twice and a withdrawn one cannot then be granted. Returns the number of rows closed. */
+  #closeJoinRequests(projectId, memberId, state, by, comment, at) {
+    const before = this.#one(
+      `SELECT COUNT(*) AS n FROM project_join_requests
+                               WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
+      projectId,
+      memberId,
+      memberId
+    ).n;
+    this.sql.exec(
+      `UPDATE project_join_requests SET state=?, closed_by=?, closed_comment=?, closed_at=?
+                    WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
+      state,
+      by,
+      comment,
+      at,
+      projectId,
+      memberId,
+      memberId
+    );
+    return before;
+  }
+  #lapseJoinRequests(projectId, by, at) {
+    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at);
+  }
+  static #requestComment(comment) {
+    return comment === null || comment === void 0 || String(comment).trim() === "" ? null : String(comment).slice(0, 280);
+  }
+  /** REC-150 — ASK TO JOIN (§7.14 "Who may ask"). The one act a member at EXISTENCE may take. Sight decides
+   *  first and says nothing a caller did not already know: NONE (absent, hidden, or not a project the caller can
+   *  see) is `#noSuchProject` byte for byte; FULL (a participant, an administrator, the founder) is refused
+   *  positionally, since that caller can already see the project. Only at EXISTENCE is a request written. */
+  projectRequest({ projectId, comment = null, by, viewer = null } = {}) {
+    const refusal7 = (code, detail, extra = {}) => {
+      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        project: projectId ?? null,
+        ...extra
+      };
+    };
+    const me = this.#requester(by, viewer);
+    if (!me)
+      return refusal7(
+        "PROJECT_REQUEST_NEEDS_A_MEMBER",
+        "asking to join a project is a signed-in member's own act (Membership Architecture v2 \xA77.14). A credential with no active member behind it asks nothing. Nothing was written."
+      );
+    const b = this.#one(`SELECT object_type, title FROM bundles WHERE bundle_id=?`, projectId);
+    const sight = b && b.object_type === "project" ? this.#sight(projectId, viewer) : _Store.SIGHT_NONE;
+    if (sight === _Store.SIGHT_NONE) return _Store.#noSuchProject(projectId);
+    if (sight === _Store.SIGHT_FULL)
+      return refusal7(
+        "PROJECT_REQUEST_NOT_OUTSIDE",
+        "you can already see this project, so there is nothing to ask: a participant is already in it (an invited one joins by the checkbox, \xA77.4), and an administrator's sight of every project is not a position in any of them (\xA77.3). Nothing was written."
+      );
+    const open = this.#openJoinRequest(projectId, me.member_id);
+    if (open)
+      return refusal7(
+        "PROJECT_REQUEST_ALREADY_OPEN",
+        "you already have an open request to join this project. One is open at a time: withdraw it to ask again. Nothing was written.",
+        { asked: open.asked_at }
+      );
+    const c = _Store.#requestComment(comment);
+    const at = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(
+      `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
+       VALUES (?,?,?,?,?,'open')`,
+      projectId,
+      me.member_id,
+      b.title ?? null,
+      c,
+      at
+    );
+    return {
+      ok: true,
+      projectId,
+      name: b.title ?? null,
+      state: "open",
+      comment: c,
+      asked: at,
+      detail: "your request is open. The project's owners answer it; until they do it stays open."
+    };
+  }
+  /** REC-150 — WITHDRAW (§7.14: "The requester may withdraw an open request"). The requester's own act on their
+   *  own record, so it asks no sight of the project: the request is what the caller names, and a caller with no
+   *  open request to that id is answered ONE way whether the project is discoverable, hidden or absent. */
+  projectRequestWithdraw({ projectId, by, viewer = null } = {}) {
+    const refusal7 = (code, detail) => {
+      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        project: projectId ?? null
+      };
+    };
+    const me = this.#requester(by, viewer);
+    if (!me)
+      return refusal7(
+        "PROJECT_REQUEST_NEEDS_A_MEMBER",
+        "withdrawing a request to join is the requester's own act, and a credential with no active member behind it made none. Nothing was written."
+      );
+    if (!this.#openJoinRequest(projectId, me.member_id))
+      return refusal7(
+        "PROJECT_REQUEST_NONE_OPEN",
+        "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written."
+      );
+    const at = (/* @__PURE__ */ new Date()).toISOString();
+    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at);
+    return { ok: true, projectId, state: "withdrawn", closed: at };
+  }
+  /** REC-150 — AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act: a member at
+   *  EXISTENCE gets C-70.1, a caller who cannot see the project the absent answer, and only then is ownership
+   *  asked — through `#isProjectOwner`, §7's one owner predicate, so an administrator, the founder and every
+   *  machine credential are refused by name. GRANT writes `invited`, with `invited_by` the granting owner — never
+   *  `joined` (§7.4: joining is the member's own act). DECLINE is recorded with the owner's optional comment. */
+  projectRequestAnswer({ projectId, handle, answer, comment = null, by, viewer = null } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    {
+      const existence = b ? this.#existenceAct(projectId, viewer) : null;
+      if (existence) return existence;
+    }
+    if (!b || !this.#rosterInSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    const want = String(answer ?? "");
+    const refusal7 = (code, detail, extra = {}) => {
+      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        project: projectId,
+        ...extra
+      };
+    };
+    if (!this.#isProjectOwner(projectId, by))
+      return refusal7(
+        "PROJECT_REQUEST_ANSWER_NOT_THE_OWNER",
+        `a request to join ${String(projectId).slice(0, 80)} is answered by its OWNERS (Membership Architecture v2 \xA77.14; only owners invite, \xA77.2), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one of them. Administrators see requests and answer none. Nothing was written.`
+      );
+    if (!_Store.JOIN_REQUEST_ANSWERS.includes(want))
+      return refusal7(
+        "PROJECT_REQUEST_UNKNOWN_ANSWER",
+        `${JSON.stringify(want.slice(0, 40))} is not an answer: a request is granted or declined, and nothing else. Nothing was written.`
+      );
+    const target = this.#memberByHandle(handle);
+    const open = target ? this.#openJoinRequest(projectId, target.member_id) : null;
+    if (!open)
+      return refusal7(
+        "PROJECT_REQUEST_NONE_OPEN",
+        `${JSON.stringify(String(handle ?? "").slice(0, 80))} has no open request to join this project, so there is nothing to answer. Nothing was written.`,
+        { handle: handle ?? null }
+      );
+    if (want === "grant" && target.status !== "active")
+      return refusal7(
+        "PROJECT_REQUEST_REQUESTER_INACTIVE",
+        `${JSON.stringify(target.handle)} is not an active member, and a grant is an invitation (\xA77.2), which goes to an active member. The request stays open. Nothing was written.`,
+        { handle: target.handle }
+      );
+    if (want === "grant" && this.#participation(projectId, target.member_id))
+      return refusal7(
+        "PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT",
+        `${JSON.stringify(target.handle)} is already a participant of this project, so a grant would invite nobody new. The request stays open: decline it, or the requester withdraws it. Nothing was written.`,
+        { handle: target.handle }
+      );
+    const c = _Store.#requestComment(comment);
+    const at = (/* @__PURE__ */ new Date()).toISOString();
+    if (want === "grant") {
+      this.sql.exec(
+        `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
+         VALUES (?,?,'invited',0,?,?,?)`,
+        projectId,
+        target.member_id,
+        by,
+        at,
+        at
+      );
+    }
+    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at);
+    return {
+      ok: true,
+      projectId,
+      handle: target.handle,
+      state: want === "grant" ? "granted" : "declined",
+      comment: c,
+      closed: at,
+      ...want === "grant" ? {
+        participation: "invited",
+        detail: "granted as an invitation: the member is INVITED, and joins by the checkbox (\xA77.4)."
+      } : {}
+    };
+  }
+  /** REC-150 — WHO SEES A REQUEST (§7.14): the requester (their own, always), the project's owners, and
+   *  administrators; not other participants, because a pending requester is not a participant (§7.8).
+   *  WITH `projectId`: that project's requests, to an owner or an administrator (the founder included), after
+   *  sight — at EXISTENCE C-70.1 (a read naming the project's own id, BOB #32's ruling (a)), without sight the
+   *  absent answer. WITHOUT it: the caller's OWN requests, every project and every state, each naming the project
+   *  by the id and the name the caller was shown when asking — so a request LAPSED by a project going hidden is
+   *  still the requester's to read, and names nothing they had not already seen. Its answering owner is NOT in
+   *  the requester's view: who owns a project is contents (§7.14 "DISCOVERABLE adds ONE thing"). */
+  projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {
+    const cap = Math.max(1, Math.min(Number(limit) || _Store.PROJECT_REQUESTS_LIMIT, _Store.PROJECT_REQUESTS_LIMIT));
+    const refusal7 = (code, detail) => {
+      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        project: projectId ?? null
+      };
+    };
+    if (projectId === null || projectId === void 0 || projectId === "") {
+      const me = this.#requester(by, viewer);
+      if (!me)
+        return refusal7(
+          "PROJECT_REQUEST_NEEDS_A_MEMBER",
+          "a member's own requests to join are read by that member, signed in. A credential with no active member behind it has made none."
+        );
+      const mine = this.#rows(
+        `SELECT project_id AS project, project_name AS name, comment, state, asked_at AS asked,
+                closed_comment, closed_at AS closed
+           FROM project_join_requests WHERE member_id=? ORDER BY seq LIMIT ?`,
+        me.member_id,
+        cap + 1
+      );
+      const mineCut = mine.length > cap;
+      const minePage = mineCut ? mine.slice(0, cap) : mine;
+      return { ok: true, own: true, requests: minePage, count: minePage.length, limit: cap, truncated: mineCut };
+    }
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    {
+      const existence = b ? this.#existenceAct(projectId, viewer) : null;
+      if (existence) return existence;
+    }
+    if (!b || !this.#inSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    if (!this.#isProjectOwner(projectId, by) && !this.#isAdminMember(by))
+      return refusal7(
+        "PROJECT_REQUESTS_NOT_VISIBLE",
+        "a project's requests to join are seen by the requester, the project's owners and administrators (Membership Architecture v2 \xA77.14), and not by other participants: a pending requester is not a participant (\xA77.8). Your own requests are read without naming a project."
+      );
+    const theirs = this.#rows(
+      `SELECT m.handle, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
+              r.closed_comment, r.closed_at AS closed
+         FROM project_join_requests r JOIN members m ON m.member_id = r.member_id
+         LEFT JOIN members cb ON cb.member_id = r.closed_by
+        WHERE r.project_id=? ORDER BY r.seq LIMIT ?`,
+      projectId,
+      cap + 1
+    );
+    const theirsCut = theirs.length > cap;
+    const theirsPage = theirsCut ? theirs.slice(0, cap) : theirs;
+    return {
+      ok: true,
+      own: false,
+      projectId,
+      requests: theirsPage,
+      count: theirsPage.length,
+      limit: cap,
+      truncated: theirsCut
+    };
+  }
+  /* REC-150 — THE REQUESTS READ'S PAGE SIZE, a CHOSEN CONSTANT and never a finding, declared BELOW the method
+     (REC-116's finding) and `PROJECT_DIRECTORY_LIMIT`'s reasoning: a list a person reads to answer or to recall
+     their own asks, generous enough that a legitimate caller rarely meets it, published whenever it cuts. */
+  static PROJECT_REQUESTS_LIMIT = 200;
   /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
      Their positional half is `by`, and they have always been driven straight at the store by callers
      that are not requests (setup, fixtures, the store's own suites) — the same population
@@ -77053,6 +77474,33 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by")
         }),
+        /* REC-150 (Membership v2 §7.14, the request to join): `by` and `viewer` are the control plane's stamps
+           (PROJECT_ACTIONS for the three acts; the viewer stamp and the `by` stamp for the read). */
+        projectrequest: () => this.projectRequest({
+          projectId: url.searchParams.get("projectId"),
+          comment: url.searchParams.get("comment"),
+          by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        projectrequestwithdraw: () => this.projectRequestWithdraw({
+          projectId: url.searchParams.get("projectId"),
+          by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        projectrequestanswer: () => this.projectRequestAnswer({
+          projectId: url.searchParams.get("projectId"),
+          handle: url.searchParams.get("handle"),
+          answer: url.searchParams.get("answer"),
+          comment: url.searchParams.get("comment"),
+          by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        projectrequests: () => this.projectRequests({
+          projectId: url.searchParams.get("projectId"),
+          by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer"),
+          limit: url.searchParams.get("limit")
+        }),
         registeraudit: () => this.registerAudit(),
         /* REC-175: the digest census, read-only (see `digestCensus`). */
         digestcensus: () => this.digestCensus({ limit: url.searchParams.get("limit") }),
@@ -77323,6 +77771,14 @@ var OPS = {
   projectvisibilityset: { classes: ["admin", "member", "probe"], mutating: true },
   projectvisibility: { classes: ["admin", "member", "probe"], mutating: false },
   projectdirectory: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-150 (Membership v2 §7.14, the request to join): ASK and WITHDRAW are a member session's own acts (the store
+     refuses a credential with no active member behind it, C-95.1); ANSWER — grant, which writes `invited`, or
+     decline — is an OWNER's (C-95.5 for everyone else, administrators and machines included); the read serves a
+     project's requests to its owners and administrators, and a member its own. */
+  projectrequest: { classes: ["admin", "member", "probe"], mutating: true },
+  projectrequestwithdraw: { classes: ["admin", "member", "probe"], mutating: true },
+  projectrequestanswer: { classes: ["admin", "member", "probe"], mutating: true },
+  projectrequests: { classes: ["admin", "member", "probe"], mutating: false },
   /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
      tell a group what a change would take BEFORE they start one. op=adminarith
      is the same thing for section 4.7, and the two differ at n=2 on purpose. */
@@ -78503,7 +78959,12 @@ var PROJECT_ACTIONS = [
   "projectfork",
   "projectownerrescue",
   /* REC-149: the owner's §7.14 setting — `by` and `viewer` stamped like every roster act. */
-  "projectvisibilityset"
+  "projectvisibilityset",
+  /* REC-150: §7.14's request to join — the requester's two acts and the owner's answer,
+     each needing the SERVER's `by` (who asks, who answers) and `viewer` (at what sight). */
+  "projectrequest",
+  "projectrequestwithdraw",
+  "projectrequestanswer"
 ];
 var GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];
 var IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
@@ -79120,6 +79581,11 @@ var NEEDS = {
   projectownerrescue: null,
   /* REC-149: §7.14's setting is an owner's act over participation-level policy, governed by §7 and not §5. */
   projectvisibilityset: null,
+  /* REC-150: §7.14's request to join is participation, governed by §7 and not §5 — the same reason as the roster
+     acts: asking to be added needs no working capability, and answering is an owner's position. */
+  projectrequest: null,
+  projectrequestwithdraw: null,
+  projectrequestanswer: null,
   /* The one participation op that DOES carry a capability, because a fork
      creates a project. Without this any participant creates projects they were
      not trusted to create, which is create_projects defeated by a button. */
@@ -84384,7 +84850,10 @@ var index_default = {
       /* REC-149: the setting's read and the directory decide by the caller's SIGHT
          (Membership v2 §7.14), so both take the stamp; each fails closed without it. */
       "projectvisibility",
-      "projectdirectory"
+      "projectdirectory",
+      /* REC-150: the requests read decides by the caller's SIGHT of the project it
+         names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
+      "projectrequests"
     ];
     if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
@@ -84478,7 +84947,7 @@ var index_default = {
         tokenClass: cls,
         detail: `the group's display name and its domain claim are set by a named administrator's own signed-in session, and the record names who set each one (Publication \xA77). The credential that asked is the operator's \`${cls}\`-class bearer token, which holds no place on the roster. Nothing was changed.`
       }, 403);
-    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || CUSTODIAL_ACTIONS.includes(op))
+    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || op === "projectrequests" || CUSTODIAL_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (IDENTITY_ACTIONS.includes(op)) {
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);

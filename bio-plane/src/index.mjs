@@ -457,6 +457,14 @@ const OPS = {
   projectvisibilityset: { classes: ["admin", "member", "probe"], mutating: true  },
   projectvisibility:    { classes: ["admin", "member", "probe"], mutating: false },
   projectdirectory:     { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-150 (Membership v2 §7.14, the request to join): ASK and WITHDRAW are a member session's own acts (the store
+     refuses a credential with no active member behind it, C-95.1); ANSWER — grant, which writes `invited`, or
+     decline — is an OWNER's (C-95.5 for everyone else, administrators and machines included); the read serves a
+     project's requests to its owners and administrators, and a member its own. */
+  projectrequest:         { classes: ["admin", "member", "probe"], mutating: true  },
+  projectrequestwithdraw: { classes: ["admin", "member", "probe"], mutating: true  },
+  projectrequestanswer:   { classes: ["admin", "member", "probe"], mutating: true  },
+  projectrequests:        { classes: ["admin", "member", "probe"], mutating: false },
   /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
      tell a group what a change would take BEFORE they start one. op=adminarith
      is the same thing for section 4.7, and the two differ at n=2 on purpose. */
@@ -1754,7 +1762,10 @@ const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projec
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue",
                          /* REC-149: the owner's §7.14 setting — `by` and `viewer` stamped like every roster act. */
-                         "projectvisibilityset"];
+                         "projectvisibilityset",
+                         /* REC-150: §7.14's request to join — the requester's two acts and the owner's answer,
+                            each needing the SERVER's `by` (who asks, who answers) and `viewer` (at what sight). */
+                         "projectrequest", "projectrequestwithdraw", "projectrequestanswer"];
 /* D-136 — THE SECTION 4.7 VOTE AND THE SECTION 4.9 CAPABILITY EDIT, AND THEY ARE
    ONE ARRAY BECAUSE THEY ARE ONE LANDING.
    `BIO_Membership_Architecture_v2.md` §4.7 (BOB #17, 2026-09-19, read at the
@@ -2480,6 +2491,11 @@ const NEEDS = {
   projectownerrescue: null,
   /* REC-149: §7.14's setting is an owner's act over participation-level policy, governed by §7 and not §5. */
   projectvisibilityset: null,
+  /* REC-150: §7.14's request to join is participation, governed by §7 and not §5 — the same reason as the roster
+     acts: asking to be added needs no working capability, and answering is an owner's position. */
+  projectrequest: null,
+  projectrequestwithdraw: null,
+  projectrequestanswer: null,
   /* The one participation op that DOES carry a capability, because a fork
      creates a project. Without this any participant creates projects they were
      not trusted to create, which is create_projects defeated by a button. */
@@ -11010,7 +11026,10 @@ export default {
                                 "strengthbarof",
                                 /* REC-149: the setting's read and the directory decide by the caller's SIGHT
                                    (Membership v2 §7.14), so both take the stamp; each fails closed without it. */
-                                "projectvisibility", "projectdirectory"];
+                                "projectvisibility", "projectdirectory",
+                                /* REC-150: the requests read decides by the caller's SIGHT of the project it
+                                   names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
+                                "projectrequests"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
@@ -11737,6 +11756,9 @@ export default {
        (`status_by`); the store refuses a member-named `by` that is not an active administrator. */
     if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op)
         || op === "projectparticipants" || op === "projectownerarith"
+        /* REC-150: whose requests a caller reads — its own, or a project's as its owner or an administrator —
+           is a POSITIONAL question, so the read takes the server's `by` as projectparticipants does. */
+        || op === "projectrequests"
         || CUSTODIAL_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's

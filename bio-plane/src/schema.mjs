@@ -3903,6 +3903,35 @@ CREATE TABLE IF NOT EXISTS project_sight (
 CREATE INDEX IF NOT EXISTS project_sight_setting ON project_sight(setting, project_id);
 -- =========================================================================
 
+-- REC-150 (Membership Architecture v2 section 7, item 7.14, "The request to join", BOB #16): a member outside a
+-- DISCOVERABLE project asks to be added. ONE ROW PER REQUEST, and the record is APPEND-ONLY AT THE FIELD: the
+-- asking fields (project, member, the name the member was shown, the comment, the date) are written once at the
+-- ask and never touched, and the closing fields (state, closed_by, closed_comment, closed_at) are written ONCE,
+-- by the one statement that moves an OPEN row to a terminal state -- every closing UPDATE carries
+-- WHERE state = 'open', so a closed row is never rewritten and nothing is ever deleted but by purge.
+-- project_name is the name AS SHOWN when the member asked: after a project goes HIDDEN the requester keeps sight
+-- of their own request, which names only what they already saw, so it must not read the live title.
+-- AT MOST ONE OPEN REQUEST PER MEMBER PER PROJECT is the partial unique index below, held by the schema and
+-- asked again by the store (which refuses by name before the index would). Keyed on project_id, a bundle id, so
+-- both purge arms clear it with the project (the project_visibility precedent).
+CREATE TABLE IF NOT EXISTS project_join_requests (
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id     TEXT NOT NULL,
+  member_id      TEXT NOT NULL,
+  project_name   TEXT,
+  comment        TEXT,
+  asked_at       TEXT NOT NULL,
+  state          TEXT NOT NULL CHECK (state IN ('open','withdrawn','granted','declined','lapsed')),
+  closed_by      TEXT,
+  closed_comment TEXT,
+  closed_at      TEXT
+);
+CREATE INDEX IF NOT EXISTS project_join_requests_project ON project_join_requests(project_id, seq);
+CREATE INDEX IF NOT EXISTS project_join_requests_member ON project_join_requests(member_id, project_id, seq);
+CREATE UNIQUE INDEX IF NOT EXISTS project_join_requests_one_open
+  ON project_join_requests(project_id, member_id) WHERE state = 'open';
+-- =========================================================================
+
 -- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
 -- blocking, DEC-20, with BIO_Content_Framework_v0_10.md section 13): the BIAS DEBT a run carries once the lens it
 -- was formed under has moved. ONE ROW PER RUN, keyed by the run and nothing else, so the sweep is idempotent by

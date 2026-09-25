@@ -13427,6 +13427,71 @@ export const PROJECT_VISIBILITY_CHECKS = {
   },
 };
 
+/* REC-150 / C-95 — THE REQUEST TO JOIN (Membership Architecture v2 §7, item 7.14, "The request to join"; step 2
+ * of its decomposition, BOB #16 from Bob's ruling of 2026-09-18: *"somebody who sees the project can ask to be
+ * added as a member"*). A member outside a DISCOVERABLE project asks (at most one open request per member per
+ * project, an optional comment) and may withdraw; an OWNER grants — which writes the requester `invited`, never
+ * `joined`, because joining is the member's own act (§7.4) — or declines; administrators and the founder see
+ * requests and answer none; setting the project HIDDEN lapses every open request. Every refusal here is said
+ * only where it discloses nothing: a request to a project the caller cannot see is `#noSuchProject` byte for
+ * byte and never a C-95 code, and a withdrawal with no open request is ONE answer whatever the id names. */
+export const PROJECT_JOIN_REQUEST_CHECKS = {
+  PROJECT_REQUEST_NEEDS_A_MEMBER: {
+    check: 'C-95.1',
+    where: 'src/store.mjs projectRequest > is-join-request-ask',
+    translation: 'Asking to join a project, withdrawing that request and reading your own requests are things '
+      + 'a signed-in member does for themselves. Sign in as yourself to do it. Nothing was changed.',
+  },
+  PROJECT_REQUEST_NOT_OUTSIDE: {
+    check: 'C-95.2',
+    where: 'src/store.mjs projectRequest > is-join-request-ask',
+    translation: 'You can already see this project, so there is nothing to ask. If you were invited, join it '
+      + 'with its checkbox. Nothing was changed.',
+  },
+  PROJECT_REQUEST_ALREADY_OPEN: {
+    check: 'C-95.3',
+    where: 'src/store.mjs projectRequest > is-join-request-ask',
+    translation: 'You already have a request open to join this project. Its owners answer it; you can withdraw '
+      + 'it and ask again. Nothing was changed.',
+  },
+  PROJECT_REQUEST_NONE_OPEN: {
+    check: 'C-95.4',
+    where: 'src/store.mjs projectRequestWithdraw > is-join-request-withdraw',
+    translation: 'There is no open request to join here to act on. It may already have been answered, '
+      + 'withdrawn or lapsed. Nothing was changed.',
+  },
+  PROJECT_REQUEST_ANSWER_NOT_THE_OWNER: {
+    check: 'C-95.5',
+    where: 'src/store.mjs projectRequestAnswer > is-join-request-answer',
+    translation: 'Only an owner of this project can grant or decline a request to join it. Administrators see '
+      + 'requests and answer none. Nothing was changed.',
+  },
+  PROJECT_REQUEST_UNKNOWN_ANSWER: {
+    check: 'C-95.6',
+    where: 'src/store.mjs projectRequestAnswer > is-join-request-answer',
+    translation: 'A request to join is either granted or declined, and nothing else. Choose one of the two. '
+      + 'Nothing was changed.',
+  },
+  PROJECT_REQUEST_REQUESTER_INACTIVE: {
+    check: 'C-95.7',
+    where: 'src/store.mjs projectRequestAnswer > is-join-request-answer',
+    translation: 'The member who asked is no longer active, so they cannot be invited. The request stays open; '
+      + 'you can decline it. Nothing was changed.',
+  },
+  PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT: {
+    check: 'C-95.8',
+    where: 'src/store.mjs projectRequestAnswer > is-join-request-answer',
+    translation: 'The member who asked is already a participant of this project, so granting would invite '
+      + 'nobody new. You can decline the request, or they can withdraw it. Nothing was changed.',
+  },
+  PROJECT_REQUESTS_NOT_VISIBLE: {
+    check: 'C-95.9',
+    where: 'src/store.mjs projectRequests > is-join-requests-project',
+    translation: 'A project\'s requests to join are seen by the people who asked, its owners and administrators. '
+      + 'You can read your own requests without naming a project.',
+  },
+};
+
 /* REC-137 / C-57 — A CASE RATIFICATION'S AUTHORITY IS ITS SIGNATURES, AND THEY MUST INCLUDE AN
  * OWNER OF THE PUBLISHING PROJECT (Membership Architecture v2 §7, the bullet *"A CASE
  * RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18; DEC-72 clause 5:
