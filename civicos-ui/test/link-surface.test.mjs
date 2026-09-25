@@ -19,6 +19,13 @@
  *   references are the ones the plane actually emits rather than ones invented
  *   here.
  *
+ * NEGATIVE CONTROL (D-729, 2026-09-25, each arm alone on civicos-ui/app.html
+ * linkRow, restored by sha256 + cmp): OLD LABEL (chrome=1 -> "site navigation")
+ * fails "no-overclaim: containment alone is never called site navigation";
+ * BASIS DROPPED (always "basis not recorded") fails "labelled as a page-furniture
+ * region with its basis ..."; OVER-STRICTNESS (tooltip reworded, label kept)
+ * stays green; BASELINE green.
+ *
  * The load-bearing assertions:
  *   1. All five partitions render distinguishably, and refused is its own
  *      partition rather than a case of offsite: "we will not carry this
@@ -100,7 +107,8 @@ ok("and are told apart only by the element they name",
 /* recordLinks' own field mapping, applied to the plane's own records. */
 const row = (l, over) => ({ source_capture: "a".repeat(64), link_ref: l.ref, address: l.address,
   address_norm: l.address, citation_norm: l.citation || l.address, fragment: l.fragment || null,
-  partition: l.type, origin: l.origin, chrome: l.chrome ? 1 : 0, captured_at: CAPTURED_AT,
+  partition: l.type, origin: l.origin, chrome: l.chrome ? 1 : 0,
+  chrome_basis: l.chrome ? String(l.chrome_basis || "") || null : null, captured_at: CAPTURED_AT,
   resolution: l.type, verdict: null, ...over });
 const find = (pred) => { const l = cap.links.find(pred);
   if (!l) { console.error("FAIL fixture: the plane emitted no link matching"); process.exit(1); } return l; };
@@ -146,7 +154,7 @@ for (const f of ["resolution", "verdict", "basis", "detail", "target_capture", "
                  "target_last_seen", "tally", "verdicts", "contemporaneous", "superseded", "undetermined"])
   ok(`the plane still emits ${f}`, resolveSrc.includes(f));
 const recordSrc = storeSrc.slice(storeSrc.indexOf("recordLinks({"), storeSrc.indexOf("linksTo({"));
-for (const f of ["address", "citation_norm", "fragment", "partition", "chrome"])
+for (const f of ["address", "citation_norm", "fragment", "partition", "chrome", "chrome_basis"])
   ok(`the plane still records ${f} on a link`, recordSrc.includes(f));
 /* And the partitions the UI names must be the ones the capture layer assigns. */
 const subSrc = fs.readFileSync(new URL("../../bio-plane/src/subresources.mjs", import.meta.url).pathname, "utf8");
@@ -224,11 +232,33 @@ ok("nothing opened while the warning was up", OPENED.length === 0);
 G.leaveGo("https://www.oaklandca.gov/gone.html");
 ok("and only the explicit choice opens it", OPENED.length === 1);
 
-/* Site furniture is a classification, never a deletion. */
-const chromeRow = G.linkRow({ resolution:"offsite", address:"https://www.oaklandca.gov/departments/", chrome:1 });
+/* Site furniture is a classification, never a deletion.
+   D-729 corrects the pin that stood here: it required the label "site navigation"
+   for any chrome=1 link. chrome=1 is CONTAINMENT only (the link sat in a furniture
+   region on this page); site navigation is containment AND recurrence across the
+   site's pages (BOB #35, LINK-FIDELITY §Chrome), which op=links does not carry per
+   link. The old assertion therefore pinned an overclaim: a page's own <aside>
+   sidebar was called the site's navigation. The row now names the region's basis. */
+const chromeRow = G.linkRow({ resolution:"offsite", address:"https://www.oaklandca.gov/departments/",
+                              chrome:1, chrome_basis:"<nav>" });
 ok("a chrome link is still shown", chromeRow.includes("/departments/"));
-ok("labelled as furniture, with reclassification possible",
-   /site navigation/.test(chromeRow) && /reclassifiable/i.test(chromeRow));
+const asideRow = G.linkRow({ resolution:"offsite", address:"https://www.oaklandca.gov/topics/sewers",
+                             chrome:1, chrome_basis:"<aside>" });
+ok("no-overclaim: containment alone is never called site navigation",
+   !/site navigation/i.test(chromeRow) && !/site navigation/i.test(asideRow));
+ok("labelled as a page-furniture region with its basis, reclassification possible",
+   /in a page-furniture region \(&lt;nav&gt;\)/.test(chromeRow) && /reclassifiable/i.test(chromeRow));
+ok("a sidebar link reads its own region, not the site's navigation",
+   /in a page-furniture region \(&lt;aside&gt;\)/.test(asideRow));
+const bareRow = G.linkRow({ resolution:"offsite", address:"https://www.oaklandca.gov/x", chrome:1 });
+ok("a contained link with no recorded basis says so, never invents one",
+   /in a page-furniture region \(basis not recorded\)/.test(bareRow) && !/site navigation/i.test(bareRow));
+const bodyRow = G.linkRow({ resolution:"offsite", address:"https://www.oaklandca.gov/y", chrome:0 });
+ok("a body link carries no furniture label", !/page-furniture/.test(bodyRow));
+/* End to end: the fixture's <nav> link, classified by the shipped capture layer and
+   mapped as recordLinks maps it, reads its region's basis on the rendered surface. */
+ok("the plane's own <nav> classification reaches the surface as its basis",
+   /in a page-furniture region \(&lt;nav&gt;\)/.test(H) && !/site navigation/i.test(H));
 
 /* A self-reference is never counted as a connection, because projectLinks drops
    the edge and a surface claiming one would overstate what the record holds. */

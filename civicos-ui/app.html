@@ -6897,7 +6897,13 @@ function linkRow(l){
          title="Opens the warning first. Nothing here navigates without saying so.">${esc(l.address||"")}</span>`
     : `<span class="lkaddr">${esc(l.address||"")}</span>`;
   const bits = [];
-  if(l.chrome) bits.push(`<span title="Site furniture: navigation, header or footer. A classification with a basis and a date, never a deletion, and always reclassifiable.">site navigation</span>`);
+  /* D-729: `chrome` on a link is CONTAINMENT only: the capture found it inside a
+     furniture region (<nav>, <header>, <footer>, <aside>, or a landmark role).
+     Site navigation is containment AND recurrence across the site's pages (BOB #35,
+     LINK-FIDELITY §Chrome), and op=links carries no recurrence verdict per link, so
+     the row names the region and its basis and never says "site navigation". A
+     page's own <aside> sidebar is contained and is not the site's navigation. */
+  if(l.chrome) bits.push(`<span title="Found inside a page-furniture region when captured. That is where the link sat on this page, not a finding that it is the site's navigation: that needs the link to recur across the site's pages. A classification with a basis and a date, never a deletion, and always reclassifiable.">in a page-furniture region (${esc(l.chrome_basis || "basis not recorded")})</span>`);
   if(l.resolution === "linked" && l.target_bundle)
     bits.push(`<a onclick="openBundle('${esc(l.target_bundle)}')">${esc(l.target_bundle)}</a>`);
   if(l.resolution === "linked" && !l.target_bundle)
