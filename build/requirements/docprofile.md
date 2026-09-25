@@ -3,7 +3,7 @@
 **Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `docprofile/index.mjs`,
 `docprofile/pipeline.mjs`, `docprofile/recogniser.mjs`, `docprofile/registry.mjs`,
 `docprofile/events.mjs`, `docprofile/readtext.mjs`, `docprofile/handlers/*.mjs`,
-`docprofile/doctypes/*.mjs`. R25 and R30 are not yet met: every registered content type's
+`docprofile/doctypes/*.mjs`. R6 and R30 are not yet met: every registered content type's
 masthead/self-naming phrases, furniture lines, operative-voice and caption vocabulary,
 code-citation vocabulary, report-template section headings, reference-line shapes, directory
 floors and measured practice thresholds are fixed in `docprofile/doctypes/*.mjs` — mostly
