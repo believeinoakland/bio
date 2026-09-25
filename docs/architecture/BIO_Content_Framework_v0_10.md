@@ -1756,10 +1756,14 @@ into a letter (Part I's invariant 5, in a column). OCR never raises a capture gr
 
 **The extraction method is asked of the UNIT, not the document (BOB #35, 2026-09-25 09:05Z; BUILT
 2026-09-25, D-686).** The method is one of the content's two intrinsic facts, so it says how THAT content
-was read. `content.chain_kind` is the kind of the last derivation step covering the unit's page, and a
-unit with no page (a whole document, an office paragraph) is asked about the document, whose answer is
-the chain's last derivation step. On a mixed document a text-layer page's unit therefore reads `layer`
-and an OCR'd page's reads `ocr`; a page two parts share (D-635) reads the part appended last. One
+was read. `content.chain_kind` is the kind of the last derivation step covering the unit's page. On a
+mixed document a text-layer page's unit therefore reads `layer` and an OCR'd page's reads `ocr`; a page
+two parts share (D-635) reads the part appended last. **A unit with no page** (a whole document, an office
+paragraph) reads the single kind its pages were read with, and **`mixed`** when they differ (BOB #35,
+09:35Z) — never NULL, because the record knows the answer; a chain with one provenance reads its last
+derivation step as before. A reader that labels machine-read text treats `mixed` as CONTAINING
+machine-read text (DEC-4); none reads the column that way today (D-686 searched), so the rule binds the
+first. `content:mixed` is a search word. One
 function computes it, `textchain.mjs` `chainKindFor`, asked of the same target as the derivation cap.
 `mintContent` writes it, and `#migrate` recomputes rows from before this rule, because the value is
 derived from each row's own chain and recomputing it is not a rewrite of history. A page no step

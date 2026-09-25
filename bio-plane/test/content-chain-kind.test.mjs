@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: two harnesses drive this suite, each run from `bio-plane/` in one step. D-686's arms live in `test/nc-d686.mjs` (`node test/nc-d686.mjs [arm]`), declared there before arming, each edits ONE real source ALONE and is restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content with a byte count floored: (a) `baseline` — nothing armed -> green. (b) `generated` — THE ROW'S OWN ARM: `schema.mjs` and `store.mjs` as they stood at D-686's base (d31c52bf, the generated whole-chain column) -> section 3's "a TEXT-LAYER page's unit reads `layer`" FAILS BY NAME, and the pure-function section 1b stays green. (c) `wholechain` — `chainKindFor` ignores the page -> the text-layer-page arms of 1b, 2b and 3 FAIL by name and every OCR-page and document-level arm stays green. (d) `nowrite` — `mintContent` stops writing the column -> section 3's minted rows read NULL and FAIL by name. (e) `nomigrate` — the recompute loop removed -> section 2b's recomputed-row assertions FAIL. (f) `xinfo` — the guard reads `table_info` -> section 2b's migration of a REC-104 store FAILS by name (the generated column is hidden from `table_info`, so the ALTER duplicates it and the Durable Object bricks). (g) `overstrict` — `chainKindFor` rewritten as a forward scan keeping the last covering step, a different correct spelling -> MUST PASS. RUN 2026-09-25 by D-686's worker on the final sources: EVERY ARM AS DECLARED, every restore byte-identical by sha256 and content (figures at the foot of `nc-d686.mjs`). Under (c) the undetermined arms of 1b also fail (a page-blind function has no page to leave uncovered), which the declaration did not name and is recorded here rather than smoothed. REC-104's surviving arms (`baseline`, `baseline2`, `parseback`, `preitem`) stay in `test/nc-rec104.mjs`; its `firststep` and `nowriter` arms were SUPERSEDED by D-686 (they broke a generated column that no longer exists) and are carried by (b) and (d) here. */
+/* NEGATIVE CONTROL: two harnesses drive this suite, each run from `bio-plane/` in one step. D-686's arms live in `test/nc-d686.mjs` (`node test/nc-d686.mjs [arm]`), declared there before arming, each edits ONE real source ALONE and is restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content with a byte count floored: (a) `baseline` — nothing armed -> green. (b) `generated` — THE ROW'S OWN ARM: `schema.mjs` and `store.mjs` as they stood at D-686's base (d31c52bf, the generated whole-chain column) -> section 3's "a TEXT-LAYER page's unit reads `layer`" FAILS BY NAME, and the pure-function section 1b stays green. (c) `wholechain` — the page question ignores the page -> the text-layer-page arms of 1b, 2b and 3 FAIL by name and every OCR-page arm stays green. (c2) `lastkind` — BOB #35's arm (09:35Z): the no-page question answers the chain's last derivation step again -> the whole-document `mixed` arms of 1b, 2b and 3 FAIL by name and every per-page arm stays green. (d) `nowrite` — `mintContent` stops writing the column -> section 3's minted rows read NULL and FAIL by name. (e) `nomigrate` — the recompute loop removed -> section 2b's recomputed-row assertions FAIL. (f) `xinfo` — the guard reads `table_info` -> section 2b's migration of a REC-104 store FAILS by name (the generated column is hidden from `table_info`, so the ALTER duplicates it and the Durable Object bricks). (g) `overstrict` — the page question rewritten as a forward scan keeping the last covering step, a different correct spelling -> MUST PASS. Figures of the final run are at the foot of `nc-d686.mjs`. REC-104's surviving arms (`baseline`, `baseline2`, `parseback`, `preitem`) stay in `test/nc-rec104.mjs`; its `firststep` and `nowriter` arms were SUPERSEDED by D-686 (they broke a generated column that no longer exists) and are carried by (b) and (d) here. */
 /* REC-104 / CONTENT-SEARCH-DESIGN.md §4.2, AND D-686 (BOB #35, 2026-09-25 09:05Z) — `content.chain_kind`:
  * THE `chain` FILTER ANSWERS OFF A COLUMN, AND THE COLUMN SAYS HOW THE UNIT WAS READ.
  *
@@ -9,7 +9,8 @@
  *   1. THE PARSE IS RETIRED, NOT KEPT BESIDE. The compiled statement carries no JSON parse of the chain,
  *      and its plan inside workerd SEEKS the index rather than scanning the table.
  *   1b. THE ONE FUNCTION. `textchain.mjs` `chainKindFor` answers a page by the last derivation step
- *      covering it, and the document by the chain's last derivation step.
+ *      covering it; a unit with no page by the single kind its pages were read with, or `mixed` (BOB #35,
+ *      09:35Z); and `capture_text`'s document-level fact (`CHAIN_LAST`) by the chain's last derivation step.
  *   2. A STORE CREATED BEFORE REC-104 MIGRATES: the column is added, plain, and every row recomputed.
  *   2b. A STORE CREATED BEFORE D-686 MIGRATES: REC-104's GENERATED whole-chain column is dropped, re-added
  *      plain, and every row RECOMPUTED per unit — a derived value, so not a rewrite of history — ONCE.
@@ -35,7 +36,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { compile, MEANING } from "../src/query.mjs";
 import { SCHEMA } from "../src/schema.mjs";
-import { chainKindFor, mergedChain } from "../src/textchain.mjs";
+import { chainKindFor, mergedChain, CHAIN_LAST, CHAIN_KIND_MIXED } from "../src/textchain.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
@@ -153,9 +154,16 @@ t("a TEXT-LAYER page of a mixed document reads `layer` — the defect D-686 clos
 t("the OCR'd page of the same document reads `ocr`", chainKindFor(MIXED, { page: 2 }), "ocr");
 t("a page two parts share answers the part appended LAST (D-635), and its other pages their layer",
   [chainKindFor(OVERLAP, { page: 2 }), chainKindFor(OVERLAP, { page: 0 })], ["ocr", "layer"]);
-t("the DOCUMENT is asked about no page and answers the chain's last derivation step — capture_text's fact",
-  [chainKindFor(MIXED), chainKindFor(OVERLAP), chainKindFor(LAYER), chainKindFor(OCR)],
-  ["ocr", "ocr", "layer", "ocr"]);
+/* BOB #35 09:35Z: a unit with NO page answers the single kind when every page was read one way and
+   `mixed` when they differ — never null, because the record knows. */
+t("a WHOLE-DOCUMENT unit of a mixed document reads `mixed` — not the kind its chain happens to end on",
+  [chainKindFor(MIXED), chainKindFor(OVERLAP), CHAIN_KIND_MIXED], ["mixed", "mixed", "mixed"]);
+t("and a whole-document unit read ONE way reads that kind, scoped or not",
+  [chainKindFor(LAYER), chainKindFor(OCR),
+   chainKindFor(mergedChain([{ chain: OCR, pages: [0] }, { chain: OCR, pages: [1] }]))], ["layer", "ocr", "ocr"]);
+t("capture_text's DOCUMENT-level fact (`CHAIN_LAST`) is still the chain's last derivation step, never `mixed`",
+  [chainKindFor(MIXED, CHAIN_LAST), chainKindFor(OVERLAP, CHAIN_LAST), chainKindFor(LAYER, CHAIN_LAST)],
+  ["ocr", "ocr", "layer"]);
 t("an UNSCOPED chain answers every page alike, so a one-provenance document reads as it always did",
   [chainKindFor(OCR, { page: 7 }), chainKindFor(LAYER, { page: 0 })], ["ocr", "layer"]);
 t("UNDETERMINED, stated as null: a page no step covers, a step of no known kind, no chain",
@@ -322,8 +330,8 @@ await mf.setOptions(opts(null));            // same storage, the CURRENT schema
 const plain = ((await raw("PRAGMA table_xinfo(content)")).rows || []).filter((r) => r.name === "chain_kind");
 t("the reboot REPLACES the generated column with a plain one — one column, `hidden` 0",
   plain.map((r) => r.hidden), [0]);
-t("every row is RECOMPUTED per unit: the text-layer page reads `layer`, the OCR'd page `ocr`, the document its last step",
-  await kinds(), ["m-doc=ocr", "m-page0=layer", "m-page2=ocr"]);
+t("every row is RECOMPUTED per unit: the text-layer page reads `layer`, the OCR'd page `ocr`, the whole document `mixed`",
+  await kinds(), ["m-doc=mixed", "m-page0=layer", "m-page2=ocr"]);
 t("and the index the filter seeks is back on the new column",
   ((await raw("SELECT name FROM sqlite_master WHERE type='index' AND name='content_chain_kind'")).rows || []).length, 1);
 t("THROUGH THE OP: `content:layer` now names the mixed document, by its text-layer page",
@@ -390,8 +398,10 @@ t("and on D-635's overlapping parts, a page only the layer read reads `layer`",
   LABELS.filter((x) => x.startsWith("over.page0")), ["over.page0=layer"]);
 t("an OCR'd page's unit reads `ocr`, and so does the page both parts read (the part appended last)",
   LABELS.filter((x) => /page2/.test(x)), ["mix.page2=ocr", "over.page2=ocr"]);
-t("the whole-document unit reads the chain's last derivation step — the document-level fact",
-  LABELS.filter((x) => /\.doc=/.test(x)), ["mix.doc=ocr", "over.doc=ocr"]);
+t("the whole-document unit of a mixed document reads `mixed` (BOB #35 09:35Z)",
+  LABELS.filter((x) => /\.doc=/.test(x)), ["mix.doc=mixed", "over.doc=mixed"]);
+t("THROUGH THE SEARCH: `content:mixed` is a word, and names each mixed document by its whole-document unit",
+  await ids("content:mixed"), [DOC_MIX, DOC_OVER].sort());
 t("THROUGH THE SEARCH: `content:layer` and `content:ocr` BOTH name each mixed document",
   [await ids("content:layer"), await ids("content:ocr")],
   [[DOC_MIX, DOC_OVER].sort(), [DOC_MIX, DOC_OVER].sort()]);

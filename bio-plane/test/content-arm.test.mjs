@@ -74,7 +74,7 @@ import { createHash } from "node:crypto";
 import { compile, MEANING, meaningVocabulary } from "../src/query.mjs";
 import { CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE,
          MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
-import { STEP_KINDS } from "../src/textchain.mjs";
+import { STEP_KINDS, CHAIN_KIND_MIXED } from "../src/textchain.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const IDX = SRC("index.mjs");
@@ -123,8 +123,13 @@ console.log("\n--- 1. the arm, and the two vocabularies it does not own ---");
      defect. These two assertions are the whole reason the arm imports. */
   t("`kind`'s vocabulary IS `CONTENT_EXTENT_KINDS`, not a copy of it",
     MEANING.content.sub.kind.vocab, Object.keys(CONTENT_EXTENT_KINDS));
-  t("`chain`'s vocabulary IS `STEP_KINDS`, not a copy of it",
-    MEANING.content.sub.chain.vocab, Object.keys(STEP_KINDS));
+  /* CORRECTED BY D-686, NOT EXEMPTED. This pinned the vocabulary as EXACTLY `STEP_KINDS`, which was
+     right while the column could only hold a step kind. BOB #35 (2026-09-25 09:35Z) ruled that a unit
+     with no page read in more than one way holds `mixed`, a value that is not a step kind, so the
+     vocabulary is now `STEP_KINDS` plus that one word. It is still DRIVEN, never typed: both halves come
+     from `textchain.mjs`, which is what this assertion exists to hold. */
+  t("`chain`'s vocabulary IS `STEP_KINDS` plus textchain's `mixed`, not a copy of either",
+    MEANING.content.sub.chain.vocab, [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED]);
   /* `dom` is refused BY NAME until CONTENT-HTML produces a producer (C-45.4),
      and it is absent from the map — so its absence here FALLS OUT of driving the
      map rather than being a second decision that could drift from the first. */
