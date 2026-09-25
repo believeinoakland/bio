@@ -13415,7 +13415,9 @@ export const PROJECT_VISIBILITY_CHECKS = {
   },
   PROJECT_VISIBILITY_UNKNOWN_SETTING: {
     check: 'C-70.3',
-    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    /* REC-197: the value check moved into one helper both doors ask (the owner's act and a creation's
+       `visibility`), so this row names that helper's region and the code keeps ONE site. */
+    where: 'src/store.mjs #visibilitySettingRefusal > is-project-visibility-setting',
     translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
       + 'Choose one of the two.',
   },
@@ -13424,6 +13426,31 @@ export const PROJECT_VISIBILITY_CHECKS = {
     where: 'src/store.mjs projectDirectory > is-project-directory-member',
     translation: 'The list of projects you can ask to join is for a signed-in member. Sign in as yourself to '
       + 'see it.',
+  },
+};
+
+/* REC-197 / C-97 — A CREATION CARRIES ITS SETTING, AND AN OWNERLESS CREATION CANNOT CHOOSE ONE (Membership
+ * Architecture v2 §7.14, RULED by BOB #32 (b), 2026-09-23: *"create and fork take one optional field,
+ * `visibility` (`discoverable` or `hidden`), and an absent one is HIDDEN. A MACHINE credential never sets it:
+ * the setting is an owner's act, and an ownerless project has no owner to choose. Its creation is therefore
+ * HIDDEN, and a `visibility=discoverable` it sends is refused by name."*). Its own family, minted, rather than
+ * C-70.5 and on, because REC-150 (the request to join) is extending C-70 in parallel. An unknown value on a
+ * creation answers C-70.3, the same row the owner's act answers, through one helper. Both codes are minted in
+ * `Store#promote`, before anything is written; a fork reaches them through `promote`. */
+export const PROJECT_CREATION_VISIBILITY_CHECKS = {
+  PROJECT_VISIBILITY_NO_OWNER: {
+    check: 'C-97.1',
+    where: 'src/store.mjs promote > is-project-creation-ownerless',
+    translation: 'Whether a project can be found is chosen by its owners, and a project created by a machine '
+      + 'credential has no owner, so it is created hidden and cannot be made discoverable here. Nothing was '
+      + 'created. Create it without the setting; an owner who joins it later can make it discoverable.',
+  },
+  PROJECT_VISIBILITY_NOT_A_CREATION: {
+    check: 'C-97.2',
+    where: 'src/store.mjs promote > is-project-creation-visibility',
+    translation: 'Whether a project can be found is chosen when it is created or forked, and this was not a '
+      + 'project being created. Nothing was changed. An owner changes an existing project\'s setting in its '
+      + 'settings.',
   },
 };
 
