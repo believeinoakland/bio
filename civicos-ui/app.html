@@ -14788,19 +14788,39 @@ function queueCaseNoteHtml(it){
   return `<div class="q-incomplete">${bits.map(b=>esc(b)).join(" ")}</div>`;
 }
 
-/* WHO THIS IS ADDRESSED TO. The producer's own `assignee` and `assignee_role`;
-   nothing here decides whose work anything is. */
+/* WHO THIS IS ADDRESSED TO. The producer's own `assignee`, `assignee_role` and
+   `recipients`; nothing here decides whose work anything is.
+
+   D-528 · `recipients` IS READ, AND "NOT ADDRESSED TO ANYBODY" NEEDS BOTH KEYS EMPTY.
+   D-86's bias-debt OBLIGATION (IC-234) publishes `assignee: null` beside a
+   `recipients` list of the members the producer named inside the run's read gate
+   (the run's principal and its project's owners, `store.mjs` `#biasDebtRecipients`).
+   This function read `assignee` alone, so every one of those named members was told
+   *"This is not addressed to anybody"* on an item the plane had shown them BECAUSE
+   they were named (`#obligationsBiasDebt` skips a member who is not) — the surface
+   stating something it could see was false. The members are rendered as the record
+   spells them, in its order, each escaped; the viewer's own id is marked, never
+   substituted. Where the list is empty the plane says why in its own sentence
+   (`recipients_stated`), which `queueSubjectHtml` renders; this line then says what
+   it always said. */
+function queueRecipientsHtml(named, me){
+  const names = named.map(m => `<b>${esc(m)}</b>${me && m === me ? " (you)" : ""}`);
+  const list = names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length-1] : names[0];
+  return `Addressed to ${list} &middot; named by the record, not by a person.`;
+}
 function queueAssigneeHtml(it){
   const me = myMemberId();
   const who = it && it.assignee;
   const role = it && it.assignee_role;
+  const named = (it && Array.isArray(it.recipients)) ? it.recipients.filter(m => typeof m === "string" && m) : [];
+  const toward = named.length ? `<div class="q-assign">${queueRecipientsHtml(named, me)}</div>` : "";
   if(who == null)
-    return `<div class="q-assign">This is not addressed to anybody. The record raised it; no obligation was routed to a person.</div>`;
+    return toward || `<div class="q-assign">This is not addressed to anybody. The record raised it; no obligation was routed to a person.</div>`;
   if(who === "unassigned")
-    return `<div class="q-assign flag">No one is holding this. It is shown as unassigned rather than addressed to somebody who does not exist, and it can still be taken or routed by hand.</div>`;
+    return `<div class="q-assign flag">No one is holding this. It is shown as unassigned rather than addressed to somebody who does not exist, and it can still be taken or routed by hand.</div>` + toward;
   if(me && who === me)
-    return `<div class="q-assign">Yours &middot; assigned by the record, not by a person${role?` (routed as ${esc(role)})`:""}.</div>`;
-  return `<div class="q-assign">With <b>${esc(who)}</b>${role?` &middot; routed as ${esc(role)}`:""}.</div>`;
+    return `<div class="q-assign">Yours &middot; assigned by the record, not by a person${role?` (routed as ${esc(role)})`:""}.</div>` + toward;
+  return `<div class="q-assign">With <b>${esc(who)}</b>${role?` &middot; routed as ${esc(role)}`:""}.</div>` + toward;
 }
 
 /* WHAT IT IS ABOUT — the SUBJECT, which is a different column from the case and
