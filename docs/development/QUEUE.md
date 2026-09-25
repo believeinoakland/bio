@@ -21,7 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-25 11:30Z · BOB #36 · D-720 (a draft that names C1 AND sets newCase has its statementack reading keyed under C1): OPTION (1). The reading is keyed at NO case identity (case_id NULL, bound to the draft, as a derived draft's is) and binds only by REC-217's act: a publish naming the draft (`draft=`).** The home is `BIO_Publication_v0_1.md` §3 rule 13, with REC-194 and BOB #32: "reading A's statement is not reading B's". Since D-618 such a draft's case is UNDETERMINED (CASE_IDENTITY_AMBIGUOUS; every answer states edition:null). Keying its reading under C1's next edition lets C1's signed document list a reading given on a draft that may become ANOTHER case. That is the record claiming a binding nobody made. Rejected: option (2), refusing the ack, which loses a recipient's real reading because the publisher's instructions conflict; and option (3), where naming C1 is not a choice, because newCase contradicts it (D-618). Scope: op=statementack on a pair draft writes case_id NULL, bound to the draft; #statementAcknowledgements' '*' draft match never lists a NULL-case row under a case identity; REC-217's publish `draft=` binds it. accepts-when: an ack on a C1-plus-newCase draft is NOT listed in C1's document at its next edition, even when that edition is authored from another draft or the case door with a byte-identical statement; after a publish naming that draft, it IS listed in the case that publish produced. NEGATIVE CONTROL: restore the C1 key, and the "not listed" arm fails by name. Fold into Publication §3 rule 13. Owner RECORD, stacked on D-708 (land/worker/D-708 @ 656b0817). D-720's row is not on coord yet (ledger.mjs find returns nothing); SCHEDULER places it.
 
 
 
@@ -942,6 +941,16 @@ scope: drop the edition number from the pair branch — name the case as the dra
 accepts-when: no op answering for a pair draft states an edition number (asserted in reviewcopy block 14 and at each of the four ops) (moves: an edition stated beside edition:null). NEGATIVE CONTROL: restore the numbered pair sentence and the no-edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-708's worker).
 
+### D-720 · queued — **A READING ACKNOWLEDGED ON A DRAFT THAT NAMES C1 AND ALSO SETS newCase IS KEYED UNDER C1's NEXT EDITION: #statementAcknowledgements lists every row at a case identity (draft match '*'), so C1's signed document can list a reading given on a draft that may become ANOTHER case — the record claiming a binding nobody made.** Diagnosed from the code by D-708's worker (statementack INSERT; #statementAcknowledgements' WHERE), not yet driven. BOB #36 RULED 2026-09-25 11:30Z, option (1) (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+order: first queued in the cache: a false binding listed in signed bytes outranks every feature (CLAUDE.md §2), and it corrects D-708 (SCHEDULER #24, 2026-09-25)
+milestone: M10
+interface: I3 — a pair draft's reading carries no case identity until a publish names the draft; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (REC-194, BOB #32: reading A's statement is not reading B's), with BOB #36's 11:30Z ruling.
+depends-on: none (stacked on land/worker/D-708 @ 656b0817, integrated, on D-618 @ dc4c41f9; D-721 runs beside it on #caseIdentitySentence).
+scope: op=statementack on a pair draft writes case_id NULL, bound to the draft (as a derived draft's reading is); #statementAcknowledgements' '*' draft match never lists a NULL-case row under a case identity; REC-217's publish draft= binds it. Rejected: refusing the ack; treating C1 as chosen. Fold into §3 rule 13. Reproduce through op=statementack first.
+accepts-when: an ack on a C1-plus-newCase draft is NOT listed in C1's document at its next edition, even when that edition is authored from another draft or the case door with a byte-identical statement; after a publish naming that draft it IS listed in the case that publish produced (moves: a reading listed under a case nobody chose). NEGATIVE CONTROL: restore the C1 key and the not-listed arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-708's worker; BOB #36 inbox).
+
 ### D-677 · queued — **THE CONTENT FRAMEWORK'S STATUS BULLET FOR D-454 IS SPLICED MID-SENTENCE INTO D-517's: "that figure is CONFIRMED [D-454's bullet] as its valley's midpoint", so both statements read garbled in the front matter.** Found by D-625's worker (minted on land/worker/D-625). — owner RECORD (docs).
 order: after D-676, a docs-only correction to the same document; it may ride any Framework landing (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -965,16 +974,6 @@ added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-631 · queued — **`adminvote.control` arm stamp-dropped: ANCHOR DRIFT — matches 2 (REC-164), so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-630, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
-milestone: M0
-interface: none (test-only).
-design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
-depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
-scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
-accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
-added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
-
-### D-632 · queued — **`aicredential.control` arms 3 and 5: ANCHOR DRIFT — arm 3 matches 0; arm 5 matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-order: after D-631, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
 design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
