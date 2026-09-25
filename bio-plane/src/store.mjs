@@ -536,7 +536,7 @@ import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS, CUSTODIAL_CHECKS } from "../
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-149 / C-70: a DISCOVERABLE project's existence is seen; its doors are not (Membership v2 §7.14). */
-import { PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS } from "../checks/bio-checks.mjs";
+import { PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
 import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-167 / C-65: a case document is signed only while its project still stands on the conclusion it records. */
@@ -17917,6 +17917,45 @@ export class Store extends DurableObject {
     }
     /* ===== END REC-141 (the mint itself is the first act inside the transaction) ===== */
     if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    /* ===== REC-197 — A CREATION CARRIES ITS SETTING, AND AN OWNERLESS ONE CANNOT CHOOSE (Membership v2 §7.14,
+       RULED by BOB #32 (b), 2026-09-23: *"create and fork take one optional field, `visibility` (`discoverable` or
+       `hidden`), and an absent one is HIDDEN. A MACHINE credential never sets it"*). Decided HERE, before any
+       write, so a refusal leaves nothing. ABSENT IS HIDDEN BY WRITING NOTHING: the sight index's one CASE
+       (`#reindexProjectSight`) already reads a project with no act as hidden, and a default restated here would
+       be the second copy of that rule. A PRESENT value is the creating OWNER's act and is recorded as one inside
+       the creation's transaction (below, beside the owner row), `hidden` included — the owner chose it. The
+       machine test is OWNERLESSNESS, never a class list: `ownerMemberId` is the control plane's stamp, set for
+       a member session alone and deleted first for every caller, so a creation with none has no owner to
+       choose — the ruling's own reason. Its `hidden` is accepted and writes nothing (it asks for exactly what an
+       ownerless creation gets); its `discoverable` is refused by name. A `visibility` on anything that is not a
+       project's creation is refused rather than ignored: a revision that answered ok over it would tell its
+       caller a choice landed that nobody recorded (the setting of an existing project is
+       `op=projectvisibilityset`, an owner's act). */
+    let creationVisibility = null;
+    if (pkg.visibility !== undefined && pkg.visibility !== null) {
+      const refusal = (code, detail) => {
+        const row = PROJECT_CREATION_VISIBILITY_CHECKS[code];
+        return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+      };
+      /* DEC-49 REGION is-project-creation-visibility */
+      if (base !== null || normalizeType(meta.object_type) !== "project")
+        return refusal("PROJECT_VISIBILITY_NOT_A_CREATION",
+          "visibility is chosen when a project is created or forked, and this is not a project's creation. An "
+          + "existing project's setting is its owners' act, op=projectvisibilityset. Nothing was written.");
+      /* END DEC-49 REGION is-project-creation-visibility */
+      const unknown = this.#visibilitySettingRefusal(pkg.visibility, null);
+      if (unknown) return unknown;
+      const creator = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
+      /* DEC-49 REGION is-project-creation-ownerless */
+      if (!creator && pkg.visibility === "discoverable")
+        return refusal("PROJECT_VISIBILITY_NO_OWNER",
+          "whether a project can be found is its OWNERS' choice (Membership Architecture v2 §7.14), and a "
+          + "project created by a machine credential has no owner to choose it, so it is created HIDDEN. Send "
+          + "the creation without visibility (or with visibility=hidden); an owner who arrives later may set "
+          + "it. Nothing was created.");
+      /* END DEC-49 REGION is-project-creation-ownerless */
+      creationVisibility = creator ? pkg.visibility : null;
+    }
     /* ===== REC-175 — A STORED DIGEST IS OF THE STORED BYTES (the Mechanical Verification Law,
        `BIO_State_Rules_Consistency_v1_5.md` §8; CLAUDE.md §5, *an equality that costs nothing to produce is
        not evidence*). `files.sha256` and the bundle's head (`newSha`, read from bundle.md's row below) were
@@ -19204,6 +19243,15 @@ export class Store extends DurableObject {
          bundle promoted INTO a project gains one, and a bundle promoted OUT of `project` loses its row rather
          than leaving a sight row standing over something that is no longer a project. It is a derivation, so
          it is idempotent: a revision that changes neither recomputes the same row. */
+      /* REC-197: the creating owner's CHOSEN setting, as the owner's act `op=projectvisibilityset` writes — one row
+         of the same append-only log, `set_by` the owner whose ownership row this transaction writes below — written
+         BEFORE the one derivation call, so the sight index is re-derived from the log that holds it (D-497's rule:
+         never written from the value directly) and no second call exists. `creationVisibility` is non-null only for
+         a project's creation that carries an owner (decided before the transaction). No reason is written: the
+         owner gave none, and a plane-authored reason would put words in their mouth. */
+      if (!cur && creationVisibility)
+        this.sql.exec(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
+          bundleId, creationVisibility, pkg.ownerMemberId, null, new Date().toISOString());
       this.#reindexProjectSight(bundleId);
 
       /* Projected from the document, every promotion, so the table is a view of
@@ -19853,6 +19901,10 @@ export class Store extends DurableObject {
       this.#flagCasesOnRevision(bundleId, base ?? null,
         stampInstant("second"));
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner,
+        /* REC-197: present ONLY on a project's creation — the setting it was created with, READ BACK through
+           `#visibilityOf` (the one reader) rather than echoed from the request, so an absent field answers
+           `hidden` because the record says so. */
+        ...(!cur && meta.object_type === "project" ? { visibility: this.#visibilityOf(bundleId) } : {}),
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
         ...(testimonyWrote ? { testimony: testimonyWrote } : {}),
@@ -35824,11 +35876,10 @@ export class Store extends DurableObject {
         `whether ${String(projectId).slice(0, 80)} can be found is its OWNERS' choice (Membership Architecture `
         + `v2 §7.14), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one of them. Seeing a project `
         + `is not directing it. Nothing was written.`);
-    if (want !== "discoverable" && want !== "hidden")
-      return refusal("PROJECT_VISIBILITY_UNKNOWN_SETTING",
-        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and `
-        + `nothing else. Nothing was written.`);
     /* END DEC-49 REGION is-project-visibility-owner */
+    /* REC-197: the value check moved into ONE helper, which a creation's `visibility` asks too, so the two
+       doors cannot disagree about what a setting is. Still asked AFTER the owner check here, as before. */
+    { const unknown = this.#visibilitySettingRefusal(want, projectId); if (unknown) return unknown; }
     const why = reason === null || reason === undefined || String(reason).trim() === ""
       ? null : String(reason).slice(0, 280);
     const at = new Date().toISOString();
@@ -35846,6 +35897,26 @@ export class Store extends DurableObject {
       ? this.#lapseJoinRequests(projectId, by, at) : 0;
     return { ok: true, projectId, setting: want, set_by: by, reason: why, at,
              ...(want === "hidden" ? { requests_lapsed: lapsed } : {}) };
+  }
+
+  /* REC-197 — WHAT A SETTING IS, asked in ONE place by both doors that take one: the owner's act above and a
+     creation's `visibility` (`promote`, which a fork reaches through). "discoverable" or "hidden" and nothing
+     else, compared exactly — a spelling the vocabulary does not write is not quietly read as either. Null when
+     the value is a setting. `projectId` is echoed when the door has one (the owner's act); a creation has none. */
+  #visibilitySettingRefusal(value, projectId) {
+    const want = String(value ?? "");
+    const refusal = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               ...(projectId !== null ? { project: projectId } : {}) };
+    };
+    /* DEC-49 REGION is-project-visibility-setting */
+    if (want !== "discoverable" && want !== "hidden")
+      return refusal("PROJECT_VISIBILITY_UNKNOWN_SETTING",
+        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and `
+        + `nothing else. Nothing was written.`);
+    /* END DEC-49 REGION is-project-visibility-setting */
+    return null;
   }
 
   /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
@@ -36823,7 +36894,7 @@ export class Store extends DurableObject {
    *
    *  Origin is recorded as `derived_from`, already in the closed relationship
    *  vocabulary of State Rules 5.1, so nothing is added to it. */
-  forkProject({ projectId, newId, title, by, viewer = null } = {}) {
+  forkProject({ projectId, newId, title, by, viewer = null, visibility = null } = {}) {
     /* REC-141 / C-59.3: a fork's id is MINTED, as a new project's is (Membership v2 §7, BOB #15). A named
        `newId` is refused FIRST — before the origin, the participation or the id is looked up — so the
        answer is one answer whether the named id is taken or free, and it echoes no id. */
@@ -36921,6 +36992,9 @@ export class Store extends DurableObject {
     const promoted = this.promote({
       base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
       author: by, ownerMemberId: by,
+      /* REC-197 (§7.14, BOB #32 (b)): the FORKER's choice, decided and recorded by `promote` exactly as a
+         creation's — a fork is a creation (§7.12) and does NOT inherit the origin's setting. Absent is HIDDEN. */
+      visibility,
       files: [{ path: "bundle.md", text, bytes: fbytes.length,
                 sha256: createSha256().update(fbytes).hex() }, ...carried],
       /* D-436: no `group` here — this was an unconditional literal. The fork is a CREATION, so `promote` stamps the
@@ -36930,7 +37004,8 @@ export class Store extends DurableObject {
     });
     if (!promoted.ok) return promoted;
     return { ok: true, projectId, newId: promoted.bundleId, title, origin: projectId, rel: "derived_from",
-             owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha };
+             owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha,
+             visibility: promoted.visibility };   /* REC-197: read back from the record by `promote` */
   }
 
   /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same
@@ -54274,6 +54349,7 @@ export class Store extends DurableObject {
         publishedmanifest: () => this.publishedManifest(),
         projectfork: () => this.forkProject({ projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"), title: url.searchParams.get("title"),
+          visibility: url.searchParams.get("visibility"),   /* REC-197: absent is null, which is HIDDEN */
           by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),   /* REC-138 */
         projectinvite: () => this.projectInvite({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),

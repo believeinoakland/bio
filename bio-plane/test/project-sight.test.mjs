@@ -7,6 +7,7 @@
    RE-RUN 2026-09-24 by D-486 in worktree /home/user/bio (cloud) on base land/conduct/c19-batch10 @ cff0ede6 AFTER adding §9 (a RUN over a hidden project, the five observation-log tallies) and four arms, real src/index.mjs 786,508 B sha256 4579fae29f93…, src/store.mjs 3,178,998 B sha256 ae571b49b306…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 136/0 · cite-distinguishing 134/2 · position-first 132/4 · not-found-to-everyone 114/22 · roster-stamp-dropped 124/12 · publish-raw-bm25 129/7 · order-by-index-bm25 131/5 · tf-over-vis 136/0 · stats-whole-store 129/7 · indexcheck-whole-index 133/3 · selectionbytes-whole 135/1 · stats-stamp-dropped 130/6 · subtract-for-everyone 136/0 · d486-content-tally-unsubtracted 134/2 (THE ROW'S OWN CONTROL: the predicate dropped from ONE reader — the content tally — and its arms fail BY NAME) · d486-stats-airunlog-unsubtracted 133/3 · d486-meaning-run-ungated 134/2 · d486-predicate-de-morgan 136/0 (over-strictness) · sight-via-redactor 136/0: AS DECLARED. BEFORE the fix §9 read 131/5 on the unedited sources (MEASUREMENTS M-131: vera's `aiRunLog` and `observationsNonLead` moved, all three tallies moved, and the MEANING level published the hidden run's own id in `looked`). RECORDED, NOT SMOOTHED: (1) d486-content-tally-unsubtracted came back NOT AS DECLARED on its first run with THREE undeclared reds, one of them BEFORE its own cause — the patch removed the predicate from the SQL and left its BINDINGS, so the statement threw; corrected to remove both, reason at the arm. (2) §9's residue arm came back GREEN on a second run after failing on the first WITHOUT a line changing: the four watermark keys move only when the fixture's captures and the run's rows fall inside ONE SECOND (the causes normalise to the second, `register.registered` carries milliseconds). Diagnosed, spelled as a CEILING, and routed as D-486 FINDING 2 — an intermittent disclosure is worse than a steady one, not better. (3) stats-whole-store and stats-stamp-dropped came back NOT AS DECLARED because §9 reads two `op=stats` keys their declarations predate; both declarations were EXTENDED (never exempted) and are AS DECLARED. (4) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-486.
    RE-RUN 2026-09-24 by D-480 in worktree /home/user/bio (cloud) on base origin/main 58293bf3 merged with land/worker/D-497 @ 29d8409d, AFTER adding §10 (a hidden project's CITATIONS, and a hidden TARGET, in the shared-question candidate page) and three arms, real src/index.mjs 802,067 B sha256 fbdcfb83ed09…, src/store.mjs 3,233,147 B sha256 d0f540dbbadf…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 147/0 · cite-distinguishing 145/2 · position-first 143/4 · not-found-to-everyone 123/24 · roster-stamp-dropped 135/12 · publish-raw-bm25 140/7 · order-by-index-bm25 142/5 · tf-over-vis 147/0 · stats-whole-store 133/14 · indexcheck-whole-index 144/3 · selectionbytes-whole 146/1 · stats-stamp-dropped 141/6 · subtract-for-everyone 147/0 · d486-content-tally-unsubtracted 145/2 · d486-stats-airunlog-unsubtracted 144/3 · d486-meaning-run-ungated 145/2 · d486-predicate-de-morgan 147/0 · d480-citers-ungated 140/7 (THE ROW'S OWN CONTROL: the citer end of the edge ungated again — §10's seven arms fail, headed by `A HIDDEN PROJECT'S CITATIONS MOVE NOTHING`) · d480-targets-ungated 146/1 (the ATTRIBUTION arm: the target end alone, failing `A TARGET VERA CANNOT SEE TAKES NO SLOT` and NOTHING else, with the citer arms either side of it green) · d480-not-in-inverted 147/0 (over-strictness) · sight-via-redactor 147/0: AS DECLARED. BEFORE the fix §10's seven arms fail, measured twice — by `d480-citers-ungated` and by `stats-whole-store`, which neuters `#hiddenSets`' `hid` at source and takes all seven with it. RECORDED, NOT SMOOTHED: (1) `d480-citers-ungated` came back NOT AS DECLARED on its first run and THE ARM WAS RIGHT WHILE THE DECLARATION WAS WRONG — two of §10's arms read `truncOf(...).every((x) => x === false)`, which is TRUE OVER AN EMPTY ARRAY, so with vera's item crowded off her page entirely they PASSED over a feed holding nothing, while a third arm failed for a reason that was not its subject (a digest compared between two reads both missing the item). The SUITE was corrected — every flag is now asserted once per item beside the item COUNT — and the declaration re-taken. (2) `not-found-to-everyone` and `stats-whole-store` came back NOT AS DECLARED on declarations that PREDATE this item: the first has been failing §9's two ADMIN-token arms undeclared since D-486 added them, and the second neuters the ONE predicate both D-464's counts and D-480's candidate page read. Both declarations were EXTENDED, never exempted, and the second is a measurement: `stats-stamp-dropped`, which drops the stamp on `op=stats` alone, leaves §10 wholly green, so the coupling is the predicate and not the door. (3) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-464, D-486 or D-480.
    RE-RUN 2026-09-25 by REC-196 in worktree /home/user/bio (cloud) on base origin/main 964da679, AFTER adding §11 (a READ naming a DISCOVERABLE project's own id answers C-70.1, BOB #32's ruling (a)) and six arms, real src/index.mjs 857,558 B sha256 28bfd3677c8c…, src/store.mjs 3,355,514 B sha256 b854b3303ef9…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 205/0 · cite-distinguishing 203/2 · position-first 201/4 · not-found-to-everyone 178/27 · roster-stamp-dropped 193/12 · publish-raw-bm25 198/7 · order-by-index-bm25 200/5 · tf-over-vis 205/0 · stats-whole-store 191/14 · indexcheck-whole-index 202/3 · selectionbytes-whole 204/1 · stats-stamp-dropped 199/6 · subtract-for-everyone 205/0 · d486-content-tally-unsubtracted 203/2 · d486-stats-airunlog-unsubtracted 202/3 · d486-meaning-run-ungated 203/2 · d486-predicate-de-morgan 205/0 · d480-citers-ungated 198/7 · d480-targets-ungated 204/1 · d480-not-in-inverted 205/0 · rec196-existence-read-dropped 180/25 (THE ROW'S OWN CONTROL: the pre-dispatch check disarmed, so a discoverable project's own id reads "does not exist" again — every one of §11's 24 reads fails 11b BY NAME, with 11c) · rec196-hidden-too 171/34 (positional for HIDDEN projects too: §11e's 24 arms and ten of §1's own hidden-equals-absent read arms) · rec196-to-everyone 203/2 (the owner answered C-70.1: 11f, 11f+) · rec196-table-short 203/2 (projectparticipants dropped from the table: the sweep names it, 11g, and its 11b fails) · rec196-roster-viewer-unstamped 204/1 · rec196-no-prefilter 205/0 (over-strictness) · sight-via-redactor 205/0: AS DECLARED. BEFORE the fix, `project-discoverable.test.mjs` §3l measured all eleven of its reads at EXISTENCE byte-identical to a never-minted id. RECORDED, NOT SMOOTHED: (1) rec196-hidden-too came back NOT AS DECLARED on its first run — it ALSO failed ten of this suite's earlier REC-138 read arms, a second witness the declaration had missed; extended. (2) rec196-table-short came back NOT AS DECLARED because §11g's FIRST spelling demanded the route read `viewer`, and `projectparticipants` reads it only through the new check, so the sweep was blind to exactly that drop; the sweep was widened to every id-carrying read route (and seven ungated reads were classified), then AS DECLARED. (3) not-found-to-everyone came back NOT AS DECLARED because §11's fixture set the setting by iris's SESSION, which that arm lies to (D-447's recorded second-variable trap); the fixture now takes the owner's act through the store's internal door and the run-open is non-fatal, and the arm's declaration was EXTENDED by 11d+, 11f and 11f+, which catch it by name. (4) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by REC-196.
+   RE-RUN 2026-09-25 by REC-197 in worktree /home/user/bio (cloud) on land/worker/REC-196 @ 82f604d2 (stacked; REC-196 integrated, not yet on main), AFTER adding §12 (a creation and a fork CARRY `visibility`, absent is HIDDEN, a machine's `discoverable` is refused C-97.1 — BOB #32's ruling (b)) and five arms, real src/index.mjs 857,558 B sha256 28bfd3677c8c…, src/store.mjs 3,361,747 B sha256 1662015934e2…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES (and sha256sum -c of all four sources before/after the run: OK) — baseline 222/0 · cite-distinguishing 220/2 · position-first 218/4 · not-found-to-everyone 187/35 · roster-stamp-dropped 210/12 · publish-raw-bm25 215/7 · order-by-index-bm25 217/5 · tf-over-vis 222/0 · stats-whole-store 208/14 · indexcheck-whole-index 219/3 · selectionbytes-whole 221/1 · stats-stamp-dropped 216/6 · subtract-for-everyone 222/0 · d486-content-tally-unsubtracted 220/2 · d486-stats-airunlog-unsubtracted 219/3 · d486-meaning-run-ungated 220/2 · d486-predicate-de-morgan 222/0 · d480-citers-ungated 215/7 · d480-targets-ungated 221/1 · d480-not-in-inverted 222/0 · rec196-existence-read-dropped 197/25 · rec196-hidden-too 188/34 · rec196-to-everyone 218/4 · rec196-table-short 220/2 · rec196-roster-viewer-unstamped 221/1 · rec196-no-prefilter 222/0 · rec197-absent-discoverable 218/4 (THE ROW'S OWN CONTROL: an absent `visibility` on an owner's creation defaults to DISCOVERABLE — the FAIL-CLOSED arms 12a, 12a+ and 12h fail BY NAME, with 12g) · rec197-machine-may-choose 218/4 (the ownerless refusal disarmed: 12d and 12d+ for the ADMIN and the MEMBER token) · rec197-not-recorded 218/4 (the field accepted and nothing recorded: 12b, 12b+, 12c, 12h+) · rec197-revision-ignored 221/1 (12g) · rec197-setting-as-set 222/0 (over-strictness) · sight-via-redactor 222/0: AS DECLARED. RECORDED, NOT SMOOTHED: (1) rec197-absent-discoverable came back NOT AS DECLARED on its first run — it ALSO failed 12g, whose fixture is 12a's absent-created project; the arm was right and the declaration one row short, so it was extended. (2) not-found-to-everyone and rec196-to-everyone came back NOT AS DECLARED on this item's first full run — §12 reads every creation back through its owner's session, which the first lies to outright and the second answers C-70.1 for a discoverable project; both declarations EXTENDED by name, never exempted. (3) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by REC-197. `project-discoverable.control.mjs` re-run on the same tree, every arm AS DECLARED: baseline 157/0 · widen-viewerPredicate 95/62 · existence-as-absent 123/34 · default-discoverable 96/61 (D-601's re-armed arm, AS DECLARED) · owner-fence-dropped 149/8 · latest-by-max-seq 157/0 · act-not-reindexed 101/56 — after correcting that suite's predecessor fixture (1a0), whose today's-code-over-yesterday's-schema store now also neuters the creation answer's `#visibilityOf` read.
  * ========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
@@ -961,6 +962,121 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
   t("11g+: and none is classified twice", Object.keys(NAMES || {}).filter((r) => r in (NOT || {})), []);
   t("11g++: every classified name is a real store route", [...Object.keys(NAMES || {}), ...Object.keys(NOT || {})]
     .filter((r) => routes[r] === undefined), []);
+}
+
+/* ======================================================================== §12
+ * REC-197 — A CREATION CARRIES ITS SETTING, AND AN OWNERLESS CREATION CANNOT CHOOSE ONE (Membership v2 §7.14,
+ * RULED by BOB #32 (b), 2026-09-23: *"create and fork take one optional field, `visibility` (`discoverable` or
+ * `hidden`), and an absent one is HIDDEN. A MACHINE credential never sets it … its creation is therefore HIDDEN,
+ * and a `visibility=discoverable` it sends is refused by name."*). Driven through the OPS — `op=promote` (the
+ * creation: a project bundle with no base) and `op=projectfork` — and read back through `op=projectvisibility`
+ * and vera's `op=projectdirectory`, never through the store.
+ *
+ * HOW A LIAR PASSES THE OBVIOUS TEST, stated before what this checks:
+ *   (1) default to DISCOVERABLE. Every arm that SENDS a value still passes. So 12a (the FAIL-CLOSED arm) creates
+ *       with the field ABSENT and asks the record — the setting, the history and vera's directory — and 12h asks
+ *       the same of a FORK sent without it, whose origin is DISCOVERABLE (so inheritance is a liar too).
+ *   (2) ACCEPT the field and record nothing. The answer can still say `discoverable` if it echoes the request;
+ *       so 12b reads it back through `op=projectvisibility`'s HISTORY (set_by iris) and vera's directory.
+ *   (3) let a machine choose. 12d drives the ADMIN and MEMBER deploy tokens with `discoverable` and demands the
+ *       refusal BY NAME (C-97.1) with its canned translation, and that NO project was created.
+ *   (4) refuse too much. 12e: a machine's creation with no field, or with `hidden`, still lands, HIDDEN, with no
+ *       owner's act recorded (it asked for exactly what an ownerless creation gets).
+ * WHAT THIS CANNOT SEE: an internal store caller that promotes a project with `ownerMemberId` it did not get from
+ * a session — the control plane's stamp is what makes ownerlessness mean "machine", and REC-79's admission suite
+ * owns that stamp. */
+{
+  const projMd12 = (title) => projectMd(null).replace('title: "Hidden project 9138"', `title: "${title}"`);
+  const create12 = (tok, title, vis) => {
+    const text = projMd12(title);
+    return POST(`op=promote&token=${tok}`, {
+      base: null, snapKey: `rec197-${++seq}`,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { ...meta(null, "project", "forming"), title },
+      ...(vis === undefined ? {} : { visibility: vis }) });
+  };
+  const visOf = async (id) => parse(await RAW(`op=projectvisibility&token=${IRIS}&projectId=${E(id)}`));
+  const listed = async () => ((parse(await RAW(`op=projectdirectory&token=${VERA}`)) || {}).projects || []).map((p) => p.id);
+  const projCount = async () => ((parse(await RAW(`op=list&token=${ADM}&limit=1000`)) || {}).bundles || [])
+    .filter((b) => b.object_type === "project").length;
+
+  /* 12a — THE FAIL-CLOSED ARM. */
+  const a = must("12a create", await create12(IRIS, "REC-197 absent"));
+  const va = await visOf(a.bundleId);
+  t("12a: FAIL-CLOSED — a member's creation with NO visibility field is created HIDDEN (answer, setting, no act recorded)",
+    [a.visibility, va && va.setting, va && va.recorded, va && va.history && va.history.length], ["hidden", "hidden", false, 0]);
+  t("12a+: FAIL-CLOSED — and the uninvited member's directory does not list it", (await listed()).includes(a.bundleId), false);
+
+  /* 12b — the owner's choice, recorded as the owner's act. */
+  const b = must("12b create", await create12(IRIS, "REC-197 discoverable", "discoverable"));
+  const vb = await visOf(b.bundleId);
+  t("12b: a member's creation with visibility=discoverable is DISCOVERABLE, recorded as iris's act",
+    [b.visibility, vb && vb.setting, vb && vb.history && vb.history.map((h) => [h.setting, h.set_by])],
+    ["discoverable", "discoverable", [["discoverable", "iris"]]]);
+  t("12b+: and vera's directory lists it by id and name", (await listed()).includes(b.bundleId), true);
+
+  /* 12c — `hidden` chosen is recorded as chosen. */
+  const c = must("12c create", await create12(IRIS, "REC-197 hidden", "hidden"));
+  const vc = await visOf(c.bundleId);
+  t("12c: visibility=hidden is HIDDEN and recorded as the owner's choice",
+    [c.visibility, vc && vc.setting, vc && vc.recorded, vc && vc.history && vc.history.map((h) => h.set_by)],
+    ["hidden", "hidden", true, ["iris"]]);
+
+  /* 12d — the machine refusal, by name, and nothing created. */
+  for (const [who, tok] of [["ADMIN", ADM], ["MEMBER", MEM]]) {
+    const before = await projCount();
+    const r = await create12(tok, `REC-197 machine ${who}`, "discoverable");
+    t(`12d: a MACHINE credential (${who} token) sending visibility=discoverable is refused BY NAME`,
+      [r && r.ok, codeOf(r), r && r.check, typeof (r && r.translation) === "string" && r.translation.length > 40],
+      [false, "PROJECT_VISIBILITY_NO_OWNER", "C-97.1", true]);
+    /* The count is floored: a list that carried no object_type would count 0 before and after, for free. */
+    t(`12d+: and nothing was created (${who}; the count is of a non-empty list)`, [await projCount(), before > 0], [before, true]);
+  }
+
+  /* 12e — OVER-STRICTNESS: the machine's creation itself is not refused. */
+  const e0 = must("12e absent", await create12(ADM, "REC-197 machine absent"));
+  const e1 = must("12e hidden", await create12(ADM, "REC-197 machine hidden", "hidden"));
+  const ve0 = parse(await RAW(`op=projectvisibility&token=${ADM}&projectId=${E(e0.bundleId)}`));
+  const ve1 = parse(await RAW(`op=projectvisibility&token=${ADM}&projectId=${E(e1.bundleId)}`));
+  t("12e: a machine's creation with no field, or with hidden, LANDS HIDDEN with no owner's act recorded",
+    [e0.visibility, e1.visibility, ve0 && ve0.recorded, ve1 && ve1.recorded, e0.owner, e1.owner],
+    ["hidden", "hidden", false, false, null, null]);
+
+  /* 12f — a value that is not a setting. */
+  { const before = await projCount();
+    const r = await create12(IRIS, "REC-197 unknown", "Discoverable");
+    t("12f: visibility=\"Discoverable\" is not a setting — refused C-70.3 by name, the owner's act's own row",
+      [r && r.ok, codeOf(r), r && r.check], [false, "PROJECT_VISIBILITY_UNKNOWN_SETTING", "C-70.3"]);
+    t("12f+: and nothing was created (the count is of a non-empty list)", [await projCount(), before > 0], [before, true]); }
+
+  /* 12g — the field on a REVISION is refused, never silently ignored. */
+  { const text = projMd12("REC-197 absent").replace("---\n", `---\nid: ${a.bundleId}\n`).replace("A project.", "Revised.");
+    const r = await POST(`op=promote&token=${IRIS}`, { bundleId: a.bundleId, base: a.bundleSha, snapKey: `rec197-${++seq}`,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { ...meta(a.bundleId, "project", "forming"), title: "REC-197 absent" }, visibility: "discoverable" });
+    const v = await visOf(a.bundleId);
+    t("12g: visibility on a REVISION is refused by name (C-97.2), and the setting did not move",
+      [r && r.ok, codeOf(r), r && r.check, v && v.setting, v && v.recorded],
+      [false, "PROJECT_VISIBILITY_NOT_A_CREATION", "C-97.2", "hidden", false]); }
+
+  /* 12h — the FORK: a creation, its forker chooses, it does not inherit. The origin is DISCOVERABLE (b). */
+  { const f0 = await POST(`op=projectfork&token=${IRIS}&projectId=${E(b.bundleId)}&title=${E("REC-197 fork absent")}`);
+    const v0 = f0 && f0.newId ? await visOf(f0.newId) : null;
+    t("12h: FAIL-CLOSED — a fork with NO visibility of a DISCOVERABLE project is HIDDEN (not inherited)",
+      [f0 && f0.ok, f0 && f0.visibility, v0 && v0.setting, v0 && v0.recorded], [true, "hidden", "hidden", false]);
+    const f1 = await POST(`op=projectfork&token=${IRIS}&projectId=${E(c.bundleId)}&title=${E("REC-197 fork chosen")}&visibility=discoverable`);
+    const v1 = f1 && f1.newId ? await visOf(f1.newId) : null;
+    t("12h+: a fork with visibility=discoverable of a HIDDEN project is DISCOVERABLE, the forker's act",
+      [f1 && f1.ok, f1 && f1.visibility, v1 && v1.history && v1.history.map((h) => [h.setting, h.set_by])],
+      [true, "discoverable", [["discoverable", "iris"]]]);
+    const f2 = await POST(`op=projectfork&token=${IRIS}&projectId=${E(c.bundleId)}&title=${E("REC-197 fork bad")}&visibility=public`);
+    t("12h++: a fork with visibility=public is refused C-70.3 by name", [f2 && f2.ok, codeOf(f2)],
+      [false, "PROJECT_VISIBILITY_UNKNOWN_SETTING"]); }
+
+  /* 12i — the owner's act still answers C-70.3 through the shared helper, project echoed as before. */
+  { const r = await POST(`op=projectvisibilityset&token=${IRIS}&projectId=${E(c.bundleId)}&setting=public`);
+    t("12i: the owner's act with an unknown setting still answers C-70.3, naming its project",
+      [r && r.ok, codeOf(r), r && r.check, r && r.project], [false, "PROJECT_VISIBILITY_UNKNOWN_SETTING", "C-70.3", c.bundleId]); }
 }
 
 } catch (e) {

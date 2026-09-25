@@ -3,6 +3,7 @@
    RE-RUN 2026-09-23 after the affordance registration (CONDUCT #18's return: `projectvisibilityset` is a PUBLISHED act, and §6 gained its DEC-8 arm) — every arm AS DECLARED: (a) baseline 155/0 · (b) widen-viewerPredicate 99/56 · (c) existence-as-absent 133/22 · (d) default-discoverable 105/50 · (e) owner-fence-dropped 147/8 · (f) latest-by-max-seq 155/0 (each +1 pass, the new arm).
    RE-RUN 2026-09-25 by REC-196 on base origin/main 964da679 AFTER correcting §3l to BOB #32's ruling (a) (a read naming P's own id answers C-70.1 at EXISTENCE; it had asserted the absent answer) and adding §3l+ — real sources untouched: YES (index.mjs 857,558 B sha256 28bfd3677c8c…, store.mjs 3,355,514 B sha256 b854b3303ef9…) — every arm AS DECLARED: (a) baseline 157/0 · (b) widen-viewerPredicate 95/62 · (c) existence-as-absent 123/34 (now also §3l's reads, declared by name) · (d) default-discoverable 96/61 · (e) owner-fence-dropped 149/8 · (f) latest-by-max-seq 157/0 · act-not-reindexed 101/56. RECORDED, NOT SMOOTHED: (d) default-discoverable had NOT ARMED since D-497 landed (D-601): its anchor ended `END,`, the comma before the `at` column D-497 removed, so it matched zero times and the default's one control reported ARM DID NOT ARM. Anchor corrected; its first armed run failed every §2c read beyond its declaration — under a flipped default every project is at EXISTENCE, and since REC-196 a read of a project's own id answers C-70.1 there — so the reads are now a second witness, declared. (b) failed §3l+ undeclared on its first run (its `3l:` fragment does not match `3l+:`); extended.
    RE-RUN 2026-09-25 by REC-150 on its branch over origin/main 964da679 (real sources untouched: YES), after REC-150 moved `act-not-reindexed`'s anchor (the lapse now sits between the re-derivation and the return) and corrected `default-discoverable`'s (D-602: its trailing comma had not occurred since D-497, so on pristine 964da679 that arm reported ARM DID NOT ARM) — every arm AS DECLARED: (a) baseline 156/0 · (b) widen-viewerPredicate 100/56 · (c) existence-as-absent 134/22 · (d) default-discoverable 106/50 · (e) owner-fence-dropped 148/8 · (f) latest-by-max-seq 156/0 · (g) act-not-reindexed 112/44. REC-150 corrected 3c in place and added no assertion to this suite.
+   RE-RUN 2026-09-25 by REC-197 on land/worker/REC-196 @ 82f604d2 (stacked) AFTER CORRECTING 1a0 (the predecessor fixture now also neuters the creation answer's `#visibilityOf` read, count-asserted — REC-197 made a project's creation ANSWER its setting, a second reader of the sight index on this fixture's path; its derivation-call count stays 3, because REC-197's act-log insert rides the ONE existing call), real src/store.mjs 3,361,747 B sha256 1662015934e2…, untouched: YES — baseline 157/0 · widen-viewerPredicate 95/62 · existence-as-absent 123/34 · default-discoverable 96/61 · owner-fence-dropped 149/8 · latest-by-max-seq 157/0 · act-not-reindexed 101/56: every arm AS DECLARED. RECORDED, NOT SMOOTHED: before the correction every arm, the baseline included, came back NOT AS DECLARED (1/2 — the fixture threw `no such table: project_sight` at the new read, and 1a0 counted 4 derivation calls from REC-197's first draft, which added one; the draft was changed to ride the existing call rather than the count raised).
  * =========================================================================
  * REC-149 / C-70 / IC-231 — DISCOVERABLE OR HIDDEN (Membership Architecture v2 §7, item 7.14, BOB #16 from
  * Bob's ruling of 2026-09-18: *"The project's contents might be private, though the existence of the project
@@ -181,10 +182,17 @@ let P, Q, IRIS, VERA, OLGA, RUTH, FOUNDER;
   const storeSrc = readFileSync(storePath, "utf8");
   const CALL = "this.#reindexProjectSight(";
   const callHits = storeSrc.split(CALL).length - 1;
-  writeFileSync(storePath, storeSrc.split(CALL).join(`false && ${CALL}`));
+  /* CORRECTED 2026-09-25 by REC-197, never exempted: a project's creation now ANSWERS its setting, read back
+     through `#visibilityOf` — a second reader of the sight index on this fixture's path, and a store with no such
+     table throws at it exactly as it would at a derivation call. The predecessor answered no setting at all, so the
+     read is neutered to the predecessor's answer (no key), by the same count-asserted method. */
+  const READ = `...(!cur && meta.object_type === "project" ? { visibility: this.#visibilityOf(bundleId) } : {}),`;
+  const readHits = storeSrc.split(READ).length - 1;
+  writeFileSync(storePath, storeSrc.split(CALL).join(`false && ${CALL}`).split(READ).join("...{},"));
   t("1a0: the predecessor's STORE is armed too — every call into the sight derivation is neutered, and the "
-  + "count is the one D-497 landed",
-    [callHits, readFileSync(storePath, "utf8").split(`false && ${CALL}`).length - 1], [3, 3]);
+  + "count is the one D-497 landed; and the creation answer's read of it (REC-197) is gone",
+    [callHits, readFileSync(storePath, "utf8").split(`false && ${CALL}`).length - 1, readHits,
+     readFileSync(storePath, "utf8").split(READ).length - 1], [3, 3, 1, 0]);
   t("1a: the predecessor is ARMED — the act log's DDL and the sight index's DDL each occur exactly once in "
   + "this tree's schema and BOTH were removed",
     [hits, sightHits, readFileSync(schemaPath, "utf8").includes("project_visibility ("),

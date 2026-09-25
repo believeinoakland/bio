@@ -489,6 +489,14 @@ const CATALOG_CENSUS = {
      1.29.0 (REC-186, 2026-09-25): C-33.48 LAST_OWNER_CANNOT_LEAVE joined ACT_SHAPE_CHECKS (BOB #31's ruling:
      op=projectleave refuses a project's only owner), 461 -> 462;
      "1.29.0": { count: 462, digest: "679731bf482feb496fa2c6fdd0443fc6d503cf8375b52cb6cf98142fd361d73a" } */
+  /* REC-197 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (REC-197, 2026-09-25, branch land/worker/REC-197, stacked on land/worker/REC-196 @ 82f604d2): TWO ARRIVALS,
+     NO DEPARTURES — C-97.1 PROJECT_VISIBILITY_NO_OWNER and C-97.2 PROJECT_VISIBILITY_NOT_A_CREATION (a creation's
+     `visibility`, BOB #32's ruling (b)). 466 -> 468, count AND digest from THIS SUITE'S OWN PRINT on the item's tree,
+     never 466 + 2. 1.29.0's row STAYS. **IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE
+     UNION'S: CONDUCT takes the next number and re-reads the census from this suite's print on the merged tree.** *\/
+     "1.30.0": { count: 468, digest: "78740e5c8072d6d694c354539ffa0f2d3d0924c3ecc8f38a4437fbb1953c09ad" }, */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -697,6 +705,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* MK-7 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-92's twelve rows); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* REC-147 side, kept as history — its A5 pin read 1.30.0 on its own branch (C-93's seven rows); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* REC-197 side, kept as history — its A5 pin read 1.30.0 on its own branch (C-97's two rows); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives

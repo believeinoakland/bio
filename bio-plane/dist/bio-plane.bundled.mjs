@@ -4501,6 +4501,7 @@ __export(bio_checks_exports, {
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
   PER_ITEM_CHECKS: () => PER_ITEM_CHECKS,
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
+  PROJECT_CREATION_VISIBILITY_CHECKS: () => PROJECT_CREATION_VISIBILITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
   PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
@@ -13704,13 +13705,27 @@ var PROJECT_VISIBILITY_CHECKS = {
   },
   PROJECT_VISIBILITY_UNKNOWN_SETTING: {
     check: "C-70.3",
-    where: "src/store.mjs projectVisibilitySet > is-project-visibility-owner",
+    /* REC-197: the value check moved into one helper both doors ask (the owner's act and a creation's
+       `visibility`), so this row names that helper's region and the code keeps ONE site. */
+    where: "src/store.mjs #visibilitySettingRefusal > is-project-visibility-setting",
     translation: "A project is either discoverable or hidden, and nothing else. Nothing was changed. Choose one of the two."
   },
   PROJECT_DIRECTORY_NEEDS_A_MEMBER: {
     check: "C-70.4",
     where: "src/store.mjs projectDirectory > is-project-directory-member",
     translation: "The list of projects you can ask to join is for a signed-in member. Sign in as yourself to see it."
+  }
+};
+var PROJECT_CREATION_VISIBILITY_CHECKS = {
+  PROJECT_VISIBILITY_NO_OWNER: {
+    check: "C-97.1",
+    where: "src/store.mjs promote > is-project-creation-ownerless",
+    translation: "Whether a project can be found is chosen by its owners, and a project created by a machine credential has no owner, so it is created hidden and cannot be made discoverable here. Nothing was created. Create it without the setting; an owner who joins it later can make it discoverable."
+  },
+  PROJECT_VISIBILITY_NOT_A_CREATION: {
+    check: "C-97.2",
+    where: "src/store.mjs promote > is-project-creation-visibility",
+    translation: "Whether a project can be found is chosen when it is created or forked, and this was not a project being created. Nothing was changed. An owner changes an existing project's setting in its settings."
   }
 };
 var CASE_AUTHORITY_CHECKS = {
@@ -47642,6 +47657,27 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         );
     }
     if (!bundleId && !creatingProject || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    let creationVisibility = null;
+    if (pkg.visibility !== void 0 && pkg.visibility !== null) {
+      const refusal8 = (code, detail) => {
+        const row = PROJECT_CREATION_VISIBILITY_CHECKS[code];
+        return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+      };
+      if (base !== null || normalizeType(meta.object_type) !== "project")
+        return refusal8(
+          "PROJECT_VISIBILITY_NOT_A_CREATION",
+          "visibility is chosen when a project is created or forked, and this is not a project's creation. An existing project's setting is its owners' act, op=projectvisibilityset. Nothing was written."
+        );
+      const unknown = this.#visibilitySettingRefusal(pkg.visibility, null);
+      if (unknown) return unknown;
+      const creator = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
+      if (!creator && pkg.visibility === "discoverable")
+        return refusal8(
+          "PROJECT_VISIBILITY_NO_OWNER",
+          "whether a project can be found is its OWNERS' choice (Membership Architecture v2 \xA77.14), and a project created by a machine credential has no owner to choose it, so it is created HIDDEN. Send the creation without visibility (or with visibility=hidden); an owner who arrives later may set it. Nothing was created."
+        );
+      creationVisibility = creator ? pkg.visibility : null;
+    }
     const digested = _Store.#digestFiles(files);
     if (digested.disagree.length)
       return {
@@ -48389,6 +48425,15 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         newSha,
         bundleId
       );
+      if (!cur && creationVisibility)
+        this.sql.exec(
+          `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
+          bundleId,
+          creationVisibility,
+          pkg.ownerMemberId,
+          null,
+          (/* @__PURE__ */ new Date()).toISOString()
+        );
       this.#reindexProjectSight(bundleId);
       const supersededBefore = [...this.sql.exec(
         `SELECT target_id FROM refs WHERE bundle_id=? AND kind='supersedes'`,
@@ -48822,6 +48867,10 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         bundleSha: after.bundle_sha,
         rowVersion: after.row_version,
         owner,
+        /* REC-197: present ONLY on a project's creation — the setting it was created with, READ BACK through
+           `#visibilityOf` (the one reader) rather than echoed from the request, so an absent field answers
+           `hidden` because the record says so. */
+        ...!cur && meta.object_type === "project" ? { visibility: this.#visibilityOf(bundleId) } : {},
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
         ...testimonyWrote ? { testimony: testimonyWrote } : {},
@@ -63546,11 +63595,10 @@ ${words}`;
         "PROJECT_VISIBILITY_NOT_THE_OWNER",
         `whether ${String(projectId).slice(0, 80)} can be found is its OWNERS' choice (Membership Architecture v2 \xA77.14), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one of them. Seeing a project is not directing it. Nothing was written.`
       );
-    if (want !== "discoverable" && want !== "hidden")
-      return refusal7(
-        "PROJECT_VISIBILITY_UNKNOWN_SETTING",
-        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and nothing else. Nothing was written.`
-      );
+    {
+      const unknown = this.#visibilitySettingRefusal(want, projectId);
+      if (unknown) return unknown;
+    }
     const why = reason === null || reason === void 0 || String(reason).trim() === "" ? null : String(reason).slice(0, 280);
     const at = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
@@ -63563,6 +63611,31 @@ ${words}`;
     );
     this.#reindexProjectSight(projectId);
     return { ok: true, projectId, setting: want, set_by: by, reason: why, at };
+  }
+  /* REC-197 — WHAT A SETTING IS, asked in ONE place by both doors that take one: the owner's act above and a
+     creation's `visibility` (`promote`, which a fork reaches through). "discoverable" or "hidden" and nothing
+     else, compared exactly — a spelling the vocabulary does not write is not quietly read as either. Null when
+     the value is a setting. `projectId` is echoed when the door has one (the owner's act); a creation has none. */
+  #visibilitySettingRefusal(value, projectId) {
+    const want = String(value ?? "");
+    const refusal7 = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...projectId !== null ? { project: projectId } : {}
+      };
+    };
+    if (want !== "discoverable" && want !== "hidden")
+      return refusal7(
+        "PROJECT_VISIBILITY_UNKNOWN_SETTING",
+        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and nothing else. Nothing was written.`
+      );
+    return null;
   }
   /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
    *  founder: §7.14, "administrators and the founder see the setting and its history"). A READ, so it does not
@@ -64352,7 +64425,7 @@ ${words}`;
    *
    *  Origin is recorded as `derived_from`, already in the closed relationship
    *  vocabulary of State Rules 5.1, so nothing is added to it. */
-  forkProject({ projectId, newId, title, by, viewer = null } = {}) {
+  forkProject({ projectId, newId, title, by, viewer = null, visibility = null } = {}) {
     if (newId !== void 0 && newId !== null && newId !== "") {
       const row = PROJECT_ID_CHECKS.PROJECT_FORK_ID_SUPPLIED;
       return {
@@ -64437,6 +64510,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
       author: by,
       ownerMemberId: by,
+      /* REC-197 (§7.14, BOB #32 (b)): the FORKER's choice, decided and recorded by `promote` exactly as a
+         creation's — a fork is a creation (§7.12) and does NOT inherit the origin's setting. Absent is HIDDEN. */
+      visibility,
       files: [{
         path: "bundle.md",
         text,
@@ -64463,7 +64539,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       rel: "derived_from",
       owner: by,
       participantsCopied: 0,
-      bundleSha: promoted.bundleSha
+      bundleSha: promoted.bundleSha,
+      visibility: promoted.visibility
     };
   }
   /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same
@@ -80068,6 +80145,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"),
           title: url.searchParams.get("title"),
+          visibility: url.searchParams.get("visibility"),
+          /* REC-197: absent is null, which is HIDDEN */
           by: url.searchParams.get("by"),
           viewer: url.searchParams.get("viewer")
         }),
