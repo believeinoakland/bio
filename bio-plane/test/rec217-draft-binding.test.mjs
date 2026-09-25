@@ -88,6 +88,17 @@
    (b) OVER-STRICTNESS — `here` spelled `d.case_id == null || d.case_id === caseId`. DECLARED: MUST PASS every row.
        RAN 42 pass, 0 fail. AS DECLARED.
 
+   D-725 NEGATIVE CONTROL (block 10; declared before arming, each arm ALONE on `src/store.mjs`, restored by `cp` from a
+   per-arm pristine copy, `sha256sum -c` OK 9935f0a6…abeb59b, `cmp` identical, 3,481,597 bytes):
+   (0) BASELINE 44 pass, 0 fail. (Before the fix, driven through op=publish: 42 pass, 2 FAIL — both block-10 rows: the
+       named draft by pat beside ella's same-bytes draft for another case got statement_by null and "UNDETERMINED: 2
+       drafts"; the named draft holding other bytes got statement_by "ella", the foreign draft's author, signed.)
+   (a) THE ROW'S OWN CONTROL — `#statementWriter` reads every project draft again (`const rows = named` spelled
+       `const rows = false`). DECLARED: MUST FAIL both block-10 rows BY NAME; MUST NOT fail any other row. RAN 42 pass,
+       2 FAIL — exactly those. AS DECLARED.
+   (b) OVER-STRICTNESS — the named draft read by filtering the project's bounded set in JS instead of by `draft_id=?`.
+       DECLARED: MUST PASS every row. RAN 44 pass, 0 fail. AS DECLARED.
+
    REC-217 / BIO_Publication_v0_1.md §3 rules 11 and 13 — BOB #33 RULED 2026-09-24 19:14Z: `op=publish` NAMES THE
    DRAFT IT PUBLISHES (`draft=`, optional, additive), and AT THAT ACT the readings taken through that draft BIND to
    the case it produced. The link is an ACT, recorded with who made it (the publisher) and when, and the case
@@ -712,6 +723,49 @@ console.log("\n--- 9. D-683: WITHOUT draft=, A FURTHER EDITION COUNTS THE NO-CAS
      (docW?.text || "").includes("ella wrote this exclusion statement, in the draft it was prepared in."),
      /iris wrote this exclusion statement in the act that published this case/.test(docW?.text || "")],
     [true, 2, "ella", "ella", true, false]);
+}
+
+/* =========================================================================== 10 */
+/* D-725 (BIO_Publication §3 rule 13; §6A.4): THE DRAFT NAMED IS THE DRAFT READ, FOR THE WRITER AS FOR THE READINGS.
+   `#statementWriter` read EVERY no-case draft of the project holding the sentence, not the draft `draft=` named, so a
+   no-case draft prepared for ANOTHER case holding the same bytes answered for this one: two authors answered
+   `drafts_disagree` (UNDETERMINED, needlessly), and one foreign draft alone named ITS author in signed bytes. Both
+   drafts here name no case and hold one sentence (one tag); ella's is for another finding, pat's is for this one. */
+console.log("\n--- 10. D-725: WITH draft=, THE WRITER IS READ OFF THE NAMED DRAFT ALONE ---");
+{
+  const Q10 = await finding("d725"), Q10x = await finding("d725x");
+  const Dx = rP(await POST(`op=casedraft&token=${ELLA}`, withRoles({ ...args(PROJ, "d725"), targets: [Q10x] })));
+  if (!Dx?.ok) bail("casedraft d725 by ella (another case's)", Dx);
+  const Dn = rP(await POST(`op=casedraft&token=${PAT}`, withRoles({ ...args(PROJ, "d725"), targets: [Q10] })));
+  if (!Dn?.ok) bail("casedraft d725 by pat (this case's)", Dn);
+  const P10 = await publish("d725", [Q10], { draft: Dn.draftId });
+  if (P10?.ok === false || !P10?.caseDocument?.doc_sha) bail("publish d725 naming pat's draft", P10);
+  const doc10 = await docOf(P10.caseDocument.case_id, 1);
+  const fm10 = fmOf(doc10?.text);
+  t("D-725 ACCEPTS-WHEN: published naming PAT's draft, while ELLA's draft for another case holds the same bytes, the "
+  + "case names PAT as its writer, in the answer and in the signed bytes — never ella, never UNDETERMINED",
+    [P10?.completeness?.statement_by, fm10.completeness?.statement_by,
+     (doc10?.text || "").includes("pat wrote this exclusion statement, in the draft it was prepared in."),
+     /ella/.test(String(fm10.completeness?.statement_by_stated ?? "")) || /\bella wrote\b/.test(doc10?.text || ""),
+     /UNDETERMINED: 2 drafts/.test(doc10?.text || "")],
+    ["pat", "pat", true, false, false]);
+
+  /* The named draft does NOT hold the published bytes, and only a foreign draft does: the named draft is the draft this
+     case was prepared in, so these bytes arrived with this act — the publisher's, stated as such — never ella's. */
+  const Q10b = await finding("d725b"), Q10bx = await finding("d725bx");
+  const Dbx = rP(await POST(`op=casedraft&token=${ELLA}`, withRoles({ ...args(PROJ, "d725b"), targets: [Q10bx] })));
+  if (!Dbx?.ok) bail("casedraft d725b by ella (another case's)", Dbx);
+  const Dbn = rP(await POST(`op=casedraft&token=${PAT}`, withRoles({ ...args(PROJ, "d725b-own"), targets: [Q10b] })));
+  if (!Dbn?.ok) bail("casedraft d725b-own by pat", Dbn);
+  const P10b = await publish("d725b", [Q10b], { draft: Dbn.draftId });
+  if (P10b?.ok === false || !P10b?.caseDocument?.doc_sha) bail("publish d725b naming pat's draft", P10b);
+  const doc10b = await docOf(P10b.caseDocument.case_id, 1);
+  t("D-725: the named draft holds OTHER bytes and only another case's draft holds these — the publisher wrote them at "
+  + "this act, said so naming the draft, and ella (the foreign draft's author) is never named",
+    [P10b?.completeness?.statement_by, fmOf(doc10b?.text).completeness?.statement_by,
+     (doc10b?.text || "").includes(`the draft this case was named as prepared in, ${Dbn.draftId}, does not hold this sentence`),
+     /\bella wrote\b/.test(doc10b?.text || "")],
+    ["iris", "iris", true, false]);
 }
 
 console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail`);

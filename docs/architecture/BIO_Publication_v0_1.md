@@ -176,11 +176,13 @@ Three consequences give the construct its shape. The record must be able to prov
     no-case draft only at edition 1, so an editor's sentence written in a no-case draft and published as a further
     edition WITHOUT `draft=` found no draft and `completeness.statement_by` named the PUBLISHER, "in the act that
     published this case" — a signed document crediting the publisher with an editor's bytes. A no-case draft is now at
-    the case identity at any edition, for the writer as for the readings (block 9). STATED, NOT WIDENED: the writer read
-    still reads every no-case draft of the project that holds the sentence, not the draft `draft=` named, so a no-case
-    draft prepared for another case holding the same bytes answers for this one — its author named if it alone holds
-    them, `drafts_disagree` (UNDETERMINED) if authors differ. The gap stood at edition 1 before; this row carries it to
-    further editions. Reading the named draft is the fix, not made here.
+    the case identity at any edition, for the writer as for the readings (block 9). **As built 2026-09-25 (D-725; I3):**
+    the draft named is the draft read, for the writer too. When `draft=` names the draft, `#statementWriter` reads THAT
+    draft alone: it read every no-case draft of the project holding the sentence, so a same-bytes no-case draft prepared
+    for another case answered for this one — its author named in signed bytes if it alone held them, `drafts_disagree`
+    (UNDETERMINED) beside the named draft's. Now the named draft's author is named; if the named draft does not hold
+    the published bytes, the publisher wrote them at this act and the document says so, naming the draft (block 10).
+    Without `draft=` the project's no-case drafts are read as before and a disagreement is still stated, not settled.
 
 14. **THE BAR IS A PAIR, AND AN AXIS NOBODY SET IS NULL** (BOB #32, 2026-09-23, D-450 on SCHEDULER #17's 22:56Z questions). A project may
     set a bar on one axis only. Both keys are always present, the unset one is `null`, and the case document says in

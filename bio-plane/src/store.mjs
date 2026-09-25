@@ -9276,7 +9276,7 @@ export class Store extends DurableObject {
        decides what the list may contain: an acknowledgement by the statement's writer is not a second
        reading (rule 11), so listing one would author bytes C-41.10 must refuse — and a store written
        before REC-193 HOLDS such rows, recorded while `op=statementack` read the draft's last editor. */
-    const writer = this.#statementWriter(proj, theCase, edition, stmt, who);
+    const writer = this.#statementWriter(proj, theCase, edition, stmt, who, boundDraft);
     /* REC-217 / §3 rule 13: THE LINK THIS ACT MAKES, when the publisher named the draft — its draft, its
        author and its time are this act's own, so the list, the prose and the row all state one act. */
     const draftLink = boundDraft ? { draft: boundDraft, by: who, at: when, case: boundDraftCase } : null;
@@ -11696,7 +11696,8 @@ export class Store extends DurableObject {
 
      FOUR ANSWERS, EACH A FACT AND NONE A FALLBACK:
        (1) drafts at this identity hold this sentence and AGREE on its author — that member;
-       (2) NO draft at this identity holds it — the PUBLISHER wrote these bytes AT THIS ACT. `op=publish`
+       (2) NO draft at this identity holds it (or, when `draft=` named one, THAT draft does not; D-725) — the
+           PUBLISHER wrote these bytes AT THIS ACT. `op=publish`
            takes `statement=` as an authored argument (it refuses NO_STATEMENT without one), so a
            sentence no draft holds arrived in this call from this caller: a measurement of this act, not
            a guess about an older one;
@@ -11712,7 +11713,7 @@ export class Store extends DurableObject {
      and it is why the document PRINTS where the name came from beside the name, in a sentence a member
      reviews, instead of printing the name alone. A caller who wants the editor named publishes the
      statement the draft holds. */
-  #statementWriter(project, caseId, edition, statement, publisher) {
+  #statementWriter(project, caseId, edition, statement, publisher, named = null) {
     const want = Store.#fmSafe(statement);
     const notFromAuthor = `It is NOT read off ${publisher}, who prepared and published this case: `
       + `preparing a case is not writing its statement (BIO_Publication §3 rule 13).`;
@@ -11720,8 +11721,18 @@ export class Store extends DurableObject {
                         stated: "UNDETERMINED: this case document prints no exclusion statement, so there is "
                               + "no sentence for anybody to have written." };
     const cap = Store.REVIEW_LIST_MAX;
-    const rows = this.#rows(`SELECT draft_id, case_id, params, statement_by FROM case_drafts
-                             WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, project, cap + 1);
+    /* D-725 (§3 rule 13; §6A.4): THE DRAFT NAMED IS THE DRAFT READ. When `draft=` named the draft this case was
+       prepared in, `op=publish` has already established that it is this project's, at this case identity, and
+       bound to no other edition — so it is the ONE draft read here. This read looked at EVERY no-case draft of the
+       project instead (D-703's stated gap): a no-case draft prepared for ANOTHER case holding these exact bytes then
+       answered for this one — its author named in signed bytes if it alone held them, or, beside the named draft's,
+       `drafts_disagree` (UNDETERMINED) where the named draft settles it. Without `draft=` the project's set is read,
+       as before, and a disagreement there is still stated, not settled. */
+    const rows = named
+      ? this.#rows(`SELECT draft_id, case_id, params, statement_by FROM case_drafts
+                    WHERE project_id=? AND draft_id=? LIMIT ?`, project, named, 1)
+      : this.#rows(`SELECT draft_id, case_id, params, statement_by FROM case_drafts
+                    WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, project, cap + 1);
     if (rows.length > cap)
       return { by: null, from: "drafts_unbounded",
                stated: `UNDETERMINED: ${project} holds more drafts than one bounded read of them lists `
@@ -11731,11 +11742,7 @@ export class Store extends DurableObject {
        1 (D-568), but since D-680 it publishes any edition, and this arm asked `Number(edition) === 1`: an editor's
        sentence written in a no-case draft and published as edition 2 without `draft=` found no draft, and the
        no-draft branch below credited the PUBLISHER with it, in signed bytes. D-683 took the same predicate off the
-       unbound reading count. KNOWN GAP, STATED AND NOT WIDENED HERE: this read looks at EVERY no-case draft of the
-       project, not the draft `draft=` named. So a no-case draft prepared for ANOTHER case that holds these exact
-       bytes answers for this one: its author is named if it alone holds them, and two authors answer
-       `drafts_disagree` (UNDETERMINED, stated). The gap stood at edition 1 before this row; dropping the edition
-       carries it to further editions, and reading the named draft is the fix, not made here. */
+       unbound reading count. Since D-725, when `draft=` named a draft only that draft is read (above). */
     const here = (d) => (d.case_id ?? null) === (caseId ?? null) || (d.case_id ?? null) === null;
     /* A DRAFT AT THIS IDENTITY WHOSE ARGUMENTS WILL NOT PARSE IS UNDETERMINED, NOT A NON-MATCH, and this is
        the arm `provenance-marker.test.mjs` §I's ceiling caught in this method's first cut. That cut returned
@@ -11760,6 +11767,11 @@ export class Store extends DurableObject {
                stated: `UNDETERMINED: ${unreadable.length} draft(s) of ${project} at this case identity `
                      + `(${unreadable.join(", ")}) hold arguments this plane cannot read, so whether this `
                      + `sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}` };
+    if (!matches.length && named)
+      return { by: publisher, from: "this_act",
+               stated: `${publisher} wrote this exclusion statement in the act that published this case, and `
+                     + `prepared and published the case — two acts, one member: the draft this case was named as `
+                     + `prepared in, ${named}, does not hold this sentence, so these bytes arrived with this publication.` };
     if (!matches.length)
       return { by: publisher, from: "this_act",
                stated: `${publisher} wrote this exclusion statement in the act that published this case, and `

@@ -39732,7 +39732,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       lock_violations: Array.isArray(lens.lock_violations) ? lens.lock_violations.length : 0,
       stated: lens.in_force === true ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed` : lens.in_force === null ? String(lens.stated) : "no manifest was in force"
     };
-    const writer = this.#statementWriter(proj, theCase, edition, stmt, who2);
+    const writer = this.#statementWriter(proj, theCase, edition, stmt, who2, boundDraft);
     const draftLink = boundDraft ? { draft: boundDraft, by: who2, at: when, case: boundDraftCase } : null;
     const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who2, writer, null, draftLink);
     const docText = _Store.#caseDocumentText({
@@ -41986,7 +41986,8 @@ case_project: ${project}
   
        FOUR ANSWERS, EACH A FACT AND NONE A FALLBACK:
          (1) drafts at this identity hold this sentence and AGREE on its author — that member;
-         (2) NO draft at this identity holds it — the PUBLISHER wrote these bytes AT THIS ACT. `op=publish`
+         (2) NO draft at this identity holds it (or, when `draft=` named one, THAT draft does not; D-725) — the
+             PUBLISHER wrote these bytes AT THIS ACT. `op=publish`
              takes `statement=` as an authored argument (it refuses NO_STATEMENT without one), so a
              sentence no draft holds arrived in this call from this caller: a measurement of this act, not
              a guess about an older one;
@@ -42002,7 +42003,7 @@ case_project: ${project}
        and it is why the document PRINTS where the name came from beside the name, in a sentence a member
        reviews, instead of printing the name alone. A caller who wants the editor named publishes the
        statement the draft holds. */
-  #statementWriter(project, caseId, edition, statement, publisher) {
+  #statementWriter(project, caseId, edition, statement, publisher, named = null) {
     const want = _Store.#fmSafe(statement);
     const notFromAuthor = `It is NOT read off ${publisher}, who prepared and published this case: preparing a case is not writing its statement (BIO_Publication \xA73 rule 13).`;
     if (!want) return {
@@ -42011,8 +42012,9 @@ case_project: ${project}
       stated: "UNDETERMINED: this case document prints no exclusion statement, so there is no sentence for anybody to have written."
     };
     const cap = _Store.REVIEW_LIST_MAX;
-    const rows = this.#rows(`SELECT draft_id, case_id, params, statement_by FROM case_drafts
-                             WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, project, cap + 1);
+    const rows = named ? this.#rows(`SELECT draft_id, case_id, params, statement_by FROM case_drafts
+                    WHERE project_id=? AND draft_id=? LIMIT ?`, project, named, 1) : this.#rows(`SELECT draft_id, case_id, params, statement_by FROM case_drafts
+                    WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, project, cap + 1);
     if (rows.length > cap)
       return {
         by: null,
@@ -42037,6 +42039,12 @@ case_project: ${project}
         by: null,
         from: "draft_unreadable",
         stated: `UNDETERMINED: ${unreadable.length} draft(s) of ${project} at this case identity (${unreadable.join(", ")}) hold arguments this plane cannot read, so whether this sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}`
+      };
+    if (!matches.length && named)
+      return {
+        by: publisher,
+        from: "this_act",
+        stated: `${publisher} wrote this exclusion statement in the act that published this case, and prepared and published the case \u2014 two acts, one member: the draft this case was named as prepared in, ${named}, does not hold this sentence, so these bytes arrived with this publication.`
       };
     if (!matches.length)
       return {
