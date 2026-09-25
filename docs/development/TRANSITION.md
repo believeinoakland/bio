@@ -60,6 +60,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-25 · T0 · snapshot branch created (tags refused by the cloud proxy, HTTP 403) · `snapshot/pre-refactor-2026-09-25` @ 5b9c2643 · —
 - 2026-09-25 · T1 · principles P1–P16 and mechanics approved by Bob · `land/bob/process-design` · —
 - 2026-09-25 · T2 · this plan, frozen old plan, index of 216 rows with first-pass classes · `land/bob/process-design` · next: T3
+- 2026-09-25 · T3 · canon list drafted by BOB #37: 38 canon documents plus the DEC rulings (4 mission, 12 level-1, 22 level-2; some by section), 10 reference, 5 retired · `requirements/README.md` · next: Bob approves the list
 
 ## 5. Challenges identified
 
