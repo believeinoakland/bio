@@ -1,0 +1,16 @@
+{
+ "unit": "plane:coord.test.mjs",
+ "inputHash": "a9001fbe1cf60766542416e1a07174e52c1359b6d5d068cdc125b4e32e757331",
+ "verdict": "PASS",
+ "run": "4740eb69891acea379ae6611e2331d2956f74fa8.1790301441819.1739.json",
+ "tree": "4740eb69891acea379ae6611e2331d2956f74fa8",
+ "head": "8d3e3be9611835cc78607e2bcb0cf058ca7657fa",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "DOCS",
+ "inputs": 1289,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "2793ab9e-da65-5fe9-9e70-7f8125b295e6",
+ "at": "2026-09-25T01:57:21.829Z"
+}
