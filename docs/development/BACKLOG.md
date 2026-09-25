@@ -53,6 +53,16 @@ scope: status by code in the serialiseContainer refusal path: 409 for DUPLICATE_
 accepts-when: a zip request naming a path twice answers 409 DUPLICATE_PATH, and an over-large one 413 (moves: a duplicate path reported as too large). NEGATIVE CONTROL: send 413 for every refusal again and the duplicate arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-561's worker).
 
+### D-618 · queued — **A DRAFT THAT NAMES A CASE AND ALSO SETS `newCase` STILL ANSWERS THAT CASE'S NEXT EDITION beside a sentence saying its case is UNDETERMINED (publication refuses the pair CASE_IDENTITY_AMBIGUOUS), so the answer states an edition for a case the record has not chosen.** Found by D-568's worker (05:36Z). — owner RECORD.
+order: after D-613, with the review-copy corrections: D-568's class, one branch over (SCHEDULER #22, 2026-09-25)
+milestone: M10
+interface: I3 — `edition` reads null for that pair; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling and D-568's `#statedEdition`.
+depends-on: D-568 (land/worker/D-568 @ d5da99bb).
+scope: #statedEdition answers null when caseId and newCase are both set, in the same five answers D-568 covers.
+accepts-when: a case-naming newCase draft answers edition null in all five (moves: an edition beside an undetermined case). NEGATIVE CONTROL: answer the named case's next edition again and the ambiguous-pair arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
+
 ### REC-226 · queued — **AN OWNER'S `projectinvite` OF A MEMBER WHOSE REQUEST TO JOIN IS OPEN LEAVES THE REQUEST OPEN, so the record holds a stale request the owner has in fact answered.** BOB #35 RULED 04:30Z on REC-150's gap (a), CHANGING the provisional: the invite CLOSES the request as `granted`, by the inviting owner, at that act. — owner RECORD.
 order: after D-586, with the membership corrections: a request the owner answered still reading open is the record claiming less than happened (SCHEDULER #22, 2026-09-25)
 milestone: M8
@@ -367,6 +377,16 @@ depends-on: none.
 scope: resolve that expression (and its `new URL("../..", …)` siblings) as a TREE root read in pensweep.mjs; then lower the UNCLASSIFIED ceiling to the printed figure (18 -> 15 or less).
 accepts-when: D-526's, D-547's and D-548's drivers read classified and the ceiling falls by name (moves: 3 drivers UNCLASSIFIED). NEGATIVE CONTROL: drop the new resolution and those three read UNCLASSIFIED over the lowered ceiling, failing by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; CONDUCT #21's batch28 finding).
+
+### D-620 · queued — **363 OF 376 bio-plane SUITES COMPARE WITH `JSON.stringify` EQUALITY, WHICH READS AN ABSENT VALUE IN AN ARRAY AS `null`, so any arm asserting a STATED null cannot tell it from a dropped key (measured in reviewcopy.control arm v, which stayed green until hardened).** Found by D-568's worker (05:36Z). — owner M0.
+order: after M0-196, with the gate-instrument rows: an arm that cannot fail on a dropped key is a control that refutes nothing (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an equality that costs nothing to produce is not evidence).
+depends-on: none.
+scope: a shared comparator whose serialiser maps undefined to a distinct sentinel; adopt it in every suite that asserts a null (grep assertions naming null), not all 363.
+accepts-when: each null-asserting suite uses the comparator and fails on a dropped key (moves: stated-null arms blind to a dropped key). NEGATIVE CONTROL: drop a stated-null key in one fixture and its arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
 
 ### D-542 · queued — **THE DEC-49 GUARD SCORES A CODE "OUT OF REACH" WHEN ITS SURFACE RENDERS THE PLANE'S OWN WORDS: `check-refusal-codes.mjs` puts a code in reach only by R1 (a catalogue row), R2 (a code LITERAL in `app.html`) or R3 (a harness mock), so UI-68's review-copy surface, which renders `detail` and keys on no literal, left TEN of D-448's eleven codes scored out of reach for a day while a member could meet them.** Found by D-448's worker (branch `land/worker/D-448` 5eadd905: the Publication front matter and `13.review-copy` both carry "D-542 carries that fix (reach-by-op) and is NOT BUILT"). — owner M0 (the guard).
 order: after D-550, with the DEC-49 instrument rows behind the product rows: it makes a false gate result (a reachable code read as unreachable) visible, which is product quality, but nothing regresses today since D-448 catalogues all eleven (Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-24)
@@ -1181,23 +1201,3 @@ depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the r
 accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own … (whole text: the cut archive)
-order: behind the product rows, first of the reading-budget rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: an over-budget kickoff costs every RECORD spawn context, not gate time, and blocks no product; SCHEDULER #12); not a defect in the product, cheap and mechanical (SCHEDULER #2, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` with CLAUDE.md §1's reading budget — *a file is either READ WHOLE … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
-order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
-depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
-accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

@@ -787,8 +787,8 @@ scope: emit that clause only when layerPages is non-empty.
 accepts-when: a wholly scanned document's note carries no kept-text clause, and a mixed one still does (moves: a stated text layer that never existed). NEGATIVE CONTROL: emit the clause unconditionally and the wholly-scanned arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
 
-### D-568 · running — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
-status: running — SCHEDULER #22 04:54Z spawns WORKER D-568 (depth 2)
+### D-568 · integrated — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
+status: integrated — SCHEDULER #22 05:38Z: tip d5da99bb, GATE 385/385 GREEN FULLREUSE (21872 assertions), tree 903310df; edition null for a derived draft in five answers (statementack too); I3; minted D-618, D-619, D-620
 order: after D-573, with the review-copy corrections: an edition stated for a case the record has not chosen claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M10
 interface: I3 — `edition` reads null on the wire for a derived draft; the integrator classifies.
@@ -820,8 +820,8 @@ scope: the setup page sends the line's SECOND token as keyB64 and the rest (the 
 accepts-when: a whole public-key line pasted into the setup page registers the key (moves: every setup-page registration refused BAD_KEY). NEGATIVE CONTROL: post the whole line again and the arm reads BAD_KEY, failing by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-134's worker).
 
-### UI-106 · queued — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
-status: queued — D-538 (01:04Z): civicos-ui preauth-vocabulary.test.mjs ~941 and review-copy.test.mjs ~479 mock the OLD identity sentence for a copy with no newCase; correct both mocks to the plane's new wording
+### UI-106 · running — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
+status: running — SCHEDULER #22 05:38Z spawns WORKER UI-106 (depth 2), carrying D-619
 order: after D-539, the surface half of the review-copy corrections (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
 interface: I3 consumer (REC-199's IC-285 and D-538's IC).
@@ -830,6 +830,17 @@ depends-on: D-538, UI-92.
 scope: `rvcFormFromCopy` reads `case.newCase` so a read-then-write keeps it; the draft list re-reads the plane's identity sentence as stated; discharge REC-199's DELEGATION block.
 accepts-when: against a real-plane suite a round trip through the form keeps `newCase`, and draft DD shows the derivation sentence (the measured failure it moves: `newCase` lost at the surface). NEGATIVE CONTROL: drop the read and the round-trip arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
+
+### D-619 · running — **`rvcGrantsHtml` SAYS A DEAD GRANT BOUND TO NO CASE "was given for a new case", untrue for a DERIVED draft's grant (D-538's class, on the surface).** Found by D-568's worker (05:36Z). RIDES UI-106's landing (the same review-copy surface). — owner UI.
+status: running — SCHEDULER #22 05:38Z: rides WORKER UI-106's landing
+order: directly after UI-106, which carries it (SCHEDULER #22, 2026-09-25)
+milestone: M10
+interface: none.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with D-538's identity sentence.
+depends-on: none (it rides UI-106's landing, the same surface).
+scope: word the no-case branch "a draft that named no case", never "a new case".
+accepts-when: a dead derived-draft grant never reads "a new case" (moves: a surface sentence claiming a new case). NEGATIVE CONTROL: restore "a new case" and the derived-grant arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
 
 ### UI-110 · running — **NO MEMBER CAN SELECT A PROJECT-SCOPED FINDING INTO A QUEUE SET: `civicos-ui/app.html`'s `queueSetOpFor` (~14393 on main 9f8b69e6; UI-94 renames it `queueSetOpsFor`) returns null for scope=project, though REC-205 makes the plane carry each item's project.** The DELEGATION RECORD (REC-205) → UI on coord `CLAIMS.md` (06b86e6d). — owner UI.
 status: running — SCHEDULER #22 05:26Z spawns WORKER UI-110 (depth 2)
