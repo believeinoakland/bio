@@ -13364,6 +13364,88 @@ export const SIGNER_ENROLMENT_CHECKS = {
   },
 };
 
+/* D-134 / C-96 — THE CUSTODIAL ACTS' REFUSALS, SAID IN WORDS (Membership Architecture v2 §4.9, *"What
+ * an administrator does"*; DEC-49). D-134 gave an administrator's session a surface over `memberadd`,
+ * `memberset`, `signeradd` and `signerset`, and every refusal that surface can receive must arrive with a
+ * canned translation rather than as a machine token. MEMBER_ID_RESERVED (C-55.1) and the two SIGNER_MEMBER
+ * rows (C-63) already had one; these are the rest.
+ *
+ * A ROW TRANSLATES ITS CODE AT EVERY SITE THAT MINTS IT, NOT ONLY AT ITS `where`: the control plane's
+ * `dec49Decorate` (index.mjs) attaches a family row's `check` and `translation` to ANY refusal carrying the
+ * row's code on its way out. So each sentence below was checked against every site that mints its code,
+ * and is written to be true at all of them:
+ *   NOT_AN_ADMIN       `#custodialBar`, `memberCaps`, `adminEndorse`, `adminRemove` — each the CALLER. The
+ *                      one site where it meant the TARGET (`adminRemove`, a member named for removal who
+ *                      is not an administrator) is SPLIT to its own code, TARGET_NOT_AN_ADMIN, because no
+ *                      single sentence is true of both facts;
+ *   EXISTS             `memberAdd` (a member id) and `promote` (a bundle created against an existing one);
+ *   CONSENSUS_REQUIRED `memberAdd` and `adminEndorse` (§4.7's administrators) and `projectOwnerAdd`
+ *                      (§7.10's owners).
+ * NO_SUCH_MEMBER, NO_SUCH_KEY and BAD_STATUS are NOT given rows: the surface sends only ids and keys the
+ * plane listed to it (no member or signer row is ever deleted) and only the two statuses the ops take, so it
+ * cannot receive them; EXPERTISE_IS_NOT_ASSIGNED likewise, because the surface never sends `expertise`. */
+export const CUSTODIAL_CHECKS = {
+  NOT_AN_ADMIN: {
+    check: 'C-96.1',
+    where: 'src/store.mjs #custodialBar > is-custodial-admin',
+    translation: 'Only an active administrator of this group can do that, and the account asking is not '
+      + 'one of them here. The record reads who is asking from the signed-in session, never from the '
+      + 'request. Nothing was changed.',
+  },
+  BAD_MEMBER_ID: {
+    check: 'C-96.2',
+    where: 'src/store.mjs memberAdd > is-member-add-id',
+    translation: 'A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with '
+      + 'a letter or a digit. Nothing was written. It is the name the record keeps for this person; the '
+      + 'handle they sign in with is theirs to choose when they enrol.',
+  },
+  NO_COVER: {
+    check: 'C-96.3',
+    where: 'src/store.mjs memberAdd > is-member-add-shape',
+    translation: 'A cover is needed: the label you use to tell members apart. It need not be, and often '
+      + 'should not be, a legal name. Nothing was written.',
+  },
+  EXISTS: {
+    check: 'C-96.4',
+    where: 'src/store.mjs memberAdd > is-member-add-shape',
+    translation: 'That id is already taken in this record, so nothing new was created under it. Choose a '
+      + 'different id.',
+  },
+  ADMINS_FIRST: {
+    check: 'C-96.5',
+    where: 'src/store.mjs memberAdd > is-admins-first',
+    translation: 'This group needs a second administrator before it has any ordinary members, so that '
+      + 'losing one person does not lose the group. Nothing was written. Invite this person as an '
+      + 'administrator, or invite a second administrator first.',
+  },
+  CONSENSUS_REQUIRED: {
+    check: 'C-96.6',
+    where: 'src/store.mjs memberAdd > is-admin-consensus',
+    translation: 'This addition needs the agreement of everyone who must agree to it — every existing '
+      + 'administrator, or for a project every existing owner — and not all of them have agreed yet, so it '
+      + 'has not taken effect. The answer lists who has agreed and who it is still waiting on.',
+  },
+  ADMIN_REQUIRES_VOTE: {
+    check: 'C-96.7',
+    where: 'src/store.mjs memberSet > is-admin-requires-vote',
+    translation: 'An administrator cannot be deactivated by another administrator acting alone. Removing an '
+      + 'administrator takes a majority of all administrators, in which the one facing removal is counted '
+      + 'but does not vote. Nothing was changed.',
+  },
+  BAD_KEY: {
+    check: 'C-96.8',
+    where: 'src/store.mjs signerAdd > is-signer-key-shape',
+    translation: 'That is not a public key this group can register. It takes the base64 part of an '
+      + 'ssh-ed25519 public key, the part that begins AAAA. Nothing was written.',
+  },
+  TARGET_NOT_AN_ADMIN: {
+    check: 'C-96.9',
+    where: 'src/store.mjs adminRemove > is-remove-target-admin',
+    translation: 'The member named is not an administrator, so there is no administrator to remove. An '
+      + 'ordinary member is deactivated instead, which one administrator can do. Nothing was changed.',
+  },
+};
+
 /* REC-134 / C-56 — SIGHT IS NOT AUTHORITY (Membership Architecture v2 §7, the block of that
  * name, BOB #15, 2026-09-18; §4.9: *"the custodial role can audit everything and direct
  * nothing"*). An act that changes a project, its productions or their grants asks the ACTOR'S

@@ -4379,6 +4379,7 @@ __export(bio_checks_exports, {
   CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
+  CUSTODIAL_CHECKS: () => CUSTODIAL_CHECKS,
   DISPATCH_CHECKS: () => DISPATCH_CHECKS,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
@@ -13288,6 +13289,53 @@ var SIGNER_ENROLMENT_CHECKS = {
     check: "C-63.2",
     where: "src/store.mjs #signerMemberBar > is-signer-member-attesting",
     translation: "That member\u2019s membership is not active, so this instance would refuse anything signed with their key. Nothing was written. Reinstate the member first if they should be able to sign again."
+  }
+};
+var CUSTODIAL_CHECKS = {
+  NOT_AN_ADMIN: {
+    check: "C-96.1",
+    where: "src/store.mjs #custodialBar > is-custodial-admin",
+    translation: "Only an active administrator of this group can do that, and the account asking is not one of them here. The record reads who is asking from the signed-in session, never from the request. Nothing was changed."
+  },
+  BAD_MEMBER_ID: {
+    check: "C-96.2",
+    where: "src/store.mjs memberAdd > is-member-add-id",
+    translation: "A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with a letter or a digit. Nothing was written. It is the name the record keeps for this person; the handle they sign in with is theirs to choose when they enrol."
+  },
+  NO_COVER: {
+    check: "C-96.3",
+    where: "src/store.mjs memberAdd > is-member-add-shape",
+    translation: "A cover is needed: the label you use to tell members apart. It need not be, and often should not be, a legal name. Nothing was written."
+  },
+  EXISTS: {
+    check: "C-96.4",
+    where: "src/store.mjs memberAdd > is-member-add-shape",
+    translation: "That id is already taken in this record, so nothing new was created under it. Choose a different id."
+  },
+  ADMINS_FIRST: {
+    check: "C-96.5",
+    where: "src/store.mjs memberAdd > is-admins-first",
+    translation: "This group needs a second administrator before it has any ordinary members, so that losing one person does not lose the group. Nothing was written. Invite this person as an administrator, or invite a second administrator first."
+  },
+  CONSENSUS_REQUIRED: {
+    check: "C-96.6",
+    where: "src/store.mjs memberAdd > is-admin-consensus",
+    translation: "This addition needs the agreement of everyone who must agree to it \u2014 every existing administrator, or for a project every existing owner \u2014 and not all of them have agreed yet, so it has not taken effect. The answer lists who has agreed and who it is still waiting on."
+  },
+  ADMIN_REQUIRES_VOTE: {
+    check: "C-96.7",
+    where: "src/store.mjs memberSet > is-admin-requires-vote",
+    translation: "An administrator cannot be deactivated by another administrator acting alone. Removing an administrator takes a majority of all administrators, in which the one facing removal is counted but does not vote. Nothing was changed."
+  },
+  BAD_KEY: {
+    check: "C-96.8",
+    where: "src/store.mjs signerAdd > is-signer-key-shape",
+    translation: "That is not a public key this group can register. It takes the base64 part of an ssh-ed25519 public key, the part that begins AAAA. Nothing was written."
+  },
+  TARGET_NOT_AN_ADMIN: {
+    check: "C-96.9",
+    where: "src/store.mjs adminRemove > is-remove-target-admin",
+    translation: "The member named is not an administrator, so there is no administrator to remove. An ordinary member is deactivated instead, which one administrator can do. Nothing was changed."
   }
 };
 var PROJECT_AUTHORITY_CHECKS = {
@@ -62675,11 +62723,26 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (by === null || by === void 0 || by === "") return null;
     if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
     if (this.#activeAdmins().includes(by)) return null;
+    const refusal7 = (code, detail, extra) => _Store.#custodialRefusal(code, detail, extra);
+    return refusal7(
+      "NOT_AN_ADMIN",
+      `${act} is an administrator's act (4.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators.`,
+      { by }
+    );
+  }
+  /* D-134 / DEC-49 — THE CUSTODIAL ACTS' REFUSALS, BUILT FROM C-96's ROWS. `reason` AND `code` carry the
+   * same literal, `#leadRefusal`'s precedent: every existing caller reads `reason`, the guard and the
+   * surfaces read `code`. The code is a STRING LITERAL at each call site, never a variable. */
+  static #custodialRefusal(code, detail, extra) {
+    const row = CUSTODIAL_CHECKS[code];
     return {
       ok: false,
-      reason: "NOT_AN_ADMIN",
-      by,
-      detail: `${act} is an administrator's act (4.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators.`
+      reason: code,
+      code,
+      check: row.check,
+      translation: row.translation,
+      ...extra || {},
+      detail
     };
   }
   /* REC-159: the stored actor, or the stated absence of one. */
@@ -62790,7 +62853,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.role !== "admin") return { ok: false, reason: "NOT_AN_ADMIN", detail: "this member is not an administrator" };
+    const refusal7 = (code, detail, extra) => _Store.#custodialRefusal(code, detail, extra);
+    if (m.role !== "admin")
+      return refusal7(
+        "TARGET_NOT_AN_ADMIN",
+        "this member is not an administrator, so there is no administrator to remove; an ordinary member is deactivated with op=memberset",
+        { memberId }
+      );
     const admins = this.#activeAdmins();
     if (memberId === by) return {
       ok: false,
@@ -62854,25 +62923,25 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const barAdd = this.#custodialBar(by, "adding a member");
     if (barAdd) return barAdd;
     const label = typeof cover === "string" && cover.trim() ? cover : name;
-    if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
-      return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    const refusal7 = (code, detail) => {
+    const refusal7 = (code, detail, extra) => {
+      if (!(code in MEMBER_ID_CHECKS)) return _Store.#custodialRefusal(code, detail, extra);
       const row = MEMBER_ID_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, memberId };
     };
+    if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
+      return refusal7("BAD_MEMBER_ID", "lowercase letters, digits and dashes, 2 to 41 characters");
     if (memberId === _Store.ROOT_ADMIN)
       return refusal7(
         "MEMBER_ID_RESERVED",
         `'${_Store.ROOT_ADMIN}' names this instance's founding administrator; no member may be enrolled under it`
       );
     if (!label || typeof label !== "string")
-      return {
-        ok: false,
-        reason: "NO_COVER",
-        detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name"
-      };
+      return refusal7(
+        "NO_COVER",
+        "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name"
+      );
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return { ok: false, reason: "EXISTS", memberId };
+      return refusal7("EXISTS", `a member row already holds the id '${memberId}'; nothing was written`, { memberId });
     if (expertise !== null && expertise !== void 0)
       return {
         ok: false,
@@ -62882,12 +62951,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const wantAdmin = role === "admin";
     const admins = this.#activeAdmins();
     if (!wantAdmin && admins.length < 2)
-      return {
-        ok: false,
-        reason: "ADMINS_FIRST",
-        administrators: admins.length,
-        detail: "the second member of a group must be an administrator, and there are no ordinary members until two exist. Administrative access is shared among at least two people so that losing one person does not lose the group."
-      };
+      return refusal7(
+        "ADMINS_FIRST",
+        "the second member of a group must be an administrator, and there are no ordinary members until two exist. Administrative access is shared among at least two people so that losing one person does not lose the group.",
+        { administrators: admins.length }
+      );
     const caps = Array.isArray(capabilities) ? capabilities.filter((c) => _Store.CAPABILITIES.includes(c)) : ["contribute"];
     const now = (/* @__PURE__ */ new Date()).toISOString();
     if (wantAdmin && admins.length >= 2) {
@@ -62909,15 +62977,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           now
         );
       const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId).map((r) => r.voter).filter((v) => admins.includes(v));
-      return {
-        ok: false,
-        reason: "CONSENSUS_REQUIRED",
-        memberId,
-        proposed: true,
-        have: have.sort(),
-        awaiting: admins.filter((a) => !have.includes(a)).sort(),
-        detail: "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it."
-      };
+      return refusal7(
+        "CONSENSUS_REQUIRED",
+        "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it.",
+        { memberId, proposed: true, have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort() }
+      );
     }
     const invite = _Store.#rand(16);
     const hash = await _Store.#sha256(invite);
@@ -63023,12 +63087,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    const refusal7 = (code, detail, extra) => _Store.#custodialRefusal(code, detail, extra);
     if (m.role === "admin" && status === "revoked")
-      return {
-        ok: false,
-        reason: "ADMIN_REQUIRES_VOTE",
-        detail: "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally."
-      };
+      return refusal7(
+        "ADMIN_REQUIRES_VOTE",
+        "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally."
+      );
     const demoted = status === "active" && m.role === "admin" && m.status !== "active";
     const now = (/* @__PURE__ */ new Date()).toISOString();
     const actor = by || null;
@@ -63127,8 +63191,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   signerAdd({ keyB64, memberId, comment, by = null } = {}) {
     const barCust = this.#custodialBar(by, "registering a signing key");
     if (barCust) return barCust;
+    const refusal7 = (code, detail, extra) => _Store.#custodialRefusal(code, detail, extra);
     if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
-      return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
+      return refusal7("BAD_KEY", "expected the base64 field of an ssh-ed25519 public key");
     const barAdd = this.#signerMemberBar(memberId);
     if (barAdd) return barAdd;
     this.sql.exec(

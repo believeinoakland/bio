@@ -508,7 +508,7 @@ import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
    refusal surface whose reader is guaranteed not to be a member. */
 import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
-import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
+import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS, CUSTODIAL_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-149 / C-70: a DISCOVERABLE project's existence is seen; its doors are not (Membership v2 §7.14). */
@@ -34873,10 +34873,23 @@ export class Store extends DurableObject {
     if (by === null || by === undefined || by === "") return null;
     if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
     if (this.#activeAdmins().includes(by)) return null;
-    return { ok: false, reason: "NOT_AN_ADMIN", by,
-             detail: `${act} is an administrator's act (4.9), and the plane stamps who is asking from the `
-                   + "signed-in session rather than taking it from the caller. This caller is not one of "
-                   + "the active administrators." };
+    /* D-134 / C-96.1: the canned translation rides beside the detail (DEC-49). */
+    const refusal = (code, detail, extra) => Store.#custodialRefusal(code, detail, extra);
+    /* DEC-49 REGION is-custodial-admin */
+    return refusal("NOT_AN_ADMIN",
+      `${act} is an administrator's act (4.9), and the plane stamps who is asking from the `
+    + "signed-in session rather than taking it from the caller. This caller is not one of "
+    + "the active administrators.", { by });
+    /* END DEC-49 REGION is-custodial-admin */
+  }
+
+  /* D-134 / DEC-49 — THE CUSTODIAL ACTS' REFUSALS, BUILT FROM C-96's ROWS. `reason` AND `code` carry the
+   * same literal, `#leadRefusal`'s precedent: every existing caller reads `reason`, the guard and the
+   * surfaces read `code`. The code is a STRING LITERAL at each call site, never a variable. */
+  static #custodialRefusal(code, detail, extra) {
+    const row = CUSTODIAL_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+             ...(extra || {}), detail };
   }
 
   /* REC-159: the stored actor, or the stated absence of one. */
@@ -34976,7 +34989,15 @@ export class Store extends DurableObject {
                      + "hosting account. The remedy is at the hosting account, not here (section 4.6)." };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.role !== "admin") return { ok: false, reason: "NOT_AN_ADMIN", detail: "this member is not an administrator" };
+    /* D-134: the TARGET is not an administrator — a different fact from the CALLER not being one, which is
+       what NOT_AN_ADMIN says at every other site, so it carries its own code and its own canned sentence. */
+    const refusal = (code, detail, extra) => Store.#custodialRefusal(code, detail, extra);
+    /* DEC-49 REGION is-remove-target-admin */
+    if (m.role !== "admin")
+      return refusal("TARGET_NOT_AN_ADMIN",
+        "this member is not an administrator, so there is no administrator to remove; an ordinary member "
+      + "is deactivated with op=memberset", { memberId });
+    /* END DEC-49 REGION is-remove-target-admin */
     const admins = this.#activeAdmins();
     if (memberId === by) return { ok: false, reason: "TARGET_CANNOT_VOTE",
       detail: "the target is counted in the denominator but does not vote" };
@@ -35022,27 +35043,33 @@ export class Store extends DurableObject {
     /* `name` is still read, because an older caller may send it, but the field
        is a cover and the response says so. */
     const label = typeof cover === "string" && cover.trim() ? cover : name;
+    /* D-134: C-55's row answers as it always did; every other refusal here is C-96's (DEC-49). */
+    const refusal = (code, detail, extra) => {
+      if (!(code in MEMBER_ID_CHECKS)) return Store.#custodialRefusal(code, detail, extra);
+      const row = MEMBER_ID_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, memberId };
+    };
+    /* DEC-49 REGION is-member-add-id */
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
-      return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+      return refusal("BAD_MEMBER_ID", "lowercase letters, digits and dashes, 2 to 41 characters");
+    /* END DEC-49 REGION is-member-add-id */
     /* REC-132 / D-422 / C-55.1: the founder's name is not an id anybody else may hold.
        The pattern above admits it and nothing else reserved it, so a member enrolled as
        `admin` would have been read as the founder by every name-keyed check
        (`#isAdminMember`, `#activeAdmins`). Refused BEFORE the EXISTS test and before
        anything is written, whoever asks and whatever role is asked for. */
-    const refusal = (code, detail) => {
-      const row = MEMBER_ID_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, memberId };
-    };
     /* DEC-49 REGION is-member-id-reserved */
     if (memberId === Store.ROOT_ADMIN)
       return refusal("MEMBER_ID_RESERVED",
         `'${Store.ROOT_ADMIN}' names this instance's founding administrator; no member may be enrolled under it`);
     /* END DEC-49 REGION is-member-id-reserved */
+    /* DEC-49 REGION is-member-add-shape */
     if (!label || typeof label !== "string")
-      return { ok: false, reason: "NO_COVER",
-               detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name" };
+      return refusal("NO_COVER",
+        "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name");
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return { ok: false, reason: "EXISTS", memberId };
+      return refusal("EXISTS", `a member row already holds the id '${memberId}'; nothing was written`, { memberId });
+    /* END DEC-49 REGION is-member-add-shape */
 
     /* D-51. v1.4 let an administrator ASSIGN expertise when creating the
        invitation, and v2 1.3 forbids exactly that: a member declares what they
@@ -35066,11 +35093,13 @@ export class Store extends DurableObject {
        at the earliest moment it is possible to satisfy them, and it is a refusal
        rather than a nudge because an ordinary member added first is a group with
        a single point of failure that nobody notices until it fails. */
+    /* DEC-49 REGION is-admins-first */
     if (!wantAdmin && admins.length < 2)
-      return { ok: false, reason: "ADMINS_FIRST", administrators: admins.length,
-               detail: "the second member of a group must be an administrator, and there are no ordinary "
-                     + "members until two exist. Administrative access is shared among at least two people "
-                     + "so that losing one person does not lose the group." };
+      return refusal("ADMINS_FIRST",
+        "the second member of a group must be an administrator, and there are no ordinary "
+      + "members until two exist. Administrative access is shared among at least two people "
+      + "so that losing one person does not lose the group.", { administrators: admins.length });
+    /* END DEC-49 REGION is-admins-first */
 
     const caps = Array.isArray(capabilities) ? capabilities.filter((c) => Store.CAPABILITIES.includes(c))
                                              : ["contribute"];
@@ -35095,10 +35124,12 @@ export class Store extends DurableObject {
           memberId, by, now);
       const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId)
         .map((r) => r.voter).filter((v) => admins.includes(v));
-      return { ok: false, reason: "CONSENSUS_REQUIRED", memberId, proposed: true,
-               have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort(),
-               detail: "adding an administrator beyond the second requires the consensus of every existing "
-                     + "administrator. No invitation is issued until they have all endorsed it." };
+      /* DEC-49 REGION is-admin-consensus */
+      return refusal("CONSENSUS_REQUIRED",
+        "adding an administrator beyond the second requires the consensus of every existing "
+      + "administrator. No invitation is issued until they have all endorsed it.",
+        { memberId, proposed: true, have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort() });
+      /* END DEC-49 REGION is-admin-consensus */
     }
 
     const invite = Store.#rand(16);
@@ -35243,11 +35274,14 @@ export class Store extends DurableObject {
        Revoking an administrator IS taking it away, so it goes through the
        section 4.7 vote or it does not happen. This is what stops an instance
        being captured by whoever acts first in a dispute. */
+    const refusal = (code, detail, extra) => Store.#custodialRefusal(code, detail, extra);   /* D-134 / C-96 */
+    /* DEC-49 REGION is-admin-requires-vote */
     if (m.role === "admin" && status === "revoked")
-      return { ok: false, reason: "ADMIN_REQUIRES_VOTE",
-               detail: "an administrator is removed by a majority of all administrators, counting the target "
-                     + "in the denominator but not letting them vote (section 4.7). No administrator may strip "
-                     + "another unilaterally." };
+      return refusal("ADMIN_REQUIRES_VOTE",
+        "an administrator is removed by a majority of all administrators, counting the target "
+      + "in the denominator but not letting them vote (section 4.7). No administrator may strip "
+      + "another unilaterally.");
+    /* END DEC-49 REGION is-admin-requires-vote */
     /* 4.9: reactivating a former administrator must NOT restore their
        administrator status.
      *
@@ -35355,8 +35389,11 @@ export class Store extends DurableObject {
     /* REC-159: the roster first, before the key is judged or the member looked up. */
     const barCust = this.#custodialBar(by, "registering a signing key");
     if (barCust) return barCust;
+    const refusal = (code, detail, extra) => Store.#custodialRefusal(code, detail, extra);   /* D-134 / C-96 */
+    /* DEC-49 REGION is-signer-key-shape */
     if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
-      return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
+      return refusal("BAD_KEY", "expected the base64 field of an ssh-ed25519 public key");
+    /* END DEC-49 REGION is-signer-key-shape */
     /* D-158: this asked only whether the member EXISTED, where the gate asks
        whether their membership is ACTIVE. `NO_SUCH_MEMBER` is unchanged and still
        arrives first — it is inside the bar, on the same lookup, so two different
