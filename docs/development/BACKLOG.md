@@ -535,6 +535,16 @@ scope: MULTI_SITE_CLOSED records each closure's literal site count and arm G fai
 accepts-when: re-running D-668's arm A3 turns the guard RED by name (moves: a green guard over a respelt closure). NEGATIVE CONTROL: drop the site-count check and A3 leaves the guard green, failing the new arm's declaration by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-668's worker).
 
+### D-727 · queued — **TWO PRODUCERS' #queueSharedInquiry GUARDS HAVE NO WITNESS IN ANY SUITE: #findingsVersionFromAnotherTeam's cannot be witnessed by purge (op=purge deletes every inquiry_basis_versions row it reads — M0-139's arm 8b is GREEN), and #findingsConcludedElsewhere's fixture mints no concluded-by-another-project item while conclude-project.test never purges.** Found by M0-139's worker (minted on land/worker/M0-139). — owner M0 (the suites).
+order: after D-705, with the test-trust rows: a guard no arm can fail is a control that cannot fail (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — tests only.
+design: `docs/development/VERIFICATION.md` (a negative control must be able to fail; admitted for M0 by name).
+depends-on: M0-139 (current.control's split arms 8a/8b; stack on land/worker/M0-139 until it lands).
+scope: (a) current.test.mjs: a member whose D-15 gate hides the shared question while both projects stay visible, asserting neither producer mints for that member; point arm 8b at it. (b) conclude-project.test.mjs: purge the concluded question and the concluded-elsewhere item goes quiet; conclude-project.control.mjs gains an arm removing that guard. STATE, do not fix: other *.control.mjs drivers may declare must-fail names no assertion carries (M0-25/M0-51's census is the place).
+accepts-when: arm 8b and the new conclude-project arm each fail by name (moves: two guards with no witness). NEGATIVE CONTROL: the two arms themselves, recorded on each suite's line.
+added: 2026-09-25 · SCHEDULER #24 (id minted by M0-139's worker).
+
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
 milestone: M8
@@ -1080,24 +1090,4 @@ design: `docs/development/VERIFICATION.md` "The negative-control register" (brea
 depends-on: M0-157.
 scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
 accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
-order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
-depends-on: M0-158.
-scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
-accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
-order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
-depends-on: none.
-scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
-accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

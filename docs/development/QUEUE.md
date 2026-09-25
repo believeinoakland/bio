@@ -874,8 +874,8 @@ scope: publishedCase() returns `document: state.document`; publishedcase.test.mj
 accepts-when: on each of the five draft-binding cases a stranger's published case page reads the signing line, never "not been signed yet" (moves: data-casedoc="none" on five signed cases). NEGATIVE CONTROL: drop `document` from the return and the stranger arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by UI-121's worker).
 
-### M0-139 · running — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
-status: running — SCHEDULER #24 11:02Z: spawned from main 95fe7bc7
+### M0-139 · integrated — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
+status: integrated — SCHEDULER #24 11:30Z: tip 03935461 on main 95fe7bc7, GATE 79/79 GREEN TARGETED (6089 assertions), tree 7137f076; NARROWED: arm 8 split 8a/8b (anchor occurred 3 times), arm 7 fails the new no_project_scope assertion by name, 8a fails by name; 8b is DECLARED-GREEN because op=purge deletes what its producer reads, so its witness is D-727; the driver records a never-armed arm as WRONG
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
 milestone: M0
 interface: none — a control and one assertion.
@@ -941,7 +941,8 @@ scope: drop the edition number from the pair branch — name the case as the dra
 accepts-when: no op answering for a pair draft states an edition number (asserted in reviewcopy block 14 and at each of the four ops) (moves: an edition stated beside edition:null). NEGATIVE CONTROL: restore the numbered pair sentence and the no-edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-708's worker).
 
-### D-720 · queued — **A READING ACKNOWLEDGED ON A DRAFT THAT NAMES C1 AND ALSO SETS newCase IS KEYED UNDER C1's NEXT EDITION: #statementAcknowledgements lists every row at a case identity (draft match '*'), so C1's signed document can list a reading given on a draft that may become ANOTHER case — the record claiming a binding nobody made.** Diagnosed from the code by D-708's worker (statementack INSERT; #statementAcknowledgements' WHERE), not yet driven. BOB #36 RULED 2026-09-25 11:30Z, option (1) (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+### D-720 · running — **A READING ACKNOWLEDGED ON A DRAFT THAT NAMES C1 AND ALSO SETS newCase IS KEYED UNDER C1's NEXT EDITION: #statementAcknowledgements lists every row at a case identity (draft match '*'), so C1's signed document can list a reading given on a draft that may become ANOTHER case — the record claiming a binding nobody made.** Diagnosed from the code by D-708's worker (statementack INSERT; #statementAcknowledgements' WHERE), not yet driven. BOB #36 RULED 2026-09-25 11:30Z, option (1) (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+status: running — SCHEDULER #24 11:30Z: spawned, stacked on land/worker/D-708 @ 656b0817
 order: first queued in the cache: a false binding listed in signed bytes outranks every feature (CLAUDE.md §2), and it corrects D-708 (SCHEDULER #24, 2026-09-25)
 milestone: M10
 interface: I3 — a pair draft's reading carries no case identity until a publish names the draft; the integrator classifies.
