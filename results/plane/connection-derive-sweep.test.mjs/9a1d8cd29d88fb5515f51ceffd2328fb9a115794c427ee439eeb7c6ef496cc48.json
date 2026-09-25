@@ -1,0 +1,16 @@
+{
+ "unit": "plane:connection-derive-sweep.test.mjs",
+ "inputHash": "9a1d8cd29d88fb5515f51ceffd2328fb9a115794c427ee439eeb7c6ef496cc48",
+ "verdict": "PASS",
+ "run": "c4043bbb07f36e625be502b8c6a5fe63e18691fe.1790331407668.2436.json",
+ "tree": "c4043bbb07f36e625be502b8c6a5fe63e18691fe",
+ "head": "d858e5bd753ccf65a1f45facc299fa6f08505475",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e2175792-eeea-5eb1-b1d5-544b44fa1632",
+ "at": "2026-09-25T10:16:47.680Z"
+}

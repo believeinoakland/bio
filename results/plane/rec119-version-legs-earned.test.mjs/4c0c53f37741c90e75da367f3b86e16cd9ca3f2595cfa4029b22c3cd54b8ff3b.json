@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec119-version-legs-earned.test.mjs",
+ "inputHash": "4c0c53f37741c90e75da367f3b86e16cd9ca3f2595cfa4029b22c3cd54b8ff3b",
+ "verdict": "PASS",
+ "run": "c4043bbb07f36e625be502b8c6a5fe63e18691fe.1790331407668.2436.json",
+ "tree": "c4043bbb07f36e625be502b8c6a5fe63e18691fe",
+ "head": "d858e5bd753ccf65a1f45facc299fa6f08505475",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 145,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e2175792-eeea-5eb1-b1d5-544b44fa1632",
+ "at": "2026-09-25T10:16:47.681Z"
+}
