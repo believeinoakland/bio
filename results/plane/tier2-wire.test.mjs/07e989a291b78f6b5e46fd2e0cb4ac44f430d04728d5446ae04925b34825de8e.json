@@ -1,0 +1,16 @@
+{
+ "unit": "plane:tier2-wire.test.mjs",
+ "inputHash": "07e989a291b78f6b5e46fd2e0cb4ac44f430d04728d5446ae04925b34825de8e",
+ "verdict": "PASS",
+ "run": "d242c4c8be51ec9ce04fd232fc04e1452c4cfdfa.1790339289489.27259.json",
+ "tree": "d242c4c8be51ec9ce04fd232fc04e1452c4cfdfa",
+ "head": "3094f19b375532358f3d914326632df789d4bd4f",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 152,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d7b4d302-5969-5f0a-a15d-5767d16df227",
+ "at": "2026-09-25T12:28:09.507Z"
+}
