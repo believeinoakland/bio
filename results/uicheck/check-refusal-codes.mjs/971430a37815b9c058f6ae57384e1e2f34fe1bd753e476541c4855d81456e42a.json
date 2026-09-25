@@ -1,0 +1,16 @@
+{
+ "unit": "uicheck:check-refusal-codes.mjs",
+ "inputHash": "971430a37815b9c058f6ae57384e1e2f34fe1bd753e476541c4855d81456e42a",
+ "verdict": "PASS",
+ "run": "bc48bc5625a8d8f3e585ebced74bd08fe8ccb926.1790309935886.2002.json",
+ "tree": "bc48bc5625a8d8f3e585ebced74bd08fe8ccb926",
+ "head": "f448cb461feac700fbd169427a486dcb504ec6e4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1398,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "0ad81d38-7a2d-54d4-aa90-da145c4b5608",
+ "at": "2026-09-25T04:18:55.897Z"
+}
