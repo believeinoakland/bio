@@ -28405,7 +28405,86 @@ export class Store extends DurableObject {
       ...this.#conditionsPartialCapture(viewer, now, identity),
       ...this.#conditionsCaptureUnattended(viewer, now, identity),
       ...this.#conditionsCaptureRequested(viewer, now, identity),
+      ...this.#conditionsRenderDeferred(viewer, now, identity),
     ];
+  }
+
+  /** `render-deferred` (D-523; BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24 by BOB #33").
+   *
+   *  THE FACT IS THE REQUEST ROW'S OWN: a request that asked for the page as a visitor saw it (`render = 1`) and
+   *  carries a C-83 code. While it is `requested` the drain is HOLDING it under that code (D-491) and asks again on
+   *  every tick until its `expires`; once `expired` the drain has RELEASED it and the render never happened. Both
+   *  are shown, under one kind, because they are one fact at two moments and a member who saw the first must be
+   *  able to see how it ended — an item that simply vanished at expiry would be the silent drop the ruling forbids.
+   *
+   *  THE REASON IS C-83's OWN, in DEC-49 words: the code, its C-number and the canned translation are read off the
+   *  family that minted them and never re-typed here, so the sentence a member reads is the one the plane refuses
+   *  with. C-83.3 and C-83.4 say different things — one that this instance cannot render at all, the other that
+   *  today's allowance is committed — and collapsing them into "deferred" would tell a member to wait for a
+   *  renderer that is not coming.
+   *
+   *  A CONDITION: our renderer, our allowance and our pacing hold it, so it is a fact about our machinery and never
+   *  about the page, and a member may mute it for themselves (D-125's item form). It offers no act of its own; the
+   *  options are the acts on the question the request was asked under, derived as every other item's are.
+   *
+   *  GATED AT THE TARGET through `#bundleGate`, exactly as the completion notification one producer up is: a
+   *  request under a question the viewer cannot see is absent from their feed as it is from op=capturerequests. */
+  #conditionsRenderDeferred(viewer, now, identity = null) {
+    const out = [];
+    const seen = this.#bundleGate("cr.target", viewer);
+    for (const r of this.#rows(
+      `SELECT cr.* FROM capture_requests cr
+        WHERE cr.render = 1
+          AND (cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))
+          AND (${seen.sql})
+        ORDER BY cr.updated, cr.request`, ...seen.args)) {
+      /* EVERY RENDER THE DRAIN HAS HELD, UNDER WHATEVER CODE IT LAST CARRIED, and every one that EXPIRED. A render
+         held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request for the
+         same host wins the slot, and that overwrites the row's code (measured, capturerequests.test.mjs 7d) — so
+         showing C-83 codes alone would make the item VANISH for a tick while the render still waits, which is the
+         silence the ruling forbids. A row never yet attempted (no code) is simply queued and is not shown. The
+         reason is the code's own family's sentence; a code no family catalogues says so. */
+      const row = Store.#renderHoldReason(r.code);
+      const words = row.translation
+        || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
+      const released = r.state === "expired";
+      const sinceMs = Date.parse(r.requested_at);
+      out.push({
+        id: `CONDITION::render-deferred::${r.request}`,
+        class: "CONDITION",
+        kind: "render-deferred",
+        case: this.#conditionHomes([r.target], viewer),
+        subject: { kind: "capture_request", id: r.request },
+        summary: released
+          ? `the render of ${r.address} was never performed: it was held until its request expired, and what `
+            + "the page showed is UNDETERMINED"
+          : `a render of ${r.address} is waiting: ${words}`,
+        detail: released
+          ? `${words} The request expired at ${r.expires} and was released; nothing was filed in the `
+            + "render's place, and no conclusion about the page can rest on it."
+          : `${words} The request is held and asked again on every tick until ${r.expires}; if it `
+            + "cannot be rendered by then it is recorded UNDETERMINED and released.",
+        basis: { source: "capture_requests", request: r.request, run: r.run, inquiry: r.target,
+                 address: r.address, host: r.host,
+                 render: released ? { state: "expired", content: "undetermined" }
+                                  : { state: "deferred", content: "undetermined" },
+                 code: r.code, check: row.check, translation: row.translation,
+                 attempts: r.attempts, expires: r.expires, updated: r.updated,
+                 plane_detail: r.detail ?? null,
+                 detail: "a condition is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's "
+                       + "renderer, render allowance or host pacing is what holds the render, which says "
+                       + "nothing about the page. The served frame is never filed as the content, so while it "
+                       + "waits and after it expires there is NO capture of what a visitor saw." },
+        age: Number.isFinite(sinceMs)
+          ? { state: "determined", since: r.requested_at, ms: Math.max(0, now - sinceMs) }
+          : { state: "undetermined", reason: "unparseable_requested_at",
+              detail: "the request row carries a request stamp this producer cannot read as an instant" },
+        assignee: null,
+        assignee_role: null,
+        options: this.#queueOptions([r.target], viewer, identity),
+      });
+    }
+    return out;
   }
 
   /** op=queue: the member's ONE feed.
@@ -41585,6 +41664,61 @@ export class Store extends DurableObject {
       const at = Store.#aiIso(nowMs);
       const cap = Math.max(1, Math.min(Number(limit) || Store.CAPTURE_REQUEST_TICK_BATCH,
                                        Store.CAPTURE_REQUEST_TICK_BATCH));
+      /* D-523 — A HELD RENDER ENDS AT ITS ROW'S OWN `expires`, RECORDED UNDETERMINED WITH ITS C-83 REASON AND
+         RELEASED, NEVER DROPPED SILENTLY (BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24
+         by BOB #33"). D-491's hold below says *"The row's own `expires` bounds the hold"*, and until this sweep
+         NOTHING READ `expires` HERE: the drain selected every `requested` row whatever its age, so a render this
+         instance could not do was asked for again on every tick for as long as the row existed, and when it
+         ended nothing said what became of it. The hold is kept (the ruling's KEEP) and is now bounded in fact.
+
+         `expired` IS A STATE OF ITS OWN, and neither of the two it could be mistaken for. Not `refused`: nothing
+         refused the ask, and a refusal is terminal because of what the ask SAID, while this ends because the
+         time it was valid for ran out. Not `captured`: nothing was filed. The C-83 code the row was held under is
+         KEPT, so the record says WHY the render never happened, and the content is UNDETERMINED — what the page
+         showed is not known to this instance, and saying "absent" would claim a look that was never made.
+
+         EVERY RENDER REQUEST PAST ITS `expires`, WHATEVER ITS LAST CODE — MEASURED, not chosen for tidiness. A
+         render held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request
+         for the same host wins the tick's one slot (CAPTURE_CONDUCT_TICK_SPENT overwrites the row's code), and
+         the first draft of this sweep, which matched C-83 codes only, let exactly that row through past its
+         `expires` to be ASKED AGAIN — a render performed after the ask lapsed, had a renderer been bound by
+         then (capturerequests.test.mjs 7d, the tick before expiry). So the bound is the ROW's, and the reason
+         recorded is the code the row carries, read off the family that minted it (`#renderHoldReason`). A PLAIN
+         request past its `expires` is still drained: that is not a render, the ruling does not reach it, and it
+         is a separate defect named in D-523's report rather than widened into here. Bounded by the tick's batch,
+         and BEFORE the batch is selected, so an expired row never takes a slot a live one could use; a backlog
+         past the batch is released on the next tick. */
+      const expired = [];
+      {
+        for (const q of this.#rows(
+          `SELECT * FROM capture_requests WHERE state='requested' AND render=1 AND expires <= ?
+            ORDER BY expires, request LIMIT ?`, at, cap)) {
+          const reason = Store.#renderHoldReason(q.code);
+          const why = String(q.detail || "").slice(0, 400);
+          const said = `held under ${reason.check || "no catalogued check"} ${q.code || "(no code: never attempted)"} `
+                     + `until this request expired at ${q.expires}. `
+                     + "The render was never performed and nothing was filed for it, so what the page showed "
+                     + "is UNDETERMINED"
+                     + (why ? ` — the reason last given: ${why}` : " — no further detail was carried");
+          this.sql.exec(
+            `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
+            said.slice(0, 600), at, q.request);
+          /* GOVERNED, on D-491's own reasoning for the hold: every C-83 admission refusal is a fact about US, so
+             the look is an indeterminate we GOVERNED, never the source failing. The condition is named now that
+             the vocabulary has a kind for it (D-491 declined to invent one, correctly, and D-523 minted it). */
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document", subjectKind: "address", subject: q.address,
+            state: "LOOKED_INDETERMINATE", governed: true, condition: "render-deferred",
+            detail: `${reason.check || "no catalogued check"} ${q.code || "(no code)"}: the render expired `
+                  + `UNDETERMINED at ${q.expires} and the request is released — ${why || "no detail was carried"}`,
+          }, at, 0);
+          expired.push({ request: q.request, address: q.address, host: q.host,
+                         code: q.code ?? null, check: reason.check, translation: reason.translation,
+                         render: { state: "expired", content: "undetermined" },
+                         expires: q.expires, detail: said });
+        }
+      }
       const queued = this.#rows(
         `SELECT * FROM capture_requests WHERE state='requested' ORDER BY requested_at, request LIMIT ?`, cap);
       const captured = [], refused = [], held = [];
@@ -41706,11 +41840,15 @@ export class Store extends DurableObject {
              `condition` is named: the queue's vocabulary has no kind for a
              deferred render, and `client-rendered-shell` would claim a shell was
              captured when nothing was fetched at all. Inventing a kind is an
-             interface change to another surface's roster and is NOT taken here. */
+             interface change to another surface's roster and is NOT taken here.
+             CORRECTED BY D-523: the kind now EXISTS — `render-deferred`, minted
+             under BOB #33's ruling of 2026-09-24 19:54Z through NOTIFICATIONS.md's
+             catalogue — so the look names it. The reasoning above for not
+             inventing one stands; what changed is that it was ruled and catalogued. */
           this.#observe({
             ...this.#lookAuthority(q),
             level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE", governed: true,
+            state: "LOOKED_INDETERMINATE", governed: true, condition: "render-deferred",
             detail: `${renderRow.check} ${r.renderCode}: the render was deferred and nothing was `
                   + `filed — ${why || "no detail was carried"}`,
           }, at, 0);
@@ -41737,8 +41875,19 @@ export class Store extends DurableObject {
         }
       }
       return { configured: true, actor, at, drained: captured.length + refused.length + held.length,
-               captured, refused, held, remaining: this.#captureRequestPending() };
+               captured, refused, held, expired, remaining: this.#captureRequestPending() };
     } finally { this.#tickRunning.delete("capture-request-drain"); }
+  }
+
+  /** D-523 — THE REASON A RENDER WAS HELD, in DEC-49 words, read off the family that MINTED the code: C-83 for a
+   *  render op=acquire could not do, C-28 for the drain's own conduct holds. A code in neither (the drain's
+   *  `CAPTURE_FETCH_FAILED` is written to the row and catalogued nowhere) or no code at all answers `check` and
+   *  `translation` NULL, stated as such rather than given a sentence nobody minted. */
+  static #renderHoldReason(code) {
+    const own = (fam) => code && Object.prototype.hasOwnProperty.call(fam, code) ? fam[code] : null;
+    const row = own(RENDER_CAPTURE_CHECKS) || own(CAPTURE_REQUEST_CHECKS);
+    return { code: code ?? null, family: own(RENDER_CAPTURE_CHECKS) ? "C-83" : row ? "C-28" : null,
+             check: row ? row.check : null, translation: row ? row.translation : null };
   }
 
   /** DEC-47's CONDUCT, and this is the ONE place it is applied. */
@@ -42012,6 +42161,16 @@ export class Store extends DurableObject {
          is is a render this instance cannot yet do. A run cannot otherwise read
          back what it asked, and an operator cannot tell the two apart. */
       render: r.render === 1,
+      /* D-523 (BOB #33 RULED 2026-09-24 19:54Z): WHAT BECAME OF A RENDER THIS INSTANCE COULD NOT DO, in the words
+         the drain and op=queue use. `deferred` while the row is held under its C-83 code, `expired` once its
+         `expires` passed and the drain released it — and in both the content is UNDETERMINED, because nothing of
+         what a visitor saw was captured. NULL on a plain request and on a render not yet attempted, so those read
+         exactly as they did. The reason is the code's own family's row (C-83, or C-28 when the drain's rate rule
+         held it that tick), never re-typed; `#renderHoldReason` says which. */
+      render_deferral: (r.render === 1 && (r.state === "expired" || (r.state === "requested" && r.code)))
+        ? (({ code, check, translation }) => ({ state: r.state === "expired" ? "expired" : "deferred",
+            content: "undetermined", code, check, translation }))(Store.#renderHoldReason(r.code))
+        : null,
       /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
          drain used. A row whose principals cannot both be named answers with the
          refusal rather than with a half attribution — the read cannot state less

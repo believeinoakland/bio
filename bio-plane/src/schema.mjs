@@ -2688,7 +2688,7 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   ua_mode           TEXT NOT NULL,    -- civicos, or member-browser (BOB-3, permitted for public documents)
   principal_plane   TEXT NOT NULL,    -- copied from the run: whose scope the writes ran under
   principal_claude  TEXT NOT NULL,    -- copied from the run: WHICH LEVEL of the cascade paid
-  state             TEXT NOT NULL,    -- requested | draining | captured | refused
+  state             TEXT NOT NULL,    -- requested | draining | captured | refused | expired (D-523, a C-83 render hold released UNDETERMINED at expires)
   code              TEXT,             -- the DEC-49 wire code, when the drain refused or held this row
   detail            TEXT,             -- what the drain said, so a held row explains itself without a second call
   capture_sha       TEXT,             -- what the daemon captured. WRITTEN BY THE DRAIN ONLY
