@@ -168,7 +168,16 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    project's ONLY owner (BOB #31, 2026-09-23 21:37Z) — so the catalogue moved 461 -> 462 and the stamp moves with it,
    MINOR and additive (Publication §3 rule 17). (Renumbered C-33.47 -> C-33.48 at c22-rec186-renumber, REC-207 holding
    C-33.47.) The integrator takes the union's number once and re-reads the census from the d470 suite's print. */
-export const CATALOG_VERSION = "1.30.0";
+/* 1.31.0 AT THE UNION (CONDUCT #22, c22-batch29 union, 2026-09-25): every branch above that took 1.29.0, 1.30.0 or 1.31.0
+   over its own base rides ONE new number, and every such claim is superseded here (their comments kept as history).
+   SIXTY-EIGHT ARRIVALS — C-33.48 (REC-186), C-41.14/.15 (REC-219), C-69.2 + C-98.1..8 (D-561), C-83.8 (D-520),
+   C-86.3/.4 (D-563), C-91.1..3 (REC-203), C-92.1..12 (MK-7), C-93.1..7 (REC-147), C-94.1..11 (D-147), C-95.1..9
+   (REC-150), C-96.1..9 (D-134), C-97.1/.2 (REC-197) — ONE DEPARTURE, C-82.1 (retired by D-521b, unreachable), and
+   NINE CHANGED under an unmoved id (the d470 row's `changed`, rule 17 as BOB #35 folded it): C-2.8 and C-21.2
+   (D-598), C-2.10 (D-147), C-41.1 and C-41.13 (REC-219), C-53.10..12 (MK-7), C-70.3 (REC-197). MINOR: the one
+   departure refused nothing any input could reach. Count 569, digest d1e8a679…, source 832fbe02… — the d470
+   suite's own print on the merged tree (HEAD ee29c763 + this commit), never 502 + 68 - 1. */
+export const CATALOG_VERSION = "1.31.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.

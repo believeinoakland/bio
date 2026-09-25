@@ -523,6 +523,33 @@ const CATALOG_CENSUS = {
      MINOR. 502 -> 511, count AND digest from THIS SUITE'S OWN PRINT on the item's tree. If another branch in the
      same batch also takes 1.31.0, the integrator re-reads the census on the union. *\/
      "1.31.0": { count: 511, digest: "b27f51ddb69af8ad9f5eacdbe45226c03573e5e947af4c88aab72da513cce243" }, */
+  /* 1.31.0 AT THE UNION (CONDUCT #22, c22-batch29 union, 2026-09-25): every branch row above that took 1.29.0, 1.30.0
+     or 1.31.0 over its own base is DROPPED, its comment kept; the union takes ONE number for the catalogue that runs.
+     ARRIVALS (68): C-33.48 (REC-186); C-41.14, C-41.15 (REC-219); C-69.2 and C-98.1..8 (D-561); C-83.8 (D-520);
+     C-86.3, C-86.4 (D-563); C-91.1..3 (REC-203); C-92.1..12 (MK-7); C-93.1..7 (REC-147); C-94.1..11 (D-147);
+     C-95.1..9 (REC-150); C-96.1..9 (D-134); C-97.1, C-97.2 (REC-197). DEPARTURE (1): C-82.1, retired by D-521b.
+     502 + 68 - 1 = 569, and that sum is NOT the figure: count, digest and source are THIS SUITE'S OWN PRINT on the
+     merged tree (HEAD ee29c763 + the gate.mjs bump; esbuild 0.25.12). Arrivals and departures were read by
+     diffing this suite's census of origin/main 5e8a65a8 against the merged tree.
+     `changed` — EXISTING ids whose refusal or admission moved in this batch (rule 17 as BOB #35 folded it), each
+     read at its site in `git diff origin/main..HEAD -- bio-plane/checks/bio-checks.mjs` and the emitting code:
+       C-2.8   D-598: checkInheritedLeg reads only an INQUIRY entry as published, so `grade_source: inherited` on a
+               leg whose target was published as EVIDENCE is now refused C-2.8 (it went to C-21.2's arms before);
+       C-21.2  D-598: its inheritance arms no longer fire on a leg over published evidence (BOB #34);
+       C-2.10  D-147: correspondenceFindings gained the LIFECYCLE arm (lifecycleFindings), new refusals under C-2.10;
+       C-41.1  REC-219: bio-case-document/4 joins CASE_DOCUMENT_FORMATS_ACCEPTED — a /4 token it refused, it admits;
+       C-41.13 REC-219: caseDocumentRequiresDisclosures answers yes for /4 as well as /3;
+       C-53.10, C-53.11, C-53.12  MK-7: the publication fence NARROWED to an observation that still names its author
+               in its own files (and what rests on one); every other observation crosses under C-92;
+       C-70.3  REC-197: the value check moved into #visibilitySettingRefusal, which op=projectcreate/fork's new
+               `visibility` also asks — a second door refused by the same row.
+     NOT listed, read and judged wording-only (what is refused or admitted did not move): C-29.9 and C-38.7's
+     translations (REC-162 — the same set refused, the sentence names the session), C-33.29..31's `where` (D-589's
+     regions), C-2.8's earned-leg hint text ("the MEASUREMENTS ledger"). THE LIMIT: `changed` is read from the
+     catalogue and the code at the sites named; a behaviour moved through a helper elsewhere is not seen here. */
+  "1.31.0": { count: 569, digest: "d1e8a679256b530d49f955460b893064fdb2e6bea67f19a6b3f94a2684d592b0",
+              changed: ["C-2.8", "C-2.10", "C-21.2", "C-41.1", "C-41.13", "C-53.10", "C-53.11", "C-53.12", "C-70.3"],
+              source: "832fbe02962e8f75e5b75b28d6ab83a08d083c8124a864c5b5260110ad6ceda9" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -711,8 +738,11 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 /* CORRECTED at c21-batch28 (CONDUCT #21): 1.29.0 -> 1.30.0, the union's one number for this batch's rows. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
+/* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: 1.30.0 -> 1.31.0, the union's one number for
+   every branch below (the catalogue under the stamp moved 502 -> 569 by this suite's print); the literal moves by
+   hand with the constant, which is its whole rule. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

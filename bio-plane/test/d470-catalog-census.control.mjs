@@ -107,6 +107,10 @@ const ALL = [A1, A2, A3, A4, A5, A6a, A6b, A7, A8, A9, A10, A11a, A11b];
 
 /* M0-195: arm (h) needs the source digest of the EDITED catalogue, which cannot be written down in advance — so,
    as the pin's own instructions say, it is read from THE SUITE'S OWN PRINT on the armed tree, never computed here. */
+/* c22-batch29 union (CONDUCT #22): the same run also yields the census the suite PRINTED (arm (h) plants it) — it was
+   the literal {502, b55afdc7…}, 1.30.0's census on M0-195's base, which went stale the moment the catalogue moved
+   (569 at the c22-batch29 union) and turned (h)'s ACCEPTS-WHEN red on A3. Read, never quoted, as M0-192 did for (d). */
+let PRINTED_CENSUS = null;
 const printedSource = () => {
   try {
     execFileSync("/bin/sh", ["-c", `${JSON.stringify(process.execPath)} ${JSON.stringify(SUITE)} > ${JSON.stringify(LOG)} 2>&1`],
@@ -114,10 +118,22 @@ const printedSource = () => {
   } catch { /* A9 red is expected here */ }
   const m = /SOURCE: .* sha256 ([a-f0-9]{64})/.exec(existsSync(LOG) ? readFileSync(LOG, "utf8") : "");
   if (!m) throw new Error("NOT ARMED: the suite printed no SOURCE digest");
+  const c = /CENSUS: (\d+) checks · sha256 ([a-f0-9]{64})/.exec(readFileSync(LOG, "utf8"));
+  if (!c) throw new Error("NOT ARMED: the suite printed no CENSUS");
+  PRINTED_CENSUS = { count: Number(c[1]), digest: c[2] };
   return m[1];
 };
 const CENSUS_HEAD = "const CATALOG_CENSUS = {\n";
-const A5_PIN = `["plane-gate/1.0 (bio-checks ${CURRENT_VERSION})", "${CURRENT_VERSION}"]`;
+/* c22-batch29 union (CONDUCT #22): the needle now carries the assertion's own line start. The bare literal occurred TWICE
+   once REC-150's kept-history comment (a commented-out A5 at 1.31.0) met a tree AT 1.31.0, and the preflight refused
+   arm (h) by name (h:2). The history copy is indented five spaces inside its comment; the live assertion two. */
+const A5_LEAD = "\n  [GATE_VERSION, CATALOG_VERSION], ";
+const A5_PIN = `${A5_LEAD}["plane-gate/1.0 (bio-checks ${CURRENT_VERSION})", "${CURRENT_VERSION}"]`;
+/* c22-batch29 union (CONDUCT #22): arm (j) declares `unchanged` on the CURRENT version's entry, found by its key at the
+   entry's own two-space indent (history copies sit deeper, inside comments). It anchored on 1.30.0's `changed:
+   ["C-41.12"]` line, which stopped being the current entry at 1.31.0 — the declaration then landed on a version
+   nobody stamps and A9 stayed red. */
+const CURRENT_ENTRY = `\n  "${CURRENT_VERSION}": {`;
 /* The edited lines are written OUT, never derived with a string replace: the M0-25 anchor witness reads a
    `.replace(` argument in a driver as an arm anchor, and 'error' occurs in the catalogue many times. */
 const EMIT_C151_WARNING = "    findings.push(f('C-15.1', 'warning', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
@@ -166,8 +182,9 @@ const ARMS = {
          BODY_EDIT();
          const source = DRY ? "0".repeat(64) : printedSource();
          edit(GATE, VERSION, `export const CATALOG_VERSION = "${BUMPED_VERSION}";`);
-         edit(SUITE, A5_PIN, `["plane-gate/1.0 (bio-checks ${BUMPED_VERSION})", "${BUMPED_VERSION}"]`);
-         edit(SUITE, CENSUS_HEAD, CENSUS_HEAD + `  "${BUMPED_VERSION}": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f", changed: ["C-15.1"], source: "${source}" },\n`);
+         edit(SUITE, A5_PIN, `${A5_LEAD}["plane-gate/1.0 (bio-checks ${BUMPED_VERSION})", "${BUMPED_VERSION}"]`);
+         const cen = PRINTED_CENSUS || { count: 0, digest: "0".repeat(64) };
+         edit(SUITE, CENSUS_HEAD, CENSUS_HEAD + `  "${BUMPED_VERSION}": { count: ${cen.count}, digest: "${cen.digest}", changed: ["C-15.1"], source: "${source}" },\n`);
        },
        mustFail: [], mustNotFail: ALL, expectGreen: true },
   i: { files: [CATALOG], label: "(I) OVER-STRICTNESS — COMMENT-ONLY edits to the real catalogue: a line comment above C-15.1, a trailing one, a block across lines",
@@ -177,8 +194,8 @@ const ARMS = {
        apply: () => {
          edit(CATALOG, EMIT_C151, "    void 0;\n" + EMIT_C151);
          const source = DRY ? "0".repeat(64) : printedSource();
-         edit(SUITE, '              changed: ["C-41.12"],\n',
-           `              changed: ["C-41.12"],\n              unchanged: [{ source: "${source}", behaviour: "unchanged", by: "M0-195 arm (j)" }],\n`);
+         edit(SUITE, CURRENT_ENTRY,
+           `${CURRENT_ENTRY} unchanged: [{ source: "${source}", behaviour: "unchanged", by: "M0-195 arm (j)" }],`);
        },
        mustFail: [], mustNotFail: ALL, expectGreen: true },
   k: { files: [SUITE], label: "(K) OVER-STRICTNESS FOR A4 — the same check changed AGAIN at a later version, nothing added: a distinct source is a distinct catalogue",
@@ -323,3 +340,9 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
      (j) 13/0 — `behaviour: "unchanged"` against the printed digest is honoured
      (k) 13/0 — a second change to C-41.12 at a new source is not a collision
    11 OF 11 AS DECLARED. */
+
+/* MEASURED 2026-09-25 at the c22-batch29 union (CONDUCT #22, /home/user/w29, HEAD ee29c763 + the 1.31.0 bump,
+   CATALOG_VERSION 1.31.0, census 569, esbuild 0.25.12). Before the re-anchoring above the driver REFUSED TO ARM
+   (preflight h:2, the A5 literal doubled by REC-150's history comment); after it, 15 anchors LIVE, driver exit 0:
+     baseline 13/0 · (b) 11/2 · (c) 11/2 · (d) 11/2 · (e) 13/0 · (f) 12/1 · (g) 12/1 · (h) 13/0 · (i) 13/0 ·
+     (j) 13/0 · (k) 13/0 — 11 OF 11 AS DECLARED; bio-checks.mjs, gate.mjs and the suite sha256 OK after the run. */
