@@ -466,7 +466,10 @@ console.log("\n--- 5. a published read that does not answer; a case pinned at an
    `r3Fed` floor by prose — a floor moved by a sentence is not a ratchet. The hand-off
    is real and is made by the derived envelope above; it is invisible to that walk for
    the reason UI-84 recorded (it keys on literals and this one arrives through a
-   function), and it must not be made visible by writing the literal down. */
+   function), and it must not be made visible by writing the literal down.
+   CORRECTED 2026-09-25 (M0-148), left standing as the receipt: the walk now blanks
+   comments and FOLLOWS `unknownOpWire` to the code the helper derives, so this hand-off
+   IS visible to it (the `FOLLOWED` print names this suite) — without the literal. */
 const pairless = { basis: LEGS };
 const p5 = await openMock(mockFor({ id: "INQ-2026-8084", sha: "c".repeat(64), fm: pairless,
   answer: unknownOpWire("publishedcase") }), "INQ-2026-8084");

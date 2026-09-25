@@ -314,9 +314,16 @@ arm("(f)", [
   { file: F.airun, from: `export function checkBound(bound) {`,
     to: `export function checkBound(bound) {
   if (bound === "__vf2_control__") return { ok: false, reason: "VF2_BRAND_NEW_CONDITION" };` },
+  /* CORRECTED 2026-09-25 by M0-148, never exempted. This plant was a COMMENT —
+     `/* VF-2 CONTROL (f): a mock sends "VF2_BRAND_NEW_CONDITION" *\/` — and it armed only
+     because the R3-fed walk harvested quoted codes out of comments, the over-count M0-148
+     removed. Against the corrected walk the comment is (rightly) not a hand-off, the code
+     never entered reach, and the arm came back exit 1 on untranslated/F-floor slack WITHOUT
+     the ratchet line it exists to see (measured, run of 2026-09-25). A mock that sends a code
+     is CODE, so the plant is now code. */
   { file: path.join(HERE, "refusal-codes.test.mjs"),
     from: `import fs from "fs";`,
-    to: `import fs from "fs";\n/* VF-2 CONTROL (f): a mock sends "VF2_BRAND_NEW_CONDITION" */` },
+    to: `import fs from "fs";\nconst VF2_CONTROL_F = { ok: false, reason: "VF2_BRAND_NEW_CONDITION" };` },
 ], guard, r => ({
   ok: r.exit === 1 && /VF2_BRAND_NEW_CONDITION/.test(r.out) && /may only ever move it DOWN/.test(r.out),
   what: "the guard exits 1 naming VF2_BRAND_NEW_CONDITION and saying the ceiling may only fall",
@@ -750,6 +757,101 @@ arm("(g1)", [{
         + `(${f.length} FAIL line(s): ${f.map(l => l.slice(6, 60)).join(" | ")})`,
   };
 });
+
+/* (h1)-(h3) D-485 — ARM H, REACH OBSERVED THROUGH THE REAL PLANE, against the REAL tree.
+   DECLARED before arming, each ALONE:
+   (h1) THE ROW'S OWN CONTROL — strip NO_CITATION's translation (the key renamed, so the row
+        has none). MUST FAIL with arm H's own line naming NO_CITATION and the pane it was read
+        in — not merely arm A's row line, which is what this control found the first draft
+        doing (arm B's `translated` map records a row with no sentence as translated).
+   (h2) THE CLASS — take BAD_REQUIRED off R4_OWED. It is read in intent-write's #pg-pf pane off
+        the real plane and was in NO reach set before this arm, so before D-485 the guard was
+        GREEN over it. MUST FAIL naming BAD_REQUIRED through arm H.
+   (h3) OVER-STRICTNESS — the SAME pane assertion for NO_KIND turned into a NEGATED one in the
+        real suite. MUST FAIL only as the owed list going STALE and R4 losing a code (the
+        floor), NEVER as NO_KIND reaching a member: a suite proving a code ABSENT is not reach. */
+const CATALOG_NC = `    where: 'src/store.mjs actNoCitation > is-act-no-citation',\n    translation: 'A citation`;
+console.log("\n(h1) D-485 — NO_CITATION's translation stripped: arm H must name it");
+arm("(h1)", [{ file: F.catalog, from: CATALOG_NC, to: CATALOG_NC.replace("translation:", "translationStripped:") }],
+  guard, r => ({
+    ok: r.exit === 1 && /ARM H \(D-485\): NO_CITATION REACHES A MEMBER THROUGH THE REAL PLANE[^\n]*intent-write\.test\.mjs/.test(r.out),
+    what: "the guard exits 1 with ARM H's own line naming NO_CITATION and the intent-write pane",
+  }));
+console.log("\n(h2) D-485 — BAD_REQUIRED taken off R4_OWED: the class, invisible before this arm");
+arm("(h2)", [{ file: F.guard, from: `["BAD_REQUIRED", "D-590"], `, to: `` }], guard, r => ({
+  ok: r.exit === 1 && /ARM H \(D-485\): BAD_REQUIRED REACHES A MEMBER THROUGH THE REAL PLANE/.test(r.out)
+    && (r.out.match(/^FAIL: ARM H/gm) || []).length === 1,
+  what: "the guard exits 1 naming BAD_REQUIRED through arm H, and arm H fails on nothing else",
+}));
+const IW = path.join(HERE, "intent-write.test.mjs");
+console.log("\n(h3) D-485 — NO_KIND's pane assertion NEGATED in the real suite: not reach");
+arm("(h3)", [{ file: IW, from: `&& /NO_KIND/.test(html("#ent-pf"))`, to: `&& !/NO_KIND/.test(html("#ent-pf"))` }], guard, r => ({
+  ok: r.exit === 1 && /R4_OWED names NO_KIND \(owed by D-590\) but no real-plane suite observes it/.test(r.out)
+    && /R4 is \d+ code\(s\) a real-plane suite observes in a pane, floor \d+/.test(r.out)
+    && !/NO_KIND REACHES A MEMBER THROUGH THE REAL PLANE/.test(r.out),
+  what: "the guard exits 1 on the STALE owed entry and the R4 floor, and never says NO_KIND reaches a member",
+}));
+
+/* (h4)-(h6) D-485 — ARM H BROKEN IN THE GUARD; its fixture ARM 12 must fail at exactly the
+   named arms and nothing else. DECLARED before arming, each ALONE, and MEASURED on the item's
+   tree before being written here: (h4) a PANE read as NEGATED (the arm goes blind) -> 12a,
+   12b, 12c, 12d, 12g; (h5) a NEGATED read as PANE (the over-read) -> 12e alone; (h6) the
+   lexer's comment test removed (a quoted example becomes an observation) -> 12e alone; (h7) the
+   constructor read with strings KEPT (a fixture's template counts as a plane) -> 12h alone.
+   RELABELLED at c22-batch29: that fixture arm is ARM 14 on the union (D-550's arm G holds ARM 12, and
+   `suiteArmsFailing` reads arms BY LABEL), so each list below names ARM 14x — the same arms. */
+for (const [id, from, to, want] of [
+  ["(h4)", `: srcIds.has(lead) ? "SOURCE" : "PANE";`, `: srcIds.has(lead) ? "SOURCE" : "NEGATED";`,
+    ["ARM 14a", "ARM 14b", "ARM 14c", "ARM 14d", "ARM 14g"]],
+  ["(h5)", `return negated ? "NEGATED" : WIRE_SUBJECT`, `return negated ? "PANE" : WIRE_SUBJECT`, ["ARM 14e"]],
+  ["(h6)", `    if (lexed[reStart] !== " " || lexed.slice(callAt, callAt + 6) !== ".test(") continue;`,
+    `    if (false) continue;`, ["ARM 14e"]],
+  ["(h7)", `MINIFLARE_CTOR.test(strip(src))`, `MINIFLARE_CTOR.test(code)`, ["ARM 14h"]],
+]) {
+  console.log(`\n${id} D-485 — ARM H BROKEN IN THE GUARD: its suite must fail at exactly ${want.join(", ")}`);
+  arm(id, [{ file: F.guard, from, to }], () => run(SUITE), r => {
+    const got = suiteArmsFailing(r.out);
+    return { ok: r.exit === 1 && got.join(",") === want.join(","),
+             what: `refusal-codes.test.mjs exits 1 failing at exactly [${want.join(", ")}] (measured [${got.join(", ")}])` };
+  });
+}
+
+/* (w1)-(w3) M0-148 — THE R3-FED WALK FOLLOWS A BINDING AND DOES NOT READ COMMENTS, against the
+   REAL tree. DECLARED before arming, each ALONE:
+   (w1) THE ROW'S OWN — the guard's resolution of an imported binding broken inline. MUST FAIL
+        with the PIN naming REQUIRED_ARGUMENT_MISSING (preauth-vocabulary's and publishedcase's
+        hand-off arrives only through `plane-refusal-wire.mjs`), and r3Fed one below its floor —
+        a count alone would not say WHICH hand-off went missing.
+   (w2) A CODE NAMED ONLY IN A COMMENT — `ADMINS_FIRST` (out of every reach set) quoted inside
+        queue-peritem.test.mjs's header. MUST BE GREEN, reach and r3Fed unmoved. Before M0-148
+        the walk counted it FED and the guard failed on slack.
+   (w3) OVER-STRICTNESS — preauth-vocabulary's binding RENAMED at all EIGHT occurrences
+        (VERIFY_REFUSAL_WIRE -> VERIFY_REFUSAL_ENVELOPE). MUST BE GREEN: the walk follows the
+        binding, never a spelling. */
+const PV = path.join(HERE, "preauth-vocabulary.test.mjs");
+const QP = path.join(HERE, "queue-peritem.test.mjs");
+console.log("\n(w1) M0-148 — the binding's resolution broken: the pin must NAME the missed code");
+arm("(w1)", [{ file: F.guard, from: `const codes = h.codes.get(exported);`, to: `const codes = null;` }], guard, r => ({
+  ok: r.exit === 1 && /REQUIRED_ARGUMENT_MISSING is PINNED as fed to a surface through a binding \(M0-148\)/.test(r.out)
+    && /R3's FED half is \d+ code\(s\)/.test(r.out),
+  what: "the guard exits 1 with the PIN naming REQUIRED_ARGUMENT_MISSING and r3Fed below its floor",
+}));
+console.log("\n(w2) M0-148 — a code quoted ONLY in a suite's comment: not fed");
+arm("(w2)", [{ file: QP, from: "(`NOT_YOURS` and its detail naming nate;", to: "(`NOT_YOURS`, never `ADMINS_FIRST`, and its detail naming nate;" }],
+  guard, r => ({
+    ok: r.exit === 0 && reachOf(r.out) === reachOf(clean.out) && !/ADMINS_FIRST\]/.test(r.out),
+    what: `the guard exits 0 with reach unmoved (${reachOf(clean.out)}) and ADMINS_FIRST in no suite's fed half`,
+  }));
+/* FIRST RUN CAME BACK RED AGAINST A GREEN DECLARATION, AND THE ARM WAS WRONG: it renamed SIX
+   occurrences because `grep -c` counted six LINES, and the first six in the file include the
+   two in comments — so the live `say(VERIFY_REFUSAL_WIRE)` kept its old name, the binding was
+   undeclared, and the code was followed only through publishedcase. Eight occurrences, all. */
+console.log("\n(w3) M0-148 — OVER-STRICTNESS: the followed binding renamed at every site");
+arm("(w3)", Array.from({ length: 8 }, () => ({ file: PV, from: "VERIFY_REFUSAL_WIRE", to: "VERIFY_REFUSAL_ENVELOPE" })),
+  guard, r => ({
+    ok: r.exit === 0 && /FOLLOWED REQUIRED_ARGUMENT_MISSING — preauth-vocabulary\.test\.mjs \(VERIFY_REFUSAL_ENVELOPE/.test(r.out),
+    what: "the guard exits 0 and follows REQUIRED_ARGUMENT_MISSING through the renamed binding",
+  }));
 
 /* ---------------------------------------------------------------- */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");

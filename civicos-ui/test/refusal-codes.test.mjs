@@ -262,6 +262,56 @@
  *   (s2 multiSiteCodes) the ceiling raised 59 -> 60 fails on CEILING SLACK alone (the generic (s2) loop).
  *   (m1) now fails ARM 12b too — measured, and corrected at its site in the harness.
  *   After: exactly (c), (e), (r2), (r6) fail, the four that fail on the untouched base.
+ *
+ *   D-485's, ADDED AND RUN 2026-09-25 (branch land/worker/D-485, over origin/main
+ *   964da679) — ARM H, a code a REAL-PLANE UI suite reads in a pane is in reach.
+ *   On the REAL tree (`refusal-codes.control.mjs`), each ALONE, declared before arming:
+ *   (h1) THE ROW'S CONTROL — strip NO_CITATION's translation. RUN: the guard exits 1
+ *        with `FAIL: ARM H (D-485): NO_CITATION REACHES A MEMBER THROUGH THE REAL PLANE`
+ *        naming intent-write's #rel-pf and #pg-dis-pf panes. **ITS FIRST RUN, BY HAND,
+ *        WAS A SURPRISING GREEN FOR ARM H** (only arm A's row line fired): arm B's
+ *        `translated` map records a row with no sentence as translated. Arm H now asks
+ *        the row for its sentence.
+ *   (h2) THE CLASS — BAD_REQUIRED taken off R4_OWED. RUN: exits 1 naming it through
+ *        arm H alone. On origin/main the guard was GREEN over that code.
+ *   (h3) OVER-STRICTNESS on the real suite — NO_KIND's pane test negated. RUN: exits 1
+ *        on the STALE owed entry and the R4 floor, never saying NO_KIND reaches.
+ *   (h4)-(h7) arm H broken in the guard; this suite fails at EXACTLY the named arms:
+ *        pane read as absent -> 14a/14b/14c/14d/14g; absent read as pane -> 14e;
+ *        the lexer's comment test removed -> 14e; the constructor read with strings
+ *        kept -> 14h. **(h7)'s subject was FOUND BY THE DRIVER'S OWN PRECONDITION**:
+ *        this suite's ARM 12 (now ARM 14) templates spell `new Miniflare(` and joined the real
+ *        corpus (29 -> 30), so the guard was red on the untouched tree.
+ *   Every restore verified by hash and content, and (z) re-ran green at reach 455.
+ *   After: exactly (c), (e), (r2), (r6) fail, the four this header records above.
+ *
+ *   M0-148's, ADDED AND RUN 2026-09-25 (branch land/worker/M0-148, over land/worker/D-485
+ *   @ a23fe7ee) — the R3-fed walk FOLLOWS a binding to its value and reads suites with
+ *   COMMENTS BLANKED. Declared before arming, each ALONE.
+ *   THIS SUITE, the guard broken on disk and restored by sha256 + cmp (01daedaa…, 689,389 B):
+ *     comment blanking removed (`const src = raw;`) -> exit 1 at EXACTLY ARM 13d and 13e,
+ *     135 assertions, 2 FAILED; the binding pass disarmed (`if (false)` where a resolved
+ *     import becomes a carrier) -> exit 1 at EXACTLY 13a (x2), 13b and 13f, 4 FAILED —
+ *     13c stays green because it IS that break, and 13g because a throw is named either way.
+ *     **ITS FIRST SPELLING DID NOT ARM AND IS RECORDED:** breaking `h.codes.get(exported)`
+ *     removed the anchor ARM 13c's own mutation needs, so the suite died at 13c's
+ *     did-not-arm throw with NO TALLY — loud, but it moved two variables; re-armed elsewhere.
+ *   THE REAL TREE (`refusal-codes.control.mjs`):
+ *   (w1) THE ROW'S CONTROL — the guard's resolution of an imported binding broken inline.
+ *        RUN: exit 1, `FAIL: REQUIRED_ARGUMENT_MISSING is PINNED as fed to a surface through
+ *        a binding (M0-148), and NO suite …` beside r3Fed 76 < 77 — the arm names the code.
+ *   (w2) ADMINS_FIRST quoted only in queue-peritem's header comment. RUN: GREEN, reach 457.
+ *   (w3) OVER-STRICTNESS — preauth-vocabulary's VERIFY_REFUSAL_WIRE renamed at all eight
+ *        occurrences. RUN: GREEN, followed through the new name. **ITS FIRST RUN WAS RED
+ *        AGAINST A GREEN DECLARATION AND THE ARM WAS WRONG**: it renamed six (a line count),
+ *        the first six include two comments, and the live use kept the old name.
+ *   AND ARM (f) ABOVE WAS FOUND DEPENDING ON THE DEFECT: its "mock" plant was a COMMENT,
+ *   armed only by the over-count, and against the corrected walk came back exit 1 without
+ *   its ratchet line. CORRECTED to plant code; RUN: as declared.
+ *   After: exactly (c), (e), (r2), (r6) fail — unchanged.
+ *   RELABELLED at c22-batch29 (CONDUCT #22's integration): D-485's fixture arm was ARM 12 on its branch and
+ *   D-550's arm G took ARM 12 on main; the two label sets collided (the control reads failing arms BY LABEL), so
+ *   D-485's is ARM 14 here, in this suite and in refusal-codes.control.mjs's (h4)-(h7) lists — the arms unchanged.
  * ============================================================================
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
@@ -433,6 +483,8 @@ const PART_REASON = {
 </script></html>
 `);
   fs.writeFileSync(path.join(ui, "test", "fixture.test.mjs"), over.suite || `const r = { reason: "PART_TOO_LARGE" };\n`);
+  /* D-485: more suites, so arm H has a REAL-PLANE suite to read (or a mock one to refuse). */
+  for (const [name, text] of Object.entries(over.suites || {})) fs.writeFileSync(path.join(ui, "test", name), text);
 
   /* Arm E's subject: the PLANE's own code->text vocabularies, the ones a
      surface renders VERBATIM (DEC-49's UI-47 input). `FIXTURE_STATUS` has
@@ -488,7 +540,20 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
        The default tree's one suite FEEDS one code the plane mints (its
        `reason:` literal), so the fixture's measured figure is 1. */
     r3Fed: 1,
+    /* D-485's two, STATED for the reason every key above is: an absent floor never fails.
+       The default tree's one suite constructs no Miniflare, so arm H's corpus and R4 are 0. */
+    r4Suites: 0, r4Pane: 0,
   }, over.floor || {}))};`);
+  /* D-485: arm H's owed list names REAL codes, which a fixture's plane does not mint, so the
+     real list would fail every fixture as STALE. The fixture states its own (empty unless an
+     arm names one). Same did-not-arm rule as every mutation: a guard without the list throws. */
+  guard = mutated("r4Owed", guard, g => g.replace(/const R4_OWED = new Map\(\[[\s\S]*?\n\]\);/,
+    `const R4_OWED = new Map(${JSON.stringify(Object.entries(over.r4Owed || {}))});`));
+  /* M0-148: the pin names a REAL code (REQUIRED_ARGUMENT_MISSING) a fixture's plane does not
+     mint, so the real pin would fail every fixture. The fixture states its own, empty unless an
+     arm names one; a guard without the pin throws (the did-not-arm rule). */
+  guard = mutated("r3Pin", guard, g => g.replace(/const R3_FOLLOWED_PIN = \[[^\]]*\];/,
+    `const R3_FOLLOWED_PIN = ${JSON.stringify(over.r3Pin || [])};`));
   guard = guard.replace(/const CEILING = \{[\s\S]*?\n\};/, `const CEILING = ${JSON.stringify(Object.assign(
     /* `inheritedVerdicts: 0` (REC-79) is STATED rather than omitted: an absent
        ceiling compares `n > undefined` -> false and never fails, so leaving it
@@ -1507,8 +1572,14 @@ withTree({}, tree => {
     /ratchet:\s+bodyLines\s+floor\s+6 · measured\s+\d+ · slack\s+[1-9]\d* · EXEMPT — DELIBERATELY NOT A RATCHET/.test(r.out), true);
   /* CORRECTED 2026-09-24 by D-550: 19 -> 20 keys and 3 -> 4 ceilings, because arm G added the ceiling
      `multiSiteCodes`; the old figure was true of a guard with one ratchet fewer. */
-  t("ARM 11g: and all 20 of the fixture's keys — 16 floors and 4 ceilings — are accounted for",
-    /20 ratchet key\(s\) \(16 floor\(s\), 4 ceiling\(s\)\), EVERY one accounted for: 19 gated/.test(r.out), true);
+  /* CORRECTED 2026-09-25 by D-485, never exempted: this read 19 keys (16 floors), and arm H added TWO
+     floors (`r4Suites`, `r4Pane`) the fixture states at 0 — the count is a census of the guard's
+     ratchet table, so a new ratchet key moves it in the landing that adds the key. D-550's
+     `multiSiteCodes` ceiling (not on main at this writing) moves it again at their union. */
+  /* CORRECTED at c22-batch29 (CONDUCT #22's union of D-550 and D-485): 22 keys — 18 floors (D-485's two) and 4
+     ceilings (D-550's one); 21 gated. Each side's figure was right for its own tree. */
+  t("ARM 11g: and all 22 of the fixture's keys — 18 floors and 4 ceilings — are accounted for",
+    /22 ratchet key\(s\) \(18 floor\(s\), 4 ceiling\(s\)\), EVERY one accounted for: 21 gated/.test(r.out), true);
 });
 
 console.log("\n--- ARM 11h · CEILING slack FAILS too — a ceiling above its subject lets the subject get worse ---");
@@ -1594,6 +1665,200 @@ withTree({ fixtureSrc: mutated("ARM 12d's double-named line",
     /arm G: ONE CODE, ONE MINT SITE — 0 of 3 DEC-49 codes/.test(r.out), true);
 });
 
+/* ============================================================
+   ARM 14 — D-485: REACH OBSERVED THROUGH THE REAL PLANE (arm H). ARM 12 on D-485's branch; relabelled 14 at
+   c22-batch29 because D-550's arm G holds ARM 12 on main (placed before ARM 13, which reads its `armFails`).
+
+   A REAL-PLANE UI suite (constructs Miniflare, drives app.html) that reads a
+   code in a PANE puts that code in reach, and a code in that reach with no
+   canned translation FAILS unless it is owed BY NAME. The guard reads suite
+   TEXT, so these suites are never run — only read.
+   ============================================================ */
+const REAL = (body) => `import { Miniflare } from "miniflare";\nimport { appScript } from "./extract.mjs";\n`
+  + `const mf = new Miniflare({ modules: true });\nconst html = (sel) => "";\n${body}\n`;
+const UNWORDED_VOCAB = `
+export const FIXTURE_BOUNDS = {
+  fetches: "fetches requested of the capture path",
+  wallclock: "wall time across resumptions, in milliseconds",
+};
+export const FIXTURE_ENDINGS = {
+  completed: "the run finished its work",
+  cancelled: "a member stopped it",
+};
+export const FIXTURE_STATUS = { running: 1, finished: 1 };
+export function stranger(x) { if (!x) return { ok: false, reason: "FIXTURE_UNWORDED" }; return null; }
+`;
+const armFails = out => out.split("\n").filter(l => /^FAIL: /.test(l));
+
+console.log("\n--- ARM 14a · a real-plane suite that READS A TRANSLATED CODE IN A PANE puts it in R4, GREEN ---");
+withTree({
+  suites: { "pane.test.mjs": REAL(`ok("the plane's refusal", /FIXTURE_NO_ADDRESS/.test(html("#pf")));`) },
+  floor: { r4Suites: 1, r4Pane: 1 },
+}, tree => {
+  const r = runGuard(tree);
+  t("ARM 14a: exits 0", r.exit, 0);
+  t("ARM 14a: and PRINTS the corpus and the code it saw, with where",
+    [/arm H \/ D-485: REAL-PLANE REACH — 1 real-plane UI suite/.test(r.out), /R4 1 code\(s\)/.test(r.out),
+     /FIXTURE_NO_ADDRESS — FIXTURE_CHECKS\.FIXTURE_NO_ADDRESS[^\n]*pane\.test\.mjs:\d+/.test(r.out)], [true, true, true]);
+});
+
+const UNWORDED_TREE = (suites, extra = {}) => Object.assign({
+  vocabSrc: UNWORDED_VOCAB, suites,
+  floor: { r4Suites: 1, r4Pane: 1, census: 8, reach: 8, untranslated: 1 },
+  ceiling: { reachGap: 1 },
+}, extra);
+
+console.log("\n--- ARM 14b · the SAME pane, an UNTRANSLATED code, owed by nobody — RED by name (the row's acceptance) ---");
+withTree(UNWORDED_TREE({ "pane.test.mjs": REAL(`ok("refused", /FIXTURE_UNWORDED/.test(html("#pf")));`) }), tree => {
+  const r = runGuard(tree);
+  t("ARM 14b: exits 1", r.exit, 1);
+  t("ARM 14b: arm H names the code AND the pane, and is the ONLY failure (the tree is otherwise conformant)",
+    [/ARM H \(D-485\): FIXTURE_UNWORDED REACHES A MEMBER THROUGH THE REAL PLANE[^\n]*pane\.test\.mjs:\d+ \(html\("#pf"\)\)/.test(r.out),
+     armFails(r.out).length], [true, 1]);
+});
+
+console.log("\n--- ARM 14c · the SAME tree with the code OWED BY NAME — GREEN, and the debt is PRINTED ---");
+withTree(UNWORDED_TREE({ "pane.test.mjs": REAL(`ok("refused", /FIXTURE_UNWORDED/.test(html("#pf")));`) },
+  { r4Owed: { FIXTURE_UNWORDED: "D-FIXTURE" } }), tree => {
+  const r = runGuard(tree);
+  t("ARM 14c: exits 0", r.exit, 0);
+  t("ARM 14c: and says whose debt it is, every run", /OWED BY NAME 1: FIXTURE_UNWORDED \(D-FIXTURE\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 14d · an owed code that is now TRANSLATED fails as STALE — the list may only shrink ---");
+withTree({
+  suites: { "pane.test.mjs": REAL(`ok("the plane's refusal", /FIXTURE_NO_ADDRESS/.test(html("#pf")));`) },
+  floor: { r4Suites: 1, r4Pane: 1 }, r4Owed: { FIXTURE_NO_ADDRESS: "D-FIXTURE" },
+}, tree => {
+  const r = runGuard(tree);
+  t("ARM 14d: exits 1 naming the paid debt, and nothing else",
+    [r.exit, /R4_OWED names FIXTURE_NO_ADDRESS \(owed by D-FIXTURE\) but it now HAS a canned translation/.test(r.out),
+     armFails(r.out).length], [1, true, 1]);
+});
+
+console.log("\n--- ARM 14e · OVER-STRICTNESS: absent, wire, source, comment and MOCK observations are NOT reach — GREEN ---");
+withTree(UNWORDED_TREE({
+  "pane.test.mjs": REAL([
+    `const APP = fs.readFileSync("app.html", "utf8");`,
+    `const REGION = APP.slice(0, 10);`,
+    `ok("the pane no longer carries it", !/FIXTURE_UNWORDED/.test(html("#pf")));`,
+    `ok("the plane sent it", /FIXTURE_UNWORDED/.test(JSON.stringify(r)));`,
+    `ok("the wire reason", /FIXTURE_UNWORDED/.test(r.reason));`,
+    `ok("the surface does not name it", /FIXTURE_UNWORDED/.test(REGION));`,
+    `// ok("quoted in a comment", /FIXTURE_UNWORDED/.test(html("#pf")));`,
+    `/* ok(/FIXTURE_UNWORDED/.test(html("#pf"))); */`,
+  ].join("\n")),
+  "mock.test.mjs": `import { appScript } from "./extract.mjs";\nok("a mock pane", /FIXTURE_UNWORDED/.test(html("#pf")));\n`,
+}, { floor: { r4Suites: 1, r4Pane: 0, census: 8, reach: 7, untranslated: 1 }, ceiling: { reachGap: 0 } }), tree => {
+  const r = runGuard(tree);
+  t("ARM 14e: exits 0 — a code proved ABSENT, read off the WIRE, read in SOURCE, quoted in a COMMENT, or seen by a "
+  + "suite with NO real plane, is not a code a member was shown", r.exit, 0);
+  t("ARM 14e: and the arm SAW each observation and classified it, rather than seeing nothing",
+    [/PANE 0, NEGATED 1, WIRE 2, SOURCE 1/.test(r.out), /R4 0 code\(s\)/.test(r.out), /1 real-plane UI suite/.test(r.out)],
+    [true, true, true]);
+});
+
+console.log("\n--- ARM 14f · the CORPUS floor: a real-plane suite that vanished FAILS — an empty corpus passes a zero gate free ---");
+withTree({ floor: { r4Suites: 1 } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 14f: exits 1 naming the lost corpus",
+    [r.exit, /ARM H \(D-485\): 0 real-plane UI suite\(s\)[^\n]*floor 1\. THE ARM LOST ITS CORPUS/.test(r.out)], [1, true]);
+});
+
+console.log("\n--- ARM 14g · a real-plane suite through a HELPER that constructs Miniflare is still real-plane ---");
+withTree({
+  suites: {
+    "walks.mjs": `import { Miniflare } from "miniflare";\nexport const mf = new Miniflare({});\n`,
+    "pane.test.mjs": `import { mf } from "./walks.mjs";\nimport { appScript } from "./extract.mjs";\n`
+      + `ok("the plane's refusal", /FIXTURE_NO_ADDRESS/.test(html("#pf")));\n`,
+  },
+  floor: { r4Suites: 1, r4Pane: 1 },
+}, tree => {
+  const r = runGuard(tree);
+  t("ARM 14g: exits 0, the helper discovered and the code in R4",
+    [r.exit, /Miniflare helpers: walks\.mjs/.test(r.out), /R4 1 code\(s\)/.test(r.out)], [0, true, true]);
+});
+
+console.log("\n--- ARM 14h · a suite that only SPELLS `new Miniflare(` in a string is NOT real-plane (this suite's own shape) ---");
+withTree({
+  suites: { "spells.test.mjs": `import { appScript } from "./extract.mjs";\n`
+    + "const T = `const mf = new Miniflare({});`;\n"
+    + `ok("a fixture pane", /FIXTURE_NO_ADDRESS/.test(html("#pf")));\n` },
+}, tree => {
+  const r = runGuard(tree);
+  t("ARM 14h: exits 0 with an EMPTY corpus — found by the D-485 control driver's own PRECONDITION, when this "
+  + "suite's ARM 14 templates joined the real corpus (29 -> 30)",
+    [r.exit, /REAL-PLANE REACH — 0 real-plane UI suite/.test(r.out)], [0, true]);
+});
+
+/* ---- ARM 13 · M0-148: THE R3-FED WALK FOLLOWS A BINDING, AND DOES NOT READ COMMENTS ----
+   The helper DERIVES its code (a `join`, never the literal), as plane-refusal-wire.mjs derives
+   C-61.1's from index.mjs — so the literal walk cannot see it, and only following can. */
+const WIRE = `export const CODE = ["PART", "FETCH", "FAILED"].join("_");\n`
+  + `export const wire = () => ({ ok: false, reason: CODE });\n`;
+const FOLLOW_TREE = (extra = {}) => Object.assign({
+  suites: { "wire.mjs": WIRE,
+    "follow.test.mjs": `import { wire } from "./wire.mjs";\nconst mock = async () => wire();\n` },
+  floor: { r3Fed: 2 }, r3Pin: ["PART_FETCH_FAILED"],
+}, extra);
+
+console.log("\n--- ARM 13a · a code FED through an imported binding is in R3, and PRINTED with its binding ---");
+withTree(FOLLOW_TREE(), tree => {
+  const r = runGuard(tree);
+  t("ARM 13a: exits 0 with r3Fed 2 (the literal suite's PART_TOO_LARGE and the followed PART_FETCH_FAILED)",
+    [r.exit, /ratchet:\s+r3Fed\s+floor\s+2 · measured\s+2/.test(r.out)], [0, true]);
+  t("ARM 13a: the FOLLOWED line names the code, the suite and the binding",
+    /FOLLOWED PART_FETCH_FAILED — follow\.test\.mjs \(wire <- \.\/wire\.mjs#wire\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 13b · a code fed ONLY through a binding and NOT pinned FAILS, naming it ---");
+withTree(FOLLOW_TREE({ r3Pin: [] }), tree => {
+  const r = runGuard(tree);
+  t("ARM 13b: exits 1 naming PART_FETCH_FAILED as unpinned, and nothing else",
+    [r.exit, /PART_FETCH_FAILED is fed to a surface ONLY through a binding/.test(r.out), armFails(r.out).length], [1, true, 1]);
+});
+
+console.log("\n--- ARM 13c · THE ROW'S CONTROL: the binding's resolution broken, and the arm NAMES the missed code ---");
+withTree(FOLLOW_TREE({ mutateGuard: g => g.replace("const codes = h.codes.get(exported);", "const codes = null;") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 13c: exits 1 with the PIN naming PART_FETCH_FAILED — not only r3Fed one lower",
+    [r.exit, /PART_FETCH_FAILED is PINNED as fed to a surface through a binding \(M0-148\), and NO suite/.test(r.out),
+     /R3's FED half is 1 code\(s\)/.test(r.out)], [1, true, true]);
+});
+
+console.log("\n--- ARM 13d · a code named ONLY in a COMMENT is not fed (UI-100's F1) — GREEN at r3Fed 1 ---");
+withTree({ suite: `// the plane could also answer "PART_FETCH_FAILED" here\n/* or "PART_PLATFORM_LIMIT" */\n`
+  + `const r = { reason: "PART_TOO_LARGE" };\n` }, tree => {
+  const r = runGuard(tree);
+  t("ARM 13d: exits 0 and measures r3Fed 1 — before M0-148 the two comment codes read FED (3, slack 2, RED)",
+    [r.exit, /ratchet:\s+r3Fed\s+floor\s+1 · measured\s+1/.test(r.out)], [0, true]);
+});
+
+console.log("\n--- ARM 13e · an `ok(` in a COMMENT no longer opens an expectation span over a real mock ---");
+withTree({ suite: `/* the old shape: ok( never closed in prose */\nconst r = { reason: "PART_TOO_LARGE" };\n`
+  + `const mock = { reason: "PART_FETCH_FAILED" };\n`, floor: { r3Fed: 2 } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 13e: exits 0 with BOTH mock codes FED (preauth-vocabulary's NOT_CONCLUDED and NO_REVIEW_COPY, in miniature)",
+    [r.exit, /fixture\.test\.mjs — FED 2 \[PART_FETCH_FAILED, PART_TOO_LARGE\]/.test(r.out)], [0, true]);
+});
+
+console.log("\n--- ARM 13f · OVER-STRICTNESS: a binding read only INSIDE an expectation is OBSERVED, not fed ---");
+withTree({ suites: { "wire.mjs": WIRE,
+  "obs.test.mjs": `import { CODE } from "./wire.mjs";\nok("the plane said it", got.reason === CODE);\n` } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 13f: exits 0 at r3Fed 1, the followed code OBSERVED and not in reach's fed half",
+    [r.exit, /obs\.test\.mjs — FED 0 · OBSERVED 1 \[PART_FETCH_FAILED\]/.test(r.out)], [0, true]);
+});
+
+console.log("\n--- ARM 13g · a helper that THROWS at import is NAMED as unresolved, never silently scored zero ---");
+withTree({ suites: { "wire.mjs": `export const CODE = (() => { throw new Error("derivation came back empty"); })();\n`,
+  "throws.test.mjs": `import { CODE } from "./wire.mjs";\nconst mock = { reason: CODE };\n` } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 13g: exits 0 (the floor did not count it) and the UNRESOLVED line names the binding and the throw",
+    [r.exit, /UNRESOLVED binding\(s\)[^\n]*throws\.test\.mjs: CODE \(\.\/wire\.mjs: THREW at import: derivation came back empty\)/.test(r.out)],
+    [0, true]);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -1637,5 +1902,10 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j). AND SINCE `
   + `D-550 a catalogued code is held to ONE mint site: a second site fails naming the code (12a), a consolidated `
   + `candidate left in the set fails as slack (12b), a declared closure passes and a stale one fails (12c), and a `
-  + `code named twice on one line or in a comment is one site (12d)`);
+  + `code named twice on one line or in a comment is one site (12d). AND SINCE D-485 a code a REAL-PLANE `
+  + `suite reads in a pane is in reach, and fails untranslated unless owed by name (14a-14h). AND SINCE `
+  + `M0-148 the R3-fed walk FOLLOWS a binding to a helper's evaluated value (13a), a code reached only that way `
+  + `must be PINNED by name (13b) so a broken resolution NAMES the code it lost (13c), a code named only in a `
+  + `comment is not fed (13d), a comment's \`ok(\` no longer swallows a real mock (13e), a binding read only inside `
+  + `an expectation is observed and not fed (13f), and a helper that throws is named rather than scored zero (13g)`);
 if (bad) process.exit(1);

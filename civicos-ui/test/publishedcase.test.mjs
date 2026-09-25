@@ -961,7 +961,12 @@ function mockFetch(u, opts){
        floor rose by one for a sentence. This suite really does feed C-61.1's code now,
        and the walk cannot see it — it arrives through `requiredArgumentWire`, and UI-84
        recorded that blind spot — but a floor pinned on prose would fall the moment
-       somebody reworded this comment. */
+       somebody reworded this comment.
+       CORRECTED 2026-09-25 (M0-148), left standing as the receipt: BOTH halves above
+       are now false. The walk reads suites with comments blanked, so a code quoted in
+       a note no longer counts, and it FOLLOWS `requiredArgumentWire` to the code the
+       helper derives — this line is one of the two hand-offs its `FOLLOWED` print
+       names for C-61.1's code. The unquoted spelling is harmless and kept. */
     if(url.searchParams.get("path")) return R(requiredArgumentWire("publishedbytes"));
     if(!PUBLISHED_SHAS.has(sha))
       return R({ ok:false, reason:"NOT_FOUND", sha256:sha,
