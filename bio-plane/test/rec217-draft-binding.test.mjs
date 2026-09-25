@@ -104,6 +104,15 @@
        8's draft-door row; MUST NOT fail block 4. RAN 37 pass, 2 FAIL — the draft door and the signed list that
        rests on it. Block 4 GREEN.
 
+   D-683 NEGATIVE CONTROL (block 9; declared before arming, each arm ALONE on `src/store.mjs`, restored by `cp` from a
+   per-arm pristine copy, `sha256sum -c` OK 6b496324…, `cmp` identical, 3,479,680 bytes):
+   (0) BASELINE 41 pass, 0 fail. (Before the fix, driven through op=publish: 40 pass, 1 FAIL — block 9's ACCEPTS-WHEN,
+       got a count of none and "Nobody but its author" on edition 2.)
+   (a) THE ROW'S OWN CONTROL — `edition=?` restored on the unbound count's `case_id IS NULL` arm. DECLARED: MUST FAIL
+       block 9's ACCEPTS-WHEN BY NAME; MUST NOT fail blocks 1-8. RAN 40 pass, 1 FAIL — exactly that row. AS DECLARED.
+   (b) OVER-STRICTNESS — the count spelled `edition=1`, the edition D-568 records every no-case reading at. DECLARED:
+       MUST PASS every row (the suite asserts the count, not the predicate's shape). RAN 41 pass, 0 fail. AS DECLARED.
+
    REC-217 / BIO_Publication_v0_1.md §3 rules 11 and 13 — BOB #33 RULED 2026-09-24 19:14Z: `op=publish` NAMES THE
    DRAFT IT PUBLISHES (`draft=`, optional, additive), and AT THAT ACT the readings taken through that draft BIND to
    the case it produced. The link is an ACT, recorded with who made it (the publisher) and when, and the case
@@ -723,6 +732,46 @@ console.log("\n--- 8. D-680: A DERIVATION DRAFT BINDS TO THE CASE PUBLICATION DE
      /accepted here only at a new case's first edition/.test(rz?.detail || "")],
     ["PUBLISH_DRAFT_NOT_THIS_CASE", CASE_DERIVATION_CHECKS.PUBLISH_DRAFT_NOT_THIS_CASE.check,
      CASE_DERIVATION_CHECKS.PUBLISH_DRAFT_NOT_THIS_CASE.translation, true, false]);
+}
+
+/* =========================================================================== 9 */
+/* D-683 (BIO_Publication §3 rule 13; §6A.4): A READING OF A NO-CASE DRAFT IS COUNTED UNDETERMINED ON A FURTHER EDITION
+   PUBLISHED WITHOUT `draft=`, exactly as block 2 counts it on a first. The reading is recorded at the draft's identity,
+   whose edition reads 1 (D-568), so the unbound count may not ask the edition either — as D-680 took it off the link
+   arm. Without it, edition 2 printed no tail over a record holding a reading of its exact sentence. */
+console.log("\n--- 9. D-683: WITHOUT draft=, A FURTHER EDITION COUNTS THE NO-CASE DRAFT'S READING UNDETERMINED ---");
+{
+  const Q9 = await finding("d683");
+  const P9a = await publish("d683", [Q9]);
+  if (P9a?.ok === false || !P9a?.caseDocument?.doc_sha) bail("publish d683 edition 1", P9a);
+  const C9 = P9a.caseDocument.case_id;
+  const d9a = await docOf(C9, 1);
+  if ((await ratify(C9, 1, d9a?.doc_sha))?.ok === false) bail("ratify d683 edition 1", {});
+  const ro = rP(await GET(`op=reopen&token=${IRIS}&target=${encodeURIComponent(Q9)}`
+    + `&reason=${encodeURIComponent("D-683 re-read: the memo has to be read again")}`));
+  if (ro?.ok === false) bail("reopen d683", ro);
+  const rc = rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(Q9)}`
+    + `&conclusion=${encodeURIComponent(`The answer to ${Q9} is on the memo (re-read).`)}`
+    + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${Q9} (re-read).`)}` + adoptedVersionParam()));
+  if (rc?.ok === false) bail("reconclude d683", rc);
+  const D9 = await draftOf("d683e2", [Q9]);
+  const A9 = await ack(`draft=${D9}&token=${ELLA}`);
+  /* CORRECTED 2026-09-25 at the c22-batch30 union (D-568 on main), never exempted: the row is KEYED at edition 1,
+     but D-568 made the ANSWER state a derived draft's edition as null (UNDETERMINED on the wire, `#statedEdition`);
+     this assertion read the internal key off the answer, which D-683's branch predated. */
+  t("FIXTURE: ella reads a draft naming no case — recorded at no case identity, its edition stated null on the wire (D-568)",
+    [A9?.ok, A9?.acknowledgement?.case_id, A9?.acknowledgement?.draft_id, A9?.acknowledgement?.edition],
+    [true, null, D9, null]);
+  const P9 = await publish("d683e2", [Q9]);
+  if (P9?.ok === false || !P9?.caseDocument?.doc_sha) bail("publish d683 edition 2", P9);
+  const doc = await docOf(C9, 2);
+  t("ACCEPTS-WHEN: edition 2 of the case, published WITHOUT draft=, lists nobody, COUNTS ella's reading of the "
+  + "no-case draft as unbindable, and says UNDETERMINED — never 'Nobody but its author'",
+    [P9?.caseDocument?.case_id === C9, P9?.caseDocument?.edition ?? P9?.edition,
+     (P9?.completeness?.acknowledgements || []).length, P9?.completeness?.acknowledgements_unbindable_to_this_case,
+     /whether any of them is a reading of THIS case is UNDETERMINED/.test(doc?.text || ""),
+     /Nobody but its author acknowledged it\./.test(doc?.text || "")],
+    [true, 2, 0, 1, true, false]);
 }
 
 console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail`);

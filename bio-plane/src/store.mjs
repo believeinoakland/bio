@@ -12207,6 +12207,9 @@ export class Store extends DurableObject {
        `writer === null` (not asked) excludes only the publisher, exactly as before this landing. */
     const writerBy = writer && typeof writer.by === "string" ? writer.by : null;
     const writerUndetermined = writer && writer.by === null ? 1 : 0;
+    /* D-683 (BIO_Publication §3 rule 13): THIS COUNT ASKS NO EDITION, for D-680's reason. A no-case draft's reading
+       is recorded at edition 1 (D-568), so `edition=?` here dropped it from every further edition published without
+       `draft=`, and that document printed "Nobody but its author" over a record holding a reading of its sentence. */
     const unboundRow = unallocated ? null
       : this.#one(`SELECT COALESCE(SUM(CASE WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
                                             WHEN acknowledger_kind='participant' AND ? = 1 THEN 0
@@ -12216,13 +12219,13 @@ export class Store extends DurableObject {
                                             WHEN acknowledger_kind='participant' AND ? = 1 THEN 1
                                             ELSE 0 END), 0) AS u
                    FROM statement_acknowledgements
-                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                   WHERE project_id=? AND statement_sha=? AND case_id IS NULL
                      AND (draft_id IS NULL
                           OR draft_id NOT IN (SELECT draft_id FROM case_documents WHERE draft_id IS NOT NULL))
                      AND (draft_id IS NULL OR draft_id <> ?)`,
                   exceptAuthor ?? null, writerUndetermined, writerBy,
                   exceptAuthor ?? null, writerUndetermined,
-                  project, sha, edition, linked);
+                  project, sha, linked);
     return { statementSha: sha, truncated,
              /* REC-217: the link this read was asked under, carried so every rendering states one act. */
              link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null, case: link.case ?? null } : null,
