@@ -1175,9 +1175,9 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-732 · running — **THE DOCUMENT PAGE (civicos-ui/app.html, stratum 4) LISTS A BUNDLE'S HISTORY BY SNAP KEY under "Everything that has ever happened to this …": parseLog sorts _history/promotion_*.json by path and "Earlier revisions, kept" sorts _history/bundle_*.md by key, though D-700 made write order the record's.** D-719's class on the member surface. Found by D-719's worker. — owner UI.
+### D-732 · integrated — **THE DOCUMENT PAGE (civicos-ui/app.html, stratum 4) LISTS A BUNDLE'S HISTORY BY SNAP KEY under "Everything that has ever happened to this …": parseLog sorts _history/promotion_*.json by path and "Earlier revisions, kept" sorts _history/bundle_*.md by key, though D-700 made write order the record's.** D-719's class on the member surface. Found by D-719's worker. — owner UI.
+status: integrated — CONDUCT #23 13:17Z: worker report — tip f64bad66 (on D-719 8ab99e48), GATE GREEN FULLREUSE (73/73; full 102/102 on 2a85abc6 red only on stdio-census, fixed); document page history in write order; no IC; rides batch31 after D-719
 order: spawned directly, stacked on D-719: a surface showing an order the record does not hold, under a heading that claims the whole history (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 12:37Z: spawned, stacked on land/worker/D-719 @ 8ab99e48
 milestone: M7
 interface: none — reads D-700's additive `seq`.
 design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, write order, as D-700 amended it).
