@@ -969,7 +969,9 @@ function mockFetch(u, opts){
        names for C-61.1's code. The unquoted spelling is harmless and kept. */
     if(url.searchParams.get("path")) return R(requiredArgumentWire("publishedbytes"));
     if(!PUBLISHED_SHAS.has(sha))
-      return R({ ok:false, reason:"NOT_FOUND", sha256:sha,
+      /* (D-561 renamed the token; corrected at c22-batch29) — the plane answers an unknown hash with
+         NO_PUBLISHED_PART (C-98.1); NOT_FOUND was the pre-D-561 spelling and no longer reaches a caller. */
+      return R({ ok:false, reason:"NO_PUBLISHED_PART", sha256:sha,
         detail:"no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately." });
     return { ok:true, status:200, headers:{ get:k => k === "x-published-kind" ? PUBLISHED_SHAS.get(sha).kind : null },
              arrayBuffer:async()=>BYTES.buffer, json:async()=>({ ok:false, error:"these are bytes" }) };
