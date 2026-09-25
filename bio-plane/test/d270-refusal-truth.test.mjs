@@ -10,10 +10,12 @@
    (a) BASELINE — nothing armed. MUST be green; every other arm's figure is read against it.
    (b) THE SPLIT COLLAPSED — `sessionOpGate`'s three outcomes reduced to the single
        `MACHINE_CREDENTIAL_REQUIRED` return `main` carried before D-270. MUST FAIL naming the ROLE
-       ops (one since REC-159: `governorconfig`) AND the omission ops BY NAME. This is the arm the row's accepts-when demands, and it
+       ops (one since REC-159: `governorconfig`) AND the omission ops BY NAME (none on the real plane since
+       REC-155 ruled all seven by §4.10, so the omission is the unruled fixture op `rec155unruled`). This is the arm the row's accepts-when demands, and it
        is the arm that proves this suite grades the DISTINCTION rather than the presence of a code.
    (c) THE DECLARATION EMPTIED — `UNATTENDED_BY_DECISION` set to `{}`. MUST FAIL naming `purge`,
-       `cpuprobe`, `capturerequestdrain` and `taskdrain`, which would then be told an omission. This
+       `cpuprobe`, `capturerequestdrain` and `taskdrain` (and since REC-155 `livefire` and `reproject`),
+       which would then be told an omission. This
        is the arm for BOB #17's rule itself: the plane may say "not for a person" ONLY where a
        decision is recorded, so emptying the record must change what the plane says.
    (d) THE DECLARATION INVENTED — `adminendorse` ADDED to `UNATTENDED_BY_DECISION`. MUST FAIL naming
@@ -52,6 +54,21 @@
    DECLARED — a GREEN 33/0 · b RED 27/6 naming governorconfig and provenanceroute · c RED 30/3 ·
    d RED 32/1 · e RED 30/3 · f RED 21/12 · g RED 32/1 · h GREEN 33/0**, every restore sha256 MATCH and
    `cmp` clean (index.mjs 743,212 B; this suite 45,891 B).
+   RE-RUN 2026-09-25 BY THE REC-155 WORKER (branch `land/worker/REC-155`, base `8bdf20e6`) after §4.10 emptied the
+   real omission arm: arm (b)'s omission op re-declared onto the unruled fixture op, arm (c) widened to the two
+   new recorded decisions, both before arming: **8/8 AS DECLARED — a GREEN 35/0 · b RED 29/6 naming
+   governorconfig and rec155unruled · c RED 31/4 naming all six recorded ops · d RED 34/1 · e RED 32/3 ·
+   f RED 23/12 · g RED 34/1 · h GREEN 35/0** (h now reaches the rewritten site THROUGH the fixture, which reads
+   the armed `src/index.mjs` from disk), every restore sha256 MATCH and `cmp` clean (index.mjs 842,163 B; this
+   suite 50,607 B).
+   RE-RUN 2026-09-25 BY THE REC-162 WORKER (branch `land/worker/REC-162`, base `8bdf20e6`). Arm (b) was
+   CORRECTED — the ROLE outcome became two returns, one per set, so it now arms three sites — and two arms
+   were ADDED, declared before arming: (i) THE ROW'S OWN CONTROL, the administrator sentence restored for a
+   founder-only op, MUST FAIL naming `governorconfig`; (j) OVER-STRICTNESS, the founder's-session `detail`
+   respelled, MUST PASS. **10/10 AS DECLARED — a GREEN 34/0 · b RED 26/8 armed 3/3 · c RED 31/3 · d RED 33/1 ·
+   e RED 31/3 · f RED 22/12 · g RED 33/1 · h GREEN 34/0 · i RED 33/1 naming governorconfig · j GREEN 34/0**,
+   every restore sha256 MATCH and `cmp` clean (index.mjs 840,734 B; this suite 48,254 B at the run, before this
+   paragraph was written).
    (h) OVER-STRICTNESS, and this file exists to survive it: a REAL site rewritten to spell its code in
        `code` with NO `reason` at all, the row IMPORTED rather than hand-copied, and an extra key the
        grader has never seen. It MUST PASS. A grader that reports correct work as a violation teaches
@@ -129,6 +146,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { ADMISSION_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "../checks/bio-checks.mjs";
+import { unruledOpPlane, unruledOpMemberSession, UNRULED_OP } from "./unruled-op-fixture.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const INDEX_SRC = readFileSync(SRC, "utf8");
@@ -318,7 +336,8 @@ console.log(`    (c) OMISSION        ${OMITTED.length}: ${OMITTED.join(" ")}`);
    REC-159 moved them into BOTH session sets on D-136's footing (the roster refuses a non-administrator
    NOT_AN_ADMIN, against a stamped `by`), so they DEPARTED this arm — pinned below in the both-sets arm
    by name. `governorconfig` stays: it is the OPERATOR's act, RULED by BOB #23 (§4.9), and the one op
-   the founder's session alone reaches. What its refusal SAYS is REC-162's item. Still a literal. */
+   the founder's session alone reaches. What its refusal SAYS was REC-162's item (2026-09-25): the founder's session, graded in
+   §5. Still a literal. */
 t("the ROLE-GATED arm is exactly the one op the FOUNDER'S session alone reaches — `governorconfig`, "
 + "the operator's (§4.9, BOB #23) — after REC-159 moved D-270's other four into both sets; pinned as "
 + "a literal SET so an arrival or a departure is looked at",
@@ -346,6 +365,12 @@ t("D-136's three reach BOTH session sets and are therefore in NEITHER role arm �
 t("REC-159's four §4.9 custodial acts reach BOTH session sets and are in NEITHER role arm — the roster "
 + "decides them against a stamped `by` (BIO_Membership_Architecture_v2.md §4.9)",
   ["memberadd", "memberset", "signeradd", "signerset"].filter((o) => !BOTH_SETS.includes(o)), []);
+/* ADDED 2026-09-25 (REC-155): §4.10's five, pinned where BOB #19's ruling put them, by name — so a regression
+   that dropped one from either set fails HERE, and not only as an omission reappearing below. */
+t("REC-155's five — the provenance pair and the three calibration writes — reach BOTH session sets and are "
++ "in NEITHER role arm: none is the founder's act (BIO_Membership_Architecture_v2.md §4.10, BOB #19)",
+  ["provenancechain", "provenanceroute", "calibrate", "calibrationsubject", "calibrationsignal"]
+    .filter((o) => !BOTH_SETS.includes(o)), []);
 t("and every declared op is one no session reaches — a declaration over an op a session DOES reach "
 + "would be a recorded decision contradicted by the table it sits in",
   [...DECLARED].filter((o) => !NO_SESSION.includes(o)), []);
@@ -364,10 +389,14 @@ t("and every declared op is one no session reaches — a declaration over an op 
    stated PROVISIONAL there and in IC-172. The four the pin named were found at the artifact; the fifth was made by the
    item that adds the op, which is the one act this table allows ("recording a decision"). Not a relaxation: the
    literal still names every op, so an emptied or invented record still fails BY NAME. */
-t("the RECORDED-DECISION arm is exactly the five ops a decision is RECORDED for, pinned as a literal "
+/* CORRECTED 2026-09-25 BY REC-155, the line working again: BOB #19 RECORDED two more decisions
+   (`BIO_Membership_Architecture_v2.md` §4.10) — `livefire` and `reproject` are unattended BY DECISION, each
+   cited to the artifact §4.10 quotes. Still a literal naming every op. */
+t("the RECORDED-DECISION arm is exactly the seven ops a decision is RECORDED for, pinned as a literal "
 + "— because the map that grades it reads the same declaration it grades against, and so cannot "
 + "see the record being emptied or invented into",
-  UNATTENDED, ["capturerequestdrain", "cpuprobe", "instancegroupseed", "purge", "taskdrain"]);
+  UNATTENDED, ["capturerequestdrain", "cpuprobe", "instancegroupseed", "livefire", "purge", "reproject",
+               "taskdrain"]);
 
 /* ====================================================================== 4
  * THE SESSIONS. A MEMBER'S AND A REAL ADMINISTRATOR'S.
@@ -419,7 +448,7 @@ const gateAnswer = async (op, session) => {
   const r = await POST(`op=${op}&${session}`, {});
   return { reason: r.reason ?? r.code ?? null, translation: r.translation ?? null,
            check: r.check ?? null, error: r.error ?? null, detail: r.detail ?? null,
-           recorded: r.recorded ?? null };
+           recorded: r.recorded ?? null, reachedBy: r.reachedBy ?? null, role: r.role ?? null };
 };
 /* RE-POINTED 2026-09-23 (REC-159), never exempted: this pair drove `op=memberset`, which now reaches
    BOTH sets — `dot` would pass the gate and be refused by the ROSTER, so the pair would read
@@ -449,7 +478,7 @@ const gateAnswer = async (op, session) => {
  * one object — and section 7 asserts that the three codes are actually
  * DIFFERENT across the arms. One generic code for all of them fails there.
  * ==================================================================== */
-console.log("\n--- 5. (b) the five: a signed-in person DOES perform these, but an administrator ---");
+console.log("\n--- 5. (b) a signed-in person DOES perform these, from the session the set names (the founder's since REC-162) ---");
 const roleAnswers = {};
 for (const op of ROLE_OPS) roleAnswers[op] = await gateAnswer(op, DOT);
 t("each of the five answers a MEMBER session with SESSION_ROLE_CANNOT_REACH_OP — pinned BY NAME "
@@ -477,8 +506,29 @@ t("and NONE of the five still CLAIMS a machine credential is required — that s
     .test(String(roleAnswers[o].error || "") + " " + String(roleAnswers[o].translation || ""))), []);
 /* THE POSITIVE HALF, so the narrowing above does not merely buy a green: the
    refusal must say the thing that IS true. */
-t("and each names the administrator as the route, which is the fact that replaces the false one",
-  ROLE_OPS.filter((o) => !/administrator/i.test(String(roleAnswers[o].translation || ""))), []);
+/* CORRECTED 2026-09-25 BY REC-162, NEVER EXEMPTED. This asserted each translation matched
+   `/administrator/` — "names the administrator as the route". After REC-159 the ROLE arm is
+   `governorconfig` alone, which the FOUNDER'S session alone reaches (Membership v2 §4.9, RULED the
+   operator's by BOB #23), and an enrolled administrator holds a MEMBER'S session: the sentence that
+   named the administrator as the route was false of every enrolled administrator it refused. The
+   route is a SESSION, derived from the set that holds the op, so the assertion now reads the
+   sentence and the `reachedBy` the gate derived, and the member-session refusal is driven to say
+   the founder's session. */
+t("and each names the SESSION that reaches it, derived from the set that holds it — the founder's "
++ "where `SESSION_OPS.admin` alone holds the op — and never calls the op an administrator's",
+  ROLE_OPS.filter((o) => {
+    const founderOnly = ADMIN_SET.has(o) && !MEMBER_SET.has(o);
+    const want = founderOnly ? /reserved to the founder's session/ : /reserved to a member's own session/;
+    return !want.test(String(roleAnswers[o].error || ""))
+      || /administrator of this group/i.test(String(roleAnswers[o].error || ""))
+      || /this session's role is/i.test(String(roleAnswers[o].detail || ""));
+  }), []);
+/* REC-162: the field the gate derived agrees with the set, and `role` — which read 'member' of an
+   enrolled administrator — is not sent at all. */
+t("and each carries `reachedBy` naming that session, and no `role` field calling the caller a member",
+  Object.fromEntries(ROLE_OPS.map((o) => [o, [roleAnswers[o].reachedBy, roleAnswers[o].role]])),
+  Object.fromEntries(ROLE_OPS.map((o) => [o,
+    [ADMIN_SET.has(o) && !MEMBER_SET.has(o) ? "founder" : "member", null]])));
 
 /* ====================================================================== 6
  * (a) THIS VERB IS NOT FOR A PERSON — only where RECORDED, and the refusal
@@ -502,9 +552,34 @@ t("every op no session reaches answers with the code its arm calls for, EACH BY 
    would be a statement about the (a) arm alone and BOB #17's third sentence
    would be untested — which is the precise shape of the two-way split this item
    replaces. */
-t("the OMISSION arm is non-empty — an empty (c) arm makes the map above a test of (a) alone, which "
-+ "is the two-way split IC-55 proposed and the thing this item exists to correct",
-  OMITTED.length > 0, true);
+/* CORRECTED 2026-09-25 BY REC-155, NEVER EXEMPTED — AND THE FLOOR'S PURPOSE IS KEPT BY MOVING IT, NOT
+   DROPPING IT. This asserted the (c) arm NON-EMPTY on the real plane, so the map above could not become a
+   test of (a) alone. Its seven members were exactly the seven ops §4.10 RULED (BOB #19): five joined both
+   session sets and two were recorded unattended by decision. So on this plane the omission arm is EMPTY,
+   and that is the ruling landing rather than the arm going blind — pinned as a literal below, so the next
+   op anybody adds without a ruling is LOOKED AT here. What the floor protected — that sentence (c) is
+   actually DRIVEN, a third code and not a two-way split — is now driven through `unruled-op-fixture.mjs`:
+   the real gate and the real row, over one op the real tables have never heard of, which is exactly the
+   case (c) exists for (`UNATTENDED_BY_DECISION`'s header: *"an op added tomorrow ... gets (c)"*). */
+t("the OMISSION arm is EMPTY on the real plane, pinned as a literal — §4.10 ruled all seven of its members "
++ "(BOB #19), so an op arriving here is an op nobody ruled on and is meant to be looked at",
+  OMITTED, []);
+const fx = unruledOpPlane({ ADMIN_TOKEN: "t-admin-1", MEMBER_TOKEN: "t-member-1", PROBE_TOKEN: "t-probe-1",
+                            VERSION: "test" });
+let unruled;
+try {
+  const FXS = await unruledOpMemberSession(fx, "t-admin-1");
+  const r = await (await fx.dispatchFetch(`http://x/api/?op=${UNRULED_OP}&${FXS}`,
+    { method: "POST", body: "{}" })).json();
+  unruled = { reason: r.reason ?? r.code ?? null, translation: r.translation ?? null, check: r.check ?? null,
+              detail: r.detail ?? null, recorded: r.recorded ?? null };
+} finally { await fx.dispose(); }
+console.log(`    (c) driven through the unruled fixture op '${UNRULED_OP}': ${unruled.reason}`);
+t(`and sentence (c) is still DRIVEN — '${UNRULED_OP}', an op no session reaches and no decision explains, `
++ "answers SESSION_ROUTE_NOT_RECORDED with C-38.8's canned translation and cites NO record",
+  [unruled.reason, unruled.check, unruled.translation === ADMISSION_CHECKS.SESSION_ROUTE_NOT_RECORDED.translation,
+   unruled.recorded],
+  ["SESSION_ROUTE_NOT_RECORDED", ADMISSION_CHECKS.SESSION_ROUTE_NOT_RECORDED.check, true, null]);
 /* CORRECTED 2026-09-19 (D-136), NEVER EXEMPTED, AND THE ASSERTION IS NOW THE
    ONE IT ALWAYS MEANT. It read *the omission arm holds D-136's three* — true of
    a plane where §4.7's vote could be cast by nobody, and it was the plane, not
@@ -527,15 +602,21 @@ t("and they are REACHABLE rather than merely gone from this arm — an op that v
   ["adminendorse", "adminremove", "membercaps"].filter((o) => !BOTH_SETS.includes(o)), []);
 /* THE CONTRADICTED PAIR, named because their own OPS rows say the opposite of
    the sentence they used to receive. */
-t("and it holds op=provenancechain and op=provenanceroute, whose own OPS rows say 'NOT open to "
-+ "daemon: deciding that the evidence supports a route is a named member's judgement' — the plane "
-+ "was telling a member that an op reserved to a named member is done by an unattended writer",
-  ["provenancechain", "provenanceroute"].filter((o) => !OMITTED.includes(o)), []);
+/* CORRECTED 2026-09-25 BY REC-155, NEVER EXEMPTED, and INVERTED rather than dropped — D-136's move above,
+   made again. This asserted the pair IN the omission arm: true while no session reached them. §4.10 (BOB
+   #19) gave them session reach, since their OPS rows call the act *"a named member's judgement"* and a
+   session is the one caller carrying a name. So they must be ABSENT from (c) and PRESENT in both sets. */
+t("and op=provenancechain and op=provenanceroute, whose own OPS rows say 'NOT open to daemon: deciding "
++ "that the evidence supports a route is a named member's judgement', are NO LONGER omissions — a "
++ "signed-in member reaches both (§4.10, REC-155)",
+  ["provenancechain", "provenanceroute"].filter((o) => OMITTED.includes(o) || !BOTH_SETS.includes(o)), []);
 /* THE OMISSION SAYS NOTHING ABOUT DESIGN. This is the whole of sentence (c). */
 t("an OMISSION refusal makes NO design claim — it never says the verb is not for a person, because "
 + "a member told an absence is a decision will not report it as the gap it is",
-  OMITTED.filter((o) => /not for a person|unattended writer|not by a person/i
-    .test(String(noSessionAnswers[o].translation || "") + String(noSessionAnswers[o].detail || ""))), []);
+  /* REC-155: the real omission arm is empty, so the fixture's answer is graded too — else this is vacuous. */
+  [...OMITTED.map((o) => [o, noSessionAnswers[o]]), [UNRULED_OP, unruled]]
+    .filter(([, a]) => /not for a person|unattended writer|not by a person/i
+      .test(String(a.translation || "") + String(a.detail || ""))).map(([o]) => o), []);
 /* AND (a) CARRIES ITS WARRANT. The claim and the record that licenses it travel
    together, so a reader can check the plane's design claim at its source. */
 t("a BY-DECISION refusal CITES the record that licenses it, and the citation names a real file — a "
@@ -549,8 +630,11 @@ t("and the by-decision arm is non-empty, so the citation assertion above is not 
  * names: one generic code for all of them.
  * ==================================================================== */
 console.log("\n--- 7. the three codes are three, and the sentences are three ---");
+/* REC-155: the fixture's answer joins the real corpus here — (c) has no live producer on the real plane
+   since §4.10, and dropping it would turn this into the two-way split it exists to refuse. */
 const seen = [...new Set([...ROLE_OPS.map((o) => roleAnswers[o].reason),
-                          ...NO_SESSION.map((o) => noSessionAnswers[o].reason)])].sort();
+                          ...NO_SESSION.map((o) => noSessionAnswers[o].reason),
+                          unruled.reason])].sort();
 t("the gate sends THREE DISTINCT codes over its corpus — one generic code for every op is how a "
 + "liar passes every by-name map above, and it is what `main` did until this item",
   seen, ["MACHINE_CREDENTIAL_REQUIRED", "SESSION_ROLE_CANNOT_REACH_OP", "SESSION_ROUTE_NOT_RECORDED"]);
@@ -634,8 +718,10 @@ t("the walk drove a real corpus — printed above and floored here, because 'no 
 + "over an empty drive is the blind walk this assertion exists to tell apart from a clean one",
   /* CORRECTED 2026-09-23 (REC-159): the floor was 15 under a measured 17; REC-159 moved four ops out of
      the ROLE arm into both sets, which this walk does not drive through the gate, so the measured
-     corpus is 13 (1 + 12) and the floor keeps the same margin of two beneath it. */
-  [ROLE_OPS.length + NO_SESSION.length >= 11, Object.keys(argAnswers).length, unresolvedSpreads],
+     corpus is 13 (1 + 12) and the floor keeps the same margin of two beneath it.
+     CORRECTED 2026-09-25 (REC-155): §4.10 moved five of the twelve no-session ops into both sets, so the
+     measured corpus is 8 (1 + 7), printed in section 3; the floor keeps the same margin of two. */
+  [ROLE_OPS.length + NO_SESSION.length >= 6, Object.keys(argAnswers).length, unresolvedSpreads],
   [true, 3, 0]);
 
 console.log(`\n${fail === 0 ? "OK" : "FAILED"}  ${pass} pass, ${fail} fail`);

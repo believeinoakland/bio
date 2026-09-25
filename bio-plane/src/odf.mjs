@@ -1453,7 +1453,8 @@ export const odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
  * WHAT IT IS, so anyone can recompute it from the artifact with two stock
  * tools: the sha256 of the `content.xml` member's INFLATED bytes, exactly
  * as `readPart` proves them whole (length and CRC-32 against the central
- * directory). No byte of content.xml is rewritten. Outside content.xml the
+ * directory). For `.ods` no byte of content.xml is rewritten; for `.odt` the
+ * list ids Google mints per export are relabelled (D-473, below). Outside content.xml the
  * package's other members are discounted, and each discount is a region
  * judgment §5 licenses: `meta.xml` (generation timestamps, the producer's
  * stamp — mechanical), `settings.xml` (view state — mechanical), the ZIP
@@ -1478,27 +1479,33 @@ export const odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
  *   .ods  content.xml byte-identical across exports: 3 of 3 (MEASUREMENTS.md
  *         2026-09-14 §4) and 18 of 18 over 3 census targets (M-123). No
  *         normalisation is needed and none is applied.
- *   .odt  content.xml differs on EVERY export. M-123 found the class on 2
- *         documents — a random `xml:id` on `<text:list>` — and said this build
- *         must re-measure it before relying on it. It was NOT re-measured here,
- *         so no `.odt` digest is claimed: a normalisation resting on 2 documents
- *         is a careless rule until it is measured, and a careless rule hides a
- *         real change. UNDETERMINED, with the reason stated.
- *   .odp  NO measurement at all (M-123: the census holds no Slides target).
- *         UNDETERMINED.
+ *   .odt  content.xml differs raw on exports carrying a list: M-123 found the
+ *         class on 2 documents — a random `xml:id` on `<text:list>`. D-473
+ *         RE-MEASURED it (M-167, a fresh population of public government Docs,
+ *         two rounds apart in time): the only difference in every list-bearing
+ *         pair is `text:list@xml:id`, and content.xml relabelled by
+ *         `odtNormalisedContentXml` is byte-stable on every pair the digest can
+ *         reach. The one other class M-167 saw (`draw:frame@draw:name`,
+ *         `imageN` permuted per export) occurs only where content.xml references
+ *         a `Pictures/` member, which the member rule below already refuses.
+ *   .odp  content.xml raw byte-stable on every pair M-167 read, but every deck
+ *         in that population references a package member, and the census holds
+ *         no Slides target (M-123). UNDETERMINED until a census target is
+ *         measured (M-167 names it).
  * Widening this is one entry in `ODF_EVIDENTIARY_MEASURED` plus the
- * measurement it cites — and, for `.odt`, the normalisation it measured. */
+ * measurement it cites, and any normalisation that measurement licensed
+ * (`ODF_EVIDENTIARY_NORMALISE`, below). */
 export const ODF_EVIDENTIARY_VERSION = 1;
 /** The flavours this module's rows define, READ OFF the rows so the control
  *  plane can ask "is this an OpenDocument format?" without learning the names
  *  (formats-odf.test.mjs pins that index.mjs spells none of them — D-70). */
 export const ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 export const ODF_EVIDENTIARY_MEASURED = Object.freeze({
-  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
+  odt: "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
 });
 const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
-  odt: "the .odt content.xml differs on every Google export (MEASUREMENTS.md 2026-09-14 §4; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
-  odp: "no .odp export has been measured for content.xml stability (M-123: the census holds no Slides target), so no evidentiary digest is claimed for .odp",
+  odp: "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp",
 });
 
 /** Package members that content.xml REFERENCES by `href`, among the members
@@ -1523,6 +1530,55 @@ function referencedMembers(contentXml, container) {
   }
   return [...hit];
 }
+
+/* D-473 — THE `.odt` NORMALISATION: RELABEL THE LIST IDS GOOGLE MINTS PER EXPORT.
+ * M-123 found, and D-473's measurement (M-167) re-measured over a fresh population,
+ * that Google writes a fresh random `xml:id` on every `<text:list>` at every
+ * export (`list888038964` → `list3685929024`). An `xml:id` is an identifier
+ * and says nothing a reader sees; what it CAN carry is a relationship — a list
+ * whose `text:continue-list` names another list's id continues that list's
+ * numbering, which a reader does see. So the ids are not stripped: each
+ * `xml:id` on a `text:list` start tag is RELABELLED `L1`, `L2`, … in document
+ * order, and every `text:continue-list` naming a relabelled id is rewritten to
+ * its label. Two exports that differ only by the random ids then carry one
+ * digest, and a list that continues a DIFFERENT list still moves it.
+ *
+ * WHAT IT DOES NOT REACH, so the rule is not read as wider than it is: it
+ * matches the literal qualified names `text:list`, `xml:id` and
+ * `text:continue-list` as Google writes them. A producer binding the text
+ * namespace to another prefix is not normalised, its digest moves on every
+ * export and the capture reads CHANGED — the safe direction (a change claimed,
+ * never a sameness). A `text:continue-list` naming an id no list carries is
+ * left verbatim. content.xml that is not valid UTF-8 is refused (null), never
+ * decoded lossily, because a replacement character would make two different
+ * byte strings equal for free. */
+const LIST_ID_RE = /(<text:list\b[^>]*?\sxml:id\s*=\s*)("([^"]*)"|'([^']*)')/g;
+const CONTINUE_RE = /(\stext:continue-list\s*=\s*)("([^"]*)"|'([^']*)')/g;
+const UTF8_STRICT = new TextDecoder("utf-8", { fatal: true });
+/** content.xml's bytes with Google's per-export list ids relabelled, or null
+ *  when the bytes are not valid UTF-8. Exported so the measurement instrument
+ *  digests exactly what the product digests. */
+export function odtNormalisedContentXml(bytes) {
+  let xml;
+  try { xml = UTF8_STRICT.decode(bytes); } catch { return null; }
+  const label = new Map();
+  let out = xml.replace(LIST_ID_RE, (m, head, q, dq, sq) => {
+    const id = dq ?? sq;
+    if (!label.has(id)) label.set(id, `L${label.size + 1}`);
+    return `${head}"${label.get(id)}"`;
+  });
+  out = out.replace(CONTINUE_RE, (m, head, q, dq, sq) => {
+    const id = dq ?? sq;
+    return label.has(id) ? `${head}"${label.get(id)}"` : m;
+  });
+  return new TextEncoder().encode(out);
+}
+/** Per flavour, the normalisation applied to content.xml before it is digested.
+ *  `.ods` needs none (content.xml measured byte-stable, M-123). */
+const ODF_EVIDENTIARY_NORMALISE = Object.freeze({
+  odt: { name: "odt-list-ids v1 (xml:id on text:list relabelled in document order, text:continue-list rewritten to match)",
+         apply: odtNormalisedContentXml },
+});
 
 /** The evidentiary digest of an OpenDocument package, or a stated refusal.
  *  `sha256Hex` is the caller's hasher (the plane's, so identity and this digest
@@ -1556,9 +1612,12 @@ export async function odfEvidentiaryDigest(bytes, sha256Hex) {
   const refs = referencedMembers(UTF8.decode(read.bytes), container);
   if (refs.length)
     return no(flavour, `content.xml references ${refs.length} package member(s) whose bytes it does not hold (${refs.slice(0, 3).join(", ")}${refs.length > 3 ? ", …" : ""}); a digest of content.xml cannot speak for them, so none is claimed`);
+  const norm = ODF_EVIDENTIARY_NORMALISE[flavour];
+  const digested = norm ? norm.apply(read.bytes) : read.bytes;
+  if (!digested) return no(flavour, "content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken");
   return {
     determined: true, flavour, over: CONTENT_PART,
-    evidentiary: await sha256Hex(read.bytes),
-    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified), odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`,
+    evidentiary: await sha256Hex(digested),
+    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`,
   };
 }

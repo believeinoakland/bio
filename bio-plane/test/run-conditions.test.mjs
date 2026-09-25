@@ -13,6 +13,11 @@
    (3) THE CLASSIFICATION IS REMOVED — delete `aiRunsInContext: "SELECTS"` from the ROLE table -> **exit 1, 52 pass, 2 FAIL**: ARM W3 naming `aiRunsInContext` (the EXACT failure of the 2026-08-08 backout, reproduced) and the ARM W8 GUARD (a corpus of zero SELECTS readers). **This is the arm answering "did minting a fifth role just make the ratchet's own failure go away".** It did not: W3 is unchanged and still total.
    (7) OVER-STRICTNESS — rewrite the projection as the equally correct `SELECT DISTINCT r.run AS run FROM ai_runs r` -> **exit 0, 54 pass, 0 fail**, as declared. **AND ITS FIRST RUN CAME BACK WRONG, which is the most useful line in this block:** W8 stayed green exactly as it should, and **ARM W8b — the POLARITY GUARD — went RED**, because its first draft built its cases by string-replacing the LIVE segment and its anchor no longer matched, so its mutation silently produced a segment identical to its input. An arm that did not arm, inside the guard whose only job is to prove the arm arms; it had also been falling as collateral in arms (1) and (2). W8b now constructs SYNTHETIC segments this file owns, so it measures the reader and not the subject's spelling, and it carries its own over-strictness case. The figures above are the post-fix ones.
    ---------------------------------------------------------------------------
+   NEGATIVE CONTROL: (run 2026-09-25, M0-145) TWO arms on ARM W9d, the quoted-column over-strictness arm, each armed ALONE on the column reader's class in `projectedColumns`, DECLARED before it ran (W9d MUST fail by name; nothing else may), anchor-occurs-exactly-once and bytes-really-changed guarded, every restore verified by sha256 AND `cmp` against a per-arm uniquely-named pristine copy with a byte count and a minimum, opening AND closing baseline rows (59 pass, 0 fail at both ends). CLEAN TREE: 59 pass, 0 fail.
+   (A) THE ROW'S CONTROL — drop `"` and `'` from the class -> **exit 1, 58 pass, 1 FAIL**, ARM W9d by name.
+   (B) drop `[` and the backtick from the class -> **exit 1, 58 pass, 1 FAIL**, ARM W9d by name.
+   W8 and W9 stayed GREEN in both arms, as declared: no live reader quotes a column, so the reader's blindness had zero instances and only the constructed segments can see it.
+   ---------------------------------------------------------------------------
    REC-74 — THE RUN'S THIRD CONDITION IS STORED AND WAS NEVER PUBLISHED, AND THE
    ITEM IS THE CLASS RATHER THAN THE FIELD.
    ---------------------------------------------------------------------------
@@ -294,6 +299,13 @@ const ROLE = {
      rather than assumed. The `bound` block in its answer is `ai_run_bounds`', a
      different table with its own publisher rules. */
   extractPropose:     "AUTHORISES",
+  /* REC-147's, 2026-09-25, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on the item's first
+     full battery. `contradictionPropose` reads `ai_runs` (`status`, `principal_plane`) to decide whether a DIFFERENT
+     act — writing contradiction candidates — is legal: AUTHORISES, `extractPropose`'s role word for word. NOT
+     `WRITES`: it writes `contradiction_candidates` and not one column of `ai_runs`. NOT `PUBLISHES`: its answers echo
+     only the run id the caller named; its RUN_NOT_RUNNING refusal deliberately carries no `status`, so ARM W4's
+     "exactly three publishers" stands. */
+  contradictionPropose: "AUTHORISES",
   /* REC-152's, 2026-09-19, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on the
      item's first full battery. `#aiRunInSight` reads `ai_runs` (the key and `context_id`, through
      `aiRunRead`'s own `#bundleGate`) to decide whether the TICK and the CLOSE — different acts — may even
@@ -526,10 +538,17 @@ const KEY_COLUMN = "run";
    happened to hold two statements, so it had never fired, which is precisely
    how a matcher stays wrong. `(?:(?!SELECT)[\s\S])*?` refuses to cross another
    `SELECT`, so the capture is the projection of the statement that really names
-   `ai_runs`. ARM W9b's polarity cases cover both directions. */
+   `ai_runs`. ARM W9b's polarity cases cover both directions.
+   CORRECTED 2026-09-25 (M0-145): the class before a column was `[\s,(]` and could not
+   see a QUOTED identifier — `SELECT run, "status" FROM ai_runs` read as key-only, a
+   projected stored column passing W8/W9 unseen. SQLite quotes an identifier four ways
+   (`"x"`, `'x'` where an identifier is expected, `[x]`, and a backtick pair), so the
+   class now holds all four openers; a quoted column after `r.` is covered too, since
+   the quote itself is the character before the name. Zero instances when it was
+   found. ARM W9d reads each spelling. */
 const projectedColumns = (segment) =>
   [...segment.matchAll(/SELECT((?:(?!SELECT)[\s\S])*?)\s+FROM\s+ai_runs/gi)]
-    .flatMap((m) => COLUMNS.filter((c) => new RegExp(`(?:^|[\\s,(]|\\w\\.)${c}\\b`).test(m[1])));
+    .flatMap((m) => COLUMNS.filter((c) => new RegExp(`(?:^|[\\s,("'\\[\`]|\\w\\.)${c}\\b`).test(m[1])));
 const selectorViolations = SELECTORS.flatMap((name) => {
   const seg = WALK.bodies.get(name) || "";
   const projected = [...new Set(projectedColumns(seg))].filter((c) => c !== KEY_COLUMN);
@@ -595,6 +614,18 @@ t("ARM W9c: THE MATCHER DOES NOT CROSS A PRECEDING `SELECT` AIMED AT ANOTHER TAB
                   + " this.#one(`SELECT run, status FROM ai_runs WHERE run=?`, a)")
      .filter((c) => c !== KEY_COLUMN)],
   [[], ["status"]]);
+t("ARM W9d OVER-STRICTNESS (M0-145): A QUOTED COLUMN IS STILL A COLUMN — SQLite's four identifier "
++ "quotings, bare and after a table alias, each read as the projection they are. A reader blind to "
++ "quotes would pass a quoted stored column through W8/W9 as a key-only projection",
+  [
+    "this.#one(`SELECT run, \"status\" FROM ai_runs WHERE run=?`, a)",
+    "this.#one(`SELECT run, 'status' FROM ai_runs WHERE run=?`, a)",
+    "this.#one(`SELECT run, [status] FROM ai_runs WHERE run=?`, a)",
+    "this.#one(`SELECT run, \\`status\\` FROM ai_runs WHERE run=?`, a)",
+    "this.#one(`SELECT r.run, r.\"status\" FROM ai_runs r WHERE r.run=?`, a)",
+    "this.#one(`SELECT \"run\" FROM ai_runs WHERE run=?`, a)",
+  ].map((seg) => [...new Set(projectedColumns(seg))].filter((c) => c !== KEY_COLUMN)),
+  [["status"], ["status"], ["status"], ["status"], ["status"], []]);
 
 /* ARM W8b, REWRITTEN 2026-08-09 IN THE TURN THAT WROTE IT, and the reason is a
    control that came back WRONG rather than a preference — recorded here instead
@@ -660,7 +691,7 @@ let PROJECT = null;
 const promote = async (id, text, type, state) => await POST("promote", {
   ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${id ?? "project"}-new`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: NOW },
 });
 const inquiryMd = ["---", `id: ${INQUIRY}`, "---", "", "## Question", "",

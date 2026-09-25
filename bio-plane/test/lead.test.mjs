@@ -145,7 +145,9 @@ const promote = async (id, text, type, { readings = [] } = {}) => {
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260918T${String(400000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+       state, and is now refused; a project document here states no title, so the label stays its only name. */
+    meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
             current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
     register: readings.map((d) => ({ sha256: d.capture.sha256, path: "captures/doc.pdf",
                                      encoding: "binary", bytes: 10 })),
@@ -344,6 +346,7 @@ const mkProject = async (label, tok) => {
   const md = projMd();
   const r = await post("promote", { base: null,
     snapKey: `20260918T${String(500000 + (++snapSeq)).slice(-6)}Z_${sha(label).slice(0, 8)}`,
+    /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", group: "believe-in-oakland", title: `title for ${label}`,
             current_state: "forming", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }, tok);

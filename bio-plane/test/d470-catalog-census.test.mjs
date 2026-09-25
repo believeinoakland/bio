@@ -133,12 +133,28 @@
  * with the constant): 6 OF 6 AS DECLARED — baseline 9/0; (b) 8/1; (c) 8/1; (d) 7/2;
  * (e) 9/0; (f) 8/1, A4 alone. Every restore verified by sha256, by content and by
  * `cmp`, driver exit 0.
+ * (g)-(k) ADDED BY M0-195, 2026-09-25 — THE SOURCE PIN (A9), rule 17's backstop for a CHANGED check, declared
+ * before the first run: (g) THE ROW'S OWN NAMED CONTROL — C-15.1's body edited ('error' -> 'warning'), no id
+ * moved, no census row: A9 MUST FAIL BY NAME, alone (A3 cannot see it, which is the defect). (h) ACCEPTS-WHEN —
+ * the same edit under a NEW version whose row declares `changed: ["C-15.1"]` and the source THE SUITE PRINTED
+ * on the armed tree: every arm GREEN. (i) OVER-STRICTNESS — comment-only edits to the REAL catalogue (a line
+ * comment on its own line, a trailing one, a block comment across lines inside the call): every arm GREEN.
+ * (j) a behaviour-free code edit (`void 0;`) declared `behaviour: "unchanged"` against the printed digest under
+ * the SAME version: every arm GREEN. (k) OVER-STRICTNESS FOR A4's widening — C-41.12 changed AGAIN at a later
+ * version with nothing added, a different source: GREEN (before M0-195 A4 would call it a collision). Arms
+ * (b) and (c) now ALSO fail A9 — adding a row or an emission site is a code edit — and are re-declared so.
+ * RUN IN FULL 2026-09-25 by M0-195 on origin/main 5e8a65a8 + this change: 11 OF 11 AS DECLARED — baseline
+ * 13/0; (b) 11/2, A3+A9; (c) 11/2, A2+A9; (d) 11/2, A3+A5; (e) 13/0 (a check re-laid across lines leaves the
+ * source digest unmoved); (f) 12/1, A4; (g) 12/1, A9 ALONE; (h) 13/0; (i) 13/0; (j) 13/0; (k) 13/0. Every
+ * restore verified by sha256, by content and by `cmp` (bio-checks.mjs 1,006,173 B; gate.mjs 24,856 B; this
+ * file 50,959 B at the run, before this record was written), driver exit 0.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { transformSync, version as ESBUILD_VERSION } from "esbuild";   /* M0-195: the parser behind `behaviourSource` */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const CATALOG = join(DIR, "..", "checks", "bio-checks.mjs");
@@ -183,6 +199,25 @@ export function codeOnly(src) {
     out += c; i++;
   }
   return out;
+}
+
+/* M0-195 — THE CATALOGUE'S BEHAVIOUR SOURCE: the file with everything that cannot change what a check does taken
+   out, so its digest moves on a CODE edit and stays put on a COMMENT edit (rule 17's backstop, BOB #35).
+   HOW COMMENTS ARE STRIPPED: not by a scanner of our own but by a real JavaScript PARSER — esbuild's, from this
+   package's lockfile — which parses the module and prints it back with `minifyWhitespace` and no comments
+   (`legalComments: "none"`). Because it is a parse, a `//` inside a string, a template or a regex is code, and
+   a comment anywhere is gone; because it is a print, layout is gone too — indentation, a check's arguments
+   re-laid across lines, and blank lines — and automatic semicolon insertion is RESOLVED by the parser, so a
+   line break that changes what ASI inserts changes the print while one that does not, does not. Nothing is
+   renamed or folded (whitespace minification only), so every token of code survives into the digest.
+   So: A COMMENT-ONLY EDIT DOES NOT MOVE THE DIGEST (A11 and control arm (i) prove it on the real file), and an
+   edit to any token of code does. What the print ALSO normalises, and is therefore also invisible: a string's
+   quote style and a number's spelling (`1.0` / `1`), which change no behaviour. What it can move WITHOUT a code
+   edit: an esbuild upgrade that prints differently — loud, never silent, and answered by a `behaviour:
+   "unchanged"` declaration; the version in use is printed beside the digest. A `@__PURE__`-style
+   annotation esbuild keeps is the one kind of comment that can move it. */
+export function behaviourSource(src) {
+  return transformSync(src, { loader: "js", format: "esm", minifyWhitespace: true, legalComments: "none" }).code;
 }
 
 /* Every call of the catalogue's one finding constructor. `\s*` after `f(` is what
@@ -336,6 +371,34 @@ const CATALOG_CENSUS = {
 
   /* 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27): D-463's rows over 1.28.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.29.0": { count: 466, digest: "82d13f0339c9228ff961949ec5e5f804d77c27a7e8aabd8d4f401bad4ba2e8e6" },
+  /* 1.31.0 (REC-150, 2026-09-25, branch land/worker/REC-150): the C-95 family (§7.14's request to join) over 1.29.0,
+     466 -> 475, nine arrivals and no departures. 1.30.0 is skipped because c21-batch28 holds it for another catalogue.
+     Count and digest are THIS SUITE'S OWN PRINT on the item's tree, never 466 + 9. */
+  /* REC-150 side, kept as history (branch row DROPPED at c22-batch29; CONDUCT takes the union's number once and re-reads
+     count and digest from this suite's print): "1.31.0": { count: 475, digest: "3f2a8c5d60fd03c79db5560e4818ece84983c3a18223cddb0acc77162c09085a" } */
+  /* D-134 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue, and one version names one catalogue; CONDUCT takes the union's number once and re-reads count and digest
+     from this suite's print): 1.30.0 (D-134, 2026-09-25): CUSTODIAL_CHECKS C-96.1-.9 over 1.29.0;
+     "1.30.0": { count: 475, digest: "7792c2e9a57e10c68358c11e922932b08b9a42c2c2632959964d073e42037447" } */
+  /* REC-219 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (REC-219, 2026-09-25): TWO ARRIVALS, NO DEPARTURES — C-41.14 `CASE_DOCUMENT_FAMILY.PENDING` and C-41.15
+     `CITATIONS` (D-579(a)) (§3 rule 18, BOB #34), 466 -> 468 over origin/main 964da679;
+     "1.30.0": { count: 468, digest: "ce0367d3116f97e0947d02029ae42648b93e613f0f92bcc098197243d9758706" } */
+  /* REC-203 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (REC-203, 2026-09-25): THREE ARRIVALS, NO DEPARTURES — C-91.1, C-91.2 and C-91.3, `op=idmatch`'s
+     IDSPACE_CHECKS, 466 -> 469 over origin/main 964da679;
+     "1.30.0": { count: 469, digest: "6da20e8de085e334d03f8d97e3211365179d5b427ec92d5e01e1a6d6e65d7f8c" } */
+  /* MK-7 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (MK-7, 2026-09-25): TWELVE ARRIVALS, no departures — ATTRIBUTION_CHECKS, C-92.1..C-92.12, 466 -> 478;
+     "1.30.0": { count: 478, digest: "7fb9adb53cb99f703ca909c8e27594906ee11ceac381b6e4d778f72e4370cf01" } */
+  /* REC-147 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (REC-147, 2026-09-25, branch land/worker/REC-147): C-93's seven candidate refusals over 1.29.0; count and
+     digest are THIS SUITE'S PRINT on this branch's tree. At a union, re-read them from the merged tree's print. *\/
+     "1.30.0": { count: 473, digest: "9582069bf3086b0cc1a5fda3e50b9535be332ce087565a1163a247ec7831d2d6" }, */
   /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
      rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
      KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
@@ -399,8 +462,94 @@ const CATALOG_CENSUS = {
      base is DROPPED, its comment kept; the union's ONE new number holds all of them (REC-207's ids renumbered off
      D-468's C-26.12 and REC-205's C-33.44), and CARRIES D-450's `changed: ["C-41.12"]` as its note above asks.
      Count and digest are THIS SUITE'S PRINT on the merged tree. */
+  /* THE SOURCE PIN (M0-195, 2026-09-25; rule 17 as BOB #35 folded it). `source` is the sha256 of the catalogue's
+     BEHAVIOUR SOURCE (`behaviourSource` above — the file parsed and printed back without comments or layout, esbuild 0.25.12), so
+     a check whose BODY changes under an unmoved version fails (A9) by name even though its number did not move.
+     1.30.0's is THIS SUITE'S OWN PRINT on origin/main 5e8a65a8, and it IS 1.30.0's source: `git diff d5d437c46
+     origin/main -- bio-plane/checks/bio-checks.mjs` is empty, d5d437c46 being the commit that set 1.30.0. No
+     EARLIER version carries a `source`: nobody measured the code those versions stamped, and inventing it now
+     would be the defect this table exists to close. An edit that moves `source` without changing what any check
+     refuses or admits is recorded, under the SAME version, as
+         unchanged: [{ source: "<the new print>", behaviour: "unchanged", by: "<the landing's id>" }]
+     and anything else takes a new version, with `changed: [C-n.m, …]` naming the checks whose behaviour moved. */
   "1.30.0": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f",
-              changed: ["C-41.12"] },
+              changed: ["C-41.12"],
+              source: "58c505cd178722403908de61287fbdfe60418b90b57f6cacf882f865a7766514" },
+  /* 1.29.0 (D-520, 2026-09-25): C-83.8 RENDER_AT_CAPACITY added to RENDER_CAPTURE_CHECKS, none changed or removed. Count and
+     digest are THIS SUITE'S OWN PRINT on the item's tree over origin/main 8bdf20e6. CONDUCT reconciles at the union. */
+  /* D-520 side, kept as history (branch row DROPPED at c22-batch29; CONDUCT takes the union's number once and re-reads
+     count and digest from this suite's print): "1.29.0": { count: 462, digest: "bbbbc10c8a9a3d179dd984d5c9bfb902dccc5b9fd91ba63a67edff5c6f4d0439" } */
+  /* D-147 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (D-147, 2026-09-25): ELEVEN ARRIVALS, NO DEPARTURES — C-94.1-11, LIFECYCLE_CHECKS, 466 -> 477 over
+     origin/main 964da679;
+     "1.30.0": { count: 477, digest: "b06cb8dce8d8ce12f4d719b0b8e44e8d1f78c7501fb1b803126870967bcb39f4" } */
+  /* REC-186 side, kept as history (branch row DROPPED at c22-batch29 — its "1.29.0" is a different catalogue from ours'
+     1.29.0; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.29.0 (REC-186, 2026-09-25): C-33.48 LAST_OWNER_CANNOT_LEAVE joined ACT_SHAPE_CHECKS (BOB #31's ruling:
+     op=projectleave refuses a project's only owner), 461 -> 462;
+     "1.29.0": { count: 462, digest: "679731bf482feb496fa2c6fdd0443fc6d503cf8375b52cb6cf98142fd361d73a" } */
+  /* REC-197 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (REC-197, 2026-09-25, branch land/worker/REC-197, stacked on land/worker/REC-196 @ 82f604d2): TWO ARRIVALS,
+     NO DEPARTURES — C-97.1 PROJECT_VISIBILITY_NO_OWNER and C-97.2 PROJECT_VISIBILITY_NOT_A_CREATION (a creation's
+     `visibility`, BOB #32's ruling (b)). 466 -> 468, count AND digest from THIS SUITE'S OWN PRINT on the item's tree,
+     never 466 + 2. 1.29.0's row STAYS. **IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE
+     UNION'S: CONDUCT takes the next number and re-reads the census from this suite's print on the merged tree.** *\/
+     "1.30.0": { count: 468, digest: "78740e5c8072d6d694c354539ffa0f2d3d0924c3ecc8f38a4437fbb1953c09ad" }, */
+  /* D-521b side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.31.0 (D-521, 2026-09-25, branch land/worker/D-521b): NO ARRIVALS, ONE DEPARTURE. C-82.1
+     STATEMENT_ACK_DOCUMENTS_OVER_BOUND is RETIRED: the read it guarded returns at most two rows by its keys, against
+     a bound of 8, so no input could reach it. Rule 17 moves the version for a REMOVED check. A departure changes the
+     census, so A4 needs no `changed` note. (M0-195's `changed:` grammar is not built; this row follows the table's
+     current grammar, and the departure is named here in words.) MINOR: nothing that passed now fails. 502 -> 501,
+     count AND digest from THIS SUITE'S OWN PRINT on the item's tree over origin/main 5e8a65a8, never arithmetic.
+     If another branch in the batch also moves this constant, CONDUCT takes the next number and re-reads the
+     census on the merged tree. *\/
+     "1.31.0": { count: 501, digest: "398bfcff3bb62cdfefd1cac1c96deb94928ab20af1e07627de634a4474cab2ad" }, */
+  /* D-563 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.31.0 (D-563, 2026-09-25, WORKER D-563, branch land/worker/D-563): TWO ARRIVALS, NO DEPARTURES, NONE CHANGED —
+     C-86.3 ENVELOPE_TITLE_DISAGREES and C-86.4 ENVELOPE_STATE_DISAGREES. 502 -> 504, count AND digest from THIS SUITE'S
+     OWN PRINT on the item's tree over origin/main 5e8a65a8; no `changed` field, because no existing check's rule moved
+     (M0-195's grammar: `changed` names a CHANGED check, and this entry has none). IF ANOTHER BRANCH IN THE SAME BATCH
+     ALSO MOVES THE VERSION, THIS ROW IS NOT THE UNION'S. *\/
+     "1.31.0": { count: 504, digest: "0837d14bb242d7b5589152a2053642b701712145d469910fd6f15432640008e2" }, */
+  /* D-561 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.31.0 (D-561, 2026-09-25, branch land/worker/D-561 over origin/main 5e8a65a8): the new PUBLISHED_READ_CHECKS
+     family (C-98.1..8) and C-69.2 STORE_DID_NOT_ANSWER in DISPATCH_CHECKS — nine arrivals, none moved or removed,
+     MINOR. 502 -> 511, count AND digest from THIS SUITE'S OWN PRINT on the item's tree. If another branch in the
+     same batch also takes 1.31.0, the integrator re-reads the census on the union. *\/
+     "1.31.0": { count: 511, digest: "b27f51ddb69af8ad9f5eacdbe45226c03573e5e947af4c88aab72da513cce243" }, */
+  /* 1.31.0 AT THE UNION (CONDUCT #22, c22-batch29 union, 2026-09-25): every branch row above that took 1.29.0, 1.30.0
+     or 1.31.0 over its own base is DROPPED, its comment kept; the union takes ONE number for the catalogue that runs.
+     ARRIVALS (68): C-33.48 (REC-186); C-41.14, C-41.15 (REC-219); C-69.2 and C-98.1..8 (D-561); C-83.8 (D-520);
+     C-86.3, C-86.4 (D-563); C-91.1..3 (REC-203); C-92.1..12 (MK-7); C-93.1..7 (REC-147); C-94.1..11 (D-147);
+     C-95.1..9 (REC-150); C-96.1..9 (D-134); C-97.1, C-97.2 (REC-197). DEPARTURE (1): C-82.1, retired by D-521b.
+     502 + 68 - 1 = 569, and that sum is NOT the figure: count, digest and source are THIS SUITE'S OWN PRINT on the
+     merged tree (HEAD ee29c763 + the gate.mjs bump; esbuild 0.25.12). Arrivals and departures were read by
+     diffing this suite's census of origin/main 5e8a65a8 against the merged tree.
+     `changed` — EXISTING ids whose refusal or admission moved in this batch (rule 17 as BOB #35 folded it), each
+     read at its site in `git diff origin/main..HEAD -- bio-plane/checks/bio-checks.mjs` and the emitting code:
+       C-2.8   D-598: checkInheritedLeg reads only an INQUIRY entry as published, so `grade_source: inherited` on a
+               leg whose target was published as EVIDENCE is now refused C-2.8 (it went to C-21.2's arms before);
+       C-21.2  D-598: its inheritance arms no longer fire on a leg over published evidence (BOB #34);
+       C-2.10  D-147: correspondenceFindings gained the LIFECYCLE arm (lifecycleFindings), new refusals under C-2.10;
+       C-41.1  REC-219: bio-case-document/4 joins CASE_DOCUMENT_FORMATS_ACCEPTED — a /4 token it refused, it admits;
+       C-41.13 REC-219: caseDocumentRequiresDisclosures answers yes for /4 as well as /3;
+       C-53.10, C-53.11, C-53.12  MK-7: the publication fence NARROWED to an observation that still names its author
+               in its own files (and what rests on one); every other observation crosses under C-92;
+       C-70.3  REC-197: the value check moved into #visibilitySettingRefusal, which a project's creation or fork
+               (op=promote's new `visibility`) also asks — a second door refused by the same row.
+     NOT listed, read and judged wording-only (what is refused or admitted did not move): C-29.9 and C-38.7's
+     translations (REC-162 — the same set refused, the sentence names the session), C-33.29..31's `where` (D-589's
+     regions), C-2.8's earned-leg hint text ("the MEASUREMENTS ledger"). THE LIMIT: `changed` is read from the
+     catalogue and the code at the sites named; a behaviour moved through a helper elsewhere is not seen here. */
+  "1.31.0": { count: 569, digest: "d1e8a679256b530d49f955460b893064fdb2e6bea67f19a6b3f94a2684d592b0",
+              changed: ["C-2.8", "C-2.10", "C-21.2", "C-41.1", "C-41.13", "C-53.10", "C-53.11", "C-53.12", "C-70.3"],
+              source: "832fbe02962e8f75e5b75b28d6ab83a08d083c8124a864c5b5260110ad6ceda9" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -418,6 +567,10 @@ const RELAYS = {
      union. It is the thirteenth member of the SAME family as the twelve above,
      relayed the same way; nothing about the mechanism changed. */
   "C41.DISCLOSURES": "CASE_DOCUMENT_FAMILY",
+  /* REC-219 (2026-09-25): the fourteenth member, C-41.14 (a /4 document's adoptions pinning a proposed
+     revision), and C-41.15 (its citation edges and their versions, D-579(a)), relayed the same way. */
+  "C41.PENDING": "CASE_DOCUMENT_FAMILY",
+  "C41.CITATIONS": "CASE_DOCUMENT_FAMILY",
   "row.check": "BASIS_VERSION_CHECKS and SUGGEST_CHECKS (basisVersionFindings' two push helpers)",
   "checkId": "checkLegExtentGrammar's parameter — 'C-2.8' here, 'C-25.10' from src/store.mjs "
            + "(BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE)",
@@ -428,6 +581,8 @@ const src = readFileSync(CATALOG, "utf8");
 const tables = declaredTables(mod);
 const { literal, computed } = emissionSites(src);
 
+const behaviour = behaviourSource(src);
+const sourceDigest = createHash("sha256").update(behaviour).digest("hex");
 const tableIds = new Set([...tables.values()].flat());
 const census = new Set([...tableIds, ...literal]);
 const count = census.size, digest = digestOf(census);
@@ -437,6 +592,7 @@ say(`  S1  declared tables:        ${tables.size} tables, ${tableIds.size} disti
 say(`  S2  literal emission sites: ${literal.size} distinct C-numbers`);
 say(`  computed emission sites:    ${computed.size} spelling(s) — ${[...computed.keys()].sort().join(", ")}`);
 say(`  CENSUS: ${count} checks · sha256 ${digest}`);
+say(`  SOURCE: ${src.length} bytes, ${behaviour.length} once comments and layout are stripped (esbuild ${ESBUILD_VERSION}) · sha256 ${sourceDigest}`);
 say(`  THE LIMIT: this census is a census OF THE CATALOGUE FILE. It establishes what the`);
 say(`  catalogue HOLDS, and it does not establish that any check RAN, nor that a version`);
 say(`  recorded below was the version actually stamped on any past ratification.`);
@@ -485,12 +641,88 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
   const seen = new Map();
   const collisions = [];
   for (const [v, e] of Object.entries(CATALOG_CENSUS)) {
-    const key = `${e.digest}|${[...(e.changed || [])].sort().join(",")}`;
+    /* M0-195: an entry that DECLARES a change is also identified by its `source`, so the same check changed
+       twice with nothing added (C-41.12 again at a later version, say) is two catalogues, not a collision.
+       An entry declaring no change is keyed as before — it cannot escape A4 by carrying a new source. */
+    const ch = [...(e.changed || [])].sort().join(",");
+    const key = `${e.digest}|${ch}|${ch && e.source ? e.source : ""}`;
     if (seen.has(key)) collisions.push(`${seen.get(key)} and ${v} record the same census`);
     else seen.set(key, v);
   }
   for (const c of collisions) console.log(`          ${c}`);
   t("(A4) ONE VERSION, ONE CATALOGUE — no two recorded versions carry the same census", collisions, []);
+}
+
+/* (A9) THE SOURCE PIN — M0-195, rule 17's backstop (BOB #35, 2026-09-25). A3 sees a check ADDED or REMOVED; it
+   cannot see a check CHANGED, because a census of ids is blind to a body. This arm pins the current version to
+   the digest of the catalogue's behaviour source, so an edit to any check's code under an unmoved version fails
+   HERE, by name, unless the landing either takes a new version (A3 then wants its census row, with `changed`) or
+   declares under this one `{ source, behaviour: "unchanged", by }` against the new digest. A comment-only edit
+   does not move the digest (A11), so a comment never costs a version. If esbuild's version moved and the code
+   did not, the print may have moved alone: that too is a `behaviour: "unchanged"` declaration, saying so.
+   THE LIMIT: `behaviour: "unchanged"` is a declaration, not a proof — the same record-of-intent limit as the
+   header's; what the arm removes is the SILENT path. And it pins the catalogue FILE: a check whose behaviour
+   moves through a helper imported from elsewhere is not seen. No entry for CATALOG_VERSION is A3's to name;
+   this arm does not count it twice. */
+{
+  const recorded = CATALOG_CENSUS[CATALOG_VERSION] || null;
+  const problems = [];
+  if (recorded) {
+    const declared = recorded.unchanged || [];
+    for (const d of declared) {
+      if (!d || d.behaviour !== "unchanged" || !/^[a-f0-9]{64}$/.test(d.source || "") || !d.by)
+        problems.push(`${CATALOG_VERSION}: an \`unchanged\` declaration must be { source: <sha256>, behaviour: "unchanged", by: <id> } — got ${JSON.stringify(d)}`);
+    }
+    const admitted = [recorded.source, ...declared.filter((d) => d && d.behaviour === "unchanged").map((d) => d.source)];
+    if (!recorded.source) {
+      problems.push(`${CATALOG_VERSION} records NO source digest`);
+      console.log(`          CATALOG_VERSION ${CATALOG_VERSION} pins no source. Add to its entry:  source: "${sourceDigest}"`);
+    } else if (!admitted.includes(sourceDigest)) {
+      problems.push(`THE CATALOGUE'S CODE MOVED AND THE STAMP DID NOT: ${CATALOG_VERSION} pins source ${recorded.source}`
+                  + (declared.length ? ` (+${declared.length} declared unchanged)` : "") + `, measured ${sourceDigest}`);
+      console.log(`          A CHECK'S CODE CHANGED UNDER ${CATALOG_VERSION}. Either MOVE CATALOG_VERSION and record`);
+      console.log(`            "<new version>": { count: ${count}, digest: "${digest}", changed: ["C-n.m", …], source: "${sourceDigest}" },`);
+      console.log(`          or, ONLY if no check refuses or admits anything differently, add to ${CATALOG_VERSION}'s entry`);
+      console.log(`            unchanged: [{ source: "${sourceDigest}", behaviour: "unchanged", by: "<this landing's id>" }]`);
+    }
+  }
+  for (const p of problems) console.log(`          ${p}`);
+  t("(A9) THE SOURCE PIN: the catalogue's behaviour source is the one pinned for CATALOG_VERSION", problems, []);
+}
+
+/* (A10) THE STRIPPED SOURCE IS NOT EMPTY AND STILL HOLDS THE CODE. A digest of an empty or truncated print agrees
+   with every other one for free (CLAUDE.md §5), so the print is floored, and every C-number the census found at a
+   literal emission site (S2, read by a different matcher) must still be in it. */
+{
+  const lost = [...literal].filter((id) => !behaviour.includes(`"${id}"`) && !behaviour.includes(`'${id}'`)).sort();
+  t("(A10) THE STRIPPED SOURCE IS NOT EMPTY AND STILL HOLDS THE CODE — floored, every literal emission site present",
+    [behaviour.length > 100000, lost], [true, []]);
+}
+
+/* (A11) OVER-STRICTNESS FOR A9: a comment-only edit is not a behaviour change and must not move the digest —
+   a comment added on its own line, at the end of a line, inside a template's `${}`, a block comment spanning
+   lines, a line re-indented, and a call's arguments re-laid across lines. And the other direction, so the arm
+   is not satisfied by a function that returns a constant: a changed token, a `//` INSIDE A STRING or a regex
+   (which is code), and a line break that changes what ASI inserts, do move it. */
+{
+  const base = "const re = /a\\/b[/]c/g;\nexport function g(x) {\n  if (x > 1) return f('C-1.1', 'error', `n=${x}`);\n  return x / 2;\n}\n";
+  const same = [
+    "// a new comment\n" + base,
+    base.replace("if (x > 1)", "if (x > 1) /* inline */"),
+    base.replace("return x / 2;", "return x / 2; // trailing"),
+    base.replace("`n=${x}`", "`n=${x /* inside */}`"),
+    base.replace("{\n  if", "{ /* spans\n lines */\n  if"),
+    base.replace("  return x / 2;", "        return   x  /  2;"),
+  ];
+  same.push(base.replace("f('C-1.1', 'error', `n=${x}`)", "f(\n      'C-1.1',\n      'error',\n      `n=${x}`\n    )"));
+  const moved = [base.replace("x > 1", "x > 2"), base.replace("'error'", "'error // not a comment'"),
+                 base.replace("/a\\/b[/]c/g", "/a\\/b[/]c\/\/d/g"),
+                 base.replace("return x / 2;", "return\n x / 2;")];   /* ASI: now returns undefined */
+  const d0 = behaviourSource(base);
+  t("(A11) OVER-STRICTNESS FOR A9: a comment-only or layout-only edit leaves the source digest unmoved",
+    same.map((s) => behaviourSource(s) === d0), same.map(() => true));
+  t("(A11) …and a code edit, a `//` inside a string or a regex, or an ASI-changing break, MOVES it",
+    moved.map((s) => behaviourSource(s) !== d0), moved.map(() => true));
 }
 
 /* (A5) THE STAMP READS THE CATALOGUE'S VERSION, and reads the bumped one. */
@@ -506,8 +738,38 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 /* CORRECTED at c21-batch28 (CONDUCT #21): 1.29.0 -> 1.30.0, the union's one number for this batch's rows. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
+/* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: 1.30.0 -> 1.31.0, the union's one number for
+   every branch below (the catalogue under the stamp moved 502 -> 569 by this suite's print); the literal moves by
+   hand with the constant, which is its whole rule. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
+/* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
+   moves this literal with the constant once:
+   /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue
+      under the stamp (466 -> 475) and this literal moves in the same commit as the constant, which is its whole rule. *\/
+   t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
+     [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
+*/
+/* D-134 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, the C-96 rows); ours is kept
+   at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* REC-219 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-41.14/C-41.15); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* REC-203 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-91's three rows); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* D-147 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-94.1-11); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* MK-7 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-92's twelve rows); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* REC-147 side, kept as history — its A5 pin read 1.30.0 on its own branch (C-93's seven rows); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* REC-197 side, kept as history — its A5 pin read 1.30.0 on its own branch (C-97's two rows); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* D-521b side, kept as history — its A5 pin read 1.31.0 on its own branch (C-82.1 retired, one departure); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* D-563 side, kept as history — its A5 pin read 1.31.0 on its own branch (C-86.3/C-86.4, two arrivals); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* D-561 side, kept as history — its A5 pin read 1.31.0 on its own branch (C-98.1..8 and C-69.2, nine arrivals); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under
@@ -532,6 +794,15 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    under the stamp is no longer 1.28.0's and the stamp moves with it (rule 17). */
 /* CORRECTED AGAIN by D-512 (2026-09-24), never exempted: C-66.6 moved the catalogue, so the stamp moved with it. */
 /* CORRECTED 2026-09-25 by D-454: 1.28.0 -> 1.29.0 with the catalogue (C-74.4 arrived); the stamp moves with it. */
+/* D-520 side, kept as history — its A5 pin read 1.29.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
+   moves this literal with the constant once:
+   /* CORRECTED by D-520 (2026-09-25), never exempted: 1.28.0 named the catalogue before C-83.8 arrived; the catalogue
+      under the stamp moved, so the stamp moved with it and this literal is edited by hand in the same commit. *\/
+   t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
+     [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
+*/
+/* REC-186 side, kept as history — its A5 pin read 1.29.0 on its own branch (1.28.0 -> 1.29.0, C-33.48); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

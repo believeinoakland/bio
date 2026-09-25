@@ -241,7 +241,7 @@ const promote = async (id, text, type, tok = RUTH, extraMeta = {}, register = []
     snapKey: `${id}-${String(++snapKeySeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
-    meta: { object_type: type, group: GROUP, title: `Bundle ${id}`,
+    meta: { object_type: type, group: GROUP,
             current_state: type === "inquiry" ? "open" : "collected",
             created: NOW, last_updated: LATER, ...extraMeta } });
 
@@ -912,7 +912,7 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
         "", "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
       return { bundleId: id, base: null, snapKey: `${id}-000001`, register: [],
         files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-        meta: { object_type: "action", group: "believe-in-oakland", title: `Action ${id}`,
+        meta: { object_type: "action", group: "believe-in-oakland",
                 current_state: "planned", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } };
     })()],
   };

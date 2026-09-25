@@ -618,7 +618,28 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      reads, and `derivation-bounds` and `meaning-bounds` each named it; it was fixed at the cause — LIMIT cap+1
      under DRIVE_SHELLS_LIMIT_DEFAULT/MAX, a keyset cursor, `limit` and `truncated` published. Its envelope is in
      the map below and its BITE in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
-  OPS.size, 46);
+  /* REC-150 side, kept as history: MOVED 45 -> 46 on 2026-09-25 by REC-150 on its own branch, from THIS ARM'S OWN FAILURE OUTPUT (`want 45 / got 46`), never by adding
+     one: op=projectrequests, a project's requests to join and a member's own (Membership v2 §7.14). It was written
+     unbounded first and `derivation-bounds` named it the one arrival in its census; §7.14 lets a requester ask again
+     after every decline, so the list grows with the record. Its cap is PROJECT_REQUESTS_LIMIT beside `LIMIT ?`,
+     declared BELOW the method, with `limit` and `truncated` published; carried in DRIVEN_ELSEWHERE for the reason
+     there. The c22-batch29 union carries BOTH arrivals (driveshells, projectrequests); its figure is
+     re-read from this arm's own failure output. */
+  /* REC-203 side, kept as history: MOVED 45 -> 46 on 2026-09-25 by REC-203 on its own branch, from THIS ARM'S OWN FAILURE OUTPUT (`want 45 / got 46`), never by adding
+     one: op=idmatch, which reads a capture's addresses under IDMATCH_ADDRESS_LIMIT (declared BELOW the method) with
+     `LIMIT ?` at cap + 1, `limit` and `truncated` published. Its bite is driven in `test/rec203-idspaces.test.mjs`'s
+     BOUND section (DRIVEN_ELSEWHERE) and its envelope in the map below. The c22-batch29 union carries THREE arrivals
+     (driveshells, projectrequests, idmatch); its figure is re-read from this arm's own failure output. */
+  /* D-521b side, kept as history: FELL 46 -> 45 on 2026-09-25 by D-521, from THIS ARM'S OWN FAILURE OUTPUT (`want 46 / got 45`), never by
+     subtracting. The departure is op=statementack. Its bound (STATEMENT_ACK_DOCUMENTS_MAX, 8, refused over as C-82.1)
+     guarded a read that returns at most two rows by its keys, so the bound could never fire and D-521 retired it.
+     The read is now two keyed `#one` reads, by identity and by draft link (rec217-draft-binding block 7 drives both).
+     The op leaves DRIVEN_ELSEWHERE, the envelope map and the named-constant arm in the same landing. The c22-batch29 union carries this departure beside REC-150's and REC-203's arrivals;
+     its figure is re-read from this arm's own failure output. */
+  /* MOVED 46 -> 47 at the c22-batch29 union (CONDUCT #22, 2026-09-25), from THIS ARM'S OWN FAILURE OUTPUT on the merged
+     tree (`want 46 / got 47`; the corpus line printed `71 carrying a cap, reaching 47 ops`), never by arithmetic: main's
+     46 (D-525's driveshells) plus REC-150's projectrequests and REC-203's idmatch, less D-521b's statementack. */
+  OPS.size, 47);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -702,7 +723,7 @@ for (let i = 1; i <= 3; i++) {
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r57", files,
     register: [{ sha256: capture, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
-    meta: { object_type: "information", group: "believe-in-oakland", title: id,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   CAPS.push(capture);
@@ -824,7 +845,7 @@ const biasMd57 = (state) => [
     const r = await POST("op=promote&token=mem-r57", {
       bundleId: BIAS_ID, base, snapKey: `${BIAS_ID}-${base ? "rev" : "new"}`, author: "r57",
       files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
-      meta: { object_type: "bias", group: "believe-in-oakland", title: BIAS_ID,
+      meta: { object_type: "bias", group: "believe-in-oakland",
               current_state: state, created: NOW, last_updated: NOW } });
     if (r?.ok === false) throw new Error(`promote ${BIAS_ID} ${state}: ${JSON.stringify(r)}`);
     return r.bundleSha;
@@ -890,7 +911,7 @@ for (const q of ["INQ-2026-0807-bounds-runs", "INQ-2026-0807-bounds-runs-elsewhe
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: q, base: null, snapKey: `${q}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: q, current_state: "open",
+    meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
             created: NOW, last_updated: NOW } });
   if (r?.ok !== true) throw new Error(`REC-153 fixture promote ${q}: ${JSON.stringify(r).slice(0, 600)}`);
 }
@@ -1006,7 +1027,7 @@ const PL1_INQ = "INQ-2026-0807-bounds-pl1";
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: PL1_INQ, base: null, snapKey: `${PL1_INQ}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: PL1_INQ,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`PL-1 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
 }
@@ -1031,7 +1052,7 @@ const D394_INQ = "INQ-2026-0807-bounds-d394";
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: D394_INQ, base: null, snapKey: `${D394_INQ}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: D394_INQ,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`D-394 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
 }
@@ -1463,6 +1484,13 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      clamp and `truncated` both ways are driven in `test/theme.test.mjs`
                                      section 6; the envelope arm is below. */
                                   "themeread",
+                                  /* REC-203: op=idmatch reads a capture's ADDRESSES under
+                                     Store.IDMATCH_ADDRESS_LIMIT, one row past the cap. Its BITE needs one
+                                     capture located at more addresses than the bound, which needs a scripted
+                                     source; the bite (cut, `truncated` true, the system then UNDETERMINED)
+                                     and the uncut read (`truncated` false) are driven in
+                                     `test/rec203-idspaces.test.mjs`'s BOUND section; the envelope arm is below. */
+                                  "idmatch",
                                   /* REC-126 / IC-145: op=reviewcopy's comments and grants are read under
                                      REVIEW_LIST_MAX with a caller `limit` clamped to it. Its BITE needs a
                                      DRAFT with comments, which only a project OWNER in a session can write,
@@ -1501,13 +1529,20 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      sixty-version fixture — so the bite, the clamp, `truncated` and total
                                      paging are driven there in section 15; the envelope arm is below. */
                                   "changedfromaudit",
-                                  /* IC-246 (c19-unionfix, 2026-09-24): neither takes a caller's `limit`.
+                                  /* IC-246 (c19-unionfix, 2026-09-24): takes no caller `limit`.
                                      op=groupidentity's CUT is driven above with a real bite (an enrolled
-                                     administrator's GROUP_DOMAIN_CHECKS_MAX + 1 claims); op=statementack's
-                                     bound REFUSES and its bite lives in
-                                     `test/d150-statement-acknowledgement.test.mjs`; its named-constant arm is
-                                     above and its envelope below. */
-                                  "groupidentity", "statementack"]);
+                                     administrator's GROUP_DOMAIN_CHECKS_MAX + 1 claims). op=statementack sat
+                                     here beside it until D-521 (2026-09-25) retired its unreachable bound; it
+                                     is no longer a capped op, so it left this list. */
+                                  "groupidentity",
+                                  /* REC-150: op=projectrequests takes a `limit` and COULD sit in the loop; what keeps
+                                     it out is projectdirectory's reason exactly — it answers only a MEMBER SESSION
+                                     (C-95.1 refuses a credential with no member behind it) and its bite needs
+                                     requests that only members' sessions can make. The bite (a limit of two over four
+                                     of a member's own requests, and three over a project's), `limit` read back as
+                                     the clamped cap, `truncated` both ways and an over-ask answered AT the ceiling are
+                                     driven in `test/project-join-request.test.mjs` §8, in this loop's shape. */
+                                  "projectrequests"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1650,7 +1685,7 @@ for (const [id, n] of [[QT_BIG, QT_MAX + 1], [QT_ONE, 1]]) {
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "action", group: "believe-in-oakland", title: id, current_state: "active",
+    meta: { object_type: "action", group: "believe-in-oakland", current_state: "active",
             created: NOW, last_updated: NOW } });
   if (r?.ok !== true) throw new Error(`D-148 fixture promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
 }
@@ -1710,20 +1745,9 @@ t("op=groupidentity: the PUBLIC projection is unchanged — no check log and no 
   ["domain_checks", "domain_checks_limit", "domain_checks_truncated"].map((k) => k in giPublic),
   [false, false, false]);
 
-/* op=statementack is an ACT, and its bound REFUSES (C-82.1, STATEMENT_ACK_DOCUMENTS_OVER_BOUND): a cut would leave a
-   document listing fewer second readers than the record holds, and its owner would sign that absence. The bite —
-   STATEMENT_ACK_DOCUMENTS_MAX + 1 unsigned documents of one statement in one project, refused with nothing
-   written, and a same-sentence document in another project untouched — needs a project, joined participants and
-   authored case documents, which live in `test/d150-statement-acknowledgement.test.mjs`, where it is driven. Here:
-   the bound is a NAMED constant the statement reads, and the op answers an envelope. */
-const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
-const saBody = SRC_STORE.slice(SRC_STORE.indexOf("  acknowledgeStatement({"),
-                               SRC_STORE.indexOf("static STATEMENT_ACK_DOCUMENTS_MAX"));
-t("op=statementack: its bound is the NAMED constant STATEMENT_ACK_DOCUMENTS_MAX, read at `LIMIT ?` with max + 1 and "
-+ "no SQL literal left, and a success publishes it",
-  [Number.isInteger(SA_MAX) && SA_MAX > 0, /LIMIT \?`,[\s\S]{0,200}ackMax \+ 1\)/.test(saBody),
-   /FROM case_documents[^`]*LIMIT \d/.test(saBody), /case_documents_limit: ackMax, case_documents_truncated: false/.test(saBody)],
-  [true, true, false, true]);
+/* op=statementack's named-constant arm stood here (IC-246). D-521 (2026-09-25) RETIRED the bound it pinned,
+   STATEMENT_ACK_DOCUMENTS_MAX and its refusal C-82.1, because the read under it returns at most two rows by its keys
+   against a bound of 8. The arm is removed with the bound; the walk above no longer finds the op. */
 /* ------------------------------------------------------ D-479's ARMS (SCHEDULER #17's finding on REC-149).
    op=projectdirectory, the DISCOVERABLE projects a member is outside (Membership v2 §7.14, "The directory").
    REC-149 built it listing EVERY such project, unpaged, publishing no bound; both bounds ratchets counted it and
@@ -1793,12 +1817,17 @@ t("op=projectdirectory: AN OVER-ASK IS ANSWERED AT THE CEILING, and the CEILING 
 t("op=projectdirectory: the CUT PAGE is the FIRST two in the SAME order the whole answer lists them — a page "
 + "means the same thing twice, which is what makes a lowered `limit` usable rather than a lottery",
   D479_BITE?.projects?.map((p) => p.id), D479_WHOLE?.projects?.slice(0, 2).map((p) => p.id));
+/* CORRECTED 2026-09-25 by REC-150, never exempted: the third element asserted a `requests: "NOT_BUILT:…"` field,
+   because a `request` of null meant "not built" while §7.14's step 2 was absent. REC-150 built the request, so null
+   now means THIS CALLER NEVER ASKED — which d479out has not — and a field still saying "not built" would be false.
+   The subject is unchanged (the cut page says only what §7.14 lets it), so the third element now asserts the
+   caveat is gone rather than present. */
 t("op=projectdirectory: and the cut page still says only what §7.14 lets it — an id, a name, and a `request` "
-+ "that is null because the request to join is NOT BUILT",
++ "that is null because this caller never asked",
   [D479_BITE?.projects?.every((p) => JSON.stringify(Object.keys(p).sort()) === '["id","name","request"]'),
    D479_BITE?.projects?.every((p) => p.request === null),
-   typeof D479_BITE?.requests === "string" && D479_BITE.requests.startsWith("NOT_BUILT:")],
-  [true, true, true]);
+   "requests" in (D479_BITE || {})],
+  [true, true, false]);
 
 /* ------------------------------------------------------ D-497's ARMS (the row D-479 reported to SCHEDULER).
    D-479 bounded what this read PUBLISHES and left what it SCANS: sight was a JS predicate with no row source,
@@ -1957,6 +1986,8 @@ const answersByOp = new Map([
   ["leadread", await GET("op=leadread&token=mem-r57&id=LEAD-2026-0918-000000000000&limit=1")],
   /* D-162: the envelope of the theme list over a store holding none — an answer object, never an array. */
   ["themeread", await GET("op=themeread&token=mem-r57&limit=1")],
+  /* REC-203: the envelope of a RECOGNITION (one value, no capture to read) — an answer object, never an array. */
+  ["idmatch", await GET("op=idmatch&token=mem-r57&space=project&a=C329142")],
   /* REC-126: the envelope of the review copy's read with no draft to key on — the ONE dead answer, an
      object and never an array. The bite is driven in `test/reviewcopy.test.mjs` (DRIVEN_ELSEWHERE). */
   ["reviewcopy", await GET("op=reviewcopy&token=mem-r57&draft=DRAFT-2026-0000&limit=1")],
@@ -1967,13 +1998,16 @@ const answersByOp = new Map([
   /* D-479: driven above with its real bite and REUSED here rather than re-driven — the read is idempotent, and
      it is carried the same way as its neighbours so the roster reads as one list rather than two conventions. */
   ["projectdirectory", D479_WHOLE],
-  /* IC-246: groupidentity driven above with its real bite and REUSED here; statementack's envelope for a caller
-     neither door admits — the review copy's one dead answer, an object. */
+  /* IC-246: groupidentity driven above with its real bite and REUSED here. statementack's envelope sat beside it
+     until D-521 retired its bound and it left the roster. */
   ["groupidentity", GI_BITE],
-  ["statementack", await POST("op=statementack&token=mem-r57&draft=DRAFT-2026-0000")],
   /* D-525: the envelope of the Drive shell sweep over a store holding no Drive-linked bundle — an object with its
      named lists, never an array. The bite is driven in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
   ["driveshells", await GET("op=driveshells&token=mem-r57&limit=1")],
+  /* REC-150: the envelope of a member's own requests to join over a member who has made none — an answer object with
+     its bound, never an array. It needs a member SESSION (C-95.1), so D-479's outside member asks. The bite is driven
+     in `test/project-join-request.test.mjs` §8 (DRIVEN_ELSEWHERE). */
+  ["projectrequests", await GET(`op=projectrequests&token=${D479_TOK}&limit=1`)],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

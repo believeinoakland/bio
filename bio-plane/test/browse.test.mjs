@@ -79,8 +79,16 @@ console.log("\n--- a session writes intake and nothing else ---");
    intake and nothing else, and both acts are still refused. */
 t("purge via session is refused, in plain words, and the words are the recorded-decision ones",
   (await j(`/api/?op=purge&token=${S}&confirm=bio`)).error.includes("machine credential"), true);
-t("the live-fire battery is refused too — still refused, but NOT with a reason nobody recorded",
-  (await j(`/api/?op=livefire&token=${S}`)).reason, "SESSION_ROUTE_NOT_RECORDED");
+/* CORRECTED 2026-09-25 BY REC-155, NEVER EXEMPTED. This line pinned SESSION_ROUTE_NOT_RECORDED: true
+   while nothing on record said why `livefire` is not a member's act. BOB #19 RULED it
+   (`BIO_Membership_Architecture_v2.md` §4.10): the deployment's live-fire battery is UNATTENDED BY
+   DECISION, recorded in `UNATTENDED_BY_DECISION` with its citation. So the pair above now agrees — both
+   verbs carry a recorded decision — and the refusal names that record rather than an omission. */
+{
+  const lf = await j(`/api/?op=livefire&token=${S}`);
+  t("the live-fire battery is refused too — and now with the RECORDED decision, cited to §4.10 (REC-155)",
+    [lf.reason, /§4\.10/.test(String(lf.recorded))], ["MACHINE_CREDENTIAL_REQUIRED", true]);
+}
 t("nothing was purged", (await j(`/api/?op=stats&token=${S}`)).result.bundles, 1);
 t("a session may take a lease, which is intake",
   (await j(`/api/?op=lease&token=${S}&id=INFO-2026-7001-x`)).result.ok, true);

@@ -46,10 +46,21 @@
  * control nobody has: driver 23 pass, 0 fail, all three arms exactly as declared, every restore byte-identical
  * again. The driver matches its arms by the SUBSTRING "selects at most" rather than by the number, so it
  * survives a ceiling move by design — which is the property this re-run establishes rather than assumes.
+ * (e) D-535's arm, ADDED 2026-09-25: index.mjs' OCR cost sentence gets its file name back (`the MEASUREMENTS ledger)`
+ * -> `MEASUREMENTS.md)`) -> "no plane or check string names MEASUREMENTS by its file" MUST FAIL naming the file,
+ * `calibration` MUST come back into the DOCS-class selection, and both ceilings MUST FAIL by count; "the method sees a
+ * real reader" MUST NOT. (f) OVER-STRICTNESS: the same sentence in a prose spelling the row did not write (`recorded
+ * in MEASUREMENTS under CPDF-10`) -> every arm PASSES.
+ * RUN 2026-09-25 by the D-535 worker, ALL SIX ARMS AS DECLARED (driver 49 pass, 0 fail): baseline 29/0 at 33 units;
+ * (a) 27/2 at 37 units, 10 through coord.mjs; (b) 26/3 at 37 — and on the FIRST run (b) NEVER ARMED (its coord.mjs
+ * anchor matched 0 times: M0-140 added `RETIRED_FILES, isRetiredPath` to the re-export and the anchor never followed),
+ * re-anchored on one shared name list and re-run; (c) 29/0 at 33; (d) 27/2 at 34 units, 30 readers; (e) 25/4, TARGETED
+ * at 40 units, the pin's `got ["bio-plane/src/index.mjs:7322"]` read in a hand-armed run; (f) 29/0 at 33. Every restore
+ * sha256 + cmp + size (index.mjs 1be5d819…, 857,183 B), and `sha256sum -c` over all five files after the driver exited.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
-import { mkdtempSync, readFileSync, writeFileSync, rmSync, mkdirSync, copyFileSync, existsSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync, rmSync, mkdirSync, copyFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -58,6 +69,7 @@ import { createHash } from "node:crypto";
 import * as S from "../../tools/statepaths.mjs";
 import * as C from "../../tools/coord.mjs";
 import { stripComments } from "../scripts/walkfloor.mjs";
+import { readGitProvenance, reportProvenance, repoPath } from "../scripts/provenance.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
@@ -68,7 +80,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 3;
+const SECTIONS = 5;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -185,9 +197,52 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    above were right on their own trees; the union selects 42, so the two slots of slack are closed rather than kept. The
    cause of the fall is NOT attributed here (undetermined: main moved 167 files since 9f8b69e6); a later landing that
    adds a unit reads its own print. A CEILING IS NOT A RATCHET: left at the printed figure. */
-const UNITS_CEILING = 42;
+/* MOVED 44 -> 33 by D-535 (2026-09-25), READ from this suite's print on its clone of the D-535 tree over origin/main
+   964da679 (`33 unit(s) of 446 selected · 29 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`); 964da679 itself
+   printed 41, so the ceiling already carried 3 of slack and this item's cut is 8. THE REASON, a narrowing: the same eight
+   doc-facing units the DOCS-class arm below names left this selection too, because they took the ledger only through
+   a plane module's by-name citation, now prose. The readers stay 29 — none of the eight was a MENTION reader.
+   A CEILING IS NOT A RATCHET: set at the printed figure. */
+/* MOVED to 35 by CONDUCT #22 at D-535's merge onto c22-batch29 (2026-09-25), READ from this suite's print on the
+   merged tree (`35 unit(s) of 478 selected · 31 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`): main's 42 and
+   D-535's 33 were each right on their own trees; the union's figure is the print. A CEILING IS NOT A RATCHET. */
+/* D-312 side, kept as history (UNITS_CEILING 43 on its own branch; the c22-batch29 union's figure is re-read from
+   this suite's print): MOVED 42 -> 43 by D-312 (2026-09-25), READ from this suite's print on the D-312 tree over origin/main 5e8a65a8
+   (`43 unit(s) of 470 selected · 31 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`). The one is D-312's own
+   `plane:memoryshare.test.mjs`, selected "walks docs/development/": it really does walk that directory's live design
+   documents for the "share of 128 MB" class, and it EXCLUDES the ledger and `measurements/` by a regex the gate's lexer blanks, so a
+   ledger-only change cannot move its verdict. That makes this ONE false selection, stated rather than hidden. The
+   only way to avoid it would be for the gate to read an exclusion, and the gate does not. A CEILING IS NOT A RATCHET:
+   left at the printed figure. CONTROL RE-RUN after the move (`statepaths.control.mjs`, 24 pass / 2 fail): arms a, c
+   and d AS DECLARED at 43, every restore byte-identical. **Arm b DID NOT ARM**: its `COORD_BLOCK` anchor no longer
+   matches `tools/coord.mjs`, whose import and re-export now also carry `RETIRED_FILES, isRetiredPath`. That is
+   pre-existing (coord.mjs is untouched here), and it is minted D-621 rather than smoothed. */
+/* MOVED 35 -> 36 at the c22-batch29 union (CONDUCT #22, 2026-09-25), READ from this suite's print on the merged tree
+   (`36 unit(s) of 503 selected · 32 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`). The one is D-312's
+   `plane:memoryshare.test.mjs` — merged after the 35 above was read — the ONE false selection D-312's own note states
+   (it walks docs/development/ and excludes the ledger by a regex the gate's lexer blanks); confirmed by name in a
+   `gates --explain` over a scratch clone with the ledger planted. A CEILING IS NOT A RATCHET: set at the printed figure. */
+const UNITS_CEILING = 36;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
+/* D-535 (2026-09-25), from the figures THIS suite PRINTED on its clone of the D-535 tree over origin/main 964da679:
+   the ledger alone is taken by 32 of 43 doc-facing units. BEFORE, on 964da679 itself, 40 of 43 (M-146's 39 plus one
+   doc-facing unit landed since). The eight that left read no ledger; each took it only through a plane module's
+   by-name citation — the row's four (index.mjs, bio-checks.mjs) take out `calibration` and `rec-182-created-tie`
+   (40 -> 38, the row's predicted -2), and the other ten sites of the class (store.mjs, schema.mjs, odf.mjs) take out
+   `affordances`, `caselifecycle`, `casepin`, `caseproduction`, `ui:connections-sidebar` and `ui:member-respect`,
+   which reach those modules as well and so left only when EVERY citing module was prose. A CEILING IS NOT A
+   RATCHET: set at the printed figure, with no slack bought. */
+/* MOVED 32 -> 33 by CONDUCT #22 at D-535's merge onto c22-batch29 (2026-09-25), READ from this suite's print on the
+   merged tree (`33 of 44 doc-facing unit(s) take docs/development/MEASUREMENTS.md`): one doc-facing unit main landed
+   since 964da679 takes the ledger. A CEILING IS NOT A RATCHET: set at the printed figure. */
+/* MOVED 33 -> 34 at the c22-batch29 union (CONDUCT #22, 2026-09-25), READ from this suite's print on the merged tree
+   (`34 of 45 doc-facing unit(s) take docs/development/MEASUREMENTS.md`): the one is D-312's `memoryshare.test.mjs`, a new
+   doc-facing unit, named in the `--explain` door list over a scratch clone — the same false selection as above.
+   A CEILING IS NOT A RATCHET: set at the printed figure. */
+const DOCS_TAKEN_CEILING = 34;
+const DOCS_FACING_FLOOR = 30;     /* the doc-facing set (43 at 964da679): a door narrowed to nothing is not a pass */
+const PLANE_FILES_FLOOR = 30;     /* bio-plane/src + bio-plane/checks (37 .mjs files at 964da679) */
 
 /* ========================================================================== */
 section("ONE DEFINITION, TWO DOORS — coord.mjs re-exports the walk-free module's bindings");
@@ -204,6 +259,44 @@ section("ONE DEFINITION, TWO DOORS — coord.mjs re-exports the walk-free module
   const code = stripComments(readFileSync(join(REPO, "tools/statepaths.mjs"), "utf8"));
   t("statepaths.mjs imports nothing (its code, comments blanked; `export … from` is an import too)",
     /\bimport\b|\brequire\s*\(|\bfrom\s*["'`]/.test(code), false);
+}
+
+/* ========================================================================== */
+section("THE PLANE CITES THE LEDGER AS PROSE — no plane string names MEASUREMENTS by file (D-535)");
+/* M0-165's property, one level down. A suite that imports `bio-plane/src/index.mjs` or `bio-plane/checks/bio-checks.mjs`
+   carries that module's text in its forward reach (`gates.mjs` §2e), and the lexer keeps strings (D-301: a path is a
+   string) — so a member-facing sentence citing `MEASUREMENTS.md` made every such suite a reader of the ledger, and a
+   MEASUREMENTS-only landing selected it (M-146, "D-535, ISOLATED HERE"). The plane runs in a Worker and opens no
+   repository file, so no string in it can be a real read: EVERY by-name spelling there is a citation, and the fix
+   is prose ("the MEASUREMENTS ledger"). The two probes are the gate's own: the BASENAME as a substring, and the STEM
+   as a quoted token. REACH, stated: the code of every .mjs/.js under bio-plane/src and bio-plane/checks, comments
+   blanked by the estate's one lexer; `dist/` is a build of the same sources. It cannot see a name ASSEMBLED from
+   pieces ("MEASUREMENTS" + ".md") — which the gate's probes cannot see either, so it moves no selection. */
+{
+  const found = [], items = [];
+  let files = 0, bytes = 0;
+  const walk = (d) => {
+    for (const n of readdirSync(d).sort()) {
+      const p = join(d, n);
+      if (statSync(p).isDirectory()) { if (n !== "node_modules" && n !== "dist") walk(p); continue; }
+      if (!/\.(mjs|js)$/.test(n)) continue;
+      const s = readFileSync(p, "utf8");
+      files++; bytes += s.length;
+      items.push({ path: repoPath(REPO, p), what: "plane source scanned for a by-name citation", counted: 1 });
+      stripComments(s).split("\n").forEach((l, i) => {
+        if (l.includes("MEASUREMENTS.md") || /["'`/]MEASUREMENTS\/?["'`]/.test(l)) found.push(`${p.slice(REPO.length + 1)}:${i + 1}`);
+      });
+    }
+  };
+  for (const d of ["bio-plane/src", "bio-plane/checks"]) walk(join(REPO, d));
+  console.log(`  corpus: ${files} files, ${bytes} bytes under bio-plane/src and bio-plane/checks`);
+  /* GUARDED (hygiene's walk census): the floor is quoted from the files IN THE COMMIT, the figure another checkout
+     reproduces (scripts/provenance.mjs, D-238); the property itself is asked of every file found, committed or not. */
+  const prov = reportProvenance({ prov: readGitProvenance(REPO), items, instrument: "statepaths' plane-citation scan",
+    corpus: `${files} plane file(s)` });
+  const committed = prov.verified ? prov.inCommit.length : -1;
+  t(`the corpus is the plane (>= ${PLANE_FILES_FLOOR} committed files, >= 5,000,000 bytes)`, committed >= PLANE_FILES_FLOOR && bytes >= 5_000_000, true);
+  t("no plane or check string names MEASUREMENTS by its file — cite it as prose, \"the MEASUREMENTS ledger\"", found, []);
 }
 
 /* ========================================================================== */
@@ -293,6 +386,35 @@ section("THE UNIT-COUNT ARM — a MEASUREMENTS-only change, M-106's method");
      `f05c1efd` it was selected "walks docs/development/ in tools/coord.mjs", only through the predicate's import. */
   t("acquire.test.mjs, which reached coord.mjs only through op-claims' predicate import, is NOT selected",
     lines.some((l) => /^gates: {3}plane:acquire\.test\.mjs /.test(l)), false);
+}
+
+/* ========================================================================== */
+section("THE DOCS-CLASS ARM — the ledger ALONE, M-146's method (D-535)");
+/* The arm above plants an empty root file so the class reads TARGETED and MENTION is asked. A MEASUREMENTS-only
+   landing is class DOCS, where §2f decides which doc-facing unit TAKES the path from its forward reach — and that
+   reach includes the plane modules a suite imports directly, whose STRINGS the lexer keeps. So the plane's own
+   citations are seen here and only here: this is the arm D-535's accepts-when is written against. Same clone, the
+   plant file removed so the ledger is the whole diff; `BIO_GATE_RESULTS=off` so the figure is selection alone. */
+{
+  rmSync(join(SCR, "m0121-plant.txt"), { force: true });
+  const r = spawnSync("node", ["tools/gates.mjs", "--explain"], { cwd: SCR, encoding: "utf8", maxBuffer: 1 << 28,
+    env: { ...process.env, BIO_GATE_RESULTS: "off" } });
+  const out = `${r.stdout}${r.stderr}`;
+  const cls = (out.match(/change class (\S+)/) || [])[1] ?? null;
+  const door = out.match(/^gates: doc-facing selection is PATH-GRANULAR \(M0-176\) — (\d+) of (\d+) doc-facing unit\(s\) take a changed path — (.*)$/m);
+  const taken = door ? Number(door[1]) : -1, facing = door ? Number(door[2]) : -1;
+  const list = door ? door[3] : "";
+  console.log(`  PRINTED: class ${cls} · ${taken} of ${facing} doc-facing unit(s) take docs/development/MEASUREMENTS.md`);
+  t("gates --explain ran (exit 0)", r.status, 0);
+  t("the ledger alone reads class DOCS", cls, "DOCS");
+  t(`the doc-facing set is not empty (>= ${DOCS_FACING_FLOOR} units)`, facing >= DOCS_FACING_FLOOR, true);
+  t("the method sees a real reader: entries.test.mjs, which OPENS the ledger, takes it", /\bentries\.test\.mjs\b/.test(list), true);
+  /* calibration.test.mjs's only prose is kickoffs/SCHEDULER.md (M-146); it took the ledger through index.mjs and
+     bio-checks.mjs, which it imports directly — M0-176's accepts-when, left unmet and rowed as D-535. */
+  t("calibration.test.mjs, which imports the plane and reads no ledger, does NOT take a MEASUREMENTS-only change (D-535)",
+    /\bcalibration\.test\.mjs\b/.test(list), false);
+  t(`a MEASUREMENTS-only change is taken by at most ${DOCS_TAKEN_CEILING} doc-facing units (40 while the plane cited the ledger by name)`,
+    taken >= 0 && taken <= DOCS_TAKEN_CEILING, true);
 }
 
 try { rmSync(SANDBOX, { recursive: true, force: true }); } catch { /* sandbox.mjs removes the ground at exit */ }

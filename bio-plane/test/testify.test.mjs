@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RUN 2026-09-18 with `node test/nc-mk1.mjs [arm]` from `bio-plane/`, every arm ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content (store.mjs 2,464,219 B sha256 b38fdab43118…, index.mjs 621,496 B cc5e4a97367c…, bio-checks.mjs 753,055 B be929828d9ac…; 17 of 17 restores byte-identical; never `git checkout --`). Figures are the FINAL tree's run, after CONDUCT #4's corrections (A) and (B). Declared BEFORE arming, and the result: (a) `baseline` — nothing armed, MUST be green: 56/0. (b) `unearned` — THE LIAR, a document CLAIMING authored accepted without the testimony path: "THE LIAR" and "ANY truthy spelling" MUST FAIL — 53/3 (the forged bundle LANDS). (c) `hijack` — an authored observation's bytes re-filed under another bundle: MUST FAIL — 46/10; the re-filing moves the register row, so the observation stops being one and every later arm that rests on it fails too, the harm the refusal prevents, measured. (d) `origin` — C-53.7 removed: both arms MUST FAIL — 54/2. (e) `dropped` — both C-53.9 sites removed: both MUST FAIL — 54/2. (f) `stamp` — THE AUTHOR STAMP REMOVED at the control plane: "THE STAMP" MUST FAIL — 7/24; re-driven by hand (index.mjs cp-aside/cp-back, `cmp` same) the stamp assertion read got [true,"mallory"] — a caller-supplied author LANDED; the rest are unstamped calls refused C-53.1. (g) `supplied` — C-53.2 removed: both body-author arms MUST FAIL — 54/2, THE STAMP stays green. (h) `machine` — C-53.1 removed: MUST FAIL — 55/1. (i) `axis` — an authored capture counted as a capture: the capture-axis arm and the B-leg refusal MUST FAIL — 52/4. (j) `extractrow` — the extraction observation not written: op=contentaxis MUST FAIL — 55/1; by hand it read missing_cause "never_looked". (k) `header` — BOB #14's ruling undone, the bytes the words alone: "canonical bytes" and "TWO MEMBERS, IDENTICAL WORDS" MUST FAIL — 42/14 (the second testimony collides and every later arm meets its register row). (l) `pubbundle` — (A) the fence for the observation ITSELF removed: MUST FAIL — 51/5; re-driven by hand (index.mjs cp-aside/cp-back, sha cc5e4a97… before and after, `cmp` same) the bucket read {words:1, authored:1, handle:1} and the words verified PUBLISHED — the path the probe found, crossing; the finding and case arms then fail too because the observation is now a published target. THIS ARM'S FIRST DRAFT CAME BACK WRONG AND IT IS THE FINDING: the "nothing published" half asked op=verify about the sha of op=image's provenance text, which is a rendering and not the stored file, so it answered false for free while the provenance document WAS in the bucket — the assertion now reads the bucket object by object. (m) `pubcited` — the cited-finding fence removed: both C-53.11 arms MUST FAIL — 54/2. (n) `pubcase` — the case fence removed: MUST FAIL — 55/1. (o) `pubdirect` — the walk made direct-only: "THROUGH ANOTHER FINDING" MUST FAIL — 55/1. (p) `pubover` — THE OVER-STRICTNESS DIRECTION, every ratification refused: the ordinary-document arm MUST FAIL while the observation's own refusal stays green — 53/3. (q) `c181` — C-18.1's authored arm removed: MUST FAIL — 53/3. (r) `overstrict` — every member-origin document treated as a claim: the member-UPLOADED and `authored: false` arms MUST FAIL, THE LIAR green — 51/5. EVERY ARM AS DECLARED. RE-RUN 2026-09-19 by the D-431 worker (testify's over-strictness arm re-ordered: case document, then finding, then the document as evidence): all 18 arms, restores byte-identical (store.mjs 2,647,601 B 8cf9feabd6a6…, index.mjs 663,888 B 7d80fc4e243a…), every arm AS DECLARED except (l) `pubbundle`, 55/1, whose "nothing published" half now STAYS GREEN because D-431's C-58.3 refuses the observation in the committer (no ratified case rests on it) — defence in depth, measured; its declaration was corrected in the driver with that reason and the arm re-run AS DECLARED, 55/1, naming the fence. THE PUBLICATION PROBE (`node test/mk1-publish-probe.mjs`) is the measurement (A) rests on and is re-runnable in one step.
+/* NEGATIVE CONTROL: RUN 2026-09-18 with `node test/nc-mk1.mjs [arm]` from `bio-plane/`, every arm ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content (store.mjs 2,464,219 B sha256 b38fdab43118…, index.mjs 621,496 B cc5e4a97367c…, bio-checks.mjs 753,055 B be929828d9ac…; 17 of 17 restores byte-identical; never `git checkout --`). Figures are the FINAL tree's run, after CONDUCT #4's corrections (A) and (B). Declared BEFORE arming, and the result: (a) `baseline` — nothing armed, MUST be green: 56/0. (b) `unearned` — THE LIAR, a document CLAIMING authored accepted without the testimony path: "THE LIAR" and "ANY truthy spelling" MUST FAIL — 53/3 (the forged bundle LANDS). (c) `hijack` — an authored observation's bytes re-filed under another bundle: MUST FAIL — 46/10; the re-filing moves the register row, so the observation stops being one and every later arm that rests on it fails too, the harm the refusal prevents, measured. (d) `origin` — C-53.7 removed: both arms MUST FAIL — 54/2. (e) `dropped` — both C-53.9 sites removed: both MUST FAIL — 54/2. (f) `stamp` — THE AUTHOR STAMP REMOVED at the control plane: "THE STAMP" MUST FAIL — 7/24; re-driven by hand (index.mjs cp-aside/cp-back, `cmp` same) the stamp assertion read got [true,"mallory"] — a caller-supplied author LANDED; the rest are unstamped calls refused C-53.1. (g) `supplied` — C-53.2 removed: both body-author arms MUST FAIL — 54/2, THE STAMP stays green. (h) `machine` — C-53.1 removed: MUST FAIL — 55/1. (i) `axis` — an authored capture counted as a capture: the capture-axis arm and the B-leg refusal MUST FAIL — 52/4. (j) `extractrow` — the extraction observation not written: op=contentaxis MUST FAIL — 55/1; by hand it read missing_cause "never_looked". (k) `header` — BOB #14's ruling undone, the bytes the words alone: "canonical bytes" and "TWO MEMBERS, IDENTICAL WORDS" MUST FAIL — 42/14 (the second testimony collides and every later arm meets its register row). (l) `pubbundle` — (A) the fence for the observation ITSELF removed: MUST FAIL — 51/5; re-driven by hand (index.mjs cp-aside/cp-back, sha cc5e4a97… before and after, `cmp` same) the bucket read {words:1, authored:1, handle:1} and the words verified PUBLISHED — the path the probe found, crossing; the finding and case arms then fail too because the observation is now a published target. THIS ARM'S FIRST DRAFT CAME BACK WRONG AND IT IS THE FINDING: the "nothing published" half asked op=verify about the sha of op=image's provenance text, which is a rendering and not the stored file, so it answered false for free while the provenance document WAS in the bucket — the assertion now reads the bucket object by object. (m) `pubcited` — the cited-finding fence removed: both C-53.11 arms MUST FAIL — 54/2. (n) `pubcase` — the case fence removed: MUST FAIL — 55/1. (o) `pubdirect` — the walk made direct-only: "THROUGH ANOTHER FINDING" MUST FAIL — 55/1. (p) `pubover` — THE OVER-STRICTNESS DIRECTION, every ratification refused: the ordinary-document arm MUST FAIL while the observation's own refusal stays green — 53/3. (q) `c181` — C-18.1's authored arm removed: MUST FAIL — 53/3. (r) `overstrict` — every member-origin document treated as a claim: the member-UPLOADED and `authored: false` arms MUST FAIL, THE LIAR green — 51/5. EVERY ARM AS DECLARED. RE-RUN 2026-09-19 by the D-431 worker (testify's over-strictness arm re-ordered: case document, then finding, then the document as evidence): all 18 arms, restores byte-identical (store.mjs 2,647,601 B 8cf9feabd6a6…, index.mjs 663,888 B 7d80fc4e243a…), every arm AS DECLARED except (l) `pubbundle`, 55/1, whose "nothing published" half now STAYS GREEN because D-431's C-58.3 refuses the observation in the committer (no ratified case rests on it) — defence in depth, measured; its declaration was corrected in the driver with that reason and the arm re-run AS DECLARED, 55/1, naming the fence. THE PUBLICATION PROBE (`node test/mk1-publish-probe.mjs`) is the measurement (A) rests on and is re-runnable in one step. D-598 (2026-09-25, WORKER D-598; BOB #34 03:00Z, BIO_Publication_v0_1.md §3 rule 5), two arms each ALONE, run with `node test/testify.test.mjs` from `bio-plane/`, each restored from a uniquely-named per-arm pristine copy verified by sha256 AND `cmp` (src/store.mjs 3,351,291 B sha256 97cb3926e3f4…; checks/bio-checks.mjs 965,524 B sha256 ee7e247846a1…; every restore byte-identical). Baseline 58/0. (d598-a) THE ROW'S CONTROL — drop the `object_type` key from `publishedRegistryFor`'s entry: declared the evidence arm MUST FAIL with F4 refused C-21.2 BY NAME and the published-INQUIRY arm MUST NOT — 57/1, got `[false,["C-21.2"],false]` on the evidence arm, as declared. (d598-b) THE OVER-STRICTNESS ARM — checkInheritedLeg sees NO published inquiry (`pub = null`): declared the published-INQUIRY arm MUST FAIL (F5's own grade accepted) and the evidence arm MUST NOT — 57/1, got `[true,null,[]]`, as declared.
  *
  * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE: a member's firsthand
  * observation IS a document (`docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §2, §7).
@@ -45,6 +45,7 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { ATTRIBUTION_CHECKS } from "../checks/bio-checks.mjs";
 import { TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, checkBundle, BUNDLE_ID_RE } from "../checks/bio-checks.mjs";
 
 const SRC_DIR = fileURLToPath(new URL("../src", import.meta.url));
@@ -79,6 +80,10 @@ const codeOf = (r) => (r && typeof r.code === "string") ? r.code : (r && r.reaso
 const refusedAs = (r, code) => [codeOf(r), r && r.check,
   !!(r && TESTIMONY_CHECKS[code] && r.translation === TESTIMONY_CHECKS[code].translation)];
 const want = (code) => [code, TESTIMONY_CHECKS[code].check, true];
+/* MK-7: the attribution gate's refusals (C-92), which replaced three of this section's fence refusals. */
+const refusedAsA = (r, code) => [codeOf(r), r && r.check,
+  !!(r && ATTRIBUTION_CHECKS[code] && r.translation === ATTRIBUTION_CHECKS[code].translation)];
+const wantA = (code) => [code, ATTRIBUTION_CHECKS[code].check, true];
 
 const NOW = "2026-09-18T00:00:00Z";
 const WORDS = "On 10 September at the Clerk's counter I watched the deputy clerk stamp the amended "
@@ -126,7 +131,7 @@ const promoteDoc = async (id, { base = null, docs, register = [], extra = {}, bu
   const prov = JSON.stringify({ documents: docs });
   return post("promote", {
     bundleId: id, base, snapKey: snapKey(),
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Info ${id}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: files ?? [fileOf("bundle.md", text), fileOf("data/provenance.json", prov)],
     register, ...extra }, tok);
@@ -328,7 +333,7 @@ const reviseObs = async (mutate, { register = [] } = {}) => {
                  fileOf(tx.file, head0[tx.file])];
   return post("promote", {
     bundleId: OBS, base: OBS_BASE, snapKey: snapKey(),
-    meta: { object_type: "information", group: "believe-in-oakland", title: "revised",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: tx.recorded_at, last_updated: tx.recorded_at },
     files, register }, RUTH);
 };
@@ -343,7 +348,7 @@ t("an AUTHORED bundle whose revision stops saying authored is REFUSED (C-53.9)",
   refusedAs(drop, "TESTIMONY_AUTHORED_DROPPED"), want("TESTIMONY_AUTHORED_DROPPED"));
 const gone = await post("promote", {
   bundleId: OBS, base: OBS_BASE, snapKey: snapKey(),
-  meta: { object_type: "information", group: "believe-in-oakland", title: "revised",
+  meta: { object_type: "information", group: "believe-in-oakland",
           current_state: "collected", created: tx.recorded_at, last_updated: tx.recorded_at },
   files: [fileOf("bundle.md", head0["bundle.md"]), fileOf(tx.file, head0[tx.file])] }, RUTH);
 t("…and one whose revision drops data/provenance.json altogether (C-53.9)",
@@ -380,7 +385,7 @@ const qMd = (id, legs = []) => ["---", `id: ${id}`, "object_type: inquiry", "sch
   "## What Would Falsify This", "", "## Session Log", "", `### Session ${NOW} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 const promoteQ = (id, legs) => post("promote", { bundleId: id, base: null, snapKey: snapKey(),
-  meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
+  meta: { object_type: "inquiry", group: "believe-in-oakland",
           current_state: "open", created: NOW, last_updated: NOW },
   files: [fileOf("bundle.md", qMd(id, legs))] }, RUTH);
 const Q = "INQ-2026-5301-q";
@@ -447,7 +452,10 @@ if (d0 && head0) {
 }
 
 /* ===================== 6. THE PUBLICATION FENCE (A) ======================= */
-console.log("\n--- 6. nothing carrying an observation crosses into the published record (C-53.10–.12) ---");
+/* CORRECTED 2026-09-25 by MK-7: the section's claim was "nothing crosses" under C-53.10–.12. MK-7 lifted those for
+   an observation in §4.1's form, so the claim is now "nothing crosses WITHOUT ITS AUTHOR'S CHOSEN ATTRIBUTION"; the
+   crossing itself, per level, is `mk7-attribution.test.mjs`'s. */
+console.log("\n--- 6. nothing carrying an observation crosses into the published record without its author's attribution (C-92, C-58.2) ---");
 /* MEASURED BEFORE THE FENCE EXISTED (`test/mk1-publish-probe.mjs`): op=ratify
    on an observation whose bytes were in the working bucket PUBLISHED its words,
    its provenance document and the observer's handle; a finding resting on one
@@ -483,9 +491,15 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const put = await (await mf.dispatchFetch(`http://x/api/?op=capture&token=${RUTH}&sha256=${OSHA}`,
     { method: "PUT", body: new TextEncoder().encode(OBYTES) })).json();
   const r1 = await ratify(OBS);
-  t("op=ratify on the OBSERVATION ITSELF (its bytes in the working bucket, a real member's signature): REFUSED BY NAME (C-53.10)",
-    [sr && sr.ok, put && put.ok, ...refusedAs(r1, "TESTIMONY_UNPUBLISHABLE")],
-    [true, true, ...want("TESTIMONY_UNPUBLISHABLE")]);
+  /* CORRECTED 2026-09-25 by MK-7, never exempted: MK-7 LIFTED C-53.10 for an observation in §4.1's form (this one
+     names nobody in its files, MK-6) and narrowed it to one that still names its author, so TESTIMONY_UNPUBLISHABLE
+     is no longer this observation's answer and asserting it would pin the fence MK-7 exists to lift. What still
+     holds — and is what the fence protected — is that its words do NOT cross outside a signed case: op=ratify
+     refuses ATTRIBUTION_UNSTATED (C-92.12), because no ratified case document states whose words they are. The
+     narrowed C-53.10 is driven by `mk7-attribution.test.mjs` section 8, on an observation in the pre-§4.1 form. */
+  t("op=ratify on the OBSERVATION ITSELF (its bytes in the working bucket, a real member's signature): REFUSED BY NAME — ATTRIBUTION_UNSTATED (C-92.12), no signed case states whose words they are",
+    [sr && sr.ok, put && put.ok, ...refusedAsA(r1, "ATTRIBUTION_UNSTATED")],
+    [true, true, ...wantA("ATTRIBUTION_UNSTATED")]);
   /* READ THE PUBLISHED BUCKET ITSELF, object by object, rather than asking
      op=verify about a provenance sha: `op=image` hands back a rendering of
      data/provenance.json whose digest is not the stored file's, so a verify on
@@ -521,7 +535,7 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const makeFinding = async (id, target, grade = true) => {
     const md = withAdoptableReading(legMd(id, target, grade));
     const p = await post("promote", { bundleId: id, base: null, snapKey: snapKey(),
-      meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
+      meta: { object_type: "inquiry", group: "believe-in-oakland",
               current_state: "open", created: NOW, last_updated: NOW },
       files: [fileOf("bundle.md", md)] }, RUTH);
     const c = await get("conclude", `target=${id}&conclusion=${encodeURIComponent("It was stamped first.")}`
@@ -533,13 +547,16 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const PLAIN = "INFO-2026-5301-plain", F3 = "INQ-2026-5301-rests-on-plain";
   const mk = [await makeFinding(F1, OBS), await makeFinding(F2, F1, false)];
   const r2 = await ratify(F1);
-  t("op=ratify on a FINDING whose basis cites the observation: REFUSED BY NAME (C-53.11), naming what it rests on",
-    [mk, ...refusedAs(r2, "TESTIMONY_CITED_UNPUBLISHABLE"), r2 && Array.isArray(r2.rests_on) && r2.rests_on[0]?.observation],
-    [[[true, true], [true, true]], ...want("TESTIMONY_CITED_UNPUBLISHABLE"), OBS]);
+  /* CORRECTED 2026-09-25 by MK-7, never exempted: C-53.11 is LIFTED for a finding resting on an observation in
+     §4.1's form (narrowed to one resting on an observation that still names its author). Such a finding now
+     crosses on the ordinary rule — only as a member of a RATIFIED case (D-431 (a)) — and op=caseratify refuses that
+     case until every observation it reaches is chosen (C-92.10, driven in r4 below). So the loose finding is
+     refused by D-431's C-58.2, which is the true first refusal now; asserting C-53.11 would pin the lifted fence. */
+  t("op=ratify on a FINDING whose basis cites the observation, in no ratified case: REFUSED BY NAME (C-58.2, D-431) — it crosses only with a signed case",
+    [mk, codeOf(r2)], [[[true, true], [true, true]], "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE"]);
   const r3 = await ratify(F2);
-  t("…and one that rests on it THROUGH ANOTHER FINDING (F2 -> F1 -> the observation): REFUSED (C-53.11)",
-    [...refusedAs(r3, "TESTIMONY_CITED_UNPUBLISHABLE"), r3 && r3.rests_on && r3.rests_on[0]?.observation],
-    [...want("TESTIMONY_CITED_UNPUBLISHABLE"), OBS]);
+  t("…and one that rests on it THROUGH ANOTHER FINDING (F2 -> F1 -> the observation): REFUSED (C-58.2)",
+    codeOf(r3), "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE");
   /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); the fixture takes a name and returns the minted id. */
   const PROJECT = await makePublishingProject({ post: (q, b) => rP(mf.dispatchFetch(`http://x/api/?${q}`,
       { method: "POST", body: JSON.stringify(b ?? {}) }).then((r) => r.json())), mf, sha, machineToken: "adm-mk1",
@@ -558,17 +575,27 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
       sig: signBytes(`bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) }, RUTH);
   };
   const r4 = await caseRatify([F1]);
-  t("op=caseratify on a CASE whose finding rests on the observation: REFUSED BY NAME (C-53.12)",
-    refusedAs(r4, "TESTIMONY_CASE_UNPUBLISHABLE"), want("TESTIMONY_CASE_UNPUBLISHABLE"));
+  /* CORRECTED 2026-09-25 by MK-7, never exempted: C-53.12 is LIFTED for a case over an observation in §4.1's form
+     and replaced by the attribution gate. The case is still refused, now because its observation's author has
+     chosen no level (C-92.10, §4.4), and the refusal names the observation. */
+  t("op=caseratify on a CASE whose finding rests on the observation: REFUSED BY NAME — ATTRIBUTION_UNCHOSEN (C-92.10), naming it",
+    [...refusedAsA(r4, "ATTRIBUTION_UNCHOSEN"), r4 && Array.isArray(r4.unchosen) ? r4.unchosen.map((u) => u.observation) : null],
+    [...wantA("ATTRIBUTION_UNCHOSEN"), [OBS]]);
   const pubObs = await post("publish", pubBody([OBS]), RUTH);
   t("…and the observation itself cannot be a case member at all (op=publish: NOT_AN_INQUIRY, the existing rule)",
     codeOf(pubObs), "NOT_AN_INQUIRY");
   /* OVER-STRICTNESS: an ordinary, non-authored document and a finding and case over it still publish. */
   const pp = await promoteDoc(PLAIN, { files: [fileOf("bundle.md", infoMd(PLAIN))] });
   const mk3 = await makeFinding(F3, PLAIN);
-  /* ORDER MATTERS AND IS THE RECORD'S, NOT THE FENCE'S: once the plain document
-     is itself published, a leg carrying its own grade on it is C-21.2's to refuse
-     (it must inherit) — so the finding and its case go first.
+  /* ORDER MATTERS AND IS THE CEREMONY'S, NOT THE FENCE'S: the finding and its case go first.
+     CORRECTED 2026-09-25 by D-598 (BOB #34 03:00Z, BIO_Publication_v0_1.md §3 rule 5), at its site and not
+     exempted: this comment used to give the reason as the record's rule — "once the plain document is itself
+     published, a leg carrying its own grade on it is C-21.2's to refuse (it must inherit)". That was WRONG.
+     C-21.2's inheritance rule is over published INQUIRIES only: a document published as a case's EVIDENCE
+     (D-431(b)) froze no strength, so there is nothing to inherit from it and a later leg on it keeps its own
+     grade. The sentence recorded what C-21.2 then DID (it read every published bundle as a finding), not a
+     rule anybody ruled; the arm below D-598's asserts the corrected behaviour. The order that remains is
+     D-431's: a finding publishes only inside a ratified case, and its evidence publishes as that case's.
      CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
      exempted: the FINDING was ratified before its CASE DOCUMENT — a finding prepared into no ratified case,
      published loose, which D-431 closes (C-58.2). The ceremony's own order is followed: the case document is
@@ -580,11 +607,32 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   t("OVER-STRICTNESS: a finding resting on an ORDINARY document, a case over it, and the document itself all RATIFY exactly as before",
     [pp && pp.ok, mk3, r6 && r6.ok, codeOf(r7), r7 && r7.ok, r5 && r5.ok],
     [true, [true, true], true, null, true, true]);
+  /* D-598 (BOB #34, 2026-09-25 03:00Z; BIO_Publication_v0_1.md §3 rule 5): C-21.2 IS OVER PUBLISHED INQUIRIES
+     ONLY. PLAIN is now published as F3's case's EVIDENCE and F3 as its finding. A SECOND finding over the
+     published document lands WITH ITS OWN GRADE (the leg is testimony at D on connection, exactly F3's leg,
+     and nothing about it is inherited); a leg carrying its own grade onto the published INQUIRY F3 is still
+     refused by C-21.2 by name, because a case built on a finding cannot be stronger than the finding beneath
+     it. Both through op=promote, the write that runs checkInquiryBasis with the published registry. */
+  const F4 = "INQ-2026-5301-second-on-plain", F5 = "INQ-2026-5301-own-grade-on-f3";
+  const promoteLeg = (id, target) => post("promote", { bundleId: id, base: null, snapKey: snapKey(),
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
+            current_state: "open", created: NOW, last_updated: NOW },
+    files: [fileOf("bundle.md", withAdoptableReading(legMd(id, target)))] }, RUTH);
+  const checksOf = (r) => (r && r.findings || []).map((x) => x.check).sort();
+  const p4 = await promoteLeg(F4, PLAIN);
+  const c4 = await get("conclude", `target=${F4}&conclusion=${encodeURIComponent("It was stamped first.")}`
+    + `&falsifier=${encodeURIComponent("A received-log showing a later stamp would overturn this.")}`
+    + adoptedVersionParam(), RUTH);
+  const p5 = await promoteLeg(F5, F3);
+  t("D-598: a SECOND finding over a document published as EVIDENCE lands with its OWN grade (testimony D, not inherited)",
+    [p4 && p4.ok, checksOf(p4), c4 && c4.ok], [true, [], true]);
+  t("…and a leg with its own grade onto a published INQUIRY is still refused, by C-21.2 by name",
+    [p5 && p5.ok, p5 && p5.reason, checksOf(p5)], [false, "BASIS_REFUSED", ["C-21.2"]]);
 }
 
 console.log(`\n  corpus: 5 observations authored (ruth x3, sam x2), 4 member-uploaded documents, 1 squatter, `
   + `1 forged promote, 4 refused revisions of one observation, 1 accepted revision; `
-  + `publication: 1 observation, 3 findings, 2 cases, 1 plain document; members ruth and sam`);
+  + `publication: 1 observation, 3 findings, 2 cases, 1 plain document; D-598: 1 finding over published evidence, 1 refused leg onto a published finding; members ruth and sam`);
 console.log(`\n${pass} pass, ${fail} fail`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

@@ -242,7 +242,9 @@ let snapSeq = 0;
 const promote = async (tok, id, md, type, state = "open", extra = {}) => rP(await POST(`op=promote&token=${tok}`, {
   bundleId: id, base: extra.base ?? null,
   snapKey: `20260910T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+     state, and is now refused; a project document here states no title, so the label stays its only name. */
+  meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `t ${id}` } : {}),
           current_state: state, created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
   register: extra.register || [],
@@ -789,9 +791,15 @@ console.log("\n--- 8. over-strictness: an unrelated edit to a non-member flags n
      NOT_SET_DOWN (REC-31's rule, which block 4 relies on), so reaching for it
      here would have made this arm measure that refusal instead of the flag. That
      was this fixture's first draft and it went red honestly. */
-  const r1 = await promote(VERA, FREE, inqBody(FREE) + "\n", "inquiry", "concluded",
+  /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: these edits sent the CREATION template (`current_state:
+     open`) under a `concluded` label, so the projection kept `concluded` only because it took the request's word. The
+     record now takes the document's, so the edit is made to the finding's LIVE bytes — concluded, as `op=conclude`
+     wrote them — which is the "unrelated edit" this arm means. */
+  const liveMd = async () => { const b = rP(await GET(`op=image&token=${VERA}&id=${FREE}`));
+    return String(b?.files?.["bundle.md"] ?? b?.["bundle.md"] ?? ""); };
+  const r1 = await promote(VERA, FREE, (await liveMd()) + "\n", "inquiry", "concluded",
     { base: await shaOf(FREE) });
-  const r2 = await promote(VERA, FREE, inqBody(FREE) + "\n\n", "inquiry", "concluded",
+  const r2 = await promote(VERA, FREE, (await liveMd()) + "\n", "inquiry", "concluded",
     { base: await shaOf(FREE) });
   t("a finding that is in NO case mints new versions and flags nothing — the flag is raised off the "
   + "PIN, so a version that no case froze is not a revision of anything",

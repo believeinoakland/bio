@@ -213,7 +213,7 @@ let snapSeq = 0;
 const promote = async (id, text, objectType, state, register = []) => rP(await POST("op=promote&token=adm-r148", {
   bundleId: id, base: null,
   snapKey: `20260923T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+  meta: { object_type: objectType, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register,
@@ -388,8 +388,12 @@ if (!rat?.container && Array.isArray(rat?.awaiting) && rat.awaiting.length) {
 }
 const cq = asm?.container?.inband;
 if (!cq) await bail("the signed case edition assembled no container carrying `inband`", asm);
-t("the container is assembled when the last signature lands, for the edition the draft stood at",
-  [pub.caseDocument.edition, dr.edition, typeof asm.container.manifest_sha], [dr.edition, 1, "string"]);
+/* CORRECTED 2026-09-25 (D-568), NOT EXEMPTED: this arm read the draft's `edition` (1) as "the edition the draft
+   stood at". The draft names no case and sets no `newCase`, so its case is DERIVED at publication and its answer
+   states the edition as UNDETERMINED (null); the edition is fixed by the publication, here the minted case's 1. */
+t("the container is assembled when the last signature lands, for the edition the publication fixed — the draft, "
++ "whose case publication derives, stated none",
+  [pub.caseDocument.edition, dr.edition, typeof asm.container.manifest_sha], [1, null, "string"]);
 t("CONTAINER HASH is the manifest's hash, and the quartet names it",
   cq.hash?.sha256, asm.container.manifest_sha);
 {

@@ -92,6 +92,15 @@
  * A3, both anchored at an indentation `src/index.mjs` stopped carrying when CPDF-19's
  * read-time copy of the partition was collapsed into one. Recorded in `nc-rec102.mjs`'s
  * own header, not smoothed.
+ *   (8) A8 D-607: THE KEPT-TEXT CLAUSE EMITTED UNCONDITIONALLY -> exit 1, naming D-607's
+ *       ABSENT set only (the wholly scanned and whitespace documents). THE ROW'S CONTROL.
+ *   (9) A9 D-607: THE CALLER STOPS PASSING THE KEPT PAGES -> exit 1, naming D-607's
+ *       PRESENT set only (the mixed documents).
+ *  (10) A10 OVER-STRICTNESS for D-607, the condition spelled `kept > 0` -> exit 0.
+ * Result 2026-09-25 (D-607): 11 of 11 arms agreed with their declarations, baseline 49
+ * assertions, every restore sha256-MATCH and cmp-IDENTICAL. A5 (D-514's raw filter) now
+ * ALSO fails D-607's whitespace arm, correctly: that defect puts a whitespace page back
+ * among the kept pages, so the note would claim kept text again.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT SECTIONS 5-7 CAN AND CANNOT SEE (D-514), stated because it is load-bearing:
@@ -302,8 +311,22 @@ const ROUTEMARGIN = pdf([
   { num: 13, head: `<< /Length ${Buffer.from(IDENTITY_CMAP, "latin1").length} >>`, stream: Buffer.from(IDENTITY_CMAP, "latin1") },
 ]);
 
+/* ---- D-607's WHOLLY SCANNED DOCUMENT: two pages, each a scan and nothing else,
+   so no page has a text layer to keep. The live witness is FINAL-2-6-PC-Agenda
+   (7 of 7 pages `no_text_layer`); this is the same class at two pages. ---- */
+const ALLSCAN = pdf([
+  { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+  { num: 2, body: "<< /Type /Pages /Kids [3 0 R 7 0 R] /Count 2 >>" },
+  { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Im0 100 0 R >> >> /Contents 4 0 R >>" },
+  { num: 4, head: `<< /Length ${IMAGE_OPS.length} >>`, stream: IMAGE_OPS },
+  { num: 7, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Im0 100 0 R >> >> /Contents 8 0 R >>" },
+  { num: 8, head: `<< /Length ${IMAGE_OPS.length} >>`, stream: IMAGE_OPS },
+  { num: 100, head: `<< /Type /XObject /Subtype /Image /Width 2550 /Height 3300 /Filter /DCTDecode /Length ${IMAGE_BYTES.length} >>`, stream: IMAGE_BYTES },
+]);
+
 const DOCS = { both: BOTH, tier3only: TIER3ONLY, tier2only: TIER2ONLY,
-               wslayer: WSLAYER, emptylayer: EMPTYLAYER, routemargin: ROUTEMARGIN };
+               wslayer: WSLAYER, emptylayer: EMPTYLAYER, routemargin: ROUTEMARGIN,
+               allscan: ALLSCAN };
 const SHA = Object.fromEntries(Object.entries(DOCS).map(([k, b]) => [k, sha256(b)]));
 
 /* THE CORPUS IS PRINTED AND FLOORED. Three headline totality assertions in this
@@ -316,8 +339,11 @@ for (const [k, b] of Object.entries(DOCS))
 /* THE COUNT MOVED 3 -> 6 AT D-514 (2026-09-24) and the floor moved WITH it, to
    the figure this file PRINTS. A corpus assertion that stayed at 3 would have
    kept passing over a fixture pair that had silently stopped being built. */
-t("the corpus is six documents: both merges, tier 3 alone, tier 2 alone, D-514's whitespace/empty pair and its routing witness",
-  Object.keys(DOCS).length, 6);
+/* CORRECTED at D-607 (2026-09-25), never exempted: the count was six and was
+   right for the corpus it counted; D-607 adds a seventh, the wholly scanned
+   document its note arm needs, so the figure moves to the one this file PRINTS. */
+t("the corpus is seven documents: both merges, tier 3 alone, tier 2 alone, D-514's whitespace/empty pair, its routing witness, and D-607's wholly scanned document",
+  Object.keys(DOCS).length, 7);
 
 /* ===================================================================== *
  * THE TWO STUB FLEET MEMBERS.
@@ -663,6 +689,42 @@ console.log("\n--- 7. D-514: the escalation predicate reads GLYPHS, and the band
      what the member was actually asked. */
   t("and the plane CONSULTED the tier-2 member for it: the routing decision, through the op",
     PDF_ASKED.some((b) => b && b.capture_sha === SHA.routemargin), true);
+}
+
+/* ===================================================================== *
+ * 8. D-607 — THE NOTE SAYS "THE PAGES THAT ALREADY HAD TEXT KEPT IT" ONLY WHEN
+ * SOME PAGE HAD TEXT, DRIVEN THROUGH THE OP.
+ *
+ * `tier3Note` emitted the kept-text clause whenever a page was filled, so a
+ * wholly scanned document recorded a text layer that never existed. The note
+ * reaches the record on the reading's `basis`, so that is where it is read.
+ * ===================================================================== */
+console.log("\n--- 8. D-607: the kept-text clause is said only when a page kept text ---");
+{
+  const KEPT = "already had text kept it";
+  const SAID = "were transcribed by the OCR member and merged";
+  const basisOf = (doc) => String((doc && doc.reading && doc.reading.basis) || "");
+  const all = (await acquire("allscan")).document;
+  /* THE PREMISE: the document reached the page-wise merge and the note was
+     written at all. Without it, a missing clause is missing for free. */
+  t("the wholly scanned document reached the TIER-3 merge: the engine was asked for BOTH pages",
+    (OCR_ASKED.find((b) => b && b.capture_sha === SHA.allscan) || {}).pages, [0, 1]);
+  t("...and its note says both pages were transcribed", basisOf(all).includes(`2 scanned page(s) ${SAID}`), true);
+  t("D-607: the wholly scanned document's note carries NO kept-text clause",
+    basisOf(all).includes(KEPT), false);
+  /* D-514's pair holds no glyph on its "text" page, so it had no text to keep
+     either — the clause follows D-514's unit, not the page count. */
+  const ws = (await acquire("wslayer")).document;
+  t("D-607: nor does the whitespace-page document's — a page of whitespace had no text to keep",
+    [basisOf(ws).includes(SAID), basisOf(ws).includes(KEPT)], [true, false]);
+  /* THE OVER-STRICTNESS ARMS: a mixed document still says it, numbered by the
+     pages it KEPT. `both` kept two (tier 2's page 0 and tier 1's page 2) and
+     filled one; `tier3only` kept one. */
+  t("a mixed document still says it: `both` kept two pages",
+    basisOf(both).includes(`1 scanned page(s) ${SAID} into this document's own text; the pages that ${KEPT}`), true);
+  const only3 = (await acquire("tier3only")).document;
+  t("...and `tier3only` kept one",
+    basisOf(only3).includes(`1 scanned page(s) ${SAID} into this document's own text; the page that ${KEPT}`), true);
 }
 
 await mf.dispose();

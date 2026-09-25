@@ -45,6 +45,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
+import { unruledOpPlane, unruledOpMemberSession, UNRULED_OP } from "./unruled-op-fixture.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -148,7 +149,7 @@ console.log("\n--- C-38.3 · A PERSON ASKING FOR SOMETHING ONLY AN UNATTENDED WR
 /* D-270, 2026-09-19. THE TWO ARMS BELOW EXIST BECAUSE THE ROW ABOVE USED TO
    ANSWER THEIR CONDITIONS TOO, and was false for both. One sentence was doing
    three jobs: the C-38.3 arm above is the one job it was right about. */
-console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY AN ADMINISTRATOR DOES ---");
+console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY ANOTHER SESSION DOES (the founder's, REC-162) ---");
 {
   /* `ada` is enrolled with `role: "admin"` but holds `member:ada`, so the plane
      reads this session's KIND as member — which is exactly the caller this
@@ -160,14 +161,21 @@ console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY AN ADMINISTRATOR
      NOT_AN_ADMIN (`adminvote.test.mjs` §9). Driving it here would assert C-38.7 over an op that no
      longer produces it. `op=governorconfig` is the one mutating op still in the founder's set alone
      (§4.9, RULED the operator's by BOB #23), so it is the op this refusal is still for. What its
-     sentence SHOULD say is REC-162's item, not this arm's. */
+     sentence says was REC-162's item, landed 2026-09-25 and corrected below. */
   const r = await POST(`op=governorconfig&${CAI}`, { host: "example.org", appetite: 1 });
-  admits("a member's session on an op only an administrator's session reaches", r, "SESSION_ROLE_CANNOT_REACH_OP");
-  t("and it says there is nothing to go and find, rather than sending them after a credential "
-  + "that would not help — the old sentence sent them after one",
-    /ask an administrator/i.test(r.translation || ""), true);
-  t("and it names the role it judged, so a caller can tell which fact refused them",
-    r.role, "member");
+  admits("a member's session on an op only the founder's session reaches", r, "SESSION_ROLE_CANNOT_REACH_OP");
+  /* CORRECTED 2026-09-25 BY REC-162, NEVER EXEMPTED. These asserted `/ask an administrator/` and
+     `role: "member"`. `governorconfig` is the FOUNDER'S session's alone (§4.9, BOB #23), and `cai`'s
+     session is the kind every enrolled administrator holds too — so "ask an administrator" sent the
+     caller to people who are refused exactly as they are, and `role: member` called an enrolled
+     administrator a non-administrator. The refusal now names the SESSION that reaches the op. */
+  t("and it says there is nothing to go and find, and names whose session to ask — the founder's — "
+  + "rather than an administrator, who is refused this exactly as a member is",
+    [/ask the person who holds the session it names/i.test(r.translation || ""),
+     /reserved to the founder's session/.test(r.error || ""), /ask an administrator/i.test(r.translation || "")],
+    [true, true, false]);
+  t("and it names the session kind it judged and the session that reaches the op, and no `role`",
+    [r.session, r.reachedBy, r.role], ["member", "founder", undefined]);
   /* THE MIRROR. Without it this arm passes over a gate that refuses everybody. */
   const m = await POST("op=governorconfig&token=t-admin-1", { host: "example.org", appetite: 1 });
   t("NEGATIVE CONTROL: the same op is NOT refused admission to a credential that reaches it",
@@ -192,19 +200,48 @@ console.log("\n--- C-38.8 · AN OMISSION, STATED AS ONE AND GIVEN NO INVENTED RA
      names beside the three this item just discharged. The omission arm is
      derived rather than listed in `d270-refusal-truth.test.mjs` and floored
      non-empty there, so this exemplar going stale is caught by name. */
-  const r = await POST(`op=provenanceroute&${CAI}`, {});
-  admits("a member's session on an op no session reaches and no decision explains", r, "SESSION_ROUTE_NOT_RECORDED");
+  /* RE-POINTED AGAIN 2026-09-25 (REC-155), NEVER EXEMPTED, AND THE ROW IS STILL THE SAME ROW. BOB #19
+     RULED all seven ops that produced this sentence (`BIO_Membership_Architecture_v2.md` §4.10): the
+     provenance pair and the three calibration writes joined BOTH session sets, `livefire` and `reproject`
+     were recorded in `UNATTENDED_BY_DECISION`. So `op=provenanceroute` answers a member's session with the
+     op's own result now, and on the real plane NO op produces C-38.8 — which is §4.10 working, not the row
+     going dead: C-38.8 is the answer owed to the next op somebody adds without a ruling. It is therefore
+     driven through `unruled-op-fixture.mjs` — the real gate and the real row over ONE op the real tables
+     have never heard of, built in memory — and `op=provenanceroute` is asserted at its NEW answer below,
+     so this re-pointing is a MOVE and a revert of REC-155 fails here by name. */
+  const fx = unruledOpPlane({ ADMIN_TOKEN: "t-admin-1", MEMBER_TOKEN: "t-member-1", PROBE_TOKEN: "t-probe-1",
+                              VERSION: "test" });
+  let r, m;
+  try {
+    const FXS = await unruledOpMemberSession(fx, "t-admin-1");
+    const fxPost = async (q) => (await fx.dispatchFetch("http://x/api/?" + q,
+      { method: "POST", body: "{}" })).json();
+    r = await fxPost(`op=${UNRULED_OP}&${FXS}`);
+    m = await fxPost(`op=${UNRULED_OP}&token=t-admin-1`);
+  } finally { await fx.dispose(); }
+  admits("a member's session on an op no session reaches and no decision explains (the unruled fixture op)",
+    r, "SESSION_ROUTE_NOT_RECORDED");
   /* THE ASSERTION THIS ROW EXISTS FOR, and it is a NEGATIVE about the wording
      rather than a positive about the code. */
-  t("and it makes NO design claim — it never says the verb is not for a person, because this op's "
-  + "own OPS row says the opposite and a false rationale suppresses its own bug report",
+  t("and it makes NO design claim — it never says the verb is not for a person, because nobody has "
+  + "ruled on this op and a false rationale suppresses its own bug report",
     /not for a person|unattended writer|not by a person/i.test(`${r.translation} ${r.detail}`), false);
   t("and it says plainly that the record holds no decision, which is an invitation to report the "
   + "gap rather than a wall in front of it",
     /no recorded decision/i.test(r.translation || ""), true);
-  const m = await POST("op=provenanceroute&token=t-admin-1", {});
-  t("NEGATIVE CONTROL: the same op is NOT refused admission to the machine credential",
-    m.reason === "SESSION_ROUTE_NOT_RECORDED", false);
+  /* The fixture op has a row and no handler, so the bearer passing admission is shown POSITIVELY — it reaches
+     dispatch and meets `unknown op` — rather than by the absence of one code, which a refusal of any other
+     kind would also satisfy. */
+  t("NEGATIVE CONTROL: the same op is NOT refused admission to the machine credential — it passes the gate "
+  + "and reaches dispatch, where a row with no handler is an unknown op",
+    [m.reason ?? null, /^unknown op: /.test(String(m.error))], [null, true]);
+  /* REC-155: THE OP THIS ARM DROVE UNTIL §4.10, AT ITS NEW ANSWER. `cai` holds no capability, and
+     `provenanceroute` NEEDS `contribute` — so passing the SESSION gate is shown by meeting the
+     CAPABILITY gate behind it, by name, rather than any session-gate code. */
+  const pr = await POST(`op=provenanceroute&${CAI}`, {});
+  t("and op=provenanceroute, which this arm drove until §4.10, now PASSES the session gate for a member "
+  + "(REC-155) and meets the capability gate behind it — NOT_CAPABLE, needing contribute",
+    [pr.reason, pr.needs], ["NOT_CAPABLE", "contribute"]);
   /* AND THE OP THIS ARM USED TO DRIVE IS ASSERTED AT ITS NEW ANSWER, so the
      re-pointing above is a MOVE rather than a deletion, and a revert of D-136
      fails HERE as well as in the suite that grades the arms.

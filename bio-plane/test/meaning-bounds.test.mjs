@@ -1539,7 +1539,7 @@ for (let i = 1; i <= 4; i++) {
   const r = await POST("op=promote&token=mem-r60", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r60", files,
     register: [{ sha256: capture, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
-    meta: { object_type: "information", group: "believe-in-oakland", title: id,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   CAPS.push(capture);
@@ -1666,7 +1666,7 @@ const RUN = "RUN-2026-0807-rec70";
     const p = await POST("op=promote&token=mem-r60", {
       bundleId: q, base: null, snapKey: `${q}-new`, author: "r60",
       files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: createHash("sha256").update(md).digest("hex") }],
-      register: [], meta: { object_type: "inquiry", group: "believe-in-oakland", title: q, current_state: "open",
+      register: [], meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
                             created: NOW, last_updated: NOW } });
     if (p?.ok !== true) throw new Error(`REC-153 fixture promote ${q}: ${JSON.stringify(p).slice(0, 600)}`);
   }

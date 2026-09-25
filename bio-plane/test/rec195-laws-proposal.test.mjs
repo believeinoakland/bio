@@ -175,7 +175,7 @@ const promote = async (tok, id, text, type = "action") =>
     bundleId: id, base: null, snapKey: `${id}-new-${String(++snapKeySeq).padStart(4, "0")}`,
     files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }],
     register: [],
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "action" ? "planned" : "open", created: NOW, last_updated: LATER },
   }));
 

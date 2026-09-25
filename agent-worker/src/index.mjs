@@ -143,17 +143,27 @@ import { resolveClaudeCascade, CASCADE_NO_ACCOUNT } from "./cascade.mjs";
 
 /* ------------------------------------------------------ THE SEGMENT BOUND
  *
- * SIZED ON FL-1's MEMORY CURVE, AND NOT ON ITS CPU CURVE. The difference is a
- * factor of about ten and it is the finding FL-1 said should shape this work:
+ * 120 TURNS, AND THE CEILING IT KEEPS CLEAR OF IS CPU — NOT MEMORY. D-312 (2026-09-25,
+ * measurements/M-168.md) re-checked this bound, because it was first sized on a misreading:
+ * FL-1's `memoryUsageBytesP99 = 120.4 MB at 200 turns` was read with 128 MB as its
+ * denominator, as a wall ~200 turns away. The metric is not a share of anything (CPDF-15:
+ * 132–240 MB on invocations the platform marks `success`, the kill at 278.7 MB reported;
+ * INTERFACES.md §"The memory bound, and how it is expressed"), and walking the same loop up
+ * until refused found NO memory wall:
  *
- *   at 200 turns   memoryUsageBytesP99 = 120.4 MB against a 128 MB isolate,
- *                  while billed CPU was 757.65 ms — 2.5% of the 30 s ceiling.
- *   at 100 turns   51.2 MB P50, 189.28 ms.
+ *   turns (scratch corpus)   400     800     1,200    1,400    — every invocation `success`
+ *   transcript               0.68 MB 1.34 MB 2.00 MB  2.34 MB
+ *   memoryUsageBytesP99      120.9   107.8   122.7    94.7 MB  — FLAT while the work grows 3.5x
+ *   billed CPU / invocation  1.06 s  3.85 s  12.59 s  15.75 s  — ~7-10 ms per MB re-serialised
  *
- * Extrapolated on the measured CPU exponent (~n^1.9), ~1,100 turns would fit the
- * CPU ceiling. **A segment sized on CPU headroom would therefore be roughly 10x
- * too long and would meet the MEMORY wall instead.** 120 sits inside the 100–150
- * band FL-1 named as inside both ceilings.
+ * CPU is spent RE-SERIALISING THE TRANSCRIPT every turn, so it grows with the CUMULATIVE
+ * BYTES SENT (~turns^2 x bytes per turn), and this member runs under the 30 s DEFAULT (its
+ * wrangler.jsonc sets no `limits`): ~3-4 GB re-serialised fits. At FL-1's payload size
+ * (~7.2 KB of transcript per turn) that is ~900-1,050 turns; 120 turns there cost ~0.3 s.
+ * So 120 is SAFE and carries ~8x headroom — not the ~1.7x its first reading claimed. It is
+ * kept, not raised: the payload size of a REAL run is unmeasured and a larger one moves the
+ * ceiling down as its square root. A turn count is the wrong UNIT for a CPU bound that
+ * scales with bytes (D-611 names the fix: bound the segment on bytes re-serialised).
  *
  * The other two FL-1 numbers that bear on this member, recorded so nobody
  * re-derives them: waiting is effectively free (~0.16 ms billed CPU per awaited
@@ -164,7 +174,8 @@ import { resolveClaudeCascade, CASCADE_NO_ACCOUNT } from "./cascade.mjs";
  * a FLOOR on that ceiling rather than the ceiling, because the walk stopped at
  * its own cap. */
 const DEFAULT_MAX_TURNS_PER_SEGMENT = 120;
-const BOUND_SOURCE = "FL-1 2026-08-08 memory curve (120.4 MB P99 of 128 MB at 200 turns), not the CPU curve";
+const BOUND_SOURCE = "FL-1 2026-08-08 curve, re-checked by D-312 2026-09-25 (M-168): CPU binds, not memory; "
+  + "120 turns is ~1/8 of the ~1,000 the 30 s CPU default fits at FL-1's payload size";
 
 /* The `ai` credential's shape (PL-11). Checked ONLY so an absent or obviously
    malformed credential is refused here instead of costing a round trip — this is

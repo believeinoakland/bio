@@ -146,7 +146,60 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.30.0";
+/* REC-150 side, kept as history — took 1.31.0 (REC-150, 2026-09-25, branch land/worker/REC-150): the C-95 family PROJECT_JOIN_REQUEST_CHECKS — §7.14's
+   request to join, nine refusals (C-95.1..C-95.9) — so the catalogue moved 466 -> 475, NINE ARRIVALS, NO DEPARTURES,
+   MINOR and additive. NOT 1.30.0: CONDUCT #21's c21-batch28 (integrated, not yet on main) already published a
+   DIFFERENT catalogue under 1.30.0, and one version names one catalogue. Figures are the d470 suite's print on this
+   item's tree over origin/main 964da679; the integrator takes the union's number once and re-reads it. */
+/* D-520 side, kept as history — took 1.29.0 (D-520, 2026-09-25): C-83.8 RENDER_AT_CAPACITY joins RENDER_CAPTURE_CHECKS — a render over the concurrency
+   cap WAITS (BOB #33) — so the catalogue moved 461 -> 462 checks and the stamp moves with it, MINOR and additive on
+   this constant's own rule (Publication §3 rule 17): one check arrives, none moves and none leaves. Figures are the d470
+   suite's own print on the item's tree over origin/main 8bdf20e6; CONDUCT reconciles the number at the union. */
+/* REC-219 side, kept as history — took 1.30.0 (REC-219, 2026-09-25): C-41.14 and C-41.15 joined CASE_DOCUMENT_FAMILY — a `bio-case-document/4`
+   must state the adoptions of its scope pinning a PROPOSED revision at signing, and its citation edges each with
+   the version it rests on (BIO_Publication_v0_1.md §3 rule 18; D-579(a)) — so the catalogue moved 466 -> 468 checks, MINOR and additive on this constant's own rule: nothing that passed
+   is refused, because /3, /2 and /1 documents are never asked the new question. Figures from the d470
+   suite's own print; CONDUCT re-reads them on the union if another branch moves this constant too. */
+/* REC-203 side, kept as history — took 1.30.0 (REC-203, 2026-09-25, branch land/worker/REC-203): THREE ARRIVALS, NO DEPARTURES — C-91.1
+   IDSPACE_UNKNOWN, C-91.2 IDSPACE_VALUE_NOT_IN_SPACE and C-91.3 IDSPACE_CAPTURE_NOT_HELD, `op=idmatch`'s
+   refusals in the new IDSPACE_CHECKS family. MINOR and additive on this constant's own rule; CONDUCT
+   reconciles the number at integration if another branch takes 1.30.0 first. */
+/* REC-186 side, kept as history — took 1.29.0 (REC-186, 2026-09-25): C-33.48 LAST_OWNER_CANNOT_LEAVE joined ACT_SHAPE_CHECKS — op=projectleave refuses a
+   project's ONLY owner (BOB #31, 2026-09-23 21:37Z) — so the catalogue moved 461 -> 462 and the stamp moves with it,
+   MINOR and additive (Publication §3 rule 17). (Renumbered C-33.47 -> C-33.48 at c22-rec186-renumber, REC-207 holding
+   C-33.47.) The integrator takes the union's number once and re-reads the census from the d470 suite's print. */
+/* 1.31.0 AT THE UNION (CONDUCT #22, c22-batch29 union, 2026-09-25): every branch above that took 1.29.0, 1.30.0 or 1.31.0
+   over its own base rides ONE new number, and every such claim is superseded here (their comments kept as history).
+   SIXTY-EIGHT ARRIVALS — C-33.48 (REC-186), C-41.14/.15 (REC-219), C-69.2 + C-98.1..8 (D-561), C-83.8 (D-520),
+   C-86.3/.4 (D-563), C-91.1..3 (REC-203), C-92.1..12 (MK-7), C-93.1..7 (REC-147), C-94.1..11 (D-147), C-95.1..9
+   (REC-150), C-96.1..9 (D-134), C-97.1/.2 (REC-197) — ONE DEPARTURE, C-82.1 (retired by D-521b, unreachable), and
+   NINE CHANGED under an unmoved id (the d470 row's `changed`, rule 17 as BOB #35 folded it): C-2.8 and C-21.2
+   (D-598), C-2.10 (D-147), C-41.1 and C-41.13 (REC-219), C-53.10..12 (MK-7), C-70.3 (REC-197). MINOR: the one
+   departure refused nothing any input could reach. Count 569, digest d1e8a679…, source 832fbe02… — the d470
+   suite's own print on the merged tree (HEAD ee29c763 + this commit), never 502 + 68 - 1. */
+export const CATALOG_VERSION = "1.31.0";
+/* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
+/* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
+   attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
+   466 -> 478, read from d470-catalog-census.test.mjs's own print on this tree. MINOR: arrivals only. */
+/* REC-147 side, kept as history — its own note on its own branch: */
+/* 1.30.0 (REC-147, 2026-09-25, branch land/worker/REC-147): C-93's seven rows arrive in the new
+   CONTRADICTION_CANDIDATE_CHECKS family — op=contradictionpropose's refusals — so the catalogue grew 466 -> 473 and the
+   stamp moves with it, MINOR and additive on this constant's own rule: seven checks arrive, none moves, none leaves.
+   AT A UNION the census is RE-READ from the d470 suite's print on the merged tree, never added by hand. */
+/* REC-197 side, kept as history — its own note on its own branch: */
+/* 1.30.0 (REC-197, 2026-09-25, branch land/worker/REC-197, stacked on land/worker/REC-196 @ 82f604d2): C-97.1
+   PROJECT_VISIBILITY_NO_OWNER and C-97.2 PROJECT_VISIBILITY_NOT_A_CREATION, the new PROJECT_CREATION_VISIBILITY_CHECKS
+   family (a creation's `visibility`, BOB #32's ruling (b)). TWO ARRIVALS, NO DEPARTURES: MINOR and additive on this
+   constant's own rule. CONDUCT reconciles the VERSION at integration if another branch takes 1.30.0 first. */
+/* D-521b side, kept as history — its own note on its own branch: */
+/* 1.31.0 (D-521, 2026-09-25, branch land/worker/D-521b): ONE DEPARTURE, NO ARRIVALS. C-82.1
+   STATEMENT_ACK_DOCUMENTS_OVER_BOUND is retired as unreachable (the read it guarded returns at most two rows against a
+   bound of 8). Rule 17 moves the stamp for a removed check. MINOR: nothing that passed now fails. The census is the
+   d470 suite's own print; CONDUCT re-reads it on the union if another branch moves this constant. */
+/* D-561 side, kept as history — took 1.31.0 (D-561, 2026-09-25, branch land/worker/D-561): the new PUBLISHED_READ_CHECKS family (C-98.1..8, the public
+   door's refusals at op=publishedbytes and op=publishedcase) and C-69.2 STORE_DID_NOT_ANSWER join the catalogue — nine
+   arrivals, none moved or removed, MINOR on this constant's own rule. 502 -> 511 from the d470 suite's print. */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -201,6 +254,16 @@ export const CATALOG_VERSION = "1.30.0";
    those two collisions), D-512 (C-66.6), D-530 (C-89.1), D-547 (C-86.2), D-549 (C-68.5), REC-214 (C-90), D-454
    (C-74.4), REC-217 (C-44.3..5) and D-450 (C-41.12 CHANGED) — MINOR, since no check leaves; count and digest are
    the d470 suite's print on the merged tree. */
+/* D-134 side, kept as history — took 1.30.0 (D-134, 2026-09-25, branch land/worker/D-134): the new CUSTODIAL_CHECKS family, C-96.1-.9 —
+   §4.9's custodial acts' refusals given canned translations, and `adminRemove`'s target case split to
+   TARGET_NOT_AN_ADMIN — so the catalogue moved 466 -> 475 and the stamp moves with it. NINE ARRIVALS, NO
+   DEPARTURES, so the bump is MINOR on this constant's own rule (Publication §3 rule 17). Figures are the
+   d470 suite's own print on this tree over origin/main 964da679. If another branch also took 1.30.0, the
+   union takes the next number once — ONE VERSION NAMES ONE CATALOGUE. */
+/* D-563 side, kept as history — took 1.31.0 (D-563, 2026-09-25, branch land/worker/D-563): TWO ARRIVALS, NO DEPARTURES, NONE CHANGED — C-86.3
+   ENVELOPE_TITLE_DISAGREES and C-86.4 ENVELOPE_STATE_DISAGREES in PROMOTED_TYPE_CHECKS. MINOR; 502 -> 504, count and
+   digest from the d470 suite's print on this tree. If another branch in the batch also moves the version, CONDUCT takes
+   the next number at the union and re-reads the print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -288,16 +351,49 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
   /* The plane's own remaining duty: bytes the register claims must exist. */
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
+    /* D-556 (BOB #34, 2026-09-25 00:00Z; Intake Doctrine section 8): A WHOLE-HASH ROW HELD IN PARTS RATIFIES
+       when every part the record names (the bundle's data/provenance.json) is present and its digest verifies:
+       the audit calls those bytes SOUND (D-533), and publication now copies them part by part and re-verifies
+       each at the destination, so the gate may not treat them as missing. Otherwise it is refused BY NAME: the
+       parts that are not there, or the parts whose size or digest failed or could not be checked. */
+    if (!probe.present && probe.parts) {
+      const { named, missing, disagree, unverified, why } = probe.parts;
+      const sum = (named || []).reduce((n, p) => n + p.bytes, 0);
+      const label = (ps) => ps.map((p) => p.file || p.sha256).join(", ");
+      if (why)
+        errors.push({ check: "PLANE_PART_UNVERIFIED",
+                      detail: `registered capture is held in parts, and ${why}, so no part could be verified`,
+                      where: { path: r.path, sha256: r.capture_sha } });
+      else if (missing.length)
+        errors.push({ check: "PLANE_PART_MISSING",
+                      detail: `registered capture is held in parts, and ${missing.length} of the ${named.length} `
+                            + `parts the record names are not in the working bucket: ${label(missing)}`,
+                      where: { path: r.path, sha256: r.capture_sha, missing_parts: missing } });
+      else if (disagree.length || unverified.length || (typeof r.bytes === "number" && sum !== r.bytes))
+        errors.push({ check: "PLANE_PART_UNVERIFIED",
+                      detail: disagree.length
+                        ? `registered capture is held in parts, and the stored size or digest of `
+                          + `${disagree.length} disagrees with the record: ${label(disagree)}`
+                        : unverified.length
+                        ? `registered capture is held in parts, all present, but the digest of `
+                          + `${unverified.length} could not be verified: ${label(unverified)}`
+                        : `registered capture is held in parts, and the parts the record names sum to ${sum} `
+                          + `bytes where the register says ${r.bytes}`,
+                      where: { path: r.path, sha256: r.capture_sha,
+                               ...(disagree.length ? { disagreeing_parts: disagree } : {}),
+                               ...(unverified.length ? { unverified_parts: unverified } : {}) } });
+      continue;
+    }
     /* D-530: a whole hash held only in parts is not missing bytes, and saying so was
-       false. It is still refused: publication copies a capture by the hash its row
-       names, and there is no object under this one. Registering each part, as the
-       setup surface does, is the shape that publishes. */
+       false. D-556: it is still refused when the record names NO parts for it, since
+       then there is nothing to verify or to copy under any hash. */
     if (!probe.present && probe.heldInParts)
       errors.push({ check: "PLANE_HELD_IN_PARTS",
                     detail: `registered capture is held only in parts: this plane's acquisition receipt names `
                           + `the whole hash, and the working bucket stores the document as its parts, each under `
-                          + `its own hash. Publication copies a capture by the hash its register row names, so `
-                          + `register the parts rather than the whole`,
+                          + `its own hash, but the bundle's data/provenance.json names no parts for it. `
+                          + `Publication copies the parts the record names, so name them there, or register `
+                          + `the parts rather than the whole`,
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (!probe.present)
       errors.push({ check: "PLANE_MISSING_BYTES", detail: `registered capture is absent from the working bucket`,

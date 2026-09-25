@@ -25,7 +25,10 @@
  * WHAT THIS SUITE CANNOT SEE, stated. It drives the pdf-page and document arms
  * of the extent test end to end; the office arms reach the same checker through
  * `#extentBoundUnheld`'s per-kind switch and are NOT driven here with office
- * captures. It does not measure the read's cost. It does not decide §18.1's own
+ * captures. (REC-221: the GRADE — whether the newer version affects the passage —
+ * is driven over the office arms, with fixture pairs holding text, in
+ * `versiongrade.test.mjs`; this suite's captures hold no text units, so every leg
+ * here grades UNDETERMINED, asserted in section 2.) It does not measure the read's cost. It does not decide §18.1's own
  * open question — whether the notice reaches a member whose case is already
  * PUBLISHED — and no surface renders it yet (UI).
  */
@@ -150,7 +153,9 @@ const mustPromote = async (id, text, type, { captures = [], tok = "mem-d394" } =
   const r = await post("promote", {
     ...(id === null ? {} : { bundleId: id }), base: id === null ? null : (HEAD.get(id) ?? null),
     snapKey: `20260923T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+       state, and is now refused; a project document here states no title, so the label stays its only name. */
+    meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW, last_updated: LATER },
     files,
@@ -343,6 +348,13 @@ t("the undetermined notice SAYS a newer version exists and that survival is unde
 t("the whole document is at the same extent in every version: matched, on its own stated reason",
   [leg(5).state, leg(5).candidates?.[0]?.reason, leg(5).candidates?.[0]?.candidate_only],
   ["newer_capture_matched", "whole_document", true]);
+/* REC-221: NONE OF THIS GROUND HOLDS TEXT, so no leg may grade A or B — and leg
+   0's extent is MATCHED, which is exactly the extent-as-identity reading the
+   grade exists to refuse. UNDETERMINED with its reason, never UNAFFECTED. */
+t("REC-221: a MATCHED extent with no text held is graded UNDETERMINED, never unaffected (A/B need the text)",
+  [leg(0).affects, leg(0).candidates?.[0]?.grade, leg(0).candidates?.[0]?.grade_reason,
+   leg(5).candidates?.[0]?.grade, leg(5).candidates?.[0]?.grade_reason, leg(3).affects],
+  ["undetermined", "UNDETERMINED", "cited_text_not_held", "UNDETERMINED", "cited_text_partial", null]);
 t("no existing row is claimed where none was minted (existing_content_id is a FIND, never a mint)",
   [leg(0).candidates?.[0]?.existing_content_id, leg(5).candidates?.[0]?.existing_content_id], [null, null]);
 

@@ -198,13 +198,13 @@ const promote = async (id, text, type) => POST(`op=promote&token=${IRIS}`, {
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
 const createProject = async (label, text) => {
   const r = await POST(`op=promote&token=${IRIS}`, {
     base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${label}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "investigating", created: NOW, last_updated: LATER } });
   if (!r?.ok || typeof r.bundleId !== "string") await bail(`create project ${label}`, r);
   return r.bundleId;
@@ -316,10 +316,13 @@ t("(fixture) B's case document is readable and non-empty", [docB?.ok, (docB?.tex
   /* CORRECTED 2026-09-24 (REC-188), never exempted: this row pinned `bio-case-document/2`, the token D-442
      moved op=publish to. REC-188 moved it to `/3` (rule 12's shape PLUS the bias manifest and the statement's
      acknowledgement list, both now REQUIRED), and /3 states every block this row is about exactly as /2 did
-     (`caseDocumentStatesMemberBlocks` answers yes for both). The pin stays EXACT, never a prefix. */
-  t("THE CASE DOCUMENT CARRIES EVERY MOVED BLOCK: the format op=publish authors (/3, rule 12's shape); per "
+     (`caseDocumentStatesMemberBlocks` answers yes for both). The pin stays EXACT, never a prefix.
+     CORRECTED AGAIN 2026-09-25 (REC-219), never exempted: `/3` was right until op=publish moved to `/4` (§3
+     rule 18 — /3's shape plus the adoptions pinning a proposed revision at signing), which states every
+     block this row is about exactly as /3 did; `caseDocumentStatesMemberBlocks` answers yes for /4 too. */
+  t("THE CASE DOCUMENT CARRIES EVERY MOVED BLOCK: the format op=publish authors (/4, rule 12's shape); per "
   + "member its role, its pinned sha and its own edition",
-    [fmB.format, row.role, row.version_sha === PIN, row.edition], ["bio-case-document/3", "load_bearing", true, 1]);
+    [fmB.format, row.role, row.version_sha === PIN, row.edition], ["bio-case-document/4", "load_bearing", true, 1]);
   t("… the frozen pair, capture and connection once each, equal to what op=publish answered",
     [sRows.map((r) => r.axis).sort(),
      JSON.stringify(sRows.map((r) => ({ axis: r.axis, state: r.state, grade: r.grade, weakest: r.weakest })))

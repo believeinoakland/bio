@@ -117,7 +117,11 @@ arm("(1) CHECK 1 — THE REACHABLE LEG (C-27.8), the other five HELD OPEN. "
 arm("(2) CHECK 2 — THE PAIR COMPUTES OVER THE DECLARED PARTITION (C-27.9), the other five HELD OPEN. "
   + "With this gone, legs sitting in a part of the argument no row declares land, and §12's MAXIMUM is "
   + "then taken over a part nobody signed for — DEC-32's anti-gaming keystone, in reverse.",
-  [["store", `    if (pairError || axisBad(pair?.capture) || axisBad(pair?.connection) || partitionDisagrees)`,
+  /* ANCHOR RE-AIMED 2026-09-25 by D-235, same condition: MK-2 generalised the
+     two axis tests to `Store.STRENGTH_AXES.some(...)` and this arm's anchor then
+     matched ZERO sites — the harness refused to arm blind here and never reached
+     its foot, so every arm below this one had stopped running. */
+  [["store", `    if (pairError || Store.STRENGTH_AXES.some((a) => axisBad(pair?.[a])) || partitionDisagrees)`,
              `    if (false)`]],
   ["CHECK 2: legs sitting in a part", "THE DRIVEN SET EQUALS THE REGISTRY"],
   ["CHECK 1: a leg naming a document", "CHECK 5:", "CHECK 6:"]);
@@ -484,12 +488,31 @@ arm("(D-235f) OVER-REACH, AND IT MUST FAIL THE OTHER WAY — make the shared rea
   + "defect: a reader that silently withheld evidence a version rests on would make a basis returned in "
   + "part read as a basis, which is PL-9's finding at the grain it bites. THE REPLAY ARM MUST FAIL "
   + "(its leg vanishes) while every other arm stays green.",
-  [["store", `      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX);`,
-             `      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX).filter((l) => String(l.ground ?? "").trim());`]],
+  /* ANCHOR RE-AIMED 2026-09-25 by D-235, same edit: REC-119 wrapped the leg
+     SELECT in `#versionLegsEarned(...)`, so the old anchor matched zero sites.
+     The filter now applies to the EARNED legs, which is the list the reader
+     returns — the arm still drops the leg as well as the blank label. */
+  [["store", `      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX));`,
+             `      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX)).filter((l) => String(l.ground ?? "").trim());`]],
   ["D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE"],
   ["D-235 (2) `grounds` PUBLISHES THE PART LABELS",
    "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
    "D-235 OVER-STRICTNESS", "CHECK 1: a leg naming a document"]);
+
+arm("(D-235g) `kind` DROPPED FROM `op=basisversions`' ANSWER — the row's own control. `op=suggest` "
+  + "reads `kind` through its OWN read-back of the projection, so dropping it from the other reader must "
+  + "fail every arm that compares the two and nothing that reads `op=suggest` alone. THE CROSS-OP ARM "
+  + "MUST FAIL (its disagreement list names `kind!=kind`), THE PER-KIND ARM MUST FAIL for all five, AND "
+  + "THE HAND-COMPOSED ARM MUST FAIL (the key is absent, not null); the name, grounds and over-strictness "
+  + "arms must stay GREEN.",
+  [["store", `        kind: r.kind ?? null,\n`, ``]],
+  ["D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
+   "D-235 EACH OF THE FIVE READS THE SAME KIND FROM BOTH OPS",
+   "D-235 (7) A HAND-COMPOSED VERSION PUBLISHES `kind: null`"],
+  ["D-235 (1) `version` PUBLISHES THE NAME THE RECORD HOLDS",
+   "D-235 (2) `grounds` PUBLISHES THE PART LABELS",
+   "D-235 OVER-STRICTNESS",
+   "all five are IN THE RECORD", "CHECK 1: a leg naming a document"]);
 
 console.log(`\n=================================================================`);
 console.log(`arms run: ${armsRun} · arms that did NOT behave as declared: ${armsWrong}`);

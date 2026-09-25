@@ -42,6 +42,9 @@
  * RE-RUN 2026-09-23 by UI-79 after its correction (the plane records a group; the held bytes pinned as sent + id +
  * stamp; one assertion added): 5/5 AS DECLARED (baseline 30/30 · A 21/30 · B 10/30 · C 12/30 · D 30/30), app.html
  * b2cedae2… restored IDENTICAL.
+ * RE-RUN 2026-09-25 by UI-70 after its correction (the creation and the fork now tick the setting a member chooses;
+ * the fork form's field count is kept over the fields a member TYPES, the two radios pinned beside it): 5/5 AS
+ * DECLARED (baseline 31/31 · A 22/31 · B 10/31 · C 12/31 · D 31/31), app.html ef1d85cc… restored IDENTICAL.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard the writer's
    own output. SHARED from the plane's test estate; census: `stdio-census.test.mjs`. */
@@ -179,6 +182,11 @@ const TITLE = "The harbour dredging money";
 $$("#a-type").value = "project";
 $$("#a-title").value = TITLE;
 $$("#a-body").value = "Where the dredging allocation went, and who decided.";
+/* CORRECTED 2026-09-25 BY UI-70 (REC-197; Membership v2 §7.14), never exempted: a project's creator now CHOOSES
+   discoverable or hidden with neither preselected, and the Add surface sends nothing until they have. This arm
+   created a project without choosing, which the surface now refuses at the form — correctly — so it ticks the
+   choice a member makes. The forced choice is `project-visibility-surface.test.mjs`'s subject, not this one's. */
+$$("#a-vis-hidden").checked = true;
 SENT.length = 0;
 await U.addGo();
 const addErrText = text(html("#a-err"));
@@ -226,14 +234,26 @@ ok("the fork act's declared fields are the name alone",
    JSON.stringify(U.ROSTER_ACTS.projectfork.fields.map(f => f[0])) === JSON.stringify(["title"]));
 U.openRosterAct("projectfork");
 const dlg0 = String(html("#dlg"));
-const inputs = [...dlg0.matchAll(/<(?:input|textarea|select)\b[^>]*\bid="([^"]+)"/g)].map(m => m[1]);
-ok(`the fork form renders exactly ONE field, the fork's name (found: ${JSON.stringify(inputs)})`,
+/* CORRECTED 2026-09-25 BY UI-70 (REC-197; Membership v2 §7.14), never exempted: the fork form now also carries
+   the forker's CHOICE — two radios, discoverable and hidden, neither checked. They are not a place to type
+   anything, so the "exactly ONE field" assertion is kept over the fields a member TYPES into and the two radios
+   are pinned by name beside it; "prefilled" is read on the typed fields, since a radio's `value` is its option
+   and not a prefill (its being unchecked is the prefill that matters, asserted in project-visibility-surface). */
+const tags = [...dlg0.matchAll(/<(?:input|textarea|select)\b[^>]*\bid="([^"]+)"[^>]*>/g)];
+const radios = tags.filter(m => /type="radio"/.test(m[0])).map(m => m[1]);
+const typed = tags.filter(m => !/type="radio"/.test(m[0]));
+const inputs = typed.map(m => m[1]);
+ok(`the fork form renders exactly ONE field to type in, the fork's name (found: ${JSON.stringify(inputs)})`,
    JSON.stringify(inputs) === JSON.stringify(["ra-title"]));
-ok("no field on the fork form is hidden or prefilled", !/type="hidden"/i.test(dlg0) && !/\bvalue="/i.test(dlg0));
+ok(`and the two setting radios and nothing else (found: ${JSON.stringify(radios)})`,
+   JSON.stringify(radios) === JSON.stringify(["ra-vis-discoverable", "ra-vis-hidden"]));
+ok("no field on the fork form is hidden or prefilled",
+   !/type="hidden"/i.test(dlg0) && !typed.some(m => /\bvalue="/i.test(m[0])));
 /* A member fills what the form asks. Any field it renders beyond the name is filled as a member would fill a
    required box — with something — so that, if an id field ever comes back, the PLANE is what answers it and
    its refusal is what this file names (the row's negative control). */
 for(const f of inputs) $$("#" + f).value = f === "ra-title" ? "The harbour dredging money, second look" : "PROJ-2026-0099-typed";
+$$("#ra-vis-hidden").checked = true;   /* UI-70: the forker's choice, as a member makes it */
 SENT.length = 0;
 const fr = await U.doRosterAct();
 const forkErr = text(html("#ra-err"));

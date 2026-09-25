@@ -304,7 +304,7 @@ const promoteReading = async (captureSha, entities) => {
   const r = await post("promote", {
     bundleId: id, base: null,
     snapKey: `20260914T${String(200000 + bseq).slice(-6)}Z_${sha(String(bseq)).slice(0, 8)}`,
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Doc ${id}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
@@ -418,7 +418,7 @@ const promoteInquiry = async (id, legs) => {
   const md = legMd(id, legs);
   const r = await post("promote", { bundleId: id, base: null,
     snapKey: `20260914T${String(300000 + (++bseq)).slice(-6)}Z_${sha(id).slice(0, 8)}`,
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Inquiry ${id}`,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);

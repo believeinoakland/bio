@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/mint-ledger.control.mjs` — deliberately NOT a `.test.mjs`, because it builds ARMED COPIES of the sources while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/mint-ledger.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-21 in worktree agent-ae1b7eca4d2254b16 on D-432 merged with origin/main cb2ab270 (real src/store.mjs 2,754,915 B sha256 81eb16670709…, untouched: YES), all nine AS DECLARED, the same figures as the first full run before the seed's counter half became one SQL statement: (a) baseline 26/0 · (b) no-ledger-read — THE ROW'S CONTROL, the ledger dropped from the minter's `taken` -> 14/12, S2 and every forced collision after a purge (F4–F9, U3–U7) fail BY NAME. ITS FIRST RUN WAS NOT AS DECLARED (11/2): the purged id was not reissued but REFUSED by the ledger's PRIMARY KEY inside the act, and the suite died at its fixture instead of failing at F4 — the arm was right and the SUITE was wrong; it now reports a thrown act at its own assertion, and the key is recorded as the ledger's second defence · (c) no-ledger-write -> 20/6, F4–F9: every purged id REISSUED silently, which is REC-151's behaviour, while the seeded U3–U7 stay green · (d) ledger-purged, the table cleared by purge's whole-store arm -> 15/11, S4, F4–F8 and U3–U7, F9 (single-bundle) green · (e) outside-the-transaction, the liar that defers the write past the act -> 25/1, ONLY F2 (the rollback) · (f) no-seed -> 21/5, U3–U7 · (g) no-counter-seed -> 25/1, ONLY U7 · (h) no-live-seed -> 22/4, U3–U6 · (i) lookup-other-spelling, correct work the source pin did not anticipate -> 26/0.
+   M0-147, RUN 2026-09-25 on origin/main 964da679 + M0-147 (real sources and this suite untouched: YES), every arm AS DECLARED, the nine above unchanged: (j) clock-pinned — the suite under `test/clockpin.preload.mjs` frozen 1 ms before the New Year that began the plane's year (2025-12-31T23:59:59.999Z; workerd keeps the true wall), THE ROW'S ACCEPTANCE -> 26/0 · (k) clock-read-restored — THE ROW'S CONTROL, `YEAR` read off this process's clock again, under the pin -> 25/1, ONLY F2 by name (want CASE-2025-7316, got CASE-2026-7316); U7 stays green VACUOUSLY — the counter ids carried 2025 and the forced draw 2026, so the collision it forces could not happen — the silent half of the defect · (l) clock-read-restored-no-pin, the same edit without the pin -> 26/0 (the pin, not the edit, is what fails (k)). The pin's first writing froze node's clock for every caller and Miniflare refused its own compatibility date (ERR_FUTURE_COMPATIBILITY_DATE) before any assertion; it now pins only reads made outside `node_modules/`.
  * =========================================================================
  * D-432 / IC-170 — AN OPAQUE ID IS NEVER DRAWN AGAIN, PURGE OR NOT. Membership Architecture v2 §7:
  * the minted-id rules (*"A MINTED ID CARRIES NO COUNT"*, BOB #16), the `op=purge` comment's own rule extended —
@@ -73,7 +74,14 @@ const t = (label, got, want) => {
 
 const ADM = "adm-d432", MEM = "mem-d432";
 const FORCE = "7316";
-const YEAR = new Date().toISOString().slice(0, 4);
+/* THE PLANE'S YEAR, read off the first id it mints (P1, §2) — never off this process's clock. CORRECTED 2026-09-25 by
+   M0-147: this read `new Date().toISOString().slice(0, 4)` at load, and the plane stamps an id with ITS clock's year when
+   it mints, so a run that loaded before midnight UTC on 31 December and minted after it compared ids of one year with
+   the next: F2 went red on a correct plane, and U7 went VACUOUSLY green — the counter ids carried the suite's year and
+   the forced draw the plane's, so the collision U7 exists to force could not happen. `op=allocid` takes its year from
+   the caller, so U1's counter ids carry this one, and U1 therefore also pins that they share the plane's year. */
+let YEAR = null;
+const yearOf = (id) => /^[A-Z]+-(\d{4})-/.exec(String(id ?? ""))?.[1] ?? null;
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
@@ -161,7 +169,7 @@ const promote = async (D, id, text, objectType, state, tok = ADM) => {
   const r = await D.POST(`op=promote&token=${tok}`, {
     bundleId: id, base: null,
     snapKey: `20260921T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+    meta: { object_type: objectType, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [],
@@ -240,7 +248,7 @@ const task = async (D, k) => {
   const md = `---\nid: ${id}\n---\n`;
   const r = await D.POST(`op=promote&token=${ADM}`, {
     bundleId: id, base: null, snapKey: `20260921T2${String(10000 + (++snapSeq)).slice(-5)}Z_task`, author: "ruth",
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Filed ${k}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [{ sha256: cap, path: `snapshots/d432-${k}.pdf`, encoding: "binary", bytes: 10 }] });
@@ -347,6 +355,7 @@ t("F0: the build under test is `src/` with ONE line forced — the draw in `#min
   const D = door(mf);
   const IRIS = await roster(D);
   const P1 = await project(D, "Ledger One");
+  YEAR = yearOf(P1);
   await concludedFinding(D, IRIS);
   const D1 = await draft(D, IRIS, P1, 1);
   /* THE DRY RUN FIRST, so the case id it mints is the first CASE draw this store ever makes. */

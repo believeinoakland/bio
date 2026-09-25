@@ -69,7 +69,10 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          caseDocumentStatesMemberBlocks,
          /* D-513: the doorbell's own family, read AS A VALUE by the three governed
             helpers below — the rows that give an anonymous knocker a sentence. */
-         KNOCK_CHECKS } from "../checks/bio-checks.mjs";
+         KNOCK_CHECKS,
+         /* D-561 / C-98: the public door's own family, read AS A VALUE by the
+            governed helpers of op=publishedbytes and op=publishedcase. */
+         PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
@@ -111,7 +114,8 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
-import { RENDER_DEFAULTS, RENDERED_METHOD, RENDER_TICK_UNDETERMINED, completenessReading, keepRenderBodies, renderAllowanceMs, renderBlock,
+import { RENDER_DEFAULTS, RENDERED_METHOD, RENDER_TICK_UNDETERMINED, completenessReading, keepRenderBodies, renderAllowanceMs,
+         renderConcurrencyCap, renderBlock,
          renderedAuthority, renderReserveMs, rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
@@ -120,7 +124,7 @@ import { RENDER_DEFAULTS, RENDERED_METHOD, RENDER_TICK_UNDETERMINED, completenes
    consult detectFormat. A new format costs one registerFormat() in
    formats.mjs and NO edit here — the D-70 test, and formats.test.mjs holds
    the evidence. */
-import { detectFormat, getFormat } from "./formats.mjs";
+import { detectFormat, getFormat, readingDialect } from "./formats.mjs";
 /* CPDF-10: the transcription provenance CHAIN. Imported, never restated — the
    rules about what a derivation may claim live in ONE module so the wire that
    builds a chain and the act that attests to one cannot disagree about them.
@@ -458,6 +462,14 @@ const OPS = {
   projectvisibilityset: { classes: ["admin", "member", "probe"], mutating: true  },
   projectvisibility:    { classes: ["admin", "member", "probe"], mutating: false },
   projectdirectory:     { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-150 (Membership v2 §7.14, the request to join): ASK and WITHDRAW are a member session's own acts (the store
+     refuses a credential with no active member behind it, C-95.1); ANSWER — grant, which writes `invited`, or
+     decline — is an OWNER's (C-95.5 for everyone else, administrators and machines included); the read serves a
+     project's requests to its owners and administrators, and a member its own. */
+  projectrequest:         { classes: ["admin", "member", "probe"], mutating: true  },
+  projectrequestwithdraw: { classes: ["admin", "member", "probe"], mutating: true  },
+  projectrequestanswer:   { classes: ["admin", "member", "probe"], mutating: true  },
+  projectrequests:        { classes: ["admin", "member", "probe"], mutating: false },
   /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
      tell a group what a change would take BEFORE they start one. op=adminarith
      is the same thing for section 4.7, and the two differ at n=2 on purpose. */
@@ -859,6 +871,12 @@ const OPS = {
      viewer, which it takes fail-closed in the stamp block below, because the pairing
      runs AS A MEMBER and pairs only what that member may see. */
   contradictionpairs: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-147 / IC-318 — CONTRADICTION'S IDENTIFY, THE JUDGEMENT'S WRITE. `extractpropose`'s class cut and for its
+     reason: a run's production, reached by the `ai` class through AI_RUN_ACTIONS and by a member or admin session,
+     and narrowed where the run object is — the STORE refuses a proposal with no live run in sight, one whose run
+     is not the caller's (REC-152's gate), and any proposal over a pair the plane does not itself form for the
+     viewer (C-93). The proposer is stamped server-side below and the body's is never read. */
+  contradictionpropose: { classes: ["admin", "member", "probe"], mutating: true },
   /* D-148: A FEE QUOTE IS EVIDENCE — the read that sets quotes side by side, by
      counterparty or by request. A pure read on `contradictionpairs`' cut: whoever
      may read the record may read what a body quoted. It takes the viewer
@@ -1290,6 +1308,10 @@ const OPS = {
   /* BOB #14's ruling (2026-09-18): the AUTHOR shares a lead to a project, an
      authored dated act — `lead`'s class cut and reason. */
   leadshare:           { classes: ["admin", "member"],             mutating: true  },
+  /* MK-7 — THE ATTRIBUTION ACT (MEMBER-KNOWLEDGE-DESIGN.md §4.2–§4.6): an observation's AUTHOR chooses
+     what one case edition publishes of who said it. A person's decision about their own words, in their
+     own name — `testify`'s class cut and reason; the store refuses a machine stamp BY NAME (C-92.1). */
+  attribute:           { classes: ["admin", "member"],             mutating: true  },
   leadread:            { classes: ["admin", "member", "probe"],    mutating: false },
   /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
      DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
@@ -1303,6 +1325,9 @@ const OPS = {
   themeplace:          { classes: ["admin", "member"],             mutating: true  },
   themepropose:        { classes: ["admin", "member", "probe"],    mutating: true  },
   themeread:           { classes: ["admin", "member", "probe"],    mutating: false },
+  /* REC-203: the identifier-space judgement (Framework §8.3). A READ: it writes nothing, and a pair's two
+     captures are gated by the viewer stamp, `themeread`'s posture. */
+  idmatch:             { classes: ["admin", "member", "probe"],    mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
      different cut from CPDF-10's above because a different thing is at stake.
 
@@ -1782,7 +1807,10 @@ const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projec
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue",
                          /* REC-149: the owner's §7.14 setting — `by` and `viewer` stamped like every roster act. */
-                         "projectvisibilityset"];
+                         "projectvisibilityset",
+                         /* REC-150: §7.14's request to join — the requester's two acts and the owner's answer,
+                            each needing the SERVER's `by` (who asks, who answers) and `viewer` (at what sight). */
+                         "projectrequest", "projectrequestwithdraw", "projectrequestanswer"];
 /* D-136 — THE SECTION 4.7 VOTE AND THE SECTION 4.9 CAPABILITY EDIT, AND THEY ARE
    ONE ARRAY BECAUSE THEY ARE ONE LANDING.
    `BIO_Membership_Architecture_v2.md` §4.7 (BOB #17, 2026-09-19, read at the
@@ -1844,6 +1872,17 @@ const IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
    `machineClasses` instead — `admin` and `probe`, the classes it held before — which keeps the
    MEMBER_TOKEN bearer and an `ai` credential out exactly as they were. */
 const CUSTODIAL_ACTIONS = ["memberadd", "memberset", "signeradd", "signerset"];
+/* REC-155 — `BIO_Membership_Architecture_v2.md` §4.10 (RULED by BOB #19, 2026-09-21): five of the seven ops
+   that no session reached and no decision explained JOIN BOTH SESSION SETS. Both sets for D-136's reason at
+   the spread below: `SESSION_OPS.admin` is the FOUNDER'S session alone, and none of the five is the founder's.
+   THE PROVENANCE PAIR: their OPS rows call the act *"a named member's judgement"*, and a signed-in session is
+   the one caller that carries a name — the `author` stamp already names `sessMember` on the session route.
+   The bearer WRITE route closes in §4.10's SECOND landing (REC-158), not here: this one refuses nobody. */
+const PROVENANCE_JUDGEMENT_ACTIONS = ["provenancechain", "provenanceroute"];
+/* THE CALIBRATION WRITES: their OPS row rules that the fence is NOT who may measure but that a measurement
+   never moves a GRADE (`CAL_CANNOT_REGRADE`), so a person measures on the same terms as a probe, and the
+   bearer route stays — a scheduled re-probe is a machine act by construction. */
+const CALIBRATION_WRITE_ACTIONS = ["calibrate", "calibrationsubject", "calibrationsignal"];
 /* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
    member reaching confirm is refused by the store with ADMIN_ONLY, which says
    what is wrong. Putting confirm in the admin set alone would answer "requires a
@@ -1917,7 +1956,10 @@ const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capt
                            The READ is deliberately absent: reading what a run
                            proposed is not a production, and a member reviews
                            proposals without holding a run at all. */
-                        "extractpropose"];
+                        "extractpropose",
+                        /* REC-147: the judgement's candidates are an act OF A RUN, for extractpropose's reason; the
+                           run is checked at the store (C-93.2, C-93.3), not here. */
+                        "contradictionpropose"];
 /* PL-18 / DEC-63 — THE THREE RUN VERBS, AS THEIR OWN LIST, because Bob's
    ruling is about exactly these three and not about the array above them.
    `AI_RUN_ACTIONS` also carries `suggest` and `capturerequest`, which are acts
@@ -1937,7 +1979,8 @@ const RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
    that names a run is a production of that run, so it takes the same stamp and the store asks sight, then
    `runPrincipalGate`, then status, and records the CALLER's principal on the row. It is the ONE list extended, not a
    second stamp condition beside it. Rule 1's TARGET does not reach it (a request names an address, not a question). */
-const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest"];
+/* REC-147 JOINS: a candidate names a run, is read against it, and takes the same principal stamp. */
+const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest", "contradictionpropose"];
 /* REC-134 / C-56: the acts that change a project and read the POSITIONAL `identity` stamp for
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
@@ -2098,6 +2141,10 @@ const SESSION_OPS = {
                       above — the roster decides them, asked by the store against the
                       stamped `by`, and an ordinary member is told NOT_AN_ADMIN. */
                    ...CUSTODIAL_ACTIONS,
+                   /* REC-155: §4.10's five, in BOTH sets for D-136's reason above — none
+                      of them is the founder's act, and an enrolled administrator is a
+                      `member` kind. */
+                   ...PROVENANCE_JUDGEMENT_ACTIONS, ...CALIBRATION_WRITE_ACTIONS,
                    /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
                       their accepted readings and the documents those rest on, so the
                       viewer decides what it may pair at all — the session route is the
@@ -2116,6 +2163,9 @@ const SESSION_OPS = {
                    /* MK-4: THE LEAD and a look recorded against it — a person's word
                       in their own name, `transcribe`'s route and reason. */
                    "lead", "leadlook", "leadshare",
+                   /* MK-7: THE ATTRIBUTION ACT — the author's own choice about their own words, `testify`'s
+                      route and reason. */
+                   "attribute",
                    /* D-162: THE THEME — declaring, placing and proposing, each a session
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
@@ -2162,6 +2212,9 @@ const SESSION_OPS = {
                    "transcribe", "transcriptionattest",
                    "testify",
                    "lead", "leadlook", "leadshare",
+                   /* MK-7: THE ATTRIBUTION ACT — the author's own choice about their own words, `testify`'s
+                      route and reason. */
+                   "attribute",
                    /* D-162: THE THEME — declaring, placing and proposing, each a session
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
@@ -2180,6 +2233,7 @@ const SESSION_OPS = {
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
+                   ...PROVENANCE_JUDGEMENT_ACTIONS, ...CALIBRATION_WRITE_ACTIONS,
                    "governorstate", "governorconfig",
                    "aicredentialmint", "aicredentialrevoke",
                    "casedraft", "reviewgrant", "reviewrevoke"]),
@@ -2258,6 +2312,9 @@ const NEEDS = {
      capability here would mean a member could be shown a question and refused the
      answer to "what else does this record say about it". */
   contradictionpairs: null,
+  /* REC-147: `extractpropose`'s capability and for its reason — a proposal is CONTRIBUTING, never publishing, and
+     nothing it writes puts the group's name on anything: a candidate is labelled machine work, state proposed. */
+  contradictionpropose: "contribute",
   /* D-148: NO CAPABILITY, on `contradictionpairs`' reasoning: reading what a body
      quoted is READING the record, and it writes nothing. */
   actionquotes: null,
@@ -2284,6 +2341,9 @@ const NEEDS = {
   lead:                "contribute",
   leadlook:            "contribute",
   leadshare:           "contribute",
+  /* MK-7: NO FIFTH CAPABILITY TOKEN. §4.2: the act needs no `publish` capability — it is a decision about
+     the member's own words, not about the case — so it rides `contribute`, the token that recorded them. */
+  attribute:           "contribute",
   /* D-162: declaring a theme, placing in one and proposing a placement all write the working
      record's lens layer, `lead`'s capability. */
   themedeclare:        "contribute",
@@ -2292,6 +2352,8 @@ const NEEDS = {
   leadread:            null,
   /* D-162: the theme read takes no capability, `leadread`'s posture; its placements are gated by the viewer. */
   themeread:           null,
+  /* REC-203: the identifier judgement takes no capability; it reads, and its captures are gated by the viewer. */
+  idmatch:             null,
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -2522,6 +2584,11 @@ const NEEDS = {
   projectownerrescue: null,
   /* REC-149: §7.14's setting is an owner's act over participation-level policy, governed by §7 and not §5. */
   projectvisibilityset: null,
+  /* REC-150: §7.14's request to join is participation, governed by §7 and not §5 — the same reason as the roster
+     acts: asking to be added needs no working capability, and answering is an owner's position. */
+  projectrequest: null,
+  projectrequestwithdraw: null,
+  projectrequestanswer: null,
   /* The one participation op that DOES carry a capability, because a fork
      creates a project. Without this any participant creates projects they were
      not trusted to create, which is create_projects defeated by a button. */
@@ -2727,6 +2794,17 @@ const NEEDS = {
      `biasinhale` carries NONE, like every other read in this file, and it is a
      read precisely because it writes nothing. */
   biasadopt:        "contribute",
+  /* REC-155 / §4.10: NO FIFTH CAPABILITY TOKEN. Repairing a provenance chain and recording a route marker are
+     corrections to the working record in a member's name, and recording a calibration, an engine to probe or a
+     vendor's announcement puts a row in the record — each rides `contribute`, as `attesttext` does, and a
+     VIEW-ONLY member does neither. PROVISIONAL, and stated: `provenancechain`'s REPORT arm writes nothing, but
+     this table gates an op rather than an arm (only `capture`'s GET is exempted, at the check), so a view-only
+     member does not reach the report through a session either. §4.10 ruled reach and is silent on capability. */
+  provenancechain:    "contribute",
+  provenanceroute:    "contribute",
+  calibrate:          "contribute",
+  calibrationsubject: "contribute",
+  calibrationsignal:  "contribute",
 };
 
 /* REC-19's act decoration, hoisted to module scope by REC-20 so op=affordances
@@ -2970,8 +3048,10 @@ async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, 
    assumed): the framework names the ORDER — a list's membership is time-sensitive, a
    record's substance is not — and no interval, so `membership` is checked daily and
    `substance` weekly. `unmonitorable` (a shell) has no clock: watching bytes that carry
-   no substance proves nothing, so the answer says so rather than scheduling it. */
-const CONTRACT_FREQUENCY = { membership: "daily", substance: "weekly", unmonitorable: null };
+   no substance proves nothing, so the answer says so rather than scheduling it.
+   REC-191: the table lives ONCE, on `Store`, because the cadence plan schedules by it too;
+   two copies were how the tick and the plan came to disagree about one document. */
+const CONTRACT_FREQUENCY = Store.CONTRACT_FREQUENCY;
 
 /* What cadence governs a monitored document, and WHICH SOURCE SET IT. REC-26's authored
    `monitoring.frequency` stays the choice when the document states one the catalog knows;
@@ -3043,7 +3123,15 @@ async function monitorRecordLook(stub, o) {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ bundleId: o.bundleId, address: o.address, outcome: o.outcome, baseline: o.baseline,
                            seen: o.seen, httpStatus: o.httpStatus, reason: o.reason,
-                           ...(o.scope ? { scope: o.scope } : {}) }) })));
+                           ...(o.scope ? { scope: o.scope } : {}),
+                           /* REC-191: what the look read the document as, for the cadence plan's
+                              contract fallback; omitted (never null) when the look read nothing. */
+                           ...(o.content !== undefined ? { locator: o.locator, content: o.content,
+                                                           contentBasis: o.contentBasis ?? null } : {}),
+                           /* D-455: the capture a `changed` tick filed (the store checks the register
+                              before naming it), or why the served bytes were not filed. */
+                           ...(o.captured ? { captured: o.captured, locator: o.locator } : {}),
+                           ...(o.uncaptured ? { uncaptured: String(o.uncaptured) } : {}) }) })));
   return out.answered ? out.result : { ok: false, written: false, why: "the store did not answer the observation write" };
 }
 
@@ -3405,12 +3493,21 @@ function aiScopeDeclaration(writes) {
         + `nothing recognises would sit in the record looking like a permission and meaning nothing, `
         + `which is exactly what declaring the scope on the record rather than in a settings row is `
         + `for (D-199 (2)).`, { op });
+    /* SCOPE-ADD to REC-162 (BOB #32, 2026-09-24): since REC-159 the four custodial acts carry
+       `member` for an enrolled administrator's OWN session and `machineClasses` for every
+       credential, so "not reachable by a member" was loosely false of them. The detail now says
+       which of the two properties refused the op, each read off its OPS row. */
     if (!aiReachesAsMember(OPS[op]))
       return refusal("AI_SCOPE_BEYOND_MEMBER_REACH",
-        `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed to `
-        + `an agent. This is a property of the operation and not a list of forbidden ones: the `
-        + `unattended worker's own verbs carry no member class by construction, so they are outside `
-        + `every scope anybody can author.`,
+        Array.isArray(OPS[op].machineClasses)
+          ? `'${op.slice(0, 60)}' is reached by a member only from that member's own signed-in `
+            + `session, and no agent credential is among the credentials it admits, so it cannot be `
+            + `handed to an agent. This is a property of the operation and not a list of forbidden `
+            + `ones: its OPS row names the credentials that reach it, and an agent's is not one.`
+          : `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed `
+            + `to an agent. This is a property of the operation and not a list of forbidden ones: the `
+            + `unattended worker's own verbs carry no member class by construction, so they are `
+            + `outside every scope anybody can author.`,
         { op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null });
   }
   /* END DEC-49 REGION is-ai-scope-declaration */
@@ -3649,12 +3746,23 @@ async function caseReader(url, env, storeName, presentedAi) {
    the slug is PUBLIC. It asks the store's `instanceGroupPublic`, which selects nothing but the slug through the one
    reader every stamp uses, so the page, the op and the bytes of every document this store creates name ONE group.
    Answers `doAnswer`'s `{ answered, result }`, and a silence is the caller's to state AS a silence. An instance with
-   no store binding at all cannot be asked, and that is a silence too: the page it serves must still be served. */
-async function publicInstanceGroup(env, storeName) {
+   no store binding at all cannot be asked, and that is a silence too: the page it serves must still be served.
+
+   D-596 — WHICH PUBLIC PROJECTION IS THE CALLER'S TO NAME, AND THERE ARE EXACTLY TWO. op=instancegroup's public arm
+   keeps `instancegrouppublic`, the slug and nothing else (REC-163's contract, its key set pinned by group-public's
+   G1/G2/C3/C5). The setup page names `groupidentitypublic`, the projection op=groupidentity answers a stranger
+   (REC-164): the slug, the display name only beside a slug, and a domain only while its latest verdict is `verified`,
+   dated. Both read the slug through the store's one `#producingGroup()` reader, so the page and the op still name
+   ONE group. THE DEFECT: the page read `instancegrouppublic` alone, so it showed the slug and never the name or the
+   verified domain, while op=groupnameset's answer told the administrator every public surface shows the name beside
+   the slug. Any other value is answered as a silence rather than forwarded, so a typo cannot reach a DO path. */
+const PUBLIC_GROUP_PROJECTIONS = ["instancegrouppublic", "groupidentitypublic"];
+async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic") {
+  if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: undefined };
   let stub = null;
   try { stub = env.STORE.get(env.STORE.idFromName(storeName)); } catch { stub = null; }
   if (!stub) return { answered: false, result: undefined };
-  return doAnswer(stub.fetch("http://do/instancegrouppublic"));
+  return doAnswer(stub.fetch(`http://do/${projection}`));
 }
 
 const json = (o, status = 200) =>
@@ -3920,8 +4028,17 @@ async function captureRequestArm(env, storeName, body, cls) {
    is the store BEHIND it, which is precisely the distinction this refusal
    exists to draw. `op` is named so an operator reading a log knows which read
    went silent without the answer implying anything about what it was reading. */
-const storeSilent = (op) =>
-  json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+/* D-561 (C-69.2): THE CODE IS NOW A STRING LITERAL AT THIS SITE and carries its canned translation, because every
+   public read meets this refusal and its reader is often a member of the public. `STORE_SILENT_REASON` still names
+   the same code for the three post-commit sub-reports in `ratify` and `recordcasemanifest` — the SAME condition
+   (the store did not answer), stated inside an answer rather than refused; the DEC-49 guard's arm G declares the two
+   spellings one condition by name. The wire only GAINS `code`, `check` and `translation`. */
+function storeSilent(op) {
+  /* DEC-49 REGION is-store-silent */
+  return json({ ok: false, reason: "STORE_DID_NOT_ANSWER", ...dispatchRow("STORE_DID_NOT_ANSWER"),
+                op, detail: STORE_SILENT_DETAIL }, 502);
+  /* END DEC-49 REGION is-store-silent */
+}
 
 /* D-116 — EACH FLEET MEMBER'S BUILD, READ BACK THROUGH THE BINDING THIS PLANE ACTUALLY HOLDS.
  *
@@ -4046,6 +4163,14 @@ const replayRow = (code) => {
   return { code, check: row.check, translation: row.translation };
 };
 
+/* MK-7: C-92's rows, the attribution gate's canned sentences, on `testimonyFenceRow`'s shape. */
+const attributionRow = (code) => {
+  const row = CHECK_CATALOGUE.ATTRIBUTION_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`attributionRow: ${code} has no ATTRIBUTION_CHECKS row with a canned translation (DEC-49).`);
+  return { code, check: row.check, translation: row.translation };
+};
+
 /* REC-164: C-64.4's row, the fence's canned sentence taken from the one catalogue family that holds it. */
 const identityFenceRow = (code) => {
   const row = CHECK_CATALOGUE.INSTANCE_GROUP_CHECKS[code];
@@ -4128,9 +4253,13 @@ const dispatchRow = (code) => {
  * suppresses.
  *
  * **THAT CASE IS NOW DISCHARGED, AND THE TENSE IS THE POINT (D-136, 2026-09-19).**
- * The three ops hold `SESSION_OPS.admin` reach and a server-stamped `by`, so an
- * administrator's session refuses nothing and a member's session gets (b) —
- * `SESSION_ROLE_CANNOT_REACH_OP`, which names the administrator as the route.
+ * The three ops hold reach in BOTH session sets and a server-stamped `by`, so no
+ * session is refused at this gate and the ROSTER answers a non-administrator
+ * `NOT_AN_ADMIN`. (CORRECTED 2026-09-25 by REC-162: this read "`SESSION_OPS.admin`
+ * reach … a member's session gets (b), which names the administrator as the
+ * route" — false of D-136's landing, which put them in both sets; and (b) now
+ * names the SESSION that reaches the op, the founder's where the admin set alone
+ * holds it, because an enrolled administrator holds a member's session.)
  * They are no longer examples of (c) and `d270-refusal-truth.test.mjs`' arm was
  * CORRECTED rather than exempted. **THE PARAGRAPH IS KEPT IN THE PAST TENSE
  * BECAUSE IT IS THE ARGUMENT FOR (c), NOT A LIST OF ITS MEMBERS**: the reason (c)
@@ -4145,8 +4274,10 @@ const dispatchRow = (code) => {
  * rows say the opposite of it in as many words: *"NOT open to `daemon`: deciding
  * that the evidence supports a route is a named member's judgement."* The plane
  * was telling a member that an op reserved to a named member's judgement is
- * performed by an unattended writer. Under (c) they now get the fact and no
- * invented reason, which is the honest answer until somebody rules.
+ * performed by an unattended writer. Under (c) they got the fact and no
+ * invented reason, which was the honest answer until somebody ruled — and BOB
+ * #19 did (§4.10, 2026-09-21): REC-155 gave both SESSION reach, so a signed-in
+ * member now performs them under their own name, as their OPS rows say.
  *
  * **WHAT THIS DOES NOT CHANGE, AND IT IS THE WHOLE SAFETY ARGUMENT: WHO REACHES
  * WHAT.** Not one op moves between `SESSION_OPS`' sets and no class list moves.
@@ -4170,13 +4301,18 @@ const dispatchRow = (code) => {
  * that costs nothing must be the one that claims nothing.
  *
  * EACH ENTRY WAS READ AT THE ARTIFACT, not inferred from an op looking
- * machine-ish, and the four below are the only ones in this plane for which a
- * decision was found. Ops refused to every session with NO entry here —
- * `livefire`, `reproject`, `provenancechain`, `provenanceroute` and the three
- * calibration writes — are UNDETERMINED rather than decided,
- * and saying WHICH is a first-class obligation (CLAUDE.md). Adding a row here
- * is recording a decision, so it is an act to take deliberately and never to
- * tidy up. */
+ * machine-ish. Adding a row here is recording a decision, so it is an act to
+ * take deliberately and never to tidy up.
+ * CORRECTED 2026-09-25 BY REC-155. This paragraph read: *"Ops refused to every
+ * session with NO entry here — `livefire`, `reproject`, `provenancechain`,
+ * `provenanceroute` and the three calibration writes — are UNDETERMINED rather
+ * than decided."* True until BOB #19 RULED all seven
+ * (`BIO_Membership_Architecture_v2.md` §4.10): the provenance pair and the three
+ * calibration writes JOINED BOTH SESSION SETS (`PROVENANCE_JUDGEMENT_ACTIONS`,
+ * `CALIBRATION_WRITE_ACTIONS`), and `livefire` and `reproject` are recorded
+ * below, each with the citation §4.10 quotes. So on this plane NO mutating op
+ * that reaches the gate is an omission today — and sentence (c) STAYS, because
+ * it is the answer the plane owes the next op somebody adds without a ruling. */
 const UNATTENDED_BY_DECISION = {
   purge: "src/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside "
        + "SESSION_OPS, purge above all, still requires a machine credential.'",
@@ -4194,6 +4330,14 @@ const UNATTENDED_BY_DECISION = {
                    + "INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN "
                    + "THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION "
                    + "OF ANY ROLE REACHES IT.'",
+  /* REC-155: the two §4.10 RULES unattended by decision (BOB #19, 2026-09-21). Each citation is the one §4.10
+     quotes, re-read at the artifact by this landing; the ruling is cited beside it so a caller can find both. */
+  livefire: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/livefire.mjs, header: 'the only "
+          + "channel available for reaching a deployment may be a plain fetch of a URL. Confined to the scratch "
+          + "namespace' — the deployment's live-fire battery, addressed to the operator's credential.",
+  reproject: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed "
+           + "because a deploy runs the bounded pass once at construction and a large store may need more than "
+           + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 };
 
 /* THE SESSION GATE. A browser signed in with a password holds a session token,
@@ -4247,15 +4391,30 @@ function sessionOpGate(kind, op, spec, method) {
    * true without consulting any record. Only then ask whether a decision is
    * recorded. And if none is, say so — do not fall back on the design claim,
    * because the fallback IS the defect. */
-  if (SESSION_OPS.admin.has(op) || SESSION_OPS.member.has(op))
+  /* REC-162 (Membership v2 §4.9, BOB #23): THE SENTENCE SAYS WHICH SESSION REACHES THE OP, DERIVED
+     FROM THE SET THAT HOLDS IT. Reaching here means exactly ONE set holds `op` and it is not this
+     session's. `SESSION_OPS.admin` is the FOUNDER'S password session and nothing else — an enrolled
+     administrator signs in as `member:<id>` — so an op the admin set alone holds is *reserved to the
+     founder's session*, and the old sentence (*"reserved to an administrator of this group"*, with
+     `role: 'member'`) was FALSE of every enrolled administrator it refused. `role` is gone for that
+     reason: `session` names the session's kind, which is true of anybody who holds it. */
+  if (SESSION_OPS.admin.has(op))
     return refusal("SESSION_ROLE_CANNOT_REACH_OP",
-      "this operation is reserved to an administrator of this group",
-      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only an `
-      + `administrator's, and this session's role is '${String(kind).slice(0, 20)}'. There is no `
-      + `machine credential to go and find: an administrator performs this from their own browser. `
-      + `This is section 4's role boundary rather than a credential boundary, and the plane said `
-      + `otherwise until D-270 measured the difference.`,
-      { role: kind });
+      "this operation is reserved to the founder's session",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only the founder's: `
+      + `the password session made when this instance was claimed with its root credential. This is `
+      + `a member's session, which is what every enrolled member signs in with, an administrator of `
+      + `this group included — so an administrator's session is refused this exactly as this one is, `
+      + `and nothing here says whether you are one. There is no machine credential to go and find: `
+      + `the founder performs this from their own browser.`,
+      { session: kind, reachedBy: "founder" });
+  if (SESSION_OPS.member.has(op))
+    return refusal("SESSION_ROLE_CANNOT_REACH_OP",
+      "this operation is reserved to a member's own session",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only a member's `
+      + `own, and this is the founder's session. There is no machine credential to go and find: `
+      + `a member performs this from their own browser.`,
+      { session: kind, reachedBy: "member" });
   const recorded = UNATTENDED_BY_DECISION[op];
   if (recorded)
     return refusal("MACHINE_CREDENTIAL_REQUIRED",
@@ -4334,6 +4493,42 @@ function publishedStoreAbsent(env) {
   /* END DEC-49 REGION is-published-store-absent */
 }
 
+/* D-561 / C-98: the public door's row reader, `installationRow`'s shape and its refusal to invent. */
+const publishedReadRow = (code) => {
+  const row = PUBLISHED_READ_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`publishedReadRow: ${code} has no PUBLISHED_READ_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member of the public.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* D-561 (C-98.1): NO PUBLISHED PART ANSWERS TO THAT HASH, at `publishedbytes`. It answered `NOT_FOUND` until
+ * D-561, a code the plane also mints for three other conditions, so no row could be written for it without
+ * putting this sentence on theirs. `detail` is the site's own sentence, BYTE-IDENTICAL to what it said before:
+ * a hash that was never ratified and a hash that never existed stay ONE answer, and the translation keeps that. */
+function noPublishedPart(sha256) {
+  /* DEC-49 REGION is-no-published-part */
+  return json({ ok: false, reason: "NO_PUBLISHED_PART", ...publishedReadRow("NO_PUBLISHED_PART"), sha256,
+    detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
+          + "never existed are the same answer here, deliberately." }, 404);
+  /* END DEC-49 REGION is-no-published-part */
+}
+
+/* D-561 (C-98.2): A PUBLISHED HASH WHOSE BYTES THIS COPY'S STORE DOES NOT HOLD — the store bound and the object
+ * absent. ONE condition met at both public ops: `publishedcase` states one finding's body unavailable with it
+ * (D-549 left it bare there), and `publishedbytes` refuses with it where it used to answer `NOT_FOUND` with the
+ * sentence "no published part answers to that hash" — FALSE of a hash the line above had just verified published.
+ * Returns the refusal OBJECT so each site chooses its envelope; `NO_PUBLISHED_STORE` is the other condition and
+ * is never this one. */
+function publishedObjectMissing() {
+  /* DEC-49 REGION is-published-object-missing
+   * THE SPAN C-98.2 names: its one mint, the code a STRING LITERAL at its site, the row's fields beside it. */
+  return { ok: false, reason: "OBJECT_MISSING", ...publishedReadRow("OBJECT_MISSING"),
+           detail: "that hash is published, and this instance's published store holds no bytes for it, so "
+                 + "they cannot be handed over. The hash is genuine." };
+  /* END DEC-49 REGION is-published-object-missing */
+}
+
 /* Some of these reads happen INSIDE a per-item renderer that returns a rendered
    object rather than a Response, so it has no way to refuse on its own behalf.
    Rather than let it fabricate a rendering from an answer it never got, it
@@ -4357,19 +4552,22 @@ const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
    acquire part; a larger one is left UNVERIFIED and said so, never passed. Three lists, each naming the part:
    `missing`, `disagree` (size or digest), `unverified`.
    SEAM: D-530 heads the same parted captures for `op=attest`; if it factors a shared "held, whole or in parts"
-   helper, the two are ONE rule and belong in one place (REC-35: identical copies diverge silently). */
+   helper, the two are ONE rule and belong in one place (REC-35: identical copies diverge silently).
+   D-556 (BOB #34, 2026-09-25 00:00Z): THREE READERS, ONE RULE. The ratify gate asks it of a whole-hash register row
+   held in parts before admitting it, and publication asks it again of the PUBLISHED bucket after copying the parts
+   across, so `keyOf` names the bucket's key for a part's hash rather than this function assuming the working one. */
 const PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
-async function partsHeld(bucket, storeName, parts) {
+async function partsHeld(bucket, keyOf, parts) {
   const missing = [], disagree = [], unverified = [];
   const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   for (const p of parts) {
     const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
-    const h = await bucket.head(captureKey(storeName, p.sha256));
+    const h = await bucket.head(keyOf(p.sha256));
     if (!h) { missing.push(name); continue; }
     if (h.size !== p.bytes) { disagree.push({ ...name, stored_bytes: h.size }); continue; }
     let digest = h.checksums?.sha256 ? hex(h.checksums.sha256) : null;
     if (!digest && h.size <= PART_VERIFY_READ_MAX) {
-      const o = await bucket.get(captureKey(storeName, p.sha256));
+      const o = await bucket.get(keyOf(p.sha256));
       if (o) digest = hex(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
     }
     if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
@@ -4451,8 +4649,9 @@ function needsTier2(text) {
   const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
   if (!(c.undetermined > glyphs)) return false;
   /* CPDF-10 — AND A SCAN DOES NOT ESCALATE TO TIER 2, because Tier 2 has
-     nothing to tell it. `no_text_layer` means the page declares no font and
-     draws an image: pdf.js would walk the same file and reach the same answer,
+     nothing to tell it. `no_text_layer` means the page draws an image and
+     shows no text — it declares no font, or (D-585) declares fonts and runs no
+     text-showing operator anywhere it paints: pdf.js would walk the same file and reach the same answer,
      one cross-worker hop later. The predicate above only started firing for
      this class when Tier 1 learned to NAME it (see pdfstructure.mjs) — before
      that a scan produced zero markers and zero chars and escalated to nothing,
@@ -4498,7 +4697,7 @@ function needsTier2(text) {
  * (never "authored" — an absent marker is an absent marker). */
 const LAYER_FIDELITY_CAP = null;
 const LAYER_FIDELITY_SOURCE = "unmeasured: a text layer is itself an unverified transcription "
-                            + "(CPDF-9, MEASUREMENTS.md 2026-08-03)";
+                            + "(CPDF-9, the MEASUREMENTS ledger 2026-08-03)";
 
 /* D-251 — AND NOW THE FILE ITSELF SAYS WHO MADE THAT LAYER, ON THE DOCUMENTS
  * THE RECORD ALREADY HOLDS.
@@ -4528,7 +4727,7 @@ const LAYER_FIDELITY_SOURCE = "unmeasured: a text layer is itself an unverified 
  * reader would need to re-run the claim. */
 const NAMED_ENGINE_CAP = null;
 const NAMED_ENGINE_SOURCE = "unmeasured: the engine is NAMED by the document's own /Info producer "
-                          + "metadata (D-251; CPDF-9, MEASUREMENTS.md 2026-08-03), and no "
+                          + "metadata (D-251; CPDF-9, the MEASUREMENTS ledger 2026-08-03), and no "
                           + "calibration of it exists here (CPDF-13)";
 
 /* The chain a document's own text layer produces, EXTENDED by what the file
@@ -4756,12 +4955,21 @@ function mergeTier3Text(base, ocr, eligible) {
  * answered for that it was not asked about (dropped, and evidence about the
  * member rather than about the document). `null` when there is nothing to say,
  * so a clean wholesale transcription reads exactly as it read before. */
-function tier3Note(m, memberNote) {
+function tier3Note(m, memberNote, layerPages) {
   const say = [];
+  /* D-607 — THE KEPT-TEXT CLAUSE IS A CLAIM ABOUT THE PAGES THAT HAD TEXT, SO IT
+     IS SAID ONLY WHEN THERE ARE ANY. It was emitted whenever a page was filled,
+     so a WHOLLY scanned document (live: FINAL-2-6-PC-Agenda, 7 of 7 pages
+     `no_text_layer`) recorded that "the pages that already had text kept it"
+     about a text layer that never existed. `layerPages` is the caller's own
+     list of pages that carry a glyph and were not filled (D-514's unit); absent
+     or empty, the clause is not said. Its number is that list's, not the filled
+     count's — the sentence is about the kept pages. */
+  const kept = Array.isArray(layerPages) ? layerPages.length : 0;
   if (!m.wholesale && m.filled.length)
     say.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into `
-           + `this document's own text; the ${m.filled.length === 1 ? "page" : "pages"} that already `
-           + `had text kept it`);
+           + `this document's own text`
+           + (kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : ""));
   if (m.unanswered.length)
     say.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay `
            + `honestly unread`);
@@ -4771,6 +4979,133 @@ function tier3Note(m, memberNote) {
   if (memberNote) say.push(memberNote);
   return say.length ? say.join("; ") : null;
 }
+
+/* ===================================================================== *
+ * D-606 — THE CALLER LOOPS. ONE MEMBER INVOCATION PER PAGE, SEQUENTIAL.
+ * ===================================================================== *
+ *
+ * The member transcribes ONE page per invocation (`ocr-worker/src/contract.mjs`
+ * `chooseChunk`, CPDF-15's memory bound) and names the rest in `deferred`,
+ * with a note asking the caller to "call again per page". This seam called it
+ * ONCE and never read `deferred`, so a scanned document was read to its first
+ * image-only page and no further: M-165 measured 174 of 190 selected scanned
+ * pages never transcribed on FW-20's walk. The member contract is unchanged —
+ * the loop lives HERE, at the one `OCR_WORKER.fetch` call site.
+ *
+ * THE LOOP IS BOUNDED BY A BUDGET, AND THE BUDGET IS THE VENDOR'S CLAIM MINUS A
+ * RESERVE. Cloudflare's service-bindings page (read 2026-09-25, THEIR claim, not
+ * measured here): "A single request has a maximum of 32 Worker invocations, and
+ * each call to a Service binding counts towards this limit. Subsequent calls will
+ * throw an exception." That binds long before the plane's own subrequest ceiling
+ * (10,000, `wrangler.jsonc`, D-54) does. Miniflare does NOT enforce it — 60
+ * sequential binding calls from one request completed (M-175) — so no local run
+ * can find it, and a deployed measurement is DIST's to make. The reserve, 8, is
+ * for the other invocations one acquire can make or sit behind, counted from the
+ * code: the request itself, the store's `SELF` hop when a monitor drives the
+ * acquire, one `PDF_WORKER` tier-2 call, the render arm's `BROWSER`, and margin
+ * for what that count cannot see (whether the originating alarm counts is
+ * UNDETERMINED). So at most 24 OCR invocations per request, the first included.
+ *
+ * WHAT HAPPENS PAST THE BUDGET, AND ON A THROW. The tail is NOT asked: its pages
+ * keep their `no_text_layer` markers (`mergeTier3Text` already keeps a selected
+ * page nobody answered for), the reading's basis says how many and why, and
+ * `stillWanting` stays true, so the capture remains a tier-3 candidate. A binding
+ * call that THROWS ends the loop the same way — never the acquire: that is what
+ * the vendor says an over-budget call does, so a budget that turns out wrong
+ * degrades to "the rest stays unread, stated" rather than to a failed acquire.
+ * NOT BUILT: a continuation that reads the tail on a later request. The read
+ * path's re-read (`op=pdfstructure&ocr=1`) starts from tier 1's text, so it
+ * would ask for the same first pages again (D-616).
+ *
+ * WHAT IS MERGED. Every answer is kept only for the page that invocation ASKED
+ * for (a page answered to the wrong call is dropped and counted, the D-252
+ * rule applied per call), and only if its provenance — engine, version, cap,
+ * measured_by, confidence floor — is the FIRST ok answer's: one chain is
+ * composed over the merged pages, so a page read by a different build (a rollout
+ * mid-loop is per isolate, D-108) cannot be filed under another's provenance; it
+ * stays unread, stated. A page the member REFUSED keeps its marker, and a
+ * refused FIRST page no longer ends the document — the pages after it are still
+ * asked. The combined answer then goes through `ocrTextFromMember` and
+ * `mergeTier3Text` exactly as one answer always did. */
+const OCR_INVOCATIONS_PER_REQUEST = 24;
+const OCR_SAME_PROVENANCE = ["engine", "version", "cap", "measured_by", "confidence_floor"];
+
+async function askMemberPerPage(env, { sha, storeName, wantPages }) {
+  const call = (pages) => env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ capture_sha: sha, store: storeName, pages }),
+  });
+  /* The first call asks for every page, as it always did: a member that CAN do
+     more than one page answers them all and leaves nothing deferred. */
+  const r = await call(wantPages);
+  if (!r.ok) return { status: r.status };
+  const first = await r.json();
+  const wanted = new Set(wantPages);
+  const deferred = (first && Array.isArray(first.deferred) ? first.deferred : [])
+    .filter((p) => Number.isInteger(p) && wanted.has(p));
+  const answers = [{ asked: null, body: first }];
+  const loop = { invocations: 1, asked: 0, notAsked: [], threw: null, strays: [], mismatched: [], refused: [] };
+  for (let i = 0; i < deferred.length; i++) {
+    const page = deferred[i];
+    if (loop.invocations >= OCR_INVOCATIONS_PER_REQUEST) { loop.notAsked = deferred.slice(i); break; }
+    loop.invocations++; loop.asked++;
+    try {
+      const rp = await call([page]);
+      const body = rp.ok ? await rp.json() : { ok: false, reason: `HTTP_${rp.status}` };
+      answers.push({ asked: page, body });
+    } catch (e) {
+      loop.threw = { at: page, rest: deferred.slice(i) };
+      break;
+    }
+  }
+  if (answers.length === 1) return { status: r.status, answer: first, loop };
+
+  const ok = answers.filter((a) => a.body && a.body.ok === true);
+  for (const a of answers) if (!(a.body && a.body.ok === true))
+    loop.refused.push(a.asked != null ? a.asked : (Number.isInteger(a.body && a.body.page) ? a.body.page : wantPages[0]));
+  if (!ok.length) return { status: r.status, answer: first, loop };
+  const lead = ok[0].body;
+  const pages = [];
+  for (const a of ok) {
+    const own = (Array.isArray(a.body.pages) ? a.body.pages : []);
+    if (a.asked == null) { pages.push(...own); continue; }
+    if (OCR_SAME_PROVENANCE.some((k) => a.body[k] !== lead[k])) { loop.mismatched.push(a.asked); continue; }
+    for (const p of own) {
+      if (p && p.page === a.asked) pages.push(p);
+      else loop.strays.push(p && Number.isInteger(p.page) ? p.page : null);
+    }
+  }
+  return { status: r.status, answer: { ...lead, pages, deferred: [] }, loop };
+}
+
+/* D-606 — WHAT THE LOOP DID NOT DO, in the record's own sentence. `null` when
+   every deferred page was asked and nothing needs saying beyond the merge's own
+   account (which already counts the pages still unread). */
+function tier3LoopNote(loop) {
+  if (!loop) return null;
+  const say = [];
+  if (loop.notAsked.length)
+    say.push(`${loop.notAsked.length} of them (from page ${loop.notAsked[0]}) were not asked for in this `
+           + `request: the OCR member reads one page per call and one request may make at most `
+           + `${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker `
+           + `invocations per request — their claim, not measured on this runtime)`);
+  if (loop.threw)
+    say.push(`the call for page ${loop.threw.at} failed, so ${loop.threw.rest.length} page(s) from it on `
+           + `were not transcribed in this request`);
+  if (loop.refused.length)
+    say.push(`the OCR member declined ${loop.refused.length} page(s) it was asked for one at a time`);
+  if (loop.mismatched.length)
+    say.push(`${loop.mismatched.length} page(s) were answered under a different engine build than the `
+           + `first and were not merged, so no page is filed under another build's provenance`);
+  if (loop.strays.length)
+    say.push(`${loop.strays.length} page(s) the OCR member returned were not the page that call asked `
+           + `for, and were dropped`);
+  return say.length ? say.join("; ") : null;
+}
+const withLoopNote = (note, loop) => {
+  const extra = tier3LoopNote(loop);
+  return extra ? (note ? `${note}; ${extra}` : extra) : note;
+};
 
 /* ===================================================================== *
  * CPDF-19 / D-319 — THE TIER-3 SEAM AS ONE FUNCTION, SO THE ACQUIRE PATH AND
@@ -4804,7 +5139,7 @@ function tier3Note(m, memberNote) {
  * engine that filled them. It never throws for a member's failure: that is an
  * `ocrNote`, exactly as it always was. */
 async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt }) {
-  let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [];
+  let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [], loop = null;
   const wanted = !!(i2text && needsTier3(i2text));
   if (i2text && needsTier3(i2text)) {
     /* D-252: WHICH pages, established before the member is called
@@ -4820,11 +5155,13 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
     const baseText = i2text;
     if (env.OCR_WORKER) {
       try {
-        const r = await env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
-          method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ capture_sha: sha, store: storeName,
-                                 pages: wantPages }),
-        });
+        /* D-606: the member is asked once for every page and then once per page it
+           DEFERRED, within the per-request budget; `asked` carries the first
+           call's status and one answer combining every page it may merge. */
+        const asked = await askMemberPerPage(env, { sha, storeName, wantPages });
+        loop = asked.loop || null;
+        const r = { ok: asked.status >= 200 && asked.status < 300, status: asked.status,
+                    json: async () => asked.answer };
         /* THE STATUS IS READ BEFORE THE BODY, and that ordering is
            the fix for a real defect this suite caught: parsing the
            body of a 500 THROWS, so the catch below reported "could
@@ -4990,9 +5327,12 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
               chain = Array.isArray(merged) ? merged : null; chainSet = true;
               if (m.filled.length) wiredTier = 3;
               filled = m.filled; unanswered = m.unanswered || [];
-              ocrNote = tier3Note(m, built.note);
+              ocrNote = tier3Note(m, built.note, layerPages);
+              /* c22-batch29: D-607 passes `layerPages` to tier3Note (nc-rec102 anchors the line above verbatim);
+                 D-606 wraps the same note with the per-page loop's account — composed on two lines so both hold. */
+              ocrNote = withLoopNote(ocrNote, loop);
             }
-          } else ocrNote = built.why;
+          } else ocrNote = withLoopNote(built.why, loop);
         }
       } catch {
         ocrNote = "the OCR member could not be reached, so this document stays unread";
@@ -5761,7 +6101,8 @@ export default {
        SERVED, through the one public read (`publicInstanceGroup`). `setupPage` puts the slug in the served bytes,
        or says in words that none is recorded, or — when the record did not answer — says THAT, never "none" and
        never a name. `no-store`, because the bytes now carry a fact the record can change: a page kept from before a
-       seed would go on saying none is recorded.
+       seed would go on saying none is recorded. D-596: the read is op=groupidentity's PUBLIC projection, so the line
+       carries the display name beside the slug and a verified domain with its date (`setup.mjs` `groupLine`).
 
        D-475 — AND THE NAMESPACE IS THE CALLER'S TO NAME HERE, because NOTHING BELOW CAN REACH THIS ROUTE. This is an
        HTML route: it answers before `path` and `op` exist, so D-456's `namespaceGate` and D-461's
@@ -5784,7 +6125,7 @@ export default {
       const pageNamespace = namespaceGate(url);
       if (pageNamespace) return pageNamespace;
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-      return new Response(setupPage(await publicInstanceGroup(env, pageStore)),
+      return new Response(setupPage(await publicInstanceGroup(env, pageStore, "groupidentitypublic")),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
     }
 
@@ -6140,10 +6481,8 @@ export default {
           const vOut = await doAnswer(stub.fetch(`http://do/verify?sha256=${shaParam}`));
           if (!vOut.answered) return storeSilent("publishedbytes");
           const v = vOut.result;
-          const notFound = () => json({ ok: false, reason: "NOT_FOUND", sha256: shaParam,
-            detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
-                  + "never existed are the same answer here, deliberately." }, 404);
-          if (!v || !v.published) return notFound();
+          /* D-561: NO_PUBLISHED_PART (C-98.1) from its one governed site; it was `NOT_FOUND`. */
+          if (!v || !v.published) return noPublishedPart(shaParam);
           /* D-549: the code, its check and its canned translation come from the ONE governed site;
              `detail` is this site's own sentence, byte-identical to what it said before. */
           const storeAbsent = publishedStoreAbsent(env);
@@ -6159,12 +6498,18 @@ export default {
              serving the part instead. */
           const wantZip = (url.searchParams.get("format") || "") === "zip";
           const isManifest = v.matches.some((m) => m.kind === "manifest");
-          if (wantZip && !isManifest)
-            return json({ ok: false, reason: "NOT_A_CONTAINER", sha256: shaParam,
+          if (wantZip && !isManifest) {
+            /* DEC-49 REGION is-not-a-container
+             * D-561 (C-98.3): the code a STRING LITERAL here, its translation from its row. */
+            return json({ ok: false, reason: "NOT_A_CONTAINER", ...publishedReadRow("NOT_A_CONTAINER"), sha256: shaParam,
               detail: "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. "
                     + "This hash names a part inside a container, not a container." }, 400);
+            /* END DEC-49 REGION is-not-a-container */
+          }
           const raw = await pubBytes(shaParam);
-          if (!raw) return notFound();
+          /* D-561: VERIFIED published above and absent from a bound store — OBJECT_MISSING (C-98.2), never the
+             "no published part answers" sentence, which is false of this hash. */
+          if (!raw) return json({ ok: false, ...publishedObjectMissing(), sha256: shaParam }, 404);
           if (!wantZip) {
             const m = v.matches[0] || {};
             return new Response(raw, { status: 200, headers: {
@@ -6178,8 +6523,13 @@ export default {
           }
           let manifest = null;
           try { manifest = JSON.parse(new TextDecoder().decode(raw)); } catch { manifest = null; }
-          if (!manifest || typeof manifest !== "object")
-            return json({ ok: false, reason: "MANIFEST_UNREADABLE", sha256: shaParam }, 500);
+          if (!manifest || typeof manifest !== "object") {
+            /* DEC-49 REGION is-manifest-unreadable
+             * D-561 (C-98.4): the code a STRING LITERAL here, its translation from its row. */
+            return json({ ok: false, reason: "MANIFEST_UNREADABLE", ...publishedReadRow("MANIFEST_UNREADABLE"),
+                          sha256: shaParam }, 500);
+            /* END DEC-49 REGION is-manifest-unreadable */
+          }
           const built = await containerEntries(manifest, raw, pubBytes);
           if (!built.ok) return json({ ok: false, ...built }, 409);
           const zip = serialiseContainer(built.entries);
@@ -6259,12 +6609,12 @@ export default {
           const fm = text ? (parseFrontmatter(text).data || {}) : null;
           /* D-549: WHICH CODE UNDER WHICH CONDITION, when the bytes are unavailable. No published store
              bound -> NO_PUBLISHED_STORE, with its check and canned translation, from its one governed
-             site. A store bound and no object at this finding's hash -> OBJECT_MISSING, a bare code as
-             before (untranslated, and counted so by check-refusal-codes). The two never share a site
-             again. The helper's `ok: false` is dropped here: this is one finding's body stated
-             unavailable inside a case that answered, not a refusal of the request. */
+             site. A store bound and no object at this finding's hash -> OBJECT_MISSING, since D-561 with
+             its own check and canned translation (C-98.2) from ITS one governed site, shared with
+             publishedbytes. The two never share a site again. Each helper's `ok: false` is dropped here:
+             this is one finding's body stated unavailable inside a case that answered, not a refusal. */
           const { ok: _refused, ...whyUnavailable } = text ? {}
-            : (publishedStoreAbsent(env) ?? { reason: "OBJECT_MISSING" });
+            : (publishedStoreAbsent(env) ?? publishedObjectMissing());
           const body = text
             ? { state: "published", from_sha: fnd.bundle_sha,
                 question: sectionText(text, "## Question"),
@@ -6925,7 +7275,7 @@ export default {
            UNDETERMINED, counted outside `sound`, never inside it. */
         if (named?.state === "unreadable") { undetermined.push({ ...row, why: named.why }); continue; }
         if (named?.state !== "named") { unbacked.push({ ...row, why: "no bytes in the working bucket" }); continue; }
-        const v = await partsHeld(env.CAPTURES, storeName, named.parts);
+        const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
         const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
         if (v.missing.length)
           unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names `
@@ -7481,7 +7831,7 @@ export default {
         const stored = (reBasis && reBasis.reading) || {};
         const t3 = await tier3Extend(env, { sha, storeName, i2text: structure.text, wiredTier: structureTier,
                                             tier2PerPage: readT2PerPage, fmt: "pdf" });
-        const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, MEASUREMENTS.md)";
+        const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)";
         /* ONE RETURN FOR EVERY ANSWER OF THIS OP, the plain read's own, below. The
            re-read only DECORATES `structure`; it adds no `json()` site of its own,
            so `plane-envelope.test.mjs`'s unclassified-site census (D-240 (e)) is not
@@ -7850,9 +8200,11 @@ export default {
          blocks — the first before the shell is fetched, the second after — and the release must
          name the SAME figure the admission took. */
       let renderReserved = 0;
+      /* D-520: the concurrency slot the admission took, given back by the same `renderspend`. */
+      let renderSlot = null;
       /* DEC-49 REGION is-render-admit
        *
-       * THE SPAN C-83.1..C-83.5 name. Helper `renderRow`, every code a STRING
+       * THE SPAN C-83.1..C-83.5 and C-83.8 name. Helper `renderRow`, every code a STRING
        * LITERAL at its site. */
       if (renderAsked) {
         if (body.render !== true)
@@ -7906,8 +8258,19 @@ export default {
         renderReserved = renderReserveMs(RENDER_DEFAULTS);
         const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved, at: retrieved }) }));
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved,
+                                 cap: renderConcurrencyCap(env), at: retrieved }) }));
         const adm = admOut.answered ? admOut.result : null;
+        /* D-520: OVER THE CONCURRENCY CAP THE RENDER WAITS (BOB #33). It is not a deferral —
+           nothing was reserved from the day and nothing was counted against it — and it is not
+           dropped: the unattended drain holds the row under this code and asks again on its next
+           tick, and a member is told a slot frees as soon as a running render finishes. */
+        if (adm && adm.state === "waiting")
+          return json({ ok: false, reason: "RENDER_AT_CAPACITY", ...renderRow("RENDER_AT_CAPACITY"),
+            op, render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
+            detail: `${adm.running} renders are running on this instance, which runs at most ${adm.cap} at once; `
+                  + `this render is waiting and nothing was fetched.` }, 429);
+        if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
         if (!adm || adm.state !== "admitted")
           return json({ ok: false, reason: "RENDER_DEFERRED", ...renderRow("RENDER_DEFERRED"),
             op, render: { state: "deferred", content: "undetermined", allowance: adm || null },
@@ -8320,7 +8683,7 @@ export default {
              path either reports the render's time or leaves the reservation charged on purpose. */
           try { await stGov.fetch("http://x/renderspend", {
             method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ ms: 0, releaseMs: renderReserved, at: retrieved }) }); }
+            body: JSON.stringify({ ms: 0, releaseMs: renderReserved, slot: renderSlot, at: retrieved }) }); }
           catch { /* an unreleased reservation under-uses the allowance; it never fails the refusal */ }
           return json({ ok: false, reason: "RENDER_NOT_A_PAGE", ...renderRow("RENDER_NOT_A_PAGE"),
             op, content_type: ct || null, bytes: total, multipart,
@@ -8331,7 +8694,7 @@ export default {
         catch (e) { answer = { ok: false, error: String(e && e.message || e) }; }
         try { await stGov.fetch("http://x/renderspend", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, at: retrieved }) }); }
+          body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }) }); }
         catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
         rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
         if (rb.ok) rbytes = new TextEncoder().encode(answer.html);
@@ -8708,6 +9071,12 @@ export default {
          it on the conservative handler and the generic type rather than a guess.
          Even then the headers and the address still carry signal. */
       let profileText = "", profileBytes = null;
+      /* REC-218: the DIALECT the format entry decoded (or would decode) this body in
+         (`readingDialect`, formats.mjs), UNDEFINED until an entry that makes a decoding
+         choice answers — so the key stays ABSENT on every reading no such entry produced.
+         Declared here because BOTH paths fill it: the format wire from its own text answer,
+         the intake read from the entry's `dialect` slot. Written at one site, below. */
+      let readDialect;
       if (profilesAsText(ct, total, multipart)) {
         try {
           const pobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
@@ -9227,6 +9596,10 @@ export default {
                  list of container names, and the store reports a missing level
                  only against that. The KEY's presence is the notion; its
                  LENGTH is whether the record holds it. */
+              /* REC-218: kept from the entry's OWN text answer, at the one place the wire's
+                 final `i2text` is read for what the record keeps about its container. */
+              if (i2text && Object.prototype.hasOwnProperty.call(i2text, "dialect"))
+                readDialect = readingDialect(i2text.dialect);
               if (i2text) {
                 const has = (k) => Array.isArray(i2text[k]);
                 const held = (k) => (has(k) && i2text[k].length ? i2text[k] : null);
@@ -9524,6 +9897,36 @@ export default {
         container: typeof reading.text_container === "string" ? reading.text_container : null,
         planeVersion: env.VERSION || null, member: canRead ? "plane" : null });
 
+      /* REC-218 — THE DIALECT, CARRIED ONTO THE READING THE PLANE PERSISTS, a key of its
+         OWN (BOB #33, 2026-09-24 21:55Z, option (b)). THE SHARED SITE: the reading's
+         assembly after every branch above has settled it — the format wire's `page_count`
+         and `container_extent` just closed above, and D-536's `provenance` is composed at
+         this same seam — and the dialect sits BESIDE them, inside none, because it is none
+         of them: not an itemisation of the container, not who read which text, but the
+         decoding choice made before any text existed.
+         *
+         * TWO SOURCES, ONE BUILDER. The format wire kept the entry's own `dialect` from its
+         * text answer. A body read AS TEXT AT INTAKE never reached the wire (any `text/*`
+         * type within PROFILE_TEXT_MAX; a larger one is streamed in parts and read by
+         * neither path), so the entry's OPTIONAL `dialect` slot is asked over the same
+         * bytes: signatures only, no record walk, and the entry's one builder, so the two
+         * cannot disagree. That the intake path's TEXT is still the lossy utf-8 decode is
+         * D-593, not this row. This file names no format here: the registry dispatches.
+         *
+         * THREE STATES, the rule `container_extent` obeys. ABSENT: no entry with a decoding
+         * choice answered (a PDF, an office container, an HTML page — and a delimited-text
+         * reading acquired before REC-218, which its capture's format tells apart). PRESENT AND
+         * NULL: an entry answered and this record cannot state a dialect from it. AN
+         * OBJECT: `{delimiter, encoding}`, each a name or NULL, and a null carries the
+         * entry's own reason in `undetermined`. Nothing is guessed to fill a null. */
+      if (reading && readDialect === undefined && profileBytes) {
+        try {
+          const fe = getFormat(profile.format && profile.format.format);
+          if (fe && typeof fe.dialect === "function") readDialect = readingDialect(await fe.dialect(profileBytes));
+        } catch { /* a signature that throws must not fail the capture: the key stays absent */ }
+      }
+      if (reading && readDialect !== undefined) reading.dialect = readDialect;
+
       /* The shape C-18.1 requires, assembled here so the caller does not have to
          know it and cannot get it subtly wrong. */
       return json({
@@ -9724,6 +10127,7 @@ export default {
             complete: subs.manifest.complete, outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
             reuse: subs.manifest.reuse,
+            part_fetch_spread: subs.manifest.part_fetch_spread,
             compute: subs.manifest.compute,
             ...(subs.computeRecord ? { compute_recorded: subs.computeRecord } : {}),
             ...(subs.resumeState ? { continuation: {
@@ -10057,7 +10461,7 @@ export default {
       let status = null, note = null, seen = null, compared = null, comparedBasis = null, frame = null;
       /* D-65 — what `assess` said, the type the fetched document reads as, and the look. */
       let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
-      const monitorLook = (o) => monitorRecordLook(stub0, { bundleId, address: normalizeAddress(locator),
+      const monitorLook = (o) => monitorRecordLook(stub0, { bundleId, address: normalizeAddress(locator), locator,
         baseline, seen, httpStatus, ...(renderTick ? { scope: "frame" } : {}), ...o,
         actorClass: viaSession ? "member" : "machine",
         actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
@@ -10260,19 +10664,85 @@ export default {
         beforeAt: baselineAt, afterAt: checked });
       const cadence = monitorCadence(fm.monitoring.frequency, graded.content);
 
+      /* D-338 — AN UNMONITORABLE DOCUMENT GRADES NO CHANGE (BIO_Content_Framework §6: `unmonitorable`
+         is the contract of a shell, and L1 settles a shell as UNWATCHABLE "and say so"). The comparison
+         above ran on bytes that carry no substance, so neither of its answers is a finding about the
+         document: `modified` is a per-render nonce moving (driven: `status: modified`, a `changed` look
+         and a raised re-evaluation on a shell nobody touched), and `unchanged` is the false comfort the
+         client_rendered handler names ("monitoring will report 'unchanged' forever"). The status is
+         withdrawn, the look is logged INDETERMINATE, and the note says why. A 404 is not touched: a
+         gone address is a finding whatever it served. */
+      /* CONDUCT #22 (c22-batch29), composing D-338 with D-567: a RENDERED capture's tick is excluded.
+         There the shell IS the compared frame by BOB #34 (b) — a frame difference is a D-472 `modified`
+         about the frame only, with the content already stated undetermined — and that more specific
+         ruling governs; D-338 withdraws the status of a shell captured as the document itself. */
+      const unmonitorable = !renderTick && !!graded.content && graded.content.contract === CONTRACT.UNMONITORABLE
+        && (status === "modified" || status === "unchanged");
+      if (unmonitorable) {
+        status = null;
+        note = "the source serves a shell whose bytes carry no substance (unmonitorable), so no change is graded";
+      }
+
+      /* D-455 — A `changed` TICK CAPTURES THE BYTES IT FETCHED (BOB #32, 2026-09-23 23:08Z;
+         OBSERVATION-LOG-DESIGN.md §4.1). The tick already HOLDS them — it hashed them to see the
+         change — so discarding them discarded evidence the record had in hand, and the look could
+         only point at the baseline. They are held here under the one capture key, exactly as
+         fetched and hashed (the fetch above went through the per-host governor, so the capture is
+         governed with it and no second request is made), and the promotion below files them in
+         this bundle's `snapshots/` — the mechanical envelope C-20.1 already admits for a sweeping
+         writer — with a register row, so the observation can name a capture the record HOLDS.
+         Every way that fails is STATED on the look and in the answer, and the look then falls back
+         to D-65's form (the baseline, the served sha in `detail`): an uncaptured sha is never named
+         as a capture. */
+      let monCap = null;
+      /* CONDUCT #22 (c22-batch29), composing D-455 with D-567: a RENDERED capture's tick fetched the
+         SHELL, and its `modified` is about the frame only (BOB #34 (b)); filing that shell as the
+         monitor's new capture would have the look name a new version of a document the tick never
+         rendered. So a render tick captures nothing and keeps D-567's frame form. */
+      if (status === "modified" && !renderTick && fetchedBytes && seen && seen !== baseline) {
+        const leaf = (locator.split("?")[0].split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 80) || "capture";
+        monCap = { sha256: seen, file: `snapshots/monitor-${seen.slice(0, 12)}-${leaf}`, bytes: fetchedBytes.length,
+                   content_type: fetchedCtx?.content_type || null, retrieved: checked, fetched_address: tickAddress,
+                   taken_by: "op=monitor, from the bytes this tick fetched through the per-host governor",
+                   held: false, existed: null, registered: false, why: null };
+        if (typeof env.CAPTURES?.put !== "function")
+          monCap.why = "R2 is not configured on this instance, so the served bytes could not be held";
+        else {
+          try {
+            const key = captureKey(storeName, seen);
+            monCap.existed = !!(await env.CAPTURES.head(key));
+            if (!monCap.existed)
+              await env.CAPTURES.put(key, fetchedBytes, { sha256: await crypto.subtle.digest("SHA-256", fetchedBytes) });
+            monCap.held = true;
+          } catch (e) {
+            monCap.why = "the served bytes could not be written to R2: " + String(e && e.message || e).slice(0, 90);
+          }
+        }
+      }
+
       /* THE LOOK, written to the observation log (OBSERVATION-LOG-DESIGN.md §4.1). */
-      const observation = await monitorLook({
-        outcome: status === "unchanged" || frame === "unchanged" ? "unchanged" : status === "modified" ? "changed"
+      const lookArgs = {
+        outcome: unmonitorable ? "unmonitorable"
+               : status === "unchanged" || frame === "unchanged" ? "unchanged" : status === "modified" ? "changed"
                : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
-        reason: unreachable });
+        reason: unreachable,
+        /* REC-191: only a look that READ a document says what the document is; an
+           unreachable or gone source leaves the address's reading as it was. */
+        ...(fetchedBytes ? { content: graded.content, contentBasis: graded.basis } : {}) };
+      /* D-455: a look that captured is written AFTER the promotion that registers the capture, so
+         the store can check the register rather than take the tick's word for it. */
+      const lookAfterPromote = !!(monCap && monCap.held);
+      let observation = lookAfterPromote ? null
+        : await monitorLook(monCap ? { ...lookArgs, uncaptured: monCap.why } : lookArgs);
 
       /* Rewrite ONLY the permitted fields, line by line, so nothing else can
          move by accident. A mechanical writer that rebuilt the document from a
          parse would reformat it, and reformatting is a change. */
       /* D-65: a substance change `assess` SETTLED as not meaningful for its type (a calendar's
          window moving: `routine`; furniture: `restyled`) raises no re-evaluation. Every other
-         verdict — `changed`, `undetermined`, `unwatchable`, or no assessment at all — keeps
-         D-60's flag, the conservative direction. */
+         verdict — `changed`, `undetermined`, or no assessment at all — keeps D-60's flag, the
+         conservative direction. (`unwatchable` no longer reaches here as `modified`: D-338
+         withdraws a shell's status above, so a shell raises no flag unless its address is gone.) */
       const settledQuiet = !!graded.assessment
         && ["identical", "unchanged", "restyled", "routine"].includes(graded.assessment.verdict);
       const flags = status === "removed" || (status === "modified" && !settledQuiet);
@@ -10296,23 +10766,30 @@ export default {
         text = text.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
 
       /* The Session Log is the one body surface a mechanical writer may add to,
-         and C-13.2 requires an entry whenever last_updated moves. */
-      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked")
-        + (compared ? ` (compared ${compared})` : "")
-        /* D-472: the durable record says WHICH bytes were compared. A Drive tick
-           reads Google's export, not the page at the document's own address, and
-           a Session Log that does not say so leaves a reader to assume the page. */
-        + (driveTick && driveTick.harvestable
-            ? ` — fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed `
-              + `from the Drive ${driveTick.kind} in ${driveTick.address}`
-            : "") + "\n";
-      const at = text.indexOf("## Session Log");
-      if (at < 0) text += "\n## Session Log\n\n" + entry;
-      else {
-        const nxt = text.indexOf("\n## ", at + 1);
-        const cut = nxt === -1 ? text.length : nxt + 1;
-        text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
-      }
+         and C-13.2 requires an entry whenever last_updated moves. D-455: `withEntry` is
+         called once per promotion ATTEMPT, because the entry says whether the served bytes
+         were filed, and a promotion retried without the capture must not say they were. */
+      const head = text;
+      const withEntry = (capLine) => {
+        const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked")
+          + (compared ? ` (compared ${compared})` : "")
+          /* D-472: the durable record says WHICH bytes were compared. A Drive tick
+             reads Google's export, not the page at the document's own address, and
+             a Session Log that does not say so leaves a reader to assume the page. */
+          + (driveTick && driveTick.harvestable
+              ? ` — fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed `
+                + `from the Drive ${driveTick.kind} in ${driveTick.address}`
+              : "") + (capLine ? ` — ${capLine}` : "") + "\n";
+        let t2 = head;
+        const at = t2.indexOf("## Session Log");
+        if (at < 0) t2 += "\n## Session Log\n\n" + entry;
+        else {
+          const nxt = t2.indexOf("\n## ", at + 1);
+          const cut = nxt === -1 ? t2.length : nxt + 1;
+          t2 = t2.slice(0, cut) + entry + "\n" + t2.slice(cut);
+        }
+        return t2;
+      };
 
       const carried = [];
       for (const [path, v] of Object.entries(img)) {
@@ -10325,32 +10802,74 @@ export default {
       }
       const liveSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(live)))]
         .map((x) => x.toString(16).padStart(2, "0")).join("");
-      const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))]
-        .map((x) => x.toString(16).padStart(2, "0")).join("");
       const stamp = checked.replace(/[-:]/g, "") + "_" +
         [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
 
-      const promoted = await doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
-        bundleId, base: liveSha, snapKey: stamp, author: "bio-monitor",
-        writer: "mechanical", operation: "monitor-tick",
-        /* D-436: no `group` — a tick is a REVISION, and the store keeps the group the document's creation wrote.
-           This was a literal fallback. */
-        meta: { object_type: fm.object_type,
-                title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
-                created: fm.created, last_updated: checked },
-        /* Every OTHER file carried forward untouched. promote writes a whole
-           image, so a writer that mentions one file deletes the rest: the first
-           version of this tick removed the provenance register, which took the
-           monitoring baseline with it and left an information@2 bundle with no
-           register at all. A mechanical writer silently destroying evidence is
-           the worst thing in this system, and the shape of promote made it the
-           DEFAULT behaviour of a careless caller. */
-        files: [
-          { path: "bundle.md", text, bytes: new TextEncoder().encode(text).length, sha256: textSha },
-          ...carried,
-        ],
-        register: [],
-      }) }));
+      /* D-455: the capture joins the image as a blob under `snapshots/` with its register row,
+         unless the image already carries those bytes (a later tick seeing the same new bytes), in
+         which case the bundle already holds and registers them and nothing is added twice. */
+      const capCarried = !!(lookAfterPromote && carried.some((f) => f.sha256 === monCap.sha256));
+      const promoteWith = async (withCap) => {
+        const text2 = withEntry(!monCap ? null
+          : withCap ? `the served bytes were captured as ${monCap.file} (sha256 ${monCap.sha256})`
+          : `the served bytes (sha256 ${monCap.sha256}) were not filed: ${monCap.why}`);
+        const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text2)))]
+          .map((x) => x.toString(16).padStart(2, "0")).join("");
+        const addCap = withCap && !capCarried;
+        return doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
+          bundleId, base: liveSha, snapKey: stamp, author: "bio-monitor",
+          writer: "mechanical", operation: "monitor-tick",
+          /* D-436: no `group` — a tick is a REVISION, and the store keeps the group the document's creation wrote.
+             This was a literal fallback. */
+          meta: { object_type: fm.object_type,
+                  title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
+                  created: fm.created, last_updated: checked },
+          /* Every OTHER file carried forward untouched. promote writes a whole
+             image, so a writer that mentions one file deletes the rest: the first
+             version of this tick removed the provenance register, which took the
+             monitoring baseline with it and left an information@2 bundle with no
+             register at all. A mechanical writer silently destroying evidence is
+             the worst thing in this system, and the shape of promote made it the
+             DEFAULT behaviour of a careless caller. */
+          files: [
+            { path: "bundle.md", text: text2, bytes: new TextEncoder().encode(text2).length, sha256: textSha },
+            ...carried,
+            ...(addCap ? [{ path: monCap.file, blobSha: monCap.sha256, sha256: monCap.sha256, bytes: monCap.bytes }] : []),
+          ],
+          register: addCap ? [{ sha256: monCap.sha256, path: monCap.file, encoding: "binary", bytes: monCap.bytes }] : [],
+        }) }));
+      };
+      /* D-455: the FIRST attempt is its own name, and `promoted` is only ever the attempt that stands.
+         The handler tests whether the STANDING attempt was answered in one place, REC-52's guard below,
+         so plane-envelope's D-240 (c) — which strips that guard and expects the answer's computed
+         verdict to read unguarded — still sees it; a second spelling of that test would hide it. */
+      const first = await promoteWith(lookAfterPromote);
+      let promoted = first;
+      if (lookAfterPromote) {
+        if (!first.answered) monCap.why = "the store did not answer the promotion that would have filed them";
+        /* A promotion REFUSED with the capture in it is retried once without it, so the tick is still
+           recorded; the refusal is kept as the reason the bytes were not filed. The one refusal this is
+           for is D-179's (C-53.13): those bytes are already another bundle's capture, and one capture
+           has one home. */
+        else if (first.result && first.result.ok === false) {
+          const r = first.result;
+          monCap.why = `the promotion filing them was refused (${r.reason || r.code || "no reason given"}`
+            + `${r.detail ? `: ${String(r.detail).slice(0, 160)}` : ""})`;
+          promoted = await promoteWith(false);
+        } else if (first.result?.ok) monCap.registered = true;
+      }
+      if (lookAfterPromote) {
+        observation = await monitorLook(monCap.registered
+          ? { ...lookArgs, captured: { sha256: monCap.sha256, retrieved: monCap.retrieved,
+                                       retrievalLocator: monCap.fetched_address } }
+          : { ...lookArgs, uncaptured: monCap.why });
+        /* The OUTCOME, not the intent: `registered` is what the store's register check let the
+           look name, so a promotion that landed without filing the capture cannot read as filed. */
+        if (monCap.registered && !(observation && observation.captured === monCap.sha256)) {
+          monCap.registered = false;
+          monCap.why = (observation && observation.uncaptured) || "the observation log did not name the capture";
+        }
+      }
       /* REC-52: a store silence produced `ok:false` at 409 with `reason` and
          `detail` both undefined — a CONFLICT status over an empty refusal —
          while the monitoring verdict above it (`status`, `note`, `seen`) was
@@ -10372,6 +10891,14 @@ export default {
            and the look as the observation log recorded it. */
         assessment: graded.assessment, assessment_basis: graded.basis,
         cadence, observation,
+        /* D-455: on a `changed` tick, the capture of the served bytes — its sha, the file it was
+           filed as, whether it was held and registered, and why not when it was not. Null on
+           every other tick, which captures nothing. */
+        capture: monCap ? { sha256: monCap.sha256, file: monCap.registered ? monCap.file : null,
+                            bytes: monCap.bytes, content_type: monCap.content_type, retrieved: monCap.retrieved,
+                            fetched_address: monCap.fetched_address, taken_by: monCap.taken_by,
+                            held: monCap.held, existed: monCap.existed, registered: monCap.registered,
+                            why: monCap.registered ? null : monCap.why } : null,
         /* D-472: for a Drive-linked document, which address this tick actually
            fetched and the three facts the plane derived to compose it. Absent for
            every other document, where the locator is the address. */
@@ -10457,21 +10984,56 @@ export default {
       const facts = factsOut.result;
       if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
 
-      /* DEC-49 REGION is-testimony-publish-case — MK-1 (A) / C-53.12. A case whose
-         findings rest, at any depth, on a member's authored observation does not
-         cross until MK-3's attribution-honouring projection lifts this; lifting it
-         is MK-3's act. MEASURED before it existed (`test/mk1-publish-probe.mjs`,
-         path 3): such a case RATIFIED. Refused before the signature is weighed, so
-         the answer is the same whoever signed. */
-      if (facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)
+      /* DEC-49 REGION is-testimony-publish-case — MK-1 (A) / C-53.12, NARROWED BY MK-7. A case whose
+         findings rest, at any depth, on an observation that still NAMES ITS AUTHOR in its own files (written
+         before MK-6) does not cross: MEMBER-KNOWLEDGE-DESIGN.md §4.1 keeps those fenced, because the level
+         lives outside the bundle and cannot hide a name the bundle itself prints. MEASURED before MK-1 built
+         it (`test/mk1-publish-probe.mjs`, path 3): such a case RATIFIED. Every other observation is judged by
+         the attribution gate below. Refused before the signature is weighed. */
+      const attr = facts.attribution || { reached: [], legacy: [], stated: [], current: [] };
+      if (attr.legacy.length)
         return json({ ok: false, reason: "TESTIMONY_CASE_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_CASE_UNPUBLISHABLE"),
-          caseId: facts.doc.case_id, edition: facts.doc.edition, rests_on: facts.testimony.via,
-          detail: `a finding in ${facts.doc.case_id} rests on a member's authored observation `
-                + `(${[...facts.testimony.via.map((v) => `${v.finding} -> ${v.observation}`), ...facts.testimony.self].slice(0, 5).join(", ")}); `
-                + `what a published case shows of an observation is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), `
-                + `and this build cannot yet honour it (MK-3)`,
+          caseId: facts.doc.case_id, edition: facts.doc.edition, observations: attr.legacy.slice(0, 50),
+          detail: `a finding in ${facts.doc.case_id} rests on an observation whose own files name its author (written `
+                + `before §4.1) or cannot be read to show they do not (${attr.legacy.slice(0, 5).join(", ")}); `
+                + `publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
           store: storeName, tokenClass: cls }, 409);
       /* END DEC-49 REGION is-testimony-publish-case */
+      /* DEC-49 REGION is-attribution-gate — MK-7 / C-92.10, C-92.11 (MEMBER-KNOWLEDGE-DESIGN.md §4.4). THE
+         LIFT OF MK-1's C-53.12, as MK-7's own act: a case reaching a member's observation crosses once, and
+         only once, every observation it reaches carries its author's chosen level in the bytes being signed.
+         (1) UNCHOSEN, named per observation: publishing one at ANY level would be the default §4 forbids.
+             PROVISIONAL (§4.4's narrow veto, carried to Bob): a member stops the use of their own words and
+             nothing else; the owner's recourse is an edition without the finding resting on it.
+         (2) STALE: the document's statements are compared with what the authors' acts give NOW. The act
+             re-authors the unsigned document when it lands, so this refuses only bytes that drifted from the
+             acts by another route — never a level the author did not choose. Refused before the signature
+             is weighed, so the answer is the same whoever signed. */
+      const unchosen = attr.current.filter((r) => !r.level);
+      if (unchosen.length)
+        return json({ ok: false, reason: "ATTRIBUTION_UNCHOSEN", ...attributionRow("ATTRIBUTION_UNCHOSEN"),
+          caseId: facts.doc.case_id, edition: facts.doc.edition,
+          unchosen: unchosen.slice(0, 50).map((r) => ({ observation: r.observation, why: r.why })),
+          detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} this edition reaches `
+                + `${unchosen.length === 1 ? "has" : "have"} no level chosen by ${unchosen.length === 1 ? "its" : "their"} `
+                + `author: ${unchosen.slice(0, 5).map((r) => r.observation).join(", ")} (MEMBER-KNOWLEDGE-DESIGN.md §4.4). `
+                + `Each author chooses with op=attribute; nothing is filled in for them`,
+          store: storeName, tokenClass: cls }, 409);
+      {
+        const statedOf = new Map(attr.stated.map((r) => [r.observation, r]));
+        const drift = attr.current.filter((r) => {
+          const st = statedOf.get(r.observation);
+          return !st || st.level !== r.level || (st.shown ?? null) !== (r.shown ?? null);
+        });
+        if (drift.length || attr.stated.length !== attr.current.length)
+          return json({ ok: false, reason: "ATTRIBUTION_STATEMENT_STALE", ...attributionRow("ATTRIBUTION_STATEMENT_STALE"),
+            caseId: facts.doc.case_id, edition: facts.doc.edition,
+            observations: (drift.length ? drift : attr.current).slice(0, 50).map((r) => r.observation),
+            detail: `the case document's attribution statements do not match what the observations' authors chose `
+                  + `for this edition; re-prepare it (op=publish) and sign the new bytes`,
+            store: storeName, tokenClass: cls }, 409);
+      }
+      /* END DEC-49 REGION is-attribution-gate */
 
       if (facts.doc.doc_sha !== body.expectedSha)
         return json({ ok: false, reason: "CASE_RATIFY_STALE",
@@ -10695,29 +11257,42 @@ export default {
                 + `never directly (BIO_Publication_v0_1.md §3 rule 2; D-429). Nothing was published.`,
           store: storeName, tokenClass: cls }, 409);
       /* END DEC-49 REGION is-ratify-project-bundle */
-      /* DEC-49 REGION is-testimony-publish-bundle — MK-1 (A) / C-53.10, C-53.11.
-         MEASURED before it existed (`test/mk1-publish-probe.mjs`): op=ratify on an
-         observation whose bytes were in the working bucket PUBLISHED its words,
-         its provenance document and the observer's handle; a finding resting on
-         one ratified. What a published case shows of an observation is the
-         attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), which this
-         build cannot yet honour — so neither crosses until MK-3's projection
-         lifts this, and lifting it is MK-3's act. Below the scope check and the
-         machine fence, before the signature is weighed. */
-      if (facts.testimony && facts.testimony.self.length)
+      /* DEC-49 REGION is-testimony-publish-bundle — MK-1 (A) / C-53.10, C-53.11, NARROWED BY MK-7.
+         MEASURED before MK-1 built it (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes
+         were in the working bucket PUBLISHED its words, its provenance document and the observer's handle.
+         Since MK-6 an observation's files name nobody (§4.1), so what stays fenced here is an observation
+         written BEFORE that, which still names its author in its own files, and a finding resting on one:
+         no level can hide a name the bundle prints. Below the scope check and the machine fence, before the
+         signature is weighed. */
+      const legacy = Array.isArray(facts.testimonyLegacy) ? facts.testimonyLegacy : [];
+      if (facts.testimony && facts.testimony.self.length && legacy.includes(body.bundleId))
         return json({ ok: false, reason: "TESTIMONY_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_UNPUBLISHABLE"),
           bundleId: body.bundleId,
-          detail: `${body.bundleId} is a member's authored observation; what a published case shows of it is the `
-                + `attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), and this build cannot yet honour it (MK-3)`,
+          detail: `${body.bundleId} is a member's observation whose own files name its author (written before §4.1), or `
+                + `cannot be read to show they do not; publishing it could publish that name at any level `
+                + `(MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
           store: storeName, tokenClass: cls }, 409);
-      if (facts.testimony && facts.testimony.via.length)
+      if (facts.testimony && facts.testimony.via.some((v) => legacy.includes(v.observation)))
         return json({ ok: false, reason: "TESTIMONY_CITED_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_CITED_UNPUBLISHABLE"),
-          bundleId: body.bundleId, rests_on: facts.testimony.via,
-          detail: `${body.bundleId} rests on a member's authored observation `
-                + `(${facts.testimony.via.slice(0, 5).map((v) => v.observation).join(", ")}); what a published case `
-                + `shows of it is the attesting member's choice, and this build cannot yet honour it (MK-3)`,
+          bundleId: body.bundleId, rests_on: facts.testimony.via.filter((v) => legacy.includes(v.observation)),
+          detail: `${body.bundleId} rests on an observation whose own files name its author (written before §4.1) or `
+                + `cannot be read to show they do not `
+                + `(${facts.testimony.via.filter((v) => legacy.includes(v.observation)).slice(0, 5).map((v) => v.observation).join(", ")})`,
           store: storeName, tokenClass: cls }, 409);
       /* END DEC-49 REGION is-testimony-publish-bundle */
+      /* DEC-49 REGION is-attribution-ratify — MK-7 / C-92.12. THE LIFT OF C-53.10 for an observation in
+         §4.1's form: its own bytes cross only as a ratified case's evidence (D-431 (b), in the committer) AND
+         only once a RATIFIED case document states the level its author chose for it (§4.3). D-431 alone would
+         let them cross beside no statement of whose they are. A finding resting on one needs nothing more
+         here: it crosses only as a member of a ratified case (D-431 (a)), and op=caseratify refused that case
+         until every observation it reaches was chosen (C-92.10). */
+      if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)
+        return json({ ok: false, reason: "ATTRIBUTION_UNSTATED", ...attributionRow("ATTRIBUTION_UNSTATED"),
+          bundleId: body.bundleId,
+          detail: `no ratified case document states an attribution for ${body.bundleId}; sign the case edition that `
+                + `uses it (op=caseratify) first, and its author's chosen level is published with it`,
+          store: storeName, tokenClass: cls }, 409);
+      /* END DEC-49 REGION is-attribution-ratify */
       if (facts.row.bundle_sha !== body.expectedSha)
         return json({ ok: false, reason: "RATIFY_STALE",
                       detail: "the bundle has changed since it was reviewed; read it again and re-sign",
@@ -10769,6 +11344,9 @@ export default {
       const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${ratViewer}`));
       if (!listOut.answered) return storeSilent("ratify/list");
       const known = new Set((listOut.result || []).map((b) => b.bundle_id));
+      /* D-556: the parts of each whole-hash row the gate admitted as HELD IN PARTS, as the record names them,
+         keyed by the whole hash. Publication copies exactly these, part by part. */
+      const partedRows = new Map();
       const gate = await runGate({
         bundleId: body.bundleId, image, knownIds: known,
         registers: facts.registers,
@@ -10800,8 +11378,18 @@ export default {
              refuses the row, because the publish step copies a capture by its whole hash,
              but with a finding that is true. The register is not asked: it is the row
              being checked. */
+          /* D-556 (BOB #34, 2026-09-25 00:00Z): and the parts THIS bundle's record names for the hash. When it
+             names them, each is headed and its digest verified by D-533's `partsHeld`, and the gate admits the
+             row only when all are present and verify; the verdict is the gate's. */
           const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
-            `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+            `http://x/registerholds?sha256=${encodeURIComponent(sha)}&bundle=${encodeURIComponent(body.bundleId)}`));
+          const named = hOut.answered && hOut.result ? hOut.result.parts : null;
+          if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
+          if (named?.state === "named") {
+            const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
+            if (!v.missing.length && !v.disagree.length && !v.unverified.length) partedRows.set(sha, named.parts);
+            return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
+          }
           const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
           return { present: false, bytes: 0, ...(inParts ? { heldInParts: true } : {}) };
         },
@@ -10826,10 +11414,24 @@ export default {
             .map((x) => x.toString(16).padStart(2, "0")).join("");
           shas.push({ sha256: sha, path, kind: path === "bundle.md" ? "bundle" : "file",
                       bytes: new TextEncoder().encode(v).length, text: v });
-        } else {
+        } else if (!partedRows.has(v.blobSha)) {
           shas.push({ sha256: v.blobSha, path, kind: "capture",
                       bytes: registerBytes.has(path) ? registerBytes.get(path) : null });
         }
+      }
+      /* D-556 (BOB #34, 2026-09-25 00:00Z): a capture the gate admitted as HELD IN PARTS is published AS its
+         parts, each under its own hash, because no object exists under the whole's. A part the image already
+         carries as a file of its own (C-18.1's filing) is published once, under that path; any other part the
+         record names joins the list. The whole's identity and its parts travel in the bundle's own
+         data/provenance.json, published beside them, so a reader can reassemble it. */
+      const partShaSet = new Set();
+      for (const [whole, parts] of partedRows) {
+        const at = (facts.registers || []).find((r) => r.capture_sha === whole)?.path || whole;
+        parts.forEach((p, i) => {
+          partShaSet.add(p.sha256);
+          if (!shas.some((s) => s.sha256 === p.sha256))
+            shas.push({ sha256: p.sha256, path: p.file || `${at}.part${i + 1}`, kind: "capture_part", bytes: p.bytes });
+        });
       }
 
       /* REC-14 / DEC-12: the EDITION, the frozen pair, the declared bar and the
@@ -11016,15 +11618,35 @@ export default {
         for (const s of shas) {
           const key = `${storeName}/published/${s.sha256}`;
           if (await env.PUBLISHED.head(key)) { present++; continue; }
-          if (s.kind === "capture") {
+          if (s.kind === "capture" || s.kind === "capture_part") {
             const obj = await env.CAPTURES.get(`${storeName}/captures/${s.sha256}`);
             if (!obj) { r2state = "INCOMPLETE: capture vanished between gate and copy"; continue; }
-            await env.PUBLISHED.put(key, obj.body);
+            if (!partShaSet.has(s.sha256)) await env.PUBLISHED.put(key, obj.body);
+            /* D-556: a part is put with its digest, so R2 refuses bytes that do not hash to it; a refused put
+               leaves the part absent, and the re-verification below names it. */
+            else try { await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 }); } catch { continue; }
           } else {
             await env.PUBLISHED.put(key, new TextEncoder().encode(s.text));
           }
           copied++;
         }
+      }
+      /* D-556 (BOB #34, 2026-09-25 00:00Z): EVERY PART, RE-VERIFIED AT THE DESTINATION. A part copied or found
+         already present is headed in the published bucket and its digest checked by the same `partsHeld` the
+         gate ran on the working one; a part that is not there, or whose digest fails or cannot be checked, is
+         NAMED in the answer and the copy is INCOMPLETE, never reported ok. */
+      const partShas = [...new Map([...partedRows.values()].flat().map((p) => [p.sha256, p])).values()];
+      let partsPublished = null;
+      if (partShas.length && r2state !== "not configured") {
+        const v = await partsHeld(env.PUBLISHED, (s) => `${storeName}/published/${s}`, partShas);
+        const bad = [...v.missing, ...v.disagree, ...v.unverified];
+        partsPublished = { parts: partShas.length, verified: partShas.length - bad.length,
+                           ...(v.missing.length ? { missing_parts: v.missing } : {}),
+                           ...(v.disagree.length ? { disagreeing_parts: v.disagree } : {}),
+                           ...(v.unverified.length ? { unverified_parts: v.unverified } : {}) };
+        if (bad.length)
+          r2state = `INCOMPLETE: ${bad.length} of ${partShas.length} parts did not verify in the published `
+                  + `bucket: ${bad.map((p) => p.file || p.sha256).join(", ")}`;
       }
 
       /* REC-44 / DEC-34: THE CASE CONTAINER, assembled the moment the LAST
@@ -11229,7 +11851,8 @@ export default {
                     /* REC-128: who DELIVERED this request (a retry that `existed`
                        wrote nothing; the record keeps its first deliverer). */
                     deliveredBy: delivererOf(deliveredBy),
-                    published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
+                    published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state,
+                                 ...(partsPublished ? { parts: partsPublished } : {}) },
                     ...(reuseReport ? { reuse: reuseReport } : {}),
                     store: storeName, tokenClass: cls }, 200);
     }
@@ -11324,7 +11947,14 @@ export default {
                                 "strengthbarof",
                                 /* REC-149: the setting's read and the directory decide by the caller's SIGHT
                                    (Membership v2 §7.14), so both take the stamp; each fails closed without it. */
-                                "projectvisibility", "projectdirectory"];
+                                "projectvisibility", "projectdirectory",
+                                /* REC-196: the roster read names a project by its own id, so the store needs the
+                                   caller's SIGHT to answer C-70.1 at EXISTENCE (BOB #32's ruling (a)). Its own
+                                   answer still reads the `by` stamp below; the viewer is read only by that check. */
+                                "projectparticipants",
+                                /* REC-150: the requests read decides by the caller's SIGHT of the project it
+                                   names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
+                                "projectrequests"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
@@ -11501,6 +12131,9 @@ export default {
            READ answers about documents, so an ungated listing would be the
            identical leak one op over. Fails closed on an absent stamp. */
         || op === "extractpropose" || op === "extractproposals"
+        /* REC-147: the candidate write re-forms the pairs AS THIS VIEWER (§6) and pairs only what the viewer may
+           see, so it needs the viewer exactly as `contradictionpairs` does. Fails closed on an absent stamp. */
+        || op === "contradictionpropose"
         /* REC-86: NARROW and its candidate read both NAME A QUESTION and read
            its readings, so a question the caller was never invited to must
            answer exactly as one that does not exist — the version acts' reason
@@ -11541,6 +12174,10 @@ export default {
            as one that does not exist — `contentmint`'s reason. Fails closed on an
            absent stamp. */
         || op === "themeplace" || op === "themepropose" || op === "themeread"
+        /* REC-203: a PAIR judgement names two CAPTURES and reads where the record retrieved each, so a
+           document the caller was never invited to must answer exactly as one the record does not hold
+           (C-91.3) — `contentmint`'s reason. Fails closed on an absent stamp. */
+        || op === "idmatch"
         /* REC-195: the governing-law proposal NAMES AN ACTION and reads it behind the fail-closed gate before
            it writes anything, so an action the caller may not see refuses NO_SUCH_BUNDLE identically to an
            absent one — `ACTION_ACTIONS`' own reason, arriving at an op that is not one of them. */
@@ -11764,6 +12401,11 @@ export default {
       inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "leadshare")
       inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* MK-7 — WHO CHOSE THE ATTRIBUTION, stamped on `testify`'s rule: the store compares it with the
+       observation's registered author, so a caller-supplied chooser would be a way to choose for somebody
+       else. A machine credential stamps `class:<cls>`, refused BY NAME (C-92.1). Never the principal. */
+    if (op === "attribute")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* D-162 / IC-241 — WHO DECLARED THE THEME, WHO PLACED IN IT, WHO PROPOSED, stamped on
        `lead`'s rule one stamp up (§8.4 fence 1: declared under the member's own name, never a
        caller's field). A machine credential stamps `class:<cls>`, which the store refuses BY NAME
@@ -11857,7 +12499,8 @@ export default {
        writes: permission is granted against a NAMED actor, and a proposal whose
        proposer were anonymous would be one the record could say nothing about,
        which is exactly what `NO_PROPOSER` refuses at the store. */
-    if (op === "extractpropose")
+    /* REC-147: the contradiction candidate's proposer is the same server-side stamp, for the same reason. */
+    if (op === "extractpropose" || op === "contradictionpropose")
       inner.searchParams.set("proposedBy",
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
@@ -12062,6 +12705,13 @@ export default {
     if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op)
         || op === "projectparticipants" || op === "projectownerarith"
         || CUSTODIAL_ACTIONS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* REC-150: whose requests to join a caller reads — its own, or a project's as its owner or an administrator — is
+       a POSITIONAL question, so `op=projectrequests` takes the server's `by` exactly as projectparticipants does, by
+       the SAME expression. A statement of its own rather than a disjunct above, `IDENTITY_ACTIONS`' precedent below:
+       that condition is pinned as one expression by adminvote.test and anchored by adminvote.control, and it sits at
+       its pin's bound. */
+    if (op === "projectrequests")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's
        parameters were copied, so a caller's `by` is overwritten rather than honoured, and the store asks the roster

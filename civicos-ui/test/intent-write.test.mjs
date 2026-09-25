@@ -215,6 +215,20 @@
  *       assertion about whether a grade is EARNED has to live on the plane side;
  *       what this file can honestly assert is that the letter is rendered as a
  *       conditional and never as a grade held, which it does.
+ *
+ * NEGATIVE CONTROL (D-576, the connect receipt states a cut derivation): RUN 2026-09-25 against
+ * app.html a562d5b28cc15da92db92a1242afb2f14df4879c444547be1f462544cfdeebf4 (1,633,048 B), each
+ * arm ALONE on connectGo's `...(r.truncated === true ? [` (anchor matched once). ARM 1 — ignore
+ * `truncated` again (`false ? [`): declared MUST FAIL the cut-receipt arm, MUST NOT fail the
+ * whole arms. Actual: 2 of 147 — "D-576 · CUT-RECEIPT: a cut derivation's receipt states the
+ * cut, after how many documents, and that the set is part", plus "COVERAGE: this suite runs
+ * clean under the guard's own probe", which is this same file re-run as a child and so fails
+ * with ANY failure here (an echo, not a second cause). ARM 2 — state the cut always (`true ?
+ * [`): declared MUST FAIL the two whole arms. Actual: 3 of 147 — "D-576 · WHOLE: an uncut
+ * derivation's receipt states no cut", "D-576 · the unbounded re-derivation is whole again and
+ * its receipt states no cut", and the COVERAGE echo. ARM 3, OVER-STRICTNESS — `r.truncated ?
+ * [`, a correct spelling not anticipated: MUST PASS; actual 147/147. Each arm restored from a
+ * per-arm pristine copy, `cmp` equal, sha256 unchanged; 147/147 green.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -436,10 +450,22 @@ const html = (s) => $$(s)._html;
    the surface reaches is recorded, so the suite can assert BY NAME that the
    nine were called from the surface and not from the test. ---- */
 const CALLED = [];
+/* D-576: `CONNECT_LIMIT`, when set, is added to ONE op=connect body as `limit` — the plane's
+   own bound, which op=connect reads off the body — so the REAL plane cuts a real derivation
+   over this file's handful of documents. The surface's request is otherwise untouched, and
+   `CONNECT_ANSWERS` keeps what the plane answered so each arm asserts over the answer it read. */
+let CONNECT_LIMIT = null; const CONNECT_ANSWERS = [];
 async function bridgeFetch(u, opts){
   const url = new URL(u, "http://x");
-  CALLED.push(url.searchParams.get("op"));
-  return mf.dispatchFetch(url.toString(), opts);
+  const op = url.searchParams.get("op");
+  CALLED.push(op);
+  if(op === "connect" && CONNECT_LIMIT != null && opts && typeof opts.body === "string"){
+    opts = { ...opts, body: JSON.stringify({ ...JSON.parse(opts.body), limit: CONNECT_LIMIT }) };
+    CONNECT_LIMIT = null;
+  }
+  const res = await mf.dispatchFetch(url.toString(), opts);
+  if(op === "connect") CONNECT_ANSWERS.push(await res.clone().json());
+  return res;
 }
 
 const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,
@@ -864,6 +890,24 @@ ok("the connect control's commit is present for an open subject", /conn-go/.test
 await U.connectGo();
 ok("op=connect was called by the surface", CALLED.includes("connect"));
 ok("the receipt states how many connections the record derived", /derived \d+ connection/.test(html("#conn-pf")));
+/* D-576 — THE RECEIPT STATES A CUT DERIVATION, and only a cut one. `truncated` is whether the
+   DERIVATION was cut (store.mjs); the receipt read every count as the whole set. */
+const wholeAns = (CONNECT_ANSWERS.at(-1) || {}).result || {};
+ok("D-576 · INSTRUMENT: the default derivation over this subject was NOT cut, and read documents",
+   wholeAns.truncated === false && wholeAns.documents >= 3);
+ok("D-576 · WHOLE: an uncut derivation's receipt states no cut", !/CUT/.test(html("#conn-pf")) && !/part of the set/.test(html("#conn-pf")));
+CONNECT_LIMIT = 1;
+await U.connectGo();
+const cutAns = (CONNECT_ANSWERS.at(-1) || {}).result || {};
+ok("D-576 · INSTRUMENT: at a bound of one pair the real plane CUT the derivation, after two documents",
+   cutAns.truncated === true && cutAns.documents === 2 && cutAns.count === 1 && CONNECT_LIMIT === null);
+ok("D-576 · CUT-RECEIPT: a cut derivation's receipt states the cut, after how many documents, and that the set is part",
+   html("#conn-pf").includes("The derivation was CUT by its bound after 2 of this subject&rsquo;s documents: the connections here are true but are part of the set through this subject, not all of it."));
+ok("D-576 · CUT-RECEIPT: the count it states is still the plane's", /derived 1 connection among/.test(html("#conn-pf")));
+/* the cut run REPLACED the pairs it wrote; re-derive unbounded so the arms below read the whole set again */
+await U.connectGo();
+ok("D-576 · the unbounded re-derivation is whole again and its receipt states no cut",
+   ((CONNECT_ANSWERS.at(-1) || {}).result || {}).truncated === false && !/CUT/.test(html("#conn-pf")));
 const conns = await get("connections", "id=" + ENT.entity_id);
 ok("the plane holds the derived connections, graded the weaker of each pair", conns.count >= 3);
 

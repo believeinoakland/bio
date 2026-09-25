@@ -190,7 +190,7 @@ const promote = async (id, text, type, state = null, base = null) => POST(`op=pr
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state ?? (type === "inquiry" ? "open" : type === "project" ? "forming" : "collected"),
           created: NOW, last_updated: LATER } });
 const mustPromote = async (id, text, type, state = null) => {
@@ -206,7 +206,7 @@ const createProject = async (name, text) => {
   const r = await POST(`op=promote&token=${RUTH}`, {
     base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: NOW, last_updated: LATER } });
   if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 800)}`);
   return r.bundleId;
@@ -616,7 +616,7 @@ console.log("\n--- 5. §7.1 item 7: WITHDRAWAL APPENDS — conclude, withdraw, c
   const tamper = await POST(`op=promote&token=${RUTH}`, {
     bundleId: B, base: await shaOf(B), snapKey: "99991231T235959Z_tamper",
     files: [{ path: "bundle.md", text: cut, bytes: cut.length, sha256: sha(cut) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: "Budget",
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: NOW, last_updated: LATER } });
   t("the fixture's cut really removed an entry (else the next arm proves nothing)", entriesIn(cut), 2);
   t("the rewrite lands (promote gates on shape, not on the catalogue's history rules)", tamper?.ok, true);

@@ -55,13 +55,32 @@ const RISK_TIERS_JSON = JSON.stringify(RISK_TIERS);
 const escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">'
   + "This copy could not read its group just now</p>";
+/* D-596 — THE DISPLAY NAME AND THE VERIFIED DOMAIN, ON THE SAME LINE AND UNDER THE SAME RULES AS THE PLANE'S.
+ * The read is now op=groupidentity's PUBLIC projection (index.mjs names `groupidentitypublic` for this page), so the
+ * recorded state can carry `display_name`, `domain` and `domain_verified_at` beside the slug. `BIO_Publication_v0_1.md`
+ * §7 points 2 and 3, rendered as UI-78 renders them in the member UI's header:
+ *   - a display name is shown WITH the slug, never instead of it — "name · slug" — and only where a slug is shown;
+ *   - a domain is shown only WITH the date of the verdict that verified it — "domain verified YYYY-MM-DD". The plane
+ *     already withholds an unverified claim; this is the surface's own gate beside it, so a read that hands this line a
+ *     domain with no dated verdict (an older plane, a hand-built answer) shows no domain rather than an undated one.
+ * The name is member-supplied text on a PUBLIC page: every value is escaped (`escGroup`), the date included. */
+const verifiedDay = (x) => (typeof x === "string" && /^\d{4}-\d\d-\d\d/.test(x) ? x.slice(0, 10) : null);
 /** The group line for ONE read of the record — `{ answered, result }`, as the control plane's `doAnswer` returns it.
  *  Only an answer that says `group: null` is "none"; anything the line cannot read as an answer is "unread". */
 export function groupLine(read) {
   const r = read && read.answered === true && read.result && read.result.ok === true ? read.result : null;
-  if (r && typeof r.group === "string" && r.group)
-    return '<p class="eyebrow" id="instance-group" data-group="recorded"><span class="slug">'
-      + escGroup(r.group) + "</span> &middot; group instance</p>";
+  if (r && typeof r.group === "string" && r.group) {
+    const name = typeof r.display_name === "string" && r.display_name.trim() ? r.display_name : null;
+    const day = verifiedDay(r.domain_verified_at);
+    const domain = typeof r.domain === "string" && r.domain && day ? r.domain : null;
+    return '<p class="eyebrow" id="instance-group" data-group="recorded">'
+      + (name ? '<span class="name">' + escGroup(name) + "</span> &middot; " : "")
+      + '<span class="slug">'
+      + escGroup(r.group) + "</span> &middot; group instance"
+      + (domain ? ' &middot; <span class="domain">' + escGroup(domain) + '</span> verified <time datetime="'
+                  + escGroup(day) + '">' + escGroup(day) + "</time>" : "")
+      + "</p>";
+  }
   if (r && r.group === null)
     return '<p class="eyebrow" id="instance-group" data-group="none">No group is recorded for this copy yet</p>';
   return GROUP_LINE_UNREAD;
@@ -92,7 +111,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
 main{max-width:640px;margin:0 auto;padding:56px 22px 80px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--verdigris);margin:0 0 14px}
-.eyebrow .slug{text-transform:none;letter-spacing:.04em}
+.eyebrow .slug,.eyebrow .name,.eyebrow .domain{text-transform:none;letter-spacing:.04em}
 h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(28px,4.2vw,38px);
   line-height:1.1;margin:0 0 16px;letter-spacing:-.01em}
 h2{font-family:Georgia,serif;font-weight:600;font-size:20px;margin:28px 0 10px}
@@ -1334,13 +1353,29 @@ $("#m-add").addEventListener("click", async ()=>{
    deserves to be told what the machine thinks they just handed it, BEFORE
    they commit it. */
 function describeKey(line){
-  const t = String(line||"").trim().split(" ").filter(function(x){ return x; });
+  const t = String(line||"").trim().split(/\\s+/).filter(function(x){ return x; });
   if (t.length < 2 || t[0] !== "ssh-ed25519" || !/^AAAA/.test(t[1]))
     return { ok:false, why:"That does not look like a public key line. It should be one line starting with ssh-ed25519." };
   const label = t.slice(2).join(" ");
   if (label === "bio-release")
     return { ok:false, why:"That is the RELEASE key, which signs software. This box wants the ratification key, the one labelled bio-ratify." };
   return { ok:true, label: label || "(no label)", fp: t[1].slice(0,16) };
+}
+/* D-605: what op=signeradd is sent for a pasted key LINE. The op takes the line's
+   base64 field alone as keyB64 (Store#signerAdd refuses anything else BAD_KEY), so
+   the line is split, as the member UI's custodial dialog splits it (D-134): the
+   second token is the key, and whatever follows it, the label, is the comment.
+   Before D-605 the whole line went as keyB64 and every registration from this
+   page was refused. Anything that is not such a line is sent as it was pasted,
+   and the plane says what it makes of it. */
+function signerAddBody(line, who){
+  const raw = String(line||"").trim();
+  const t = raw.split(/\\s+/).filter(function(x){ return x; });
+  const isLine = t.length >= 2 && t[0] === "ssh-ed25519";
+  const body = { keyB64: isLine ? t[1] : raw, memberId: String(who||"").trim().toLowerCase() };
+  const label = isLine ? t.slice(2).join(" ") : "";
+  if (label) body.comment = label;
+  return body;
 }
 $("#k-key").addEventListener("input", ()=>{
   const v = $("#k-key").value.trim();
@@ -1355,8 +1390,7 @@ $("#k-add").addEventListener("click", async ()=>{
   const e = $("#k-err"); e.textContent = "";
   const d = describeKey($("#k-key").value);
   if (!d.ok) { e.textContent = d.why; return; }
-  const r = await post("signeradd", { keyB64: $("#k-key").value.trim(),
-    memberId: $("#k-who").value.trim().toLowerCase() });
+  const r = await post("signeradd", signerAddBody($("#k-key").value, $("#k-who").value));
   if (!r.result || !r.result.ok) {
     e.textContent = r.result && r.result.reason === "BAD_KEY"
       ? "That is not a public key this system can read. Copy the whole line from the signing page."

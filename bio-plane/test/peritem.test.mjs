@@ -111,7 +111,7 @@ try {
       subject: "https://www.oaklandca.gov/documents/agenda.pdf", at: AT });
     await doPost("promote", {
       bundleId: bundle, base: null, snapKey: `20260923T120000Z_peritem_${n}`, author: "consumer",
-      meta: { object_type: "information", group: "believe-in-oakland", title: "Per-item fixture",
+      meta: { object_type: "information", group: "believe-in-oakland",
               current_state: "collected", created: AT, last_updated: AT },
       files: [{ path: "bundle.md", text: "---\nid: " + bundle + "\n---\n", bytes: 10 }],
       register: [{ sha256: sha, path: "snapshots/agenda.pdf", encoding: "binary", bytes: 10 }],
@@ -310,9 +310,12 @@ try {
    *      NO_SUCH_PROGRESSION — the same true-and-useless refusal IC-60's bridge exists to have
    *      replaced, arriving by the other door. It now refuses CLASS_NOT_DISPOSED naming `instead`.
    *
-   * WHAT THIS BLOCK CANNOT SEE: the SURFACE. `civicos-ui/app.html`'s `queueSetOpFor` returns null for
-   * a finding whose `disposition.scope` is `project`, so no member can select one today whatever the
-   * plane accepts — that half is UI's and is DELEGATED (CLAIMS.md, REC-205), not closed here. */
+   * WHAT THIS BLOCK CANNOT SEE: the SURFACE. `civicos-ui/app.html`'s `queueSetOpsFor` (UI-94's name for
+   * `queueSetOpFor`) offers `proposedispose` for a finding whose `disposition.scope` is `project` wherever
+   * `queueFindingHomes` reads a home from the record's `disposition.projects` (no set act only where it
+   * publishes none), and the set act sends each such item as `{ project, finding }` — UI-110 closed that
+   * half on the surface; `civicos-ui/test/queue-projectscope.test.mjs` drives it, not this block
+   * (corrected at c22-batch29 after UI-110). */
   console.log("\n--- 9 · REC-205: a project-scoped finding in the selection ---");
   /* The fixture is `d266scope.test.mjs`'s, carried here deliberately rather than shared: the two
      suites must be able to disagree about the SET's behaviour without disagreeing about what a
@@ -371,7 +374,7 @@ try {
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha9(text) }],
     register: type === "information"
       ? [{ path: "snapshots/doc.bin", sha256: sha9(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${title || id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW9, last_updated: LATER9 } }));
   const must9 = async (what, r) => {

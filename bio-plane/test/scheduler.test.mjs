@@ -418,7 +418,7 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
       bundleId: INQ, base: null, snapKey: `${INQ}-fl4`,
       files: [{ path: "bundle.md", text: inquiryMd, bytes: inquiryMd.length, sha256: sha(inquiryMd) }],
       register: [],
-      meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${INQ}`,
+      meta: { object_type: "inquiry", group: "believe-in-oakland",
               current_state: "open", created: NOW, last_updated: LATER } });
     if (!pr.ok) throw new Error(`promote: ${JSON.stringify(pr).slice(0, 400)}`);
 

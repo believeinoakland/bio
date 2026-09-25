@@ -187,7 +187,7 @@ const promote = async (id, text, type, { reading = null } = {}) => {
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260923T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
     files, register: [] });
   if (r.ok !== false) HEAD.set(id, r.bundleSha);

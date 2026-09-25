@@ -216,7 +216,7 @@ const promote = async (id, text, type, state, tok = RUTH, register = []) => {
     bundleId: id, base: null, snapKey: `${id}-${sha(text).slice(0, 8)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: LATER } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
   return r;
@@ -255,7 +255,7 @@ const promoteProject = async (label, text) => {
     base: null, snapKey: `${label}-${sha(text).slice(0, 8)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${label}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: NOW, last_updated: LATER } });
   if (!r || r.ok === false || !r.bundleId) throw new Error(`promote ${label}: ${JSON.stringify(r).slice(0, 600)}`);
   return r.bundleId;
@@ -568,7 +568,7 @@ const INQ_D = "INQ-2026-4400-does-northbay-perform";
     bundleId: INQ_D, base: null, snapKey: `${INQ_D}-withleg`,
     files: [{ path: "bundle.md", text: legMd, bytes: legMd.length, sha256: sha(legMd) }],
     register: [],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${INQ_D}`,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: LATER } });
   /* The refusal text rides the assertion rather than a bare `false`, because a
      fixture that fails silently sends the next reader to the producer to look

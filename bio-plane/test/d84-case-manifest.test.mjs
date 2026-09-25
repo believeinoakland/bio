@@ -268,7 +268,10 @@ const infoMd = (id) => ["---",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const inquiryMd = (id, cites) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
-  `title: "What does ${id} rest on?"`, "current_state: open", "prior_state: null",
+  /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: its one caller CONCLUDED this finding BY LABEL — the bytes
+     said `open`, the request `concluded`, and the projection took the request's word. The record now takes the
+     document's, so the document states the state the fixture needs. */
+  `title: "What does ${id} rest on?"`, "current_state: concluded", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland",
@@ -310,7 +313,9 @@ const promote = async (tok, id, text, type, state, register = []) => {
   const r = await POST(`op=promote&token=${tok}`, {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260923T${String(210000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+       state, and is now refused; a project document here states no title, so the label stays its only name. */
+    meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register });
   if (!r || r.ok === false || !r.bundleSha) bail(`promote ${id} -> ${state}`, r);
@@ -561,7 +566,7 @@ const cen0 = await censusOf();
 const backQ = await POST(`op=promote&token=${IRIS}`, {
   bundleId: BQ, base: HEAD.get(BQ),
   snapKey: "20260923T235959Z_d468back",
-  meta: { object_type: "bias", group: "believe-in-oakland", title: `Bundle ${BQ}`,
+  meta: { object_type: "bias", group: "believe-in-oakland",
           current_state: "proposed", created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text: biasMd(BQ, "proposed", "q1", TXT_Q2),
             bytes: biasMd(BQ, "proposed", "q1", TXT_Q2).length, sha256: sha(biasMd(BQ, "proposed", "q1", TXT_Q2)) }] });
@@ -658,9 +663,13 @@ await block("5", async () => {
                                                      body });
   const idsOf = (g) => g.findings.map((x) => x.check);
   const has41_13 = (g) => idsOf(g).filter((c) => c === "C-41.13");
-  t("PUBLISHED-READS-/3: every case this suite published and ratified is `bio-case-document/3` — "
+  /* CORRECTED 2026-09-25 (REC-219), never exempted: this row pinned `bio-case-document/3`, which was the token
+     op=publish authored until §3 rule 18 moved it to `/4` (BOB #34, 2026-09-24 23:08Z). /4 carries every /3
+     obligation this section asserts (`caseDocumentRequiresDisclosures` answers yes for both), so every
+     other row here stands as written; a /3 document keeps ratifying, which `rec219-case-document-v4` asserts. */
+  t("PUBLISHED-READS-/4: every case this suite published and ratified is `bio-case-document/4` — "
   + "with no lens, under one, and after it moved",
-    [FA.format, FB.format, FC.format], ["bio-case-document/3", "bio-case-document/3", "bio-case-document/3"]);
+    [FA.format, FB.format, FC.format], ["bio-case-document/4", "bio-case-document/4", "bio-case-document/4"]);
   t("REACH: each carries the two disclosures the row makes required — the manifest map, its bundle list, "
   + "the acknowledged count (ZERO: nobody acknowledged) and its EMPTY list",
     [typeof FB.bias_manifest, Array.isArray(FB.bias_manifest_bundles), FB.completeness?.acknowledged,
@@ -749,7 +758,7 @@ await block("6", async () => {
     return POST(`op=promote&token=${IRIS}`, {
       bundleId: id, base,
       snapKey: `20260924T${String(100000 + (++seq)).slice(-6)}Z_${sha(`d468-${seq}`).slice(0, 8)}`,
-      meta: { object_type: "bias", group: "believe-in-oakland", title: `Bundle ${id}`,
+      meta: { object_type: "bias", group: "believe-in-oakland",
               current_state: state, created: NOW, last_updated: LATER },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }] });
   };

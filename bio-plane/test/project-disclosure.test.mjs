@@ -121,7 +121,9 @@ const create = (tok, id, type, title) => {
   const md = type === "project" ? projectMd(id, title) : inquiryMd(id);
   return RAW(`op=promote&token=${tok}`, {
     ...(type === "project" ? {} : { bundleId: id }), base: null, snapKey: `20260701T0000${String(++seq).padStart(2, "0")}Z_rec139`,
-    meta: { object_type: type, group: "believe-in-oakland", title,
+    /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: a question's document states its own title, which this
+       label contradicted; only a project, whose document states the same title, is labelled. */
+    meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title } : {}),
             current_state: type === "project" ? "forming" : "open", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] });
 };
@@ -324,7 +326,7 @@ console.log("\n--- 4. CLOSED BY REC-141: a CREATION naming a hidden project's id
      naming an id is refused BEFORE any id is looked up, one answer taken or not (`project-mint.test.mjs`). */
   const named = (id) => { const md = projectMd(null, "Anything at all");
     return RAW(`op=promote&token=${VERA}`, { bundleId: id, base: null, snapKey: `20260701T0000${String(++seq).padStart(2, "0")}Z_rec139`,
-      meta: { object_type: "project", group: "believe-in-oakland", title: "Anything at all", current_state: "forming",
+      meta: { object_type: "project", group: "believe-in-oakland", current_state: "forming",
               created: NOW, last_updated: LATER },
       files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }); };
   const r = await named(HIDDEN), f = await named(HIDDEN.replace(/-\d{4}-/, "-9999-"));

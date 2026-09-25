@@ -69,6 +69,8 @@
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
          CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS, LAW_LEVELS,
+         /* D-147: the lifecycle's two closed sets, from the catalog that judges them (C-94). */
+         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES,
          /* REC-43 / DEC-39. The two letters the co-attestation fence states are
             the RULE's own, imported from where the refusal that enforces it is
             computed, so the sentence a member reads and the grade the gate will
@@ -587,6 +589,11 @@ export const VOCABULARIES = {
      direction `action_kind` and `basis_roles` above already take. One array. */
   action_basis_kinds: ACTION_BASIS_KINDS,
   correspondence_directions: CORRESPONDENCE_DIRECTIONS,
+  /* D-147: THE RECORDS-REQUEST LIFECYCLE's closed sets — the stages an entry may state, by direction, and the
+     outcomes a decision carries as the body gave it. Published so a surface offers them before a member is
+     refused, the REC-39 reasoning below; the SAME objects C-94 judges against. */
+  correspondence_stages: CORRESPONDENCE_STAGES,
+  correspondence_outcomes: CORRESPONDENCE_OUTCOMES,
   /* REC-39, UI-24's second measured gap and the LAST of the action loop's closed
      sets to reach here. How an action ENDED: C-2.10 requires one of these four
      the moment an action's state is `resolved`, and `op=actionmove` refuses
@@ -828,6 +835,11 @@ export const RUNG_ABSENT = {
   projectinvite:        { ground: "credential", is: "roster act on a project, position-enforced by the store" },
   projectjoin:          { ground: "credential", is: "roster act on a project" },
   projectleave:         { ground: "credential", is: "roster act on a project" },
+  /* REC-150 (Membership v2 §7.14): the request to join is participation — WHO may act in a project — exactly as the
+     roster acts beside it are; a GRANT writes the same `invited` row `projectinvite` does. */
+  projectrequest:         { ground: "credential", is: "a member outside a discoverable project asks to be added (§7.14); one open at a time, withdrawn by the requester" },
+  projectrequestwithdraw: { ground: "credential", is: "the requester closes their own open request to join" },
+  projectrequestanswer:   { ground: "credential", is: "an owner grants a request to join (an invitation: `invited`, never `joined`) or declines it" },
   projectremove:        { ground: "credential", is: "roster act on a project" },
   projectowneradd:      { ground: "credential", is: "roster act on a project" },
 
@@ -929,6 +941,11 @@ export const RUNG_ABSENT = {
      act on the record, corrected forward (a proposal is never deleted — IC-83),
      never signed by the thing that made it (C-35.10). */
   extractpropose:       { ground: "undetermined", is: "an EXTRACT run PROPOSES a reading — what the text this record already holds NAMES, carrying an ai(function, version) step, bounded by the run's `mints` allowance and part of a finding only when a member cites it (§7.3)" },
+  /* REC-147 — `op=contradictionpropose`, on `extractpropose`'s ground directly above and for its reason: a run CHOOSES
+     what to propose over pairs the plane formed, so not `substrate`; it records what a machine judged about two
+     things, not what was observed, so not `observational`. The ladder's own gap, stated: an act on the record,
+     corrected forward (a candidate is never updated), labelled machine work and never signed. */
+  contradictionpropose: { ground: "undetermined", is: "a run PROPOSES how two referents the pairing formed relate — one of §5's five labels and its reason, labelled machine work, state proposed, and never a finding until a member judges it (CONTRADICTION-IDENTIFY-DESIGN.md §8)" },
   /* REC-86 / IC-123 — NARROW, and the ground is the ladder's own gap rather than
      `reasoned`, on MEASUREMENT: the act refuses a new reading with no account of
      what changed (C-50.11, `NARROW_NO_DESCRIPTION`), but that code is not in
@@ -965,6 +982,10 @@ export const RUNG_ABSENT = {
      later look is a new row, never a rewrite of the earlier one. */
   lead:                 { ground: "undetermined", is: "a member writes a LEAD in their own words — what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
   leadshare:            { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
+  /* MK-7 / IC-319 — THE ATTRIBUTION ACT. Ground `undetermined` on `testify`'s measurement: none of its refusals
+     (C-92.1–.9) are in `JUSTIFICATION_REFUSALS`. NOT `reversible` as a rung: a later act replaces the level for an
+     unsigned edition, and a signed edition's statement answers forever — nothing takes a published level back. */
+  attribute:            { ground: "undetermined", is: "an observation's AUTHOR chooses what one case edition publishes of who said it — group, project, cover or name — never prefilled, and re-authors that edition's unsigned case document (MEMBER-KNOWLEDGE-DESIGN.md §4.2)" },
   /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are
      `credential`: their whole subject is WHO MAY READ one draft, and they write
      nothing the record asserts. The DRAFT and the COMMENT are `undetermined` on
@@ -1740,8 +1761,10 @@ export const ACTS = [
      the roster acts themselves receive — and each predicate below is its own act's refusal
      stated as a condition, never D-310's "owner of SOME project":
        projectinvite      NOT_THE_OWNER            (`projectInvite`)   -> owner of THIS project
-       projectjoin        NOT_INVITED              (`projectJoin`)     -> any participation row
-       projectleave       NOT_A_PARTICIPANT/NOT_JOINED (`projectLeave`) -> state `joined`
+       projectjoin        NOT_INVITED              (`projectJoin`)     -> a participation row, not
+                          `joined` (REC-186: a joined caller's join changes nothing)
+       projectleave       NOT_A_PARTICIPANT/NOT_JOINED, LAST_OWNER_CANNOT_LEAVE (`projectLeave`)
+                          -> state `joined`, and not the only owner (REC-186)
        projectremove      NOT_THE_OWNER            (`projectRemove`)   -> owner of THIS project
        projectowneradd    NOT_THE_OWNER            (`projectOwnerAdd`) -> owner of THIS project
        projectownerremove NOT_THE_OWNER, LAST_OWNER (`projectOwnerRemove`) -> owner, and the
@@ -1751,9 +1774,14 @@ export const ACTS = [
      REVERSED v1.4, and the store has refused a non-owner since. D-311's own row and D-310's
      argument both said "an ADMINISTRATOR's" — the v1.4 reading; each predicate here is derived
      from the refusal its op RAISES, which is what caught it.
-     `projectjoin` IS OFFERED TO EVERY PARTICIPANT, joined ones included: `projectJoin` refuses only
-     a caller with no participation row, and a joined participant's join SUCCEEDS (a leaving one's
-     withdraws the request, 7.6). Withholding it there would be a fence tighter than its rule.
+     `projectjoin` IS OFFERED TO A PARTICIPANT WHO IS NOT JOINED — invited, or leaving (whose join
+     withdraws the request, 7.6). CORRECTED by REC-186 on BOB #31's ruling of 2026-09-23 21:37Z: this
+     read "offered to every participant, joined ones included … withholding it there would be a fence
+     tighter than its rule". `projectJoin` stays idempotent and a joined caller's join still SUCCEEDS,
+     but it changes nothing, and an offer that does nothing is an overclaim (DEC-8) — the store is not
+     narrowed, only the offer. `projectleave` likewise is not offered to the project's ONLY owner:
+     `projectLeave` refuses LAST_OWNER_CANNOT_LEAVE through `Store.ownerMath` over `#owners`, the same
+     arithmetic `f.roster.owner_floor_clear` already states, so the offer reads that fact.
      WHAT THESE DO NOT SAY is what turns on a PARAMETER — the handle named, its status, the reason,
      the 7.10 votes still owed (CONSENSUS_REQUIRED, VOTES_SHORT) — the release precedent: the
      record permits the move, not that this caller's parameters will pass.
@@ -1765,9 +1793,10 @@ export const ACTS = [
   { id: "projectinvite", label: "Invite a member to this project", weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true },
   { id: "projectjoin", label: "Join this project", weight: "single", types: ["project"],
-    applies: (f, ty) => ty === "project" && typeof f.roster?.state === "string" },
+    applies: (f, ty) => ty === "project" && typeof f.roster?.state === "string" && f.roster.state !== "joined" },
   { id: "projectleave", label: "Ask to leave this project", weight: "single", types: ["project"],
-    applies: (f, ty) => ty === "project" && f.roster?.state === "joined" },
+    applies: (f, ty) => ty === "project" && f.roster?.state === "joined"
+                     && (f.roster?.owner !== true || f.roster?.owner_floor_clear === true) },
   { id: "projectremove", label: "Remove a participant", weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true },
   { id: "projectowneradd", label: "Add an owner", weight: "single", types: ["project"],
@@ -1890,7 +1919,7 @@ export const NON_ACTS = {
   /* D-148. Not object-directed on `contradictionpairs`' reasoning: it reads ACROSS
      actions by counterparty, and what it returns is something to LOOK AT. */
   actionquotes: "read: the fee quotes the record holds, by counterparty or by request, side by side; judges none of them and writes nothing",
-  versionnotice: "read: whether the document a citation rests on has a newer version at its address, and whether a passage at the same extent is in it — a candidate or UNDETERMINED; moves nothing and writes nothing (D-394)",
+  versionnotice: "read: whether the document a citation rests on has a newer version at its address, and whether a passage at the same extent is in it — a candidate or UNDETERMINED — and whether the update AFFECTS the cited part, graded A/B (unaffected), C/NOT_FOUND (affected) or UNDETERMINED with its reason; moves nothing and writes nothing (D-394, REC-221)",
   /* REC-87 / IC-128. TRANSCRIBE is NOT an object-directed act, on `contentmint`'s
      reason: its subject is a PORTION of a document — (document, extent) — and
      `affordanceFacts` carries no page and no region, so an applies() over those
@@ -1912,6 +1941,10 @@ export const NON_ACTS = {
   lead: "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence",
   leadlook: "lead-directed: a member records following a lead, keyed by lead id; writes one observation_log row under authority_kind lead",
   leadshare: "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project); writes a `lead_shares` row and no edge",
+  /* MK-7 / IC-319. The ATTRIBUTION ACT is not offered against an object's facts: its subject is a member's choice
+     about their OWN words in ONE case edition, and whether an edition reaches an observation is the case's, not the
+     observation's. The surface that offers it is Program B's (MEMBER-KNOWLEDGE-DESIGN.md §8). */
+  attribute: "author-directed: an observation's author chooses its attribution level for one prepared case edition, keyed by (case, edition, observation); writes an `observation_attributions` row and re-authors the unsigned case document",
   leadread: "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
   /* D-162 / IC-241. THE THEME is NOT an object-directed act: its subject is a member's IDEA, which
      no object's facts could say when to offer, and a placement names a document without acting on
@@ -1926,6 +1959,7 @@ export const NON_ACTS = {
      act would put "propose the governing laws" beside "state the governing laws" on one object, which is the
      record offering a member the machine's half of a ruling that exists to keep the two apart. */
   actionlawspropose: "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labelled machine work and never the action's own list",
+  idmatch: "read: one identifier recognised in its space (C.M.S., project, fund, APN) — its form, its normalised value, a C.M.S. number's reach against Legistar's floor, an APN's standing — or a PAIR judged under Framework §8.3: counts only in two independent systems read from each capture's own addresses, with the referent agreeing; writes nothing",
   themeread: "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
@@ -1939,6 +1973,9 @@ export const NON_ACTS = {
      `extractproposals` is a READ and nothing in this registry publishes reads. */
   extractpropose: "run-directed: an EXTRACT run's production, keyed by (run, document); the run is the subject and no bundle state offers it",
   extractproposals: "read: what an EXTRACT run proposed, keyed by a run or a document",
+  /* REC-147: `extractpropose`'s reason exactly — its subject is a run's judgement over a PAIR the plane formed, keyed by
+     (key, both referents at their versions), and `affordanceFacts` holds neither a run nor a pair. */
+  contradictionpropose: "run-directed: a run's judgement over a pair the plane formed, keyed by (key, both referents at their versions); the run is the subject and no bundle state offers it",
   /* Keyed by entity / capture / progression — the framework surface, not a
      bundle-state act. */
   entitycreate: "registry write, keyed by entity",
@@ -2056,6 +2093,16 @@ export const NON_ACTS = {
         the addition and the machine narrowing each being stated on its own (the report's IC
         proposal carries both halves, classified apart). */
   projectfork: "creates a NEW project; gated on the create_projects shape, not on the source object's state",
+  /* REC-150 (Membership v2 §7.14, the request to join). NOT ACTS, and each for a reason of its own shape:
+     the ASK is made at EXISTENCE sight, where no object is before the caller — op=affordances answers a project the
+     caller cannot see fully as it answers an absent one, so a control there would be offered beside nothing; it is
+     reached from op=projectdirectory's row instead, which carries the caller's own request state. WITHDRAW and
+     ANSWER act on a REQUEST, not on the project's state: their subject is the (project, requester) pair, which
+     op=projectrequests lists — the requester's own list, and the owner's queue — and that is where §7.14 step 4's
+     surface (UI-71) renders them. */
+  projectrequest: "request to join (§7.14): made at EXISTENCE sight, where no object is before the caller — reached from op=projectdirectory's row, not from a target's control strip",
+  projectrequestwithdraw: "request to join (§7.14): the requester's act on their own REQUEST, not on a bundle — listed by op=projectrequests",
+  projectrequestanswer: "request to join (§7.14): an owner's grant or decline of a REQUEST, not a state of the project — listed in the owner's queue by op=projectrequests",
   /* Identity, roster and operator surface. */
   expertisedeclare: "a member's own declaration, not a corpus act",
   expertiseconfirm: "administrator act on a declaration, class-gated",
@@ -2198,6 +2245,17 @@ export const NON_ACTS = {
      both, in `ai_credentials`. */
   aicredentialmint: "creating an agent credential with a declared task scope (D-199): instance-level governance, authored and dated by a member, keyed by nothing in the corpus. Not object-directed — it is the roster ops' territory, not a bundle's",
   aicredentialrevoke: "withdrawing an agent credential (D-199): the narrowing half of the same governance act, recorded against the member who withdrew it. Not object-directed, for the reason its counterpart is not",
+  /* REC-155 — Membership v2 §4.10 (BOB #19) gave these five SESSION reach, and a session-reachable op carries a
+     `NEEDS` row, so this drift guard requires each to be an act or named here. NAMED HERE, AND THE PAIR'S
+     SENTENCE SAYS WHAT IS TRUE RATHER THAN "not object-directed": the provenance pair IS keyed by a document.
+     Publishing either as an ACT beside a document — a label, a rung, a surface — is NOT decided by §4.10, which
+     ruled reach only, and no surface offers it; REC-155 does not invent that. The three calibration writes are
+     keyed by an ENGINE, which is no object in the corpus. */
+  provenancechain: "document-directed: rebuilds a document's provenance chain from the evidence its register already holds, keyed by bundleId; REPORTS by default and writes only on apply=1. Session reach since REC-155 (§4.10); whether a surface offers it beside a document is NOT decided, so no act row is published",
+  provenanceroute: "document-directed: records a standing marker that a document's route cannot be shown, keyed by bundleId; moves no state and no byte. Session reach since REC-155 (§4.10); whether a surface offers it beside a document is NOT decided, so no act row is published",
+  calibrate: "engine-directed: records what a probe measured of a derivation engine, keyed by (engine, version); moves no claim and no grade (CAL_CANNOT_REGRADE)",
+  calibrationsubject: "engine-directed: registers an engine this instance can probe, keyed by engine; registering is not measuring",
+  calibrationsignal: "engine-directed: records a vendor's announcement about an engine, keyed by engine; may only shorten the interval to the next probe",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.

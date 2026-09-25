@@ -150,7 +150,7 @@ const promote = async (id, text, type, { reading = null, register = [], name = i
   return post("promote", {
     ...(id != null ? { bundleId: id } : {}), base: null,
     snapKey: `20260914T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${name}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW, last_updated: LATER },
     files, register });
@@ -462,7 +462,17 @@ const rPlain = await cite(Q("again"), [DOCS[0]], `&role=supports&note=a plain ci
    difference could not be this item's. Normalising a value neither tree controls
    is the difference between a pin on the act and a pin on a random number;
    normalising anything more would be a digest that agrees for free. */
-const normalised = (await imageOf(Q("again")))
+/* CORRECTED 2026-09-25 BY REC-220, NOT EXEMPTED. The act now writes ONE more line on a no-extent
+   leg — `extent_capture`, the capture the leg was made against (Bob's 00:40Z version doctrine,
+   rule 1) — so the pristine digest would fail for the right reason. That line is not a PART of the
+   document (legHasAuthoredExtent ignores it; it names WHICH BYTES, not which portion), so it is
+   asserted on its own below and removed here, and EVERY OTHER BYTE is still held to the pre-REC-97
+   figure: the pin keeps its meaning instead of being re-measured into agreeing with itself. */
+const PIN_LINE = `    extent_capture: "${sha(`rec97-${DOCS[0]}`)}"`;
+const rawAgain = await imageOf(Q("again"));
+t("REC-220: the no-extent leg carries exactly ONE pin line, naming the document's capture",
+  rawAgain.split("\n").filter((l) => /^\s+extent_capture:/.test(l)), [PIN_LINE]);
+const normalised = rawAgain.split("\n").filter((l) => l !== PIN_LINE).join("\n")
   .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/g, "<WHEN>")
   .replace(/sel-[0-9a-f]+/g, "<SEL>");
 const got = sha(normalised);
@@ -477,9 +487,15 @@ ok_("the document a no-extent cite writes is byte-identical to the pre-item meas
    `[0]` and THREW, which killed the run and reported `-1` instead of naming the
    four assertions the arm was supposed to break. A control that crashes the
    suite tells you nothing about which rule it broke. */
-t("and the leg it wrote carries no extent key of any kind",
+/* CORRECTED 2026-09-25 BY REC-220, NOT EXEMPTED: `extent_capture` is now written on every leg onto
+   a captured document (the version pin). It names WHICH BYTES and no PART of them, so the claim this
+   assertion guards — no part was invented for a cite that named none — is still asserted, by the
+   catalogue's own `legHasAuthoredExtent` beside the key list. */
+t("and the leg it wrote carries no extent key of any kind — only the version pin",
   Object.keys((await docLegs(Q("again")))[0] ?? {}).sort(),
-  ["note", "role", "target"]);
+  ["extent_capture", "note", "role", "target"]);
+ok_("and the catalogue reads it as naming NO part of the document",
+  legHasAuthoredExtent((await docLegs(Q("again")))[0] ?? {}) === false);
 ok_("its receipt carries no `extent` either — absent, not null and not \"document\"",
   rPlain.legs && rPlain.legs.length === 1 && !("extent" in rPlain.legs[0]),
   JSON.stringify(rPlain.legs));

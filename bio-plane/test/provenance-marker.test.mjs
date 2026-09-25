@@ -633,9 +633,20 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
        when the truth is "the record could not be read". The class's remedy shape: stated, not smoothed.
        WHY A SWALLOW AND NOT A THROW: the sweep walks a page of bundles, and one unreadable register must not take
        down the answer for every other bundle on the page. */
+  /* MOVED 39 -> 40 by MK-7 (2026-09-25, land/worker/MK-7), FROM THE FIGURE THIS WALK PRINTED on this item's own
+     tree (`origin/main` @ 964da679 prints 39, this branch 40). THE ONE NEW SITE IS THIS ITEM'S OWN AND WAS LOOKED AT:
+     - MK-7, `observationsNamingAuthor`: an observation's `data/provenance.json` that will not PARSE is read as NOT in
+       §4.1's reference form — so it stays FENCED (C-53.10–.12), and the refusal SAYS so: "names its author … or
+       cannot be read to show they do not". Undetermined is fenced and stated, never let through and never smoothed
+       into "names nobody". WHY A CATCH AND NOT A THROW: the read serves op=caseratify's facts over every observation
+       a case reaches, so a throw would take down the facts read for the whole case over one unreadable file. */
+  /* MK-7 side, kept as history: CEILING 40 on its own branch; the c22-batch29 union's figure is re-read from this walk's print. */
   /* CONDUCT #21 at c21-batch28: 41 at the union — D-533's and D-525's sites, each its own and each looked at by
      its worker; RE-READ from this walk's print on the merged tree. */
-  const CEILING = 41;
+  /* CONDUCT #22 at the c22-batch29 union: 41 -> 42, RE-READ from this walk's print on the merged tree (`42 of 41`).
+     The one is MK-7's `observationsNamingAuthor` (its note above, looked at by its worker) — confirmed by listing the
+     catch sites by enclosing method on origin/main 5e8a65a8 (41) and on the merged tree (42): the only difference. */
+  const CEILING = 42;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

@@ -187,13 +187,13 @@ const promote = (id, text, type) => POST(`op=promote&token=${IRIS}`, {
   bundleId: id, base: null, snapKey: `${id}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information" ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "ui80-instance", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "ui80-instance",
           current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
 const createProject = async (label, text) => {
   const r = await POST(`op=promote&token=${IRIS}`, { base: null,
     snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "ui80-instance", title: `Project ${label}`,
+    meta: { object_type: "project", group: "ui80-instance",
             current_state: "investigating", created: NOW, last_updated: LATER } });
   if (!r?.ok || typeof r.bundleId !== "string") { ok(`FIXTURE: create project ${label}`, false, JSON.stringify(r)); await finish(1); }
   return r.bundleId;
@@ -466,7 +466,10 @@ console.log("\n--- 5. a published read that does not answer; a case pinned at an
    `r3Fed` floor by prose — a floor moved by a sentence is not a ratchet. The hand-off
    is real and is made by the derived envelope above; it is invisible to that walk for
    the reason UI-84 recorded (it keys on literals and this one arrives through a
-   function), and it must not be made visible by writing the literal down. */
+   function), and it must not be made visible by writing the literal down.
+   CORRECTED 2026-09-25 (M0-148), left standing as the receipt: the walk now blanks
+   comments and FOLLOWS `unknownOpWire` to the code the helper derives, so this hand-off
+   IS visible to it (the `FOLLOWED` print names this suite) — without the literal. */
 const pairless = { basis: LEGS };
 const p5 = await openMock(mockFor({ id: "INQ-2026-8084", sha: "c".repeat(64), fm: pairless,
   answer: unknownOpWire("publishedcase") }), "INQ-2026-8084");

@@ -246,13 +246,15 @@ const promote = async (id, text, type, base = null) => POST(`op=promote&token=${
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+     state, and is now refused; a project document here states no title, so the label stays its only name. */
+  meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
           current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
 const createProject = async (label, text) => {
   const r = await POST(`op=promote&token=${IRIS}`, {
     base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${label}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "investigating", created: NOW, last_updated: LATER } });
   if (!r?.ok || typeof r.bundleId !== "string") await bail(`create project ${label}`, r);
   return r.bundleId;

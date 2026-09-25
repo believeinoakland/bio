@@ -788,19 +788,18 @@ const ACTS_AWAITING_SURFACE = [
      named as the one thing the button does not carry, and which is asserted in the direction
      that fails. ARM A3's, A4d's and A4e's floors move in this same commit, from the figures
      those arms PRINTED. */
-  /* REC-149. Registered as a DEBT, never exempted, which is what ARM A4b asked for by name on the item's first
-     run. The act is `op=projectvisibilityset`: a project's OWNER chooses whether it is DISCOVERABLE or HIDDEN
-     (Membership Architecture v2 §7.14). THE SURFACE OWES ONE THING THE BUTTON DOES NOT: neither option is
-     preselected (§7.14: "each project chooses" is taken literally), and a project with no record reads HIDDEN in
-     the plane's own words (`op=projectvisibility`'s `recorded: false`), never as a default the surface picked. */
-  { id: "projectvisibilityset", published_by: "REC-149 (Membership v2 §7.14 step 1: the owner's setting)", owed_by: "UI — §7.14 step 3: the owner's setting control, with neither option preselected, and the create/fork forced choice", since: "2026-09-23" },
-  /* REC-214. Registered as a DEBT, never exempted, which is what ARM A4b asked for by name on the item's first run.
-     The act is `op=actionrisktier`: a member REVISES an action's risk tier as an authored, append-only act with a
-     REQUIRED reason (BOB #33, 2026-09-24; BIO_Case_Making_v0_1.md §2). THE SURFACE OWES WHAT THE BUTTON DOES NOT: the
-     tier history beside the act — every earlier tier, who set it and why, and the intake tier's author as the
-     plane's own UNDETERMINED sentence (`action.risk_tier_history`) — a REQUIRED reason field, and no tier
-     preselected. UI-104 is the row that owes it. */
-  { id: "actionrisktier", published_by: "REC-214 (BOB #33's risk-tier revision: authored, append-only, a required reason)", owed_by: "UI-104 — the action page's tier history (action.risk_tier_history, oldest first, the intake author in the plane's own words) and the revise act with a required reason and no tier preselected", since: "2026-09-24" },
+  /* `projectvisibilityset` STOOD HERE AND WAS STRUCK 2026-09-25 BY UI-70, the item the row named as owing it
+     (Membership v2 §7.14 step 3). REC-149 registered it as a debt with the one thing the button does not carry:
+     neither option preselected, and an unrecorded project shown as the plane reads it (`recorded: false`),
+     never as a default the surface picked. ARM A4c fired naming the row on the item's first run. The act is
+     now hosted by `SURFACES["project"]` (`projectVisibilityHtml`, the owner's control; every other viewer
+     reads the setting), and `project-visibility-surface.test.mjs` drives it against the REAL plane, with the
+     create and fork forms' forced choice. ARM A3's, A4d's and A4e's floors move in this same commit, from
+     the figures those arms PRINTED. */
+  /* REC-214's `actionrisktier` sat here as a DEBT from 2026-09-24 until UI-104 surfaced it (2026-09-25): the action
+     page renders `action.risk_tier_history` (the intake author in the plane's own UNDETERMINED sentence) and offers
+     the revise act with a REQUIRED reason and no tier preselected; `SURFACES.action.acts` names it in the same
+     landing. Driven against a real plane by `ui104-risk-tier.test.mjs`. */
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls
@@ -891,8 +890,10 @@ await section("ARM A · acts come from the plane", () => {
      of an act the question's page also hosts) and `withdrawconclusion`. */
   /* CONDUCT #17 (c17-batch5, 2026-09-23): D-311 (seven roster acts) and UI-74 (four version transitions) each moved these floors from the same base; the union's figures are re-read from this arm's PRINT on the merged tree. */
   /* UI-90 (2026-09-24): `actionlaws` is struck from the register and hosted by the action surface, so all three move by exactly one, from the figures THIS ARM PRINTED with the floors raised out of reach (34, 30, 30) and not by adding one to the number in the file. A3 rises for the placement; A4d rises because the struck row moves that act OUT of the register and INTO the catalogue-outside-it this floor is measured over; A4e rises because a surface now hosts it. A register row being paid moves both halves of the partition, in opposite directions, and 33/29/29 would each have carried a whole act of slack the moment this landed. */
-  ok(G.placements >= 34,
-     `ARM A3: ${G.placements} act placements are described, floor 34 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED; 33 was measured 2026-09-23 by D-311 from the figure this arm PRINTED with the floor raised out of reach on a throwaway copy — the project surface's seven roster acts, published by the plane since D-311; was 22 under UI-65, 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
+  /* UI-70 (2026-09-25): `projectvisibilityset` is struck from the register and hosted by the project surface; all three floors move from the figures THIS ARM PRINTED with the floors raised out of reach on a throwaway copy (35, 31, 31), for UI-90's reasons exactly. c22-batch29 KEPT OURS' floors (34, 30, 30) at the merge and records the branch's here: A3 35, A4d 31, A4e 31, each measured by UI-70 on its own base — CONDUCT re-reads all three from the print on the union. */
+  /* CONDUCT #22 at the c22-batch29 union (2026-09-25): all three floors MOVED from the figures THIS ARM PRINTED on the merged tree with the floors raised out of reach on a throwaway edit of this file (restored by cp, sha256 OK): A3 34 -> 36, A4d 30 -> 32, A4e 30 -> 32. Two acts left the register on the batch: UI-70's `projectvisibilityset` (its branch read 35/31/31) and UI-104's `actionrisktier` (its struck ACTS_AWAITING row) — each moves all three by one, for UI-90's reasons. */
+  ok(G.placements >= 36,
+     `ARM A3: ${G.placements} act placements are described, floor 36 (c22-batch29 union's print; measured 2026-09-24 by UI-90 from the figure this arm PRINTED; 33 was measured 2026-09-23 by D-311 from the figure this arm PRINTED with the floor raised out of reach on a throwaway copy — the project surface's seven roster acts, published by the plane since D-311; was 22 under UI-65, 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
 
   /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
      A surface naming an act the plane does not publish is the registry claiming
@@ -952,11 +953,11 @@ await section("ARM A · acts come from the plane", () => {
      into the catalogue-outside-it, and `inquiry-stance` now hosts it. 17 would
      have carried one act of slack in each. */
   /* CONDUCT #17 (c17-batch5, 2026-09-23): D-311 (seven roster acts) and UI-74 (four version transitions) each moved these floors from the same base; the union's figures are re-read from this arm's PRINT on the merged tree. */
-  ok(G.baseline.length >= 30,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 30 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED when actionlaws was struck; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the plane published no roster act; 18 was UI-65's, up from 17 when the register still named withdrawconclusion). `
+  ok(G.baseline.length >= 32,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 32 (c22-batch29 union's print; measured 2026-09-24 by UI-90 from the figure this arm PRINTED when actionlaws was struck; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the plane published no roster act; 18 was UI-65's, up from 17 when the register still named withdrawconclusion). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
-  ok(G.hostedSet.size >= 30,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 30 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED when the action surface took actionlaws; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the project surface could name none of its seven roster acts; 18 was UI-65's, up from 17 when no surface hosted withdrawconclusion). `
+  ok(G.hostedSet.size >= 32,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 32 (c22-batch29 union's print; measured 2026-09-24 by UI-90 from the figure this arm PRINTED when the action surface took actionlaws; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the project surface could name none of its seven roster acts; 18 was UI-65's, up from 17 when no surface hosted withdrawconclusion). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.
@@ -1001,7 +1002,7 @@ await section("ARM D · declared reads are real and reached", () => {
      written. It is moved rather than noted because a floor with slack is not a
      ratchet, and this one would have sat green through the deletion of a fifth
      of the file's static op calls. */
-  ok(called.size >= 78, `ARM D1: ${called.size} ops are called statically from app.html, floor 78 (MOVED 2026-09-24 by UI-92 from the figure this arm PRINTED, the arm forced to print it by raising the floor and restored by sha256 — this item added exactly one, op=casedrafts, and found the floor TWELVE low at 65, which is the fifth consecutive item to find one stale: a floor with slack is not a ratchet. Was 65 under UI-45 when it sat one low, 64 under UI-42, and 50 before that when it sat thirteen low) — an empty call set would make D3 vacuous`);
+  ok(called.size >= 79, `ARM D1: ${called.size} ops are called statically from app.html, floor 79 (MOVED 2026-09-25 by UI-88 from the figure this arm PRINTED, forced by raising the floor and restored by sha256 — this item added exactly one, op=partitionindependence, the accept ceremony's origins read; was 78, MOVED 2026-09-24 by UI-92 from the figure this arm PRINTED, the arm forced to print it by raising the floor and restored by sha256 — this item added exactly one, op=casedrafts, and found the floor TWELVE low at 65, which is the fifth consecutive item to find one stale: a floor with slack is not a ratchet. Was 65 under UI-45 when it sat one low, 64 under UI-42, and 50 before that when it sat thirteen low) — an empty call set would make D3 vacuous`);
 
   let declared = 0;
   for(const [id, s] of Object.entries(SURFACES)){
@@ -1018,7 +1019,7 @@ await section("ARM D · declared reads are real and reached", () => {
   }
   /* MOVED 2026-08-09 (UI-42) FROM 30 TO 39, from the figure THIS ARM PRINTED —
      UI-42's surface declares two reads and the floor was already seven low. */
-  ok(declared >= 54, `ARM D5: ${declared} reads are described, floor 54 (MOVED 2026-09-24 by UI-92 from the figure this arm PRINTED, alongside D1 and in the same forced print — this item declared exactly one more, op=casedrafts on the project surface, and found the floor TWELVE low at 41; was 41 under UI-45, 39 under UI-42, and 30 before that when it sat seven low)`);
+  ok(declared >= 55, `ARM D5: ${declared} reads are described, floor 55 (MOVED 2026-09-25 by UI-88 from the figure this arm PRINTED, in the same forced print as D1 — this item declared exactly one more, partitionindependence on the accept ceremony; was 54, MOVED 2026-09-24 by UI-92 from the figure this arm PRINTED, alongside D1 and in the same forced print — this item declared exactly one more, op=casedrafts on the project surface, and found the floor TWELVE low at 41; was 41 under UI-45, 39 under UI-42, and 30 before that when it sat seven low)`);
 });
 
 /* ================================================= RECIPES ARE DATA, VALIDATED */

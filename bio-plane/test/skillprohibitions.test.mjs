@@ -212,7 +212,7 @@ const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
     : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
 
 for (const [id, md, type] of [[LEDGER, infoMd(LEDGER), "information"], [INQ, inquiryMd(INQ), "inquiry"]]) {

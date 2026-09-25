@@ -237,11 +237,18 @@ const digest = (c) => sha(JSON.stringify(c ?? null));
 /* ====================================================================== */
 /* THE PRISTINE PINS — measured on 92f4c64e with CAP10_MEASURE=1, before this
    item's source existed. See the header for why these are not typed by hand. */
+/* CORRECTED by D-535 (2026-09-25), not exempted. Every pin digests a chain whose layer step carries index.mjs'
+   LAYER_FIDELITY_SOURCE as its `measured_by` text, and D-535 rewrote that text's citation from the file name
+   "MEASUREMENTS.md" to prose ("the MEASUREMENTS ledger", so a MEASUREMENTS-only diff stops selecting the suites that
+   import the plane). The old pins were right about the old sentence and wrong about nothing else: MEASURED by the
+   D-535 worker, with ONLY that one string reverted in index.mjs this suite passed all four old pins 43/0; with it
+   restored the four new digests below were read from `CAP10_MEASURE=1` on the D-535 tree (driveOdtPre is the layer
+   step ALONE, `slice(1)`, which is cityOdt's chain — as it was on 92f4c64e). Old: 6778f0e3… (odt), c65ae27c… (pdf). */
 const PRISTINE = {
-  cityOdt:     "6778f0e3c85909a3c99fbf00d5b326072ddf091502c01269d574197b1d66b4fd",
-  cityPdf:     "c65ae27c605d7c6a24b1c742c77c182bcbab35cdfc18569770f02ad7a39ea950",
-  archivedOdt: "6778f0e3c85909a3c99fbf00d5b326072ddf091502c01269d574197b1d66b4fd",
-  driveOdtPre: "6778f0e3c85909a3c99fbf00d5b326072ddf091502c01269d574197b1d66b4fd",
+  cityOdt:     "7aa7a9a9804fcfb7134eb8fb0b0991787e9be5895a6f9c3d0d76ad196ec29665",
+  cityPdf:     "eeb2db5a85c7a8ab35f3751a57ecd5c5082000cd51d27cad030cab651e0ce34f",
+  archivedOdt: "7aa7a9a9804fcfb7134eb8fb0b0991787e9be5895a6f9c3d0d76ad196ec29665",
+  driveOdtPre: "7aa7a9a9804fcfb7134eb8fb0b0991787e9be5895a6f9c3d0d76ad196ec29665",
 };
 
 const NOW = "2026-09-18T00:00:00Z";
@@ -266,7 +273,7 @@ const promote = async (id, reading) => {
   return post("promote", {
     bundleId: id, base: null,
     snapKey: `20260918T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],

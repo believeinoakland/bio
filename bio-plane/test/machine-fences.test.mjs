@@ -319,7 +319,7 @@ const promote = async (id, text, type, tok = RUTH, extraMeta = {}, extraFiles = 
     snapKey: `${id}-${String(++snapKeySeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extraFiles],
     register,
-    meta: { object_type: type, group: GROUP, title: `Bundle ${id}`,
+    meta: { object_type: type, group: GROUP,
             current_state: type === "inquiry" ? "open" : "collected",
             created: NOW, last_updated: LATER, ...extraMeta } });
 
@@ -841,7 +841,7 @@ const fence = (code, payload, machineAnswer) => {
     return POST(`op=promote&token=${tok}`, {
       bundleId: ACT, base, snapKey: `${ACT}-${String(++snapKeySeq).padStart(6, "0")}`,
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-      meta: { object_type: "action", group: GROUP, title: `Bundle ${ACT}`, current_state: "planned",
+      meta: { object_type: "action", group: GROUP, current_state: "planned",
               created: NOW, last_updated: LATER } });
   };
   const v0 = await view();
@@ -886,7 +886,7 @@ const fence = (code, payload, machineAnswer) => {
   const left = await POST(`op=promote&token=${AI}`, {
     bundleId: ACT2, base: base2, snapKey: `${ACT2}-${String(++snapKeySeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text: leftText, bytes: leftText.length, sha256: sha(leftText) }], register: [],
-    meta: { object_type: "action", group: GROUP, title: `Bundle ${ACT2}`, current_state: "planned",
+    meta: { object_type: "action", group: GROUP, current_state: "planned",
             created: NOW, last_updated: LATER } });
   t("a machine credential's revision LEAVING UNDETERMINED A TIER NO MEMBER EVER SET lands, and reads undetermined",
     [left.ok, (await view2()).tier], [true, "undetermined"]);
@@ -897,7 +897,7 @@ const fence = (code, payload, machineAnswer) => {
   const set1 = await POST(`op=promote&token=${AI}`, {
     bundleId: ACT2, base: base3, snapKey: `${ACT2}-${String(++snapKeySeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text: setText, bytes: setText.length, sha256: sha(setText) }], register: [],
-    meta: { object_type: "action", group: GROUP, title: `Bundle ${ACT2}`, current_state: "planned",
+    meta: { object_type: "action", group: GROUP, current_state: "planned",
             created: NOW, last_updated: LATER } });
   t("…and on a never-set tier the machine still cannot state 1 — refused by the same name",
     [codeOf(set1), (await view2()).tier], ["MACHINE_CANNOT_SET_RISK_TIER", "undetermined"]);

@@ -108,7 +108,7 @@ const promote = async (tok, id, text, base = null) =>
   rP(await POST(`op=promote&token=${tok}`, {
     bundleId: id, base, snapKey: `${id}-${base ? "rev" : "new"}-${String(++snapKeySeq).padStart(4, "0")}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-    meta: { object_type: "action", group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: "action", group: "believe-in-oakland",
             current_state: "active", created: NOW, last_updated: LATER },
   }));
 

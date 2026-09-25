@@ -655,8 +655,7 @@ console.log("\n--- C · the fold: op=airunlog answers byte-identically (§4.4) -
 
 await POST(`op=promote&token=${TOK}`, {
   bundleId: BUNDLE, base: null, snapKey: "20260914T090000Z_inbox", author: "ruth",
-  meta: { object_type: "inquiry", group: "believe-in-oakland",
-          title: "What did we look for?", current_state: "open", created: T0, last_updated: T0 },
+  meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open", created: T0, last_updated: T0 },
   files: [{ path: "bundle.md", text: `---\nid: ${BUNDLE}\n---\n\n## Question\n\nWhat did we look for?\n`,
             bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
   register: [],
@@ -993,7 +992,9 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
     const text = `---\n${mint ? "" : `id: ${id}\n`}object_type: ${type}\n---\n\n## Summary\n\n${id}\n`;
     const r = await POST(`op=promote&token=${TOK}`, {
       ...(mint ? {} : { bundleId: id }), base: null, snapKey: `20260916T0900${id.length % 10}0Z_${sha(id).slice(0, 8)}`,
-      meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+      /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+         state, and is now refused; a project document here states no title, so the label stays its only name. */
+      meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
               current_state: type === "project" ? "forming" : type === "inquiry" ? "open" : "collected",
               created: T0, last_updated: T0 },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
@@ -1247,8 +1248,7 @@ console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) --
   const R2 = "RUN-2026-0916-rec100";
   await POST(`op=promote&token=${TOK}`, {
     bundleId: B2, base: null, snapKey: "20260916T090000Z_inbox", author: "ruth",
-    meta: { object_type: "inquiry", group: "believe-in-oakland",
-            title: "what is the carve-out waiting on?", current_state: "open",
+    meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
             created: T0, last_updated: T0 },
     files: [{ path: "bundle.md", text: `---\nid: ${B2}\n---\n\n## Question\n\nWaiting on what?\n`,
               bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
@@ -1620,8 +1620,7 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
   const KR = "RUN-2026-0918-rec100-reaped";
   await POST(`op=promote&token=${TOK}`, {
     bundleId: KB, base: null, snapKey: "20260918T090000Z_inbox", author: "ruth",
-    meta: { object_type: "inquiry", group: "believe-in-oakland",
-            title: "what does the rollup rest on?", current_state: "open",
+    meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
             created: T0, last_updated: T0 },
     files: [{ path: "bundle.md", text: `---\nid: ${KB}\n---\n\n## Question\n\nRests on what?\n`,
               bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
@@ -1811,8 +1810,7 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
         const o = on(old);
         await o.POST(`op=promote&token=${TOK}`, {
           bundleId: KB, base: null, snapKey: "20260918T090000Z_inbox", author: "ruth",
-          meta: { object_type: "inquiry", group: "believe-in-oakland",
-                  title: "what does the rollup rest on?", current_state: "open",
+          meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
                   created: T0, last_updated: T0 },
           files: [{ path: "bundle.md", text: `---\nid: ${KB}\n---\n\n## Question\n\nRests on what?\n`,
                     bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA_A ("a" x 64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
@@ -2158,8 +2156,7 @@ t("M1b: NO READER TESTS THE THREE-WAY ANSWER AS A BOOLEAN — every one of its t
     const text = `---\nid: ${MB}\n---\n\n## What\n\nA capture nothing has read.\n`;
     await sPOST(`op=promote&token=${ADM}`, {
       bundleId: MB, base: null, snapKey: "20260924T120000Z_d500",
-      meta: { object_type: "inquiry", group: "believe-in-oakland",
-              title: "the watermark fixture", current_state: "open",
+      meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
               created: T0, last_updated: T0 },
       files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text) }],
       register: [{ sha256: MSHA, path: "data/d500.pdf", encoding: "binary", bytes: 10 }] });
@@ -2281,8 +2278,7 @@ t("M1b: NO READER TESTS THE THREE-WAY ANSWER AS A BOOLEAN — every one of its t
       const t0 = Date.now();
       await bPOST(`op=promote&token=${ADM}`, {
         bundleId: bundle, base: null, snapKey: `20260924T120000Z_d516_${attempt}`,
-        meta: { object_type: "inquiry", group: "believe-in-oakland",
-                title: "the band fixture", current_state: "open",
+        meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
                 created: T0, last_updated: T0 },
         files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text) }],
         register: [{ sha256: sha, path: "data/d516.pdf", encoding: "binary", bytes: 10 }] });

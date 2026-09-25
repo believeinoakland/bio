@@ -398,7 +398,7 @@ h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px
 .fence{grid-row:3/4;grid-column:2/3;position:relative;height:var(--fence-h);background:var(--paper-2);border-top:1px solid var(--rule-strong);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
 .fence::before{content:"";position:absolute;top:-4px;left:0;right:0;border-top:1px solid var(--rule-strong)}
 .fence .fl{font-family:var(--font-fact);font-size:11.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--ink-soft)}
-.fence .idstr{font-size:12px;color:var(--muted)}
+.fence .idstr{font-size:12px;color:var(--muted);min-width:0;margin-left:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ---- published shell ---- */
 #pub{display:none}
@@ -981,17 +981,24 @@ setInterval(buildCheck, 5*60*1000);
    every sovereign group's own account, so every instance's public page claimed to be this project's —
    the record claiming an association it cannot support, which is the defect class
    `BIO_Publication_v0_1.md` §7 exists to refuse.
-   NOW: both surfaces read `op=instancegroup` (IC-174: `{ ok, group }` or `{ ok, group:null, detail }`)
-   and show THREE states, the setup page's own three (`bio-plane/src/setup.mjs` `groupLine`), in its words:
+   UI-77 had both surfaces read `op=instancegroup` (IC-174: `{ ok, group }` or `{ ok, group:null, detail }`;
+   since UI-78 the read is `op=groupidentity`, below, whose `group` is the same field) and show THREE states, the setup page's own three (`bio-plane/src/setup.mjs` `groupLine`), in its words:
      recorded — the SLUG, as the record holds it (§7 point 1: the slug is public);
      none     — the record answered and records no group: said in words, never a blank, never a default;
      silent   — the record did not answer (an error, a silent store, an older plane that refuses a
                 stranger, no plane at all): said as THAT, never as "none" (REC-52).
    The markup carries the silent line, so a surface painted before any read names nobody.
-   WHAT IS NOT SHOWN, and why: a DISPLAY NAME (§7 point 2) and a VERIFIED DOMAIN (§7 point 3) are not
-   built on the plane, so `#p-gid` — where the domain stood — is left empty (a domain is shown only while
-   verified, and none is), and nothing stands in for a display name: when one exists it is shown WITH
-   the slug, never instead. The monogram is the slug's own first character, and nothing when there is no slug.
+   UI-78, 2026-09-25 — §7 POINTS 2 AND 3, READ FROM `op=groupidentity` (REC-164, IC-223), which answers
+   `op=instancegroup`'s slug under the same rule for WHO and WHICH STORE, and beside it:
+     a DISPLAY NAME — shown WITH the slug, never instead of it (`groupLabel`): a name that imitates another
+                body cannot stand alone as an identity. The plane answers one only beside a recorded slug,
+                and this surface shows none without a slug either;
+     a DOMAIN   — on the PUBLIC header only while its latest verdict is `verified`, and only with that
+                verdict's date (`groupDomainPublic`): a domain with no dated verdict beside it is not shown,
+                whatever the answer carries, so the surface cannot claim an association it did not read;
+     the CLAIM  — members (the credentialed read) see the claimed domain and its latest DATED verdict in the
+                fence (`groupClaimLine`), whatever the verdict, and whether a stranger is shown it.
+   The monogram stays the slug's own first character: a display name is presentation, the slug the identity.
    WHICH READ: the working space reads through `recR`, holding the member's credential, so it asks the
    store every other read on that screen asks (a probe's scratch namespace included). The published
    space reads through `apiQ`, holding NOTHING — its public-read seam, so a stranger's header and a
@@ -1000,15 +1007,49 @@ const GROUP_WORDS = {
   none:   "No group is recorded for this copy yet",
   silent: "This copy could not read its group just now",
 };
+const GROUP_VERDICTS = ["verified", "absent", "mismatched", "undetermined"];
 function groupFromAnswer(r){
-  if(r && r.ok === true && typeof r.group === "string" && r.group) return { state:"recorded", slug:r.group };
+  if(r && r.ok === true && typeof r.group === "string" && r.group) return groupFacts(r, r.group);
   if(r && r.ok === true && r.group === null) return { state:"none", slug:null };
   return { state:"silent", slug:null };
+}
+/* UI-78: what the answer says beside a recorded slug — each fact taken only in the shape the plane states it. */
+function groupFacts(r, slug){
+  const g = { state:"recorded", slug, name:null, domain:null, domainAt:null, claim:null };
+  if(typeof r.display_name === "string" && r.display_name.trim()) g.name = r.display_name.trim();
+  if(typeof r.domain === "string" && r.domain && typeof r.domain_verified_at === "string" && r.domain_verified_at){
+    g.domain = r.domain; g.domainAt = r.domain_verified_at;
+  }
+  const c = r.domain_claim;
+  if(c && typeof c === "object" && typeof c.domain === "string" && c.domain){
+    const l = c.latest && typeof c.latest === "object" && GROUP_VERDICTS.includes(c.latest.verdict) ? c.latest : null;
+    g.claim = { domain:c.domain, verdict:l ? l.verdict : null, checkedAt:l ? (l.checked_at || null) : null,
+                detail:l && typeof l.detail === "string" ? l.detail : null };
+  }
+  return g;
+}
+/* The words a surface shows for WHO: the slug, or the display name WITH the slug — never the name alone. */
+function groupLabel(g){
+  if(g.state !== "recorded") return GROUP_WORDS[g.state];
+  return g.name ? `${g.name} \u00b7 ${g.slug}` : g.slug;
+}
+/* The public header's domain line: only a domain the answer dates as verified, with that date; else nothing. */
+function groupDomainPublic(g){
+  return g.state === "recorded" && g.domain && g.domainAt ? `${g.domain} \u00b7 verified ${String(g.domainAt).slice(0, 10)}` : "";
+}
+/* The member's view of the claim: the domain, its latest verdict dated, and whether a stranger is shown it. */
+function groupClaimLine(g){
+  const c = g.state === "recorded" ? g.claim : null;
+  if(!c) return "";
+  if(!c.verdict) return `domain claimed: ${c.domain} \u2014 not yet checked, not shown publicly`;
+  const when = c.checkedAt ? ` ${String(c.checkedAt).slice(0, 10)}` : " (undated)";
+  return `domain claimed: ${c.domain} \u2014 ${c.verdict}${when}, `
+    + (c.verdict === "verified" ? "shown publicly" : "not shown publicly");
 }
 async function readGroup(space){
   if(PLANE.preview) return { state:"silent", slug:null };
   try{
-    return groupFromAnswer(space === "published" ? await apiQ("instancegroup") : await recR("instancegroup"));
+    return groupFromAnswer(space === "published" ? await apiQ("groupidentity") : await recR("groupidentity"));
   }catch(_){ return { state:"silent", slug:null }; }
 }
 function paintGroupAt(sel, g, words){
@@ -1018,14 +1059,16 @@ function paintGroupAt(sel, g, words){
 }
 async function paintGroup(space){
   const g = await readGroup(space);
-  const words = g.state === "recorded" ? g.slug : GROUP_WORDS[g.state];
+  const words = groupLabel(g);
   if(space === "published"){
     paintGroupAt("#p-gname", g, words);
     paintGroupAt("#p-mono", g, g.slug ? g.slug.charAt(0).toUpperCase() : "");
-    if($("#p-gid")) $("#p-gid").textContent = "";
+    if($("#p-gid")) $("#p-gid").textContent = groupDomainPublic(g);
   } else {
     paintGroupAt("#m-grp", g, words);
-    paintGroupAt("#m-idstr", g, words);
+    const claim = groupClaimLine(g);
+    paintGroupAt("#m-idstr", g, claim ? `${words} \u00b7 ${claim}` : words);
+    if($("#m-idstr")) $("#m-idstr").title = claim ? `${words} \u00b7 ${claim}` : words;   /* the whole line, if the fence cuts it */
   }
   return g;
 }
@@ -1479,7 +1522,7 @@ async function boot(){
   await loadActSource(true);
   buildRail(w);
   $("#m-handle").innerHTML = (w.session ? esc(w.handle || w.member || "member") : (w.tokenClass ? esc(w.tokenClass)+" token" : "connected")) + ' <span style="color:var(--muted)">&#9662;</span>';
-  await paintGroup("working");   /* UI-77: the recorded slug, or the stated absence, from op=instancegroup */
+  await paintGroup("working");   /* UI-77/UI-78: the recorded slug (with any display name and the domain claim), or the stated absence, from op=groupidentity */
   $("#gate").classList.add("hidden");
   $("#pub").classList.remove("on");
   $("#work").classList.add("on");
@@ -1516,7 +1559,8 @@ async function boot(){
   if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
      && !actionRouteFromHash() && !aiSessionRouteFromHash()
      && !versionReviewRouteFromHash() && !stanceRouteFromHash()
-     && !acceptCeremonyRouteFromHash() && !draftRouteFromHash()) go("queue", true);
+     && !acceptCeremonyRouteFromHash() && !draftRouteFromHash()
+     && !themeRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -1530,6 +1574,8 @@ const RAIL = [
   {id:"search",   icon:"i-search",   label:"Find evidence"},
   {id:"subjects", icon:"i-focus",    label:"Subjects"},
   {id:"progressions",icon:"i-monitor",label:"Progressions"},
+  /* UI-76: themes, a member's declared lens (framework §8.4). */
+  {id:"themes",   icon:"i-focus",    label:"Themes"},
   {id:"inquiries",icon:"i-focus",    label:"Questions"},
   /* P-52, UI-19. The IMPACTING verb had no entry in the rail at all: an action
      could only be reached by knowing its id. `op=list` and `op=search` have
@@ -1591,7 +1637,7 @@ function navLabel(p){
   if(p.type==="bundle") return "the document";
   if(p.type==="inquiry") return "the question";
   if(p.type==="action") return "the action";
-  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",themes:"Themes",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -1647,7 +1693,7 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",themes:"Themes",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","inquiries","actions","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
@@ -1684,6 +1730,7 @@ async function go(screen, fromNav){
        actions route kept; UI-21 deleted renderFiltered, so the route now goes
        through the finder scope the same way inquiries/monitoring do. */
     actions: ()=>renderFinder({ scope:"actions" }),
+    themes: thmRenderList,   /* UI-76 */
     review: renderReview, members: renderMembers, add: renderAdd, bundle: null
   };
   if(R[screen]) await R[screen]();
@@ -2205,10 +2252,15 @@ const SURFACES = {
   },
   members: {
     routes: ["screen:members"],
-    purpose: "Who holds what in this instance: the roster, each member's capabilities, and the invitations outstanding.",
+    purpose: "Who holds what in this instance: the roster, each member's capabilities, and the invitations outstanding — and, for an administrator's session, the custodial acts over membership and signing keys.",
     levels: [],
+    /* D-134: the four custodial acts this surface performs for an administrator — `memberadd`,
+       `memberset`, `signeradd`, `signerset` — are not in the plane's OBJECT-act catalogue (`ACTS` is
+       acts ON a record object, published per object by `op=affordances`), so they are not listed
+       here, where ARM A4a would rightly call them fiction. Their call sites are asserted by name,
+       each driven against the real plane, in `test/custodial-acts.test.mjs`. */
     acts: [],
-    reads: ["memberlist", "whoami"],
+    reads: ["memberlist", "whoami", "signerlist"],
   },
   add: {
     routes: ["screen:add"],
@@ -2243,7 +2295,11 @@ const SURFACES = {
     /* UI-65: `basisversions` — the conclude dialog's reading picker (the
        accepted readings a no-project conclusion may adopt), read through the
        version-review door so the bound the plane applied is stated with it. */
-    reads: ["image", "inquirystrength", "inquiryground", "resolutions", "basisversions"],
+    reads: ["image", "inquirystrength", "inquiryground", "resolutions", "basisversions",
+    /* UI-75: the elicitation's read-back asks whether the sets a member's answers
+       made rest on the same material further back (§12 (c)), before anything is
+       written. A provenance read; it carries no strength. */
+            "partitionindependence"],
   },
   project: {
     routes: ["object:project", "hash:project"],
@@ -2254,12 +2310,16 @@ const SURFACES = {
        hosted all seven since UI-3 through `ROSTER_ACTS` below — the registry said `[]` only because
        ARM A's fiction check forbids naming an act the plane did not publish. It now names them. */
     acts: ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
-           "projectownerremove", "projectownerrescue"],
+           "projectownerremove", "projectownerrescue",
+           /* UI-70 (Membership v2 §7.14 step 3): the OWNER's setting, changed on the workspace
+              (`projectVisibilityHtml`); every other viewer with sight reads it and is offered nothing.
+              Struck from `ACTS_AWAITING_SURFACE` in the same landing. */
+           "projectvisibilityset"],
     /* UI-92: `casedrafts` (REC-198, IC-243) is read HERE and nowhere else — the list of the
        project's draft cases belongs to the workspace, and the review-copy surface keeps the
        DRAFT itself at its own address. So the read is declared on the surface that performs
        it; `review-copy`'s `reads` are unchanged. */
-    reads: ["projectparticipants", "projectownerarith", "projection", "casedrafts"],
+    reads: ["projectparticipants", "projectownerarith", "projection", "casedrafts", "projectvisibility"],
   },
   action: {
     routes: ["object:action", "hash:action"],
@@ -2269,7 +2329,10 @@ const SURFACES = {
        which laws govern a records request is a member's authored statement, and the page that
        shows the ask is the page that offers it. The act was a ROW on `ACTS_AWAITING_SURFACE`
        until this item; striking it there and naming it here are the same landing. */
-    acts: ["actionmove", "actioncorrespond", "actionlaws"],
+    acts: ["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"],
+    /* UI-104: `actionrisktier` joins them (REC-214, BOB #33). A member revises the tier with a
+       REQUIRED reason, and the page that shows the tier history is the page that offers it. Struck
+       from `ACTS_AWAITING_SURFACE` in the same landing. */
     reads: ["image", "projection"],
   },
   published: {
@@ -2329,7 +2392,7 @@ const SURFACES = {
     purpose: "One reading of one question's evidence, acted on: adopted, turned down, set aside with a reason, or put back where nobody had acted on it. The record is asked what the act would do before it is done; where the reading is filed as several sets of reasons each offered as carrying the answer on its own, the page first shows what the record traced about whether those sets rest on the same material, then asks the member to say so about each set before it will put their name on the reading; and what the reading comes to is not shown until after that.",
     levels: ["meaning"],
     acts: ["versionaccept", "versionreject", "versionconsider", "versionrevert"],
-    reads: ["basisversions", "affordances", "airun", "versionstrength"],
+    reads: ["basisversions", "affordances", "airun", "partitionindependence", "versionstrength"],
   },
 
   /* UI-45 · §7's stance, and it is a SECOND surface over one read rather than a
@@ -2367,6 +2430,16 @@ const SURFACES = {
      suite asserts there is EXACTLY ONE surface of this kind, so a second AI
      session surface FAILS THE BUILD. That single assertion is what "designed
      once" means when it is enforced instead of documented. */
+  /* UI-76 · THEMES (framework §8.4, D-162). `acts` is EMPTY because none of the four theme ops is in the
+     plane's act catalogue — `affordances.mjs` NON_ACTS names them — so they are this surface's READS and
+     writes, each reached from the page (the review-copy surface's reason). */
+  themes: {
+    routes: ["screen:themes", "hash:theme"],
+    purpose: "Themes: an idea a member declares in their own name with its test, the sentence a document or a passage passes or fails. Every theme shows whose lens it is. A member places a document or a passage in it, or confirms a proposal standing there; a proposal is a hunch, shown apart, and is never membership. A theme gathers material and is never the basis of a claim.",
+    levels: ["meaning", "documents", "content"],
+    acts: [],
+    reads: ["themeread", "themedeclare", "themeplace"],
+  },
   "ai-session": {
     kind: "ai-session",
     consumers: ["assistant", "investigative-session"],
@@ -8991,6 +9064,44 @@ function openByType(id, type){
   return openBundle(id);
 }
 
+/* ============================================================
+   UI-70 · DISCOVERABLE OR HIDDEN — THE CREATOR CHOOSES, THE OWNER CHANGES IT.
+
+   DESIGN: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14, "The setting", with DEC-69
+   (forced, at the act). The plane half is REC-149 (the owner's act and its read) and REC-197 (a creation
+   and a fork carry one optional `visibility`; absent is HIDDEN; a machine's `discoverable` is C-97.1).
+
+   NEITHER OPTION IS PRESELECTED, AND THAT IS THE ITEM. §7.14: *"each project chooses" is taken literally,
+   and a preselection would be the surface choosing.* So the two options render with no `checked`, the
+   submit stays shut until one is picked, and the commit paths (`addGo`, `doRosterAct`) refuse to send
+   without one — because the plane's answer to a creation that carries none is HIDDEN, a surface that let
+   the member through unchosen would have chosen HIDDEN for them and said nothing. The choice is read off
+   the two inputs at the moment of the act and nowhere else: nothing is remembered between forms.
+
+   WHAT THE TWO WORDS MEAN is §7.14's boundary in a member's words: discoverable adds the project's
+   EXISTENCE and NAME for members outside it, and nothing of its contents; hidden is what every project
+   was before this. The request to join is NOT built (§7.14 step 2), so nothing here promises it. */
+const VISIBILITY_OPTIONS = [
+  ["discoverable", "Discoverable", "Members who are not in this project can see that it exists and what it is called. Nothing inside it is shown to them."],
+  ["hidden", "Hidden", "Members who are not in this project cannot tell that it exists."],
+];
+const VISIBILITY_UNCHOSEN = "Choose whether this project can be found: discoverable or hidden.";
+/* Each form re-reads its own readiness when the choice moves: the Add form's minimum, the fork's submit, the
+   owner's submit. One dispatcher, keyed on the form's prefix, so the markup carries a plain call. */
+const VISIBILITY_SYNC = { a: () => addValidate(), ra: () => rosterChoiceSync(), pv: () => projectVisibilitySync() };
+function visibilityChoiceChanged(prefix){ const f = VISIBILITY_SYNC[prefix]; if(f) f(); }
+function visibilityChoiceHtml(prefix){
+  return `<label class="fld">Can members outside this project find it?</label>
+    <p class="subj-note">Nothing is chosen for you. Its owners can change this later.</p>
+    ${VISIBILITY_OPTIONS.map(([v, label, what]) =>
+      `<label class="ckline"><input type="radio" name="${esc(prefix)}-vis" id="${esc(prefix)}-vis-${v}" value="${v}" onchange="visibilityChoiceChanged(${esc(JSON.stringify(prefix))})"> <b>${esc(label)}</b> &mdash; ${esc(what)}</label>`).join("")}`;
+}
+/* The choice as the two inputs hold it NOW: "discoverable", "hidden", or null when neither is checked. */
+function visibilityChosen(prefix){
+  for(const [v] of VISIBILITY_OPTIONS){ const e = $("#" + prefix + "-vis-" + v); if(e && e.checked) return v; }
+  return null;
+}
+
 /* ---- THE SEVEN ROSTER OPS AND THEIR CALL SITES ----
    One table, one dialog, one commit path. Each entry names the OP, the label,
    the fields the op takes, and the PLANE-PUBLISHED POSITION that makes the
@@ -9020,6 +9131,9 @@ const ROSTER_ACTS = {
   /* UI-66 (REC-141, IC-158): NO id field. A fork's id is minted by the plane, which refuses a named `newId`
      (C-59.3); the receipt below renders the `newId` the plane ANSWERS. The member names the fork, nothing else. */
   projectfork: { label:"Fork this project", op:"projectfork", fields:[["title","Its name","required"]],
+    /* UI-70: a fork is a CREATION (§7.12) and does not inherit the original's setting (§7.14), so its
+       forker chooses, with neither option preselected, and the act is not sent until they have. */
+    choice: "visibility",
     what:"A fork is a clone with a recorded origin. Participants are not copied.",
     where: p => p.joined && p.forks },
 };
@@ -9066,15 +9180,30 @@ function openRosterAct(actId){
      <p class="what">${esc(a.what)}</p>
      <div class="dz-what"><span class="dz-ttl">${esc(WORKSPACE.title||WORKSPACE.id)}</span><span class="id">${esc(WORKSPACE.id)}</span></div>
      ${flds}
+     ${a.choice === "visibility" ? visibilityChoiceHtml("ra") : ""}
      <div id="ra-err" class="teach hidden"></div>
      <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
-       <button class="btn" id="ra-go" onclick="doRosterAct()">${esc(a.label)}</button></div>`;
+       <button class="btn" id="ra-go"${a.choice === "visibility" ? " disabled" : ""} onclick="doRosterAct()">${esc(a.label)}</button></div>`;
   $("#dlg-wrap").classList.remove("hidden");
+}
+/* UI-70: the fork's submit opens only once a setting is chosen. */
+function rosterChoiceSync(){
+  const go = $("#ra-go"); if(go) go.disabled = !visibilityChosen("ra");
 }
 async function doRosterAct(){
   if(!ROSTER_CTX) return;
   const a = ROSTER_ACTS[ROSTER_CTX.actId];
   const params = { projectId: ROSTER_CTX.projectId };
+  /* UI-70: the forced choice, asked at the act as well as on the button (see `visibilityChoiceHtml`). */
+  if(a.choice === "visibility"){
+    const v = visibilityChosen("ra");
+    if(!v){
+      const err = $("#ra-err");
+      if(err){ err.innerHTML = `<p>${esc(VISIBILITY_UNCHOSEN)} Nothing was sent.</p>`; err.classList.remove("hidden"); }
+      return { refused:true, reason:null, unchosen:true };
+    }
+    params.visibility = v;
+  }
   for(const [name] of a.fields){
     const el = $("#ra-"+name);
     /* Sent as authored, including empty: the store decides what a missing
@@ -9100,6 +9229,70 @@ async function doRosterAct(){
        <div class="row-btns"><button class="btn" onclick="closeDialog();openProjectWorkspace(${esc(JSON.stringify(ROSTER_CTX.projectId))})">Done</button></div>
      </div>`;
   return res;
+}
+
+/* UI-70 · WHO CAN FIND THIS PROJECT — the setting as the record holds it, and the OWNER's control.
+   The setting, whether anyone chose it, who did and when are `op=projectvisibility`'s own fields, rendered
+   and never computed: a project with no record is shown as the record reads it (`recorded: false`, and the
+   `setting` it answers), never as a default this page picked. The control EXISTS for an owner only — the
+   store's `owner` flag on my own participation row, the same position fact every roster act reads — and it
+   is the same two options with neither preselected; everyone else with sight of the page reads the setting
+   and is offered nothing. A refusal is the plane's sentence through `actRefusalHtml`. */
+function visibilityWord(v){
+  const o = VISIBILITY_OPTIONS.find(([k]) => k === v);
+  return o ? o[1] : null;
+}
+function projectVisibilityHtml(ask, pos){
+  if(!ask) return "";
+  if(!ask.accepted) return actRefusalHtml(ask.refusal);
+  const r = (ask.result && typeof ask.result === "object") ? ask.result : {};
+  const setting = typeof r.setting === "string" ? r.setting : null;
+  const word = visibilityWord(setting);
+  const meaning = (VISIBILITY_OPTIONS.find(([k]) => k === setting) || [])[2] || "";
+  const hist = Array.isArray(r.history) ? r.history.filter(h => h && typeof h === "object") : [];
+  const last = hist.length ? hist[hist.length - 1] : null;
+  const now = setting === null
+    ? `<div class="empty">The record did not say whether this project can be found.</div>`
+    : `<div class="card" data-project-visibility="${esc(setting)}"><div class="kv"><span class="k">Right now</span><span class="v plain"><b>${esc(word || setting)}</b>${meaning ? ` &mdash; ${esc(meaning)}` : ""}</span></div>`
+      + (r.recorded === false
+          ? `<div class="kv"><span class="k">Chosen by</span><span class="v plain">No owner has chosen yet, and the record reads a project nobody chose for as ${esc(word || setting)}.</span></div>`
+          : last ? `<div class="kv"><span class="k">Chosen by</span><span class="v plain">${esc(String(last.set_by || "—"))}${last.at ? ` &middot; ${esc(fmtWhenFull(last.at))}` : ""}${last.reason ? ` &middot; ${esc(String(last.reason))}` : ""}</span></div>` : "")
+      + `</div>`;
+  if(!pos || !pos.owner)
+    return `${now}<p class="subj-note" data-project-visibility-readonly="1">Only an owner of this project can change this.</p>`;
+  return `${now}
+    <div class="card" id="pv-control">
+      ${visibilityChoiceHtml("pv")}
+      <label class="fld" for="pv-reason">Why, if you want to say</label>
+      <input class="txt" id="pv-reason" autocomplete="off">
+      <div id="pv-err" class="teach hidden"></div>
+      <div class="rv-bar" style="margin:8px 0 0"><button class="btn" id="pv-go" onclick="doProjectVisibility()">Record this choice</button></div>
+    </div>`;
+}
+/* The workspace greys nothing (a control is present or absent), so the owner's submit is never disabled: an
+   unchosen submit is answered at `doProjectVisibility` by the form's own sentence, and nothing is sent. */
+function projectVisibilitySync(){
+  const err = $("#pv-err"); if(err && visibilityChosen("pv")){ err.innerHTML = ""; err.classList.add("hidden"); }
+}
+async function doProjectVisibility(){
+  if(!WORKSPACE) return;
+  const setting = visibilityChosen("pv");
+  const err = $("#pv-err");
+  if(!setting){
+    if(err){ err.innerHTML = `<p>${esc(VISIBILITY_UNCHOSEN)} Nothing was sent.</p>`; err.classList.remove("hidden"); }
+    return { refused:true, reason:null, unchosen:true };
+  }
+  const reason = String((($("#pv-reason")||{}).value) || "").trim();
+  const go = $("#pv-go"); if(go){ go.disabled = true; go.textContent = "…"; }
+  const r = await actAsk("projectvisibilityset", { projectId: WORKSPACE.id, setting, ...(reason ? { reason } : {}) });
+  if(!r.accepted){
+    if(err){ err.innerHTML = actRefusalHtml(r.refusal); err.classList.remove("hidden"); }
+    if(go){ go.disabled = false; go.textContent = "Record this choice"; }
+    return { refused:true, reason: r.refusal && r.refusal.reason };
+  }
+  RECORD_CACHE = null;
+  await openProjectWorkspace(WORKSPACE.id, true);
+  return r.result || {};
 }
 
 let PROJ_HASH_LOCK = false;
@@ -9197,6 +9390,8 @@ async function openProjectWorkspace(id, fromNav){
     const ar = await actAsk("projectownerarith", { projectId:id });
     if(ar.accepted) arith = ar.result || null;
     if(WORKSPACE) WORKSPACE.arith = arith;
+    /* UI-70: the setting, asked after the visibility gate cleared like every read on this page. */
+    const vis = await actAsk("projectvisibility", { projectId:id });
 
     $("#content").innerHTML = `${header}
       <h2 class="sec">How ready the work product is</h2>
@@ -9213,6 +9408,8 @@ async function openProjectWorkspace(id, fromNav){
       <h2 class="sec">How ownership changes hands</h2>
       <p class="subj-note">Computed by the record for this project as it stands, and shown beside the act that uses it &mdash; a denominator with no act beside it teaches that governance is something you read.</p>
       ${projectOwnershipHtml(arith)}
+      <h2 class="sec">Who can find this project</h2>
+      ${projectVisibilityHtml(vis, pos)}
       ${controls}`;
   }catch(e){ $("#content").innerHTML = `${crumb}${errPane(e)}`; }
 }
@@ -9332,7 +9529,7 @@ async function openAction(id, fromNav){
     const der = (proj && proj.action && typeof proj.action === "object") ? proj.action : null;
     const actsR = await actsFor(id);
     ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
-    ACTION = { id, title, state, fm, fmj, der, mv:null, corr:null, laws:null };
+    ACTION = { id, title, state, fm, fmj, der, mv:null, corr:null, laws:null, tier:null };
 
     const planText = mdSectionOf(body, (vocabFor(HEADINGS, otype)||[])[0]);
     $("#content").innerHTML = `${crumb}
@@ -9354,6 +9551,9 @@ async function openAction(id, fromNav){
       ${actionLawsHtml(der)}
       <p class="subj-note">And what has been PROPOSED, stood beside that list and never part of it. A proposal is somebody&rsquo;s suggestion of the citations; the list is a member&rsquo;s own act, and nothing here offers a proposal as a way of making one. Each is shown under the record&rsquo;s own words about who proposed it.</p>
       ${actionLawsProposalsHtml(der)}
+      <h2 class="sec">Whether this is safe to file</h2>
+      <p class="subj-note">A member&rsquo;s judgement about the legal exposure of sending this ask, in the record&rsquo;s own words. Every change is a member&rsquo;s act with a reason, and every earlier tier stays in this history.</p>
+      ${actionRiskTierHtml(der)}
       <h2 class="sec">The clock</h2>
       <p class="subj-note">Every deadline carries the statute, the order, or the commitment it comes from. A date with no basis would be the record asserting a deadline it invented.</p>
       ${actionClockHtml(fmj, der)}
@@ -9502,6 +9702,50 @@ function actionLawsProposalsHtml(der){
     </div>`).join("")}
     <div class="ln">${esc(String(p.says||""))}</div>${
     p.truncated?`<div class="ln">The record answered with the most recent ${esc(String(p.limit??rows.length))} of them.</div>`:""}`;
+}
+
+/* UI-104 (REC-214; BOB #33's risk-tier revision ruling, BIO_Case_Making_v0_1.md §2 `risk_tier`): EVERY TIER
+   THIS ACTION HAS HELD, AS THE PLANE STATES IT.
+
+   ONE READER, AND IT IS THE PLANE'S. `action.risk_tier_history` is `riskTierHistoryOf`'s answer — the same
+   function the act answers with and C-2.10 judges the bytes by — so the current tier, the intake tier and
+   each revision are read here and composed nowhere. Every tier is shown in the plane's own words
+   (`current_words`, `tier_words`, `prior_words`: `vocabularies.risk_tiers` exactly), never as a number this
+   page glosses.
+
+   THE INTAKE TIER'S AUTHOR IS UNDETERMINED, AND THE SENTENCE SAYING SO IS THE PLANE'S (`intake.stated`). An
+   intake writes the tier with no author of its own; naming the action's creator here would be the page
+   inferring what the record cannot support.
+
+   AN ENTRY THE PLANE COULD NOT READ is kept and said (`readable: false`), never dropped: an append-only
+   history with a silently missing row is the overwrite the act exists to refuse.
+
+   AN ABSENT BLOCK IS ITS OWN ANSWER, as for the laws above — a plane predating REC-214 carries no key, and
+   "never revised" and "the record did not answer" are different facts.
+
+   ROOM FOR REC-215, NOT BUILT HERE: a machine's PROPOSAL that a tier be reconsidered is labelled machine work,
+   read BESIDE this history under the plane's own label (`actionLawsProposalsHtml`'s shape) and never inside
+   it — this function renders the member's history and nothing else. */
+function actionRiskTierHtml(der){
+  const h = der && der.risk_tier_history;
+  if(!h || typeof h !== "object")
+    return `<div class="empty">The record did not answer with this action's risk-tier history.</div>`;
+  const revs = Array.isArray(h.revisions) ? h.revisions : [];
+  const intake = (h.intake && typeof h.intake === "object") ? h.intake : null;
+  return `<div class="act-law">
+      <div class="act-law-cite">Now: ${esc(String(h.current_words||""))}</div>
+    </div>
+    ${intake ? `<div class="act-law">
+      <div class="act-law-cite">When this action was created: ${esc(String(intake.tier_words||""))}</div>
+      <div class="act-clock-why">${esc(String(intake.stated||""))}</div>
+    </div>` : ""}
+    ${revs.map(r=> r && r.readable === true ? `<div class="act-law act-tier-rev">
+      <div class="act-law-cite">Revised from ${esc(String(r.prior_words||""))} to ${esc(String(r.tier_words||""))}: ${esc(String(r.reason||""))}</div>
+      <div class="ln">By ${esc(String(r.by||""))}${r.at?` &middot; <span class="mono">${esc(String(r.at).slice(0,10))}</span>`:""}</div>
+    </div>` : `<div class="act-law act-tier-rev">
+      <div class="act-clock-why">The record holds a revision here that it could not read. It is kept in the history, not dropped.</div>
+    </div>`).join("")}
+    <div class="ln">${esc(String(h.stated||""))}</div>`;
 }
 
 function actionLedgerHtml(der){
@@ -9888,6 +10132,101 @@ async function doActionLaws(){
   actionLawsPaint();
 }
 
+/* ---------------------------------------------------------------
+   THE RISK-TIER REVISION (UI-104; REC-214, BOB #33) — a tier and a REQUIRED reason, NOTHING PRESELECTED.
+
+   THE WORDS ARE THE PLANE'S. Each option is a sentence of `vocabularies.risk_tiers`, the map the intake
+   chooser (UI-85) already offers; this page spells no tier and no tier's meaning.
+
+   WHICH OF THEM THE ACT SETS IS THE PLANE'S TOO, from its own publication and never a list here. The map
+   also holds `undetermined` — what an action reads when nobody has assessed it, which the act refuses to
+   "set" (BAD_RISK_TIER). The act publishes its settable tiers as that refusal's `legal`, and it judges the
+   tier BEFORE the reason and before any write (store.mjs `actionRiskTier`: the machine fence, the target,
+   then the tier), so one call naming no tier writes nothing and answers with the set — UI-90's `NO_LAWS`
+   probe for `legal_levels`, the same shape. A probe refused for any OTHER reason (a machine credential, an
+   action this credential cannot see) is shown in the plane's words and no option is offered.
+
+   NOTHING IS CHECKED WHEN THE FORM OPENS, not even the tier the action holds: a revision is a member's
+   choice, and a form that arrived answered would be this page making it.
+
+   THE REASON IS REQUIRED, AND THE FORM CANNOT SEND WITHOUT ONE: the commit control is ABSENT until a tier
+   is chosen and the reason holds more than whitespace, and `doActionRiskTier` refuses to call without both.
+   What the reason may hold (its length, the characters the grammar cannot store) is the plane's rule and is
+   stated by the plane when broken — the canned DEC-49 translation through `actRefusalHtml`.
+   --------------------------------------------------------------- */
+async function openActionRiskTier(id, title, act){
+  ACTION.tier = { id, title, act, legal:[], words:null, tier:"", reason:"", probed:false,
+                  busy:false, refusal:null, done:null };
+  actionTierPaint();
+  await loadActSource();
+  const a = await actAsk("actionrisktier", { target:id });
+  const T = ACTION && ACTION.tier; if(!T || T.id !== id) return;
+  const r = a.accepted ? null : a.refusal;
+  T.words = actVocabMap("risk_tiers");
+  T.legal = (r && r.reason === "BAD_RISK_TIER" && Array.isArray(r.legal))
+    ? r.legal.map(String).filter(k => T.words && Object.prototype.hasOwnProperty.call(T.words, k)) : [];
+  if(r && r.reason !== "BAD_RISK_TIER") T.refusal = r;
+  T.probed = true;
+  actionTierPaint();
+}
+function actionTierPick(k){
+  const T = ACTION && ACTION.tier; if(!T) return;
+  if(T.legal.includes(String(k))) T.tier = String(k);
+  actionTierPaint();
+}
+/* The reason's own handler repaints only the commit bar, so typing never redraws the field being typed in. */
+function actionTierWhy(v){
+  const T = ACTION && ACTION.tier; if(!T) return;
+  T.reason = String(v == null ? "" : v);
+  const bar = $("#rt-bar"); if(bar) bar.innerHTML = actionTierBarHtml();
+}
+function actionTierReady(){
+  const T = ACTION && ACTION.tier;
+  return !!(T && T.tier && T.legal.includes(T.tier) && T.reason.trim());
+}
+function actionTierBarHtml(){
+  const T = ACTION && ACTION.tier; if(!T) return "";
+  return `${actionTierReady() ? `<button class="btn" ${T.busy?"disabled":""} onclick="doActionRiskTier()">${esc(T.act.label)}</button>` : ""}
+      <button class="btn ghost" onclick="closeDialog()">Cancel</button>`;
+}
+function actionTierPaint(){
+  const T = ACTION && ACTION.tier; if(!T) return;
+  if(T.done){
+    const d = T.done;
+    actDlg(`<h3>${esc(T.act.label)}</h3>
+      <p class="lede">Revised from ${esc(String(d.prior_words||""))} to ${esc(String(d.risk_tier_words||""))}: ${esc(String(d.reason||""))}</p>
+      <div class="ln">By ${esc(String(d.by||""))}${d.at?` on <span class="mono">${esc(String(d.at).slice(0,10))}</span>`:""}. The tier it replaced stays in the history.</div>
+      <div class="rv-bar"><button class="btn" onclick="closeDialog();openAction(${esc(JSON.stringify(T.id))})">Back to the action</button></div>`);
+    return;
+  }
+  const now = ACTION && ACTION.der && ACTION.der.risk_tier_history;
+  const pick = !T.probed ? `<p class="count-line">Loading&hellip;</p>`
+    : T.legal.length
+      ? T.legal.map(k=>`<label class="ckline"><input type="radio" name="rt-tier" value="${esc(k)}"${
+          T.tier === k ? " checked" : ""} onchange="actionTierPick(${esc(JSON.stringify(k))})"> ${esc(T.words[k])}</label>`).join("")
+      : (T.refusal ? "" : `<div class="empty">The record did not publish the tiers this act sets, so this surface offers none rather than inventing them.</div>`);
+  actDlg(`<h3>${esc(T.act.label)}</h3>
+    ${T.act.prompt?`<p class="lede">${esc(T.act.prompt)}</p>`:""}
+    <p class="subj-note">This is a member&rsquo;s judgement about the legal exposure of sending this ask. Nothing is chosen for you, and the reason is kept beside the change for as long as the record lasts.</p>
+    ${now && now.current_words ? `<div class="ln">Now: ${esc(String(now.current_words))}</div>` : ""}
+    ${pick}
+    ${T.legal.length ? `<label class="fld" for="rt-why">Why &mdash; required</label>
+    <textarea class="txt" id="rt-why" style="min-height:70px" oninput="actionTierWhy(this.value)">${esc(T.reason)}</textarea>` : ""}
+    ${T.refusal ? actRefusalHtml(T.refusal) : ""}
+    <div class="rv-bar" id="rt-bar">${actionTierBarHtml()}</div>`);
+}
+async function doActionRiskTier(){
+  const T = ACTION && ACTION.tier; if(!T || T.busy) return;
+  if(!actionTierReady()) return;
+  T.busy = true; T.refusal = null; actionTierPaint();
+  const a = await actAskPost("actionrisktier", { tier:Number(T.tier), reason:T.reason.trim() }, { target:T.id });
+  T.busy = false;
+  if(!a.accepted){ T.refusal = a.refusal; actionTierPaint(); return; }
+  IMG_CACHE.delete(T.id); PROJ_CACHE.delete(T.id); RECORD_CACHE = null;
+  T.done = a.result || {};
+  actionTierPaint();
+}
+
 /* THE ONE ACT AN OVERDUE ACTION OFFERS, what it deliberately is not, and the
    MEASURED GAP it runs into.
 
@@ -10111,6 +10450,8 @@ const ACT_FLOW = {
      with a shape no other act here has — a LIST the member grows, each row two halves, and a
      body-carried write — arrived and nothing above this line changed. */
   actionlaws:       (id, title, act) => openActionLaws(id, title, act),
+  /* UI-104 added `actionrisktier` (REC-214), one entry and nothing above this line changed. */
+  actionrisktier:   (id, title, act) => openActionRiskTier(id, title, act),
   /* UI-27 added DEC-32's elicitation, and the one-entry-per-act promise held a
      fourth time: a flow with a shape unlike every other one here — ordered
      phases, a derivation, and a strength that may not be shown until the record
@@ -10863,7 +11204,8 @@ function elicFalsifier(d){
 
 async function openElicit(id, title, act){
   ELIC = { id, title, act, legs:[], standing:{ grouped:false, sets:[], rows:[] },
-           ans:{}, stmts:{}, reason:"", phase:"author", refusal:null, receipt:null, busy:false };
+           ans:{}, stmts:{}, reason:"", phase:"author", refusal:null, receipt:null, busy:false,
+           origins:null, originsKey:null };
   $("#dlg").innerHTML = `<h2>${esc(act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
   $("#dlg-wrap").classList.remove("hidden");
   try{
@@ -10892,7 +11234,81 @@ function elicSay(which, v){
   if(!ELIC) return;
   if(which === "reason") ELIC.reason = v; else ELIC.stmts[which] = v;
 }
-function elicPhase(p){ if(ELIC){ ELIC.phase = p; elicPaint(); } }
+function elicPhase(p){
+  if(!ELIC) return Promise.resolve();
+  ELIC.phase = p; elicPaint();
+  return p === "readback" ? elicOriginsLoad() : Promise.resolve();
+}
+
+/* ============================================================
+   UI-75 · §12 (c): THE SHARED ORIGIN, NAMED AT THE MEMBER'S OWN ELICITATION.
+
+   The read-back tells a member *"your answer fails only if ALL of these fail"*.
+   That sentence is only as true as the sets are apart, and two sets that trace
+   to one captured copy, one document or one address are not as apart as the
+   sentence sounds. So before the answers are written the read-back names every
+   shared upstream origin between the sets it lists — derived by the PLANE, over
+   the partition as PROPOSED, through `op=partitionindependence` (REC-161), the
+   same `#independenceOf` the write gate and the accept ceremony read. This page
+   derives nothing about provenance itself.
+
+   WHAT IT MUST NOT BECOME, and why each is a property of the code rather than
+   of care (the row's own "how a liar passes it"):
+     - IT INFORMS ONCE (DEC-69), at the act, in the read-back, beside the
+       falsifier it qualifies. It is never repeated in the authoring phase.
+     - IT REFUSES NOTHING AND REORDERS NOTHING. `doElicit` does not read
+       `ELIC.origins` at all, so the answers written are the answers given,
+       whatever the record traced; the control is offered while the read is
+       still in flight, because waiting on it would make an informing fact a
+       gate.
+     - IT SHOWS NO STRENGTH. The op carries none, and only `independence` is
+       KEPT from its answer, so nothing else it might one day carry can be drawn
+       before the structure is authored (DEC-32 clause 5).
+     - IT PREFILLS NOTHING: the answers a member gave are the only input.
+
+   KEYED TO THE PARTITION IT WAS ASKED ABOUT. A member who goes back and changes
+   an answer proposes a different partition; an answer about the old one is not
+   an answer about the new one, so it is never shown against it. Asked only where
+   there are two sets or more — one set has nothing to share with. A refusal or
+   a failed call is kept as NOT TOLD, which renders as not told and never as
+   clean.
+   ============================================================ */
+function elicPartitionKey(d){
+  return (d && d.partition && d.partition.length >= 2)
+    ? JSON.stringify(d.partition.map((g,k)=>({ label: elicLabel(g,k), legs: g }))) : null;
+}
+async function elicOriginsRead(inquiryId, partition){
+  let r;
+  try{ r = await recPostR("partitionindependence", { partition }, { id: inquiryId }); }
+  catch(_){ return null; }
+  const ind = (r && r.ok !== false && typeof r === "object") ? r.independence : null;
+  return (ind && typeof ind === "object") ? ind : null;
+}
+async function elicOriginsLoad(){
+  if(!ELIC) return;
+  const key = elicPartitionKey(elicDerive());
+  /* An ANSWER is kept for its proposal; NOT TOLD is not an answer, so coming
+     back to the same proposal after a refusal asks again. */
+  if(!key || (key === ELIC.originsKey && ELIC.origins !== null)) return;
+  ELIC.originsKey = key; ELIC.origins = undefined;
+  const me = ELIC;
+  const ind = await elicOriginsRead(me.id, JSON.parse(key));
+  if(ELIC !== me || me.originsKey !== key) return;
+  me.origins = ind;
+  if(me.phase === "readback" && !me.receipt) elicPaint();
+}
+/* The read-back's own rendering of it — the accept ceremony's, CALLED
+   (`originsHtml`), because one fact rendered two ways on two surfaces is two
+   facts to a reader. `undefined` is ASKING; `null` is not told. */
+function elicOriginsHtml(d){
+  const key = elicPartitionKey(d);
+  if(!key) return "";
+  if(ELIC.originsKey !== key || ELIC.origins === undefined)
+    return '<div class="subj-how" data-elic="origins-asking">Asking the record whether these rest on the same '
+      + 'material further back. You do not have to wait for it.</div>';
+  const byLabel = new Map(d.partition.map((g,k)=>[elicLabel(g,k), elicName(g)]));
+  return originsHtml(ELIC.origins, lab => byLabel.get(String(lab)) || String(lab), "data-elic");
+}
 
 function elicPaint(){
   if(!ELIC) return;
@@ -10981,6 +11397,7 @@ function elicPaint(){
     <h3 class="cx-h">What your answers say</h3>
     <p class="subj-note">Read this. If it is not what you meant, go back and change an answer &mdash; that is what this page is for, and reading this is far easier than writing it.</p>
     <div class="pub-excl" data-falsifier="1">${esc(elicFalsifier(d))}</div>
+    ${elicOriginsHtml(d)}
     ${sets}
     ${outcome}
     ${reasonBox}
@@ -14260,7 +14677,7 @@ function founderReconcileHtml(liveAdmins, rosterAdminRows){
    unchanged and still rendered by `ballotDivergenceHtml`; only its home moved. */
 function governanceHtml(adminArith, rosterAdminRows){
   let out = `<section class="mm-gov"><h2>How power changes hands here</h2>`
-          + `<p class="mm-lede">These are the group&rsquo;s own rules, computed by the record. Nothing on this screen changes anything &mdash; it only shows you the arithmetic so you can check it yourself.</p>`;
+          + `<p class="mm-lede">These are the group&rsquo;s own rules, computed by the record. Nothing in this panel changes anything &mdash; it only shows you the arithmetic so you can check it yourself.</p>`;
   if(adminArith && adminArith.live){
     out += adminDenominatorHtml(adminArith.live);
     out += founderReconcileHtml(adminArith.live.administrators, rosterAdminRows);
@@ -14284,22 +14701,227 @@ function governanceHtml(adminArith, rosterAdminRows){
    browser, a cross-project participation view that REC-25 had just made the
    plane's to decide. The DELEGATION proposing an `owns` projection on
    op=memberlist is therefore withdrawn as unnecessary: nothing consumes it. */
-function rosterRow(m){
+/* D-134 (BOB #35, 2026-09-25): WHO INVITED this member, as the record holds it — `op=memberlist`'s own
+   `invited_by`, which reads `not recorded` for anyone invited before the plane kept it. Rendered in the
+   plane's words and never inferred; an older plane that does not send the field gets no line at all. */
+function memberInviterHtml(m){
+  if(!m || !Object.prototype.hasOwnProperty.call(m, "invited_by")) return "";
+  return `<div class="mm-cover">invited by ${esc(m.invited_by == null ? "not recorded" : String(m.invited_by))}</div>`;
+}
+function rosterRow(m, acts){
   const handle = m.handle || m.member_id || m.member || m.id || "";
   const cover  = m.cover || m.name || "";
   const pending = m.invite_pending ? ` <span class="chip collected" title="An invitation has been issued and not yet spent.">invite pending</span>` : "";
   return `<tr>
     <td class="ttl">${esc(handle)}${cover?`<div class="mm-cover">${esc(cover)}</div>`:""}</td>
     <td>${memberRoleBadge(m)}${pending}</td>
-    <td>${memberStatusBadge(m)}</td>
-    <td>${memberCapsHtml(m)}</td>
+    <td>${memberStatusBadge(m)}${memberInviterHtml(m)}</td>
+    <td>${memberCapsHtml(m)}</td>${acts ? `
+    <td>${memberActHtml(m)}</td>` : ""}
   </tr>`;
 }
 
+/*__CUSTODIAL_START__*/
+/* ============================================================
+   D-134 · §4.9's CUSTODIAL ACTS — the WRITE half of this screen, for an
+   administrator's own session (Membership Architecture v2 §4.9, *"What an
+   administrator does"*).
+
+   Four ops, each already built and each reaching both session sets since
+   REC-159 (`CUSTODIAL_ACTIONS` in index.mjs):
+     op=memberadd   invite a member (§6's burner link), or PROPOSE an
+                    administrator beyond the second (§4.7 — the answer lists
+                    who has endorsed it and who has not);
+     op=memberset   deactivate or reactivate a member (a row is never deleted);
+     op=signeradd   register a member's signing key;
+     op=signerset   revoke or reactivate a registered key.
+
+   WHO IS ASKING IS NEVER SENT FROM HERE. The control plane stamps `by` from the
+   signed-in session and the store asks the ROSTER (`Store#custodialBar`), so
+   the record names whoever is signed in and this surface has no field that
+   could name anybody else.
+
+   THE CONTROLS EXIST ONLY FOR A SESSION THE PLANE SAYS ADMINISTERS
+   (`op=whoami`'s `administer`, the same published position the rail and 7.13's
+   rescue read). A member's session renders NONE of the four — absent, never
+   greyed (DEC-69) — and nothing here predicts a refusal: what turns on a
+   parameter (an id already taken, an administrator who needs the §4.7 vote, a
+   key that is not a key) is said by the plane at the act, in its own canned
+   words (C-96, `actRefusalHtml`).
+   ============================================================ */
+function custodian(){
+  return !!(PLANE.session && PLANE.me && PLANE.me.session && PLANE.me.administer);
+}
+let CUSTODY = { members:[], signers:[] };   // what the roster and key reads answered, for the dialogs' pickers
+let CUSTODY_CTX = null;                      // { act, ...the row the member picked }
+
+function custodialBarHtml(){
+  return `<div class="rv-bar" style="margin:8px 0 0;gap:8px" data-custodial="bar">`
+    + `<button class="btn ghost" data-act="memberadd" onclick="openCustodialAct('memberadd')">Invite a member&hellip;</button>`
+    + `<button class="btn ghost" data-act="signeradd" onclick="openCustodialAct('signeradd')">Register a signing key&hellip;</button>`
+    + `</div>`;
+}
+/* One roster row's act: the status the plane reported decides which of the two
+   standings is offered, and the store decides whether it may be set. */
+function memberActHtml(m){
+  const id = m && m.member_id;
+  if(!id) return "";
+  const to = m.status === "revoked" ? "active" : "revoked";
+  return `<button class="btn ghost" data-act="memberset" onclick="openCustodialAct('memberset', ${esc(JSON.stringify(id))}, ${esc(JSON.stringify(to))})">${to==="active"?"Reactivate":"Deactivate"}&hellip;</button>`;
+}
+function keyActHtml(k){
+  const key = k && k.key_b64;
+  if(!key) return "";
+  const to = k.status === "revoked" ? "active" : "revoked";
+  return `<button class="btn ghost" data-act="signerset" onclick="openCustodialAct('signerset', ${esc(JSON.stringify(key))}, ${esc(JSON.stringify(to))})">${to==="active"?"Reactivate":"Revoke"}&hellip;</button>`;
+}
+function keysHtml(signers){
+  const rows = (signers||[]).map(k=>{
+    const who = k.member_id || "";
+    const m = CUSTODY.members.find(x=>x && x.member_id === who);
+    const name = (m && (m.handle || m.cover)) || who;
+    const fp = String(k.key_b64||"").slice(0,24);
+    return `<tr><td class="ttl">${esc(name)}${k.comment?`<div class="mm-cover">${esc(k.comment)}</div>`:""}</td>`
+      + `<td class="mono">${esc(fp)}&hellip;</td>`
+      + `<td>${k.status==="revoked"?`<span class="chip flag">Revoked</span>`:`<span class="chip verified">Active</span>`}`
+      + `${k.attests?"":` <span class="chip collected" title="This instance would refuse a signature from this key right now.">cannot sign now</span>`}</td>`
+      + `<td class="mm-cover">set by ${esc(k.status_by||"not recorded")}</td>`
+      + `<td>${keyActHtml(k)}</td></tr>`;
+  }).join("");
+  return rows
+    ? `<table class="rec mm-keys"><thead><tr><th>Member</th><th>Key</th><th>Standing</th><th>Recorded</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+    : `<div class="empty">No signing key is registered.</div>`;
+}
+
+/* THE DIALOGS. Every field starts EMPTY and nothing is preselected: the role and
+   the capabilities are the administrator's to choose, and a choice not made is
+   sent as not made. */
+function openCustodialAct(act, subject, to){
+  if(!custodian()) return;
+  CUSTODY_CTX = { act, subject: subject ?? null, to: to ?? null, role: null, caps: [] };
+  let title = "", what = "", body = "";
+  if(act === "memberadd"){
+    const vocab = Array.isArray(PLANE.me && PLANE.me.vocabulary) ? PLANE.me.vocabulary : [];
+    title = "Invite a member";
+    what = "An invitation is a link that works once. A second administrator is added by one administrator; an administrator beyond the second needs every existing administrator to endorse the proposal, and no link exists until they have.";
+    body = `<label class="fld" for="ca-id">A member id for them</label><input class="txt" id="ca-id" autocomplete="off">`
+      + `<label class="fld" for="ca-cover">A cover &mdash; your label for them, not a legal name</label><input class="txt" id="ca-cover" autocomplete="off">`
+      + `<div class="fld">Invite them as</div>`
+      + `<label class="ckline"><input type="radio" name="ca-role" id="ca-role-admin" onchange="custodialChoose('role','admin')"> An administrator</label>`
+      + `<label class="ckline"><input type="radio" name="ca-role" id="ca-role-member" onchange="custodialChoose('role','member')"> An ordinary member</label>`
+      + (vocab.length ? `<div class="fld">What they may do</div>` + vocab.map(c=>
+          `<label class="ckline"><input type="checkbox" id="ca-cap-${esc(c)}" onchange="custodialChoose('cap',${esc(JSON.stringify(c))},this.checked)"> ${esc(c)}</label>`).join("") : "");
+  } else if(act === "memberset"){
+    const m = CUSTODY.members.find(x=>x && x.member_id === subject) || {};
+    title = to === "active" ? "Reactivate a member" : "Deactivate a member";
+    what = to === "active"
+      ? "The same person comes back with the same handle and the same history. A former administrator comes back as an ordinary member; restoring the office is a group decision."
+      : "Deactivation ends their access and keeps their history: a member row is never deleted. An administrator is removed only by a vote of the administrators.";
+    body = `<div class="dz-what"><span class="dz-ttl">${esc(m.handle || m.cover || subject)}</span></div>`;
+  } else if(act === "signeradd"){
+    title = "Register a signing key";
+    what = "A signing key lets a member sign what the group publishes. Paste the public key line from the signing page.";
+    body = `<label class="fld" for="ca-who">Whose key</label><select class="txt" id="ca-who"><option value=""></option>`
+      + CUSTODY.members.map(m=>`<option value="${esc(m.member_id)}">${esc(m.handle || m.cover || m.member_id)}</option>`).join("")
+      + `</select>`
+      + `<label class="fld" for="ca-key">The public key</label><input class="txt" id="ca-key" autocomplete="off">`
+      + `<label class="fld" for="ca-comment">A note, if you want one</label><input class="txt" id="ca-comment" autocomplete="off">`;
+  } else if(act === "signerset"){
+    title = to === "active" ? "Reactivate a signing key" : "Revoke a signing key";
+    what = to === "active"
+      ? "The key signs again, if its member's own standing lets them sign."
+      : "The key stops signing now. What it signed before stays signed.";
+    body = `<div class="dz-what"><span class="mono">${esc(String(subject||"").slice(0,24))}&hellip;</span></div>`;
+  } else return;
+  $("#dlg").innerHTML =
+    `<h2>${esc(title)}</h2><p class="what">${esc(what)}</p>${body}
+     <div id="ca-err" class="teach hidden"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="ca-go" onclick="doCustodialAct()">${esc(title)}</button></div>`;
+  $("#dlg-wrap").classList.remove("hidden");
+}
+/* The invitation's two CHOICES, held as they are made and carried into the one op. A role not picked is
+   sent as not picked, and a capability not ticked is not granted. */
+function custodialChoose(kind, value, on){
+  const c = CUSTODY_CTX;
+  if(!c || c.act !== "memberadd") return;
+  if(kind === "role") c.role = value;
+  if(kind === "cap") c.caps = on ? [...new Set([...c.caps, value])] : c.caps.filter(x=>x!==value);
+}
+/* What the op is sent, read from the dialog as authored. A pasted key LINE is
+   split into its base64 part and its label, because that is what `op=signeradd`
+   takes; anything that is not such a line is sent as it was pasted and the
+   plane says what it makes of it. */
+function custodialBody(ctx){
+  const val = (id) => String((($("#"+id))||{}).value || "").trim();
+  if(ctx.act === "memberadd"){
+    const b = { memberId: val("ca-id"), cover: val("ca-cover") };
+    if(ctx.role) b.role = ctx.role;
+    const vocab = Array.isArray(PLANE.me && PLANE.me.vocabulary) ? PLANE.me.vocabulary : [];
+    if(vocab.length) b.capabilities = vocab.filter(c=>ctx.caps.includes(c));
+    return b;
+  }
+  if(ctx.act === "memberset") return { memberId: ctx.subject, status: ctx.to };
+  if(ctx.act === "signerset") return { keyB64: ctx.subject, status: ctx.to };
+  if(ctx.act === "signeradd"){
+    const raw = val("ca-key"), line = /^ssh-ed25519\s+(\S+)(?:\s+(.+))?$/.exec(raw);
+    const comment = val("ca-comment") || (line && line[2] ? line[2].trim() : "");
+    return { memberId: val("ca-who"), keyB64: line ? line[1] : raw, ...(comment ? { comment } : {}) };
+  }
+  return null;
+}
+/* THE COMMIT: one call site per op, spelled out so each act's call is a
+   separate line a reader (and the suite's control) can find by name. */
+async function doCustodialAct(){
+  const ctx = CUSTODY_CTX;
+  if(!ctx || !custodian()) return;
+  const body = custodialBody(ctx);
+  const go = $("#ca-go"); if(go){ go.disabled = true; }
+  let r;
+  if(ctx.act === "memberadd")      r = await actAskPost("memberadd", body);
+  else if(ctx.act === "memberset") r = await actAskPost("memberset", body);
+  else if(ctx.act === "signeradd") r = await actAskPost("signeradd", body);
+  else if(ctx.act === "signerset") r = await actAskPost("signerset", body);
+  else return;
+  if(!r.accepted){
+    const f = r.refusal || {};
+    const err = $("#ca-err");
+    /* §4.7's proposal is recorded even though the answer is a refusal: the
+       record's own lists say who has endorsed it and who it waits on. */
+    const lists = f.proposed && Array.isArray(f.have) && Array.isArray(f.awaiting)
+      ? `<div class="kv"><span class="k">Endorsed by</span><span class="v plain">${esc(f.have.join(", ") || "nobody yet")}</span></div>`
+        + `<div class="kv"><span class="k">Waiting on</span><span class="v plain">${esc(f.awaiting.join(", "))}</span></div>`
+      : "";
+    if(err){ err.innerHTML = actRefusalHtml(f) + lists; err.classList.remove("hidden"); }
+    if(go){ go.disabled = false; }
+    return { refused:true, reason: f.reason, refusal: f };
+  }
+  const res = r.result || {};
+  const link = (ctx.act === "memberadd" && res.invite)
+    ? `<p class="dz-rlede">Send them this link. It works once, it is not shown again, and it goes nowhere after it has been used.</p>`
+      + `<p class="mono" data-invite-link style="word-break:break-all">${esc(`${PLANE.base}/#invite=${encodeURIComponent(res.invite)}`)}</p>`
+    : "";
+  const rows = Object.keys(res).filter(k=>k!=="ok" && k!=="invite" && res[k]!==null && res[k]!==undefined)
+    .map(k=>`<div class="kv"><span class="k">${esc(k==="by"?"recorded as set by":k)}</span><span class="v plain">${esc(Array.isArray(res[k])?res[k].join(", "):String(res[k]))}</span></div>`).join("");
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt"><div class="dz-rhead">Recorded.</div>${link}
+       <p class="dz-rlede">What the record wrote, in its own fields.</p>
+       <div class="dz-rgrid">${rows}</div>
+       <div class="row-btns"><button class="btn" onclick="closeDialog();renderMembers()">Done</button></div>
+     </div>`;
+  return res;
+}
+/*__CUSTODIAL_END__*/
+
 async function renderMembers(){
+  /* D-134: an administrator's session carries §4.9's acts on this screen, so
+     "this screen only shows" is said only where it is still true. */
+  const acts = custodian();
   $("#content").innerHTML = `<h1 class="rec">Members &amp; governance</h1>`
-    + `<p class="lede">Who holds power in this group, and the rules by which it changes hands. Members sign in with a handle and password; a cover is a label, not a legal name; a password can never publish, only a registered key can. This screen only SHOWS &mdash; adding or removing a member, or a key, happens elsewhere, as a decision the group can check.</p>`
-    + `<div id="mm-gov"></div><h2 class="mm-rh">The roster</h2><div id="mm">Loading&hellip;</div>`;
+    + `<p class="lede">Who holds power in this group, and the rules by which it changes hands. Members sign in with a handle and password; a cover is a label, not a legal name; a password can never publish, only a registered key can.`
+    + (acts ? `</p>` : ` This screen only SHOWS &mdash; adding or removing a member, or a key, happens elsewhere, as a decision the group can check.</p>`)
+    + `<div id="mm-gov"></div><h2 class="mm-rh">The roster</h2>${acts ? custodialBarHtml() : ""}<div id="mm">Loading&hellip;</div>`
+    + (acts ? `<h2 class="mm-rh">Signing keys</h2><div id="mm-keys">Loading&hellip;</div>` : "");
   try{
     /* Read the roster and the administrator arithmetic together. A failure in
        one does not blank the other.
@@ -14308,19 +14930,23 @@ async function renderMembers(){
        and this screen's whole governance panel rendered "the administrator
        arithmetic could not be read with this account" against every real plane.
        `recR` opens the envelope; op=memberlist beside it always did. */
-    const [rosterR, adminR] = await Promise.all([
+    const [rosterR, adminR, keysR] = await Promise.all([
       recR("memberlist").catch(e=>({ __err:e })),
       recR("adminarith").catch(()=>null),
+      acts ? recR("signerlist").catch(e=>({ __err:e })) : null,
     ]);
     if(rosterR && rosterR.__err){ $("#mm").innerHTML = errPane(rosterR.__err); }
     const members = (rosterR && !rosterR.__err && (rosterR.members||rosterR)) || [];
+    CUSTODY = { members: Array.isArray(members) ? members : [],
+                signers: (keysR && !keysR.__err && Array.isArray(keysR.signers)) ? keysR.signers : [] };
     const rosterAdminRows = members.filter(m=>memberRole(m)==="admin" && (m.status?m.status==="active":true)).length;
     $("#mm-gov").innerHTML = governanceHtml(adminR, rosterAdminRows);
     if(!(rosterR && rosterR.__err)){
       $("#mm").innerHTML = members.length
-        ? `<table class="rec mm-roster"><thead><tr><th>Member</th><th>Class</th><th>Standing</th><th>May</th></tr></thead><tbody>${members.map(m=>rosterRow(m)).join("")}</tbody></table>`
+        ? `<table class="rec mm-roster"><thead><tr><th>Member</th><th>Class</th><th>Standing</th><th>May</th>${acts?"<th></th>":""}</tr></thead><tbody>${members.map(m=>rosterRow(m, acts)).join("")}</tbody></table>`
         : `<div class="empty">No members listed, or this account cannot read the roster.</div>`;
     }
+    if(acts) $("#mm-keys").innerHTML = (keysR && keysR.__err) ? errPane(keysR.__err) : keysHtml(CUSTODY.signers);
   }catch(e){ $("#mm").innerHTML = errPane(e); }
 }
 
@@ -14472,6 +15098,10 @@ let QUEUE_SET_ERR = "";           // a refusal of the SET itself (it had no item
    whole and a `<select>`'s value would not survive it. `null` is "not open"; `to` is the member the
    forward would name, and it is read back out of here by the act, never off the element. */
 let QUEUE_FWD = null;             // null, or { members:[…the roster as op=memberlist gave it…], to }
+/* UI-110: the case a member NAMED for a selected finding filed under several (id -> project id). Held in
+   state for the reason `QUEUE_FWD` is: the queue repaints whole. Nothing is ever put here but a member's own
+   pick, so an item absent from it has no case and is not sent — there is no default to fall back on. */
+let QUEUE_HOME = new Map();
 /* Read off the act source boot already loaded (`loadActSource`, one `op=affordances` read for the whole
    surface), never a second call — and never awaited ahead of the feeds, so the queue is not held back by it. */
 function queueSetActsFrom(src){
@@ -14479,9 +15109,19 @@ function queueSetActsFrom(src){
   QUEUE_SET_ACTS = new Map(acts.filter(a => a && a.weight === "per-item" && a.id).map(a => [a.id, a]));
 }
 /* WHICH set acts a selected item can be handed to, from the item's own class and the record's own
-   disposition publication. A finding keyed by (project, finding) is NOT selectable: its act needs the
-   member to name the project it is acting for, one item at a time, and a set would have to choose it
-   for them.
+   disposition publication.
+
+   UI-110 — A FINDING KEYED BY (project, finding) IS SELECTABLE, and the sentence that stood here (*"its act
+   needs the member to name the project it is acting for, one item at a time, and a set would have to choose
+   it for them"*) was wrong about the plane: REC-205 measured the set act taking a `project` PER ITEM and
+   narrowing the shared body by the act's published `item_keys`, so a mixed selection is one act. What the
+   sentence guarded is still guarded, by a different mechanism: the project is never CHOSEN here. An item
+   the record files under ONE case sends that case — its own home, the only one `disposition.projects`
+   names. An item filed under SEVERAL is selectable but is NOT SENT until the member names one of them
+   (`queueHomeFor`): D-266 — a surface that defaulted one would be choosing whose judgment the record
+   carries. A project-scoped finding the record publishes NO home for (`available` false,
+   `no_project_scope`) is not offered at all, because there is nothing for the decision to be recorded
+   under.
 
    UI-94 WIDENED THIS FROM ONE OP TO THE SET OF THEM, and that is the whole shape of the change: an
    OBLIGATION takes BOTH of the acts the plane publishes over it — resolve the selection, or forward the
@@ -14494,11 +15134,45 @@ function queueSetOpsFor(it){
     return canContribute() ? ["taskresolve", "taskforward"].filter(op => QUEUE_SET_ACTS.has(op)) : [];
   if(it.class === "FINDING"){
     const d = it.disposition || null;
-    if(d && d.available === true && d.scope === "project") return [];
+    if(d && d.scope === "project" && !queueFindingHomes(it).length) return [];
     if(!notifDispositionKeyed(it) || !queueFindingKey(it) || !canProposalAct()) return [];
     return QUEUE_SET_ACTS.has("proposedispose") ? ["proposedispose"] : [];
   }
   return [];
+}
+/* UI-110: the cases a project-scoped finding may be decided for — the record's `disposition.projects`, read
+   verbatim and never widened. An item that is not project-scoped answers none. */
+function queueFindingHomes(it){
+  const d = (it && it.disposition) || null;
+  if(!d || d.scope !== "project" || d.available !== true || !Array.isArray(d.projects)) return [];
+  return d.projects.filter(p => typeof p === "string" && p.trim()).map(p => p.trim());
+}
+function queueIsProjectScoped(it){ return !!(it && it.disposition && it.disposition.scope === "project"); }
+/* The case THIS item's decision is recorded under, or null while it is still the member's to name. One home
+   is the item's own; several are asked, and only the member's own pick — still one of the record's homes —
+   answers. Null is never replaced by a guess. */
+function queueHomeFor(it){
+  const homes = queueFindingHomes(it);
+  if(homes.length === 1) return homes[0];
+  const picked = QUEUE_HOME.get(String(it && it.id));
+  return (picked && homes.includes(picked)) ? picked : null;
+}
+function queueHomeTo(id, project){
+  id = String(id);
+  if(project) QUEUE_HOME.set(id, String(project)); else QUEUE_HOME.delete(id);
+  queuePaint();
+}
+/* Selected project-scoped findings no case has been named for yet: selected, and held back from the act. */
+function queueSelAwaitingHome(){
+  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id);
+    return it && queueIsProjectScoped(it) && queueSetOpsFor(it).includes("proposedispose") && !queueHomeFor(it); });
+}
+/* How a case is named to a member: the record's title for it where the item's own ancestors carry one, and
+   its id beside it, so two cases with one title are never confused. */
+function queueCaseName(it, project){
+  const a = ((it && it.case && Array.isArray(it.case.ancestors)) ? it.case.ancestors : [])
+    .find(x => x && x.id === project);
+  return (a && a.title) ? `${a.title} (${project})` : project;
 }
 function queueSelectionToggle(id, on){
   id = String(id);
@@ -14506,11 +15180,14 @@ function queueSelectionToggle(id, on){
   if(on) QUEUE_SEL.add(id); else QUEUE_SEL.delete(id);
   queuePaint();
 }
-function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_SET_ERR = ""; QUEUE_FWD = null; queuePaint(); }
+function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_HOME.clear(); QUEUE_SET_ERR = ""; QUEUE_FWD = null; queuePaint(); }
 function queueRetainedClear(id){ QUEUE_RETAINED.delete(String(id)); queuePaint(); }
-/* The selected ids a set op would take, in the order the member sees them. */
+/* The selected ids a set op would take, in the order the member sees them. UI-110: a project-scoped finding
+   whose case is still the member's to name is NOT among them — it stays selected and waits. */
 function queueSelFor(op){
-  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id); return it && queueSetOpsFor(it).includes(op); });
+  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id);
+    return it && queueSetOpsFor(it).includes(op)
+      && !(op === "proposedispose" && queueIsProjectScoped(it) && !queueHomeFor(it)); });
 }
 /* ONE call for the whole selection. `shared` is what every item shares (a disposition, a reason); each
    item carries only its own identity. The actor and the decider are the plane's stamps and are never sent. */
@@ -14526,17 +15203,24 @@ async function queueApplySet(op, shared){
        own published `disposition` block — the same block the key comes from — and never composed or
        re-read here. A set that names a version the record has since revised is RETAINED with the
        plane's own DEFINITION_MOVED words, exactly as a missing reason already is. */
-    const items = ids.map(id => op === "proposedispose"
-      ? { key: queueFindingKey(QUEUE_ITEMS.get(id)),
-          definitionVersion: queueDispositionVersion(QUEUE_ITEMS.get(id)) }
-      : { id });
+    /* UI-110: a project-scoped finding goes in the act's SECOND identity shape, (project, finding) — its
+       own case, or the one the member named, and the finding as the record published it
+       (`disposition.finding`). Never `key`: that is the shared-record shape, and the plane's IC-60 bridge
+       would only refuse it NO_PROJECT_SCOPE. */
+    const items = ids.map(id => {
+      const it = QUEUE_ITEMS.get(id);
+      if(op !== "proposedispose") return { id };
+      if(queueIsProjectScoped(it))
+        return { project: queueHomeFor(it), finding: (it.disposition && it.disposition.finding) || String(it.id) };
+      return { key: queueFindingKey(it), definitionVersion: queueDispositionVersion(it) };
+    });
     const res = await recPostR(op, { ...(shared || {}), items });
     const outs = (res && Array.isArray(res.items)) ? res.items : null;
     if(!outs){ QUEUE_SET_ERR = queueReason(res); return; }
     outs.forEach(o => {
       const id = ids[o.index];
       if(id === undefined) return;
-      if(o.outcome === "applied"){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); }
+      if(o.outcome === "applied"){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); QUEUE_HOME.delete(id); }
       else {
         const it = QUEUE_ITEMS.get(id);
         /* The canned translation is chosen first (`queueReason`); where the record ALSO sent a detail — the
@@ -14555,7 +15239,23 @@ function queueSelTickHtml(it){
   const id = String(it.id);
   /* The tick FEEDS THE SET the act sends (member-respect ARM 1d's item selector): its value is the
      item's membership of `items[]`, nothing else. */
-  return `<label class="q-sel"><input type="checkbox" data-qsel="${esc(id)}"${QUEUE_SEL.has(id)?" checked":""} onchange="queueSelectionToggle('${esc(id)}', this.checked)"> Select</label>`;
+  return `<label class="q-sel"><input type="checkbox" data-qsel="${esc(id)}"${QUEUE_SEL.has(id)?" checked":""} onchange="queueSelectionToggle('${esc(id)}', this.checked)"> Select</label>`
+    + queueSelHomeHtml(it);
+}
+/* UI-110: WHOSE decision a selected project-scoped finding would be, on the item itself. One home is said;
+   several are ASKED — a picker whose first option chooses nothing, and which marks no case chosen until
+   the member has chosen it (D-266). */
+function queueSelHomeHtml(it){
+  const id = String(it.id);
+  if(!QUEUE_SEL.has(id) || !queueIsProjectScoped(it)) return "";
+  const homes = queueFindingHomes(it);
+  if(homes.length === 1)
+    return `<div class="q-selhome" data-selhome="${esc(id)}">Recorded as the case ${esc(queueCaseName(it, homes[0]))}&rsquo;s own decision; it governs no other case.</div>`;
+  const picked = queueHomeFor(it);
+  return `<div class="q-selhome" data-selhome="${esc(id)}">This is filed under ${homes.length} cases, and deciding it is one case&rsquo;s own act. `
+    + `<select data-qsethome="${esc(id)}"><option value="">Choose which case this is for&hellip;</option>`
+    + homes.map(p => `<option value="${esc(p)}"${picked === p ? " selected" : ""}>${esc(queueCaseName(it, p))}</option>`).join("")
+    + `</select>${picked ? "" : " It is not sent until you choose."}</div>`;
 }
 /* The record's reason an item was kept, on the item itself. */
 function queueRetainedHtml(id){
@@ -14652,6 +15352,10 @@ function queueSelBarHtml(){
           + `<button class="tbtn" data-qsetfwdcancel>Cancel</button></span>`);
     }
   }
+  /* UI-110: the findings held back for want of a case are COUNTED in the bar, so a set that goes without
+     them is never read as the whole selection. */
+  const waiting = queueSelAwaitingHome();
+  if(waiting.length) bits.push(`<span class="q-sethomewait" data-sethomewait>${waiting.length} selected ${waiting.length === 1 ? "finding is" : "findings are"} filed under more than one case and will not be sent until you choose, on ${waiting.length === 1 ? "it" : "each"}, which case the decision is for.</span>`);
   if(finds.length && disp) bits.push(`<span class="q-setdisp">${esc(disp.label)} (${finds.length}): `
     + `<input class="q-setreason" data-qsetreason placeholder="Your reason, in your own words"> `
     + `<button class="btn ghost" data-qsetdisp="deferred">Defer</button> <button class="btn ghost" data-qsetdisp="dismissed">Dismiss</button></span>`);
@@ -15069,6 +15773,80 @@ function queueDispositionVersion(it){
   const d = (it && it.disposition) || null;
   return (d && Number.isInteger(d.definition_version)) ? d.definition_version : null;
 }
+/* UI-109. THE REOPENED QUESTION SHOWS ITS EARLIER ANSWER, ON THE ITEM (framework §8.2, "The declared
+   flow, and its revisions"; D-527 on the plane, 2026-09-24). A decision to set a finding aside judges
+   the version of the declared flow it was taken against; after a revision the finding is OPEN again and
+   the plane publishes the earlier decision on the FINDING item itself as `prior_disposition` — `null`
+   where nobody has ever decided. Until this landing no surface read it, so a member meeting a reopened
+   question was shown one nobody had answered while the record held a decision.
+
+   EVERY WORD OF FACT IS THE PLANE'S (DEC-8): the state, the reason, who decided and when, the version
+   judged or `not recorded`, `applies` and the plane's own `applies_because` code, printed verbatim beside
+   the sentence that reads it. WHAT THE ITEM DOES NOT CARRY IS SAID, NOT FILLED: `prior_disposition` names
+   who DECIDED, not who REVISED the flow and so reopened the question — that member is on the declared
+   flow's own history (op=progression), not on this item (D-592: the plane's fix, to publish the revising
+   version's author and instant beside it), and no name is put here in its place. The
+   version the flow stands at now is the item's own `subject.definition_version`. A field ABSENT (a plane
+   that predates D-527) renders nothing, because absent says nothing about whether anybody decided; a
+   `null` says nobody has, and is stated. */
+const PRIOR_BECAUSE_WORDS = {
+  decided_against_earlier_version:
+    "the declared flow has been revised since that decision, so it judged a version that no longer stands",
+  version_not_recorded_definition_declared_since:
+    "the record did not keep which version it judged, and the declared flow was declared again after it was taken",
+  version_not_recorded_order_undetermined:
+    "the record did not keep which version it judged, and whether the flow was declared again before or after it is not in the record",
+  definition_not_declared:
+    "the record holds no declared flow for it to judge now",
+};
+function queueFindingPriorHtml(it){
+  if(!it || it.class !== "FINDING" || !Object.prototype.hasOwnProperty.call(it, "prior_disposition")) return "";
+  const p = it.prior_disposition;
+  if(p === null)
+    return `<div class="q-gap" data-prior="none"><b>Nobody has decided this question before.</b> The record holds no earlier decision on it.</div>`;
+  if(!p || typeof p !== "object")
+    return `<div class="q-gap" data-prior="malformed">The record published an earlier decision on this question in a shape this page cannot read, and none is invented here.</div>`;
+  const state = String(p.state || "").trim();
+  const who   = String(p.decided_by || "").trim();
+  const at    = String(p.at || "").trim();
+  const why   = String(p.reason || "").trim();
+  const v     = p.definition_version;
+  const gaps = [];
+  if(!state) gaps.push("what it was set aside as");
+  if(!who)   gaps.push("who decided");
+  if(!at)    gaps.push("when");
+  if(!why)   gaps.push("their reason");
+  const judged = (String(p.definition_version_state || "").trim() === "recorded" && v != null && v !== "")
+    ? `It judged <b>version ${esc(String(v))}</b> of the declared flow.`
+    : String(p.definition_version_state || "").trim() === "not recorded"
+      ? `Which version of the declared flow that decision judged is <b>not recorded</b>: it was taken before the record kept the version, and no number is put there in its place.`
+      : `The record did not say which version of the declared flow it judged, and none is invented here.`;
+  const sv = it.subject && it.subject.definition_version;
+  const now = (sv != null && sv !== "") ? ` The flow stands at <b>version ${esc(String(sv))}</b> now.` : "";
+  const code = String(p.applies_because || "").trim();
+  const because = code
+    ? (PRIOR_BECAUSE_WORDS[code]
+        ? ` Why, in the record's words: ${esc(PRIOR_BECAUSE_WORDS[code])} (<code>${esc(code)}</code>).`
+        : ` The record's reason is <code>${esc(code)}</code>, which this page has no words for, so it is shown as the record gave it.`)
+    : ` The record gave no reason code.`;
+  const stands = p.applies === false
+    ? `<b>That decision no longer answers the question</b>, so it is asked again here. The decision is kept, never deleted.`
+    : p.applies === true
+      ? `The record says that decision <b>still applies</b>, yet it has put the question back on the open list; the two are shown as the record gave them and not reconciled here.`
+      : `The record did not say whether that decision still applies, so nothing is claimed about that here.`;
+  const qd = queueData();
+  const alsoHeld = !!(qd && qd.disposed && Array.isArray(qd.disposed.findings)
+    && qd.disposed.findings.some(r => String((r && r.key) || "") === queueFindingKey(it)));
+  return `<div class="q-notice" data-prior="${esc(queueFindingKey(it))}">`
+    + `<b>Reopened &mdash; somebody already decided this question once: set aside${state ? " as " + esc(state) : ""}`
+    + `${who ? " by " + esc(who) : ""}${at ? " on " + esc(at) : ""}.</b> `
+    + (why ? `<span class="q-notice-why">Their reason, as the record recorded it: ${esc(why)}</span> ` : "")
+    + `<span class="q-gap">${judged}${now}${because} ${stands}</span>`
+    + ` <span class="q-gap">Who revised the flow and so reopened the question is <b>not on this item</b>; the declared flow&rsquo;s own history names each version&rsquo;s author, and no name is put here in its place.</span>`
+    + (gaps.length ? ` <span class="q-gap">The record did not say ${esc(gaps.join(", "))}, and none of it is invented here.</span>` : "")
+    + (alsoHeld ? ` <span class="q-gap">It is the same decision listed among what the record holds as set aside, not a second one.</span>` : "")
+    + `</div>`;
+}
 function queueFindingAsProposal(it){
   const b = (it && it.basis) || {};
   return { key: queueFindingKey(it),
@@ -15094,6 +15872,7 @@ function queueItemHtml(it){
     ${queueAgeHtml(it)}
     <div class="q-summary">${esc(it.summary||"")}</div>
     ${it.detail ? `<div class="q-detail">${esc(it.detail)}</div>` : ""}
+    ${queueFindingPriorHtml(it)}
     <div class="q-meta">${queueSubjectHtml(it)}</div>
     ${queueAssigneeHtml(it)}
     ${queueCountsHtml(it)}
@@ -15572,6 +16351,8 @@ function queueWire(){
   document.querySelectorAll("#q [data-qselclear]").forEach(b=>b.onclick=()=>queueSelClear());
   document.querySelectorAll("#q [data-unretain]").forEach(b=>b.onclick=()=>queueRetainedClear(b.dataset.unretain));
   document.querySelectorAll("#q [data-qset]").forEach(b=>b.onclick=()=>queueApplySet(b.dataset.qset));
+  /* UI-110: the case a member names for a finding filed under several, on its own attribute. */
+  document.querySelectorAll("#q [data-qsethome]").forEach(sel=>sel.onchange=()=>queueHomeTo(sel.dataset.qsethome, sel.value));
   document.querySelectorAll("#q [data-qsetdisp]").forEach(b=>b.onclick=()=>{
     const r = document.querySelector("#q [data-qsetreason]");
     queueApplySet("proposedispose", { to: b.dataset.qsetdisp, reason: (r && r.value) || "" });
@@ -16846,8 +17627,15 @@ async function connectGo(){
   const pane = $("#conn-pf"); if(!pane) return;
   if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
   const r = a.result;
+  /* D-576 — THE DERIVATION'S EXTENT ON THE RECEIPT. `truncated` on this answer is whether
+     the DERIVATION was cut (store.mjs, deriveConnections), and the receipt read the count
+     as every connection through the subject when it was part of them. The added sentence
+     is UI-95's, in the plane's own wording (`derivationStatement`, airun.mjs), because
+     op=connect answers `truncated` and `documents` but no `derivation.says` to render. */
+  const cutAfter = typeof r.documents === "number" ? `${esc(String(r.documents))} of this subject&rsquo;s documents` : "an unrecorded number of this subject&rsquo;s documents";
   pane.innerHTML = intentReceiptHtml([
-    `The record derived ${esc(String(r.count!=null?r.count:(r.connections||[]).length))} ${(r.count===1)?"connection":"connections"} among the documents that concern this subject.`]);
+    `The record derived ${esc(String(r.count!=null?r.count:(r.connections||[]).length))} ${(r.count===1)?"connection":"connections"} among the documents that concern this subject.`,
+    ...(r.truncated === true ? [`The derivation was CUT by its bound after ${cutAfter}: the connections here are true but are part of the set through this subject, not all of it.`] : [])]);
   await showEntity(INTENT_SUBJ.entity.entity_id, null, true);
 }
 
@@ -17077,10 +17865,64 @@ async function progLoad(){
   PROG.entity = ents[0];
   await progPaintInstance();
 }
+/* UI-108: A FINDING A MEMBER HAS DECIDED SAYS SO, BESIDE ITSELF (framework §12 "age rather than
+   vanish", D-79; the plane half is D-552, IC-290). `op=instance` publishes on every finding the
+   member's decision about its (progression, stage) — `disposition`, or null where nobody decided —
+   and until this item this page painted `findings[]` bare, so a question a member had already
+   answered read as an open one: the record holding a decision and the page saying nothing of it.
+   THE FINDING STAYS LISTED. A decision ages a finding and never erases it, so it is rendered
+   BESIDE the finding it judged, never instead of it. Every word about the decision is the record's
+   — its state, its author, its instant, the member's reason verbatim, and which version of the
+   declared flow it judged and whether it still stands, through the queue's own sentence
+   (`disposedFlowVersionHtml`) so the two pages cannot drift into two accounts of one decision.
+   A field the record did not send is SAID to be missing, never filled; and a finding on a plane
+   that publishes no `disposition` key at all is not called undecided — whether anyone decided it
+   is then not known, and the page says that (CLAUDE.md §4: undetermined is first-class). */
+function progFindingDecisionHtml(f){
+  if(!f || !Object.prototype.hasOwnProperty.call(f, "disposition"))
+    return `<div class="q-gap">The record did not say whether a member has decided this finding, so nothing is claimed about that here.</div>`;
+  const d = f.disposition;
+  if(d === null)
+    return `<div class="subj-note">No member has decided this finding: it is an open question on the record.</div>`;
+  if(!d || typeof d !== "object")
+    return `<div class="q-gap">The record sent something about a decision on this finding that this page cannot read, so nothing is claimed about it here.</div>`;
+  const state = String(d.state || "").trim();
+  const who   = String(d.decided_by || "").trim();
+  const at    = String(d.at || "").trim();
+  const why   = String(d.reason || "").trim();
+  const gaps = [];
+  if(!state) gaps.push("what it was set aside as");
+  if(!who)   gaps.push("who decided");
+  if(!at)    gaps.push("when");
+  if(!why)   gaps.push("their reason");
+  return `<div class="q-notice" data-decided-finding="${esc(String(f.stage_key || ""))}">`
+    + `<b>A member decided this finding: set aside${state ? " as " + esc(state) : ""}`
+    + `${who ? " by " + esc(who) : ""}${at ? " on " + esc(at) : ""}.</b>`
+    + ` It stays listed here, because a decision ages a finding and never erases it.`
+    + (why ? ` <span class="q-notice-why">Their reason, as the record recorded it: ${esc(why)}</span>` : "")
+    + (gaps.length ? ` <span class="q-gap">The record did not say ${esc(gaps.join(", "))}, and none of it is invented here.</span>` : "")
+    + ` ${disposedFlowVersionHtml(d)}`
+    + `</div>`;
+}
+/* UI-108: how many of the listed findings a standing decision answers, in the record's own count
+   (`open_finding_count`, D-552), beside `finding_count`. Absent -> nothing is counted here. */
+function progFindingCountHtml(inst){
+  if(!inst || typeof inst.finding_count !== "number" || typeof inst.open_finding_count !== "number") return "";
+  const all = inst.finding_count, open = inst.open_finding_count;
+  if(!all) return "";
+  return `<div class="subj-note">The record lists ${esc(String(all))} ${all===1?"finding":"findings"} on this chain; `
+    + `${esc(String(open))} ${open===1?"is":"are"} still open, and ${esc(String(all-open))} `
+    + `${(all-open)===1?"is":"are"} answered by a member&rsquo;s decision that still stands.</div>`;
+}
 async function progPaintInstance(){
   const out = $("#pg-inst"); if(!out) return;
-  let inst = null, docs = [];
-  try{ inst = await recR("instance", { key: PROG.def.progression_key, id: PROG.entity.entity_id }); }catch(_){ inst = null; }
+  let inst = null, docs = [], instRefusal = null, instNoAnswer = false;
+  /* UI-108: a REFUSED read is the plane's to word (DEC-49), and one that got no answer is not an empty
+     chain: both were painted as "nothing on the record" at every stage, which claims a read that
+     never happened. A control-plane refusal throws flat; a store refusal arrives as `ok:false`. */
+  try{ inst = await recR("instance", { key: PROG.def.progression_key, id: PROG.entity.entity_id }); }
+  catch(e){ inst = null; if(e && typeof e === "object" && e.ok === false) instRefusal = e; else instNoAnswer = true; }
+  if(inst && inst.ok === false){ instRefusal = inst; inst = null; }
   /* UI-48: THE ENVELOPE WAS DROPPED AT THE CALL — `(await recR(...)).documents`
      discards `limit` and `truncated` before anything downstream could read them,
      so no renderer on this screen COULD have stated the bound. The whole answer
@@ -17099,13 +17941,20 @@ async function progPaintInstance(){
       <h2>${esc(PROG.def.label)} &mdash; ${esc(PROG.entity.label)}</h2>${gradeLine}</div>`
     + stages.map(s=>{
         const st = s.present ? `${s.document_count||s.documents.length} on the record`
-          : (s.discharged ? "missing, and lawfully so" : "nothing on the record");
+          : (s.discharged ? "missing, and lawfully so"
+            : ((instRefusal || instNoAnswer) ? "not read: the record did not answer for this chain" : "nothing on the record"));
         return `<div class="subj-doc"><div class="top"><span><b>${esc(s.label||s.stage_key)}</b> &mdash; ${esc(st)}</span>
           ${s.present && s.grade ? subjGradeBadge(s.grade, s.grade==="A"||s.grade==="B", s.grade==="C") : ""}</div>
           ${(s.exceptions||[]).map(x=>`<div class="subj-just">Skipped lawfully: ${esc(x.reason)}</div><div class="subj-cite">Cited: ${esc(x.citation)}</div>`).join("")}</div>`;
       }).join("")
+    + (instRefusal ? intentRefusalHtml(instRefusal)   /* UI-108: the plane's canned translation (DEC-49), never re-worded */
+      : instNoAnswer ? `<div class="q-gap">The record did not answer for this chain, so nothing is said here about what is on it or what is missing from it.</div>`
+      : "")
+    + progFindingCountHtml(inst)
     + ((inst && inst.findings || []).map(f=>
-        `<div class="subj-doc"><div class="top"><span>${esc(f.detail || f.finding || "a stage the record expected is missing")}</span></div></div>`).join(""))
+        `<div class="subj-doc" data-finding-stage="${esc(String(f.stage_key || ""))}"><div class="top"><span>${esc(f.detail || f.finding || "a stage the record expected is missing")}</span></div>`
+        + progFindingDecisionHtml(f)                    /* UI-108: the member's decision, beside the finding it judged */
+        + `</div>`).join(""))
     + progVersionsHtml(PROG.def)                      /* UI-99: the declared flow's versions and their basis */
     + (canIntentWrite() ? progThreadHtml(stages, docs, concernsAns) : "");
   if(canIntentWrite()){
@@ -17436,7 +18285,17 @@ function docProgressionsHtml(p){
 /* One progression instance this document sits in, with its findings. An
    overdue_successor renders the plane's own overdue_by_ms as "N days overdue";
    a missing_predecessor (never overdue) renders no deadline; an undetermined
-   instance grade is STATED, never a guessed letter. */
+   instance grade is STATED, never a guessed letter.
+
+   D-617: AND A FINDING A MEMBER HAS DECIDED SAYS SO, BESIDE ITSELF (framework §12
+   "age rather than vanish", D-79; the plane half is D-552, IC-290). op=captureprogressions
+   publishes on every finding the decision about its (progression, stage) — `disposition`,
+   or null where nobody decided — and this page painted the findings without it, so a
+   question a member had already answered read here as an open one while the progression
+   page (UI-108) said it was decided. Each finding now carries the SAME sentence the
+   progression page renders, through the same `progFindingDecisionHtml`, so the two pages
+   cannot drift into two accounts of one decision. The finding stays listed; a plane that
+   publishes no `disposition` key reads "not known", never "undecided". */
 function docInstanceHtml(inst){
   const gradeBadge = f => (f.grade_determined===false || !f.grade)
     ? `<span class="subj-grade g-unconf">Grade undetermined</span><span class="subj-how">The record cannot yet say how strongly this process is connected, and does not guess.</span>`
@@ -17446,14 +18305,16 @@ function docInstanceHtml(inst){
     if(docFindingOverdue(f)){
       const days = Number.isFinite(f.overdue_by_ms) ? Math.floor(f.overdue_by_ms/86400000) : null;
       const when = days===null ? "overdue" : (days<=0 ? "overdue today" : `${days} day${days===1?"":"s"} overdue`);
-      return `<div class="docprog-finding overdue">
+      return `<div class="docprog-finding overdue" data-finding-stage="${esc(String(f.stage_key || ""))}">
         <div class="ends"><b>The ${esc(f.stage_label||f.stage_key)}</b> is ${req}, and it is <b>${esc(when)}</b>${f.deadline?` — due ${esc(fmtWhenFull(f.deadline))}`:""}.</div>
         <div class="top">${gradeBadge(f)}</div>
+        ${progFindingDecisionHtml(f)}
       </div>`;
     }
-    return `<div class="docprog-finding">
+    return `<div class="docprog-finding" data-finding-stage="${esc(String(f.stage_key || ""))}">
       <div class="ends"><b>The ${esc(f.stage_label||f.stage_key)}</b> is ${req} but no document fills it yet.</div>
       <div class="top">${gradeBadge(f)}</div>
+      ${progFindingDecisionHtml(f)}
     </div>`;
   }).join("");
   return `<div class="subj-doc">
@@ -18817,6 +19678,7 @@ async function renderAdd(){
       ${ADD_CAPTURE_TEACH}
     </div>
     ${addActionPaneHtml()}
+    <div id="a-vis" class="hidden">${visibilityChoiceHtml("a")}</div>
     <div id="a-err" class="teach hidden"></div>
     <div id="a-prog"></div>
     <div id="a-note"></div>
@@ -18830,6 +19692,7 @@ function addTypeSync(){
      describes a captured document, and a question or a project has none. */
   const box = $("#a-doc"); if(box) box.classList.toggle("hidden", t !== "information");
   const act = $("#a-act"); if(act) act.classList.toggle("hidden", t !== "action");
+  const vis = $("#a-vis"); if(vis) vis.classList.toggle("hidden", normalizeType(t) !== "project");
   addValidate();
 }
 /* THE ACTION'S OWN MINIMUM, and it is a statement about what this FORM has
@@ -18853,12 +19716,15 @@ function addValidate(){
   const loc = (($("#a-loc")||{}).value||"").trim();
   const auth = (($("#a-auth")||{}).value||"").trim();
   const act = t === "action" ? addActReady() : { ok:true };
+  /* UI-70: a project is not ready until its creator has CHOSEN (§7.14, DEC-69). */
+  const vis = normalizeType(t) === "project" ? visibilityChosen("a") : "n/a";
   let why = "";
   if(!title) why = "A title and a body are the minimum.";
   else if(!body) why = "Write something in the body: an empty record says nothing.";
   else if(t === "information" && loc && !/^https:\/\//i.test(loc)) why = "The address must be https on a public site.";
   else if(t === "information" && loc && !auth) why = "Say who issued the document as well as where it lives.";
   else if(!act.ok) why = act.why;
+  else if(!vis) why = VISIBILITY_UNCHOSEN;
   /* THE LETTER CAME OUT OF THIS LINE TOO (2026-08-04, UI-32), and it was the
      sharper of the two: the teach block at least described a rule, while this
      told a member what grade a capture that HAS NOT HAPPENED will carry. The
@@ -18868,7 +19734,7 @@ function addValidate(){
   else why = loc ? `It will be captured at ${vocabFor(FIRST_STATE, t)} and appear in the record for review.`
                  : `It will be written at ${vocabFor(FIRST_STATE, t)}, with no document attached.`;
   const go = $("#a-go"), n = $("#a-n");
-  const ready = !!(title && body && act.ok && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
+  const ready = !!(title && body && act.ok && vis && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
   if(go) go.disabled = !ready || ADD_BUSY;
   if(n) n.textContent = why;
 }
@@ -18962,6 +19828,17 @@ async function addGo(){
   const auth = (($("#a-auth")||{}).value||"").trim();
   const wantSubs = !!(($("#a-subs")||{}).checked);
   const wantArch = !!(($("#a-arch")||{}).checked);
+  /* UI-70 (§7.14, DEC-69: forced, at the act). A project is not written until its creator has CHOSEN
+     discoverable or hidden. This is the surface's own form minimum, the same kind as "a title and a body",
+     and it is asked HERE as well as on the button because the button is a courtesy: a submit that reached
+     the plane with no choice would be created HIDDEN by the plane's fail-closed default, silently — the
+     surface choosing in the member's place, which is exactly what the forced choice forbids. */
+  const visibility = normalizeType(type) === "project" ? visibilityChosen("a") : null;
+  if(normalizeType(type) === "project" && !visibility){
+    addErr(esc(VISIBILITY_UNCHOSEN) + " Nothing was written.");
+    ADD_BUSY = false; addValidate();   /* nothing was asked of the plane, so the form is handed straight back */
+    return;
+  }
   try{
     let doc = null, snap = null, partial = null;
     if(loc){
@@ -19070,6 +19947,9 @@ async function addGo(){
     }
     const res = await recPostR("promote", {
       ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: who,
+      /* UI-70 (REC-197): the creator's CHOICE, sent on a project's creation and on nothing else — the plane
+         refuses a `visibility` on anything that is not a project's creation (C-97.2). */
+      ...(visibility ? { visibility } : {}),
       /* UI-79: no `group` — the plane stamps the instance's recorded one (IC-172). */
       meta: { object_type: type, title,
               current_state: vocabFor(FIRST_STATE, type), created: now, last_updated: now },
@@ -23152,8 +24032,9 @@ try{ window.addEventListener("hashchange", ()=>{ if(!VREV_HASH_LOCK) versionRevi
    ---- D-195: THE SHARED ORIGIN, DERIVED BY THE PLANE AND SHOWN BEFORE THE
         AFFIRMATION — AND NEVER A REFUSAL (§12 (a))
 
-   `op=versionstrength` publishes `independence` — `Store#independenceOf`,
-   recomputed on the read rather than replayed from the write (IC-52). UI-43's
+   `op=partitionindependence`'s version arm publishes `independence` —
+   `Store#independenceOf`, recomputed on the read rather than replayed from the
+   write (IC-52, IC-248). UI-43's
    branch could only say *nobody looked*; the plane now looks, so this page shows
    what it found, in the reading's own card, ABOVE the affirmation: which sets
    rest on the same document, the same captured copy or the same address, or
@@ -23162,12 +24043,14 @@ try{ window.addEventListener("hashchange", ()=>{ if(!VREV_HASH_LOCK) versionRevi
    still goes through. Derived informs, authored binds.
 
    THE ORDERING RULE (DEC-32 clause 5) SURVIVES THIS, AND HOW IS THE POINT.
-   `independence` rides on the op that also answers the arithmetic, so asking it
-   before the affirmation fetches a pair. `acerOriginsRead` KEEPS `independence`
-   AND NOTHING ELSE — the pair is dropped at the fetch, never stored in `ACER`,
-   so no code path can draw it; the arithmetic is asked AGAIN, and only, from
-   `acerStrengthShow` after the affirmation. A shared origin is a provenance fact
-   and not a grade (§12 (c)), so showing it first does not break the keystone.
+   Until UI-88 `independence` was asked of `op=versionstrength`, which also
+   answers the arithmetic, so the pair crossed the wire before the affirmation
+   and was dropped client-side. BOB #31 (2026-09-23 22:22Z) ruled the separation
+   structural at the wire, not a choice each page makes: `acerOriginsRead` asks
+   the independence-only read, so no strength-bearing answer is FETCHED before
+   the affirmation; the arithmetic is asked only from `acerStrengthShow`, after
+   it. A shared origin is a provenance fact and not a grade (§12 (c)), so
+   showing it first does not break the keystone.
 
    ---- DEC-46: THE LENS DIFF IN THE FLOW, ABOVE THE CONTROL, THREE-VALUED.
    ---- REC-36: A READING COMPOSED BY A RUN THIS CREDENTIAL CANNOT OPEN LOSES
@@ -23324,29 +24207,40 @@ function acerOriginWords(o){
 }
 /* D-195, RENDERED FROM THE PLANE'S DERIVATION. Four states and no fifth: not
    told, shared (named), traced-and-none, and could-not-finish. Nothing here
-   refuses and nothing here grades. */
+   refuses and nothing here grades.
+
+   UI-75 LIFTED THE BODY into `originsHtml`, unchanged but for two parameters —
+   how a set is named, and the attribute its states are tagged with — so the
+   elicitation's read-back renders the same fact in the same words (BOB #22:
+   whichever of UI-74 and UI-75 lands second reuses the first's rendering). */
 function acerOriginsHtml(v){
   if(acerSetKeys(v).length < 2) return "";
-  const ind = ACER && ACER.origins;
+  return originsHtml(ACER && ACER.origins, k => acerSetName(v, k), "data-acer");
+}
+/* THE SHARED RENDERER. `ind` is the plane's `independence` or null (not told);
+   `nameOf` turns the plane's set label into the member's words; `tag` is the
+   attribute name each state is marked with. Called by `acerOriginsHtml` and
+   `elicOriginsHtml`. */
+function originsHtml(ind, nameOf, tag){
   if(!ind || typeof ind !== "object" || ind.checked !== true)
-    return '<div class="teach" style="margin:6px 0 0" data-acer="origins-untold">' + esc(ACER_ORIGINS_UNTOLD) + '</div>';
+    return '<div class="teach" style="margin:6px 0 0" ' + tag + '="origins-untold">' + esc(ACER_ORIGINS_UNTOLD) + '</div>';
   const shared = Array.isArray(ind.shared) ? ind.shared.filter(p => p && typeof p === "object") : [];
   const cut = ind.complete === false
     ? '<div class="subj-how">The record stopped tracing at its own limit of ' + esc(String(ind.limit ?? "an unstated number"))
       + ' per step, so there may be more than it says here.</div>' : "";
   if(!shared.length){
     if(ind.complete === false)
-      return '<div class="teach" style="margin:6px 0 0" data-acer="origins-undetermined">The record began tracing whether '
+      return '<div class="teach" style="margin:6px 0 0" ' + tag + '="origins-undetermined">The record began tracing whether '
         + 'these sets rest on the same material further back and could not finish, so it cannot say whether they do.'
         + cut + '</div>';
-    return '<div class="subj-how" data-acer="origins-none">The record traced where the material behind each set came '
+    return '<div class="subj-how" ' + tag + '="origins-none">The record traced where the material behind each set came '
       + 'from and found none of it shared between them. ' + esc(ACER_ORIGINS_REACH) + '</div>';
   }
-  return '<div class="card" style="margin:6px 0 0" data-acer="origins-shared">'
+  return '<div class="card" style="margin:6px 0 0" ' + tag + '="origins-shared">'
     + '<div class="kv"><span class="k">Rests on the same material</span><span class="v plain">'
     + 'The record traced where the material behind each set came from, and some of it is shared.</span></div>'
-    + shared.map(p => '<div class="subj-how" data-acer="origin">' + esc(acerSetName(v, p.a)) + ' shares material with '
-        + esc(acerSetName(v, p.b)) + ': '
+    + shared.map(p => '<div class="subj-how" ' + tag + '="origin">' + esc(nameOf(p.a)) + ' shares material with '
+        + esc(nameOf(p.b)) + ': '
         + esc((Array.isArray(p.through) ? p.through : []).map(acerOriginWords).join("; ") || "material the record did not name")
         + '.</div>').join("")
     + cut
@@ -23607,15 +24501,15 @@ async function acerStrengthShow(){
   acceptCeremonyPaint();
 }
 
-/* D-195's READ, AND IT KEEPS ONE FIELD. The op also answers the pair; the pair
-   is dropped HERE, at the fetch, so nothing before the affirmation can draw it
-   (DEC-32 clause 5). Asked in the reading's own state, because the op refuses a
-   reading outside the state set it counts. `null` on any refusal — which the
+/* D-195's READ, AND THE ANSWER CARRIES NOTHING ELSE (UI-88). The VERSION arm of
+   `op=partitionindependence` (REC-192, IC-248) answers the stored reading's
+   `independence` ON ITS OWN — no pair, no axis, no state set — so no strength
+   crosses the wire before the affirmation (DEC-32 clause 5; BOB #31, 2026-09-23
+   22:22Z). It is not state-gated, so no state is named: the reading a member
+   affirms is by construction not yet adopted. `null` on any refusal — which the
    page renders as NOT TOLD, never as clean. */
 async function acerOriginsRead(v){
-  const st = String((v && v.state) || "").trim();
-  const a = await actAsk("versionstrength",
-    { id: ACER.inquiry, version: String(v.name), ...(st ? { states: st } : {}) });
+  const a = await actAsk("partitionindependence", { id: ACER.inquiry, version: String(v.name) });
   const ind = a.accepted && a.result && typeof a.result === "object" ? a.result.independence : null;
   return (ind && typeof ind === "object") ? ind : null;
 }
@@ -24601,12 +25495,16 @@ try{ window.addEventListener("hashchange", ()=>{ if(!STANCE_HASH_LOCK) stanceRou
 
    WHAT THIS SURFACE MUST NEVER DO, and the harness (`review-copy.test.mjs`)
    asserts each by name:
-     - OFFER ANY WAY OUT OF THE INSTANCE. No download, no print, no file, no
-       blob or data link, no `beforeprint` hook, no print rule for this copy.
-       §6A.3 point 1 (DEC-31's bound rule, measured by BOB #16): a rendering
-       that leaves carries its hash, date, author and both threshold floors
-       in-band, and `op=reviewcopy` does not yet carry all four — so NO surface
-       offers to export a review copy. Reading it here needs none of that.
+     - OFFER ANY WAY OUT OF THE INSTANCE BUT ONE. UI-69: §6A.3 point 1's gate
+       is met — `op=reviewcopy` answers DEC-31's quartet in-band (REC-148,
+       IC-229; its date the copy's LAST CHANGE since REC-200) — so the member
+       door offers ONE act, `rvcExport`, and nothing else anywhere: no print
+       call or hook, no print rule for this copy, no blob, data or download
+       link outside `rvcDeliverFile`, and nothing at all on the recipient door.
+       The file is drawn from a FRESH answer and every page of it carries that
+       answer's `inband`, verbatim; an answer lacking any of the four is
+       refused and no file is made. §6A.3 point 2 is said in the export
+       act's own box, and nowhere else.
      - TELL A RECIPIENT WHY A COPY IS DEAD. The plane's dead answer is ONE answer
        for revoked, never issued, malformed and moved-on alike, and the page
        renders its one sentence and nothing that varies with the cause. The page
@@ -24662,9 +25560,15 @@ function rvcDraftBody(f, draftId){
   else if(f.nothingLeftOut) body.excluded = [];
   return body;
 }
-/* Editing starts from what the draft HOLDS, read back from `op=reviewcopy`. The
-   one thing the answer does not say back is whether a draft naming no case was
-   marked as a new one, so that choice starts unmade rather than guessed. */
+/* Editing starts from what the draft HOLDS, read back from `op=reviewcopy`.
+   CORRECTED 2026-09-25 (UI-106, REC-199's delegation): this comment said the answer
+   does not say back whether a draft naming no case was marked as a new one. Since
+   REC-199 (IC-285) it does — `case.newCase` — and a form that did not read it wrote
+   the draft back WITHOUT it, turning a draft that asked for a new case into one whose
+   case publication DERIVES (the D-309 override the field exists to refuse). So the
+   choice is read back as the draft holds it: a named case is the next-edition choice
+   and keeps precedence (publication refuses the two together); `newCase` is the
+   new-case choice; neither leaves the choice unmade, which is what the draft holds. */
 function rvcFormFromCopy(c){
   const f = rvcEmptyForm();
   f.project = rvcStr(c && c.project);
@@ -24674,6 +25578,7 @@ function rvcFormFromCopy(c){
   f.undesignated = fs.filter(x => x && x.role !== "load_bearing" && x.role !== "supporting").map(x => x.target).join("\n");
   const cid = c && c.case && c.case.case_id;
   if(cid){ f.caseMode = "next"; f.caseId = String(cid); }
+  else if(c && c.case && c.case.newCase === true) f.caseMode = "new";
   const a = (c && c.authored) || {};
   for(const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"]) f[k] = rvcStr(a[k]);
   if(Array.isArray(a.excluded)){
@@ -24948,13 +25853,19 @@ function rvcRecipientLink(secret){
 /* §6A.3 point 2, AT THE ACT: what the grant controls and what it does not. */
 const RVC_AT_THE_ACT = "This gives one named person a link to read this draft and comment on it, here, inside "
   + "this group's record. Nothing is sent anywhere and no file of it is made. Withdrawing the grant ends their "
-  + "access at once. What a withdrawal cannot reach is anything copied out of this page by hand: text pasted "
-  + "into an email, a screenshot, a page printed from the browser. That has left, and it cannot be revoked. "
+  + "access at once. What a withdrawal cannot reach is anything taken out of this page: a file exported from "
+  + "it, text pasted into an email, a screenshot, a page printed from the browser. That has left, and it cannot be revoked. "
   + "If what you need is confidentiality, the grant protects what stays here and nothing that leaves.";
 function rvcGrantsHtml(c){
   const gs = Array.isArray(c.grants) ? c.grants : [];
   const rows = gs.map(g => {
-    const bound = g.case_id ? "edition " + esc(g.edition) + " of <span class=\"mono\">" + esc(g.case_id) + "</span>" : "a new case";
+    /* D-619: a grant bound to no case was given for a draft that NAMED NO CASE — and that is all the row
+       says. It was never "a new case": the draft may have been one whose case publication DERIVES (D-538),
+       and the grant row does not record which. Its `edition` is null where the plane does not state one
+       (D-568), and a null is said as nothing, never as a number. */
+    const bound = g.case_id
+      ? (g.edition != null ? "edition " + esc(g.edition) + " of " : "") + "<span class=\"mono\">" + esc(g.case_id) + "</span>"
+      : "a draft that named no case";
     const state = g.live
       ? 'Can read this draft now. <button class="btn ghost" onclick="rvcRevoke(\'' + esc(g.grant_id) + '\')">Withdraw this grant</button>'
       : g.revoked_at
@@ -24982,6 +25893,156 @@ function rvcGrantsHtml(c){
     + '<input class="txt" id="rv-recipient" value="' + esc(RVC.recipient || "") + '" onchange="rvcField(\'recipient\', this.value)" placeholder="their name, or the group they speak for">'
     + (RVC.grantRefusal ? rvcRefusalHtml(RVC.grantRefusal) : '')
     + '<button class="btn" onclick="rvcGrant()">Give access</button></div>';
+}
+/* ---------------- UI-69 · THE EXPORT, AND THE ONE WAY OUT ----------------
+   §6A.3 point 1 (DEC-31's bound rule): a rendering that leaves the instance
+   addressed to someone carries its hash, its date, its author and both floors
+   IN-BAND. The plane computes all four in ONE function (`inbandQuartet`,
+   REC-148) and answers them as `inband`; this page computes NONE of them. Every
+   page of the file carries the answer's quartet twice, as words and as the
+   plane's own JSON verbatim (`JSON.stringify(inband, null, 1)`), so the stamp
+   on a page is byte-equal to what the plane said, and a reader holding a single
+   printed page still holds all four.
+
+   THE FILE IS DRAWN FROM THE ANSWER IT IS STAMPED WITH. `rvcExport` reads the
+   copy afresh at the act and draws the pages and the stamps from that ONE
+   answer; drawing the content from the copy on screen and the stamp from a
+   later read would put a hash on bytes it was not taken over.
+
+   WHAT THE FILE DOES NOT REPRODUCE, SAID ON ITS FIRST PAGE: who the copy was
+   given to and the comments on it (UI-69's provisional reading: a recipient's
+   name and words stay inside the instance unless someone chooses otherwise,
+   and the member exporting is not that someone for them). The hash is over the
+   whole answer, those included, so it identifies which state of the record the
+   file was drawn from and is re-checkable against the record, not against the
+   file alone — which the page says rather than lets a reader assume.
+
+   §6A.3 point 2 — THE STATEMENT AT THE ACT, AND NOWHERE ELSE. It stands in the
+   export box beside the one button, on the member door only. It is not on the
+   recipient door (a recipient holds no grant to withdraw), not in the grant box
+   (which says its own half), and not in the file (whose reader did not act). */
+const RVC_EXPORT_AT_THE_ACT = "Exporting makes a file of this copy on this device, stamped on every page with "
+  + "its hash, the date of its last change, its author and both floors. Once that file leaves this device "
+  + "— emailed, shared, uploaded or printed — it cannot be revoked: nothing done in this group’s "
+  + "record afterwards reaches it, and withdrawing a grant does not recall it. The grant is what can be revoked: "
+  + "withdrawing one ends that person’s access to the copy here, and nothing more. If what you need is "
+  + "confidentiality, a file is the act that gives it up.";
+const RVC_NO_QUARTET = "The record did not answer this copy with all four of its in-band marks (its hash, its date, "
+  + "its author and both floors), and a copy may not leave without them. No file was made.";
+const RVC_NOT_DELIVERED = "This browser did not accept the file, so none was made. Nothing left this page.";
+
+/* All four keys present, and the hash a real one. A date or author the record
+   answers as null is kept, and said as undetermined — never made up here. */
+function rvcQuartetOf(c){
+  const q = c && c.inband;
+  if(!q || typeof q !== "object" || !q.hash || typeof q.hash !== "object") return null;
+  if(!/^[0-9a-f]{64}$/.test(String(q.hash.sha256 || ""))) return null;
+  if(!("date" in q) || !("author" in q) || !q.floors || typeof q.floors !== "object") return null;
+  return q;
+}
+function rvcFloorText(g){ return (typeof g === "string" && g) ? g : "none declared"; }
+function rvcInbandHtml(q){
+  const fl = q.floors || {};
+  return '<div class="rvx-inband" data-rvx-inband>'
+    + '<div><b>Hash</b> <span class="mono">' + esc(q.hash.algorithm || "") + ':' + esc(q.hash.sha256) + '</span>, over '
+      + esc(q.hash.over || "") + ' (' + esc(String(q.hash.bytes)) + ' bytes).</div>'
+    + '<div><b>Date</b> <span class="mono">' + esc(q.date == null ? "not stated by the record" : q.date) + '</span>, the copy&rsquo;s last change.</div>'
+    + '<div><b>Author</b> <span class="mono">' + esc(q.author == null ? "not stated by the record" : q.author) + '</span>.</div>'
+    + '<div><b>Floors</b> ' + esc(AXIS_SHORT.capture) + ': ' + esc(rvcFloorText(fl.capture)) + ' &middot; '
+      + esc(AXIS_SHORT.connection) + ': ' + esc(rvcFloorText(fl.connection)) + '. ' + esc(fl.detail || "") + '</div>'
+    + '<pre class="rvx-quartet" data-rvx-quartet>' + esc(JSON.stringify(q, null, 1)) + '</pre>'
+    + '</div>';
+}
+/* THE PAGES. Each is one `<section>`, and `rvcExportPage` is the only way to
+   make one, so a page cannot be drawn without its stamp. */
+function rvcExportPage(q, n, inner){
+  return '<section class="rvx-page" data-rvx-page="' + n + '">' + rvcInbandHtml(q) + inner + '</section>';
+}
+function rvcExportAcksHtml(c){
+  const sa = (c && c.statement_acknowledgements) || {};
+  const list = Array.isArray(sa.acknowledgements) ? sa.acknowledgements : [];
+  return '<h2 class="sec">Who else has read this statement</h2>'
+    + (list.map(rvcAckWhoHtml).join("") || '<div class="empty">Nobody but its author had acknowledged this statement when this file was made.</div>')
+    + (sa.truncated === true ? '<p class="subj-note">Only the first acknowledgements are shown; the record holds more.</p>' : '')
+    + (typeof sa.withheld_stated === "string" && sa.withheld_stated ? '<p class="subj-note">' + esc(sa.withheld_stated) + '</p>' : '');
+}
+function rvcExportPages(c, q){
+  const a = c.authored || {};
+  const pages = [];
+  pages.push('<div class="rvc-marking">' + esc(c.marking || "") + '</div>'
+    + '<p class="subj-note">' + esc((c.signature && c.signature.detail) || "") + '</p>'
+    + '<p class="lede">This draft stands as ' + esc((c.case && c.case.identity) || "") + '.</p>'
+    + '<p class="subj-note" data-rvx-not-reproduced>This file does not reproduce who the copy was given to, or the '
+      + 'comments made on it. The hash above is over the record&rsquo;s whole answer, those included, so it names the '
+      + 'state of the record this file was drawn from; it can be checked against that record, not against this file alone.</p>'
+    + '<h2 class="sec">What this case leaves out</h2>' + rvcSaid(a.statement) + rvcExcludedHtml(a)
+    + rvcExportAcksHtml(c)
+    + '<h2 class="sec">What a publication would still need</h2>' + rvcMissingHtml(c));
+  pages.push('<h2 class="sec">What the case covers</h2>' + rvcSaid(a.scope)
+    + '<h2 class="sec">Putting it to its subject</h2>'
+    + (rvcText(a.subjectPosition) ? '<p><span class="mono">' + esc(a.subjectPosition) + '</span></p>' : '')
+    + rvcSaid(a.subjectJustification)
+    + '<h2 class="sec">The acknowledgement of bias</h2>' + rvcSaid(a.biasAcknowledgement));
+  const fs = Array.isArray(c.findings) ? c.findings : [];
+  if(!fs.length) pages.push('<h2 class="sec">The findings it rests on</h2><div class="q-gap">This draft names no findings yet.</div>');
+  for(const f of fs) pages.push('<h2 class="sec">A finding it rests on</h2>' + rvcFindingHtml(f));
+  return pages.map((inner, i) => rvcExportPage(q, i + 1, inner));
+}
+/* THE FILE: standalone, no script, its own styles, one section per page. */
+function rvcExportFile(c){
+  const q = rvcQuartetOf(c);
+  if(!q) return null;
+  const pages = rvcExportPages(c, q);
+  const name = "review-copy-" + String(c.draft || "draft").replace(/[^A-Za-z0-9._-]/g, "") + "-" + q.hash.sha256.slice(0, 12) + ".html";
+  const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>' + esc(c.marking || "Review copy") + '</title>'
+    + '<style>body{font:15px/1.5 Georgia,serif;margin:0;color:#111;background:#fff}'
+    + '.rvx-page{padding:24px 28px;border-top:2px solid #000;break-before:page}.rvx-page:first-of-type{break-before:auto}'
+    + '.rvx-inband{border:1px solid #000;padding:10px 12px;margin:0 0 18px;font-size:13px}'
+    + '.rvx-quartet{white-space:pre-wrap;word-break:break-all;font-size:10.5px;margin:8px 0 0}'
+    + '.mono{font-family:ui-monospace,Menlo,monospace}.rvc-marking{font-weight:700;border:2px solid #000;padding:8px 10px}'
+    + '.card{border:1px solid #bbb;padding:8px 10px;margin:8px 0}.subj-note{color:#444}.q-gap{font-style:italic}</style></head><body>'
+    + pages.join("") + '</body></html>';
+  return { name, html, pages: pages.length, sha256: q.hash.sha256 };
+}
+/* THE ONE WAY OUT. The only place in this surface a file is handed to the
+   browser; `review-copy.test.mjs` asserts nothing else in the block does. */
+function rvcDeliverFile(name, html){
+  try{
+    const u = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = u; a.download = name; a.rel = "noopener";
+    a.click();
+    setTimeout(() => { try{ URL.revokeObjectURL(u); }catch(_){} }, 60000);
+    return true;
+  }catch(_){ return false; }
+}
+async function rvcExport(){
+  if(!RVC || !RVC.copy || RVC.exporting) return;
+  RVC.exporting = true; RVC.exported = null; RVC.exportRefusal = null; rvcPaint();
+  let c = null;
+  try{ c = await recR("reviewcopy", { draft: RVC.draft }); }
+  catch(e){ RVC.exportRefusal = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
+  if(c){
+    RVC.copy = c;
+    const f = rvcExportFile(c);
+    if(!f) RVC.exportRefusal = { detail: RVC_NO_QUARTET };
+    else if(!rvcDeliverFile(f.name, f.html)) RVC.exportRefusal = { detail: RVC_NOT_DELIVERED };
+    else RVC.exported = { name: f.name, pages: f.pages, sha256: f.sha256 };
+  }
+  RVC.exporting = false; rvcPaint();
+}
+function rvcExportBoxHtml(){
+  const done = RVC.exported
+    ? '<div class="intent-box" data-rvc-exported><div class="intent-lede">A file was made: <span class="mono">' + esc(RVC.exported.name) + '</span></div>'
+      + '<p class="subj-note">Each of its ' + esc(String(RVC.exported.pages)) + ' pages carries the hash <span class="mono">'
+      + esc(RVC.exported.sha256) + '</span> and the three marks beside it, as the record answered them when it was made.</p></div>'
+    : '';
+  return '<h2 class="sec">A file of this copy</h2>'
+    + done
+    + '<div class="intent-box" data-rvc-export-box>'
+    + '<p class="subj-note" data-rvc-export-act>' + esc(RVC_EXPORT_AT_THE_ACT) + '</p>'
+    + (RVC.exportRefusal ? rvcRefusalHtml(RVC.exportRefusal) : '')
+    + '<button class="btn ghost" id="rv-export" onclick="rvcExport()">Export this copy to a file</button></div>';
 }
 function rvcFormHtml(){
   const f = RVC.form;
@@ -25039,6 +26100,7 @@ function rvcHtml(){
     + '<button class="btn ghost" onclick="rvcEdit()">Edit this draft</button>'
     + rvcCopyHtml(c, "member")
     + rvcGrantsHtml(c)
+    + rvcExportBoxHtml()
     + rvcCommentsHtml(c, "member");
 }
 function rvcPaint(){
@@ -25125,6 +26187,291 @@ function rvsPaint(){
   el.innerHTML = rvsHtml();
 }
 /*__REVIEW_COPY_END__*/
+
+/*__THEMES_START__*/
+/* ============================================================
+   UI-76 · THEMES — a connection through an IDEA, declared by a member, visibly theirs.
+
+   DESIGN: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.4 (Bob, 2026-09-21, D-162), fences 1–3,
+   with DEC-69 (inform once, at the act). The plane half is D-162's (IC-241, amended 2026-09-24 by BOB #32):
+   `op=themedeclare`, `op=themeplace`, `op=themepropose`, `op=themeread`. Nothing below asks the plane for
+   anything it does not publish, and this surface sends no proposal: it reads hunches and a member places.
+
+     FENCE 1 — WHOSE LENS. Every theme this surface renders, in the list and on its page, names its
+       declarer. The name is the one `op=themeread` PROJECTED for this reader: a handle for a member who
+       does not administer, and the member id and cover beside it for one who does (Membership v2 §3, the
+       amendment to IC-241). The page never asks which kind of reader it has; it renders the keys the
+       answer carries. A handle the record does not hold is SAID, never guessed.
+     FENCE 2 — THE TEST. The test is shown with the theme, every time, because it is what any member
+       checks a placement against. The declare form sends what the member wrote and nothing else: the
+       plane refuses a theme without its test, and that refusal is rendered in the plane's words.
+     FENCE 3 — A HUNCH IS NEVER MEMBERSHIP. `members[]` and `hunches[]` arrive APART and are rendered
+       apart, under different headings; every hunch carries `THM_HUNCH_LABEL`, and a hunch's target is
+       never written inside the members section. Confirming one is `op=themeplace` on the same target, the
+       member's own act; leaving one is doing nothing, and nothing here asks them to.
+
+   Nothing is prefilled (DEC-69): the declare form, the place form and the search open empty. Every
+   refusal is the plane's (`refusalWords` reads its canned `translation`, DEC-49); this block keys on no
+   refusal code.
+
+   WHAT THIS SURFACE DOES NOT DO, stated so it is not assumed: the document page offers no "place in a
+   theme" entry — a member places from the theme's page by naming a document or a passage. That is the
+   smallest surface the row asks for and the document page is other items' ground.
+   ============================================================ */
+let THM = null;
+let THM_HASH_LOCK = false;
+const THM_UNREACHED = "This page could not reach the record just now, so nothing is shown. Nothing about the themes is implied by that.";
+/* THE HUNCH LABEL — the one sentence every proposed placement carries, and the property the row's liar
+   arm is about: a proposal that renders without it could be read as membership. */
+const THM_HUNCH_LABEL = "A hunch: proposed, and not a member of this theme until a member checks it against the test and places it.";
+
+function thmIsAnswer(e){ return !!(e && typeof e === "object" && ("reason" in e || "detail" in e || "error" in e || "translation" in e)); }
+function thmRefusalHtml(r){
+  return '<div class="intent-ref" data-thm-refusal><div class="intent-ref-why">'
+    + esc(refusalWords(r) || "The record refused this and said nothing further.") + '</div></div>';
+}
+function thmMayAct(){ return canContribute(); }
+/* THE ASK, stated on the wire (`bound-sweep.test.mjs` WALK 2): `op=themeread` is capped unconditionally, so
+   every read names its own limit, and what a member reads is the bound the RECORD answered with — never
+   this constant (ARM E). */
+const THM_ASK_LIMIT = 200;
+/* THE RECORD'S BOUND, over the set the plane bounded: the list bounds THEMES; one theme bounds its members
+   and its hunches, each with its own `*_truncated` under one `limit`. Called by the function that READS the
+   answer (`bound-sweep.test.mjs` ARM G), so the envelope is never dropped. Its own sentence rather than a
+   fourth caller of `meaningBoundHtml`, whose three units are the meaning layer's three reads (ARM H6). Where
+   the record states no bound the page says so and puts no number of its own there. */
+function thmBoundHtml(ans, which){
+  const a = ans && typeof ans === "object" ? ans : {};
+  const bound = Number(a.limit);
+  const what = which === "themes" ? "the themes" : "this theme's " + which;
+  if(!(Number.isFinite(bound) && bound > 0))
+    return 'The record did not say what bound it applied to ' + what + ', so this page cannot tell you whether all of them are here.';
+  const cut = (which === "themes" ? a.truncated : a[which + "_truncated"]) === true;
+  return 'The record read at most ' + esc(bound) + ' of ' + what + '.'
+    + (cut ? ' <b>The record says that answer was CUT</b>: it holds more than it read, so some can be missing from this list.' : '');
+}
+
+/* WHO, as the plane projected it for this reader. `prefix` is `declared_by`, `placed_by` or `proposed_by`.
+   A machine stamp arrives in `<prefix>` with a null handle for every reader; a member arrives as a handle,
+   with the member id and the cover beside it only when the reader administers. */
+function thmWhoHtml(o, prefix){
+  if(!o || typeof o !== "object") return '<span data-thm-who="none">nobody the record names</span>';
+  const handle = o[prefix + "_handle"], id = o[prefix], cover = o[prefix + "_cover"];
+  if(typeof handle === "string" && handle){
+    return '<span data-thm-who="' + esc(prefix) + '"><b>' + esc(handle) + '</b>'
+      + (typeof cover === "string" && cover ? ' (' + esc(cover) + (id ? ', <span class="mono">' + esc(id) + '</span>' : '') + ')' : '')
+      + '</span>';
+  }
+  if(typeof id === "string" && /^class:/.test(id))
+    return '<span data-thm-who="' + esc(prefix) + '">an automated credential, <span class="mono">' + esc(id) + '</span></span>';
+  if(typeof id === "string" && id)
+    return '<span data-thm-who="' + esc(prefix) + '">a member whose handle the record does not hold, <span class="mono">' + esc(id) + '</span></span>';
+  return '<span data-thm-who="' + esc(prefix) + '">a member whose handle the record does not hold</span>';
+}
+function thmTargetHtml(p){
+  const t = p && p.target, doc = p && p.document;
+  const link = (id) => '<a class="mono" onclick="openBundle(\'' + esc(id) + '\')">' + esc(id) + '</a>';
+  if(p && p.target_kind === "content")
+    return 'A passage, <span class="mono">' + esc(t) + '</span>, of ' + (doc ? link(doc) : 'a document');
+  return 'The document ' + (t ? link(t) : '');
+}
+
+/* ---------------- THE LIST, AND THE ACT OF DECLARING ---------------- */
+async function thmRenderList(){
+  THM = { mode:"list", q:"", list:null, refusal:null, err:null, busy:true,
+          form:{ name:"", test:"" }, declareRefusal:null, declared:null };
+  thmSetHash("");
+  await thmLoadList();
+}
+async function thmLoadList(){
+  if(!THM || THM.mode !== "list") return;
+  THM.busy = true; thmPaint();
+  const params = THM.q.trim() ? { q: THM.q.trim() } : {};
+  let ans = null;
+  try{ ans = await recR("themeread", { ...params, limit: String(THM_ASK_LIMIT) }); THM.refusal = null; THM.err = null; }
+  catch(e){ ans = null; if(thmIsAnswer(e)) THM.refusal = e; else THM.err = THM_UNREACHED; }
+  if(ans && ans.ok === false){ THM.refusal = ans; ans = null; }
+  THM.list = ans;
+  THM.bound = ans ? thmBoundHtml(ans, "themes") : "";
+  THM.busy = false; thmPaint();
+}
+function thmField(k, v){ if(THM) THM[k] = String(v == null ? "" : v); }
+function thmFormField(k, v){ if(THM && THM.form) THM.form[k] = String(v == null ? "" : v); }
+async function thmSearch(){ if(THM && THM.mode === "list") await thmLoadList(); }
+async function thmDeclare(){
+  if(!THM || THM.mode !== "list" || THM.busy) return;
+  THM.declareRefusal = null;
+  let r;
+  try{ r = await recPostR("themedeclare", { name: THM.form.name, test: THM.form.test }); }
+  catch(e){ r = thmIsAnswer(e) ? e : { detail: THM_UNREACHED }; }
+  if(r && r.ok === true && r.theme_id){
+    await thmOpen(r.theme_id);
+    if(THM) { THM.declared = r; thmPaint(); }
+    return;
+  }
+  THM.declareRefusal = r || {}; thmPaint();
+}
+function thmListHtml(){
+  const L = THM.list;
+  let body;
+  if(THM.busy && !L) body = '<div class="empty">Reading the themes.</div>';
+  else if(THM.err) body = '<div class="q-gap" data-thm-unreached>' + esc(THM.err) + '</div>';
+  else if(THM.refusal) body = thmRefusalHtml(THM.refusal);
+  else {
+    const rows = (L && Array.isArray(L.themes)) ? L.themes : [];
+    body = rows.length ? rows.map(t =>
+        '<div class="card" data-thm-theme="' + esc(t.theme_id) + '">'
+        + '<div class="kv"><a onclick="thmOpen(\'' + esc(t.theme_id) + '\')"><b>' + esc(t.name) + '</b></a></div>'
+        + '<p class="subj-note" data-thm-test>Its test: ' + esc(t.test) + '</p>'
+        + '<p class="subj-note" data-thm-declarer>Declared by ' + thmWhoHtml(t, "declared_by") + ' at <span class="mono">' + esc(t.at) + '</span>.</p>'
+        + '</div>').join("")
+      : '<div class="empty">' + (L && L.q ? 'No theme&rsquo;s name or test contains that phrase.' : 'No theme has been declared yet.') + '</div>';
+    if(THM.bound) body += '<p class="subj-note" data-thm-bound>' + THM.bound + '</p>';
+  }
+  const f = THM.form;
+  const declare = thmMayAct()
+    ? '<h2 class="sec">Declare a theme</h2>'
+      + '<p class="subj-note" data-thm-fence>A theme is an idea you use to gather material, declared in your name: every reading of it shows your handle. Its test is one sentence a document or a passage passes or fails, so any member can check a placement against it. A theme is never the basis of a claim.</p>'
+      + '<div class="intent-box" data-thm-declare>'
+      + '<div class="kv"><span class="k">The idea, in a few words</span></div>'
+      + '<input class="txt" id="thm-name" value="' + esc(f.name) + '" onchange="thmFormField(\'name\', this.value)">'
+      + '<div class="kv"><span class="k">Its test</span></div>'
+      + '<textarea class="txt" id="thm-test" rows="3" onchange="thmFormField(\'test\', this.value)">' + esc(f.test) + '</textarea>'
+      + (THM.declareRefusal ? thmRefusalHtml(THM.declareRefusal) : '')
+      + '<button class="btn" onclick="thmDeclare()">Declare the theme</button></div>'
+    /* A refusal is rendered even where the form is not: a credential that reached the act anyway is told
+       the plane's words, never nothing. */
+    : (THM.declareRefusal ? thmRefusalHtml(THM.declareRefusal) : '');
+  return '<h1 class="rec">Themes</h1>'
+    + '<div class="intent-box" data-thm-search><input class="txt" id="thm-q" value="' + esc(THM.q) + '" onchange="thmField(\'q\', this.value)">'
+    + '<button class="btn ghost" onclick="thmSearch()">Search the themes</button></div>'
+    + body + declare;
+}
+
+/* ---------------- ONE THEME: ITS TEST, ITS DECLARER, ITS MEMBERS AND ITS HUNCHES APART ---------------- */
+async function thmOpen(themeId){
+  const id = String(themeId == null ? "" : themeId).trim();
+  if(!id) return;
+  THM = { mode:"theme", id, theme:null, refusal:null, err:null, busy:true,
+          place:{ target:"", note:"" }, placeRefusal:null, placed:null, declared:null };
+  thmSetHash("#theme/" + id);
+  await thmLoad();
+}
+async function thmLoad(){
+  if(!THM || THM.mode !== "theme") return;
+  THM.busy = true; thmPaint();
+  let ans = null;
+  try{ ans = await recR("themeread", { id: THM.id, limit: String(THM_ASK_LIMIT) }); THM.refusal = null; THM.err = null; }
+  catch(e){ ans = null; if(thmIsAnswer(e)) THM.refusal = e; else THM.err = THM_UNREACHED; }
+  if(ans && ans.ok === false){ THM.refusal = ans; ans = null; }
+  THM.theme = ans;
+  THM.bound = ans ? { members: thmBoundHtml(ans, "members"), hunches: thmBoundHtml(ans, "hunches") } : null;
+  THM.busy = false; thmPaint();
+}
+function thmPlaceField(k, v){ if(THM && THM.place) THM.place[k] = String(v == null ? "" : v); }
+/* PLACING and CONFIRMING are one act, `op=themeplace`: on a standing hunch the plane confirms it and keeps
+   who proposed it. `target` comes from the form, or from the hunch the member chose to confirm. */
+async function thmPlace(target){
+  if(!THM || THM.mode !== "theme" || THM.busy) return;
+  const confirming = typeof target === "string";
+  const body = { theme: THM.id, target: confirming ? target : THM.place.target };
+  if(!confirming && THM.place.note.trim()) body.note = THM.place.note;
+  THM.placeRefusal = null; THM.placed = null;
+  let r;
+  try{ r = await recPostR("themeplace", body); }
+  catch(e){ r = thmIsAnswer(e) ? e : { detail: THM_UNREACHED }; }
+  if(r && r.ok === true){
+    if(!confirming) THM.place = { target:"", note:"" };
+    await thmLoad();
+    THM.placed = r; thmPaint();
+    return;
+  }
+  THM.placeRefusal = r || {}; thmPaint();
+}
+function thmMemberHtml(p){
+  return '<div class="card" data-thm-member="' + esc(p.target) + '">'
+    + '<div class="kv">' + thmTargetHtml(p) + '</div>'
+    + '<p class="subj-note">Placed by ' + thmWhoHtml(p, "placed_by") + ' at <span class="mono">' + esc(p.placed_at) + '</span>, on their judgement that it passes the test.'
+    + (p.proposed_at ? ' First proposed by ' + thmWhoHtml(p, "proposed_by") + ' at <span class="mono">' + esc(p.proposed_at) + '</span>.' : '')
+    + '</p>'
+    + (p.note ? '<div class="prose"><p>' + esc(p.note) + '</p></div>' : '')
+    + '</div>';
+}
+function thmHunchHtml(p){
+  return '<div class="card" data-thm-hunch="' + esc(p.target) + '">'
+    + '<p class="subj-note" data-thm-hunch-label>' + esc(THM_HUNCH_LABEL) + '</p>'
+    + '<div class="kv">' + thmTargetHtml(p) + '</div>'
+    + '<p class="subj-note">Proposed by ' + thmWhoHtml(p, "proposed_by") + ' at <span class="mono">' + esc(p.proposed_at) + '</span>.</p>'
+    + (p.proposal_note ? '<div class="prose"><p>' + esc(p.proposal_note) + '</p></div>' : '')
+    + (thmMayAct() ? '<button class="btn ghost" onclick="thmPlace(\'' + esc(p.target) + '\')">It passes the test: place it</button>' : '')
+    + '</div>';
+}
+function thmThemeHtml(){
+  const crumb = '<p class="crumb"><a onclick="go(\'themes\')">Themes</a> &rsaquo; <span class="mono">' + esc(THM.id) + '</span></p>';
+  if(THM.busy && !THM.theme) return crumb + '<div class="empty">Reading the theme.</div>';
+  if(THM.err) return crumb + '<div class="q-gap" data-thm-unreached>' + esc(THM.err) + '</div>';
+  if(!THM.theme) return crumb + thmRefusalHtml(THM.refusal);
+  const T = THM.theme;
+  const members = Array.isArray(T.members) ? T.members : [];
+  const hunches = Array.isArray(T.hunches) ? T.hunches : [];
+  const said = (r) => (r && typeof r.says === "string" && r.says) ? '<p class="subj-note" data-thm-said>' + esc(r.says) + '</p>' : '';
+  const place = thmMayAct()
+    ? '<h2 class="sec">Place something in this theme</h2>'
+      + '<div class="intent-box" data-thm-place>'
+      + '<div class="kv"><span class="k">A document&rsquo;s id, or a passage&rsquo;s content id</span></div>'
+      + '<input class="txt" id="thm-target" value="' + esc(THM.place.target) + '" onchange="thmPlaceField(\'target\', this.value)">'
+      + '<div class="kv"><span class="k">A note (optional)</span></div>'
+      + '<textarea class="txt" id="thm-note" rows="2" onchange="thmPlaceField(\'note\', this.value)">' + esc(THM.place.note) + '</textarea>'
+      + '<button class="btn" onclick="thmPlace()">Place it in this theme</button></div>'
+    : '';
+  return crumb
+    + '<h1 class="rec" data-thm-name>' + esc(T.name) + '</h1>'
+    + '<p class="subj-note" data-thm-declarer>Declared by ' + thmWhoHtml(T, "declared_by") + ' at <span class="mono">' + esc(T.at) + '</span>.</p>'
+    + '<h2 class="sec">Its test</h2>'
+    + '<div class="card" data-thm-test><div class="prose"><p>' + esc(T.test) + '</p></div></div>'
+    + said(THM.declared)
+    + said(T)
+    + (THM.placed ? said(THM.placed) : '')
+    + (THM.placeRefusal ? thmRefusalHtml(THM.placeRefusal) : '')
+    + '<h2 class="sec">Members</h2>'
+    + '<div data-thm-members>' + (members.length ? members.map(thmMemberHtml).join("") : '<div class="empty">Nothing you can see has been placed in this theme.</div>')
+    + (THM.bound ? '<p class="subj-note" data-thm-bound>' + THM.bound.members + '</p>' : '') + '</div>'
+    + '<h2 class="sec">Hunches</h2>'
+    + '<div data-thm-hunches>' + (hunches.length ? hunches.map(thmHunchHtml).join("") : '<div class="empty">Nothing you can see is proposed for this theme.</div>')
+    + (THM.bound ? '<p class="subj-note" data-thm-bound>' + THM.bound.hunches + '</p>' : '') + '</div>'
+    + place;
+}
+
+function thmHtml(){
+  if(!THM) return "";
+  return THM.mode === "theme" ? thmThemeHtml() : thmListHtml();
+}
+function thmPaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = thmHtml();
+}
+function thmSetHash(h){
+  THM_HASH_LOCK = true;
+  try{
+    if(h) location.hash = h;
+    else if(/^#theme\//.test(String(location.hash || ""))) history.replaceState(null, "", location.pathname + location.search);
+  }catch(_){}
+  THM_HASH_LOCK = false;
+}
+/* `#theme/<THEME-…>` is a real address, asked inside `boot()`'s router chain and nowhere at the top
+   level — POST-authentication, classified by `preauth-vocabulary.test.mjs` WALK 2. */
+function themeRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#theme\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  if(THM && THM.mode === "theme" && THM.id === m[1]) return true;
+  thmOpen(m[1]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!THM_HASH_LOCK) themeRouteFromHash(); }); }catch(_){}
+/*__THEMES_END__*/
 
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}

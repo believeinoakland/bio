@@ -97,6 +97,20 @@
 #   used since FY2021); and an arm written `'<family>' in fams[c]` tested a DICT's
 #   KEYS, reporting families that never fired and unable to fail.
 #
+# FW-24 (2026-09-25) RAN THE CENSUS OVER THE WHOLE CORPUS, both halves named
+# (`M032_HALVES=bucket,legistar`, the same population as unset): 2,000 of 29,607
+# text-bearing items, seed 20260924, a NEW draw. Classification path unchanged
+# (`161d2ff9...`); one `derive` print corrected (the paired header's literal 600).
+# Figures: `docs/development/measurements/M-176.md`.
+#
+# NEGATIVE CONTROL: (FW-24, 2026-09-25, instrument sha d7434895... before the arm,
+#   restored by cp from a uniquely-named pristine copy, verified by sha256 AND cmp,
+#   145,557 bytes, floored at 100,000. Baseline on the whole-corpus sample 110 arms,
+#   0 failed.) N1 re-driven on that sample: BOB #32's conjunct folded back into
+#   `_fw22_budget` -> exit 1 at exactly "ON THE REAL SAMPLE the RECOUNT MOVES ..."
+#   (1 of 110), and `derive` prints the recounted budget arm at 20 not 14 with the six
+#   named financial reports gone from the moved list. Restored: 110 arms, 0 failed.
+#
 # WHAT A CLASS IS, AND WHY IT IS NOT A LIST OF SPELLINGS. Each class is defined by
 # what makes a document that class IN PRINCIPLE, and the recogniser implements the
 # principle as a THRESHOLD OVER INDEPENDENT EVIDENCE FAMILIES — never one literal.
@@ -1346,9 +1360,10 @@ def plane_text(rec, data):
     if os.path.exists(tp):
         text = open(tp, encoding='utf-8', errors='replace').read()
         os.remove(tp)
-    ip = os.path.join(tdir, sha + '.i2.json')
-    if os.path.exists(ip):
-        os.remove(ip)
+    for x in (sha + '.i2.json', sha + '.plain.txt'):
+        ip = os.path.join(tdir, x)
+        if os.path.exists(ip):
+            os.remove(ip)
     # D-536: the row's provenance rides beside the text, so `read_one` can record WHICH tier and member
     # produced the text this census classified, and `reread` can attribute a moved class.
     LAST_PLANE_ROW.clear()
@@ -1358,9 +1373,13 @@ def plane_text(rec, data):
         return '', 'plane (no row)', reason or 'plane reader returned no row'
     if row.get('err'):
         return text, 'plane (acquire refused)', 'plane acquire: ' + str(row['err'])[:160]
-    tier = row.get('structure_tier') or row.get('text_tier')
+    # D-557: the text above is the text the acquire READING classified (its `text_units`), and the label
+    # names the tiers of the producers of exactly those pages, never the document's `text_tier` — which
+    # labelled 34 documents "tier 3" that were judged on EMPTY plain text (M-152). No text judged, no tier.
+    # The label is the census row's own (`judged.reader`), composed in ONE place.
+    label = (row.get('judged') or {}).get('reader') or 'plane (no text judged)'
     text, reflowed = reflow(text)
-    return text, f'plane (text tier {tier}){" REFLOWED" if reflowed else ""}', ''
+    return text, label + (' REFLOWED' if reflowed else ''), ''
 
 
 def hashlib_sha(data):
@@ -1451,7 +1470,9 @@ def read_one(rec, tmp):
         ptext, reader, preason = plane_text(rec, data)
         plane_prov = {'sha': hashlib_sha(data),
                       'structure_provenance': LAST_PLANE_ROW.get('structure_provenance'),
-                      'reading_provenance': LAST_PLANE_ROW.get('reading_provenance')}
+                      'reading_provenance': LAST_PLANE_ROW.get('reading_provenance'),
+                      # D-557: what was judged — units, chars, producers' tiers, digest agreement.
+                      'judged': LAST_PLANE_ROW.get('judged')}
         if preason:
             reason = preason
         else:
@@ -1840,8 +1861,10 @@ def cmd_derive():
     # classes differ: the two counts come from the SAME 600 documents, so the honest
     # comparison is PAIRED. Only documents that are one class and not the other carry
     # any information about which is larger.
+    # FW-24: the sample size was printed as a literal 600 (M-18's n) through M-126, M-143 and M-152's
+    # n = 1,000 walks; it is the walk's own n.
     print('\nIS THE ORDER REAL? A PAIRED comparison of each adjacent pair — the two '
-          'counts come\n  from the same 600 documents, so only the DISCORDANT ones '
+          f'counts come\n  from the same {n:,} documents, so only the DISCORDANT ones '
           'carry information.')
     memb = {c: {r['id'] for r in bodies if c in r['classes']} for c in CLASSES}
     ranked = [c for c, a, p, sc, ci in sorted(est, key=lambda e: -e[1])]
@@ -2023,8 +2046,9 @@ def cmd_reread():
                 x = {'id': r['id'], 'name': r['name'], 'kept': True,
                      'classes_before': r['classes'], 'classes_after': cs,
                      'reader_before': r['reader'], 'reader_after': reader, 'reason_after': reason,
-                     'prov_before': r['plane_prov'].get('structure_provenance'),
-                     'prov_after': LAST_PLANE_ROW.get('structure_provenance')}
+                     # D-557: the provenance of the text JUDGED, which is the acquire reading's.
+                     'prov_before': r['plane_prov'].get('reading_provenance'),
+                     'prov_after': LAST_PLANE_ROW.get('reading_provenance')}
             f.write(json.dumps(x) + '\n')
             f.flush()
             done[x['id']] = x

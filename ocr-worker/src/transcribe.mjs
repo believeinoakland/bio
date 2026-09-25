@@ -94,21 +94,25 @@ export async function transcribeOnePage(bytes, page, { psm = null, confidenceFlo
      refusals are passed through verbatim: a page with a text layer, a vector
      page, a mosaic and a JBIG2 stream are four different findings and this
      member collapses none of them. */
-  const rendered = await renderPageToPixels(bytes, page, { });
+  /* `decodeDct` (D-320): a DCT page is DECODED to pixels, upright, rather than
+     handed back as the publisher's JPEG this isolate cannot read. The route
+     then says `decoded-dct`, and `pixels_sha256` is one an independent decoder
+     reproduces — so the anchor below stays checkable. */
+  const rendered = await renderPageToPixels(bytes, page, { decodeDct: true });
   if (!rendered || !rendered.ok)
     return { ok: false, reason: "PAGE_NOT_RENDERABLE", detail: REFUSALS.PAGE_NOT_RENDERABLE,
              page, render: rendered ? { reason: rendered.reason, why: RENDER_REFUSALS[rendered.reason] || null,
                                         detail: rendered } : null };
 
-  /* THE PASS-THROUGH ROUTE IS NAMED, NOT ATTEMPTED. `passthrough-dct` hands back
-     the publisher's own JPEG, which is the strongest provenance position there
-     is and which nothing in this isolate can decode: workerd has no canvas and
-     no `createImageBitmap`, and a JPEG decoder is a real capability that is NOT
-     built here. Saying so is the whole treatment — CPDF-15's own row records
-     "no in-isolate PDF decode" as what it could not see, and this is that gap
-     arriving where it actually bites. A page in this class stays honestly
-     unread. Filed as D-320, with the share of the image-only class this costs
-     stated as UNMEASURED rather than guessed at. */
+  /* A CONTAINER THIS MEMBER CANNOT READ IS NAMED, NOT ATTEMPTED. Until D-320
+     every `passthrough-dct` page landed here — the publisher's own JPEG, which
+     nothing in workerd decodes (no canvas, no `createImageBitmap`) — and 17 of
+     CPDF-12's 24 image-only pages were DCT. D-320 asks the renderer to DECODE
+     them (`decodeDct` above), so a baseline JPEG now arrives as a PNG; a JPEG it
+     cannot decode (progressive, arithmetic-coded, CMYK) is refused by the
+     renderer BY NAME and reaches the caller as PAGE_NOT_RENDERABLE with that
+     reason. This guard stays for any future route that answers in a container
+     `pngsamples.mjs` does not read. */
   if (rendered.mediaType !== "image/png")
     return { ok: false, reason: "PIXELS_UNREADABLE", detail: REFUSALS.PIXELS_UNREADABLE, page,
              route: rendered.route, mediaType: rendered.mediaType,
@@ -136,6 +140,13 @@ export async function transcribeOnePage(bytes, page, { psm = null, confidenceFlo
              route: rendered.route, png: samples };
 
   const rgba = samplesToRgba(samples);
+  /* THE SAMPLES ARE RELEASED BEFORE THE ENGINE RUNS (D-320). Only their
+     dimensions are read below. A bilevel page's packed samples are ~1 MB, but
+     a decoded RGB page's are 25.2 MB (3300x2550x3), and holding them beside the
+     33.7 MB RGBA frame for the whole engine run would put ~59 MB live where the
+     CCITT page put ~35 MB — in the isolate where a 75.7 MB frame was KILLED
+     (CPDF-15). Arithmetic, not a measurement: M-163. */
+  samples.packed = null;
   const out = await transcribeFrame(rgba, samples.width, samples.height, { psm });
   if (!out.ok)
     return { ok: false, reason: "ENGINE_FAILED", detail: REFUSALS.ENGINE_FAILED, page,

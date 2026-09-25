@@ -578,21 +578,27 @@ ok("WALK 2 REACH: it matches exactly three published ADDRESS SHAPES — found ["
      `acceptCeremonyRouteFromHash` is POST-AUTHENTICATION. It is asked inside
      `boot()`'s router chain and NOWHERE at the top level, so
      `#accept/<INQ-…>/<name>` resolves for nobody holding nothing. Its reads
-     (`basisversions`, `affordances`, `airun`, `versionstrength`) are
-     admin/member/probe and its four acts are session-mode, so it adds no
-     member-facing pre-auth vocabulary.
+     (`basisversions`, `affordances`, `airun`, `versionstrength`, and since UI-88
+     `partitionindependence`) are admin/member/probe and its four acts are
+     session-mode, so it adds no member-facing pre-auth vocabulary.
 
    The two pins below check both halves for THIS router as well. */
 /* CORRECTED A FIFTH TIME 2026-09-23 BY CONDUCT #18 at UI-68's merge onto c17-batch7, eight -> NINE: UI-74
    (`acceptCeremonyRouteFromHash`) and UI-68 (`draftRouteFromHash`) each classified an eighth router from the
    same base, so each side's eight was right on its own tree and the union carries both, each classified
    post-auth by its own pins below. */
-ok("WALK 2 REACH: the script declares exactly the nine routers this walk has classified — found ["
-   + ROUTE_FNS.join(", ") + "] (a tenth must be classified as pre-auth or not before this passes)",
-   ROUTE_FNS.length === 9
+/* CORRECTED A SIXTH TIME 2026-09-25 BY UI-76, nine -> TEN, and the old assertion was RIGHT to fail:
+   `themeRouteFromHash` arrived with the theme surface (framework §8.4) and this arm stopped it arriving
+   UNCLASSIFIED. It is POST-AUTHENTICATION: asked inside `boot()`'s router chain and NOWHERE at the top level,
+   so `#theme/<THEME-…>` resolves for nobody holding nothing. `op=themeread` is admin/member/probe and the two
+   writes it hosts (`themedeclare`, `themeplace`) are admin/member session ops, so it adds no member-facing
+   pre-auth vocabulary. The two pins below check both halves for THIS router as well. */
+ok("WALK 2 REACH: the script declares exactly the ten routers this walk has classified — found ["
+   + ROUTE_FNS.join(", ") + "] (an eleventh must be classified as pre-auth or not before this passes)",
+   ROUTE_FNS.length === 10
    && ["acceptCeremonyRouteFromHash","actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
        "publishedRouteFromHash","routeFromHash","stanceRouteFromHash",
-       "versionReviewRouteFromHash", "draftRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
+       "versionReviewRouteFromHash", "draftRouteFromHash", "themeRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
 {
   /* The running-session router is asked in boot()'s chain ... */
   const BOOTCHAIN = /if\(!publishedRouteFromHash\(\)[\s\S]{0,400}?\)\s*go\("queue"/.exec(SCRIPT);
@@ -647,6 +653,14 @@ ok("WALK 2 REACH: the script declares exactly the nine routers this walk has cla
      SCRIPT.indexOf("/*__REVIEW_COPY_END__*/") > 0 && RTAIL.length > 100);
   ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #draft/<id> resolves for nobody holding nothing",
      !RTAIL.includes("draftRouteFromHash()"));
+  /* UI-76's router, the same two halves; the slice starts at the END of the themes block. */
+  ok("WALK 2 CLASSIFICATION: themeRouteFromHash is asked INSIDE boot(), which is what makes it post-authentication",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("themeRouteFromHash()"));
+  const TTAIL = SCRIPT.slice(SCRIPT.indexOf("/*__THEMES_END__*/"));
+  ok("WALK 2 REACH: the themes block's END marker was found — a slice that missed it would make the pin below pass over nothing",
+     SCRIPT.indexOf("/*__THEMES_END__*/") > 0 && TTAIL.length > 100);
+  ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #theme/<THEME-…> resolves for nobody holding nothing",
+     !TTAIL.includes("themeRouteFromHash()"));
 }
 ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outside boot()",
    /\n\s*if\(\/\^#\(published[\s\S]{0,80}publishedRouteFromHash\(\);?\n?\}catch/.test(SCRIPT)
@@ -1161,8 +1175,13 @@ function makePlane(mode){
     /* UI-77, 2026-09-22: the public header's group read, answered as the plane answers a stranger since REC-163
        (IC-174) — `{ok:true, group:<slug>}` inside the control plane's envelope — with a slug that is NOT this
        project's, through `say` so the slug is attributed to the PLANE, not to the surface. Before UI-77 the
-       header painted a literal and this op was never asked. */
-    if(op === "instancegroup") return W(say({ ok:true, group:"harbour-watch-coalition" }));
+       header painted a literal and this op was never asked.
+       CORRECTED 2026-09-25 (UI-78), never exempted: the header now reads `op=groupidentity` (REC-164, IC-223), the
+       stranger's projection — the slug, the display name beside it, and a domain only with its verified date. The
+       fixture answers a display name and a VERIFIED domain, so `#p-gid` is a surface again (below) and the name is
+       walked where it is shown, beside the slug. */
+    if(op === "groupidentity") return W(say({ ok:true, group:"harbour-watch-coalition", display_name:"Harbour Watch",
+                                               domain:"harbour.example", domain_verified_at:"2026-09-25T00:00:00.000Z" }));
     /* UI-68: the recipient's door — FLAT, as index.mjs answers it; only the fixture's own secret reads a copy. */
     if(op === "reviewcopy")
       return url.searchParams.get("secret") === REVIEW_SECRET ? R(say(REVIEW_COPY_ANSWER))
@@ -1676,9 +1695,12 @@ const ALL_SURFACES = [...new Set(SCENARIOS.flatMap(s => [...s.surfaces.keys()]))
    (one group's, on every instance); Publication §7 point 3 shows a domain only while VERIFIED, and verification
    is not built, so the header leaves it empty and an empty element is not something a reader reads. When a
    verified domain is built this surface returns and this list gains it back. `#p-gname` and `#p-mono` stay:
-   they now carry the recorded slug and its first character, read from `op=instancegroup`. */
+   they now carry the recorded slug and its first character, read from `op=instancegroup`.
+   CORRECTED 2026-09-25 (UI-78), as that note said it would be: the verified domain is built (REC-164 on the plane,
+   UI-78 here), so `#p-gid` is a surface again — it carries a domain the answer dates as verified, with its date —
+   and it is back in this list. `#p-gname` now carries the display name WITH the slug, read from `op=groupidentity`. */
 const EXPECT_SURFACES = ["#content","#g-err","#m-grp","#m-handle","#m-idstr",
-                         "#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED,
+                         "#p-gid","#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED,
                          "#v-c-" + FIND_ID, "#v-f-" + FIND_ID, "#v-man",
                          "#v-part-" + SHA.slice(0, 12), "#v-part-" + CAP.slice(0, 12),
                          "#v-refused", "#v-unreachable",
@@ -2066,8 +2088,11 @@ if(S("case-address-at-load") && !HID("case-verify")){
         error reads as the record NOT REACHED, never as a refusal. The old pin was right about `apiQ` and about the
         discipline; its set predates the second write. `statement-ack.test.mjs` drives both halves through the real
         plane, and asserts on the WIRE that the acknowledgement carried the secret and no token. */
+     /* CORRECTED 2026-09-25 (UI-78), never exempted: still EIGHT callers; the header's group read is renamed
+        `op=groupidentity` (REC-164, IC-223) and `groupFromAnswer` is still the same SHAPE test on its `group`, so an
+        `ok:false` through this seam still reads as a SILENCE (group-surface.test.mjs's SILENCE arms drive it). */
      && APIQ_CALLERS.length === 8
-     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
+     && APIQ_CALLERS.join(",") === "groupidentity,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the

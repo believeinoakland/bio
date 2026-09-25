@@ -145,7 +145,9 @@ const projectMd = (id, { cites = [], summary = "A project.", name = id } = {}) =
                    : ["references: []"]),
   "required_strength:", "  capture: B", "  connection: C",
   "---", "", "## Summary", "", summary, "", "## Session Log", ""].join("\n");
-const bundleMeta = (id, type, state) => ({ object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+/* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: the label `Bundle ${id}` contradicted every document's own
+   title and is now refused; the label names none, and each bundle is titled by its document. */
+const bundleMeta = (id, type, state) => ({ object_type: type, group: "believe-in-oakland",
   current_state: state, created: NOW, last_updated: LATER });
 let snapSeq = 0;
 const promoteAs = async (tok, id, text, type, state, base = null) => POST(`op=promote&token=${tok}`, {

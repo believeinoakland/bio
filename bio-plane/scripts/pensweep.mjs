@@ -57,7 +57,10 @@
  * resolved to a repo-relative path through the file's own `const`/`let` table, `dirname`, `+`,
  * `process.env.X || "<literal>"`, `mkdtempSync(`, `controlPen(`, `tmpdir()`, `fileURLToPath(import.meta.url)`,
  * `process.cwd()`, and an object property whose key is defined in the same file; an interpolation it cannot
- * resolve becomes a `*` and the path is matched as a pattern.
+ * resolve becomes a `*` and the path is matched as a pattern. Since M0-196 also: the trailing-slash strip
+ * `.replace(/\/$/, "")` / `/\/+$/` (and NO other `.replace`), a comma-continued `const a = …, b = …`, and a
+ * later segment of `join` it cannot place, read as a `*` BELOW the first root (never for `resolve`, which
+ * re-roots).
  * WHAT IT CANNOT SEE, stated: a path assembled only at runtime (a parameter, an import, a loop variable, a
  * `.replace()` chain on an unknown) — such a path is NOT named here and its driver is graded on the paths it
  * does name; a path written by a spawned command or a shell driver; and `*.control.sh`, which is not read.
@@ -185,8 +188,36 @@ export function bindings(code) {
     const expr = code.slice(from, i).trim();
     if (!expr) continue;
     if (map.has(m[1])) map.get(m[1]).push(expr); else map.set(m[1], [expr]);
+    /* A COMMA-CONTINUED DECLARATION binds its later names too: `const plane = join(root, "bio-plane"), test =
+       join(plane, "test")` left `test` unbound, and every path built on it read UNCLASSIFIED (M0-196, measured
+       on d548-block.control.mjs). Only a `NAME =` directly after the top-level comma continues it. */
+    if (code[i] === ",") {
+      const next = /^\s*([A-Za-z_$][\w$]*)\s*=(?![=>])\s*/.exec(code.slice(i + 1));
+      if (next) bindingAt(code, i + 1 + next[0].length, next[1], map);
+    }
   }
   return map;
+}
+
+/* One continued binding `NAME = <expr>` from FROM, scanned exactly as `bindings` scans the first, and itself
+   continued while a top-level comma introduces another `NAME =`. */
+function bindingAt(code, from, name, map) {
+  let depth = 0, i = from;
+  for (; i < code.length; i++) {
+    const c = code[i];
+    if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") { if (depth === 0) break; depth--; }
+    else if ((c === ";" || c === ",") && depth === 0) break;
+    else if (c === "\n" && depth === 0) { const rest = code.slice(i + 1).match(/^\s*(\S)/); if (!rest || !"+?:.|&".includes(rest[1])) break; }
+    else if (c === "`" || c === '"' || c === "'") { const q = c; i++; while (i < code.length && code[i] !== q) { if (code[i] === "\\") i++; i++; } }
+  }
+  const expr = code.slice(from, i).trim();
+  if (!expr) return;
+  if (map.has(name)) map.get(name).push(expr); else map.set(name, [expr]);
+  if (code[i] === ",") {
+    const next = /^\s*([A-Za-z_$][\w$]*)\s*=(?![=>])\s*/.exec(code.slice(i + 1));
+    if (next) bindingAt(code, i + 1 + next[0].length, next[1], map);
+  }
 }
 
 /* Object-literal property values for a key, anywhere in the file — for an `arm.file` destination. */
@@ -283,6 +314,19 @@ export function resolvePath(expr, ctx, seen = new Set(), depth = 0) {
     return TREE(clean(join(dirname(ctx.file), rel.path)) + (dir ? "/" : ""));
   }
 
+  /* `X.replace(/\/$/, "")` / `X.replace(/\/+$/, "")` — THE TRAILING-SLASH STRIP, and nothing else. It is how
+     this estate's copy-source drivers turn the plane-root READ `fileURLToPath(new URL("..", import.meta.url))`
+     into a directory name for `dirname`, and before M0-196 it read "a call this walk does not read", which
+     graded D-510's, D-526's, D-547's, D-548's and D-563's drivers UNCLASSIFIED over their own tree root. The
+     regex survives `stripComments` only because `namedPaths` restores THESE TWO spellings at their offsets; any
+     other `.replace(…)` is still unread, as it must be — it can rewrite a path into anything. */
+  const strip = /\.\s*replace\s*\(\s*\/\\\/\+?\$\/\s*,\s*(?:""|''|``)\s*\)$/.exec(e);
+  if (strip && closer(e, e.indexOf("(", strip.index), "(", ")") === e.length - 1) {
+    const r = resolvePath(e.slice(0, strip.index), ctx, seen, depth + 1);
+    if (r.root === "TREE" || r.root === "RELATIVE") return { root: r.root, path: r.path.replace(/\/+$/, "") };
+    return r;
+  }
+
   /* A call. */
   const call = /^(?:[A-Za-z_$][\w$]*\s*\.\s*)*([A-Za-z_$][\w$]*)\s*\(/.exec(e);
   if (call) {
@@ -291,7 +335,7 @@ export function resolvePath(expr, ctx, seen = new Set(), depth = 0) {
     if (fn === "tmpdir" || fn === "controlPen") return TEMP();
     if (fn === "mkdtempSync" || fn === "mkdtemp") return args[0] ? resolvePath(args[0], ctx, seen, depth + 1) : UNKNOWN("mkdtempSync with no prefix");
     if (fn === "join" || fn === "resolve" || fn === "normalize")
-      return args.length ? concat(args.map((a) => resolvePath(a, ctx, seen, depth + 1)), true) : UNKNOWN(`${fn}()`);
+      return args.length ? concat(args.map((a) => resolvePath(a, ctx, seen, depth + 1)), true, fn === "join") : UNKNOWN(`${fn}()`);
     if (fn === "dirname") { const r = args[0] ? resolvePath(args[0], ctx, seen, depth + 1) : UNKNOWN("dirname()"); return r.root === "TREE" ? TREE(clean(dirname(r.path))) : r.root === "RELATIVE" ? REL(clean(dirname(r.path))) : r; }
     if (fn === "realpathSync") return args[0] ? resolvePath(args[0], ctx, seen, depth + 1) : UNKNOWN("realpathSync()");
     /* `fileURLToPath(import.meta.url)` is THIS FILE; `fileURLToPath(new URL(…))` is whatever the URL
@@ -369,7 +413,7 @@ function joinAll(rs, why) {
 
 /* Concatenation, in order: the FIRST part gives the root; a TREE part contributes its text; a part the
    resolver could not read becomes a `*`. A TEMP or ABSOLUTE root swallows what follows. */
-function concat(parts, asSegments = false) {
+function concat(parts, asSegments = false, underFirst = false) {
   if (!parts.length) return UNKNOWN("nothing to concatenate");
   const first = parts[0];
   if (first.root === "TEMP") return TEMP();
@@ -377,7 +421,11 @@ function concat(parts, asSegments = false) {
   if (first.root === "UNKNOWN") return first;
   let p = first.path;
   for (const r of parts.slice(1)) {
-    const piece = (r.root === "TREE" || r.root === "RELATIVE") ? r.path : r.root === "UNKNOWN" ? "*" : null;
+    /* `join` never lets a later segment re-root the path — `join("bio-plane", "/tmp/x")` is `bio-plane/tmp/x` —
+       so under `join` a later TEMP or ABSOLUTE part is a `*` below the first root, not a disagreement. That is
+       how `.map((p) => join(PLANE, p))` reads when `p` is bound elsewhere in the file to a temp path (M0-196,
+       measured on d526-refusal-order.control.mjs); `resolve` DOES re-root, and keeps the refusal. */
+    const piece = (r.root === "TREE" || r.root === "RELATIVE") ? r.path : (r.root === "UNKNOWN" || underFirst) ? "*" : null;
     if (piece === null) return UNKNOWN("a temp or absolute root in the middle of a path");
     p = asSegments ? (p ? `${p}/${piece}` : piece) : p + piece;
   }
@@ -428,7 +476,7 @@ function topSplit(e, ops) {
    literal that holds a `/` or is spelled as a dot-name, and a template literal with either. Nested
    expressions are not reported twice: an outer `join(…)` swallows the literals inside it. */
 export function namedPaths(src, file, ctx) {
-  const code = stripComments(src);
+  const code = restoreSlashStrip(src, stripComments(src));
   const local = { ...ctx, file, code, binds: bindings(code) };
   const spans = [];                                  /* [start, end, expr] of each candidate, outermost first */
   const push = (a, b) => { if (!spans.some(([x, y]) => a >= x && b <= y)) spans.push([a, b, code.slice(a, b)]); };
@@ -515,6 +563,18 @@ export function namedPaths(src, file, ctx) {
   for (const m of code.matchAll(/(?<![\w$.])controlPen\s*\(/g))
     out.push({ line: lineOf(code, m.index), expr: "controlPen(…)", root: "TEMP" });
   return out.sort((x, y) => x.line - y.line);
+}
+
+/* `stripComments` blanks regex literals, offsets kept. The trailing-slash strip `.replace(/\/$/, "")` (and
+   `/\/+$/`) is the ONE regex a path expression here needs read, so exactly those two spellings are put back
+   at their offsets, and only where the stripped text is blank there (M0-196). */
+export function restoreSlashStrip(src, code) {
+  let out = code;
+  for (const m of src.matchAll(/\.\s*replace\s*\(\s*(\/\\\/\+?\$\/)\s*,/g)) {
+    const at = m.index + m[0].indexOf(m[1]);
+    if (out.slice(at, at + m[1].length).trim() === "") out = out.slice(0, at) + m[1] + out.slice(at + m[1].length);
+  }
+  return out;
 }
 
 /* ------------------------------------------------------------------ 4. THE SWEEP */

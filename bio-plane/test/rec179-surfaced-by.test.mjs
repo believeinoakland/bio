@@ -104,7 +104,7 @@ let seq = 0;
 const pkg = (id, base, md) => ({
   bundleId: id, base,
   snapKey: `20260923T1700${String(++seq).padStart(2, "0")}Z_rec179aa`,
-  meta: { object_type: "inquiry", group: "believe-in-oakland", title: `title for ${id}`,
+  meta: { object_type: "inquiry", group: "believe-in-oakland",
           current_state: "open", created: NOW, last_updated: NOW },
   files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md), sha256: sha(md) }],
   register: [],

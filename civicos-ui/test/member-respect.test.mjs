@@ -8,6 +8,13 @@
  * -> ARM P2; drop the fence pre-check in `openAttestDialog` -> ARM P2; delete the
  * per-kind mute (`data-mute1`) -> ARM 4d. The over-strictness half is the CLEAN run
  * staying green with all three protected publications asserted PRESENT by name.
+ * D-588, RUN 2026-09-25: the driver now arms EIGHT, 8 of 8 correct, exit 0 —
+ * arm 4 plants prose "unread" in markup -> ARM 3b RED naming the stem; arm 5
+ * compares `chain_unread` / `newer_capture_unread` in a branch -> GREEN (506/0).
+ * SUITE-LEVEL ARM, by hand: restore ARM 3b's raw substring match (proseHits pushes
+ * every hit) -> RED 504 pass 2 fail at ARM 3b0 "the snake_case state codes
+ * `chain_unread` / `newer_capture_unread` ... are IDENTIFIERS" (got 4, want 0);
+ * restored, sha256 20362bb4… identical by cmp.
  *
  * ============================================================================
  * THE RULING, AND WHY THIS FILE IS NOT A GREP
@@ -532,12 +539,56 @@ const DILIGENCE_FAMILY = [
   "how many times you", "how often you", "you approved", "your approval rate",
 ];
 console.log(`  DILIGENCE FAMILY (a FLOOR, printed): ${DILIGENCE_FAMILY.join(" · ")}`);
+/* ARM 3b READS PROSE, NOT IDENTIFIERS — D-588, 2026-09-25, correcting this arm's
+   first build. It matched each stem as a RAW SUBSTRING of `code`, and `code` keeps
+   every identifier and every string literal, including the ones that never reach a
+   member. So the plane's own state codes `chain_unread` and `newer_capture_unread`,
+   compared in a branch, failed the suite as a "rendered diligence phrase" — and
+   UI-96 had to bend correct code (branching on `newer`) around the instrument. The
+   old assertion was wrong because a snake_case or camelCase token is a CODE, not a
+   sentence a member reads; DEC-68 is about what a member is TOLD. The cut: a hit
+   counts only when the token run of identifier characters `[A-Za-z0-9_$]` around it
+   is NOT identifier-shaped — it carries no `_`, no `$` and no lower-to-upper hump.
+   Prose words carry none of the three, so "unread", "Unread" and "UNREAD" in text
+   still fail, in the script and in the shell alike.
+   WHAT THIS CANNOT SEE: an identifier spelled as a bare lowercase word (`unread` as
+   a variable name) still reads as prose here — over-strict, never a false green —
+   and a stem that is a PREFIX of a longer prose word ("unreadable") still matches,
+   as it did before; whether that word is a diligence phrase is DEC-68's call, not
+   this instrument's. */
+const IDENT_CH = /[A-Za-z0-9_$]/;
+function proseHits(text, stem){
+  const esc = stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
+  const out = [];
+  for(const m of text.matchAll(new RegExp(esc, "gi"))){
+    let a = m.index, b = m.index + m[0].length;
+    while(a > 0 && IDENT_CH.test(text[a-1])) a--;
+    while(b < text.length && IDENT_CH.test(text[b])) b++;
+    const left = text.slice(a, m.index + m[0].search(/\s|$/));
+    const lastWs = m[0].search(/\S+$/);
+    const right = text.slice(m.index + lastWs, b);
+    const isIdent = (t) => /[_$]/.test(t) || /[a-z][A-Z]/.test(t);
+    if(!isIdent(left) && !isIdent(right)) out.push(m.index);
+  }
+  return out;
+}
+/* 3b0 — THE INSTRUMENT'S OWN OVER-STRICTNESS ARM AND ITS PROSE HALF, over a fixed
+   probe so neither depends on what app.html happens to hold today. The snake_case
+   codes are the two UI-96 met; each must PASS by name, and prose must still FAIL. */
 {
-  const low = code.toLowerCase(), shellLow = SHELL.toLowerCase();
+  const probe = 'if(v.state === "chain_unread" || v.state === "newer_capture_unread") n = unreadCount + isUnread;';
+  eq(proseHits(probe, "unread").length, 0,
+     "ARM 3b0: the snake_case state codes `chain_unread` / `newer_capture_unread` and the camelCase `unreadCount` / `isUnread` in a comparison are IDENTIFIERS, not a diligence phrase — an instrument that reads them as prose bends correct code around itself (D-588)");
+  eq(proseHits('el.innerHTML = `<b>3 unread passages</b>`; x = "Unread."; y = "UNREAD";', "unread").length, 3,
+     "ARM 3b0: prose \"unread\" reaching markup still FAILS in every case — the fix narrowed what counts as prose, not what is banned");
+  eq(proseHits("You have reviewed_all and you  Have Reviewed it", "you have reviewed").length, 1,
+     "ARM 3b0: a multi-word stem is matched across any whitespace and case, and refused only when an END word is joined into an identifier");
+}
+{
   for(const stem of DILIGENCE_FAMILY){
-    const i = low.indexOf(stem);
-    ok(i < 0, `ARM 3b: the diligence phrase "${stem}" is rendered at line ${i<0?"-":lineOf(i)} — DEC-68 withdrew the premise: no other member act is graded on diligence and this one is not either`);
-    ok(!shellLow.includes(stem), `ARM 3b: the diligence phrase "${stem}" is in app.html's static shell`);
+    const hs = proseHits(code, stem);
+    ok(hs.length === 0, `ARM 3b: the diligence phrase "${stem}" is rendered at line ${hs.length?hs.map(lineOf).join(", "):"-"} — DEC-68 withdrew the premise: no other member act is graded on diligence and this one is not either`);
+    ok(proseHits(SHELL, stem).length === 0, `ARM 3b: the diligence phrase "${stem}" is in app.html's static shell`);
   }
   /* AND THE COUNTS THAT DO EXIST ARE NOT THIS. `rvCount` says "3 documents
      selected" and `queueMuteReportHtml` says how many items a member's own mute is
@@ -682,9 +733,15 @@ const CHOOSERS = {
      per-row "apply" control would be this surface offering a partial statement the plane has no act for.
      `addActionPaneHtml`'s shape exactly. */
   "actionLawsPaint":       "UI-90: draft-list editing of the governing laws before ONE op=actionlaws; the act replaces the whole set as one statement, so a per-row act would be a partial statement the plane cannot take",
+  /* UI-104 (REC-214). ONE decision: `op=actionrisktier` sets ONE tier on ONE action per act, with one reason. */
+  "actionTierPaint":       "UI-104: radios choosing the ONE tier a single op=actionrisktier revision sets, with its one required reason",
   /* D-126, 2026-09-23. */
   "queueSelBarHtml":       "the acts the record publishes (`set_acts`, weight per-item) over ONE held selection — `finderPaintSelection`'s shape on the queue; the per-item ticks that build the selection are `queueEntryControlsHtml`'s",
   "queueRetainedHtml":     "clears ONE retained item's note from this screen; it touches the record not at all (the item's own acts are still `queueEntryControlsHtml`'s)",
+  /* D-134, 2026-09-25. */
+  "openCustodialAct":      "D-134: the role radios and capability ticks composing ONE op=memberadd invitation; nothing is decided until the one act",
+  /* UI-70 (Membership v2 §7.14, DEC-69). */
+  "visibilityChoiceHtml":  "UI-70: two radios choosing the ONE setting (discoverable or hidden) a project's creation, its fork or its owner's act sends; neither is preselected and the act carries the one chosen",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is
@@ -728,6 +785,15 @@ const SETS = {
      carry a control of its own. */
   "queueMuteReportHtml": { single: true, bulk: true, op: "queuemute",
     why: "UI-97. THE UNDO, which `op=queuemute` has taken as `unmute: true` in BOTH forms since D-125 and which no client sent. ONE `{ item, unmute:true }` per muted item is the single mode; ONE `{ case, kinds, unmute:true }` naming the kinds is the set mode, over the same class rule as the mute (`queueMutableItem`). Nothing is looped: the case control sends one call carrying its kinds, which is why this is a mode and not the forty-dialogs shape (DEC-52). NAMED LIMIT, not a mode withheld: the case control names only the kinds on `suppressed[]`, because `op=queue` publishes `mute.cases` as case IDS and the muted kinds NOWHERE — so a case whose mute is holding nothing back today gets no control and a sentence saying why, rather than an undo over kinds this surface guessed at. That gap is the plane's and is D-534." },
+  /* UI-76, 2026-09-25. Each hunch standing in a theme is judged on its own against the theme's test, so the
+     list is a SET of decisions — and leaving one is doing nothing, which needs no control at all. */
+  "thmHunchHtml": { single: true, bulk: false, op: "themeplace",
+    why: "UI-76 (carried): one 'It passes the test: place it' per hunch standing in a theme. `op=themeplace` takes ONE `target`, and each confirmation is its own attributed judgement that THAT document or passage passes the theme's test (framework §8.4 fence 3), recorded in the member's name beside who proposed it. A bulk path is the PLANE accepting a set, not this surface looping — N calls over N hunches is the forty-dialogs shape wearing a bulk control's clothes (DEC-52, `rvcGrantsHtml`'s note); and an 'all of these pass' control would put judgements in the record nobody made one by one. Leaving a hunch is the absence of an act, so no mode is forced." },
+  /* D-134, 2026-09-25. §4.9's standing acts, one control per roster row and per key row. */
+  "memberActHtml": { single: true, bulk: false, op: "memberset",
+    why: "D-134 (carried): one Deactivate or Reactivate per roster row. `op=memberset` takes ONE `memberId`, and each is a custodial act over ONE person's access that the record attributes to its actor (`status_by`, REC-159). A bulk path is the PLANE accepting a set, not this surface looping — N calls over N members is the forty-dialogs shape wearing a bulk control's clothes (DEC-52)." },
+  "keyActHtml": { single: true, bulk: false, op: "signerset",
+    why: "D-134 (carried): one Revoke or Reactivate per registered key. `op=signerset` takes ONE `keyB64`, each attributed to its actor (`status_by`, REC-159); a bulk path is the plane accepting a set, and a client-side loop is the forty-dialogs shape (DEC-52)." },
   "queueItemMuteHtml": { single: true, bulk: true, op: "queuemute",
     why: "UI-86. DEC-10's (b), 'stop notifying me about this one': ONE `{ item }` per control, keyed on the item's own id (D-125). It is the SINGLE-item mode; the case group's kind mute (`queueMuteHtml`, above) is the set mode over the same class rule (`queueMutableItem`), so neither is forced. Where an item has no case — an ungrouped condition (D-170) — the item form is the only mute the record has, and that is the plane's shape, not a mode withheld here." },
 };
@@ -752,7 +818,10 @@ const SETS = {
 /* 4c — THE AMENDMENT, BOTH WAYS. */
 for(const [host, s] of Object.entries(SETS)){
   ok(s.single, `ARM 4c: the set of decisions in '${host}' offers NO single-item path — a surface that only offers bulk takes the mode of judgment out of the member's hands just as surely as forty clicks do. ${s.why}`);
-  ok(s.bulk || /^UI-\d+ \(carried\)/.test(s.why),
+  /* CORRECTED 2026-09-25 by D-134, not exempted: this read `/^UI-\d+ \(carried\)/`, which is the rule's
+     SPELLING rather than the rule. The rule is "CARRIED AS A NAMED ITEM"; a UI-owned row whose id is in the
+     `D-` namespace (D-134, a debt row the area owns) is a named item, and the UI-only pattern refused it. */
+  ok(s.bulk || /^(?:UI|D)-\d+ \(carried\)/.test(s.why),
      `ARM 4c: the set of decisions in '${host}' offers NO bulk path and carries no reason — every missing mode is either built or CARRIED AS A NAMED ITEM with why it cannot be built here. ${s.why}`);
   console.log(`  ${host.padEnd(26)} single:${s.single?"yes":"NO "} bulk:${s.bulk?"yes":"NO "} · ${s.why}`);
 }

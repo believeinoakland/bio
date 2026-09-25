@@ -1,8 +1,9 @@
-/* REC-126's NEGATIVE CONTROL DRIVER — nineteen arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
+/* REC-126's NEGATIVE CONTROL DRIVER — twenty-three arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
  * REC-133's, §6A.2's authority, (i)-(k) REC-198's, the list of a project's drafts, (l)-(n) REC-199's,
  * the copy saying `newCase` back, (o)-(q) D-539's, the copy saying an absent finding's `role` back,
  * (r)-(s) D-538's, the identity sentence reading `newCase` — its (o)-(p) on its branch, renamed at
- * c21-batch28 by CONDUCT #21 because D-539 holds (o)-(q)), re-runnable in one step:
+ * c21-batch28 by CONDUCT #21 because D-539 holds (o)-(q)), (t)-(w) D-568's, a derived draft's edition stated
+ * as UNDETERMINED while its internal key still binds, re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -208,6 +209,37 @@ const ARMS = {
          "    return \"a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED \"",
          "    return \"an undetermined case: publication will derive it from the record, since this draft names none \"\n"
        + "         + \"and asks for no new one; until then \"") },
+
+  /* D-568 — a derived draft's edition is UNDETERMINED on the wire, and its internal key still binds. Declarations in
+     the suite's header, made before arming. */
+  t: { files: [STORE],
+       label: "(t) THE INTERNAL EDITION ANSWERED AGAIN: `#statedEdition` returns the key's edition whatever the "
+            + "draft is — the plane exactly as it stood before D-568, edition 1 beside a DERIVED case",
+       apply: () => edit(STORE,
+         "    return ident.caseId || newCase ? ident.edition : null;",
+         "    return ident.edition;") },
+
+  u: { files: [STORE],
+       label: "(u) THE LIAR'S NULL: every draft naming no case answers null, `newCase` ignored — right about DD for "
+            + "free, and denies the minted-case edition a new-case draft truly stands at",
+       apply: () => edit(STORE,
+         "    return ident.caseId || newCase ? ident.edition : null;",
+         "    return ident.caseId ? ident.edition : null;") },
+
+  v: { files: [STORE],
+       label: "(v) THE WIRE EDITION USED AS THE KEY: a grant's liveness compared with the STATED edition instead of "
+            + "the internal one — the half of the scope that says the (no case, 1) key is KEPT",
+       apply: () => edit(STORE,
+         "    if ((now.caseId ?? null) !== (g.case_id ?? null) || now.edition !== Number(g.edition)) return null;",
+         "    if ((now.caseId ?? null) !== (g.case_id ?? null)\n"
+       + "        || Store.#statedEdition(now, !!JSON.parse(d.params).newCase) !== Number(g.edition)) return null;") },
+
+  w: { files: [STORE],
+       label: "(w) OVER-STRICTNESS: the same rule in a spelling this suite did not write — two early returns "
+            + "instead of one conditional — must PASS",
+       apply: () => edit(STORE,
+         "    return ident.caseId || newCase ? ident.edition : null;",
+         "    if (!ident.caseId && !newCase) return null;\n    return ident.edition;") },
 };
 
 const want = process.argv[2];
@@ -350,4 +382,18 @@ console.log(`\npen removed: ${PEN}`);
               the new-case-kept arm GREEN, the liar agreeing for free on the one draft it is right about
      p 88/0   the reworded derived sentence passes
    Every (a)-(n) failure count is REC-199's, unchanged; block 11's six arms are the only movement.
+
+   RE-MEASURED 2026-09-25 by WORKER D-568 (cloud, SCHEDULER #22), all TWENTY-THREE arms, pen in the session
+   scratchpad via `BIO_NC_PEN`, 23 of 23 restores of a 3,474,606-byte `store.mjs` (sha256 65ec128a…) sha256 MATCH /
+   content IDENTICAL / size ok:
+     baseline  98/0
+     a 93/5   b 97/1   c 94/4   d 96/2   e 96/2   f 97/1   g 90/8   h 97/1
+     i 92/6   j 95/3   k 98/0   l 95/3   m 96/2   n 98/0   o 96/2   p 98/0   q 96/2   r 95/3   s 98/0
+     t 95/3   the internal edition answered again — ACCEPTS-WHEN and block 2's two corrected arms, by name
+     u 97/1   the liar's null — the new-case-keeps-1 arm; ACCEPTS-WHEN GREEN, right about DD for free
+     v 95/3   the wire edition used as the key — KEY STILL BINDS, ACCEPTS-WHEN, and D2's G2 in block 5
+     w 98/0   the unanticipated spelling passes
+   c moved 2 -> 4: its gates-must-pass grant is dead on DD, whose gates refuse — block 13's two ACCEPTS-WHEN arms.
+   A FIRST RUN read v 96/2 with ACCEPTS-WHEN GREEN: `t` compares by JSON, where an absent key reads as `null`, so
+   the refused reading passed as a stated null. The arm now reads each key through `stated`; this is the re-run.
 */

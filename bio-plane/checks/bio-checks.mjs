@@ -4115,7 +4115,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   if (earned && earned.mode === 'ceiling' && earned.grade == null) {
     findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ''}`,
       [`state NO capture grade on basis[${i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-       'or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns',
+       'or have the transcription measured (the MEASUREMENTS ledger, per engine, per version) and state the letter the record then earns',
        'or state this leg as testimony (grade D, with an author and a date) if it is a member\'s own account']));
     return;
   }
@@ -4196,7 +4196,15 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
  *  strength on their behalf, because the strength was not changed for them. */
 function checkInheritedLeg(leg, i, graded, registry, findings) {
   const target = typeof leg.target === 'string' ? leg.target : null;
-  const pub = registry && target ? registry[target] : null;
+  /* D-598 (BOB #34, 2026-09-25 03:00Z; BIO_Publication_v0_1.md §3 rule 5): THE RULE IS OVER PUBLISHED
+     INQUIRIES ONLY. A document or observation published as a case's EVIDENCE (D-431(b)) froze no strength,
+     so it is not a published finding and a leg on it keeps its own grade on its own axis (C-2.8 for
+     testimony, the capture grade for a document) — forcing it to `inherited` made every later finding over
+     published evidence ungradeable, the record claiming LESS than it can support. An entry with NO
+     object_type (a registry built before the key, or a caller's) is held to the inquiry rule: undetermined
+     is not evidence. */
+  const entry = registry && target ? registry[target] : null;
+  const pub = entry && (entry.object_type == null || entry.object_type === 'inquiry') ? entry : null;
   if (leg.grade_source === 'inherited' && !pub) {
     findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source 'inherited' but its target ${registry ? 'is not a published case' : 'cannot be checked against the published record here'}: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else`,
       ['cite a published case and name its edition', 'or state where this grade actually came from']));
@@ -4713,6 +4721,8 @@ export function correspondenceFindings(fm, findings) {
     }
     /* D-148: the QUOTE arm, one rule shared with op=actioncorrespond (quoteFindings below). */
     for (const q of quoteFindings(entries, i)) findings.push(f('C-2.10', 'error', q.message, null, q.code));
+    /* D-147: the LIFECYCLE arm, one rule shared with op=actioncorrespond (lifecycleFindings below). */
+    for (const q of lifecycleFindings(entries, i)) findings.push(f('C-2.10', 'error', q.message, null, q.code));
   });
 }
 
@@ -4798,6 +4808,189 @@ export function quoteFindings(entries, i) {
     }
   }
   return out;
+}
+
+/** D-147 — THE RECORDS-REQUEST LIFECYCLE (BOB #27, 2026-09-22; `BIO_Case_Making_v0_1.md` §2,
+ *  *THE RECORDS-REQUEST LIFECYCLE*), on D-148's pattern and bound by D-149.
+ *
+ *  `awaiting_response` hid every stage after the request. Each stage is now its OWN correspondence
+ *  entry naming the entry it answers or follows, so the lifecycle reads as a chain of dated entries.
+ *  FLAT keys on the entry, as D-148's quote is written, because the restricted grammar has no nested
+ *  map inside an array element:
+ *
+ *    stage       what this entry IS in the round trip, by direction (CORRESPONDENCE_STAGES). Optional:
+ *                an entry written before this row carries none and reads "not stated", never guessed.
+ *    follows     the ORD of the earlier entry this one answers or follows. Required on every stage but
+ *                `request`; an appeal names the DECISION it appeals (a received entry carrying an outcome).
+ *    outcome     a decision's OUTCOME in the closed vocabulary (CORRESPONDENCE_OUTCOMES), as the body gave
+ *                it — `none_stated` when it gave none. Only on a received entry; REQUIRED on the four
+ *                decision stages, so a decision never reads as one whose outcome nobody recorded.
+ *    exemptions  the exemptions a denial cited, VERBATIM as the body cited them. Received only.
+ *    due_by      the date by which the NEXT stage is due, as a MEMBER states it, with
+ *    due_cite    the citation it comes from — one of the action's D-149 governing laws (checked at the op,
+ *                where the list is read; see below). Both or neither.
+ *
+ *  THE CLOCK IS NEVER ENCODED (D-149: the plane encodes no law's rules). Nothing here computes a due
+ *  date from a kind, a law or a stage; with none stated it is UNDETERMINED, and `requestLifecycleOf`
+ *  says so. What the plane derives is only what costs nothing to invent: days elapsed between dated
+ *  entries, and that a stated date passed with no entry following it.
+ *
+ *  WHY `due_cite` IS JUDGED AGAINST THE LIST AT THE OP AND NOT HERE. This rule runs over every version
+ *  of the document at promote, and the governing-law list is a member's act that may later change. A
+ *  catalog arm refusing an entry whose cited law was later taken off the list would make op=actionlaws
+ *  fail on history — an earlier dated statement made unwritable by a later one. So the op refuses a
+ *  citation that is not on the list WHEN IT IS STATED (DUE_CITE_NOT_GOVERNING), and the read states,
+ *  per entry, whether the citation is on the list NOW. A direct promote carrying a citation that was
+ *  never on the list is therefore not refused here; the read says `on_list: false` for it.
+ *
+ *  @returns {{code: string, message: string}[]} */
+export const CORRESPONDENCE_STAGES = {
+  sent: ['request', 'fee_waiver_request', 'appeal', 'court_filing'],
+  received: ['acknowledgement', 'fee_estimate', 'fee_waiver_decision', 'extension_notice', 'production',
+             'denial', 'appeal_decision', 'court_decision'],
+};
+export const CORRESPONDENCE_OUTCOMES = ['granted', 'denied', 'partial', 'reversed', 'affirmed', 'none_stated'];
+export const DECISION_STAGES = ['fee_waiver_decision', 'denial', 'appeal_decision', 'court_decision'];
+export const LIFECYCLE_KEYS = ['stage', 'follows', 'outcome', 'exemptions', 'due_by', 'due_cite'];
+export function lifecycleFindings(entries, i) {
+  const out = [];
+  const e = entries[i];
+  if (!e || typeof e !== 'object' || Array.isArray(e)) return out;
+  const str = (v) => (v === null || v === undefined ? '' : String(v).trim());
+  const stage = str(e.stage), follows = str(e.follows), outcome = str(e.outcome);
+  const exemptions = str(e.exemptions), dueBy = str(e.due_by), dueCite = str(e.due_cite);
+  if (stage) {
+    const legal = CORRESPONDENCE_STAGES[e.direction] || [];
+    if (!legal.includes(stage)) {
+      out.push({ code: 'STAGE_NOT_OF_DIRECTION', message:
+        `correspondence[${i}].stage '${stage.slice(0, 40)}' is not a stage of a '${e.direction}' entry: `
+        + (legal.length ? `one of ${legal.join(', ')}` : 'a non-response carries no stage, it names what it awaited by follows') });
+    }
+  }
+  let prior = null;
+  if (follows) {
+    const n = /^\d+$/.test(follows) ? Number(follows) : null;
+    prior = n !== null && n < i ? entries[n] : null;
+    if (!prior || typeof prior !== 'object') {
+      out.push({ code: 'FOLLOWS_NO_ENTRY', message:
+        `correspondence[${i}].follows '${follows.slice(0, 20)}' names no earlier entry of this ledger: a stage `
+        + 'names the entry it answers or follows by its position, counted from zero' });
+      prior = null;
+    }
+  } else if (stage && stage !== 'request') {
+    out.push({ code: 'FOLLOWS_NO_ENTRY', message:
+      `correspondence[${i}] is a '${stage}' naming no entry it follows: each stage after the request names the `
+      + 'entry it answers or follows, so the lifecycle reads as one chain' });
+  }
+  if (stage === 'appeal' && follows && prior
+      && !(prior.direction === 'received' && str(prior.outcome))) {
+    out.push({ code: 'APPEAL_NAMES_NO_DECISION', message:
+      `correspondence[${i}] is an appeal following entry ${follows}, which is not a decision: an appeal names the `
+      + 'decision it appeals, a received entry carrying an outcome' });
+  }
+  if (outcome) {
+    if (e.direction !== 'received') {
+      out.push({ code: 'OUTCOME_NOT_ON_RECEIVED', message:
+        `correspondence[${i}] carries an outcome on a '${e.direction}' entry: an outcome is what the body decided `
+        + 'and sent back, so it rides a received entry' });
+    } else if (!CORRESPONDENCE_OUTCOMES.includes(outcome)) {
+      out.push({ code: 'OUTCOME_NOT_IN_VOCABULARY', message:
+        `correspondence[${i}].outcome '${outcome.slice(0, 40)}' is not one of: ${CORRESPONDENCE_OUTCOMES.join(', ')}` });
+    }
+  } else if (DECISION_STAGES.includes(stage) && e.direction === 'received') {
+    out.push({ code: 'DECISION_WITHOUT_OUTCOME', message:
+      `correspondence[${i}] is a '${stage}' with no outcome: a decision carries its outcome as the body gave it, `
+      + 'and none_stated when it gave none' });
+  }
+  if (exemptions && e.direction !== 'received') {
+    out.push({ code: 'OUTCOME_NOT_ON_RECEIVED', message:
+      `correspondence[${i}] carries exemptions on a '${e.direction}' entry: the exemptions are the ones the body `
+      + 'cited, so they ride a received entry' });
+  }
+  if (stage === 'fee_estimate' && e.direction === 'received' && !isQuoteEntry(e)) {
+    out.push({ code: 'FEE_ESTIMATE_WITHOUT_QUOTE', message:
+      `correspondence[${i}] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and `
+      + 'currency as quoted' });
+  }
+  if (!!dueBy !== !!dueCite) {
+    out.push({ code: 'DUE_HALF_STATED', message:
+      `correspondence[${i}] states ${dueBy ? 'a due date with no citation' : 'a citation with no due date'}: a `
+      + 'due date is stated with the citation it comes from, one of the action\'s governing laws, or not at all' });
+  } else if (dueBy && !/^\d{4}-\d{2}-\d{2}$/.test(dueBy)) {
+    out.push({ code: 'DUE_NOT_A_DATE', message:
+      `correspondence[${i}].due_by '${dueBy.slice(0, 40)}' is not a date (YYYY-MM-DD)` });
+  }
+  return out;
+}
+
+/** D-147: THE LIFECYCLE, READ BACK AS ONE DATED CHAIN — a pure function over one document and a day, so
+ *  the store's read and any other reader agree by construction. Every entry answers with its stage (or
+ *  that none was stated), the entry it follows, the days elapsed since that entry, what followed it, and
+ *  its due date: STATED with its citation and whether that citation is on the action's list now, or
+ *  UNDETERMINED with the sentence saying so. `due.status` is DERIVED against `today` and nothing else:
+ *  `open` (not yet passed, nothing followed), `passed_unanswered`, `followed_by_due`, `followed_after_due`.
+ *  It never derives a due date, and it states no rate, pattern or judgement about the body. */
+export const DUE_UNDETERMINED_SAYS = 'UNDETERMINED: no member has stated when the next stage is due. The record '
+  + 'encodes no law\'s clock, so it computes none — not from the action\'s kind, not from a law, not from the '
+  + 'stage. A member states a due date with the citation it comes from.';
+const dayNumber = (d) => {
+  const s = String(d ?? '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const ms = Date.parse(`${s}T00:00:00Z`);
+  return Number.isFinite(ms) ? Math.round(ms / 86400000) : null;
+};
+export function requestLifecycleOf(fm, today) {
+  const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
+  const laws = governingLawsOf(fm).laws.map((l) => l.citation);
+  const day = String(today ?? '').slice(0, 10);
+  const todayN = dayNumber(day);
+  const str = (v) => (v === null || v === undefined ? '' : String(v).trim());
+  const ordOf = (v, i) => (/^\d+$/.test(str(v)) && Number(str(v)) < i ? Number(str(v)) : null);
+  const followers = entries.map(() => []);
+  entries.forEach((e, i) => {
+    const p = e && typeof e === 'object' ? ordOf(e.follows, i) : null;
+    if (p !== null) followers[p].push(i);
+  });
+  const chain = entries.map((e, i) => {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) return { ord: i, unreadable: true };
+    const at = str(e.at).slice(0, 10);
+    const follows = ordOf(e.follows, i);
+    const prevAt = follows !== null && entries[follows] ? str(entries[follows].at).slice(0, 10) : '';
+    const elapsed = follows !== null && dayNumber(at) !== null && dayNumber(prevAt) !== null
+      ? dayNumber(at) - dayNumber(prevAt) : null;
+    const next = followers[i];
+    const dueBy = str(e.due_by), dueCite = str(e.due_cite);
+    let due;
+    if (dueBy && dueCite && dayNumber(dueBy) !== null) {
+      const firstAt = next.length ? str(entries[next[0]].at).slice(0, 10) : '';
+      const status = next.length
+        ? (dayNumber(firstAt) !== null && dayNumber(firstAt) <= dayNumber(dueBy) ? 'followed_by_due' : 'followed_after_due')
+        : (todayN !== null && dayNumber(dueBy) < todayN ? 'passed_unanswered' : 'open');
+      due = { state: 'stated', by: dueBy, cite: dueCite, on_list: laws.includes(dueCite), status,
+              ...(status === 'passed_unanswered' ? { days_past: todayN - dayNumber(dueBy) } : {}) };
+    } else {
+      due = { state: 'undetermined', says: DUE_UNDETERMINED_SAYS };
+    }
+    return {
+      ord: i, direction: e.direction ?? null, at,
+      stage: str(e.stage) || null, stage_stated: !!str(e.stage),
+      follows, elapsed_days: elapsed,
+      outcome: str(e.outcome) || null,
+      ...(str(e.exemptions) ? { exemptions: str(e.exemptions) } : {}),
+      ...(isQuoteEntry(e) ? { quote: { amount: str(e.quote_amount), currency: str(e.quote_currency) } } : {}),
+      followed_by: next,
+      ...(!next.length && todayN !== null && dayNumber(at) !== null ? { days_since: todayN - dayNumber(at) } : {}),
+      due,
+    };
+  });
+  return {
+    entries: chain,
+    passed_unanswered: chain.filter((c) => c.due && c.due.status === 'passed_unanswered').map((c) => c.ord),
+    as_of: day,
+    says: 'Each entry is dated as recorded and names the entry it follows. The plane derives only the days '
+      + 'between entries and whether a STATED due date passed with nothing following it; it encodes no law\'s '
+      + 'clock and states no judgement about the body.',
+  };
 }
 
 /** DEC-14: what an action's recorded consequence CLAIMS, derived rather than
@@ -6877,6 +7070,11 @@ export async function checkBundle(input, opts = {}) {
  *   - **Widening a `where` widens what must be translated TODAY.** If you find
  *     yourself widening one to cover a refusal, you are doing REC-64's sweep, in
  *     the worst possible place. Add the row, or narrow the `where`.
+ *   - **A REGION INSIDE A FUNCTION ANOTHER ROW NAMES WHOLE IS JUDGED ONCE, by
+ *     its own rows** (D-589, 2026-09-25): arm C takes every CLAIMED region out of
+ *     an enclosing whole-function span, so the innermost claim governs. Before
+ *     that the region was judged twice and failed at the function, which is why
+ *     REC-207's re-run refusals could not be narrowed inside `aiRunOpen`.
  *
  * THE GUARD PRINTS, EVERY RUN, the span of every governed site and how many
  * refusals it judged, so a `where` that has quietly stopped meaning anything is
@@ -9412,9 +9610,10 @@ export const AI_CREDENTIAL_CHECKS = {
   AI_SCOPE_BEYOND_MEMBER_REACH: {
     check: 'C-29.9',
     where: 'src/index.mjs aiScopeDeclaration > is-ai-scope-declaration',
-    translation: 'An agent may only be given things a member of this group could do themselves, and '
-      + 'this is not one of them. The background worker\'s own jobs are outside what anybody can hand '
-      + 'to an agent, so this cannot be written into a credential at all.',
+    translation: 'An agent may only be given things a member of this group could hand to it, and '
+      + 'this is not one of them. The background worker\'s own jobs, and the acts a member performs '
+      + 'only from their own signed-in session, are outside what anybody can hand to an agent, so '
+      + 'this cannot be written into a credential at all.',
   },
   /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
      A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
@@ -10563,10 +10762,24 @@ export const ACT_SHAPE_CHECKS = {
      at a governed site, for as long as the row has existed. They are the two rows
      immediately below. Nothing about the span changed; the instrument started
      seeing it.
+
+     **D-589 (2026-09-25) NARROWED ALL THREE INTO REGIONS, AND THE PARAGRAPH TWO
+     ABOVE IS NOW HISTORY, NOT RULE.** The whole-function `where` stopped being
+     honest the moment a SECOND family's refusal was written inside `aiRunOpen`:
+     REC-207's first draft put its re-run refusals in a narrowed region there and
+     the guard failed them by name, because the region was judged once by its own
+     rows and again by this whole-function site, where their codes are not rows.
+     So each of these three rows now names the region around its one refusal
+     (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
+     judges a claimed region a second time from an enclosing whole-function
+     `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
+     the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
+     seed — each minted and governed at its own site) are not read at this
+     function while no whole-function row names it.
      --------------------------------------------------------------------------- */
   AI_RUN_CAPABILITY_UNAVAILABLE: {
     check: 'C-33.29',
-    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    where: 'src/store.mjs aiRunOpen > is-airun-open-capability, reached from op=airunopen',
     translation: 'Nothing was run, because this instance could not find an account to run it under. '
       + 'That is a fact about our setup and not an answer about your question: no searching '
       + 'happened, so nothing here should be read as having looked and found nothing.',
@@ -10584,14 +10797,14 @@ export const ACT_SHAPE_CHECKS = {
      --------------------------------------------------------------------------- */
   AI_RUN_NO_CONTEXT: {
     check: 'C-33.30',
-    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    where: 'src/store.mjs aiRunOpen > is-airun-open-context, reached from op=airunopen',
     translation: 'Nothing was run, because the request did not say what the run is for or what it '
       + 'belongs to. A run has to sit inside a question or a project so that the people working on '
       + 'that question can see it happened; one belonging to nothing would be invisible to everybody.',
   },
   AI_RUN_ALREADY_OPEN: {
     check: 'C-33.31',
-    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    where: 'src/store.mjs aiRunOpen > is-airun-open-already, reached from op=airunopen',
     translation: 'Nothing was run, because a run with this name is already on record here. The record '
       + 'keeps what each run did under its own name, so starting a second one under a name already in '
       + 'use would write two different histories into one place. Give this one a name of its own.',
@@ -10611,19 +10824,19 @@ export const ACT_SHAPE_CHECKS = {
      itself, it names something that is not there, or it names work in another
      context whose lens is a different lens entirely.
 
-     A WHOLE-FUNCTION `where`, AND THE CHOICE IS MEASURED RATHER THAN LAZY.
-     These three were first written inside a narrowed REGION, which is what
-     `kickoffs/WORKER.md` asks for — and `check-refusal-codes.mjs` then FAILED
-     all three by name. `aiRunOpen`'s three existing rows carry a WHOLE-FUNCTION
-     `where`, and the guard does not subtract a region's span from the enclosing
-     function's: the region's refusals are judged TWICE, once at the region and
-     once at `aiRunOpen`, where the code is not one of that site's rows. So a
-     region inside a function that still has a whole-function `where` is not a
-     narrowing, it is a contradiction — the two sites disagree about who governs
-     the same lines. Narrowing ALL of `aiRunOpen`'s rows is the honest fix and
-     is REC-71's work rather than this item's, so these three join their three
-     neighbours at the function, and the residue is stated here rather than
-     left for the next reader to rediscover from a red guard.
+     A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
+     narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
+     `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
+     rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
+     region's refusals twice, once at the region and once at the enclosing
+     function, where their codes were not rows. So these three were written at
+     the whole function. D-589 (2026-09-25) then narrowed those three neighbours
+     into governed regions (`is-airun-open-context`, `-capability`, `-already`,
+     the rows above) and made arm C judge a claimed region once, by its own rows
+     (`nestedRegionsIn`). These three are now the ONLY rows naming `aiRunOpen`
+     as a whole, and the three regions' lines inside it are governed by the
+     regions, not by this site. Narrowing these three into a region of their own
+     is now possible and has not been done.
      --------------------------------------------------------------------------- */
   AI_RUN_RERUN_SELF: {
     check: 'C-33.45',
@@ -10786,6 +10999,17 @@ export const ACT_SHAPE_CHECKS = {
       + 'again. The answer may well be the same one, and it will then be yours. Both versions are '
       + 'named beside this message, the earlier one still reads back in full, and nothing was '
       + 'recorded.',
+  },
+  /* REC-186 (BOB #31, 2026-09-23 21:37Z): the last owner's request to leave. C-33.48, not the next
+     free number on main, because REC-205 and REC-207's unmerged branches already hold C-33.44..46 in
+     this family; the integrator renumbers if the union needs it. RENUMBERED C-33.47 -> C-33.48 by CONDUCT #22
+     (2026-09-25, c22-rec186-renumber): REC-207's renumber landed C-33.46/C-33.47 on main in c21-batch28. */
+  LAST_OWNER_CANNOT_LEAVE: {
+    check: 'C-33.48',
+    where: 'src/store.mjs projectLeave > is-leave-owner-floor',
+    translation: 'You are the only owner of this project, and a project always keeps at least one '
+      + 'owner, so a request to leave it is one nobody could ever carry out. Add another owner first, '
+      + 'then ask to leave — or stand the project down. Nothing was recorded.',
   },
 };
 
@@ -11198,13 +11422,21 @@ export const ADMISSION_CHECKS = {
      `signerset` — were answered with the row above, which told a member to go
      and find a machine credential for an act an administrator performs from
      their own browser. There is no such credential to find. This sentence names
-     the person to ask instead, because that is the action actually available. */
+     the person to ask instead, because that is the action actually available.
+     CORRECTED 2026-09-25 by REC-162 (Membership v2 §4.9, BOB #23): it read "but an
+     administrator of this group, and this session is not one … ask an administrator".
+     After REC-159 the one op it answers is `governorconfig`, which the FOUNDER'S session
+     alone reaches — an enrolled administrator holds a member's session and was told they
+     were not an administrator. The sentence now names the SESSION, as the refusal's own
+     `reachedBy` does. */
   SESSION_ROLE_CANNOT_REACH_OP: {
     check: 'C-38.7',
     where: 'src/index.mjs sessionOpGate > is-session-op-gate',
-    translation: 'A signed-in person does perform this operation, but an administrator of this '
-      + 'group, and this session is not one. No machine credential is needed and finding one is '
-      + 'not the way through: ask an administrator.',
+    translation: 'A signed-in person does perform this operation, but from a different session than '
+      + 'this one, and this refusal names which. Where it names the founder\'s session, being an '
+      + 'administrator of this group does not reach it: every enrolled member, an administrator '
+      + 'included, signs in with a member\'s session. No machine credential is needed and finding '
+      + 'one is not the way through: ask the person who holds the session it names.',
   },
   /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
      otherwise have to cover a case neither is true of.
@@ -11484,6 +11716,18 @@ export const RENDER_CAPTURE_CHECKS = {
       + 'it, so nothing was filed: the page\'s empty frame is never filed as its content. The reason the '
       + 'renderer gave is beside this message.',
   },
+  /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a cap from the
+     vendor's stated limit, and a render over it WAITS, never dropped). Decided in the
+     admission span, before the shell is fetched, and distinct from C-83.4 on purpose: the
+     day's allowance is untouched and may have room, so the sentence must not say it is
+     used. The unattended drain holds the row under this code and asks again next tick. */
+  RENDER_AT_CAPACITY: {
+    check: 'C-83.8',
+    where: 'src/index.mjs fetch > is-render-admit',
+    translation: 'This instance is already rendering as many pages at once as it allows, so this render '
+      + 'is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. '
+      + 'A scheduled capture asks again on its own; try again in a minute.',
+  },
 };
 
 /* ===========================================================================
@@ -11553,6 +11797,103 @@ export const DISPATCH_CHECKS = {
     where: 'src/index.mjs fetch > is-unknown-op',
     translation: 'This copy has no operation by that name. A copy running an older or newer version can have '
       + 'a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
+  },
+  /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
+     `publishedcase`, `verify`, `publishedmanifest` — so its reader is often a member of the public holding nothing,
+     and until D-561 the code reached them bare. It is a fact about the EXCHANGE, never about the record, and the
+     sentence says only that. It does NOT say "nothing was changed": `storeSilent` also answers a write whose store
+     went silent, and whether that write took effect is exactly what a silence cannot say. */
+  STORE_DID_NOT_ANSWER: {
+    check: 'C-69.2',
+    where: 'src/index.mjs storeSilent > is-store-silent',
+    translation: 'This copy of the record could not consult its own records just now, so nothing in this reply is a '
+      + 'statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your '
+      + 'request was meant to change something, look before repeating it, because this reply cannot say whether it did.',
+  },
+};
+
+/* ===========================================================================
+   D-561 (C-98) — THE PUBLIC DOOR'S OWN REFUSALS: `op=publishedbytes` AND `op=publishedcase`.
+
+   `BIO_Publication_v0_1.md` §4 lists both as the reads a published case is served through, and both are
+   UNGATED (`classes: null`): the reader these sentences are written for is a MEMBER OF THE PUBLIC holding no
+   credential. D-549 translated NO_PUBLISHED_STORE (C-68.5); D-561 enumerated at the code every other code the
+   two ops hand an anonymous caller and found these eight bare, plus STORE_DID_NOT_ANSWER (C-69.2, above).
+
+   EVERY SENTENCE HERE IS WRITTEN FOR A STRANGER, AND THREE RULES HOLD FOR ALL OF THEM:
+     - PLAIN, no internal name: no bucket, binding, manifest key, op name or parameter spelled as code. A hash is
+       "the fingerprint"; a container is "the case file as one download"; its manifest is "the list of its
+       contents".
+     - NEVER MORE THAN THE SITE ALREADY DISCLOSES. NO_PUBLISHED_PART and NOT_PUBLISHED keep their sites' doctrine:
+       never-published and never-existed are ONE answer, and the sentence says so rather than hinting at either.
+       The other six are reached only after the thing asked for was verified PUBLISHED, which is itself a public
+       fact, so saying "it is published" discloses nothing.
+     - A CONDITION OF THIS COPY IS STATED AS ONE, with who can cure it — never as a fact about the document.
+
+   TWO CODES WERE RENAMED TO GET HERE, and that is the non-additive part of this family (I3): the public door
+   answered `NOT_FOUND` and the container `TOO_LARGE`, and both spellings are minted elsewhere in the plane for
+   DIFFERENT conditions (a capture absent from working storage, a progression version, an inbox item; a
+   subresource, a knock). `dec49Attach` decorates by code, so a row under either old spelling would have put the
+   public door's sentence on every other site's refusal — false there. One condition, one code, one row.
+   A third site that answered `NOT_FOUND` — a hash VERIFIED published whose bytes are absent — said "no published
+   part answers to that hash", which was FALSE of it; it now answers OBJECT_MISSING, the code `publishedcase`
+   already used for the same condition, minted at one shared site.
+   =========================================================================== */
+export const PUBLISHED_READ_CHECKS = {
+  NO_PUBLISHED_PART: {
+    check: 'C-98.1',
+    where: 'src/index.mjs noPublishedPart > is-no-published-part',
+    translation: 'Nothing this copy of the record has published matches that fingerprint. Something that was never '
+      + 'published and something that never existed get this same answer, so it says nothing about anything '
+      + 'unpublished. Check that the fingerprint was copied whole. Nothing was changed.',
+  },
+  OBJECT_MISSING: {
+    check: 'C-98.2',
+    where: 'src/index.mjs publishedObjectMissing > is-published-object-missing',
+    translation: 'This document is published, but this copy of the record cannot find its contents in its storage, '
+      + 'so it cannot hand them over. The document and its fingerprint are unaffected, and nothing was changed. '
+      + 'Whoever runs this copy can restore the missing contents.',
+  },
+  NOT_A_CONTAINER: {
+    check: 'C-98.3',
+    where: 'src/index.mjs fetch > is-not-a-container',
+    translation: 'You asked for a whole case file as one download, but that fingerprint belongs to a single '
+      + 'document inside a case file. Ask for it without the download-as-one-file option to get that document, or '
+      + 'use the fingerprint of the case file\'s list of contents to get the whole case file. Nothing was changed.',
+  },
+  MANIFEST_UNREADABLE: {
+    check: 'C-98.4',
+    where: 'src/index.mjs fetch > is-manifest-unreadable',
+    translation: 'This case file is published, but this copy of the record cannot read the list of its contents, '
+      + 'so it cannot put the case file together as one download. Nothing was changed. Whoever runs this copy can '
+      + 'repair it.',
+  },
+  PART_MISSING: {
+    check: 'C-98.5',
+    where: 'src/container.mjs containerEntries > is-part-missing',
+    translation: 'This case file is published, but this copy of the record cannot find one of the documents it '
+      + 'lists, and it will not hand over a case file with a piece missing. The reply names the missing document; '
+      + 'the others can still be asked for one at a time. Nothing was changed. Whoever runs this copy can restore it.',
+  },
+  DUPLICATE_PATH: {
+    check: 'C-98.6',
+    where: 'src/container.mjs serialiseContainer > is-duplicate-path',
+    translation: 'The list of this case file\'s contents puts two documents under the same name, so one download '
+      + 'could be read two ways. This copy will not hand over a case file that says two things about one name. '
+      + 'Each document can still be asked for on its own. Nothing was changed.',
+  },
+  CONTAINER_TOO_LARGE: {
+    check: 'C-98.7',
+    where: 'src/container.mjs serialiseContainer > is-container-too-large',
+    translation: 'This case file is too large to hand over as one download. Every document in it can still be asked '
+      + 'for on its own, which gives the same contents. Nothing was changed.',
+  },
+  NOT_PUBLISHED: {
+    check: 'C-98.8',
+    where: 'src/store.mjs publishedCase > is-not-published',
+    translation: 'Nothing this copy of the record has published answers to what you asked for. A case that was '
+      + 'never published, an edition that does not exist and a name that never existed all get this same answer, '
+      + 'so it says nothing about anything unpublished. Nothing was changed.',
   },
 };
 
@@ -11989,22 +12330,43 @@ export const REEXTRACT_CHECKS = {
    whose author was obliged to carry both; C-41.13 refuses one that does not. /2 and /1 stay in the
    accepted set and keep ratifying exactly as written (rule 1: what already crossed stays crossed).
    op=publish authors /3 only. */
-export const CASE_DOCUMENT_FORMAT = 'bio-case-document/3';
-/* /2 (D-442, rule 12) states its members' frozen blocks exactly as /3 does and is not obliged to
-   carry the manifest or the acknowledgement list; /1 (legacy) carried the frozen blocks in its
-   members' own bytes. */
+/* REC-219 / BIO_Publication_v0_1.md §3 rule 18 (BOB #34, 2026-09-24 23:08Z): THE FORMAT MOVES TO /4,
+   FOR THE REASON /3 DID. REC-210 made op=biasmanifest SAY that an adoption pins a PROPOSED revision
+   (`pins_proposed`), but the frozen `bias_manifest` block of a /3 document has no field for it — so a
+   case published while its scope's only adoption pinned proposed bytes signed "no manifest was in
+   force" and nothing beside it, and a later reader takes "a declaration was pending" for "nobody
+   declared anything". A /4 document is one whose author was obliged to state BOTH facts as they stood
+   at signing; C-41.14 refuses one silent about the second. /3, /2 and /1 stay in the accepted set and
+   ratify exactly as written, never re-signed (rule 1). op=publish authors /4 only. */
+export const CASE_DOCUMENT_FORMAT = 'bio-case-document/4';
+/* /3 (REC-188) carries the manifest and the acknowledgement list and is not obliged to state an
+   adoption pinning a proposed revision; /2 (D-442, rule 12) states its members' frozen blocks exactly
+   as /3 and /4 do and is not obliged to carry the manifest or the acknowledgement list; /1 (legacy)
+   carried the frozen blocks in its members' own bytes. */
+export const CASE_DOCUMENT_FORMAT_V3 = 'bio-case-document/3';
 export const CASE_DOCUMENT_FORMAT_V2 = 'bio-case-document/2';
 export const CASE_DOCUMENT_FORMAT_LEGACY = 'bio-case-document/1';
-export const CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY];
+export const CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V3,
+                                               CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY];
 /* Does this case document state its members' frozen blocks itself (rule 12, /2 and /3), or were they
    carried in the members' own bytes (/1, legacy)? ONE predicate, read by the gate, the ratify
    committer and every per-case reader, so the two shapes cannot be told apart two ways. REC-188:
-   /3 is rule 12's shape plus two required disclosures, so it answers yes exactly as /2 does. */
+   /3 is rule 12's shape plus two required disclosures, so it answers yes exactly as /2 does; REC-219:
+   /4 is /3's shape plus one more, and answers yes too. */
 export const caseDocumentStatesMemberBlocks = (fm) =>
-  fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V2;
+  fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V3
+  || fm?.format === CASE_DOCUMENT_FORMAT_V2;
 /* REC-188: is this document obliged to carry the bias manifest and the statement's acknowledgement
-   list (C-41.13)? ONE predicate, so the obligation is a property of the token and nothing else. */
-export const caseDocumentRequiresDisclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
+   list (C-41.13)? ONE predicate, so the obligation is a property of the token and nothing else.
+   REC-219: /4 carries every /3 obligation, so /3 and /4 both answer yes. */
+export const caseDocumentRequiresDisclosures = (fm) =>
+  fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V3;
+/* REC-219: is this document obliged to state, beside "no manifest was in force", every adoption of
+   its scope that pinned a PROPOSED revision at signing (C-41.14), and every citation edge of the case
+   with the version it rests on (C-41.15, D-579(a))? /4 and nothing older: a /3 document was never obliged
+   to, and is read as it is (BOB #34: *"/3 documents stay valid and are read as they are, with no
+   re-signing"*). */
+export const caseDocumentRequiresV4Disclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 
 /* REC-96 / D-196 / IC-112 — WHERE A CASE'S `searched` SECTION GOT ITS SUBJECTS,
    AND THE VOCABULARY IS THE FENCE RATHER THAN A LABEL.
@@ -12076,8 +12438,17 @@ export const CASE_DOCUMENT_FAMILY = {
   COMPLETENESS: { check: 'C-41.10', what: 'the completeness block (REC-14)' },
   EXCLUDED:     { check: 'C-41.11', what: 'the exclusion list field (C-9)' },
   BAR:          { check: 'C-41.12', what: 'required_strength — the standard of evidence (DEC-17 as DEC-72 rehomes it)' },
-  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest, the statement\'s acknowledgement list and the statement\'s WRITER, required of a bio-case-document/3 (REC-188; the writer REC-212)' },
+  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest, the statement\'s acknowledgement list and the statement\'s WRITER, required of a bio-case-document/3 or /4 (REC-188; the writer REC-212)' },
+  /* REC-219: BOB #34 named this check C-41.13, which /3's obligation above already holds, so it takes
+     the next free member of the family. */
+  PENDING:      { check: 'C-41.14', what: 'the adoptions pinning a PROPOSED revision at signing, stated beside bias_manifest, required of a bio-case-document/4 (REC-219)' },
+  /* REC-219 / D-579(a) (BOB #34, 2026-09-25 02:30Z): the case's citation edges, each pinned to the
+     version it was made against — one more /4 obligation, riding the same bump. */
+  CITATIONS:    { check: 'C-41.15', what: 'case_citations — each citation edge with the version it rests on, a pinned one naming its capture, required of a bio-case-document/4 (REC-219, D-579(a))' },
 };
+/* REC-219 / D-579(a): the states a case document's citation edge may carry, and which name a capture. */
+export const CASE_CITATION_VERSIONS = ['pinned', 'only_capture', 'undetermined', 'no_capture', 'no_bytes'];
+const CITATION_NAMES_CAPTURE = new Set(['pinned', 'only_capture']);
 const C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check]));
 
@@ -12301,6 +12672,78 @@ export function checkCaseDocument(fm, ctx = {}) {
         || !(c.statement_by === null || (typeof c.statement_by === 'string' && c.statement_by.trim()))) {
       findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : undefined}${c && !Object.prototype.hasOwnProperty.call(c, 'statement_by') ? ', with no such key' : ''})`,
         ['re-publish through op=publish, which carries the draft\'s server-stamped statement_by onto the document']));
+    }
+  }
+  /* REC-219 — C-41.14, THE ADOPTION PENDING AT SIGNING, a /4 obligation and nothing older
+     (BIO_Publication_v0_1.md §3 rule 18; BOB #34, 2026-09-24 23:08Z). The frozen block states the
+     scope's bias position AS IT STOOD AT SIGNING, and "no manifest was in force" is TRUE of a scope whose
+     only adoption pins a PROPOSED revision — but alone it lets a later reader take "nobody declared
+     anything" for "a declaration was pending". So a /4 document states, beside the manifest:
+       - `bias_manifest.pins_proposed`, the COUNT of adoptions whose pinned revision stood at a state other
+         than `adopted` (ZERO is a statement and the common answer);
+       - `bias_manifest_pins_proposed`, one row per such adoption naming its bundle, the REVISION it
+         pinned (64 hex) and the scope — the list's length the count;
+       - `bias_manifest.pins_proposed_stated`, the sentence saying what the list is.
+     What is refused is SILENCE, never a value: an EMPTY list with a zero count passes, and so does a
+     long one. Nothing here reads WHICH revision is named, nor asks whether it will take effect — the
+     ruling is that the document SAYS NOTHING about when or whether it does. A document whose manifest
+     is absent or not a map is C-41.13's and is not asked twice.
+     WHAT THIS CANNOT SEE: the RECORD at signing. The gate is a function of the bytes a stranger hands it,
+     and the adoption table has moved since (a pin re-pins at promotion, REC-187), so "the record held
+     one and the list omits it" is enforced where the record IS read — op=publish, which authors this
+     list from the same op=biasmanifest answer the manifest is stamped from — and a document's own
+     disagreement with itself (a count that is not its list's length) is what is refused here. */
+  if (caseDocumentRequiresV4Disclosures(fm)) {
+    const bm = fm?.bias_manifest;
+    if (bm && typeof bm === 'object' && !Array.isArray(bm)) {
+      const list = fm?.bias_manifest_pins_proposed;
+      const n = bm.pins_proposed;
+      if (!Number.isInteger(n) || n < 0 || !Array.isArray(list)) {
+        findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list) ? `of ${list.length}` : 'absent'}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication §3 rule 18)`,
+          ['re-publish through op=publish, which states every adoption of the scope pinning a proposed revision at signing']));
+      } else if (list.length !== n) {
+        findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
+          ['re-publish through op=publish']));
+      } else {
+        const bad = list.filter((x) => !(x && typeof x === 'object'
+          && typeof x.bundle_id === 'string' && x.bundle_id.trim()
+          && typeof x.revision === 'string' && /^[0-9a-f]{64}$/.test(x.revision)
+          && (x.scope === 'instance' || x.scope === 'project')));
+        if (bad.length > 0)
+          findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest_pins_proposed has ${bad.length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: ${JSON.stringify(bad[0])}): the ruling is that the document names the proposed revision the adoption pinned — its id — and a row without it says an adoption was pending without saying which`,
+            ['re-publish through op=publish']));
+        if (!(typeof bm.pins_proposed_stated === 'string' && bm.pins_proposed_stated.trim()))
+          findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
+            ['re-publish through op=publish']));
+      }
+    }
+  }
+  /* REC-219 / D-579(a) — C-41.15, THE CITATION EDGES AND THEIR VERSIONS, a /4 obligation (BOB #34,
+     2026-09-25 02:30Z: *"A published case must say which version it cited, and a pin kept outside the
+     signed bytes is one a reader cannot verify"*). A /4 document carries `case_citations`, a list (EMPTY
+     legal: the project cited nothing), each row a target and a `version` from CASE_CITATION_VERSIONS:
+     `pinned` and `only_capture` NAME the 64-hex capture; `undetermined`, `no_capture` and `no_bytes` name
+     none and say why by their value. What is refused: the list absent, a row with no target or a version
+     outside the vocabulary, a row whose version says it names a capture and OMITS IT (the pin dropped),
+     and a row naming a capture its version says it has not.
+     WHAT THIS CANNOT SEE, as C-41.14 cannot: the RECORD. Whether the edge's bytes held a pin that this
+     row calls `undetermined` is op=publish's to get right, and is driven through the op. /3 and older are
+     never asked: read today their edges are "version undetermined (signed before capture pins)", which
+     op=casedocument states. */
+  if (caseDocumentRequiresV4Disclosures(fm)) {
+    const rows = fm?.case_citations;
+    if (!Array.isArray(rows)) {
+      findings.push(f(C41.CITATIONS, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal — an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication §3 rule 18)`,
+        ['re-publish through op=publish, which signs every cites edge of the project with its version']));
+    } else {
+      const bad = rows.filter((x) => !(x && typeof x === 'object' && typeof x.target === 'string' && x.target.trim()
+        && CASE_CITATION_VERSIONS.includes(x.version)
+        && (CITATION_NAMES_CAPTURE.has(x.version)
+          ? typeof x.capture === 'string' && /^[0-9a-f]{64}$/.test(x.capture)
+          : x.capture === null || x.capture === undefined)));
+      if (bad.length > 0)
+        findings.push(f(C41.CITATIONS, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's case_citations has ${bad.length} row(s) that do not state a target and a version from {${CASE_CITATION_VERSIONS.join(', ')}}, with the 64-hex capture exactly where the version names one (first: ${JSON.stringify(bad[0])}): a citation edge that says it is pinned and omits the pin, or names a capture its version disowns, states a version nobody can verify`,
+          ['re-publish through op=publish']));
     }
   }
   /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM
@@ -13423,9 +13866,12 @@ export const TRANSCRIBE_CHECKS = {
  *   is-testify-bytes     whether the canonical bytes (header + words) are already
  *                        registered — reachable only by pre-registering them
  *   is-testimony-publish-bundle / is-testimony-publish-case (src/index.mjs)
- *                        THE PUBLICATION FENCE (C-53.10–.12): an observation, a
- *                        finding resting on one, or a case over such a finding
- *                        does not cross until MK-3's attribution does
+ *                        THE PUBLICATION FENCE (C-53.10–.12), NARROWED BY MK-7:
+ *                        it stands only over an observation that still names
+ *                        its author in its own files (written before MK-6,
+ *                        §4.1), a finding resting on one, or a case over such a
+ *                        finding. Every other observation crosses under MK-7's
+ *                        attribution (ATTRIBUTION_CHECKS, C-92)
  *   is-testimony-fence  THE REFUSALS THE ITEM EXISTS FOR, at op=promote — the one
  *                        write path — so no route but op=testify can set the flag,
  *                        and no revision can quietly change what it says: an
@@ -13440,8 +13886,115 @@ export const TRANSCRIBE_CHECKS = {
  *
  * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's
  * and lives in C-2.8 (`checkTestimonyLeg`, IC-142), not in this family; the
- * attribution level on the case act (§4) is MK-3's.
+ * attribution level on the case act (§4) is MK-7's, in ATTRIBUTION_CHECKS (C-92).
  * ===================================================================== */
+/* =====================================================================
+ * C-92 — THE ATTRIBUTION ACT AND ITS GATE (MK-7; MEMBER-KNOWLEDGE-DESIGN.md
+ * §4.2–§4.6, BOB #19, 2026-09-21). C-92 minted with `node tools/mintid.mjs C`.
+ *
+ * A member's firsthand observation is published only beside a statement of
+ * WHO SAID IT, at the level its author chose for that case edition — group,
+ * project, cover or name — and that choice is the author's alone, never
+ * prefilled. ITS OWN FAMILY because its subject is the author's control over
+ * their own words, where C-53 is the observation's integrity as a record.
+ *
+ *   is-attribute-act      who is choosing (a signed-in member, stamped), and
+ *                         that a level was chosen at all, from the four
+ *   is-attribute-author   that the chooser is the observation's author, and
+ *                         an active member (§4.2, §4.5)
+ *   is-attribute-edition  that the edition is a prepared, unsigned one that
+ *                         reaches the observation, and that `name` has a
+ *                         handle to publish (§4.6)
+ *   is-attribution-gate (src/index.mjs)
+ *                         op=caseratify refuses an edition while any
+ *                         observation it reaches is unchosen, naming each, or
+ *                         while its bytes state a level the acts no longer do
+ *                         (§4.4); op=ratify refuses an observation's own bytes
+ *                         until a ratified case document states its level
+ *
+ * PROVISIONAL, carried to Bob: §4.4's narrow veto (C-92.10 is that veto) and
+ * §4.6's reading of `name` as the member's handle (C-92.9).
+ * ===================================================================== */
+export const ATTRIBUTION_CHECKS = {
+  ATTRIBUTION_NOT_A_MEMBER: {
+    check: 'C-92.1',
+    where: 'src/store.mjs attributeObservation > is-attribute-act',
+    translation: 'How a member\'s observation is attributed is that member\'s own choice. The credential '
+      + 'that asked is an automated one, and it cannot make that choice for anybody. Sign in and choose it yourself.',
+  },
+  ATTRIBUTION_NO_LEVEL: {
+    check: 'C-92.2',
+    where: 'src/store.mjs attributeObservation > is-attribute-act',
+    translation: 'No level was chosen. Choose what a published case shows of who said your observation: '
+      + 'the group, the project, the cover the group knows you by, or your handle. Nothing is filled in for you.',
+  },
+  ATTRIBUTION_LEVEL_UNKNOWN: {
+    check: 'C-92.3',
+    where: 'src/store.mjs attributeObservation > is-attribute-act',
+    translation: 'That is not one of the four levels. Choose group, project, cover or name.',
+  },
+  ATTRIBUTION_NOT_AN_OBSERVATION: {
+    check: 'C-92.4',
+    where: 'src/store.mjs attributeObservation > is-attribute-author',
+    translation: 'That document is not a member\'s firsthand observation in this record, so there is no '
+      + 'author whose choice this is. Attribution is chosen for observations only.',
+  },
+  ATTRIBUTION_NOT_THE_AUTHOR: {
+    check: 'C-92.5',
+    where: 'src/store.mjs attributeObservation > is-attribute-author',
+    translation: 'Another member recorded that observation. Only the member who said it chooses how a '
+      + 'published case shows who said it — not a project owner, not an administrator, and not a default.',
+  },
+  ATTRIBUTION_AUTHOR_NOT_ACTIVE: {
+    check: 'C-92.6',
+    where: 'src/store.mjs attributeObservation > is-attribute-author',
+    translation: 'That observation\'s author is not an active member, and nobody chooses for them. The '
+      + 'observation stays in the record and can be used where its author already chose, and nowhere new.',
+  },
+  ATTRIBUTION_NOT_REACHED: {
+    check: 'C-92.7',
+    where: 'src/store.mjs attributeObservation > is-attribute-edition',
+    translation: 'No prepared case edition by that name rests on your observation. You choose an attribution '
+      + 'for an edition that uses your words, once its case document has been prepared.',
+  },
+  ATTRIBUTION_EDITION_RATIFIED: {
+    check: 'C-92.8',
+    where: 'src/store.mjs attributeObservation > is-attribute-edition',
+    translation: 'That edition is already signed, and a signed edition does not change. Your choice can '
+      + 'apply to the next edition, which keeps your last choice until you change it.',
+  },
+  /* PROVISIONAL (§4.6, carried to Bob): `name` publishes the member's HANDLE, because the record holds no
+     legal name and must not start to. */
+  ATTRIBUTION_NAME_NO_HANDLE: {
+    check: 'C-92.9',
+    where: 'src/store.mjs attributeObservation > is-attribute-edition',
+    translation: 'Choosing your name publishes the handle you appear under in this record, and you have none. '
+      + 'Choose another level, or set a handle first.',
+  },
+  /* PROVISIONAL (§4.4, carried to Bob): THE NARROW VETO. An edition reaching an unchosen observation is not
+     signed, so each member has a veto over the use of their own words and over nothing else: the owner's
+     recourse is an edition without the finding that rests on it. */
+  ATTRIBUTION_UNCHOSEN: {
+    check: 'C-92.10',
+    where: 'src/index.mjs fetch > is-attribution-gate',
+    translation: 'This case edition uses a member\'s firsthand observation whose author has not yet chosen how '
+      + 'it is attributed, so it cannot be signed. Publishing it at any level would be choosing for them. Ask '
+      + 'the author to choose, or prepare the edition without the finding that rests on it.',
+  },
+  ATTRIBUTION_STATEMENT_STALE: {
+    check: 'C-92.11',
+    where: 'src/index.mjs fetch > is-attribution-gate',
+    translation: 'This case document states an attribution for an observation that its author\'s choices no '
+      + 'longer give. Prepare the case document again so it states what the authors chose, then sign that.',
+  },
+  ATTRIBUTION_UNSTATED: {
+    check: 'C-92.12',
+    where: 'src/index.mjs fetch > is-attribution-ratify',
+    translation: 'This observation\'s words are published only beside a signed case that states whose they '
+      + 'are, and no signed case does yet. Sign the case document that uses it first.',
+  },
+};
+
 export const TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: 'C-53.1',
@@ -13520,31 +14073,38 @@ export const TESTIMONY_CHECKS = {
      in the working bucket PUBLISHED its words, its provenance document and the
      observer's handle; a finding resting on one, and a case over that finding,
      ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
-     of a member's observation at the attesting member's chosen level, and that
-     is MK-3's — so until MK-3's projection honours it, nothing carrying an
-     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
+     of a member's observation at the attesting member's chosen level.
+     LIFTED BY MK-7 AS ITS OWN ACT, AND NARROWED RATHER THAN DELETED: the three
+     codes now refuse only an observation that still NAMES ITS AUTHOR in its own
+     files — one written before MK-6 (§4.1: "Authored bundles written before the
+     change carry the member id and STAY FENCED") — and what rests on one. No
+     level can hide a name the bundle itself prints, because the level lives
+     outside the bundle. Every other observation crosses under C-92. The old
+     sentences said the record could not YET honour the choice; since MK-7 it
+     can, so they would now be false, and they are corrected, not kept. */
   TESTIMONY_UNPUBLISHABLE: {
     check: 'C-53.10',
     where: 'src/index.mjs fetch > is-testimony-publish-bundle',
-    translation: 'This document is a member\'s own firsthand observation, and it cannot be published yet. '
-      + 'What a published case shows of an observation — the group, the project, the member\'s cover or '
-      + 'their name — is the observing member\'s choice, and the record cannot yet honour that choice in '
-      + 'what it publishes. Until it can, publishing the observation would publish its author.',
+    translation: 'This document is a member\'s own firsthand observation, recorded before the record stopped '
+      + 'writing its author\'s name into the observation\'s own files. Publishing it would publish that name '
+      + 'whatever level its author chose, so it is not published. Its author can record it again as a new '
+      + 'observation, which names nobody in its files.',
   },
   TESTIMONY_CITED_UNPUBLISHABLE: {
     check: 'C-53.11',
     where: 'src/index.mjs fetch > is-testimony-publish-bundle',
-    translation: 'This finding rests, directly or through another finding, on a member\'s own firsthand '
-      + 'observation, and it cannot be published yet. How a published case attributes an observation is '
-      + 'the observing member\'s choice, and the record cannot yet honour that choice. Publish the finding '
-      + 'without that observation in its basis, or wait until attribution is supported.',
+    translation: 'This finding rests, directly or through another finding, on a member\'s firsthand '
+      + 'observation recorded before the record stopped writing its author\'s name into the observation\'s '
+      + 'own files, so it is not published. Rest the finding on a newer observation of the same thing, or '
+      + 'publish it without that observation in its basis.',
   },
   TESTIMONY_CASE_UNPUBLISHABLE: {
     check: 'C-53.12',
     where: 'src/index.mjs fetch > is-testimony-publish-case',
-    translation: 'A finding in this case rests, directly or through another finding, on a member\'s own '
-      + 'firsthand observation, so the case cannot be published yet. How a published case attributes an '
-      + 'observation is the observing member\'s choice, and the record cannot yet honour that choice.',
+    translation: 'A finding in this case rests, directly or through another finding, on a member\'s '
+      + 'firsthand observation recorded before the record stopped writing its author\'s name into the '
+      + 'observation\'s own files, so the case is not published: that name would be published whatever '
+      + 'level its author chose. Rest the finding on a newer observation, or leave it out of this edition.',
   },
   /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
      `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
@@ -13725,6 +14285,88 @@ export const SIGNER_ENROLMENT_CHECKS = {
   },
 };
 
+/* D-134 / C-96 — THE CUSTODIAL ACTS' REFUSALS, SAID IN WORDS (Membership Architecture v2 §4.9, *"What
+ * an administrator does"*; DEC-49). D-134 gave an administrator's session a surface over `memberadd`,
+ * `memberset`, `signeradd` and `signerset`, and every refusal that surface can receive must arrive with a
+ * canned translation rather than as a machine token. MEMBER_ID_RESERVED (C-55.1) and the two SIGNER_MEMBER
+ * rows (C-63) already had one; these are the rest.
+ *
+ * A ROW TRANSLATES ITS CODE AT EVERY SITE THAT MINTS IT, NOT ONLY AT ITS `where`: the control plane's
+ * `dec49Decorate` (index.mjs) attaches a family row's `check` and `translation` to ANY refusal carrying the
+ * row's code on its way out. So each sentence below was checked against every site that mints its code,
+ * and is written to be true at all of them:
+ *   NOT_AN_ADMIN       `#custodialBar`, `memberCaps`, `adminEndorse`, `adminRemove` — each the CALLER. The
+ *                      one site where it meant the TARGET (`adminRemove`, a member named for removal who
+ *                      is not an administrator) is SPLIT to its own code, TARGET_NOT_AN_ADMIN, because no
+ *                      single sentence is true of both facts;
+ *   EXISTS             `memberAdd` (a member id) and `promote` (a bundle created against an existing one);
+ *   CONSENSUS_REQUIRED `memberAdd` and `adminEndorse` (§4.7's administrators) and `projectOwnerAdd`
+ *                      (§7.10's owners).
+ * NO_SUCH_MEMBER, NO_SUCH_KEY and BAD_STATUS are NOT given rows: the surface sends only ids and keys the
+ * plane listed to it (no member or signer row is ever deleted) and only the two statuses the ops take, so it
+ * cannot receive them; EXPERTISE_IS_NOT_ASSIGNED likewise, because the surface never sends `expertise`. */
+export const CUSTODIAL_CHECKS = {
+  NOT_AN_ADMIN: {
+    check: 'C-96.1',
+    where: 'src/store.mjs #custodialBar > is-custodial-admin',
+    translation: 'Only an active administrator of this group can do that, and the account asking is not '
+      + 'one of them here. The record reads who is asking from the signed-in session, never from the '
+      + 'request. Nothing was changed.',
+  },
+  BAD_MEMBER_ID: {
+    check: 'C-96.2',
+    where: 'src/store.mjs memberAdd > is-member-add-id',
+    translation: 'A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with '
+      + 'a letter or a digit. Nothing was written. It is the name the record keeps for this person; the '
+      + 'handle they sign in with is theirs to choose when they enrol.',
+  },
+  NO_COVER: {
+    check: 'C-96.3',
+    where: 'src/store.mjs memberAdd > is-member-add-shape',
+    translation: 'A cover is needed: the label you use to tell members apart. It need not be, and often '
+      + 'should not be, a legal name. Nothing was written.',
+  },
+  EXISTS: {
+    check: 'C-96.4',
+    where: 'src/store.mjs memberAdd > is-member-add-shape',
+    translation: 'That id is already taken in this record, so nothing new was created under it. Choose a '
+      + 'different id.',
+  },
+  ADMINS_FIRST: {
+    check: 'C-96.5',
+    where: 'src/store.mjs memberAdd > is-admins-first',
+    translation: 'This group needs a second administrator before it has any ordinary members, so that '
+      + 'losing one person does not lose the group. Nothing was written. Invite this person as an '
+      + 'administrator, or invite a second administrator first.',
+  },
+  CONSENSUS_REQUIRED: {
+    check: 'C-96.6',
+    where: 'src/store.mjs memberAdd > is-admin-consensus',
+    translation: 'This addition needs the agreement of everyone who must agree to it — every existing '
+      + 'administrator, or for a project every existing owner — and not all of them have agreed yet, so it '
+      + 'has not taken effect. The answer lists who has agreed and who it is still waiting on.',
+  },
+  ADMIN_REQUIRES_VOTE: {
+    check: 'C-96.7',
+    where: 'src/store.mjs memberSet > is-admin-requires-vote',
+    translation: 'An administrator cannot be deactivated by another administrator acting alone. Removing an '
+      + 'administrator takes a majority of all administrators, in which the one facing removal is counted '
+      + 'but does not vote. Nothing was changed.',
+  },
+  BAD_KEY: {
+    check: 'C-96.8',
+    where: 'src/store.mjs signerAdd > is-signer-key-shape',
+    translation: 'That is not a public key this group can register. It takes the base64 part of an '
+      + 'ssh-ed25519 public key, the part that begins AAAA. Nothing was written.',
+  },
+  TARGET_NOT_AN_ADMIN: {
+    check: 'C-96.9',
+    where: 'src/store.mjs adminRemove > is-remove-target-admin',
+    translation: 'The member named is not an administrator, so there is no administrator to remove. An '
+      + 'ordinary member is deactivated instead, which one administrator can do. Nothing was changed.',
+  },
+};
+
 /* REC-134 / C-56 — SIGHT IS NOT AUTHORITY (Membership Architecture v2 §7, the block of that
  * name, BOB #15, 2026-09-18; §4.9: *"the custodial role can audit everything and direct
  * nothing"*). An act that changes a project, its productions or their grants asks the ACTOR'S
@@ -13776,7 +14418,9 @@ export const PROJECT_VISIBILITY_CHECKS = {
   },
   PROJECT_VISIBILITY_UNKNOWN_SETTING: {
     check: 'C-70.3',
-    where: 'src/store.mjs projectVisibilitySet > is-project-visibility-owner',
+    /* REC-197: the value check moved into one helper both doors ask (the owner's act and a creation's
+       `visibility`), so this row names that helper's region and the code keeps ONE site. */
+    where: 'src/store.mjs #visibilitySettingRefusal > is-project-visibility-setting',
     translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
       + 'Choose one of the two.',
   },
@@ -13785,6 +14429,96 @@ export const PROJECT_VISIBILITY_CHECKS = {
     where: 'src/store.mjs projectDirectory > is-project-directory-member',
     translation: 'The list of projects you can ask to join is for a signed-in member. Sign in as yourself to '
       + 'see it.',
+  },
+};
+
+/* REC-150 / C-95 — THE REQUEST TO JOIN (Membership Architecture v2 §7, item 7.14, "The request to join"; step 2
+ * of its decomposition, BOB #16 from Bob's ruling of 2026-09-18: *"somebody who sees the project can ask to be
+ * added as a member"*). A member outside a DISCOVERABLE project asks (at most one open request per member per
+ * project, an optional comment) and may withdraw; an OWNER grants — which writes the requester `invited`, never
+ * `joined`, because joining is the member's own act (§7.4) — or declines; administrators and the founder see
+ * requests and answer none; setting the project HIDDEN lapses every open request. Every refusal here is said
+ * only where it discloses nothing: a request to a project the caller cannot see is `#noSuchProject` byte for
+ * byte and never a C-95 code, and a withdrawal with no open request is ONE answer whatever the id names. */
+export const PROJECT_JOIN_REQUEST_CHECKS = {
+  PROJECT_REQUEST_NEEDS_A_MEMBER: {
+    check: 'C-95.1',
+    where: 'src/store.mjs #noRequester > is-join-request-member',
+    translation: 'Asking to join a project, withdrawing that request and reading your own requests are things '
+      + 'a signed-in member does for themselves. Sign in as yourself to do it. Nothing was changed.',
+  },
+  PROJECT_REQUEST_NOT_OUTSIDE: {
+    check: 'C-95.2',
+    where: 'src/store.mjs projectRequest > is-join-request-ask',
+    translation: 'You can already see this project, so there is nothing to ask. If you were invited, join it '
+      + 'with its checkbox. Nothing was changed.',
+  },
+  PROJECT_REQUEST_ALREADY_OPEN: {
+    check: 'C-95.3',
+    where: 'src/store.mjs projectRequest > is-join-request-ask',
+    translation: 'You already have a request open to join this project. Its owners answer it; you can withdraw '
+      + 'it and ask again. Nothing was changed.',
+  },
+  PROJECT_REQUEST_NONE_OPEN: {
+    check: 'C-95.4',
+    where: 'src/store.mjs #noOpenRequest > is-join-request-none-open',
+    translation: 'There is no open request to join here to act on. It may already have been answered, '
+      + 'withdrawn or lapsed. Nothing was changed.',
+  },
+  PROJECT_REQUEST_ANSWER_NOT_THE_OWNER: {
+    check: 'C-95.5',
+    where: 'src/store.mjs projectRequestAnswer > is-join-request-answer',
+    translation: 'Only an owner of this project can grant or decline a request to join it. Administrators see '
+      + 'requests and answer none. Nothing was changed.',
+  },
+  PROJECT_REQUEST_UNKNOWN_ANSWER: {
+    check: 'C-95.6',
+    where: 'src/store.mjs projectRequestAnswer > is-join-request-answer',
+    translation: 'A request to join is either granted or declined, and nothing else. Choose one of the two. '
+      + 'Nothing was changed.',
+  },
+  PROJECT_REQUEST_REQUESTER_INACTIVE: {
+    check: 'C-95.7',
+    where: 'src/store.mjs projectRequestAnswer > is-join-request-answer',
+    translation: 'The member who asked is no longer active, so they cannot be invited. The request stays open; '
+      + 'you can decline it. Nothing was changed.',
+  },
+  PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT: {
+    check: 'C-95.8',
+    where: 'src/store.mjs projectRequestAnswer > is-join-request-answer',
+    translation: 'The member who asked is already a participant of this project, so granting would invite '
+      + 'nobody new. You can decline the request, or they can withdraw it. Nothing was changed.',
+  },
+  PROJECT_REQUESTS_NOT_VISIBLE: {
+    check: 'C-95.9',
+    where: 'src/store.mjs projectRequests > is-join-requests-project',
+    translation: 'A project\'s requests to join are seen by the people who asked, its owners and administrators. '
+      + 'You can read your own requests without naming a project.',
+  },
+};
+
+/* REC-197 / C-97 — A CREATION CARRIES ITS SETTING, AND AN OWNERLESS CREATION CANNOT CHOOSE ONE (Membership
+ * Architecture v2 §7.14, RULED by BOB #32 (b), 2026-09-23: *"create and fork take one optional field,
+ * `visibility` (`discoverable` or `hidden`), and an absent one is HIDDEN. A MACHINE credential never sets it:
+ * the setting is an owner's act, and an ownerless project has no owner to choose. Its creation is therefore
+ * HIDDEN, and a `visibility=discoverable` it sends is refused by name."*). Its own family, minted, rather than
+ * C-70.5 and on, because REC-150 (the request to join) is extending C-70 in parallel. An unknown value on a
+ * creation answers C-70.3, the same row the owner's act answers, through one helper. Both codes are minted in
+ * `Store#promote`, before anything is written; a fork reaches them through `promote`. */
+export const PROJECT_CREATION_VISIBILITY_CHECKS = {
+  PROJECT_VISIBILITY_NO_OWNER: {
+    check: 'C-97.1',
+    where: 'src/store.mjs promote > is-project-creation-ownerless',
+    translation: 'Whether a project can be found is chosen by its owners, and a project created by a machine '
+      + 'credential has no owner, so it is created hidden and cannot be made discoverable here. Nothing was '
+      + 'created. Create it without the setting; an owner who joins it later can make it discoverable.',
+  },
+  PROJECT_VISIBILITY_NOT_A_CREATION: {
+    check: 'C-97.2',
+    where: 'src/store.mjs promote > is-project-creation-visibility',
+    translation: 'Whether a project can be found is chosen when it is created or forked, and this was not a '
+      + 'project being created. Nothing was changed. An owner changes an existing project\'s setting in its '
+      + 'settings.',
   },
 };
 
@@ -14028,6 +14762,61 @@ export const CONTRADICTION_PAIR_CHECKS = {
   },
 };
 
+/* REC-147 / C-93 — THE CONTRADICTION CANDIDATE'S REFUSALS (`CONTRADICTION-IDENTIFY-DESIGN.md` section 5,
+ * section 8, section 9 item 3). op=contradictionpropose is the ONE door a run's judgement enters the record by, and
+ * every refusal here is asked of the WHOLE batch before anything is written, so a refused batch leaves nothing.
+ *
+ * WHY THE PAIR IS CHECKED AGAINST THE PAIRING AND NOT TAKEN FROM THE CALLER: a candidate says the record put these
+ * two side by side for this key. A pair a caller can hand us is a provenance hop a caller can invent (CLAUDE.md
+ * section 5), so the plane re-forms the pairs for THIS viewer and writes only a proposal naming one of them, with
+ * the referents and versions the PLANE read, never the ones the body sent. The run's principal is REC-152's gate,
+ * relayed with its own code, and is not restated here. */
+export const CONTRADICTION_CANDIDATE_CHECKS = {
+  CANDIDATE_NO_PROPOSER: {
+    check: 'C-93.1',
+    where: 'src/store.mjs contradictionPropose > is-candidate-no-proposer',
+    translation: 'A proposed contradiction records who proposed it, and this request arrived by a route that '
+      + 'does not say. Rather than write a proposal nobody can be held to, nothing was written.',
+  },
+  CANDIDATE_NO_RUN: {
+    check: 'C-93.2',
+    where: 'src/store.mjs contradictionPropose > is-candidate-no-run',
+    translation: 'A proposed contradiction is machine work, and machine work happens inside a run a member '
+      + 'opened. No open run by that name is visible here, so nothing was written. Open a run, then propose.',
+  },
+  CANDIDATE_RUN_NOT_RUNNING: {
+    check: 'C-93.3',
+    where: 'src/store.mjs contradictionPropose > is-candidate-run-not-running',
+    translation: 'That run has ended. Its work is read against the conditions it was formed under, and those '
+      + 'stopped being current when it stopped, so nothing was written. Open a new run to go on working.',
+  },
+  CANDIDATE_NO_PROPOSALS: {
+    check: 'C-93.4',
+    where: 'src/store.mjs contradictionPropose > is-candidate-no-proposals',
+    translation: 'The request carried no proposals. An empty answer is not a judgement that found nothing; that '
+      + 'belongs in the run log, which says which level was empty. Nothing was written.',
+  },
+  CANDIDATE_LABEL_UNKNOWN: {
+    check: 'C-93.5',
+    where: 'src/store.mjs contradictionPropose > is-candidate-label-unknown',
+    translation: 'A proposal carries exactly one of five labels: world, record, precision, unrelated or '
+      + 'undetermined. One proposal in this batch carried something else, so none of the batch was written.',
+  },
+  CANDIDATE_NO_REASON: {
+    check: 'C-93.6',
+    where: 'src/store.mjs contradictionPropose > is-candidate-no-reason',
+    translation: 'Each proposal says in one sentence why it carries its label, so the member judging it can see '
+      + 'what the machine saw. One proposal in this batch had no reason, so none of the batch was written.',
+  },
+  CANDIDATE_PAIR_NOT_FORMED: {
+    check: 'C-93.7',
+    where: 'src/store.mjs contradictionPropose > is-candidate-pair-not-formed',
+    translation: 'A proposal must name a pair the record itself put side by side for that key, as you can see '
+      + 'it now. One proposal in this batch named two things the pairing does not pair, so none of the batch '
+      + 'was written. Read the pairs again and propose over those.',
+  },
+};
+
 /* D-148 / C-72 — A FEE QUOTE IS EVIDENCE (`BIO_Case_Making_v0_1.md` §2). The refusals of the quote grammar
  * (`quoteFindings`, which C-2.10 also reports over the document, each finding carrying the same code) and of
  * its read. The rule lives in ONE pure function; op=actioncorrespond refuses by these names before anything is
@@ -14080,6 +14869,79 @@ export const QUOTE_CHECKS = {
     where: 'src/store.mjs actionQuotes > is-quote-read-axis',
     translation: 'A request is named by its position in the action\'s correspondence, which is a whole number '
       + 'counted from zero. Give that number to see only the quotes answering that request.',
+  },
+};
+
+/* D-147 / C-94 — THE RECORDS-REQUEST LIFECYCLE (`BIO_Case_Making_v0_1.md` §2). The refusals of the lifecycle
+ * grammar (`lifecycleFindings`, which C-2.10 also reports over the document, each finding carrying the same code)
+ * and the two the op alone can judge: a due date's citation against the action's governing laws as they stand
+ * when it is stated, and the writability of the prose a stage carries. None of them encodes a law's clock. */
+export const LIFECYCLE_CHECKS = {
+  STAGE_NOT_OF_DIRECTION: {
+    check: 'C-94.1',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'That stage does not belong to this kind of entry. A request, a fee-waiver request, an appeal or a '
+      + 'court filing is something sent; an acknowledgement, a fee estimate, a decision, an extension notice, a '
+      + 'production or a denial is something received. A non-response carries no stage.',
+  },
+  FOLLOWS_NO_ENTRY: {
+    check: 'C-94.2',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'Every stage after the request names the earlier entry it answers or follows, by its position in '
+      + 'the correspondence counted from zero. Give the position of an entry already recorded.',
+  },
+  APPEAL_NAMES_NO_DECISION: {
+    check: 'C-94.3',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'An appeal names the decision it appeals. The entry named is not a decision: record the decision '
+      + 'as received with its outcome, then name it.',
+  },
+  OUTCOME_NOT_ON_RECEIVED: {
+    check: 'C-94.4',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'An outcome, and the exemptions a body cited, are what the body sent back, so they belong on an '
+      + 'entry recording something received.',
+  },
+  OUTCOME_NOT_IN_VOCABULARY: {
+    check: 'C-94.5',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'An outcome is one of granted, denied, partial, reversed, affirmed, or none_stated when the body '
+      + 'stated none.',
+  },
+  DECISION_WITHOUT_OUTCOME: {
+    check: 'C-94.6',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'A decision carries its outcome as the body gave it. If the body stated none, record none_stated '
+      + 'so the record says so rather than leaving it blank.',
+  },
+  FEE_ESTIMATE_WITHOUT_QUOTE: {
+    check: 'C-94.7',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'A fee estimate is a quote: record the amount and the currency as quoted, and the request it '
+      + 'answers.',
+  },
+  DUE_HALF_STATED: {
+    check: 'C-94.8',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'A due date is stated together with the citation it comes from, or not at all. With none stated '
+      + 'the record reads it as undetermined, which is honest.',
+  },
+  DUE_NOT_A_DATE: {
+    check: 'C-94.9',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'A due date is written as a calendar date, YYYY-MM-DD.',
+  },
+  DUE_CITE_NOT_GOVERNING: {
+    check: 'C-94.10',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-due-cite',
+    translation: 'A due date names the law it comes from, and that law must be one of those a member has stated '
+      + 'govern this action. State the governing laws first, then cite one of them exactly as listed.',
+  },
+  LIFECYCLE_TEXT_UNWRITABLE: {
+    check: 'C-94.11',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-writable',
+    translation: 'The exemptions or the citation is too long, or holds a quotation mark, a backslash or a line '
+      + 'break, which the record cannot store. Shorten it or leave those characters out.',
   },
 };
 
@@ -14276,19 +15138,12 @@ const THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
    grammar reads either; a leg carrying one is claiming membership as a reason. */
 const THEME_LEG_KEYS = ["theme", "themes"];
 
-/* IC-246 / C-82 (minted with `node tools/mintid.mjs C` by c19-unionfix, 2026-09-24) — op=statementack's bound on
- * the unsigned case documents one acknowledgement re-authors (BIO_Publication_v0_1.md §3 rule 11). Over it the act
- * is REFUSED and nothing is written, because a cut would leave a document listing fewer second readers than the
- * record holds, and its owner would sign that absence. */
+/* IC-246 / C-82 (minted with `node tools/mintid.mjs C` by c19-unionfix, 2026-09-24) — op=statementack's refusals
+ * (BIO_Publication_v0_1.md §3 rule 11). C-82.1, STATEMENT_ACK_DOCUMENTS_OVER_BOUND, is RETIRED (D-521, 2026-09-25)
+ * and its number is not reused. It refused over a bound of 8 unsigned case documents per acknowledgement, and the
+ * read it guarded returns at most two rows by its keys (REC-194 made it one; REC-217's draft link made it two), so
+ * no input could reach it. A catalogued refusal that cannot occur is a claim the record makes about itself. */
 export const STATEMENT_ACK_CHECKS = {
-  STATEMENT_ACK_DOCUMENTS_OVER_BOUND: {
-    check: 'C-82.1',
-    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-documents-bound',
-    translation: 'More unsigned case documents of this project carry this exact exclusion statement than one '
-      + 'acknowledgement can update at once. Updating only some would leave the others listing fewer second '
-      + 'readers than the record holds, so nothing was recorded. Sign or replace some of those documents, then '
-      + 'acknowledge the statement again.',
-  },
   /* D-507 / IC-270 — THE SIX REFUSALS THAT REACHED A MEMBER AS MACHINE WORDS. UI-89's worker measured it
      at the surface: of the seven conditions `acknowledgeStatement` refuses on, only C-82.1 above held a
      row, so the other six arrived carrying the plane's authored `detail` and NO canned translation, which
@@ -15409,6 +16264,27 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'is, because what it is decides which rules protect it. Nothing was written. To record it as the other '
       + 'kind, create a new one of that kind and link the two.',
   },
+  /* D-563 (2026-09-25) — C-86.1's rule one field over, twice: the document states what it is CALLED and where it STANDS,
+   * and a request whose label contradicts either is refused rather than obeyed. The name is what 7.1 holds unique and
+   * the state decides who may move the item (7.11) and what may cite it (REC-181), so a label a caller can steer was
+   * an authority over both. Only a contradiction between two statements: a label stating nothing takes the document's
+   * word. Replay is exempt, as for C-86.1. */
+  ENVELOPE_TITLE_DISAGREES: {
+    check: 'C-86.3',
+    where: 'src/store.mjs promote > is-promoted-title-disagrees',
+    translation: 'The document being filed gives itself one name, and the request that carried it gives another. '
+      + 'The record goes by the document, and names are held unique across the instance, so rather than file it under '
+      + 'a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request '
+      + 'naming the document\'s title, or naming none, or change the document first.',
+  },
+  ENVELOPE_STATE_DISAGREES: {
+    check: 'C-86.4',
+    where: 'src/store.mjs promote > is-promoted-state-disagrees',
+    translation: 'The document being filed says where it stands, and the request that carried it says something '
+      + 'different. Where a thing stands decides who may move it and what may cite it, and the record goes by the '
+      + 'document, so it stops and tells you both. Nothing was written. Send it again with the request saying what '
+      + 'the document says, or saying nothing about it, or change the document first.',
+  },
 };
 
 /* REC-214 / C-90 — A MEMBER REVISES AN ACTION'S RISK TIER BY AN AUTHORED, APPEND-ONLY ACT (BOB #33, 2026-09-24,
@@ -15455,6 +16331,36 @@ export const RISK_TIER_REVISION_CHECKS = {
     where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
     translation: 'This action\'s record of earlier risk tiers is not in a shape the act can add to without '
       + 'rewriting it, and the act only ever adds. Nothing was written.',
+  },
+};
+
+/* REC-203 / C-91 — `op=idmatch`, the identifier-space judgement (`BIO_Content_Framework_v0_10.md` §8.3 "WHAT
+ * MAKES A SHARED IDENTIFIER COUNT"). THREE refusals, and each is a request the judgement cannot be asked, never
+ * a verdict: a pair that does not count (different forms, one system, an unread referent) is an ANSWER with
+ * `counts: false` and its reason, because "these do not join" is a fact about the record, not a fault in the
+ * question. The capture refusal answers a document the caller may not see EXACTLY as one the record does not
+ * hold, `contentmint`'s reason: otherwise the judgement is a way to learn that a document exists. */
+export const IDSPACE_CHECKS = {
+  IDSPACE_UNKNOWN: {
+    check: 'C-91.1',
+    where: 'src/store.mjs idMatch > is-idspace-unknown',
+    translation: 'That is not an identifier space the record knows how to judge. The spaces are the resolution '
+      + 'or ordinance number (cms), the project number (project), the fund code (fund) and the assessor\'s parcel '
+      + 'number (apn). Nothing was judged.',
+  },
+  IDSPACE_VALUE_NOT_IN_SPACE: {
+    check: 'C-91.2',
+    where: 'src/store.mjs idMatch > is-idspace-value-shape',
+    translation: 'The value given does not have the shape of any form of that identifier space, so the record '
+      + 'cannot say what it would join. Give the identifier as the document writes it (for a project, C329142 or '
+      + '1000858; for a parcel, 011-0836-017-00). Nothing was judged.',
+  },
+  IDSPACE_CAPTURE_NOT_HELD: {
+    check: 'C-91.3',
+    where: 'src/store.mjs idMatch > is-idspace-capture',
+    translation: 'Each value in a pair has to be named with the captured document it was read in, one the record '
+      + 'holds and you can see: which system published a document is read from where the record retrieved it, '
+      + 'never taken from the request. One of the two names no such document. Nothing was judged.',
   },
 };
 

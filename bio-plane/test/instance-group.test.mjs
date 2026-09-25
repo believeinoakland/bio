@@ -160,7 +160,7 @@ const create = async (D, tok, { id, text, type, state, metaGroup, replay } = {})
   const pkg = {
     ...(id === undefined ? {} : { bundleId: id }), base: null,
     snapKey: `20260921T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, ...(metaGroup === undefined ? {} : { group: metaGroup }), title: `t ${id ?? "new"}`,
+    meta: { object_type: type, ...(metaGroup === undefined ? {} : { group: metaGroup }),
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }],
     register: [], ...(replay ? { replay: true } : {}) };

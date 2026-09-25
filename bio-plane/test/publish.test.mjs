@@ -368,7 +368,7 @@ let snapSeq = 0;
 const promote = async (id, md, type, state, tok = PILAR, base = null) => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
     ...(id === null ? {} : { bundleId: id }), base, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id ?? PROJ_NAME}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: type === "information"
@@ -1091,7 +1091,10 @@ console.log("\n--- 6b. a republish that does not increment the edition is refuse
      refused by name and nothing is overwritten. */
   const withEdition = (n) => md.replace(/^---\n/, `---\nedition: ${n}\n`);
   const backdated = withEdition(2);
-  await promote(INQ_CASE, backdated, "inquiry", "published", PILAR, await shaOf(INQ_CASE));
+  /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: these re-promotions labelled the state `published` over bytes
+     that say `concluded` (CASE-4 took `published` out of the machine); the label is now refused, so it names none and
+     the record takes the state the bytes state — what the projection wrote from them all along is now what it writes. */
+  await promote(INQ_CASE, backdated, "inquiry", undefined, PILAR, await shaOf(INQ_CASE));
   const r = await ratify(INQ_CASE);
   /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
      exempted. These hand-written bytes are a finding at a sha NO ratified case pins — the case pinned the bytes
@@ -1103,7 +1106,7 @@ console.log("\n--- 6b. a republish that does not increment the edition is refuse
   t("ratifying different bytes under an edition already published is refused BY NAME (C-58.2: no ratified case pins them)",
     [r.ok, r.reason, r.highest], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", undefined]);
   const backwards = withEdition(1);
-  await promote(INQ_CASE, backwards, "inquiry", "published", PILAR, await shaOf(INQ_CASE));
+  await promote(INQ_CASE, backwards, "inquiry", undefined, PILAR, await shaOf(INQ_CASE));
   const r2 = await ratify(INQ_CASE);
   t("and so is a republish that moves the edition BACKWARDS (C-58.2, for the same reason)",
     [r2.ok, r2.reason], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE"]);

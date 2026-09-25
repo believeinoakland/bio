@@ -97,7 +97,9 @@ const projectMd = () => ["---", "object_type: project", `title: "Hidden project 
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", "A project.", "",
   "## Session Log", ""].join("\n");
-const meta = (id, type, state) => ({ object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+/* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: the label `Bundle ${id}` contradicted every document's own
+   title and is now refused; the label names none, and each bundle is titled by its document. */
+const meta = (id, type, state) => ({ object_type: type, group: "believe-in-oakland",
   current_state: state, created: NOW, last_updated: LATER });
 const reg = (s, path = "snapshots/doc.bin") => ({ path, sha256: s, encoding: "binary", bytes: 10 });
 let seq = 0;
@@ -133,7 +135,7 @@ const a1 = must("A registers X", await promote(ADM, A, aMd, "information", "coll
 const p = must("mint the project", await POST(`op=promote&token=${ADM}`, {
   base: null, snapKey: "20260923T000000Z_d179proj",
   files: [{ path: "bundle.md", text: projectMd(), bytes: Buffer.byteLength(projectMd()), sha256: sha(projectMd()) }],
-  register: [reg(Y, "snapshots/project.bin")], meta: { ...meta("P", "project", "forming"), title: "Hidden project 0179" } }));
+  register: [reg(Y, "snapshots/project.bin")], meta: meta("P", "project", "forming") }));
 const P = p.bundleId;
 must("iris owns it", await DO("projectclaimowner", { projectId: P, memberId: "iris" }));
 

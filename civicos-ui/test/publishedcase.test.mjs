@@ -961,10 +961,17 @@ function mockFetch(u, opts){
        floor rose by one for a sentence. This suite really does feed C-61.1's code now,
        and the walk cannot see it — it arrives through `requiredArgumentWire`, and UI-84
        recorded that blind spot — but a floor pinned on prose would fall the moment
-       somebody reworded this comment. */
+       somebody reworded this comment.
+       CORRECTED 2026-09-25 (M0-148), left standing as the receipt: BOTH halves above
+       are now false. The walk reads suites with comments blanked, so a code quoted in
+       a note no longer counts, and it FOLLOWS `requiredArgumentWire` to the code the
+       helper derives — this line is one of the two hand-offs its `FOLLOWED` print
+       names for C-61.1's code. The unquoted spelling is harmless and kept. */
     if(url.searchParams.get("path")) return R(requiredArgumentWire("publishedbytes"));
     if(!PUBLISHED_SHAS.has(sha))
-      return R({ ok:false, reason:"NOT_FOUND", sha256:sha,
+      /* (D-561 renamed the token; corrected at c22-batch29) — the plane answers an unknown hash with
+         NO_PUBLISHED_PART (C-98.1); NOT_FOUND was the pre-D-561 spelling and no longer reaches a caller. */
+      return R({ ok:false, reason:"NO_PUBLISHED_PART", sha256:sha,
         detail:"no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately." });
     return { ok:true, status:200, headers:{ get:k => k === "x-published-kind" ? PUBLISHED_SHAS.get(sha).kind : null },
              arrayBuffer:async()=>BYTES.buffer, json:async()=>({ ok:false, error:"these are bytes" }) };
@@ -2315,9 +2322,12 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
      `op=instancegroup` — public since REC-163 (IC-174), answering a stranger the recorded slug and nothing else —
      so the header shows whose record this is from the record instead of a literal group name (Publication §7
      point 1). The pin was right that the surface reaches only credential-free reads; the set it named was the
-     set before that read existed. The token and working-record assertions below are unchanged. */
+     set before that read existed. The token and working-record assertions below are unchanged.
+     CORRECTED 2026-09-25 (UI-78), never exempted: the header's read is now `op=groupidentity` (REC-164, IC-223),
+     which answers the same public slug and, beside it, the display name and a domain only while verified
+     (Publication §7 points 2 and 3). Still five credential-free ops; one of them renamed. */
   ok("the whole surface reached exactly the five credential-free ops and no other",
-     JSON.stringify(ops) === JSON.stringify(["instancegroup", "publishedbytes", "publishedcase", "publishedmanifest", "verify"]));
+     JSON.stringify(ops) === JSON.stringify(["groupidentity", "publishedbytes", "publishedcase", "publishedmanifest", "verify"]));
   ok("NOT ONE request carried a token — the evidence, not the promise",
      WIRE.length > 10 && WIRE.every(w => !w.token));
   ok("and none of them reached a working-record op",

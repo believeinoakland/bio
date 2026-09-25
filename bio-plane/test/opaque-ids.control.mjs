@@ -11,9 +11,13 @@
  * last; the run fails if either moved. What each arm MUST fail (by label fragment) is DECLARED before it arms;
  * every other assertion MUST stay green.
  *
+ * M0-147 added the CLOCK arms: `pin` runs the suite under `test/clockpin.preload.mjs` (node's clock frozen 1 ms before
+ * the New Year that began the plane's year), and `suite` patches a COPY of the suite, run from the copy's own `test/`
+ * beside links to the real one's helpers. The suite itself is hashed with the sources, before and after.
+ *
  * RESULTS: see the header of `test/opaque-ids.test.mjs` and IC-164.
  */
-import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync, symlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
@@ -24,7 +28,7 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "opaque-ids.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/store.mjs", "test/opaque-ids.test.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 const ARMS = {
@@ -81,6 +85,21 @@ const ARMS = {
                "      const u = new Uint32Array(1);\n      for (;;) { crypto.getRandomValues(u); if (u[0] < 4294960000)"]],
     mustFail: [],
   },
+
+  /* M0-147 — THE SUITE MUST NOT READ THE YEAR OFF ITS OWN CLOCK. `pin` runs the suite under `test/clockpin.preload.mjs`
+     frozen 1 ms before the New Year that BEGAN the plane's current year (the plane's workerd keeps the true wall), so the
+     suite's clock reads the year before and every id the plane mints carries the year after: a run that straddled
+     midnight UTC on 31 December, reproduced without touching the machine's clock. `suite` patches a COPY of the suite. */
+  "clock-pinned": { pin: true, patches: [], mustFail: [] },
+  /* THE ROW'S CONTROL: the clock read RESTORED, under the pin. The four "three mints were made" arms fail BY NAME (each id carries the plane's year, the suite asked for the year
+     before); the NO COUNT arms read only the suffix and stay green, and so does §3 — `op=allocid` takes the caller's year. */
+  "clock-read-restored": { pin: true, patches: [],
+    suite: [["YEAR = /^PROJ-(\\d{4})-/.exec(String(PROJ ?? \"\"))?.[1] ?? null;\n", "YEAR = new Date().toISOString().slice(0, 4);\n"]],
+    mustFail: ["CASE: three mints were made", "DRAFT: three mints were made", "RVG: three mints were made", "TASK: three mints were made"] },
+  /* BREAK ONLY THE THING: the same restored read WITHOUT the pin — on any day but a straddle the suite's clock and the
+     plane's agree, so nothing may fail. The arm above fails because of the pin, not because of the edit. */
+  "clock-read-restored-no-pin": { pin: false, patches: [],
+    suite: [["YEAR = /^PROJ-(\\d{4})-/.exec(String(PROJ ?? \"\"))?.[1] ?? null;\n", "YEAR = new Date().toISOString().slice(0, 4);\n"]], mustFail: [] },
 };
 
 const run = (name) => {
@@ -98,7 +117,27 @@ const run = (name) => {
       if (n !== 1) return { name, armed: false, why: `anchor in ${file} occurs ${n} times: ${from.slice(0, 70)}` };
       writeFileSync(p, s.replace(from, () => to));
     }
-    const r = spawnSync(process.execPath, [SUITE], { env: { ...process.env, OPAQUE_IDS_SRC: join(tree, "bio-plane", "src") },
+    /* A patched SUITE runs from the copy's own `test/`, beside a link to each helper it imports by `./` (a link resolves to
+       the real file, so the helpers' own imports resolve in place — no directory is walked), with `node_modules/` and
+       `scripts/` linked, so its relative imports and its `../src` resolve as they do in place. */
+    let suite = SUITE;
+    if (arm.suite) {
+      const dir = join(tree, "bio-plane", "test");
+      mkdirSync(dir, { recursive: true });
+      let s = readFileSync(SUITE, "utf8");
+      for (const m of s.matchAll(/(?:from|import) "\.\/([^"/]+)"/g)) symlinkSync(join(PLANE, "test", m[1]), join(dir, m[1]));
+      for (const f of ["node_modules", "scripts", "package.json"]) symlinkSync(join(PLANE, f), join(tree, "bio-plane", f));
+      for (const [from, to] of arm.suite) {
+        const n = s.split(from).length - 1;
+        if (n !== 1) return { name, armed: false, why: `anchor in the suite occurs ${n} times: ${from.slice(0, 70)}` };
+        s = s.replace(from, () => to);
+      }
+      suite = join(dir, "opaque-ids.test.mjs");
+      writeFileSync(suite, s);
+    }
+    const pin = arm.pin ? ["--import", join(PLANE, "test", "clockpin.preload.mjs")] : [];
+    const pinEnv = arm.pin ? { CLOCK_PIN_MS: String(Date.UTC(new Date().getUTCFullYear(), 0, 1) - 1) } : {};
+    const r = spawnSync(process.execPath, [...pin, suite], { env: { ...process.env, ...pinEnv, OPAQUE_IDS_SRC: join(tree, "bio-plane", "src") },
                                                      encoding: "utf8", maxBuffer: 64 << 20 });
     const out = r.stdout || "";
     const tally = /opaque-ids: (\d+) passed, (\d+) failed/.exec(out);

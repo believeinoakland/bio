@@ -33,6 +33,19 @@
  *       counted row, block 3's three, block 5's two); MUST NOT fail block 2's ACCEPTS-WHEN absent row,
  *       which is about the LIST and must still pass. RESULT: rec213 13 pass, 6 FAIL — exactly those six,
  *       with the ACCEPTS-WHEN row still green. d150 64/0, rec212 45/0.
+ *   D-540 (RUN 2026-09-25 by the D-540 worker on land/worker/D-540, each arm ALONE, DECLARED BEFORE ARMING,
+ *   every restore by `cp` from a uniquely-named pristine copy in the session scratchpad, verified by sha256
+ *   (`sha256sum -c` OK, 3b1f1cba9fed1c8262a0b4a59e476fb3ace82f492b9f264a876efda4743d63b3) AND `cmp`, 3,353,411
+ *   bytes). BASELINE: rec213 20/0, rec212 46/0, d150 64/0.
+ *     (d540-a) THE ROW'S OWN CONTROL — the writer exclusion DROPPED from `#statementAcknowledgements`' unbound
+ *       count (its `acknowledger IS ?` bound to null). DECLARED: MUST FAIL rec213 block 4's count row (reads
+ *       3) and its prose row; MUST NOT fail rec212 or d150. RESULT: rec213 18 pass, 2 FAIL — exactly those two,
+ *       `got [..,3,..]` — rec212 46/0, d150 64/0, as declared.
+ *     (d540-b) THE FOLD — writer-undetermined participant rows counted INTO `unbound` and the own key zeroed.
+ *       DECLARED: MUST FAIL rec212 block 5's two D-540 rows; MUST NOT fail rec213 or d150. RESULT: rec212 44
+ *       pass, 2 FAIL — exactly those two, `got [0,[],1,null,null]` — rec213 20/0, d150 64/0, as declared.
+ *     NOT DRIVEN, SAID: a RECIPIENT's draft-given row under an UNDETERMINED writer (it stays in `unbound`);
+ *       no fixture here holds one.
  *   NOT ARMED, AND SAID RATHER THAN SCORED: the shared `byTheWriter` predicate itself (widening it to
  *   RECIPIENT rows) is REC-212's subject, not this row's, and an arm there breaks the case document as
  *   well as the review copy — so it is not this suite's control and is named here so a reader does not
@@ -185,7 +198,7 @@ let snapSeq = 0;
 const promote = async (id, text, objectType, state) => rP(await POST("op=promote&token=adm-r213", {
   bundleId: id, base: null,
   snapKey: `20260924T${String(400000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+  meta: { object_type: objectType, group: "believe-in-oakland",
           current_state: state, created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" },
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],
@@ -387,12 +400,27 @@ let CB = null;
      BECAME, so a new case's document lists none of them and counts them as unbindable instead. The
      writer withholding therefore has nothing to bite on HERE, and saying so is what tells an absent
      list caused by the narrowing apart from one caused by this landing. */
+  /* CORRECTED 2026-09-25 BY D-540, never exempted: this arm asserted 3, and 3 WAS THE DEFECT, pinned. D1
+     holds three draft-given readings — ella's, pat's and the grant's recipient's — and ella WROTE the
+     sentence, so hers is not a second reading of it at any identity (§3 rule 13; §6A.4: *a row by the
+     sentence's own writer is not a second reading at any moment*). `#statementAcknowledgements`' unbound
+     count asked only the publisher's exclusion (REC-212 put the writer's on the LIST alone), so the
+     document stated her own reading as one more reading that might be THIS case's. The honest count is 2:
+     pat's and the recipient's. The writer is DETERMINED here, so nothing is stated as writer-undetermined. */
   t("the new case carries ella as the statement's writer and iris as the block's author, lists NOBODY, and "
-  + "counts the draft-given readings as UNBINDABLE rather than as second readers of this case",
+  + "counts the draft-given readings as UNBINDABLE rather than as second readers of this case — TWO, pat's and "
+  + "the recipient's, never the writer ella's own (D-540)",
     [c.statement_by, c.author, (c.acknowledgements || []).map((a) => [a.kind, a.by]),
      c.acknowledgements_unbindable_to_this_case ?? null,
-     c.acknowledgements_by_statement_writer_not_listed ?? null],
-    ["ella", "iris", [], 3, null]);
+     c.acknowledgements_by_statement_writer_not_listed ?? null,
+     c.acknowledgements_unbindable_writer_undetermined ?? null],
+    ["ella", "iris", [], 2, null, null]);
+  const docB = rP(await GET(`op=casedocument&case=${CB}&edition=1&token=${IRIS}`));
+  t("D-540: and the PROSE the owner signs says the same TWO — the key and the sentence are one claim",
+    [/This record also holds 2 acknowledgements of this exact statement/.test(docB?.text || ""),
+     /also holds 3 acknowledgements/.test(docB?.text || ""),
+     /whether any is the statement's writer's own/.test(docB?.text || "")],
+    [true, false, false]);
   const rr = rP(await POST(`op=caseratify&token=${IRIS}`,
     { caseId: CB, edition: 1, expectedSha: P.caseDocument.doc_sha,
       sig: signCase("iris", CB, 1, P.caseDocument.doc_sha) }));

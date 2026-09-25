@@ -92,7 +92,9 @@ const readingOf = () => ({ content_type: "meeting_calendar", reader_version: 1, 
 /* One promote carrying a reading per capture: that writes a CONTENT-level row (REC-94) and a MEANING-level
    reader-run row (REC-95) per capture, through the op. A project's id is MINTED (REC-141, IC-158). */
 const promote = async (id, type, shas) => {
-  const text = `---\nobject_type: ${type}\ngroup: believe-in-oakland\ntitle: ${id}\ncurrent_state: collected\n---\n\n# ${id}\n`;
+  /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: a project's bytes said `collected` (information's word) under a
+     `forming` label, and the projection took the label; the record now takes the bytes, so they state `forming`. */
+  const text = `---\nobject_type: ${type}\ngroup: believe-in-oakland\ntitle: ${id}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\n---\n\n# ${id}\n`;
   const prov = JSON.stringify({ documents: shas.map((s) => ({
     capture: { sha256: s, encoding: "binary", bytes: 10 }, reading: readingOf() })) });
   const r = await POST(`op=promote&token=${ADM}`, {

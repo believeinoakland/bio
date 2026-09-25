@@ -272,7 +272,7 @@ const promote = async (id, { document = null } = {}) => {
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260915T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files,
     register: document && document.capture && document.capture.sha256

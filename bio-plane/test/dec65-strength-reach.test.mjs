@@ -517,7 +517,7 @@ const promote = async (id, text, type, base = null, reading = null) => {
       : reading
       ? [{ path: "snapshots/d.bin", sha256: reading.capture.sha256, encoding: "binary", bytes: 10 }]
       : [],
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW, last_updated: LATER } });
 };

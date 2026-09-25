@@ -336,7 +336,7 @@ const projectMd = (id, { refs = [], bar = null, name = id } = {}) => ["---",
 let snapSeq = 0;
 const promote = async (id, md, type, state, tok = PILAR, base = null) => rP(await POST(`op=promote&token=${tok}`, {
   bundleId: id, base, snapKey: `20260810T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
   register: type === "information"
@@ -349,7 +349,7 @@ const promote = async (id, md, type, state, tok = PILAR, base = null) => rP(awai
 const createProject = async (name, md, tok = PILAR) => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
     base: null, snapKey: `20260810T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: "project", group: "believe-in-oakland", title: `t ${name}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "investigating", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));
   if (r.ok === false || !r.bundleId) throw new Error(`create project ${name}: ${JSON.stringify(r)}`);
@@ -957,7 +957,10 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
 
   /* ADVERSARY 1 — THE MEMBER CLAIMS THE PRODUCING PROJECT. */
   const projectLie = addAfterFm(weakMd, [`case_project: ${PROJ_OTHER}`]);
-  const p1 = await promote(INQ_WEAK, projectLie, "inquiry", "published", PILAR, await liveSha(INQ_WEAK));
+  /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: these re-promotions labelled the state `published` over bytes
+     that say `concluded` (CASE-4 took `published` out of the machine); the label is now refused, so it names none and
+     the record takes the state the bytes state — what the projection wrote from them all along is now what it writes. */
+  const p1 = await promote(INQ_WEAK, projectLie, "inquiry", undefined, PILAR, await liveSha(INQ_WEAK));
   t("(fixture) the tampered bytes really promoted — the adversary is through the hand-written door, "
   + "which is the only door a case's facts do not reach by construction", p1.ok, true);
   const a1 = await ratify(INQ_WEAK);
@@ -975,7 +978,7 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
   const roleLie = addAfterFm(weakMd,
     ["case_roles:", `  - target: ${INQ_STRONG}`, "    role: supporting",
      `  - target: ${INQ_WEAK}`, "    role: load_bearing"]);
-  const p2 = await promote(INQ_WEAK, roleLie, "inquiry", "published", PILAR, await liveSha(INQ_WEAK));
+  const p2 = await promote(INQ_WEAK, roleLie, "inquiry", undefined, PILAR, await liveSha(INQ_WEAK));
   t("(fixture) the second tamper promoted too", p2.ok, true);
   const a2 = await ratify(INQ_WEAK);
   t("AND A MEMBER THAT DESIGNATES THE CASE'S PARTITION IN ITS OWN BYTES IS REFUSED BY NAME: which "
@@ -995,7 +998,7 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
     `case_findings: [${INQ_WEAK}]`, "case_roles:", `  - target: ${INQ_WEAK}`, "    role: load_bearing",
     "required_strength:", "  declared: false", "  source: none", `  project: ${PROJ}`,
     "  capture: null", "  connection: null", '  detail: "none"']);
-  const p4 = await promote(INQ_WEAK, allEight, "inquiry", "published", PILAR, await liveSha(INQ_WEAK));
+  const p4 = await promote(INQ_WEAK, allEight, "inquiry", undefined, PILAR, await liveSha(INQ_WEAK));
   t("(fixture) op=promote ACCEPTS already-published bytes carrying every one of them — pre-existing "
   + "behaviour of re-promoting a published document, measured by CASE-2 on `case_scope` and "
   + "reproduced here, reported rather than fixed", p4.ok, true);
@@ -1011,7 +1014,7 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
 
   /* RESTORED, AND THE CASE THEN COMPLETES. An adversary that left the record
      broken would make every assertion after it meaningless. */
-  const p3 = await promote(INQ_WEAK, weakMd, "inquiry", "published", PILAR, await liveSha(INQ_WEAK));
+  const p3 = await promote(INQ_WEAK, weakMd, "inquiry", undefined, PILAR, await liveSha(INQ_WEAK));
   t("(fixture) the honest bytes are restored", p3.ok, true);
   const r2 = await ratify(INQ_WEAK);
   t("and the case completes: no adversary reached it, and the second member ratifies on the bytes it "

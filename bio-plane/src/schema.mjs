@@ -846,7 +846,7 @@ CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
 -- member surface and REC-18's earned grades were bounded to exact references.
 --
 -- WHY TERMS AND NOT A NORMALISED LABEL COLUMN, and it is MEASURED, not preferred
--- (MEASUREMENTS.md 2026-08-04, REC-36; instrument test/label-variance-probe.mjs).
+-- (the MEASUREMENTS ledger 2026-08-04, REC-36; instrument test/label-variance-probe.mjs).
 -- Over the one real captured document this repository holds -- a 33-page Oakland
 -- Legistar agenda read by the real doctype -- a subject name was the WHOLE label
 -- in 0 of 41 labels against 33 names taken from the document itself. The label is
@@ -2714,7 +2714,7 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   ua_mode           TEXT NOT NULL,    -- civicos, or member-browser (BOB-3, permitted for public documents)
   principal_plane   TEXT NOT NULL,    -- copied from the run: whose scope the writes ran under
   principal_claude  TEXT NOT NULL,    -- copied from the run: WHICH LEVEL of the cascade paid
-  state             TEXT NOT NULL,    -- requested | draining | captured | refused
+  state             TEXT NOT NULL,    -- requested | draining | captured | refused | expired (D-523, a C-83 render hold released UNDETERMINED at expires)
   code              TEXT,             -- the DEC-49 wire code, when the drain refused or held this row
   detail            TEXT,             -- what the drain said, so a held row explains itself without a second call
   capture_sha       TEXT,             -- what the daemon captured. WRITTEN BY THE DRAIN ONLY
@@ -2925,7 +2925,7 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
 -- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
 -- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no
 -- ANALYZE, which is this plane's live condition because nothing here ever
--- runs one). MEASUREMENTS.md M-41 carries the plans in full:
+-- runs one). The MEASUREMENTS ledger's M-41 carries the plans in full:
 --   the four existing readers     -- every one uses the PRIMARY KEY autoindex,
 --                                    none touches this index, and DROPPING it
 --                                    leaves all four plans IDENTICAL
@@ -3190,7 +3190,7 @@ CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bun
 --
 -- THE INPUTS AND THE SCORES ARE COLUMNS RATHER THAN PROSE, and that is the
 -- item. CPDF-10 shaped measured_by as a free STRING -- today
--- "MEASUREMENTS.md 2026-08-03 (CPDF-9)" -- which is better than a bare letter
+-- "the MEASUREMENTS ledger 2026-08-03 (CPDF-9)" -- which is better than a bare letter
 -- and is still not a binding: nothing checks the pointer resolves, and nothing
 -- can answer "which transcriptions rest on a measurement that has been
 -- superseded". A row here is that answer's other half.
@@ -3374,7 +3374,7 @@ CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
 --
 -- MEASURED 2026-09-15 (test/content-index-probe.mjs, node:sqlite, the statements
 -- DRIVEN out of compile() and every OTHER index DRIVEN out of schema.mjs AND
--- store.mjs rather than typed). MEASUREMENTS.md M-23 (filed as M-21, renumbered
+-- store.mjs rather than typed). The MEASUREMENTS ledger's M-23 (filed as M-21, renumbered
 -- at integration -- corrected here by REC-104) carries both corpus sizes,
 -- the instrument, the synthetic proportions and what the instrument cannot see.
 -- At 20,000 bundles / 40,002 content rows, 9 reps:
@@ -3847,6 +3847,28 @@ CREATE INDEX IF NOT EXISTS statement_acknowledgements_statement
   ON statement_acknowledgements(project_id, statement_sha, edition);
 -- =========================================================================
 
+-- MK-7 / MEMBER-KNOWLEDGE-DESIGN.md section 4.2-4.6: THE ATTRIBUTION ACT. One row per
+-- (case edition, observation): the level the observation's AUTHOR chose for what that edition's
+-- published case document shows of them. Written only by op=attribute, taken by the author and by
+-- nobody else, never prefilled (no row is "unchosen", and a case document cannot be ratified
+-- while any observation it reaches is unchosen). A later edition INHERITS the latest earlier
+-- edition's row until the author acts again (section 4.3). chosen_by is the server-stamped author.
+-- There is deliberately NO column that could hold an off-the-record source's identity: that
+-- anonymity is a structural absence (section 4), and hygiene would see a column added here.
+-- bundle_id is the OBSERVATION, so the rows ride the purge TABLES list in both arms (D-113): an
+-- attribution outliving its observation would attach to whatever bundle was next allocated its id.
+CREATE TABLE IF NOT EXISTS observation_attributions (
+  case_id    TEXT NOT NULL,
+  edition    INTEGER NOT NULL,
+  bundle_id  TEXT NOT NULL,     -- the observation (an authored INFO bundle)
+  level      TEXT NOT NULL CHECK (level IN ('group','project','cover','name')),
+  chosen_by  TEXT NOT NULL,     -- the observation's author, stamped from the signed-in session
+  chosen_at  TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
+-- =========================================================================
+
 -- REC-164: THE PUBLISHING GROUP'S DISPLAY NAME AND ITS DOMAIN (BIO_Publication_v0_1.md
 -- section 7 points 2 and 3). Two durable values, each with a dated history: a value is
 -- the LATEST row for its field, and no statement updates or deletes a row, so every
@@ -3927,6 +3949,35 @@ CREATE TABLE IF NOT EXISTS project_sight (
   setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden'))
 );
 CREATE INDEX IF NOT EXISTS project_sight_setting ON project_sight(setting, project_id);
+-- =========================================================================
+
+-- REC-150 (Membership Architecture v2 section 7, item 7.14, "The request to join", BOB #16): a member outside a
+-- DISCOVERABLE project asks to be added. ONE ROW PER REQUEST, and the record is APPEND-ONLY AT THE FIELD: the
+-- asking fields (project, member, the name the member was shown, the comment, the date) are written once at the
+-- ask and never touched, and the closing fields (state, closed_by, closed_comment, closed_at) are written ONCE,
+-- by the one statement that moves an OPEN row to a terminal state -- every closing UPDATE carries
+-- WHERE state = 'open', so a closed row is never rewritten and nothing is ever deleted but by purge.
+-- project_name is the name AS SHOWN when the member asked: after a project goes HIDDEN the requester keeps sight
+-- of their own request, which names only what they already saw, so it must not read the live title.
+-- AT MOST ONE OPEN REQUEST PER MEMBER PER PROJECT is the partial unique index below, held by the schema and
+-- asked again by the store (which refuses by name before the index would). Keyed on project_id, a bundle id, so
+-- both purge arms clear it with the project (the project_visibility precedent).
+CREATE TABLE IF NOT EXISTS project_join_requests (
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id     TEXT NOT NULL,
+  member_id      TEXT NOT NULL,
+  project_name   TEXT,
+  comment        TEXT,
+  asked_at       TEXT NOT NULL,
+  state          TEXT NOT NULL CHECK (state IN ('open','withdrawn','granted','declined','lapsed')),
+  closed_by      TEXT,
+  closed_comment TEXT,
+  closed_at      TEXT
+);
+CREATE INDEX IF NOT EXISTS project_join_requests_project ON project_join_requests(project_id, seq);
+CREATE INDEX IF NOT EXISTS project_join_requests_member ON project_join_requests(member_id, project_id, seq);
+CREATE UNIQUE INDEX IF NOT EXISTS project_join_requests_one_open
+  ON project_join_requests(project_id, member_id) WHERE state = 'open';
 -- =========================================================================
 
 -- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
@@ -4039,6 +4090,20 @@ CREATE TABLE IF NOT EXISTS render_allowance (
   last_at    TEXT NOT NULL
 );
 
+-- D-520: THE RENDERS RUNNING NOW, one row per admitted render, so the
+-- instance can CAP how many run at once (CLIENT-RENDERED.md, RULED by BOB #33:
+-- a concurrency cap from the vendor's stated limit, labelled; over the cap a
+-- render WAITS). render_allowance is an ACCOUNT of browser time and cannot say
+-- how many are in flight. A slot is released when its render reports, and
+-- EXPIRES at its admission plus its reservation (the most time the asked
+-- environment permits it), so a render that never reports cannot hold a slot
+-- for ever. An operational fact about this instance, not corpus-derived.
+CREATE TABLE IF NOT EXISTS render_slots (
+  slot        TEXT PRIMARY KEY,
+  admitted_at TEXT NOT NULL,
+  expires_ms  INTEGER NOT NULL
+);
+
 -- REC-195 (D-149's remaining half, BIO_Case_Making_v0_1.md §2): A MACHINE'S
 -- PROPOSAL OF THE LAWS GOVERNING AN ACTION, STORED APART FROM THE MEMBER'S LIST.
 --
@@ -4133,6 +4198,66 @@ CREATE TABLE IF NOT EXISTS reading_history (
   PRIMARY KEY (capture_sha, seq)
 );
 
+-- REC-191: THE CONTENT TYPE A MONITOR TICK LAST READ AT AN ADDRESS, which is what
+-- the cadence plan falls back on when no version authored a frequency (the
+-- contract sets the check frequency, BIO_Content_Framework section 6, and
+-- CONTRACT_FREQUENCY gives it an interval). op=monitor determines the type on
+-- every tick and, until this table, told only its caller -- so a document
+-- stating no frequency read UNSCHEDULED in the plan though the tick had answered
+-- it by its contract (D-65's worker finding a).
+-- Keyed on the NORMALISED address, which is the key captured_locators and the
+-- version chain use, so every version at one address shares one reading. The raw
+-- address is kept beside it because a bundle with no captured address is matched
+-- on its own source.locator, which is raw.
+-- A row is replaced only by a tick that DETERMINED a contract, or when none is
+-- held: an unreachable source says nothing about what the document is, so it
+-- must not erase what an earlier tick read. content_type and contract NULL is a
+-- tick that read the address and could not say, with basis saying why.
+-- DERIVED from ticks over the corpus: a whole-store purge clears it. A per-bundle
+-- purge does not, because an address outlives any one of its versions, the same
+-- reasoning as source_reachability.
+CREATE TABLE IF NOT EXISTS monitor_address_type (
+  address_norm  TEXT PRIMARY KEY,
+  address       TEXT NOT NULL,   -- the locator as the ticked document states it
+  content_type  TEXT,            -- the doctype key, NULL when undetermined or a shell
+  confidence    TEXT,
+  contract      TEXT,            -- substance, membership or unmonitorable, NULL when undetermined
+  basis         TEXT,            -- why no type was read, when none was
+  read_at       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS monitor_address_type_raw ON monitor_address_type(address);
+-- REC-147 / IC-318 (CONTRADICTION-IDENTIFY-DESIGN.md section 8): THE CONTRADICTION CANDIDATE. One row per
+-- PROPOSED conflict between two referents the pairing FORMED (op=contradictionpairs), written as labelled
+-- MACHINE work through ONE append site (Store appendContradictionCandidate) and never updated in place.
+-- APPEND-ONLY AND KEYED BY WHAT WAS COMPARED: candidate is a digest of the key and both referents AT THEIR
+-- VERSIONS, order-free, so a re-run over unchanged referents collides and writes nothing (section 8), while a
+-- changed side is a new row and the old one stays with its versions. A claim side is the inquiry and the reading
+-- it is held on, versioned by the sha256 of the claim text as compared. An extent side is its content row (or the
+-- capture where none is named), versioned by the capture, whose bytes never change.
+-- state is only 'proposed' until PRESENT and RESOLVE are designed (section 9 item 4). origin is always 'machine'
+-- (DEC-24: a proposal, labelled). a_bundle_id and b_bundle_id are the bundles each side lives in, so a purge of
+-- either end takes the row (D-113), as connections do. Nothing reads this table to a member yet.
+CREATE TABLE IF NOT EXISTS contradiction_candidates (
+  candidate    TEXT PRIMARY KEY,
+  key          TEXT NOT NULL,
+  a_kind       TEXT NOT NULL,
+  a_ref        TEXT NOT NULL,
+  a_version    TEXT NOT NULL,
+  a_bundle_id  TEXT,
+  b_kind       TEXT NOT NULL,
+  b_ref        TEXT NOT NULL,
+  b_version    TEXT NOT NULL,
+  b_bundle_id  TEXT,
+  run          TEXT NOT NULL,
+  proposed_by  TEXT NOT NULL,
+  label        TEXT NOT NULL,
+  reason       TEXT NOT NULL,
+  state        TEXT NOT NULL DEFAULT 'proposed',
+  origin       TEXT NOT NULL DEFAULT 'machine',
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candidates(run);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -4140,7 +4265,7 @@ CREATE TABLE IF NOT EXISTS reading_history (
 -- makes one token bucket globally correct for the instance for free; a bucket
 -- in Worker memory governs nothing because every invocation is independent.
 -- appetite_per_min NULL means the configured default (a CHOSEN constant,
--- recorded in MEASUREMENTS.md, never a finding). cooloff_until is how a 429 or
+-- recorded in the MEASUREMENTS ledger, never a finding). cooloff_until is how a 429 or
 -- a refusal overrides the bucket entirely: while it is in the future, no token
 -- balance admits anything to that host. refusals counts CONSECUTIVE refusals
 -- and decays to zero on success, so the cool-off escalates the way the

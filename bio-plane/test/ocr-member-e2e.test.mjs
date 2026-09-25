@@ -29,14 +29,20 @@
  * (2) A PAGE WITH SYNTHETIC PIXELS, and it is here because of a MEASUREMENT
  *     rather than convenience. The accepts-when asks that OCR'd text reach
  *     `reading_refs`, and a reference only enters that index when a docprofile
- *     recogniser mints an entity from the text. The only recogniser in this
- *     estate that mints one is `meeting-agenda`, which needs line-anchored file
- *     numbers, `Subject:`/`Recommendation:` blocks and an agenda heading —
+ *     recogniser mints an entity from the text. This arm uses `meeting-agenda`,
+ *     which needs line-anchored file numbers, `Subject:`/`Recommendation:`
+ *     blocks and an agenda heading (CORRECTED by D-321 part 2: this said it was
+ *     the ONLY recogniser that mints one; at the code, minutes, calendar,
+ *     regulation, staff-report and staff-directory mint entities too) —
  *     **and the real page is a RESOLUTION, not an agenda, so it yields none.
  *     That is asserted below rather than worked around, and the gap is filed as
  *     D-321.** D-313 measured why there is no second real page to reach for: the
  *     image-only class is rare and clumped, and two harvests of 1,377 pages
- *     hours apart returned ZERO of it. So the
+ *     hours apart returned ZERO of it. D-321 then searched every byte held in
+ *     git (M-170, 2026-09-25: 52 pages, ONE image-only, and it is this
+ *     resolution) and the instance's own captures (M-170 part 2: 11 PDFs, 24
+ *     image-only candidates, none agenda-shaped by eye, and none the tier-3
+ *     path can render: JBIG2, JPX or several images, D-622). So the
  *     `reading_refs` arm draws agenda text as PIXELS and sends them through the
  *     SAME real engine over the SAME real wire. **What is synthetic is the ink,
  *     never the engine, the renderer, the binding or the chain** — and the arm
@@ -52,6 +58,7 @@
  * CPDF-16 measured that NEITHER local model passes the noise control, so no
  * agreement figure may be read as accuracy at all. This suite quotes none.**
  *
+ * NEGATIVE CONTROL: RE-RUN 2026-09-25 by D-320 against a baseline of 77 pass / 0 fail with a FOURTH arm — a NO-OP DCT decoder (right dimensions, no picture) -> 70/7: section 11's DCT page stops reaching tier 3, the Pillow-digest arm fails BY NAME, and every CCITT and ink-page arm is spared; arms (1)-(3) on the new baseline 42/35, 76/1, 67/10, all as declared; 4 of 4, every restore sha256 AND cmp identical. The original run follows.
  * NEGATIVE CONTROL: RUN 2026-09-12 by `node test/ocr-member-e2e.control.mjs`. THREE ARMS — the three the QUEUE ROW names — each armed ALONE on the REAL path (real plane, real binding, real engine, real scanned page), each rebuilding the member's committed artifact, each declared before arming, each restored by `cp` from a per-arm pristine copy verified by sha256 AND by `cmp` with byte counts printed and floored — never by `git checkout --`, which restores to HEAD and would silently discard uncommitted work (CLAUDE.md, measured twice in two days). BASELINE 63 pass / 0 fail / exit 0 / foot reached. (1) STRIP THE `text_source` MARKER — the member stops naming what performed the derivation, so the plane has nothing to compose a chain from -> **35/28**: the chain arms, the PROJECTION, the INDEX and the EXPORT distinguishability arms all red, and the MUST-NOT held (the text-layer document's own arms never touch the member and stayed green); (2) DROP THE CONFIDENCE FLOOR — the member stops reporting the floor its instance is configured with, so a region the engine could barely read reaches the record as a best guess -> **62/1**, the section-9 floor arm, and only it; (3) COLLAPSE THE CHAIN TO ONE LABEL — the wire records a single `ocr` step with no `pixels` before it (deliberately NOT a literal string: `checkChain` refuses that outright and the arm would then prove the type check rather than the rule) -> **55/8**, every arm asserting the chain names EACH step, in the acquire path AND in the export, **while the index and the terminal-step projection stayed GREEN as declared — they read only the LAST step and structurally cannot see this collapse, which is worth knowing about what those two surfaces can and cannot tell you**. 3 arms run, 0 not as declared, every restore byte-identical, tree re-green at 63/0. Arm (3) mutates `bio-plane/src/index.mjs`, which this item does not own; it is copied aside and restored under verification, on `nc-cpdf10.mjs`'s precedent. The fleet gates' own arms are declared in `fleetbundles.test.mjs`, and the member's six in `ocr-worker/test/ocr-worker.test.mjs`.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -68,6 +75,16 @@ import { ocrWorkerDef } from "../../ocr-worker/test/memberworker.mjs";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SCAN = new Uint8Array(readFileSync(fileURLToPath(
   new URL("../../pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf", import.meta.url))));
+/* D-320: page 4 of the SAME Oakland attachment — its exact DCTDecode stream,
+   /Rotate 270 preserved (`pdf-worker/test/fixtures/make-dct-fixtures.py`). The
+   digest is PILLOW's upright decode of that stream, pinned in
+   `pagepixels.test.mjs` with its provenance; the member must reproduce it. */
+const DCT_SCAN = new Uint8Array(readFileSync(fileURLToPath(
+  new URL("../../pdf-worker/test/fixtures/scan-dct-page.pdf", import.meta.url))));
+const DCT_UPRIGHT_SHA = "2afca4d5af6d1d463ee61eac64d5a270a3ac09334567727d5b90b48663225b94";
+/* PINS on a known page, not a score (this suite quotes no accuracy — D-314):
+   three strings the upright page carries and a sideways page does not produce. */
+const DCT_WORDS = ["FURTHER RESOLVED", "CEQA Guidelines", "15300.2"];
 
 let pass = 0, fail = 0, footReached = false;
 process.on("exit", () => {
@@ -192,6 +209,7 @@ const serve = (request) => {
   const u = new URL(request.url);
   const bin = (b) => new Response(b, { headers: { "content-type": "application/pdf" } });
   if (u.pathname === "/scan.pdf") return bin(SCAN);
+  if (u.pathname === "/dct-scan.pdf") return bin(DCT_SCAN);
   if (u.pathname === "/agenda-scan.pdf") return bin(AGENDA_SCAN);
   if (u.pathname === "/layer.pdf") return bin(LAYER);
   return new Response("unscripted", { status: 500 });
@@ -352,7 +370,7 @@ console.log("\n--- 3 · WITHOUT THE MEMBER the SAME page stays honestly unread (
 console.log("\n--- 4 · THE CHAIN REACHES reading_refs — through the real engine ---");
 {
   /* THE REAL PAGE FIRST, AND ITS HONEST ANSWER. A scanned RESOLUTION page mints
-     no entity: the only recogniser here that mints one needs agenda-shaped text.
+     no entity: no recogniser fires on it (the arm below uses the agenda one).
      Asserted rather than skipped, because "no rows" for the right reason and
      "no rows" because the wire is broken look identical from outside. */
   t("the real page's reading is recorded and read from text", real.reading.read_from_text, true);
@@ -551,6 +569,33 @@ console.log("\n--- 10 · THE READ-TIME RE-READ, on the REAL engine (CPDF-19 / D-
     [re.reextraction?.engine?.engine, re.reextraction?.engine?.version], ["tesseract-wasm", "0.11.0"]);
   t("and the text it answers is the engine's, not empty",
     typeof re.text?.document === "string" && re.text.document.length > 0, true);
+}
+
+console.log("\n--- 11 · D-320: A REAL DCT PAGE — decoded in-isolate, upright, and transcribed ---");
+{
+  /* Until D-320 this page was refused PIXELS_UNREADABLE: the renderer handed
+     back the publisher's JPEG and nothing in the isolate reads one. Now the
+     member asks the renderer to DECODE it, and the pixels it OCRs are the ones
+     an independent decoder produces — the digest is Pillow's, not ours. */
+  const dct = await acquire("/dct-scan.pdf");
+  t("the DCT page reaches TIER 3 through the real member", [!!dct, dct?.reading?.text_tier], [true, 3]);
+  t("with the same chain shape as the CCITT page", steps(dct?.reading), ["pixels", "ocr"]);
+  const member = await mf.getWorker("ocr-worker");
+  const ans = await (await member.fetch("http://ocr-worker/transcribe", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ capture_sha: dct.capture.sha256, store: "bio", pages: [0] }),
+  })).json();
+  t("the member transcribes it rather than refusing PIXELS_UNREADABLE", ans.ok ? "ok" : ans.reason, "ok");
+  t("naming the route that decoded it", ans.image?.route, "decoded-dct");
+  t("ROTATED: the page's /Rotate 270 applied, portrait as a reader sees it",
+    [ans.image?.width, ans.image?.height, ans.image?.upright, ans.image?.rotate_deg], [2550, 3300, true, 270]);
+  t("and the pixels it read are PILLOW's pixels, by digest", ans.image?.pixels_sha256, DCT_UPRIGHT_SHA);
+  t("every region's anchor carries the same checkable digest",
+    (ans.pages?.[0]?.regions || []).every((r) => r.source.image.pixels_sha256 === DCT_UPRIGHT_SHA), true);
+  const text = (ans.pages?.[0]?.regions || []).map((r) => r.text).join("\n");
+  console.log(`  (the engine read ${(ans.pages?.[0]?.regions || []).length} line(s); first: ${JSON.stringify(text.split("\n").slice(0, 3))})`);
+  t("and it read words, not noise — the sideways page read as fluent invention (CPDF-12's 8.67%)",
+    DCT_WORDS.every((w) => text.includes(w)), true);
 }
 
 footReached = true;

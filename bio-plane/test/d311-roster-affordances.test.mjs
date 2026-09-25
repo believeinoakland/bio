@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/d311.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (`d310.control.mjs`'s precedent). Re-run from `bio-plane/`: `node test/d311.control.mjs [arm]`. Every arm is armed ALONE, its anchor asserted to occur exactly once, and every source restored from a per-arm pristine copy verified by sha256, by content and by `cmp`. (1) THE ROW'S OWN — swap D-310's fact in: the roster fact's `owner` asks `#ownsAnyProject(actor)` instead of `#isProjectOwner(target, actor)` -> MUST FAIL "CROSS-PROJECT" (iris owns PA and merely joined PB, and is offered projectinvite on PB); MUST NOT FAIL the machine arms. (2) THE MACHINE RULE DROPPED — `deriveActs` no longer consults MACHINE_REFUSALS -> MUST FAIL "MACHINE WITHHELD"; MUST NOT FAIL "CROSS-PROJECT". (3) OVER-STRICTNESS — `projectjoin` narrowed to `state === "invited"` -> MUST FAIL the join row of "THE AGREEMENT" (a joined participant's join succeeds and is no longer offered); MUST NOT FAIL "CROSS-PROJECT". (4) THE STAMP — the roster fact asked of `identity` instead of `by` is NOT drivable here (no `ai` credential in this fixture); stated, not claimed.
-   RESULTS, RUN 2026-09-23 by the D-311 worker (sources affordances.mjs 156,123 B sha256 98783a998be2…, store.mjs 2,888,728 B sha256 87599f71a4c9…, each restored after every arm and verified by sha256, by content and by `cmp` x2): BASELINE 21/0 · (1) 15/6 — the invite, remove and owner-add AGREEMENT rows, the positions row, CROSS-PROJECT by name, and the structural `#ownsAnyProject` pin; the machine arms GREEN · (2) 20/1 — "MACHINE WITHHELD: on every fixture object" alone · (3) 19/2 — the projectjoin AGREEMENT row and the positions row · (4) 20/1 — "THE MACHINE MAP IS THE STORE'S" alone. 4 arms, 0 other than declared. The positions row falling beside the named arms in (1) and (3) is WIDER than declared and is kept: it pins the measured positions, so any change to them moves it. RE-RUN 2026-09-24 by c19-unionfix after two drives were added (D-149's `actionlaws`, REC-149's `projectvisibilityset`) and `actionlaws: "MACHINE_CANNOT_SET_LAWS"` joined MACHINE_REFUSALS: baseline 21/0; ARM (5) that entry deleted from affordances.mjs (anchor asserted once; restored by cp, sha256 AND cmp, 167,298 B) -> 20/1, "THE MACHINE MAP IS THE STORE'S" alone, AS DECLARED.
+   RESULTS, RUN 2026-09-23 by the D-311 worker (sources affordances.mjs 156,123 B sha256 98783a998be2…, store.mjs 2,888,728 B sha256 87599f71a4c9…, each restored after every arm and verified by sha256, by content and by `cmp` x2): BASELINE 21/0 · (1) 15/6 — the invite, remove and owner-add AGREEMENT rows, the positions row, CROSS-PROJECT by name, and the structural `#ownsAnyProject` pin; the machine arms GREEN · (2) 20/1 — "MACHINE WITHHELD: on every fixture object" alone · (3) 19/2 — the projectjoin AGREEMENT row and the positions row · (4) 20/1 — "THE MACHINE MAP IS THE STORE'S" alone. 4 arms, 0 other than declared. The positions row falling beside the named arms in (1) and (3) is WIDER than declared and is kept: it pins the measured positions, so any change to them moves it. RE-RUN 2026-09-24 by c19-unionfix after two drives were added (D-149's `actionlaws`, REC-149's `projectvisibilityset`) and `actionlaws: "MACHINE_CANNOT_SET_LAWS"` joined MACHINE_REFUSALS: baseline 21/0; ARM (5) that entry deleted from affordances.mjs (anchor asserted once; restored by cp, sha256 AND cmp, 167,298 B) -> 20/1, "THE MACHINE MAP IS THE STORE'S" alone, AS DECLARED. RE-RUN 2026-09-25 by the REC-186 worker after BOB #31's ruling narrowed projectjoin (not the joined) and projectleave (not the only owner), arm (3)'s anchor moved with the predicate: BASELINE 21/0 · (1) 14/7 — the six before PLUS "THE AGREEMENT — projectleave", WIDER than declared and kept: the leave offer now reads `f.roster.owner`, so D-310's swapped-in fact withholds leave from pam@PA (owner of PB, joined PA) whom the store lets leave · (2) 20/1 as before · (3) 19/2 as before · (4) 20/1 as before; 4 arms, 0 other than declared.
  * =========================================================================
  * D-311 — `op=affordances` PUBLISHED NOTHING ABOUT SEVEN ROSTER ACTS, AND OFFERED A MACHINE
  * CREDENTIAL ACTS ITS CLASS IS REFUSED BY NAME.
@@ -106,7 +106,7 @@ const mkProject = async (name) => {
   return must(`promote ${name}`, await POST(`op=promote&token=${ADM}`, {
     base: null, snapKey: `d311-${++snapSeq}-${sha(name).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: name, current_state: "forming",
+    meta: { object_type: "project", group: "believe-in-oakland", current_state: "forming",
             created: NOW, last_updated: LATER } })).bundleId;
 };
 const PA = await mkProject("D-311 project A");
@@ -148,6 +148,12 @@ console.log("\n--- 1. D-311: each roster act is OFFERED exactly where its store 
 /* THE OFFER SIDE FIRST, for every pair, before any probe can move the roster. */
 const offer = new Map();
 for (const [, tok] of CALLERS) for (const [, p] of PROJECTS) offer.set(`${tok}|${p}`, await offered(tok, p));
+/* REC-186: each caller's roster state AT OFFER TIME, read from the store's own participant list, because
+   the join agreement below turns on it and the leave probe moves it before the join probe runs. */
+const stateAt = new Map();
+for (const [pn, p] of PROJECTS)
+  for (const row of must(`participants of ${pn}`, await DO(`projectparticipants?projectId=${p}&by=ruth`, {})).participants)
+    stateAt.set(`${row.handle}|${pn}`, row.state);
 
 /* THE ACCEPT SIDE. Each probe carries a parameter chosen to fail AFTER every position and project
    check, so `accepted` means "refused only by the parameter" and nothing is written — except
@@ -175,7 +181,14 @@ for (const act of ROSTER)
     for (const [pn, p] of PROJECTS) {
       const r = await probe[act](tok, p, HANDLE.get(tok));
       const reason = codeOf(r);
-      rows.push({ act, who, pn, offered: offer.get(`${tok}|${p}`).includes(act), accepted: PARAM_ONLY.has(reason), reason });
+      /* CORRECTED by REC-186 (BOB #31, 2026-09-23 21:37Z): for projectjoin this read "accepted" as the
+         store answering ok, which counted a JOINED participant's join — idempotent, it succeeds and changes
+         nothing — as an act the caller can take, and so demanded the offer to a joined participant. The
+         ruling is that an offer that does nothing is an overclaim: join is accepted only where the store
+         answers ok AND the caller was not already joined when the offer was read. */
+      const noop = act === "projectjoin" && stateAt.get(`${HANDLE.get(tok)}|${pn}`) === "joined";
+      rows.push({ act, who, pn, offered: offer.get(`${tok}|${p}`).includes(act),
+                  accepted: PARAM_ONLY.has(reason) && !noop, reason: noop ? `${reason} (no-op: already joined)` : reason });
     }
 for (const act of ROSTER) {
   const mine = rows.filter((r) => r.act === act);
@@ -190,17 +203,22 @@ t("FIXTURE GUARD: every roster act is offered to somebody AND withheld from some
   ROSTER.filter((act) => { const m = rows.filter((r) => r.act === act); return !(m.some((r) => r.offered) && m.some((r) => !r.offered)); }), []);
 /* The positions the rows rest on, named, so a fixture drift is loud rather than a quiet green. */
 const at = (act, who, pn) => rows.find((r) => r.act === act && r.who.startsWith(who) && r.pn === pn);
-t("the positions, as measured: invite is the OWNER's; join every participant's (the invitee's, the "
-+ "joined, the leaving); leave the joined's; removal an OWNER's and NOT an administrator's (v2 7.7); "
+/* CORRECTED by REC-186 (BOB #31, 2026-09-23 21:37Z): this read "join every participant's (the invitee's,
+   the joined, the leaving)" and pinned pam@PA's join (joined) as offered — the overclaim the ruling closes.
+   A joined participant is not offered join; the project's only owner is not offered leave (iris@PA). */
+t("the positions, as measured: invite is the OWNER's; join the not-yet-joined participant's (the invitee's, "
++ "the leaving) and NOT the joined's; leave the joined's but NOT the only owner's; removal an OWNER's and NOT an administrator's (v2 7.7); "
 + "owner-removal clear of the one-owner floor only on PC; the rescue an administrator's on stranded PR only",
   [at("projectinvite", "iris", "PA").offered, at("projectinvite", "pam", "PA").offered,
    at("projectjoin", "olga", "PA").offered, at("projectjoin", "zed", "PA").offered, at("projectjoin", "pam", "PA").offered,
    at("projectleave", "zed", "PA").offered, at("projectleave", "olga", "PA").offered,
+   at("projectleave", "iris", "PA").offered, at("projectleave", "iris", "PA").reason,
    at("projectremove", "ruth", "PA").offered, at("projectremove", "founder", "PA").offered, at("projectremove", "iris", "PA").offered,
    at("projectownerremove", "iris", "PA").offered, at("projectownerremove", "iris", "PC").offered,
    at("projectownerrescue", "ruth", "PR").offered, at("projectownerrescue", "founder", "PR").offered,
    at("projectownerrescue", "ruth", "PA").offered],
-  [true, false, true, true, true, false, false, false, false, true, false, true, true, true, false]);
+  [true, false, true, true, false, false, false, false, "LAST_OWNER_CANNOT_LEAVE",
+   false, false, true, false, true, true, true, false]);
 
 /* ============================ 2. CROSS-PROJECT: the liar's route, named */
 console.log("\n--- 2. CROSS-PROJECT: the fact is the PAIR, never D-310's `owner of SOME project` ---");
@@ -255,7 +273,7 @@ const promote = async (id, text, type, state) => must(`promote ${id}`, await POS
   bundleId: id, base: null, snapKey: `d311-${++snapSeq}-${sha(id).slice(0, 6)}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information" ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`, current_state: state, created: NOW, last_updated: LATER } }));
+  meta: { object_type: type, group: "believe-in-oakland", current_state: state, created: NOW, last_updated: LATER } }));
 const INFO = "INFO-2026-9311-ledger", INQ = "INQ-2026-9311-transfer", ACTN = "ACTN-2026-9311-request";
 await promote(INFO, infoMd(INFO), "information", "collected");
 await promote(INQ, inquiryMd(INQ, INFO), "inquiry", "open");

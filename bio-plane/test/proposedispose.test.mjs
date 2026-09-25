@@ -106,7 +106,7 @@ const promoteReading = async (captureSha, entities) => {
   const prov = JSON.stringify({ documents: [doc] });
   const r = await post("promote", {
     bundleId: id, base: null, snapKey: "20260724T010000Z_aaaa1111", author: "rec7",
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Doc ${id}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
@@ -634,7 +634,7 @@ export default worker;
                entities: [{ ref: "fund:L", kind: "fund", key: "L", label: "Grant L" }] } };
   const lMd = bundleMd("INFO-2026-0901-rec184"), lProv = JSON.stringify({ documents: [lDoc] });
   await call("promote", { bundleId: "INFO-2026-0901-rec184", base: null, snapKey: "20260924T010000Z_bbbb2222", author: "rec184",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "Doc L", current_state: "collected",
+    meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
             created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: lMd, bytes: lMd.length, sha256: sha(lMd) },
             { path: "data/provenance.json", text: lProv, bytes: lProv.length, sha256: sha(lProv) }], register: [] });

@@ -42,6 +42,18 @@
  *       row renamed; it is a row withdrawn, and `cannedFor` returning null for a withdrawn row is
  *       correct behaviour. RED 4 of 84, the four naming the empty lookup and the panes it emptied.
  *       Corrected to a spelling INSIDE the convention, which is the variable the arm exists to move.
+
+       **CORRECTED 2026-09-25 by M0-148, never exempted — THE DECLARATION ABOVE WAS FALSE IN ITS
+       FIRST CLAUSE.** *"The same row, the same sentence"* holds for the CATALOGUE; it does not hold
+       for the ESTATE. `bio-plane/src/index.mjs` IMPORTS `DISPATCH_CHECKS` BY NAME and `dispatchRow`
+       reads it, so the catalogue-only rename STOPS THE PLANE: every suite that boots one through
+       Miniflare dies at `ERR_RUNTIME_FAILURE` (measured by UI-100's arm (D) on `case-frozen-pair`;
+       M-139 §7 item 2). This arm read GREEN only because the one suite it runs,
+       preauth-vocabulary, drives a MOCK plane and never loads `index.mjs` as code — so the green
+       was true of that suite and silent about the second variable the arm moved. The arm now
+       renames at the plane's import as well (`DISPATCH_MISS_CHECKS as DISPATCH_CHECKS`, UI-100's
+       spelling), leaving exactly one variable moved: whether a lookup that DISCOVERS the family
+       still finds the row. DECLARED: GREEN, and now it is a claim about the whole estate.
  *
  *   (D) THE WIDE DIRECTION — THE PLANE STOPS DECORATING. `...dispatchRow("UNKNOWN_OP"),` deleted from
  *       `bio-plane/src/index.mjs`'s `!spec` line, `error` left byte-identical. MUST FAIL: the SITE
@@ -133,9 +145,16 @@ const ARMS = [
   { id:"B", file:MODULE, why:"the other refusal alone: `translation` dropped from unknownOpWire",
     from:`  translation:UNKNOWN_OP_CANNED && UNKNOWN_OP_CANNED.translation, op });`,
     to:  `  translation:undefined, op });` },
-  { id:"C", file:CATLG, why:"OVER-STRICTNESS: the catalogue family renamed; same row, same sentence",
-    from:`export const DISPATCH_CHECKS = {`,
-    to:  `export const DISPATCH_MISS_CHECKS = {` },
+  /* CORRECTED 2026-09-25 by M0-148 (M-139 §7), never exempted: this arm renamed the family in
+     the catalogue ALONE, which stops the plane — index.mjs imports it by name. It now renames
+     at the plane's import too, so the only variable moved is whether a DISCOVERING lookup
+     still finds the row. See the declaration of (C) in this file's header. */
+  { id:"C", why:"OVER-STRICTNESS: the catalogue family renamed; same row, same sentence, the plane still starting",
+    edits:[
+      { file:CATLG, from:`export const DISPATCH_CHECKS = {`, to:`export const DISPATCH_MISS_CHECKS = {` },
+      { file:PLANE, from:`         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_CHECKS,`,
+        to:`         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_MISS_CHECKS as DISPATCH_CHECKS,` },
+    ] },
   { id:"D", file:PLANE, why:"the WIDE direction: the plane stops decorating the dispatch miss",
     from:`    if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"),\n                             op }, 400);`,
     to:  `    if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP",\n                             op }, 400);` },
@@ -155,38 +174,52 @@ if(bt.failed !== 0){
 }
 
 let asDeclared = 0;
+/* AN ARM MAY PATCH SEVERAL FILES (M0-148, for arm C): each edit is anchored EXACTLY ONCE, every
+   file gets its own uniquely-named pristine, and every one is restored and verified by sha256 AND
+   by `cmp` before anything is believed. A single-file arm is the one-edit case. */
 for(const arm of ARMS){
-  const pristine = path.join(TMP, `pristine-${arm.id}-${path.basename(arm.file)}`);
-  fs.copyFileSync(arm.file, pristine);
-  const before = sha(arm.file), bytes = fs.statSync(arm.file).size;
-  if(bytes < MIN_BYTES[arm.file]){
-    console.error(`ARM ${arm.id}: SUBJECT TOO SMALL (${bytes} B) — refusing to arm against a truncated file.`);
-    process.exit(1);
+  const edits = arm.edits || [{ file:arm.file, from:arm.from, to:arm.to }];
+  let armed = true;
+  const saved = [];
+  for(const [k, e] of edits.entries()){
+    const pristine = path.join(TMP, `pristine-${arm.id}${k}-${path.basename(e.file)}`);
+    fs.copyFileSync(e.file, pristine);
+    const before = sha(e.file), bytes = fs.statSync(e.file).size;
+    if(bytes < MIN_BYTES[e.file]){
+      console.error(`ARM ${arm.id}: SUBJECT TOO SMALL (${bytes} B) — refusing to arm against a truncated file.`);
+      process.exit(1);
+    }
+    saved.push({ file:e.file, pristine, before, bytes });
+    const src = fs.readFileSync(e.file, "utf8");
+    const hits = src.split(e.from).length - 1;
+    if(hits !== 1){
+      console.log(`ARM ${arm.id} — NEVER ARMED: its patch in ${path.basename(e.file)} matched ${hits} times, not once. `
+                + `AN ARM THAT DID NOT ARM IS A FINDING, and this arm reports nothing about the subject.`);
+      armed = false; break;
+    }
+    fs.writeFileSync(e.file, src.split(e.from).join(e.to));
   }
-  const src = fs.readFileSync(arm.file, "utf8");
-  const hits = src.split(arm.from).length - 1;
-  if(hits !== 1){
-    console.log(`ARM ${arm.id} — NEVER ARMED: its patch matched ${hits} times, not once. `
-              + `AN ARM THAT DID NOT ARM IS A FINDING, and this arm reports nothing about the subject.`);
-    continue;
+  const r = armed ? runSuite() : null;
+  const t = armed ? tally(r.out) : null;
+  /* ---- RESTORE EVERY FILE, and verify each TWO ways before believing anything. ---- */
+  let allRestored = true;
+  if(armed) console.log(`\nARM ${arm.id} — ${arm.why}`);
+  for(const f of saved){
+    fs.copyFileSync(f.pristine, f.file);
+    const after = sha(f.file);
+    let cmpOk = true;
+    try{ execFileSync("cmp", ["-s", f.file, f.pristine]); }catch{ cmpOk = false; }
+    const restored = after === f.before && cmpOk && fs.statSync(f.file).size === f.bytes;
+    if(armed) console.log(`  armed in ${path.relative(ROOT, f.file)} (${f.bytes} B)`);
+    console.log(`  RESTORED ${path.basename(f.file)}: sha256 ${f.before.slice(0,8)}… -> ${after.slice(0,8)}… · cmp `
+              + `${cmpOk ? "identical" : "DIFFERS"} · ${fs.statSync(f.file).size} B · ${restored ? "VERIFIED" : "*** RESTORE FAILED ***"}`);
+    if(!restored) allRestored = false;
   }
-  fs.writeFileSync(arm.file, src.split(arm.from).join(arm.to));
-  const r = runSuite();
-  const t = tally(r.out);
-  /* ---- RESTORE, and verify it TWO ways before believing anything. ---- */
-  fs.copyFileSync(pristine, arm.file);
-  const after = sha(arm.file);
-  let cmpOk = true;
-  try{ execFileSync("cmp", ["-s", arm.file, pristine]); }catch{ cmpOk = false; }
-  const restored = after === before && cmpOk && fs.statSync(arm.file).size === bytes;
-  console.log(`\nARM ${arm.id} — ${arm.why}`);
-  console.log(`  armed in ${path.relative(ROOT, arm.file)} (${bytes} B)`);
+  if(!allRestored) process.exit(1);
+  if(!armed) continue;
   console.log(`  RESULT: ${t.failed === -1 ? "NO TALLY LINE — the suite did not reach its own foot" :
                  t.failed === 0 ? `GREEN ${t.total}/${t.total}` : `RED ${t.failed} of ${t.total}`} (exit ${r.code})`);
   for(const l of failingLines(r.out)) console.log("    FAILING:", l);
-  console.log(`  RESTORED: sha256 ${before.slice(0,8)}… -> ${after.slice(0,8)}… · cmp ${cmpOk ? "identical" : "DIFFERS"} `
-            + `· ${fs.statSync(arm.file).size} B · ${restored ? "VERIFIED" : "*** RESTORE FAILED ***"}`);
-  if(!restored) process.exit(1);
   asDeclared++;
 }
 fs.rmSync(TMP, { recursive:true, force:true });

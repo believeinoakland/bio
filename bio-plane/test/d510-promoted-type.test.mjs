@@ -126,7 +126,7 @@ let seq = 0;
    one the plane VERIFIES (`replay-proof.mjs`) — since BOB #33's step (2) the only replay the plane honours. */
 const promote = async (id, text, { metaType = "action", state = "planned", token = "mem-d510",
                                    base = null, extra = {}, noMetaType = false, proof = false } = {}) => {
-  const meta = { group: "believe-in-oakland", title: "Records request",
+  const meta = { group: "believe-in-oakland",
                  current_state: state, created: NOW, last_updated: NOW };
   if (!noMetaType) meta.object_type = metaType;
   const pkg = {
@@ -168,6 +168,7 @@ const ADMIN_RUN = await (async () => {
   const pmd = ["---", "current_state: forming", `created: "${NOW}"`, `last_updated: "${NOW}"`,
                "references: []", "---", "", "## Summary", "", "The D-510 suite's surfacing-run project.", "", "## Session Log", ""].join(NL);
   const pr = await post("promote", { base: null, snapKey: "20260724T025900Z_d510run",
+    /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", title: "D-510 run project", current_state: "forming", group: "believe-in-oakland", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: pmd, bytes: pmd.length, sha256: sha(pmd) }], register: [] }, "adm-d510");
   const project = pr && pr.bundleId;

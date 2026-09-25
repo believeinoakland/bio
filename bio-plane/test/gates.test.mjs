@@ -178,6 +178,10 @@
  *   - `--since`'s: re-running only suites that read a file changed on both sides (the intersection of
  *     the two FILE sets). A tool moved on one side and its suite on the other shares no file, and that
  *     pairing was never measured anywhere. So an arm asserts the suite re-runs.
+ * NEGATIVE CONTROL: RAN 2026-09-25 by the M0-152 worker, by hand, ALONE: `tools/gates.mjs`'s `if (cls === "DOCS" ||
+ *   EXPLAIN)` put back to `if (cls === "DOCS")` (copied aside, restored sha256- and cmp-identical at 106,257 B) ->
+ *   baseline 126 pass / 0 fail; armed 125 / 1, EXACTLY "M0-152: ...and `--explain` prints the SAME derived doc-facing
+ *   set there"; its sibling (the diff reads TARGETED) held, so the arm moved the printing and nothing else.
  */
 /* NEGATIVE CONTROL: RAN 2026-09-24 by the M0-154 worker, by hand, over the DERIVED fixture copy list
  * (`test/gatedeps.mjs`). Declared before arming; each arm ALONE, the other three suites held open; every
@@ -722,6 +726,13 @@ section("M0-143 · THE DOC-FACING SET IS READ AS CODE — a comment names `docs/
     [["assembled.test.mjs", "dirnamed.test.mjs", "prose.test.mjs", "toolstring.test.mjs"], true]);
   t("...and the plan SAYS the set was read as code, so the selection stays auditable",
     d.out.includes("doc-facing suites derived fresh, read as code, comments blanked (strings kept)"), true);
+  /* M0-152: a caller that asks the gate "is this suite doc-facing?" (`fleetbundles.control.mjs` arm 5b) asks it over
+     a tree whose diff is CODE — its own control edits a suite — so `--explain` must print the same derived set in a
+     TARGETED plan, or the caller is left to restate the rule, which is how arm 5b went stale. */
+  const tg = withEdits(F.root, ["data/figures.txt"], () => gates(F.root, ["--explain"]));
+  t("M0-152: a code-only diff reads TARGETED, so the next arm is not asking a DOCS plan", tg.cls, "TARGETED");
+  t("M0-152: ...and `--explain` prints the SAME derived doc-facing set there — the derivation is not a DOCS-only fact",
+    [docFacingOf(tg), docFacingOf(tg).length > 0], [docFacingOf(d), true]);
 }
 
 /* ========================================================================== */

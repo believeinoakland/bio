@@ -21,6 +21,7 @@
    (D-235d) THE LABEL DE-TOTALISED: drop one field out of the computed source map while leaving it on the answer. ONLY THE TOTALITY ARM AND THE PARTITION PIN MAY FAIL; every behavioural arm stays GREEN, because the bytes are unchanged and only the answer's account of itself is wrong. That is the arm's justification, not a weakness in it.
    (D-235e) THE BLANK PART LABEL RE-ADMITTED: drop `filter(Boolean)` from the shared reader's ground derivation. ONLY THE REPLAY ARM MAY FAIL — `op=suggest` cannot produce a leg with no part (C-25.5 refuses it at `promote`), but the shape arm is `!pkg.replay`, so the record's own history can carry one.
    (D-235f) OVER-REACH, AND IT MUST FAIL THE OTHER WAY: make the shared reader drop the LEG as well as the blank label. The empty label is not a part anybody declared and comes out; the leg is a fact the record holds and must not. THE REPLAY ARM MUST FAIL, and a reader that silently withheld evidence would make a basis returned in part read as a basis.
+   (D-235g) `kind` DROPPED FROM `op=basisversions`' ANSWER: delete the `kind: r.kind ?? null,` line from `basisVersions`. THE CROSS-OP ARM "D-235 (3)", THE PER-KIND ARM "D-235 EACH OF THE FIVE" AND THE HAND-COMPOSED "D-235 (7) A HAND-COMPOSED VERSION" MUST FAIL — the first by `kind!=kind` in its disagreement list — while `op=suggest`'s own arms and the name/grounds arms stay GREEN, because `op=suggest` reads `kind` through its own read-back and never through this answer. MEASURED 2026-09-25 by `suggest.control.mjs`: 98 pass, 3 fail — exactly those three, `kind!=kind` the cross-op arm's disagreement; restored and verified by sha256 AND content; the whole harness 24/24 arms as declared. That run also RE-AIMED two anchors that had drifted to ZERO matches ((2) after MK-2, (D-235f) after REC-119 — the harness stopped at arm (2) and nothing below it had run), and D-235c reached its foot only after the D-271 arm's bare `.grounds.length` stopped throwing on the fail-safe's `null`.
    NOTE ON NUMBERING: the harness has always carried more arms than this list names its own ordinals for, so the D-231, D-234 and D-235 arms are LABELLED rather than numbered and `suggest.control.mjs` runs them under the same labels.
  * =========================================================================
  *
@@ -255,7 +256,7 @@ const promote = async (id, text, type, base = null, register = [], state = null)
      frontmatter said `retired` and whose row said `collected`, so D-168's
      fixture silently armed nothing. Caught by the fixture's own arm, which is
      why that arm asserts the state rather than trusting the promote. */
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state ?? (type === "inquiry" ? "open" : "collected"),
           created: NOW, last_updated: LATER } });
 const mustPromote = async (...a) => {
@@ -410,6 +411,18 @@ const read = async () => (await GET(`op=basisversions&token=${RUTH}&id=${INQ}&li
     [(answer.versions ?? []).filter((v) => v.hidden).length,
      (answer.versions ?? []).filter((v) => v.moved !== null).length],
     [0, 0]);
+  /* D-235: THE KIND, READ BY BOTH OPS FOR ALL FIVE. `op=suggest` answered
+     each of these with the kind it read back from the projection; before D-235
+     `op=basisversions` carried no `kind` key at all, so every row below read
+     `undefined` here. Asserted per kind rather than as a set, so a reader that
+     published one kind for every row would fail too. */
+  const kindsBack = Object.keys(LANDED).sort()
+    .map((k) => [k, LANDED[k]?.kind ?? null, byName.get(LANDED[k]?.version)?.kind ?? null]);
+  console.log(`      corpus: ${kindsBack.length} kind(s) read back across op=suggest and op=basisversions`);
+  t("D-235 EACH OF THE FIVE READS THE SAME KIND FROM BOTH OPS — `op=basisversions` publishes the kind "
+  + "`op=suggest` said the run proposed that version as, for every one of §9's kinds",
+    [kindsBack.length >= 5, kindsBack.filter(([k, a, b]) => !(a === k && b === k)).map(([k]) => k)],
+    [true, []]);
   t("the empty-level kind lands with NO legs and is still a real answer — §9's kind exists so a run that "
   + "honestly found nothing is distinguishable from a run that emitted nothing",
     [byName.get("nothing on the open internet")?.legs?.length,
@@ -785,7 +798,12 @@ console.log("\n--- 2. the six pre-write checks, PLANE-SIDE, each driven by C-num
     [Array.isArray(LANDED["basis-version"].shared_origins),
      LANDED["basis-version"].shared_origins.length,
      LANDED["basis-version"].origins_complete,
-     LANDED["basis-version"].grounds.length],
+     /* `?.`, CORRECTED 2026-09-25 by D-235: the fail-safe side publishes
+        `grounds: null` when the read-back comes back empty, and a bare
+        `.length` then THREW — a TypeError that ended the module 60-odd
+        assertions early, so (D-235c)'s named arms never ran. Null now fails
+        this assertion by name instead. */
+     LANDED["basis-version"].grounds?.length ?? null],
     [true, 0, true, 1]);
   /* AND THE PIN THAT MAKES THE CONSTANT UNMISSABLE. Driven rather than argued:
      a one-part reading and a two-part reading with genuinely separate origins
@@ -1126,6 +1144,10 @@ console.log("\n--- 5. the kind is checked at BOTH gates, and it is inside the fr
     [/\bkind\t/.test(String(authored?.composition)), authored?.state,
      /\ndescription\t/.test(String(authored?.composition))],
     [false, "suggested", true]);
+  t("D-235 (7) A HAND-COMPOSED VERSION PUBLISHES `kind: null` — the key present "
+  + "and the value stated, never omitted and never defaulted to a kind, because a member's own reading "
+  + "is not a suggestion of any kind (the schema's own words)",
+    [authored ? "kind" in authored : null, authored?.kind], [true, null]);
   t("AND THE FREEZE STILL HOLDS OVER IT: re-promoting that document unchanged does not fire the freeze, "
   + "which is the arm that says the conditional line is a NO-OP for every version already in a record "
   + "rather than a change nobody measured",
@@ -1445,8 +1467,15 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
      is PRINTED and FLOORED: a mapping that had gone empty would compare nothing
      and pass, which is the shape three instruments in this repository took in
      one week. */
-  /* WHAT THIS ARM CANNOT SEE, AND IT IS A FINDING RATHER THAN AN OMISSION.
-     `kind` IS ABSENT FROM THIS MAP BECAUSE `op=basisversions` DOES NOT PUBLISH
+  /* CLOSED 2026-09-25 BY D-235 ITSELF, and the paragraph below is kept as the
+     record of what this arm could not see until then: `op=basisversions` now
+     publishes `kind` on every version, so `kind` is IN the map and the corpus
+     floor rose from nine to ten. The old assertion's "nine" and its "`kind` is
+     NOT in the corpus" were not wrong when written; they described the other
+     reader's silence, which is what this landing removed.
+
+     WHAT THIS ARM COULD NOT SEE, AND IT WAS A FINDING RATHER THAN AN OMISSION.
+     `kind` WAS ABSENT FROM THIS MAP BECAUSE `op=basisversions` DOES NOT PUBLISH
      IT AT ALL. Measured, not read: the first run of this arm came back
      `["kind!=kind", "legs!=legs"]`, and only one of those was the defect D-235
      names. The projection STORES `kind` — PL-3 put it in the composition and
@@ -1460,7 +1489,7 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
      cross-checked against the other reader, because the other reader is silent
      about it. Saying so is the point — a thing the matcher cannot see must be
      NAMED, never silently scored zero. */
-  const MAP = { version: "name", run: "run", state: "state", author: "author",
+  const MAP = { version: "name", kind: "kind", run: "run", state: "state", author: "author",
                 at: "at", legs: "legs", count: "leg_count", grounds: "grounds",
                 composition: "composition" };
   /* THE FIXTURE'S NAME FOLDS TOO, AND THAT IS A CORRECTION MADE BY RUNNING THE
@@ -1486,12 +1515,11 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
     .map(([a, b]) => `${a}!=${b}`);
   console.log(`      corpus: ${Object.keys(MAP).length} field(s) compared across op=suggest and op=basisversions`);
   t("D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD IS THE SAME FACT `op=basisversions` PUBLISHES "
-  + "FOR THAT VERSION — nine of them, driven across two ops rather than asserted at the helper, over a "
-  + "submission carrying characters the document cannot hold so the two sources cannot coincide by "
-  + "accident. REC-75 proved this for `composition` alone; the rest of the answer was the half D-235 "
-  + "named. `kind` is NOT in the corpus and the comment above says why: the other reader is silent "
-  + "about it",
-    [quoted.ok, heldQ !== null, disagree, Object.keys(MAP).length >= 9],
+  + "FOR THAT VERSION — ten of them, `kind` among them, driven across two ops rather than asserted at "
+  + "the helper, over a submission carrying characters the document cannot hold so the two sources "
+  + "cannot coincide by accident. REC-75 proved this for `composition` alone; the rest of the answer "
+  + "was the half D-235 named",
+    [quoted.ok, heldQ !== null, disagree, Object.keys(MAP).length >= 10],
     [true, true, [], true]);
   /* CORRECTED 2026-09-17 BY REC-119 (D-411), NOT EXEMPTED, AND THE OLD
      EXPECTATION IS WRONG RATHER THAN MERELY OUT OF DATE.
@@ -1647,7 +1675,7 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
       snapKey: `${RINQ}-replay`,
       files: [{ path: "bundle.md", text: withUnlabelledLeg,
                 bytes: withUnlabelledLeg.length, sha256: sha(withUnlabelledLeg) }],
-      meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${RINQ}`,
+      meta: { object_type: "inquiry", group: "believe-in-oakland",
               current_state: "open", created: NOW, last_updated: LATER } }));
     const held = ((await GET(`op=basisversions&token=${RUTH}&id=${RINQ}&limit=10`)).versions ?? [])[0];
     t("D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE, DRIVEN END TO END: a "

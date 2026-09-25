@@ -4,8 +4,8 @@
  * is not a plane source, it is not bundled, and no real slug ever carries it.
  *
  * WHAT IT IS. wasm tesseract (`tesseract-wasm`) running IN workerd, so DEC-42's
- * CPU question and the memory question nobody has taken (33.6 MB per RGBA frame
- * against a 128 MB isolate) can be read off the PLATFORM's billing surface —
+ * CPU question and the memory question nobody has taken (33.6 MB per RGBA frame:
+ * which frame size completes) can be read off the PLATFORM's billing surface —
  * never off this Worker's own clock, which is a fabrication (D-56,
  * `src/cpu.mjs`). Nothing here times itself and nothing here reports a
  * millisecond about its own compute.

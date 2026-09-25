@@ -469,6 +469,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.45", "AI_RUN_RERUN_SELF"],
     ["C-33.46", "AI_RUN_RERUN_UNKNOWN"],
     ["C-33.47", "AI_RUN_RERUN_OTHER_CONTEXT"],
+    /* REC-186, 2026-09-25 (BOB #31's ruling): op=projectleave refuses a project's ONLY owner. C-33.48, not
+       .44, because REC-205/REC-207's unmerged branches hold .44-.46. D-PIN-B failed naming exactly this
+       row when it landed — the arm doing its job. */
+    ["C-33.48", "LAST_OWNER_CANNOT_LEAVE"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -588,7 +592,14 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        the re-run link's three refusals at `aiRunOpen > is-airun-rerun-link`. */
     /* CONDUCT #21 at c21-batch28: 67 at the union — REC-205's C-33.44 (64 on its branch) and REC-207's three,
        renumbered C-33.45..C-33.47 off that collision; RE-READ from this suite's print on the merged tree. */
-    rowsSeen, 67);
+    /* REC-186 side, kept as history: MOVED 63 -> 64 on 2026-09-25 (REC-186), FROM THE FIGURE THIS INSTRUMENT PRINTED
+       ("corpus: 64 rows across 2 families") on the item's tree over origin/main 8bdf20e6, never 63 + 1: C-33.48
+       LAST_OWNER_CANNOT_LEAVE — `rowsSeen, 64` on its branch. Ours' figure is kept at c22-batch29; NUMBER TO RE-READ
+       from this suite's print on the union (REC-186's row arrives over ours' 67). */
+    /* CONDUCT #22 at the c22-batch29 union: 67 -> 68, RE-READ from this suite's print on the merged tree ("corpus: 68
+       rows across 2 families", "got 68"), never 67 + 1: REC-186's C-33.48 LAST_OWNER_CANNOT_LEAVE, renumbered off
+       REC-207's C-33.47 at c22-rec186-renumber, the batch's one arrival in these two families. */
+    rowsSeen, 68);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

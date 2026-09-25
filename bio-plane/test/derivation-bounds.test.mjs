@@ -581,7 +581,11 @@ const D384_LEAVES = [
   { name: "#frontierMeaning", why: "the same shape: #frontierVerification and #missingMeaningCause per "
       + "row over a (cap+1)*3 page and three LIMIT cap+1 scans; the only unbounded scan is the tally, "
       + "read ONCE. REC-95's admission states the bound itself" },
-  { name: "#monitorCadencePlan", why: "one linear pass over monitored bundles, arithmetic per row" },
+  /* CORRECTED 2026-09-25 (REC-191), not exempted: the plan's row source moved into
+     #monitorSubjects, which groups monitored bundles by ADDRESS; the old reason named a pass
+     over bundles, which the method no longer makes. It still makes one linear pass. */
+  { name: "#monitorCadencePlan", why: "one linear pass over the address subjects #monitorSubjects builds "
+      + "(three linear reads, grouped in memory in one pass over the chain — REC-191), arithmetic per row" },
   { name: "#queueMutes", why: "one linear pass, a parse of each row's own column" },
   { name: "#queueRenotifyWake", why: "one linear pass computing a minimum" },
   { name: "#searchedForCase", why: "every scan is batched per chunk of 50 subjects (linear in "
@@ -1390,7 +1394,41 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    declared roster, and a page that stopped short would publish a decided finding as undecided — the defect
    this item closes. It is a per-key read (the `#groupIdentityHistory` / `projectVisibility` argument above),
    called once per assembled instance, and it does NOT join the amplification class (26 is unchanged). */
-const SCANNING_MEASURED_2026_09_15 = 118;
+/* 117 -> 118, 2026-09-25 by REC-220, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (118) and diffed by name
+   against the 117 above. ONE ARRIVAL, NO DEPARTURE, and not a lost LIMIT: `#legVersions`, which states
+   each leg's VERSION on op=earnedbasis (Bob's 2026-09-25 00:40Z doctrine, rule 1). Its row sources are
+   the question's own legs — the set `earnedBasis` already reads unbounded and is already on this roster
+   for — read in CHUNKS under D-36's variable ceiling (one grouped count per chunk of targets, one content
+   read per chunk of ids), never one read per leg. It is not in the amplification CLASS; the class roster
+   pinned by name above is unmoved. */
+/* 117 -> 118, 2026-09-25 by D-451, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (118) and diffed by name against the
+   117 above. ONE ARRIVAL, NO DEPARTURE: `#runContextQuestions` — the `cites` rows out of ONE project,
+   `WHERE bundle_id=?`, a per-key read (a project's own citations, a roster), published by `op=airun` as a project
+   run's `context.questions`. Not a lost LIMIT on a read that had one. It asks `#citesInto` and `#inSight` per
+   cited question, helper calls this walk does not see as `#rows(` (the declared helper blind spot `eachImage`'s note
+   records); the amplification CLASS is unmoved. */
+/* 117 -> 118, 2026-09-25 by D-523, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (118) and diffed by name against
+   the 117 above. ONE ARRIVAL, NO DEPARTURE: `#conditionsRenderDeferred`, op=queue's `render-deferred` producer (BOB
+   #33's ruling of 2026-09-24 19:54Z). ADMITTED, NOT FIXED, AND THE ADMISSION IS A DEFECT NAMED RATHER THAN A CLEAN
+   BILL: it is `#conditionsCaptureRequested`'s shape one producer down — a walk over `capture_requests` gated at the
+   target, with no SQL bound, whose EXPIRED rows (like that sibling's CAPTURED ones) stay in the table and in the
+   answer for as long as the request row exists. Bounding one of the two alone would leave the feed's two readers of
+   one table under two rules; the class fix (both producers bounded, the cut published on op=queue) is minted in
+   D-523's report, not taken here. */
+/* 117 -> 118, 2026-09-25 by REC-219 / D-579(a), READ FROM THE CENSUS ROSTER THIS RUN PRINTED (118) and diffed by
+   name against the 117 above. ONE ARRIVAL, NO DEPARTURE, and not a lost LIMIT: `#caseCitations`, which reads a
+   case's citation edges at op=publish to sign each with its version. Its row sources are the project's own
+   `references[]` (one bundle.md, itself bounded by INLINE_MAX) and one grouped capture count per CHUNK of targets
+   under D-36's variable ceiling — never one read per edge; REC-220's `#legVersions` has the same shape. It is not in
+   the amplification CLASS; the class roster pinned by name above is unmoved. REC-220 (land/worker/REC-220) takes
+   117 -> 118 for `#legVersions` on its own branch, so AT THE UNION this figure is 119 — re-read from the print. */
+/* 118 -> 122 at the c22-batch29 union (CONDUCT #22, 2026-09-25), READ FROM THE CENSUS ROSTER THIS RUN PRINTED on the
+   merged tree (`CENSUS ROSTER (122 methods scanning UNBOUNDED)`) and DIFFED BY NAME against the same suite's roster on
+   origin/main 5e8a65a8 (118), never 118 + 4. FIVE ARRIVALS, ONE DEPARTURE: `#caseCitations` (REC-219), `#legVersions`
+   (REC-220), `#runContextQuestions` (D-451) and `#conditionsRenderDeferred` (D-523) — each named in its own note above,
+   D-523's as an admitted defect — and `#monitorSubjects` (REC-191), which took over `#monitorCadencePlan`'s row source
+   (REC-191's correction of that admission, above), so `#monitorCadencePlan` left the roster as it arrived. */
+const SCANNING_MEASURED_2026_09_15 = 122;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "

@@ -128,7 +128,9 @@ const bundle = (id, type, extra = {}) => {
   return {
     ...(type === "project" ? {} : { bundleId: id }), base: null,
     snapKey: `20260922T1200${String(++seq).padStart(2, "0")}Z_aaaa1111`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `title for ${id}`,
+    /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: the label `title for ${id}` contradicted the question's
+       own `title:` and is now refused; the project's document states no title, so the label stays its only name. */
+    meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `title for ${id}` } : {}),
             current_state: type === "project" ? "forming" : type === "information" ? "collected" : "open",
             created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...(extra.files ?? [])],

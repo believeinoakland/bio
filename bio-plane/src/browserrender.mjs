@@ -88,6 +88,8 @@ const CLIENT_HEADER = "bio-plane";
    CHOICE, not a measurement: puppeteer's own `networkidle0` uses 500 ms and this
    matches it so the two agree about what the word means. */
 const IDLE_QUIET_MS = 500;
+/* D-520: the least of the render's bound kept for serialising the document after the wait. */
+const SERIALISE_MS = 1000;
 
 /* D-529 — HOW LONG THE DRIVER SPENDS COLLECTING RESPONSE BODIES, in total, after
    the wait. A CHOICE, not a measurement. It is bounded so the render stays inside
@@ -125,8 +127,11 @@ async function openSession(binding) {
  *  is what CDP returns for text) or `body_unavailable` (the browser's or the bound's own
  *  sentence). The driver hashes NOTHING: the plane hashes what it keeps (`render.mjs`
  *  `keepRenderBodies`), so the digest on the record is never the renderer's word. */
-export async function collectBodies(conn, sessionId, entries, { now = () => Date.now() } = {}) {
-  const deadline = now() + BODY_PHASE_MS;
+export async function collectBodies(conn, sessionId, entries, { now = () => Date.now(), until = Infinity } = {}) {
+  /* CONDUCT #22 (c22-batch29), composing D-529 with D-520: D-520 makes the render honour its
+     navigation bound, so the navigation half of the reservation is no longer slack this phase
+     can assume; the phase also ends at `until`, the render's own `navMs + timeoutMs`. */
+  const deadline = Math.min(now() + BODY_PHASE_MS, until);
   let taken = 0, spent = 0;
   for (const e of entries) {
     if (e.outcome !== "completed") continue;
@@ -135,7 +140,12 @@ export async function collectBodies(conn, sessionId, entries, { now = () => Date
     if (taken >= SUBRESOURCE_CAP) { e.body_unavailable = `past the ${SUBRESOURCE_CAP}-body ceiling`; continue; }
     if (spent >= SUBRESOURCE_BUDGET) { e.body_unavailable = `the ${SUBRESOURCE_BUDGET}-byte body budget was spent`; continue; }
     const left = deadline - now();
-    if (left <= 0) { e.body_unavailable = `the ${BODY_PHASE_MS} ms body-collection bound was spent`; continue; }
+    if (left <= 0) {
+      e.body_unavailable = deadline === until
+        ? "the render's reserved bound (navigation + wait) was spent before this body was collected"
+        : `the ${BODY_PHASE_MS} ms body-collection bound was spent`;
+      continue;
+    }
     try {
       const b = await conn.send("Network.getResponseBody", { requestId: e.rid }, sessionId, Math.min(BODY_CALL_MS, left));
       if (typeof b.body !== "string") { e.body_unavailable = "the browser answered with no body"; continue; }
@@ -151,6 +161,18 @@ export async function collectBodies(conn, sessionId, entries, { now = () => Date
       e.body_unavailable = `the browser would not give the body: ${String((err && err.message) || err).slice(0, 200)}`;
     }
   }
+}
+
+/* D-520: the session opening, inside the navigation bound. `binding.fetch` takes no
+   timeout of its own, so the two calls race a timer; a binding that never answers fails
+   the render by name instead of holding the isolate past what was reserved for it. */
+async function boundedOpen(binding, ms) {
+  let timer = null;
+  const expire = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`the Browser Rendering binding gave no session within the ${ms} ms navigation bound`)), ms);
+  });
+  try { return await Promise.race([openSession(binding), expire]); }
+  finally { clearTimeout(timer); }
 }
 
 /** The CDP connection: one socket, ids, per-session events.
@@ -217,11 +239,34 @@ const resourceType = (t) => (typeof t === "string" && t ? t.toLowerCase() : "oth
 export async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) {
   const asked = req || {};
   const timeoutMs = Math.max(1000, Number(asked.wait?.timeout_ms) || 15000);
+  /* D-520 — THE NAVIGATION BOUND IS HONOURED HERE, and until D-520 it was not read at all.
+     `render.mjs` asks `navigation_timeout_ms` and `renderReserveMs` reserves it against the
+     allowance and the concurrency slot, but this driver bounded Page.navigate by the WAIT
+     timeout and every setup command by `send`'s 30,000 ms default, so the reservation was a
+     bound the renderer was asked for and did not hold. Now the render has TWO phases, each
+     with its own deadline: getting to the page (session, target, emulation, domains and
+     Page.navigate to commit) inside `navMs`, and the wait plus the serialisation inside
+     `timeoutMs` from the moment the navigation committed, so the whole render ends inside
+     `navMs + timeoutMs` — the figure reserved. A renderer asked for no navigation bound
+     keeps 30,000 ms, the figure this driver held before (`render.mjs` always asks one).
+     WHAT THIS CANNOT BOUND: the session close in `finally`, which runs after `elapsed_ms`
+     is taken and has its own 5,000 ms bounds, and the platform's own time to hand out a
+     browser, which happens inside `navMs` only as far as the binding's fetch answers. */
+  const navMs = Math.max(1000, Number(asked.navigation_timeout_ms) || 30000);
   const until = typeof asked.wait?.until === "string" ? asked.wait.until : "networkidle";
   let sess = null, conn = null, targetId = null;
   const started = now();
+  const navDeadline = started + navMs;
+  /* What is left of a phase, for one command. A phase already spent fails the render BY
+     NAME rather than sending a command with a zero or negative bound. */
+  const left = (deadline, phase) => {
+    const ms = deadline - now();
+    if (ms <= 0) throw new Error(`the render's ${phase} bound was spent before it finished`);
+    return ms;
+  };
+  const navLeft = () => left(navDeadline, `navigation (${navMs} ms)`);
   try {
-    sess = await openSession(binding);
+    sess = await boundedOpen(binding, navMs);
     conn = cdpConnection(sess.ws);
 
     /* The engine names ITSELF. `Browser.getVersion`'s `product` is the string the
@@ -230,7 +275,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
        version rather than halved into a guess. */
     let engine = null, engineVersion = null;
     try {
-      const v = await conn.send("Browser.getVersion");
+      const v = await conn.send("Browser.getVersion", {}, undefined, navLeft());
       const product = typeof v.product === "string" ? v.product : null;
       if (product) {
         const slash = product.lastIndexOf("/");
@@ -243,15 +288,15 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
        would render in a tab nobody navigated. Only if there is none do we make one. */
     let pageTarget = null;
     try {
-      const { targetInfos } = await conn.send("Target.getTargets");
+      const { targetInfos } = await conn.send("Target.getTargets", {}, undefined, navLeft());
       pageTarget = (Array.isArray(targetInfos) ? targetInfos : []).find((t) => t && t.type === "page") || null;
     } catch { pageTarget = null; }
     if (!pageTarget) {
-      const made = await conn.send("Target.createTarget", { url: "about:blank" });
+      const made = await conn.send("Target.createTarget", { url: "about:blank" }, undefined, navLeft());
       targetId = made.targetId;
     } else targetId = pageTarget.targetId;
     if (!targetId) throw new Error("the browser gave this render no page target");
-    const { sessionId } = await conn.send("Target.attachToTarget", { targetId, flatten: true });
+    const { sessionId } = await conn.send("Target.attachToTarget", { targetId, flatten: true }, undefined, navLeft());
     if (!sessionId) throw new Error(`the browser did not attach a session to target ${targetId}`);
 
     /* THE ENVIRONMENT WE ASK FOR. Each is recorded as ASKED by `renderBlock`
@@ -264,13 +309,13 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     try {
       await conn.send("Emulation.setDeviceMetricsOverride", {
         width: Math.round(Number(vp.width) || 1280), height: Math.round(Number(vp.height) || 800),
-        deviceScaleFactor: Number(asked.dpr) || 1, mobile: false }, sessionId);
+        deviceScaleFactor: Number(asked.dpr) || 1, mobile: false }, sessionId, navLeft());
       envOk.viewport = true; envOk.dpr = true;
     } catch { /* recorded as not honoured, below */ }
     if (typeof asked.locale === "string" && asked.locale)
-      try { await conn.send("Emulation.setLocaleOverride", { locale: asked.locale }, sessionId); envOk.locale = true; } catch { /* as above */ }
+      try { await conn.send("Emulation.setLocaleOverride", { locale: asked.locale }, sessionId, navLeft()); envOk.locale = true; } catch { /* as above */ }
     if (typeof asked.timezone === "string" && asked.timezone)
-      try { await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked.timezone }, sessionId); envOk.timezone = true; } catch { /* as above */ }
+      try { await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked.timezone }, sessionId, navLeft()); envOk.timezone = true; } catch { /* as above */ }
 
     /* THE TWO OBSERVATION DOMAINS, AND WHAT IT MEANS WHEN ONE WILL NOT ENABLE.
        `Network` gives the request ledger; `Debugger` gives the scripts the engine
@@ -279,9 +324,9 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
        and is NOT the same as an empty list (BOB #31 rules exactly that). */
     let requests = new Map(), scripts = [];
     let sawNetwork = false, sawDebugger = false;
-    try { await conn.send("Network.enable", {}, sessionId); sawNetwork = true; } catch { /* requests -> null */ }
-    try { await conn.send("Page.enable", {}, sessionId); } catch { /* the load event is one of two wait conditions; the other still works */ }
-    try { await conn.send("Debugger.enable", {}, sessionId); sawDebugger = true; } catch { /* scripts -> null */ }
+    try { await conn.send("Network.enable", {}, sessionId, navLeft()); sawNetwork = true; } catch { /* requests -> null */ }
+    try { await conn.send("Page.enable", {}, sessionId, navLeft()); } catch { /* the load event is one of two wait conditions; the other still works */ }
+    try { await conn.send("Debugger.enable", {}, sessionId, navLeft()); sawDebugger = true; } catch { /* scripts -> null */ }
 
     let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
     conn.on((m) => {
@@ -344,7 +389,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     /* NAVIGATE. A navigation the browser refuses outright (`errorText`) is a
        failed render and says which address and why — it is never a render of
        `about:blank` reported as the page. */
-    const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, timeoutMs);
+    const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, navLeft());
     if (nav.errorText) throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}`);
     mainFrameId = nav.frameId || null;
 
@@ -353,7 +398,14 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
        that happened — `timeout` is a real answer here, not a failure: the page had
        15 s and never went quiet, and a capture of what it showed at that moment is
        the fact. */
-    const deadline = started + timeoutMs;
+    /* D-520: the wait's bound runs from the COMMIT, not from `started`: before D-520 the
+       wait's 15 s had to pay for the session and the navigation too, so a slow navigation
+       silently shortened the wait it was asked for. */
+    /* And the whole render ends inside `navMs + timeoutMs`, the figure reserved: the wait
+       gives up to SERIALISE_MS of its end to the serialisation below only when the
+       navigation used so much of its own bound that the two would not otherwise fit. */
+    const overall = started + navMs + timeoutMs;
+    const deadline = Math.min(now() + timeoutMs, overall - SERIALISE_MS);
     let fired = null;
     while (now() < deadline) {
       if (until === "load" && loadFired) { fired = "load"; break; }
@@ -372,7 +424,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       expression: `JSON.stringify({`
         + `html: (document.doctype ? "<!DOCTYPE " + document.doctype.name + ">\\n" : "") + document.documentElement.outerHTML,`
         + `url: location.href })`,
-      returnByValue: true, awaitPromise: false }, sessionId, timeoutMs);
+      returnByValue: true, awaitPromise: false }, sessionId, left(overall, `render (${navMs + timeoutMs} ms)`));
     let html = null, navigatedTo = null;
     try {
       const parsed = JSON.parse(evaluated.result?.value);
@@ -384,7 +436,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
 
     /* D-529: AFTER the document is taken, so collecting bodies cannot change what the
        page showed, and before the session closes, which is when the browser drops them. */
-    if (sawNetwork) await collectBodies(conn, sessionId, [...requests.values()], { now });
+    if (sawNetwork) await collectBodies(conn, sessionId, [...requests.values()], { now, until: overall });
 
     const elapsed = now() - started;
     return {

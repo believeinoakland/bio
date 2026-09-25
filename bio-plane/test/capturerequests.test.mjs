@@ -17,6 +17,12 @@
    (13) THE HOLD. Let a refused render fall through to the ordinary fetch-failure path -> 109 pass, 7 FAIL: the row carries CAPTURE_FETCH_FAILED over a fetch never attempted and the run's log says the source could not be reached when nothing was sent to it, which is D-104's split inverted.
    (14) OVER-STRICTNESS, and it breaks ONLY correct work: make the door refuse `render: false` too -> 114 pass, 2 FAIL, both naming the plain-capture arms, and every deferral arm STAYS GREEN. A fence that refuses a caller saying "no render" is an undeclared interface change wearing the costume of caution.
    (15) THE HOST'S SLOT. Remove the rollback the deferral does and a render that fetched nothing keeps the host's one fetch per tick, starving a plain request behind it until the render row expires 24h later -> 113 pass, 3 FAIL, its two declared arms among them. **AN ANOMALY, RECORDED RATHER THAN SMOOTHED: the third failure is the ROW-carries-the-deferral arm, which this arm's edit does not reach (it reads the row after the FIRST drain, where only one row of that host is in the tick). 31 hand re-runs of the byte-identical armed tree — serial, five and six concurrent, with and without a probe line — gave 114/2 every time and never reproduced it.** The candidates are named and neither is asserted: another worker's battery on this shared machine during that one run, or something in the harness's own `execFileSync` environment. What is established is that both DECLARED failures fired on every measurement.
+   D-523 ADDED FIVE ARMS (16)-(20), RUN 2026-09-25 on base origin/main 8bdf20e6 plus this item, ALL TWENTY AS DECLARED (`20 arms run, 0 behaved differently from their declaration`), baseline 133/0 and hygiene 1198/0 before each and every restore verified by sha256 AND by content. Arms (10), (11) and (13) now fail 18, 18 and 15 rather than 7: block 7d stands on the deferral they break, and every assertion they declared still fails by name.
+   (16) THE ROW'S OWN CONTROL (its accepts-when's arm) — let expiry DELETE the held render instead of recording it -> 131 pass, 2 FAIL, exactly the two declared: "THE ROW READS UNDETERMINED AFTER EXPIRY" and "op=queue does not DROP it". The drain's own answer and the held-phase item stay GREEN, which is the point: the tick SAID it released the render and the record kept nothing.
+   (17) THE HOLD UNBOUNDED, the state before D-523 — neuter the expiry sweep -> 125 pass, 8 FAIL: the release, the rate arm at expiry, the row, the item, the log line, released-once, and the fresh re-ask (the unreleased row is still the standing one).
+   (18) THE FIRST DRAFT'S SWEEP, C-83 codes only -> 131 pass, 2 FAIL: THE RATE ARM AT EXPIRY and RELEASED ONCE (the rate-held render is asked again past its expiry and released a tick late); the C-83 release stays GREEN.
+   (19) THE CONDITION KIND ABSENT — drop the producer from #queueConditions -> 128 pass, 5 FAIL, every one an op=queue assertion; the row and the drain stay GREEN.
+   (20) TIGHTER THAN THE RULE — show a held render only under a C-83 code -> 132 pass, 1 FAIL: the rate-paused render vanishes from the queue while it still waits; the C-83 item and the expired item stay GREEN.
    (9) OVER-STRICTNESS, and these PASS rather than fail: a document under a robots.txt `Disallow` path CAPTURES (BOB-3); a RECORDED member-browser agent CAPTURES and its agent leaves verbatim; a second request for the same address from the same run is the standing row and not a second fetch; and a `purpose: acquire` request captures exactly as `investigate` does. A fence that refuses correct work is a defect in the fence.
  * ========================================================================= */
 /* IS-BUILD-PLAN PL-4 / IS-4 / SWEEP §4b.1 — `capture_requests`, DRAINED BY THE DAEMON.
@@ -122,7 +128,11 @@ const mf = new Miniflare({
                  no renderer bound it would stop one gate earlier at C-83.3 and the
                  row's accepts-when could not be driven at all. Nothing else in
                  this suite asks for a render, so no other arm can see this value. */
-              RENDER_DAILY_ALLOWANCE_MS: "0" },
+              RENDER_DAILY_ALLOWANCE_MS: "0",
+              /* D-520: A CONCURRENCY CAP OF ONE, read only by block 7d. The cap is decided
+                 BEFORE the allowance, so with no slot taken this changes nothing 7c sees;
+                 7d takes the one slot by hand and the drain then meets the cap first. */
+              RENDER_CONCURRENCY_CAP: "1" },
   serviceBindings: { SELF: async (request) => MF.dispatchFetch(request),
     /* D-491: A RENDERER THAT MUST NEVER BE REACHED. Miniflare has no browser, and
        this fixture does not need one: the allowance above defers before anything
@@ -214,7 +224,7 @@ const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
   snapKey: `${id}-${String(++snapKeySeq).padStart(6, "0")}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : "collected",
           created: NOW, last_updated: LATER } });
 
@@ -839,12 +849,193 @@ console.log("\n--- 7c. a request can ask for the RENDERED page, and a render thi
      serves are not one document — that is D-64's founding claim, and the plane
      files them under two digests. Asked LAST and never drained: what is asserted
      is the DOOR's answer, and a third row on this host would only add a
-     tick-ordering dependency the arms above have already paid for. */
-  const plainSame = await request({ address: RENDERABLE });
+     tick-ordering dependency the arms above have already paid for.
+     CORRECTED BY D-523, never exempted: block 7d below DOES drain this row, and
+     with a minted id it tied the render row on `requested_at` and won the tick's
+     one slot for the host by the DRAW of its id — measured: the render row's C-83
+     code was overwritten by CAPTURE_CONDUCT_TICK_SPENT on one run and not on
+     another. The literal id sorts AFTER ID_RENDER, so the render is always
+     reached first, exactly as this block's header prescribes for the other two. */
+  const plainSame = await request({ address: RENDERABLE, request: "CR-D491-3-PLAIN-SAME" });
   t("a PLAIN request for the address the render named is a SECOND row, not the render's: answering "
   + "it with the standing render would report a capture of the served document that nobody performed",
     [plainSame.ok, plainSame.already === true, plainSame.request === ID_RENDER, plainSame.render],
     [true, false, false, false]);
+
+  /* ==================================================================== 7d
+   * D-523 — THE HELD RENDER IS SHOWN WITH ITS REASON, AND AT ITS `expires` IT IS RECORDED UNDETERMINED AND
+   * RELEASED, NEVER DROPPED SILENTLY (BOB #33 RULED 2026-09-24 19:54Z; CLIENT-RENDERED.md "RULED 2026-09-24 by
+   * BOB #33"). The measured failure it moves: a hold no member could see, ending in nothing recorded — and
+   * before this item NOTHING in the drain read `expires`, so the hold was not even bounded.
+   *
+   * WHAT THIS CAN SEE: the op=queue item while held and after expiry, the row's `render_deferral`, the run's log
+   * naming the new condition kind, and the drain's `expired` answer — at an instant AFTER the rows' own
+   * `expires`, handed to the drain as `now`, so no real day has to pass. And the case the first draft of the
+   * sweep MISSED, found by driving it: a render whose C-83 code the drain's RATE rule overwrote on the last
+   * tick before expiry. WHAT IT CANNOT SEE: an expiry on a live instance's clock, which is the same predicate
+   * read against `Date.now()`.
+   *
+   * THE IDS ARE LITERAL for 7c's reason: two rows on one host in one second are drained in id order, and the
+   * RATE arm below needs its plain row reached FIRST so that the render loses the host's slot.
+   * ==================================================================== */
+  const queueNow = async () => GET(`op=queue&token=${RUTH}`);
+  const itemOf = (q, id) => (q.items || []).find((i) => i.id === `CONDITION::render-deferred::${id}`);
+  const rowsNow = async () => (await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`)).requests;
+  t("D-523: a tick before any expiry released nothing — the drains above answered `expired` empty",
+    [(d.expired || []).length, (d2.expired || []).length], [0, 0]);
+  {
+    const q = await queueNow();
+    const it = itemOf(q, ID_RENDER);
+    t("D-523 WHILE HELD: op=queue SHOWS the deferred render as a CONDITION of kind render-deferred, about the "
+    + "request, with its C-83 reason by code and C-number",
+      it && [it.class, it.kind, it.subject && it.subject.kind, it.subject && it.subject.id,
+             it.basis && it.basis.code, it.basis && it.basis.check, it.basis && it.basis.render],
+      ["CONDITION", "render-deferred", "capture_request", ID_RENDER, "RENDER_DEFERRED", "C-83.4",
+       { state: "deferred", content: "undetermined" }]);
+    t("and the reason is in DEC-49 WORDS — the registry's canned translation, read off the item rather than "
+    + "typed here, in the summary a member reads first",
+      !!it && it.basis.translation === RENDER_CAPTURE_CHECKS.RENDER_DEFERRED.translation
+        && it.summary.includes(RENDER_CAPTURE_CHECKS.RENDER_DEFERRED.translation), true);
+    t("the item names the question the request was asked under and the address it waits on",
+      it && [it.basis.inquiry, it.basis.address], [INQ, RENDERABLE]);
+    const row = (await rowsNow()).find((r) => r.request === ID_RENDER);
+    t("the row publishes its render_deferral while held: deferred, content undetermined, C-83.4",
+      row && row.render_deferral && [row.render_deferral.state, row.render_deferral.content, row.render_deferral.check],
+      ["deferred", "undetermined", "C-83.4"]);
+    const plain = (await rowsNow()).find((r) => r.request === ID_PLAIN);
+    t("OVER-STRICTNESS: a plain request that CAPTURED carries no render_deferral and no render-deferred item",
+      [plain && plain.render_deferral, !!itemOf(q, ID_PLAIN)], [null, false]);
+    const log = await GET(`op=airunlog&token=${RUTH}&run=${RUN}`);
+    const line = (log.entries || []).filter((e) => e.subject === RENDERABLE).pop();
+    t("the run's log NAMES the condition kind the deferral is, now that the vocabulary has one",
+      line && line.condition, "render-deferred");
+  }
+
+  /* THE RATE ARM — THE CASE THE FIRST DRAFT MISSED. A plain request and a render on ONE fresh host, the plain
+     one ordered first: the tick captures it and the render is held by CONDUCT 3 (C-28), not by C-83. */
+  const H2_PLAIN = "https://portal.d523-rate.example.gov/agenda", H2_RENDER = "https://portal.d523-rate.example.gov/agenda-app";
+  const ID_H2_PLAIN = "CR-D523-1-PLAIN", ID_H2_RENDER = "CR-D523-2-RENDER";
+  await request({ address: H2_PLAIN, request: ID_H2_PLAIN });
+  await request({ address: H2_RENDER, render: true, request: ID_H2_RENDER });
+  {
+    const d3 = await drain();
+    t("the RATE arm is armed: the plain row took the host's slot and the render was held by CONDUCT 3, "
+    + "while the first render was deferred under C-83.4 again in the same tick",
+      [(d3.captured || []).some((c) => c.request === ID_H2_PLAIN),
+       (d3.held || []).find((h) => h.request === ID_H2_RENDER)?.code,
+       (d3.held || []).find((h) => h.request === ID_RENDER)?.code, (d3.expired || []).length],
+      [true, "CAPTURE_CONDUCT_TICK_SPENT", "RENDER_DEFERRED", 0]);
+    const it = itemOf(await queueNow(), ID_H2_RENDER);
+    t("and a render the RATE rule paused is still SHOWN waiting, with the C-28 sentence it was held under — "
+    + "an item that vanished for the tick would be the silence the ruling forbids",
+      it && [it.basis.render.state, it.basis.code, it.basis.check,
+             it.basis.translation === CAPTURE_REQUEST_CHECKS.CAPTURE_CONDUCT_TICK_SPENT.translation],
+      ["deferred", "CAPTURE_CONDUCT_TICK_SPENT", CAPTURE_REQUEST_CHECKS.CAPTURE_CONDUCT_TICK_SPENT.check, true]);
+  }
+  {
+    /* THE INSTANT AFTER BOTH ROWS' OWN `expires`, read from the rows rather than computed from the TTL, so the
+       arm measures the predicate the drain applies and not this suite's belief about the constant. */
+    const rows = await rowsNow();
+    const exps = [ID_RENDER, ID_H2_RENDER].map((id) => Date.parse(rows.find((r) => r.request === id)?.expires));
+    const after = Math.max(...exps) + 1000;
+    const renderedBefore = RENDER_CALLS;
+    const dx = await doStub.captureRequestDrain({ actor: "suite", now: after });
+    const x = (dx.expired || []).find((e) => e.request === ID_RENDER);
+    t("AT EXPIRY THE DRAIN RELEASES IT: the tick answers it under `expired`, with its C-83 reason and the "
+    + "content UNDETERMINED",
+      x && [x.code, x.check, x.render, x.translation === RENDER_CAPTURE_CHECKS.RENDER_DEFERRED.translation],
+      ["RENDER_DEFERRED", "C-83.4", { state: "expired", content: "undetermined" }, true]);
+    t("and it is neither held again, nor captured, nor refused, and the renderer was never reached",
+      [(dx.held || []).some((h) => h.request === ID_RENDER), (dx.captured || []).some((c) => c.request === ID_RENDER),
+       (dx.refused || []).some((r) => r.request === ID_RENDER), RENDER_CALLS - renderedBefore], [false, false, false, 0]);
+    t("THE RATE ARM AT EXPIRY: the render held by CONDUCT 3 on its last tick is RELEASED too, under the code it "
+    + "carried — never asked again past its expiry, which is what the first draft of the sweep did",
+      [(dx.expired || []).find((e) => e.request === ID_H2_RENDER)?.code,
+       (dx.held || []).some((h) => h.request === ID_H2_RENDER)], ["CAPTURE_CONDUCT_TICK_SPENT", false]);
+    const row = (await rowsNow()).find((r) => r.request === ID_RENDER);
+    t("THE ROW READS UNDETERMINED AFTER EXPIRY: state expired, its C-83 code KEPT, no capture, and its "
+    + "render_deferral says the render expired and what the page showed is undetermined",
+      row && [row.state, row.code, row.capture_sha, row.render_deferral && row.render_deferral.state,
+              row.render_deferral && row.render_deferral.content, /UNDETERMINED/.test(row.detail || "")],
+      ["expired", "RENDER_DEFERRED", null, "expired", "undetermined", true]);
+    const it = itemOf(await queueNow(), ID_RENDER);
+    t("and op=queue does not DROP it: the same item now says the render never happened, content undetermined",
+      it && [it.kind, it.basis && it.basis.render, /UNDETERMINED/.test(it.summary || "")],
+      ["render-deferred", { state: "expired", content: "undetermined" }, true]);
+    const log = await GET(`op=airunlog&token=${RUTH}&run=${RUN}`);
+    const line = (log.entries || []).filter((e) => e.subject === RENDERABLE && /expired UNDETERMINED/.test(e.detail || "")).pop();
+    t("the run's log records the release as a GOVERNED indeterminate under render-deferred, naming C-83.4",
+      line && [line.state, line.governed, line.condition, /C-83\.4 RENDER_DEFERRED/.test(line.detail || "")],
+      ["LOOKED_INDETERMINATE", true, "render-deferred", true]);
+    const d4 = await doStub.captureRequestDrain({ actor: "suite", now: after + 1000 });
+    t("RELEASED ONCE: the next tick neither holds nor releases either again",
+      [ID_RENDER, ID_H2_RENDER].map((id) => (d4.held || []).some((h) => h.request === id)
+                                     || (d4.expired || []).some((e) => e.request === id)), [false, false]);
+    const again = await request({ address: RENDERABLE, render: true });
+    t("and an expired render is not a STANDING row: asking again opens a fresh request rather than being "
+    + "answered with the one that expired",
+      [again.ok, again.already === true, again.request === ID_RENDER], [true, false, false]);
+  }
+}
+
+/* ====================================================================== 7d
+ * D-520 — OVER THE CONCURRENCY CAP A RENDER WAITS IN THE ALARM, NEVER DROPPED.
+ *
+ * BOB #33 (2026-09-24 19:10Z, folded into CLIENT-RENDERED.md as a RULED section):
+ * a concurrency cap from the vendor's stated limit, labelled, and a render over it
+ * WAITS. The unattended half is this block: the drain meets C-83.8, HOLDS the row
+ * under it with the tick's word `waiting`, and asks again next tick.
+ *
+ * THE SLOT IS TAKEN BY HAND, through the store's own admission (`renderAdmit`, the
+ * method op=acquire's render arm calls), because this fixture has no renderer that
+ * can be admitted — its allowance is zero on purpose (7c). WHAT THIS CANNOT SEE: an
+ * unattended render that then SUCCEEDS, which no fixture here can drive (7c's
+ * header); the second tick is shown to pass the CAP and meet the next gate, the
+ * allowance, by name — the wait was re-asked, not dropped and not answered stale.
+ * The member-facing burst (K at once against a cap of J) is `rendered-capture`'s
+ * block K.
+ * ====================================================================== */
+console.log("\n--- 7d. D-520: a render over the concurrency cap WAITS in the alarm and is asked again ---");
+{
+  /* CONDUCT #22 (c22-batch29), composing D-520's block with D-523's: D-523's arms (inside 7c) EXPIRE
+     CR-D491-1-RENDER and then open a fresh render request for the same address, so the render that
+     waits here is that LIVE one, found by what it is rather than by the id 7c minted. */
+  const liveRenders = (await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`)).requests
+    .filter((r) => r.render === true && r.state === "requested");
+  t("7d-pre exactly one render request is live for this block to drive (D-523 expired 7c's)",
+    liveRenders.length, 1);
+  const ID_RENDER = liveRenders.length === 1 ? liveRenders[0].request : null;
+  /* 7c's LAST arm left a PLAIN request queued on the render's host, and CONDUCT 3 admits
+     one load per host per tick: drained first, it would take the tick's slot and answer the
+     render CAPTURE_CONDUCT_TICK_SPENT before the cap was ever asked (measured: the first
+     run of this block read exactly that). One tick here clears it. */
+  await drain();
+  const taken = await doStub.renderAdmit({ allowanceMs: 1e9, reserveMs: 3600000, cap: 1 });
+  t("7d0 the fixture's one slot is taken through the store's own admission",
+    [taken.state, typeof taken.slot === "string" && taken.slot.length > 0], ["admitted", true]);
+  const seenBefore = SEEN.length, renderedBefore = RENDER_CALLS;
+  const d = await drain();
+  const h = (d.held || []).find((x) => x.request === ID_RENDER);
+  t("7d1 THE ACCEPTS-WHEN, unattended half: the render request is HELD as RENDER_AT_CAPACITY, C-83.8, "
+  + "and the tick's word is WAITING — not deferred, because nothing was taken from the day",
+    h && [h.code, h.check, h.render], ["RENDER_AT_CAPACITY", "C-83.8", { state: "waiting", content: "undetermined" }]);
+  t("7d2 it is not refused and not captured, nothing left this instance for it, and the renderer was never reached",
+    [(d.refused || []).some((r) => r.request === ID_RENDER), (d.captured || []).some((c) => c.request === ID_RENDER),
+     SEEN.length - seenBefore,
+     RENDER_CALLS - renderedBefore],
+    [false, false, 0, 0]);
+  {
+    const rows = await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`);
+    const row = rows.requests.find((r) => r.request === ID_RENDER);
+    t("7d3 the ROW waits: `requested`, C-83.8's code, no capture", row && [row.state, row.code, row.capture_sha],
+      ["requested", "RENDER_AT_CAPACITY", null]);
+  }
+  /* THE SLOT FREES — the render holding it reports — and the NEXT TICK ASKS AGAIN. */
+  await doStub.renderSpend({ ms: 0, releaseMs: 3600000, slot: taken.slot });
+  const d2 = await drain();
+  const h2 = (d2.held || []).find((x) => x.request === ID_RENDER);
+  t("7d4 the next tick ASKED AGAIN and passed the cap: the row now meets the allowance (zero here) by name",
+    h2 && [h2.code, h2.check, h2.render.state], ["RENDER_DEFERRED", "C-83.4", "deferred"]);
 }
 
 /* ====================================================================== 8

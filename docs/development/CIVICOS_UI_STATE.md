@@ -50,6 +50,234 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v129, 2026-09-25 session, thread UI, D-617 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/D-617`, STACKED on `land/worker/UI-108` @ `80594009`, in the commit that carries this entry; numbered by
+CONDUCT #22 at c22-batch29, which landed v120–v129 together. SURFACE: **the document
+page no longer shows a dismissed finding as an open question.** `docInstanceHtml` (the UI-9 block) painted each
+`op=captureprogressions` finding as its stage, required-ness and grade, while the plane (D-552, IC-290) published the
+member's decision on it and the progression page (UI-108, `v125`) already said so. Each finding, missing or overdue,
+now carries the SAME sentence beside it, through UI-108's `progFindingDecisionHtml`, so the two pages give one
+account of one decision; the finding stays listed and an overdue one keeps its overdue note; a plane that publishes
+no `disposition` key is said to be not known, never undecided. Suite `civicos-ui/test/document-decided-finding.test.mjs`
+(25/0, the real plane in miniflare, a signed-in member, the plane's clock pinned so both branches run); control
+`document-decided-finding.control.mjs` 4/4 AS DECLARED. Not stated on this page: an open count, which
+`op=captureprogressions` does not publish.
+
+v128, 2026-09-25 session, thread UI, UI-76 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-76` (base `origin/main` @ `964da6790`), in the commit that carries this entry; numbered by CONDUCT #22
+at c22-batch29. SURFACE:
+**THEMES reach a member** — a new rail entry, "Themes" (`screen:themes`), and a theme's own page (`#theme/<id>`), the
+member half of D-162 (framework §8.4, fences 1–3; IC-241 as amended by BOB #32).
+
+**What a member can now do.** Declare a theme — its idea and its TEST, both fields empty until the member writes them,
+with ONE sentence at the act saying what a theme is (DEC-69). Open a theme and read its test, its declarer, its
+members and its hunches APART. Place a document or a passage by naming its id, with an optional note. Confirm a
+hunch with "It passes the test: place it" (`op=themeplace` on that target, which keeps who proposed it); leave one by
+doing nothing. The surface never proposes. Every theme it renders names its declarer AS THE PLANE PROJECTED IT for the
+reader — a handle for a member, the handle with the cover and member id for an administrator — and every hunch
+carries its own label and is never written among the members. Every refusal is the plane's canned translation.
+
+**The guards that fired on the first run, each classified rather than quietened:** `preauth-vocabulary` WALK 2
+(a tenth router, post-authentication, pinned both halves); `member-respect` ARM 4b (the hunch control, a SET of
+decisions, carried with why a bulk confirm is not built); `bound-sweep` WALK 2 and ARM G (`op=themeread` is capped:
+every call names its limit, and the RECORD's bound is stated beside each list, through `thmBoundHtml`, not a fourth
+caller of `meaningBoundHtml`, whose three units ARM H6 pins). One surface defect found by the suite and fixed: a
+declare refusal rendered only inside the form. Suite: `civicos-ui/test/themes.test.mjs` (56 assertions, real plane);
+control: `themes.control.mjs`, seven arms, every one as declared.
+
+**Not built, stated:** no "place in a theme" entry on the document page (a member types an id on the theme's page);
+the `truncated` lines are unexercised (200 of a set would be needed).
+
+v127, 2026-09-25 session, thread UI, UI-109 (a WORKER of SCHEDULER #21, cloud session). Landed on
+`land/worker/UI-109` (base `origin/main` @ `964da679`), in the commit that carries this entry; numbered by CONDUCT #22
+at c22-batch29. SURFACE: **a reopened finding on the queue shows the decision
+somebody already took on it** (`queueFindingPriorHtml`, drawn in `queueItemHtml` under the item's detail).
+
+**WHAT IT CLOSES.** D-527 put `prior_disposition` on `op=queue`'s FINDING item; no surface read it, so the
+reopened question was painted as one nobody had answered. The item now says, in the plane's words: set aside
+as what, by whom, when, their reason, the version judged (or `not recorded` in words, no number), the version
+standing now (`subject.definition_version`), that the decision no longer answers the question, and the
+plane's `applies_because` code verbatim beside a sentence reading it (an unknown code is printed as given). A
+`null` says nobody has decided; an ABSENT field renders nothing. **Who REVISED the flow and so reopened the
+question is not on the item** (`prior_disposition` names who DECIDED) and the page says so rather than naming
+anybody — the row's "who reopened" narrowed to what the item carries; the plane-side fix is D-592. UI-99's §8.2 residue sentence (v116
+below) is history, not state.
+
+**SUITE AND CONTROL.** `civicos-ui/test/reopened-finding.test.mjs`, real plane in miniflare, 4 arms, 26
+assertions; its control `reopened-finding.control.mjs` 4/4 AS DECLARED — (A) the row's arm, the render
+omitted: RED 12/26 naming THE ROW, every FIXTURE assertion green. **Who else reads it:** UI-99's
+`declared-flow-surface` control came back 3/4 — its arm 5 read `not recorded` over the WHOLE queue, and the
+reopened item's words kept it green with the set-aside row's sentence hidden. Arm 5 now reads the set-aside
+row itself (corrected with a comment, not exempted); 4/4 again. The item's sentence is worded apart from
+`disposedFlowVersionHtml`'s so each control finds its own subject once.
+
+v126, 2026-09-25 session, thread UI, D-134 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/D-134` (base `origin/main` @ `964da6790`), in the commit that carries this entry; numbered by CONDUCT #22
+at c22-batch29. SURFACE: **the Members screen gains §4.9's custodial WRITE half for an administrator's session.** Invite a member
+(or, beyond the second administrator, propose one: the answer's own lists say who has endorsed and who it waits on),
+Deactivate / Reactivate on each roster row, and a Signing keys table with Register a signing key and Revoke /
+Reactivate per key — `op=memberadd`, `op=memberset`, `op=signeradd`, `op=signerset`, one call site each in
+`doCustodialAct`. The controls exist only for a session `op=whoami` says administers (`custodian()`), the founder's
+or an enrolled administrator's; a member's session renders none of them, and the lede's "this screen only SHOWS" is
+now said only to that session, where it is still true. The page sends no actor; the plane stamps `by` (REC-159).
+The role and capabilities of an invitation start unpicked and travel as choices (`custodialChoose`); a pasted
+`ssh-ed25519 AAAA… label` line is split into the key's base64 part and its label, because that is what the op takes.
+PLANE: every refusal the surface can receive now carries a canned translation — `CUSTODIAL_CHECKS`, C-96.1–.9 — and
+`adminRemove`'s target case is split to TARGET_NOT_AN_ADMIN, because `dec49Decorate` puts a family row's sentence on
+EVERY refusal carrying its code. SUITES: `civicos-ui/test/custodial-acts.test.mjs` (both administrators' sessions
+perform all four against the real plane, attributed; the member's renders none; each refusal in its words) and
+`bio-plane/test/d134-custodial-refusals.test.mjs` (each C-96 check named at the op). WHO INVITED: BOB #35 ruled it its
+own fact while this item ran, and it landed here — `members.invited_by`, written by every `memberadd` path, and each
+roster row says "invited by <who>", or "not recorded" where the plane says so. Controls and figures:
+`measurements/M-171.md`.
+
+v125, 2026-09-25 session, thread UI, UI-108 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-108` (base `origin/main` @ `5e8a65a8`, which carries D-552), in the commit that carries this entry;
+numbered by CONDUCT #22 at c22-batch29. SURFACE: **the progression page no longer shows a dismissed finding as an open question.**
+`progPaintInstance()` painted `inst.findings` as bare `detail` lines, so a finding a member had already decided read
+exactly like one nobody had looked at, while `op=instance` (D-552, IC-290) published the decision on it. Each finding
+now keeps its place and carries its decision BESIDE it (`progFindingDecisionHtml`): the state, the decider and the
+instant as the record holds them, the member's reason verbatim, and which version of the declared flow it judged and
+whether it still stands — through the queue's own `disposedFlowVersionHtml`, so the two pages give one account of one
+decision. An undecided finding says so; a plane that publishes no `disposition` key is NOT called undecided (not known,
+said). The record's `open_finding_count` is stated beside `finding_count`. **And a second defect in the same function,
+fixed because the row's scope names refusals:** a refused or failed `op=instance` read was swallowed into `null`, after
+which every stage said "nothing on the record" — a read that never happened, painted as an empty chain. A refusal now
+renders the plane's canned translation (DEC-49, `intentRefusalHtml`) and its code, and the stages say they were not
+read. Suite `civicos-ui/test/progression-decided-finding.test.mjs` (27/0, the real plane in miniflare, a signed-in
+member); control `progression-decided-finding.control.mjs` 4/4 AS DECLARED. **Not fixed here, minted D-617:** the
+DOCUMENT page's `docInstanceHtml` paints `op=captureprogressions`' findings, which carry the same `disposition`, just
+as bare — same class, another block.
+
+v124, 2026-09-25 session, thread UI, UI-70 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-70`, STACKED on `land/worker/REC-197` @ `e88ef9d1` (REC-196 and REC-197), in the commit that carries
+this entry; numbered by CONDUCT #22 at c22-batch29. SURFACE: **the create and fork
+forms ask whether a project can be found, with neither answer preselected, and the project's owner can change it.**
+
+**What moved** (Membership v2 §7.14 step 3; DEC-69, forced at the act). The Add form's project arm and the fork
+dialog render two options, *Discoverable* and *Hidden*, neither `checked`; the Add button stays shut and both commit
+paths (`addGo`, `doRosterAct`) send NOTHING until one is chosen, because the plane's answer to a creation that carries
+no setting is HIDDEN — a form that let an unchosen project through would have chosen for the member in silence. The
+choice travels as REC-197's `visibility` on a project's creation ALONE. The workspace gained *Who can find this
+project*: the setting as `op=projectvisibility` reads it (an unrecorded project is shown as the record reads it,
+never as a default of ours), the OWNER's control (`op=projectvisibilityset`, neither option preselected, an optional
+reason), and for everyone else the setting read-only with no control. Every refusal is `actRefusalHtml`'s — the
+plane's canned translation — C-97.1 driven through the Add form, C-70.2 through the owner's commit path, C-97.2 over
+the plane's real answer. `projectvisibilityset` is struck from `ACTS_AWAITING_SURFACE`.
+
+**Evidence.** `project-visibility-surface.test.mjs` (real plane, 41/41) and its control (6/6 AS DECLARED, including
+the row's own — preselect HIDDEN — and the row's liar on both forms). Three suites CORRECTED, not exempted, each with
+the reason at the site: `project-id-surface` and `project-workspace` created and forked without choosing;
+`surface-registry`'s A3/A4d/A4e floors moved to the printed 35/31/31; `member-respect` classifies the new chooser.
+The fork arm of the control recorded a finding about itself: unguarded, the fork sends the string "null" and the
+plane refuses it C-70.3 — loud at the plane, where the Add form's liar is silent.
+
+v123, 2026-09-25 session, thread UI, UI-104 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-104` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; numbered by CONDUCT #22
+at c22-batch29. SURFACE: **the action page shows the risk-tier history and offers
+the revision act** — the surface half of REC-214 (BOB #33's risk-tier revision ruling, `BIO_Case_Making_v0_1.md` §2
+`risk_tier`).
+
+**WHAT LANDED**, in `app.html` only at the action page's tier block: a section *"Whether this is safe to file"*
+directly after the governing-laws list and its proposals (UI-90, UI-102), rendered by `actionRiskTierHtml` from
+`action.risk_tier_history` — the current tier, the intake tier with the plane's own UNDETERMINED-author sentence,
+each revision as *"Revised from <prior words> to <tier words>: <reason>"* with its author and date, an unreadable
+entry kept and said, an absent block said as an absence. The act `actionrisktier` gets its flow
+(`openActionRiskTier` … `doActionRiskTier`), one `ACT_FLOW` entry, and its name in `SURFACES.action.acts`; its
+`ACTS_AWAITING_SURFACE` row is struck in the same commit.
+
+**THE FORM'S THREE PROPERTIES, each driven.** The options are the plane's words (`vocabularies.risk_tiers`) for the
+tiers the ACT publishes as settable — the `legal` of its own `BAD_RISK_TIER`, fetched by one call naming no tier,
+which the store judges before the reason and before any write (UI-90's `NO_LAWS` probe, same shape) — so
+`undetermined` is never offered as a tier to set. NOTHING is checked on open, not even the held tier. The reason is
+REQUIRED: the commit control is absent until a tier is chosen and the reason holds more than whitespace, and the
+commit refuses to call without both. Every refusal is the plane's canned DEC-49 translation through `actRefusalHtml`;
+a machine credential sees C-32.19's and is offered nothing.
+
+**EVIDENCE.** `civicos-ui/test/ui104-risk-tier.test.mjs`, against a real plane under miniflare: 35/35; negative
+control `ui104-risk-tier.control.mjs`, six arms, every arm as declared (the row's `noreason` arm fails the three
+REQUIRED REASON arms by name). **NOT BUILT, and left room for:** REC-215's labelled machine PROPOSAL of a
+reconsideration, to be read BESIDE the history and never inside it.
+
+v122, 2026-09-25 session, thread UI, UI-110 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-110` (base `origin/main` @ `5e8a65a83`), in the commit that carries this entry; numbered by CONDUCT
+#22 at c22-batch29.
+SURFACE: **the queue's selection takes a PROJECT-SCOPED finding, and the case its decision is recorded under is the
+item's own or the member's pick — never the surface's.**
+
+**WHAT IT CLOSES.** `queueSetOpsFor` (UI-94's name for `queueSetOpFor`) returned no set act for an item whose
+`disposition.scope` is `project`, by a comment that said the set *"would have to choose it for them"*. REC-205
+measured the plane's set act taking a `project` PER ITEM, so that half was false; the other half — the member must
+say which team they act for — is what this entry builds. RECORD's DELEGATION (REC-205 → UI, 2026-09-24) is
+discharged in its block on `coord`.
+
+**WHAT IT DOES.** A project-scoped finding with a home in `disposition.projects` gets the tick. In the act it goes
+as `{ project, finding }` (`disposition.finding`), never as `key`. ONE home: sent under it, and the item says so
+(*"Recorded as the case … 's own decision; it governs no other case"*). SEVERAL: the item draws a case picker whose
+only default is the option that chooses nothing, the bar COUNTS it as held back, and `queueSelFor` leaves it out of
+the act — still selected — until the member names one (`queueHomeFor` answers null, never a guess; D-266).
+
+**NUMBERS.** `civicos-ui/test/queue-projectscope.test.mjs` NEW, **23 pass / 0 fail**, against the real plane under
+miniflare with `d266scope.test.mjs`'s fixture, every decision read back under its case. Control
+`queue-projectscope.control.mjs`, six arms, every one as declared (three declarations AMENDED from the printed run):
+baseline 23/0 · nullscope 12/11 (the row's: *"a PROJECT-SCOPED finding carries a tick that FEEDS THE SET"* fails by
+name) · preselect 14/9 (the no-default arm: *"THE TWO-HOME FINDING IS NOT SENT until the member names one"* fails by
+name) · pickdefault 22/1 · keyshape 17/6 · spelling 23/0 (over-strictness). `queue-peritem.test.mjs`'s *"still not
+selectable"* line CORRECTED, not exempted.
+
+**WHAT IT DOES NOT DO, stated.** The plane's refusal of such an item reaches the member in the plane's own `detail`,
+not a DEC-49 canned translation: the plane mints `NO_PROJECT_SCOPE` with no `code`/`translation` (D-623, the
+plane's). The SINGLE-item Defer/Dismiss dialog still sends `key` alone on a project-scoped finding and is refused —
+the 2026-08-10 D-266 DELEGATION to UI, open since, now D-624 in the plan; `queueHomeFor` is the piece it can reuse.
+
+v121, 2026-09-25 session, thread UI, D-576 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/D-576` (base `origin/main` @ `5e8a65a8`, which carries UI-95), in the commit that carries this entry;
+numbered by CONDUCT #22 at c22-batch29. SURFACE: **the `op=connect` receipt on the subject view now states when the
+derivation was CUT.**
+
+**WHAT IT CLOSES.** `connectGo` read *"The record derived N connections among the documents that concern this
+subject"* and ignored the answer's `truncated`, which `deriveConnections` (store.mjs) documents as whether the
+DERIVATION was cut. A cut derivation's receipt read as every connection through the subject when it was part of
+them — the record claiming more than it holds. When `truncated === true` the receipt now adds UI-95's sentence in
+the plane's own wording (`derivationStatement`, airun.mjs): *"The derivation was CUT by its bound after D of this
+subject's documents: the connections here are true but are part of the set through this subject, not all of it."*
+An uncut answer's receipt is unchanged. op=connect publishes `truncated` and `documents` but no `derivation.says`,
+so the sentence is composed here from those two fields rather than rendered verbatim.
+
+**TESTED THROUGH THE REAL PLANE** (`civicos-ui/test/intent-write.test.mjs`, miniflare): the bridge adds `limit:1`
+to one connect body, so the real plane cuts a real derivation after 2 documents; the cut receipt, the uncut
+receipt and the unbounded re-derivation are each asserted, with the suite's NEGATIVE CONTROL line recording three
+arms.
+
+v120, 2026-09-25 session, thread UI, UI-106 carrying D-619 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-106`, STACKED on `land/worker/D-568` @ `d5da99bb`, in the commit that carries this entry; numbered
+by CONDUCT #22 at c22-batch29. SURFACE: **the
+review copy's edit form keeps a draft's request for a new case, and its grant roster no longer tells a member a
+grant bound to no case was given "for a new case".**
+
+**WHAT IT CLOSES, two sentences on one surface that claimed more than the record holds.** (1) `rvcFormFromCopy`
+read the case choice from `case.case_id` alone, so a draft that asked for a NEW case came back to its editor with
+the choice unmade and `rvcDraftBody` wrote it back WITHOUT `newCase`: one edit of the scope turned it into a draft
+whose case publication DERIVES (D-538) — the D-309 override the field exists to refuse. REC-199 (IC-285) made
+`op=reviewcopy` say `newCase` back; the form now reads it, the named case keeping precedence, and the comment
+that said the answer carries no such field is corrected in place. Discharges `CLAIMS.md`'s "DELEGATION 2026-09-24
+RECORD (WORKER REC-199) -> UI". (2) D-619: `rvcGrantsHtml` said a grant bound to no case was given "for a new
+case"; for a DERIVED draft that is untrue, and the grant row does not record which kind of no-case draft it was
+given for, so it now says what the row holds — "a draft that named no case" — and a case-bound grant whose
+`edition` the plane leaves null (D-568) prints no edition rather than an empty or invented one.
+
+**UI-92's draft list needed no change, and that is measured, not assumed:** it already draws the plane's
+`case.identity` verbatim, so D-538's derivation sentence reaches the list as the plane states it — asserted on draft
+DD against the real plane, with no "edition 1" anywhere on its row or its copy.
+
+**WHAT LANDED:** three sites in `app.html`'s review-copy block (`rvcFormFromCopy` and its comment, the `bound`
+line of `rvcGrantsHtml`); `civicos-ui/test/review-copy-newcase.test.mjs` and its control, NEW; one stale example
+in `review-copy.test.mjs`'s 6b comment CORRECTED. No `DEC-49 REGION`, router, `SURFACES` key or other surface was
+touched. Negative control 6/6 AS DECLARED (its first run 5/6, recorded in the suite's header). Found on the way and
+minted, not fixed here (plane paths): **D-626**, two plane sentences of D-538's class — `REVIEW_NO_SUCH_CASE`'s
+canned translation still says *"Leave the name off and the draft is a new case"*, and `PUBLISH_DRAFT_NOT_THIS_CASE`
+builds its identity sentence without the draft's `newCase`.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it

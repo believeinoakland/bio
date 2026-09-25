@@ -125,11 +125,24 @@ function runContextTarget(session) {
   const type = ctx && typeof ctx.type === "string" ? ctx.type : null;
   const id = ctx && ctx.id != null && String(ctx.id).trim() !== "" ? String(ctx.id).trim() : null;
   if (!id) return { target: null, basis: "UNDETERMINED: the run read published no context id" };
-  if (type === "project")
+  if (type === "project") {
+    if (!Array.isArray(ctx.questions))
+      return {
+        target: null,
+        basis: "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the run read does not publish that set; a candidate names its own target, never the project id"
+      };
+    const qs = [...new Set(ctx.questions.filter((q) => typeof q === "string" && q.trim() !== "").map((q) => q.trim()))];
+    if (qs.length === 1) return { target: qs[0], basis: "the one question the run's project confirmed-cites" };
+    if (qs.length === 0)
+      return {
+        target: null,
+        basis: "UNDETERMINED: the run's project confirmed-cites no question this run can see; a candidate names its own target, never the project id"
+      };
     return {
       target: null,
-      basis: "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the run read does not publish that set; a candidate names its own target, never the project id"
+      basis: `UNDETERMINED: the run's project confirmed-cites ${qs.length} questions and this member does not pick one of several; a candidate names its own target, never the project id`
     };
+  }
   if (type === "inquiry") return { target: id, basis: "the run's context question" };
   return { target: null, basis: `UNDETERMINED: the run's context kind ${JSON.stringify(type)} is not one this member reads` };
 }
@@ -698,7 +711,7 @@ async function resolveClaudeCascade(accounts = {}) {
 // src/index.mjs
 var PLANE_ORIGIN = "http://plane";
 var DEFAULT_MAX_TURNS_PER_SEGMENT = 120;
-var BOUND_SOURCE = "FL-1 2026-08-08 memory curve (120.4 MB P99 of 128 MB at 200 turns), not the CPU curve";
+var BOUND_SOURCE = "FL-1 2026-08-08 curve, re-checked by D-312 2026-09-25 (M-168): CPU binds, not memory; 120 turns is ~1/8 of the ~1,000 the 30 s CPU default fits at FL-1's payload size";
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {

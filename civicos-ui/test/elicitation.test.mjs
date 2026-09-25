@@ -4,6 +4,13 @@
  *   (l) LEAK THE ANALYST'S VOCABULARY ONTO THE SURFACE — in `elicPaint`'s read-back branch, change the set heading `Carries it on its own` to `Ground (OR-related branch)`. RUN: 1 of 47 fails, and it NAMES every hit: four banned patterns on each of three phases (the read-back, the read-back of a revision, and the refusal), 12 in all, with the matched text printed. The sweep is over everything this flow RENDERS in every phase, because DEC-32 clause 1 says *"not even as tooltips"* and a rule that only reads the headings is a rule about headings.
  *   (m) PREFILL THE MEMBER'S EARLIER ANSWERS — in `openElicit`, after `ELIC.standing = elicStanding(fmj);` add `for(const st of ELIC.standing.sets) for(const i of st.ords) ELIC.ans[i] = { holds:true, falls:st.ords.filter(x=>x!==i) };`. RUN: 1 of 47 fails, naming the revision's controls. It looks like a courtesy and it is the one way round the anti-gaming keystone: independent sufficiency would then survive a restructuring BY OMISSION, which is exactly what clause 4 says it must never do — the member would be able to keep a sufficiency claim by clicking past it.
  *   (n) SEND AN ATTRIBUTION — in `doElicit`, add the member's own name and a time to every set: in the `d.partition.map(...)` return, spread `{ asserted_by: (PLANE.me && PLANE.me.member) || "member", at: new Date().toISOString() }` into both branches. RUN: 2 of 47 fail, both on the WIRE. The record stamps both fields and DISCARDS a caller's (REC-45), so this changes nothing the record stores today — which is precisely why it is asserted on the wire: a surface that sends an attribution is a surface that would be believed the day anything downstream stopped discarding one, and an attribution a caller can hand us is one a caller can invent (CLAUDE.md).
+ *   UI-75's SIX arms (§12 (c): the shared origin at the read-back), RUN 2026-09-25 by the UI-75 worker against this 61-assertion suite, each broken ALONE, every file restored by `cp` from a per-arm pristine copy and verified by sha256 AND cmp (`civicos-ui/app.html` 712a2e3064bdc76acb48c4146663d5cc2b11260c73b067f1e5a21b725e2642b6 after every arm). Baseline 61/61.
+ *   (o) THE ROW'S OWN CONTROL — the mock's `partitionAnswer` returns `shared:[]` (its push replaced by `void common;`). RUN: RED 56/61, failing BY NAME at "UI-75 (the correlated fixture): the two sets that trace to one captured copy are NAMED as sharing it", plus the four arms that read the shared card.
+ *   (p) DROP THE RENDERING — `elicOriginsHtml` returns "". RUN: RED 53/61 (8 fail), the correlated-fixture arm, the traced-none arm and the not-told arm among them.
+ *   (q) A GATE — `doElicit` returns without writing while a shared origin is on screen. RUN: RED 49/61 (12 fail), "the answers are written UNCHANGED over a shared origin" among them. ITS FIRST RUN FOUND THE INSTRUMENT WRONG: with no body sent, section 4's bare `SENT.grounds[0]` threw and the module ended at tally -1 — a crash, not a named failure. Those reads are now guarded (commented at the site) and the arm re-run to 12 named failures.
+ *   (r) A REORDER — `doElicit` reverses the sets when an origin is shared. RUN: RED 58/61, "written UNCHANGED" failing by name. This and (q) are the row's "how a liar passes it".
+ *   (s) CACHE NOT TOLD AS AN ANSWER — `elicOriginsLoad` skips on the key alone. RUN: RED 60/61, "after a refusal, returning to the same proposal asks the record again" failing by name.
+ *   (t) OVER-STRICTNESS, MUST PASS — send the partition as bare position arrays (the plane files them `part N`) and map `part k+1` back to the member's reasons. RUN: GREEN 61/61: the suite asserts the positions asked about and the words rendered, never one wire spelling of a set's name.
  * Restore after each. */
 /* UI-27 · DEC-32's ELICITATION — the surface that asks a member for
  * CONSEQUENCES and derives the structure from their answers.
@@ -110,6 +117,41 @@ const DOCS = {
   [EMPTY]: { legs:[],     rows:null,   state:"open",          title:"Where did the surplus go?" },
 };
 
+/* UI-75 · WHERE EACH REASON'S MATERIAL CAME FROM, in `#independenceOf`'s own
+   prefixes. L1 and L3 were captured from ONE copy — the correlated pair the row's
+   acceptance names — and L2 and L4 share nothing with anything. The mock derives
+   `shared` from THIS and from the partition the page actually SENT, so a page
+   that sent the wrong grouping reads a different answer; it does not hand back a
+   constant a page could pass without asking. */
+const SHARED_SHA = "a".repeat(16);
+const ORIGIN_OF = {
+  [L1]: [`bundle:${L1}`, `capture:${SHARED_SHA}`],
+  [L2]: [`bundle:${L2}`, `address:https://example.test/memo`],
+  [L3]: [`bundle:${L3}`, `capture:${SHARED_SHA}`],
+  [L4]: [`bundle:${L4}`],
+};
+let PI_REFUSE_NEXT = false; // the record refuses the next origins read
+function partitionAnswer(inq, raw){
+  const legs = (DOCS[inq] || { legs:[] }).legs;
+  const groups = (Array.isArray(raw) ? raw : []).map((g,k)=>{
+    const named = g && typeof g === "object" && !Array.isArray(g);
+    return { label: named ? String(g.label) : `part ${k+1}`, ords: named ? g.legs : g };
+  });
+  const sets = groups.map(g => [g.label, new Set(g.ords.flatMap(o => ORIGIN_OF[legs[o].target] || []))]);
+  const shared = [];
+  for(let i=0;i<sets.length;i++) for(let j=i+1;j<sets.length;j++){
+    const common = [...sets[i][1]].filter(o => sets[j][1].has(o));
+    if(common.length) shared.push({ a:sets[i][0], b:sets[j][0], through:common });
+  }
+  return { ok:true, inquiry:inq, partition:groups.map(g=>({ label:g.label, legs:g.ords })), wrote:false,
+           independence:{ checked: groups.length > 1, parts: groups.length, shared, complete:true, limit:50 },
+           /* PLANTED, and the plane sends no such key (REC-161: "shows NO STRENGTH").
+              It is here so that "only `independence` is kept" is MEASURED: if the
+              page drew anything else from this answer, the grade sweep over the
+              read-back would find this pair's letters. */
+           strength: AFTER };
+}
+
 /* ---------------- the mock plane ---------------- */
 const WIRE = [];
 let SENT = null;            // the LAST body posted to op=inquiryground
@@ -154,6 +196,12 @@ function mockFetch(u, opts){
      Negative control (k) measured precisely that on its first run. */
   if(op === "inquirystrength") return R({ ok:true, result:{ ok:true, ...BEFORE } });
   if(op === "whoami") return R({ ok:true, result:{ member:"carol", session:true, capabilities:["contribute"] } });
+  if(op === "partitionindependence"){
+    if(PI_REFUSE_NEXT){ PI_REFUSE_NEXT = false;
+      return R({ ok:true, result:{ ok:false, reason:"PARTITION_INDEPENDENCE_UNREADABLE", code:"PARTITION_INDEPENDENCE_UNREADABLE",
+        detail:"pass partition=<JSON>" } }); }
+    return R({ ok:true, result: partitionAnswer(url.searchParams.get("id"), body && body.partition) });
+  }
   if(op === "inquiryground"){
     SENT = body;
     if(REFUSE_NEXT){ const r = REFUSE_NEXT; REFUSE_NEXT = null; return R({ ok:true, result:r }); }
@@ -268,7 +316,15 @@ console.log("\n--- elicitation (UI-27 / DEC-32) ---");
      /Which of the others stop carrying your answer the moment this one does\?/.test(withOthers));
   ctx.__elicWith(0, 1); ctx.__elicWith(2, 3);
   ok("with every reason answered the read-back becomes reachable", /id="el-read"/.test(dlg()));
-  ctx.__elicPhase("readback");
+  ok("UI-75: nothing about shared origins was asked while the member was still answering (DEC-69: once, at the act)",
+     !WIRE.some(w => w.op === "partitionindependence"));
+  const asking = ctx.__elicPhase("readback");
+  /* THE READ-BACK AS FIRST PAINTED, before the record has answered: the control
+     is ALREADY there. Waiting on the origins read would make it a gate. */
+  const early = dlg();
+  ok("UI-75: while the origins read is in flight the page says it is asking, and the control to record is already offered",
+     /data-elic="origins-asking"/.test(early) && /id="el-go"/.test(early));
+  await asking;
   const rb = keep("the read-back");
   /* THE DERIVED FALSIFIER, SHOWN BACK IN THE RULING'S OWN TWO SHAPES. */
   const fals = strip((/data-falsifier="1">([\s\S]*?)<\/div>/.exec(rb) || [,""])[1]);
@@ -288,6 +344,31 @@ console.log("\n--- elicitation (UI-27 / DEC-32) ---");
      && strip(rb).includes(ctx.__TEST));
   ok("the member can go back and correct an answer — the read-back is a check, not a confirmation step",
      /elicPhase\('author'\)/.test(rb));
+
+  /* ---- UI-75 · §12 (c): THE SHARED ORIGIN, NAMED BEFORE ANYTHING IS WRITTEN ---- */
+  const asked = WIRE.filter(w => w.op === "partitionindependence");
+  ok("UI-75: the read-back asked the RECORD, once, about the partition as proposed — by position, for this question",
+     asked.length === 1 && asked[0].id === A && asked[0].body
+     && JSON.stringify(asked[0].body.partition.map(g => Array.isArray(g) ? g : g.legs)) === JSON.stringify([[0,1],[2,3]]));
+  const shared = (/data-elic="origins-shared"[\s\S]*?(?=data-set=)/.exec(rb) || [""])[0];
+  const said = [...rb.matchAll(/data-elic="origin">([\s\S]*?)<\/div>/g)].map(m => strip(m[1]));
+  ok("UI-75 (the correlated fixture): the two sets that trace to one captured copy are NAMED as sharing it, in the member's own reasons",
+     said.length === 1 && said[0].includes(L1) && said[0].includes(L2) && said[0].includes(L3) && said[0].includes(L4)
+     && said[0].includes("the same captured copy, fingerprint " + SHARED_SHA));
+  ok("UI-75: and it is said ONCE, beside the falsifier it qualifies and above the sets",
+     (rb.match(/data-elic="origins-shared"/g) || []).length === 1
+     && rb.indexOf('data-falsifier="1"') < rb.indexOf('data-elic="origins-shared"')
+     && rb.indexOf('data-elic="origins-shared"') < rb.indexOf('data-set='));
+  ok("UI-75: it informs and does not stop — the page says so, and the control to record is still offered",
+     /This does not stop you\./.test(strip(shared)) && /id="el-go"/.test(rb));
+  ok("UI-75: no set name the record filed the question under is shown instead of the member's reasons",
+     !/reasons 1 2 shares|reasons 3 4/.test(strip(shared)));
+  /* INFORM ONCE is also a property of the WIRE: re-painting the read-back, or
+     returning to it with the SAME answers, does not ask again. */
+  ctx.__elicPhase("author"); await ctx.__elicPhase("readback");
+  ok("UI-75: returning to the same read-back with the same answers does not ask the record again",
+     WIRE.filter(w => w.op === "partitionindependence").length === 1
+     && /data-elic="origins-shared"/.test(dlg()));
   /* CLAUSE 5, INSTRUMENT ONE: no strength anywhere, in any phase, before the
      record has answered. */
   for(const [where, html] of SURFACES){
@@ -319,10 +400,15 @@ console.log("\n--- elicitation (UI-27 / DEC-32) ---");
      !JSON.stringify(SENT).includes("asserted_by") && !JSON.stringify(SENT).includes('"at"')
      && !JSON.stringify(SENT).includes("carol"));
   ok("an optional statement is sent when the member wrote one, and is absent when they did not",
-     SENT.grounds[0].statement === "the ledger and the memo carry this without the resolution."
+     /* GUARDED 2026-09-25 (UI-75's control arm q): with NO body sent, the bare
+        `SENT.grounds[0]` threw a TypeError that ended the module before its tally
+        (-1), so a page that silently wrote nothing read as a crash rather than as
+        these assertions failing by name. */
+     !!(SENT && Array.isArray(SENT.grounds) && SENT.grounds.length === 2)
+     && SENT.grounds[0].statement === "the ledger and the memo carry this without the resolution."
      && SENT.grounds[1].statement === undefined);
   ok("no reason is sent on a FIRST answer: there is no earlier answer for it to be a revision of",
-     SENT.reason === undefined);
+     !!SENT && SENT.reason === undefined);   /* guarded: UI-75 arm q, as above */
 }
 
 /* ============ 5. THE RECEIPT — AND THE FIRST STRENGTH THIS FLOW HAS SHOWN ============ */
@@ -365,8 +451,14 @@ console.log("\n--- elicitation (UI-27 / DEC-32) ---");
   ctx.__elicAnswer(0, true); ctx.__elicAnswer(1, true);
   ctx.__elicAnswer(2, true); ctx.__elicAnswer(3, true);
   ctx.__elicWith(0, 2);
-  ctx.__elicPhase("readback");
+  await ctx.__elicPhase("readback");
   const rb = keep("the read-back, a revision");
+  /* THE SAME TWO REASONS NOW SIT IN ONE SET, so nothing is shared BETWEEN sets —
+     and the page says the record traced and found none, rather than saying
+     nothing (which would read as not asked). */
+  ok("UI-75: over a partition whose sets share nothing, the page says the record traced and found none shared",
+     /data-elic="origins-none"/.test(rb) && !/data-elic="origins-shared"/.test(rb)
+     && /found none of it shared between them/.test(strip(rb)));
   ok("the reason field is present because the record requires one for a change, and says whose rule that is",
      /id="el-why"/.test(rb) && /The record requires this whenever you change an answer you already recorded/.test(strip(rb)));
   /* REFUSED WITHOUT A REASON, IN THE RECORD'S OWN WORDS — this surface composes
@@ -385,7 +477,7 @@ console.log("\n--- elicitation (UI-27 / DEC-32) ---");
   ok("with a reason it is RECORDED, never blocked — and the reason is kept beside it",
      /Changed/.test(strip(done)) && /it never stood on its own/.test(strip(done)));
   ok("the reason reached the record, and only the reason: the name and the time are still the record's",
-     SENT.reason === "the resolution turned out to rest on the same memo, so it never stood on its own."
+     !!SENT && SENT.reason === "the resolution turned out to rest on the same memo, so it never stood on its own."
      && !JSON.stringify(SENT).includes("asserted_by"));
 }
 
@@ -412,6 +504,40 @@ console.log("\n--- elicitation (UI-27 / DEC-32) ---");
      && /there is nothing to write and this page offers no control that would write it/.test(strip(rb)));
   const before = WIRE.filter(w => w.op === "inquiryground").length;
   ok("nothing was sent", WIRE.filter(w => w.op === "inquiryground").length === before);
+  ok("UI-75: with no sets there is nothing to trace between, so the origins read is not made and nothing is said of it",
+     !/data-elic="origins-/.test(rb) && WIRE.filter(w => w.op === "partitionindependence").length === 2);
+}
+
+/* ============ 7a. UI-75 · NOT TOLD IS NOT CLEAN, AND THE ANSWERS ARE WRITTEN UNCHANGED ============ */
+{
+  /* The record refuses the origins read. The page must say it was NOT TOLD —
+     never that nothing is shared — and must still write exactly what the member
+     answered. */
+  ctx.__actGo("inquiryground", A, DOCS[A].title);
+  await new Promise(r => setTimeout(r, 0));
+  ctx.__elicAnswer(0, true); ctx.__elicAnswer(1, true);
+  ctx.__elicAnswer(2, true); ctx.__elicAnswer(3, true);
+  ctx.__elicWith(0, 1); ctx.__elicWith(2, 3);
+  PI_REFUSE_NEXT = true;
+  await ctx.__elicPhase("readback");
+  const rb = keep("the read-back, origins not told");
+  ok("UI-75: a refused origins read renders as NOT TOLD, never as traced-and-clean",
+     /data-elic="origins-untold"/.test(rb) && !/data-elic="origins-none"/.test(rb)
+     && /That is not the same as being told they do not\./.test(strip(rb)));
+  /* NOT TOLD IS NOT AN ANSWER, so it is not kept: coming back to the same
+     proposal asks again (an ANSWER is kept — section 3's last arm). Then THE
+     ACCEPTANCE CLAUSE'S SECOND HALF, driven with a SHARED origin on screen: the
+     body must be the one a page with no origins read would send. */
+  const before = WIRE.filter(w => w.op === "partitionindependence").length;
+  ctx.__elicPhase("author"); await ctx.__elicPhase("readback");
+  ok("UI-75: after a refusal, returning to the same proposal asks the record again, and this time it is told the origin is shared",
+     WIRE.filter(w => w.op === "partitionindependence").length === before + 1
+     && /data-elic="origins-shared"/.test(dlg()));
+  await ctx.__doElicit();
+  ok("UI-75: the answers are written UNCHANGED over a shared origin — the same sets, in the same order, nothing held back",
+     SENT && SENT.target === A
+     && JSON.stringify(SENT.grounds) === JSON.stringify([{ ground:"reasons 1 2", legs:[0,1] }, { ground:"reasons 3 4", legs:[2,3] }])
+     && /Recorded/.test(strip(dlg())));
 }
 
 /* ============ 8. A QUESTION THAT RESTS ON NOTHING ============ */

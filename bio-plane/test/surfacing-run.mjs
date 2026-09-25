@@ -40,7 +40,8 @@ const FIXTURE_SURFACES = 1_000_000;
  * TWICE — a per-wrapper counter restarts at 1 and collides with the projects the first wrapper created, which is
  * what `observation-log` and `founder-sight` do when they re-attach a PERSISTED store to a second Miniflare. It
  * counts OPENED RUNS, not (token, store) pairs, which is strictly finer: a run re-opened after a whole-store purge
- * takes a name of its own too. */
+ * takes a name of its own too. M0-193: the same `nth` ends the fixture project's SNAP KEY, which was the whole SECOND
+ * alone, so two runs opened in one second promoted under ONE key. */
 let fixtureNo = 0;
 
 /* THE ONE THING THIS FIXTURE MAY ABSORB: a plane that does not HAVE the surfacing machinery — a suite whose plane is
@@ -83,7 +84,7 @@ export function withSurfacingRun(mf, tokens) {
     const now = new Date().toISOString().split(".")[0] + "Z";
     const md = projectMd(now);
     const pr = await (await raw(`http://x/api/?op=promote&${auth}`, { method: "POST", body: JSON.stringify({
-      base: null, snapKey: `${now.replace(/[-:]/g, "")}_5171f1a0`,
+      base: null, snapKey: `${now.replace(/[-:]/g, "")}_5171f1a0_${nth}`,
       meta: { object_type: "project", title: `REC-171 fixture project ${nth} (${store || "bio"})`,
               current_state: "forming",
               ...(group ? { group } : {}),
@@ -113,10 +114,15 @@ export function withSurfacingRun(mf, tokens) {
     const url = new URL(typeof input === "string" || input instanceof URL ? String(input) : input.url);
     const token = url.searchParams.get("token");
     /* A WHOLE-STORE purge takes the fixture's project and run with everything else (D-113), so the next question
-       opens a fresh run rather than naming one the store no longer holds. */
+       opens a fresh run rather than naming one the store no longer holds. M0-193: the cache follows what the plane
+       ANSWERED, never what was asked (`VERIFICATION.md`) — a purge REFUSED (no `confirm`, a wrong one, a class that
+       may not purge) removed nothing, so the runs it names are still held and the cache keeps them. It read the
+       ATTEMPT, and cleared on every one. The answer is read from a CLONE, so the caller still reads its own body. */
     if (url.searchParams.get("op") === "purge" && !url.searchParams.get("bundleId")) {
       const answer = await raw(input, init);
-      runs.clear();
+      let said = null;
+      try { said = await answer.clone().json(); } catch { said = null; }
+      if (said && said.ok === true) runs.clear();
       return answer;
     }
     const body = init && typeof init.body === "string" ? init.body : null;

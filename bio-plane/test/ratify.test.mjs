@@ -143,7 +143,7 @@ const pkg = (n, base, snap) => {
   const md = mkMd(n);
   return {
     bundleId: ID, base, snapKey: snap, author: "claude",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "Ratify target",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
@@ -221,6 +221,22 @@ t("the catalogue version the stamp is built from is a real version (floor: not e
 t("the catalog's version is recorded, not the gate's own", rat.gateVersion, `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`);
 t("... and NOT the gate's own version alone — the recorded stamp names the catalogue that judged it",
   [rat.gateVersion === "plane-gate/1.0", String(rat.gateVersion).includes(`(bio-checks ${CATALOG_VERSION})`)], [false, true]);
+/* D-134 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for the C-96 rows; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* REC-219 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for C-41.14 and C-41.15; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* REC-203 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for C-91's three rows; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* D-147 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for C-94.1-11; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* REC-186 side, kept as history: the branch CORRECTED this arm's literal 1.28.0 -> 1.29.0 for C-33.48; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* MK-7 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for C-92's twelve rows; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* REC-147 side, kept as history: the branch CORRECTED this arm's literal to 1.30.0 for C-93's seven rows; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* REC-197 side, kept as history: the branch CORRECTED this arm's literal to 1.30.0 for C-97's two rows; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong
@@ -270,7 +286,7 @@ const badMd = mkMd(1, "INFO-2026-0000-wrong-id").replace("references: []",
    "    status: confirmed", '    note: ""'].join("\n"));
 const badPkg = {
   bundleId: BAD, base: null, snapKey: "20260724T130000Z_dddd4444", author: "claude",
-  meta: { object_type: "information", group: "believe-in-oakland", title: "Ratify target",
+  meta: { object_type: "information", group: "believe-in-oakland",
           current_state: "collected", created: NOW, last_updated: NOW },
   files: [{ path: "bundle.md", text: badMd, bytes: badMd.length, sha256: sha(badMd) }],
   /* The dangling edge lives in the frontmatter above, which is now its only

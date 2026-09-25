@@ -205,8 +205,12 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             catalogue rather than restated here. DEC-49: the C-number, the wire code and
             the canned translation are ONE ROW read from one place. */
          CONTRADICTION_PAIR_CHECKS,
+         /* REC-147 / C-93: the candidate write's refusal family, one row per code, from the catalogue. */
+         CONTRADICTION_CANDIDATE_CHECKS,
          /* D-148 / C-72: the fee-quote grammar's one rule and its refusal family. */
          QUOTE_CHECKS, quoteFindings, quoteValue, isQuoteEntry,
+         /* D-147 / C-94: the records-request lifecycle's one rule, its refusal family and its one reader. */
+         LIFECYCLE_CHECKS, lifecycleFindings, requestLifecycleOf,
 
          /* D-149: the three levels, the two bounds and the ONE reader of an action's governing laws, from the
             catalog that judges them (C-2.10) — the act, its refusal and the read cannot disagree. */
@@ -360,6 +364,8 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
 /* REC-152: tick and close are the run's PRINCIPAL's acts — the positional half, decided once in `airun.mjs`.
    Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
 import { runPrincipalGate } from "./airun.mjs";
+/* REC-147: §5's five labels, the one vocabulary the gate scores and this store refuses outside of. */
+import { CONTRADICTION_LABELS } from "./contradiction.mjs";
 /* D-500: §5.1's top-end bound — is this subject's entry provably at or after the log's first row at its
    level — decided ONCE in `airun.mjs`, beside the cause vocabulary it answers into, and asked by the content
    and meaning readers below. Its own import line, for the reason REC-152's gives. */
@@ -470,7 +476,8 @@ import { CALIBRATION_CHECKS } from "../checks/bio-checks.mjs";
 import { isCaseMemberBytes } from "../checks/bio-checks.mjs";
 /* D-442 / BIO_Publication_v0_1.md §3 rule 12: which shape a case document is — the catalog's one
    predicate, consumed by every per-case reader of a member's frozen facts here. */
-import { caseDocumentStatesMemberBlocks, sectionText as caseSectionText } from "../checks/bio-checks.mjs";
+import { caseDocumentStatesMemberBlocks, caseDocumentRequiresV4Disclosures,
+         sectionText as caseSectionText } from "../checks/bio-checks.mjs";
 /* D-309 / DEC-49: the case-identity family, imported for the one reason every
    DEC-49 import in this file exists — the catalogue holds the member-facing
    WORDS and this file holds none of them. */
@@ -525,11 +532,11 @@ import { REVIEW_COPY_CHECKS } from "../checks/bio-checks.mjs";
    refusal surface whose reader is guaranteed not to be a member. */
 import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
-import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
+import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS, CUSTODIAL_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-149 / C-70: a DISCOVERABLE project's existence is seen; its doors are not (Membership v2 §7.14). */
-import { PROJECT_VISIBILITY_CHECKS } from "../checks/bio-checks.mjs";
+import { PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
 import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-167 / C-65: a case document is signed only while its project still stands on the conclusion it records. */
@@ -543,11 +550,15 @@ import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
 /* D-510: the one refusal of `promote`'s envelope-versus-document check, held in the catalogue with every
    other DEC-49 row so the code, its check number and its canned translation live in one place. */
 import { PROMOTED_TYPE_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-203 / C-91: op=idmatch's refusals, and the identifier spaces it judges under Framework §8.3. */
+import { IDSPACE_CHECKS } from "../checks/bio-checks.mjs";
+import { ID_SPACES, recognise as recogniseIdentifier, apnStanding, systemOfAddresses, judgePair } from "./idspaces.mjs";
 /* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
    is written into a document's bytes, which the suites judging a composer's bytes call too. */
 import { INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
+import { ATTRIBUTION_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
    catalogue so this file holds no grade-letter literal for it. */
 import { TESTIMONY_GRADE } from "../checks/bio-checks.mjs";
@@ -1307,9 +1318,18 @@ export class Store extends DurableObject {
          `op=signeradd` or `op=signerset` last set it, or `class:<cls>` for the operator's bearer.
          NULLABLE AND NEVER BACK-FILLED, D-85's reasoning: a row changed before this column existed
          recorded no actor, and there is no value a backfill could reach for that would not be
-         invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
+         invented. NULL reads back as `not recorded`, stated, through `#statusBy`.
+         D-610 (BOB #35, 2026-09-25): EVERY writer of `members.status` writes it, naming the actor whose act
+         caused THAT transition -- `memberAdd` the inviter or proposer, `adminEndorse` and `adminRemove` the
+         administrator whose vote completed the act, `enroll` the enrolling member. */
       ["members", "status_by", "TEXT"],
       ["signers", "status_by", "TEXT"],
+      /* D-134 (Membership v2 §4.9, RULED 2026-09-25 by BOB #35): WHO INVITED a member -- the SERVER's stamp
+         of whoever `op=memberadd` ran for, on every path (an invitation, the second administrator, a 4.7
+         proposal), or `class:<cls>` for the operator's bearer. Its own column because `status_by` names only
+         the LATEST transition and enrolment overwrites it. NULLABLE AND NEVER BACK-FILLED, D-85's reasoning:
+         a member invited before this column existed recorded no inviter. NULL reads `not recorded`. */
+      ["members", "invited_by", "TEXT"],
       /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
          disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
          column existed recorded no version, and the one value a backfill could reach for is the
@@ -2213,6 +2233,10 @@ export class Store extends DurableObject {
          when and why — and the intake tier with its author stated UNDETERMINED. Read by the catalogue's one reader
          from the same bytes `risk_tier` above is, so the history and the current tier cannot disagree. */
       risk_tier_history: riskTierHistoryOf(fm),
+      /* D-147: THE RECORDS-REQUEST LIFECYCLE, read back as one dated chain by the catalog's one reader at
+         the same `now` as the clock above. Each entry's due date is the member's STATED date with its
+         citation, or UNDETERMINED with its sentence — never computed from the kind, a law or a stage. */
+      lifecycle: requestLifecycleOf(fm, new Date(now).toISOString().slice(0, 10)),
       /* REC-195: AND WHAT WAS PROPOSED, APART FROM IT. Two keys, never composed: `governing_laws` above is the
          member's statement or its honest undetermined, and this is machine work labelled as machine work
          (D-149). Nothing here is evidence that the list came from a proposal, and nothing derives one. */
@@ -3428,6 +3452,9 @@ export class Store extends DurableObject {
      many would fit, never to decide the refusal, which is made on the real
      encoded length. */
   static CITE_EDGE_BYTES = 83;
+  /* REC-219 / D-579(a): the `    extent_capture: <64 hex>` line a pinned case edge adds — 85 bytes by
+     construction (20 + 64 + the newline), not measured, because it is fixed width. */
+  static CITE_PIN_BYTES = 85;
   /* How many ids a Session Log entry names before it summarises. Bounded for
      the same reason the audit bounds its offender list. */
   static CITE_LOG_SAMPLE = 20;
@@ -5344,15 +5371,23 @@ export class Store extends DurableObject {
    * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
    *
    * `source_status` is not read, as at cite and at reinstate: a removed or
-   * modified source stays citable, and `retired` is the other axis. Only
-   * Information has the state — an inquiry target answers false, exactly as
-   * `#edgeTransition` leaves it un-refused — and an id with no row answers
-   * false too, because an absent target is refused by another door and this
-   * one claims nothing about it. */
+   * modified source stays citable, and `retired` is the other axis. An id with
+   * no row answers false, because an absent target is refused by another door
+   * and this one claims nothing about it.
+   *
+   * D-553 (BOB #34, 2026-09-24): THE STORE'S ONE RETIRED-TARGET PREDICATE, AND
+   * TYPE-BLIND. The rule follows the STATE, not the type — any object in a
+   * `retired` state is not citable, by any door and for every caller — so the
+   * Information test this carried is gone. Two machines carry the state today,
+   * measured from `STATES` in the catalogue: `information` and `bias`; a future
+   * machine meaning something else must name its state differently. It is read
+   * at all three doors that ask the question: `#edgeTransition` (reinstate) and
+   * `affordanceFacts`, `op=cite`'s `is-cite-retired` region, and the suggest
+   * path's CHECK 1. It is NEVER viewer-gated: whether the viewer can see the
+   * target decides only the refusal's WORDING, never citability. */
   #retiredNotCitable(id) {
-    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-    return !!b && normalizeType(b.object_type) === "information"
-        && String(b.current_state ?? "").trim() === "retired";
+    const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, id);
+    return !!b && String(b.current_state ?? "").trim() === "retired";
   }
 
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
@@ -6939,10 +6974,19 @@ export class Store extends DurableObject {
    * `quoteFindings`, run here over the ledger as it WOULD stand, so a member is
    * refused by the C-72 name before anything is written, and the same function
    * reports C-2.10 over the document that lands. An entry with no quote
-   * parameter writes exactly the bytes it wrote before D-148. */
+   * parameter writes exactly the bytes it wrote before D-148.
+   *
+   * D-147: AND IT MAY CARRY ITS PLACE IN THE RECORDS-REQUEST LIFECYCLE (`stage`,
+   * `follows`, `outcome`, `exemptions`, `due_by`, `due_cite`) — the catalog's
+   * `lifecycleFindings`, run here the same way. A due date's citation is judged
+   * HERE against the action's governing laws as they stand when it is stated
+   * (DUE_CITE_NOT_GOVERNING), and only here: see the catalog's comment for why
+   * the document-level rule does not. No due date is ever computed. An entry
+   * with no lifecycle parameter writes exactly the bytes it wrote before. */
   actionCorrespond({ target, direction = "", at = "", medium = "", party = "",
                      artifactSha = "", account = "", quoteAmount = "", quoteCurrency = "",
                      quoteBasis = "", quoteAnswers = "", quoteRevises = "",
+                     stage = "", follows = "", outcome = "", exemptions = "", dueBy = "", dueCite = "",
                      viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
@@ -7001,11 +7045,32 @@ export class Store extends DurableObject {
       const t = String(v ?? "").trim();
       if (t) quote[k] = t;
     }
+    /* D-147: the lifecycle keys, likewise only those a caller SENT. */
+    const life = {};
+    for (const [k, v] of [["stage", stage], ["follows", follows], ["outcome", outcome],
+                          ["exemptions", exemptions], ["due_by", dueBy], ["due_cite", dueCite]]) {
+      const t = String(v ?? "").trim();
+      if (t) life[k] = t;
+    }
     const refusal = (code, detail, extra) => {
-      const row = QUOTE_CHECKS[code];
+      const row = QUOTE_CHECKS[code] || LIFECYCLE_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation,
                target, detail, ...(extra || {}) };
     };
+    /* DEC-49 REGION is-lifecycle-writable — D-147/C-94.11. The two prose values
+       a stage carries are written quoted into a grammar with no escapes; the four
+       tokens are bare, so each must be the token its grammar names before any
+       byte is spliced (the grammar below judges which token). */
+    for (const [k, max] of [["exemptions", Store.RELEASE_ACK_MAX], ["due_cite", CITATION_MAX]])
+      if (life[k] !== undefined && (life[k].length > max || /["\\\r\n]/.test(life[k])))
+        return refusal("LIFECYCLE_TEXT_UNWRITABLE",
+          `${k} is at most ${max} characters and cannot contain a quote, a backslash, or a newline: the `
+          + `restricted frontmatter grammar has no escapes`, { field: k });
+    for (const k of ["stage", "follows", "outcome", "due_by"])
+      if (life[k] !== undefined && !/^[a-z0-9_-]{1,40}$/.test(life[k]))
+        return refusal("LIFECYCLE_TEXT_UNWRITABLE",
+          `${k} is a single token of lower-case letters, digits, underscores or hyphens`, { field: k });
+    /* END DEC-49 REGION is-lifecycle-writable */
     /* DEC-49 REGION is-quote-writable — D-148/C-72.6. The two prose values a
        quote carries are written quoted into a grammar with no escapes. */
     for (const k of ["quote_currency", "quote_basis"])
@@ -7057,6 +7122,7 @@ export class Store extends DurableObject {
       ...(sha ? { artifact_sha: sha } : {}),
       ...(acct ? { account: acct } : {}),
       ...quote,
+      ...life,
       /* SERVER-STAMPED. Present on both arms — who put this entry on the record
          is part of the record even when the record is bytes. */
       author: who,
@@ -7084,6 +7150,49 @@ export class Store extends DurableObject {
         return refusal("QUOTE_REVISES_NO_QUOTE", has("QUOTE_REVISES_NO_QUOTE").message, all);
       /* END DEC-49 REGION is-quote-grammar */
     }
+    /* D-147: the catalog's ONE lifecycle rule, over the ledger as it would stand. */
+    const lf = lifecycleFindings([...ledgerNow, entryFm], ord);
+    if (lf.length) {
+      this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+      const has = (c) => lf.find((x) => x.code === c);
+      const all = { findings: lf };
+      /* DEC-49 REGION is-lifecycle-grammar — D-147/C-94.1-9. The first finding, by
+         the name the catalog reports over the document too. */
+      if (has("STAGE_NOT_OF_DIRECTION"))
+        return refusal("STAGE_NOT_OF_DIRECTION", has("STAGE_NOT_OF_DIRECTION").message, all);
+      if (has("FOLLOWS_NO_ENTRY"))
+        return refusal("FOLLOWS_NO_ENTRY", has("FOLLOWS_NO_ENTRY").message, all);
+      if (has("APPEAL_NAMES_NO_DECISION"))
+        return refusal("APPEAL_NAMES_NO_DECISION", has("APPEAL_NAMES_NO_DECISION").message, all);
+      if (has("OUTCOME_NOT_ON_RECEIVED"))
+        return refusal("OUTCOME_NOT_ON_RECEIVED", has("OUTCOME_NOT_ON_RECEIVED").message, all);
+      if (has("OUTCOME_NOT_IN_VOCABULARY"))
+        return refusal("OUTCOME_NOT_IN_VOCABULARY", has("OUTCOME_NOT_IN_VOCABULARY").message, all);
+      if (has("DECISION_WITHOUT_OUTCOME"))
+        return refusal("DECISION_WITHOUT_OUTCOME", has("DECISION_WITHOUT_OUTCOME").message, all);
+      if (has("FEE_ESTIMATE_WITHOUT_QUOTE"))
+        return refusal("FEE_ESTIMATE_WITHOUT_QUOTE", has("FEE_ESTIMATE_WITHOUT_QUOTE").message, all);
+      if (has("DUE_HALF_STATED"))
+        return refusal("DUE_HALF_STATED", has("DUE_HALF_STATED").message, all);
+      if (has("DUE_NOT_A_DATE"))
+        return refusal("DUE_NOT_A_DATE", has("DUE_NOT_A_DATE").message, all);
+      /* END DEC-49 REGION is-lifecycle-grammar */
+    }
+    /* D-147: a stated due date names ONE OF THE ACTION'S citations (D-149), read
+       from the action's own bytes as they stand now. With no list stated, no
+       citation can be one of it, so the date cannot be stated yet — the refusal
+       says to state the laws first. Nothing is inferred from the kind. */
+    const cited = life.due_cite;
+    const listed = governingLawsOf(fm).laws.map((l) => l.citation);
+    const onList = cited ? listed.includes(cited) : true;
+    if (!onList) {
+      this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+      /* DEC-49 REGION is-lifecycle-due-cite — D-147/C-94.10. */
+      return refusal("DUE_CITE_NOT_GOVERNING",
+        `due_cite '${cited.slice(0, 60)}' is not one of this action's stated governing laws`,
+        { governing_laws: listed });
+      /* END DEC-49 REGION is-lifecycle-due-cite */
+    }
     let text = Store.#spliceCorrespondence(liveMd.content, entryFm);
     if (!text)
       return { ok: false, reason: "UNSPLICEABLE_CORRESPONDENCE", target,
@@ -7095,7 +7204,8 @@ export class Store extends DurableObject {
       + `Trigger: op=actioncorrespond on ${target}\n`
       + `Changes: correspondence[${ord}] recorded, dated ${day}`
       + `${String(party ?? "").trim() ? `, with ${String(party).trim()}` : ""}.\n`
-      + `Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who}`}\n`);
+      + `Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who}`}\n`
+      + `${life.stage ? `Stage: ${life.stage}${life.follows !== undefined ? `, following correspondence[${life.follows}]` : ""}.\n` : ""}`);
 
     const carried = [];
     for (const r of this.sql.exec(
@@ -7132,6 +7242,7 @@ export class Store extends DurableObject {
              held_as: sha ? "capture" : "testimony",
              ...(sha ? { artifact_sha: sha } : { account: acct }),
              ...(Object.keys(quote).length ? { quote } : {}),
+             ...(Object.keys(life).length ? { lifecycle: life } : {}),
              ...(responded ? { responds_to: responded } : {}),
              weight: "single" };
   }
@@ -7784,6 +7895,15 @@ export class Store extends DurableObject {
       ...(e.quote_basis !== undefined ? [`    quote_basis: "${e.quote_basis}"`] : []),
       ...(e.quote_answers !== undefined ? [`    quote_answers: ${e.quote_answers}`] : []),
       ...(e.quote_revises !== undefined ? [`    quote_revises: ${e.quote_revises}`] : []),
+      /* D-147: the lifecycle keys, each only if carried. Stage, follows and
+         outcome are bare tokens (judged tokens before this splice); the date and
+         the two prose values are quoted so the parser keeps them as written. */
+      ...(e.stage !== undefined ? [`    stage: ${e.stage}`] : []),
+      ...(e.follows !== undefined ? [`    follows: ${e.follows}`] : []),
+      ...(e.outcome !== undefined ? [`    outcome: ${e.outcome}`] : []),
+      ...(e.exemptions !== undefined ? [`    exemptions: "${e.exemptions}"`] : []),
+      ...(e.due_by !== undefined ? [`    due_by: "${e.due_by}"`] : []),
+      ...(e.due_cite !== undefined ? [`    due_cite: "${e.due_cite}"`] : []),
       `    author: ${e.author}`,
       `    recorded_at: "${e.recorded_at}"`,
     ];
@@ -9230,6 +9350,18 @@ export class Store extends DurableObject {
       stated: lens.in_force === true
         ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed`
         : lens.in_force === null ? String(lens.stated) : "no manifest was in force",
+      /* REC-219 / BIO_Publication_v0_1.md §3 rule 18 (BOB #34, 2026-09-24 23:08Z): EVERY ADOPTION OF
+         THIS SCOPE WHOSE PIN IS A PROPOSED REVISION, as op=biasmanifest answered it at this act — the
+         same answer the manifest above is stamped from, never a second read. `stated` stays exactly as
+         it is, because "no manifest was in force" is TRUE; this is the second fact beside it, so a
+         reader never takes a pending declaration for no declaration. Carried in all three lens states
+         (in force, not, undetermined), because op=biasmanifest carries it in all three (REC-210). The
+         rows name the bundle, the REVISION pinned, the scope and that revision's own state — and not
+         who adopted it: a member's name in a signed public document is that member's choice (§3 rule 7),
+         and the ruling asks for the revision's id. Nothing here says when or whether it takes effect. */
+      pins_proposed: (Array.isArray(lens.pins_proposed) ? lens.pins_proposed : [])
+        .map((x) => ({ bundle_id: x.bundle_id, revision: x.revision, scope: x.scope,
+                       pinned_state: x.pinned_state ?? null })),
     };
     /* D-150 / §3 rule 11 — WHO ACKNOWLEDGED THIS STATEMENT, read at the act that authors the
        document the owner signs, so the list is inside the signature. An acknowledgement by the
@@ -9239,6 +9371,10 @@ export class Store extends DurableObject {
        decides what the list may contain: an acknowledgement by the statement's writer is not a second
        reading (rule 11), so listing one would author bytes C-41.10 must refuse — and a store written
        before REC-193 HOLDS such rows, recorded while `op=statementack` read the draft's last editor. */
+    /* REC-219 / D-579(a): THE CASE'S CITATION EDGES, WITH THE VERSION EACH WAS MADE AGAINST, read from
+       the project's bytes at this act and signed in (BOB #34, 2026-09-25 02:30Z: *"a pin kept outside the
+       signed bytes is one a reader cannot verify"*). */
+    const citations = this.#caseCitations(proj);
     const writer = this.#statementWriter(proj, theCase, edition, stmt, who);
     /* REC-217 / §3 rule 13: THE LINK THIS ACT MAKES, when the publisher named the draft — its draft, its
        author and its time are this act's own, so the list, the prose and the row all state one act. */
@@ -9258,6 +9394,12 @@ export class Store extends DurableObject {
       manifest,
       /* D-150 / §3 rule 11: the acknowledgements, read above and signed in. */
       acks,
+      /* REC-219 / D-579(a): the citation edges and the version each rests on. */
+      citations,
+      /* MK-7 / §4.3: each observation this edition reaches, at the level its author chose (inherited from an
+         earlier edition where they chose then), or UNCHOSEN — which op=caseratify refuses by name (§4.4). */
+      attributions: this.#attributionStatements(theCase, edition, proj,
+        [...new Set((() => { const r = this.testimonyReach(members); return [...r.self, ...r.via.map((v) => v.observation)]; })())]),
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -9322,6 +9464,8 @@ export class Store extends DurableObject {
              /* D-84: THE MANIFEST THE DOCUMENT CARRIES, echoed — the lens (computed) beside the
                 acknowledgement (authored), two things that travel together and are not one. */
              bias_manifest: manifest,
+             /* REC-219 / D-579(a): the citation edges the document just signed, with their versions. */
+             case_citations: citations,
              completeness: { statement: stmt, subject_position: pos, subject_justification: just,
                              author: who, at: when, excluded: rows.length,
                              /* D-150: what the document just authored lists, in its words. */
@@ -9346,7 +9490,12 @@ export class Store extends DurableObject {
                                 above is REC-194's undetermined, unchanged. */
                              ...(draftLink ? { draft: { draft_id: draftLink.draft, named_by: draftLink.by,
                                                         named_at: draftLink.at,
-                                                        acknowledgements_bound: acks.boundByLink } } : {}) },
+                                                        acknowledgements_bound: acks.boundByLink } } : {}),
+                             /* D-540: the unbindable participant readings whose writer is UNDETERMINED, so none
+                                can be ruled out as the writer's own — stated apart, never in the count above. */
+                             ...(acks.unboundWriterUndetermined
+                               ? { acknowledgements_unbindable_writer_undetermined: acks.unboundWriterUndetermined }
+                               : {}) },
              author: who, at: when, weight: "single",
              /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE
                 ONE. Two findings whose strengths differ have two answers; one
@@ -9398,6 +9547,57 @@ export class Store extends DurableObject {
      PURE AND STATIC ON PURPOSE. It takes everything it needs as arguments and
      touches no table, so the suite can render a document without a store and the
      gate can be exercised against bytes this method produced. */
+  /* REC-219 / D-579(a): the words the case document's prose gives each `version`. */
+  static CASE_CITATION_WORDS = {
+    pinned: "cited at capture",
+    only_capture: "no pin; the record held one capture at signing,",
+    undetermined: "version UNDETERMINED — no pin, and the record held several captures, so which one was cited is not known",
+    no_capture: "the record held no capture of it at signing",
+    no_bytes: "a question, which has no bytes (DEC-21)",
+  };
+
+  /** REC-219 / D-579(a) — A CASE'S CITATION EDGES AND THE VERSION EACH RESTS ON, read at op=publish.
+   *
+   *  The project's `references[]` entries of `rel: cites` that are not severed, in the document's own
+   *  order, each classified from ITS OWN BYTES first: an `extent_capture` on the edge is the pin (op=cite
+   *  writes it since this item; an author may write it too) and is carried as the bytes say it. Without
+   *  one, the edge was cited before capture pins, and what the record can honestly say depends on how
+   *  many captures it holds of the document NOW, at signing: one (there is only one version the edge
+   *  can rest on), several (UNDETERMINED, never back-filled by the resolver's answer) or none. A
+   *  question has no bytes. SET-BASED: the bytes once, and one grouped count per chunk of targets, under
+   *  D-36's variable ceiling — never one read per edge. */
+  #caseCitations(project) {
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
+    const refs = md && md.content !== null ? (parseFrontmatter(md.content).data?.references || []) : [];
+    const edges = (Array.isArray(refs) ? refs : []).filter((r) => r && typeof r === "object" && r.rel === "cites"
+      && r.status !== "severed" && typeof r.target === "string" && r.target.trim());
+    const docs = [...new Set(edges.map((r) => r.target.trim())
+      .filter((t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "information"))];
+    const held = new Map();
+    const half = Math.floor(Store.SELECTION_ID_CHUNK / 2);
+    for (let i = 0; i < docs.length; i += half) {
+      const part = docs.slice(i, i + half), qs = part.map(() => "?").join(",");
+      for (const r of this.#rows(
+        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n, MIN(capture_sha) AS one FROM (
+           SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${qs})
+           UNION ALL
+           SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${qs}))
+         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, { n: r.n, one: r.one });
+    }
+    return edges.map((r) => {
+      const target = r.target.trim();
+      const pin = typeof r.extent_capture === "string" && /^[0-9a-f]{64}$/.test(r.extent_capture.trim())
+        ? r.extent_capture.trim() : null;
+      if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "information")
+        return { target, version: "no_bytes", capture: null };
+      if (pin) return { target, version: "pinned", capture: pin };
+      const h = held.get(target);
+      if (!h || !h.n) return { target, version: "no_capture", capture: null };
+      return h.n === 1 ? { target, version: "only_capture", capture: h.one }
+                       : { target, version: "undetermined", capture: null };
+    });
+  }
+
   static #caseDocumentText({ caseId, edition, project, scope, bias, bar, roster, roles, pins,
                              statement, position, justification, excluded, author, at,
                              /* REC-212 / IC-272 / BIO_Publication_v0_1.md §3 rule 13 (BOB #32 (b),
@@ -9437,12 +9637,28 @@ export class Store extends DurableObject {
 
                              /* D-150 / §3 rule 11: `#statementAcknowledgements`' answer — the
                                 acknowledgements of THIS statement by anybody but its author. */
-                             acks = { statementSha: null, truncated: false, rows: [] } }) {
+                             acks = { statementSha: null, truncated: false, rows: [] },
+                             /* REC-219 / D-579(a): `#caseCitations`' rows. */
+                             citations = [],
+                             /* MK-7 / MEMBER-KNOWLEDGE-DESIGN.md §4.3: `#attributionStatements`' rows, one per
+                                observation this edition reaches, computed by the caller (this method is pure
+                                and static). EMPTY writes neither run, so a case reaching no observation is
+                                authored byte for byte as before. */
+                             attributions = [] }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
     const lens = manifest && manifest.in_force === true ? manifest
       : { in_force: manifest && manifest.in_force === null ? null : false,
           scope: "project", scope_id: project, statements_sha: null, bundles: [], lock_violations: 0,
-          stated: manifest && manifest.in_force === null ? manifest.stated : "no manifest was in force" };
+          stated: manifest && manifest.in_force === null ? manifest.stated : "no manifest was in force",
+          pins_proposed: (manifest && manifest.pins_proposed) || [] };
+    /* REC-219: the adoptions pinning a proposed revision at signing, and the sentence saying what the
+       list is. It states the fact as it stood at this act and NOTHING about when or whether the revision
+       takes effect (BOB #34). An empty list is a statement, and says so. */
+    const pending = Array.isArray(lens.pins_proposed) ? lens.pins_proposed : [];
+    const pendingStated = pending.length === 0
+      ? "no adoption in this scope pinned a proposed revision when this case was signed"
+      : "each row is an adoption in this scope whose pinned revision the group had proposed and not "
+        + "accepted when this case was signed; that revision was not in force at signing";
     const frozenOf = (m) => (frozen && frozen.get(m)) || null;
     const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
     const fm = [
@@ -9465,11 +9681,34 @@ export class Store extends DurableObject {
       `  statements_sha: ${lens.statements_sha ?? "null"}`,
       `  lock_violations: ${lens.lock_violations}`,
       `  stated: "${Store.#fmSafe(lens.stated)}"`,
+      /* REC-219 / §3 rule 18: the count beside the list below, and its sentence (C-41.14). */
+      `  pins_proposed: ${pending.length}`,
+      `  pins_proposed_stated: "${Store.#fmSafe(pendingStated)}"`,
       "bias_manifest_bundles:",
       ...lens.bundles.flatMap((x) => [
         `  - bundle_id: ${x.bundle_id}`,
         `    revision: ${x.revision}`,
         `    scope: ${x.scope}`]),
+      /* REC-219: `bias_manifest_bundles`' shape, for the grammar's reason (no map holding an array). */
+      "bias_manifest_pins_proposed:",
+      ...pending.flatMap((x) => [
+        `  - bundle_id: ${x.bundle_id}`,
+        `    revision: ${x.revision}`,
+        `    scope: ${x.scope}`,
+        `    pinned_state: ${x.pinned_state ?? "null"}`]),
+      /* REC-219 / D-579(a) / §3 rule 18 — THE CASE'S CITATION EDGES, EACH WITH THE VERSION IT RESTS ON
+         (C-41.15). An array of flat objects, `case_roles`' shape. `version` is REC-220's vocabulary for a
+         question's leg, plus the two cases that have no version to name: `pinned` (the edge's bytes name
+         the capture — op=cite stamped it at the act, or its author wrote it), `only_capture` (no pin, and
+         the record held exactly one capture at signing), `undetermined` (no pin, several captures: which
+         one the member cited is not a fact the record holds, and it is NOT guessed), `no_capture` (the
+         record held none) and `no_bytes` (a question — DEC-21). `capture` is a sha exactly where the first
+         two say one. */
+      "case_citations:",
+      ...citations.flatMap((x) => [
+        `  - target: ${x.target}`,
+        `    version: ${x.version}`,
+        `    capture: ${x.capture ?? "null"}`]),
       `case_findings: [${roster.join(", ")}]`,
       "case_roles:",
       ...roster.flatMap((m) => [
@@ -9606,6 +9845,9 @@ export class Store extends DurableObject {
           `    load_bearing: ${g.load_bearing}`,
           `    population: ${g.population}`]);
       }),
+      /* MK-7 / §4.3 — EACH REACHED OBSERVATION'S LEVEL, AS THIS EDITION'S STATEMENT, derived from its
+         author's act and never from the publisher's input. An array of flat objects, `case_roles`' shape. */
+      ...(attributions.length ? Store.#attributionFrontmatterLines(attributions) : []),
       "required_strength:",
       `  declared: ${bar.declared}`,
       `  source: ${bar.source}`,
@@ -9675,6 +9917,8 @@ export class Store extends DurableObject {
           + "no-project relationship's. A reader weighing this case should know which findings this "
           + "project concluded for itself and which it took as the record already answered.",
       "",
+      /* MK-7 — IN THE BODY AND IN PROSE, for this method's own reason: a member reviews and signs the BODY. */
+      ...(attributions.length ? Store.#attributionBodyLines(attributions) : []),
       "## What This Excludes",
       "",
       statement,
@@ -9779,6 +10023,28 @@ export class Store extends DurableObject {
         : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood `
            + "adopted for this instance or this project. That is stated, not left blank — it is a different "
            + "fact from a lens with nothing in it."]),
+      /* REC-219 / §3 rule 18: the second fact, in prose, for the reason the manifest is — a member signs
+         THIS. Said when there is something to say; the frontmatter states the empty list either way. */
+      ...(pending.length
+        ? ["",
+           `AN ADOPTION PINNED A PROPOSED REVISION when this case was signed: ${pending.length === 1 ? "one adoption" : `${pending.length} adoptions`} `
+           + "in this scope pinned a revision the group had proposed and not accepted. It was not in force at "
+           + "signing, and it is not part of any lens this document names.",
+           "",
+           ...pending.map((x) => `- ${x.bundle_id} (${x.scope}) pinned revision ${x.revision}, `
+             + `standing at ${x.pinned_state ?? "an unrecorded state"}`)]
+        : []),
+      "",
+      /* REC-219 / D-579(a): the citation edges in prose, for the reason every section here is. */
+      "## Citations",
+      "",
+      ...(citations.length
+        ? ["What this case cites, and the version of each it cites — pinned where the record holds the capture "
+           + "the citation was made against, and stated where it does not:",
+           "",
+           ...citations.map((x) => `- ${x.target}: ${Store.CASE_CITATION_WORDS[x.version] ?? x.version}`
+             + (x.capture ? ` ${x.capture}` : ""))]
+        : ["This case's project cited nothing when it was published."]),
       "",
       "## Bias Acknowledgement",
       "",
@@ -10102,6 +10368,10 @@ export class Store extends DurableObject {
         const cf = (parseFrontmatter(doc.text).data || {}).case_findings;
         return (Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim());
       })()),
+      /* MK-7 / §4.4: the attribution this document states for each observation it reaches, beside what the
+         authors' acts say now and which reached observations still name their author (§4.1) — the facts
+         op=caseratify's attribution gate judges, read off the same bytes the signature would publish. */
+      attribution: this.attributionFacts(doc),
       /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): each roster member's `basis` AT THE BYTES
          THIS DOCUMENT PINS, for the C-2.8 arms that followed the frozen pair into the case document
          (the testimony row, the per-ground rows). Read at the PIN and never at the working version:
@@ -10258,7 +10528,22 @@ export class Store extends DurableObject {
                 while the document is unsigned — there is no delivery yet, which
                 is a different fact from a delivery nobody recorded. */
              delivered_by: d.ratified_at ? this.#deliveredBy(d) : null,
-             gate_version: d.gate_version ?? null };
+             gate_version: d.gate_version ?? null,
+             /* REC-219 / D-579(a) (BOB #34, 2026-09-25 02:30Z): WHICH VERSION EACH CITATION RESTS ON, as the
+                SIGNED BYTES say it. A /4 document signed its edges with their versions, and they are read
+                straight out of the bytes above, never recomputed. An older document signed NO edge and no
+                version, so the answer states that rather than reading the project's edges as they stand
+                today — which would be the case claiming citations it never signed — and it is never
+                re-signed (rule 1). */
+             citations: Store.#signedCitations(d.text) };
+  }
+  static #signedCitations(text) {
+    const fm = parseFrontmatter(String(text || "")).data || {};
+    if (caseDocumentRequiresV4Disclosures(fm) && Array.isArray(fm.case_citations))
+      return { state: "signed", rows: fm.case_citations };
+    return { state: "undetermined", rows: null,
+             stated: "version undetermined (signed before capture pins): this document was signed before a case's "
+                   + "citation edges were pinned to the capture they were made against, and it carries neither" };
   }
 
   /* ===== REC-126 / DEC-31 / IC-145 / IC-146: THE REVIEW COPY ================
@@ -10409,12 +10694,27 @@ export class Store extends DurableObject {
      rehomes it). A draft naming an existing case stands at that case's next
      edition; a draft naming none stands at edition 1, the edition a MINTED case has — which is the case only
      when it asks for a new one or the derivation finds nothing (D-538: the identity SENTENCE says which; this
-     `edition` does not, and is kept because grants and acknowledgements are keyed on it). */
+     `edition` does not, and is kept because grants and acknowledgements are keyed on it — D-568: it is the
+     INTERNAL key, and every answer states it through `#statedEdition`, null for a derived draft). */
   #draftIdentity(row) {
     const named = String(row.case_id ?? "").trim() || null;
     if (!named) return { caseId: null, edition: 1 };
     const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, named);
     return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
+  }
+
+  /* D-568 (BIO_Publication_v0_1.md 6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE EDITION A
+     DRAFT'S ANSWERS STATE IS NULL WHERE ITS CASE IS DERIVED. `#draftIdentity`'s edition 1 for a draft naming no
+     case is the edition a MINTED case has, and it stays the INTERNAL key — `review_grants` rows and
+     `statement_acknowledgements` rows are written and matched at (case_id NULL, edition 1), so moving it would
+     orphan every grant and reading already given. But ON THE WIRE it claimed more than the record holds: a draft
+     that names no case and does not set `newCase` has its case DERIVED at publication (D-538's sentence), and
+     over findings a published case already serves that is C1's NEXT edition, not edition 1 (reviewcopy.test.mjs
+     block 12, draft DD). Which edition it becomes is UNDETERMINED until then, so the answer says `null`, never a
+     number. A draft naming a case keeps that case's next edition; one asking for a new case keeps 1, which is
+     true of it. `newCase` is read for truthiness, as `publishCase` reads it. */
+  static #statedEdition(ident, newCase) {
+    return ident.caseId || newCase ? ident.edition : null;
   }
 
   /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
@@ -10533,7 +10833,7 @@ export class Store extends DurableObject {
     }
     const ident = this.#draftIdentity({ case_id: named });
     return { ok: true, draftId: id, project: owning, edited: !!existing,
-             caseId: ident.caseId, edition: ident.edition,
+             caseId: ident.caseId, edition: Store.#statedEdition(ident, !!params.newCase),
              caseIdentity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
              read: `op=reviewcopy&draft=${id}` };
   }
@@ -10665,10 +10965,13 @@ export class Store extends DurableObject {
                       detail: "the plane could not find a free grant id; nothing was issued" };
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, a.who, when);
-    return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId, edition: ident.edition,
+    /* D-568: the ROW binds at the internal key; the ANSWER states the edition only where the record holds one. */
+    const newCase = !!JSON.parse(d.params).newCase;
+    return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId,
+             edition: Store.#statedEdition(ident, newCase),
              recipient: to, issuedBy: a.who, issuedAt: when,
              boundTo: `this grant reads ${Store.#caseIdentitySentence(ident.caseId, ident.edition,
-                                                                     !!JSON.parse(d.params).newCase)} and nothing `
+                                                                     newCase)} and nothing `
                     + `else. It ends when it is revoked, and when that edition is published and signed.` };
   }
 
@@ -10748,13 +11051,34 @@ export class Store extends DurableObject {
           a.kind === "recipient" ? "recipient" : "member", "statement acknowledgement");
     let last = null;
     for (const c of cand) if (!last || instantOrder(c.at, last.at) > 0) last = c;
+    const who = (c) => `${c.kind === "edit" ? "an edit of the draft" : `a ${c.kind}`} by `
+                     + `${c.by ?? "somebody this record does not name"}`;
     const act = !last ? "UNDETERMINED: these bytes carry no dated act at all"
-      : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft"
-          : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
+      : `the newest dated act these bytes carry is ${who(last)}`;
+    /* D-573 / BOB #34's ruling of 2026-09-25 01:05Z (§6A.3 point 1): A WHOLE-SECOND STAMP NAMES ITS SECOND AND
+       NOT WHERE IN IT THE ACT FELL, so beside another act inside that same second the order between the two is
+       one the record cannot support — BOB #33's D-516 band, which reads UNDETERMINED. The instant-order pick
+       above is KEPT as the one in-band date (DEC-31 needs one value), and the tie is STATED beside it rather
+       than chosen silently: each act in the pick's own second whose order against the pick turns on a stamp
+       cut to the second is named in `undetermined_within`, and `stated` says which of the two is undetermined
+       and why. Only acts recorded before D-543 carry such a stamp. Acts in different seconds are ordered by
+       the record and carry no statement, and so are two millisecond stamps inside one second. */
+    const WHOLE = /T\d{2}:\d{2}:\d{2}Z$/;
+    const second = (at) => Math.floor(Date.parse(at) / 1000);
+    const tied = !last ? [] : cand.filter((c) => c !== last && second(c.at) === second(last.at)
+                                               && (WHOLE.test(c.at) || WHOLE.test(last.at)));
+    const tieStated = tied.map((c) => {
+      const [a, b] = WHOLE.test(c.at) ? [c, last] : [last, c];
+      return ` Which of ${who(a)} (${a.at}) and ${who(b)} (${b.at}) came later is undetermined: `
+           + (WHOLE.test(b.at) ? "both were recorded to the second" : `${who(a)} was recorded to the second`)
+           + `, so the date this copy carries is the instant order's pick and not an order the record holds `
+           + `(BOB #34, 2026-09-25).`;
+    }).join("");
     return {
       at: last ? last.at : null, by: last ? last.by : null,
       by_kind: last ? last.by_kind : null, kind: last ? last.kind : null,
-      stated: `${act}. THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as `
+      undetermined_within: tied.map((c) => ({ at: c.at, by: c.by, by_kind: c.by_kind, kind: c.kind })),
+      stated: `${act}.${tieStated} THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as `
             + `BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an `
             + `acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy `
             + `draws live and dates nowhere — each finding's text, the publish gates' verdict, and the `
@@ -10831,8 +11155,15 @@ export class Store extends DurableObject {
       const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,
                                            revoked_by, revoked_at FROM review_grants WHERE draft_id=?
                                     ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, cap + 1);
-      const grants = grantRows.slice(0, cap).map((g) => ({ ...g,
-        live: !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition }));
+      /* D-568: LIVENESS is decided at the stored key, and the row's `edition` is STATED only where the record holds
+         one. A grant bound to no case was given at (NULL, 1) for a draft that was either new or DERIVED, and the row
+         does not record which: a LIVE one reads the draft's own stated edition (it binds what the draft is now), a
+         dead one reads null — UNDETERMINED, never the minted-case edition it may never have been. */
+      const grants = grantRows.slice(0, cap).map((g) => {
+        const live = !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition;
+        return { ...g, live,
+                 edition: g.case_id ? g.edition : live ? Store.#statedEdition(ident, !!params.newCase) : null };
+      });
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
     /* D-150 / §3 rule 11: who has acknowledged the statement AS IT STANDS NOW — the same read
@@ -10915,7 +11246,9 @@ export class Store extends DurableObject {
          UNDETERMINED). THE IDENTITY SENTENCE BESIDE IT READS THE SAME FIELD (D-538): before it, with no
          case named, that sentence read *a new case* whether or not this field was set — REC-199's
          reported finding, fixed in `#caseIdentitySentence` for every answer that prints it. */
-      case: { case_id: ident.caseId, edition: ident.edition,
+      /* D-568: `edition` is null for a DERIVED draft — see `#statedEdition`; the grants' liveness above is
+         still decided at the internal key. */
+      case: { case_id: ident.caseId, edition: Store.#statedEdition(ident, !!params.newCase),
               identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
               newCase: !!params.newCase },
       authored: { scope: params.scope ?? null, statement: params.statement ?? null,
@@ -10925,6 +11258,24 @@ export class Store extends DurableObject {
       findings, gates: gates.gates, missing: gates.missing, evaluated: gates.evaluated,
       comments, comments_truncated: commentsTruncated, list_limit: cap,
       statement_acknowledgements: statementAcks,
+      /* MK-7 / MEMBER-KNOWLEDGE-DESIGN.md §4.2: EVERY OBSERVATION THIS EDITION WOULD REACH, at any depth, with
+         its state — chosen or not — and never the level itself: what a case shows of an observation's author is
+         the author's to state, in the case document, and a draft reader needs only to know whether the edition
+         can be signed. Unchosen is what op=caseratify refuses (§4.4). A draft naming no case has no identity a
+         level can be keyed to (a case id is minted only by publication), so each is unchosen and says why. */
+      observations: (() => {
+        const seen = findings.filter((f) => f.present).map((f) => f.target);
+        const r = this.testimonyReach(seen);
+        return [...new Set([...r.self, ...r.via.map((v) => v.observation)])].map((obs) => {
+          const act = ident.caseId ? this.#attributionInForce(ident.caseId, ident.edition, obs) : null;
+          return { observation: obs, chosen: !!act,
+                   stated: act ? `its author has chosen a level for ${ident.caseId} edition ${ident.edition}`
+                     : ident.caseId ? `its author has chosen no level for ${ident.caseId} edition ${ident.edition}; `
+                                      + "the edition cannot be signed until they do (op=attribute)"
+                     : "this draft names no case yet, so no level can be chosen; its author chooses one "
+                       + "(op=attribute) once op=publish has prepared the case document" };
+        });
+      })(),
       updated_by: d.updated_by, updated_at: d.updated_at,
       /* REC-200 / §6A.3 point 1 as BOB #32 ruled it: WHEN THIS COPY LAST CHANGED, and who changed it —
          the quantity the control plane puts in the in-band quartet's `date`. `updated_at` above stays what
@@ -11012,6 +11363,9 @@ export class Store extends DurableObject {
   acknowledgeStatement({ draft = null, caseId = null, edition = null, secretSha = null, viewer = null,
                          bySecret = false } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
+    /* D-568: whether the draft read through either draft door asked for a new case — the answer states the
+       edition off it (`#statedEdition`); the row is still written and matched at the internal key. */
+    let draftNewCase = false;
     /* REC-193: whether the author was read from a DRAFT's `statement_by` — the column an older draft
        does not carry, and the one place UNDETERMINED is reachable. A case document states its author
        in its own bytes, so that door is not this one. */
@@ -11023,7 +11377,7 @@ export class Store extends DurableObject {
        authored `detail` with no translation at all (UI-89's worker's finding): a helper a return
        cannot see is a helper that return does not use. Declared here, before the first refusal, so
        every one of the seven is built the same way and each row's `where` names the smallest span in
-       which its refusal is enforced. ADDITIVE ON THE WIRE (IC-270): `reason`, the site's own `detail`
+       which its refusal is enforced. (Six since D-521 retired C-82.1, the bound no input could reach.) ADDITIVE ON THE WIRE (IC-270): `reason`, the site's own `detail`
        and its per-site keys are unchanged; `code`, `check` and `translation` JOIN them. */
     const refusal = (code, detail, extra) => {
       const row = STATEMENT_ACK_CHECKS[code];
@@ -11041,6 +11395,7 @@ export class Store extends DurableObject {
       if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();
       const d = live.draft;
       project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
+      draftNewCase = !!JSON.parse(d.params).newCase;
       /* REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES, stamped at the
          draft write that changed them — never `updated_by`, which is the last editor of any field. */
       statement = JSON.parse(d.params).statement; statementAuthor = d.statement_by ?? null;
@@ -11054,6 +11409,7 @@ export class Store extends DurableObject {
         const d = this.#draftForMember(draft, v);
         if (!d) return Store.#noReviewCopy();
         project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
+        draftNewCase = !!JSON.parse(d.params).newCase;
         /* REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES, stamped at the
          draft write that changed them — never `updated_by`, which is the last editor of any field. */
       statement = JSON.parse(d.params).statement; statementAuthor = d.statement_by ?? null;
@@ -11195,10 +11551,11 @@ export class Store extends DurableObject {
        - THE PROJECT IS MATCHED IN SQL, spelled as `#caseDocumentText` writes it. It was filtered AFTER a `LIMIT 8`,
          so another project's documents of the same sentence could fill the page and crowd this project's out —
          an acknowledgement recorded and never listed where it belongs.
-       - OVER THE BOUND IS A REFUSAL, NOT A CUT. A cut would leave the ninth document listing fewer second readers
-         than the record holds, and its owner would SIGN that absence. So the read is `max + 1`, and more than
-         `max` refuses by name with nothing written. The parse filter stays, applied after the bound is decided. */
-    const ackMax = Store.STATEMENT_ACK_DOCUMENTS_MAX;
+       - NO CUT, AND SINCE D-521 NO BOUND EITHER. IC-246 read at `max + 1` and refused over `max` (C-82.1), because a
+         cut would leave a document listing fewer second readers than the record holds and its owner would sign
+         that absence. The two keyed reads below bound it by construction (see D-521's note at them), so the
+         bound could never fire. Its refusal, its catalogue row and its constant are retired. The parse filter
+         stays. */
     const needle = `\n  statement_sha: ${statementSha}\n`;
     const projectLine = `\ncase_project: ${project}\n`;
     /* REC-194 / §3 rule 13 — THE DOOR REACHES ONLY ITS OWN DOCUMENT, AND A DRAFT OF A NEW CASE HAS NONE.
@@ -11214,32 +11571,37 @@ export class Store extends DurableObject {
        than letting a case document say nobody read the sentence. The fix that would bind it — `op=publish`
        naming the draft it publishes — was ruled by BOB #33 and is BUILT (REC-217): the found read below
        reaches the document a publisher named this draft for.
-       THE BOUND AND ITS REFUSAL ARE KEPT AND ARE NOW UNREACHABLE BY CONSTRUCTION, WHICH IS SAID RATHER
-       THAN LEFT TO BE NOTICED: `(case_id, edition)` is `case_documents`' PRIMARY KEY, so a read naming
-       both returns at most one row and `found.length` cannot exceed 1. IC-246's refusal is retained as a
-       guard over this read — deleting it would move the DEC-49 refusal floor and drop C-82.1 from the
-       catalogue, which is a landing of its own — and the removal is reported as a nameable fix. */
+       REC-194 found IC-246's bound unreachable here (`(case_id, edition)` is the PRIMARY KEY, so one row at
+       most) and kept it as a guard; D-521 retired it, after re-deriving the count on REC-217's wider read. */
     /* REC-217 / §3 rule 13 (BOB #33): AND A DRAFT A PUBLISHER NAMED REACHES THE DOCUMENT IT WAS NAMED FOR.
        REC-194's "a draft naming none reaches NOTHING" was true while nothing linked a draft to its case; the
        link is that act, recorded on the case document's row (`draft_id`), so a reading given through the
        named draft after publication re-authors that unsigned document exactly as a reading given there
-       before publication is listed in it. Still ONE document at most: the link names one (case, edition),
-       and `op=publish` refuses a second (PUBLISH_DRAFT_ALREADY_BOUND). */
-    const found = this.#rows(
-                            `SELECT case_id, edition, doc_sha, text, draft_id, authored_by, authored_at
-                               FROM case_documents
-                              WHERE sig_armored IS NULL AND edition=? AND (case_id IS ? OR draft_id = ?)
-                                AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
-                             ident.edition, ident.caseId ?? null, draftId ?? "", needle, projectLine, ackMax + 1);
-    /* DEC-49 REGION is-statement-ack-documents-bound */
-    if (found.length > ackMax)
-      return refusal("STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
-               `more than ${ackMax} unsigned case documents of this project carry this exact statement at `
-                     + `this case identity. Each would have to be re-authored to list the acknowledgement, and `
-                     + `re-authoring only some would leave the rest listing fewer second readers than the record `
-                     + `holds. Nothing was written: sign or supersede some of them, then acknowledge.`,
-               { limit: ackMax, statement_sha: statementSha, edition: ident.edition, case_id: ident.caseId ?? null });
-    /* END DEC-49 REGION is-statement-ack-documents-bound */
+       before publication is listed in it.
+       D-521 (2026-09-25): AT MOST TWO DOCUMENTS, AND THEY CAN BE TWO DIFFERENT ONES. This comment said "Still ONE
+       document at most", which stopped being true when this read became a union of two keys (REC-217 wrote it as
+       one statement, `edition=? AND (case_id IS ? OR draft_id = ?)`). The two keys are now read as TWO keyed
+       reads, so the bound is visible in the code rather than argued in a comment:
+       - BY IDENTITY: `(case_id, edition)` is the PRIMARY KEY, so one row. A draft naming no case has no identity,
+         and the old `case_id IS NULL` matched nothing because the column is NOT NULL, so that read is skipped.
+       - BY LINK: `draft_id` at this edition is one row, because `op=publish` refuses a second binding of a draft
+         (PUBLISH_DRAFT_ALREADY_BOUND) and nothing else writes the column. `#draftLinkOf` rests on the same key.
+       They are two different documents when a draft named for one case is then re-pointed by `op=casedraft` at
+       another case's same edition. MEASURED in `test/rec217-draft-binding.test.mjs` block 7: both come back.
+       Collapsing to ONE read would keep whichever it asked first and could drop the document the reading belongs
+       to, with no refusal (that block's control arm (b) measured the loss). Where both keys name the same document
+       it is kept once. The pair is ordered by case id, as the single statement's `ORDER BY case_id` did. */
+    const docCols = `case_id, edition, doc_sha, text, draft_id, authored_by, authored_at`;
+    const docMatch = `sig_armored IS NULL AND edition=? AND instr(text, ?) > 0 AND instr(text, ?) > 0`;
+    const byIdentity = ident.caseId == null ? null
+      : this.#one(`SELECT ${docCols} FROM case_documents WHERE case_id=? AND ${docMatch}`,
+                  ident.caseId, ident.edition, needle, projectLine);
+    const byLink = !draftId ? null
+      : this.#one(`SELECT ${docCols} FROM case_documents WHERE draft_id=? AND ${docMatch}`,
+                  draftId, ident.edition, needle, projectLine);
+    const found = [byIdentity, byLink]
+      .filter((d, i, all) => d && all.findIndex((e) => e && e.case_id === d.case_id) === i)
+      .sort((a, b) => (a.case_id < b.case_id ? -1 : a.case_id > b.case_id ? 1 : 0));
     /* REC-217: AT NO CASE IDENTITY THE DRAFT IS PART OF WHAT WAS READ. REC-194 made a draft naming no case
        its own identity for the LISTING and left this idempotence key without it, so a participant who
        acknowledged the same sentence on two such drafts was told the second `existed` and was recorded on
@@ -11266,12 +11628,11 @@ export class Store extends DurableObject {
     const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return { ok: true, existed: !!same,
              acknowledgement: { kind, by, recipient, grant_id: grantId, at: when, project,
-                                case_id: ident.caseId ?? null, edition: ident.edition, draft_id: draftId,
-                                statement_sha: statementSha },
+                                case_id: ident.caseId ?? null, edition: Store.#statedEdition(ident, draftNewCase),
+                                draft_id: draftId, statement_sha: statementSha },
              /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
-             case_documents_limit: ackMax, case_documents_truncated: false,
              /* REC-194 / §3 rule 13: THE ANSWER SAYS WHICH OF THE TWO THINGS HAPPENED, because they are
                 different facts and one sentence used to claim the stronger of them for both. An
                 acknowledgement given at a CASE IDENTITY is listed by that case's document and by no
@@ -11310,10 +11671,6 @@ export class Store extends DurableObject {
                    + `afterwards is a different sentence, and this acknowledgement is not listed under it.` };
   }
 
-  /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
-     The figure D-150's literal carried; over it the act is REFUSED (C-82.1), never cut. */
-  static STATEMENT_ACK_DOCUMENTS_MAX = 8;
-
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
      `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an
      acknowledgement lands on one authored and unsigned, so the two can never print it two ways.
@@ -11342,15 +11699,24 @@ export class Store extends DurableObject {
      holds another reading it cannot attribute to this case would otherwise read as complete. Counted,
      never named — naming is the claim that cannot be made. */
   static #ackUnboundLines(acks, project) {
-    if (!acks.unbound) return [];
-    return ["",
+    const u = acks.unboundWriterUndetermined || 0;
+    if (!acks.unbound && !u) return [];
+    return [...(acks.unbound ? ["",
       `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact `
       + `statement in ${project} given for a case whose identity was not yet allocated — a draft — and whether `
       + "any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and "
       + "none of them was given on a draft that any publisher named as a case's draft at publication, so a "
       + "reading of a draft is not a reading of this case. They "
       + "are counted here and deliberately not named, because naming them would claim they read THIS case's "
-      + "statement, which this record does not establish (BIO_Publication §3 rule 13)."];
+      + "statement, which this record does not establish (BIO_Publication §3 rule 13)."] : []),
+      /* D-540: a draft-given participant reading while the WRITER is undetermined is two unknowns at once —
+         whether it is this case's, and whether it is the writer's own — so it is counted in its own sentence
+         and never folded into the one above, which counts only readings that are not the writer's. */
+      ...(u ? ["",
+      `This record also holds ${u} acknowledgement${u === 1 ? "" : "s"} of this exact statement in ${project}, `
+      + "given by a participant for a draft, of which it is UNDETERMINED both whether any is a reading of THIS "
+      + "case and whether any is the statement's writer's own, because who wrote the statement is UNDETERMINED. "
+      + "They are counted here, apart, and deliberately not named (BIO_Publication §3 rule 13)."] : [])];
   }
   static #ackBodyLines(acks, project) {
     return [...Store.#ackBodyHeadLines(acks, project), ...Store.#ackLinkLines(acks),
@@ -11379,7 +11745,7 @@ export class Store extends DurableObject {
              + (a.draft ? ` — given on draft ${a.draft}` : "")),
          ...(acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this "
                                 + "document lists)"] : [])]
-      : acks.unbound
+      : (acks.unbound || acks.unboundWriterUndetermined)
         /* REC-194 / §3 rule 13: NOBODY AND UNDETERMINED ARE DIFFERENT FACTS, and the narrowing is what
            made the difference reachable. This record holds readings of this exact sentence given for a
            case whose identity was not yet allocated — a draft — and it cannot establish that any of them
@@ -11571,14 +11937,34 @@ export class Store extends DurableObject {
        So both leave this count, and what remains is REC-194's remainder exactly: readings of a draft nobody
        has named. The link is read off `case_documents.draft_id`, the act's own record, and an unsigned edition
        re-authored without `draft=` drops its link there — so its readings return to this count, as they must. */
+    /* D-540 / §3 rule 13 — THE WRITER IS EXCLUDED HERE THE SAME WAY THE PUBLISHER IS, because a reading
+       by the sentence's own writer is not a second reading at ANY identity, bound or not. REC-212 put the
+       writer exclusion on the LIST and left this count asking only `exceptAuthor`, so a writer's own
+       draft-given reading was stated in the document as one more reading "whether of THIS case is
+       UNDETERMINED" — measured by REC-213's worker: 3 read where 2 is true. And where the writer is
+       UNDETERMINED (`writer.by === null`) a participant row here may be the writer's own, so it is counted
+       under its OWN key, `unboundWriterUndetermined`, never folded into `unbound` (which would claim it as a
+       possible second reading) nor silently excluded (which would claim it is the writer's): two unknowns,
+       stated apart. A RECIPIENT row is never the writer (REC-193), so it stays in `unbound` either way.
+       `writer === null` (not asked) excludes only the publisher, exactly as before this landing. */
+    const writerBy = writer && typeof writer.by === "string" ? writer.by : null;
+    const writerUndetermined = writer && writer.by === null ? 1 : 0;
     const unboundRow = unallocated ? null
-      : this.#one(`SELECT COUNT(*) AS n FROM statement_acknowledgements
+      : this.#one(`SELECT COALESCE(SUM(CASE WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            WHEN acknowledger_kind='participant' AND ? = 1 THEN 0
+                                            WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            ELSE 1 END), 0) AS n,
+                          COALESCE(SUM(CASE WHEN acknowledger_kind='participant' AND acknowledger IS ? THEN 0
+                                            WHEN acknowledger_kind='participant' AND ? = 1 THEN 1
+                                            ELSE 0 END), 0) AS u
+                   FROM statement_acknowledgements
                    WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
-                     AND NOT (acknowledger_kind='participant' AND acknowledger IS ?)
                      AND (draft_id IS NULL
                           OR draft_id NOT IN (SELECT draft_id FROM case_documents WHERE draft_id IS NOT NULL))
                      AND (draft_id IS NULL OR draft_id <> ?)`,
-                  project, sha, edition, exceptAuthor ?? null, linked);
+                  exceptAuthor ?? null, writerUndetermined, writerBy,
+                  exceptAuthor ?? null, writerUndetermined,
+                  project, sha, edition, linked);
     return { statementSha: sha, truncated,
              /* REC-217: the link this read was asked under, carried so every rendering states one act. */
              link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null } : null,
@@ -11590,6 +11976,7 @@ export class Store extends DurableObject {
              byWriter: all.filter(byTheWriter).length,
              withheldWriterUndetermined: all.filter(undeterminedWithheld).length,
              unbound: unboundRow ? Number(unboundRow.n) : 0,
+             unboundWriterUndetermined: unboundRow ? Number(unboundRow.u) : 0,
              rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
                                         recipient: r.recipient ?? null, at: r.at,
                                         /* REC-217: only a row the LINK brought in carries its draft; the
@@ -11720,7 +12107,8 @@ export class Store extends DurableObject {
     const drafts = rows.map((d) => {
       const ident = this.#draftIdentity(d);
       return { draft_id: d.draft_id,
-               case: { case_id: ident.caseId, edition: ident.edition,
+               /* D-568: null for a DERIVED draft (`#statedEdition`), as the single read states it. */
+               case: { case_id: ident.caseId, edition: Store.#statedEdition(ident, !!JSON.parse(d.params).newCase),
                        identity: Store.#caseIdentitySentence(ident.caseId, ident.edition,
                                                              !!JSON.parse(d.params).newCase) },
                created_by: d.created_by, created_at: d.created_at,
@@ -13666,9 +14054,10 @@ export class Store extends DurableObject {
        `retire` already refuses while a live edge cites the item (CITED); a
        citation made AFTER the retirement is the same harm entered by the other
        door. Asked HERE, in the store, so a member's session and a machine
-       credential meet one rule (DEC-8: never on a surface) — the suggest path's
-       CHECK 1 (SUGGEST_LEG_UNREACHABLE) asks the same question of the same
-       column.
+       credential meet one rule (DEC-8: never on a surface), and asked through
+       `#retiredNotCitable`, the ONE predicate the suggest path's CHECK 1 and
+       reinstate also call (D-553; this comment used to claim CHECK 1 asked "the
+       same question of the same column" while it held its own type-blind copy).
 
        WHAT IS NOT ASKED, and each absence is the ruling's, not an omission:
          - `source_status`. A publisher that withdraws or changes a document is
@@ -13679,12 +14068,7 @@ export class Store extends DurableObject {
            predates the retirement is the record's history and is not rewritten.
        The whole call is refused with the retired members named, never narrowed
        to the rest, the same reason as every refusal above. */
-    const retiredMembers = [];
-    for (const id of sel.members) {
-      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (b && normalizeType(b.object_type) === "information"
-          && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
-    }
+    const retiredMembers = sel.members.filter((id) => this.#retiredNotCitable(id));
     if (retiredMembers.length)
       return { ok: false, reason: "RETIRED_NOT_CITABLE", code: "RETIRED_NOT_CITABLE",
                check: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.check,
@@ -13943,9 +14327,26 @@ export class Store extends DurableObject {
      * leg's grade would be the record asserting a maximum as a measurement.
      */
     let spliced = null, filled = [];
+    /* REC-219 / D-579(a) (BOB #34, 2026-09-25 02:30Z, under Bob's 00:40Z version doctrine, rule 1: a
+       reference is PINNED to the version it was made against and the system never moves it): A CASE'S
+       CITATION EDGE CARRIES THE CAPTURE THE RECORD PRESENTS AT THIS ACT, as `extent_capture` in the edge's
+       own bytes — the stamp REC-220 writes into a question's leg, through the same resolver. Until this a
+       `cites` edge named only a bundle, so which bytes a case cited was a question asked again at every
+       later read, and a later capture could answer it differently. op=publish carries the pin into the
+       signed case document (`case_citations`), where a reader can verify it.
+       NOT stamped on a QUESTION target (no bytes, DEC-21) or where the record holds no capture of the
+       document (nothing to pin: the edge stays a bundle, and the document says so). */
+    const edgePins = new Map();
+    if (!ontoInquiry)
+      for (const target of add)
+        if (normalizeType(OBJECT_TYPES[String(target).split("-")[0]]) === "information") {
+          const pin = this.#captureForContent(target);
+          if (pin) edgePins.set(target, pin);
+        }
     if (!ontoInquiry) {
       spliced = Store.#spliceReferences(
-        liveMd.content, add.map((target) => ({ rel: "cites", target, status: "confirmed", note: nt })));
+        liveMd.content, add.map((target) => ({ rel: "cites", target, status: "confirmed", note: nt,
+                                               ...(edgePins.has(target) ? { extent_capture: edgePins.get(target) } : {}) })));
       if (!spliced)
         return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
                  detail: "the project's references block is not in a shape this grammar can extend in place. "
@@ -13954,12 +14355,32 @@ export class Store extends DurableObject {
       const subject = typeof parsed.data.subject_entity === "string" && parsed.data.subject_entity.trim() !== ""
         ? parsed.data.subject_entity.trim() : null;
       const reg = this.earnedBasisRegistry(subject, add);
+      /* REC-220 — THE VERSION THE LEG WAS MADE AGAINST IS RECORDED AT THE ACT (Bob, 2026-09-25 00:40Z,
+         rule 1: a reference is PINNED to the version it was made against and the system never moves it).
+         Until this item a leg this act wrote named only a BUNDLE, and which capture it rested on was
+         RE-DERIVED by `#captureForContent` at every later promotion — a resolver's answer, not a fact
+         the record held, and one a later registration can change (the earliest-capture order reads
+         `register.registered`, which a re-registration overwrites). So the capture that resolver
+         answers NOW — the one every read of this document presents at this instant — is written INTO
+         THE LEG as `extent_capture`, the field `#contentPlanFor` already honours as authored, and from
+         then on the leg names its bytes rather than asking for them.
+         NOT stamped where the leg names a `content_id` (the id is a hash OVER its capture, so it is
+         already pinned and a second statement of it could disagree), on a QUESTION target (no bytes,
+         DEC-21), or where the record holds no capture (nothing to pin; `content_id` stays NULL and says
+         so, as before). */
+      const pinOf = (target) => {
+        if (typeof legFields.content_id === "string" && legFields.content_id.trim()) return null;
+        if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "information") return null;
+        return this.#captureForContent(target);
+      };
       filled = add.map((target) => {
         const earned = reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
+        const pin = pinOf(target);
+        const pinned = pin ? { extent_capture: pin } : {};
         return earned && earned.grade
           ? { target, role: rl, grade: earned.grade, grade_axis: "connection", grade_source: "resolution",
-              note: nt, why: earned.why, ...legFields }
-          : { target, role: rl, note: nt, why: null, ...legFields };
+              note: nt, why: earned.why, ...legFields, ...pinned }
+          : { target, role: rl, note: nt, why: null, ...legFields, ...pinned };
       });
       /* references FIRST and only where the document does not already carry the
          target: C-6.3 refuses a leg whose target is not in references[], and the
@@ -14068,7 +14489,10 @@ export class Store extends DurableObject {
        this, because the gate compares it byte-wise against history (C-5, C-12)
        and schema.mjs keeps every file the gate reads inline by rule. */
     if (bytes.length > INLINE_MAX) {
-      const overhead = bytes.length - add.length * Store.CITE_EDGE_BYTES;
+      /* REC-219 / D-579(a): a PINNED edge carries one more line, so the per-edge estimate grows by it
+         wherever this act pinned any — conservative, never decisive (the refusal is the real length). */
+      const perEdge = Store.CITE_EDGE_BYTES + (edgePins.size ? Store.CITE_PIN_BYTES : 0);
+      const overhead = bytes.length - add.length * perEdge;
       return { ok: false, reason: "CITATION_TOO_LARGE",
                project, handle, drift: sel.drift,
                requested: add.length, bytes: bytes.length, limit: INLINE_MAX,
@@ -14078,7 +14502,7 @@ export class Store extends DurableObject {
                   real encoded length a few lines above — and an estimate that
                   errs toward "fewer would fit" tells an operator something
                   true. Stated rather than silently reused. */
-               roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / Store.CITE_EDGE_BYTES)),
+               roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / perEdge)),
                detail: `citing this many records at once would push this ${ontoInquiry ? "question" : "case"}'s `
                      + "bundle.md past the 1MB inline limit. Every edge is written into the document, so the "
                      + "ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller "
@@ -14118,6 +14542,10 @@ export class Store extends DurableObject {
 
     return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
              cited: add.slice().sort(), alreadyCited: already.sort(), severed: [],
+             /* REC-219 / D-579(a): on the case arm, the capture each new edge was PINNED to at this act, or
+                null where none was (a question target; a document the record holds no capture of). */
+             ...(ontoInquiry ? {} : { pinned_captures: Object.fromEntries(
+               add.slice().sort().map((t) => [t, edgePins.get(t) ?? null])) }),
              bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
              gate: sel.gate, expires: sel.expires,
              /* REC-37: what the act actually landed on the question, per leg —
@@ -14136,6 +14564,10 @@ export class Store extends DurableObject {
                                  legs: filled.map((l) => ({ target: l.target, role: l.role,
                                    grade: l.grade ?? null, grade_axis: l.grade_axis ?? null,
                                    grade_source: l.grade_source ?? null, why: l.why ?? null,
+                                   /* REC-220: the capture this act PINNED into the leg's bytes, or
+                                      null where it pinned none (a content id already names one; a
+                                      question has no bytes; the record holds none). */
+                                   pinned_capture: l.extent_capture ?? null,
                                    ...(Object.keys(legFields).length
                                        ? { extent: legExtent(l),
                                            ...(l.content_id ? { content_id: l.content_id } : {}) }
@@ -15008,6 +15440,147 @@ export class Store extends DurableObject {
     };
   }
 
+  /** A side of a formed pair AS A REFERENT AT A VERSION (§8): a claim is the reading it is held on, versioned by the
+   *  digest of the claim text compared; an extent is its content row (or its capture where none is named),
+   *  versioned by the capture, whose bytes never change. `bundle` is where the side lives, for purge (D-113). */
+  #candidateSide(s) {
+    if (s && s.kind === "claim")
+      return { kind: "claim", ref: `${String(s.inquiry ?? "")}|${String(s.version ?? "")}`,
+               version: sha256HexSync(String(s.claim ?? "")), bundle: s.inquiry == null ? null : String(s.inquiry) };
+    const cap = s?.capture_sha == null ? "" : String(s.capture_sha);
+    const cid = s?.content_id == null || s.content_id === "" ? null : String(s.content_id);
+    const home = cid ? this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, cid)
+      : cap ? this.#one(`SELECT bundle_id FROM content WHERE capture_sha=? ORDER BY bundle_id LIMIT 1`, cap) : null;
+    return { kind: s?.kind === "leg" ? "leg" : "extent", ref: cid ?? cap, version: cap,
+             bundle: home ? home.bundle_id : null };
+  }
+
+  /** THE ONE APPEND SITE of `contradiction_candidates` (§8). INSERT OR IGNORE on the candidate digest: a row over
+   *  the same key and the same two referents at the same versions is already there, and is left exactly as it was.
+   *  Returns whether a row was written. Nothing updates or deletes a candidate but purge. */
+  #appendContradictionCandidate(row) {
+    const before = this.#one(`SELECT candidate FROM contradiction_candidates WHERE candidate=?`, row.candidate);
+    if (before) return false;
+    this.sql.exec(
+      `INSERT OR IGNORE INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id,
+         b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed','machine',?)`,
+      row.candidate, row.key, row.a.kind, row.a.ref, row.a.version, row.a.bundle,
+      row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason, row.at);
+    return true;
+  }
+
+  /** op=contradictionpropose — REC-147 / IC-318 (CONTRADICTION-IDENTIFY-DESIGN.md §5, §8, §9 item 3). A RUN'S
+   *  JUDGEMENT OVER FORMED PAIRS ENTERS THE RECORD AS PROPOSED CANDIDATES.
+   *
+   *  The plane cannot judge (§2); what it holds is WHAT WAS COMPARED and WHAT WAS PROPOSED about it. So: every
+   *  proposal is CHECKED before anything is written (a refused batch leaves nothing), and a proposal is written only
+   *  when it names a pair the plane ITSELF forms for this viewer now, with the referents and versions the PLANE
+   *  read — a pair a caller hands in is a provenance hop a caller can invent. A claim side must carry the claim text
+   *  it judged: a claim that changed since is a different referent, so that proposal is about a pair that is no
+   *  longer formed and is refused rather than written against text the machine never saw.
+   *
+   *  THE LABEL IS A PROPOSAL (DEC-24): every row is `origin = 'machine'`, `state = 'proposed'`, and nothing here
+   *  grades, edits or closes either side. THE GATE THIS DOOR RESTS ON IS NOT IN IT: §7's over-strictness gate is a
+   *  property of the JUDGEMENT (M-162 measured the prompt src/contradiction.mjs pins), and no read shows a
+   *  candidate to a member until PRESENT is designed (§9 item 4). */
+  contradictionPropose({ run, proposals, proposedBy, viewer = null, caller = null, at = null } = {}) {
+    const refusal = (code, detail, extra) => {
+      const row = CONTRADICTION_CANDIDATE_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    /* DEC-49 REGION is-candidate-no-proposer */
+    if (typeof proposedBy !== "string" || !proposedBy.trim())
+      return refusal("CANDIDATE_NO_PROPOSER",
+        "a proposed contradiction records who proposed it; the plane stamps that from the credential that asked, "
+        + "so an empty one means the act arrived by a route that does not attribute it");
+    /* END DEC-49 REGION is-candidate-no-proposer */
+    const runId = typeof run === "string" ? run.trim() : "";
+    const r = runId ? this.#one(`SELECT status, principal_plane FROM ai_runs WHERE run=?`, runId) : null;
+    /* SIGHT, THEN POSITION, THEN STATUS — the tick's order (REC-152, REC-165). A run the viewer cannot see answers
+       exactly as one never minted (§7.9). */
+    /* DEC-49 REGION is-candidate-no-run */
+    if (!r || !this.#aiRunInSight(runId, viewer))
+      return refusal("CANDIDATE_NO_RUN",
+        runId ? `no run named '${runId.slice(0, 60)}' is open in this store` 
+              : "pass run=<the run whose judgement this is>: a candidate is machine work and names the run it came from",
+        { run: runId || null });
+    /* END DEC-49 REGION is-candidate-no-run */
+    const notPrincipal = runPrincipalGate({ caller, principal: r.principal_plane,
+                                            act: "proposing contradictions under a run" });
+    if (notPrincipal)
+      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail, run: runId,
+               note: "a proposed contradiction names a run its caller holds. Nothing was written" };
+    /* DEC-49 REGION is-candidate-run-not-running */
+    if (r.status !== "running")
+      return refusal("CANDIDATE_RUN_NOT_RUNNING",
+        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`,
+        { run: runId });
+    /* END DEC-49 REGION is-candidate-run-not-running */
+    const list = Array.isArray(proposals) ? proposals : [];
+    /* DEC-49 REGION is-candidate-no-proposals */
+    if (list.length === 0)
+      return refusal("CANDIDATE_NO_PROPOSALS",
+        "an empty batch is not a judgement that found nothing; that is an observation for the run's log", { run: runId });
+    /* END DEC-49 REGION is-candidate-no-proposals */
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i] || {};
+      /* DEC-49 REGION is-candidate-label-unknown */
+      if (!CONTRADICTION_LABELS.includes(p.label))
+        return refusal("CANDIDATE_LABEL_UNKNOWN",
+          `proposal ${i} carries '${String(p.label).slice(0, 30)}', which is not one of ${CONTRADICTION_LABELS.join(", ")}`,
+          { run: runId, index: i, labels: [...CONTRADICTION_LABELS] });
+      /* END DEC-49 REGION is-candidate-label-unknown */
+      /* DEC-49 REGION is-candidate-no-reason */
+      if (typeof p.reason !== "string" || !p.reason.trim())
+        return refusal("CANDIDATE_NO_REASON", `proposal ${i} carries no reason`, { run: runId, index: i });
+      /* END DEC-49 REGION is-candidate-no-reason */
+    }
+    /* THE PAIRS AS THIS VIEWER'S PAIRING FORMS THEM NOW — the op's own read, so what may be proposed over is
+       exactly what the member could have been shown (§6), bounded as it is bounded. */
+    const read = this.contradictionPairs({ viewer });
+    const handle = (x) => `${x.kind}|${x.ref}@${x.version}`;
+    const formed = new Map();
+    for (const q of (read && Array.isArray(read.pairs)) ? read.pairs : []) {
+      const a = this.#candidateSide(q.a), b = this.#candidateSide(q.b);
+      formed.set(`${q.key}:${[handle(a), handle(b)].sort().join(" <> ")}`, { key: q.key, a, b });
+    }
+    const cutKeys = (read?.keys ?? []).filter((k) => k.truncated).map((k) => k.key);
+    const rows = [];
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      const key = String(p.key ?? "").trim().toUpperCase();
+      const a = this.#candidateSide(p.a), b = this.#candidateSide(p.b);
+      const f = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
+      /* DEC-49 REGION is-candidate-pair-not-formed */
+      if (!f)
+        return refusal("CANDIDATE_PAIR_NOT_FORMED",
+          `proposal ${i} names a ${key || "(no key)"} pair the pairing does not form for this viewer now`
+          + (cutKeys.length ? ` (the read was cut at its bound on ${cutKeys.join(", ")}, and a pair past the bound is not formed here)` : ""),
+          { run: runId, index: i, cut_keys: cutKeys });
+      /* END DEC-49 REGION is-candidate-pair-not-formed */
+      /* The PLANE's referents, ordered so the row reads the way its digest was taken. */
+      const [x, y] = handle(f.a) <= handle(f.b) ? [f.a, f.b] : [f.b, f.a];
+      rows.push({ candidate: sha256HexSync(canonicalJson({ v: 1, key: f.key, sides: [handle(x), handle(y)] })),
+                  key: f.key, a: x, b: y, run: runId, proposed_by: proposedBy.trim(),
+                  label: p.label, reason: p.reason.trim().slice(0, 2000), at: at || new Date().toISOString() });
+    }
+    const written = [];
+    this.ctx.storage.transactionSync(() => {
+      for (const row of rows) written.push(this.#appendContradictionCandidate(row));
+    });
+    const candidates = rows.map((row, i) => ({
+      new: written[i], ...this.#one(`SELECT candidate, key, a_kind, a_ref, a_version, b_kind, b_ref, b_version,
+        run, proposed_by, label, reason, state, origin, at FROM contradiction_candidates WHERE candidate=?`, row.candidate) }));
+    const n = written.filter(Boolean).length;
+    return { ok: true, run: runId, proposed: rows.length, written: n, unchanged: rows.length - n, candidates,
+             says: `${n} candidate(s) written as PROPOSED machine work; ${rows.length - n} named two referents at `
+                 + `versions already proposed over, and were left exactly as they were (§8). A candidate is a `
+                 + `proposal about two things as they were, never a finding: no member has judged it.` };
+  }
+
   /** op=narrow — THE ACT. A new basis version, one leg narrower, the old retained. */
   narrow(a = {}) {
     const args = a || {};
@@ -15479,7 +16052,9 @@ export class Store extends DurableObject {
     if (end === -1) return null;
 
     const block = additions.map((a) =>
-      `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`);
+      `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`
+      /* REC-219 / D-579(a): the capture a case's citation edge was made against, where op=cite pinned one. */
+      + (typeof a.extent_capture === "string" ? `\n    extent_capture: ${a.extent_capture}` : ""));
 
     let ref = -1;
     for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
@@ -15966,6 +16541,17 @@ export class Store extends DurableObject {
    *  release()'s precedent: a register half-reconstructed is a record where the
    *  reader cannot tell which documents were established and which were skipped.
    */
+  /* D-563: an internal relabel's fallback — each row value is sent only when the carried `bundle.md` states no such
+     key, so the plane never labels its own write against the document it is carrying. */
+  static #rowUnlessStated(files, row) {
+    const md = files.find((f) => f && f.path === "bundle.md");
+    const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+    const out = {};
+    for (const [k, v] of Object.entries(row))
+      if (!(fm && typeof fm === "object" && Object.prototype.hasOwnProperty.call(fm, k))) out[k] = v;
+    return out;
+  }
+
   provenanceChainRebuild({ bundleId = "", apply = false, author = null, viewer = null } = {}) {
     const who = String(author ?? "").trim();
     if (!who)
@@ -16063,8 +16649,14 @@ export class Store extends DurableObject {
       author: who,
       files: [{ path: "data/provenance.json", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: seen.object_type, group: seen.group_id, title: seen.title,
-              current_state: seen.current_state, prior_state: seen.prior_state ?? null,
+      /* D-563: the row's title and state are sent ONLY where the held document states none. `promote` now derives
+         them from the document and refuses a label that contradicts it; relabelling from the ROW would refuse this
+         correction on every bundle whose row an envelope once wrote apart from its bytes — M-172 counted 11 in `bio`
+         (row `prior_state` null, document `collected`). Where the document states them the projection takes the
+         document's value, which is the value the bundle's own bytes have always carried. */
+      meta: { object_type: seen.object_type, group: seen.group_id,
+              ...Store.#rowUnlessStated(carried, { title: seen.title, current_state: seen.current_state,
+                                                   prior_state: seen.prior_state ?? null }),
               created: seen.created, last_updated: seen.last_updated,
               criticality: seen.criticality ?? null },
     });
@@ -17346,6 +17938,38 @@ export class Store extends DurableObject {
     const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
     const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);
     /* ===== END D-526 derivation ===== */
+    /* ===== D-563 (`BIO_Case_Making_v0_1.md` §2; C-2.5 and D-510's derivation, C-86.3, C-86.4) — THE DOCUMENT ALSO
+       STATES WHAT IT IS CALLED AND WHERE IT STANDS, AND THE ENVELOPE IS A LABEL FOR THOSE TOO. D-510/D-526 derived the
+       TYPE from the bytes; the title and the state were still the CALLER'S: `bundles.title`, `current_state` and
+       `prior_state` were projected from `meta`, and 7.1's name scan, 7.11's owner test and REC-181's retirement arm
+       asked `meta.title` / `meta.current_state` / `meta.closed_reason`. MEASURED by D-526's worker: a second project
+       whose bytes name a TAKEN title LANDED when `meta.title` named another, and the projection showed the envelope's
+       title over the bytes'. So each is derived ONCE, here, from the bytes the caller sent (REC-141's mint and D-436's
+       stamp rewrite `id:` and `group:` only), and every fence and the projection read the derived value. The envelope
+       is the FALLBACK where the document states nothing, exactly as `promotedType` takes it — a blob-held or
+       title-less bundle.md is byte-identical to what these lines did before. `prior_state` and `closed_reason` are
+       STATED when the document carries the key (a `null` is a statement); an envelope contradicting any of them is
+       refused by name below (`is-promoted-title-disagrees`, `is-promoted-state-disagrees`), after every fence, so
+       which fence a caller meets never depends on the label. ===== */
+    const envelopeMeta = meta && typeof meta === "object" ? meta : null;
+    const fmHas = (o, k) => !!o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
+    const textStated = (v) => (typeof v === "string" && v.trim() !== "" ? v : null);
+    const documentTitle = sentFm && typeof sentFm === "object" ? textStated(sentFm.title) : null;
+    /* C-16: an inquiry's title is a rendering of its `## Question`; an envelope naming THAT title agrees with the
+       document as much as one naming `title:` does, because it is the title the projection writes. */
+    const documentQuestionTitle = documentType === "inquiry" && typeof sentMd?.text === "string"
+      ? deriveInquiryTitle(inquiryQuestionOf(sentMd.text)) : null;
+    const envelopeTitle = envelopeMeta ? textStated(envelopeMeta.title) : null;
+    /* `let`: a revision stating no title anywhere carries the held one forward (below, once `cur` is read). */
+    let promotedTitle = documentTitle ?? (envelopeMeta ? envelopeMeta.title : undefined);
+    const documentState = sentFm && typeof sentFm === "object" ? textStated(sentFm.current_state) : null;
+    const envelopeState = envelopeMeta ? textStated(envelopeMeta.current_state) : null;
+    const promotedState = documentState ?? (envelopeMeta ? envelopeMeta.current_state : undefined);
+    const promotedPriorState = fmHas(sentFm, "prior_state") ? (sentFm.prior_state ?? null)
+      : (envelopeMeta ? envelopeMeta.prior_state ?? null : null);
+    const promotedClosedReason = fmHas(sentFm, "closed_reason") ? (sentFm.closed_reason ?? null)
+      : (envelopeMeta ? envelopeMeta.closed_reason : undefined);
+    /* ===== END D-563 derivation ===== */
     const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object"
       && (promotedType === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
@@ -17376,6 +18000,45 @@ export class Store extends DurableObject {
     }
     /* ===== END REC-141 (the mint itself is the first act inside the transaction) ===== */
     if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    /* ===== REC-197 — A CREATION CARRIES ITS SETTING, AND AN OWNERLESS ONE CANNOT CHOOSE (Membership v2 §7.14,
+       RULED by BOB #32 (b), 2026-09-23: *"create and fork take one optional field, `visibility` (`discoverable` or
+       `hidden`), and an absent one is HIDDEN. A MACHINE credential never sets it"*). Decided HERE, before any
+       write, so a refusal leaves nothing. ABSENT IS HIDDEN BY WRITING NOTHING: the sight index's one CASE
+       (`#reindexProjectSight`) already reads a project with no act as hidden, and a default restated here would
+       be the second copy of that rule. A PRESENT value is the creating OWNER's act and is recorded as one inside
+       the creation's transaction (below, beside the owner row), `hidden` included — the owner chose it. The
+       machine test is OWNERLESSNESS, never a class list: `ownerMemberId` is the control plane's stamp, set for
+       a member session alone and deleted first for every caller, so a creation with none has no owner to
+       choose — the ruling's own reason. Its `hidden` is accepted and writes nothing (it asks for exactly what an
+       ownerless creation gets); its `discoverable` is refused by name. A `visibility` on anything that is not a
+       project's creation is refused rather than ignored: a revision that answered ok over it would tell its
+       caller a choice landed that nobody recorded (the setting of an existing project is
+       `op=projectvisibilityset`, an owner's act). */
+    let creationVisibility = null;
+    if (pkg.visibility !== undefined && pkg.visibility !== null) {
+      const refusal = (code, detail) => {
+        const row = PROJECT_CREATION_VISIBILITY_CHECKS[code];
+        return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+      };
+      /* DEC-49 REGION is-project-creation-visibility */
+      if (base !== null || normalizeType(meta.object_type) !== "project")
+        return refusal("PROJECT_VISIBILITY_NOT_A_CREATION",
+          "visibility is chosen when a project is created or forked, and this is not a project's creation. An "
+          + "existing project's setting is its owners' act, op=projectvisibilityset. Nothing was written.");
+      /* END DEC-49 REGION is-project-creation-visibility */
+      const unknown = this.#visibilitySettingRefusal(pkg.visibility, null);
+      if (unknown) return unknown;
+      const creator = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
+      /* DEC-49 REGION is-project-creation-ownerless */
+      if (!creator && pkg.visibility === "discoverable")
+        return refusal("PROJECT_VISIBILITY_NO_OWNER",
+          "whether a project can be found is its OWNERS' choice (Membership Architecture v2 §7.14), and a "
+          + "project created by a machine credential has no owner to choose it, so it is created HIDDEN. Send "
+          + "the creation without visibility (or with visibility=hidden); an owner who arrives later may set "
+          + "it. Nothing was created.");
+      /* END DEC-49 REGION is-project-creation-ownerless */
+      creationVisibility = creator ? pkg.visibility : null;
+    }
     /* ===== REC-175 — A STORED DIGEST IS OF THE STORED BYTES (the Mechanical Verification Law,
        `BIO_State_Rules_Consistency_v1_5.md` §8; CLAUDE.md §5, *an equality that costs nothing to produce is
        not evidence*). `files.sha256` and the bundle's head (`newSha`, read from bundle.md's row below) were
@@ -17490,7 +18153,7 @@ export class Store extends DurableObject {
          the bundle's head and the answer carry — the caller's own sha of an id-less document is never
          registered. Inside the transaction, so the sequence step and the write are one act. */
       if (creatingProject) {
-        bundleId = this.#mintProjectId(meta.title);
+        bundleId = this.#mintProjectId(promotedTitle);
         if (!bundleId) return { ok: false, reason: "MINT_EXHAUSTED",
                                 detail: "the plane could not find a free project id in the current sequence" };
         const lines = projectMd.text.split("\n");
@@ -17572,9 +18235,10 @@ export class Store extends DurableObject {
        *
        * Carrying forward is correct in general: an update that does not mention
        * the title is not a request to remove it. */
-      if (cur && (meta.title === undefined || meta.title === null || meta.title === "")) {
+      /* D-563: carried into the DERIVED title, which the document and the envelope both left unstated. */
+      if (cur && (promotedTitle === undefined || promotedTitle === null || promotedTitle === "")) {
         const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
-        if (prev && prev.title) meta.title = prev.title;
+        if (prev && prev.title) promotedTitle = prev.title;
       }
 
       /* 7.1: a project's name is unique across the instance.
@@ -17605,7 +18269,7 @@ export class Store extends DurableObject {
        * against projects promoted before the column existed. Projects are few
        * relative to Information and this runs only for them. */
       if (promotedType === "project") {
-        const key = Store.projectNameKey(meta.title);
+        const key = Store.projectNameKey(promotedTitle);   /* D-563: the DOCUMENT's name */
         if (!key)
           return { ok: false, reason: "NO_TITLE",
                    detail: "a project needs a name, and it must be unique across this instance" };
@@ -17647,8 +18311,9 @@ export class Store extends DurableObject {
        * group has stopped pursuing something is a statement by its members about
        * their own intent, and no automation holds that. */
       if (cur && cur.object_type === "project") {
-        const to = meta.current_state, from = cur.current_state;
-        const deactivating = from !== "closed" && to === "closed" && meta.closed_reason === "abandoned";
+        /* D-563: the state and the reason the DOCUMENT states, not the label on the request. */
+        const to = promotedState, from = cur.current_state;
+        const deactivating = from !== "closed" && to === "closed" && promotedClosedReason === "abandoned";
         const reactivating = from === "closed" && to === "investigating";
         if (deactivating || reactivating) {
           const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
@@ -17712,7 +18377,7 @@ export class Store extends DurableObject {
          state without the question (State Rules v1.5 §4.1, BOB #30). The same predicate, the same
          code and the same offenders' shape. Only a move INTO retired: an edit of an item ALREADY
          retired changes no state, and a leg that predates this rule stays untouched (D-168 §3). */
-      if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired")
+      if (promotedState === "retired" && (!cur || cur.current_state !== "retired")   /* D-563: the document's state */
           && (cur ? cur.object_type : promotedType) === "information") {
         const citedBy = this.#retirementCitedBy(bundleId);
         if (citedBy.length)
@@ -17904,6 +18569,55 @@ export class Store extends DurableObject {
                        + `the document names, or change the document first. Nothing was written.` };
       }
       /* END DEC-49 REGION is-promoted-type-disagrees */
+      /* D-563 — the same two halves as D-510's, for the title and the state: the DERIVATION above is not exempt for a
+         replay, and the REFUSAL is, for D-510's reason. Only a contradiction between two STATEMENTS is refused: an
+         envelope stating nothing takes the document's word, and a document stating nothing takes the envelope's.
+         Compared with runs of whitespace collapsed and ends trimmed, so a respacing is not a contradiction; case is
+         kept, because a different word is a different title. */
+      const sameText = (a, b) => String(a).trim().replace(/\s+/g, " ") === String(b).trim().replace(/\s+/g, " ");
+      /* DEC-49 REGION is-promoted-title-disagrees */
+      if (envelopeTitle !== null && (documentTitle !== null || documentQuestionTitle !== null)
+          && !(documentTitle !== null && sameText(envelopeTitle, documentTitle))
+          && !(documentQuestionTitle !== null && sameText(envelopeTitle, documentQuestionTitle)) && !pkg.replay) {
+        const ttRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TITLE_DISAGREES;
+        return { ok: false, reason: "ENVELOPE_TITLE_DISAGREES", code: "ENVELOPE_TITLE_DISAGREES",
+                 check: ttRow.check, translation: ttRow.translation,
+                 document_title: String(documentTitle ?? documentQuestionTitle).slice(0, 200),
+                 envelope_title: String(envelopeTitle).slice(0, 200),
+                 detail: `the document being promoted is titled '${String(documentTitle ?? documentQuestionTitle).slice(0, 80)}' `
+                       + `and this request's meta says '${String(envelopeTitle).slice(0, 80)}'. The record goes by the `
+                       + `document, and a name is what 7.1 holds unique, so it will not file one under the other. Send it `
+                       + `again with the meta naming the document's title, or with no title in the meta, or change the `
+                       + `document first. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promoted-title-disagrees */
+      const stateContradiction = (() => {
+        if (!envelopeMeta) return null;
+        if (envelopeState !== null && documentState !== null && !sameText(envelopeState, documentState))
+          return ["current_state", documentState, envelopeState];
+        for (const k of ["prior_state", "closed_reason"]) {
+          if (!fmHas(sentFm, k) || envelopeMeta[k] === undefined) continue;
+          const d = sentFm[k] ?? null, e = envelopeMeta[k] ?? null;
+          if (d === null && e === null) continue;
+          if (d === null || e === null || !sameText(d, e)) return [k, d, e];
+        }
+        return null;
+      })();
+      /* DEC-49 REGION is-promoted-state-disagrees */
+      if (stateContradiction && !pkg.replay) {
+        const stRow = PROMOTED_TYPE_CHECKS.ENVELOPE_STATE_DISAGREES;
+        const [field, said, asked] = stateContradiction;
+        return { ok: false, reason: "ENVELOPE_STATE_DISAGREES", code: "ENVELOPE_STATE_DISAGREES",
+                 check: stRow.check, translation: stRow.translation, field,
+                 document_value: said === null ? null : String(said).slice(0, 80),
+                 envelope_value: asked === null ? null : String(asked).slice(0, 80),
+                 detail: `the document being promoted says ${field} '${said === null ? "null" : String(said).slice(0, 40)}' `
+                       + `and this request's meta says '${asked === null ? "null" : String(asked).slice(0, 40)}'. The record `
+                       + `goes by the document: where a thing stands decides who may move it and what may cite it. Send `
+                       + `it again with the meta naming what the document says, or leave it out of the meta, or change `
+                       + `the document first. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promoted-state-disagrees */
       /* `promotedType` (D-526, derived at the top of `promote`) is the one value every projection below reads. The
          envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
          the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
@@ -18441,7 +19155,9 @@ export class Store extends DurableObject {
       const biasSpelling = promotedType === "bias" ? promotedType
                          : (cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null);
       if (cur && biasSpelling) {
-        const from = cur.current_state, to = meta.current_state;
+        /* D-563: the state the projection below WRITES — asking the label here while the row takes the bytes
+           would let an envelope saying `adopted` walk an adopted set back to `proposed`. */
+        const from = cur.current_state, to = promotedState;
         const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
         /* BUILT AS A LITERAL rather than through `#biasRefuse`, and the DEC-49 guard is why: a verdict
            INHERITED THROUGH A SPREAD is one the guard's outcome walk cannot resolve until run time, so
@@ -18640,8 +19356,8 @@ export class Store extends DurableObject {
          authored under the old contract). */
       const mdForTitle = files.find((x) => x.path === "bundle.md");
       const projectedTitle = (projectedType === "inquiry"
-        ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? meta.title
-        : meta.title);
+        ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? promotedTitle
+        : promotedTitle);   /* D-563: the document's title (the envelope's only where the bytes state none) */
 
       this.sql.exec(
         `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
@@ -18655,7 +19371,7 @@ export class Store extends DurableObject {
         /* D-436: a revision keeps the group its creation wrote (the ON CONFLICT arm never touches group_id, and
            NOT NULL is checked before it, so the value handed in must be real); a creation writes the one decided
            above, before the transaction. `meta.group` is read nowhere but that decision. */
-        bundleId, projectedType, cur ? cur.group_id : createdGroup, projectedTitle, meta.current_state, meta.prior_state ?? null,
+        bundleId, projectedType, cur ? cur.group_id : createdGroup, projectedTitle, promotedState, promotedPriorState,
         meta.created, meta.last_updated, meta.criticality ?? null, newSha, bundleId);
 
       /* D-497: the SIGHT INDEX follows the bundle row that decides whether this is a project at all. ONE call
@@ -18663,6 +19379,15 @@ export class Store extends DurableObject {
          bundle promoted INTO a project gains one, and a bundle promoted OUT of `project` loses its row rather
          than leaving a sight row standing over something that is no longer a project. It is a derivation, so
          it is idempotent: a revision that changes neither recomputes the same row. */
+      /* REC-197: the creating owner's CHOSEN setting, as the owner's act `op=projectvisibilityset` writes — one row
+         of the same append-only log, `set_by` the owner whose ownership row this transaction writes below — written
+         BEFORE the one derivation call, so the sight index is re-derived from the log that holds it (D-497's rule:
+         never written from the value directly) and no second call exists. `creationVisibility` is non-null only for
+         a project's creation that carries an owner (decided before the transaction). No reason is written: the
+         owner gave none, and a plane-authored reason would put words in their mouth. */
+      if (!cur && creationVisibility)
+        this.sql.exec(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
+          bundleId, creationVisibility, pkg.ownerMemberId, null, new Date().toISOString());
       this.#reindexProjectSight(bundleId);
 
       /* Projected from the document, every promotion, so the table is a view of
@@ -18734,12 +19459,21 @@ export class Store extends DurableObject {
          so `for (const r of this.#rows(...))` self-classifies as amplifying and
          put `promote` itself on REC-66's roster. One read, then one pass over
          what it returned, is what this actually is. */
+      /* REC-220: AND BY CAPTURE, for a leg that NAMES one. `extent_capture` is the member's (or the
+         act's, at the moment of citing) statement of WHICH BYTES the leg rests on, so a prior referent
+         about DIFFERENT bytes is not carried over it — that would be the record overriding an authored
+         pin, 5.8's forbidden direction with the member's act present. A leg naming no capture keeps
+         the (target, extent) key exactly as before. */
+      const priorContentAt = new Map();
       const priorRows = this.#rows(
-        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext
+        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext, c.capture_sha AS cap
            FROM inquiry_basis b LEFT JOIN content c ON c.content_id = b.content_id
           WHERE b.bundle_id=? AND b.content_id IS NOT NULL`, bundleId);
       for (const r of priorRows)
-        if (r.ext != null) priorContent.set(`${r.t}\u0000${r.ext}`, r.cid);
+        if (r.ext != null) {
+          priorContent.set(`${r.t}\u0000${r.ext}`, r.cid);
+          if (r.cap != null) priorContentAt.set(`${r.t}\u0000${r.ext}\u0000${r.cap}`, r.cid);
+        }
       const contentProjected = [];
       /* ONE resolution for the whole basis, on the refusal arm's own terms and
          through the same method — see `#contentPlanFor`. */
@@ -18800,7 +19534,9 @@ export class Store extends DurableObject {
             const namedRow = legContentId(leg);
             if (namedRow) { legRowId = namedRow; }
             else {
-              const carried = priorContent.get(`${leg.target}\u0000${canonicalExtent(ext)}`);
+              const carried = cp.authored
+                ? priorContentAt.get(`${leg.target}\u0000${canonicalExtent(ext)}\u0000${cp.captureSha}`)
+                : priorContent.get(`${leg.target}\u0000${canonicalExtent(ext)}`);
               if (carried) { legRowId = carried; legCarried = true; }
               else if (cp.captureSha) {
                 const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
@@ -19024,7 +19760,7 @@ export class Store extends DurableObject {
            source fields are copied from THE SAME BYTES, for the same reason — the pin is one revision,
            never a sha from one and a provenance from another. The authored act (`author`, `at`) is
            op=biasadopt's and is not rewritten: a promotion is attributed in the manifest table. */
-        if (meta.current_state === "adopted" && newSha) {
+        if (promotedState === "adopted" && newSha) {   /* D-563: the state the row above was written with */
           const pfm = docFmW || {};
           const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
           this.sql.exec(
@@ -19301,6 +20037,10 @@ export class Store extends DurableObject {
       this.#flagCasesOnRevision(bundleId, base ?? null,
         stampInstant("second"));
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner,
+        /* REC-197: present ONLY on a project's creation — the setting it was created with, READ BACK through
+           `#visibilityOf` (the one reader) rather than echoed from the request, so an absent field answers
+           `hidden` because the record says so. */
+        ...(!cur && meta.object_type === "project" ? { visibility: this.#visibilityOf(bundleId) } : {}),
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
         ...(testimonyWrote ? { testimony: testimonyWrote } : {}),
@@ -20093,12 +20833,12 @@ export class Store extends DurableObject {
       const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
       bound = (byUnits
                 ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20's "
+                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's "
                 + "largest-promote-that-fits and M-35's two route ceilings) -- the index costs "
                 + "ROWS, not only bytes, and this capture offered more pieces than a promote "
                 + "may spend its CPU window on"
                 : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20)")
+                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)")
             + " or the acquire answer's own budget, whichever bit first -- the last is "
             + "the smaller in bytes and is what the promote path's inline-file limit forces";
       detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; `
@@ -21220,6 +21960,269 @@ export class Store extends DurableObject {
       self: rows.filter((r) => r.depth === 0).map((r) => r.root),
       via: rows.filter((r) => r.depth > 0).map((r) => ({ finding: r.root, observation: r.observation })),
     };
+  }
+
+  /** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST.
+   *  `group` is the floor every level shares (§4.3): every published case is the group's. `name`
+   *  publishes the member's HANDLE — §4.6's reading of "to the member by name", which is a PROVISIONAL
+   *  carried to Bob (the record holds no legal name and must not start to). The member id is never
+   *  published at any level. */
+  static ATTRIBUTION_LEVELS = ["group", "project", "cover", "name"];
+
+  /** MK-7 / §4.1's discriminator — WHICH OF THESE OBSERVATIONS STILL NAME THEIR AUTHOR IN THEIR OWN FILES.
+   *  An observation written before MK-6 carries the member in `data/provenance.json` and the Session Log,
+   *  and §4.1 keeps it FENCED: the level lives outside the bundle, so no level can hide a name the bundle
+   *  itself prints. Asked STRUCTURALLY of the fields MK-6 moved — every provenance document's `author`, every
+   *  chain hop's `who`, every `| Authored |` Session Log line — each must be `Store.observerRef(<id>)`. A file
+   *  that cannot be read or parsed is NOT in reference form: undetermined is fenced, never let through. */
+  observationsNamingAuthor(ids) {
+    const out = [];
+    for (const id of [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x))].slice(0, 200)) {
+      const ref = Store.observerRef(id);
+      const prov = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, id);
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+      let form = false;
+      try {
+        const docs = JSON.parse(String(prov && prov.content || "")).documents;
+        const authored = String(md && md.content || "").split("\n").filter((l) => /^### Session \S+ \| Authored \| /.test(l));
+        form = Array.isArray(docs) && docs.length > 0 && authored.length > 0
+          && docs.every((d) => d && d.author === ref
+               && (Array.isArray(d.provenance_chain) ? d.provenance_chain : []).every((h) => h && h.who === ref))
+          && authored.every((l) => l.endsWith(`| Authored | ${ref}`));
+      } catch { form = false; }
+      if (!form) out.push(id);
+    }
+    return out;
+  }
+
+  /** MK-7 / §4.3 — THE LEVEL IN FORCE FOR ONE OBSERVATION AT ONE CASE EDITION: the author's act at this
+   *  edition, or else the latest earlier edition's (a later edition INHERITS the prior choice until the
+   *  author changes it). Earlier editions of a case are ratified ones — an edition number is only spent
+   *  by ratification — so an inherited level is one a published edition already carried. None is none:
+   *  nothing is ever prefilled. */
+  #attributionInForce(caseId, edition, observation) {
+    return this.#one(`SELECT level, edition, chosen_by, chosen_at FROM observation_attributions
+                       WHERE case_id=? AND bundle_id=? AND edition<=? ORDER BY edition DESC LIMIT 1`,
+                     caseId, observation, edition) || null;
+  }
+
+  /** MK-7 — EVERY OBSERVATION ONE CASE DOCUMENT REACHES, at any depth, in first-reached order (§4.3: one
+   *  level per observation per edition however many findings reach it, a `via` observation included). */
+  #observationsReachedBy(docText) {
+    const cf = (parseFrontmatter(String(docText || "")).data || {}).case_findings;
+    const reach = this.testimonyReach((Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim()));
+    return [...new Set([...reach.self, ...reach.via.map((v) => v.observation)])];
+  }
+
+  /** MK-7 / §4.3, §4.6 — THE EDITION'S ATTRIBUTION STATEMENTS, DERIVED FROM THE ACTS AND NEVER FROM THE
+   *  OWNER'S INPUT. One row per reached observation: the level in force and what that level PUBLISHES —
+   *  `group` the producing group (null when this store records none, stated in the prose), `project` the
+   *  publishing project, `cover` the administrator's cover for the author, `name` the author's handle. The
+   *  author's member id is never a value here. A level whose published value cannot be produced (a `name`
+   *  whose author has since lost their handle) is UNCHOSEN with its reason: publishing it at any other value
+   *  would be the default §4 forbids. */
+  #attributionStatements(caseId, edition, project, observations) {
+    return observations.map((obs) => {
+      const act = this.#attributionInForce(caseId, edition, obs);
+      if (!act) return { observation: obs, level: null, shown: null, chosen_at_edition: null,
+                         why: "its author has chosen no level for this edition or any earlier one" };
+      const g = this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
+      const m = g ? this.#one(`SELECT cover, handle FROM members WHERE member_id=?`, g.author) : null;
+      /* WHAT EACH LEVEL PUBLISHES, and nothing else (a projection, not a refusal site, so it carries no DEC-49 marker). */
+      const shown = act.level === "group" ? this.#producingGroup()
+        : act.level === "project" ? project
+        : act.level === "cover" ? (m && m.cover ? m.cover : null)
+        : act.level === "name" ? (m && m.handle ? m.handle : null)
+        : null;
+      if (shown === null && act.level !== "group")
+        return { observation: obs, level: null, shown: null, chosen_at_edition: null,
+                 why: `its author chose '${act.level}' at edition ${act.edition}, and the record holds no `
+                    + `${act.level === "name" ? "handle" : act.level} for them to publish under it` };
+      return { observation: obs, level: act.level, shown, chosen_at_edition: Number(act.edition), why: null };
+    });
+  }
+
+  /* MK-7 — THE TWO RENDERINGS OF THE STATEMENTS, ONE SPELLING EACH: written by `#caseDocumentText` when
+     op=publish authors a document reaching an observation, and spliced by `#reauthorAttributions` when the
+     author's act lands on one authored and unsigned — `#ackFrontmatterLines`' arrangement. The frontmatter
+     run starts at `observation_attributions:` and ends at the next top-level key; the prose starts at
+     `Store.ATTRIBUTION_PROSE_HEAD` and ends before the next `## ` heading. A document reaching NO observation
+     carries neither, so every other case document's bytes are exactly what they were. */
+  static ATTRIBUTION_PROSE_HEAD = "## Whose Words These Are";
+  static #attributionFrontmatterLines(rows) {
+    return ["observation_attributions:",
+      ...rows.flatMap((r) => [
+        `  - observation: ${r.observation}`,
+        `    level: ${r.level ?? "null"}`,
+        `    shown: ${r.shown == null ? "null" : `"${Store.#fmSafe(r.shown)}"`}`,
+        `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`])];
+  }
+  static #attributionBodyLines(rows) {
+    const said = { group: "the group that publishes this case", project: "the project that produced it",
+                   cover: "the cover the group knows its author by", name: "the name its author chose to appear under" };
+    return [Store.ATTRIBUTION_PROSE_HEAD, "",
+      `This case rests, directly or through another finding, on ${rows.length} firsthand observation`
+      + `${rows.length === 1 ? "" : "s"} recorded by a member of this group. What it shows of who SAID each one is `
+      + "that member's own choice, made for this edition and never filled in for them (MEMBER-KNOWLEDGE-DESIGN.md "
+      + "§4). An observation names no person in its own bytes; the words below are the whole of the attribution.",
+      "",
+      ...rows.map((r) => !r.level
+        ? `- **${r.observation}** — NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author `
+          + "chooses one, or the finding resting on it leaves the case."
+        : `- **${r.observation}** — attributed to ${said[r.level]}${r.shown == null ? " (this record names no "
+          + "producing group, so none is printed)" : `: ${r.shown}`} — level \`${r.level}\`, chosen at edition `
+          + `${r.chosen_at_edition}.`),
+      ""];
+  }
+
+  /** MK-7 — RE-AUTHOR ONE UNSIGNED CASE DOCUMENT'S ATTRIBUTION RUNS FROM THE ACTS, on
+   *  `#reauthorAcknowledgements`' rule: only the two runs change, only while `sig_armored IS NULL` and only
+   *  over the hash read, so the new hash is what the owner signs and a signature over the old bytes is
+   *  refused CASE_RATIFY_STALE. A document carrying no run (it reached no observation when authored) is left
+   *  as it is and says so. */
+  #reauthorAttributions(doc) {
+    const lines = doc.text.split("\n");
+    const f0 = lines.indexOf("observation_attributions:");
+    let f1 = f0 + 1;
+    while (f0 >= 0 && f1 < lines.length && lines[f1].startsWith("  ")) f1++;
+    const b0 = lines.indexOf(Store.ATTRIBUTION_PROSE_HEAD);
+    let b1 = b0 + 1;
+    while (b0 >= 0 && b1 < lines.length && !lines[b1].startsWith("## ")) b1++;
+    if (f0 < 0 || b0 < 0 || b1 >= lines.length)
+      return { case_id: doc.case_id, edition: doc.edition, reauthored: false,
+               why: "this case document carries no attribution statements to re-author" };
+    const fm = parseFrontmatter(doc.text).data || {};
+    const rows = this.#attributionStatements(doc.case_id, Number(doc.edition), String(fm.case_project ?? "").trim(),
+                                             this.#observationsReachedBy(doc.text));
+    const text = [...lines.slice(0, f0), ...Store.#attributionFrontmatterLines(rows), ...lines.slice(f1, b0),
+                  ...Store.#attributionBodyLines(rows), ...lines.slice(b1)].join("\n");
+    if (text === doc.text) return { case_id: doc.case_id, edition: doc.edition, reauthored: false, doc_sha: doc.doc_sha };
+    const docSha = createSha256().update(new TextEncoder().encode(text)).hex();
+    this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
+                   AND sig_armored IS NULL`, docSha, text, doc.case_id, doc.edition, doc.doc_sha);
+    const now = this.#one(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=?`, doc.case_id, doc.edition);
+    return { case_id: doc.case_id, edition: doc.edition, reauthored: !!now && now.doc_sha === docSha,
+             doc_sha: now ? now.doc_sha : null,
+             read: `op=casedocument&case=${doc.case_id}&edition=${doc.edition}` };
+  }
+
+  /** MK-7 — WHAT op=caseratify NEEDS TO JUDGE ONE CASE DOCUMENT'S ATTRIBUTION (§4.4): every observation it
+   *  reaches, those still naming their author in their own bytes (§4.1, fenced), what the signed-for-review
+   *  bytes STATE, and what the acts say NOW. The gate compares the last two, so a document can never carry a
+   *  level the author did not choose. */
+  attributionFacts(doc) {
+    const fm = parseFrontmatter(String(doc && doc.text || "")).data || {};
+    const reached = this.#observationsReachedBy(doc && doc.text);
+    const stated = (Array.isArray(fm.observation_attributions) ? fm.observation_attributions : [])
+      .map((r) => ({ observation: String(r && r.observation != null ? r.observation : ""),
+                     level: r && typeof r.level === "string" && r.level !== "null" ? r.level : null,
+                     shown: r && r.shown != null && r.shown !== "null" ? String(r.shown) : null }));
+    const current = this.#attributionStatements(doc.case_id, Number(doc.edition), String(fm.case_project ?? "").trim(), reached);
+    return { reached, legacy: this.observationsNamingAuthor(reached), stated, current };
+  }
+
+  /** MK-7 — DOES ANY RATIFIED CASE DOCUMENT STATE A CHOSEN LEVEL FOR THIS OBSERVATION? op=ratify asks it before
+   *  an observation's own bytes cross as a case's evidence: the words are published only beside a signed
+   *  statement of whose they are. Bounded; the text match is the index, the parse the authority. */
+  attributionStatedFor(observation) {
+    const id = String(observation ?? "");
+    if (!id) return false;
+    const docs = this.#rows(`SELECT text FROM case_documents WHERE ratified_at IS NOT NULL
+                              AND instr(text, ?) > 0 ORDER BY case_id, edition LIMIT 50`, `  - observation: ${id}`);
+    return docs.some((d) => {
+      const rows = (parseFrontmatter(d.text).data || {}).observation_attributions;
+      return Array.isArray(rows) && rows.some((r) => r && String(r.observation) === id
+        && Store.ATTRIBUTION_LEVELS.includes(r.level));
+    });
+  }
+
+  /** MK-7 / IC — op=attribute: THE ATTRIBUTION ACT (MEMBER-KNOWLEDGE-DESIGN.md §4.2–§4.6, MK-3's
+   *  replacement (ii)). The observation's AUTHOR, and only they, chooses what one case edition publishes
+   *  of who said it: `group | project | cover | name`, per (case edition, observation). It lands at the
+   *  edition's PREPARED AND UNSIGNED case document — the door `op=statementack` binds at, for REC-194's
+   *  reason: a case id is minted only by publication, so a draft of a new case has no identity to key a
+   *  level to — and re-authors that document's attribution runs, so the level is in the bytes its owner
+   *  signs. No `publish` capability is needed: it is a decision about the member's own words, not about
+   *  the case. `by` is the control plane's stamp and nothing else. */
+  attributeObservation({ caseId = null, edition = null, observation = null, level = null, by = null } = {}) {
+    const refusal = (code, detail, extra) => {
+      const row = ATTRIBUTION_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    const who = typeof by === "string" ? by.trim() : "";
+    /* DEC-49 REGION is-attribute-act */
+    if (!who || isMachineIdentity(who))
+      return refusal("ATTRIBUTION_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential, and how a member's words are attributed is that `
+              + `member's own choice` : `this call carries nobody; the plane stamps who chose from the credential`);
+    const lv = typeof level === "string" ? level.trim() : "";
+    if (!lv)
+      return refusal("ATTRIBUTION_NO_LEVEL",
+        `no level was chosen. There is no default (MEMBER-KNOWLEDGE-DESIGN.md §4): choose one of `
+        + `${Store.ATTRIBUTION_LEVELS.join(", ")}`, { allowed: Store.ATTRIBUTION_LEVELS });
+    if (!Store.ATTRIBUTION_LEVELS.includes(lv))
+      return refusal("ATTRIBUTION_LEVEL_UNKNOWN",
+        `'${lv.slice(0, 40)}' is not a level; choose one of ${Store.ATTRIBUTION_LEVELS.join(", ")}`,
+        { allowed: Store.ATTRIBUTION_LEVELS });
+    /* END DEC-49 REGION is-attribute-act */
+    const obs = typeof observation === "string" ? observation.trim() : "";
+    const reg = obs ? this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs) : null;
+    /* DEC-49 REGION is-attribute-author */
+    if (!reg)
+      return refusal("ATTRIBUTION_NOT_AN_OBSERVATION",
+        `${obs ? obs.slice(0, 80) : "(none named)"} is not a member's firsthand observation in this record, so it `
+        + `has no author to choose how it is attributed`, { observation: obs || null });
+    if (reg.author !== who)
+      return refusal("ATTRIBUTION_NOT_THE_AUTHOR",
+        `${obs} was recorded by another member. Only an observation's author chooses how a case shows who said it: `
+        + `not a project owner, not an administrator, and not a default (§4.2)`, { observation: obs });
+    const me = this.#one(`SELECT status, handle FROM members WHERE member_id=?`, who);
+    if (!me || me.status !== "active")
+      return refusal("ATTRIBUTION_AUTHOR_NOT_ACTIVE",
+        `the author of ${obs} is not an active member, and nobody takes this act for them (§4.5)`, { observation: obs });
+    /* END DEC-49 REGION is-attribute-author */
+    const cid = typeof caseId === "string" ? caseId.trim() : "";
+    const ed = Number(edition);
+    const doc = cid && Number.isInteger(ed) && ed >= 1
+      ? this.#one(`SELECT case_id, edition, doc_sha, text, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, cid, ed)
+      : null;
+    const reaches = !!doc && this.#observationsReachedBy(doc.text).includes(obs);
+    /* DEC-49 REGION is-attribute-edition
+       ONE ANSWER for no such document and a document that does not reach this observation, so the act is not
+       a way to learn what cases exist: the author is told only about an edition that uses their words. */
+    if (!reaches)
+      return refusal("ATTRIBUTION_NOT_REACHED",
+        `no prepared case edition ${cid ? `${cid.slice(0, 60)} edition ${Number.isInteger(ed) ? ed : "(none)"}` : "(none named)"} `
+        + `rests on ${obs}. An attribution is chosen for an edition that uses the observation, once op=publish has `
+        + `prepared its case document`, { observation: obs, caseId: cid || null, edition: Number.isInteger(ed) ? ed : null });
+    if (doc.sig_armored)
+      return refusal("ATTRIBUTION_EDITION_RATIFIED",
+        `${cid} edition ${ed} is already signed, and a signed edition answers forever; your choice applies to the `
+        + `next edition, which inherits it until you change it (§4.3)`, { observation: obs, caseId: cid, edition: ed });
+    if (lv === "name" && !(me.handle && String(me.handle).trim()))
+      return refusal("ATTRIBUTION_NAME_NO_HANDLE",
+        `'name' publishes the handle you appear under in this record, and you have none (§4.6). Choose another `
+        + `level, or set a handle first`, { observation: obs });
+    /* END DEC-49 REGION is-attribute-edition */
+    const prior = this.#attributionInForce(cid, ed, obs);
+    /* c22-batch29 union (CONDUCT #22): D-543's one helper, not a hand-spelled whole-second stamp — MK-7 was cut before
+       D-543 and d543-instant-precision named this site. Same value: stampInstant("second") of the current instant. */
+    const when = stampInstant("second");
+    const same = !!(prior && Number(prior.edition) === ed && prior.level === lv);
+    if (!same)
+      this.sql.exec(`INSERT INTO observation_attributions (case_id, edition, bundle_id, level, chosen_by, chosen_at)
+                     VALUES (?,?,?,?,?,?) ON CONFLICT(case_id, edition, bundle_id) DO UPDATE SET
+                       level=excluded.level, chosen_by=excluded.chosen_by, chosen_at=excluded.chosen_at`,
+                    cid, ed, obs, lv, who, when);
+    const reauthored = this.#reauthorAttributions(doc);
+    const fm = parseFrontmatter(doc.text).data || {};
+    const stmt = this.#attributionStatements(cid, ed, String(fm.case_project ?? "").trim(), [obs])[0];
+    return { ok: true, existed: same, observation: obs, caseId: cid, edition: ed, level: lv, shown: stmt.shown,
+             previous: prior ? { level: prior.level, edition: Number(prior.edition) } : null,
+             case_document: reauthored,
+             stated: `edition ${ed} of ${cid} now states ${obs} at level '${lv}'. The case document was re-authored; `
+                   + `its owner signs the new bytes. A later edition inherits this choice until you change it.` };
   }
 
   /** When the member says they observed it: a calendar date or a UTC instant,
@@ -22506,6 +23509,99 @@ export class Store extends DurableObject {
      published beside the answer — never a claim that no more exist. */
   static LAW_PROPOSALS_READ_MAX = 12;
   static THEME_READ_LIMIT_MAX = 2000;
+
+  /* REC-203 — op=idmatch: ONE identifier judged under `BIO_Content_Framework_v0_10.md` §8.3 "WHAT MAKES A
+   * SHARED IDENTIFIER COUNT", through `src/idspaces.mjs`, which holds the recognisers and the counting rule.
+   * With one value it RECOGNISES: the form, the normalised value, a C.M.S. number's reach against Legistar's
+   * floor, an APN's standing. With two, each named with the CAPTURE it was read in, it JUDGES the pair.
+   *
+   * THE SYSTEM OF EACH END IS READ FROM THE RECORD, never taken from the request: every address
+   * `captured_locators` holds for the capture, mapped through the measured system table. That is the whole
+   * point of the capture argument — a caller who could name the system could name two publications of one
+   * source as two systems, which is the one error rule 1 exists to refuse.
+   *
+   * THE REFERENT READING is the caller's, when it is given, and the answer says so: this plane reads no
+   * referent (every agreement M-119, M-132 and M-157 counted was read by hand). A fund's NAME is the one
+   * referent it compares itself. WRITES NOTHING. */
+  idMatch({ space = null, a = null, b = null, aCapture = null, bCapture = null, aName = null, bName = null,
+            referent = null, viewer = null } = {}) {
+    const sp = typeof space === "string" ? space.trim().toLowerCase() : "";
+    /* DEC-49 REGION is-idspace-unknown */
+    if (!Object.prototype.hasOwnProperty.call(ID_SPACES, sp)) {
+      const row = IDSPACE_CHECKS.IDSPACE_UNKNOWN;
+      return { ok: false, reason: "IDSPACE_UNKNOWN", code: "IDSPACE_UNKNOWN", check: row.check,
+               translation: row.translation, spaces: Object.keys(ID_SPACES),
+               detail: `space must be one of ${Object.keys(ID_SPACES).join(", ")}` };
+    }
+    /* END DEC-49 REGION is-idspace-unknown */
+    const pair = b != null && String(b).trim() !== "";
+    const ra = recogniseIdentifier(sp, a);
+    const rb = pair ? recogniseIdentifier(sp, b) : null;
+    /* DEC-49 REGION is-idspace-value-shape */
+    if (!ra || (pair && !rb)) {
+      const row = IDSPACE_CHECKS.IDSPACE_VALUE_NOT_IN_SPACE;
+      return { ok: false, reason: "IDSPACE_VALUE_NOT_IN_SPACE", code: "IDSPACE_VALUE_NOT_IN_SPACE",
+               check: row.check, translation: row.translation, space: sp,
+               forms: ID_SPACES[sp].forms.map((f) => f.form),
+               detail: `${!ra ? "a" : "b"} has the shape of no form of the ${ID_SPACES[sp].label}` };
+    }
+    /* END DEC-49 REGION is-idspace-value-shape */
+    const view = (r) => ({ value: r.value, form: r.form, normal: r.normal,
+                           ...(r.kind !== undefined ? { kind: r.kind } : {}),
+                           ...(r.reach ? { reach: r.reach } : {}),
+                           /* No assessor vintage is held in the record, so an APN's standing is judged over
+                              none, and reads UNDETERMINED saying so — never "no such parcel". */
+                           ...(sp === "apn" ? { standing: apnStanding(r.normal) } : {}) });
+    if (!pair) return { ok: true, space: sp, label: ID_SPACES[sp].label, evidence: false, a: view(ra) };
+    /* THE CAPTURES, read through the caller's own sight: a capture the viewer may not see is answered
+       exactly as one the record does not hold. Fails closed on an absent stamp (`viewerPredicate`). */
+    const g = viewerPredicate(viewer);
+    const held = (sha) => {
+      const k = typeof sha === "string" ? sha.trim().toLowerCase() : "";
+      if (!/^[0-9a-f]{64}$/.test(k)) return null;
+      const r = this.#one(
+        `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+          WHERE r.capture_sha = ? AND (${g.sql})`, k, ...g.args);
+      if (!r) return null;
+      /* BOUNDED, and the bound is PUBLISHED: one row past the cap is read so a cut is MEASURED, and a cut
+         capture's system is UNDETERMINED rather than judged off the addresses that happened to fit — an
+         unread address could be another system's. */
+      const cap = Store.IDMATCH_ADDRESS_LIMIT;
+      const rows = this.#rows(
+        `SELECT DISTINCT address FROM captured_locators WHERE capture_sha = ? ORDER BY address LIMIT ?`, k, cap + 1);
+      return { addresses: rows.slice(0, cap).map((x) => x.address), truncated: rows.length > cap };
+    };
+    const addrA = held(aCapture), addrB = held(bCapture);
+    /* DEC-49 REGION is-idspace-capture */
+    if (addrA === null || addrB === null) {
+      const row = IDSPACE_CHECKS.IDSPACE_CAPTURE_NOT_HELD;
+      return { ok: false, reason: "IDSPACE_CAPTURE_NOT_HELD", code: "IDSPACE_CAPTURE_NOT_HELD", check: row.check,
+               translation: row.translation, detail: `${addrA === null ? "a_capture" : "b_capture"} names no captured `
+               + `document this record holds that you can see` };
+    }
+    /* END DEC-49 REGION is-idspace-capture */
+    const reading = referent === "agrees" || referent === "disagrees" ? referent : null;
+    const systemOf = (h) => (h.truncated
+      ? { origin: null, why: `the record holds more than ${Store.IDMATCH_ADDRESS_LIMIT} addresses for these bytes, `
+          + `and a system is judged from EVERY address, so it is undetermined` }
+      : systemOfAddresses(h.addresses));
+    const endA = { rec: ra, system: systemOf(addrA), name: aName };
+    const endB = { rec: rb, system: systemOf(addrB), name: bName };
+    const j = judgePair(sp, endA, endB, reading);
+    const sys = (e) => (e.system.origin
+      ? { origin: e.system.origin, name: e.system.name, republication: e.system.republication,
+          provenance_stated: e.system.provenance_stated, basis: e.system.basis }
+      : { origin: null, why: e.system.why });
+    return { ok: true, space: sp, label: ID_SPACES[sp].label, evidence: false, ...j,
+             /* Each end's cut is published as the page measured it (one row past the cap), never combined. */
+             limit: Store.IDMATCH_ADDRESS_LIMIT, a_truncated: addrA.truncated, b_truncated: addrB.truncated,
+             a: { ...view(ra), capture: String(aCapture).trim().toLowerCase(), system: sys(endA),
+                  ...(sp === "fund" ? { name: aName ?? null } : {}) },
+             b: { ...view(rb), capture: String(bCapture).trim().toLowerCase(), system: sys(endB),
+                  ...(sp === "fund" ? { name: bName ?? null } : {}) } };
+  }
+  /* op=idmatch's bound: the most addresses read per capture to judge its system. */
+  static IDMATCH_ADDRESS_LIMIT = 32;
 
   /* ====================================================================== *
    * SK-8 REGION — THE EXTRACT RUN'S PRODUCTIONS, AND THE FIRST CALLER OF THE
@@ -26874,7 +27970,7 @@ export class Store extends DurableObject {
           determined: false,
           undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
           empty_level: "transcription fidelity — this document's text was derived by a machine and no "
-                     + "step in that derivation carries a measured fidelity (MEASUREMENTS.md, per engine, "
+                     + "step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, "
                      + "per version)",
           why: `${captureWord}, but every transcription of its text is UNMEASURED: no step in the `
              + `provenance of this document's text carries a measured fidelity, so what a leg resting on `
@@ -29595,7 +30691,86 @@ export class Store extends DurableObject {
       ...this.#conditionsPartialCapture(viewer, now, identity),
       ...this.#conditionsCaptureUnattended(viewer, now, identity),
       ...this.#conditionsCaptureRequested(viewer, now, identity),
+      ...this.#conditionsRenderDeferred(viewer, now, identity),
     ];
+  }
+
+  /** `render-deferred` (D-523; BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24 by BOB #33").
+   *
+   *  THE FACT IS THE REQUEST ROW'S OWN: a request that asked for the page as a visitor saw it (`render = 1`) and
+   *  carries a C-83 code. While it is `requested` the drain is HOLDING it under that code (D-491) and asks again on
+   *  every tick until its `expires`; once `expired` the drain has RELEASED it and the render never happened. Both
+   *  are shown, under one kind, because they are one fact at two moments and a member who saw the first must be
+   *  able to see how it ended — an item that simply vanished at expiry would be the silent drop the ruling forbids.
+   *
+   *  THE REASON IS C-83's OWN, in DEC-49 words: the code, its C-number and the canned translation are read off the
+   *  family that minted them and never re-typed here, so the sentence a member reads is the one the plane refuses
+   *  with. C-83.3 and C-83.4 say different things — one that this instance cannot render at all, the other that
+   *  today's allowance is committed — and collapsing them into "deferred" would tell a member to wait for a
+   *  renderer that is not coming.
+   *
+   *  A CONDITION: our renderer, our allowance and our pacing hold it, so it is a fact about our machinery and never
+   *  about the page, and a member may mute it for themselves (D-125's item form). It offers no act of its own; the
+   *  options are the acts on the question the request was asked under, derived as every other item's are.
+   *
+   *  GATED AT THE TARGET through `#bundleGate`, exactly as the completion notification one producer up is: a
+   *  request under a question the viewer cannot see is absent from their feed as it is from op=capturerequests. */
+  #conditionsRenderDeferred(viewer, now, identity = null) {
+    const out = [];
+    const seen = this.#bundleGate("cr.target", viewer);
+    for (const r of this.#rows(
+      `SELECT cr.* FROM capture_requests cr
+        WHERE cr.render = 1
+          AND (cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))
+          AND (${seen.sql})
+        ORDER BY cr.updated, cr.request`, ...seen.args)) {
+      /* EVERY RENDER THE DRAIN HAS HELD, UNDER WHATEVER CODE IT LAST CARRIED, and every one that EXPIRED. A render
+         held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request for the
+         same host wins the slot, and that overwrites the row's code (measured, capturerequests.test.mjs 7d) — so
+         showing C-83 codes alone would make the item VANISH for a tick while the render still waits, which is the
+         silence the ruling forbids. A row never yet attempted (no code) is simply queued and is not shown. The
+         reason is the code's own family's sentence; a code no family catalogues says so. */
+      const row = Store.#renderHoldReason(r.code);
+      const words = row.translation
+        || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
+      const released = r.state === "expired";
+      const sinceMs = Date.parse(r.requested_at);
+      out.push({
+        id: `CONDITION::render-deferred::${r.request}`,
+        class: "CONDITION",
+        kind: "render-deferred",
+        case: this.#conditionHomes([r.target], viewer),
+        subject: { kind: "capture_request", id: r.request },
+        summary: released
+          ? `the render of ${r.address} was never performed: it was held until its request expired, and what `
+            + "the page showed is UNDETERMINED"
+          : `a render of ${r.address} is waiting: ${words}`,
+        detail: released
+          ? `${words} The request expired at ${r.expires} and was released; nothing was filed in the `
+            + "render's place, and no conclusion about the page can rest on it."
+          : `${words} The request is held and asked again on every tick until ${r.expires}; if it `
+            + "cannot be rendered by then it is recorded UNDETERMINED and released.",
+        basis: { source: "capture_requests", request: r.request, run: r.run, inquiry: r.target,
+                 address: r.address, host: r.host,
+                 render: released ? { state: "expired", content: "undetermined" }
+                                  : { state: "deferred", content: "undetermined" },
+                 code: r.code, check: row.check, translation: row.translation,
+                 attempts: r.attempts, expires: r.expires, updated: r.updated,
+                 plane_detail: r.detail ?? null,
+                 detail: "a condition is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's "
+                       + "renderer, render allowance or host pacing is what holds the render, which says "
+                       + "nothing about the page. The served frame is never filed as the content, so while it "
+                       + "waits and after it expires there is NO capture of what a visitor saw." },
+        age: Number.isFinite(sinceMs)
+          ? { state: "determined", since: r.requested_at, ms: Math.max(0, now - sinceMs) }
+          : { state: "undetermined", reason: "unparseable_requested_at",
+              detail: "the request row carries a request stamp this producer cannot read as an instant" },
+        assignee: null,
+        assignee_role: null,
+        options: this.#queueOptions([r.target], viewer, identity),
+      });
+    }
+    return out;
   }
 
   /** op=queue: the member's ONE feed.
@@ -30133,6 +31308,15 @@ export class Store extends DurableObject {
       mute: {
         personal: true,
         cases: [...mutes.keys()].sort(),
+        /* D-534: the kinds each of those cases mutes, case id -> sorted kinds.
+           `cases` alone named the case and the kinds nowhere, so a case mute
+           holding nothing back today (no live item of those kinds, so nothing
+           on `suppressed`) could be neither named nor undone — the case form's
+           unmute takes the kinds. A map BESIDE `cases` rather than objects IN
+           it, because every reader of `cases` holds it as a list of ids (the
+           queue-state suites and civicos-ui); this adds and moves nothing. */
+        case_kinds: Object.fromEntries([...mutes.keys()].sort()
+          .map((c) => [c, [...mutes.get(c)].sort()])),
         /* D-125: every item id this member muted, whether or not it is live
            now — a muted host that is not held today is still muted for them. */
         items: [...itemMutes].sort(),
@@ -31248,6 +32432,8 @@ export class Store extends DurableObject {
          still open — a non-zero monitorTickEpoch means the last tick failed on
          something and the next one will be its retry. */
       monitorFired: n("monitor_fired"), monitorTickEpoch: n("monitor_tick_epoch"),
+      /* REC-191: reported so a whole-store purge can PROVE it took the address types (D-113). */
+      monitorAddressType: n("monitor_address_type"),
       /* FW-6: the subject registry's depth, reported so a whole-store purge can
          PROVE it cleared the registry rather than assert it (D-113). */
       entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
@@ -32957,6 +34143,11 @@ export class Store extends DurableObject {
                        outliving its project would admit whoever is next allocated that id to a
                        member's lead. Whole-store: the leads themselves go in the arm below. */
                     "lead_shares",
+                    /* MK-7 / D-113: an ATTRIBUTION is keyed on the OBSERVATION it governs. Per-bundle: a
+                       level outliving its observation would be inherited by whatever bundle was next
+                       allocated that id — a member's choice attached to somebody else's words. A ratified
+                       case document keeps the level it published in its own signed bytes. */
+                    "observation_attributions",
                     /* D-162 / D-113: a THEME PLACEMENT, keyed on the DOCUMENT it places (a
                        passage's placement carries its document too). Per-bundle: a placement
                        outliving its document would say a file nobody holds belongs to a lens,
@@ -33033,6 +34224,9 @@ export class Store extends DurableObject {
            when EITHER end's bundle is purged, so the reverse-index connection cannot
            outlive a document it joined (D-113). */
         this.sql.exec(`DELETE FROM connections WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
+        /* REC-147 / D-113: a contradiction candidate spans TWO referents, so it is not in TABLES, and it goes when
+           EITHER side's bundle is purged — a candidate outliving a side it compared names a referent nobody holds. */
+        this.sql.exec(`DELETE FROM contradiction_candidates WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
         /* REC-122: a member's on-point choice is ABOUT a connection and goes with it. */
         this.sql.exec(`DELETE FROM connection_pair_choices WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
         /* REC-27 / D-137. Participation and owner-governance votes are keyed on
@@ -33050,6 +34244,9 @@ export class Store extends DurableObject {
         /* D-497: and the sight index derived from it, the same arm again — a derivation outliving the acts it
            derives from would hand a later bundle at a colliding id somebody else's owners' choice. */
         this.sql.exec(`DELETE FROM project_sight WHERE project_id=?`, bundleId);
+        /* REC-150: the join requests are keyed on project_id too — a request outliving its project would name, to
+           its requester, a project that no longer exists. The same arm, the same reason. */
+        this.sql.exec(`DELETE FROM project_join_requests WHERE project_id=?`, bundleId);
         /* PL-12 / D-84 / D-113. An adoption is keyed (scope_type, scope_id,
            bundle_id) and a project scope_id IS a bundle id, so purging a project
            while leaving its adoptions behind would leave a LENS in force over a
@@ -33175,6 +34372,8 @@ export class Store extends DurableObject {
         /* D-497: the sight index is a derivation of the table above, so it goes in the same arm. Every row it
            could hold is recomputed from what survives at the next boot, which is what makes it safe to clear. */
         this.sql.exec(`DELETE FROM project_sight`);
+        /* REC-150: the join requests go with the participation graph they would have added to. */
+        this.sql.exec(`DELETE FROM project_join_requests`);
         /* CASE-5b / D-113, AND IT IS CASE-1'S OWN REVERSAL CONDITION ARRIVING
            RATHER THAN A NEW JUDGEMENT. CASE-1 exempted `cases` from purge and
            wrote the condition that would reverse it at the site, in these words:
@@ -33242,6 +34441,13 @@ export class Store extends DurableObject {
            this order: the fired rows, then the epoch that names them. */
         this.sql.exec(`DELETE FROM monitor_fired`);
         this.sql.exec(`DELETE FROM monitor_tick_epoch`);
+        /* REC-191. The content type each monitored ADDRESS last read as, which the
+           cadence plan falls back on where no version authored a frequency. Read
+           from sources about documents this purge just removed, so it goes with
+           them: a later capture at the same address must be read afresh rather
+           than inherit a type nobody holds a document for. Not in the per-bundle
+           arm, for source_reachability's reason: an address outlives a version. */
+        this.sql.exec(`DELETE FROM monitor_address_type`);
         /* The capture machinery's own derived tables, found MISSING here on
            2026-07-31 when D-113 was closed as a class rather than an instance.
            Every one is derived from the corpus and every one predates the fix
@@ -33285,6 +34491,8 @@ export class Store extends DurableObject {
            Stages before defs, so nothing outlives the definition it belongs to.
            hygiene.test.mjs asserts this list against schema.mjs. */
         this.sql.exec(`DELETE FROM connections`);
+        /* REC-147: the contradiction candidates, which span two referents and have no single bundle_id. */
+        this.sql.exec(`DELETE FROM contradiction_candidates`);
         /* REC-122: the member's on-point choices, about connections that are gone. */
         this.sql.exec(`DELETE FROM connection_pair_choices`);
         this.sql.exec(`DELETE FROM progression_stages`);
@@ -34710,6 +35918,77 @@ export class Store extends DurableObject {
       + "it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).");
     /* END DEC-49 REGION is-project-existence-only */
   }
+  /* ===== REC-196 — A READ NAMING A DISCOVERABLE PROJECT'S OWN ID IS ANSWERED POSITIONALLY (Membership v2 §7, item
+   * 7.14, RULED 2026-09-23 by BOB #32, (a)).
+   *
+   * THE DEFECT. REC-149 refused every ACT at EXISTENCE positionally, and left every READ that names a project by id
+   * answering as for a project that does not exist ("Record reads do not widen"). So a member the directory had just
+   * shown a project to was told by `op=projectparticipants`, `op=image`, `op=projectvisibility` … that it does not
+   * exist — the record calling a project the record itself had just shown nonexistent. The ruling: a read naming the
+   * PROJECT'S OWN id answers exactly as an act does, C-70.1 through `#existenceAct` (the id and the name, nothing
+   * else); a read naming anything INSIDE the project answers exactly as today; `viewerPredicate` is unchanged.
+   *
+   * ONE DOOR, ONE TABLE. The check sits in `fetch`, before the route runs, rather than in thirty read methods: every
+   * read below is reached by exactly that door, so no read can answer a second thing. The table names, per read, the
+   * parameters that carry a BUNDLE id — the only parameters that can name a project. `#existenceAct` answers only
+   * when that id is a PROJECT the caller sees at EXISTENCE, so an id of anything inside a project (a bundle, a run, a
+   * draft), an absent id, a hidden project and every caller with full sight all fall through to the read unchanged.
+   * `PROJECT_NAMING_READS_NOT` names each read whose parameters name something that is never a bundle, with the
+   * reason, and `project-sight.test.mjs` §11 sweeps every id-carrying read op into exactly one of the two tables, so a
+   * new read cannot join the plane unclassified.
+   *
+   * COST, STATED: one indexed lookup on `project_sight` per named parameter of a stamped read, and `#sight` only for
+   * an id that row calls discoverable. A viewer never sent (an internal call) is not asked. */
+  static PROJECT_NAMING_READS = Object.freeze({
+    image: ["id"], file: ["id"], projection: ["id"], excludedby: ["id"], backlinks: ["target"],
+    reevaluations: ["target"], inquirystrength: ["id"], earnedbasis: ["id"], partitionindependence: ["id"],
+    narrowcandidates: ["target"], versionnotice: ["target"], basisversions: ["id", "project"],
+    versionstrength: ["id", "project"], strengthbarof: ["project", "target"], extractproposals: ["bundle"],
+    capturerequests: ["target"], tasks: ["refers"], biasmanifest: ["scopeId"], airuns: ["contextId"],
+    casedrafts: ["project"], gatefacts: ["id"], affordancefacts: ["target"],
+    projectownerarith: ["projectId"], projectvisibility: ["projectId"], projectparticipants: ["projectId"],
+    /* c22-batch29 (REC-196 x REC-150): REC-150's requests read names the project by its own id, so the door answers
+       C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
+    projectrequests: ["projectId"],
+  });
+  static PROJECT_NAMING_READS_NOT = Object.freeze({
+    content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
+    concerns: "`id` is an ENTITY id", connections: "`id` is an ENTITY id", instance: "`id` is an ENTITY id",
+    exceptions: "`id` is an ENTITY id", transcription: "`id` is a transcription's content id",
+    themeread: "`id` is a THEME id", leadread: "`id` is a LEAD id",
+    versionchain: "`address` is a normalised source address, never a bundle id",
+    airun: "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    airunlog: "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    airunspawn: "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    /* c22-batch29: `biasdebt` (REC-207, on main) reached REC-196's sweep only at this union. */
+    biasdebt: "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    reviewcopy: "`draft` is a DRAFT id — a thing inside a project, whose existence is contents",
+    casedocument: "`case` is a CASE id, answered by the case door's own fence",
+    reading: "`sha256` is a CAPTURE's digest", resolutions: "`sha256` is a CAPTURE's digest",
+    textattest: "`sha256` is a CAPTURE's digest", readingname: "`entity` is an ENTITY id",
+    entity: "`id` is an ENTITY id", relation: "`id` is a RELATION id", inboxget: "`id` is an INBOX item's id",
+    sourcereach: "`address` is a source address", captureprogressions: "`sha256` is a CAPTURE's digest",
+    verify: "`sha256` is a published artifact's digest",
+    publishedcase: "`id` is a PUBLISHED case — the published record, served to anybody",
+    publishededitions: "`id` is a PUBLISHED case — the published record, served to anybody",
+    caseflags: "`case` and `target` name a case and its member finding, every field already published",
+  });
+  #existenceRead(op, url, body) {
+    const params = Object.prototype.hasOwnProperty.call(Store.PROJECT_NAMING_READS, op)
+      ? Store.PROJECT_NAMING_READS[op] : null;
+    const viewer = url.searchParams.get("viewer");
+    if (!params || viewer === null) return null;
+    for (const p of params) {
+      const fromBody = body && typeof body === "object" && typeof body[p] === "string" ? body[p] : null;
+      for (const id of [url.searchParams.get(p), fromBody]) {
+        if (typeof id !== "string" || id === "") continue;
+        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=? AND setting='discoverable'`, id)) continue;
+        const existence = this.#existenceAct(id, viewer);
+        if (existence) return existence;
+      }
+    }
+    return null;
+  }
 
   /** REC-149 — THE SETTING, an OWNER'S recorded act (§7.14 "The setting"). Append-only: every act is a row with
    *  the owner, the date and an optional reason, and the current setting is the latest. Sight before position:
@@ -34735,11 +36014,10 @@ export class Store extends DurableObject {
         `whether ${String(projectId).slice(0, 80)} can be found is its OWNERS' choice (Membership Architecture `
         + `v2 §7.14), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one of them. Seeing a project `
         + `is not directing it. Nothing was written.`);
-    if (want !== "discoverable" && want !== "hidden")
-      return refusal("PROJECT_VISIBILITY_UNKNOWN_SETTING",
-        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and `
-        + `nothing else. Nothing was written.`);
     /* END DEC-49 REGION is-project-visibility-owner */
+    /* REC-197: the value check moved into ONE helper, which a creation's `visibility` asks too, so the two
+       doors cannot disagree about what a setting is. Still asked AFTER the owner check here, as before. */
+    { const unknown = this.#visibilitySettingRefusal(want, projectId); if (unknown) return unknown; }
     const why = reason === null || reason === undefined || String(reason).trim() === ""
       ? null : String(reason).slice(0, 280);
     const at = new Date().toISOString();
@@ -34749,7 +36027,34 @@ export class Store extends DurableObject {
        log that just gained a row. Never written from `want` directly — that would be the second copy of
        "the latest act wins", and it is the copy that would agree for free until the day the rule moved. */
     this.#reindexProjectSight(projectId);
-    return { ok: true, projectId, setting: want, set_by: by, reason: why, at };
+    /* REC-150 (§7.14, "The request to join"): SETTING A PROJECT HIDDEN LAPSES EVERY OPEN REQUEST TO IT, recorded as
+       lapsed with the owner who hid it and the same date — the closing fields written once, by the one statement
+       that moves an OPEN row (`WHERE state='open'`), so a request already answered or withdrawn is not rewritten.
+       Setting it discoverable again reopens nothing: a lapsed requester asks again, as after a decline. */
+    const lapsed = want === "hidden"
+      ? this.#lapseJoinRequests(projectId, by, at) : 0;
+    return { ok: true, projectId, setting: want, set_by: by, reason: why, at,
+             ...(want === "hidden" ? { requests_lapsed: lapsed } : {}) };
+  }
+
+  /* REC-197 — WHAT A SETTING IS, asked in ONE place by both doors that take one: the owner's act above and a
+     creation's `visibility` (`promote`, which a fork reaches through). "discoverable" or "hidden" and nothing
+     else, compared exactly — a spelling the vocabulary does not write is not quietly read as either. Null when
+     the value is a setting. `projectId` is echoed when the door has one (the owner's act); a creation has none. */
+  #visibilitySettingRefusal(value, projectId) {
+    const want = String(value ?? "");
+    const refusal = (code, detail) => {
+      const row = PROJECT_VISIBILITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               ...(projectId !== null ? { project: projectId } : {}) };
+    };
+    /* DEC-49 REGION is-project-visibility-setting */
+    if (want !== "discoverable" && want !== "hidden")
+      return refusal("PROJECT_VISIBILITY_UNKNOWN_SETTING",
+        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and `
+        + `nothing else. Nothing was written.`);
+    /* END DEC-49 REGION is-project-visibility-setting */
+    return null;
   }
 
   /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
@@ -34772,9 +36077,10 @@ export class Store extends DurableObject {
    *  else. A hidden project is never in it, so its absence here is one answer for "hidden" and "does not
    *  exist". Every row is asked through `#sight` — the one predicate — and listed only at EXISTENCE, so a
    *  project this caller can see fully (it is in it, or it is an administrator) is not listed as one to join.
-   *  THE REQUEST LIFECYCLE IS NOT BUILT (item 7.14's decomposition, step 2): no request can exist yet, so
-   *  `request` is null on every row and the answer says why rather than letting null read as a fact about the
-   *  caller. A viewer that names no member has no directory: it is refused by name, never answered empty. */
+   *  REC-150 BUILT THE REQUEST (item 7.14's decomposition, step 2): `request` is the state of the caller's own
+   *  latest request to that project, and null only where it has never asked — so null is now a fact about the
+   *  caller, and the `requests: "NOT_BUILT…"` field that said otherwise is gone. A viewer that names no member has
+   *  no directory: it is refused by name, never answered empty. */
   projectDirectory({ viewer = null, limit = null } = {}) {
     const gate = viewerPredicate(viewer);
     const member = gate.member;
@@ -34820,13 +36126,23 @@ export class Store extends DurableObject {
        So the page is over the VISIBLE set and the candidate read IS the visible set — D-479 had to walk
        because those were two different things. `ORDER BY b.bundle_id` keeps the order D-479's callers page by. */
     const cap = Math.max(1, Math.min(Number(limit) || Store.PROJECT_DIRECTORY_LIMIT, Store.PROJECT_DIRECTORY_LIMIT));
+    /* REC-150: `request` IS THE STATE OF THE CALLER'S OWN LATEST REQUEST to each listed project, or null where it
+       has never asked — joined in the SAME statement (the latest row of `project_join_requests` for this member and
+       this project, through its member index), so the page and its requests are one read and cannot disagree. Only
+       the caller's own row is joined: whose else has asked is not a fact the directory holds (§7.14: the requester,
+       the owners and administrators see a request, and nobody else). A GRANTED request never appears here — a
+       grant makes the caller a participant, and a participant has FULL sight, so the project leaves this list. */
     const projects = this.#rows(
-      `SELECT b.bundle_id AS id, b.title
+      `SELECT b.bundle_id AS id, b.title, r.state AS rstate, r.asked_at AS rasked, r.closed_at AS rclosed
          FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
+         LEFT JOIN project_join_requests r
+           ON r.seq = (SELECT MAX(r2.seq) FROM project_join_requests r2
+                        WHERE r2.member_id = ? AND r2.project_id = b.bundle_id)
         WHERE b.object_type = 'project' AND s.setting = 'discoverable' AND NOT (${gate.sql})
         ORDER BY b.bundle_id
-        LIMIT ?`, ...gate.args, cap + 1)
-      .map((r) => ({ id: r.id, name: r.title ?? null, request: null }));
+        LIMIT ?`, member, ...gate.args, cap + 1)
+      .map((r) => ({ id: r.id, name: r.title ?? null,
+                     request: r.rstate ? { state: r.rstate, asked: r.rasked, closed: r.rclosed ?? null } : null }));
     const truncated = projects.length > cap;
     /* CUT BY A SLICE AT THE PUBLISHED CAP rather than by shortening what was measured, which is
        `#contentAxisTally`'s spelling and D-369's readable one: the collection `truncated` was measured over
@@ -34838,9 +36154,7 @@ export class Store extends DurableObject {
                 whether more exists. A truncated answer is the FIRST `limit` discoverable projects this caller
                 is outside, in `bundle_id` order, and a caller who needs the rest lowers `limit` and asks
                 again from what it already holds — the order is stable, so a page means the same thing twice. */
-             limit: cap, truncated,
-             requests: "NOT_BUILT: the request to join is not built yet (Membership Architecture v2 §7.14, "
-                     + "step 2), so no request exists and `request` is null on every row." };
+             limit: cap, truncated };
   }
   /* D-479 — THE DIRECTORY'S PAGE SIZE (§7.14 "The directory"; SCHEDULER #17's finding on REC-149, 2026-09-24).
      A CHOSEN CONSTANT and never a finding: the directory's answer grows with the group's own record — every
@@ -34851,6 +36165,282 @@ export class Store extends DurableObject {
      teaches people to ignore it. It is a CEILING, not a target — a caller may ask for less and an over-ask is
      answered here, with the ceiling published, so nobody is told they got more than they did. */
   static PROJECT_DIRECTORY_LIMIT = 200;
+
+  /* ===== REC-150 — THE REQUEST TO JOIN (Membership v2 §7, item 7.14, "The request to join"; step 2 of its
+   * decomposition, on REC-149's EXISTENCE level) =====
+   *
+   * Bob, 2026-09-18: *"somebody who sees the project can ask to be added as a member"*. The lifecycle, and where
+   * each clause of the design lands:
+   *   ASK       `projectRequest` — a member SESSION at EXISTENCE sight (uninvited, active, not a participant), at
+   *             most ONE OPEN request per member per project, an optional short comment (§7.6's precedent). A
+   *             hidden project, or one the caller cannot see, is answered `#noSuchProject` byte for byte.
+   *   WITHDRAW  `projectRequestWithdraw` — the requester's own open request. After it they may ask again.
+   *   ANSWER    `projectRequestAnswer` — an OWNER's (§7.2: only owners invite). GRANT IS AN INVITATION: it writes
+   *             the participation `invited` with `invited_by` = the granting owner, exactly the row `projectInvite`
+   *             writes, and NEVER `joined` — joining is the member's own act by the checkbox (§7.4), and a grant
+   *             that wrote `joined` would make the owner's act the member's. DECLINE is recorded with an optional
+   *             comment. Administrators and the founder see requests (§7.3) and answer none.
+   *   LAPSE     `#lapseJoinRequests`, from `projectVisibilitySet` — setting a project HIDDEN lapses every open
+   *             request to it, recorded.
+   *   READ      `projectRequests` — a project's requests to its owners and administrators; with no project, the
+   *             caller's OWN requests, which it keeps sight of after a lapse, naming only what it already saw.
+   * The record is `project_join_requests` (schema.mjs, REC-150's block): append-only at the field. */
+  static JOIN_REQUEST_ANSWERS = ["grant", "decline"];
+  /* The member a request is ABOUT is the server-stamped `by` (PROJECT_ACTIONS), never a name the caller supplies;
+     a machine credential stamps `class:<cls>` and names nobody, so it resolves to no member and is refused. */
+  #activeMemberRow(memberId) {
+    if (memberId === null || memberId === undefined || String(memberId).startsWith(MACHINE_CLASS_PREFIX)) return null;
+    /* The FOUNDER is a person with no roster row (`#isAdminMember`'s first line), so C-95.1's "no member behind this
+       credential" would be FALSE about them — found by this suite's §1f on its first run. They are answered as the
+       person they are: at FULL sight, so the ask is C-95.2 like any administrator's. */
+    if (memberId === Store.ROOT_ADMIN) return { member_id: Store.ROOT_ADMIN, handle: null, status: "active" };
+    const m = this.#one(`SELECT member_id, handle, status FROM members WHERE member_id=?`, memberId);
+    return m && m.status === "active" ? m : null;
+  }
+  /* THE PERSON ASKING: the stamped `by` names an active member AND the stamped viewer names the SAME person — the
+     control plane stamps both from one session, so a disagreement is a caller that is not a member session (an
+     `ai` credential stamps its principal as viewer and `class:ai` as `by`) and asks nothing. The founder's viewer
+     is the bare `admin` (index.mjs, the founder's session), `viewerPredicate`'s operator spelling, so it is
+     matched by that spelling; every other member by `viewerPredicate`'s own parse, never a second one. */
+  #requester(by, viewer) {
+    const me = this.#activeMemberRow(by);
+    if (!me) return null;
+    if (me.member_id === Store.ROOT_ADMIN) return viewer === Store.ROOT_ADMIN ? me : null;
+    return viewerPredicate(viewer).member === me.member_id ? me : null;
+  }
+  /* C-95.1 and C-95.4 are each said at more than one act, so each is minted in ONE governed region and every act
+     RELAYS it (`#existenceOnly`'s shape): one row, one `where`, one place a translation can go missing. The DETAIL is
+     the act's own sentence, handed in; the code is the literal here. */
+  #joinRequestRefusal(code, projectId, detail, extra = {}) {
+    const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+             project: projectId ?? null, ...extra };
+  }
+  #noRequester(projectId, detail) {
+    const refusal = (code, d) => this.#joinRequestRefusal(code, projectId, d);
+    /* DEC-49 REGION is-join-request-member */
+    return refusal("PROJECT_REQUEST_NEEDS_A_MEMBER",
+      `${detail} A request to join is a PERSON's act: it is made, withdrawn and read back by the member who `
+      + `asked, signed in as themselves (Membership Architecture v2 §7.14), and a machine credential, the operator's `
+      + `bearer and the member bearer have nobody behind them to ask.`);
+    /* END DEC-49 REGION is-join-request-member */
+  }
+  #noOpenRequest(projectId, detail, extra = {}) {
+    const refusal = (code, d) => this.#joinRequestRefusal(code, projectId, d, extra);
+    /* DEC-49 REGION is-join-request-none-open */
+    return refusal("PROJECT_REQUEST_NONE_OPEN",
+      `${detail} A request is open until it is granted, declined, withdrawn, or lapsed by its project going `
+      + `hidden (Membership Architecture v2 §7.14), and each of those closes it for good; the member may ask `
+      + `again.`);
+    /* END DEC-49 REGION is-join-request-none-open */
+  }
+  #openJoinRequest(projectId, memberId) {
+    return this.#one(`SELECT seq, comment, asked_at FROM project_join_requests
+                       WHERE project_id=? AND member_id=? AND state='open'`, projectId, memberId);
+  }
+  /* THE ONE STATEMENT THAT CLOSES A REQUEST. Every terminal state is written here, and only an OPEN row moves:
+     the `WHERE state='open'` is what makes the closing fields write-once, so an answered request cannot be
+     answered twice and a withdrawn one cannot then be granted. Returns the number of rows closed. */
+  #closeJoinRequests(projectId, memberId, state, by, comment, at) {
+    const before = this.#one(`SELECT COUNT(*) AS n FROM project_join_requests
+                               WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
+      projectId, memberId, memberId).n;
+    this.sql.exec(`UPDATE project_join_requests SET state=?, closed_by=?, closed_comment=?, closed_at=?
+                    WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
+      state, by, comment, at, projectId, memberId, memberId);
+    return before;
+  }
+  #lapseJoinRequests(projectId, by, at) {
+    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at);
+  }
+  static #requestComment(comment) {
+    return comment === null || comment === undefined || String(comment).trim() === ""
+      ? null : String(comment).slice(0, 280);
+  }
+
+  /** REC-150 — ASK TO JOIN (§7.14 "Who may ask"). The one act a member at EXISTENCE may take. Sight decides
+   *  first and says nothing a caller did not already know: NONE (absent, hidden, or not a project the caller can
+   *  see) is `#noSuchProject` byte for byte; FULL (a participant, an administrator, the founder) is refused
+   *  positionally, since that caller can already see the project. Only at EXISTENCE is a request written. */
+  projectRequest({ projectId, comment = null, by, viewer = null } = {}) {
+    const refusal = (code, detail, extra = {}) => {
+      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               project: projectId ?? null, ...extra };
+    };
+    /* DEC-49 REGION is-join-request-ask */
+    /* A caller with no person behind it — a machine credential, or a viewer naming no member — asks nothing:
+       asked BEFORE sight, because it is a fact about the caller and says nothing about any project. */
+    const me = this.#requester(by, viewer);
+    if (!me)
+      return this.#noRequester(projectId,
+        "asking to join a project is a signed-in member's own act (Membership Architecture v2 §7.14). A "
+        + "credential with no active member behind it asks nothing. Nothing was written.");
+    /* Only a PROJECT is asked to join: any other bundle is visible to every member (§7.9: the evidence corpus
+       stays shared), so its sight would read FULL and misname it a project the caller is in. It is answered as
+       what it is — no project by that id — which is the absent answer, and true. */
+    const b = this.#one(`SELECT object_type, title FROM bundles WHERE bundle_id=?`, projectId);
+    const sight = b && b.object_type === "project" ? this.#sight(projectId, viewer) : Store.SIGHT_NONE;
+    if (sight === Store.SIGHT_NONE) return Store.#noSuchProject(projectId);
+    if (sight === Store.SIGHT_FULL)
+      return refusal("PROJECT_REQUEST_NOT_OUTSIDE",
+        "you can already see this project, so there is nothing to ask: a participant is already in it (an "
+        + "invited one joins by the checkbox, §7.4), and an administrator's sight of every project is not a "
+        + "position in any of them (§7.3). Nothing was written.");
+    const open = this.#openJoinRequest(projectId, me.member_id);
+    if (open)
+      return refusal("PROJECT_REQUEST_ALREADY_OPEN",
+        "you already have an open request to join this project. One is open at a time: withdraw it to ask "
+        + "again. Nothing was written.", { asked: open.asked_at });
+    /* END DEC-49 REGION is-join-request-ask */
+    const c = Store.#requestComment(comment);
+    const at = new Date().toISOString();
+    this.sql.exec(
+      `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
+       VALUES (?,?,?,?,?,'open')`, projectId, me.member_id, b.title ?? null, c, at);
+    return { ok: true, projectId, name: b.title ?? null, state: "open", comment: c, asked: at,
+             detail: "your request is open. The project's owners answer it; until they do it stays open." };
+  }
+
+  /** REC-150 — WITHDRAW (§7.14: "The requester may withdraw an open request"). The requester's own act on their
+   *  own record, so it asks no sight of the project: the request is what the caller names, and a caller with no
+   *  open request to that id is answered ONE way whether the project is discoverable, hidden or absent. */
+  projectRequestWithdraw({ projectId, by, viewer = null } = {}) {
+    const me = this.#requester(by, viewer);
+    if (!me)
+      return this.#noRequester(projectId,
+        "withdrawing a request to join is the requester's own act, and a credential with no active member "
+        + "behind it made none. Nothing was written.");
+    if (!this.#openJoinRequest(projectId, me.member_id))
+      return this.#noOpenRequest(projectId,
+        "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is "
+        + "the same whatever that id names. Nothing was written.");
+    const at = new Date().toISOString();
+    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at);
+    return { ok: true, projectId, state: "withdrawn", closed: at };
+  }
+
+  /** REC-150 — AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act: a member at
+   *  EXISTENCE gets C-70.1, a caller who cannot see the project the absent answer, and only then is ownership
+   *  asked — through `#isProjectOwner`, §7's one owner predicate, so an administrator, the founder and every
+   *  machine credential are refused by name. GRANT writes `invited`, with `invited_by` the granting owner — never
+   *  `joined` (§7.4: joining is the member's own act). DECLINE is recorded with the owner's optional comment. */
+  projectRequestAnswer({ projectId, handle, answer, comment = null, by, viewer = null } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }
+    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    const want = String(answer ?? "");
+    const refusal = (code, detail, extra = {}) => {
+      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               project: projectId, ...extra };
+    };
+    /* DEC-49 REGION is-join-request-answer */
+    if (!this.#isProjectOwner(projectId, by))
+      return refusal("PROJECT_REQUEST_ANSWER_NOT_THE_OWNER",
+        `a request to join ${String(projectId).slice(0, 80)} is answered by its OWNERS (Membership Architecture `
+        + `v2 §7.14; only owners invite, §7.2), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one `
+        + `of them. Administrators see requests and answer none. Nothing was written.`);
+    if (!Store.JOIN_REQUEST_ANSWERS.includes(want))
+      return refusal("PROJECT_REQUEST_UNKNOWN_ANSWER",
+        `${JSON.stringify(want.slice(0, 40))} is not an answer: a request is granted or declined, and nothing `
+        + `else. Nothing was written.`);
+    const target = this.#memberByHandle(handle);
+    const open = target ? this.#openJoinRequest(projectId, target.member_id) : null;
+    if (!open)
+      return this.#noOpenRequest(projectId,
+        `${JSON.stringify(String(handle ?? "").slice(0, 80))} has no open request to join this project, so there `
+        + `is nothing to answer. Nothing was written.`, { handle: handle ?? null });
+    if (want === "grant" && target.status !== "active")
+      return refusal("PROJECT_REQUEST_REQUESTER_INACTIVE",
+        `${JSON.stringify(target.handle)} is not an active member, and a grant is an invitation (§7.2), which `
+        + `goes to an active member. The request stays open. Nothing was written.`, { handle: target.handle });
+    if (want === "grant" && this.#participation(projectId, target.member_id))
+      return refusal("PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT",
+        `${JSON.stringify(target.handle)} is already a participant of this project, so a grant would invite `
+        + `nobody new. The request stays open: decline it, or the requester withdraws it. Nothing was written.`,
+        { handle: target.handle });
+    /* END DEC-49 REGION is-join-request-answer */
+    const c = Store.#requestComment(comment);
+    const at = new Date().toISOString();
+    if (want === "grant") {
+      /* THE SAME ROW §7.2's invitation writes (`projectInvite`): `invited`, not an owner, invited_by the owner
+         who granted. Joining stays the member's own act (§7.4), so this never writes `joined`. */
+      this.sql.exec(
+        `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
+         VALUES (?,?,'invited',0,?,?,?)`, projectId, target.member_id, by, at, at);
+    }
+    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at);
+    return { ok: true, projectId, handle: target.handle, state: want === "grant" ? "granted" : "declined",
+             comment: c, closed: at,
+             ...(want === "grant"
+               ? { participation: "invited",
+                   detail: "granted as an invitation: the member is INVITED, and joins by the checkbox (§7.4)." }
+               : {}) };
+  }
+
+  /** REC-150 — WHO SEES A REQUEST (§7.14): the requester (their own, always), the project's owners, and
+   *  administrators; not other participants, because a pending requester is not a participant (§7.8).
+   *  WITH `projectId`: that project's requests, to an owner or an administrator (the founder included), after
+   *  sight — at EXISTENCE C-70.1 (a read naming the project's own id, BOB #32's ruling (a)), without sight the
+   *  absent answer. WITHOUT it: the caller's OWN requests, every project and every state, each naming the project
+   *  by the id and the name the caller was shown when asking — so a request LAPSED by a project going hidden is
+   *  still the requester's to read, and names nothing they had not already seen. Its answering owner is NOT in
+   *  the requester's view: who owns a project is contents (§7.14 "DISCOVERABLE adds ONE thing"). */
+  projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {
+    /* BOUNDED, AND THE BOUND IS PUBLISHED — op=projectdirectory's shape (D-479), for the same reason: both lists
+       grow with the record and have no natural ceiling. §7.14 rules that a requester may ask again after every
+       decline or withdrawal ("ownership is the remedy for a nuisance, not a cooldown"), so a project's list grows
+       with every ask anyone ever made of it. `limit` is the cap APPLIED (the caller may LOWER it, not raise it);
+       `truncated` is MEASURED by reading one row past the cap, never derived from the page. The page is the FIRST
+       `limit` requests in the order they were made, so a page means the same thing twice. */
+    const cap = Math.max(1, Math.min(Number(limit) || Store.PROJECT_REQUESTS_LIMIT, Store.PROJECT_REQUESTS_LIMIT));
+    const refusal = (code, detail) => {
+      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               project: projectId ?? null };
+    };
+    if (projectId === null || projectId === undefined || projectId === "") {
+      const me = this.#requester(by, viewer);
+      if (!me)
+        return this.#noRequester(null,
+          "a member's own requests to join are read by that member, signed in. A credential with no active "
+          + "member behind it has made none.");
+      const mine = this.#rows(
+        `SELECT project_id AS project, project_name AS name, comment, state, asked_at AS asked,
+                closed_comment, closed_at AS closed
+           FROM project_join_requests WHERE member_id=? ORDER BY seq LIMIT ?`, me.member_id, cap + 1);
+      const mineCut = mine.length > cap;
+      const minePage = mineCut ? mine.slice(0, cap) : mine;
+      return { ok: true, own: true, requests: minePage, count: minePage.length, limit: cap, truncated: mineCut };
+    }
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }
+    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    /* DEC-49 REGION is-join-requests-project */
+    if (!this.#isProjectOwner(projectId, by) && !this.#isAdminMember(by))
+      return refusal("PROJECT_REQUESTS_NOT_VISIBLE",
+        "a project's requests to join are seen by the requester, the project's owners and administrators "
+        + "(Membership Architecture v2 §7.14), and not by other participants: a pending requester is not a "
+        + "participant (§7.8). Your own requests are read without naming a project.");
+    /* END DEC-49 REGION is-join-requests-project */
+    const theirs = this.#rows(
+      `SELECT m.handle, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
+              r.closed_comment, r.closed_at AS closed
+         FROM project_join_requests r JOIN members m ON m.member_id = r.member_id
+         LEFT JOIN members cb ON cb.member_id = r.closed_by
+        WHERE r.project_id=? ORDER BY r.seq LIMIT ?`, projectId, cap + 1);
+    const theirsCut = theirs.length > cap;
+    const theirsPage = theirsCut ? theirs.slice(0, cap) : theirs;
+    return { ok: true, own: false, projectId, requests: theirsPage, count: theirsPage.length, limit: cap,
+             truncated: theirsCut };
+  }
+  /* REC-150 — THE REQUESTS READ'S PAGE SIZE, a CHOSEN CONSTANT and never a finding, declared BELOW the method
+     (REC-116's finding) and `PROJECT_DIRECTORY_LIMIT`'s reasoning: a list a person reads to answer or to recall
+     their own asks, generous enough that a legitimate caller rarely meets it, published whenever it cuts. */
+  static PROJECT_REQUESTS_LIMIT = 200;
   /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
      Their positional half is `by`, and they have always been driven straight at the store by callers
      that are not requests (setup, fixtures, the store's own suites) — the same population
@@ -35046,11 +36636,17 @@ export class Store extends DurableObject {
    *  rather than calling its bytes absent. One bounded read on the
    *  `captured_locators_sha` index, and like `registered` it names no bundle.
    */
-  registerHolds({ sha = null } = {}) {
+  /*  D-556 (BOB #34, 2026-09-25 00:00Z) - AND, when the caller names the BUNDLE whose row it is gating, the
+   *  PARTS that bundle's record names for the hash (`#partsNamedFor`, D-533's reader, not a second one). The
+   *  ratify gate asks it on a whole-hash miss: a row held in parts is admitted when every part the record names
+   *  is present and verifies, and publication copies exactly those parts. The bundle's own register document is
+   *  read, so it names nothing the ratifier has not already been handed in the image. */
+  registerHolds({ sha = null, bundle = null } = {}) {
     const s = typeof sha === "string" && sha.trim()
       ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
     if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
-    return { ok: true, sha: s, asked: true, registered: !!this.#one(
+    const b = typeof bundle === "string" && bundle.trim() ? bundle.trim() : null;
+    return { ok: true, sha: s, asked: true, ...(b ? { parts: this.#partsNamedFor(b, s) } : {}), registered: !!this.#one(
       `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
         WHERE r.capture_sha = ? LIMIT 1`, s),
       acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s) };
@@ -35183,6 +36779,20 @@ export class Store extends DurableObject {
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT" };
     if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state };
+    /* REC-186 (BOB #31's ruling of 2026-09-23 21:37Z on Membership v2 §7.6 and §7.10): THE PROJECT'S ONLY
+       OWNER DOES NOT ASK TO LEAVE. An owner's request can be honoured only by the 7.10 removal (7.7 refuses
+       an owner, `OWNER`), and 7.10's floor refuses that removal at one owner, so a request from the last owner
+       would record a departure the record can never carry out — an overclaim. The floor is asked through the
+       SAME arithmetic `projectOwnerRemove`'s LAST_OWNER runs (`Store.ownerMath` over `#owners`), so the two
+       cannot disagree about who is last; a co-owner's request is recorded as before. Nothing is written. */
+    /* DEC-49 REGION is-leave-owner-floor — REC-186/C-33.48. */
+    const floor = p.owner ? Store.ownerMath(this.#owners(projectId).length) : null;
+    if (floor && !floor.possible)
+      return { ok: false, reason: "LAST_OWNER_CANNOT_LEAVE", owners: floor.owners,
+               detail: "you are this project's only owner, and one owner is the floor, so a request to leave "
+                     + "could never be carried out. Transfer ownership first: add another owner (7.10), then ask "
+                     + "to leave; or deactivate the project (7.11)." };
+    /* END DEC-49 REGION is-leave-owner-floor */
     const c = comment === null ? null : String(comment).slice(0, 280);
     this.sql.exec(`UPDATE project_participants SET state='leaving', comment=?, updated=? WHERE project_id=? AND member_id=?`,
       c, new Date().toISOString(), projectId, by);
@@ -35428,7 +37038,7 @@ export class Store extends DurableObject {
    *
    *  Origin is recorded as `derived_from`, already in the closed relationship
    *  vocabulary of State Rules 5.1, so nothing is added to it. */
-  forkProject({ projectId, newId, title, by, viewer = null } = {}) {
+  forkProject({ projectId, newId, title, by, viewer = null, visibility = null } = {}) {
     /* REC-141 / C-59.3: a fork's id is MINTED, as a new project's is (Membership v2 §7, BOB #15). A named
        `newId` is refused FIRST — before the origin, the participation or the id is looked up — so the
        answer is one answer whether the named id is taken or free, and it echoes no id. */
@@ -35526,6 +37136,9 @@ export class Store extends DurableObject {
     const promoted = this.promote({
       base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
       author: by, ownerMemberId: by,
+      /* REC-197 (§7.14, BOB #32 (b)): the FORKER's choice, decided and recorded by `promote` exactly as a
+         creation's — a fork is a creation (§7.12) and does NOT inherit the origin's setting. Absent is HIDDEN. */
+      visibility,
       files: [{ path: "bundle.md", text, bytes: fbytes.length,
                 sha256: createSha256().update(fbytes).hex() }, ...carried],
       /* D-436: no `group` here — this was an unconditional literal. The fork is a CREATION, so `promote` stamps the
@@ -35535,7 +37148,8 @@ export class Store extends DurableObject {
     });
     if (!promoted.ok) return promoted;
     return { ok: true, projectId, newId: promoted.bundleId, title, origin: projectId, rel: "derived_from",
-             owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha };
+             owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha,
+             visibility: promoted.visibility };   /* REC-197: read back from the record by `promote` */
   }
 
   /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same
@@ -36017,10 +37631,23 @@ export class Store extends DurableObject {
     if (by === null || by === undefined || by === "") return null;
     if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
     if (this.#activeAdmins().includes(by)) return null;
-    return { ok: false, reason: "NOT_AN_ADMIN", by,
-             detail: `${act} is an administrator's act (4.9), and the plane stamps who is asking from the `
-                   + "signed-in session rather than taking it from the caller. This caller is not one of "
-                   + "the active administrators." };
+    /* D-134 / C-96.1: the canned translation rides beside the detail (DEC-49). */
+    const refusal = (code, detail, extra) => Store.#custodialRefusal(code, detail, extra);
+    /* DEC-49 REGION is-custodial-admin */
+    return refusal("NOT_AN_ADMIN",
+      `${act} is an administrator's act (4.9), and the plane stamps who is asking from the `
+    + "signed-in session rather than taking it from the caller. This caller is not one of "
+    + "the active administrators.", { by });
+    /* END DEC-49 REGION is-custodial-admin */
+  }
+
+  /* D-134 / DEC-49 — THE CUSTODIAL ACTS' REFUSALS, BUILT FROM C-96's ROWS. `reason` AND `code` carry the
+   * same literal, `#leadRefusal`'s precedent: every existing caller reads `reason`, the guard and the
+   * surfaces read `code`. The code is a STRING LITERAL at each call site, never a variable. */
+  static #custodialRefusal(code, detail, extra) {
+    const row = CUSTODIAL_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+             ...(extra || {}), detail };
   }
 
   /* REC-159: the stored actor, or the stated absence of one. */
@@ -36098,8 +37725,10 @@ export class Store extends DurableObject {
        appears exactly once, here, as it does for any other invitation. */
     const invite = Store.#rand(16);
     const hash = await Store.#sha256(invite);
-    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, updated=? WHERE member_id=?`,
-      hash, now, memberId);
+    /* D-610 (BOB #35, 2026-09-25): the transition is the act of the administrator whose vote COMPLETED
+       the consensus, so `status_by` names `by` — not the proposer the row carried from `memberAdd`. */
+    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, status_by=?, updated=? WHERE member_id=?`,
+      hash, by, now, memberId);
     return { ok: true, memberId, invite, endorsedBy: have.sort() };
   }
 
@@ -36120,7 +37749,15 @@ export class Store extends DurableObject {
                      + "hosting account. The remedy is at the hosting account, not here (section 4.6)." };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.role !== "admin") return { ok: false, reason: "NOT_AN_ADMIN", detail: "this member is not an administrator" };
+    /* D-134: the TARGET is not an administrator — a different fact from the CALLER not being one, which is
+       what NOT_AN_ADMIN says at every other site, so it carries its own code and its own canned sentence. */
+    const refusal = (code, detail, extra) => Store.#custodialRefusal(code, detail, extra);
+    /* DEC-49 REGION is-remove-target-admin */
+    if (m.role !== "admin")
+      return refusal("TARGET_NOT_AN_ADMIN",
+        "this member is not an administrator, so there is no administrator to remove; an ordinary member "
+      + "is deactivated with op=memberset", { memberId });
+    /* END DEC-49 REGION is-remove-target-admin */
     const admins = this.#activeAdmins();
     if (memberId === by) return { ok: false, reason: "TARGET_CANNOT_VOTE",
       detail: "the target is counted in the denominator but does not vote" };
@@ -36149,9 +37786,11 @@ export class Store extends DurableObject {
 
     /* Carried. Revocation is immediate and takes sessions and signing keys with
        it, exactly as an ordinary revocation does. */
-    this.sql.exec(`UPDATE members SET status='revoked', updated=? WHERE member_id=?`, now, memberId);
+    /* D-610 (BOB #35, 2026-09-25): the removal is recorded under the administrator whose vote CARRIED
+       it, and the cascade onto the member's keys names the same actor, as `memberSet`'s does (REC-159). */
+    this.sql.exec(`UPDATE members SET status='revoked', status_by=?, updated=? WHERE member_id=?`, by, now, memberId);
     this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-    this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
+    this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by, memberId);
     return { ok: true, memberId, removed: true, ...math,
              deciders: votes.map((v) => v.voter).sort(), reasons: votes.map((v) => v.reason).filter(Boolean),
              alsoDo: "removing an administrator in the application is half of an ejection. The other half is "
@@ -36166,27 +37805,33 @@ export class Store extends DurableObject {
     /* `name` is still read, because an older caller may send it, but the field
        is a cover and the response says so. */
     const label = typeof cover === "string" && cover.trim() ? cover : name;
+    /* D-134: C-55's row answers as it always did; every other refusal here is C-96's (DEC-49). */
+    const refusal = (code, detail, extra) => {
+      if (!(code in MEMBER_ID_CHECKS)) return Store.#custodialRefusal(code, detail, extra);
+      const row = MEMBER_ID_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, memberId };
+    };
+    /* DEC-49 REGION is-member-add-id */
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
-      return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+      return refusal("BAD_MEMBER_ID", "lowercase letters, digits and dashes, 2 to 41 characters");
+    /* END DEC-49 REGION is-member-add-id */
     /* REC-132 / D-422 / C-55.1: the founder's name is not an id anybody else may hold.
        The pattern above admits it and nothing else reserved it, so a member enrolled as
        `admin` would have been read as the founder by every name-keyed check
        (`#isAdminMember`, `#activeAdmins`). Refused BEFORE the EXISTS test and before
        anything is written, whoever asks and whatever role is asked for. */
-    const refusal = (code, detail) => {
-      const row = MEMBER_ID_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, memberId };
-    };
     /* DEC-49 REGION is-member-id-reserved */
     if (memberId === Store.ROOT_ADMIN)
       return refusal("MEMBER_ID_RESERVED",
         `'${Store.ROOT_ADMIN}' names this instance's founding administrator; no member may be enrolled under it`);
     /* END DEC-49 REGION is-member-id-reserved */
+    /* DEC-49 REGION is-member-add-shape */
     if (!label || typeof label !== "string")
-      return { ok: false, reason: "NO_COVER",
-               detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name" };
+      return refusal("NO_COVER",
+        "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name");
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return { ok: false, reason: "EXISTS", memberId };
+      return refusal("EXISTS", `a member row already holds the id '${memberId}'; nothing was written`, { memberId });
+    /* END DEC-49 REGION is-member-add-shape */
 
     /* D-51. v1.4 let an administrator ASSIGN expertise when creating the
        invitation, and v2 1.3 forbids exactly that: a member declares what they
@@ -36210,11 +37855,13 @@ export class Store extends DurableObject {
        at the earliest moment it is possible to satisfy them, and it is a refusal
        rather than a nudge because an ordinary member added first is a group with
        a single point of failure that nobody notices until it fails. */
+    /* DEC-49 REGION is-admins-first */
     if (!wantAdmin && admins.length < 2)
-      return { ok: false, reason: "ADMINS_FIRST", administrators: admins.length,
-               detail: "the second member of a group must be an administrator, and there are no ordinary "
-                     + "members until two exist. Administrative access is shared among at least two people "
-                     + "so that losing one person does not lose the group." };
+      return refusal("ADMINS_FIRST",
+        "the second member of a group must be an administrator, and there are no ordinary "
+      + "members until two exist. Administrative access is shared among at least two people "
+      + "so that losing one person does not lose the group.", { administrators: admins.length });
+    /* END DEC-49 REGION is-admins-first */
 
     const caps = Array.isArray(capabilities) ? capabilities.filter((c) => Store.CAPABILITIES.includes(c))
                                              : ["contribute"];
@@ -36225,11 +37872,13 @@ export class Store extends DurableObject {
        needs the consensus of all existing administrators: without that, a
        captured administrator recruits confederates and manufactures the majority
        that ejects the honest ones. */
+    /* D-134 (BOB #35): the stamped actor is the INVITER, on every path. */
+    const inviter = by || null;
     if (wantAdmin && admins.length >= 2) {
       this.sql.exec(
-        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
-         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?)`,
-        memberId, label, JSON.stringify(caps), expertise ?? null, now, now);
+        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated,status_by,invited_by)
+         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?,?,?)`,
+        memberId, label, JSON.stringify(caps), expertise ?? null, now, now, by || null, inviter);
       /* REC-156: `by` is the control plane's STAMP, relayed from the query by the
          dispatch and never taken from the caller's body — so this row is the
          PROPOSER'S own endorsement. The founder's session is stamped `admin`; a
@@ -36239,22 +37888,25 @@ export class Store extends DurableObject {
           memberId, by, now);
       const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId)
         .map((r) => r.voter).filter((v) => admins.includes(v));
-      return { ok: false, reason: "CONSENSUS_REQUIRED", memberId, proposed: true,
-               have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort(),
-               detail: "adding an administrator beyond the second requires the consensus of every existing "
-                     + "administrator. No invitation is issued until they have all endorsed it." };
+      /* DEC-49 REGION is-admin-consensus */
+      return refusal("CONSENSUS_REQUIRED",
+        "adding an administrator beyond the second requires the consensus of every existing "
+      + "administrator. No invitation is issued until they have all endorsed it.",
+        { memberId, proposed: true, have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort() });
+      /* END DEC-49 REGION is-admin-consensus */
     }
 
     const invite = Store.#rand(16);
     const hash = await Store.#sha256(invite);
     this.sql.exec(
-      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
-       VALUES (?,?,NULL,?,?,?,?,?,?,?)`,
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated,status_by,invited_by)
+       VALUES (?,?,NULL,?,?,?,?,?,?,?,?,?)`,
       memberId, label, wantAdmin ? "admin" : "member", "invited", hash,
-      JSON.stringify(caps), expertise ?? null, now, now);
+      JSON.stringify(caps), expertise ?? null, now, now, by || null, inviter);
     /* The plaintext invite appears exactly once, here, for handing to the
        person. It is never readable again. */
-    return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps };
+    return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps,
+             invited_by: Store.#statusBy(inviter) };
   }
 
   /* An invitation is a BURNER: the token in the URL is the whole credential, and
@@ -36324,8 +37976,10 @@ export class Store extends DurableObject {
        would teach a caller to try. Section 6: already attached, not editable.
        The invite hash is cleared, so the burner URL resolves to nothing
        afterwards and a leaked or archived link is inert. */
-    this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, updated=? WHERE member_id=?`,
-      h, new Date().toISOString(), m.member_id);
+    /* D-610 (BOB #35, 2026-09-25): enrolment is the MEMBER'S own act, so `status_by` names them and no
+       longer carries the inviter's stamp onto a status the inviter did not set. */
+    this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, updated=? WHERE member_id=?`,
+      h, m.member_id, new Date().toISOString(), m.member_id);
     return { ok: true, memberId: m.member_id, handle: h };
   }
 
@@ -36366,10 +38020,11 @@ export class Store extends DurableObject {
        pairing rather than leaking it. */
     const pairs = administer === true || administer === "1";
     return { members: this.#rows(
-      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, capabilities, created, updated,
+      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, invited_by, capabilities, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
        FROM members ORDER BY member_id`).map((r) => ({ ...r, capabilities: this.#capsOf(r),
          status_by: Store.#statusBy(r.status_by),   /* REC-159: who set the status, or `not recorded` */
+         invited_by: Store.#statusBy(r.invited_by), /* D-134 (BOB #35): who invited them, or `not recorded` */
          /* D-51: served from `member_expertise`, not from the dead column on
             this row. Two places answering the same question, one of them never
             updated, is the shape that produces a roster nobody can trust. */
@@ -36387,11 +38042,14 @@ export class Store extends DurableObject {
        Revoking an administrator IS taking it away, so it goes through the
        section 4.7 vote or it does not happen. This is what stops an instance
        being captured by whoever acts first in a dispute. */
+    const refusal = (code, detail, extra) => Store.#custodialRefusal(code, detail, extra);   /* D-134 / C-96 */
+    /* DEC-49 REGION is-admin-requires-vote */
     if (m.role === "admin" && status === "revoked")
-      return { ok: false, reason: "ADMIN_REQUIRES_VOTE",
-               detail: "an administrator is removed by a majority of all administrators, counting the target "
-                     + "in the denominator but not letting them vote (section 4.7). No administrator may strip "
-                     + "another unilaterally." };
+      return refusal("ADMIN_REQUIRES_VOTE",
+        "an administrator is removed by a majority of all administrators, counting the target "
+      + "in the denominator but not letting them vote (section 4.7). No administrator may strip "
+      + "another unilaterally.");
+    /* END DEC-49 REGION is-admin-requires-vote */
     /* 4.9: reactivating a former administrator must NOT restore their
        administrator status.
      *
@@ -36499,8 +38157,11 @@ export class Store extends DurableObject {
     /* REC-159: the roster first, before the key is judged or the member looked up. */
     const barCust = this.#custodialBar(by, "registering a signing key");
     if (barCust) return barCust;
+    const refusal = (code, detail, extra) => Store.#custodialRefusal(code, detail, extra);   /* D-134 / C-96 */
+    /* DEC-49 REGION is-signer-key-shape */
     if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
-      return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
+      return refusal("BAD_KEY", "expected the base64 field of an ssh-ed25519 public key");
+    /* END DEC-49 REGION is-signer-key-shape */
     /* D-158: this asked only whether the member EXISTED, where the gate asks
        whether their membership is ACTIVE. `NO_SUCH_MEMBER` is unchanged and still
        arrives first — it is inside the bar, on the same lookup, so two different
@@ -36612,6 +38273,14 @@ export class Store extends DurableObject {
       /* MK-1 (A): whether this bundle IS, or RESTS ON, a member's authored
          observation — the publication fence's one fact (C-53.10/.11). */
       testimony: this.testimonyReach([bundleId]),
+      /* MK-7: which of the observations this bundle is or rests on still name their author in their own
+         files (§4.1 keeps those fenced), and — for an observation — whether a RATIFIED case document states a
+         chosen level for it, which its words may not cross without. */
+      testimonyLegacy: (() => {
+        const t = this.testimonyReach([bundleId]);
+        return this.observationsNamingAuthor([...t.self, ...t.via.map((v) => v.observation)]);
+      })(),
+      attributionStated: this.attributionStatedFor(bundleId),
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`, bundleId).map((r) => r.target_id),
@@ -37751,11 +39420,17 @@ export class Store extends DurableObject {
         if (st) { theCase = null; ed = r.edition; state = st; }
       }
     }
-    if (!state)
+    /* D-561 (C-98.8): THE CODE CARRIES ITS CANNED TRANSLATION, attached on the wire by the control plane's
+       `json()` (`dec49Attach`, by code), so the return below is BYTE-IDENTICAL: civicos-ui's
+       preauth-vocabulary suite reads this sentence out of this file by its exact shape. */
+    if (!state) {
+      /* DEC-49 REGION is-not-published */
       return { ok: false, reason: "NOT_PUBLISHED",
                detail: "no published edition answers to that. A case that was never published, an edition "
                      + "that does not exist and an id that never existed are one answer here, because the "
                      + "published projection is the only thing this read can see." };
+      /* END DEC-49 REGION is-not-published */
+    }
 
     /* Every edition of this CASE, so a reader holding an older one learns that a
        newer one exists WITHOUT this surface deciding on their behalf that the
@@ -38326,6 +40001,68 @@ export class Store extends DurableObject {
    *  inquiry invisible -> the whole answer withheld as an absent one; a TARGET
    *  the viewer may not see -> dropped from the registry, with the fact that
    *  something was dropped stated and NO id and NO count leaked. */
+  /** REC-220 — WHICH VERSION EACH LEG RESTS ON, AND WHETHER THE RECORD CAN SAY (Bob, 2026-09-25 00:40Z,
+   *  rule 1). Sets `version` on every leg onto a DOCUMENT, in place, from the leg's own BYTES:
+   *
+   *    `pinned`        the bytes name the capture — `extent_capture` (written by op=cite at the act since
+   *                    REC-220, or by op=narrow, or by the author) or a `content_id` (a hash over its
+   *                    capture). `by` says which. This is a fact the record holds.
+   *    `only_capture`  no pin, and the record holds exactly ONE capture of the document: there is only one
+   *                    version the leg can rest on.
+   *    `undetermined`  no pin, and the record holds SEVERAL captures. The leg's content row is about the
+   *                    capture the resolver answered when the question was first projected, carried
+   *                    forward since in a DERIVED table (REC-82) — not a record of which bytes the member
+   *                    read. That row's capture is named as `resolved_capture`, and it is never back-filled
+   *                    into the leg by guess.
+   *
+   *  A leg onto a question (no bytes, DEC-21) or one whose document the record holds no capture of gets
+   *  no `version`; its `null_case` already says which. TWO set-based reads, never one per leg (the
+   *  derivation-bounds class): the document's bytes once, one grouped count per CHUNK of targets, one content read per chunk of ids. */
+  #legVersions(id, legs) {
+    const docs = legs.filter((l) => normalizeType(l.target_type) === "information");
+    if (!docs.length) return;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+    const bytesLegs = md && md.content !== null ? (parseFrontmatter(md.content).data?.basis || []) : [];
+    /* CHUNKED under D-36's ~100-variable ceiling (the store's own `SELECTION_ID_CHUNK`): the count names
+       each chunk TWICE (both halves of the union), so it takes half a chunk at a time. */
+    const targets = [...new Set(docs.map((l) => l.target))];
+    const held = new Map();
+    const half = Math.floor(Store.SELECTION_ID_CHUNK / 2);
+    for (let i = 0; i < targets.length; i += half) {
+      const part = targets.slice(i, i + half), qs = part.map(() => "?").join(",");
+      for (const r of this.#rows(
+        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n FROM (
+           SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${qs})
+           UNION ALL
+           SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${qs}))
+         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, r.n);
+    }
+    const cids = [...new Set(docs.map((l) => l.content_id).filter(Boolean))];
+    const capOf = new Map();
+    for (let i = 0; i < cids.length; i += Store.SELECTION_ID_CHUNK) {
+      const part = cids.slice(i, i + Store.SELECTION_ID_CHUNK);
+      for (const r of this.#rows(
+        `SELECT content_id, capture_sha FROM content WHERE content_id IN (${part.map(() => "?").join(",")})`,
+        ...part)) capOf.set(r.content_id, r.capture_sha);
+    }
+    for (const l of docs) {
+      const n = held.get(l.target) || 0;
+      if (!n) continue;
+      const bl = bytesLegs[l.ord] && typeof bytesLegs[l.ord] === "object" && bytesLegs[l.ord].target === l.target
+        ? bytesLegs[l.ord] : {};
+      const cap = l.content_id ? capOf.get(l.content_id) ?? null : null;
+      const pin = typeof bl.extent_capture === "string" && bl.extent_capture.trim() ? "extent_capture"
+                : legContentId(bl) ? "content_id" : null;
+      l.version = pin ? { state: "pinned", by: pin, capture: cap }
+                : n === 1 ? { state: "only_capture", capture: cap }
+                : { state: "undetermined", resolved_capture: cap, captures_held: n,
+                    detail: `the record holds ${n} captures of ${l.target} and this leg's bytes name none of `
+                          + `them, so which version it was made against is undetermined. The capture named is `
+                          + `the one the record resolved when this question was first projected; it is not `
+                          + `a record of what the member read, and nothing here moves it` };
+    }
+  }
+
   earnedBasis({ id, targets = null, viewer = null } = {}) {
     if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
     if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
@@ -38419,6 +40156,7 @@ export class Store extends DurableObject {
        from `ensureLegContent`, which is where the distinction is decided, and
        is carried here rather than re-derived. A leg still NULL with no case
        named is one the bound above did not reach, and that is said too. */
+    this.#legVersions(id, legs);
     for (const l of legs) {
       if (l.content_id) continue;
       if (!l.null_case && !l.why_no_content) {
@@ -38520,13 +40258,25 @@ export class Store extends DurableObject {
        `test/frontier-chunk.test.mjs`. `json_each(?)` is this file's own precedent (the authored-capture read)
        and binds ONE variable whatever the list's length. Not chunked, because a loop around the read hides
        its row source from `derivation-bounds.test.mjs`'s reader while the per-row work is unchanged. */
+    /* D-598 (BOB #34, 2026-09-25 03:00Z; BIO_Publication_v0_1.md §3 rule 5): EACH ENTRY IS KEYED ON ITS
+       OBJECT TYPE, because C-21.2's inheritance rule applies to published INQUIRIES only. A document or an
+       observation published as a case's EVIDENCE (D-431(b)) sits in `published_bundles` beside the findings
+       and freezes no strength of its own, so a registry that did not say which was which read every
+       evidence document as a published finding and forced every later leg on it to `grade_source:
+       inherited` — from nothing. The type is read from `bundles`, the record's own row, never from a
+       caller; a published row with no `bundles` row answers `object_type: null`, UNDETERMINED, and
+       checkInheritedLeg holds the inquiry rule over it rather than guessing it is evidence. The key is
+       carried rather than the non-inquiries dropped because `publishedTargets` serves this same registry
+       to the public read path, where a published evidence document is still a leg the page can SERVE. */
     const rows = this.#rows(
-      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, strength
-       FROM published_bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, edition`,
+      `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.strength, b.object_type
+       FROM published_bundles p LEFT JOIN bundles b ON b.bundle_id = p.bundle_id
+       WHERE p.bundle_id IN (SELECT value FROM json_each(?)) ORDER BY p.bundle_id, p.edition`,
       JSON.stringify(ids));
     const reg = {};
     for (const r of rows) {
-      const e = reg[r.bundle_id] || (reg[r.bundle_id] = { latest: 0, editions: {} });
+      const e = reg[r.bundle_id]
+        || (reg[r.bundle_id] = { object_type: r.object_type ?? null, latest: 0, editions: {} });
       const strength = r.strength ? JSON.parse(r.strength) : null;
       const byAxis = {};
       for (const a of Array.isArray(strength) ? strength : [])
@@ -38775,13 +40525,43 @@ export class Store extends DurableObject {
    *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
-  renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
+  renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null }) {
     const now = at || stampInstant("second");
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
     /* CEILED, never floored: a reservation rounded DOWN is a reservation short of the cost it
        stands for, which is the direction that overruns. */
     const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
+    /* D-520 — THE CONCURRENCY CAP, decided BEFORE the allowance and taking nothing from it.
+       Residue (2) above was that the allowance is an ACCOUNT and nothing capped how many
+       renders run at once; this is the throttle. A render over the cap is `waiting`, a THIRD
+       state and not a deferral: the day's allowance may have plenty of room, and a member
+       told "deferred" would read the allowance as spent. Nothing is reserved and nothing is
+       counted against the day for it, so the caller can ask again as soon as a slot frees —
+       the unattended drain does exactly that, holding the row under C-83.8 and asking again
+       on its next tick (BOB #33: over the cap a render WAITS, never dropped).
+
+       SLOTS EXPIRE, and the expiry is the reservation: a render admitted at T with reservation
+       R holds its slot until it reports or until T + R, the most time the asked environment
+       permits it. Without the expiry a render that never reports (a Worker that died) would
+       hold a slot for ever, and `cap` of them would stop every render on the instance. WHAT
+       THE EXPIRY CANNOT SEE: a renderer that overruns its asked bounds is still running when
+       its slot is reclaimed, so for that overrun one more render than the cap can be in the
+       browser — residue (1)'s shape, the renderer's time being its own claim.
+
+       A caller that names no cap is ADMITTED WITHOUT ONE, which is the one place this does
+       not fail closed, and on purpose: the reservation above already fails closed, and the
+       cap is a throttle whose absence costs throughput, never the record. The one caller
+       (`src/index.mjs`) passes `renderConcurrencyCap(env)`. */
+    const capN = Number.isInteger(Number(cap)) && Number(cap) > 0 ? Number(cap) : null;
+    const nowMs = Date.parse(now);
+    if (capN !== null) {
+      if (Number.isFinite(nowMs)) this.sql.exec(`DELETE FROM render_slots WHERE expires_ms <= ?`, nowMs);
+      const running = [...this.sql.exec(`SELECT COUNT(*) AS n FROM render_slots`)][0].n;
+      if (running >= capN)
+        return { state: "waiting", day, cap: capN, running, reserve_ms: reserve,
+                 why: `${running} renders are running and this instance runs at most ${capN} at once` };
+    }
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
     const spent = cur ? cur.spent_ms : 0;
     const reserved = cur ? (cur.reserved_ms || 0) : 0;
@@ -38803,8 +40583,14 @@ export class Store extends DurableObject {
       return defer(null);
     if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
     else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
+    /* D-520: the slot, taken in the SAME serialised step as the reservation, so no second
+       admission can read the count between the check above and this write. */
+    const slot = crypto.randomUUID();
+    this.sql.exec(`INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
+                  slot, now, (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve);
     return { state: "admitted", day, spent_ms: spent, reserved_ms: reserved + reserve, reserve_ms: reserve,
-             allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0 };
+             allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0,
+             slot, cap: capN };
   }
 
   /** Add the browser time one render REPORTED, and RELEASE the reservation `renderAdmit` took
@@ -38820,7 +40606,12 @@ export class Store extends DurableObject {
    *  under-used, which is the direction that cannot overrun, and `reserved_ms` says how much is
    *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
    *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
-  renderSpend({ ms, releaseMs = 0, at = null }) {
+  renderSpend({ ms, releaseMs = 0, slot = null, at = null }) {
+    /* D-520: THE SLOT IS GIVEN BACK ON EVERY PATH, including the unreported one. The slot
+       counts renders RUNNING, and a render that has come back to this op — with a time or
+       without one — is not running; the day's reservation is a different question and keeps
+       D-492's answer below. */
+    if (typeof slot === "string" && slot) this.sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
     const now = at || stampInstant("second");
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
@@ -39007,7 +40798,10 @@ export class Store extends DurableObject {
    * ------------------------------------------------------------------ */
 
   recordCapturedLocator({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null,
-                          authorityKind = null, authority = null, actorClass = "plane", actor = null }) {
+                          authorityKind = null, authority = null, actorClass = "plane", actor = null,
+                          /* D-455: false only for a caller that writes its OWN look for this
+                             act (the monitor's), so one look is one row. */
+                          observe = true }) {
     if (!addressNorm || !captureSha) return { recorded: false };
     /* ================================================================ *
      * REC-93 — THE DOCUMENT-LEVEL OBSERVATION, AND §7'S EDGE-TRIGGERED RULE.
@@ -39077,7 +40871,7 @@ export class Store extends DurableObject {
        one, because a first look and a transition are the two things a frontier
        cannot be reconstructed without. */
     let observed = null, wrote = false;
-    if (detail !== "unchanged") {
+    if (detail !== "unchanged" && observe !== false) {
       observed = this.#observe({
         actorClass, actor,
         /* The archive fallback and a direct acquire are DIFFERENT AUTHORITIES
@@ -39548,6 +41342,181 @@ export class Store extends DurableObject {
              why: `${describeExtent(extent)} exists in the newer capture as the record holds it` };
   }
 
+  /* ======================================================================
+   * REC-221 — DOES THE NEWER VERSION AFFECT THE REFERENCED PART? GRADED, NOT GUESSED.
+   *
+   * Bob, 2026-09-25 00:40Z, rule 2: a member is notified only when the update
+   * touches the referenced PART, and where the record cannot tell it says
+   * UNDETERMINED rather than staying silent. §5.8 of CONTENT-EXTENT-DESIGN-SPACE
+   * names the grades the record may DERIVE across two captures: A, byte-identical
+   * text at the extent; B, identical text at a new position; C, similar text,
+   * flagged. This build adds the two answers a derivation must also be able to
+   * give: NOT FOUND (the newer capture's text is held WHOLE and the passage is not
+   * in it) and UNDETERMINED, always with its reason.
+   *
+   * WHAT IS COMPARED IS THE TEXT THE RECORD HOLDS NOW FOR BOTH CAPTURES, in
+   * `capture_text` (the one per-unit text store, CONTENT-SEARCH-DESIGN.md §4.1),
+   * never the extent's existence. REC-82's extent test says only that page 3
+   * EXISTS in the newer capture; a publisher who rewrote page 3 leaves that test
+   * holding, and a grade read off it would be the silence rule 2 forbids.
+   *
+   * THE GRADE IS ADDITIVE TO THE ANSWER, and `state`/`matched` are unchanged: a
+   * surface already rendering them reads what it read before.
+   *
+   * THE ASYMMETRY IS THE DESIGN. A and B say UNAFFECTED only on POSITIVE evidence
+   * (the identical text was found). NOT FOUND is said only where the newer text is
+   * held whole (its index PRESENT, no unit truncated) — an index cut at a bound,
+   * or a capture nobody read, is UNDETERMINED, because "not in the part we read"
+   * is not "not in the document". A cited unit the record holds no text for is
+   * UNDETERMINED, never A: an extent that exists with no text to compare is not a
+   * passage carried forward.
+   *
+   * THE SIMILARITY FLOOR ONLY SEPARATES C FROM NOT FOUND, AND BOTH ARE AFFECTED,
+   * so it cannot move whether anyone is notified. It is a word-multiset Dice
+   * coefficient (case-folded letters and digits), chosen for being order-free and
+   * cheap; 0.7 is provisional, this worker's, and says only which of two AFFECTED
+   * words a member reads.
+   * ====================================================================== */
+
+  /** The five grades, what each means for the referenced part, and the sentence a
+   *  member reads. The vocabulary travels with the answer (PL-17). */
+  static VERSION_NOTICE_GRADES = {
+    A: { affects: "unaffected",
+         says: "the passage's text is byte-identical at the same extent of the newer version" },
+    B: { affects: "unaffected",
+         says: "the passage's text is byte-identical in the newer version, at a different position" },
+    C: { affects: "affected",
+         says: "text SIMILAR to the passage is in the newer version, and it is not identical: the passage changed" },
+    NOT_FOUND: { affects: "affected",
+         says: "the newer version's text is held whole, and neither the passage nor text similar to it is in it" },
+    UNDETERMINED: { affects: "undetermined",
+         says: "whether the change touches your passage is UNDETERMINED; the reason says what the record lacks" },
+  };
+  /** Word-multiset Dice at or above which differing text is C rather than NOT FOUND. */
+  static VERSION_NOTICE_SIMILAR = 0.7;
+
+  /** The latest text-index outcome for a capture (`#observeIndexed`'s row), or null. */
+  #indexStateOf(captureSha) {
+    return this.#one(
+      `SELECT state FROM observation_log WHERE level='content' AND subject_kind='capture' AND subject=?
+         AND authority_kind='derive' ORDER BY seq DESC LIMIT 1`, captureSha)?.state ?? null;
+  }
+
+  /** A capture's held units in reading order, read ONCE per notice read (`memo`),
+   *  because one newer capture is usually asked about by every leg citing it. */
+  #unitsOf(captureSha, memo) {
+    const key = `units\u0000${captureSha}`;
+    if (!memo.has(key)) {
+      const units = this.#rows(
+        `SELECT extent, ref, text, truncated FROM capture_text WHERE capture_sha=? ORDER BY seq LIMIT ?`,
+        captureSha, CAPTURE_TEXT_CAPTURE_UNIT_BOUND);
+      memo.set(key, { units, state: this.#indexStateOf(captureSha) });
+    }
+    return memo.get(key);
+  }
+
+  static #bagOf(text) {
+    const bag = new Map();
+    for (const w of String(text).toLowerCase().match(/[\p{L}\p{N}]+/gu) || []) bag.set(w, (bag.get(w) || 0) + 1);
+    let n = 0;
+    for (const v of bag.values()) n += v;
+    return { bag, n };
+  }
+  static #dice(a, b) {
+    if (!a.n || !b.n) return 0;
+    let shared = 0;
+    const [small, big] = a.bag.size <= b.bag.size ? [a.bag, b.bag] : [b.bag, a.bag];
+    for (const [w, c] of small) shared += Math.min(c, big.get(w) || 0);
+    return (2 * shared) / (a.n + b.n);
+  }
+
+  /** THE GRADE for one cited passage against one newer capture. Returns
+   *  `{ grade, affects, reason, why, found_at, similarity }`. Reads, never writes. */
+  #gradeAcross(row, extent, newerSha, memo) {
+    const G = Store.VERSION_NOTICE_GRADES;
+    const out = (grade, reason, why, found_at = null, similarity = null) =>
+      ({ grade, affects: G[grade].affects, reason, why, found_at, similarity });
+    const U = (reason, why) => out("UNDETERMINED", reason, why);
+    if (!extent || typeof extent !== "object" || typeof extent.kind !== "string")
+      return U("extent_unreadable", "the cited passage's extent could not be read back from its row");
+    if (row.cited_as === "bytes")
+      return U("cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part "
+        + "digest of the newer capture to compare it with");
+    const older = this.#unitsOf(row.capture_sha, memo);
+    const newer = this.#unitsOf(newerSha, memo);
+    const whole = extent.kind === "document";
+    let cited;
+    if (whole) {
+      if (older.state !== "PRESENT" || !older.units.length || older.units.some((u) => u.truncated))
+        return U("cited_text_partial", "the citation is to the whole document, and the record does not hold the "
+          + `cited version's text whole (its index reads ${older.state || "never recorded"}), so there is no whole `
+          + "text to compare");
+      cited = { extent: canonicalExtent(extent), text: older.units.map((u) => u.text).join("\n") };
+    } else {
+      const at = canonicalExtent(extent);
+      const u = older.units.find((x) => x.extent === at);
+      if (!u)
+        return U("cited_text_not_held", `the record holds no text at exactly ${describeExtent(extent)} of the cited `
+          + "version (only whole indexed units — a PDF page, a paragraph, a slide — carry text), so there is "
+          + "nothing to compare");
+      if (u.truncated)
+        return U("cited_text_truncated", "the cited passage's text is held only to the per-unit cap, so an "
+          + "identity with the newer version cannot be established");
+      cited = { extent: at, text: u.text };
+    }
+    const found = (x) => ({ extent: safeJson(x.extent), ref: x.ref });
+    if (whole) {
+      const complete = newer.state === "PRESENT" && newer.units.length && !newer.units.some((u) => u.truncated);
+      if (!complete)
+        return U(newer.units.length ? "newer_text_partial" : "newer_text_not_held",
+          `the record does not hold the newer version's text whole (its index reads ${newer.state || "never recorded"})`);
+      const same = newer.units.length === older.units.length
+        && newer.units.every((u, i) => u.extent === older.units[i].extent && u.text === older.units[i].text);
+      if (same) return out("A", "identical_at_extent", "every unit of the newer version's text is byte-identical "
+        + "at the same position", { extent, ref: row.ref });
+      const text = newer.units.map((u) => u.text).join("\n");
+      if (text === cited.text) return out("B", "identical_elsewhere", "the newer version's text is byte-identical, "
+        + "divided into different units", { extent, ref: row.ref });
+      const sim = Store.#dice(Store.#bagOf(cited.text), Store.#bagOf(text));
+      const r = Math.round(sim * 1000) / 1000;
+      return sim >= Store.VERSION_NOTICE_SIMILAR
+        ? out("C", "similar_text", `the document's text changed; word similarity ${r}`, { extent, ref: row.ref }, r)
+        : out("NOT_FOUND", "text_not_found", `the document's text changed past the similarity floor `
+            + `(${Store.VERSION_NOTICE_SIMILAR}); word similarity ${r}`, null, r);
+    }
+    const here = newer.units.find((x) => x.extent === cited.extent);
+    if (here && !here.truncated && here.text === cited.text)
+      return out("A", "identical_at_extent", `the text at ${describeExtent(extent)} is byte-identical in the newer version`,
+        found(here));
+    const moved = newer.units.find((x) => !x.truncated && x.text === cited.text);
+    if (moved)
+      return out("B", "identical_elsewhere", `the passage's text is byte-identical at ${moved.ref} of the newer version`,
+        found(moved));
+    /* C: the best-scoring unit, the same extent winning a tie so an edited passage
+       that stayed put is named where it stayed. */
+    const bag = Store.#bagOf(cited.text);
+    let best = null, bestSim = -1;
+    for (const x of here ? [here, ...newer.units.filter((y) => y !== here)] : newer.units) {
+      const s = Store.#dice(bag, Store.#bagOf(x.text));
+      if (s > bestSim) { best = x; bestSim = s; }
+    }
+    const r = best ? Math.round(bestSim * 1000) / 1000 : null;
+    if (best && bestSim >= Store.VERSION_NOTICE_SIMILAR)
+      return out("C", "similar_text", `text similar to the passage (word similarity ${r}) is at ${best.ref} of the `
+        + "newer version, and it is not identical", found(best), r);
+    if (!newer.units.length)
+      return U("newer_text_not_held", "the record holds no text of the newer version (its index reads "
+        + `${newer.state || "never recorded"}), so where the passage went cannot be looked for`);
+    if (newer.state !== "PRESENT")
+      return U("newer_text_partial", `the newer version's text is held only in part (its index reads ${newer.state}), `
+        + "so the passage may be in the part not held");
+    if (newer.units.some((x) => x.truncated))
+      return U("newer_text_truncated", "a unit of the newer version is held only to the per-unit cap, so the passage "
+        + "may be in the part not held");
+    return out("NOT_FOUND", "text_not_found", `the newer version's text is held whole (${newer.units.length} unit(s)) `
+      + `and neither the passage nor text similar to it is in it (best word similarity ${r ?? 0})`, null, r);
+  }
+
   /** THE ADDRESSES ONE CAPTURE WAS RETRIEVED FROM — one walk of `captured_locators`
    *  by capture, shared by its two askers: IS-6's origin walk (`#independenceOf`) and
    *  D-394's notice. `independence.test.mjs` pins exactly ONE such walk in this file,
@@ -39562,7 +41531,7 @@ export class Store extends DurableObject {
   }
 
   /** The notice for ONE content row. `row` is the stored row (extent as JSON text). */
-  #versionNoticeFor(row, viewer) {
+  #versionNoticeFor(row, viewer, memo = new Map()) {
     const extent = safeJson(row.extent);
     const cap = Store.VERSION_NOTICE_ADDRESSES_MAX;
     const addrRows = this.#capturedAddresses(row.capture_sha, cap + 1);
@@ -39595,9 +41564,13 @@ export class Store extends DurableObject {
     const newer = newerBySha.size > 0 ? true : allRead ? false : null;
     const candidates = [...newerBySha.values()].map((v) => {
       const test = this.#extentTestAcross(extent, v.capture_sha);
+      const g = this.#gradeAcross(row, extent, v.capture_sha, memo);
       return { capture_sha: v.capture_sha, bundle_id: v.bundle_id, first_retrieved: v.first_retrieved,
                extent: test.holds ? extent : null, matched: test.holds, reason: test.reason, why: test.why,
                existing_content_id: test.existing_content_id,
+               /* REC-221 — the grade, beside the extent test and not replacing it. */
+               grade: g.grade, affects: g.affects, grade_reason: g.reason, grade_why: g.why,
+               found_at: g.found_at, similarity: g.similarity,
                candidate_only: true, identity: "not_established",
                says: test.holds
                  ? "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to "
@@ -39613,10 +41586,18 @@ export class Store extends DurableObject {
       : addrRows.length > cap
         ? `this capture was seen at more than ${cap} addresses and only ${cap} were asked`
         : "at least one address's version chain does not hold this capture for you";
+    /* REC-221 — WHETHER THE UPDATE AFFECTS THE PASSAGE, rolled up over the
+       candidates: AFFECTED if any newer version affects it, else UNDETERMINED if
+       any cannot be told, else UNAFFECTED. No newer version affects nothing
+       (`null`); a chain nobody could read is UNDETERMINED, never silence. */
+    const affects = state === "no_newer_capture" ? null
+      : state === "chain_unread" ? "undetermined"
+      : candidates.some((c) => c.affects === "affected") ? "affected"
+      : candidates.some((c) => c.affects === "undetermined") ? "undetermined" : "unaffected";
     return {
       content_id: row.content_id, capture_sha: row.capture_sha, bundle_id: row.bundle_id,
       extent_kind: row.extent_kind, ref: row.ref,
-      state, newer, chain_read: newer === false ? true : read.length > 0,
+      state, newer, chain_read: newer === false ? true : read.length > 0, affects,
       chains, addresses_asked: addresses.length, addresses_truncated: addrRows.length > cap,
       candidates,
       /* §18.1's first row: silence is earned only where the chain was read. */
@@ -39640,7 +41621,7 @@ export class Store extends DurableObject {
     };
     const tgt = String(target ?? "").trim();
     const cid = String(content ?? "").trim();
-    const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref`;
+    const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as`;
     let legs = [], rows = [], truncated = false, inquiry = null;
     /* DEC-49 REGION is-version-notice-subject */
     if ((tgt && cid) || (!tgt && !cid))
@@ -39678,19 +41659,20 @@ export class Store extends DurableObject {
             ...ids, ids.length)
         : [];
     }
-    const byId = new Map(rows.map((r) => [r.content_id, this.#versionNoticeFor(r, viewer)]));
+    const memo = new Map();
+    const byId = new Map(rows.map((r) => [r.content_id, this.#versionNoticeFor(r, viewer, memo)]));
     const notices = inquiry
       ? legs.map((l) => l.content_id && byId.has(l.content_id)
           ? { ord: l.ord, target: l.target, ...byId.get(l.content_id) }
           : { ord: l.ord, target: l.target, content_id: null, state: "not_asked", newer: null,
-              says: null,
+              says: null, affects: null,
               why: "this leg rests on no cited passage (it cites another question, or a document this record "
                  + "holds no bytes of), so there is no capture whose newer versions could be asked about" })
       : [...byId.values()];
     return {
       ok: true, target: inquiry, content: inquiry ? null : cid,
       notices, count: notices.length, limit: inquiry ? max : 1, truncated,
-      states: Store.VERSION_NOTICE_STATES,
+      states: Store.VERSION_NOTICE_STATES, grades: Store.VERSION_NOTICE_GRADES,
       wrote: false, proposal_only: true,
       visible_to: "the version chains here are the ones visible to you; a version filed in a project you "
         + "were not invited to is not in them",
@@ -40040,6 +42022,15 @@ export class Store extends DurableObject {
         hidden: r.hidden === 1,
         claim: r.claim,
         run: r.run,
+        /* D-235: WHICH OF §9's KINDS a run proposed this reading AS — stored
+           inside the frozen composition since PL-3 and published by
+           `op=suggest`'s answer, and until D-235 silent here, so one version
+           read a kind from one op and none from the other. `null` on a reading
+           a member composed by hand, and that is the schema's honest answer
+           rather than a default: a member's own reading is not a suggestion of
+           any kind. The key is present on EVERY version, so a consumer cannot
+           read an absent key as "not asked". */
+        kind: r.kind ?? null,
         author: r.author, at: r.at,
         /* PL-2 / IS-2: WHO moved this reading, when, and why — published beside
            the state, because a state with no act behind it is the shape D-214
@@ -41859,11 +43850,16 @@ export class Store extends DurableObject {
     /* CHECK 1 — EVERY LEG EXISTS AND IS REACHABLE AT ITS ADDRESS.
        D-168 IS THE WHOLE REASON THIS IS NOT A TYPE CHECK. `op=cite` WAS TYPE-ONLY
        when this was written (since D-168, 2026-09-23, it refuses a retired member
-       too — RETIRED_NOT_CITABLE, the same question of the same column). A
-       type-only check here would PASS RETIRED INFORMATION — a leg resting on a
-       document the record itself retired, reading to every later member as live
-       support. So three questions are asked and not one: is it IN the record, is
-       it READABLE from here, and has the record RETIRED it. */
+       too — RETIRED_NOT_CITABLE). A type-only check here would PASS RETIRED
+       INFORMATION — a leg resting on a document the record itself retired,
+       reading to every later member as live support. So three questions are
+       asked and not one: is it IN the record, is it READABLE from here, and has
+       the record RETIRED it.
+       D-553 (BOB #34): the third is asked through `#retiredNotCitable`, the
+       store's ONE retired predicate, and it is asked BEFORE and APART FROM the
+       viewer: citability is never viewer-gated. What the viewer decides is only
+       the WORDING — a target this viewer cannot read is named as unreadable,
+       retired or not, so the refusal does not tell it what the record holds. */
     const unreachable = [];
     for (let i = 0; i < legsIn.length; i++) {
       const t = str(legsIn[i]?.target);
@@ -41875,12 +43871,12 @@ export class Store extends DurableObject {
          second one. A different alias here failed at the FIRST leg with a raw
          SQLITE_ERROR, which is the whole reason the leg walk is driven through
          the op in this item's suite rather than reasoned about. */
+      const retired = this.#retiredNotCitable(t);
       const row = this.#one(
-        `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+        `SELECT b.bundle_id FROM bundles b
          WHERE b.bundle_id=? AND (${g2.sql})`, t, ...g2.args);
       if (!row) { unreachable.push({ ord: i, target: t, why: "not in the record, or not readable from here" }); continue; }
-      if (String(row.current_state ?? "").trim() === "retired")
-        unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
+      if (retired) unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
     }
     if (unreachable.length)
       return remember(refusal("SUGGEST_LEG_UNREACHABLE",
@@ -42887,6 +44883,61 @@ export class Store extends DurableObject {
       const at = Store.#aiIso(nowMs);
       const cap = Math.max(1, Math.min(Number(limit) || Store.CAPTURE_REQUEST_TICK_BATCH,
                                        Store.CAPTURE_REQUEST_TICK_BATCH));
+      /* D-523 — A HELD RENDER ENDS AT ITS ROW'S OWN `expires`, RECORDED UNDETERMINED WITH ITS C-83 REASON AND
+         RELEASED, NEVER DROPPED SILENTLY (BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24
+         by BOB #33"). D-491's hold below says *"The row's own `expires` bounds the hold"*, and until this sweep
+         NOTHING READ `expires` HERE: the drain selected every `requested` row whatever its age, so a render this
+         instance could not do was asked for again on every tick for as long as the row existed, and when it
+         ended nothing said what became of it. The hold is kept (the ruling's KEEP) and is now bounded in fact.
+
+         `expired` IS A STATE OF ITS OWN, and neither of the two it could be mistaken for. Not `refused`: nothing
+         refused the ask, and a refusal is terminal because of what the ask SAID, while this ends because the
+         time it was valid for ran out. Not `captured`: nothing was filed. The C-83 code the row was held under is
+         KEPT, so the record says WHY the render never happened, and the content is UNDETERMINED — what the page
+         showed is not known to this instance, and saying "absent" would claim a look that was never made.
+
+         EVERY RENDER REQUEST PAST ITS `expires`, WHATEVER ITS LAST CODE — MEASURED, not chosen for tidiness. A
+         render held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request
+         for the same host wins the tick's one slot (CAPTURE_CONDUCT_TICK_SPENT overwrites the row's code), and
+         the first draft of this sweep, which matched C-83 codes only, let exactly that row through past its
+         `expires` to be ASKED AGAIN — a render performed after the ask lapsed, had a renderer been bound by
+         then (capturerequests.test.mjs 7d, the tick before expiry). So the bound is the ROW's, and the reason
+         recorded is the code the row carries, read off the family that minted it (`#renderHoldReason`). A PLAIN
+         request past its `expires` is still drained: that is not a render, the ruling does not reach it, and it
+         is a separate defect named in D-523's report rather than widened into here. Bounded by the tick's batch,
+         and BEFORE the batch is selected, so an expired row never takes a slot a live one could use; a backlog
+         past the batch is released on the next tick. */
+      const expired = [];
+      {
+        for (const q of this.#rows(
+          `SELECT * FROM capture_requests WHERE state='requested' AND render=1 AND expires <= ?
+            ORDER BY expires, request LIMIT ?`, at, cap)) {
+          const reason = Store.#renderHoldReason(q.code);
+          const why = String(q.detail || "").slice(0, 400);
+          const said = `held under ${reason.check || "no catalogued check"} ${q.code || "(no code: never attempted)"} `
+                     + `until this request expired at ${q.expires}. `
+                     + "The render was never performed and nothing was filed for it, so what the page showed "
+                     + "is UNDETERMINED"
+                     + (why ? ` — the reason last given: ${why}` : " — no further detail was carried");
+          this.sql.exec(
+            `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
+            said.slice(0, 600), at, q.request);
+          /* GOVERNED, on D-491's own reasoning for the hold: every C-83 admission refusal is a fact about US, so
+             the look is an indeterminate we GOVERNED, never the source failing. The condition is named now that
+             the vocabulary has a kind for it (D-491 declined to invent one, correctly, and D-523 minted it). */
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document", subjectKind: "address", subject: q.address,
+            state: "LOOKED_INDETERMINATE", governed: true, condition: "render-deferred",
+            detail: `${reason.check || "no catalogued check"} ${q.code || "(no code)"}: the render expired `
+                  + `UNDETERMINED at ${q.expires} and the request is released — ${why || "no detail was carried"}`,
+          }, at, 0);
+          expired.push({ request: q.request, address: q.address, host: q.host,
+                         code: q.code ?? null, check: reason.check, translation: reason.translation,
+                         render: { state: "expired", content: "undetermined" },
+                         expires: q.expires, detail: said });
+        }
+      }
       const queued = this.#rows(
         `SELECT * FROM capture_requests WHERE state='requested' ORDER BY requested_at, request LIMIT ?`, cap);
       const captured = [], refused = [], held = [];
@@ -43008,11 +45059,15 @@ export class Store extends DurableObject {
              `condition` is named: the queue's vocabulary has no kind for a
              deferred render, and `client-rendered-shell` would claim a shell was
              captured when nothing was fetched at all. Inventing a kind is an
-             interface change to another surface's roster and is NOT taken here. */
+             interface change to another surface's roster and is NOT taken here.
+             CORRECTED BY D-523: the kind now EXISTS — `render-deferred`, minted
+             under BOB #33's ruling of 2026-09-24 19:54Z through NOTIFICATIONS.md's
+             catalogue — so the look names it. The reasoning above for not
+             inventing one stands; what changed is that it was ruled and catalogued. */
           this.#observe({
             ...this.#lookAuthority(q),
             level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE", governed: true,
+            state: "LOOKED_INDETERMINATE", governed: true, condition: "render-deferred",
             detail: `${renderRow.check} ${r.renderCode}: the render was deferred and nothing was `
                   + `filed — ${why || "no detail was carried"}`,
           }, at, 0);
@@ -43022,7 +45077,11 @@ export class Store extends DurableObject {
                          a reader needs no second one: the content is UNDETERMINED
                          and says so, which is what keeps a deferral out of the
                          coverage a captured row would imply. */
-                      render: { state: "deferred", content: "undetermined" },
+                      /* D-520: the STATE is op=acquire's own word when it sent one — a render
+                         over the concurrency cap is `waiting` (C-83.8), not `deferred`: nothing
+                         was taken from the day's allowance, and the next tick is expected to
+                         run it. `deferred` is kept for every code that sends no word. */
+                      render: { state: r.renderState || "deferred", content: "undetermined" },
                       detail: why });
         } else {
           this.sql.exec(
@@ -43039,8 +45098,19 @@ export class Store extends DurableObject {
         }
       }
       return { configured: true, actor, at, drained: captured.length + refused.length + held.length,
-               captured, refused, held, remaining: this.#captureRequestPending() };
+               captured, refused, held, expired, remaining: this.#captureRequestPending() };
     } finally { this.#tickRunning.delete("capture-request-drain"); }
+  }
+
+  /** D-523 — THE REASON A RENDER WAS HELD, in DEC-49 words, read off the family that MINTED the code: C-83 for a
+   *  render op=acquire could not do, C-28 for the drain's own conduct holds. A code in neither (the drain's
+   *  `CAPTURE_FETCH_FAILED` is written to the row and catalogued nowhere) or no code at all answers `check` and
+   *  `translation` NULL, stated as such rather than given a sentence nobody minted. */
+  static #renderHoldReason(code) {
+    const own = (fam) => code && Object.prototype.hasOwnProperty.call(fam, code) ? fam[code] : null;
+    const row = own(RENDER_CAPTURE_CHECKS) || own(CAPTURE_REQUEST_CHECKS);
+    return { code: code ?? null, family: own(RENDER_CAPTURE_CHECKS) ? "C-83" : row ? "C-28" : null,
+             check: row ? row.check : null, translation: row ? row.translation : null };
   }
 
   /** DEC-47's CONDUCT, and this is the ONE place it is applied. */
@@ -43209,6 +45279,10 @@ export class Store extends DurableObject {
         && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
       return { ok: false, reason,
                renderCode,
+               /* D-520: op=acquire's word for the held render (`waiting`, `deferred`), read and
+                  never invented; any other value is dropped rather than carried into the record. */
+               renderState: renderCode && out && out.render && (out.render.state === "waiting" || out.render.state === "deferred")
+                 ? out.render.state : null,
                detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
     } catch (e) {
       /* D-205: the message is the plane's own, never the exception's, because a
@@ -43314,6 +45388,16 @@ export class Store extends DurableObject {
          is is a render this instance cannot yet do. A run cannot otherwise read
          back what it asked, and an operator cannot tell the two apart. */
       render: r.render === 1,
+      /* D-523 (BOB #33 RULED 2026-09-24 19:54Z): WHAT BECAME OF A RENDER THIS INSTANCE COULD NOT DO, in the words
+         the drain and op=queue use. `deferred` while the row is held under its C-83 code, `expired` once its
+         `expires` passed and the drain released it — and in both the content is UNDETERMINED, because nothing of
+         what a visitor saw was captured. NULL on a plain request and on a render not yet attempted, so those read
+         exactly as they did. The reason is the code's own family's row (C-83, or C-28 when the drain's rate rule
+         held it that tick), never re-typed; `#renderHoldReason` says which. */
+      render_deferral: (r.render === 1 && (r.state === "expired" || (r.state === "requested" && r.code)))
+        ? (({ code, check, translation }) => ({ state: r.state === "expired" ? "expired" : "deferred",
+            content: "undetermined", code, check, translation }))(Store.#renderHoldReason(r.code))
+        : null,
       /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
          drain used. A row whose principals cannot both be named answers with the
          refusal rather than with a half attribution — the read cannot state less
@@ -46249,6 +48333,32 @@ export class Store extends DurableObject {
     }).sort();
   }
 
+  /** D-451 (INVESTIGATIVE-SESSION.md §11 item 5, RULE 1'S TARGET, BOB #28) — THE QUESTIONS A PROJECT RUN'S
+   *  READINGS MAY LAND ON, published by `aiRunRead` so a member (FL-11's `runContextTarget`) can NAME one.
+   *
+   *  `#runContextProjects` read the other way round: every question `#citesInto` says this project
+   *  CONFIRMED-cites (the one live-cites predicate, and the very expression `op=suggest`'s context check (d)
+   *  asks, so a SEVERED edge is not a question the run may land on). Not `#refEdgeSevered` directly: the
+   *  severance rule has one definition and a PINNED caller set (`severedhomes.test.mjs`), and a seventh reader
+   *  is the drift D-267 removed. Kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
+   *  `SUGGEST_NOT_AN_INQUIRY` shape test) that THIS viewer can see (`#inSight`, the predicate its viewer gate
+   *  asks). A question the viewer cannot see is omitted and not counted (§7.9: a count would say it exists).
+   *  So the set published is exactly the set `suggestVersion`'s context check (d) admits for this caller, and
+   *  never a second answer to it. Sorted, so the read is stable. */
+  #runContextQuestions(projectId, viewer) {
+    const id = projectId == null ? "" : String(projectId);
+    if (!id) return [];
+    const out = [];
+    for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id=? AND kind='cites'`, id)) {
+      const q = String(r.target_id);
+      if (normalizeType(OBJECT_TYPES[q.split("-")[0]]) !== "inquiry") continue;
+      if (!this.#citesInto(q).confirmed.includes(id)) continue;
+      if (!this.#inSight(q, viewer)) continue;
+      out.push(q);
+    }
+    return out.sort();
+  }
+
   /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
    *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
    *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
@@ -46375,6 +48485,10 @@ export class Store extends DurableObject {
        its canned translation are read from the catalogue at the moment of
        refusal, on REC-64's precedent three guards down; the `note` is kept
        unchanged beside it because it is the OPERATOR's sentence. */
+    /* DEC-49 REGION is-airun-open-context — C-33.30. The request names no run id or no
+       context for it to sit in: asked before anything is looked up. D-589 narrowed C-33.29..31 from a
+       whole-function `where` into one region each (REC-71's rule: a row names the smallest span), so a
+       refusal written elsewhere in this function is judged by ITS OWN row and not by these three. */
     if (!run || !contextType || !contextId)
       return { run: run || null, started: false,
                code: "AI_RUN_NO_CONTEXT",
@@ -46382,6 +48496,7 @@ export class Store extends DurableObject {
                translation: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
                note: "a run needs an id and the context it runs in (an inquiry or a project): "
                    + "a run nothing is in the context of has nowhere to be visible" };
+    /* END DEC-49 REGION is-airun-open-context */
     /* PL-18 / DEC-63 — THE GATE, AND IT RUNS BEFORE THE RUN'S OWN SHAPE IS
        JUDGED. Placed here, immediately after the context is known and before
        the principals and the skill version, on purpose: whether this account
@@ -46458,6 +48573,8 @@ export class Store extends DurableObject {
        want to distinguish *no account resolved at any level* from *the plane
        credential is missing*. Those are two conditions and would be two codes;
        one code is stated here rather than two invented ahead of the producer. */
+    /* DEC-49 REGION is-airun-open-capability — C-33.29. No account to run under: the
+       two principals are not both named. See REC-64's note above for why one code and not two. */
     if (!principalPlane || !principalClaude)
       return { run, started: false,
                code: "AI_RUN_CAPABILITY_UNAVAILABLE",
@@ -46466,6 +48583,7 @@ export class Store extends DurableObject {
                note: "a run names TWO principals — the plane credential acting and WHICH LEVEL of the "
                    + "Claude-account cascade pays (member, then project, then instance). They are "
                    + "different principals and an act must say both (DEC-27(b), DEC-55.4)" };
+    /* END DEC-49 REGION is-airun-open-capability */
     /* SK-1 — THE THIRD CONDITION, AND IT IS REFUSED WHERE THE PRINCIPALS ARE.
        §11 records what a run was FORMED under, and the skill version is one of
        the three. The decision and the two failure shapes are on
@@ -46514,12 +48632,15 @@ export class Store extends DurableObject {
        found here. It is a real member-facing condition (an id that is already in
        use), and it was answering with a bare sentence a surface could only
        render verbatim or blank. */
+    /* DEC-49 REGION is-airun-open-already — C-33.31. The run id is already on record.
+       Asked AFTER the lens is computed and immediately before the insert, with no await between them. */
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
       return { run, started: false,
                code: "AI_RUN_ALREADY_OPEN",
                check: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.check,
                translation: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
                note: "a run with this id already exists" };
+    /* END DEC-49 REGION is-airun-open-already */
 
     /* REC-207 — THE RE-RUN LINK IS JUDGED BEFORE IT IS WRITTEN, because a link the record cannot stand
        behind is worse than none: `aiRunClose` settles a bias debt on the strength of this field, so a
@@ -47295,7 +49416,13 @@ export class Store extends DurableObject {
       created: row.created,
       updated: row.updated,
       expires: row.expires,
-      context: { type: row.context_type, id: row.context_id },
+      /* D-451: a run over a PROJECT also publishes `questions` — the questions it confirmed-cites that this
+         viewer can see (`#runContextQuestions`), the set `op=suggest` admits as its target. A run over a
+         question publishes none: its context id IS its one question. */
+      context: row.context_type === "project"
+        ? { type: row.context_type, id: row.context_id,
+            questions: this.#runContextQuestions(row.context_id, viewer) }
+        : { type: row.context_type, id: row.context_id },
       /* §14a: the record names WHICH LEVEL of the cascade was used, BESIDE the
          plane-credential principal — two principals, never one, and never a
          token value. `ref` is the operator's own label for the account. */
@@ -48594,7 +50721,8 @@ export class Store extends DurableObject {
    *  so the tick and the suite read the same rule.
    *
    *  `actorClass`/`actor` come from the QUERY STRING, where the control plane stamped them. */
-  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null, scope = null } = {}) {
+  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null, scope = null,
+                                 captured = null, uncaptured = null } = {}) {
     const cap = typeof baseline === "string" && /^[0-9a-f]{64}$/.test(baseline) ? baseline : null;
     /* D-567: a rendered capture's tick compares the SHELL, so its look is about the FRAME and
        the referent is the pair's shell digest; the detail says so, and says the content is
@@ -48605,19 +50733,31 @@ export class Store extends DurableObject {
       /* The zero-payload revisit: the record's own capture, confirmed at a date. */
       case "unchanged":
         return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: `${frame}unchanged${tail}` } : null;
-      /* The substance moved. §4.1 says `result_ref` = the NEW sha — but a tick does not
-         capture the new version, so the record does not hold it, and naming it as a
-         `capture` would be the log claiming a document the record lacks. The referent is
-         the capture the look was compared against; the served sha rides in `detail`.
-         (A DESIGN GAP against §4.1, raised in D-65's report.) */
+      /* The substance moved. D-455, BOB #32's ruling of 2026-09-23 23:08Z: the tick CAPTURES
+         the served bytes and `result_ref` names the NEW capture — §4.1's own word. `captured`
+         is that capture's sha ONLY when `recordMonitorLook` has found it in the register under
+         this bundle; the caller's word for it is not enough. Without it the look keeps D-65's
+         form — the referent is the capture it was compared against and the served sha rides in
+         `detail` — and says why the bytes were not filed, because naming an uncaptured sha as a
+         `capture` would be the log claiming a document the record lacks. */
       case "changed":
-        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap,
-                       detail: `${frame}changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}${tail}` } : null;
+        if (!cap) return null;
+        if (typeof captured === "string" && /^[0-9a-f]{64}$/.test(captured) && captured !== cap)
+          return { state: "PRESENT", resultKind: "capture", resultRef: captured,
+                   detail: `${frame}changed; captured by the monitor; compared against baseline sha256 ${cap}${tail}` };
+        return { state: "PRESENT", resultKind: "capture", resultRef: cap,
+                 detail: `${frame}changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}`
+                       + (uncaptured ? `; not captured: ${String(uncaptured).slice(0, 200)}` : "") + tail };
       case "removed":
         return { state: "LOOKED_ABSENT", detail: `gone; the source answered ${httpStatus ?? "unknown"}` };
       case "unreachable":
         return { state: "LOOKED_INDETERMINATE",
                  detail: `unreachable; ${String(reason || (httpStatus != null ? `the source answered ${httpStatus}` : "no answer")).slice(0, 160)}` };
+      /* D-338: the source answered with a shell (the `unmonitorable` contract). A look happened and
+         determined nothing about the document, so it is INDETERMINATE and never `changed`/`unchanged`. */
+      case "unmonitorable":
+        return { state: "LOOKED_INDETERMINATE",
+                 detail: `unmonitorable; the source serves a shell whose bytes carry no substance${typeof seen === "string" ? `; served sha256 ${seen}` : ""}` };
       /* D-104: our pacing held us. A fact about us; LOOKED_INDETERMINATE is the only state. */
       case "governed":
         return { state: "LOOKED_INDETERMINATE", governed: true, condition: "source-unreachable-governed",
@@ -48629,9 +50769,40 @@ export class Store extends DurableObject {
   }
 
   recordMonitorLook({ bundleId = null, address = null, outcome = null, baseline = null, seen = null,
-                      httpStatus = null, reason = null, scope = null, actorClass = "plane", actor = null } = {}) {
+                      httpStatus = null, reason = null, scope = null, actorClass = "plane", actor = null,
+                      locator = null, content = undefined, contentBasis = null,
+                      captured = null, uncaptured = null } = {}) {
     if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
-    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason, scope });
+    /* REC-191: the type this look read the address as, kept BEFORE the observation's own
+       early returns, because a look with no baseline to compare still read what the
+       document is. `content` absent means the caller read nothing (a governed look). */
+    if (content !== undefined) this.#recordMonitorAddressType(address, locator, content, contentBasis);
+    /* D-455 — THE CAPTURE A `changed` TICK FILED, CHECKED HERE RATHER THAN TAKEN. The control
+       plane holds the bytes in R2 and files them through the tick's promotion; the look names
+       them only when the REGISTER holds that sha under THIS bundle — the one fact the caller
+       cannot have produced by saying so — and it is the sha the tick saw. A capture that does
+       not resolve is not named, and the reason is stated on the row. */
+    let capturedSha = null, uncapturedWhy = uncaptured ? String(uncaptured) : null;
+    if (outcome === "changed" && captured && typeof captured === "object") {
+      const s = typeof captured.sha256 === "string" ? captured.sha256 : "";
+      const home = /^[0-9a-f]{64}$/.test(s) ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, s) : null;
+      if (s !== seen) uncapturedWhy = "the capture offered is not the sha this tick saw";
+      else if (!home || home.bundle_id !== String(bundleId))
+        uncapturedWhy = "the served bytes are not registered under this bundle";
+      else {
+        capturedSha = s;
+        /* The version at the address, filed through the ONE writer of `captured_locators`
+           (PL-10: versions of one document are indexed by its address), under the sweep's
+           authority. `observe: false` because THIS method writes the look below: one look,
+           one row. */
+        this.recordCapturedLocator({ address: locator || address, addressNorm: address, captureSha: s,
+          retrieved: typeof captured.retrieved === "string" ? captured.retrieved : stampInstant("second"),
+          via: "direct", retrievalLocator: typeof captured.retrievalLocator === "string" ? captured.retrievalLocator : null,
+          authorityKind: "sweep", authority: String(bundleId), observe: false });
+      }
+    }
+    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason, scope,
+                                              captured: capturedSha, uncaptured: uncapturedWhy });
     if (!row) return { ok: true, written: false,
                        why: outcome === "unchanged" || outcome === "changed"
                          ? "no captured baseline, so the look has no capture to refer to and is not recorded"
@@ -48647,7 +50818,38 @@ export class Store extends DurableObject {
     }, now);
     if (bad) return { ok: false, written: false, refusal: bad };
     const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
-    return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail };
+    return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail,
+             /* D-455: the capture the row NAMES, which is the register's answer and not the caller's;
+                null with the reason when a `changed` look could not name one. */
+             ...(outcome === "changed" ? { captured: capturedSha, uncaptured: capturedSha ? null : uncapturedWhy } : {}) };
+  }
+
+  /* REC-191 — WHAT A TICK READ THE ADDRESS AS, for the cadence plan's contract fallback.
+     A reading that determined a contract replaces whatever was held; one that could not
+     say is written only where nothing is held, so an unreachable source or a document
+     read as bytes does not erase what an earlier tick established. The contract word is
+     checked against CONTRACT_FREQUENCY's keys here, once: a word this plane gives no
+     meaning is kept as UNDETERMINED with its word in the basis, never stored as a
+     contract the plan would then have to second-guess. */
+  #recordMonitorAddressType(addressNorm, locator, content, basis) {
+    const at = stampInstant("second");
+    const c = content && typeof content === "object" ? content : null;
+    const known = c && typeof c.contract === "string"
+      && Object.prototype.hasOwnProperty.call(Store.CONTRACT_FREQUENCY, c.contract);
+    const why = known ? null
+      : c && c.contract != null ? `the tick read the contract '${String(c.contract).slice(0, 40)}', which this plane gives no frequency`
+      : String(basis || "the tick could not determine the document's content type").slice(0, 240);
+    this.sql.exec(
+      `INSERT INTO monitor_address_type (address_norm, address, content_type, confidence, contract, basis, read_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(address_norm) DO UPDATE SET
+         address=excluded.address, content_type=excluded.content_type, confidence=excluded.confidence,
+         contract=excluded.contract, basis=excluded.basis, read_at=excluded.read_at
+       WHERE excluded.contract IS NOT NULL OR monitor_address_type.contract IS NULL`,
+      String(addressNorm), String(locator || addressNorm),
+      known && typeof c.type === "string" ? c.type : null,
+      known && c.confidence != null ? String(c.confidence) : null,
+      known ? c.contract : null, why, at);
   }
 
   /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.
@@ -49792,6 +51994,16 @@ export class Store extends DurableObject {
     per_meeting:      null,  // not a clock this plane can compute — stated, never guessed
     none:             null,  // not monitored on a clock
   };
+  /* D-65's PROVISIONAL contract intervals (BIO_Content_Framework section 6: a content
+     type's monitoring contract *"also sets the expected check frequency, because a
+     delisting is time-sensitive and a regulation is not"*; the framework names the ORDER
+     and no interval). ONE copy: op=monitor's `monitorCadence` reads this table and so does
+     the cadence plan below, so the cadence a tick ANSWERS with and the cadence the plan
+     SCHEDULES by cannot drift apart — which is exactly what REC-191 found they had done.
+     `unmonitorable` (a shell) has no clock: watching bytes that carry no substance proves
+     nothing. The words are the catalog's, checked by `monitorIntervalMs`. */
+  static CONTRACT_FREQUENCY = Object.freeze({ membership: "daily", substance: "weekly", unmonitorable: null });
+
   /* Bounded like TASK_DRAIN_ALARM_BATCH and MONITOR_TICK_BATCH: 50 is the usable
      external-subrequest budget measured for one invocation (MEASUREMENTS.md), and
      each fire in this tick spends one. */
@@ -49811,26 +52023,205 @@ export class Store extends DurableObject {
     return typeof v === "number" ? v : null;
   }
 
+  /* REC-191 — THE SUBJECT OF A SCHEDULE IS AN ADDRESS, NOT A BUNDLE.
+   *
+   *  Bob, 2026-08-06 (D-220): *"Monitoring an ADDRESS is what a member means"*; monitoring a
+   *  bundle is what this consumer did, so sixty captures of one calendar were sixty
+   *  schedules fetching the same address sixty times. The monitored bundles are GROUPED by
+   *  `captured_locators.address_norm` through the version-chain join (`versionChain`'s own
+   *  join: `captured_locators` to `register` on the capture sha, one version per sha, in
+   *  `first_retrieved` order with the sha as tiebreak), and each address becomes ONE row of
+   *  the shape the loop in `#monitorCadencePlan` has always read.
+   *
+   *  WHICH VERSION IS CHECKED: the CURRENT one — the newest version at the address among
+   *  those asking to be monitored, because op=monitor refuses a bundle that does not ask.
+   *  A NEWER version that does not ask is not silently passed over: it is STATED on the
+   *  row (`newer_unmonitored`), since a tick against an older baseline is then comparing
+   *  with a capture the record has already superseded.
+   *
+   *  WHICH FREQUENCY GOVERNS — BOB #31's 22:03Z ruling (quoted on REC-191's row, cited
+   *  until folded; its date is the row's to state, not this comment's): *"the ADDRESS's own setting governs; where none is set, the CURRENT version's;
+   *  never the shortest; a disagreement is STATED."* No address-level setting EXISTS in
+   *  this record (no column, no op writes one), so the first clause has nothing to read and
+   *  that is stated here rather than approximated. The current version's AUTHORED
+   *  `monitoring.frequency` governs; where it authored none, the CONTRACT of the content
+   *  type the last tick read at the address (`monitor_address_type`, CONTRACT_FREQUENCY) —
+   *  op=monitor's own rule (`monitorCadence`), so the plan and the tick agree. Other
+   *  versions' authored words never govern and never shorten it; where they differ from the
+   *  one that governs, the row carries `disagreement`.
+   *
+   *  WHEN IT WAS LAST CHECKED: the LATEST check of ANY monitored version, because every one
+   *  of them fetches the same address; the address was looked at when any was ticked.
+   *
+   *  NOTHING READ YET: an address whose current version authored no frequency and whose
+   *  type no tick has read is DUE NOW (`frequency_source: "unread"`) — the check is what
+   *  reads it, the same reasoning as a never-checked document. A tick that reads and cannot
+   *  say writes a row saying so, so this cannot recur for the same address. One that read
+   *  NO document (unreachable, gone) writes nothing, and the address is then STATED
+   *  unscheduled rather than retried on an interval nobody derived.
+   *
+   *  A BUNDLE WITH NO CAPTURED ADDRESS (promoted without a capture filed at an address)
+   *  is its own subject, as before, matched to a type reading by its own `source.locator`.
+   *  So is a bundle captured at SEVERAL addresses none of which is its `source.locator`:
+   *  choosing one would be the plane inventing which document it watches.
+   *
+   *  BOUNDED: three linear reads (the monitored bundles, the chain rows at their
+   *  addresses, the type readings), grouped in memory — no read per row. */
+  #monitorSubjects() {
+    const bundles = this.#rows(
+      `SELECT bundle_id, monitor_frequency, monitor_last_checked, source_locator
+         FROM bundles WHERE monitor_enabled = 1`);
+    const chain = this.#rows(
+      `SELECT cl.address_norm AS address_norm, cl.capture_sha AS capture_sha,
+              MIN(cl.first_retrieved) AS first_retrieved, MIN(cl.address) AS address,
+              r.bundle_id AS bundle_id, b.monitor_enabled AS monitor_enabled
+         FROM captured_locators cl
+         JOIN register r ON r.capture_sha = cl.capture_sha
+         JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE cl.address_norm IN (
+                SELECT cl2.address_norm FROM captured_locators cl2
+                  JOIN register r2 ON r2.capture_sha = cl2.capture_sha
+                  JOIN bundles b2 ON b2.bundle_id = r2.bundle_id
+                 WHERE b2.monitor_enabled = 1)
+        GROUP BY cl.address_norm, cl.capture_sha, r.bundle_id
+        ORDER BY cl.address_norm, MIN(cl.first_retrieved), cl.capture_sha, r.bundle_id`);
+    const types = new Map(), typesRaw = new Map();
+    for (const t of this.#rows(`SELECT * FROM monitor_address_type`)) {
+      types.set(t.address_norm, t);
+      typesRaw.set(t.address, t);
+    }
+    const byId = new Map(bundles.map((b) => [b.bundle_id, b]));
+    /* Every address each MONITORED bundle holds a version at, with the raw spelling. */
+    const addrsOf = new Map();
+    for (const c of chain) {
+      if (!byId.has(c.bundle_id)) continue;
+      if (!addrsOf.has(c.bundle_id)) addrsOf.set(c.bundle_id, new Map());
+      addrsOf.get(c.bundle_id).set(c.address_norm, c.address);
+    }
+    const home = new Map(), lone = [];
+    for (const b of bundles) {
+      const a = addrsOf.get(b.bundle_id);
+      if (!a || a.size === 0) { lone.push({ b, basis: null }); continue; }
+      if (a.size === 1) { home.set(b.bundle_id, [...a.keys()][0]); continue; }
+      const own = [...a].filter(([, raw]) => raw === b.source_locator).map(([norm]) => norm);
+      if (own.length === 1) home.set(b.bundle_id, own[0]);
+      else lone.push({ b, basis: `captured at ${a.size} addresses, none of them singly its source.locator, `
+                                + "so it is scheduled as itself rather than assigned to one" });
+    }
+    const last = (list) => {
+      let m = null;
+      for (const b of list) {
+        const v = b.monitor_last_checked ? Date.parse(b.monitor_last_checked) : NaN;
+        if (Number.isFinite(v) && (m === null || v > m)) m = v;
+      }
+      return m === null ? null : stampInstant("second", m);
+    };
+    /* The frequency the plan schedules by, and WHICH SOURCE SET IT — `monitorCadence`'s
+       rule: an authored word stands (the catalog judges it below); none authored takes the
+       read type's contract; nothing read is `unread`. */
+    const cadence = (authored, type, checked) => {
+      if (authored != null && authored !== "") return { monitor_frequency: authored, frequency_source: "authored" };
+      /* Never checked: the check is what reads the type. Checked and still unread (the
+         checks found no document to read, or ran before this table existed): no interval
+         can be derived, and inventing one to retry on is the guess this consumer refuses. */
+      if (!type && !checked) return { monitor_frequency: null, frequency_source: "unread",
+        why: "no frequency authored, and no tick has read what the document is: this check reads it" };
+      if (!type) return { monitor_frequency: null, frequency_source: "undetermined",
+        why: `no frequency authored, and no check has read a document at this address (last checked ${checked})` };
+      if (type.contract == null) return { monitor_frequency: null, frequency_source: "undetermined",
+        why: `no frequency authored, and the content type read at this address on ${type.read_at} `
+           + `is undetermined (${type.basis || "no basis recorded"})` };
+      const f = Object.prototype.hasOwnProperty.call(Store.CONTRACT_FREQUENCY, type.contract)
+        ? Store.CONTRACT_FREQUENCY[type.contract] : undefined;
+      return { monitor_frequency: f ?? null, frequency_source: "contract",
+               contract: type.contract, content_type: type.content_type ?? null,
+               ...(f === null ? { why: "no frequency authored, and an unmonitorable document has no check "
+                                     + "clock: its bytes carry no substance to watch" }
+                  : f === undefined ? { why: `no frequency authored, and the contract '${type.contract}' `
+                                           + "is given no frequency" } : {}) };
+    };
+    const rows = [];
+    for (const { b, basis } of lone) {
+      /* A bundle with no locator gives a tick nothing to read (op=monitor refuses it
+         NO_LOCATOR), so "unread, check it now" would be a promise nothing can keep. */
+      const c = (b.monitor_frequency == null || b.monitor_frequency === "") && !b.source_locator
+        ? { monitor_frequency: null, frequency_source: "undetermined",
+            why: "no frequency authored, and no source.locator to read a content type from" }
+        : cadence(b.monitor_frequency, b.source_locator ? typesRaw.get(b.source_locator) : null,
+                  last([b]));
+      rows.push({ bundle_id: b.bundle_id, monitor_last_checked: b.monitor_last_checked,
+                  address: null, versions: [b.bundle_id],
+                  ...(basis ? { address_basis: basis } : {}), ...c });
+    }
+    /* ONE pass over the chain, which is ordered by address and then by version, so the
+       last member seen at an address IS its current version: recorded as the pass goes,
+       never looked for again. The groups partition the chain, so the per-address work
+       below is linear in it in total. */
+    const groups = new Map(), currentAt = new Map();
+    for (const c of chain) {
+      if (!groups.has(c.address_norm)) groups.set(c.address_norm, []);
+      groups.get(c.address_norm).push(c);
+      if (home.get(c.bundle_id) === c.address_norm) currentAt.set(c.address_norm, groups.get(c.address_norm).length - 1);
+    }
+    for (const [addr, versions] of groups) {
+      if (!currentAt.has(addr)) continue;
+      const at = currentAt.get(addr);
+      const members = [...new Set(versions.filter((v) => home.get(v.bundle_id) === addr).map((v) => v.bundle_id))]
+        .map((id) => byId.get(id));
+      const current = byId.get(versions[at].bundle_id);
+      const newer = [...new Set(versions.slice(at + 1).map((v) => v.bundle_id))]
+        .filter((id) => home.get(id) !== addr);
+      const authored = members.filter((m) => m.monitor_frequency != null && m.monitor_frequency !== "");
+      const words = new Set(authored.map((m) => m.monitor_frequency));
+      const governs = current.monitor_frequency != null && current.monitor_frequency !== ""
+        ? current.monitor_frequency : null;
+      const disagrees = words.size > 1 || (words.size === 1 && governs !== [...words][0]);
+      rows.push({
+        bundle_id: current.bundle_id, monitor_last_checked: last(members), address: addr,
+        versions: [...new Set(versions.map((v) => v.bundle_id))],
+        ...(newer.length ? { newer_unmonitored: newer } : {}),
+        ...cadence(current.monitor_frequency, types.get(addr), last(members)),
+        ...(disagrees ? { disagreement: {
+          governs: governs, governed_by: current.bundle_id,
+          authored: authored.map((m) => ({ bundle: m.bundle_id, frequency: m.monitor_frequency })),
+          note: "versions at this address author different frequencies; the current version's governs, "
+              + "never the shortest (BOB #31)" } } : {}),
+      });
+    }
+    return { rows, monitored: bundles.length, addresses: rows.filter((r) => r.address !== null).length };
+  }
+
   /* What is due, what is next, and what has no computable cadence — one read, so
-     `due`, `wake` and `tick` cannot disagree about the same instant. */
+     `due`, `wake` and `tick` cannot disagree about the same instant. REC-191: over
+     ADDRESSES (`#monitorSubjects`), one row per address, each row carrying the version
+     it checks as `bundle` and every version it stands for. */
   #monitorCadencePlan(now) {
-    if (!this.#monitorConfigured()) return { due: [], next: null, unscheduled: [], monitored: 0 };
+    if (!this.#monitorConfigured()) return { due: [], next: null, unscheduled: [], monitored: 0, addresses: 0 };
     const due = [], unscheduled = [];
-    let next = null, monitored = 0;
-    for (const r of this.#rows(
-      `SELECT bundle_id, monitor_frequency, monitor_last_checked
-         FROM bundles WHERE monitor_enabled = 1`)) {
-      monitored++;
+    let next = null;
+    const subjects = this.#monitorSubjects();
+    const about = (r) => ({ address: r.address, versions: r.versions, frequency_source: r.frequency_source,
+      ...(r.contract ? { contract: r.contract, content_type: r.content_type } : {}),
+      ...(r.address_basis ? { address_basis: r.address_basis } : {}),
+      ...(r.newer_unmonitored ? { newer_unmonitored: r.newer_unmonitored } : {}),
+      ...(r.disagreement ? { disagreement: r.disagreement } : {}) });
+    for (const r of subjects.rows) {
       const iv = Store.monitorIntervalMs(r.monitor_frequency);
       if (iv === null) {
+        /* REC-191: nothing authored and nothing read — the check is how the type is read. */
+        if (r.frequency_source === "unread") {
+          due.push({ bundle: r.bundle_id, frequency: null, due_at: 0, ...about(r), why: r.why });
+          continue;
+        }
         unscheduled.push({ bundle: r.bundle_id, frequency: r.monitor_frequency ?? null,
-          reason: r.monitor_frequency === "per_meeting"
+          reason: r.why ? r.why
+            : r.monitor_frequency === "per_meeting"
             ? "cadence is a meeting schedule this plane does not hold"
             : r.monitor_frequency === "none" || r.monitor_frequency == null
               ? "no frequency declared"
               : MONITOR_FREQ.includes(r.monitor_frequency)
                 ? "the cadence table gives this frequency no interval"
-                : "not a frequency the catalog knows" });
+                : "not a frequency the catalog knows", ...about(r) });
         continue;
       }
       /* A monitored document that has NEVER been checked is due now: the record
@@ -49838,13 +52229,13 @@ export class Store extends DurableObject {
          is the strongest case for asking rather than the weakest. */
       const last = r.monitor_last_checked ? Date.parse(r.monitor_last_checked) : NaN;
       const at = Number.isFinite(last) ? last + iv : 0;
-      if (at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at });
+      if (at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at, ...about(r) });
       else if (next === null || at < next) next = at;
     }
     /* Longest-overdue first, then by id, so a batch-bounded tick starves nobody
        and the same instant always produces the same batch. */
     due.sort((a, b) => a.due_at - b.due_at || (a.bundle < b.bundle ? -1 : a.bundle > b.bundle ? 1 : 0));
-    return { due, next, unscheduled, monitored };
+    return { due, next, unscheduled, monitored: subjects.monitored, addresses: subjects.addresses };
   }
 
   #monitorCadenceWake(now) {
@@ -49875,9 +52266,12 @@ export class Store extends DurableObject {
     for (const d of plan.due.slice(0, Store.MONITOR_CADENCE_BATCH)) {
       if (!this.#claimFire("monitor-cadence", d.bundle, epoch)) { skipped.push(d.bundle); continue; }
       const r = await this.#fireMonitorTick(d.bundle);
+      /* REC-191: each entry carries the plan's whole account of its ADDRESS — the
+         versions it stands for, which source set its frequency, and anything stated. */
+      const { bundle: _b, frequency: _f, due_at: _d, why: _w, ...of } = d;
       (r.ok ? ticked : failed).push(r.ok
-        ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval }
-        : { bundle: d.bundle, frequency: d.frequency, reason: r.reason });
+        ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval, ...of }
+        : { bundle: d.bundle, frequency: d.frequency, reason: r.reason, ...of });
     }
     /* D-518: the same correction as #monitorTick's, made for the same reason and
        in the same class — a cadence tick that fired nothing and only skipped
@@ -49888,6 +52282,7 @@ export class Store extends DurableObject {
        cadence instead. #monitorTick's note carries the measurement. */
     if (!failed.length && !skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
     return { monitorcadence: { configured: true, at, epoch, monitored: plan.monitored,
+                               addresses: plan.addresses,
                                candidates: plan.due.length, next: plan.next,
                                ticked, skipped, failed, unscheduled: plan.unscheduled } };
     } finally { this.#tickRunning.delete("monitor-cadence"); }
@@ -50785,7 +53180,8 @@ export class Store extends DurableObject {
         /* D-476: does the register hold these whole-document bytes, read-only and naming no
            bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
            is never stored under its own hash for R2 to be asked about. */
-        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256") }),
+        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256"),
+                                                  bundle: url.searchParams.get("bundle") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
@@ -51334,6 +53730,13 @@ export class Store extends DurableObject {
            would be the impostor hole REC-29 measured. `key` and `limit` are the
            caller's, and both are answered rather than trusted: an unknown key is
            refused BY NAME and a limit out of range is clamped to the published bound. */
+        /* REC-147 / IC-318: the run's judgement enters as candidates. The proposer, the viewer and the principal are
+           the control plane's stamps, never the body's (extractpropose's rule); the run and the proposals are the
+           caller's, and every proposal is re-checked against the pairs the plane forms for that viewer. */
+        contradictionpropose: () => this.contradictionPropose({
+          run: (body || {}).run, proposals: (body || {}).proposals, at: (body || {}).at || null,
+          proposedBy: url.searchParams.get("proposedBy"), viewer: url.searchParams.get("viewer"),
+          caller: url.searchParams.get("principal") }),
         contradictionpairs: () => this.contradictionPairs({
           key: url.searchParams.get("key"), limit: url.searchParams.get("limit"),
           viewer: url.searchParams.get("viewer"),
@@ -51393,6 +53796,15 @@ export class Store extends DurableObject {
           viewer: url.searchParams.get("viewer"),
           identity: url.searchParams.get("identity"),
         }),
+        /* MK-7: THE ATTRIBUTION ACT. WHO CHOSE comes from the QUERY STRING, where the control plane stamped
+           it over anything the caller sent; nothing in the body can name the chooser. */
+        attribute: () => this.attributeObservation({
+          caseId: body ? body.caseId : null,
+          edition: body ? body.edition : null,
+          observation: body ? body.observation : null,
+          level: body ? body.level : null,
+          by: url.searchParams.get("by"),
+        }),
         leadshare: () => this.leadShare({
           lead: (body && body.lead) || url.searchParams.get("lead"),
           project: (body && body.project) || url.searchParams.get("project"),
@@ -51424,6 +53836,13 @@ export class Store extends DurableObject {
           viewer: url.searchParams.get("viewer"),
           administer: url.searchParams.get("administer"),
         }),
+        /* REC-203: the identifier-space judgement. `viewer` is the control plane's stamp; nothing else is. */
+        idmatch: () => this.idMatch({ space: url.searchParams.get("space"), a: url.searchParams.get("a"),
+                                      b: url.searchParams.get("b"), aCapture: url.searchParams.get("a_capture"),
+                                      bCapture: url.searchParams.get("b_capture"),
+                                      aName: url.searchParams.get("a_name"), bName: url.searchParams.get("b_name"),
+                                      referent: url.searchParams.get("referent"),
+                                      viewer: url.searchParams.get("viewer") }),
         themeread: () => this.themeRead({ id: url.searchParams.get("id"),
                                           q: url.searchParams.get("q"),
                                           limit: url.searchParams.get("limit"),
@@ -51637,6 +54056,10 @@ export class Store extends DurableObject {
           quoteBasis: url.searchParams.get("quote_basis"),
           quoteAnswers: url.searchParams.get("quote_answers"),
           quoteRevises: url.searchParams.get("quote_revises"),
+          /* D-147: the entry's place in the records-request lifecycle. */
+          stage: url.searchParams.get("stage"), follows: url.searchParams.get("follows"),
+          outcome: url.searchParams.get("outcome"), exemptions: url.searchParams.get("exemptions"),
+          dueBy: url.searchParams.get("due_by"), dueCite: url.searchParams.get("due_cite"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         /* D-148: the quotes, by counterparty or by request. */
@@ -52077,6 +54500,7 @@ export class Store extends DurableObject {
         publishedmanifest: () => this.publishedManifest(),
         projectfork: () => this.forkProject({ projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"), title: url.searchParams.get("title"),
+          visibility: url.searchParams.get("visibility"),   /* REC-197: absent is null, which is HIDDEN */
           by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),   /* REC-138 */
         projectinvite: () => this.projectInvite({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
@@ -52102,6 +54526,20 @@ export class Store extends DurableObject {
           limit: url.searchParams.get("limit") }),
         projectparticipants: () => this.projectParticipants({ projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by") }),
+        /* REC-150 (Membership v2 §7.14, the request to join): `by` and `viewer` are the control plane's stamps
+           (PROJECT_ACTIONS for the three acts; the viewer stamp and the `by` stamp for the read). */
+        projectrequest: () => this.projectRequest({ projectId: url.searchParams.get("projectId"),
+          comment: url.searchParams.get("comment"), by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer") }),
+        projectrequestwithdraw: () => this.projectRequestWithdraw({ projectId: url.searchParams.get("projectId"),
+          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
+        projectrequestanswer: () => this.projectRequestAnswer({ projectId: url.searchParams.get("projectId"),
+          handle: url.searchParams.get("handle"), answer: url.searchParams.get("answer"),
+          comment: url.searchParams.get("comment"), by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer") }),
+        projectrequests: () => this.projectRequests({ projectId: url.searchParams.get("projectId"),
+          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer"),
+          limit: url.searchParams.get("limit") }),
         registeraudit: () => this.registerAudit(),
         /* REC-175: the digest census, read-only (see `digestCensus`). */
         digestcensus: () => this.digestCensus({ limit: url.searchParams.get("limit") }),
@@ -52164,7 +54602,9 @@ export class Store extends DurableObject {
         purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") }),
       };
       if (!map[op]) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
-      return Response.json({ ok: true, result: await map[op]() });
+      /* REC-196: a read naming a discoverable project's own id, asked by a caller at EXISTENCE, answers C-70.1. */
+      const existence = this.#existenceRead(op, url, body);
+      return Response.json({ ok: true, result: existence ?? await map[op]() });
     } catch (e) {
       return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 });
     }

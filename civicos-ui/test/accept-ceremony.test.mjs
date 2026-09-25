@@ -4,7 +4,7 @@
  * that each carries the answer on its own before their name lands over a reading
  * filed as several such sets (DEC-32 clause 4); and D-195's shared upstream origin
  * — DERIVED by the plane (`Store#independenceOf`, published on
- * `op=versionstrength` as `independence`) — is SHOWN before that affirmation and
+ * `op=partitionindependence`'s version arm as `independence`, UI-88) — is SHOWN before that affirmation and
  * never refuses anything. UI-43's stranded branch (`9706d19e`) is the scope this
  * was re-derived from; it drove a MOCK plane and read `independence` 0×. This
  * suite drives the plane itself under miniflare: every answer the surface renders
@@ -21,8 +21,12 @@
  *       the affirmation and the accept still go through (never refuses).
  *   (3) A READING WITH INDEPENDENT SETS SHOWS NONE — no shared origin is drawn,
  *       and the page says the record traced and found none, within its reach.
- *   (4) THE ORDERING RULE (DEC-32 clause 5) — the pair the origins read also
- *       fetched is NOT held and NOT drawn before the affirmation.
+ *   (4) THE ORDERING RULE (DEC-32 clause 5) — UI-88: before the affirmation the
+ *       ceremony's network log holds NO strength-bearing answer (the origins read
+ *       is the independence-only read, REC-192), and nothing strength-bearing is
+ *       held or drawn. Until UI-88 the pair crossed the wire and was dropped
+ *       client-side; BOB #31 (2026-09-23 22:22Z) ruled that separation structural
+ *       at the wire, so the log itself is now the evidence.
  *   (5) the one-set reading asks nothing; (6) REC-36's withholding; (7) DEC-46's
  *       lens in the flow; (8) refusals in the plane's words; (9) the analyst
  *       vocabulary sweep over every phase, and the record's own set labels in NO
@@ -63,6 +67,17 @@
  *     section's arm sat AFTER `acerChoose`, which clears `strength`, so it could not fail; moved to arrival.
  *   F report a share whenever there are two sets: 3 FAIL, incl. "D-195 INDEPENDENT SHOWS NONE".
  *   G OVER-STRICTNESS, `acerAffirmedAll` as an indexed loop: 85/85, MUST PASS, passed.
+ * NEGATIVE CONTROL (UI-88): RE-RUN 2026-09-25 by WORKER UI-88 — same driver, exit 0, CONTROL CLEAN, 8 arms.
+ * BASELINE 90/90 (app.html 1,598,499 bytes, sha256 31ee13e5cdb0…, final IDENTICAL by sha256 AND cmp).
+ *   H THE ROW'S NAMED ARM, `acerOriginsRead` pointed back at `op=versionstrength` verbatim as before UI-88:
+ *     85/90, FAILS both "PRE-AFFIRMATION FETCH" arms (each naming the versionstrength answer and its keys
+ *     pair, state_set, what_if, … — checked by hand, so the arm fails on the STRENGTH and not only on the op),
+ *     "the origins read is the independence-only read", "the arithmetic is not asked before any act" and
+ *     "ORDERING, SECOND HALF", AS DECLARED; "nothing strength-bearing is HELD" STAYS GREEN, as declared —
+ *     the old client-side drop kept the page's state clean, which is why only the network log can see it.
+ *   A–G re-run on the corrected suite, each as declared: A 85/5, B 81/9, C 84/6, D 84/6, E 88/2 (E
+ *     re-labelled: no pair is fetched to keep, so it stores the origins answer in the strength slot), F 87/3,
+ *     G 90/0.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. Imported for its SIDE EFFECT; census:
@@ -163,7 +178,7 @@ let snapSeq = 0;
 const promote = async (id, md, type, state, register = []) => {
   const r = rP(await POST("op=promote&token=mem-ui74", {
     bundleId: id, base: null, snapKey: `${id}-${String(++snapSeq).padStart(6, "0")}`, author: "seed",
-    meta: { object_type: type, title: `t ${id}`, current_state: state, created: NOW, last_updated: LATER },
+    meta: { object_type: type, current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register,
   }));
@@ -254,6 +269,18 @@ await promote(INQ, inquiryMd(), "inquiry", "open");
   if (opened?.started !== true) throw new Error(`airunopen: ${JSON.stringify(opened).slice(0, 600)}`);
 }
 
+/* UI-88: the strength vocabulary (derived in GROUND below) and a deep key walk. */
+const STRENGTH = [];
+const keysDeep = (o, out = new Set()) => {
+  if (o && typeof o === "object")
+    for (const [k, v] of Object.entries(o)) { if (!Array.isArray(o)) out.add(k); keysDeep(v, out); }
+  return out;
+};
+const strengthKeysIn = (o) => [...keysDeep(o)].filter((k) => STRENGTH.includes(k));
+/* Every answer in the network log between positions `from` and `to` that carries a strength key. */
+const strengthAnswersIn = (from, to) => WIRE.slice(from, to)
+  .map((w, i) => ({ i: from + i, op: w.op, keys: strengthKeysIn(w.answer) })).filter((x) => x.keys.length);
+
 const readings = async () => {
   const r = rP(await GET(`op=basisversions&token=${PILAR}&id=${INQ}&limit=50`));
   return Array.isArray(r?.versions) ? r.versions : [];
@@ -265,10 +292,34 @@ const stateOf = async (name) => (await readings()).find((v) => v.name === name) 
     [V_INDEP, V_SHARED, V_ONE, V_DARK, V_RUN].every((n) => vs.some((v) => v.name === n && v.state === "suggested")),
     `got ${JSON.stringify(vs.map((v) => [v.name, v.state]))}`);
   /* THE DERIVATION ITSELF, asked directly — so the surface's answer below is
-     compared against the plane's and not against this suite's belief. */
-  const ind = async (n) => rP(await GET(`op=versionstrength&token=${PILAR}&id=${INQ}`
-    + `&version=${encodeURIComponent(n)}&states=suggested`))?.independence;
+     compared against the plane's and not against this suite's belief. UI-88: asked
+     of the op the page now reads, the version arm of `op=partitionindependence`. */
+  const ind = async (n) => rP(await GET(`op=partitionindependence&token=${PILAR}&id=${INQ}`
+    + `&version=${encodeURIComponent(n)}`))?.independence;
   const si = await ind(V_SHARED), ii = await ind(V_INDEP);
+  /* UI-88 · THE STRENGTH VOCABULARY, taken from the answer that DOES carry a strength
+     rather than typed from memory (REC-192's block H, the same derivation): every key
+     `op=versionstrength` answers that the independence-only read does not, minus the
+     facts about the reading itself — and those are DERIVED too, as every key the
+     question's own record of its readings (`op=basisversions`) carries: `hidden` and
+     `derived_from` are the reading's fields, not a grade, and a vocabulary holding them
+     flagged the record read on the first run. A key added to versionstrength later joins it. */
+  const vsAns = rP(await GET(`op=versionstrength&token=${PILAR}&id=${INQ}`
+    + `&version=${encodeURIComponent(V_SHARED)}&states=suggested`));
+  const piAns = rP(await GET(`op=partitionindependence&token=${PILAR}&id=${INQ}`
+    + `&version=${encodeURIComponent(V_SHARED)}`));
+  const FACTS = new Set(["version", "version_state", "legs_complete",
+    ...keysDeep(rP(await GET(`op=basisversions&token=${PILAR}&id=${INQ}&limit=50`)))]);
+  const piKeys = new Set(Object.keys(piAns ?? {}));
+  for (const k of Object.keys(vsAns ?? {})) if (!piKeys.has(k) && !FACTS.has(k)) STRENGTH.push(k);
+  console.log(`  strength vocabulary, derived from op=versionstrength's answer: ${STRENGTH.join(", ")}`);
+  ok("GROUND (UI-88): THE DETECTOR IS NOT EMPTY — the vocabulary holds `pair` and more, and walking "
+    + "versionstrength's OWN answer finds it, so an absence below is a finding",
+    vsAns?.ok !== false && STRENGTH.includes("pair") && STRENGTH.length >= 5 && strengthKeysIn(vsAns).length > 0,
+    `vocabulary ${JSON.stringify(STRENGTH)}`);
+  ok("GROUND (UI-88): the independence-only read answers the SAME `independence` as versionstrength for the same reading",
+    JSON.stringify(piAns?.independence) === JSON.stringify(vsAns?.independence) && strengthKeysIn(piAns).length === 0,
+    `pi ${JSON.stringify(piAns).slice(0, 300)}`);
   ok("GROUND: the plane DERIVES a shared origin between the two sets of the shared reading, through the one address",
     si?.checked === true && si.shared?.length === 1 && si.shared[0].through.includes(`address:${SHARED_ADDR}`),
     `got ${JSON.stringify(si)}`);
@@ -307,8 +358,13 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
   localStorage:{ getItem:()=>null, setItem(){} }, window:{ addEventListener(){}, open:()=>null },
   fetch: async (u, opts) => {
     const url = new URL(u, "http://x");
-    WIRE.push({ op: url.searchParams.get("op"), params: Object.fromEntries(url.searchParams.entries()) });
-    return mf.dispatchFetch(url.toString(), opts);
+    /* UI-88: the ANSWER is logged beside the request, so "no strength-bearing answer
+       crossed the wire" is judged on what the plane SENT, not on which op was named. */
+    const w = { op: url.searchParams.get("op"), params: Object.fromEntries(url.searchParams.entries()), answer: undefined };
+    WIRE.push(w);
+    const res = await mf.dispatchFetch(url.toString(), opts);
+    try { w.answer = await res.clone().json(); } catch (_) { w.answer = null; }
+    return res;
   } };
 ctx.globalThis = ctx; vm.createContext(ctx);
 vm.runInContext(appScript() + ";globalThis.__U = {" + [
@@ -387,12 +443,20 @@ await click("act on the independent reading, from the review surface",
   ok("D-195 INDEPENDENT: and the page says the record TRACED and found none — not silence, which would be the untold case",
     /data-acer="origins-none"/.test(h) && t.includes("found none of it shared") && !/data-acer="origins-untold"/.test(h));
   ok("D-195 INDEPENDENT: the reach of that 'none' is stated with it", t.includes("beyond what it can see"));
-  /* THE ORDERING RULE, FIRST HALF. */
-  const vs = wireOf("versionstrength");
-  ok("ORDERING: the only strength ask before any act is the origins read, made once, for this reading, in its own state",
-    vs.length === 1 && vs[0].params.version === V_INDEP && vs[0].params.states === "suggested",
-    `got ${JSON.stringify(vs.map((w) => w.params))}`);
-  ok("ORDERING: the pair that read also fetched is NOT HELD — nothing in the page's state carries it",
+  /* THE ORDERING RULE, FIRST HALF. CORRECTED 2026-09-25 by UI-88: this arm read
+     "the only strength ask before any act is the origins read … in its own state",
+     asserting ONE versionstrength request with states=suggested. That was the
+     defect pinned as the rule: the origins read fetched the pair and dropped it
+     client-side. BOB #31 (2026-09-23 22:22Z) ruled the separation structural at
+     the wire, so the origins read is now the independence-only read and NO
+     strength request precedes an act. */
+  const pi = wireOf("partitionindependence");
+  ok("ORDERING: the origins read is the independence-only read, made once, for this reading, naming no state",
+    pi.length === 1 && pi[0].params.version === V_INDEP && pi[0].params.states === undefined
+    && pi[0].params.partition === undefined, `got ${JSON.stringify(pi.map((w) => w.params))}`);
+  ok("ORDERING: and the arithmetic is not asked before any act", wireOf("versionstrength").length === 0,
+    `got ${JSON.stringify(wireOf("versionstrength").map((w) => w.params))}`);
+  ok("ORDERING: nothing strength-bearing is HELD — nothing in the page's state carries a pair",
     U.ACER().strength === null && !JSON.stringify(U.ACER()).includes('"pair"'));
   ok("ORDERING: and nothing of what the reading comes to is drawn", !/data-acer="strength"/.test(h)
     && !t.includes("What this reading comes to"));
@@ -414,6 +478,15 @@ await click("choose the adopt act", page(), /^acerChoose\("versionaccept"\)$/);
     wireOf("versionaccept").length === nAccept);
   ok("and the record, read back, still holds the reading unadopted",
     before === "suggested" && (await stateOf(V_INDEP))?.state === "suggested");
+}
+/* UI-88 · THE ROW'S ACCEPTS-WHEN, judged on the network log at the moment the
+   member is about to affirm: every answer the plane SENT since the page loaded. */
+{
+  const n = WIRE.length, hits = strengthAnswersIn(0, n);
+  ok(`PRE-AFFIRMATION FETCH: before the affirmation the ceremony's network log (${n} answers) holds NO strength-bearing answer — the independent reading`,
+    n >= 4 && WIRE.slice(0, n).every((w) => w.answer !== undefined) && hits.length === 0
+    && WIRE.slice(0, n).some((w) => w.op === "partitionindependence" && w.answer?.result?.independence),
+    `strength-bearing: ${JSON.stringify(hits)}`);
 }
 await click("affirm set 1", page(), /^acerAffirm\(0\)$/);
 {
@@ -460,14 +533,17 @@ await click("ask what the reading comes to, after the affirmation", page(), /^ac
 {
   const h = keep("independent, strength after the affirmation");
   const t = strip(h);
-  const vs = wireOf("versionstrength");
-  /* Three asks: the origins read at arrival (suggested), the origins re-read
-     when the page re-reads the record after the act (accepted), and only then
-     the arithmetic — with no state named, the op's default, because the
+  const vs = wireOf("versionstrength"), pi = wireOf("partitionindependence");
+  /* CORRECTED 2026-09-25 by UI-88: this arm counted THREE versionstrength asks —
+     two origins reads (suggested, then accepted) and the arithmetic — because the
+     origins read went through the strength op. It now goes through the
+     independence-only read, so the two origins reads are partitionindependence's
+     (arrival, and the re-read after the act) and the arithmetic is the ONE
+     versionstrength ask, with no state named, the op's default, because the
      reading is adopted now. */
-  ok("ORDERING, SECOND HALF: the arithmetic is asked only now, after two origins reads, with the op's own default state set",
-    vs.length === 3 && vs[0].params.states === "suggested" && vs[1].params.states === "accepted"
-    && vs[2].params.states === undefined, `got ${JSON.stringify(vs.map((w) => w.params.states))}`);
+  ok("ORDERING, SECOND HALF: the arithmetic is asked only now, once, with the op's own default state set, after two independence-only origins reads",
+    vs.length === 1 && vs[0].params.states === undefined && pi.length === 2
+    && WIRE.indexOf(vs[0]) > WIRE.indexOf(pi[1]), `got vs ${JSON.stringify(vs.map((w) => w.params.states))}, pi ${pi.length}`);
   ok("the plane's own filter line is rendered verbatim (DEC-40)", t.includes("This is the record's own answer for this question"));
   ok("and it is drawn BELOW the affirmation", h.indexOf('data-acer="strength"') > h.indexOf('data-acer="affirm"')
     && h.indexOf('data-acer="affirm"') > 0);
@@ -477,6 +553,7 @@ await click("ask what the reading comes to, after the affirmation", page(), /^ac
    3. THE SHARED READING — THE ORIGIN SHOWN BEFORE THE AFFIRMATION, NEVER A REFUSAL
    ============================================================ */
 console.log("\n--- 3. two sets fetched from one address: the origin is shown first, and nothing is refused ---");
+const wireAtShared = WIRE.length;   /* UI-88: this ceremony's own network log starts here */
 await U.acceptCeremonyOpen(INQ, V_SHARED);
 {
   keep("shared, on arrival");
@@ -484,7 +561,7 @@ await U.acceptCeremonyOpen(INQ, V_SHARED);
      finding: `acerChoose` clears `strength`, so this assertion, written first
      after the choice, could not fail — control arm E came back with it GREEN
      while the pair sat in the page's state from arrival until the click. */
-  ok("ORDERING: on arrival at the shared reading, the pair fetched with the origins is not held here either",
+  ok("ORDERING: on arrival at the shared reading, nothing strength-bearing is held here either",
     U.ACER().strength === null && !JSON.stringify(U.ACER()).includes('"pair"'));
 }
 await click("choose the adopt act", page(), /^acerChoose\("versionaccept"\)$/);
@@ -503,6 +580,15 @@ await click("choose the adopt act", page(), /^acerChoose\("versionaccept"\)$/);
     (h.match(/acerAffirm\(\d+\)/g) || []).length === 2);
   ok("D-195 SHARED: the page says it does not stop the member", t.includes("This does not stop you"));
 }
+{
+  /* UI-88: the same accepts-when over the shared reading, which draws an origin. */
+  const n = WIRE.length, hits = strengthAnswersIn(wireAtShared, n);
+  ok(`PRE-AFFIRMATION FETCH: before the affirmation the network log (${n - wireAtShared} answers since it opened) holds NO strength-bearing answer — the shared reading, whose origin IS drawn`,
+    n - wireAtShared >= 3 && hits.length === 0
+    && WIRE.slice(wireAtShared, n).some((w) => w.op === "partitionindependence" && w.params.version === V_SHARED
+      && (w.answer?.result?.independence?.shared || []).length === 1),
+    `strength-bearing: ${JSON.stringify(hits)}`);
+}
 await click("affirm set 1", page(), /^acerAffirm\(0\)$/);
 await click("affirm set 2", page(), /^acerAffirm\(1\)$/);
 await click("send the adopt act", page(), /^acerSend\(\)$/);
@@ -518,7 +604,8 @@ await click("send the adopt act", page(), /^acerSend\(\)$/);
    4. THE ONE-SET READING — THE KEYSTONE MUST NOT FIRE (OVER-STRICTNESS)
    ============================================================ */
 console.log("\n--- 4. one set: nothing to affirm, nothing to trace between ---");
-const vsBeforeOne = wireOf("versionstrength").length;
+/* UI-88: both ops counted — the origins read moved from versionstrength to partitionindependence. */
+const vsBeforeOne = wireOf("versionstrength").length + wireOf("partitionindependence").length;
 await U.acceptCeremonyOpen(INQ, V_ONE);
 await click("choose the adopt act", page(), /^acerChoose\("versionaccept"\)$/);
 {
@@ -527,7 +614,8 @@ await click("choose the adopt act", page(), /^acerChoose\("versionaccept"\)$/);
   ok("OVER-STRICTNESS: a one-set reading asks the member to affirm nothing, and the send control is there",
     !/acerAffirm\(/.test(h) && /id="acer-go"/.test(h));
   ok("and draws no origin line of any kind — there is nothing between one set to trace", !/data-acer="origins/.test(h));
-  ok("and asks the plane nothing about origins", wireOf("versionstrength").length === vsBeforeOne);
+  ok("and asks the plane nothing about origins",
+    wireOf("versionstrength").length + wireOf("partitionindependence").length === vsBeforeOne);
   ok("a member-composed reading says who composed it", t.includes("Composed by omar"));
   ok("the falsifier is read back with the ANY stem", t.includes(U.VREV_FAILS_ANY.trim()));
 }
@@ -640,7 +728,7 @@ await click("send the turn-down", page(), /^acerSend\(\)$/);
       && !String(h).includes("the audit route"))
     && wireOf("versionaccept").some((w) => String(w.params.affirmed || "").includes(LEAKY_LABEL)));
   ok("the ops this ceremony reaches are never named to the member",
-    PHASES.every(([, h]) => { const t = strip(h); return !/\b(basisversions|versionstrength|airun|versionaccept)\b/.test(t); }));
+    PHASES.every(([, h]) => { const t = strip(h); return !/\b(basisversions|versionstrength|partitionindependence|airun|versionaccept)\b/.test(t); }));
 }
 
 await mf.dispose();

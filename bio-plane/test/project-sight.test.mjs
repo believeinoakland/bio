@@ -6,6 +6,8 @@
    RE-RUN 2026-09-24 by D-464 in worktree /home/user/bio (cloud) on base 15b2a4c0 AFTER adding §8 (the counts) and five arms, real src/index.mjs 742,733 B sha256 450e60c61109…, src/store.mjs 2,958,609 B sha256 9a5b205f5a3b…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 125/0 · cite-distinguishing 123/2 · position-first 121/4 · not-found-to-everyone 103/22 · roster-stamp-dropped 113/12 · publish-raw-bm25 118/7 · order-by-index-bm25 120/5 · tf-over-vis 125/0 · stats-whole-store 122/3 (THE BRIEF'S CONTROL: `op=stats` counts the whole store again — the hidden-creation arm fails BY NAME, `A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats`, with the digest and EXACT arms; searchindexcheck and selectionlist stay green) · indexcheck-whole-index 122/3 · selectionbytes-whole 124/1 · stats-stamp-dropped 122/3 · subtract-for-everyone 125/0 (over-strictness) · sight-via-redactor 125/0: AS DECLARED. BEFORE the fix §8 read 115/7 on the unedited sources (vera's stats moved `bundles, files, history, refs, indexed, projectParticipants`). RECORDED, NOT SMOOTHED: (1) stats-stamp-dropped came back NOT AS DECLARED on its first run (then 121/4, against a store reading an ABSENT stamp as DENY: the ADMIN witness failed and three zeros agreed); that reading was corrected before landing because it zeroed the counters four store-level suites read off the DO route (a never-sent viewer is now an internal call, WHOLE), and the arm was re-declared: dropping the stamp now fails the headline by name. Reason at the arm. (2) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2) above, unchanged by D-464.
    RE-RUN 2026-09-24 by D-486 in worktree /home/user/bio (cloud) on base land/conduct/c19-batch10 @ cff0ede6 AFTER adding §9 (a RUN over a hidden project, the five observation-log tallies) and four arms, real src/index.mjs 786,508 B sha256 4579fae29f93…, src/store.mjs 3,178,998 B sha256 ae571b49b306…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 136/0 · cite-distinguishing 134/2 · position-first 132/4 · not-found-to-everyone 114/22 · roster-stamp-dropped 124/12 · publish-raw-bm25 129/7 · order-by-index-bm25 131/5 · tf-over-vis 136/0 · stats-whole-store 129/7 · indexcheck-whole-index 133/3 · selectionbytes-whole 135/1 · stats-stamp-dropped 130/6 · subtract-for-everyone 136/0 · d486-content-tally-unsubtracted 134/2 (THE ROW'S OWN CONTROL: the predicate dropped from ONE reader — the content tally — and its arms fail BY NAME) · d486-stats-airunlog-unsubtracted 133/3 · d486-meaning-run-ungated 134/2 · d486-predicate-de-morgan 136/0 (over-strictness) · sight-via-redactor 136/0: AS DECLARED. BEFORE the fix §9 read 131/5 on the unedited sources (MEASUREMENTS M-131: vera's `aiRunLog` and `observationsNonLead` moved, all three tallies moved, and the MEANING level published the hidden run's own id in `looked`). RECORDED, NOT SMOOTHED: (1) d486-content-tally-unsubtracted came back NOT AS DECLARED on its first run with THREE undeclared reds, one of them BEFORE its own cause — the patch removed the predicate from the SQL and left its BINDINGS, so the statement threw; corrected to remove both, reason at the arm. (2) §9's residue arm came back GREEN on a second run after failing on the first WITHOUT a line changing: the four watermark keys move only when the fixture's captures and the run's rows fall inside ONE SECOND (the causes normalise to the second, `register.registered` carries milliseconds). Diagnosed, spelled as a CEILING, and routed as D-486 FINDING 2 — an intermittent disclosure is worse than a steady one, not better. (3) stats-whole-store and stats-stamp-dropped came back NOT AS DECLARED because §9 reads two `op=stats` keys their declarations predate; both declarations were EXTENDED (never exempted) and are AS DECLARED. (4) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-486.
    RE-RUN 2026-09-24 by D-480 in worktree /home/user/bio (cloud) on base origin/main 58293bf3 merged with land/worker/D-497 @ 29d8409d, AFTER adding §10 (a hidden project's CITATIONS, and a hidden TARGET, in the shared-question candidate page) and three arms, real src/index.mjs 802,067 B sha256 fbdcfb83ed09…, src/store.mjs 3,233,147 B sha256 d0f540dbbadf…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 147/0 · cite-distinguishing 145/2 · position-first 143/4 · not-found-to-everyone 123/24 · roster-stamp-dropped 135/12 · publish-raw-bm25 140/7 · order-by-index-bm25 142/5 · tf-over-vis 147/0 · stats-whole-store 133/14 · indexcheck-whole-index 144/3 · selectionbytes-whole 146/1 · stats-stamp-dropped 141/6 · subtract-for-everyone 147/0 · d486-content-tally-unsubtracted 145/2 · d486-stats-airunlog-unsubtracted 144/3 · d486-meaning-run-ungated 145/2 · d486-predicate-de-morgan 147/0 · d480-citers-ungated 140/7 (THE ROW'S OWN CONTROL: the citer end of the edge ungated again — §10's seven arms fail, headed by `A HIDDEN PROJECT'S CITATIONS MOVE NOTHING`) · d480-targets-ungated 146/1 (the ATTRIBUTION arm: the target end alone, failing `A TARGET VERA CANNOT SEE TAKES NO SLOT` and NOTHING else, with the citer arms either side of it green) · d480-not-in-inverted 147/0 (over-strictness) · sight-via-redactor 147/0: AS DECLARED. BEFORE the fix §10's seven arms fail, measured twice — by `d480-citers-ungated` and by `stats-whole-store`, which neuters `#hiddenSets`' `hid` at source and takes all seven with it. RECORDED, NOT SMOOTHED: (1) `d480-citers-ungated` came back NOT AS DECLARED on its first run and THE ARM WAS RIGHT WHILE THE DECLARATION WAS WRONG — two of §10's arms read `truncOf(...).every((x) => x === false)`, which is TRUE OVER AN EMPTY ARRAY, so with vera's item crowded off her page entirely they PASSED over a feed holding nothing, while a third arm failed for a reason that was not its subject (a digest compared between two reads both missing the item). The SUITE was corrected — every flag is now asserted once per item beside the item COUNT — and the declaration re-taken. (2) `not-found-to-everyone` and `stats-whole-store` came back NOT AS DECLARED on declarations that PREDATE this item: the first has been failing §9's two ADMIN-token arms undeclared since D-486 added them, and the second neuters the ONE predicate both D-464's counts and D-480's candidate page read. Both declarations were EXTENDED, never exempted, and the second is a measurement: `stats-stamp-dropped`, which drops the stamp on `op=stats` alone, leaves §10 wholly green, so the coupling is the predicate and not the door. (3) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-464, D-486 or D-480.
+   RE-RUN 2026-09-25 by REC-196 in worktree /home/user/bio (cloud) on base origin/main 964da679, AFTER adding §11 (a READ naming a DISCOVERABLE project's own id answers C-70.1, BOB #32's ruling (a)) and six arms, real src/index.mjs 857,558 B sha256 28bfd3677c8c…, src/store.mjs 3,355,514 B sha256 b854b3303ef9…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 205/0 · cite-distinguishing 203/2 · position-first 201/4 · not-found-to-everyone 178/27 · roster-stamp-dropped 193/12 · publish-raw-bm25 198/7 · order-by-index-bm25 200/5 · tf-over-vis 205/0 · stats-whole-store 191/14 · indexcheck-whole-index 202/3 · selectionbytes-whole 204/1 · stats-stamp-dropped 199/6 · subtract-for-everyone 205/0 · d486-content-tally-unsubtracted 203/2 · d486-stats-airunlog-unsubtracted 202/3 · d486-meaning-run-ungated 203/2 · d486-predicate-de-morgan 205/0 · d480-citers-ungated 198/7 · d480-targets-ungated 204/1 · d480-not-in-inverted 205/0 · rec196-existence-read-dropped 180/25 (THE ROW'S OWN CONTROL: the pre-dispatch check disarmed, so a discoverable project's own id reads "does not exist" again — every one of §11's 24 reads fails 11b BY NAME, with 11c) · rec196-hidden-too 171/34 (positional for HIDDEN projects too: §11e's 24 arms and ten of §1's own hidden-equals-absent read arms) · rec196-to-everyone 203/2 (the owner answered C-70.1: 11f, 11f+) · rec196-table-short 203/2 (projectparticipants dropped from the table: the sweep names it, 11g, and its 11b fails) · rec196-roster-viewer-unstamped 204/1 · rec196-no-prefilter 205/0 (over-strictness) · sight-via-redactor 205/0: AS DECLARED. BEFORE the fix, `project-discoverable.test.mjs` §3l measured all eleven of its reads at EXISTENCE byte-identical to a never-minted id. RECORDED, NOT SMOOTHED: (1) rec196-hidden-too came back NOT AS DECLARED on its first run — it ALSO failed ten of this suite's earlier REC-138 read arms, a second witness the declaration had missed; extended. (2) rec196-table-short came back NOT AS DECLARED because §11g's FIRST spelling demanded the route read `viewer`, and `projectparticipants` reads it only through the new check, so the sweep was blind to exactly that drop; the sweep was widened to every id-carrying read route (and seven ungated reads were classified), then AS DECLARED. (3) not-found-to-everyone came back NOT AS DECLARED because §11's fixture set the setting by iris's SESSION, which that arm lies to (D-447's recorded second-variable trap); the fixture now takes the owner's act through the store's internal door and the run-open is non-fatal, and the arm's declaration was EXTENDED by 11d+, 11f and 11f+, which catch it by name. (4) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by REC-196.
+   RE-RUN 2026-09-25 by REC-197 in worktree /home/user/bio (cloud) on land/worker/REC-196 @ 82f604d2 (stacked; REC-196 integrated, not yet on main), AFTER adding §12 (a creation and a fork CARRY `visibility`, absent is HIDDEN, a machine's `discoverable` is refused C-97.1 — BOB #32's ruling (b)) and five arms, real src/index.mjs 857,558 B sha256 28bfd3677c8c…, src/store.mjs 3,361,747 B sha256 1662015934e2…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES (and sha256sum -c of all four sources before/after the run: OK) — baseline 222/0 · cite-distinguishing 220/2 · position-first 218/4 · not-found-to-everyone 187/35 · roster-stamp-dropped 210/12 · publish-raw-bm25 215/7 · order-by-index-bm25 217/5 · tf-over-vis 222/0 · stats-whole-store 208/14 · indexcheck-whole-index 219/3 · selectionbytes-whole 221/1 · stats-stamp-dropped 216/6 · subtract-for-everyone 222/0 · d486-content-tally-unsubtracted 220/2 · d486-stats-airunlog-unsubtracted 219/3 · d486-meaning-run-ungated 220/2 · d486-predicate-de-morgan 222/0 · d480-citers-ungated 215/7 · d480-targets-ungated 221/1 · d480-not-in-inverted 222/0 · rec196-existence-read-dropped 197/25 · rec196-hidden-too 188/34 · rec196-to-everyone 218/4 · rec196-table-short 220/2 · rec196-roster-viewer-unstamped 221/1 · rec196-no-prefilter 222/0 · rec197-absent-discoverable 218/4 (THE ROW'S OWN CONTROL: an absent `visibility` on an owner's creation defaults to DISCOVERABLE — the FAIL-CLOSED arms 12a, 12a+ and 12h fail BY NAME, with 12g) · rec197-machine-may-choose 218/4 (the ownerless refusal disarmed: 12d and 12d+ for the ADMIN and the MEMBER token) · rec197-not-recorded 218/4 (the field accepted and nothing recorded: 12b, 12b+, 12c, 12h+) · rec197-revision-ignored 221/1 (12g) · rec197-setting-as-set 222/0 (over-strictness) · sight-via-redactor 222/0: AS DECLARED. RECORDED, NOT SMOOTHED: (1) rec197-absent-discoverable came back NOT AS DECLARED on its first run — it ALSO failed 12g, whose fixture is 12a's absent-created project; the arm was right and the declaration one row short, so it was extended. (2) not-found-to-everyone and rec196-to-everyone came back NOT AS DECLARED on this item's first full run — §12 reads every creation back through its owner's session, which the first lies to outright and the second answers C-70.1 for a discoverable project; both declarations EXTENDED by name, never exempted. (3) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by REC-197. `project-discoverable.control.mjs` re-run on the same tree, every arm AS DECLARED: baseline 157/0 · widen-viewerPredicate 95/62 · existence-as-absent 123/34 · default-discoverable 96/61 (D-601's re-armed arm, AS DECLARED) · owner-fence-dropped 149/8 · latest-by-max-seq 157/0 · act-not-reindexed 101/56 — after correcting that suite's predecessor fixture (1a0), whose today's-code-over-yesterday's-schema store now also neuters the creation answer's `#visibilityOf` read.
  * ========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
@@ -139,13 +141,16 @@ const inquiryMd = (id, basis) => ["---", `id: ${id}`, "object_type: inquiry", "s
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 /* CORRECTED 2026-09-18 (REC-141, IC-158): `id` null builds a CREATION's bytes, which carry no `id:` line —
    the plane mints the project's id and writes it (C-59.2 refuses bytes already carrying one). */
-const projectMd = (id, cites = [], summary = "A project.") => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
-  `title: "Hidden project 9138"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+/* D-563: `title` is the project's NAME, stated in its document — 7.1 scans the document's title, not a label. */
+const projectMd = (id, cites = [], summary = "A project.", title = "Hidden project 9138") => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
+  `title: "${title}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
                    : ["references: []"]),
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", summary, "",
   "## Session Log", ""].join("\n");
-const meta = (id, type, state) => ({ object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+/* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: the label `Bundle ${id}` contradicted every document's own
+   title and is now refused; the label names none, and each bundle is titled by its document. */
+const meta = (id, type, state) => ({ object_type: type, group: "believe-in-oakland",
   current_state: state, created: NOW, last_updated: LATER });
 const pkg = (id, text, type, state, base, snapKey) => ({ bundleId: id, base, snapKey,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
@@ -245,7 +250,7 @@ t("the id names nothing yet (so the first read IS the never-minted answer)", awa
 /* CORRECTED 2026-09-19 (REC-141): created with NO id; the plane mints it, and P becomes the minted id. */
 {
   const { bundleId: _chosen, ...create } = pkg(P, projectMd(null, [LEDGER]), "project", "forming", null, `${P}-${++seq}`);
-  const minted = must("mint the project", await POST(`op=promote&token=${ADM}`, { ...create, meta: { ...create.meta, title: "Hidden project 9138" } }));
+  const minted = must("mint the project", await POST(`op=promote&token=${ADM}`, create));
   t("the plane minted an id of the canonical shape, and it is not the never-minted one read above",
     [/^PROJ-\d{4}-\d{4}-hidden-project-9138$/.test(String(minted.bundleId)), minted.bundleId !== NEVER], [true, true]);
   P = minted.bundleId;
@@ -462,14 +467,17 @@ console.log("\n--- 8. D-464: creating and revising a project vera cannot see mov
   console.log(`  corpus: ${READS.length} count reads by vera; op=stats answers ${keys.length} keys (bundles ${s0.bundles}, indexed ${s0.indexed})`);
   t("the counts are live: vera's op=stats is an answer of counts (floor: 40 keys, and she already sees documents)",
     [keys.length >= 40, s0.bundles > 0, s0.indexed > 0], [true, true, true]);
-  const { bundleId: _none, ...create } = pkg(NEVER, projectMd(null, [LEDGER]), "project", "forming", null, `d464-${++seq}`);
-  const q = must("a second hidden project is minted", await POST(`op=promote&token=${ADM}`,
-    { ...create, meta: { ...create.meta, title: "Hidden project 9464" } })).bundleId;
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: its name `Hidden project 9464` rode on the LABEL over a
+     document titled `Hidden project 9138`; 7.1 now scans the document's title, so the name is written there. */
+  const { bundleId: _none, ...create } = pkg(NEVER,
+    projectMd(null, [LEDGER], undefined, "Hidden project 9464"),
+    "project", "forming", null, `d464-${++seq}`);
+  const q = must("a second hidden project is minted", await POST(`op=promote&token=${ADM}`, create)).bundleId;
   must("iris owns it", await DO("projectclaimowner", { projectId: q, memberId: "iris" }));
   must("iris invites olga", await DO(`projectinvite?projectId=${q}&handle=olga&by=iris&viewer=admin`, {}));
   const qBase = await shaOf(q);
   must("and it is revised, citing a second document",
-    await promoteAs(ADM, q, projectMd(q, [LEDGER, MINUTES], "A revision."), "project", "forming", qBase));
+    await promoteAs(ADM, q, projectMd(q, [LEDGER, MINUTES], "A revision.", "Hidden project 9464"), "project", "forming", qBase));
   t("the hidden revision LANDED (its sha moved)", (await shaOf(q)) !== qBase, true);
   /* And iris, who owns it, SELECTS it: `op=selectionlist`'s `bytes` summed every owner's selection rows. */
   must("iris selects the hidden project", await POST(`op=select&token=${IRIS}&kind=enumerated`, { ids: [q] }));
@@ -695,8 +703,11 @@ console.log("\n--- 10. D-480: a hidden project's CITATIONS take no slot in vera'
   const QQ = "INQ-2026-9480-zz-shared";        /* sorts AFTER every filler: the question that is crowded out */
   must("vera's own shared question", await promoteAs(ADM, QQ, inquiryMd(QQ, LEDGER), "inquiry", "open"));
   const mintProject = async (title, cites) => {
-    const { bundleId: _n, ...c } = pkg(NEVER, projectMd(null, cites), "project", "forming", null, `d480-${++seq}`);
-    return must(`mint ${title}`, await POST(`op=promote&token=${ADM}`, { ...c, meta: { ...c.meta, title } })).bundleId;
+    /* D-563: the name goes in the DOCUMENT — 7.1 now scans the document's title, and a label naming each project
+       apart over one shared document title would be refused (C-86.3) or collide (NAME_TAKEN). */
+    const md = projectMd(null, cites, undefined, title);
+    const { bundleId: _n, ...c } = pkg(NEVER, md, "project", "forming", null, `d480-${++seq}`);
+    return must(`mint ${title}`, await POST(`op=promote&token=${ADM}`, c)).bundleId;
   };
   /* TWO projects vera PARTICIPATES IN (she owns them), so the divergence below is hers to read. */
   const VA = await mintProject("Vera oversight 9480", [QQ]);
@@ -785,8 +796,9 @@ console.log("\n--- 10. D-480: a hidden project's CITATIONS take no slot in vera'
      — the divergence then vanishes and every bound below reads `-1` over a feed with no item in it. The act, not a
      hand-authored row, puts it back, which is also the product's own order (`op=versioncurrent`). */
   const reviseVis = async (extra) => {
-    for (const [pid, nm] of [[VA, "VA"], [VB, "VB"]])
-      must(`revise ${nm}`, await promoteAs(ADM, pid, projectMd(pid, [QQ, ...cFill, ...extra]), "project", "forming", await shaOf(pid)));
+    /* D-563: each revision states its project's own name — the document's title is the name 7.1 holds unique. */
+    for (const [pid, nm, title] of [[VA, "VA", "Vera oversight 9480"], [VB, "VB", "Vera budget 9480"]])
+      must(`revise ${nm}`, await promoteAs(ADM, pid, projectMd(pid, [QQ, ...cFill, ...extra], undefined, title), "project", "forming", await shaOf(pid)));
     must("VA stands on the reading again",
          await POST(`op=versioncurrent&token=${VERA}&target=${E(QQ)}&version=v1&project=${E(VA)}`, {}));
   };
@@ -825,6 +837,259 @@ console.log("\n--- 10. D-480: a hidden project's CITATIONS take no slot in vera'
   t("STILL LIVE: crowding vera CAN see does reach her — her queue moves, and her own question is crowded off "
   + "her page (the same consequence the hidden crowding must NOT have)",
     [sha(vVis.body) !== sha(vVisTarget.body), mine(vVis).length], [true, 0]);
+}
+
+/* ======================================================== 11. A READ NAMING A DISCOVERABLE PROJECT'S OWN ID (REC-196) */
+console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE project's own id is answered positionally ---");
+{
+  /* WHAT WAS WRONG. REC-149 refused every ACT at EXISTENCE positionally (C-70.1) and left every READ that names a
+     project by id answering as for a project that does not exist — so the member the directory had just shown a
+     project to was told by the record that it does not exist. BOB #32 ruled on 2026-09-23 23:08Z (Membership v2
+     §7.14, (a)): *a read naming a discoverable PROJECT'S OWN id is answered POSITIONALLY at EXISTENCE, exactly like
+     an act; a read naming anything INSIDE the project answers exactly as it does today; `viewerPredicate` stays
+     unchanged.* Measured on the unedited tree through `project-discoverable.test.mjs` §3l: all eleven of its reads
+     answered byte-identically to a never-minted id at EXISTENCE.
+     HOW A LIAR PASSES, stated before what this checks:
+       (1) answer "does not exist" for the project itself (the old answer kept) — 11b demands C-70.1 of every read,
+           and the control's `rec196-existence-read-dropped` arm is exactly that;
+       (2) answer positionally for EVERYTHING, contents included — 11d reads a RUN inside the project and demands
+           the absent answer, byte for byte, and 11e demands a HIDDEN project still absent;
+       (3) answer positionally to everybody — 11f demands the owner's real answer from every read;
+       (4) cover the reads somebody thought of — 11g sweeps every gated read op into the store's two tables. */
+  const TITLE_D = "Discoverable roads project 9196";
+  /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: REC-196's fixture named D only in the ENVELOPE,
+     over a document titled "Hidden project 9138". Since D-563 promote takes the document's title, so D collided with
+     the hidden project's name (NAME_TAKEN). The document now carries TITLE_D itself, and the envelope agrees. */
+  const { bundleId: _n, ...c } = pkg(NEVER, projectMd(null, [LEDGER], undefined, TITLE_D), "project", "forming", null, `rec196-${++seq}`);
+  const D = must("mint D", await POST(`op=promote&token=${ADM}`, { ...c, meta: { ...c.meta, title: TITLE_D } })).bundleId;
+  must("iris owns D", await DO("projectclaimowner", { projectId: D, memberId: "iris" }));
+  /* The setting is iris's OWNER's act, taken through the store's INTERNAL door (a viewer never sent is not asked,
+     `#rosterInSight`'s precedent) rather than her session — so the `not-found-to-everyone` control arm, which lies
+     to every member session, perturbs the SUBJECT and not this fixture (D-447's recorded second-variable trap). */
+  must("iris sets D discoverable",
+       await DO(`projectvisibilityset?projectId=${E(D)}&setting=discoverable&by=iris&reason=${E("open to all")}`, {}));
+  const RUN_D = "RUN-2026-9196-inside", RUN_NEVER = "RUN-2026-9196-never";
+  /* NOT `must`: a control arm that hides D from iris refuses this open, and that must fail 11d+ BY NAME rather
+     than throw the suite before its foot. */
+  const opened = await POST(`op=airunopen&token=${IRIS}`, {
+    run: RUN_D, contextType: "project", contextId: D, label: "roads sweep", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude", skillVersion: "investigative-session@1",
+    bounds: [{ bound: "fetches", allowed: 20, unit: "requests" }], leaseMs: 600000 });
+
+  /* EVERY READ `Store.PROJECT_NAMING_READS` NAMES THAT A CALLER REACHES AS AN OP, each asked of the id X in the
+     parameter the table names. `gatefacts` and `affordancefacts` are store routes: the second is reached through
+     `op=affordances`, the first only by `op=ratify`, which is an act and REC-149's. */
+  const NAMING = (X) => [
+    ["image", `op=image&id=${X}`], ["file", `op=file&id=${X}&path=bundle.md`], ["projection", `op=projection&id=${X}`],
+    ["excludedby", `op=excludedby&id=${X}`], ["backlinks", `op=backlinks&target=${X}`],
+    ["reevaluations", `op=reevaluations&target=${X}`], ["inquirystrength", `op=inquirystrength&id=${X}`],
+    ["earnedbasis", `op=earnedbasis&id=${X}&targets=${LEDGER}`],
+    ["partitionindependence", `op=partitionindependence&id=${X}&partition=${E("[]")}`],
+    ["narrowcandidates", `op=narrowcandidates&target=${X}&version=v1&ord=0`],
+    ["versionnotice", `op=versionnotice&target=${X}`], ["basisversions", `op=basisversions&id=${E(INQ)}&project=${X}`],
+    ["versionstrength", `op=versionstrength&id=${E(INQ)}&version=v1&project=${X}`],
+    ["strengthbarof", `op=strengthbarof&project=${X}`], ["extractproposals", `op=extractproposals&bundle=${X}`],
+    ["capturerequests", `op=capturerequests&target=${X}`], ["tasks", `op=tasks&refers=${X}`],
+    ["biasmanifest", `op=biasmanifest&scope=project&scopeId=${X}`],
+    ["airuns", `op=airuns&contextType=project&contextId=${X}`], ["casedrafts", `op=casedrafts&project=${X}`],
+    ["affordances", `op=affordances&target=${X}`], ["projectownerarith", `op=projectownerarith&projectId=${X}`],
+    ["projectvisibility", `op=projectvisibility&projectId=${X}`],
+    ["projectparticipants", `op=projectparticipants&projectId=${X}`],
+  ];
+  const readAll = async (tok, X) => { const o = []; for (const [, q] of NAMING(X)) o.push(await RAW(`${q}&token=${tok}`)); return o; };
+  const vD = await readAll(VERA, D);
+  console.log(`  corpus: ${NAMING(D).length} reads naming a project by its own id`);
+  t("11a: the corpus is not empty (floor: 24 reads)", NAMING(D).length >= 24, true);
+  NAMING(D).forEach(([name], i) => { const r = parse(vD[i]);
+    t(`11b: AT EXISTENCE, op=${name} naming D's own id answers C-70.1, naming D by its id and name`,
+      [codeOf(r), r && r.check, r && r.project, r && r.name], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1", D, TITLE_D]); });
+  const allowed = ["ok", "reason", "code", "check", "translation", "detail", "project", "name", "store", "tokenClass"];
+  t("11c: and each carries NOTHING about D beyond its id and name (no owner, participant, state, run)",
+    vD.map((r, i) => [NAMING(D)[i][0], Object.keys(parse(r) || {}).filter((k) => !allowed.includes(k)),
+                      /iris|forming|roads sweep|9196-inside/.test(r.body)])
+      .filter(([, extra, named]) => extra.length || named), []);
+
+  /* CONTENTS KEEP THE EXISTENCE ANSWER: a run INSIDE D is D's thinking, and its existence is contents. */
+  const idless = (body, id) => body.split(id).join("<ID>");
+  const inside = await RAW(`op=airun&token=${VERA}&run=${RUN_D}`), never = await RAW(`op=airun&token=${VERA}&run=${RUN_NEVER}`);
+  t("11d: INSIDE THE PROJECT: vera's op=airun of the run over D is byte-identical to a run id that names nothing",
+    { status: inside.status, sha: sha(idless(inside.body, RUN_D)) }, { status: never.status, sha: sha(idless(never.body, RUN_NEVER)) });
+  t("11d+: and that read is not blind — iris reads her own run over D",
+    [opened && opened.ok !== false, parse(inside)?.found,
+     (({ run, found }) => [run, found])(parse(await RAW(`op=airun&token=${IRIS}&run=${RUN_D}`)) || {})],
+    [true, false, [RUN_D, true]]);
+
+  /* A HIDDEN project is untouched by the ruling: P, which vera was never invited to, answers every one of these
+     reads byte-identically to a never-minted id. */
+  const vP = await readAll(VERA, P), vN = await readAll(VERA, NEVER);
+  NAMING(P).forEach(([name], i) => t(`11e: HIDDEN = ABSENT, raw: op=${name} naming hidden P`,
+    { status: vP[i].status, sha: sha(idless(vP[i].body, P)) }, { status: vN[i].status, sha: sha(idless(vN[i].body, NEVER)) }));
+
+  /* Those with full sight are unchanged: the owner is never answered positionally by any of them. */
+  const iD = await readAll(IRIS, D);
+  t("11f: the OWNER is answered by every read (none says C-70.1 to iris)",
+    iD.map((r, i) => [NAMING(D)[i][0], codeOf(parse(r))]).filter(([, cd]) => cd === "PROJECT_SEEN_NOT_A_PARTICIPANT"), []);
+  t("11f+: and the roster read gives her the real roster", (parse(iD[NAMING(D).findIndex(([n]) => n === "projectparticipants")])
+    ?.participants || []).map((p) => p.handle), ["iris"]);
+
+  /* 11g — THE SWEEP, AND IT IS WHAT KEEPS THE TABLE FROM GOING STALE. Every op `index.mjs` marks `mutating: false`
+     whose store route reads a parameter of an id-carrying name must be classified in
+     EXACTLY ONE of `Store.PROJECT_NAMING_READS` (a bundle id, so it can name a project) or
+     `Store.PROJECT_NAMING_READS_NOT` (never a bundle id, with its reason). WHAT THIS CANNOT SEE, stated: a read the
+     control plane COMPOSES under a different route name (`affordances` → `affordancefacts` is mapped by hand
+     below); a parameter whose name is not in `IDISH`; a route that takes its id from the body under another name.
+     Unclassified routes are PRINTED by name, never scored zero.
+     THE FIRST SPELLING ALSO DEMANDED THAT THE ROUTE READ `viewer`, AND THE `rec196-table-short` CONTROL ARM FOUND IT
+     BLIND: `projectparticipants` reads its viewer ONLY through this item's pre-dispatch check, never in its own route,
+     so dropping it from the table passed the sweep. Recorded, not smoothed; the viewer condition is gone, and the
+     ungated id-carrying reads are classified too. */
+  const src = (f) => readFileSync(join(SRC_DIR, f), "latin1");
+  const reads = new Set([...src("index.mjs").matchAll(/^\s+([a-z0-9]+):\s*\{\s*classes:[^}]*mutating:\s*false/gm)].map((m) => m[1]));
+  const lines = src("store.mjs").split("\n");
+  const at = lines.findIndex((l) => /^      const map = \{/.test(l));
+  const routes = {}; let cur = null;
+  for (let i = at + 1; i < lines.length && !/^      \};/.test(lines[i]); i++) {
+    const m = lines[i].match(/^        ([a-z0-9]+): /);
+    if (m) { cur = m[1]; routes[cur] = ""; }
+    if (cur) routes[cur] += lines[i];
+  }
+  const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
+    return m ? Function(`return (${m[1]});`)() : null; };
+  const NAMES = table("PROJECT_NAMING_READS"), NOT = table("PROJECT_NAMING_READS_NOT");
+  const IDISH = ["id", "target", "projectId", "project", "bundleId", "bundle", "scopeId", "contextId", "address",
+                 "run", "case", "draft", "refers", "sha256", "content", "entity"];
+  const ALIAS = { affordances: "affordancefacts" };
+  const gated = [], unrouted = [];
+  for (const op of [...reads].sort()) {
+    const route = routes[ALIAS[op] || op];
+    if (route === undefined) { unrouted.push(op); continue; }
+    const ps = [...route.matchAll(/searchParams\.get\("([a-zA-Z0-9]+)"\)/g)].map((m) => m[1]);
+    if (ps.some((p) => IDISH.includes(p))) gated.push(ALIAS[op] || op);
+  }
+  console.log(`  sweep: ${reads.size} read ops; ${gated.length} routes carry an id-named parameter; `
+            + `${unrouted.length} composed in the control plane with no store route of their name (not swept): ${unrouted.join(", ")}`);
+  t("11g0: the sweep is not blind (the tables parsed; floors: 20 id-carrying reads, 24 naming reads)",
+    [!!NAMES, !!NOT, gated.length >= 20, Object.keys(NAMES || {}).length >= 24], [true, true, true, true]);
+  t("11g: every read carrying an id-named parameter is classified (unclassified, by name)",
+    gated.filter((r) => !(r in (NAMES || {})) && !(r in (NOT || {}))), []);
+  t("11g+: and none is classified twice", Object.keys(NAMES || {}).filter((r) => r in (NOT || {})), []);
+  t("11g++: every classified name is a real store route", [...Object.keys(NAMES || {}), ...Object.keys(NOT || {})]
+    .filter((r) => routes[r] === undefined), []);
+}
+
+/* ======================================================================== §12
+ * REC-197 — A CREATION CARRIES ITS SETTING, AND AN OWNERLESS CREATION CANNOT CHOOSE ONE (Membership v2 §7.14,
+ * RULED by BOB #32 (b), 2026-09-23: *"create and fork take one optional field, `visibility` (`discoverable` or
+ * `hidden`), and an absent one is HIDDEN. A MACHINE credential never sets it … its creation is therefore HIDDEN,
+ * and a `visibility=discoverable` it sends is refused by name."*). Driven through the OPS — `op=promote` (the
+ * creation: a project bundle with no base) and `op=projectfork` — and read back through `op=projectvisibility`
+ * and vera's `op=projectdirectory`, never through the store.
+ *
+ * HOW A LIAR PASSES THE OBVIOUS TEST, stated before what this checks:
+ *   (1) default to DISCOVERABLE. Every arm that SENDS a value still passes. So 12a (the FAIL-CLOSED arm) creates
+ *       with the field ABSENT and asks the record — the setting, the history and vera's directory — and 12h asks
+ *       the same of a FORK sent without it, whose origin is DISCOVERABLE (so inheritance is a liar too).
+ *   (2) ACCEPT the field and record nothing. The answer can still say `discoverable` if it echoes the request;
+ *       so 12b reads it back through `op=projectvisibility`'s HISTORY (set_by iris) and vera's directory.
+ *   (3) let a machine choose. 12d drives the ADMIN and MEMBER deploy tokens with `discoverable` and demands the
+ *       refusal BY NAME (C-97.1) with its canned translation, and that NO project was created.
+ *   (4) refuse too much. 12e: a machine's creation with no field, or with `hidden`, still lands, HIDDEN, with no
+ *       owner's act recorded (it asked for exactly what an ownerless creation gets).
+ * WHAT THIS CANNOT SEE: an internal store caller that promotes a project with `ownerMemberId` it did not get from
+ * a session — the control plane's stamp is what makes ownerlessness mean "machine", and REC-79's admission suite
+ * owns that stamp. */
+{
+  const projMd12 = (title) => projectMd(null).replace('title: "Hidden project 9138"', `title: "${title}"`);
+  const create12 = (tok, title, vis) => {
+    const text = projMd12(title);
+    return POST(`op=promote&token=${tok}`, {
+      base: null, snapKey: `rec197-${++seq}`,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { ...meta(null, "project", "forming"), title },
+      ...(vis === undefined ? {} : { visibility: vis }) });
+  };
+  const visOf = async (id) => parse(await RAW(`op=projectvisibility&token=${IRIS}&projectId=${E(id)}`));
+  const listed = async () => ((parse(await RAW(`op=projectdirectory&token=${VERA}`)) || {}).projects || []).map((p) => p.id);
+  const projCount = async () => ((parse(await RAW(`op=list&token=${ADM}&limit=1000`)) || {}).bundles || [])
+    .filter((b) => b.object_type === "project").length;
+
+  /* 12a — THE FAIL-CLOSED ARM. */
+  const a = must("12a create", await create12(IRIS, "REC-197 absent"));
+  const va = await visOf(a.bundleId);
+  t("12a: FAIL-CLOSED — a member's creation with NO visibility field is created HIDDEN (answer, setting, no act recorded)",
+    [a.visibility, va && va.setting, va && va.recorded, va && va.history && va.history.length], ["hidden", "hidden", false, 0]);
+  t("12a+: FAIL-CLOSED — and the uninvited member's directory does not list it", (await listed()).includes(a.bundleId), false);
+
+  /* 12b — the owner's choice, recorded as the owner's act. */
+  const b = must("12b create", await create12(IRIS, "REC-197 discoverable", "discoverable"));
+  const vb = await visOf(b.bundleId);
+  t("12b: a member's creation with visibility=discoverable is DISCOVERABLE, recorded as iris's act",
+    [b.visibility, vb && vb.setting, vb && vb.history && vb.history.map((h) => [h.setting, h.set_by])],
+    ["discoverable", "discoverable", [["discoverable", "iris"]]]);
+  t("12b+: and vera's directory lists it by id and name", (await listed()).includes(b.bundleId), true);
+
+  /* 12c — `hidden` chosen is recorded as chosen. */
+  const c = must("12c create", await create12(IRIS, "REC-197 hidden", "hidden"));
+  const vc = await visOf(c.bundleId);
+  t("12c: visibility=hidden is HIDDEN and recorded as the owner's choice",
+    [c.visibility, vc && vc.setting, vc && vc.recorded, vc && vc.history && vc.history.map((h) => h.set_by)],
+    ["hidden", "hidden", true, ["iris"]]);
+
+  /* 12d — the machine refusal, by name, and nothing created. */
+  for (const [who, tok] of [["ADMIN", ADM], ["MEMBER", MEM]]) {
+    const before = await projCount();
+    const r = await create12(tok, `REC-197 machine ${who}`, "discoverable");
+    t(`12d: a MACHINE credential (${who} token) sending visibility=discoverable is refused BY NAME`,
+      [r && r.ok, codeOf(r), r && r.check, typeof (r && r.translation) === "string" && r.translation.length > 40],
+      [false, "PROJECT_VISIBILITY_NO_OWNER", "C-97.1", true]);
+    /* The count is floored: a list that carried no object_type would count 0 before and after, for free. */
+    t(`12d+: and nothing was created (${who}; the count is of a non-empty list)`, [await projCount(), before > 0], [before, true]);
+  }
+
+  /* 12e — OVER-STRICTNESS: the machine's creation itself is not refused. */
+  const e0 = must("12e absent", await create12(ADM, "REC-197 machine absent"));
+  const e1 = must("12e hidden", await create12(ADM, "REC-197 machine hidden", "hidden"));
+  const ve0 = parse(await RAW(`op=projectvisibility&token=${ADM}&projectId=${E(e0.bundleId)}`));
+  const ve1 = parse(await RAW(`op=projectvisibility&token=${ADM}&projectId=${E(e1.bundleId)}`));
+  t("12e: a machine's creation with no field, or with hidden, LANDS HIDDEN with no owner's act recorded",
+    [e0.visibility, e1.visibility, ve0 && ve0.recorded, ve1 && ve1.recorded, e0.owner, e1.owner],
+    ["hidden", "hidden", false, false, null, null]);
+
+  /* 12f — a value that is not a setting. */
+  { const before = await projCount();
+    const r = await create12(IRIS, "REC-197 unknown", "Discoverable");
+    t("12f: visibility=\"Discoverable\" is not a setting — refused C-70.3 by name, the owner's act's own row",
+      [r && r.ok, codeOf(r), r && r.check], [false, "PROJECT_VISIBILITY_UNKNOWN_SETTING", "C-70.3"]);
+    t("12f+: and nothing was created (the count is of a non-empty list)", [await projCount(), before > 0], [before, true]); }
+
+  /* 12g — the field on a REVISION is refused, never silently ignored. */
+  { const text = projMd12("REC-197 absent").replace("---\n", `---\nid: ${a.bundleId}\n`).replace("A project.", "Revised.");
+    const r = await POST(`op=promote&token=${IRIS}`, { bundleId: a.bundleId, base: a.bundleSha, snapKey: `rec197-${++seq}`,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { ...meta(a.bundleId, "project", "forming"), title: "REC-197 absent" }, visibility: "discoverable" });
+    const v = await visOf(a.bundleId);
+    t("12g: visibility on a REVISION is refused by name (C-97.2), and the setting did not move",
+      [r && r.ok, codeOf(r), r && r.check, v && v.setting, v && v.recorded],
+      [false, "PROJECT_VISIBILITY_NOT_A_CREATION", "C-97.2", "hidden", false]); }
+
+  /* 12h — the FORK: a creation, its forker chooses, it does not inherit. The origin is DISCOVERABLE (b). */
+  { const f0 = await POST(`op=projectfork&token=${IRIS}&projectId=${E(b.bundleId)}&title=${E("REC-197 fork absent")}`);
+    const v0 = f0 && f0.newId ? await visOf(f0.newId) : null;
+    t("12h: FAIL-CLOSED — a fork with NO visibility of a DISCOVERABLE project is HIDDEN (not inherited)",
+      [f0 && f0.ok, f0 && f0.visibility, v0 && v0.setting, v0 && v0.recorded], [true, "hidden", "hidden", false]);
+    const f1 = await POST(`op=projectfork&token=${IRIS}&projectId=${E(c.bundleId)}&title=${E("REC-197 fork chosen")}&visibility=discoverable`);
+    const v1 = f1 && f1.newId ? await visOf(f1.newId) : null;
+    t("12h+: a fork with visibility=discoverable of a HIDDEN project is DISCOVERABLE, the forker's act",
+      [f1 && f1.ok, f1 && f1.visibility, v1 && v1.history && v1.history.map((h) => [h.setting, h.set_by])],
+      [true, "discoverable", [["discoverable", "iris"]]]);
+    const f2 = await POST(`op=projectfork&token=${IRIS}&projectId=${E(c.bundleId)}&title=${E("REC-197 fork bad")}&visibility=public`);
+    t("12h++: a fork with visibility=public is refused C-70.3 by name", [f2 && f2.ok, codeOf(f2)],
+      [false, "PROJECT_VISIBILITY_UNKNOWN_SETTING"]); }
+
+  /* 12i — the owner's act still answers C-70.3 through the shared helper, project echoed as before. */
+  { const r = await POST(`op=projectvisibilityset&token=${IRIS}&projectId=${E(c.bundleId)}&setting=public`);
+    t("12i: the owner's act with an unknown setting still answers C-70.3, naming its project",
+      [r && r.ok, codeOf(r), r && r.check, r && r.project], [false, "PROJECT_VISIBILITY_UNKNOWN_SETTING", "C-70.3", c.bundleId]); }
 }
 
 } catch (e) {

@@ -23,7 +23,7 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "group-identity.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "src/setup.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 /* Anchors, each a line of the subject quoted verbatim. */
@@ -32,6 +32,12 @@ const TICK = "        tick: ()    => this.#groupDomainTick() },";
 const FENCE = "    if (IDENTITY_ACTIONS.includes(op) && !viaSession)";
 const STAMP = "      inner.searchParams.set(\"by\", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);\n"
             + "      inner.searchParams.set(\"origin\", url.origin);";
+/* D-596's anchors: the setup page's read, the line's domain gate and its dated rendering, the name span, and the escape. */
+const PAGE_READ = "      return new Response(setupPage(await publicInstanceGroup(env, pageStore, \"groupidentitypublic\")),";
+const DOMAIN_GATE = "    const domain = typeof r.domain === \"string\" && r.domain && day ? r.domain : null;";
+const DOMAIN_DATE = "'</span> verified <time datetime=\"'\n                  + escGroup(day) + '\">' + escGroup(day) + \"</time>\"";
+const NAME_SPAN = "      + (name ? '<span class=\"name\">' + escGroup(name) + \"</span> &middot; \" : \"\")\n      + '<span class=\"slug\">'\n      + escGroup(r.group) + \"</span> &middot; group instance\"";
+const NAME_ESC = "'<span class=\"name\">' + escGroup(name) + ";
 const ROSTER = "    if (!by || !this.#activeAdmins().includes(by))\n      return refusal(\"GROUP_IDENTITY_NOT_ADMIN\",";
 
 const ARMS = {
@@ -43,14 +49,17 @@ const ARMS = {
      domain down. Every verified arm stays green: the gate only ever REMOVES a domain. */
   "verdict-gate-skipped": {
     patches: [["store.mjs", GATE, "    const verified = !!(slug && dom);"]],
-    mustFail: ["D1:", "D2:", "D3:", "D3b:", "L3:"],
+    /* W3, W3b, W5 ADDED by D-596: the setup page follows the plane's gate, and a skipped gate hands it the claim WITH a
+       date (`domain_verified_at` is the latest check's), so the page's own dated-verdict gate cannot and should not
+       catch a plane that lies — the plane's gate is the one that decides. */
+    mustFail: ["D1:", "D2:", "D3:", "D3b:", "L3:", "W3:", "W3b:", "W5:"],
   },
 
   /* THE LIAR THE ROW NAMES — VERIFIED ONCE AT SET TIME: the alarm consumer stays registered and re-checks nothing.
      Every set-time arm stays green; only the arms that change the file after `verified` can see it. */
   "set-time-only": {
     patches: [["store.mjs", TICK, "        tick: ()    => ({ groupdomain: null }) },"]],
-    mustFail: ["L2:", "L3:", "L4:"],
+    mustFail: ["L2:", "L3:", "L4:", "W5:"],   /* W5 ADDED by D-596: the page follows the stale verdict */
   },
 
   /* THE BEARER FENCE DROPPED, the stamp and the roster left standing: a bearer reaches the store as `class:<cls>`,
@@ -83,7 +92,47 @@ const ARMS = {
      demands a VERIFIED domain be shown fails. The direction a fence tighter than its rule goes. */
   "gate-never-opens": {
     patches: [["store.mjs", GATE, "    const verified = false;"]],
-    mustFail: ["D5:", "L1:", "L4:", "O1:"],
+    mustFail: ["D5:", "L1:", "L4:", "O1:", "W4:", "W6:"],   /* W4, W6 ADDED by D-596: nothing verified to show */
+  },
+
+  /* D-596, THE ROW'S CONTROL — THE DOMAIN RENDERED WITHOUT ITS VERIFIED DATE: the line's own gate no longer asks for a
+     dated verdict and the date is not rendered. The plane still withholds every unverified claim, so the unverified
+     page arms (W3, W3b, W5) stay green; the arms that demand the date beside a verified domain (W4, W6) and the
+     surface's own gate over an undated hand-built answer (W8) fail BY NAME. */
+  "domain-undated": {
+    patches: [["setup.mjs", DOMAIN_GATE, "    const domain = typeof r.domain === \"string\" && r.domain ? r.domain : null;"],
+              ["setup.mjs", DOMAIN_DATE, "'</span>'"]],
+    mustFail: ["W4:", "W6:", "W8:"],
+  },
+
+  /* THE DEFECT RESTORED: the setup page reads op=instancegroup's slug-only projection again. Every plane arm stays
+     green; every page arm that demands the name or the verified domain fails. W3/W3b/W5 stay green — a page showing
+     no domain never shows an unverified one — and W2, W8 need no read. */
+  "page-reads-slug-only": {
+    patches: [["index.mjs", PAGE_READ, "      return new Response(setupPage(await publicInstanceGroup(env, pageStore)),"]],
+    mustFail: ["W1:", "W3:", "W4:", "W6:", "W7:"],
+  },
+
+  /* THE NAME INSTEAD OF THE SLUG: where a name is recorded the line shows it alone. W0 and W2 stay green (no name). */
+  "name-alone": {
+    patches: [["setup.mjs", NAME_SPAN, "      + (name ? '<span class=\"name\">' + escGroup(name) + \"</span> &middot; group instance\"\n"
+                                     + "        : '<span class=\"slug\">' + escGroup(r.group) + \"</span> &middot; group instance\")"]],
+    mustFail: ["W1:", "W3:", "W4:", "W7:"],
+  },
+
+  /* THE NAME UNESCAPED: member-supplied markup reaches the public page's bytes. Only W7 carries markup. */
+  "name-unescaped": {
+    patches: [["setup.mjs", NAME_ESC, "'<span class=\"name\">' + String(name) + "]],
+    mustFail: ["W7:"],
+  },
+
+  /* OVER-STRICTNESS OF THE PAGE ARMS: the name, the date and the domain in markup and words they did not anticipate —
+     no spans, a numeric entity for the dot, the date in parentheses after "verified on". Nothing may fail. */
+  "page-respelled": {
+    patches: [["setup.mjs", NAME_SPAN, "      + (name ? '<b>' + escGroup(name) + \"</b> &#183; \" : \"\")\n      + '<code>'\n"
+                                     + "      + escGroup(r.group) + \"</code> &#183; the group this copy records\""],
+              ["setup.mjs", DOMAIN_DATE, "' (verified on ' + escGroup(day) + ')'"]],
+    mustFail: [],
   },
 
   /* OVER-STRICTNESS OF THE SUITE: the same gate in a spelling it did not anticipate. Nothing may fail. */
