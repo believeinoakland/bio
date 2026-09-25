@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d150-statement-acknowledgement.test.mjs",
+ "inputHash": "cd9f2d0cffc3893601b64c20af850f5591b9345a2b10b4456a961fb79cc725dc",
+ "verdict": "PASS",
+ "run": "6fc9ca57dfeeb63409f32a7c7f8ed9866f72e6cf.1790330254972.1205.json",
+ "tree": "6fc9ca57dfeeb63409f32a7c7f8ed9866f72e6cf",
+ "head": "80d1db460140b57638d0b083ffd702d30c179eb5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 159,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "85106322-ecd8-5df4-ab13-ab53137b2293",
+ "at": "2026-09-25T09:57:34.982Z"
+}
