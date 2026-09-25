@@ -229,3 +229,4 @@ D-700	2026-09-25T09:21:27.465Z	land/worker/D-674
 D-701	2026-09-25T09:26:42.852Z	SCHEDULER-23	navchanges and op=links filter by the viewer (BOB #35 09:30Z)
 D-702	2026-09-25T09:26:47.545Z	SCHEDULER-23	link chrome needs containment AND recurrence (BOB #35 09:30Z)
 D-703	2026-09-25T09:27:39.263Z	land/worker/D-683	
+D-704	2026-09-25T09:27:58.222Z	SCHEDULER-23	check-mock-envelope spawns suites piped with no maxBuffer (D-387's second half, delegation half 2)
