@@ -733,6 +733,8 @@ const CHOOSERS = {
      per-row "apply" control would be this surface offering a partial statement the plane has no act for.
      `addActionPaneHtml`'s shape exactly. */
   "actionLawsPaint":       "UI-90: draft-list editing of the governing laws before ONE op=actionlaws; the act replaces the whole set as one statement, so a per-row act would be a partial statement the plane cannot take",
+  /* UI-104 (REC-214). ONE decision: `op=actionrisktier` sets ONE tier on ONE action per act, with one reason. */
+  "actionTierPaint":       "UI-104: radios choosing the ONE tier a single op=actionrisktier revision sets, with its one required reason",
   /* D-126, 2026-09-23. */
   "queueSelBarHtml":       "the acts the record publishes (`set_acts`, weight per-item) over ONE held selection — `finderPaintSelection`'s shape on the queue; the per-item ticks that build the selection are `queueEntryControlsHtml`'s",
   "queueRetainedHtml":     "clears ONE retained item's note from this screen; it touches the record not at all (the item's own acts are still `queueEntryControlsHtml`'s)",
