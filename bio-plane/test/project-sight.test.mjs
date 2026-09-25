@@ -6,6 +6,7 @@
    RE-RUN 2026-09-24 by D-464 in worktree /home/user/bio (cloud) on base 15b2a4c0 AFTER adding §8 (the counts) and five arms, real src/index.mjs 742,733 B sha256 450e60c61109…, src/store.mjs 2,958,609 B sha256 9a5b205f5a3b…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 125/0 · cite-distinguishing 123/2 · position-first 121/4 · not-found-to-everyone 103/22 · roster-stamp-dropped 113/12 · publish-raw-bm25 118/7 · order-by-index-bm25 120/5 · tf-over-vis 125/0 · stats-whole-store 122/3 (THE BRIEF'S CONTROL: `op=stats` counts the whole store again — the hidden-creation arm fails BY NAME, `A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats`, with the digest and EXACT arms; searchindexcheck and selectionlist stay green) · indexcheck-whole-index 122/3 · selectionbytes-whole 124/1 · stats-stamp-dropped 122/3 · subtract-for-everyone 125/0 (over-strictness) · sight-via-redactor 125/0: AS DECLARED. BEFORE the fix §8 read 115/7 on the unedited sources (vera's stats moved `bundles, files, history, refs, indexed, projectParticipants`). RECORDED, NOT SMOOTHED: (1) stats-stamp-dropped came back NOT AS DECLARED on its first run (then 121/4, against a store reading an ABSENT stamp as DENY: the ADMIN witness failed and three zeros agreed); that reading was corrected before landing because it zeroed the counters four store-level suites read off the DO route (a never-sent viewer is now an internal call, WHOLE), and the arm was re-declared: dropping the stamp now fails the headline by name. Reason at the arm. (2) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2) above, unchanged by D-464.
    RE-RUN 2026-09-24 by D-486 in worktree /home/user/bio (cloud) on base land/conduct/c19-batch10 @ cff0ede6 AFTER adding §9 (a RUN over a hidden project, the five observation-log tallies) and four arms, real src/index.mjs 786,508 B sha256 4579fae29f93…, src/store.mjs 3,178,998 B sha256 ae571b49b306…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 136/0 · cite-distinguishing 134/2 · position-first 132/4 · not-found-to-everyone 114/22 · roster-stamp-dropped 124/12 · publish-raw-bm25 129/7 · order-by-index-bm25 131/5 · tf-over-vis 136/0 · stats-whole-store 129/7 · indexcheck-whole-index 133/3 · selectionbytes-whole 135/1 · stats-stamp-dropped 130/6 · subtract-for-everyone 136/0 · d486-content-tally-unsubtracted 134/2 (THE ROW'S OWN CONTROL: the predicate dropped from ONE reader — the content tally — and its arms fail BY NAME) · d486-stats-airunlog-unsubtracted 133/3 · d486-meaning-run-ungated 134/2 · d486-predicate-de-morgan 136/0 (over-strictness) · sight-via-redactor 136/0: AS DECLARED. BEFORE the fix §9 read 131/5 on the unedited sources (MEASUREMENTS M-131: vera's `aiRunLog` and `observationsNonLead` moved, all three tallies moved, and the MEANING level published the hidden run's own id in `looked`). RECORDED, NOT SMOOTHED: (1) d486-content-tally-unsubtracted came back NOT AS DECLARED on its first run with THREE undeclared reds, one of them BEFORE its own cause — the patch removed the predicate from the SQL and left its BINDINGS, so the statement threw; corrected to remove both, reason at the arm. (2) §9's residue arm came back GREEN on a second run after failing on the first WITHOUT a line changing: the four watermark keys move only when the fixture's captures and the run's rows fall inside ONE SECOND (the causes normalise to the second, `register.registered` carries milliseconds). Diagnosed, spelled as a CEILING, and routed as D-486 FINDING 2 — an intermittent disclosure is worse than a steady one, not better. (3) stats-whole-store and stats-stamp-dropped came back NOT AS DECLARED because §9 reads two `op=stats` keys their declarations predate; both declarations were EXTENDED (never exempted) and are AS DECLARED. (4) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-486.
    RE-RUN 2026-09-24 by D-480 in worktree /home/user/bio (cloud) on base origin/main 58293bf3 merged with land/worker/D-497 @ 29d8409d, AFTER adding §10 (a hidden project's CITATIONS, and a hidden TARGET, in the shared-question candidate page) and three arms, real src/index.mjs 802,067 B sha256 fbdcfb83ed09…, src/store.mjs 3,233,147 B sha256 d0f540dbbadf…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 147/0 · cite-distinguishing 145/2 · position-first 143/4 · not-found-to-everyone 123/24 · roster-stamp-dropped 135/12 · publish-raw-bm25 140/7 · order-by-index-bm25 142/5 · tf-over-vis 147/0 · stats-whole-store 133/14 · indexcheck-whole-index 144/3 · selectionbytes-whole 146/1 · stats-stamp-dropped 141/6 · subtract-for-everyone 147/0 · d486-content-tally-unsubtracted 145/2 · d486-stats-airunlog-unsubtracted 144/3 · d486-meaning-run-ungated 145/2 · d486-predicate-de-morgan 147/0 · d480-citers-ungated 140/7 (THE ROW'S OWN CONTROL: the citer end of the edge ungated again — §10's seven arms fail, headed by `A HIDDEN PROJECT'S CITATIONS MOVE NOTHING`) · d480-targets-ungated 146/1 (the ATTRIBUTION arm: the target end alone, failing `A TARGET VERA CANNOT SEE TAKES NO SLOT` and NOTHING else, with the citer arms either side of it green) · d480-not-in-inverted 147/0 (over-strictness) · sight-via-redactor 147/0: AS DECLARED. BEFORE the fix §10's seven arms fail, measured twice — by `d480-citers-ungated` and by `stats-whole-store`, which neuters `#hiddenSets`' `hid` at source and takes all seven with it. RECORDED, NOT SMOOTHED: (1) `d480-citers-ungated` came back NOT AS DECLARED on its first run and THE ARM WAS RIGHT WHILE THE DECLARATION WAS WRONG — two of §10's arms read `truncOf(...).every((x) => x === false)`, which is TRUE OVER AN EMPTY ARRAY, so with vera's item crowded off her page entirely they PASSED over a feed holding nothing, while a third arm failed for a reason that was not its subject (a digest compared between two reads both missing the item). The SUITE was corrected — every flag is now asserted once per item beside the item COUNT — and the declaration re-taken. (2) `not-found-to-everyone` and `stats-whole-store` came back NOT AS DECLARED on declarations that PREDATE this item: the first has been failing §9's two ADMIN-token arms undeclared since D-486 added them, and the second neuters the ONE predicate both D-464's counts and D-480's candidate page read. Both declarations were EXTENDED, never exempted, and the second is a measurement: `stats-stamp-dropped`, which drops the stamp on `op=stats` alone, leaves §10 wholly green, so the coupling is the predicate and not the door. (3) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by D-464, D-486 or D-480.
+   RE-RUN 2026-09-25 by REC-196 in worktree /home/user/bio (cloud) on base origin/main 964da679, AFTER adding §11 (a READ naming a DISCOVERABLE project's own id answers C-70.1, BOB #32's ruling (a)) and six arms, real src/index.mjs 857,558 B sha256 28bfd3677c8c…, src/store.mjs 3,355,514 B sha256 b854b3303ef9…, src/query.mjs 166,525 B sha256 998316465236…, untouched: YES — baseline 205/0 · cite-distinguishing 203/2 · position-first 201/4 · not-found-to-everyone 178/27 · roster-stamp-dropped 193/12 · publish-raw-bm25 198/7 · order-by-index-bm25 200/5 · tf-over-vis 205/0 · stats-whole-store 191/14 · indexcheck-whole-index 202/3 · selectionbytes-whole 204/1 · stats-stamp-dropped 199/6 · subtract-for-everyone 205/0 · d486-content-tally-unsubtracted 203/2 · d486-stats-airunlog-unsubtracted 202/3 · d486-meaning-run-ungated 203/2 · d486-predicate-de-morgan 205/0 · d480-citers-ungated 198/7 · d480-targets-ungated 204/1 · d480-not-in-inverted 205/0 · rec196-existence-read-dropped 180/25 (THE ROW'S OWN CONTROL: the pre-dispatch check disarmed, so a discoverable project's own id reads "does not exist" again — every one of §11's 24 reads fails 11b BY NAME, with 11c) · rec196-hidden-too 171/34 (positional for HIDDEN projects too: §11e's 24 arms and ten of §1's own hidden-equals-absent read arms) · rec196-to-everyone 203/2 (the owner answered C-70.1: 11f, 11f+) · rec196-table-short 203/2 (projectparticipants dropped from the table: the sweep names it, 11g, and its 11b fails) · rec196-roster-viewer-unstamped 204/1 · rec196-no-prefilter 205/0 (over-strictness) · sight-via-redactor 205/0: AS DECLARED. BEFORE the fix, `project-discoverable.test.mjs` §3l measured all eleven of its reads at EXISTENCE byte-identical to a never-minted id. RECORDED, NOT SMOOTHED: (1) rec196-hidden-too came back NOT AS DECLARED on its first run — it ALSO failed ten of this suite's earlier REC-138 read arms, a second witness the declaration had missed; extended. (2) rec196-table-short came back NOT AS DECLARED because §11g's FIRST spelling demanded the route read `viewer`, and `projectparticipants` reads it only through the new check, so the sweep was blind to exactly that drop; the sweep was widened to every id-carrying read route (and seven ungated reads were classified), then AS DECLARED. (3) not-found-to-everyone came back NOT AS DECLARED because §11's fixture set the setting by iris's SESSION, which that arm lies to (D-447's recorded second-variable trap); the fixture now takes the owner's act through the store's internal door and the run-open is non-fatal, and the arm's declaration was EXTENDED by 11d+, 11f and 11f+, which catch it by name. (4) promote-stamp-dropped is still NOT AS DECLARED (0/1, SURFACE_NO_RUN in REC-171's fixture) — PRE-EXISTING, D-447's finding (2), unchanged by REC-196.
  * ========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
@@ -825,6 +826,141 @@ console.log("\n--- 10. D-480: a hidden project's CITATIONS take no slot in vera'
   t("STILL LIVE: crowding vera CAN see does reach her — her queue moves, and her own question is crowded off "
   + "her page (the same consequence the hidden crowding must NOT have)",
     [sha(vVis.body) !== sha(vVisTarget.body), mine(vVis).length], [true, 0]);
+}
+
+/* ======================================================== 11. A READ NAMING A DISCOVERABLE PROJECT'S OWN ID (REC-196) */
+console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE project's own id is answered positionally ---");
+{
+  /* WHAT WAS WRONG. REC-149 refused every ACT at EXISTENCE positionally (C-70.1) and left every READ that names a
+     project by id answering as for a project that does not exist — so the member the directory had just shown a
+     project to was told by the record that it does not exist. BOB #32 ruled on 2026-09-23 23:08Z (Membership v2
+     §7.14, (a)): *a read naming a discoverable PROJECT'S OWN id is answered POSITIONALLY at EXISTENCE, exactly like
+     an act; a read naming anything INSIDE the project answers exactly as it does today; `viewerPredicate` stays
+     unchanged.* Measured on the unedited tree through `project-discoverable.test.mjs` §3l: all eleven of its reads
+     answered byte-identically to a never-minted id at EXISTENCE.
+     HOW A LIAR PASSES, stated before what this checks:
+       (1) answer "does not exist" for the project itself (the old answer kept) — 11b demands C-70.1 of every read,
+           and the control's `rec196-existence-read-dropped` arm is exactly that;
+       (2) answer positionally for EVERYTHING, contents included — 11d reads a RUN inside the project and demands
+           the absent answer, byte for byte, and 11e demands a HIDDEN project still absent;
+       (3) answer positionally to everybody — 11f demands the owner's real answer from every read;
+       (4) cover the reads somebody thought of — 11g sweeps every gated read op into the store's two tables. */
+  const TITLE_D = "Discoverable roads project 9196";
+  const { bundleId: _n, ...c } = pkg(NEVER, projectMd(null, [LEDGER]), "project", "forming", null, `rec196-${++seq}`);
+  const D = must("mint D", await POST(`op=promote&token=${ADM}`, { ...c, meta: { ...c.meta, title: TITLE_D } })).bundleId;
+  must("iris owns D", await DO("projectclaimowner", { projectId: D, memberId: "iris" }));
+  /* The setting is iris's OWNER's act, taken through the store's INTERNAL door (a viewer never sent is not asked,
+     `#rosterInSight`'s precedent) rather than her session — so the `not-found-to-everyone` control arm, which lies
+     to every member session, perturbs the SUBJECT and not this fixture (D-447's recorded second-variable trap). */
+  must("iris sets D discoverable",
+       await DO(`projectvisibilityset?projectId=${E(D)}&setting=discoverable&by=iris&reason=${E("open to all")}`, {}));
+  const RUN_D = "RUN-2026-9196-inside", RUN_NEVER = "RUN-2026-9196-never";
+  /* NOT `must`: a control arm that hides D from iris refuses this open, and that must fail 11d+ BY NAME rather
+     than throw the suite before its foot. */
+  const opened = await POST(`op=airunopen&token=${IRIS}`, {
+    run: RUN_D, contextType: "project", contextId: D, label: "roads sweep", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude", skillVersion: "investigative-session@1",
+    bounds: [{ bound: "fetches", allowed: 20, unit: "requests" }], leaseMs: 600000 });
+
+  /* EVERY READ `Store.PROJECT_NAMING_READS` NAMES THAT A CALLER REACHES AS AN OP, each asked of the id X in the
+     parameter the table names. `gatefacts` and `affordancefacts` are store routes: the second is reached through
+     `op=affordances`, the first only by `op=ratify`, which is an act and REC-149's. */
+  const NAMING = (X) => [
+    ["image", `op=image&id=${X}`], ["file", `op=file&id=${X}&path=bundle.md`], ["projection", `op=projection&id=${X}`],
+    ["excludedby", `op=excludedby&id=${X}`], ["backlinks", `op=backlinks&target=${X}`],
+    ["reevaluations", `op=reevaluations&target=${X}`], ["inquirystrength", `op=inquirystrength&id=${X}`],
+    ["earnedbasis", `op=earnedbasis&id=${X}&targets=${LEDGER}`],
+    ["partitionindependence", `op=partitionindependence&id=${X}&partition=${E("[]")}`],
+    ["narrowcandidates", `op=narrowcandidates&target=${X}&version=v1&ord=0`],
+    ["versionnotice", `op=versionnotice&target=${X}`], ["basisversions", `op=basisversions&id=${E(INQ)}&project=${X}`],
+    ["versionstrength", `op=versionstrength&id=${E(INQ)}&version=v1&project=${X}`],
+    ["strengthbarof", `op=strengthbarof&project=${X}`], ["extractproposals", `op=extractproposals&bundle=${X}`],
+    ["capturerequests", `op=capturerequests&target=${X}`], ["tasks", `op=tasks&refers=${X}`],
+    ["biasmanifest", `op=biasmanifest&scope=project&scopeId=${X}`],
+    ["airuns", `op=airuns&contextType=project&contextId=${X}`], ["casedrafts", `op=casedrafts&project=${X}`],
+    ["affordances", `op=affordances&target=${X}`], ["projectownerarith", `op=projectownerarith&projectId=${X}`],
+    ["projectvisibility", `op=projectvisibility&projectId=${X}`],
+    ["projectparticipants", `op=projectparticipants&projectId=${X}`],
+  ];
+  const readAll = async (tok, X) => { const o = []; for (const [, q] of NAMING(X)) o.push(await RAW(`${q}&token=${tok}`)); return o; };
+  const vD = await readAll(VERA, D);
+  console.log(`  corpus: ${NAMING(D).length} reads naming a project by its own id`);
+  t("11a: the corpus is not empty (floor: 24 reads)", NAMING(D).length >= 24, true);
+  NAMING(D).forEach(([name], i) => { const r = parse(vD[i]);
+    t(`11b: AT EXISTENCE, op=${name} naming D's own id answers C-70.1, naming D by its id and name`,
+      [codeOf(r), r && r.check, r && r.project, r && r.name], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1", D, TITLE_D]); });
+  const allowed = ["ok", "reason", "code", "check", "translation", "detail", "project", "name", "store", "tokenClass"];
+  t("11c: and each carries NOTHING about D beyond its id and name (no owner, participant, state, run)",
+    vD.map((r, i) => [NAMING(D)[i][0], Object.keys(parse(r) || {}).filter((k) => !allowed.includes(k)),
+                      /iris|forming|roads sweep|9196-inside/.test(r.body)])
+      .filter(([, extra, named]) => extra.length || named), []);
+
+  /* CONTENTS KEEP THE EXISTENCE ANSWER: a run INSIDE D is D's thinking, and its existence is contents. */
+  const idless = (body, id) => body.split(id).join("<ID>");
+  const inside = await RAW(`op=airun&token=${VERA}&run=${RUN_D}`), never = await RAW(`op=airun&token=${VERA}&run=${RUN_NEVER}`);
+  t("11d: INSIDE THE PROJECT: vera's op=airun of the run over D is byte-identical to a run id that names nothing",
+    { status: inside.status, sha: sha(idless(inside.body, RUN_D)) }, { status: never.status, sha: sha(idless(never.body, RUN_NEVER)) });
+  t("11d+: and that read is not blind — iris reads her own run over D",
+    [opened && opened.ok !== false, parse(inside)?.found,
+     (({ run, found }) => [run, found])(parse(await RAW(`op=airun&token=${IRIS}&run=${RUN_D}`)) || {})],
+    [true, false, [RUN_D, true]]);
+
+  /* A HIDDEN project is untouched by the ruling: P, which vera was never invited to, answers every one of these
+     reads byte-identically to a never-minted id. */
+  const vP = await readAll(VERA, P), vN = await readAll(VERA, NEVER);
+  NAMING(P).forEach(([name], i) => t(`11e: HIDDEN = ABSENT, raw: op=${name} naming hidden P`,
+    { status: vP[i].status, sha: sha(idless(vP[i].body, P)) }, { status: vN[i].status, sha: sha(idless(vN[i].body, NEVER)) }));
+
+  /* Those with full sight are unchanged: the owner is never answered positionally by any of them. */
+  const iD = await readAll(IRIS, D);
+  t("11f: the OWNER is answered by every read (none says C-70.1 to iris)",
+    iD.map((r, i) => [NAMING(D)[i][0], codeOf(parse(r))]).filter(([, cd]) => cd === "PROJECT_SEEN_NOT_A_PARTICIPANT"), []);
+  t("11f+: and the roster read gives her the real roster", (parse(iD[NAMING(D).findIndex(([n]) => n === "projectparticipants")])
+    ?.participants || []).map((p) => p.handle), ["iris"]);
+
+  /* 11g — THE SWEEP, AND IT IS WHAT KEEPS THE TABLE FROM GOING STALE. Every op `index.mjs` marks `mutating: false`
+     whose store route reads a parameter of an id-carrying name must be classified in
+     EXACTLY ONE of `Store.PROJECT_NAMING_READS` (a bundle id, so it can name a project) or
+     `Store.PROJECT_NAMING_READS_NOT` (never a bundle id, with its reason). WHAT THIS CANNOT SEE, stated: a read the
+     control plane COMPOSES under a different route name (`affordances` → `affordancefacts` is mapped by hand
+     below); a parameter whose name is not in `IDISH`; a route that takes its id from the body under another name.
+     Unclassified routes are PRINTED by name, never scored zero.
+     THE FIRST SPELLING ALSO DEMANDED THAT THE ROUTE READ `viewer`, AND THE `rec196-table-short` CONTROL ARM FOUND IT
+     BLIND: `projectparticipants` reads its viewer ONLY through this item's pre-dispatch check, never in its own route,
+     so dropping it from the table passed the sweep. Recorded, not smoothed; the viewer condition is gone, and the
+     ungated id-carrying reads are classified too. */
+  const src = (f) => readFileSync(join(SRC_DIR, f), "latin1");
+  const reads = new Set([...src("index.mjs").matchAll(/^\s+([a-z0-9]+):\s*\{\s*classes:[^}]*mutating:\s*false/gm)].map((m) => m[1]));
+  const lines = src("store.mjs").split("\n");
+  const at = lines.findIndex((l) => /^      const map = \{/.test(l));
+  const routes = {}; let cur = null;
+  for (let i = at + 1; i < lines.length && !/^      \};/.test(lines[i]); i++) {
+    const m = lines[i].match(/^        ([a-z0-9]+): /);
+    if (m) { cur = m[1]; routes[cur] = ""; }
+    if (cur) routes[cur] += lines[i];
+  }
+  const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
+    return m ? Function(`return (${m[1]});`)() : null; };
+  const NAMES = table("PROJECT_NAMING_READS"), NOT = table("PROJECT_NAMING_READS_NOT");
+  const IDISH = ["id", "target", "projectId", "project", "bundleId", "bundle", "scopeId", "contextId", "address",
+                 "run", "case", "draft", "refers", "sha256", "content", "entity"];
+  const ALIAS = { affordances: "affordancefacts" };
+  const gated = [], unrouted = [];
+  for (const op of [...reads].sort()) {
+    const route = routes[ALIAS[op] || op];
+    if (route === undefined) { unrouted.push(op); continue; }
+    const ps = [...route.matchAll(/searchParams\.get\("([a-zA-Z0-9]+)"\)/g)].map((m) => m[1]);
+    if (ps.some((p) => IDISH.includes(p))) gated.push(ALIAS[op] || op);
+  }
+  console.log(`  sweep: ${reads.size} read ops; ${gated.length} routes carry an id-named parameter; `
+            + `${unrouted.length} composed in the control plane with no store route of their name (not swept): ${unrouted.join(", ")}`);
+  t("11g0: the sweep is not blind (the tables parsed; floors: 20 id-carrying reads, 24 naming reads)",
+    [!!NAMES, !!NOT, gated.length >= 20, Object.keys(NAMES || {}).length >= 24], [true, true, true, true]);
+  t("11g: every read carrying an id-named parameter is classified (unclassified, by name)",
+    gated.filter((r) => !(r in (NAMES || {})) && !(r in (NOT || {}))), []);
+  t("11g+: and none is classified twice", Object.keys(NAMES || {}).filter((r) => r in (NOT || {})), []);
+  t("11g++: every classified name is a real store route", [...Object.keys(NAMES || {}), ...Object.keys(NOT || {})]
+    .filter((r) => routes[r] === undefined), []);
 }
 
 } catch (e) {

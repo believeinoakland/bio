@@ -33578,6 +33578,72 @@ export class Store extends DurableObject {
       + "it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).");
     /* END DEC-49 REGION is-project-existence-only */
   }
+  /* ===== REC-196 — A READ NAMING A DISCOVERABLE PROJECT'S OWN ID IS ANSWERED POSITIONALLY (Membership v2 §7, item
+   * 7.14, RULED 2026-09-23 by BOB #32, (a)).
+   *
+   * THE DEFECT. REC-149 refused every ACT at EXISTENCE positionally, and left every READ that names a project by id
+   * answering as for a project that does not exist ("Record reads do not widen"). So a member the directory had just
+   * shown a project to was told by `op=projectparticipants`, `op=image`, `op=projectvisibility` … that it does not
+   * exist — the record calling a project the record itself had just shown nonexistent. The ruling: a read naming the
+   * PROJECT'S OWN id answers exactly as an act does, C-70.1 through `#existenceAct` (the id and the name, nothing
+   * else); a read naming anything INSIDE the project answers exactly as today; `viewerPredicate` is unchanged.
+   *
+   * ONE DOOR, ONE TABLE. The check sits in `fetch`, before the route runs, rather than in thirty read methods: every
+   * read below is reached by exactly that door, so no read can answer a second thing. The table names, per read, the
+   * parameters that carry a BUNDLE id — the only parameters that can name a project. `#existenceAct` answers only
+   * when that id is a PROJECT the caller sees at EXISTENCE, so an id of anything inside a project (a bundle, a run, a
+   * draft), an absent id, a hidden project and every caller with full sight all fall through to the read unchanged.
+   * `PROJECT_NAMING_READS_NOT` names each read whose parameters name something that is never a bundle, with the
+   * reason, and `project-sight.test.mjs` §11 sweeps every id-carrying read op into exactly one of the two tables, so a
+   * new read cannot join the plane unclassified.
+   *
+   * COST, STATED: one indexed lookup on `project_sight` per named parameter of a stamped read, and `#sight` only for
+   * an id that row calls discoverable. A viewer never sent (an internal call) is not asked. */
+  static PROJECT_NAMING_READS = Object.freeze({
+    image: ["id"], file: ["id"], projection: ["id"], excludedby: ["id"], backlinks: ["target"],
+    reevaluations: ["target"], inquirystrength: ["id"], earnedbasis: ["id"], partitionindependence: ["id"],
+    narrowcandidates: ["target"], versionnotice: ["target"], basisversions: ["id", "project"],
+    versionstrength: ["id", "project"], strengthbarof: ["project", "target"], extractproposals: ["bundle"],
+    capturerequests: ["target"], tasks: ["refers"], biasmanifest: ["scopeId"], airuns: ["contextId"],
+    casedrafts: ["project"], gatefacts: ["id"], affordancefacts: ["target"],
+    projectownerarith: ["projectId"], projectvisibility: ["projectId"], projectparticipants: ["projectId"],
+  });
+  static PROJECT_NAMING_READS_NOT = Object.freeze({
+    content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
+    concerns: "`id` is an ENTITY id", connections: "`id` is an ENTITY id", instance: "`id` is an ENTITY id",
+    exceptions: "`id` is an ENTITY id", transcription: "`id` is a transcription's content id",
+    themeread: "`id` is a THEME id", leadread: "`id` is a LEAD id",
+    versionchain: "`address` is a normalised source address, never a bundle id",
+    airun: "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    airunlog: "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    airunspawn: "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    reviewcopy: "`draft` is a DRAFT id — a thing inside a project, whose existence is contents",
+    casedocument: "`case` is a CASE id, answered by the case door's own fence",
+    reading: "`sha256` is a CAPTURE's digest", resolutions: "`sha256` is a CAPTURE's digest",
+    textattest: "`sha256` is a CAPTURE's digest", readingname: "`entity` is an ENTITY id",
+    entity: "`id` is an ENTITY id", relation: "`id` is a RELATION id", inboxget: "`id` is an INBOX item's id",
+    sourcereach: "`address` is a source address", captureprogressions: "`sha256` is a CAPTURE's digest",
+    verify: "`sha256` is a published artifact's digest",
+    publishedcase: "`id` is a PUBLISHED case — the published record, served to anybody",
+    publishededitions: "`id` is a PUBLISHED case — the published record, served to anybody",
+    caseflags: "`case` and `target` name a case and its member finding, every field already published",
+  });
+  #existenceRead(op, url, body) {
+    const params = Object.prototype.hasOwnProperty.call(Store.PROJECT_NAMING_READS, op)
+      ? Store.PROJECT_NAMING_READS[op] : null;
+    const viewer = url.searchParams.get("viewer");
+    if (!params || viewer === null) return null;
+    for (const p of params) {
+      const fromBody = body && typeof body === "object" && typeof body[p] === "string" ? body[p] : null;
+      for (const id of [url.searchParams.get(p), fromBody]) {
+        if (typeof id !== "string" || id === "") continue;
+        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=? AND setting='discoverable'`, id)) continue;
+        const existence = this.#existenceAct(id, viewer);
+        if (existence) return existence;
+      }
+    }
+    return null;
+  }
 
   /** REC-149 — THE SETTING, an OWNER'S recorded act (§7.14 "The setting"). Append-only: every act is a row with
    *  the owner, the date and an optional reason, and the current setting is the latest. Sight before position:
@@ -50591,7 +50657,9 @@ export class Store extends DurableObject {
         purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") }),
       };
       if (!map[op]) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
-      return Response.json({ ok: true, result: await map[op]() });
+      /* REC-196: a read naming a discoverable project's own id, asked by a caller at EXISTENCE, answers C-70.1. */
+      const existence = this.#existenceRead(op, url, body);
+      return Response.json({ ok: true, result: existence ?? await map[op]() });
     } catch (e) {
       return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 });
     }

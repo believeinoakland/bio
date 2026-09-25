@@ -11010,7 +11010,11 @@ export default {
                                 "strengthbarof",
                                 /* REC-149: the setting's read and the directory decide by the caller's SIGHT
                                    (Membership v2 §7.14), so both take the stamp; each fails closed without it. */
-                                "projectvisibility", "projectdirectory"];
+                                "projectvisibility", "projectdirectory",
+                                /* REC-196: the roster read names a project by its own id, so the store needs the
+                                   caller's SIGHT to answer C-70.1 at EXISTENCE (BOB #32's ruling (a)). Its own
+                                   answer still reads the `by` stamp below; the viewer is read only by that check. */
+                                "projectparticipants"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's

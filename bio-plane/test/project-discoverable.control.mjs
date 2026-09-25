@@ -42,7 +42,9 @@ const ARMS = {
        reads ANY discoverable row ever written rather than the latest, so once §6 sets P hidden again vera still
        sees it FULLY — §6f (she gets the owner refusal, not C-70.1) and every §6k arm fail. The arm was right and
        the declaration was short; those are its consequences and are declared here. */
-    mayFail: ["5a: CONTENTS", "5b: CONTENTS", "3b:", "3h:", "3i:", "3j:", "3l:", "7c:", "6f:", "6k:"],
+    /* EXTENDED 2026-09-25 by REC-196: "3l+:" is §3l's companion arm (a C-70.1 carries nothing more), and it falls with
+       §3l under a widened predicate for the same reason — nobody is at EXISTENCE any more. */
+    mayFail: ["5a: CONTENTS", "5b: CONTENTS", "3b:", "3h:", "3i:", "3j:", "3l:", "3l+:", "7c:", "6f:", "6k:"],
   },
 
   /* EXISTENCE ANSWERED AS ABSENT — REC-138's answer kept at a discoverable project: every act says "does not
@@ -51,8 +53,11 @@ const ARMS = {
     patches: [["store.mjs", "    if (viewer === null || viewer === undefined) return null;\n    return this.#sight(projectId, viewer) === Store.SIGHT_EXISTENCE",
                "    if (true) return null;\n    return this.#sight(projectId, viewer) === Store.SIGHT_EXISTENCE"]],
     mustFail: ["3h: AT EXISTENCE, op=promote", "3h: AT EXISTENCE, op=cite", "3h: AT EXISTENCE, op=projectjoin",
-               "3h: AT EXISTENCE, op=airunopen", "3h: AT EXISTENCE, op=projectvisibilityset", "6f:"],
-    mayFail: ["3h:", "3i:", "3j:"],
+               "3h: AT EXISTENCE, op=airunopen", "3h: AT EXISTENCE, op=projectvisibilityset", "6f:",
+               /* EXTENDED 2026-09-25 by REC-196, never exempted: a READ naming P's own id now answers through the
+                  same `#existenceAct` (BOB #32's ruling (a)), so this arm takes §3l's reads with it, by name. */
+               "3l: AT EXISTENCE, read op=projectparticipants", "3l: AT EXISTENCE, read op=image"],
+    mayFail: ["3h:", "3i:", "3j:", "3l"],
   },
 
   /* THE DEFAULT FLIPPED — a project with no record reads DISCOVERABLE. The predecessor's projects then show
@@ -65,20 +70,27 @@ const ARMS = {
        missing on 2026-09-23 (see the note under `mustFail`), and it is the property D-497 had to keep while
        putting the directory's candidates into SQL. The patch reproduces the old arm's semantics exactly: no
        act reads DISCOVERABLE, an explicit `hidden` act is still honoured. */
-    patches: [["store.mjs", "                   THEN 'discoverable' ELSE 'hidden' END,",
+    /* ANCHOR CORRECTED 2026-09-25 by REC-196: it ended `END,` — the comma that preceded the derivation's `at`
+       column, which D-497 removed before landing (the column rewrote every row on an unchanged boot). With the
+       comma the anchor occurred ZERO times, so this arm reported ARM DID NOT ARM from D-497's landing until now:
+       the default's one control was not running. The patch is otherwise the same. */
+    patches: [["store.mjs", "                   THEN 'discoverable' ELSE 'hidden' END\n",
                "                   THEN 'discoverable'\n"
                + "                   WHEN (SELECT pv.setting FROM project_visibility pv\n"
                + "                          WHERE pv.project_id = b.bundle_id\n"
                + "                          ORDER BY pv.seq DESC LIMIT 1) = 'hidden' THEN 'hidden'\n"
-               + "                   ELSE 'discoverable' END,"]],
+               + "                   ELSE 'discoverable' END\n"]],
     /* FIRST RUN (2026-09-23) NOT AS DECLARED, and it was the SUBJECT that was wrong: 1e and 2e PASSED — the
        directory took its candidates from the visibility table, a second copy of "no record = hidden", so the flipped
        default never reached it. The directory now asks `#sight` over every project; re-run, as declared. */
-    mustFail: ["1c:", "1d:", "1e:", "2b: HIDDEN = ABSENT, raw: op=cite", "2e:"],
     /* Second run: 3e and 3g failed undeclared — under the flipped default EVERY project a caller is not in is
        offered (Q to olga, and to both of them the surfacing-run harness's own `REC-171 fixture project`). A
        consequence of the arm, read off the failure text, and declared. */
-    mayFail: ["2b:", "2d:", "3b:", "3d:", "3e:", "3g:", "3m:", "6j:", "6k:"],
+    /* THIRD RUN (2026-09-25, REC-196, the first since the anchor was repaired): every §2c READ failed undeclared as
+       well — under a flipped default every project is at EXISTENCE, and since REC-196 a read naming a project's own
+       id answers C-70.1 there, so the reads now catch the flipped default too. A second witness gained, declared. */
+    mustFail: ["1c:", "1d:", "1e:", "2b: HIDDEN = ABSENT, raw: op=cite", "2e:", "2c: HIDDEN = ABSENT, raw: read op=projectparticipants"],
+    mayFail: ["2b:", "2c:", "2d:", "3b:", "3d:", "3e:", "3g:", "3m:", "6j:", "6k:"],
   },
 
   /* THE OWNER FENCE DROPPED — anybody who can see the project sets it. §6's refusals MUST fail. */
@@ -123,7 +135,8 @@ const ARMS = {
        predecessor tree, and this arm removes one of the three. The fixture's guard firing on a deliberate
        removal is the guard working; it is the same line that would catch a call left standing. */
     mustFail: ["3b:", "3h:", "3i:"],
-    mayFail: ["1a0:", "3b:", "3h:", "3i:", "6j:", "6k:"],
+    /* EXTENDED 2026-09-25 by REC-196: §3l's reads at P answer through the index too, so they fall with §3h. */
+    mayFail: ["1a0:", "3b:", "3h:", "3i:", "3l", "6j:", "6k:"],
   },
 };
 
