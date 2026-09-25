@@ -27,6 +27,21 @@
  * exact substring it removed, present again — and the RE-RUN says the subject
  * is green again. A hash alone would be satisfied by a file swapped for another
  * copy of itself by a process that never performed the restore.
+ *
+ * NEGATIVE CONTROL: this file IS the guard's; its record is the arm table. Last
+ * run 2026-09-25 by D-664 on `5e8a65a8` + D-664's corrections, exit 0, 177 ok · 0
+ * FAIL: 47 arms, each failing its subject BY NAME (or passing where DECLARED to:
+ * (n2), (n3), (r3), (s1 bodyLines) EXEMPT; (c) shows the harness BLIND to the
+ * plant and red only at the guard's existence pins), plus the two preconditions and
+ * (z), every restore verified by hash and content. Arms (a) (b) (c) (d) (e) (f) ·
+ * (r1)-(r6) · (n1)-(n6) · (s1) x16 floors · (s2) x4 ceilings · (s3a) (s4) (s5) ·
+ * (m1)-(m5) · (g1). BEFORE the correction, on `5e8a65a8`: (c), (e), (r2) FAILED
+ * and (r5) THREW on a moved anchor, so the 36 arms after it never ran — (r6)'s
+ * stale pin (36; measured 50) surfaced only once (r5) stopped throwing. Each
+ * correction carries its own dated note at the arm. D-664's own meta-control of
+ * the new (r5) anchor: the SAME plant one line after the region's END marker
+ * leaves the guard at exit 0, so the arm's position inside the region is what
+ * makes it fire.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -274,10 +289,31 @@ catch(_){ fail++; }`,
     },
   ],
   aside: [F.guard, path.join(HERE, "refusal-codes.test.mjs")],
-}, runner, r => ({
-  ok: r.exit === 0,
-  what: "node test/run.mjs exits 0 — the whole UI harness is GREEN over a codeless refusal",
-}));
+}, runner, r => {
+  /* CORRECTED 2026-09-25 by D-664, never exempted — and, like the 2026-08-07
+     correction above, the correction is a FINDING. This arm required `run.mjs` to exit
+     0, and on `5e8a65a8` it exited 1: measured, the harness failed at exactly TWO
+     suites, and neither judged the planted refusal. `member-respect.test.mjs` ARM P3
+     asserts the guard is ON DISK ("a mechanism outside the loop the reader runs is not a
+     mechanism"), and `stdio-census.test.mjs` ARM D READS the guard's text for its flush
+     residual and dies ENOENT without it. **Two more independent layers that catch the
+     guard's REMOVAL** — the same kind as arm 8 found on first run — and they arrived
+     after this arm was written, so "exits 0" was true of a tree with fewer pins. The arm
+     keeps its claim, stated sharper: with the guard gone, NOTHING in the harness sees
+     the codeless refusal — no line names it CODELESS — and the ONLY failures are the
+     suites that pin the guard's EXISTENCE, each at its pin. A new suite that pins or reads
+     the guard fails this arm BY NAME, which is the prompt to re-judge it, not to exempt. */
+  const failing = [...r.out.matchAll(/^FAIL (\S+\.test\.mjs)/gm)].map(x => x[1]).sort();
+  const want = ["member-respect.test.mjs", "stdio-census.test.mjs"];
+  return {
+    ok: r.exit === 1 && failing.join(",") === want.join(",")
+      && /FAIL ARM P3: the DEC-49 guard is on disk/.test(r.out)
+      && /ENOENT[^\n]*check-refusal-codes\.mjs/.test(r.out)
+      && !/CODELESS REFUSAL/.test(r.out),
+    what: `node test/run.mjs is blind to the codeless refusal — no line names it — and fails ONLY at the suites that `
+        + `pin the guard's existence, [${want.join(", ")}] (measured [${failing.join(", ")}])`,
+  };
+});
 
 /* ---------------------------------------------------------------- (d) */
 console.log("\n(d) THE SURFACE HOLE — a code its producer mints, with no wording in the surface table");
@@ -301,7 +337,15 @@ arm("(e)", [{
   to: `  'M2 reason:<expr>':  src => {
     const out = new Set(); if (out) return out;`,
 }], guard, r => ({
-  ok: r.exit === 1 && /the plane census is \d+ refusal codes, floor is/.test(r.out)
+  /* CORRECTED 2026-09-25 by D-664, never exempted: the guard's census FAIL line now
+     carries its provenance — `the plane census is 725 refusal codes that are in the
+     commit at HEAD (725 over the working tree), floor is 729` — so the old pattern
+     `\d+ refusal codes, floor is` matched nothing and this arm read RED over a guard that
+     had failed exactly as declared (measured on `5e8a65a8`). The pattern now reads the
+     FAIL line through to its floor, whatever the clause between. (The arm also moves
+     arm F's floor, 280 -> 276, because four of M2's codes were untranslated; that is a
+     consequence of the neutering, not a second subject, and is not asserted.) */
+  ok: r.exit === 1 && /^FAIL: the plane census is \d+ refusal codes[^\n]*, floor is \d+\./m.test(r.out)
       && /M2 reason:<expr>\s+0 codes/.test(r.out),
   what: "the guard exits 1 on the CENSUS FLOOR with M2 printed at 0 codes",
 }));
@@ -370,13 +414,27 @@ arm("(r2)", [
      the row was written. **That drift is the defect in miniature: the set a
      whole-function `where` claims is not fixed at the time it is written, it
      grows with the function.** The count is now family-specific so this arm and
-     (r6) cannot borrow each other's failures. */
+     (r6) cannot borrow each other's failures.
+
+     PIN CORRECTED AGAIN 2026-09-25 by D-664, never exempted, for the reason the note
+     above already gives: 33 -> 47, measured on `5e8a65a8`. Fourteen more refusals in
+     `promote`, outside both basis-version regions, are now read. Two causes are known and
+     the split between them is UNDETERMINED: new sites (ENVELOPE_TYPE_DISAGREES,
+     GOVERNING_LAWS_REWRITTEN and RISK_TIER_REWRITTEN are nowhere in `store.mjs` at
+     `43081d69`, 2026-08-08), and REC-76 / D-236's inverted classifier, which reads verdict
+     shapes the August walk could not. Neither is needed to judge the arm: its claim is that the WHOLE-FUNCTION spelling
+     conscripts every one of them and the narrowed spelling none. The pin stays EXACT, not a
+     floor: it is what caught REC-71's half-armed first run (34 against 32). Every line it
+     counts must read `(in promote)` — a site INSIDE a region counted here would mean the
+     narrowing leaked. When `promote` gains a refusal this figure moves: re-measure from
+     the printed count, never by arithmetic. */
   const n = (r.out.match(/refuses with code [A-Z_]+, which is NOT a row in BASIS_VERSION_CHECKS/g) || []).length;
+  const inRegion = (r.out.match(/\(in promote > [^)]*\) refuses with code [A-Z_]+, which is NOT a row in BASIS_VERSION_CHECKS/g) || []).length;
   return {
-    ok: r.exit === 1 && n === 33,
-    what: `the guard exits 1 with EXACTLY 33 refusals conscripted into BASIS_VERSION_CHECKS again `
-        + `(measured ${n}) — 32 on the PL-1-only tree plus PL-12's BIAS_REFUSED, so the narrowing is `
-        + `shown to be what removed them`,
+    ok: r.exit === 1 && n === 47 && inRegion === 0,
+    what: `the guard exits 1 with EXACTLY 47 refusals conscripted into BASIS_VERSION_CHECKS again `
+        + `(measured ${n}, ${inRegion} inside a region) — every refusal \`promote\` makes outside the two `
+        + `basis-version regions, so the narrowing is shown to be what removed them`,
   };
 });
 
@@ -414,12 +472,29 @@ arm("(r4)", [{
    teeth are re-proved INSIDE the newly narrowed region rather than assumed to
    work because they worked in the other one: a narrowing is only as good as the
    arm that shows it did not blind the guard, and each region owes its own. */
+/* RE-ANCHORED 2026-09-25 by D-664, never exempted. This arm anchored on the region's
+   `if` — `if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {` — which is
+   CODE, and code moves: D-526 (`c4a65ae0`, 2026-09-24) widened that condition to a union
+   with `promotedType`, the anchor vanished, and `arm()` THREW here, so on `5e8a65a8` no arm
+   after (r5) ran — (r6), (n1)-(n6), every (s), (m) and (g1) arm, and (z). It now anchors on
+   the region's own END marker, read by name and asserted to occur ONCE: the marker is the
+   thing the `where` names, so it cannot move without the row moving with it (and (r4)'s
+   kind of arm is what fails if it vanishes). The plant sits on the line before it — inside
+   `bias-set-refusal`, whatever that region's code says. */
+function regionEnd(file, name) {
+  const all = [...fs.readFileSync(file, "utf8").matchAll(new RegExp(`^ *\\/\\* END DEC-49 REGION ${name} \\*\\/$`, "gm"))];
+  if (all.length !== 1)
+    throw new Error(`regionEnd(${name}): ${all.length} END marker(s) in ${path.basename(file)}, expected exactly 1 — an arm `
+      + `that cannot find what it breaks proves nothing`);
+  return all[0][0];
+}
 console.log("\n(r5) THE TEETH INSIDE THE **BIAS** REGION — each newly narrowed region owes its own arm");
+const BIAS_END = regionEnd(F.store, "bias-set-refusal");
 arm("(r5)", [{
   file: F.store,
-  from: `      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {`,
-  to: `      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
-        if (pkg.__rec71_bias_control__) return { ok: false, detail: "a refusal nobody gave a code" };`,
+  from: BIAS_END,
+  to: `      if (pkg.__rec71_bias_control__) return { ok: false, detail: "a refusal nobody gave a code" };
+${BIAS_END}`,
 }], guard, r => ({
   ok: r.exit === 1
       && /src\/store\.mjs:\d+ \(in promote > bias-set-refusal\) returns a CODELESS REFUSAL/.test(r.out),
@@ -432,13 +507,21 @@ arm("(r6)", [{
   from: `    where: 'src/store.mjs promote > bias-set-refusal, reached from op=promote',`,
   to: `    where: 'src/store.mjs promote, reached from op=promote',`,
 }], guard, r => {
+  /* PIN CORRECTED 2026-09-25 by D-664, never exempted: 36 -> 50, measured on `5e8a65a8`.
+     This arm had not run on `main` since D-526 moved (r5)'s anchor — (r5) threw first — so
+     its figure was stale unobserved. The 50 decomposes, measured by diffing this arm's codes
+     against (r2)'s: the SAME 46 refusals (r2) counts (its 47 less BIAS_REFUSED, which is
+     this family's own) PLUS the refusals inside the OTHER family's two regions — now FOUR
+     (VERSION_FROZEN and VERSION_LEG_UNRESOLVED, two sites each), not the two this arm
+     named on its day (36 = 34 + 2, CONDUCT's figure on the merged tree). So (r2) and (r6) move together whenever `promote` gains a
+     refusal outside every region: re-measure both from their printed counts. */
   const n = (r.out.match(/refuses with code [A-Z_]+, which is NOT a row in BIAS_CHECKS/g) || []).length;
   return {
-    ok: r.exit === 1 && n === 36,
-    what: `the guard exits 1 with EXACTLY 36 refusals conscripted into BIAS_CHECKS again (measured `
-        + `${n}) — the number CONDUCT measured on the merged tree, so the narrowing is shown to be `
-        + `what removed them. Note 36 and not 34: a whole-function \`where\` also conscripts the two `
-        + `refusals the OTHER family's regions correctly govern`,
+    ok: r.exit === 1 && n === 50,
+    what: `the guard exits 1 with EXACTLY 50 refusals conscripted into BIAS_CHECKS again (measured `
+        + `${n}), so the narrowing is shown to be what removed them. 50 is (r2)'s 46 non-family `
+        + `refusals plus the four the OTHER family's regions correctly govern — a whole-function `
+        + `\`where\` conscripts those too`,
   };
 });
 
