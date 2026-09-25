@@ -2290,7 +2290,11 @@ const SURFACES = {
     /* UI-65: `basisversions` — the conclude dialog's reading picker (the
        accepted readings a no-project conclusion may adopt), read through the
        version-review door so the bound the plane applied is stated with it. */
-    reads: ["image", "inquirystrength", "inquiryground", "resolutions", "basisversions"],
+    reads: ["image", "inquirystrength", "inquiryground", "resolutions", "basisversions",
+    /* UI-75: the elicitation's read-back asks whether the sets a member's answers
+       made rest on the same material further back (§12 (c)), before anything is
+       written. A provenance read; it carries no strength. */
+            "partitionindependence"],
   },
   project: {
     routes: ["object:project", "hash:project"],
@@ -10920,7 +10924,8 @@ function elicFalsifier(d){
 
 async function openElicit(id, title, act){
   ELIC = { id, title, act, legs:[], standing:{ grouped:false, sets:[], rows:[] },
-           ans:{}, stmts:{}, reason:"", phase:"author", refusal:null, receipt:null, busy:false };
+           ans:{}, stmts:{}, reason:"", phase:"author", refusal:null, receipt:null, busy:false,
+           origins:null, originsKey:null };
   $("#dlg").innerHTML = `<h2>${esc(act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
   $("#dlg-wrap").classList.remove("hidden");
   try{
@@ -10949,7 +10954,81 @@ function elicSay(which, v){
   if(!ELIC) return;
   if(which === "reason") ELIC.reason = v; else ELIC.stmts[which] = v;
 }
-function elicPhase(p){ if(ELIC){ ELIC.phase = p; elicPaint(); } }
+function elicPhase(p){
+  if(!ELIC) return Promise.resolve();
+  ELIC.phase = p; elicPaint();
+  return p === "readback" ? elicOriginsLoad() : Promise.resolve();
+}
+
+/* ============================================================
+   UI-75 · §12 (c): THE SHARED ORIGIN, NAMED AT THE MEMBER'S OWN ELICITATION.
+
+   The read-back tells a member *"your answer fails only if ALL of these fail"*.
+   That sentence is only as true as the sets are apart, and two sets that trace
+   to one captured copy, one document or one address are not as apart as the
+   sentence sounds. So before the answers are written the read-back names every
+   shared upstream origin between the sets it lists — derived by the PLANE, over
+   the partition as PROPOSED, through `op=partitionindependence` (REC-161), the
+   same `#independenceOf` the write gate and the accept ceremony read. This page
+   derives nothing about provenance itself.
+
+   WHAT IT MUST NOT BECOME, and why each is a property of the code rather than
+   of care (the row's own "how a liar passes it"):
+     - IT INFORMS ONCE (DEC-69), at the act, in the read-back, beside the
+       falsifier it qualifies. It is never repeated in the authoring phase.
+     - IT REFUSES NOTHING AND REORDERS NOTHING. `doElicit` does not read
+       `ELIC.origins` at all, so the answers written are the answers given,
+       whatever the record traced; the control is offered while the read is
+       still in flight, because waiting on it would make an informing fact a
+       gate.
+     - IT SHOWS NO STRENGTH. The op carries none, and only `independence` is
+       KEPT from its answer, so nothing else it might one day carry can be drawn
+       before the structure is authored (DEC-32 clause 5).
+     - IT PREFILLS NOTHING: the answers a member gave are the only input.
+
+   KEYED TO THE PARTITION IT WAS ASKED ABOUT. A member who goes back and changes
+   an answer proposes a different partition; an answer about the old one is not
+   an answer about the new one, so it is never shown against it. Asked only where
+   there are two sets or more — one set has nothing to share with. A refusal or
+   a failed call is kept as NOT TOLD, which renders as not told and never as
+   clean.
+   ============================================================ */
+function elicPartitionKey(d){
+  return (d && d.partition && d.partition.length >= 2)
+    ? JSON.stringify(d.partition.map((g,k)=>({ label: elicLabel(g,k), legs: g }))) : null;
+}
+async function elicOriginsRead(inquiryId, partition){
+  let r;
+  try{ r = await recPostR("partitionindependence", { partition }, { id: inquiryId }); }
+  catch(_){ return null; }
+  const ind = (r && r.ok !== false && typeof r === "object") ? r.independence : null;
+  return (ind && typeof ind === "object") ? ind : null;
+}
+async function elicOriginsLoad(){
+  if(!ELIC) return;
+  const key = elicPartitionKey(elicDerive());
+  /* An ANSWER is kept for its proposal; NOT TOLD is not an answer, so coming
+     back to the same proposal after a refusal asks again. */
+  if(!key || (key === ELIC.originsKey && ELIC.origins !== null)) return;
+  ELIC.originsKey = key; ELIC.origins = undefined;
+  const me = ELIC;
+  const ind = await elicOriginsRead(me.id, JSON.parse(key));
+  if(ELIC !== me || me.originsKey !== key) return;
+  me.origins = ind;
+  if(me.phase === "readback" && !me.receipt) elicPaint();
+}
+/* The read-back's own rendering of it — the accept ceremony's, CALLED
+   (`originsHtml`), because one fact rendered two ways on two surfaces is two
+   facts to a reader. `undefined` is ASKING; `null` is not told. */
+function elicOriginsHtml(d){
+  const key = elicPartitionKey(d);
+  if(!key) return "";
+  if(ELIC.originsKey !== key || ELIC.origins === undefined)
+    return '<div class="subj-how" data-elic="origins-asking">Asking the record whether these rest on the same '
+      + 'material further back. You do not have to wait for it.</div>';
+  const byLabel = new Map(d.partition.map((g,k)=>[elicLabel(g,k), elicName(g)]));
+  return originsHtml(ELIC.origins, lab => byLabel.get(String(lab)) || String(lab), "data-elic");
+}
 
 function elicPaint(){
   if(!ELIC) return;
@@ -11038,6 +11117,7 @@ function elicPaint(){
     <h3 class="cx-h">What your answers say</h3>
     <p class="subj-note">Read this. If it is not what you meant, go back and change an answer &mdash; that is what this page is for, and reading this is far easier than writing it.</p>
     <div class="pub-excl" data-falsifier="1">${esc(elicFalsifier(d))}</div>
+    ${elicOriginsHtml(d)}
     ${sets}
     ${outcome}
     ${reasonBox}
@@ -23459,29 +23539,40 @@ function acerOriginWords(o){
 }
 /* D-195, RENDERED FROM THE PLANE'S DERIVATION. Four states and no fifth: not
    told, shared (named), traced-and-none, and could-not-finish. Nothing here
-   refuses and nothing here grades. */
+   refuses and nothing here grades.
+
+   UI-75 LIFTED THE BODY into `originsHtml`, unchanged but for two parameters —
+   how a set is named, and the attribute its states are tagged with — so the
+   elicitation's read-back renders the same fact in the same words (BOB #22:
+   whichever of UI-74 and UI-75 lands second reuses the first's rendering). */
 function acerOriginsHtml(v){
   if(acerSetKeys(v).length < 2) return "";
-  const ind = ACER && ACER.origins;
+  return originsHtml(ACER && ACER.origins, k => acerSetName(v, k), "data-acer");
+}
+/* THE SHARED RENDERER. `ind` is the plane's `independence` or null (not told);
+   `nameOf` turns the plane's set label into the member's words; `tag` is the
+   attribute name each state is marked with. Called by `acerOriginsHtml` and
+   `elicOriginsHtml`. */
+function originsHtml(ind, nameOf, tag){
   if(!ind || typeof ind !== "object" || ind.checked !== true)
-    return '<div class="teach" style="margin:6px 0 0" data-acer="origins-untold">' + esc(ACER_ORIGINS_UNTOLD) + '</div>';
+    return '<div class="teach" style="margin:6px 0 0" ' + tag + '="origins-untold">' + esc(ACER_ORIGINS_UNTOLD) + '</div>';
   const shared = Array.isArray(ind.shared) ? ind.shared.filter(p => p && typeof p === "object") : [];
   const cut = ind.complete === false
     ? '<div class="subj-how">The record stopped tracing at its own limit of ' + esc(String(ind.limit ?? "an unstated number"))
       + ' per step, so there may be more than it says here.</div>' : "";
   if(!shared.length){
     if(ind.complete === false)
-      return '<div class="teach" style="margin:6px 0 0" data-acer="origins-undetermined">The record began tracing whether '
+      return '<div class="teach" style="margin:6px 0 0" ' + tag + '="origins-undetermined">The record began tracing whether '
         + 'these sets rest on the same material further back and could not finish, so it cannot say whether they do.'
         + cut + '</div>';
-    return '<div class="subj-how" data-acer="origins-none">The record traced where the material behind each set came '
+    return '<div class="subj-how" ' + tag + '="origins-none">The record traced where the material behind each set came '
       + 'from and found none of it shared between them. ' + esc(ACER_ORIGINS_REACH) + '</div>';
   }
-  return '<div class="card" style="margin:6px 0 0" data-acer="origins-shared">'
+  return '<div class="card" style="margin:6px 0 0" ' + tag + '="origins-shared">'
     + '<div class="kv"><span class="k">Rests on the same material</span><span class="v plain">'
     + 'The record traced where the material behind each set came from, and some of it is shared.</span></div>'
-    + shared.map(p => '<div class="subj-how" data-acer="origin">' + esc(acerSetName(v, p.a)) + ' shares material with '
-        + esc(acerSetName(v, p.b)) + ': '
+    + shared.map(p => '<div class="subj-how" ' + tag + '="origin">' + esc(nameOf(p.a)) + ' shares material with '
+        + esc(nameOf(p.b)) + ': '
         + esc((Array.isArray(p.through) ? p.through : []).map(acerOriginWords).join("; ") || "material the record did not name")
         + '.</div>').join("")
     + cut
