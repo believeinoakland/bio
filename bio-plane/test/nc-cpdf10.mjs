@@ -19,6 +19,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const SUITE = "test/textchain.test.mjs";
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -136,6 +138,9 @@ const ARMS = [
     mustFail: "EVERY Tier-3 arm — the scan is no longer routed at all, which is the state this item found the plane in",
     mustNotFail: "the pure textchain unit arms (they import no PDF)" },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read); `file` is bio-plane-relative. */
+anchorTable(ARMS.map((a) => ({ arm: a.name.split(".")[0], file: fileURLToPath(new URL(`../${a.file}`, import.meta.url)), find: a.from, put: a.to })));
 
 console.log("CPDF-10 NEGATIVE CONTROLS — each arm ALONE, others held open\n");
 const base = run();

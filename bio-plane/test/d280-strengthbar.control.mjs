@@ -50,6 +50,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = { store: ROOT + "src/store.mjs" };
@@ -67,9 +68,9 @@ for (const [k, v] of Object.entries(ORIGINAL)) {
 }
 
 const PEN = ROOT + "../.d280-harness";
-rmSync(PEN, { recursive: true, force: true });
-mkdirSync(PEN, { recursive: true });
-for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+if (!ANCHOR_DRY) rmSync(PEN, { recursive: true, force: true });   /* M0-197: no pen under the dry read */
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
 
 let armsRun = 0, armsWrong = 0;
 
@@ -113,6 +114,7 @@ function restoreAll(armId) {
    PER SUITE, because this item's defect lives in one method and the predicate
    it consumes is shared with another item's suite. */
 function arm(id, title, edits, suites, expectGreen = false) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: id, file: F[k], find, put })));   /* M0-197: read, never armed */
   armsRun++;
   console.log(`\n=== (${id}) ${title}`);
   for (const [k] of edits) copyFileSync(F[k], join(PEN, `arm${id}.${k}`));
@@ -152,7 +154,7 @@ function arm(id, title, edits, suites, expectGreen = false) {
 
 console.log("\nD-280 — negative controls. THE BASELINE FIRST, so every arm is a DELTA and so a run in\n"
           + "which every arm is broken is distinguishable from one in which every arm works.");
-for (const n of ["d280-strengthbar.test.mjs", "severedhomes.test.mjs"]) {
+for (const n of ANCHOR_DRY ? [] : ["d280-strengthbar.test.mjs", "severedhomes.test.mjs"]) {   /* M0-197: no suite under the dry read */
   const b = runSuite(n);
   console.log(`  BASELINE ${n}: ${b.pass} pass, ${b.fail} fail`);
   if (b.fail !== 0) {
@@ -270,6 +272,7 @@ arm("D", "SITE (d) PUT BACK. `restingOn` stops attaching the status, so the read
 
 /* ============ (G) THE BASELINE, RE-TAKEN ================================= */
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log("\n=== (G) BASELINE RE-TAKEN — the row that distinguishes six-arms-broken from six-arms-working");
 let restoredGreen = true;
 for (const n of [OWN, D267]) {

@@ -48,6 +48,7 @@ import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync } from 
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PEN = controlPen("rec115");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
@@ -98,6 +99,9 @@ const ARMS = {
     + "If S102/S103 went green here the section would be satisfiable by silencing, and the item "
     + "would be closed by prose. S108 held open."],
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, [edits]]) => edits.map(([file, find, put]) => ({ arm, file, find, put }))));
 
 const runOne = (suite, foot) => {
   let r;

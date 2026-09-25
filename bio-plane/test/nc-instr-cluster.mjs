@@ -38,6 +38,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));          /* bio-plane/ */
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
@@ -254,6 +255,11 @@ function restoreAll(id) {
   }
   if (existsSync(PLANTED)) { unlinkSync(PLANTED); console.log(`    planted suite removed`); }
 }
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). An arm with no edits plants
+   a composed suite WHOLE (5, 6) or arms nothing (7, the baseline). */
+anchorTable(QUEUE.flatMap((q) => q.edits.length ? q.edits.map(([k, find, put]) => ({ arm: q.id, file: F[k], find, put }))
+  : [{ arm: q.id, none: "no edit: plants a composed suite whole, or arms nothing (the baseline)" }]));
 
 const willRun = QUEUE.filter((q) => !ONLY || ONLY === q.id).map((q) => q.id);
 preflight("nc-instr-cluster.mjs",

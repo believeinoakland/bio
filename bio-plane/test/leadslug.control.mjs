@@ -35,6 +35,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -99,6 +100,8 @@ function restoreAll() {
 }
 
 function arm(title, edits, mustFail, mustNotFail = [], suite = "leadslug.test.mjs") {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find, put })));
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -121,11 +124,12 @@ function arm(title, edits, mustFail, mustNotFail = [], suite = "leadslug.test.mj
 }
 
 console.log("PL-15 / D-213 — negative controls. Whole-tree baselines first, so every arm is a DELTA.");
-const base = runSuite("leadslug.test.mjs");
+const NONE = { pass: 0, fail: 0 };   /* M0-197: no suite under the dry read */
+const base = ANCHOR_DRY ? NONE : runSuite("leadslug.test.mjs");
 console.log(`  BASELINE leadslug.test.mjs: ${base.pass} pass, ${base.fail} fail`);
-const baseHyg = runSuite("hygiene.test.mjs");
+const baseHyg = ANCHOR_DRY ? NONE : runSuite("hygiene.test.mjs");
 console.log(`  BASELINE hygiene.test.mjs: ${baseHyg.pass} pass, ${baseHyg.fail} fail`);
-const baseQC = runSuite("queue-conditions.test.mjs");
+const baseQC = ANCHOR_DRY ? NONE : runSuite("queue-conditions.test.mjs");
 console.log(`  BASELINE queue-conditions.test.mjs: ${baseQC.pass} pass, ${baseQC.fail} fail`);
 if (base.fail !== 0 || baseHyg.fail !== 0 || baseQC.fail !== 0) {
   console.log("  ** the tree is not whole; arms below would measure the wrong thing");
@@ -297,6 +301,8 @@ arm("(7) THE CLASS IS DOCTRINE AND NOT A LABEL. Move the slug from QUEUE_FINDING
    "op=queue ANSWERS — the mint admitted every item it was handed"],
   ["a lead naming a DOCUMENT is refused by name (C-28.14)",
    "a member MAY mute it for themselves"]);
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only; arm (8) arms nothing */
 
 /* ===================== (8) THE OVER-STRICTNESS ARM ======================= */
 

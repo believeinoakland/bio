@@ -99,13 +99,14 @@ import path from "path";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { ANCHOR_DRY, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI = path.join(HERE, "..");
 const APP = path.join(UI, "app.html");
 const SUITE = path.join(HERE, "version-predecessor.test.mjs");
 const PEN = path.join(UI, ".ui50-harness");
-fs.mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) fs.mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under the dry read */
 
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 const same = (a, b) => {
@@ -115,7 +116,7 @@ const same = (a, b) => {
 /* THE PRISTINE-OF-RECORD, taken ONCE before any arm and never overwritten. Every
    restore is checked against this as well as against its own arm's copy. */
 const RECORD = {};
-for (const [k, p] of Object.entries({ app: APP, suite: SUITE })) {
+for (const [k, p] of ANCHOR_DRY ? [] : Object.entries({ app: APP, suite: SUITE })) {
   RECORD[k] = path.join(PEN, `record.${path.basename(p)}`);
   fs.copyFileSync(p, RECORD[k]);
 }
@@ -203,6 +204,10 @@ const ARMS = [
       return t.replace(a, "  const names = new Set(seed); return [...names];");
     } },
 ];
+/* M0-197: each arm's patch is handed a RECORDER instead of the source (its `split` reads one match, each `replace` is
+   recorded as an anchor, in order), so the anchors come from the arms themselves; a no-op outside the dry read. */
+if (ANCHOR_DRY) anchorTable(ARMS.flatMap((arm) => { const rows = [], rec = { split: () => ["", ""], replace: (find, put) => (rows.push({ arm: arm.id, file: arm.file, find, put }), rec) };
+  arm.patch(rec); return rows.length ? rows : [{ arm: arm.id, none: "the baseline patches nothing" }]; }));
 
 const run = () => {
   try {

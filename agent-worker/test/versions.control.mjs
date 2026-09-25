@@ -23,6 +23,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../../bio-plane/scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(DIR, "..");
@@ -34,7 +35,6 @@ const SUBSESSION = join(MEMBER, "src/subsession.mjs");
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const FLOOR = 200;
-mkdirSync(PEN, { recursive: true });
 
 function runSuite() {
   const r = spawnSync("node", [SUITE], { cwd: MEMBER, encoding: "utf8" });
@@ -48,6 +48,7 @@ function runSuite() {
    A replacement that matches nothing THROWS — an arm that armed nothing and
    ran green would read as a defence holding. */
 function withReplaced(file, from, to, body) {
+  if (ANCHOR_DRY) return void anchorPatch(file, from, to, "any");   /* M0-197: read, never armed (includes + replace: >=1 match arms) */
   const before = readFileSync(file);
   if (before.length < FLOOR) throw new Error(`refusing to arm ${file}: below the byte floor`);
   const text = before.toString("utf8");
@@ -114,6 +115,10 @@ const ARMS = {
       })),
   },
 };
+
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs (a no-op otherwise); the pen is made after it. */
+anchorEach(Object.fromEntries(Object.entries(ARMS).filter(([n]) => n !== "baseline")), (a) => a.run());
+mkdirSync(PEN, { recursive: true });
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);

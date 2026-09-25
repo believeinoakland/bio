@@ -21,6 +21,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PEN = controlPen("m038");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
@@ -115,6 +116,8 @@ const ARMS = [
     "MUST NOT FAIL — ANYTHING. The cut is correct and only its spelling changed. This is REC-99's "
   + "own arm (11) discipline applied to the in-memory half."],
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap(([arm, , parts]) => parts.map(([find, put]) => ({ arm, file: STORE, find, put }))));
 
 const base = run("derivation-bounds");
 console.log(`BASELINE ROW FIRST — derivation-bounds ${base.pass}/${base.fail}, census ${base.census}`);

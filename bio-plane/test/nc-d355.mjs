@@ -29,6 +29,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));          /* bio-plane/ */
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
@@ -278,6 +279,11 @@ arm("6", "a SECOND copy of arm 9's anchor planted in `index.mjs` (inside a comme
       say: `exit ${r.code} · preflight rows cover ${ids.size} arm id(s) · arm 9 marked: ${marked} · ARM 0 announced: `
          + `${/^ARM 0 · /m.test(r.out)} · pen ${penAbsent() ? "absent" : "**PRESENT**"}` };
   });
+
+/* M0-197: the queued arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). Arms 2, 3 and 4
+   quote no tree file: they seed a saved log, run a driver, or kill one. */
+anchorTable(QUEUE.flatMap((q) => q.edits.length ? q.edits.map(([file, find, put]) => ({ arm: q.id, file, find, put }))
+  : q.id === "0" ? [] : [{ arm: q.id, none: "edits no tree file: it seeds a saved log, runs a driver, or kills one" }]));
 
 /* ------------------------------------------------------------------- RUN */
 preflight("nc-d355.mjs",

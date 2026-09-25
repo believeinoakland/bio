@@ -33,9 +33,12 @@
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { rmSync } from "node:fs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = fileURLToPath(new URL("./", import.meta.url));
 const COV = HERE + ".query-reach-cov/";
+/* M0-197: this driver has no patch arm to drift — it measures coverage, editing nothing (a no-op outside the dry read). */
+anchorTable([{ arm: "coverage", none: "no arm patches a source: it re-runs itself under NODE_V8_COVERAGE and reports reach" }]);
 if (process.env.QUERY_REACH_CHILD !== "1") {
   rmSync(COV, { recursive: true, force: true });
   const self = fileURLToPath(import.meta.url);

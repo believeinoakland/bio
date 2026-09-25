@@ -30,6 +30,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -76,15 +77,18 @@ function runSuite() {
   return { pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, code, out };
 }
 
-const BASE = runSuite();
+const BASE = ANCHOR_DRY ? { pass: 0, fail: 0, code: 0 } : runSuite();   /* M0-197: no suite under the dry read */
 console.log(`BASELINE  ${BASE.pass} pass, ${BASE.fail} fail, exit ${BASE.code}`);
-if (BASE.fail !== 0 || BASE.pass < 20) {
+if (!ANCHOR_DRY && (BASE.fail !== 0 || BASE.pass < 20)) {
   console.log("the tree is not green before the controls — refusing to run arms");
   process.exit(1);
 }
 
 const results = [];
 function arm({ id, what, mustFail, mustNotFail, files }) {
+  /* M0-197: under tools/anchordrift.mjs each patch() is handed a recorder, so its replace() calls are READ, never applied. */
+  if (ANCHOR_DRY) return void files.forEach((f) => { let n = 0; const rec = { replace: (find, put) => (n++, anchorRows([{ arm: id, file: f.path, find, put, sites: "any" }]), rec) };
+    f.patch(rec); if (!n) anchorRows([{ arm: id, none: `appends to ${f.path.slice(REPO.length + 1)}; quotes no anchor` }]); });
   for (const f of files) snapshot(id, f.path);
   for (const f of files) writeFileSync(f.path, f.patch(readFileSync(f.path, "utf8")));
   /* AN ARM THAT NEVER ARMED IS THE WORST OUTCOME: it reports a clean green over a
@@ -207,6 +211,7 @@ export function routeOf(op, table) {`) }],
 });
 
 /* ------------------------------------------------------------------ the verdict */
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 const after = runSuite();
 console.log(`\nAFTER ALL ARMS, the tree restored: ${after.pass} pass, ${after.fail} fail, exit ${after.code}`);
 console.log(after.pass === BASE.pass && after.fail === 0

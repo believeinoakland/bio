@@ -59,6 +59,7 @@ import { createHash } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const PRED = path.join(REPO, "tools", "occupancy.mjs");
@@ -236,6 +237,8 @@ const ARMS = [
     mustNotBreak: ["a runs list cut at list_task_runs' default is UNDETERMINED"] },
 ];
 const DECLARED_ARMS = 18;
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: PRED, find: a.from, put: a.to })));
 
 const RUNNING = ONLY ? ARMS.filter((a) => a.id === ONLY) : ARMS;
 if (ONLY && !RUNNING.length) { console.log(`** no arm '${ONLY}' — the arms are ${ARMS.map((a) => a.id).join(", ")}`); process.exit(2); }

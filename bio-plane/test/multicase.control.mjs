@@ -125,6 +125,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -140,6 +141,7 @@ const FLOOR = 1000;                                /* a "restore" of a truncated
    unbreakable, which is the one wrong answer a control can give — and this
    repository has met arms that patched zero times more than once. */
 const edit = (file, needle, replacement) => {
+  if (ANCHOR_DRY) return void anchorPatch(file, needle, replacement);   /* M0-197: read, never armed */
   const src = readFileSync(file, "utf8");
   const n = src.split(needle).length - 1;
   if (n !== 1) throw new Error(`ARM NEEDLE not unique in ${file}: found ${n} occurrence(s)\n  ${needle.slice(0, 90)}`);
@@ -207,6 +209,8 @@ const ARMS = {
          "    if (!newCase && !String(caseId ?? \"\").trim() && distinct.length > 1)",
          "    if (!newCase && !String(caseId ?? \"\").trim() && distinct.length > 0)") },
 };
+
+anchorEach(ARMS, (a) => a.apply());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const want = process.argv[2];
 const order = want ? [want] : Object.keys(ARMS);

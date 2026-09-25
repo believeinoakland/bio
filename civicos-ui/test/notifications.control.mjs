@@ -116,6 +116,7 @@ import os from "os";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { ANCHOR_DRY, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI = path.join(HERE, "..");
@@ -365,6 +366,14 @@ const ARMS = [
     what: "BASELINE — no patch at all. Without this row, ten arms failing for the wrong reason looks like ten arms working",
     patch: (t) => t },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). Read FROM THE ARMS: each
+   patch is handed a stand-in for its file's text whose `split` records the anchor it counts (once, exactly) and whose
+   `replace` records what it writes there. */
+anchorTable(ANCHOR_DRY ? ARMS.flatMap((arm) => { const real = fs.readFileSync(arm.file, "utf8"), rows = [];
+  arm.patch({ split: (a) => (rows.push({ arm: arm.id, file: arm.file, find: a }), real.split(a)),
+              replace: (a, b) => { const r = rows.find((x) => x.find === a); if (r) r.put = b; return real.replace(a, b); } });
+  return rows; }) : []);
 
 const run = () => {
   try { return { code: 0, out: execFileSync("node", [SUITE], { encoding: "utf8", stdio: "pipe" }) }; }

@@ -30,6 +30,7 @@ import { readFileSync, mkdirSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DIR = controlPen("rec116-plan");
@@ -43,6 +44,14 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
+
+/* M0-197: the anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read), BEFORE the first spawn. This
+   driver patches no tree file: arm A EXTRACTS its subject by the three anchors below (copied from the extraction
+   lines further down — keep them together), and arm B drops the index in the sqlite fixture this driver composes. */
+anchorTable([{ arm: "A", file: join(HERE, "..", "src", "store.mjs"), find: "provenanceRoutesMarked({", sites: "any" },
+  { arm: "A", file: join(HERE, "..", "src", "schema.mjs"), find: /CREATE TABLE IF NOT EXISTS provenance_route_marks \([\s\S]*?\n\);/ },
+  { arm: "A", file: join(HERE, "..", "src", "schema.mjs"), find: /CREATE INDEX IF NOT EXISTS provenance_route_marks_finding\n {2}ON provenance_route_marks\(finding, bundle_id\);/ },
+  { arm: "B", none: "drops the index in the sqlite fixture this driver composes from arm A's extracted DDL" }]);
 
 try { execFileSync("sqlite3", ["--version"], { stdio: "pipe" }); }
 catch { console.log("SKIP (NAMED, not green): sqlite3 binary absent — no arm ran"); process.exit(2); }

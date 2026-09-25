@@ -22,6 +22,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const P = (rel) => fileURLToPath(new URL(rel, import.meta.url));
 const STORE = P("../src/store.mjs");
@@ -93,6 +94,10 @@ const ARMS = [
     from: `                 status: status ?? "confirmed", note });`,
     to: `                 status: "confirmed", note });` },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). An `all` arm needs >= 2
+   sites; the reader's nearest is "any" (>= 1). */
+anchorTable(ARMS.map((a) => (a.file ? { arm: a.id, file: a.file, find: a.from, put: a.to, sites: a.all ? "any" : 1 } : { arm: a.id, none: "nothing armed" })));
 
 const runSuite = () => {
   try {

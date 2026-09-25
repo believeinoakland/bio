@@ -29,6 +29,7 @@ import crypto from "crypto";
 import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, "..", "..");
@@ -44,6 +45,7 @@ const sha = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest
 /* THE TWO SUBJECTS. Each returns {exit, out}. Neither is piped — a pipe reports
    the LAST command's status and this project recorded a false `exit 0` that way. */
 const runGuard = () => {
+  if (ANCHOR_DRY) return { exit: 0, out: "" };   /* M0-197: nothing runs under the dry read */
   try {
     const out = execFileSync("node", [path.join(ROOT, "civicos-ui", "test", "run.mjs")],
       { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -51,6 +53,7 @@ const runGuard = () => {
   } catch (e) { return { exit: e.status ?? -1, out: `${e.stdout || ""}${e.stderr || ""}` }; }
 };
 const runSuite = () => {
+  if (ANCHOR_DRY) return { exit: 0, out: "" };
   try {
     const out = execFileSync("node", [path.join(HERE, "machinefences-dec49.test.mjs")],
       { cwd: path.join(ROOT, "bio-plane"), encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -69,6 +72,8 @@ for (const [k, f] of Object.entries(P)) {
 
 const results = [];
 function arm({ n, name, declare, file, mutate, expect }) {
+  /* M0-197: under tools/anchordrift.mjs the arm's own mutate() is handed a recorder, so its replace() is READ, never applied. */
+  if (ANCHOR_DRY) return void mutate({ replace: (find, put) => anchorRows([{ arm: String(n), file: P[file], find, put, sites: "any" }]) });
   console.log(`\n${"=".repeat(78)}\nARM ${n} — ${name}`);
   console.log(`  DECLARED BEFORE ARMING:\n${declare.split("\n").map((l) => "    " + l).join("\n")}`);
   const f = P[file];
@@ -227,6 +232,7 @@ arm({
 });
 
 /* ================================================================= THE CLOSE */
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${"=".repeat(78)}\nFINAL STATE — every file back to its pre-arm bytes, proved twice:`);
 let clean = true;
 for (const [k, f] of Object.entries(P)) {

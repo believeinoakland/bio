@@ -90,6 +90,7 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const PEN = controlPen("m037");   /* M0-182: the one spelling of an item-named pen (c21-batch28 carries it onto D-537) */
@@ -102,6 +103,11 @@ const COORD_FLOOR = 100_000;
 const PLANCHECK = join(REPO, "tools/plancheck.mjs");
 const MODULE = join(REPO, "tools/delegations.mjs");
 const SUITE = join(REPO, "bio-plane/test/planning-hygiene.test.mjs");
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs, before the coord pin is read (a no-op otherwise). */
+const COORD_WHY = "edits the coord register's CLAIMS.md by line number, picked live, and plants it as a local ref; quotes no tree file";
+anchorTable([...["A1", "A2", "A6"].map((arm) => ({ arm, none: COORD_WHY })), { arm: "A3", none: "nothing armed (over-strictness)" },
+  { arm: "A4", file: PLANCHECK, find: /\/\* -+ 8\. A DELEGATION STATES ITS OWN STATE, DATED[\s\S]*?\n\/\* -+ report/, sites: "any" },
+  { arm: "A5", none: "appends a syntax error to tools/delegations.mjs; quotes nothing" }]);
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

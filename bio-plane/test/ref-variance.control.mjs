@@ -30,6 +30,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const P = fileURLToPath(new URL("./ref-variance-probe.mjs", import.meta.url));
 const S = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -39,6 +40,9 @@ const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
 const run = (env = {}) => spawnSync(process.execPath, [P], { cwd: ROOT, encoding: "utf8", env: { ...process.env, ...env } });
 let failed = 0;
 function arm(name, { file, from, to, env }, expect) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edit is its anchor. */
+  if (ANCHOR_DRY) return void anchorRows([file ? { arm: name.slice(0, 3), file, find: from, put: to, sites: "any" }
+    : { arm: name.slice(0, 3), none: `an environment switch (${Object.keys(env).join(", ")}); no source is patched` }]);
   const before = file ? sha(file) : null;
   if (file) {
     const src = readFileSync(file, "utf8");
@@ -70,5 +74,6 @@ arm("(d) loosen the matcher — drop the every-term subset test",
   { file: P, from: `      if (!at.every((t) => tt.includes(t))) continue;`, to: `      if (false && !at.every((t) => tt.includes(t))) continue;` },
   /positive control \(d\)/);
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${failed ? `${failed} arm(s) DID NOT FIRE — the probe's gates are not evidence` : "4 pass, 0 fail — every gate fired and every file was restored byte-identically"}`);
 process.exit(failed ? 1 : 0);

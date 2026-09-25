@@ -78,6 +78,7 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");            /* the repo root: test/ -> bio-plane/ -> . */
@@ -181,6 +182,12 @@ function stripClause() {
   writeFileSync(TOOL, src.replace(ANCHOR, DISARMED));
   return true;
 }
+
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs, before the index is produced (a no-op otherwise).
+   Only stripClause() quotes the tool; the plants APPEND a line and quote nothing. */
+const PLANTED = { none: "appends a planted line to docs/development/MEASUREMENTS.md; quotes no anchor" };
+anchorTable([{ arm: "A1", ...PLANTED }, { arm: "A2", file: TOOL, find: ANCHOR, put: DISARMED }, { arm: "A3", ...PLANTED },
+  { arm: "A4", ...PLANTED }, { arm: "A6", file: TOOL, find: ANCHOR, put: DISARMED }]);
 
 /* ---------------------------------------------------------------- the arms */
 console.log(`nc-m034 — D-367's marker clause, driven in both directions. pen ${PEN}`);

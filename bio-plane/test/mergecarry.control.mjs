@@ -37,6 +37,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "../..");
@@ -111,6 +112,9 @@ function withPatch(files, body) {
    `mustNotFail` are labels that must stay green, which is what separates a targeted arm
    from a suite that simply fell over. */
 function arm(name, files, { mustFail, mustNotFail = [] }) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its patches are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(files.map((f) => f.append ? { arm: String(armN + 1), none: "appends to the file; quotes no anchor" }
+    : { arm: String(armN + 1), file: f.path, find: f.from, put: f.to, sites: f.expect ?? 1 }), armN++);
   console.log(`\n--- ARM ${armN + 1}: ${name} ---`);
   console.log(`  DECLARED must FAIL: ${JSON.stringify(mustFail)}`);
   console.log(`  DECLARED must NOT fail: ${JSON.stringify(mustNotFail)}`);
@@ -133,7 +137,7 @@ function arm(name, files, { mustFail, mustNotFail = [] }) {
 
 /* ========================================================================== */
 console.log("--- BASELINE: the suite unpatched ---");
-const base = runSuite();
+const base = ANCHOR_DRY ? { status: 0, pass: 41, fail: 0 } : runSuite();   /* M0-197: no suite under the dry read */
 console.log(`  suite: exit ${base.status} · ${base.pass} pass, ${base.fail} fail`);
 t("BASELINE: the suite is GREEN before any arm — without this row every arm below "
   + "is indistinguishable from a suite that was already red", base.status === 0 && base.fail === 0);
@@ -203,6 +207,7 @@ arm("the historical register reads `origin/main` again instead of its PIN",
   { mustFail: ["the register's verdict is IDENTICAL whatever origin/main holds"],
     mustNotFail: ["e241672's real drop is NOT carried", "the check reports exactly ONE dropped path"] });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 /* ========================================================================== */
 console.log("\n--- the tree is as it was found ---");
 for (const [name, p] of [["mergecarry.mjs", TOOL], ["plancheck.mjs", PLANCHECK], ["CONDUCT.md", KICKOFF]]) {

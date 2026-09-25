@@ -37,6 +37,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(HERE, "..");
@@ -129,6 +130,9 @@ function patch(file, find, replace) {
 /* An arm: declare what MUST fail and what MUST NOT, arm it alone, measure, and
    restore before anything else runs. */
 function arm({ id, subject, what, mustFail, mustNot, file, find, replace, patches, swapManifest, run }) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) { const es = patches ?? (file ? [{ file, find, replace }] : []); return void anchorRows(es.length
+    ? es.map((e) => ({ arm: id, file: e.file, find: e.find, put: e.replace })) : [{ arm: id, none: swapManifest ? "hides fleet-member.json by rename; quotes no line" : "edits nothing" }]); }
   if (only.length && !only.includes(id)) return;
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
@@ -660,6 +664,9 @@ arm({
     };
   },
 });
+
+/* M0-197: prints the arms read above plus the two inline ones below, and exits, under the dry read only. */
+anchorTable([{ arm: "D5", file: HARNESS_SRC, find: ARM_FIND }, { arm: "O1", none: "nothing is edited" }]);
 
 if (!only.length || only.includes("D5")) {
   armsRun++;

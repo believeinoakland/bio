@@ -36,6 +36,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ARM = (process.argv[2] || "none").toLowerCase();
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -228,6 +229,9 @@ const ARMS = {
                "it applies the walk's OWN three conditions"],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: a.file, find: a.find, put: a.with })));
 
 const runSuite = () => {
   const r = spawnSync(process.execPath, [SUITE], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });

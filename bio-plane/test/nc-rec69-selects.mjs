@@ -37,6 +37,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -69,6 +70,7 @@ const failedArms = (out) => (out.match(/^ {2}FAIL {2}(.+)$/gm) || [])
 const PEN = controlPen("rec69-selects");
 let armNo = 0, wrong = 0;
 const arm = ({ name, file, from, to, mustFail, mustNotFail, run }) => {
+  if (ANCHOR_DRY) return void anchorRows([{ arm: `arm${++armNo}`, file: P[file], find: from, put: to }]);   /* M0-197: read, never armed */
   armNo++;
   const tag = `arm${armNo}`;
   const path = P[file];
@@ -115,7 +117,7 @@ const arm = ({ name, file, from, to, mustFail, mustNotFail, run }) => {
 /* ================================================================ BASELINE */
 console.log("=== BASELINE (nothing armed) — without this row, every arm below could be");
 console.log("    failing for a reason that has nothing to do with its subject.");
-const bc = conditions(), ba = airuns();
+const bc = ANCHOR_DRY ? { pass: 1, fail: 0 } : conditions(), ba = ANCHOR_DRY ? { pass: 1, fail: 0 } : airuns();   /* M0-197: no suite under the dry read */
 console.log(`    run-conditions: ${bc.pass} pass, ${bc.fail} fail`);
 console.log(`    airuns:         ${ba.pass} pass, ${ba.fail} fail`);
 if (bc.fail !== 0 || ba.fail !== 0 || bc.pass < 1 || ba.pass < 1) {
@@ -271,6 +273,8 @@ arm({
     if (r.fail !== 0) { console.log("    ARM CAME BACK WRONG"); wrong++; }
   },
 });
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ==================================================================== FOOT */
 const fc = conditions(), fa = airuns();

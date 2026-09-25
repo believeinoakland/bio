@@ -23,6 +23,7 @@ import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -246,6 +247,14 @@ ARMS.unbranded = () => {
   const bad = restore(snap, "unbranded");
   return { hyg, totality, bad };
 };
+
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs, HAND-COPIED from the two patching arms above (their
+   quotes are inline, so keep these in step with them); a no-op outside its dry read. `replace` + `armed === src` arms
+   on >= 1 match. newfloor and overstrict plant files they compose whole and quote nothing. */
+anchorTable([{ arm: "newfloor", none: "plants d265-unanticipated.probe.mjs, a file it composes whole; it patches no tree file" },
+  { arm: "neuter", file: FILES.figure, find: `      if (hint === "string") return String(n);\n      throw new WalkFloorError(`, sites: "any" },
+  { arm: "overstrict", none: "plants d265-benign.probe.mjs, a file it composes whole; it patches no tree file" },
+  { arm: "unbranded", file: FILES.opclaims, find: "  return walkResult({\n    about: \"op-claims sweep()", sites: "any" }]);
 
 const which = process.argv[2] || "all";
 const order = which === "all" ? ["baseline", "newfloor", "neuter", "overstrict", "unbranded"] : [which];

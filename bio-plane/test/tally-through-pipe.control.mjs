@@ -33,6 +33,7 @@ import { spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -242,6 +243,12 @@ const ARMS = [
     },
   },
 ];
+
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs (a no-op otherwise). HAND-COPIED from the anchors inside the
+   `patch` closures above, which keep them local; `src.includes` + `replace` arms on the first of any number, hence "any". */
+anchorTable([{ arm: "baseline", none: "nothing armed" }, { arm: "d93", none: "plants two whole probe suites into test/; quotes no line" },
+  { arm: "unflush", file: STDIO, find: "        s._handle.setBlocking(true);", sites: "any" },
+  { arm: "overstrict", file: SUITE, find: 'console.log("         got  ${MARK_HEAD}" + filler + "${MARK_MID}" + filler + "${MARK_TAIL}");', sites: "any" }]);
 
 /* --------------------------------------------------------------- THE DRIVER */
 

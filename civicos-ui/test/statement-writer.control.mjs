@@ -65,6 +65,7 @@ import os from "os";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, "..", "..");
@@ -119,6 +120,9 @@ const ARMS = [
             ["app", "    + '<p class=\"subj-note\">Writing the sentence above and preparing and publishing this case are two '\n    + 'different acts. One member may have done both, and on this case that is a fact about this case '\n    + 'rather than the way it works &mdash; so each act is named for itself, and neither name is read off '\n    + 'the other.</p>'",
                     "    + '<p class=\"subj-note\">Two separate acts: writing the sentence printed above, and preparing this '\n    + 'case and publishing it. The same member may have done both, and where that happened it is a fact '\n    + 'about this case and not how the record works, so each act is named on its own and neither name is '\n    + 'taken from the other.</p>'"]] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => (a.edits || []).map(([f, find, put]) => ({ arm: a.name, file: FILES[f], find, put }))));
 
 const orig = {};
 for (const [k, p] of Object.entries(FILES)) {

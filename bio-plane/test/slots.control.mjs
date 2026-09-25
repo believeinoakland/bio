@@ -36,6 +36,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const SUBJECT = join(REPO, "tools/slots.mjs");
@@ -105,6 +106,8 @@ const ARMS = {
         to: "if (false) inStr = true;",
         fail: "a brace inside a string does not end the value", hold: "a bare array reads, completeness unknown" },
 };
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: SUBJECT, find: a.from, put: a.to })));
 
 /* preflight: every anchor exactly once in the pristine subject, before anything arms */
 const text = PRISTINE.toString("utf8");

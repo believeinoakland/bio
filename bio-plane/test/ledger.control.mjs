@@ -71,9 +71,12 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const PEN = join(REPO, ".led2-harness");
+/* M0-197: under the dry read of tools/anchordrift.mjs the pristine copies land in its throwaway $TMPDIR, not the tree. */
+const PEN = ANCHOR_DRY ? join(tmpdir(), "led2-harness") : join(REPO, ".led2-harness");
 const LEDGER = join(REPO, "tools/ledger.mjs");
 const OWED = join(REPO, "tools/owed.mjs");
 const MINTID = join(REPO, "tools/mintid.mjs");
@@ -123,7 +126,7 @@ const suite = (path = SUITE) => {
 const failed = (out, label) => out.split("\n").some((l) => l.startsWith(`  FAIL  ${label}`));
 
 console.log("\n--- BASELINE · nothing armed ---");
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite runs under the dry read */
   const s = suite();
   t("baseline · the suite reached its tally and is GREEN", [s.pass > 50, s.fail, s.status], [true, 0, 0]);
   const so = suite(OWED_SUITE);
@@ -305,6 +308,9 @@ const ARMS = [
     patches: [[LEDGER, "return t === null && l.optional ? { text: \"\", absent: true }", "return false ? { text: \"\", absent: true }"]],
     mustFail: ["an ABSENT tail is NAMED absent by the audit, never unreadable, and scored as empty"] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(([file, find, put]) => ({ arm: a.id, file, find, put }))));
 
 for (const a of ARMS) {
   console.log(`\n--- ARM ${a.id} · ${a.title} (armed ALONE) ---`);

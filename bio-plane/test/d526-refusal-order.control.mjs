@@ -16,6 +16,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = dirname(PLANE.replace(/\/$/, ""));
@@ -108,6 +109,10 @@ const ARMS = {
     mustPass: [...LABELLED_ALL.filter((l) => !l.includes("surfaced_by")), "UNLABELLED: refused GOVERNING_LAWS_REWRITTEN",
                "UNLABELLED: refused SURFACE_NO_RUN", "UNLABELLED: refused NAME_TAKEN"] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). The arms patch a COPY;
+   the anchor is counted in the tree file the copy is taken from. */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([file, find, put]) => ({ arm, file: join(PLANE, file), find, put }))));
 
 const run = (name) => {
   const arm = ARMS[name];

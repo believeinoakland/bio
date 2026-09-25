@@ -48,6 +48,7 @@ import { createHash } from "node:crypto";
 import { spawnSync, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PEN = controlPen("m0182");
 const P = (rel) => fileURLToPath(new URL(rel, import.meta.url));
@@ -103,6 +104,9 @@ const ARMS = [
     from: 'const SAFE = controlPen("rec82");',
     to: 'const SAFE = mkdtempSync(join(tmpdir(), "nc-rec82-"));\nimport { mkdtempSync } from "node:fs";\nimport { tmpdir } from "node:os";' },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: a.file, find: a.from, put: a.to })));
 
 /* D-331: every anchor is counted BEFORE anything is armed, so an arm that could never have armed is a
    finding about the arm rather than a surprising green. */

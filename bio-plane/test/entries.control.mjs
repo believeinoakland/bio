@@ -25,6 +25,7 @@ import { spawn, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const MINTID = path.join(REPO, "tools", "mintid.mjs");
@@ -103,6 +104,8 @@ const ARMS = [
     mustBreak: "a file holding another entry's heading FAILS",
     mustNotBreak: ["TWO MEASUREMENTS LAND IN ONE TRAIN WITH NO CONFLICT", "THE LIAR IS CAUGHT", "an entry APPENDED to a frozen file FAILS naming it"] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(([find, put]) => ({ arm: a.id, file: a.file, find, put }))));
 if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms in the table against ${DECLARED_ARMS} declared — the head is wrong`); process.exit(1); }
 
 const selected = ARMS.filter((a) => !ONLY || a.id === ONLY);

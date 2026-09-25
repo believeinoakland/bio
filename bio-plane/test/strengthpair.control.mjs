@@ -66,6 +66,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -79,6 +80,7 @@ const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) =>
 let armsRun = 0, armsWrong = 0;
 
 function runSuite(name) {
+  if (ANCHOR_DRY) return { pass: 0, fail: 0, named: [], out: "" };   /* M0-197: no suite under the dry read */
   let out = "";
   try {
     out = execFileSync(process.execPath, [ROOT + "test/" + name], { encoding: "utf8", timeout: 600000 });
@@ -110,6 +112,8 @@ function restoreAll() {
 function arm(title, edits, mustFail, mustNotFail = [],
              { mustStayGreen = false, mustSee = [], mustNotThrow = true,
                suite = "strengthpair.test.mjs" } = {}) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: /^\(([^)]+)\)/.exec(title)[1], file: F[k], find, put })));
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -386,6 +390,7 @@ arm("(10) OVER-STRICTNESS. A fence that refuses correct work is a defect in the 
     + "   * ================================================================== */\n\n  /** How many state words"]],
   [], [], { mustStayGreen: true });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${armsRun} arms run, ${armsWrong} wrong.`);
 restoreAll();
 console.log("final restore: every file verified by sha256 AND by content");

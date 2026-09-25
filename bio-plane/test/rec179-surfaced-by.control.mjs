@@ -13,6 +13,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
@@ -59,6 +60,8 @@ const ARMS = {
   /* OVER-STRICTNESS: the same rule in a spelling the suite did not anticipate. Nothing may fail. */
   "same-rule-respelt": { patches: [["store.mjs", CMP, cmpWhen("![was].includes(now)")]], mustFail: [] },
 };
+/* M0-197: the arms' anchors as data (each patches a COPY of src/; counted in the real file it copies). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([file, find, put]) => ({ arm, file: join(PLANE, "src", file), find, put }))));
 
 const run = (name) => {
   const arm = ARMS[name];

@@ -17,6 +17,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = `${ROOT}test/rendered-capture.test.mjs`;
@@ -53,6 +54,9 @@ const ARMS = {
     from: `body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved, at: retrieved }) }));`,
     to:   `body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: String(renderReserved), at: retrieved }) }));` },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: `${ROOT}${a.file}`, find: a.from, put: a.to })));
 
 const run = () => {
   const r = spawnSync(process.execPath, [SUITE], { cwd: ROOT, encoding: "utf-8", timeout: 900000 });

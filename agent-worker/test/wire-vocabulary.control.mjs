@@ -79,6 +79,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(HERE, "..");
@@ -155,6 +156,7 @@ function patch(file, find, replace) {
 }
 
 function arm({ id, subject, what, mustFail, mustNot, file, find, replace, run }) {
+  if (ANCHOR_DRY) return void (file && anchorRows([{ arm: id, file, find, put: replace }]));   /* M0-197: read, never armed */
   if (only.length && !only.includes(id)) return;
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
@@ -299,6 +301,7 @@ arm({
   },
 });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${armsRun} arm(s) run, ${armsAsDeclared} AS DECLARED.`);
 if (findings.length) {
   console.log(`\nFINDINGS (recorded, not smoothed):`);

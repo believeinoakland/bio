@@ -24,12 +24,13 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
 const SAFE = process.env.REC87_PEN || "/tmp/conduct4-rec87/pen";
-mkdirSync(SAFE, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(SAFE, { recursive: true });   /* M0-197: the pen is the arms' business; the dry read never arms */
 const STORE = join(PLANE, "src/store.mjs");
 const CHAIN = join(PLANE, "src/textchain.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
@@ -47,6 +48,8 @@ const runSuite = () => {
 /* Every patch in an arm must match EXACTLY the declared number of times, or the
    arm did not arm — and nothing is written. */
 function arm(patches) {
+  /* M0-197: read, never armed — each patch is an anchor, counted `expect` times. */
+  if (ANCHOR_DRY) return (patches.forEach(([file, find, put, expect = 1]) => anchorPatch(file, find, put, expect)), { armed: true, matches: patches.map((p) => p[3] ?? 1).join("+") });
   const byFile = new Map();
   for (const [file, find, replace, expect = 1] of patches) {
     const src = byFile.get(file) ?? readFileSync(file, "utf8");
@@ -158,6 +161,8 @@ const ARMS = {
                               "    if (who === t.transcriber || true)\n      return refusal(\"TRANSCRIPTION_SELF_ATTEST\","]]),
   },
 };
+
+anchorEach(ARMS, (a) => a.patch());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const want = process.argv[2] || null;
 const names = want ? [want] : Object.keys(ARMS);

@@ -36,6 +36,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -57,6 +58,7 @@ function runSuite(key) {
            failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim()) };
 }
 function arm(file, find, replace) {
+  if (ANCHOR_DRY) return (anchorPatch(file, find, replace), { armed: true, matches: 1 });   /* M0-197: read, never armed */
   const src = readFileSync(file, "utf8");
   const n = src.split(find).length - 1;
   if (n !== 1) return { armed: false, matches: n };
@@ -127,6 +129,8 @@ const ARMS = {
                            `        pieces.push("\\n "); // a new text line`),
   },
 };
+
+anchorEach(ARMS, (a) => a.patch());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);

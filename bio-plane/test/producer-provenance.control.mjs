@@ -59,6 +59,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join, basename } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -67,7 +68,7 @@ const REPO = join(PLANE, "..");
    scratchpad — a harness silently replaced between ARM and RESTORE reports a
    restore it never performed. A dot-directory, so no walk enrols what it holds. */
 const SAFE = join(REPO, ".d251-control-pristine");
-mkdirSync(SAFE, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(SAFE, { recursive: true });   /* M0-197: no pen under the dry read */
 
 const P = (rel) => join(REPO, rel);
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
@@ -98,6 +99,9 @@ function run() {
 const line = (r) => SUITES.map(([n]) => `${n} ${r[n].pass}/${r[n].pass + r[n].fail} (${r[n].fail} FAIL)`).join(" · ");
 
 function arm({ id, what, mustFail, mustNot, file, patch }) {
+  /* M0-197: under tools/anchordrift.mjs the arm's patch is handed a recorder, not the source — its replace() is its anchor
+     (replace-first over >=1 match, as the arm writes whatever it matched). */
+  if (ANCHOR_DRY) return void patch({ replace: (find, put) => anchorRows([{ arm: id, file: P(file), find, put, sites: "any" }]), match: () => null, includes: () => false });
   const abs = P(file);
   const pristine = join(SAFE, `${id}-${basename(file)}`);
   copyFileSync(abs, pristine);
@@ -128,7 +132,7 @@ function arm({ id, what, mustFail, mustNot, file, patch }) {
 
 /* ---- BASELINE. Arms nothing. Three arms broken and three arms working must
    not read the same, and only this row can tell them apart. ---------------- */
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite under the dry read */
   const r = run();
   console.log(`=== BASELINE (nothing armed) — ${line(r)}`);
   if (SUITES.some(([n]) => r[n].fail !== 0)) {
@@ -199,6 +203,7 @@ arm({
    anyone needs. A run INTERRUPTED mid-arm leaves it behind on purpose, which is
    why `.gitignore` also carries it: an untracked scratch directory left in a
    worktree has already been swept into another item's walk. */
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 rmSync(SAFE, { recursive: true, force: true });
 
 console.log("\nALL THREE ARMS RAN AND WERE RESTORED. Read the per-arm rows above against each arm's "

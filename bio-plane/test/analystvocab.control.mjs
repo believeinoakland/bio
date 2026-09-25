@@ -49,6 +49,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = fileURLToPath(new URL("./", import.meta.url));
 const PLANE = HERE + "../";
@@ -87,6 +88,7 @@ const FLOORS = { [STORE]: 500000, [SUITE]: 15000, [APP]: 400000 };
 /* ONE arm. `edits` is [[path, find, replace], ...]. Others are held open: the
    loop arms exactly one and restores before the next. */
 function arm(id, mustFail, what, edits) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([file, find, put]) => ({ arm: id, file, find, put })));   /* M0-197: read, never armed */
   console.log(`\nARM ${id} — ${what}`);
   console.log(`  DECLARED: the suite MUST ${mustFail ? "FAIL" : "PASS"}.`);
   const pristines = [];
@@ -148,7 +150,7 @@ function arm(id, mustFail, what, edits) {
 
 /* ---------------------------- THE BASELINE ---------------------------- */
 console.log("BASELINE — no arm, nothing mutated. If this is not GREEN, every row below is meaningless.");
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite under the dry read */
   const r = runSuite();
   console.log(`  BASELINE: ${r.green ? "GREEN" : "RED"}`);
   if (!r.green) { console.log(r.out.split("\n").filter((l) => /FAIL/.test(l)).slice(0, 6).join("\n")); process.exit(2); }
@@ -218,6 +220,8 @@ results.push(["6 OVER-STRICTNESS", arm("6", false,
    "const P = (n) => `PLACEHOLDER-${n}`;",
    "const P = (n) => `PLACEHOLDER-${n}`;\n/* a fixture id carrying the word, on purpose: fixtures are not surfaces. */\nconst FIXTURE_GROUND_PARTITION_DISJUNCT = \"or-branch-ground-partition\";\nvoid FIXTURE_GROUND_PARTITION_DISJUNCT;"],
 ]) ]);
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ------------------------------- THE ROLL ------------------------------- */
 console.log("\n================ THE ROLL ================");

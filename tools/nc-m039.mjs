@@ -39,6 +39,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../bio-plane/scripts/anchortable.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const QUIET = process.argv.includes("--quiet");
@@ -96,6 +97,15 @@ const OVERSTRICT = [
   `FL-3 corrected ${"DEC-65"}'s entry, but PL-3's guard still cited the old check.`,
   `${B} ruled ${ARCH_DEC}'s scope narrower than the row assumed.`,
 ];
+
+/* ARM 1h's anchor, at module scope (M0-197) so the table below reads the SAME constant the arm patches with. */
+const NEEDLE = "allocPattern: () => /^##\\s+M-(\\d+)\\s+·/gm, allocIsUnique: true";
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs, before the first scratch tree (a no-op otherwise). 1h
+   patches a copy of tools/mintid.mjs on `includes` + `replace` (>= 1 arms); every other arm quotes no tree line. */
+anchorTable([...["2a", "2b", "2c", "2d", "2e", "2f"].map((arm) => ({ arm, none: "grades an in-memory fixture the driver composes" })),
+  ...["1a", "1b", "1c", "1d", "1g"].map((arm) => ({ arm, none: "composes a scratch tree (1b also unsets NAMESPACES.M.allocPattern in memory)" })),
+  { arm: "1h", file: join(REPO, "tools/mintid.mjs"), find: NEEDLE, sites: "any" },
+  ...["1e", "2g"].map((arm) => ({ arm, none: "APPENDS a planted line to a worktree copy; it quotes no anchor" }))]);
 
 /* ================================================================== ARM 2, in memory
  *
@@ -298,7 +308,6 @@ const ENTRY = (n, rest) => `## M-${n} · 2026-09-15 · ${rest}\n\nbody\n\n`;
      an arm that never armed is a finding, and this project has met three of them. */
   {
     const src = readFileSync(join(REPO, "tools/mintid.mjs"), "utf8");
-    const NEEDLE = "allocPattern: () => /^##\\s+M-(\\d+)\\s+·/gm, allocIsUnique: true";
     const armed = src.includes(NEEDLE);
     const alt = join(REPO, "tools", ".mintid-nc-m039.mjs");
     let sec2 = "";

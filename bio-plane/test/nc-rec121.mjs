@@ -27,6 +27,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach, anchorRows } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -62,6 +63,7 @@ const runSuite = (file) => {
 const SUITES = ["test/content-arm.test.mjs", "test/rec121-chain-bytes.test.mjs"];
 
 function arm(file, find, replace) {
+  if (ANCHOR_DRY) return (anchorPatch(file, find, replace), { armed: true, matches: 1 });   /* M0-197: read, never armed */
   const src = readFileSync(file, "utf8");
   const n = src.split(find).length - 1;
   if (n !== 1) return { armed: false, matches: n };
@@ -135,6 +137,9 @@ const ARMS = {
     },
   },
 };
+
+/* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise. `preitem` writes a past commit's file WHOLE. */
+anchorEach(ARMS, (a, name) => name === "preitem" ? anchorRows([{ arm: name, none: "writes the source WHOLE from a past commit; quotes no anchor" }]) : a.patch());
 
 const want = process.argv[2];
 const names = want ? [want] : Object.keys(ARMS);

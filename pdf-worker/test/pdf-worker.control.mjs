@@ -96,6 +96,7 @@ import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 /* `node pdf-worker/test/pdf-worker.control.mjs A1 A5` runs those arms only.
    With no argument every arm runs, which is how the recorded pass was taken —
@@ -228,7 +229,10 @@ const restoreAll = () => {
   }
 };
 
+/* M0-197: under tools/anchordrift.mjs an arm's body runs only to its patch, which records the anchor and stops it. */
+let DRY_ARM = null; const ANCHORED = Symbol("anchored");
 const edit = (p, from, to) => {
+  if (ANCHOR_DRY) { anchorRows([{ arm: DRY_ARM, file: p, find: from, put: to, sites: "any" }]); throw ANCHORED; }   /* includes + replace: >=1 arms */
   const s = readFileSync(p, "utf8");
   if (!s.includes(from)) throw new Error(`ARM COULD NOT BE HONOURED: anchor not found in ${p}: ${from.slice(0, 60)}`);
   writeFileSync(p, s.replace(from, to));
@@ -236,6 +240,7 @@ const edit = (p, from, to) => {
 
 const results = [];
 const arm = (id, title, declared, body) => {
+  if (ANCHOR_DRY) { DRY_ARM = id; try { body(); } catch (e) { if (e !== ANCHORED) throw e; } return; }
   if (ONLY.length && !ONLY.includes(id)) return;
   console.log(`\n=== ${id} · ${title}`);
   console.log(`  DECLARED: ${declared}`);
@@ -252,7 +257,7 @@ const arm = (id, title, declared, body) => {
 
 /* ---- the baseline every arm is measured against ---- */
 console.log("=== BASELINE (nothing armed)");
-const base = runSuite();
+const base = ANCHOR_DRY ? { code: 0, pass: 1, fail: 0 } : runSuite();   /* M0-197: no suite under the dry read */
 console.log(`  suite: exit ${base.code} · ${base.pass} pass, ${base.fail} fail`);
 if (base.fail !== 0 || base.pass <= 0) {
   console.log("  !! the baseline is not green — every arm below would be uninterpretable. STOPPING.");
@@ -348,8 +353,10 @@ arm("A6", "THE SURFACE ROW WITHOUT ITS REACH — two stages, because stage 1 may
   + "MUST exit 1. MUST NOT, in either stage: the fleet FLOOR fire — the op is still declared, so the count does not fall.",
   () => {
     const s0 = readFileSync(SUITE, "utf8");
-    const start = s0.indexOf('console.log("\\n--- VERSION:');
-    const end = s0.indexOf("console.log(`\\npdf-worker:");
+    const V_START = 'console.log("\\n--- VERSION:', V_END = "console.log(`\\npdf-worker:";
+    if (ANCHOR_DRY) { anchorRows([V_START, V_END].map((find) => ({ arm: "A6", file: SUITE, find, sites: "any" }))); throw ANCHORED; }
+    const start = s0.indexOf(V_START);
+    const end = s0.indexOf(V_END);
     if (start < 0 || end < 0 || end < start) throw new Error("ARM COULD NOT BE HONOURED: version block anchors not found");
     writeFileSync(SUITE, s0.slice(0, start) + s0.slice(end));
     const c1 = runCoverage();
@@ -437,6 +444,7 @@ arm("O1", "OVER-STRICTNESS — a fleet suite in a spelling the discovery did not
   + "anticipate is DISCOVERED and RUN by the battery, the battery stays GREEN, and the `fleet:` line still reports "
   + "the member as having RAN. MUST NOT: the extra suite be skipped, or the member reported dark.",
   () => {
+    if (ANCHOR_DRY) { anchorRows([{ arm: "O1", none: "writes a whole new suite file beside the suite; quotes nothing" }]); throw ANCHORED; }
     const extra = join(HERE, "zz-unanticipated-spelling.test.mjs");
     writeFileSync(extra,
       "/* CPDF-9 control O1 — a correct fleet suite in a filename nobody anticipated. */\n"
@@ -455,6 +463,8 @@ arm("O1", "OVER-STRICTNESS — a fleet suite in a spelling the discovery did not
       return `battery exit ${b.code} · discovered: ${discovered} · ran ok: ${ranOk} · ${fleetLine}`;
     } finally { rmSync(extra, { force: true }); }
   });
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ---- the close ---- */
 console.log("\n=== FINAL STATE (everything restored)");

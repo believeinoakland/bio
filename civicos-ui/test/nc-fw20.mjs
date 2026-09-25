@@ -20,6 +20,7 @@ import { spawnSync } from "child_process";
 import fs from "fs";
 import crypto from "crypto";
 import path from "path";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
 const PEN = path.join(ROOT, ".fw20-pen");
@@ -76,6 +77,9 @@ const ARMS = {
     green: ["ui", "breadth", "e2e"],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).filter(([, a]) => a.find).map(([arm, a]) => ({ arm, file: SUBJECT, find: a.find, put: a.repl })));
 
 function run(name) {
   const [cmd, args, cwd] = SUITES[name];

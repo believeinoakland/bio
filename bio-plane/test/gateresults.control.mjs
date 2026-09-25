@@ -60,6 +60,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 /* THE PEN IS OUTSIDE THE WORKTREE — moved there 2026-09-24 by M0-179, under BOB #32's ruling of the same day: a
@@ -226,6 +227,8 @@ const ARMS = [
     alsoBreak: ["descentOf names FOUR outcomes"],
     mustNotBreak: ["the next gate REUSES NOTHING"] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map((p) => ({ arm: a.id, file: p.file, find: p.from, put: p.to }))));
 
 const RUN = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));
 preflight("gateresults.control.mjs",

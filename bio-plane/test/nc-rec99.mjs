@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PEN = controlPen("rec99");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
@@ -88,6 +89,11 @@ const ARMS = [
   + "reds here is tighter than its rule, which is an undeclared interface change wearing the "
   + "costume of caution."],
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). Arm (11)'s alias edit below
+   is an unchecked replace (>= 1 site), quoted here from the loop. */
+anchorTable([...ARMS.map(([label, file, find, put]) => ({ arm: label.slice(1, label.indexOf(")")), file, find, put })),
+  { arm: "11", file: STORE, find: "const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));\n    /* cap + 1 is asked", sites: "any" }]);
 
 const base = run("derivation-bounds");
 console.log(`BASELINE ROW FIRST — derivation-bounds ${base.pass}/${base.fail}, census ${base.census}`);

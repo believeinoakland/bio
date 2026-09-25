@@ -38,6 +38,7 @@ import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync, existsSyn
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
@@ -162,6 +163,8 @@ const ARMS = [
     become: "    const kinds = Object.keys(RUN_CONTEXTS).slice();",
     inSuite: null },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => [a, ...(a.also ? [a.also] : [])].map((x) => ({ arm: a.id, file: STORE, find: x.anchor, put: x.become }))));
 
 /* ------------------------------------------------------------------ run it */
 if (existsSync(SAFE)) rmSync(SAFE, { recursive: true });

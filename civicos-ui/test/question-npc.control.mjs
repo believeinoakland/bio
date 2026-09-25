@@ -78,6 +78,7 @@ import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const APP = new URL("../app.html", import.meta.url);
 const SUITE = new URL("./question-npc.test.mjs", import.meta.url).pathname;
@@ -130,6 +131,9 @@ const ARMS = [
     to:   `wd.reason = ""; IMG_CACHE.delete(STANCE.inquiry); PROJ_CACHE.delete(STANCE.inquiry); await stanceLoad();`,
     must: [], mustNot: [], expectFail: 0 },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.filter((a) => a.from !== undefined).map((a) => ({ arm: a.id, file: APP.pathname, find: a.from, put: a.to })));
 
 let armsWrong = 0;
 for (const arm of ARMS) {

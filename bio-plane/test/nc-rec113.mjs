@@ -40,6 +40,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PEN = controlPen("rec113");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
@@ -142,6 +143,9 @@ const ARMS = {
     identityMustFail: true,
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).filter(([, a]) => a).map(([arm, a]) => ({ arm, file: a.file, find: a.find, put: a.repl })));
 
 /* ---------------------------------------------------------------- *
  * THE RUNNERS

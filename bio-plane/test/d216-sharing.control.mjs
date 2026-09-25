@@ -95,6 +95,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const PROBE = fileURLToPath(new URL("./d216-sharing.probe.mjs", import.meta.url));
@@ -102,6 +103,7 @@ const ORIGINAL = readFileSync(STORE, "utf8");
 const ORIGINAL_SHA = createHash("sha256").update(ORIGINAL).digest("hex");
 
 const runProbe = () => {
+  if (ANCHOR_DRY) return { pass: 0, fail: 0, failed: [] };   /* M0-197: no probe under the dry read */
   let out = "";
   try { out = execFileSync(process.execPath, [PROBE], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }); }
   catch (e) { out = String(e.stdout ?? "") + String(e.stderr ?? ""); }
@@ -112,6 +114,7 @@ const runProbe = () => {
 };
 
 const restore = (arm) => {
+  if (ANCHOR_DRY) return;   /* M0-197: nothing was armed */
   writeFileSync(STORE, ORIGINAL);
   const back = readFileSync(STORE, "utf8");
   const sha = createHash("sha256").update(back).digest("hex");
@@ -124,6 +127,7 @@ const restore = (arm) => {
    or the harness would silently arm a site nobody chose (PL-10's finding, and it
    is why that item's harness stopped). */
 const arm = (name, find, replace) => {
+  if (ANCHOR_DRY) return void anchorRows([{ arm: name, file: STORE, find, put: replace }]);   /* M0-197: read, never armed */
   const n = ORIGINAL.split(find).length - 1;
   if (n !== 1) throw new Error(`ARM ${name}: target text occurs ${n} times, expected exactly 1 — refusing to arm blind`);
   writeFileSync(STORE, ORIGINAL.replace(find, replace));
@@ -217,6 +221,8 @@ arm("3",
     : "UNEXPECTED: re-read the arm before trusting arm B at all."}`);
 }
 restore("ARM 3");
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* --------------------------------------------------------------- POLARITY */
 console.log("\nPOLARITY — the tree is back and the probe is green again.");

@@ -848,7 +848,10 @@ section("M0-98 · --since — after a rebase, only what BOTH sides touched, plus
   upstream("docs/notes/b.md", "moved upstream\n");
   t("the rebase over the docs commit is clean", rebase("since-docs"), 0);
   const d = gates(F.root, ["--since", "--explain"]);
-  t("a rebase over DISJOINT docs commits re-runs ONLY plancheck", [d.cls, d.plan], ["SINCE", "plancheck --local"]);
+  /* CORRECTED 2026-09-25 by M0-197, never exempted: the steps that ALWAYS run are now TWO — the control-anchor
+     reader (`tools/anchordrift.mjs`, BOB #35: every gate profile) beside plancheck — so "only plancheck" was a claim
+     about the plan before that row. What this arm guards is unchanged: no suite is selected. */
+  t("a rebase over DISJOINT docs commits re-runs ONLY the always-run steps (anchordrift, plancheck)", [d.cls, d.plan], ["SINCE", "anchordrift (M0-197) · plancheck --local"]);
   const dRun = gates(F.root, ["--since"]);
   const newTree = treeAt(F.root);
   t("...and the --since run is GREEN and RECORDS the new tree",

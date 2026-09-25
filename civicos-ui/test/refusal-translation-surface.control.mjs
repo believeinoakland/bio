@@ -72,6 +72,7 @@ import path from "path";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.join(HERE, "..", "app.html");
@@ -129,6 +130,8 @@ const ARMS = [
     from: `  const words = refusalWords(err);\n  const msg = err && (words || err.reason) ? [err.reason, words].filter(Boolean).join(" · ") :`,
     to:   `  const msg = err && (err.error || err.reason || err.detail) ? [err.reason,err.error,err.detail].filter(Boolean).join(" · ") :` },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.filter((a) => a.from).map((a) => ({ arm: a.name.split(" ")[0], file: APP, find: a.from, put: a.to })));
 
 fs.mkdirSync(SCRATCH, { recursive: true });
 const origSha = sha(APP);

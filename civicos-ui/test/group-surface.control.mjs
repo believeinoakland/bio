@@ -30,6 +30,7 @@ import path from "path";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.join(HERE, "..", "app.html");
@@ -68,6 +69,10 @@ const ARMS = [
   { name: "(D) over-strictness: the absence in other words", declared: "GREEN",
     edits: [[`  none:   "No group is recorded for this copy yet",`, `  none:   "No group has been recorded for this copy",`]] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => (a.edits ? a.edits.map(([find, put]) => ({ arm: a.name.split(" ")[0], file: APP, find, put }))
+  : [{ arm: a.name.split(" ")[0], none: "nothing armed" }])));
 
 fs.mkdirSync(SCRATCH, { recursive: true });
 const origSha = sha(APP);

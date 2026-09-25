@@ -28,6 +28,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const INSTRUMENT = fileURLToPath(new URL("./accepts-without-reading.measure.mjs", import.meta.url));
 const FOOT = /^accepts-without-reading: (\d+) pass, (\d+) fail · answer (.+)$/m;
@@ -51,6 +52,8 @@ const say = (ok, label, detail) => {
 };
 
 console.log("\n=== VF-6 · negative controls, each armed ALONE ===");
+/* M0-197: the arms quote no source — each is an --arm= flag of the instrument — said as data for tools/anchordrift.mjs. */
+anchorTable(["proxy-as-quantity", "absence-as-zero", "vacuity"].map((arm) => ({ arm, none: "an --arm= flag of accepts-without-reading.measure.mjs; no source is patched" })));
 
 /* ------------------------------------------------------------------ BASELINE */
 console.log("\n--- BASELINE (no arm) ---");

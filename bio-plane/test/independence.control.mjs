@@ -27,6 +27,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { anchorTable, ANCHOR_DRY } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -35,7 +36,7 @@ const PEN = join(ROOT, ".d271-harness", "pen");
 const SUITE = join(DIR, "independence.test.mjs");
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: the in-tree pen is not made under the dry read */
 
 const ORIGINAL = readFileSync(TARGET);
 const ORIGINAL_SHA = sha(ORIGINAL);
@@ -118,6 +119,9 @@ const arms = [
     from: `          const common = [...originSets[i][1]].filter((o) => originSets[j][1].has(o));`,
     to: `          const common = ["bundle:manufactured"];` },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(arms.filter((a) => a.from !== null).map((a) => ({ arm: String(a.id), file: TARGET, find: a.from, put: a.to })));
 
 const results = [];
 for (const arm of arms) {

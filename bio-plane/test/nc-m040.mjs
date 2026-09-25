@@ -17,6 +17,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, copyFileSync, rmSync, statSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const STORE = new URL("../src/store.mjs", import.meta.url).pathname;
 const SUITE = new URL("./derivation-bounds.test.mjs", import.meta.url).pathname;
@@ -104,6 +105,9 @@ const ARMS = [
     declared: "the roster collapses to 14 and the pinned `ncLinearInline` contradiction goes RED. This is "
             + "the arm that proves D-384 cannot be closed silently in either direction" },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.parts.map(([find, put]) => ({ arm: String(a.n), file: a.file, find, put }))));
 
 const PEN = controlPen("m040");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */

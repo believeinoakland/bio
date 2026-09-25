@@ -31,6 +31,7 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -41,7 +42,7 @@ const REPO = join(PLANE, "..");
    resumed MK-2 run of 2026-09-18. */
 const SAFE = process.env.MK2_PEN
   || join("/tmp", `mk2-pen-${createHash("sha256").update(REPO).digest("hex").slice(0, 12)}`);
-mkdirSync(SAFE, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(SAFE, { recursive: true });   /* M0-197: the pen is under /tmp, outside the dry read's sandbox */
 const STORE = join(PLANE, "src/store.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
 /* THE PRE-ITEM SOURCE: the origin/main commit MK-2 is merged onto, i.e. main
@@ -63,6 +64,7 @@ const runSuite = () => {
            failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim().slice(0, 300)) };
 };
 function arm(patches) {
+  if (ANCHOR_DRY) return (patches.forEach(([file, find, replace, expect = 1]) => anchorPatch(file, find, replace, expect)), { armed: true, matches: "dry" });   /* M0-197 */
   const byFile = new Map();
   for (const [file, find, replace, expect = 1] of patches) {
     const src = byFile.get(file) ?? readFileSync(file, "utf8");
@@ -219,6 +221,8 @@ const ARMS = {
                                "  if (leg.grade_axis !== 'testimony') { if (observation) findings.push(f('C-2.8', 'error', 'overstrict', null, 'testimony-overstrict')); return; }\n"]]),
   },
 };
+
+anchorEach(ARMS, (a) => a.patch());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 /* `preitem` — THE MEASUREMENT against the pre-item source. */
 function preitem() {

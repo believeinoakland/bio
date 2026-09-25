@@ -29,6 +29,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PEN = controlPen("rec63");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
@@ -95,6 +96,10 @@ const ARMS = [
     mustNotFail: "everything else: the sweep is an instrument beside the subject, not the subject",
   },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). The driver arms on
+   `includes` and replaces the first match, so it accepts any count >= 1. */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: a.file, find: a.from, put: a.to, sites: "any" })));
 
 function runSuite() {
   try {

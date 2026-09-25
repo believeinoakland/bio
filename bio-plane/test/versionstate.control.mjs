@@ -41,6 +41,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -97,6 +98,8 @@ function restoreAll() {
    that fails "somewhere" proves the suite is sensitive to something; an arm that
    fails AT ITS OWN LAYER proves the layer is doing the work. */
 function arm(title, edits, mustFail, mustNotFail = []) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find, put })));
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -119,7 +122,7 @@ function arm(title, edits, mustFail, mustNotFail = []) {
 }
 
 console.log("PL-2 / IS-2 — negative controls. Whole-tree baseline first, so every arm is a DELTA.");
-const base = runSuite("versionstate.test.mjs");
+const base = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite("versionstate.test.mjs");   /* M0-197: no suite under the dry read */
 console.log(`  BASELINE: ${base.pass} pass, ${base.fail} fail`);
 if (base.fail !== 0) { console.log("  ** the tree is not whole; arms below would measure the wrong thing"); process.exit(1); }
 
@@ -287,6 +290,7 @@ arm("(9) STOP DRIVING C-25.32 OUT OF THE PLANE — leave the row in the registry
                               body: { reason: 'the audit says "it never cleared"' } }));`, ``]],
   ["THE DRIVEN SET EQUALS THE REGISTRY"]);
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${armsRun} arms run, ${armsWrong} did not behave as the control claims.`);
 restoreAll();
 console.log("final restore: every file verified by sha256 AND by content");

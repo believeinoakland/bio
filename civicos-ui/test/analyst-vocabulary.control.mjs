@@ -79,6 +79,7 @@ import path from "path";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { ANCHOR_DRY, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI = path.join(HERE, "..");
@@ -89,7 +90,7 @@ const FAMILY = path.join(HERE, "analyst-vocabulary.mjs");
 const MINE = path.join(HERE, "analyst-vocabulary.test.mjs");
 const ELIC = path.join(HERE, "elicitation.test.mjs");
 const PEN = path.join(UI, ".ui53-harness");
-fs.mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) fs.mkdirSync(PEN, { recursive: true });   /* M0-197: no pen, no copies, under the dry read */
 
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 const same = (a, b) => { try { execFileSync("cmp", ["-s", a, b]); return true; } catch (_) { return false; } };
@@ -100,7 +101,7 @@ const same = (a, b) => { try { execFileSync("cmp", ["-s", a, b]); return true; }
    a digest read `e3b0c442…`, the sha256 of the empty string. */
 const WATCHED = { app: APP, decisions: DECISIONS, family: FAMILY, mine: MINE, elic: ELIC };
 const RECORD = {};
-for (const [k, p] of Object.entries(WATCHED)) {
+if (!ANCHOR_DRY) for (const [k, p] of Object.entries(WATCHED)) {
   RECORD[k] = path.join(PEN, `record.${path.basename(p)}`);
   fs.copyFileSync(p, RECORD[k]);
   const bytes = fs.statSync(RECORD[k]).size;
@@ -200,6 +201,11 @@ const ARMS = [
     what: "BASELINE — no patch at all. Without this row, every arm failing for the wrong reason looks like every arm working",
     patch: (t) => t },
 ];
+
+/* M0-197: under tools/anchordrift.mjs's dry read each arm's OWN patch is handed a recorder for the text, so its
+   anchor is read from it (each demands exactly one site: `split(a).length - 1 !== 1`). The baseline patches nothing. */
+if (ANCHOR_DRY) anchorTable(ARMS.map((a) => { const r = { arm: a.id, file: a.file };
+  a.patch({ split: (find) => (r.find = find, ["", ""]), replace: (_, put) => (r.put = put, "") }); return r; }).filter((r) => r.find));
 
 const runSuite = (s) => {
   try { return { code: 0, out: execFileSync("node", [s], { encoding: "utf8", stdio: "pipe" }) }; }

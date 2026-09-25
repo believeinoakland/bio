@@ -14,6 +14,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./d456-namespace-scope.test.mjs", import.meta.url));
@@ -37,6 +38,9 @@ const ARMS = [
   { id: "D", declared: "FAIL", must: /FAIL  admin · whoami · store=bio -> ok, store bio/,
     patch: [[`  if (NAMESPACES.includes(asked)) return null;`, `  if (asked === "scratch") return null;`]] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patch.map(([find, put]) => ({ arm: a.id, file: SRC, find, put }))));
 
 const rows = [];
 for (const arm of ARMS) {

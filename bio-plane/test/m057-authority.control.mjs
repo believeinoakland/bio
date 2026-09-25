@@ -31,6 +31,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TOOL = join(ROOT, "tools/corpuscheck.mjs");
@@ -64,6 +65,7 @@ function cleanup() { for (const { copy } of pristine.values()) if (existsSync(co
 /* An arm is a set of literal substitutions, EACH validated to occur exactly once before any is
    applied — an arm that did not arm produces a confident wrong answer. */
 function patch(p, subs) {
+  if (ANCHOR_DRY) return void subs.forEach(([from, to]) => anchorPatch(p, from, to));   /* M0-197: read, never armed */
   let text = readFileSync(p, "utf8");
   for (const [from] of subs) {
     const n = text.split(from).length - 1;
@@ -75,11 +77,13 @@ function patch(p, subs) {
 }
 
 const run = (args) => {
+  if (ANCHOR_DRY) return { out: "", code: 0 };   /* M0-197: nothing runs under the dry read */
   try {
     return { out: execFileSync("node", [TOOL, ...args], { cwd: ROOT, encoding: "utf8" }), code: 0 };
   } catch (e) { return { out: `${e.stdout || ""}${e.stderr || ""}`, code: e.status ?? 1 }; }
 };
 const suite = () => {
+  if (ANCHOR_DRY) return 0;   /* M0-197: nothing runs under the dry read */
   try {
     execFileSync("node", ["test/corpuscheck.test.mjs"], { cwd: join(ROOT, "bio-plane"), encoding: "utf8" });
     return 0;
@@ -89,6 +93,7 @@ const suite = () => {
 /* The revert: strip the pointer this item added, leaving item 6 the words that misled BOB #12. */
 const REVERT = [[/\*\*DESIGNED 2026-08-03[\s\S]*?Bob's direction of 2026-09-14/, "Bob's direction of 2026-09-14"]];
 function revertFramework() {
+  if (ANCHOR_DRY) return anchorPatch(FRAMEWORK, REVERT[0][0], REVERT[0][1], "any");   /* first match; arms on >= 1 */
   const text = readFileSync(FRAMEWORK, "utf8");
   const out = text.replace(REVERT[0][0], REVERT[0][1]);
   if (out === text) throw new Error("ANCHOR MISS: §18 item 6's pointer is not where this control expects it");
@@ -152,6 +157,8 @@ const ARMS = [
     t("arm 6 · plancheck --local is clean (--local isolates the variable; the publication half is skipped)", code === 0, `code ${code}`);
   }],
 ];
+/* M0-197: arms 1-5 read (their run/suite calls are inert when dry); arm 6 arms nothing and runs plancheck, so it is not invoked. */
+anchorEach(Object.fromEntries(ARMS.filter(([n]) => !n.startsWith("6")).map(([n, body]) => [n.split(" ")[0], body])), (body) => body());
 
 console.log(`M0-57 NEGATIVE CONTROL — ${ARMS.length} arms declared, each armed ALONE.\n`);
 declared = ARMS.length;

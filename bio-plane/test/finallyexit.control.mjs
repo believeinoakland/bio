@@ -19,6 +19,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const TEST = fileURLToPath(new URL(".", import.meta.url));
 const PLANE = join(TEST, "..");
@@ -49,6 +50,10 @@ const ARMS = {
 for (const f of SUITES) ARMS[`throw:${f}`] = { file: f, edit: (s) => { const at = plantAt(s); return at < 0 ? null : s.slice(0, at) + PLANT + s.slice(at); },
   run: f, want: 1, names: /M0-134 PLANTED THROW/ };
 const DECLARED = 4 + SUITES.length;
+/* M0-197: the anchors the arms' edit functions look for, as data for tools/anchordrift.mjs (a no-op otherwise). */
+const SEV_AT = [{ file: join(TEST, SEV), find: "\n} catch (e) {\n  /* M0-134: A THROW" }, { file: join(TEST, SEV), find: "\n} finally {", sites: "any" }];
+anchorTable([{ arm: "baseline", none: "nothing armed: the baseline edits no file" }, ...["nocatch", "emptycatch", "before"].flatMap((arm) => SEV_AT.map((r) => ({ arm, ...r }))),
+  ...SUITES.map((f) => ({ arm: `throw:${f}`, file: join(TEST, f), find: CATCH_AT }))]);
 
 const only = process.argv[2];
 const chosen = Object.keys(ARMS).filter((k) => !only || k === only);

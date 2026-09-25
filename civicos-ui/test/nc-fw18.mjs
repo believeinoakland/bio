@@ -34,6 +34,7 @@ import { execFileSync } from "child_process";
 import fs from "fs";
 import crypto from "crypto";
 import path from "path";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
 const PEN = path.join(ROOT, ".fw18-pen", "nc");
@@ -132,6 +133,10 @@ const ARMS = {
     file: null, string: true, expect: {},
   },
 };
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => [
+  ...(a.file ? [{ arm, file: a.file, find: a.find, put: a.repl }] : a.string ? [{ arm, none: "arms no source; re-reads every fixture as a bare string" }] : []),
+  ...(a.file2 ? [{ arm, file: a.file2, find: a.find2, put: a.repl2 }] : [])]));
 
 function probe(asString) {
   const out = execFileSync("node", [path.join(ROOT, "civicos-ui/test/nc-fw18.probe.mjs")]

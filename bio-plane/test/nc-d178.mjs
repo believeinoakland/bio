@@ -12,6 +12,8 @@ import { readFileSync, writeFileSync, copyFileSync, mkdtempSync, statSync, unlin
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const SRC = "src/store.mjs";
 const ANCHOR = "            publishedRegistry: this.publishedRegistryFor(row.bundle_id, targets),\n";
@@ -20,6 +22,8 @@ const ARMS = {
   drop: "",
   liar: "            publishedRegistry: {},\n",
 };
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read); SRC is cwd-relative. */
+anchorTable(Object.entries(ARMS).filter(([, put]) => put !== null).map(([arm, put]) => ({ arm, file: fileURLToPath(new URL("../src/store.mjs", import.meta.url)), find: ANCHOR, put })));
 const h = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const dir = mkdtempSync(join(process.cwd(), "test/.nc-d178-"));
 const orig = h(SRC);

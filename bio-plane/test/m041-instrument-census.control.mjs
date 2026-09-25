@@ -161,6 +161,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -263,6 +264,14 @@ function plancheckLocal() {
 
 /* ------------------------------------------------------------------- the run */
 console.log("M0-41 NEGATIVE CONTROL — the census must be able to come back with a NEGATIVE\n");
+
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs, before the first git call (a no-op otherwise). The
+   quotes are armFile's anchors below, copied: they are bound where each arm arms, after side effects this read may not run. */
+anchorTable([{ arm: "(1) baseline", none: "nothing armed" },
+  { arm: "(4) over-strictness", file: join(REPO, "bio-plane/test/m041-instrument-census.mjs"), find: "  const call = /\\b(?:execSync|execFileSync|spawnSync|spawn|exec)\\s*\\(/g;" },
+  { arm: "(2) planted bypass, GRADED namespace", file: join(REPO, "docs/development/MILESTONES.md"), find: "## How this file stays true\n" },
+  { arm: "(3) planted bypass, UNGRADED namespace (M)", file: join(REPO, "docs/development/MEASUREMENTS.md"), find: "# Measurements" },
+  { arm: "(5) silent degrade", none: "renames tools/corpuscheck.mjs aside; quotes nothing" }]);
 
 const head0 = sh(["git", "rev-parse", "HEAD"]).trim();
 const dirty0 = sh(["git", "status", "--porcelain"]).trim();

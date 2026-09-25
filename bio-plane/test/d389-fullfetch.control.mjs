@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, copyFileSync, rmSync, openSync, closeSync 
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -37,6 +38,8 @@ const ARMS = {
   overstrict: { patches: [[HELPER, "             truncated: true };"]],
                 mustFail: ["C1", "C2", "C3", "S1"] },
 };
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([find, put]) => ({ arm, file: STORE, find, put }))));
 
 const runSuite = () => {
   const fd = openSync(OUT, "w");

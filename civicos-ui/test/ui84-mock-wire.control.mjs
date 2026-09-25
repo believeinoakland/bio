@@ -85,6 +85,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { execFileSync } from "child_process";
 import path from "path";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const SUITE  = path.join(ROOT, "civicos-ui/test/preauth-vocabulary.test.mjs");
@@ -140,6 +141,8 @@ const ARMS = [
     from:`    if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"),\n                             op }, 400);`,
     to:  `    if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP",\n                             op }, 400);` },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: a.file, find: a.from, put: a.to })));
 
 fs.mkdirSync(TMP, { recursive:true });
 console.log("UI-84 NEGATIVE CONTROL — four arms, each ALONE, against the FINAL tree\n");

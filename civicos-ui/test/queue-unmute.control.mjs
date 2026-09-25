@@ -55,12 +55,15 @@ import os from "os";
 import path from "path";
 import { execFileSync } from "child_process";
 import { appScript } from "./extract.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../../bio-plane/scripts/anchortable.mjs";
 
 const SUITE = new URL("./queue-unmute.test.mjs", import.meta.url).pathname;
 const BASE = appScript();
 const ITEM_SEND = `    const res = await recPostR("queuemute", { item: itemId, unmute: true });`;
 const CASE_SEND = `    const res = await recPostR("queuemute", { case: caseId, kinds: named, unmute: true });`;
 function one(s, from, to){
+  /* M0-197: read, never armed — the script is extracted from app.html, so the anchor is counted there. */
+  if (ANCHOR_DRY) return (anchorPatch(new URL("../app.html", import.meta.url).pathname, from, to), s);
   const n = s.split(from).length - 1;
   if (n !== 1) throw new Error(`ARM DID NOT ARM: anchor occurs ${n} time(s): ${from.slice(0, 90)}`);
   return s.replace(from, to);
@@ -76,6 +79,7 @@ const ARMS = {
     `    const res = await recPostR("queuemute", { item: itemId, unmute: Boolean(1) });`), CASE_SEND,
     `    const res = await recPostR("queuemute", { case: caseId, kinds: named, unmute: Boolean(1) });`),
 };
+anchorEach(ARMS, (arm) => arm(BASE));   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 const only = process.argv[2];
 /* The scratch pen is the session scratchpad's own temp root, NEVER the worktree. */
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ui97-ctl-"));

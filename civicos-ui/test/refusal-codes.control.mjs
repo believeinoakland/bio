@@ -38,6 +38,7 @@ import path from "path";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { execFileSync } from "child_process";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI = path.join(HERE, "..");
@@ -97,6 +98,10 @@ function report(name, ok, detail) {
 function arm(name, spec, runIt, expect) {
   const edits = Array.isArray(spec) ? spec : (spec.edits || []);
   const aside = (Array.isArray(spec) ? [] : (spec.aside || []));
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed. Its edits apply in order per file and each needs
+     its anchor present (`includes`) and replaces the first, so any count above zero is live. */
+  if (ANCHOR_DRY) return void anchorRows([...edits.map((e) => ({ arm: name, file: e.file, find: e.from, put: e.to, sites: "any" })),
+    ...aside.map((f) => ({ arm: name, none: `moves ${path.basename(f)} out of the tree whole; it quotes nothing` }))]);
   /* `touch` (M0-79, 2026-09-21): files the arm's OWN RUN writes between its phases —
      the landing-in-the-same-turn arms read the figure the guard printed and only then
      move the floor to it, so the edit cannot be written before arming. Each is
@@ -209,7 +214,7 @@ const failLines = out => out.split("\n").filter(l => /^FAIL: /.test(l));
 
 console.log("\n=== DEC-49 GUARD · NEGATIVE CONTROLS AGAINST THE REAL TREE ===\n");
 
-const clean = guard();
+const clean = ANCHOR_DRY ? { exit: 0, out: "" } : guard();   /* M0-197: no run under the dry read */
 report("PRECONDITION: the guard is GREEN on the untouched tree", clean.exit === 0, `exit ${clean.exit}`);
 
 /* ---------------------------------------------------------------- (a)
@@ -752,6 +757,7 @@ arm("(g1)", [{
 });
 
 /* ---------------------------------------------------------------- */
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");
 const after = guard();
 report("(z) the guard exits 0 again", after.exit === 0, `exit ${after.exit}\n${after.out.slice(-700)}`);

@@ -22,13 +22,12 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { anchorTable, ANCHOR_DRY } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = join(DIR, "..", "src", "index.mjs");
 const SUITE = join(DIR, "d270-refusal-truth.test.mjs");
 const WORK = join(DIR, ".d270-control");           /* inside this worktree, never /tmp */
-rmSync(WORK, { recursive: true, force: true });
-mkdirSync(WORK, { recursive: true });
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = { [SRC]: 400000, [SUITE]: 8000 };
@@ -156,6 +155,12 @@ const ARMS = [
       return [out, n];
     } },
 ];
+
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs — each patch is handed a stand-in whose replace() records
+   its regex (a non-global replace arms on >=1 match). The pen is made below it, not above. A no-op otherwise. */
+if (ANCHOR_DRY) anchorTable(ARMS.filter((a) => a.file).flatMap((a) => { const rows = [], rec = { replace: (find) => (rows.push({ arm: a.id, file: a.file, find, sites: "any" }), rec) }; a.patch(rec); return rows; }));
+rmSync(WORK, { recursive: true, force: true });
+mkdirSync(WORK, { recursive: true });
 
 const runSuite = () => {
   try {

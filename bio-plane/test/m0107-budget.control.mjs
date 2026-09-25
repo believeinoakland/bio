@@ -33,6 +33,7 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DECLARED_ARMS = 7;
 const PLANE = join(fileURLToPath(new URL(".", import.meta.url)), "..");
@@ -135,6 +136,8 @@ const ARMS = [
     mustNotBreak: ["(s1) a spawn whose result is never checked", "(s5) a budgetAssert naming a DIFFERENT binding"] },
 ];
 t(`the driver's arm table carries the ${DECLARED_ARMS} arms its head declares`, ARMS.length, DECLARED_ARMS);
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read; the pen above is in $TMPDIR). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: F[a.key], find: a.from, put: a.to })));
 
 /* D-331: every anchor, counted and PRINTED before anything arms. */
 console.log("\n--- PREFLIGHT · every arm's anchor, counted in the file it will write ---");

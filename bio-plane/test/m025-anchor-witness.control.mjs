@@ -46,6 +46,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const WITNESS = join(ROOT, "bio-plane/test/m025-arm-anchor-witness.test.mjs");
@@ -59,8 +60,9 @@ const MIN_BYTES = { [WITNESS]: 8_000, [AGENT_SRC]: 20_000, [FANOUT_SRC]: 3_000, 
 const only = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
-if (existsSync(WORK)) rmSync(WORK, { recursive: true, force: true });
-mkdirSync(WORK, { recursive: true });
+/* M0-197: under tools/anchordrift.mjs's dry read no work dir is made; the arms below are READ, never armed. */
+if (!ANCHOR_DRY && existsSync(WORK)) rmSync(WORK, { recursive: true, force: true });
+if (!ANCHOR_DRY) mkdirSync(WORK, { recursive: true });
 
 let snap = 0;
 function takeOriginal(file, armId) {
@@ -123,6 +125,7 @@ let armsRun = 0, asDeclared = 0;
 const findings = [];
 
 function arm({ id, subject, what, mustFail, mustNot, edits, expect }) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([file, find, put]) => ({ arm: id, file, find, put })));   /* M0-197 */
   if (only.length && !only.includes(id)) return;
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
@@ -315,6 +318,7 @@ function runProcess(file, args, label) {
    rather than generalising `arm()`, because editing five working arms to add
    two is how a control driver acquires the defect it exists to find. */
 function armOn({ id, subject, what, mustFail, mustNot, edits, run, expect }) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([file, find, put]) => ({ arm: id, file, find, put })));   /* M0-197 */
   if (only.length && !only.includes(id)) return;
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
@@ -496,6 +500,8 @@ armOn({
   expect: (r) => r.code === 0 && !/TALLY NOT AS DECLARED/.test(r.out)
     && /tally NOT AS DECLARED : 0/.test(r.out) && /declared tallies read : 1 of 1/.test(r.out),
 });
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ------------------------------------------------------------------- THE FOOT
    Reached only if nothing exited early, so a reader can tell a completed run

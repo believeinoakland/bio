@@ -22,6 +22,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { COORD_PIN } from "./coordpin.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 /* Importing the helper set the override in THIS process; a suite must earn its pin itself, so no child inherits it. */
 delete process.env.BIO_COORD_REF;
@@ -53,6 +54,8 @@ const ARMS = [
   { id: "L1", line: 'process.env.BIO_COORD_REF = "origin/coord";   /* M0-136 CONTROL: pointed back at the LIVE ref */', fails: true },
 ];
 const MUST = ["reads the PINNED coord commit, never a ref name", "is IDENTICAL whatever origin/coord holds"];
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(want.flatMap((unit) => ARMS.map((a) => ({ arm: `${unit} ${a.id}`, file: join(REPO, `bio-plane/test/${unit}.test.mjs`), find: ANCHOR, put: `${ANCHOR}\n${a.line}` }))));
 
 for (const unit of want) {
   const SUITE = join(REPO, `bio-plane/test/${unit}.test.mjs`);

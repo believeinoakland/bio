@@ -50,6 +50,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..", "..");
@@ -108,6 +109,10 @@ for (const [k, v] of Object.entries(ANCHORS)) {
   const hay = k === "walk" ? readFileSync(TOOL, "utf8") : std0;
   if (!hay.includes(v)) throw new Error(`ANCHOR ${k} not found — the arms would not arm; fix the anchor, do not proceed`);
 }
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs, before the baseline runs (a no-op otherwise). */
+anchorTable([{ arm: "1", file: STD, find: ANCHORS.govRow }, { arm: "2", none: "plants two new .md files on disk; quotes nothing" },
+  ...["3", "4", "5"].map((arm) => ({ arm, file: STD, find: ANCHORS.excRow })), { arm: "6", file: STD, find: ANCHORS.undRow },
+  { arm: "7", file: TOOL, find: "if (statSync(join(ROOT, r)).isDirectory()) walk(r);" }, { arm: "8", none: "nothing armed (the over-strictness baseline)" }]);
 const base = corpuscheck();
 console.log(`BASELINE  exit ${base.code} · ${base.out.trim().split("\n").pop()}`);
 if (base.code !== 0) throw new Error("BASELINE IS RED — establish the tree before arming anything");

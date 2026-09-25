@@ -24,6 +24,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { preflight } from "../scripts/armdecay.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -105,6 +106,8 @@ for (const name of Object.keys(ARMS)) {
   preflightArms.push({ id: name, anchors: DRY });
   DRY = null;
 }
+/* M0-197: the anchors the arms' own DRY pass just recorded, as data for tools/anchordrift.mjs (a no-op otherwise). */
+anchorTable(preflightArms.flatMap(({ id, anchors }) => anchors.map(({ file, needle }) => ({ arm: id, file, find: needle }))));
 preflight("projection-noproject.control.mjs", preflightArms.filter((a) => a.anchors.length), { fatalFor: order });
 
 mkdirSync(PEN, { recursive: true });

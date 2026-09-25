@@ -28,6 +28,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -121,6 +122,8 @@ function restore(keys) {
 }
 
 function arm(label, declared, keys, pairs, run, judge) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its pairs are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(Object.entries(pairs).flatMap(([k, ps]) => ps.map(([find, put]) => ({ arm: label.split(" — ")[0], file: F[k], find, put }))));
   armsRun++;
   console.log(`\n=== ARM ${label}`);
   console.log(`    DECLARED — MUST FAIL:     ${declared.mustFail}`);
@@ -142,8 +145,8 @@ function arm(label, declared, keys, pairs, run, judge) {
 /* ------------------------------------------------------------- the baseline */
 
 console.log("=== BASELINE, measured before any arm ===");
-const BASE = coverage();
-const BASE_HYG = hygiene();
+const BASE = ANCHOR_DRY ? { exit: 0 } : coverage();       /* M0-197: no baseline under the dry read */
+const BASE_HYG = ANCHOR_DRY ? { exit: 0 } : hygiene();
 console.log(`    coverage --strict exit ${BASE.exit} · ${BASE.arms} arms · ${BASE.classified} classified · `
   + `corpus ${BASE.corpus} · ${BASE.unclassifiedCount} unclassified ${JSON.stringify(BASE.unclassifiedNamed)}`);
 console.log(`    hygiene exit ${BASE_HYG.exit} · ${BASE_HYG.pass} pass, ${BASE_HYG.fail} fail`);
@@ -252,6 +255,7 @@ arm("5 — EXACTLY ONE ARM REMOVED (strengthpair.test.mjs)",
     actual: `exit ${r.exit} · arms ${r.arms} (was ${BASE.arms}) · floor fired ${r.floorFired} · classified ${r.classified}`,
   }));
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 /* ------------------------------------------------------------------ report */
 
 console.log("\n=== RESTORE, FINAL — every file against its PRISTINE pre-arm copy ===");

@@ -35,6 +35,7 @@ import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync } from 
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const STORE = HERE + "../src/store.mjs";
@@ -66,6 +67,8 @@ function runSuite() {
 /* ONE ARM: copy pristine (uniquely named), edit, PROVE the edit landed, run,
    restore, VERIFY the restore by sha256 AND by bytes. */
 function arm({ id, what, file, from, to, mustFail, mustName }) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed. It accepts ANY count (`includes`) and edits the first. */
+  if (ANCHOR_DRY) return void anchorRows([{ arm: id, file, find: from, put: to, sites: "any" }]);
   const pristine = `${file}.rec77-nc-${id}.pristine`;
   copyFileSync(file, pristine);
   const sha0 = sha(file), len0 = statSync(file).size;
@@ -104,7 +107,7 @@ function arm({ id, what, file, from, to, mustFail, mustName }) {
 say("REC-77 negative controls · " + new Date().toISOString().slice(0, 10));
 say("baseline (nothing armed):");
 {
-  const b = runSuite();
+  const b = ANCHOR_DRY ? { reachedFoot: true, pass: 0, fail: 0 } : runSuite();   /* M0-197: no suite under the dry read */
   if (!b.reachedFoot || b.fail !== 0) { say(`  BASELINE IS NOT GREEN (${b.pass} pass, ${b.fail} fail, foot ${b.reachedFoot}) — every arm below would be unreadable`); bad++; }
   else say(`  ${b.pass} pass, 0 fail — the arms below are read as a DELTA against this\n`);
 }
@@ -160,5 +163,6 @@ arm({
   mustName: "SWEEP GUARD",
 });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 say(bad ? `${bad} arm(s) did NOT behave as declared — read the verdicts above` : "every arm behaved as declared");
 process.exit(bad ? 1 : 0);

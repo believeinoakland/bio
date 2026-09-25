@@ -54,6 +54,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -64,8 +65,6 @@ const SUITE = join(DIR, "fleetbundles.test.mjs");
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const FLOOR = 200;                                   /* a "restore" of a truncated file is not a restore */
-
-mkdirSync(PEN, { recursive: true });
 
 /* Run the gate and read its OWN exit status. Output to a FILE (rule 3). */
 function runSuite() {
@@ -528,6 +527,13 @@ ARMS["10c"] = {
     return r;
   }),
 };
+
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs (a no-op otherwise). Only 9, 10 and 10b quote a line. */
+anchorTable([...Object.keys(ARMS).filter((n) => !["9", "10", "10b"].includes(n)).map((arm) => ({ arm,
+    none: "appends a probe, renames an install, edits JSON by key, or arms nothing (baseline, 5, 8): quotes no line" })),
+  { arm: "9", file: FLEET_BUNDLE, find: new RegExp(`^${FLAG_LINE}`, "m") },
+  { arm: "10", file: FLEET_BUNDLE, find: REMEDY_HEAD + REMEDY_NOW, put: REMEDY_HEAD + REMEDY_OLD }, { arm: "10b", file: FLEET_BUNDLE, find: REMEDY_HEAD + REMEDY_NOW }]);
+mkdirSync(PEN, { recursive: true });   /* moved below the table (M0-197): nothing above uses the pen */
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);

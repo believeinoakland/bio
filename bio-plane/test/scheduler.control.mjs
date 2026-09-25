@@ -42,6 +42,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -105,6 +106,8 @@ function restoreAll(armId) {
    suite stays entirely GREEN, which is the ONE case where a green run is the
    correct answer rather than a control proving nothing. */
 function arm(id, title, edits, mustFail, mustNotFail = [], { mustStayGreen = false } = {}) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: id, file: F[k], find, put })));
   armsRun++;
   console.log(`\n=== ${id} ${title}`);
   try {
@@ -132,7 +135,7 @@ function arm(id, title, edits, mustFail, mustNotFail = [], { mustStayGreen = fal
 }
 
 console.log("\nFL-4 — negative controls. Whole-tree BASELINE first, so every arm below is a DELTA.");
-const base = runSuite("scheduler.test.mjs");
+const base = ANCHOR_DRY ? { pass: 0, fail: 0, reachedFoot: true } : runSuite("scheduler.test.mjs");   /* M0-197: no suite when dry */
 console.log(`  (0) BASELINE scheduler.test.mjs, NO EDIT: ${base.pass} passed, ${base.fail} failed`);
 if (base.fail !== 0 || !base.reachedFoot) {
   console.log("  ** the tree is not whole; every arm below would measure the wrong thing");
@@ -245,5 +248,6 @@ arm("(9)", "OVER-STRICTNESS: correct work in a spelling the suite did not antici
                          AND cr.run_woken_at IS NULL)`]],
   [], [], { mustStayGreen: true });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\nFL-4 controls: ${armsRun} arms run, ${armsWrong} NOT as declared.`);
 process.exit(armsWrong ? 1 : 0);

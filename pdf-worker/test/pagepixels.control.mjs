@@ -22,6 +22,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { anchorPatch, anchorEach } from "../../bio-plane/scripts/anchortable.mjs";
 
 const SRC = fileURLToPath(new URL("../src/pagepixels.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./pagepixels.test.mjs", import.meta.url));
@@ -56,6 +57,9 @@ const ARMS = [
     mustFail: false,
     edit: (s) => s.replace("    contentBytes: content.length,\n", "    contentBytes: content.length, spuriousExtraField: true,\n") },
 ];
+/* M0-197: each arm's edit is handed a recorder in place of the source, so its anchor is read FROM the arm itself.
+   `String#replace` edits the first match and the arm arms on any change, so any count >= 1 arms ("any"). */
+anchorEach(ARMS, (a) => a.edit({ replace: (find, put) => anchorPatch(a.file, find, put, "any") }));
 
 function runSuite() {
   try {

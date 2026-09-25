@@ -41,6 +41,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -64,6 +65,7 @@ function runSuite(key) {
            failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim()) };
 }
 function arm(file, find, replace) {
+  if (ANCHOR_DRY) return (anchorPatch(file, find, replace), { armed: true, matches: 1 });   /* M0-197: read, never armed */
   const src = readFileSync(file, "utf8");
   const n = src.split(find).length - 1;
   if (n !== 1) return { armed: false, matches: n };
@@ -91,6 +93,7 @@ const OLDKEY = `["image" + "_bound"]`;
 const oldShape = (v) => `...(${v} && ${v}.level === "page_images" ? { ${OLDKEY}: { determined: false, `
   + `empty_level: "the images this capture's pages paint", why: ${v}.why } } : {})`;
 function armAll(file, pairs) {
+  if (ANCHOR_DRY) return (pairs.forEach(([f, r]) => anchorPatch(file, f, r)), { armed: true, matches: pairs.map(() => 1).join("+") });   /* M0-197 */
   const results = pairs.map(([f]) => readFileSync(file, "utf8").split(f).length - 1);
   if (results.some((n) => n !== 1)) return { armed: false, matches: results.join("+") };
   for (const [f, r] of pairs) writeFileSync(file, readFileSync(file, "utf8").replace(f, r));
@@ -166,6 +169,8 @@ const ARMS = {
       "  return { level: 'page_images', why: (c && c.page_images_why) || 'held' };"),
   },
 };
+
+anchorEach(ARMS, (a) => a.patch());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);

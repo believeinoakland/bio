@@ -12,6 +12,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = { store: ROOT + "src/store.mjs", queuestate: ROOT + "src/queuestate.mjs" };
@@ -23,9 +24,11 @@ for (const [k, v] of Object.entries(ORIGINAL)) {
   if (v.length < 2000) { console.log(`  ** ${k} is implausibly small; refusing to arm over it`); process.exit(1); }
 }
 const PEN = ROOT + ".d125-harness";
+if (!ANCHOR_DRY) {   /* M0-197: no pen under the dry read of tools/anchordrift.mjs */
 rmSync(PEN, { recursive: true, force: true });
 mkdirSync(PEN, { recursive: true });
 for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+}
 
 let armsWrong = 0;
 function runSuite() {
@@ -55,6 +58,7 @@ function restoreAll(id) {
   }
 }
 function arm(id, title, edits, mustFail, mustNotFail) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: id, file: F[k], find: from, put: to })));   /* M0-197: read, never armed */
   console.log(`\n=== (${id}) ${title}`);
   for (const k of Object.keys(F)) copyFileSync(F[k], join(PEN, `arm${id}.${k}`));
   try {
@@ -71,9 +75,11 @@ function arm(id, title, edits, mustFail, mustNotFail) {
   } finally { restoreAll(id); }
 }
 
+if (!ANCHOR_DRY) {   /* M0-197: no baseline suite under the dry read */
 const base = runSuite();
 console.log(`\n  BASELINE d125-findingmute.test.mjs: ${base.pass} pass, ${base.fail} fail`);
 if (base.fail !== 0 || base.pass < 30) { console.log("  ** the tree is not whole; refusing to arm"); process.exit(1); }
+}
 
 /* (a) THE ROW'S OWN ARM. The row says "key the item mute by case alone"; the item
    form holds no case, so the faithful arm is the one that takes the MEMBER out of
@@ -104,6 +110,7 @@ arm("c", "DO NOT ASK `tasks` TO NAME AN OPAQUE ID. DECLARED: the by-ITEM obligat
   ["by ITEM: the task's own id is refused"],
   ["by KIND: refused KIND_NOT_PERSONAL"]);
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 rmSync(PEN, { recursive: true, force: true });
 console.log(`\nd125-findingmute.control: ${armsWrong === 0 ? "every arm as declared" : `${armsWrong} arm(s) NOT as declared`}`);
 process.exit(armsWrong ? 1 : 0);

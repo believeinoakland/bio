@@ -46,6 +46,7 @@ import path from "path";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.join(HERE, "..", "app.html");
@@ -86,6 +87,8 @@ const ARMS = [
     edits: [{ from: BASIS_SENTENCE, to: loud(BASIS_SENTENCE) },
             { from: VERSION_SENTENCE, to: loud(VERSION_SENTENCE) }] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.edits.map((e) => ({ arm: a.name, file: APP, find: e.from, put: e.to }))));
 
 const origSha = sha(APP);
 const origBytes = fs.statSync(APP).size;

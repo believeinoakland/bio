@@ -126,9 +126,12 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const PEN = join(REPO, ".d293-harness");
+/* M0-197: under the dry read of tools/anchordrift.mjs the pristine copies land in its throwaway $TMPDIR, not the tree. */
+const PEN = ANCHOR_DRY ? join(tmpdir(), "d293-harness") : join(REPO, ".d293-harness");
 const GATES = join(REPO, "tools/gates.mjs");
 const GUARD = join(REPO, "tools/pushguard.mjs");
 const SUITE = join(REPO, "bio-plane/test/gates.test.mjs");
@@ -486,6 +489,9 @@ const ARMS = [
                    "a doc-facing suite that names NO path and NO directory keeps the whole tree",
                    "the doc-facing set is EXACTLY this, and it is NOT EMPTY"] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(({ file, from, to }) => ({ arm: a.id, file, find: from, put: to }))));
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */
 const RUN = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));

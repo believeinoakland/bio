@@ -30,6 +30,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -81,7 +82,7 @@ function runSuite() {
            foot: /\[FOOT REACHED\]/.test(out), code, out };
 }
 
-const BASE = runSuite();
+const BASE = ANCHOR_DRY ? { pass: 30, fail: 0, foot: true } : runSuite();   /* M0-197: no baseline under the dry read */
 console.log(`BASELINE  ${BASE.pass} pass, ${BASE.fail} fail, exit ${BASE.code}, foot ${BASE.foot}`);
 if (BASE.fail !== 0 || BASE.pass < 30 || !BASE.foot) {
   console.log("the tree is not green before the controls — refusing to run arms");
@@ -90,6 +91,10 @@ if (BASE.fail !== 0 || BASE.pass < 30 || !BASE.foot) {
 
 const results = [];
 function arm({ id, what, mustFail, mustNotFail, files }) {
+  /* M0-197: under tools/anchordrift.mjs each patch is handed a recorder for the text, so its anchor is read FROM the
+     arm; `replace` edits the first match and the arm arms on any, so any count above zero is live. */
+  if (ANCHOR_DRY) return void anchorRows(files.map((f) => { const r = { arm: id, file: f.path, sites: "any" };
+    f.patch({ replace: (find, put) => (Object.assign(r, { find, put }), "") }); return r; }));
   for (const f of files) snapshot(id, f.path);
   for (const f of files) writeFileSync(f.path, f.patch(readFileSync(f.path, "utf8")));
   const armed = files.every((f) =>
@@ -168,6 +173,7 @@ arm({
   mustNotFail: (r) => r.fail === 0,
 });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 /* ------------------------------------------------------------------ summary */
 console.log("\n================ FW-14 NEGATIVE CONTROL SUMMARY ================");
 for (const r of results)

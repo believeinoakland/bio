@@ -28,12 +28,15 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
 const REPO = join(PLANE, "..");
 const MEMBER = join(REPO, "ocr-worker");
-const PEN = join(PLANE, ".cpdf10-e2e-pen");
+/* M0-197: under the dry read of tools/anchordrift.mjs the pristine copies land in its throwaway $TMPDIR, not the tree. */
+const PEN = ANCHOR_DRY ? join(tmpdir(), "cpdf10-e2e-pen") : join(PLANE, ".cpdf10-e2e-pen");
 const SUITE = join(HERE, "ocr-member-e2e.test.mjs");
 
 const F = {
@@ -93,6 +96,7 @@ function restore() {
 let armsRun = 0, surprises = 0, BASE = null;
 
 function arm(id, declared, edits, judge) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([file, from, to]) => ({ arm: id.split(" ")[0], file, find: from, put: to })));   /* M0-197: read, never armed */
   armsRun++;
   console.log(`\n=== ARM ${id} — ${declared.what}`);
   console.log(`    MUST FAIL:     ${declared.mustFail}`);
@@ -129,7 +133,7 @@ function arm(id, declared, edits, judge) {
 }
 
 console.log("\n=== BASELINE — without this row, three-arms-broken and three-arms-working read alike ===");
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite runs under the dry read */
   BASE = runSuite();
   console.log(`    BASELINE: ${BASE.pass} pass, ${BASE.fail} fail, exit ${BASE.code}, foot ${BASE.foot ? "reached" : "NOT REACHED"}`);
   if (BASE.code !== 0 || BASE.fail !== 0 || !BASE.foot) {
@@ -178,6 +182,7 @@ arm("3 · COLLAPSE THE CHAIN TO ONE LABEL (the wire stops recording the `pixels`
     'let chain = [{ step: "ocr", engine: r.engine, version: r.version,\n                 cap: r.cap, measured_by: r.measured_by, calibration }];  /* NC ARM 3 */']],
   (r) => ({ ok: r.fail > 0 && r.foot, why: `${r.fail} failure(s); the chain-shape arms are the subject` }));
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log("\n=== POST-RESTORE — the tree is back where it started ===");
 {
   const r = runSuite();

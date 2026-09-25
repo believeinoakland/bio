@@ -17,6 +17,7 @@ import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -61,6 +62,11 @@ const ARMS = [
     },
     ok: (r) => r.failed.includes(STORED) && !r.failed.includes(NONASCII) && !OVERSTRICT.some((x) => r.failed.includes(x)) },
 ];
+
+/* M0-197: under tools/anchordrift.mjs's dry read each arm's OWN patch is handed a recorder for the text, so its
+   anchor is read from it (the arm demands exactly one site: `split(a).length === 2`). */
+if (ANCHOR_DRY) anchorTable(ARMS.filter((a) => a.patch).map((a) => { const r = { arm: a.id, file: STORE };
+  a.patch({ split: (find) => (r.find = find, ["", ""]), replace: (_, put) => (r.put = put, "") }); return r; }));
 
 const only = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const origSha = sha(STORE);

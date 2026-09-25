@@ -115,6 +115,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("../", import.meta.url));
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
@@ -204,6 +205,11 @@ const ARMS = {
     guardMustFail: false, sweepMustName: 0, suiteMustFail: [],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). The arms match on
+   latin1 text, the reader counts on utf8, so each anchor and patch is carried back to utf8. */
+const utf8 = (x) => Buffer.from(x, "latin1").toString("utf8");
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.edits.map((e) => ({ arm, file: e.file, find: utf8(e.anchor), put: utf8(e.patch) }))));
 
 function runGuard(tag) {
   const r = spawnSync(process.execPath, [GUARD, "--strict"], { cwd: REPO, encoding: "utf8" });

@@ -38,6 +38,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { preflight } from "../scripts/armdecay.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -52,6 +53,7 @@ const FLOOR = 1000;
 
 let DRY = null;
 const edit = (file, needle, replacement) => {
+  if (ANCHOR_DRY) return void anchorPatch(file, needle, replacement);   /* M0-197: read, never armed */
   if (DRY) { DRY.push({ file, needle }); return; }
   /* BYTE-WISE: the catalog is large and CLAUDE.md §7 warns that a source in this tree can carry a stray byte. */
   const src = readFileSync(file);
@@ -126,6 +128,8 @@ const ARMS = {
          '              },\n  "1.30.1": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f" },'),
        mustFail: [A4], mustNotFail: except(A4) },
 };
+
+anchorEach(ARMS, (a) => a.apply());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const want = process.argv[2];
 const order = want ? [want] : Object.keys(ARMS);

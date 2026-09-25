@@ -20,6 +20,7 @@ import os from "os";
 import path from "path";
 import { spawnSync, execFileSync } from "child_process";
 import { createHash } from "crypto";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const ROOT = new URL("../../", import.meta.url).pathname;
 const CHECK = ROOT + "civicos-ui/check-semantics.mjs";
@@ -62,6 +63,9 @@ const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex")
 const only = process.argv[2];
 if (only && !ARMS[only]) { console.error(`no such arm: ${only}\n  arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }
 const names = only ? [only] : Object.keys(ARMS);
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map((p) => ({ arm, file: CHECK, find: p.from, put: p.to }))));
 
 /* PREFLIGHT: every anchor this invocation will write, counted in the file, the whole table printed. */
 const src0 = fs.readFileSync(CHECK, "utf8");

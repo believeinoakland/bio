@@ -14,6 +14,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = dirname(PLANE.replace(/\/$/, ""));
@@ -59,6 +60,9 @@ const ARMS = {
     mustPass: ["over a head that is an `action`, is REFUSED", "TYPE IS UNCHANGED", "keeps its type LANDS",
                "`focus` over an `inquiry` head", "refused CAS_STALE"] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([find, put]) => ({ arm, file: join(PLANE, "src", "store.mjs"), find, put }))));
 
 const run = (name) => {
   const arm = ARMS[name];

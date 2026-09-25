@@ -82,6 +82,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const PEN = join(REPO, ".d402-harness");
@@ -96,9 +97,9 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under tools/anchordrift.mjs's dry read */
 const copy = join(PEN, "pristine.retirable");
-writeFileSync(copy, readFileSync(PRED));
+if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(PRED));
 const PRISTINE = { sha: sha(PRED), bytes: statSync(PRED).size };
 const MIN_BYTES = 6000;
 console.log(`  pristine predicate: ${PRISTINE.bytes} bytes, sha256 ${PRISTINE.sha.slice(0, 8)}…`);
@@ -120,6 +121,7 @@ function armPatch(from, to) {
   return hits;
 }
 const suiteRun = () => {
+  if (ANCHOR_DRY) return { out: "", pass: -1, fail: -1, reachedFoot: false, status: null, failed: [] };   /* M0-197 */
   const r = spawnSync(process.execPath, [SUITE], { cwd: REPO, encoding: "utf8" });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   const tally = out.match(/retirable: (\d+) pass, (\d+) fail/);
@@ -246,6 +248,8 @@ const ARMS = [
     to: `  const outranks = (a, b) => a[1] > b[1];`,
     mustBreak: "the lane is ORDERED by instance number, not by who acted last" },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: PRED, find: a.from, put: a.to })));
 
 for (const a of ARMS) {
   console.log(`\n--- ARM ${a.id} · ${a.title} (armed ALONE) ---`);

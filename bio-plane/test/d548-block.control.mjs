@@ -18,6 +18,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url)).replace(/\/$/, "");
 const REPO = dirname(PLANE);
@@ -56,6 +57,9 @@ const ARMS = {
     want: { "0 (setup)": undefined, "1": undefined, "2": undefined, "3": undefined, "4": undefined, "5": undefined },
     exit: 1, foot: false, diedBecause: {} },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([find, put]) => ({ arm, file: SUITE, find, put }))));
 
 const before = digest();
 console.log(`real suite before: ${before}`);

@@ -34,6 +34,11 @@
  *   3. plancheck ALWAYS runs (as --local mid-turn; the bare run is owed after
  *      the push — publication is the handoff gate's half).
  *
+ *   4. `tools/anchordrift.mjs` ALWAYS runs (M0-197, BOB #35 2026-09-25): every
+ *      control driver's patch anchors counted, never armed — seconds — so an
+ *      anchor a landing drifts is caught in THAT landing, not a worker round
+ *      later. Like plancheck it is never cached: it reads every driver.
+ *
  * ---- D-293 (BOB #22's ruling): THE VERDICT IS RECORDED, KEYED BY THE TREE. ----
  * The push guard (`tools/pushguard.mjs`) never RUNS this tool — a push-time gate
  * would not converge (M-85) — so the gate leaves its verdict where the guard can
@@ -1148,6 +1153,10 @@ const batteryRuns = (filters) => UNITS.filter((u) => (u.kind === "plane" || u.ki
 
 const STEPS = [];
 const plancheckStep = { label: "plancheck --local", units: ["plancheck"], cmd: "node", args: ["tools/plancheck.mjs", "--local"] };
+/* Named by URL, so `bio-plane/test/gatedeps.mjs` derives it into every gate fixture's copy list (a spawned tool no
+   import names would be absent from a fixture, and the fixture's gate would measure a step that cannot run). */
+const anchordriftStep = { label: "anchordrift (M0-197)", units: ["anchordrift"], cmd: "node",
+  args: [fileURLToPath(new URL("./anchordrift.mjs", import.meta.url))] };
 if (cls === "FULL") {
   STEPS.push({ label: "battery (all)", units: ["plane:*", "fleet:*"], cmd: "npm", args: ["run", "test:battery"], cwd: join(REPO, "bio-plane") });
   STEPS.push({ label: "coverage --strict", units: ["coverage"], cmd: "node", args: ["scripts/coverage.mjs", "--strict"], cwd: join(REPO, "bio-plane") });
@@ -1271,7 +1280,7 @@ if (GR) {
   if (REUSED.size) {
     const next = [];
     for (const s of STEPS) {
-      if (s.units.includes("plancheck")) { next.push(s); continue; }
+      if (s.units.includes("plancheck") || s.units.includes("anchordrift")) { next.push(s); continue; }
       const ids = expandUnits(s.units);
       const left = ids.filter((id) => !REUSED.has(id));
       if (left.length === ids.length) next.push(s);
@@ -1289,6 +1298,7 @@ if (GR) {
 /* --local skips the publication checks: gates runs MID-TURN, before commit+push,
    and a dirty planning surface is the expected state then. The bare plancheck is
    still owed AFTER the push — it is the handoff gate, not this one. */
+STEPS.push(anchordriftStep);
 STEPS.push(plancheckStep);
 
 if (sinceNote) console.log(`gates: ${sinceNote}`);
@@ -1377,7 +1387,7 @@ const historyRead = new Map();      /* keyed unit id -> those reads: it FAILS (B
 STEPS.forEach((s, i) => {
   console.log(`\n=== gates · ${s.label}: ${s.cmd} ${s.args.join(" ")}`);
   const vf = join(VERDICT_DIR, `step-${i}.json`);
-  const ran = s.units.includes("plancheck") ? [] : expandUnits(s.units);
+  const ran = s.units.includes("plancheck") || s.units.includes("anchordrift") ? [] : expandUnits(s.units);
   const keyed = ran.filter((id) => KEYS.get(id) && KEYS.get(id).hash);
   const traceDir = TRACING && keyed.length ? mkdtempSync(join(VERDICT_DIR, `trace-${i}-`)) : null;
   const isBattery = !!s.names || s.units.some((u) => u === "plane:*" || u === "fleet:*") || /battery/.test(s.label);

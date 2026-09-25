@@ -40,6 +40,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const HOLD = controlPen("cpdf19");
@@ -97,6 +98,8 @@ const ARMS = {
                "the latest content-level row is the member's"],
   },
 };
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([file, find, put]) => ({ arm, file, find, put }))));
 
 function runSuite() {
   const r = spawnSync(process.execPath, ["test/reextract.test.mjs"], { cwd: ROOT, encoding: "utf8", maxBuffer: 64 << 20 });

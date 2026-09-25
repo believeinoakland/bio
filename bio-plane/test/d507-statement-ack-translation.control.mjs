@@ -50,6 +50,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -66,6 +67,7 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 const FLOOR = 1000;
 
 const edit = (file, needle, replacement) => {
+  if (ANCHOR_DRY) return void anchorPatch(file, needle, replacement);   /* M0-197: read, never armed */
   /* BYTE-WISE: `store.mjs` carries a stray byte (CLAUDE.md §7), so the needle is matched on bytes. */
   const src = readFileSync(file);
   const nb = Buffer.from(needle, "utf8");
@@ -167,6 +169,8 @@ const ARMS = {
     mustFail: [], guardMustPass: true, expectGreen: true,
   },
 };
+
+anchorEach(ARMS, (a) => a.apply());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const want = process.argv[2];
 const order = want ? [want] : Object.keys(ARMS);

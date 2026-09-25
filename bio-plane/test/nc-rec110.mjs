@@ -35,6 +35,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PEN = controlPen("rec110");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
@@ -111,6 +112,8 @@ const ARMS = {
     "MUST NOT FAIL ANYTHING. The values move; the invariance does not. A red here means the pin "
     + "is tighter than its rule"],
 };
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, [file, find, put]]) => ({ arm, file, find, put })));
 
 const runSuite = (path) => {
   try {
