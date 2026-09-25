@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: every arm below was RUN on 2026-08-07 by is6-agent, and every restore was verified by CONTENT as well as sha256 — an NC harness in this repository once reported a byte-identical restore over a file that had not been restored. ~~Clean tree: 101 pass, 0 fail.~~ **CORRECTED 2026-08-08 (UI-38) BY MEASURING IT: the clean tree on `57b5067` ran 103, not 101. Clean tree after UI-38's ARM U rewrite: 107 pass, 0 fail.** **RE-MEASURED 2026-08-10 BY FL-7: 114 pass, 0 fail** — it corrected ARM V6 (the endings set, which went red BY DESIGN when a third ending landed) and added V6b plus ARM G1-G5, the through-the-op arms for `mode-not-deployed`. **FL-7's arms against THIS suite are declared and run from `agent-worker/test/harness.control.mjs` (F1-F4), not from here, because they break sources in BOTH trees; under F2 this suite reads 108/6 and under F4 112/2.** **RE-MEASURED 2026-09-10 BY FL-8: 126 pass, 0 fail** — it added ARM V9 (the STATUS vocabulary's first exhaustive pin: `RUN_BOUNDS` had V5 and `RUN_ENDINGS` had V6, and the third run vocabulary had NO guard at all), ARM H1-H4 (the status through `op=airunclose`, `op=airunlog` and `op=airun`, with H3 pinning the WHOLE partition so the three unmoved cases cannot be swept together) and ARM W0-W5 (the three vocabularies held against `#aiRunTerminate`'s keying in both directions, the store's side read from its OWN SOURCE TEXT so neither side is the other's expectation). **FL-8's arms against THIS suite are likewise declared and run from `agent-worker/test/harness.control.mjs` (G1-G5): under G1 this suite reads 122/4, under G2 125/1 — EXACTLY ONE, which is the arm that earns the two-way claim — under G3 124/2, under G4 123/3.**
+/* NEGATIVE CONTROL: every arm below was RUN on 2026-08-07 by is6-agent, and every restore was verified by CONTENT as well as sha256 — an NC harness in this repository once reported a byte-identical restore over a file that had not been restored. ~~Clean tree: 101 pass, 0 fail.~~ **CORRECTED 2026-08-08 (UI-38) BY MEASURING IT: the clean tree on `57b5067` ran 103, not 101. Clean tree after UI-38's ARM U rewrite: 107 pass, 0 fail.** **RE-MEASURED 2026-08-10 BY FL-7: 114 pass, 0 fail** — it corrected ARM V6 (the endings set, which went red BY DESIGN when a third ending landed) and added V6b plus ARM G1-G5, the through-the-op arms for `mode-not-deployed`. **FL-7's arms against THIS suite are declared and run from `agent-worker/test/harness.control.mjs` (F1-F4), not from here, because they break sources in BOTH trees; under F2 this suite reads 108/6 and under F4 112/2.** **RE-MEASURED 2026-09-10 BY FL-8: 126 pass, 0 fail** — it added ARM V9 (the STATUS vocabulary's first exhaustive pin: `RUN_BOUNDS` had V5 and `RUN_ENDINGS` had V6, and the third run vocabulary had NO guard at all), ARM H1-H4 (the status through `op=airunclose`, `op=airunlog` and `op=airun`, with H3 pinning the WHOLE partition so the three unmoved cases cannot be swept together) and ARM W0-W5 (the three vocabularies held against `#aiRunTerminate`'s keying in both directions, the store's side read from its OWN SOURCE TEXT so neither side is the other's expectation). **FL-8's arms against THIS suite are likewise declared and run from `agent-worker/test/harness.control.mjs` (G1-G5): under G1 this suite reads 122/4, under G2 125/1 — EXACTLY ONE, which is the arm that earns the two-way claim — under G3 124/2, under G4 123/3.** **D-451, RUN 2026-09-25 BY WORKER D-451 (cloud) on 8bdf20e6 + this item, ARM PQ0-PQ6 added: clean 134 pass, 0 fail (127 before). (D1) THE ROW'S CONTROL — in `aiRunRead` drop `questions` from a project run's `context`; DECLARED must fail PQ1 PQ2 PQ5 PQ6, must hold PQ0 PQ3 PQ4 -> 130/4 AS DECLARED, PQ6 reading `[null, "SUGGEST_NO_TARGET"]` by name (PQ3 holds because the plane's own context check reads no published set). (D2) the member's side — `runContextTarget` ignores `context.questions`, FL-11's branch restored -> 133/1, PQ6 alone. Both restores verified by sha256 AND cmp.**
    ARM U's ARMS, 2026-08-08 (UI-38, cross-area — see IC-41). ARM U lifts `civicos-ui/app.html`'s renderers out BY NAME, so UI-38's collapse of three field-named renderers into one broke this file with `ReferenceError: aiSessionBudgetHtml is not defined` — a throw that ends the MODULE while the battery reads `assertions unknown`, which is the class WORKER.md warns about and is why the consumer was corrected here rather than delegated. The arm proving the new U9 family: in `civicos-ui/app.html`'s `aiSessionBlockHtml`, make the nested loop `continue` unconditionally -> U9b and U9d FAIL naming `bias` and its fields, with U3/U3b/U6/U7 beside them. **U9's own first run FAILED against CORRECT behaviour** — it asked for every KEY of the bias block and named `now` and `moved`, which are `null` on a run with no manifest and which the surface deliberately renders nothing for; the ARM was narrowed, not the surface.
    (1) THE ITEM'S OWN, AND IT IS FIRST — A RUN KILLED MID-FLIGHT. In src/store.mjs neuter the reaper's tick by making the `ai-run-reap` registry entry a no-op (`tick: (now) => ({ airunreap: { at: null, lapsed: 0, reaped: [] } })`), which is exactly what "the run writes its own log on the way out" amounts to for a run that was killed -> 11 FAIL, 90 pass, and every one NAMES the killed run or what a surface can no longer render: K2c (reaped [] against one named run), K3 (log has 3 entries, not 4 — the terminal one is simply absent), K4 (bound null against "lease"), K5 (state null), K5b (no sentence naming the bound), K6 (still "running" hours after it died), K7 (seqs [1,2,3]), K8 (op=airun publishes no condition), K9 (a late tick REOPENS a dead run), U6 and U7 (the running-session surface has nothing to render about a run that ended). Restored, 101 pass.
    (2) MAKE THE LOG WRITE ONLY ON SUCCESS. In #aiRunTerminate guard the #aiRunAppend call with `stoppedByBound ? null : …` -> 8 FAIL, 93 pass, across TWO runs and nothing else: K3/K4/K5/K5b/K7 name the killed run that left nothing, B3/B4/B5 name the budget-exhausted one. EVERY arm about a run that FINISHED stays GREEN — C1-C4 and F1-F2 do not move — which is the finding as a measurement rather than a sentence: a log that exists only when the run finished is a log about the runs that did not need one. (Noted precisely: the CANCELLED run stays green under this arm because `cancelled` is an ENDING and not a bound, so this mutation does not reach it. The first draft of this line claimed C3 failed; it does not, and the claim is corrected rather than left standing.)
@@ -1196,6 +1196,111 @@ console.log("\n--- ARM X · one bound function, not two that agree ---");
     + "one function's answer", /allowed|consumed|>=/.test(reaper), false);
   t("ARM X7: and there is exactly ONE call site deciding which bound stopped a run",
     [...STORE_SRC.matchAll(/finishedBound\(/g)].length, 2);
+}
+
+/* ------------------------------------------------------------------------- *
+ *  ARM PQ · D-451 — A PROJECT RUN PUBLISHES THE QUESTIONS IT MAY LAND ON.
+ *
+ *  INVESTIGATIVE-SESSION.md §11 item 5, rule 1's target (BOB #28): a run over a project lands its readings
+ *  on a question that project CONFIRMED-cites. Until D-451 `op=airun` published only `context: {type, id}`,
+ *  so a member (FL-11's `runContextTarget`) could not name that question and every table-made level-empty
+ *  candidate of a project run was refused SUGGEST_NO_TARGET. The set is `#runContextQuestions`: the
+ *  `#citesInto` predicate read forward, kept where `op=suggest` itself would admit the target. Every edge is
+ *  written by `op=cite` and moved by `op=sever` — never hand-authored (citeproject-inquiry's discipline).
+ *  WHAT THIS CANNOT SEE: a question hidden from the viewer. Sight (`viewerPredicate`) filters PROJECT bundles
+ *  only, so no inquiry a project cites is ever hidden from a viewer who can see the run; the `#inSight` term
+ *  keeps the set equal to what `op=suggest`'s viewer gate admits, and has no case here that could fail it.
+ *  NEGATIVE CONTROL: declared and recorded on this file's first line (D-451, 2026-09-25).
+ * ------------------------------------------------------------------------- */
+console.log("\n--- ARM PQ · D-451: a project run publishes the questions it confirmed-cites ---");
+{
+  const ADM = `token=${TOK}`;   /* the member deploy token: the suite's own, and the one its surfacing run wraps */
+  const E = encodeURIComponent;
+  const projMd = ["---", "object_type: project", "current_state: forming", `created: "${T0}"`,
+    `last_updated: "${T0}"`, "references: []", "---", "", "## Summary", "", "D-451's project.", "",
+    "## Session Log", ""].join("\n");
+  let projSeq = 0;
+  const mkProject = async () => (await POST(`op=promote&${ADM}`, {
+    base: null, snapKey: `20260925T00001${++projSeq}Z_d4510000`,
+    meta: { object_type: "project", group: "believe-in-oakland", title: `D-451 project ${projSeq}`,
+            current_state: "forming", created: T0, last_updated: T0 },
+    files: [{ path: "bundle.md", text: projMd, bytes: projMd.length }], register: [] }))?.bundleId ?? null;
+  const mkQuestion = async (id) => (await POST(`op=promote&${ADM}`, {
+    bundleId: id, base: null, snapKey: "20260925T000000Z_d4510001", author: "ruth",
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: `D-451 question ${id}`,
+            current_state: "open", created: T0, last_updated: T0 },
+    /* A WHOLE inquiry's frontmatter (rec165's fixture): `op=suggest` writes a revision of it, and a question
+       whose bytes carry no `created` cannot be revised — the first draft's two-line fixture measured that. */
+    files: [{ path: "bundle.md", text: ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
+      `title: "D-451 question ${id}"`, "current_state: open", "prior_state: null", `created: "${T0}"`,
+      `last_updated: "${T0}"`, "produced_by:", "  mode: agent", "  capability_tier: high",
+      "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
+      "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+      "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "", "Which?", "",
+      "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+      "## Review Notes", ""].join("\n") }],
+    register: [] }).then((r) => (r?.ok === true ? r : (console.log("promote:", JSON.stringify(r).slice(0, 400)), r))))?.ok === true;
+  const handleOf = async (ids) => { const r = await POST(`op=select&${ADM}`, { ids }); return r?.handle ?? null; };
+  const cite = async (project, ids) => (await GET(`op=cite&${ADM}&project=${E(project)}&handle=${await handleOf(ids)}`))?.ok === true;
+  const sever = async (project, ids) => (await GET(`op=sever&${ADM}&project=${E(project)}&handle=${await handleOf(ids)}`
+    + `&reason=${E("D-451: the project withdrew from this question")}`))?.ok === true;
+  let pseq = 0;
+  const openRun = async (contextId, contextType) => {
+    const run = `RUN-2026-0925-d451-${++pseq}`;
+    const r = await POST(`op=airunopen&${ADM}`, { run, contextType, contextId, label: "D-451 run", mode: "check",
+      principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude", skillVersion: "investigative-session@1",
+      bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
+    return r?.ok === true || r?.opened === true || r?.run === run ? run : (console.log("open:", JSON.stringify(r)), null);
+  };
+  const ctxOf = async (run) => (await GET(`op=airun&${ADM}&run=${E(run)}`))?.session?.context ?? null;
+
+  const QA = "INQ-2026-9451-alpha", QB = "INQ-2026-9451-bravo", QS = "INQ-2026-9451-severed";
+  const P1 = await mkProject(), P2 = await mkProject();
+  const qs = [await mkQuestion(QA), await mkQuestion(QB), await mkQuestion(QS)];
+  const edges = [await cite(P1, [QA]), await cite(P2, [QA, QB, QS]), await sever(P2, [QS])];
+  const back = await GET(`op=backlinks&${ADM}&target=${E(QS)}`);
+  t("ARM PQ0 (FIXTURE): two projects, three questions; P1 cites QA, P2 cites all three and SEVERS QS — every "
+    + "edge by the act, read back through op=backlinks",
+    [!!P1, !!P2, P1 !== P2, qs, edges, (back?.backlinks ?? []).map((x) => [x.from, x.status])],
+    [true, true, true, [true, true, true], [true, true, true], [[P2, "severed"]]]);
+
+  const R1 = await openRun(P1, "project"), R2 = await openRun(P2, "project"), RQ = await openRun(QA, "inquiry");
+  const c1 = await ctxOf(R1), c2 = await ctxOf(R2), cq = await ctxOf(RQ);
+  t("ARM PQ1 (D-451): a run over a project citing ONE question publishes that question as `context.questions`",
+    c1, { type: "project", id: P1, questions: [QA] });
+  t("ARM PQ2 (D-451): a project citing several publishes every CONFIRMED one, sorted — the SEVERED question "
+    + "is not one the run may land on (`#citesInto`'s partition, not the raw `refs` projection)",
+    c2?.questions ?? null, [QA, QB]);
+  t("ARM PQ3 (D-451): the published set is exactly what `op=suggest` admits — each published question is "
+    + "INSIDE the run's context by the plane's own check, and the severed one is refused OUTSIDE it",
+    await (async () => {
+      const code = async (run, target) => {
+        const r = await POST(`op=suggest&${ADM}`, { target, run, kind: "level-empty", name: `d451-${target}-${run}`,
+          description: "D-451: we searched the internet level for this question and found nothing.",
+          relationship: "and", level: "internet", observed_at: `observation:d451-${target}` });
+        return r?.ok === false ? r.code : "landed";
+      };
+      return [await code(R2, QA), await code(R2, QB), await code(R2, QS)];
+    })(), ["landed", "landed", "SUGGEST_OUTSIDE_RUN_CONTEXT"]);
+  t("ARM PQ4 (D-451): a run over a QUESTION publishes no `questions` — its context id IS its one question, "
+    + "and the shape it always had is unchanged", cq, { type: "inquiry", id: QA });
+  t("ARM PQ5 (over-strictness): a project that cites nothing live publishes an EMPTY set, present and stated, "
+    + "never an absent key",
+    await (async () => { const P3 = await mkProject(); const R3 = await openRun(P3, "project");
+                         return (await ctxOf(R3))?.questions ?? "(absent)"; })(), []);
+  /* THE ROW'S ACCEPTANCE, END TO END: the member's own `runContextTarget` reads the plane's answer and seeds
+     the target, and the level-empty candidate the table makes is FILED by the plane. Imported, never retyped. */
+  const { runContextTarget } = await import("../../agent-worker/src/harness.mjs");
+  const seeded = runContextTarget({ context: c1 });
+  const filed = seeded.target ? await POST(`op=suggest&${ADM}`, { target: seeded.target, run: R1, kind: "level-empty",
+      name: "level-empty-internet", description: "D-451: the internet level was searched and found empty.",
+      relationship: "and", level: "internet", observed_at: "observation:d451-seeded" })
+    : await POST(`op=suggest&${ADM}`, { run: R1, kind: "level-empty", name: "level-empty-internet",
+      description: "D-451: the internet level was searched and found empty.", relationship: "and",
+      level: "internet", observed_at: "observation:d451-seeded" });
+  t("ARM PQ6 (D-451, THE ROW'S): a project run citing one question SEEDS it as the target through the member's "
+    + "`runContextTarget`, and its level-empty candidate is FILED by the plane — not SUGGEST_NO_TARGET",
+    [seeded.target, filed?.ok === false ? filed.code : "filed"], [QA, "filed"]);
 }
 
 } finally {

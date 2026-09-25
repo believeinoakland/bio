@@ -423,22 +423,36 @@ export const FIRST_STEP = "gate-mode";
  *  A RUN OVER A QUESTION: the target IS the context id — the only question inside the context.
  *
  *  A RUN OVER A PROJECT: NEVER the project id (a project is not an inquiry, and the plane refuses it
- *  `SUGGEST_NOT_AN_INQUIRY`). Its readings land on a question the project CONFIRMED-cites, and the run read
- *  does not publish that set (`aiRunRead` answers `context: { type, id }`). This member does NOT re-derive
- *  `#citesInto` from a project's bytes — a second implementation of the one live-cites predicate is the
- *  drift REC-19 removed — and does not pick one of several. So a project run's target is UNDETERMINED and
- *  STATED: its candidates carry their own target, which the plane bounds, and a table-made candidate with
- *  none is refused by the plane in its own words. `basis` says which of these is true, so the run's output
- *  never implies a target it does not hold. */
+ *  `SUGGEST_NOT_AN_INQUIRY`). Its readings land on a question the project CONFIRMED-cites. D-451: the run
+ *  read now PUBLISHES that set as `context.questions` (`aiRunRead` / `#runContextQuestions`: the confirmed-
+ *  cited inquiries this caller can see, the set `op=suggest` admits). This member takes it as published and
+ *  does NOT re-derive `#citesInto` from a project's bytes — a second implementation of the one live-cites
+ *  predicate is the drift REC-19 removed. EXACTLY ONE question is the target. SEVERAL are left to the
+ *  candidate — this member does not pick one of several — and NONE, or a plane that publishes no set, is
+ *  UNDETERMINED and STATED: a candidate then carries its own target, which the plane bounds, and a
+ *  table-made candidate with none is refused by the plane in its own words. `basis` says which of these is
+ *  true, so the run's output never implies a target it does not hold. */
 export function runContextTarget(session) {
   const ctx = session && typeof session === "object" ? session.context : null;
   const type = ctx && typeof ctx.type === "string" ? ctx.type : null;
   const id = ctx && ctx.id != null && String(ctx.id).trim() !== "" ? String(ctx.id).trim() : null;
   if (!id) return { target: null, basis: "UNDETERMINED: the run read published no context id" };
-  if (type === "project")
+  if (type === "project") {
+    if (!Array.isArray(ctx.questions))
+      return { target: null,
+               basis: "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the "
+                    + "run read does not publish that set; a candidate names its own target, never the project id" };
+    const qs = [...new Set(ctx.questions.filter((q) => typeof q === "string" && q.trim() !== "")
+                                        .map((q) => q.trim()))];
+    if (qs.length === 1) return { target: qs[0], basis: "the one question the run's project confirmed-cites" };
+    if (qs.length === 0)
+      return { target: null,
+               basis: "UNDETERMINED: the run's project confirmed-cites no question this run can see; a candidate "
+                    + "names its own target, never the project id" };
     return { target: null,
-             basis: "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the "
-                  + "run read does not publish that set; a candidate names its own target, never the project id" };
+             basis: `UNDETERMINED: the run's project confirmed-cites ${qs.length} questions and this member does `
+                  + "not pick one of several; a candidate names its own target, never the project id" };
+  }
   if (type === "inquiry") return { target: id, basis: "the run's context question" };
   return { target: null, basis: `UNDETERMINED: the run's context kind ${JSON.stringify(type)} is not one this member reads` };
 }
