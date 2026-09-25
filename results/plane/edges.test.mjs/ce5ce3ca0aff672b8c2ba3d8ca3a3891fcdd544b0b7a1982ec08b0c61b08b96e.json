@@ -1,0 +1,16 @@
+{
+ "unit": "plane:edges.test.mjs",
+ "inputHash": "ce5ce3ca0aff672b8c2ba3d8ca3a3891fcdd544b0b7a1982ec08b0c61b08b96e",
+ "verdict": "PASS",
+ "run": "c1ee8a017595e1daccb829aeb516768c7480536c.1790312618225.2192.json",
+ "tree": "c1ee8a017595e1daccb829aeb516768c7480536c",
+ "head": "5da6cee9bfab717baaa975a084c7eed65dbfef09",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 143,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "ae26c654-9a82-5f35-9879-553277bfec54",
+ "at": "2026-09-25T05:03:38.236Z"
+}
