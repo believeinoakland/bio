@@ -1,0 +1,16 @@
+{
+ "unit": "plane:pdf-worker-binding.test.mjs",
+ "inputHash": "80bf1934ab725dcff755511dee0e488e01b5e74efa72394f68e012c7f3e84b35",
+ "verdict": "PASS",
+ "run": "488f47d777304f2617599af96c6b72460b706080.1790324642645.2097.json",
+ "tree": "488f47d777304f2617599af96c6b72460b706080",
+ "head": "ec5625746c6760d4ceea70ae973279dec2bbc520",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5a76689a-fb86-5e7e-986f-23f54462f487",
+ "at": "2026-09-25T08:24:02.668Z"
+}
