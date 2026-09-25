@@ -123,6 +123,16 @@ scope: measure request lifetimes on the client-rendered corpus sources (extend M
 accepts-when: an opengov fixture settles by the quiet window with its open long-poll named; a page that never quiets still times out reading incomplete (moves: 16 of 16 timeouts). NEGATIVE CONTROL: drop the age exclusion and the opengov arm times out by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-520's worker).
 
+### D-593 · queued — **A `text/csv` BODY'S READING TEXT AT ACQUIRE IS THE INTAKE LOSSY-UTF-8 DECODE, NEVER csv.mjs's `text()`: an undetermined-encoding byte reaches the content-type reader as U+FFFD, the sheet's cells are not the reader's units, and a csv over 8 MiB (multipart) is not read at all; only `application/csv` reached the format entry.** Found by REC-218's worker (02:51Z). — owner FRAMEWORK, RECORD.
+order: after D-585, with the reader corrections: a reading of bytes the record cannot decode stated as text claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M2
+interface: I1 — the reading text of a csv capture changes source; the integrator classifies.
+design: `docs/development/OFFICE-FORMATS.md` "CSV — DESIGNED 2026-09-24 by BOB #32" (the entry IS the csv reader), with REC-218's `reading.dialect`.
+depends-on: REC-218.
+scope: in op=acquire, when the detected format's registry entry has a `text()` slot, route the single-part body to the format wire instead of the intake decode, naming no format in index.mjs (the D-70 pin holds); the multipart case stays a stated undetermined.
+accepts-when: a `text/csv` capture's reading units are the sheet's cells with the dialect recorded, and a latin-1 byte never becomes U+FFFD in them (moves: the intake decode for csv). NEGATIVE CONTROL: route text/csv back to the intake decode and the cell-units arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by REC-218's worker).
+
 ### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
 order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
 milestone: M6
@@ -500,16 +510,6 @@ depends-on: MK-7 (it carries MK-7's attribution; §8 names MK-3's replacement (i
 accepts-when: an opinion lands as a case element with its attribution and is refused as a leg, by name, through the ops; battery green by its COMPLETION LINE.
 added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### REC-150 · queued — **DISCOVERABLE OR HIDDEN, 2 of 4: THE REQUEST TO JOIN — ask (one open per member per project, optional comment), withdraw** … (whole text: the cut archive)
-order: after REC-149, whose EXISTENCE level it needs (SCHEDULER, 2026-09-19)
-milestone: M8
-interface: I3 (an IC minted with `node tools/mintid.mjs IC`)
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14 and §7.4 (a grant is an invitation … (whole text: the cut archive)
-depends-on: REC-149.
-accepts-when: a grant leaves the requester `invited` and NOT `joined`; a lapsed requester reads their own request and nothing else about the project; an administrator's grant is refused. … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER (same entry, item 2).
-cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### UI-70 · queued — **DISCOVERABLE OR HIDDEN, 3 of 4: the create and fork forms ASK, with neither preselected, and cannot submit without the choice** … (whole text: the cut archive)
 order: after REC-149, and after UI-66 on the same forms (SCHEDULER, 2026-09-19)
