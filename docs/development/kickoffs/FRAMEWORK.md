@@ -91,8 +91,15 @@ plane bundle makes FL-10's freshness guard fail the battery **on a suite the cha
 touched**, which reads as damage the worker did somewhere else entirely.
 
 **So a `docprofile/` change carries two regenerations, not one:** `node tools/bundle-docprofile.mjs`
-for the UI embed, and `cd bio-plane && npm run build` for the plane bundle. Neither is a UI edit or
+for the UI embed, and `node tools/bundles.mjs` for the committed bundles. Neither is a UI edit or
 a deploy; both are generated artifacts catching up to their source.
+
+**The second command was `cd bio-plane && npm run build` until M0-188 (2026-09-24), and naming ONE
+directory there was this section's own defect one consumer over:** a `docprofile/` change stales the
+plane's bundle, and a `bio-plane/src/` change stales THREE (M0-178, measured — `pdf-worker` and
+`ocr-worker` read the plane's sources). `tools/bundles.mjs` DERIVES the set it rebuilds from the
+committed manifests, so it does not go stale the way a list of directories does, and it is the same
+command every staleness finding in `bio-plane/scripts/fleet-bundle.mjs` now hands the reader.
 
 **FW-17 hit this and did not record it. FW-18 hit it again and paid a green-to-red battery before
 filing the row.** A rule that has to be rediscovered is a rule that was never written down, and the
