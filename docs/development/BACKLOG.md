@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-734 · queued — **op=verify ANSWERS "NOT PUBLISHED" FOR A RATIFIED CASE DOCUMENT's doc_sha (measured on 6 ratified editions): only bundle parts and MANIFEST.json are in published_shas, and op=verify's own sentence equates "not published" with "never ratified" — false, on the no-account verify surface.** D-731's part (b); its part (a), the page's button checking op=casedocument, rides inside D-712. BOB #36 RULED 2026-09-25 11:50Z (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+order: directly after D-712, whose button it lets switch back to op=verify: the record claiming LESS than it holds on the public surface (CLAUDE.md §2) (SCHEDULER #24, 2026-09-25)
+milestone: M10
+interface: I3 — additive published_shas kind `case_document`; op=verify answers published:true naming it; op=publishedbytes serves the bytes; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §4 (the verify surface, usable with no account), with BOB #36's 11:50Z ruling.
+depends-on: D-712 (stack on land/worker/D-712 once it re-tips with part (a)).
+scope: at caseratify register the case document's sha in published_shas (kind case_document); op=verify answers published:true naming the kind; op=publishedbytes serves the bytes from case_documents.text, checked byte-identical to the signed sha. Fold into Publication §4. The button's switch back to op=verify is an optional UI follow-up, not this row.
+accepts-when: op=verify on each of the 6 ratified editions' doc_sha answers published:true, kind case_document; publishedbytes serves bytes whose sha256 equals it; an unratified draft's document sha still answers not published (moves: 6 ratified documents reading never-ratified). NEGATIVE CONTROL: skip the registration and the 6-edition arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (`node tools/mintid.mjs D`, D-731 part (b), BOB #36 inbox).
+
 ### D-726 · queued — **A REVISION WHOSE BYTES RESTATE A DIFFERENT `group` LANDS, and bundles.group_id keeps the creation's (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured through op=promote in a local Miniflare: row group_id believe-in-oakland, head bytes `group: some-other-group`.** D-692's class, one column over. Live-corpus count UNDETERMINED. Found by D-692's worker. — owner RECORD.
 order: after D-707, the same promote function, one worker at a time (SCHEDULER #24, 2026-09-25)
 milestone: M7
@@ -32,16 +42,6 @@ depends-on: D-707 (same function; stack on its branch once integrated).
 scope: refuse a non-replay revision whose document's `group` differs from the head's group_id (REVISION_REGROUPS_BUNDLE), replay exempt, after CAS and before the first write, as C-86.9 does. Measure the live-corpus count if reachable, else state it undetermined. STATE, do not sweep further: other columns written only at creation.
 accepts-when: a revision restating a different group is refused by name and nothing is written; the same group respelt, and a revision stating none, still land (moves: a row and its head bytes disagreeing on group). NEGATIVE CONTROL: drop the refusal and the regroup arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-692's worker).
-
-### D-723 · queued — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
-order: directly behind D-710, which it completes: a correction to just-landed work outranks new work, and "less narrative" binds us first (SCHEDULER #24, 2026-09-25)
-milestone: M2
-interface: I3 — a shared page's content.chain_kind reads `mixed`; the integrator classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14 (chain_kind, as D-686 and D-710 write it), with BOB #36's 11:05Z ruling.
-depends-on: D-710 (same function; stack on land/worker/D-710 once integrated).
-scope: `textchain.mjs` chainKindFor's page branch answers `mixed` for a page covered by two steps of different kinds; a page read one way keeps its one kind. Correct content-chain-kind.test.mjs 1b, 2b and 3 with a comment saying why the old assertion was wrong; move construct 4.unit-chain-kind-mixed to BUILT; fold the rule into the Content Framework's chain_kind section. Unchanged (CONFIRMED): content:ocr stays an equality and never names a mixed unit; content:mixed names it; capture_text.chain_kind stays the chain's LAST step and never reads mixed.
-accepts-when: a D-635 appended page reads `mixed` and a text-layer-only or OCR-only page keeps its one kind (moves: a shared page reading `ocr`). NEGATIVE CONTROL: restore the last-appended rule and the shared-page arm fails by name.
-added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

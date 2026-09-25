@@ -21,7 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-25 11:50Z · BOB #36 · D-731 (the published page's "Verify this hash" on the SIGNED CASE DOCUMENT gets op=verify's "NOT PUBLISHED", measured on 6 ratified editions): BOTH, in order. (a) NOW, inside D-712; (b) as its own RECORD row after it.** The home is `BIO_Publication_v0_1.md` §4, the verify surface, which is usable with no account. A stranger checking what the group signed is the construct's point. op=verify answering "never ratified" for a ratified case document's sha is the record claiming LESS than it holds, on the public surface. It is false, not merely incomplete, because op=verify's own sentence equates "not published" with "never ratified". (a) alone fixes the BUTTON but leaves op=verify saying something false to anyone who calls it directly, so it cannot be the whole fix. (b) alone would ship D-712's button lying until (b) lands, and UI-121 is waiting on D-712. So: (a) D-712's button checks against op=casedocument (ratified:true and doc_sha equal) and says so in its own words, naming what it checked. This keeps UI-121's hold satisfiable with a truthful page. (b) New RECORD row, I3 additive: at caseratify, register the case document's sha in published_shas (kind `case_document`). op=verify then answers published:true for it, naming the kind, and op=publishedbytes serves those exact bytes from `case_documents.text` (byte-identical to the signed sha, checked). When (b) lands, the button may switch to op=verify (a UI follow-up, not required). accepts-when for (b): op=verify on each of M-measured's 6 ratified editions' doc_sha answers published:true and kind case_document; publishedbytes serves bytes whose sha256 equals it; an unratified draft's document sha still answers not published. NEGATIVE CONTROL: skip the registration, and the 6-edition arm fails by name. Fold into Publication §4. SCHEDULER: (a) rides D-712 (tell CONDUCT #23 if D-712 has already pushed); mint (b) after D-712.
 
 
 
@@ -789,8 +788,8 @@ scope: the image carries write order (rowid or a seq) for each manifest entry; C
 accepts-when: a bundle whose snap-key order differs from its write order is audited in write order by C-20.1 (moves: gate and plane disagreeing on "prior"). NEGATIVE CONTROL: sort by key again and the divergent-order arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-674's worker).
 
-### D-710 · running — **A WHOLE-DOCUMENT UNIT OF A MIXED DOCUMENT READS `ocr` (the chain's last step), which is the overstatement D-686 exists to remove.** BOB #35 RULED 2026-09-25 09:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): a new value, `mixed` — chainKindFor answers the single kind when every derivation step covering the unit is one kind, and `mixed` when they differ; not NULL, since the record KNOWS it was read both ways; every reader that labels machine-read text treats `mixed` as CONTAINING machine-read text (DEC-4); an office unit with one kind reads that kind. D-686 (integrated) shipped the provisional last-step answer. — owner CONTENT-PDF, RECORD.
-status: running — SCHEDULER #23 11:00Z: spawned, stacked on land/worker/D-686 @ 8c55a9c2
+### D-710 · integrated — **A WHOLE-DOCUMENT UNIT OF A MIXED DOCUMENT READS `ocr` (the chain's last step), which is the overstatement D-686 exists to remove.** BOB #35 RULED 2026-09-25 09:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): a new value, `mixed` — chainKindFor answers the single kind when every derivation step covering the unit is one kind, and `mixed` when they differ; not NULL, since the record KNOWS it was read both ways; every reader that labels machine-read text treats `mixed` as CONTAINING machine-read text (DEC-4); an office unit with one kind reads that kind. D-686 (integrated) shipped the provisional last-step answer. — owner CONTENT-PDF, RECORD.
+status: integrated — SCHEDULER #24 11:55Z: tip f34c4c9f, ONE commit on D-686 526cc17f (earlier 8c55a9c2 work never pushed, superseded), GATE 388/388 GREEN FULLREUSE (21990 assertions; excludes 3 untallied), tree 715cc0a6; unscoped-first chain reads undetermined (NULL), grammar names content:mixed, CHAIN_LAST driven through the op; nc-d710 arms as declared; D-686 IC must cover mixed and this undetermined case
 order: at the backlog head after D-697 — it corrects just-integrated D-686 and rides its IC (SCHEDULER #23, 2026-09-25)
 milestone: M2
 interface: I5 — the chain-kind vocabulary gains `mixed`; rides D-686's IC; the integrator classifies.
@@ -867,7 +866,7 @@ accepts-when: a revision restating a different `created` is refused by name, and
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-615's worker).
 
 ### D-712 · integrated — **THE PUBLISHED CASE PAGE TELLS EVERY STRANGER A SIGNED, RATIFIED CASE IS UNSIGNED: pubCaseHtml's "The case document · signed by …" line reads `c.document`, which op=publishedcase NEVER serves (Store.publishedCase builds state.document through #caseEditionState and its return omits it), so it prints "This case edition's own document has not been signed yet".** Measured by UI-121's worker: data-casedoc="none" on five cases each signed through op=caseratify. publishedcase.test.mjs's fixture carries a `document` key the live op does not (D-173's class). — owner RECORD.
-status: integrated — CONDUCT #23 11:48Z: worker report — tip 6e1e4669 (on UI-121 6ceb9b9b), GATE 385/385 GREEN FULLREUSE (21884 assertions); I3 additive document on op=publishedcase; UI-121 + D-712 ride batch30 together (BOB #36 hold satisfied); minted D-731
+status: integrated — SCHEDULER #24 11:55Z: OWES D-731 part (a) BEFORE IT TRAINS (BOB #36 11:50Z): the Verify-this-hash button checks op=casedocument and says so; worker told directly; expect a re-tip past 6e1e4669. Was: tip 6e1e4669 (on UI-121 6ceb9b9b), GATE 385/385 GREEN, tree 0d63f725; rides with UI-121
 order: spawned directly, ahead of the backlog: the record claiming LESS than it holds on the one page strangers read is a trustworthiness defect (CLAUDE.md §2, "less narrative" binds us first) and a correction to just-landed work (SCHEDULER #24, 2026-09-25)
 milestone: M10
 interface: I3 — additive `document` on op=publishedcase; the integrator classifies.
@@ -978,7 +977,7 @@ accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, a
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-631 · integrated — **`adminvote.control` arm stamp-dropped: ANCHOR DRIFT — matches 2 (REC-164), so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — CONDUCT #23 11:53Z: worker report — tip 3092ad35 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6590 assertions); adminvote.control stamp-dropped re-anchored, allowance removed; test-only, no IC; rides batch30 (keep both anchordrift.json deletions with D-630)
+status: integrated — SCHEDULER #24 11:55Z: tip 3092ad35 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6590 assertions), tree 392dba8a; adminvote.control stamp-dropped re-anchored, allowance deleted, arm alone 57/24 as declared; anchordrift.json deletion adjacent to D-630 (keep both)
 order: after D-630, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
@@ -1043,7 +1042,19 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-636 · queued — **`d266scope.control` arm 2: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+### D-723 · running — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
+order: directly behind D-710, which it completes: a correction to just-landed work outranks new work, and "less narrative" binds us first (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:55Z: spawned, stacked on land/worker/D-710 @ f34c4c9f
+milestone: M2
+interface: I3 — a shared page's content.chain_kind reads `mixed`; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14 (chain_kind, as D-686 and D-710 write it), with BOB #36's 11:05Z ruling.
+depends-on: none (stacked on land/worker/D-710 @ f34c4c9f, integrated, on D-686 @ 526cc17f).
+scope: `textchain.mjs` chainKindFor's page branch answers `mixed` for a page covered by two steps of different kinds; a page read one way keeps its one kind. Correct content-chain-kind.test.mjs 1b, 2b and 3 with a comment saying why the old assertion was wrong; move construct 4.unit-chain-kind-mixed to BUILT; fold the rule into the Content Framework's chain_kind section. Unchanged (CONFIRMED): content:ocr stays an equality and never names a mixed unit; content:mixed names it; capture_text.chain_kind stays the chain's LAST step and never reads mixed.
+accepts-when: a D-635 appended page reads `mixed` and a text-layer-only or OCR-only page keeps its one kind (moves: a shared page reading `ocr`). NEGATIVE CONTROL: restore the last-appended rule and the shared-page arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
+
+### D-636 · running — **`d266scope.control` arm 2: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: running — SCHEDULER #24 11:55Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
 order: after D-634, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
