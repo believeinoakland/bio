@@ -91,3 +91,4 @@ IC-330	2026-09-25T06:42:12.756Z	CONDUCT#22	D-134: custodial refusals translated;
 IC-331	2026-09-25T06:42:17.741Z	CONDUCT#22	D-520: C-83.8 RENDER_AT_CAPACITY at op=acquire; table render_slots (c22-batch29)
 IC-332	2026-09-25T06:42:23.219Z	CONDUCT#22	D-338: op=monitor grades no change for an unmonitorable shell (c22-batch29)
 IC-333	2026-09-25T06:42:29.146Z	CONDUCT#22	REC-191: monitor cadence per ADDRESS; table monitor_address_type (c22-batch29)
+IC-334	2026-09-25T06:42:34.645Z	CONDUCT#22	D-455: a changed monitor tick captures the bytes; the look names the new capture (c22-batch29)
