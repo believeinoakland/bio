@@ -525,8 +525,8 @@ scope: the generic DO forward (index.mjs, the `inner` URL build) stops passing `
 accepts-when: op=content&id=<row>&store=scratch answers the scratch row, and store=bio the bio row, through the op (moves: FIXED_KEY_ONLY on store=). NEGATIVE CONTROL: pass `store` through again and the scratch arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-419's worker).
 
-### UI-120 · running — **NO SURFACE RENDERS A CITED IMAGE'S CROP: D-419 built the new content-crop read (the crop of a cited PDF image extent, through the pdf member's POST /crop) and no page asks for it.** D-419's own row: *a UI item renders it*. — owner UI.
-status: running — SCHEDULER #23 08:58Z: spawned, stacked on land/worker/D-419 @ 914bb380
+### UI-120 · integrated — **NO SURFACE RENDERS A CITED IMAGE'S CROP: D-419 built the new content-crop read (the crop of a cited PDF image extent, through the pdf member's POST /crop) and no page asks for it.** D-419's own row: *a UI item renders it*. — owner UI.
+status: integrated — SCHEDULER #23 10:05Z: tip b6a94713 (on D-419 914bb380), GATE 61/61 GREEN FULLREUSE (5834 assertions), tree 91eac1b1; Show the cited image on image-extent legs only, asked on use; C-99 refusals rendered; surface-registry D1 78->80, D5 54->55, r3Fed 82->87; CIVICOS_UI_STATE v120 provisional (third claimant); orientation sentence gap stated
 order: after D-677, with the display surfaces (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3 consumer.
@@ -685,6 +685,17 @@ depends-on: none (stacked on land/worker/D-615 @ 8b3ab6ae, integrated, on D-546 
 scope: a revision carries the head's value for each field; a creation missing one is refused by a named DEC-49 code BEFORE the first write; a string `meta` is read or refused by name, never thrown.
 accepts-when: each of the four fields absent on a creation is refused by name and on a revision is carried, with no stack in any answer (moves: a raw NOT NULL stack from promote). NEGATIVE CONTROL: remove the pre-write check and the creation arms fail by name, reading a stack.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
+
+### D-618 · running — **A DRAFT THAT NAMES A CASE AND ALSO SETS `newCase` STILL ANSWERS THAT CASE'S NEXT EDITION beside a sentence saying its case is UNDETERMINED (publication refuses the pair CASE_IDENTITY_AMBIGUOUS), so the answer states an edition for a case the record has not chosen.** Found by D-568's worker (05:36Z). — owner RECORD.
+status: running — SCHEDULER #23 10:05Z: spawned from main 95fe7bc7
+order: after D-613, with the review-copy corrections: D-568's class, one branch over (SCHEDULER #22, 2026-09-25)
+milestone: M10
+interface: I3 — `edition` reads null for that pair; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling and D-568's `#statedEdition`.
+depends-on: none (D-568 done, on main 95fe7bc7 via batch29).
+scope: #statedEdition answers null when caseId and newCase are both set, in the same five answers D-568 covers.
+accepts-when: a case-naming newCase draft answers edition null in all five (moves: an edition beside an undetermined case). NEGATIVE CONTROL: answer the named case's next edition again and the ambiguous-pair arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

@@ -506,16 +506,6 @@ scope: status by code in the serialiseContainer refusal path: 409 for DUPLICATE_
 accepts-when: a zip request naming a path twice answers 409 DUPLICATE_PATH, and an over-large one 413 (moves: a duplicate path reported as too large). NEGATIVE CONTROL: send 413 for every refusal again and the duplicate arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-561's worker).
 
-### D-618 · queued — **A DRAFT THAT NAMES A CASE AND ALSO SETS `newCase` STILL ANSWERS THAT CASE'S NEXT EDITION beside a sentence saying its case is UNDETERMINED (publication refuses the pair CASE_IDENTITY_AMBIGUOUS), so the answer states an edition for a case the record has not chosen.** Found by D-568's worker (05:36Z). — owner RECORD.
-order: after D-613, with the review-copy corrections: D-568's class, one branch over (SCHEDULER #22, 2026-09-25)
-milestone: M10
-interface: I3 — `edition` reads null for that pair; the integrator classifies.
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling and D-568's `#statedEdition`.
-depends-on: D-568 (land/worker/D-568 @ d5da99bb).
-scope: #statedEdition answers null when caseId and newCase are both set, in the same five answers D-568 covers.
-accepts-when: a case-naming newCase draft answers edition null in all five (moves: an edition beside an undetermined case). NEGATIVE CONTROL: answer the named case's next edition again and the ambiguous-pair arm fails by name.
-added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
-
 ### UI-117 · queued — **A DRAFT HOLDING BOTH `caseId` AND `newCase` IS NOT SURFACED ON THE REVIEW-COPY FORM: BOB #35 RULED 2026-09-25 06:45Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded) — SURFACE it, never refuse to load, never drop `newCase` silently.** The form loads such a draft and shows BOTH values exactly as stored, with one plain line: this draft names an existing case AND a new one, and cannot be published until an owner keeps one (the plane refuses the pair, CASE_IDENTITY_AMBIGUOUS). Keeping one is the owner's own act — a save that clears the other field — offered with neither preselected (DEC-69). Found as UI-106's form gap. — owner UI.
 order: after D-618 — the same both-identity pair, its plane half first (BOB #35's placement, 06:45Z; SCHEDULER #23, 2026-09-25)
 milestone: M10
@@ -1101,4 +1091,14 @@ design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure 
 depends-on: land/conduct/c20-batch11fix on `main`.
 scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
 accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-156 · queued — **`check-refusal-codes` ARM C READS ONLY THE SPANS A `where` NAMES, so a code re-minted OUTSIDE every governed region is invisible, for all 170 governed sites.** Found by D-484's worker. — owner M0 (RECORD reviews).
+order: after M0-155, the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
+depends-on: D-484.
+scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plane/src` per region row, failing on any outside its claimed span.
+accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
