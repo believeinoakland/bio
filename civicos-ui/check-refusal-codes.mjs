@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "../bio-plane/test/stdio.mjs";
 /* check-refusal-codes.mjs — THE DEC-49 GUARD (VF-2).
  *
  * DEC-49 (Bob, 2026-08-06): *"I have no problem with those messages being

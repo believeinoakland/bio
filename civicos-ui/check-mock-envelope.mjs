@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "../bio-plane/test/stdio.mjs";
 /* check-mock-envelope.mjs — THE D-173 GUARD (UI-23), the check-semantics
  * pattern applied to the one defect this codebase has now shipped five times.
  *

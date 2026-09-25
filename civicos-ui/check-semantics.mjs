@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "../bio-plane/test/stdio.mjs";
 /* check-semantics.mjs — THE DRIFT GUARD, and as of UI-10 it is a real one.
  *
  * WHAT IT USED TO BE, and why that mattered. This check read `app.html` and
