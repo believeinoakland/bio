@@ -615,7 +615,11 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* D-689 side, kept as history (c23-batch30): MOVED 67 -> 68 on 2026-09-25 (D-689), FROM THE FIGURE THIS INSTRUMENT
        PRINTED ("got 68") on the item's tree over REC-201 @ 45ce0bc5: C-32.20 MACHINE_CANNOT_STATE_RECORDS_LAW. Ours'
        68 kept; NUMBER TO RE-READ from this suite's print on the union. */
-    rowsSeen, 68);
+    /* CONDUCT #23 at the c23-batch30 union: 68 -> 70, RE-READ from this suite's print on the merged tree ("corpus: 70
+       rows across 2 families", "got 70"), never 68 + 2: D-623's C-33.49 NO_PROJECT_SCOPE and D-689's C-32.20
+       MACHINE_CANNOT_STATE_RECORDS_LAW — the batch's only arrivals in C-32/C-33 by the d470 census diffed by name
+       against origin/main 95fe7bc7. */
+    rowsSeen, 70);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

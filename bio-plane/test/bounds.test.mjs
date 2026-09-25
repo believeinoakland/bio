@@ -643,7 +643,11 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
   /* MOVED 46 -> 47 at the c22-batch29 union (CONDUCT #22, 2026-09-25), from THIS ARM'S OWN FAILURE OUTPUT on the merged
      tree (`want 46 / got 47`; the corpus line printed `71 carrying a cap, reaching 47 ops`), never by arithmetic: main's
      46 (D-525's driveshells) plus REC-150's projectrequests and REC-203's idmatch, less D-521b's statementack. */
-  OPS.size, 47);
+  /* MOVED 47 -> 48 at the c23-batch30 union (CONDUCT #23, 2026-09-25), from THIS ARM'S OWN FAILURE OUTPUT on the merged
+     tree (`want 47 / got 48`; the corpus line printed `74 carrying a cap, reaching 48 ops`), never by arithmetic. The
+     roster diffed BY NAME against origin/main 95fe7bc7's: ONE arrival, op=leadlist (D-681, its history note above),
+     none out. */
+  OPS.size, 48);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were

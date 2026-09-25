@@ -1443,7 +1443,10 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
 /* D-546 side, kept as history (c22-batch30; its const read 119 on its own branch — NUMBER TO RE-READ from the print): 118 -> 119, 2026-09-25 by D-546, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (`119 methods scanning UNBOUNDED`):
    ONE ARRIVAL, `stateMoveCensus`, NO DEPARTURE — the amplification-class arrival named at the CLASS ratchet above (26 ->
    27), counted over every recorded move by BOB #34's ruling. */
-const SCANNING_MEASURED_2026_09_15 = 122;
+/* 122 -> 123 at the c23-batch30 union (CONDUCT #23, 2026-09-25), READ FROM THE CENSUS ROSTER THIS RUN PRINTED on the
+   merged tree (`CENSUS ROSTER (123 methods scanning UNBOUNDED)`) and DIFFED BY NAME against the same suite's roster on
+   origin/main 95fe7bc7 (122), never 122 + 1: ONE ARRIVAL, `stateMoveCensus` (D-546, its note above), NO DEPARTURE. */
+const SCANNING_MEASURED_2026_09_15 = 123;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "

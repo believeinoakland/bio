@@ -132,7 +132,15 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
 /* D-628 side, kept as history (c23-batch30): its branch MOVED this ceiling 22 -> 23 BY NAME for
    `d628-promoted-fields.control.mjs`, D-578's driver derived verbatim; ours (<= 13) is kept and the print on the union
    decides. NUMBER TO RE-READ. */
-t("the estate's UNCLASSIFIED drivers have not grown past what M0-196 left (<= 13)", g("UNCLASSIFIED").length <= 13, true);
+/* MOVED 13 -> 14 at the c23-batch30 union (CONDUCT #23, 2026-09-25), TO THE PRINTED FIGURE, BY NAME, never as slack:
+   `node bio-plane/scripts/pensweep.mjs` on the merged tree prints `14 UNCLASSIFIED`, and its UNCLASSIFIED list diffed
+   against the same walk on origin/main 95fe7bc7 (13) differs by ONE driver, `bio-plane/test/d564-block.control.mjs`
+   (D-564): `:221 \`suite\` is not bound in this file` — the suite name is a LOOP VARIABLE over its seven suites, the
+   parameter-built class M0-196 left named. That path is a READ of the committed suite (`join(PLANE, "test", NAME)`);
+   every write goes under `mkdtempSync(join(tmpdir(), …))` (read at :229-:245). D-578's, D-546's, D-615's and D-628's
+   drivers each classify TEMP on the union, so none of their branch moves is taken.
+   The fix that lets this fall is the walk reading a loop variable over a literal key set; not taken here. */
+t("the estate's UNCLASSIFIED drivers have not grown past what M0-196 left (<= 14; D-564's d564-block at the c23-batch30 union)", g("UNCLASSIFIED").length <= 14, true);
 t("M0-196, BY NAME: the copy-source drivers of D-510, D-526, D-547, D-548 and REC-180 read their tree root and are classified",
   ["d510-promoted-type", "d526-refusal-order", "d547-revision-retype", "d548-block", "rec180-promote-rollback"]
     .map((n) => [n, (real.drivers.find((d) => d.file === `bio-plane/test/${n}.control.mjs`) || {}).grade])
