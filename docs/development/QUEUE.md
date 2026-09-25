@@ -1166,8 +1166,8 @@ scope: both outermost catches answer a named internal-error code and a correlati
 accepts-when: a forced throw on a public op and on a member op answers the named code with no stack, path or line text (moves: String(e.stack) to the caller). NEGATIVE CONTROL: return the stack again and the no-stack arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
 
-### REC-206 · running — **AN AGENDA ITEM'S MEMBERSHIP IN A FILE EXISTS ONLY AS RECT CO-LOCATION AN INSTRUMENT INFERS: tier-1 text units carry no position and a LinkRecord carries no anchor text.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *DESIGN IT — I2 gains position on tier-1 text units (page and rect) and anchor text plus a rect on LinkRecord; membership is DERIVED from containment, labelled machine work and graded inferred, never presented as the publisher's link.* — owner CONTENT-PDF, then RECORD.
-status: running — SCHEDULER #23 07:24Z: spawned
+### REC-206 · integrated — **AN AGENDA ITEM'S MEMBERSHIP IN A FILE EXISTS ONLY AS RECT CO-LOCATION AN INSTRUMENT INFERS: tier-1 text units carry no position and a LinkRecord carries no anchor text.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *DESIGN IT — I2 gains position on tier-1 text units (page and rect) and anchor text plus a rect on LinkRecord; membership is DERIVED from containment, labelled machine work and graded inferred, never presented as the publisher's link.* — owner CONTENT-PDF, then RECORD.
+status: integrated — SCHEDULER #23 09:20Z: tip 17ed9704 on 5e8a65a8, GATE 82/82 GREEN FULLREUSE (6612 assertions; 376 reused from 383/386, its three whole-output pins corrected by removing the new keys by name), tree 9206aa0d; tier-1 lines with rects, LinkRecord anchor, derived membership (machine, grade C, inferred) beside links[]; construct 5.pdf-positional PARTIAL; I2/I3 additive ICs the integrator's; structure 182->335 KB; grade-mapping gap to BOB
 order: with the M2 extraction rows, after D-246; I2 PROVISIONAL, RECORD after PDF, as ruled (SCHEDULER #17, 2026-09-23, LED-7 S17-4; CPDF-3's worker)
 milestone: M2
 interface: I2 PROVISIONAL — positions and anchors; I3 — the derived membership; the integrator mints and classifies the ICs.
@@ -1177,8 +1177,8 @@ scope: the PDF member emits page and rect per tier-1 unit and anchor text plus r
 accepts-when: an agenda's item-to-file membership reads derived, labelled machine work, graded inferred. NEGATIVE CONTROL: present it as a publisher link, and the labelling arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-340 · running — **CHROME IS A PROPERTY OF THE SITE AND THE PLANE RECORDS IT NOWHERE: `site_chrome` exists only in `LINK-FIDELITY.md`, which RATIFIES it as a derived table regenerable by scan; no table and no per-host navigation-change read are built.** — owner CAPTURE, then RECORD.
-status: running — SCHEDULER #23 07:26Z: spawned
+### D-340 · integrated — **CHROME IS A PROPERTY OF THE SITE AND THE PLANE RECORDS IT NOWHERE: `site_chrome` exists only in `LINK-FIDELITY.md`, which RATIFIES it as a derived table regenerable by scan; no table and no per-host navigation-change read are built.** — owner CAPTURE, then RECORD.
+status: integrated — SCHEDULER #23 09:20Z: tip fdf6c8c9 on 5e8a65a8, GATE 386/386 GREEN FULLREUSE (21908 assertions), tree a1bde48f; NARROWED premise (links.chrome existed, never set): links carry chrome/chrome_basis, derived site_chrome + site_chrome_refs (in purge), new op navchanges; construct 2.site-chrome BUILT; census 224/120; I3/I5 ICs the integrator's; design gap + disclosure question to BOB
 order: after D-419, with the M4 extraction rows (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M4
 interface: I5 — a derived table (in `purge`); I3 — a per-host read; the integrator mints and classifies the ICs.
@@ -1437,6 +1437,28 @@ depends-on: none (stacked on land/worker/D-635 @ d31c52bf, integrated, on D-627 
 scope: one function computing a unit's chain kind from the last step covering its page; every reader and writer calls it; recompute existing rows; capture_text's reader text as ruled.
 accepts-when: on a mixed fixture a text-layer page's unit reads its layer kind and an OCR'd page's reads 'ocr' (moves: every unit 'ocr'). NEGATIVE CONTROL: revert to the generated whole-chain column and the text-layer arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-635's worker).
+
+### D-674 · running — **`manifest.created` IS THE WRITER'S `meta.last_updated`, NOT THE PLANE'S CLOCK: D-546's suite landed an amendment dated BEFORE the move preceding it, so every reader ordering by REC-182's `created` (op=export's promotions, the gate facts) can be steered out of write order by the caller.** Found by D-546's worker (minted on land/worker/D-546). — owner RECORD.
+status: running — SCHEDULER #23 09:20Z: spawned from main
+order: after D-673, with the promote corrections — a caller-supplied date that orders the record is a provenance hop a caller can invent (CLAUDE.md §5) (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — the order op=export states for promotions; the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.7 (write order is the record's order), with REC-182's `created`.
+depends-on: none (on main today; D-546's census, integrated, pairs by write order already).
+scope: order by rowid (write order) in every reader that orders by `created`, OR stamp the plane's clock into manifest.created and keep the writer's date beside it named as the writer's; list each reader by name.
+accepts-when: an amendment carrying a backdated writer date reads AFTER the move it follows in op=export and the gate facts (moves: caller-steered order). NEGATIVE CONTROL: order by `created` again and the backdated arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker).
+
+### D-641 · running — **107 REFUSAL CODES A MEMBER CAN RECEIVE HAVE NO CANNED TRANSLATION: D-542's R5/R6 walk brought them into reach (reach 488->595) and they are the whole reachGap rise 39->146 — e.g. relationdeclare NO_ENDS / SELF_RELATION, queuemute NO_KINDS, progressiondefine NO_STAGES; the publishedbytes codes overlap D-561.** Listed by check-refusal-codes' `IN REACH ONLY BY OP` line. Found by D-542's worker (minted on land/worker/D-542). — owner RECORD (REC-64's sweep).
+status: running — SCHEDULER #23 09:20Z: spawned, stacked on land/worker/D-542 @ fac514e0
+order: after D-628 — a member told a bare code instead of words is DEC-49's own defect and product, ahead of the process rows (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 additive — translations only; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it (member-facing refusals carry canned words), with `docs/development/VERIFICATION.md` (the DEC-49 guard) and D-542's R5/R6 arms as built.
+depends-on: none (stacked on land/worker/D-542 @ fac514e0, integrated — the reach walk that lists them).
+scope: for each of the 107, a DEC-49 row with its translation, OR show at the code that it never leaves on the wire and narrow the walk at that op; lower CEILING.reachGap in the same commit to the measured remainder. Batches of about 20 per commit are fine; the row closes when the gap is 39 or below and each exception is stated.
+accepts-when: reachGap reads the measured remainder and every in-reach code carries words or a stated not-on-the-wire reason (moves: reachGap 146). NEGATIVE CONTROL: strip one new translation and the guard names that code.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-542's worker, relayed by CONDUCT #22).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
