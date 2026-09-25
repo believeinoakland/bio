@@ -712,8 +712,8 @@ scope: (1) publication copies a parted capture part by part and re-verifies each
 accepts-when: a parted capture ratifies AND publishes, byte-verified; one missing a part is refused naming it (moves: PLANE_HELD_IN_PARTS on sound bytes). NEGATIVE CONTROL: drop the part-copy from publication and the publish arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-533's worker).
 
-### D-561 · running — **FIVE REFUSAL CODES STILL REACH AN ANONYMOUS CALLER UNTRANSLATED ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase`, after D-549 translated NO_PUBLISHED_STORE (C-68.5).** Found by D-549's worker (land/worker/D-549 @ afcf1128; codes named in its report, not on the branch). Its sibling D-562 (check-refusal-codes grades public-op codes out of reach) is D-542's reach-by-op class and rides D-542. — owner RECORD.
-status: running — SCHEDULER #22 04:32Z spawns WORKER D-561 (depth 2)
+### D-561 · integrated — **FIVE REFUSAL CODES STILL REACH AN ANONYMOUS CALLER UNTRANSLATED ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase`, after D-549 translated NO_PUBLISHED_STORE (C-68.5).** Found by D-549's worker (land/worker/D-549 @ afcf1128; codes named in its report, not on the branch). Its sibling D-562 (check-refusal-codes grades public-op codes out of reach) is D-542's reach-by-op class and rides D-542. — owner RECORD.
+status: integrated — SCHEDULER #22 05:48Z: tip 1ab197c5, GATE 92/92 GREEN FULLREUSE (7372 assertions), tree 670988c1; NINE public codes (not five) translated, C-98.1-8 + C-69.2; I3 NOT purely additive: NOT_FOUND->NO_PUBLISHED_PART, TOO_LARGE->CONTAINER_TOO_LARGE, a false NOT_FOUND now OBJECT_MISSING; CATALOG 1.30.0->1.31.0 (d470 511); civicos-ui publishedcase.test mock stale (UI)
 order: after D-567, with the corrections: a public caller shown a machine token is DEC-49's failure on the surface a stranger meets (SCHEDULER #21, 2026-09-25)
 milestone: M10
 interface: I3 additive — code, check and translation on the two public ops' refusals; the integrator classifies.
@@ -918,6 +918,17 @@ depends-on: REC-214.
 scope: on the action page, beside UI-90's governing-laws list, the revise act (tier plus a required reason, words from the plane's vocabulary) and the tier history as the plane states it.
 accepts-when: against a real-plane suite a member revises a tier with a reason and the history renders "revised from … to …: <reason>"; the act cannot submit without a reason (the measured failure it moves: no surface for the act). NEGATIVE CONTROL: submit without a reason and the required-reason arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
+
+### REC-215 · queued — **NO MACHINE PROPOSAL OF A RISK TIER EXISTS, LABELLED AND APART FROM THE MEMBER'S VALUE.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), item 3: `actionriskpropose` (not yet an op), REC-195's shape. — owner RECORD.
+order: after UI-104 (BOB #33: after (1), the proposal half last) (SCHEDULER #19, 2026-09-24)
+milestone: M7
+interface: I3 additive — a proposal read labelled machine work; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (only a member's authored act sets a tier), with REC-195's labelled-proposal shape and BOB #33's risk-tier ruling (sent by message 21:18Z, cited elsewhere as "21:21Z"; RECORDED in the BOB INBOX entry of 21:55Z, drained to `BOB-INBOX-drained.md` by SCHEDULER #20).
+depends-on: REC-214.
+scope: a proposal of a tier with its basis, stored apart from the member's value and labelled machine work; it never sets the tier.
+accepts-when: a proposal reads labelled machine work and the tier is unchanged until a member acts (the measured failure it moves: no proposal read). NEGATIVE CONTROL: let the proposal write the tier and the "the tier is the member's" arm fails by name.
+context: REC-216's audit (F1-F4, SCHEDULER #19's worker) and BOB #33's 21:55Z ruling: every `*propose` op is NON_ACTS in `bio-plane/src/affordances.mjs` (REC-195's reasoning) and a member states the value with their own act; so this proposal is a machine READ, never a member act in ACTS, and its surface SHOWS it beside the member's tier with no adopt control, as UI-102 (a2d974aa) does for the governing-laws proposal.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

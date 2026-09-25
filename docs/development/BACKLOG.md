@@ -47,8 +47,8 @@ added: 2026-09-25 · SCHEDULER #21 (id minted by REC-162's worker).
 order: after D-586 (D-605 moved to the cache), with the public-door corrections: a status that states the wrong reason misleads a stranger on the public door (SCHEDULER #22, 2026-09-25)
 milestone: M10
 interface: I3 — an HTTP status on one public refusal; the integrator classifies.
-design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the public door).
-depends-on: D-561 (the public codes' translations; land/worker/D-561 when pushed).
+design: `docs/architecture/BIO_Publication_v0_1.md` §4 (the public reads; §7 is attribution, per D-561's worker).
+depends-on: D-561 (land/worker/D-561 @ 1ab197c5; it renames container TOO_LARGE to CONTAINER_TOO_LARGE).
 scope: status by code in the serialiseContainer refusal path: 409 for DUPLICATE_PATH, 413 only for CONTAINER_TOO_LARGE; grep the path for any other code it returns and give each its own status.
 accepts-when: a zip request naming a path twice answers 409 DUPLICATE_PATH, and an over-large one 413 (moves: a duplicate path reported as too large). NEGATIVE CONTROL: send 413 for every refusal again and the duplicate arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-561's worker).
@@ -253,17 +253,6 @@ depends-on: D-534.
 scope: `queueMuteReportHtml`'s per-case undo names every kind the member muted from D-534's published kinds, not only `suppressed[]`'s; retire the named limit in member-respect's SETS row.
 accepts-when: against a real plane a member undoes a case mute whose kind holds nothing back today (the measured failure it moves: no control drawn). NEGATIVE CONTROL: read `suppressed[]` alone again and the quiet-kind arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
-
-### REC-215 · queued — **NO MACHINE PROPOSAL OF A RISK TIER EXISTS, LABELLED AND APART FROM THE MEMBER'S VALUE.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), item 3: `actionriskpropose` (not yet an op), REC-195's shape. — owner RECORD.
-order: after UI-104 (BOB #33: after (1), the proposal half last) (SCHEDULER #19, 2026-09-24)
-milestone: M7
-interface: I3 additive — a proposal read labelled machine work; the integrator classifies.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (only a member's authored act sets a tier), with REC-195's labelled-proposal shape and BOB #33's risk-tier ruling (sent by message 21:18Z, cited elsewhere as "21:21Z"; RECORDED in the BOB INBOX entry of 21:55Z, drained to `BOB-INBOX-drained.md` by SCHEDULER #20).
-depends-on: REC-214.
-scope: a proposal of a tier with its basis, stored apart from the member's value and labelled machine work; it never sets the tier.
-accepts-when: a proposal reads labelled machine work and the tier is unchanged until a member acts (the measured failure it moves: no proposal read). NEGATIVE CONTROL: let the proposal write the tier and the "the tier is the member's" arm fails by name.
-context: REC-216's audit (F1-F4, SCHEDULER #19's worker) and BOB #33's 21:55Z ruling: every `*propose` op is NON_ACTS in `bio-plane/src/affordances.mjs` (REC-195's reasoning) and a member states the value with their own act; so this proposal is a machine READ, never a member act in ACTS, and its surface SHOWS it beside the member's tier with no adopt control, as UI-102 (a2d974aa) does for the governing-laws proposal.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
 ### D-580 · queued — **`#captureForContent`'s "earliest" ORDERS TWO DIFFERENT CLOCKS IN ONE COLUMN: `register.registered` (the server's instant) and `readings.at` (a reading's OWN date from provenance bytes), so a capture held LATER of an older-dated document sorts first and the record presents the wrong version as the one it held first.** Found by REC-220's worker (measured in rec220-version-pin; a re-registration does not move it). — owner RECORD.
 order: before REC-222, with the version-pinning corrections: the version a reference resolves to must be the one the record first held (Bob's 2026-09-25 00:40Z doctrine, rule 1) (SCHEDULER #21, 2026-09-25)
@@ -1201,3 +1190,13 @@ depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the r
 accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own … (whole text: the cut archive)
+order: behind the product rows, first of the reading-budget rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: an over-budget kickoff costs every RECORD spawn context, not gate time, and blocks no product; SCHEDULER #12); not a defect in the product, cheap and mechanical (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` with CLAUDE.md §1's reading budget — *a file is either READ WHOLE … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
