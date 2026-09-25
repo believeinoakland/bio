@@ -284,3 +284,4 @@ D-755	2026-09-25T12:57:40.170Z	CONDUCT #23	batch30 union anchor drift: 24 arms i
 D-756	2026-09-25T12:57:40.170Z	CONDUCT #23	batch30 union anchor drift: 24 arms in 14 control drivers (re-anchor each on a unique span)
 D-757	2026-09-25T12:57:57.680Z	CONDUCT #23	batch30 union anchor drift: queue-peritem.control allornone (re-anchor)
 D-758	2026-09-25T13:10:35.254Z	HEAD	
+D-759	2026-09-25T14:35:57.868Z	land/worker/D-712	
