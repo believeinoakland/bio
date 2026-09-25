@@ -1,0 +1,16 @@
+{
+ "unit": "plane:cpdf18-pdf-images.test.mjs",
+ "inputHash": "217e9f58575a138bf013d7fca6e4da0a25b845ac28f1b59f66846b5ca989fb05",
+ "verdict": "PASS",
+ "run": "b89902902f4118b29f2d5b8841596e8dabbdcbd8.1790324287003.1491.json",
+ "tree": "b89902902f4118b29f2d5b8841596e8dabbdcbd8",
+ "head": "ae6d5a496b571b4ec13a2294cf4e211f70946cab",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 150,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "84f36a10-614e-59ce-a789-d6454929813b",
+ "at": "2026-09-25T08:18:07.015Z"
+}

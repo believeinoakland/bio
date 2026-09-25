@@ -1,0 +1,16 @@
+{
+ "unit": "plane:ooxml.test.mjs",
+ "inputHash": "2e5b3d94b8fc59e0e04f1299acb9fe4154abf48809b8325987585df171cbf466",
+ "verdict": "PASS",
+ "run": "b89902902f4118b29f2d5b8841596e8dabbdcbd8.1790324287003.1491.json",
+ "tree": "b89902902f4118b29f2d5b8841596e8dabbdcbd8",
+ "head": "ae6d5a496b571b4ec13a2294cf4e211f70946cab",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 135,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "84f36a10-614e-59ce-a789-d6454929813b",
+ "at": "2026-09-25T08:18:07.015Z"
+}
