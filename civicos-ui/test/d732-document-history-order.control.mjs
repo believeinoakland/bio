@@ -19,6 +19,7 @@
  *
  * Every restore is verified by sha256 AND by a byte compare against a uniquely named per-arm pristine copy in the
  * item's pen (`controlPen`, outside the worktree, M0-182), and the pristine copy's size is printed and floored. */
+import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard its own output */
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
