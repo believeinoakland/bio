@@ -635,8 +635,8 @@ accepts-when: the stability figure is recorded with date, instrument and populat
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 note: 2026-09-24 by SCHEDULER #19 (D-472's worker F2, via CONDUCT #20 20:14Z): the monitor's cry-wolf survives for Google Docs and Slides (.odt, .odp) because only .ods has a measured container digest; land the .odt normalisation with an ODF_EVIDENTIARY_MEASURED row once measured, and name a census target for .odp.
 
-### D-612 · running — **EVERY REAL GOOGLE DOC EXPORT EMBEDS `Fonts/fontN.ttf`, REFERENCED BY `svg:font-face-uri`, AND D-351's MEMBER RULE REFUSES THOSE REFERENCES, so the .odt digest reads UNDETERMINED on ALL 8 real Docs (M-167) and the monitor's false "changed" alarm for Docs survives D-473.** Found by D-473's worker (05:49Z). — owner CAPTURE.
-status: running — SCHEDULER #22 05:58Z spawns WORKER D-612 (depth 2), stacked on land/worker/D-473 @ 737913b0
+### D-612 · integrated — **EVERY REAL GOOGLE DOC EXPORT EMBEDS `Fonts/fontN.ttf`, REFERENCED BY `svg:font-face-uri`, AND D-351's MEMBER RULE REFUSES THOSE REFERENCES, so the .odt digest reads UNDETERMINED on ALL 8 real Docs (M-167) and the monitor's false "changed" alarm for Docs survives D-473.** Found by D-473's worker (05:49Z). — owner CAPTURE.
+status: integrated — SCHEDULER #22 07:02Z: tip f2dcbc6c (CARRIES D-473 737913b0), GATE 367/367 GREEN FULLREUSE (21100 assertions), tree 30feba7f; font-face-uri discounted, Pictures/ still refuse; moved count UNDETERMINED (M-167 not re-addressable), minted a re-measure row; rides batch30
 order: directly after D-473, which it completes: D-473's widening reaches no real Doc until fonts are admitted (SCHEDULER #22, 2026-09-25)
 milestone: M2
 interface: none unless a digest's grade changes on the wire (the integrator classifies).
@@ -1117,6 +1117,26 @@ design: `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §6 (which gains the b
 depends-on: none.
 scope: carry per-page dimensions onto the reading; the extent check refuses a rect outside the MediaBox by name (the stricter mechanism; clip-and-state is the architect's alternative if preferred). Extend the extent suite.
 accepts-when: `[0,0,999999,999999]` is refused by name; a rect inside mints. NEGATIVE CONTROL: drop the bound, and the oversize arm mints and fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-415 · queued — **A WORKBOOK'S `sheet-range` UNITS ARE WHOLE SHEETS ONLY: `formats-xlsx.mjs` turns `definedNames` into anchor links and emits one `usedSheetRange` per sheet; table parts and ODF named ranges are not read.** — owner COFF.
+order: after D-374 (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M4
+interface: I2 — finer sheet-range units; the integrator mints and classifies the IC.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.3 item 1.
+depends-on: none.
+scope: a defined name and a table part each emit a `sheet-range` unit; a multi-area name is skipped with a stated reason. Extend `bio-plane/test/fw19-extent-arms.test.mjs`.
+accepts-when: a fixture's defined name emits its unit. NEGATIVE CONTROL: before the fix the defined-name arm emits none and fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-419 · queued — **THE CROP OF A CITED PDF IMAGE EXISTS AND NOTHING CAN ASK FOR IT: `cropImage` lives only in `pdf-worker/src/imagecrop.mjs`, with no route and no plane op.** — owner CONTENT-PDF, then RECORD; a UI item renders it.
+order: after D-416; display only, behind every over-claim (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M4
+interface: I6 — a `POST /crop` route; I3 — a read-only op; the integrator mints and classifies the ICs.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.4.
+depends-on: none.
+scope: the member route and a read-only plane op returning the crop for a cited image extent. Extend `pdf-worker/test/` and a plane suite.
+accepts-when: a cited image extent returns its crop through the op. NEGATIVE CONTROL: route to the whole page, and the crop-dimensions arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates

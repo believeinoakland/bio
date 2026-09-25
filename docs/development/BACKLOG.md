@@ -164,6 +164,16 @@ scope: a JBIG2 generic-region decoder (MMR and arithmetic, with JBIG2Globals) an
 accepts-when: Ordinance 13035's JBIG2 page and one JPX page transcribe at tier 3 with pixel digests matching the reference decoder (moves: 14 held pages unread by every tier). NEGATIVE CONTROL: a no-op decoder fails the digest arms by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-321 part 2's worker).
 
+### D-669 · queued — **M-167's POPULATION CANNOT BE RE-ADDRESSED: it committed only truncated file ids and the measuring pen is gone, so D-612's widening (fonts discounted) could not be re-measured and its moved count stands UNDETERMINED (predicted from M-167's refs column: 4 of 8 Docs move to determined).** Found by D-612's worker (06:31Z). — owner CAPTURE.
+order: after D-622, with the measurement rows: a figure the record cannot re-take is weaker evidence, but no gate result is false (SCHEDULER #22, 2026-09-25)
+milestone: M0 (a measurement)
+interface: none (a measurement).
+design: `docs/development/VERIFICATION.md` (measure; do not recall; a measurement names its population so it can be re-taken).
+depends-on: D-612 (land/worker/D-612 @ f2dcbc6c).
+scope: take a fresh public-government Google Docs and Slides population with FULL target ids committed in the measurement log, re-run tools/measure-odf-stability.mjs through the plane with store=scratch (witness counters before and after), and record the moved .odt count under D-612; never CAP-11's captures.
+accepts-when: the .odt determined count after D-612 is measured on a re-addressable population, date and instrument stated (moves: an undetermined moved count). NEGATIVE CONTROL: count fonts again and the moved count falls back, by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; D-612's worker's finding).
+
 ### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
 order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
 milestone: M6
@@ -511,16 +521,6 @@ scope: on the DEPLOYED plane, read a CSV just over 20 MiB in the scratch namespa
 accepts-when: the measurement is recorded with date, instrument and the build that answered, and the bound is either confirmed or re-set from it (the measured failure it moves: a bound resting on a node heap figure and a vendor claim). NEGATIVE CONTROL: a CSV just under the bound reads clean, so a failure above it is attributable to size.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs DIST`).
 
-### D-415 · queued — **A WORKBOOK'S `sheet-range` UNITS ARE WHOLE SHEETS ONLY: `formats-xlsx.mjs` turns `definedNames` into anchor links and emits one `usedSheetRange` per sheet; table parts and ODF named ranges are not read.** — owner COFF.
-order: after D-374 (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M4
-interface: I2 — finer sheet-range units; the integrator mints and classifies the IC.
-design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.3 item 1.
-depends-on: none.
-scope: a defined name and a table part each emit a `sheet-range` unit; a multi-area name is skipped with a stated reason. Extend `bio-plane/test/fw19-extent-arms.test.mjs`.
-accepts-when: a fixture's defined name emits its unit. NEGATIVE CONTROL: before the fix the defined-name arm emits none and fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
 ### D-416 · queued — **A READING POSITION CANNOT FALL INSIDE A `sheet-range` EXTENT: `readingPositionInExtent` (`textchain.mjs`) returns false whenever the reading's arm and the extent's differ, so a cell reading never earns the connection its range should.** The image-rect and `doc-table` halves wait on readings that carry rects and paragraph spans (D-352). — owner FRAMEWORK.
 order: after D-415, which emits the units it reads (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M4
@@ -529,16 +529,6 @@ design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2.
 depends-on: D-415.
 scope: the `sheet-range` half: a cell reading inside a range is contained. Extend the textchain suite.
 accepts-when: a cell reading inside a sheet-range earns a connection. NEGATIVE CONTROL: restore the arm-mismatch false, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-419 · queued — **THE CROP OF A CITED PDF IMAGE EXISTS AND NOTHING CAN ASK FOR IT: `cropImage` lives only in `pdf-worker/src/imagecrop.mjs`, with no route and no plane op.** — owner CONTENT-PDF, then RECORD; a UI item renders it.
-order: after D-416; display only, behind every over-claim (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M4
-interface: I6 — a `POST /crop` route; I3 — a read-only op; the integrator mints and classifies the ICs.
-design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.4.
-depends-on: none.
-scope: the member route and a read-only plane op returning the crop for a cited image extent. Extend `pdf-worker/test/` and a plane suite.
-accepts-when: a cited image extent returns its crop through the op. NEGATIVE CONTROL: route to the whole page, and the crop-dimensions arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
 ### D-246 · queued — **A RENDERING'S FILE HASH IS RUNTIME-DEPENDENT, AND DEC-41 ASKS FOR A HASH ANY COPY CAN CHECK.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *BOTH, LABELLED: `published_shas` carries the PIXEL hash (`pixels_sha256`, identical across node, workerd and Pillow) as the verifying value; the file hash is recorded beside it as "this file's bytes", for information only.* — owner CONTENT-PDF, then RECORD.
@@ -1191,3 +1181,13 @@ depends-on: none — M0-119 is on `main`.
 scope: `write()` adds its automatic rebalance only when an intent changes a plan file's membership or size: `insert`, `row`, `refill`, `archive`, or an `append`, `line` or `replace` whose file is `QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`; a `status` word, a claim, a handoff or a DELEGATION does not. The explicit `rebalance` intent is unchanged; `coord.test.mjs` gains the arms.
 accepts-when: a write of only a `CLAIMS.md` append or a `-NEXT.md` replace leaves both plan files byte-identical even when the backlog is over budget; an `insert` over budget still moves the tail. NEGATIVE CONTROL: rebalance on every write again, and the claim-only arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (BOB #29's ruling in WORK-PIPELINE §2; `node tools/mintid.mjs M0`).
+
+### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two … (whole text: the cut archive)
+order: behind the product rows, first of the ledger tooling (Bob, 2026-09-22: *process is overhead*; SCHEDULER #12): AMBIGUITY STATED, not the record over-claiming — the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), and LED-7 folds around the two rows (SCHEDULER #2 + BOB #17, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullet "The legacy residue" … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `find` returns BOTH rows for a collided id and SAYS it collided; `mintid --audit` still reads 0 breaks; every existing citation of the four still resolves. How a liar passes … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER #2 (batch 4; found by CONDUCT #7; no-renumber ruling by BOB #17).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «LED-8» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
