@@ -854,9 +854,13 @@ ok("IT CARRIES NO CREDENTIAL — the published record needs none, and asking for
    else — to show whose record this is instead of a literal group name (Publication §7 point 1). The old
    assertion was right that nothing of the WORKING record may be touched; it was wrong to equate that with one
    op, because the group's slug is a public fact of the published record's own header. What it protects is
-   kept: every op reached is one of the two public reads, and none carries a credential. */
+   kept: every op reached is one of the two public reads, and none carries a credential.
+   CORRECTED 2026-09-25 (UI-78), never exempted: the header's group read is now `op=groupidentity` (REC-164,
+   IC-223) — the same public slug under the same rule, and beside it the display name and a domain only while
+   verified (Publication §7 points 2 and 3). The op named changed; the property — two public reads, no
+   credential — is unchanged. */
 ok("no other op is reached from the published space — nothing of the working record is touched (the case list and the header's public group read, credential-free, only)",
-   planeP.CALLS.every(c=>(c.op==="publishedmanifest" || c.op==="instancegroup") && c.token===null));
+   planeP.CALLS.every(c=>(c.op==="publishedmanifest" || c.op==="groupidentity") && c.token===null));
 
 const pl = E(ctxP, "#pl")._html;
 ok("every ratified case file in the manifest is listed",

@@ -398,7 +398,7 @@ h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px
 .fence{grid-row:3/4;grid-column:2/3;position:relative;height:var(--fence-h);background:var(--paper-2);border-top:1px solid var(--rule-strong);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
 .fence::before{content:"";position:absolute;top:-4px;left:0;right:0;border-top:1px solid var(--rule-strong)}
 .fence .fl{font-family:var(--font-fact);font-size:11.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--ink-soft)}
-.fence .idstr{font-size:12px;color:var(--muted)}
+.fence .idstr{font-size:12px;color:var(--muted);min-width:0;margin-left:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ---- published shell ---- */
 #pub{display:none}
@@ -981,17 +981,24 @@ setInterval(buildCheck, 5*60*1000);
    every sovereign group's own account, so every instance's public page claimed to be this project's —
    the record claiming an association it cannot support, which is the defect class
    `BIO_Publication_v0_1.md` §7 exists to refuse.
-   NOW: both surfaces read `op=instancegroup` (IC-174: `{ ok, group }` or `{ ok, group:null, detail }`)
-   and show THREE states, the setup page's own three (`bio-plane/src/setup.mjs` `groupLine`), in its words:
+   UI-77 had both surfaces read `op=instancegroup` (IC-174: `{ ok, group }` or `{ ok, group:null, detail }`;
+   since UI-78 the read is `op=groupidentity`, below, whose `group` is the same field) and show THREE states, the setup page's own three (`bio-plane/src/setup.mjs` `groupLine`), in its words:
      recorded — the SLUG, as the record holds it (§7 point 1: the slug is public);
      none     — the record answered and records no group: said in words, never a blank, never a default;
      silent   — the record did not answer (an error, a silent store, an older plane that refuses a
                 stranger, no plane at all): said as THAT, never as "none" (REC-52).
    The markup carries the silent line, so a surface painted before any read names nobody.
-   WHAT IS NOT SHOWN, and why: a DISPLAY NAME (§7 point 2) and a VERIFIED DOMAIN (§7 point 3) are not
-   built on the plane, so `#p-gid` — where the domain stood — is left empty (a domain is shown only while
-   verified, and none is), and nothing stands in for a display name: when one exists it is shown WITH
-   the slug, never instead. The monogram is the slug's own first character, and nothing when there is no slug.
+   UI-78, 2026-09-25 — §7 POINTS 2 AND 3, READ FROM `op=groupidentity` (REC-164, IC-223), which answers
+   `op=instancegroup`'s slug under the same rule for WHO and WHICH STORE, and beside it:
+     a DISPLAY NAME — shown WITH the slug, never instead of it (`groupLabel`): a name that imitates another
+                body cannot stand alone as an identity. The plane answers one only beside a recorded slug,
+                and this surface shows none without a slug either;
+     a DOMAIN   — on the PUBLIC header only while its latest verdict is `verified`, and only with that
+                verdict's date (`groupDomainPublic`): a domain with no dated verdict beside it is not shown,
+                whatever the answer carries, so the surface cannot claim an association it did not read;
+     the CLAIM  — members (the credentialed read) see the claimed domain and its latest DATED verdict in the
+                fence (`groupClaimLine`), whatever the verdict, and whether a stranger is shown it.
+   The monogram stays the slug's own first character: a display name is presentation, the slug the identity.
    WHICH READ: the working space reads through `recR`, holding the member's credential, so it asks the
    store every other read on that screen asks (a probe's scratch namespace included). The published
    space reads through `apiQ`, holding NOTHING — its public-read seam, so a stranger's header and a
@@ -1000,15 +1007,49 @@ const GROUP_WORDS = {
   none:   "No group is recorded for this copy yet",
   silent: "This copy could not read its group just now",
 };
+const GROUP_VERDICTS = ["verified", "absent", "mismatched", "undetermined"];
 function groupFromAnswer(r){
-  if(r && r.ok === true && typeof r.group === "string" && r.group) return { state:"recorded", slug:r.group };
+  if(r && r.ok === true && typeof r.group === "string" && r.group) return groupFacts(r, r.group);
   if(r && r.ok === true && r.group === null) return { state:"none", slug:null };
   return { state:"silent", slug:null };
+}
+/* UI-78: what the answer says beside a recorded slug — each fact taken only in the shape the plane states it. */
+function groupFacts(r, slug){
+  const g = { state:"recorded", slug, name:null, domain:null, domainAt:null, claim:null };
+  if(typeof r.display_name === "string" && r.display_name.trim()) g.name = r.display_name.trim();
+  if(typeof r.domain === "string" && r.domain && typeof r.domain_verified_at === "string" && r.domain_verified_at){
+    g.domain = r.domain; g.domainAt = r.domain_verified_at;
+  }
+  const c = r.domain_claim;
+  if(c && typeof c === "object" && typeof c.domain === "string" && c.domain){
+    const l = c.latest && typeof c.latest === "object" && GROUP_VERDICTS.includes(c.latest.verdict) ? c.latest : null;
+    g.claim = { domain:c.domain, verdict:l ? l.verdict : null, checkedAt:l ? (l.checked_at || null) : null,
+                detail:l && typeof l.detail === "string" ? l.detail : null };
+  }
+  return g;
+}
+/* The words a surface shows for WHO: the slug, or the display name WITH the slug — never the name alone. */
+function groupLabel(g){
+  if(g.state !== "recorded") return GROUP_WORDS[g.state];
+  return g.name ? `${g.name} \u00b7 ${g.slug}` : g.slug;
+}
+/* The public header's domain line: only a domain the answer dates as verified, with that date; else nothing. */
+function groupDomainPublic(g){
+  return g.state === "recorded" && g.domain && g.domainAt ? `${g.domain} \u00b7 verified ${String(g.domainAt).slice(0, 10)}` : "";
+}
+/* The member's view of the claim: the domain, its latest verdict dated, and whether a stranger is shown it. */
+function groupClaimLine(g){
+  const c = g.state === "recorded" ? g.claim : null;
+  if(!c) return "";
+  if(!c.verdict) return `domain claimed: ${c.domain} \u2014 not yet checked, not shown publicly`;
+  const when = c.checkedAt ? ` ${String(c.checkedAt).slice(0, 10)}` : " (undated)";
+  return `domain claimed: ${c.domain} \u2014 ${c.verdict}${when}, `
+    + (c.verdict === "verified" ? "shown publicly" : "not shown publicly");
 }
 async function readGroup(space){
   if(PLANE.preview) return { state:"silent", slug:null };
   try{
-    return groupFromAnswer(space === "published" ? await apiQ("instancegroup") : await recR("instancegroup"));
+    return groupFromAnswer(space === "published" ? await apiQ("groupidentity") : await recR("groupidentity"));
   }catch(_){ return { state:"silent", slug:null }; }
 }
 function paintGroupAt(sel, g, words){
@@ -1018,14 +1059,16 @@ function paintGroupAt(sel, g, words){
 }
 async function paintGroup(space){
   const g = await readGroup(space);
-  const words = g.state === "recorded" ? g.slug : GROUP_WORDS[g.state];
+  const words = groupLabel(g);
   if(space === "published"){
     paintGroupAt("#p-gname", g, words);
     paintGroupAt("#p-mono", g, g.slug ? g.slug.charAt(0).toUpperCase() : "");
-    if($("#p-gid")) $("#p-gid").textContent = "";
+    if($("#p-gid")) $("#p-gid").textContent = groupDomainPublic(g);
   } else {
     paintGroupAt("#m-grp", g, words);
-    paintGroupAt("#m-idstr", g, words);
+    const claim = groupClaimLine(g);
+    paintGroupAt("#m-idstr", g, claim ? `${words} \u00b7 ${claim}` : words);
+    if($("#m-idstr")) $("#m-idstr").title = claim ? `${words} \u00b7 ${claim}` : words;   /* the whole line, if the fence cuts it */
   }
   return g;
 }
@@ -1479,7 +1522,7 @@ async function boot(){
   await loadActSource(true);
   buildRail(w);
   $("#m-handle").innerHTML = (w.session ? esc(w.handle || w.member || "member") : (w.tokenClass ? esc(w.tokenClass)+" token" : "connected")) + ' <span style="color:var(--muted)">&#9662;</span>';
-  await paintGroup("working");   /* UI-77: the recorded slug, or the stated absence, from op=instancegroup */
+  await paintGroup("working");   /* UI-77/UI-78: the recorded slug (with any display name and the domain claim), or the stated absence, from op=groupidentity */
   $("#gate").classList.add("hidden");
   $("#pub").classList.remove("on");
   $("#work").classList.add("on");

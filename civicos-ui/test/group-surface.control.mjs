@@ -52,7 +52,8 @@ const ARMS = [
        `<div><div class="gname" id="p-gname">Believe in Oakland</div><div class="gid" id="p-gid">believeinoakland.org</div></div>`],
       [`  paintGroup("working");   /* UI-77: preview holds no plane, so this paints the silent line */\n`,
        `  $("#m-grp").textContent = GROUP.name;\n  $("#m-idstr").textContent = GROUP.idstr.slice(0,32);\n`],
-      [`  await paintGroup("working");   /* UI-77: the recorded slug, or the stated absence, from op=instancegroup */\n`,
+      /* CORRECTED 2026-09-25 BY UI-78: the anchor carries the boot line's comment, which now names op=groupidentity. */
+      [`  await paintGroup("working");   /* UI-77/UI-78: the recorded slug (with any display name and the domain claim), or the stated absence, from op=groupidentity */\n`,
        `  $("#m-grp").textContent = GROUP.name;\n  $("#m-idstr").textContent = GROUP.idstr.slice(0,32);\n`],
       [`  PUB_GROUP = paintGroup("published");\n`,
        `  $("#p-gname").textContent = GROUP.name;\n  $("#p-gid").textContent = GROUP.idstr.slice(0, 32);\n  $("#p-mono").textContent = GROUP.mono;\n`],
