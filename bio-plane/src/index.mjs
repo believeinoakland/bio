@@ -1291,6 +1291,8 @@ const OPS = {
      authored dated act — `lead`'s class cut and reason. */
   leadshare:           { classes: ["admin", "member"],             mutating: true  },
   leadread:            { classes: ["admin", "member", "probe"],    mutating: false },
+  /* D-681: the leads THIS viewer may read, each once — `leadread`'s class cut and fence (`#leadReach`). */
+  leadlist:            { classes: ["admin", "member", "probe"],    mutating: false },
   /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
      DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
      and a judgement against its test — so both take `lead`'s class cut: `mutating: true` keeps a
@@ -2290,6 +2292,7 @@ const NEEDS = {
   themeplace:          "contribute",
   themepropose:        "contribute",
   leadread:            null,
+  leadlist:            null,
   /* D-162: the theme read takes no capability, `leadread`'s posture; its placements are gated by the viewer. */
   themeread:           null,
   monitor:          "contribute",
@@ -11304,7 +11307,7 @@ export default {
     /* REC-132 / D-422: the ops whose store method reads the POSITIONAL `identity` stamp
        (`#positionalMember`). `affordances` and `queue` build their own inner requests
        above and stamp it there. A new reader of `identity` joins this list. */
-    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
                                 "textprovenance", "textattest",
                                 /* CPDF-13: the drift obligation's rows NAME the bundle each
@@ -11535,7 +11538,7 @@ export default {
            and the look names what it found (a capture or a content row), which is
            gated like every other reference to a document. Fails closed on an
            absent stamp. */
-        || op === "leadlook" || op === "leadread" || op === "leadshare"
+        || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist"
         /* D-162: a THEME's placement acts and its read NAME A DOCUMENT (or a passage
            of one), so a document the caller was never invited to must answer exactly
            as one that does not exist — `contentmint`'s reason. Fails closed on an

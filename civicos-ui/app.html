@@ -2302,8 +2302,8 @@ const SURFACES = {
   /* D-194 · A MEMBER'S LEAD (MEMBER-KNOWLEDGE-DESIGN.md §5). `acts` is EMPTY for the
      review copy's reason: none of the four lead ops is in the plane's act catalogue — a
      lead is not a bundle and nothing on it is a move of one — so they are this surface's
-     READS and writes, each reached from the page. The list is the internet level of
-     `op=frontier`, which is the plane's list of the leads a viewer may read. */
+     READS and writes, each reached from the page. The list is `op=leadlist` (D-681), the
+     lead's own list of the leads a viewer may read, each once. */
   lead: {
     routes: ["screen:leads", "hash:leads", "hash:lead"],
     purpose: "What a member was told or has reason to believe, and where it might be found, written down before anyone has looked: somewhere to look and never evidence. The member records each time they follow it and what came of it, including that they looked and it was not there, and the lead stays theirs alone until they share it to a project they have joined.",
@@ -2312,7 +2312,7 @@ const SURFACES = {
        path (ARM L6), and this surface fetches nothing — the member looks, and says so. */
     levels: [],
     acts: [],
-    reads: ["lead", "leadlook", "leadread", "leadshare", "frontier"],
+    reads: ["lead", "leadlook", "leadread", "leadshare", "leadlist"],
   },
   "published-case": {
     routes: ["hash:case"],
@@ -25152,8 +25152,8 @@ function rvsPaint(){
    D-194 · A MEMBER'S LEAD — the same knowledge, before the search.
 
    DESIGN: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5. The plane half is
-   MK-4's (IC-135, IC-136) and REC-129's (IC-143); nothing below asks the plane
-   for anything it did not already publish.
+   MK-4's (IC-135, IC-136) and D-681's (`op=leadlist`); nothing below asks the
+   plane for anything it did not already publish.
 
      WRITE  — `op=lead`: the member's words and, if they have one, where to look.
               The author is the plane's stamp, never a field here. Nothing is
@@ -25163,10 +25163,11 @@ function rvsPaint(){
               came of it. No outcome is preselected: which one is the member's
               finding, and a default would be a finding nobody made.
      READ   — `op=leadread`: the lead, its looks and where it is shared.
-     LIST   — `op=frontier&level=internet`: the plane's list of the leads THIS
-              viewer may read, the latest look at each and each nobody has
-              followed. There is no list op of the lead's own (D-681): the
-              frontier keeps the latest look per SUBJECT, the lead's words.
+     LIST   — `op=leadlist`: the leads THIS viewer may read, each ONCE, with
+              the latest state recorded against it. D-681: this surface first
+              listed from `op=frontier&level=internet`, whose `looked` keeps the
+              latest look per SUBJECT (the lead's words), so a lead whose words
+              repeated another's looked at later was listed nowhere.
      SHARE  — `op=leadshare`: the author's own act, to one project. Nothing on
               this surface shares a lead as a side effect of anything else.
 
@@ -25237,8 +25238,8 @@ async function ldListLoad(){
   if(!LDS || LDS.mode !== "list") return;
   LDS.busy = true; ldPaint();
   try{
-    const r = await recR("frontier", { level: "internet", limit: String(LEAD_ASK_LIMIT) });
-    LDS.list = r; LDS.bound = ldBoundSentence(r && r.limit, r && r.truncated, "the leads you may read, followed and not followed each"); LDS.err = null;
+    const r = await recR("leadlist", { limit: String(LEAD_ASK_LIMIT) });
+    LDS.list = r; LDS.bound = ldBoundSentence(r && r.limit, r && r.truncated, "the leads you may read"); LDS.err = null;
   }
   catch(e){ LDS.list = null; LDS.bound = ""; LDS.err = ldIsAnswer(e) ? e : { detail: LEAD_UNREACHED }; }
   LDS.busy = false;
@@ -25280,11 +25281,11 @@ function ldListHtml(){
   if(LDS.busy && !LDS.list) return head + form + '<div class="empty">Reading your leads.</div>';
   if(LDS.err) return head + form + ldRefusalHtml(LDS.err);
   const f = LDS.list || {};
-  const looked = Array.isArray(f.looked) ? f.looked : [];
-  const never = Array.isArray(f.never_looked) ? f.never_looked : [];
-  const rows = looked.map(r => ldRowHtml(r.lead, r.subject, r.state, r.at)).join("")
-    + never.map(r => ldRowHtml(r.lead, r.subject, "NEVER_LOOKED", r.at)).join("");
-  const none = (!looked.length && !never.length)
+  const leads = Array.isArray(f.leads) ? f.leads : [];
+  /* One row per LEAD, as the plane listed it; the date shown is the latest look's, or the
+     lead's own when nobody has followed it. */
+  const rows = leads.map(r => ldRowHtml(r.lead_id, r.words, r.state, r.looked_at || r.at)).join("");
+  const none = !leads.length
     ? '<div class="empty" data-lead-empty>' + esc((f.empty && f.empty.says) || "There is no lead here you may read.") + '</div>' : '';
   return head + form + '<h2 class="sec">The leads you may read</h2>' + rows + none
     + '<p class="subj-note" data-lead-bound>' + esc(LDS.bound || '') + '</p>';

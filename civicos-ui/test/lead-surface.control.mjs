@@ -27,8 +27,12 @@
  *       "MIRROR: each of the page's sentences", "in the plane's own words for that state";
  *       MUST NOT fail "WRITE AND LOOK: and the member SEES LOOKED_ABSENT"
  *   (F) the list stubbed empty instead of read from the plane                          -> RED, naming
- *       "the list is the plane's internet-level frontier", "the list draws LOOKED_ABSENT against that lead";
+ *       "the list is the plane's lead list", "the list draws LOOKED_ABSENT against that lead";
  *       MUST NOT fail "WRITE AND LOOK: the plane records the look"
+ *   (H) D-681, THE ROW'S OWN — the list read from `op=frontier&level=internet` again, grouped per SUBJECT
+ *                                                                                     -> RED, naming
+ *       "SAME WORDS, TWO LEADS"; MUST NOT fail "WRITE AND LOOK: the plane records the look",
+ *       "WRITE AND LOOK: and the member SEES LOOKED_ABSENT"
  *   (G) OVER-STRICTNESS — the heading, the lede and the write button re-worded        -> GREEN
  *
  * RUN 2026-09-25 by the D-194 worker, the FIRST run and unamended: 8/8 AS DECLARED against app.html 0c39845f92eaa2d5…
@@ -36,6 +40,10 @@
  * 47/1 · (C) RED 45/3 · (D) RED 46/2 · (E) RED 46/2 · (F) RED 43/5 · (G) GREEN 48/0. Every RED arm failed at the lines it
  * named and spared the ones it declared; (A), the row's own, ended at the budgeted look wait (M0-107) AFTER both
  * write-and-look arms had failed by name, and the foot line was reached.
+ * RE-RUN 2026-09-25 by the D-681 worker after the list moved to `op=leadlist` and arm (H) was added, the first run:
+ * 9/9 AS DECLARED against app.html 0c18e77bfb45… (1,650,107 B), IDENTICAL after every arm by sha256 AND cmp, driver exit
+ * 0. BASELINE GREEN 51/0 · (A) RED 10/15 · (B) RED 50/1 · (C) RED 48/3 · (D) RED 49/2 · (E) RED 49/2 · (F) RED 45/6 ·
+ * (H) RED 48/3, D-681's own, failing "SAME WORDS, TWO LEADS" by name · (G) GREEN 51/0.
  */
 import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
@@ -80,10 +88,20 @@ const ARMS = [
     edits: [["app", '  LOOKED_ABSENT:        "we looked and it is positively not there",\n  LOOKED_INDETERMINATE: "we looked and could not tell",\n  PRESENT:              "we looked and it is there",\n  partial:              "we looked and got part of it",',
                     '  LOOKED_ABSENT:        "we looked and it is not there",\n  LOOKED_INDETERMINATE: "we looked and could not tell",\n  PRESENT:              "we looked and it is there",\n  partial:              "we looked and got part of it",']] },
   { name: "(F) the list stubbed empty", declared: "RED",
-    names: ["the list is the plane's internet-level frontier", "the list draws LOOKED_ABSENT against that lead"],
+    names: ["the list is the plane's lead list", "the list draws LOOKED_ABSENT against that lead"],
     mustNotFail: ["WRITE AND LOOK: the plane records the look"],
-    edits: [["app", '    const r = await recR("frontier", { level: "internet", limit: String(LEAD_ASK_LIMIT) });',
-                    '    const r = { looked: [], never_looked: [] };']] },
+    edits: [["app", '    const r = await recR("leadlist", { limit: String(LEAD_ASK_LIMIT) });',
+                    '    const r = { leads: [] };']] },
+  /* D-681 — THE ROW'S OWN: the list read back from the frontier, D-194's spelling byte for byte, which groups the
+     latest look per SUBJECT — so the first of two leads in the same words vanishes. */
+  { name: "(H) the list grouped by subject again (op=frontier)", declared: "RED",
+    names: ["SAME WORDS, TWO LEADS"],
+    mustNotFail: ["WRITE AND LOOK: the plane records the look", "WRITE AND LOOK: and the member SEES LOOKED_ABSENT"],
+    edits: [["app", '    const r = await recR("leadlist", { limit: String(LEAD_ASK_LIMIT) });',
+                    '    const r = await recR("frontier", { level: "internet", limit: String(LEAD_ASK_LIMIT) });'],
+            ["app", '  const leads = Array.isArray(f.leads) ? f.leads : [];',
+                    '  const leads = [...(Array.isArray(f.looked) ? f.looked : []).map(r => ({ lead_id: r.lead, words: r.subject, state: r.state, at: r.at })),\n'
+                  + '                 ...(Array.isArray(f.never_looked) ? f.never_looked : []).map(r => ({ lead_id: r.lead, words: r.subject, state: "NEVER_LOOKED", at: r.at }))];']] },
   { name: "(G) over-strictness: the heading, lede and button re-worded", declared: "GREEN",
     edits: [["app", `  const head = '<div class="trow"><h1 class="rec">Leads</h1></div>'`,
                     `  const head = '<div class="trow"><h1 class="rec">Your leads</h1></div>'`],

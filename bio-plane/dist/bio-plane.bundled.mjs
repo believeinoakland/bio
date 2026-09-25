@@ -51418,6 +51418,73 @@ ${words}`;
      200/2000 pair, and for its reason: the population is looks at ONE subject. */
   static LEAD_READ_LIMIT_DEFAULT = 200;
   static LEAD_READ_LIMIT_MAX = 2e3;
+  /** D-681 — op=leadlist: THE LEADS THIS VIEWER MAY READ, EACH ONCE, WITH ITS OWN
+   *  LATEST STATE. The member's list is a question about LEADS, and until this read
+   *  no lead op answered it: D-194's surface listed from `op=frontier&level=internet`,
+   *  whose `looked` keeps the latest look per SUBJECT — the lead's words — so a lead
+   *  whose words equal another readable lead looked at later was in neither `looked`
+   *  nor `never_looked`, and vanished from the member's list. The frontier is NOT
+   *  regrouped: "the latest look at each subject" is its contract at every level
+   *  (OBSERVATION-LOG-DESIGN.md §6), and the internet level's other sources (a run's
+   *  searches, an acquire at an address; `not_read`) carry no lead to group on.
+   *
+   *  ONE ROW PER LEAD, keyed on `lead_id`, fenced by `#leadReach` INSIDE the
+   *  statement — the one predicate `#leadVisibleTo` and `#frontierInternet` ask — so
+   *  a lead outside this viewer's reach moves nothing here, and a viewer who reaches
+   *  none is answered exactly as one whose reach holds no lead: an empty list, never
+   *  a refusal that says leads exist. `state` is `op=leadread`'s own `state` for the
+   *  same lead, from the same query shape (the latest look recorded against it;
+   *  `NEVER_LOOKED` when none), so the list and the read cannot disagree about one
+   *  lead. Bounded, and the bound published. NEWEST FIRST, and within one second (`at`
+   *  is stamped whole-second) in the order the record received them — `rowid`, never
+   *  the id's random tail — so a page cut falls in the same place on every read. */
+  leadList({ limit = null, viewer = null, identity = null } = {}) {
+    const cap = Math.max(1, Math.min(
+      Math.floor(Number(limit) || _Store.LEAD_LIST_LIMIT_DEFAULT),
+      _Store.LEAD_LIST_LIMIT_MAX
+    ));
+    const reach = this.#leadReach(viewer, identity);
+    const rows = !reach ? [] : this.#rows(
+      `SELECT l.lead_id, l.author, l.words, l.locator, l.at,
+              (SELECT o.state FROM observation_log o WHERE o.authority_kind = 'lead' AND o.authority = l.lead_id
+                ORDER BY o.seq DESC LIMIT 1) AS latest_state,
+              (SELECT o.at FROM observation_log o WHERE o.authority_kind = 'lead' AND o.authority = l.lead_id
+                ORDER BY o.seq DESC LIMIT 1) AS latest_at,
+              (SELECT COUNT(*) FROM observation_log o WHERE o.authority_kind = 'lead'
+                  AND o.authority = l.lead_id) AS looks
+         FROM leads l
+        WHERE ${reach.sql}
+        ORDER BY l.at DESC, l.rowid DESC
+        LIMIT ?`,
+      ...reach.args,
+      cap + 1
+    );
+    const leads = rows.slice(0, cap).map((r) => ({
+      lead_id: r.lead_id,
+      author: r.author,
+      words: r.words,
+      locator: r.locator,
+      at: r.at,
+      state: r.latest_state || "NEVER_LOOKED",
+      looked_at: r.latest_at ?? null,
+      looks: r.looks,
+      evidence: false
+    }));
+    return {
+      ok: true,
+      limit: cap,
+      truncated: rows.length > cap,
+      leads,
+      empty: leads.length ? null : { cause: "no_leads_visible", says: _Store.LEAD_LIST_EMPTY },
+      note: _Store.LEAD_LIST_NOTE
+    };
+  }
+  /* op=leadlist's bound and words, BELOW its method for REC-116's reason. `op=leadread`'s
+     200/2000 pair: the population is the leads one member may read. */
+  static LEAD_LIST_LIMIT_DEFAULT = 200;
+  static LEAD_LIST_LIMIT_MAX = 2e3;
+  static LEAD_LIST_EMPTY = "there is no lead here you may read. A lead is readable by its author and by the joined participants of a project its author shared it to; whether any other lead exists is not said to anyone outside it";
+  static LEAD_LIST_NOTE = "the leads THIS VIEWER MAY READ, each once, newest first, with the latest state recorded against it (NEVER_LOOKED when nobody has followed it). Two leads with the same words are two leads and both are listed. A lead is never evidence";
   /* ====================================================================== *
    * D-162 / IC-241 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's
    * ruling of 2026-09-21): a connection through an IDEA. Four acts:
@@ -78642,6 +78709,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           identity: url.searchParams.get("identity")
         }),
+        /* D-681: the leads this viewer may read, each once — `leadread`'s stamps. */
+        leadlist: () => this.leadList({
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
+        }),
         suggest: () => this.suggestVersion({
           ...body || {},
           target: body && body.target || url.searchParams.get("target"),
@@ -80531,6 +80604,8 @@ var OPS = {
      authored dated act — `lead`'s class cut and reason. */
   leadshare: { classes: ["admin", "member"], mutating: true },
   leadread: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-681: the leads THIS viewer may read, each once — `leadread`'s class cut and fence (`#leadReach`). */
+  leadlist: { classes: ["admin", "member", "probe"], mutating: false },
   /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
      DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
      and a judgement against its test — so both take `lead`'s class cut: `mutating: true` keeps a
@@ -81294,6 +81369,7 @@ var NEEDS = {
   themeplace: "contribute",
   themepropose: "contribute",
   leadread: null,
+  leadlist: null,
   /* D-162: the theme read takes no capability, `leadread`'s posture; its placements are gated by the viewer. */
   themeread: null,
   monitor: "contribute",
@@ -86915,7 +86991,7 @@ var index_default = {
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
     inner.searchParams.delete("identity");
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
     const REC30_VIEWER_READS = [
       "dangling",
       "tasks",
@@ -86952,7 +87028,7 @@ var index_default = {
       "projectvisibility",
       "projectdirectory"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`

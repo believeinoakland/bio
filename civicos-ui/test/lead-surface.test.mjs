@@ -2,14 +2,19 @@
  * that found nothing, and sees LOOKED_ABSENT against it — on the lead's own page and in the list — and the lead is
  * shared only by the member's own act.
  *
- * DESIGN: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5. The plane half is MK-4's (IC-135, IC-136) and REC-129's
- * (IC-143): `op=lead`, `op=leadlook`, `op=leadread`, `op=leadshare` and `op=frontier&level=internet`. This item
- * changes none of them.
+ * DESIGN: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5. The plane half is MK-4's (IC-135, IC-136) and D-681's:
+ * `op=lead`, `op=leadlook`, `op=leadread`, `op=leadshare` and `op=leadlist`. D-194 changed none of them; D-681 added
+ * `op=leadlist` and swapped the list onto it (section 4b is its accepts-when, through the page).
+ *
+ * CORRECTED 2026-09-25 by D-681: the list was asserted to be `op=frontier&level=internet`'s. That was the defect,
+ * not the contract — the frontier keeps the latest look per SUBJECT, so a lead whose words repeated another's
+ * looked at later was listed nowhere, and this suite asserted the read that dropped it. Every list assertion
+ * now reads `op=leadlist`.
  *
  * ================= HOW A LIAR WOULD MAKE THIS SUITE GREEN =================
  *  (a) A PAGE THAT DRAWS THE STATE IT WAS TOLD TO — "LOOKED_ABSENT" rendered because the member clicked it, whether or
  *      not the plane recorded anything. So every state the page draws is compared to what the plane answers when asked
- *      DIRECTLY (`op=leadread` and `op=frontier`, read here with the member's own token), and the look must be on the
+ *      DIRECTLY (`op=leadread` and `op=leadlist`, read here with the member's own token), and the look must be on the
  *      WIRE as `op=leadlook` naming the lead the plane minted.
  *  (b) A LEAD WRITTEN BY THE PAGE — an id or an author the page made up. So the lead's id is the one `op=lead` answered
  *      on the wire, and its author is the plane's stamp, compared to `op=whoami`.
@@ -34,6 +39,10 @@
  * 47/1 · (C) RED 45/3 · (D) RED 46/2 · (E) RED 46/2 · (F) RED 43/5 · (G) GREEN 48/0. Every RED arm failed at the lines it
  * named and spared the ones it declared; (A), the row's own, ended at the budgeted look wait (M0-107) AFTER both
  * write-and-look arms had failed by name, and the foot line was reached.
+ * RE-RUN 2026-09-25 by the D-681 worker after the list moved to `op=leadlist` and arm (H) was added, the first run:
+ * 9/9 AS DECLARED against app.html 0c18e77bfb45… (1,650,107 B), IDENTICAL after every arm by sha256 AND cmp, driver exit
+ * 0. BASELINE GREEN 51/0 · (A) RED 10/15 · (B) RED 50/1 · (C) RED 48/3 · (D) RED 49/2 · (E) RED 49/2 · (F) RED 45/6 ·
+ * (H) RED 48/3, D-681's own, failing "SAME WORDS, TWO LEADS" by name · (G) GREEN 51/0.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: shared, for its side effect. */
 import fs from "fs";
@@ -207,14 +216,14 @@ ok("REACH: the leads block was found and is the real one",
    BLOCK.length > 4000 && BLOCK.includes("function ldListHtml") && BLOCK.includes("function ldLook"), String(BLOCK.length));
 const S = JSON.parse(JSON.stringify(M.U.SURFACES.lead || null));
 tb("the surface registry declares the lead surface's routes", S && S.routes, ["screen:leads", "hash:leads", "hash:lead"]);
-tb("and every lead op it reaches, plus the frontier it lists from", S && [...S.reads].sort(),
-   ["frontier", "lead", "leadlook", "leadread", "leadshare"]);
+tb("and every lead op it reaches, the list among them", S && [...S.reads].sort(),
+   ["lead", "leadlist", "leadlook", "leadread", "leadshare"]);
 await M.U.go("leads");
 await drawn("the leads screen is drawn from the plane's list", () => M.U.LDS && !M.U.LDS.busy);
 const list0 = M.html("#content");
-const listCall0 = M.WIRE.find((w) => w.op === "frontier");
-tb("the list is the plane's internet-level frontier, asked for by the page", listCall0 && listCall0.params.level, "internet");
-const direct0 = await GET(`op=frontier&level=internet&token=${IRIS}`);
+const listCall0 = M.WIRE.find((w) => w.op === "leadlist");
+tb("the list is the plane's lead list, asked for by the page at the bound it states", listCall0 && listCall0.params.limit, "200");
+const direct0 = await GET(`op=leadlist&token=${IRIS}`);
 ok("an empty list says so in the PLANE's words (its stated cause), not the page's",
    direct0?.empty?.says && flat(strip(list0)).includes(flat(direct0.empty.says)), JSON.stringify(direct0?.empty));
 
@@ -290,17 +299,32 @@ ok("in the plane's own words for that state", strip(one2).includes(OBSERVATION_S
 await M.run(handler(one2, "onclick", /renderLeads\(\)/));
 await drawn("the list is drawn again", () => M.U.LDS && M.U.LDS.mode === "list" && !M.U.LDS.busy && M.U.LDS.list);
 const list1 = M.html("#content");
-const front1 = await GET(`op=frontier&level=internet&token=${IRIS}`);
-const frow = (front1?.looked || []).find((r) => r.lead === LEAD);
+const front1 = await GET(`op=leadlist&token=${IRIS}`);
+const frow = (front1?.leads || []).find((r) => r.lead_id === LEAD);
 const rowHtml = (new RegExp(`<div class="card" data-lead-row="${LEAD}"[\\s\\S]*?</div></div>`).exec(list1) || [""])[0];
-ok("WRITE AND LOOK: the plane's frontier lists the lead as LOOKED_ABSENT, found nothing",
-   frow && frow.state === "LOOKED_ABSENT" && frow.found_nothing === true, JSON.stringify(front1?.looked));
+ok("WRITE AND LOOK: the plane's lead list carries the lead as LOOKED_ABSENT",
+   frow && frow.state === "LOOKED_ABSENT", JSON.stringify(front1?.leads));
 tb("WRITE AND LOOK: and the list draws LOOKED_ABSENT against that lead, once", statesOn(rowHtml), ["LOOKED_ABSENT"]);
 const boundP = (/<p class="subj-note" data-lead-bound>([^<]*)<\/p>/.exec(list1) || [])[1] || "";
-ok("THE BOUND IS THE RECORD'S: the list states the limit op=frontier published, and whether it cut",
+ok("THE BOUND IS THE RECORD'S: the list states the limit op=leadlist published, and whether it cut",
    Number.isFinite(front1?.limit) && boundP.includes(`a bound of ${front1.limit}.`)
    && (front1.truncated === true) === /was cut/.test(boundP), boundP);
 ok("the list's row opens the lead it names", handler(list1, "onclick", new RegExp(`data-lead-row="${LEAD}"`)) === `ldOpen('${LEAD}')`);
+
+console.log("\n--- 4b. D-681: a second lead in the SAME WORDS, looked at later — both stay on the list ---");
+/* THE ROW'S ACCEPTS-WHEN through the page. Written and looked at through the plane with iris's own token: what is under
+   test is the LIST, and section 4 already drove the write and the look through the page's own controls. */
+const second = await POST(`op=lead&token=${IRIS}`, { words: WORDS, locator: WHERE });
+const LEAD2 = second && second.lead_id;
+const look2 = await POST(`op=leadlook&token=${IRIS}`, { lead: LEAD2, state: "LOOKED_INDETERMINATE" });
+ok("FIXTURE: a second lead, the same words, a different id, looked at AFTER the first",
+   /^LEAD-/.test(LEAD2 || "") && LEAD2 !== LEAD && look2?.ok === true, JSON.stringify([second, look2]).slice(0, 300));
+await M.U.renderLeads();
+await drawn("the list is drawn again after the second lead", () => M.U.LDS && M.U.LDS.mode === "list" && !M.U.LDS.busy && M.U.LDS.list);
+const list2 = M.html("#content");
+const rowOf = (h, id) => (new RegExp(`<div class="card" data-lead-row="${id}"[\\s\\S]*?</div></div>`).exec(h) || [""])[0];
+tb("SAME WORDS, TWO LEADS: the list draws BOTH, each once, each with its OWN latest state",
+   [statesOn(rowOf(list2, LEAD)), statesOn(rowOf(list2, LEAD2))], [["LOOKED_ABSENT"], ["LOOKED_INDETERMINATE"]]);
 
 console.log("\n--- 5. shared only by the member's act ---");
 ok("NO SHARE AS A SIDE EFFECT: writing, looking and listing sent no `op=leadshare`",

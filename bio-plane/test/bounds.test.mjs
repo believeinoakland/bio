@@ -1457,6 +1457,11 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      tokens only. The bite, the clamp and `truncated` both ways are driven
                                      in `test/lead.test.mjs` section 7; the envelope arm is below. */
                                   "leadread",
+                                  /* D-681: op=leadlist's BITE arms need LEADS, which only a signed-in
+                                     member can write (C-54.2), so on `leadread`'s reason the bite, the
+                                     clamp and `truncated` both ways are driven in `test/leadlist.test.mjs`;
+                                     the envelope arm is below. */
+                                  "leadlist",
                                   /* D-162 / IC-241: op=themeread's BITE arms need a THEME, which only a
                                      signed-in member can declare (C-81.2), and this suite drives machine
                                      tokens only. The bite on both pages (the list and a theme's members), the
@@ -1955,6 +1960,8 @@ const answersByOp = new Map([
   ["provenanceroutes", await GET("op=provenanceroutes&token=mem-r57&limit=1")],
   /* MK-4: the envelope of a keyed read with no lead to key on — an answer object, never an array. */
   ["leadread", await GET("op=leadread&token=mem-r57&id=LEAD-2026-0918-000000000000&limit=1")],
+  /* D-681: the envelope of the lead list for a caller who reaches no lead — an answer object, never an array. */
+  ["leadlist", await GET("op=leadlist&token=mem-r57&limit=1")],
   /* D-162: the envelope of the theme list over a store holding none — an answer object, never an array. */
   ["themeread", await GET("op=themeread&token=mem-r57&limit=1")],
   /* REC-126: the envelope of the review copy's read with no draft to key on — the ONE dead answer, an

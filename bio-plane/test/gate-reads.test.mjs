@@ -1003,6 +1003,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "caller may not read answers exactly as an absent one (LEAD_NOT_FOUND), and a look's referent the "
       + "caller can no longer see is not published — the lead discloses what a member was told and where they "
       + "went looking, which is a line of inquiry.",
+    leadlist: "D-681: the LEADS this caller may read, each once with its own latest state. GATED by the one "
+      + "lead predicate op=leadread and op=frontier's internet level ask (#leadReach, inside the statement): its "
+      + "AUTHOR, the JOINED participants of a project the author SHARED it to, a machine credential only within a "
+      + "member's minted scope. It takes the fail-closed viewer stamp beside op=leadread in index.mjs. A caller "
+      + "who reaches no lead gets an empty list, never a refusal — a lead's existence is not disclosed outside "
+      + "its reach, so the answer names no lead it may not read and no count of them.",
     themeread: "D-162: one THEME by id — a member's declared idea, its test, its declarer, and the documents "
       + "and passages placed in it (members) or proposed for it (hunches) — or the list of themes, searchable. "
       + "GATED PER PLACEMENT: a theme itself is not existence-private (framework §8.4: it may be searched, shown "

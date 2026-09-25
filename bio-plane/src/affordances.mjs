@@ -1912,6 +1912,7 @@ export const NON_ACTS = {
   lead: "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence",
   leadlook: "lead-directed: a member records following a lead, keyed by lead id; writes one observation_log row under authority_kind lead",
   leadshare: "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project); writes a `lead_shares` row and no edge",
+  leadlist: "read: the leads this viewer may read, each once with its own latest state, newest first, bounded; the same reach as leadread, and an empty list for a viewer who reaches none",
   leadread: "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
   /* D-162 / IC-241. THE THEME is NOT an object-directed act: its subject is a member's IDEA, which
      no object's facts could say when to offer, and a placement names a document without acting on

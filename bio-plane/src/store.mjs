@@ -22194,6 +22194,63 @@ export class Store extends DurableObject {
   static LEAD_READ_LIMIT_DEFAULT = 200;
   static LEAD_READ_LIMIT_MAX = 2000;
 
+  /** D-681 — op=leadlist: THE LEADS THIS VIEWER MAY READ, EACH ONCE, WITH ITS OWN
+   *  LATEST STATE. The member's list is a question about LEADS, and until this read
+   *  no lead op answered it: D-194's surface listed from `op=frontier&level=internet`,
+   *  whose `looked` keeps the latest look per SUBJECT — the lead's words — so a lead
+   *  whose words equal another readable lead looked at later was in neither `looked`
+   *  nor `never_looked`, and vanished from the member's list. The frontier is NOT
+   *  regrouped: "the latest look at each subject" is its contract at every level
+   *  (OBSERVATION-LOG-DESIGN.md §6), and the internet level's other sources (a run's
+   *  searches, an acquire at an address; `not_read`) carry no lead to group on.
+   *
+   *  ONE ROW PER LEAD, keyed on `lead_id`, fenced by `#leadReach` INSIDE the
+   *  statement — the one predicate `#leadVisibleTo` and `#frontierInternet` ask — so
+   *  a lead outside this viewer's reach moves nothing here, and a viewer who reaches
+   *  none is answered exactly as one whose reach holds no lead: an empty list, never
+   *  a refusal that says leads exist. `state` is `op=leadread`'s own `state` for the
+   *  same lead, from the same query shape (the latest look recorded against it;
+   *  `NEVER_LOOKED` when none), so the list and the read cannot disagree about one
+   *  lead. Bounded, and the bound published. NEWEST FIRST, and within one second (`at`
+   *  is stamped whole-second) in the order the record received them — `rowid`, never
+   *  the id's random tail — so a page cut falls in the same place on every read. */
+  leadList({ limit = null, viewer = null, identity = null } = {}) {
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.LEAD_LIST_LIMIT_DEFAULT),
+                                     Store.LEAD_LIST_LIMIT_MAX));
+    const reach = this.#leadReach(viewer, identity);
+    const rows = !reach ? [] : this.#rows(
+      `SELECT l.lead_id, l.author, l.words, l.locator, l.at,
+              (SELECT o.state FROM observation_log o WHERE o.authority_kind = 'lead' AND o.authority = l.lead_id
+                ORDER BY o.seq DESC LIMIT 1) AS latest_state,
+              (SELECT o.at FROM observation_log o WHERE o.authority_kind = 'lead' AND o.authority = l.lead_id
+                ORDER BY o.seq DESC LIMIT 1) AS latest_at,
+              (SELECT COUNT(*) FROM observation_log o WHERE o.authority_kind = 'lead'
+                  AND o.authority = l.lead_id) AS looks
+         FROM leads l
+        WHERE ${reach.sql}
+        ORDER BY l.at DESC, l.rowid DESC
+        LIMIT ?`, ...reach.args, cap + 1);
+    const leads = rows.slice(0, cap).map((r) => ({
+      lead_id: r.lead_id, author: r.author, words: r.words, locator: r.locator, at: r.at,
+      state: r.latest_state || "NEVER_LOOKED", looked_at: r.latest_at ?? null, looks: r.looks,
+      evidence: false,
+    }));
+    return { ok: true, limit: cap, truncated: rows.length > cap, leads,
+             empty: leads.length ? null : { cause: "no_leads_visible", says: Store.LEAD_LIST_EMPTY },
+             note: Store.LEAD_LIST_NOTE };
+  }
+  /* op=leadlist's bound and words, BELOW its method for REC-116's reason. `op=leadread`'s
+     200/2000 pair: the population is the leads one member may read. */
+  static LEAD_LIST_LIMIT_DEFAULT = 200;
+  static LEAD_LIST_LIMIT_MAX = 2000;
+  static LEAD_LIST_EMPTY =
+    "there is no lead here you may read. A lead is readable by its author and by the joined participants "
+    + "of a project its author shared it to; whether any other lead exists is not said to anyone outside it";
+  static LEAD_LIST_NOTE =
+    "the leads THIS VIEWER MAY READ, each once, newest first, with the latest state recorded against it "
+    + "(NEVER_LOOKED when nobody has followed it). Two leads with the same words are two leads and both are "
+    + "listed. A lead is never evidence";
+
   /* ====================================================================== *
    * D-162 / IC-241 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's
    * ruling of 2026-09-21): a connection through an IDEA. Four acts:
@@ -51431,6 +51488,10 @@ export class Store extends DurableObject {
                                           administer: url.searchParams.get("administer") }),
         leadread: () => this.leadRead({ id: url.searchParams.get("id"),
                                         limit: url.searchParams.get("limit"),
+                                        viewer: url.searchParams.get("viewer"),
+                                        identity: url.searchParams.get("identity") }),
+        /* D-681: the leads this viewer may read, each once — `leadread`'s stamps. */
+        leadlist: () => this.leadList({ limit: url.searchParams.get("limit"),
                                         viewer: url.searchParams.get("viewer"),
                                         identity: url.searchParams.get("identity") }),
         suggest: () => this.suggestVersion({
