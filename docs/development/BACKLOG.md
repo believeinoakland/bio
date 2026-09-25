@@ -106,15 +106,15 @@ scope: MEASURE first (a fixture over the budget) in measurements/<id>.md; charge
 accepts-when: a unit over the remaining budget is carried truncated and marked so, and search finds its prefix (moves: a unit silently dropped). NEGATIVE CONTROL: charge the whole unit again and the carried-prefix arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
 
-### D-628 · queued — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
-order: after D-615 — the same promote function as D-546, D-578 and D-615: one worker at a time (SCHEDULER #23, 2026-09-25)
+### D-692 · queued — **A REVISION WHOSE BYTES RESTATE `created` LANDS, and bundles.created keeps the creation's value (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row still says 2026-07-24.** None live (M-181). Found by D-615's worker (minted on land/worker/D-615). — owner RECORD.
+order: after D-628, the same promote function, one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M7
-interface: I3 — a named DEC-49 refusal on op=promote for a creation missing a required field; the integrator classifies.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4 (per-type schemas), with D-578's carry-or-refuse shape (C-86.5).
-depends-on: D-615 (same function).
-scope: a revision carries the head's value for each field; a creation missing one is refused by a named DEC-49 code BEFORE the first write; a string `meta` is read or refused by name, never thrown.
-accepts-when: each of the four fields absent on a creation is refused by name and on a revision is carried, with no stack in any answer (moves: a raw NOT NULL stack from promote). NEGATIVE CONTROL: remove the pre-write check and the creation arms fail by name, reading a stack.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
+interface: I3 — a named refusal on op=promote; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5 and D-615's derivation), with State Rules v1.5 §4.7's rule that a writer's timestamp never buys an earlier reading (BOB #35 09:05Z/08:00Z, D-673).
+depends-on: D-628 (same function).
+scope: refuse by name a non-replay revision whose document's `created` differs from the head's (C-86.2's shape, one field over); replay exempt as D-615 made it. Decided by SCHEDULER #23: refusal, not moving the row — moving it would let any writer backdate a creation, which the record's own rules already refuse elsewhere.
+accepts-when: a revision restating a different `created` is refused by name, and one restating the same lands (moves: row and bytes disagreeing). NEGATIVE CONTROL: drop the check and the backdated-revision arm lands, failing by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-615's worker).
 
 ### D-667 · queued — **ELEVEN MORE SUITES CAN ABORT A FIXTURE WITHOUT REPORTING WHICH SECTIONS NEVER RAN: four print "FIXTURE ABORTED" (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding) and seven reach `process.exit` through a bail/abort/die const (case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question, d442-publish-writes-nothing, rec170-manifest-pair).** D-548 and D-564 fixed eight; this is the sweep's remainder. Found by D-564's worker (minted on land/worker/D-564). — owner M0 (the suites).
 order: after D-628, behind the head's product corrections: a process row that cuts false-green risk in the gate, placed near the head but never above product (CLAUDE.md §2, Bob 2026-09-22; SCHEDULER #23, 2026-09-25)

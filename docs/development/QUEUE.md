@@ -470,8 +470,8 @@ scope: over M-178's 49 classified pages MEASURE one signal (image pixel dimensio
 accepts-when: the signal's separation is recorded with date and instrument, and either a routing rule routes the chart-under-title pages or the record states none separates (moves: the class unrouted with no measurement). NEGATIVE CONTROL: invert the rule and the chart arm routes nowhere, by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 06:25Z).
 
-### D-615 · running — **`op=promote` STILL PROJECTS `bundles.created` AND `last_updated` FROM THE ENVELOPE, though the document states both (CORE_FIELDS): D-563's class, the last two fields.** Found by D-563's worker (05:47Z). — owner RECORD.
-status: running — SCHEDULER #23 08:25Z: spawned, stacked on land/worker/D-546 @ b690552a
+### D-615 · integrated — **`op=promote` STILL PROJECTS `bundles.created` AND `last_updated` FROM THE ENVELOPE, though the document states both (CORE_FIELDS): D-563's class, the last two fields.** Found by D-563's worker (05:47Z). — owner RECORD.
+status: integrated — SCHEDULER #23 10:00Z: tip 8b3ab6ae (on D-546 b690552a), GATE 389/389 GREEN FULLREUSE (21983 assertions), tree 38c68c14; promote derives created/last_updated from the document; C-86.7 ENVELOPE_DATES_DISAGREE; projectfork stamps its own created; CATALOG 1.33.0->1.34.0; M-181 (0 of 31 differ); 22 plane + 1 UI fixtures corrected; minted D-692
 order: after D-546, the same promote function one worker at a time: the envelope is a label, the document states what it is (SCHEDULER #22, 2026-09-25)
 milestone: M7
 interface: I3 — the projection's two dates; the integrator classifies.
@@ -674,6 +674,17 @@ depends-on: none (stacked on land/worker/D-546 @ b690552a, integrated, on D-578 
 scope: C-4.2 passes an undeclared in-bytes edge with D-546's sentence only when the census corroborates it at or before the fence; otherwise ERROR as today.
 accepts-when: the corroborated twin passes with the sentence and the uncorroborated one fails (moves: no reading for an in-bytes undeclared edge). NEGATIVE CONTROL: a fixture carrying a backdated undeclared edge with no record corroboration must fail C-4.2 by name, and the corroborated twin must pass with the sentence.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker; placed on BOB #35's 08:00Z ruling).
+
+### D-628 · running — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
+status: running — SCHEDULER #23 10:00Z: spawned, stacked on land/worker/D-615 @ 8b3ab6ae
+order: after D-615 — the same promote function as D-546, D-578 and D-615: one worker at a time (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — a named DEC-49 refusal on op=promote for a creation missing a required field; the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4 (per-type schemas), with D-578's carry-or-refuse shape (C-86.5).
+depends-on: none (stacked on land/worker/D-615 @ 8b3ab6ae, integrated, on D-546 on D-578 on D-563 — the same promote function).
+scope: a revision carries the head's value for each field; a creation missing one is refused by a named DEC-49 code BEFORE the first write; a string `meta` is read or refused by name, never thrown.
+accepts-when: each of the four fields absent on a creation is refused by name and on a revision is carried, with no stack in any answer (moves: a raw NOT NULL stack from promote). NEGATIVE CONTROL: remove the pre-write check and the creation arms fail by name, reading a stack.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
