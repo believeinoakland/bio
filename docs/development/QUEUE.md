@@ -865,9 +865,9 @@ scope: refuse by name a non-replay revision whose document's `created` differs f
 accepts-when: a revision restating a different `created` is refused by name, and one restating the same lands (moves: row and bytes disagreeing). NEGATIVE CONTROL: drop the check and the backdated-revision arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-615's worker).
 
-### D-712 · running — **THE PUBLISHED CASE PAGE TELLS EVERY STRANGER A SIGNED, RATIFIED CASE IS UNSIGNED: pubCaseHtml's "The case document · signed by …" line reads `c.document`, which op=publishedcase NEVER serves (Store.publishedCase builds state.document through #caseEditionState and its return omits it), so it prints "This case edition's own document has not been signed yet".** Measured by UI-121's worker: data-casedoc="none" on five cases each signed through op=caseratify. publishedcase.test.mjs's fixture carries a `document` key the live op does not (D-173's class). — owner RECORD.
+### D-712 · integrated — **THE PUBLISHED CASE PAGE TELLS EVERY STRANGER A SIGNED, RATIFIED CASE IS UNSIGNED: pubCaseHtml's "The case document · signed by …" line reads `c.document`, which op=publishedcase NEVER serves (Store.publishedCase builds state.document through #caseEditionState and its return omits it), so it prints "This case edition's own document has not been signed yet".** Measured by UI-121's worker: data-casedoc="none" on five cases each signed through op=caseratify. publishedcase.test.mjs's fixture carries a `document` key the live op does not (D-173's class). — owner RECORD.
+status: integrated — SCHEDULER #24 11:49Z: tip 6e1e4669 (on UI-121 6ceb9b9b), GATE 385/385 GREEN FULLREUSE (21884 assertions; excludes 3 untallied), tree 0d63f725; publishedCase returns document (I3 additive); five stranger rows read signed; fixture anchored to the live wire; RIDES WITH UI-121; minted D-731 (the Verify-this-hash button answers NOT PUBLISHED for a ratified doc), design with BOB #36
 order: spawned directly, ahead of the backlog: the record claiming LESS than it holds on the one page strangers read is a trustworthiness defect (CLAUDE.md §2, "less narrative" binds us first) and a correction to just-landed work (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 11:00Z: spawned, stacked on land/worker/UI-121 @ 6ceb9b9b
 milestone: M10
 interface: I3 — additive `document` on op=publishedcase; the integrator classifies.
 design: `docs/architecture/BIO_Publication_v0_1.md` §3 (rule 13, the published case states its signed document) and §9.
@@ -1020,7 +1020,8 @@ scope: #b-history sorts by seq when every entry carries one, else by snap key as
 accepts-when: a bundle whose keys run against write order lists its history in write order (moves: a history shown out of write order). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-700's worker).
 
-### D-632 · queued — **`aicredential.control` arms 3 and 5: ANCHOR DRIFT — arm 3 matches 0; arm 5 matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+### D-632 · running — **`aicredential.control` arms 3 and 5: ANCHOR DRIFT — arm 3 matches 0; arm 5 matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: running — SCHEDULER #24 11:49Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
 order: after D-631, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
