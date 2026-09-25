@@ -920,8 +920,8 @@ scope: when `r.truncated === true`, the receipt adds that the derivation was cut
 accepts-when: a truncated connect answer's receipt states the cut; an untruncated one does not (moves: a cut receipt reading as whole). NEGATIVE CONTROL: ignore `truncated` again and the cut-receipt arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by UI-95's worker).
 
-### D-575 · running — **A CONNECTION'S PAIR SAYS "which nobody has chosen" WHILE A MEMBER'S CHOICE STANDS, AND NEVER STATES A LAPSE: `Store#pairSelection`'s `says` ends that way on every row on `op=connections&id=`/`&sha256=`, including one carrying a current `on_point`; that arm's `on_point` never states a lapse (only the `content=` arm does).** Found by UI-91's worker (01:25Z). — owner RECORD.
-status: running — SCHEDULER #22 05:30Z spawns WORKER D-575 (depth 2)
+### D-575 · integrated — **A CONNECTION'S PAIR SAYS "which nobody has chosen" WHILE A MEMBER'S CHOICE STANDS, AND NEVER STATES A LAPSE: `Store#pairSelection`'s `says` ends that way on every row on `op=connections&id=`/`&sha256=`, including one carrying a current `on_point`; that arm's `on_point` never states a lapse (only the `content=` arm does).** Found by UI-91's worker (01:25Z). — owner RECORD.
+status: integrated — SCHEDULER #22 06:44Z: tip 617fd5ef, GATE 73/73 GREEN FULLREUSE over b2d73275's 386/386, tree 36299aeb; the pair sentence names choices and lapses; I3 additive; civicos-ui onpoint-choice.test corrected (UI-112 may meet it); rides batch30
 order: after D-576, with the connection corrections: the record contradicting itself about a member's act (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: I3 additive — `lapsed`/`why` on `on_point[side]`, and the selection sentence's content; the integrator classifies.

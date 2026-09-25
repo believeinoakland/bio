@@ -672,6 +672,16 @@ scope: re-anchor `dropslides` on the current line (prefer an anchor keyed on `sl
 accepts-when: nc-cap12 reports `dropslides` ARMED and the slides arm fails by name (moves: 1 arm that never armed). NEGATIVE CONTROL: the re-anchored patch itself; revert the anchor and the driver reports ARMED NO again.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-535's worker).
 
+### D-666 · queued — **`bio-plane/test/rec168-capturerequest-principal.control.mjs`'s ARMS drop-gate, gate-sessions-only AND gate-credentials-only DO NOT ARM: their anchor matches 2 sites (since D-85), so the capture-request principal gate's controls refute nothing.** Found by CONDUCT #22 at batch29's union (06:28Z); the union re-anchored the no-stamp arm onto REC-147's RUN_PRODUCTION_ACTIONS literal. M0-197 (running) may have minted the same drift; if so, close this as its duplicate. — owner M0.
+order: after D-600, with the control-driver rows: a control that cannot arm is loud, not false (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative control: break the subject, watch the suite fail at a NAMED assertion).
+depends-on: none.
+scope: give the three arms a single-site anchor each; re-run the driver AS DECLARED and record it on the suite's NEGATIVE CONTROL line.
+accepts-when: all three arms report ARMED and fail by name (moves: 3 arms that never armed). NEGATIVE CONTROL: the arms themselves.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; CONDUCT #22's union finding).
+
 ### M0-174 · queued — **`mintid`'s `D` NAMESPACE STILL GRADES DUPLICATES ACROSS TWO SHAPES AS ONE: since DEBT's retirement (M0-140) a `D-` is minted as a PLAN ROW, so its allocation site is the heading `### D-n ·`; the DEBT-table rows `| D-n |` are LEGACY allocations frozen at D-443. A heading and a legacy row for one id (M-57's 17 pairs) are the item and the row it closed, never a duplicate.** BOB #33 RULED, 2026-09-24 17:35Z (drained to `BOB-INBOX-drained.md`; cite until folded). — owner M0.
 order: low in the M0 group, beside M0-172: small; fold into an open M0 batch if one fits (BOB #33, 17:35Z; SCHEDULER #19)
 milestone: M0
@@ -1181,13 +1191,3 @@ depends-on: none — M0-119 is on `main`.
 scope: `write()` adds its automatic rebalance only when an intent changes a plan file's membership or size: `insert`, `row`, `refill`, `archive`, or an `append`, `line` or `replace` whose file is `QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`; a `status` word, a claim, a handoff or a DELEGATION does not. The explicit `rebalance` intent is unchanged; `coord.test.mjs` gains the arms.
 accepts-when: a write of only a `CLAIMS.md` append or a `-NEXT.md` replace leaves both plan files byte-identical even when the backlog is over budget; an `insert` over budget still moves the tail. NEGATIVE CONTROL: rebalance on every write again, and the claim-only arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (BOB #29's ruling in WORK-PIPELINE §2; `node tools/mintid.mjs M0`).
-
-### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two … (whole text: the cut archive)
-order: behind the product rows, first of the ledger tooling (Bob, 2026-09-22: *process is overhead*; SCHEDULER #12): AMBIGUITY STATED, not the record over-claiming — the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), and LED-7 folds around the two rows (SCHEDULER #2 + BOB #17, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullet "The legacy residue" … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `find` returns BOTH rows for a collided id and SAYS it collided; `mintid --audit` still reads 0 breaks; every existing citation of the four still resolves. How a liar passes … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (batch 4; found by CONDUCT #7; no-renumber ruling by BOB #17).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «LED-8» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
