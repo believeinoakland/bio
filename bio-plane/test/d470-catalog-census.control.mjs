@@ -115,9 +115,15 @@ const ARMS = {
          "    findings.push(f(\n      'C-15.1',\n      'error',\n      'every Problem, in every disposition including dismissed, carries at least one recheck trigger',\n      ['author a trigger, dual-audience shape, dated when time-bound']\n    ));"),
        mustFail: [], mustNotFail: ALL, expectGreen: true },
   /* D-450 (2026-09-25): A4 keys on census + `changed`. Strip `changed` from 1.29.0, whose census is 1.28.0's
-     (a CHANGED check, nothing added) — the entry is then indistinguishable from 1.28.0 and A4 must name it. */
-  f: { files: [SUITE], label: "(F) A CHANGED-CHECK ENTRY THAT DOES NOT SAY WHAT CHANGED — `changed` dropped from 1.29.0",
-       apply: () => edit(SUITE, '              changed: ["C-41.12"] },', '              },'),
+     (a CHANGED check, nothing added) — the entry is then indistinguishable from 1.28.0 and A4 must name it.
+     RE-POINTED at c21-batch28 (CONDUCT #21), not exempted: at the union D-450's change rides 1.30.0 with 36
+     arrivals, so no recorded entry is a changed-only successor any more and stripping `changed` alone collided
+     with nothing (the arm read 9/0, NOT AS DECLARED). The arm now PLANTS the shape it was written for — a
+     changed-only successor "1.30.1" carrying 1.30.0's census — and strips `changed` from 1.30.0, so the two
+     entries are indistinguishable exactly as 1.28.0/1.29.0 were on D-450's branch, and A4 must name it. */
+  f: { files: [SUITE], label: "(F) A CHANGED-CHECK ENTRY THAT DOES NOT SAY WHAT CHANGED — `changed` dropped beside a planted changed-only successor",
+       apply: () => edit(SUITE, '              changed: ["C-41.12"] },',
+         '              },\n  "1.30.1": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f" },'),
        mustFail: [A4], mustNotFail: except(A4) },
 };
 

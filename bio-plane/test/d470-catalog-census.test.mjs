@@ -378,7 +378,6 @@ const CATALOG_CENSUS = {
      **IF ANOTHER BRANCH IN THE SAME BATCH TAKES 1.29.0, THIS ROW IS NOT THE UNION'S: CONDUCT takes the next
      number, re-reads count and digest from this suite's print on the merged tree, and CARRIES
      `changed: ["C-41.12"]` onto that entry.** */
-              changed: ["C-41.12"] },
   /* D-512 (2026-09-24, branch land/worker/D-512): 1.28.0 -> 1.29.0, MINOR — one check ADDED, none changed or removed:
      C-66.6 `REPLAY_UNVERIFIED` in SURFACE_CHECKS. Count and digest are THIS SUITE'S OWN PRINT on the item's tree over
      origin/main 9f8b69e6, never arithmetic on 461. CONDUCT re-reads it at the union if another branch adds rows. */
@@ -395,6 +394,13 @@ const CATALOG_CENSUS = {
   /* 1.29.0 (D-454, 2026-09-25, WORKER D-454, branch land/worker/D-454): ONE ARRIVAL, NO DEPARTURES — C-74.4
      CONNECTION_CHOICE_OCCURRENCE_UNNAMED. 461 -> 462, count AND digest from THIS SUITE'S OWN PRINT on the item's
      tree over origin/main 8bdf20e6. IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S. */
+
+  /* 1.30.0 AT THE UNION (CONDUCT #21, c21-batch28): every branch row above that took 1.26.0 or 1.29.0 over its own
+     base is DROPPED, its comment kept; the union's ONE new number holds all of them (REC-207's ids renumbered off
+     D-468's C-26.12 and REC-205's C-33.44), and CARRIES D-450's `changed: ["C-41.12"]` as its note above asks.
+     Count and digest are THIS SUITE'S PRINT on the merged tree. */
+  "1.30.0": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f",
+              changed: ["C-41.12"] },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -499,8 +505,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
+/* CORRECTED at c21-batch28 (CONDUCT #21): 1.29.0 -> 1.30.0, the union's one number for this batch's rows. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under
