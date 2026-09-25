@@ -298,7 +298,7 @@ cannot be both governed and excluded.
 | `docs/development/VERIFICATION.md` | process document | describes how the project works, not what the system is |
 | `docs/development/WORK-PIPELINE.md` | process document | describes how work moves from backlog to queue to archive, not what the system is |
 | `docs/development/TREE-SHARING.md` | process document | describes how the lanes share the repository and land on `main`, not what the system is |
-| `docs/development/PROCESS-DESIGN.md` | process document | describes how BIO is built (the process design, PROPOSED 2026-09-25), not what the system is |
+| `docs/development/PROCESS-DESIGN.md` | process document | states the principles of how BIO is built (PROPOSED 2026-09-25), not what the system is |
 | `docs/development/kickoffs/*.md` | kickoff | describes how a lane works; `plancheck` already checks each for the mechanisms it must carry |
 
 The reasoning behind those rows, unchanged:
