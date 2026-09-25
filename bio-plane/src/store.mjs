@@ -37714,7 +37714,10 @@ export class Store extends DurableObject {
    * ------------------------------------------------------------------ */
 
   recordCapturedLocator({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null,
-                          authorityKind = null, authority = null, actorClass = "plane", actor = null }) {
+                          authorityKind = null, authority = null, actorClass = "plane", actor = null,
+                          /* D-455: false only for a caller that writes its OWN look for this
+                             act (the monitor's), so one look is one row. */
+                          observe = true }) {
     if (!addressNorm || !captureSha) return { recorded: false };
     /* ================================================================ *
      * REC-93 — THE DOCUMENT-LEVEL OBSERVATION, AND §7'S EDGE-TRIGGERED RULE.
@@ -37784,7 +37787,7 @@ export class Store extends DurableObject {
        one, because a first look and a transition are the two things a frontier
        cannot be reconstructed without. */
     let observed = null, wrote = false;
-    if (detail !== "unchanged") {
+    if (detail !== "unchanged" && observe !== false) {
       observed = this.#observe({
         actorClass, actor,
         /* The archive fallback and a direct acquire are DIFFERENT AUTHORITIES
@@ -46914,20 +46917,28 @@ export class Store extends DurableObject {
    *  so the tick and the suite read the same rule.
    *
    *  `actorClass`/`actor` come from the QUERY STRING, where the control plane stamped them. */
-  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null } = {}) {
+  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null,
+                                 captured = null, uncaptured = null } = {}) {
     const cap = typeof baseline === "string" && /^[0-9a-f]{64}$/.test(baseline) ? baseline : null;
     switch (outcome) {
       /* The zero-payload revisit: the record's own capture, confirmed at a date. */
       case "unchanged":
         return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: "unchanged" } : null;
-      /* The substance moved. §4.1 says `result_ref` = the NEW sha — but a tick does not
-         capture the new version, so the record does not hold it, and naming it as a
-         `capture` would be the log claiming a document the record lacks. The referent is
-         the capture the look was compared against; the served sha rides in `detail`.
-         (A DESIGN GAP against §4.1, raised in D-65's report.) */
+      /* The substance moved. D-455, BOB #32's ruling of 2026-09-23 23:08Z: the tick CAPTURES
+         the served bytes and `result_ref` names the NEW capture — §4.1's own word. `captured`
+         is that capture's sha ONLY when `recordMonitorLook` has found it in the register under
+         this bundle; the caller's word for it is not enough. Without it the look keeps D-65's
+         form — the referent is the capture it was compared against and the served sha rides in
+         `detail` — and says why the bytes were not filed, because naming an uncaptured sha as a
+         `capture` would be the log claiming a document the record lacks. */
       case "changed":
-        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap,
-                       detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}` } : null;
+        if (!cap) return null;
+        if (typeof captured === "string" && /^[0-9a-f]{64}$/.test(captured) && captured !== cap)
+          return { state: "PRESENT", resultKind: "capture", resultRef: captured,
+                   detail: `changed; captured by the monitor; compared against baseline sha256 ${cap}` };
+        return { state: "PRESENT", resultKind: "capture", resultRef: cap,
+                 detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}`
+                       + (uncaptured ? `; not captured: ${String(uncaptured).slice(0, 200)}` : "") };
       case "removed":
         return { state: "LOOKED_ABSENT", detail: `gone; the source answered ${httpStatus ?? "unknown"}` };
       case "unreachable":
@@ -46945,13 +46956,39 @@ export class Store extends DurableObject {
 
   recordMonitorLook({ bundleId = null, address = null, outcome = null, baseline = null, seen = null,
                       httpStatus = null, reason = null, actorClass = "plane", actor = null,
-                      locator = null, content = undefined, contentBasis = null } = {}) {
+                      locator = null, content = undefined, contentBasis = null,
+                      captured = null, uncaptured = null } = {}) {
     if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
     /* REC-191: the type this look read the address as, kept BEFORE the observation's own
        early returns, because a look with no baseline to compare still read what the
        document is. `content` absent means the caller read nothing (a governed look). */
     if (content !== undefined) this.#recordMonitorAddressType(address, locator, content, contentBasis);
-    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason });
+    /* D-455 — THE CAPTURE A `changed` TICK FILED, CHECKED HERE RATHER THAN TAKEN. The control
+       plane holds the bytes in R2 and files them through the tick's promotion; the look names
+       them only when the REGISTER holds that sha under THIS bundle — the one fact the caller
+       cannot have produced by saying so — and it is the sha the tick saw. A capture that does
+       not resolve is not named, and the reason is stated on the row. */
+    let capturedSha = null, uncapturedWhy = uncaptured ? String(uncaptured) : null;
+    if (outcome === "changed" && captured && typeof captured === "object") {
+      const s = typeof captured.sha256 === "string" ? captured.sha256 : "";
+      const home = /^[0-9a-f]{64}$/.test(s) ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, s) : null;
+      if (s !== seen) uncapturedWhy = "the capture offered is not the sha this tick saw";
+      else if (!home || home.bundle_id !== String(bundleId))
+        uncapturedWhy = "the served bytes are not registered under this bundle";
+      else {
+        capturedSha = s;
+        /* The version at the address, filed through the ONE writer of `captured_locators`
+           (PL-10: versions of one document are indexed by its address), under the sweep's
+           authority. `observe: false` because THIS method writes the look below: one look,
+           one row. */
+        this.recordCapturedLocator({ address: locator || address, addressNorm: address, captureSha: s,
+          retrieved: typeof captured.retrieved === "string" ? captured.retrieved : new Date().toISOString().split(".")[0] + "Z",
+          via: "direct", retrievalLocator: typeof captured.retrievalLocator === "string" ? captured.retrievalLocator : null,
+          authorityKind: "sweep", authority: String(bundleId), observe: false });
+      }
+    }
+    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason,
+                                              captured: capturedSha, uncaptured: uncapturedWhy });
     if (!row) return { ok: true, written: false,
                        why: outcome === "unchanged" || outcome === "changed"
                          ? "no captured baseline, so the look has no capture to refer to and is not recorded"
@@ -46967,7 +47004,10 @@ export class Store extends DurableObject {
     }, now);
     if (bad) return { ok: false, written: false, refusal: bad };
     const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
-    return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail };
+    return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail,
+             /* D-455: the capture the row NAMES, which is the register's answer and not the caller's;
+                null with the reason when a `changed` look could not name one. */
+             ...(outcome === "changed" ? { captured: capturedSha, uncaptured: capturedSha ? null : uncapturedWhy } : {}) };
   }
 
   /* REC-191 — WHAT A TICK READ THE ADDRESS AS, for the cadence plan's contract fallback.

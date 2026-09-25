@@ -64686,7 +64686,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     authorityKind = null,
     authority = null,
     actorClass = "plane",
-    actor = null
+    actor = null,
+    /* D-455: false only for a caller that writes its OWN look for this
+       act (the monitor's), so one look is one row. */
+    observe = true
   }) {
     if (!addressNorm || !captureSha) return { recorded: false };
     const seen = this.#one(
@@ -64714,7 +64717,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       retrieved
     );
     let observed = null, wrote = false;
-    if (detail !== "unchanged") {
+    if (detail !== "unchanged" && observe !== false) {
       observed = this.#observe({
         actorClass,
         actor,
@@ -72905,24 +72908,42 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  so the tick and the suite read the same rule.
    *
    *  `actorClass`/`actor` come from the QUERY STRING, where the control plane stamped them. */
-  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null } = {}) {
+  static monitorObservationFor({
+    outcome,
+    baseline = null,
+    seen = null,
+    httpStatus = null,
+    reason = null,
+    captured = null,
+    uncaptured = null
+  } = {}) {
     const cap = typeof baseline === "string" && /^[0-9a-f]{64}$/.test(baseline) ? baseline : null;
     switch (outcome) {
       /* The zero-payload revisit: the record's own capture, confirmed at a date. */
       case "unchanged":
         return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: "unchanged" } : null;
-      /* The substance moved. §4.1 says `result_ref` = the NEW sha — but a tick does not
-         capture the new version, so the record does not hold it, and naming it as a
-         `capture` would be the log claiming a document the record lacks. The referent is
-         the capture the look was compared against; the served sha rides in `detail`.
-         (A DESIGN GAP against §4.1, raised in D-65's report.) */
+      /* The substance moved. D-455, BOB #32's ruling of 2026-09-23 23:08Z: the tick CAPTURES
+         the served bytes and `result_ref` names the NEW capture — §4.1's own word. `captured`
+         is that capture's sha ONLY when `recordMonitorLook` has found it in the register under
+         this bundle; the caller's word for it is not enough. Without it the look keeps D-65's
+         form — the referent is the capture it was compared against and the served sha rides in
+         `detail` — and says why the bytes were not filed, because naming an uncaptured sha as a
+         `capture` would be the log claiming a document the record lacks. */
       case "changed":
-        return cap ? {
+        if (!cap) return null;
+        if (typeof captured === "string" && /^[0-9a-f]{64}$/.test(captured) && captured !== cap)
+          return {
+            state: "PRESENT",
+            resultKind: "capture",
+            resultRef: captured,
+            detail: `changed; captured by the monitor; compared against baseline sha256 ${cap}`
+          };
+        return {
           state: "PRESENT",
           resultKind: "capture",
           resultRef: cap,
-          detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}`
-        } : null;
+          detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}` + (uncaptured ? `; not captured: ${String(uncaptured).slice(0, 200)}` : "")
+        };
       case "removed":
         return { state: "LOOKED_ABSENT", detail: `gone; the source answered ${httpStatus ?? "unknown"}` };
       case "unreachable":
@@ -72956,11 +72977,43 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     actor = null,
     locator = null,
     content = void 0,
-    contentBasis = null
+    contentBasis = null,
+    captured = null,
+    uncaptured = null
   } = {}) {
     if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
     if (content !== void 0) this.#recordMonitorAddressType(address, locator, content, contentBasis);
-    const row = _Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason });
+    let capturedSha = null, uncapturedWhy = uncaptured ? String(uncaptured) : null;
+    if (outcome === "changed" && captured && typeof captured === "object") {
+      const s = typeof captured.sha256 === "string" ? captured.sha256 : "";
+      const home = /^[0-9a-f]{64}$/.test(s) ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, s) : null;
+      if (s !== seen) uncapturedWhy = "the capture offered is not the sha this tick saw";
+      else if (!home || home.bundle_id !== String(bundleId))
+        uncapturedWhy = "the served bytes are not registered under this bundle";
+      else {
+        capturedSha = s;
+        this.recordCapturedLocator({
+          address: locator || address,
+          addressNorm: address,
+          captureSha: s,
+          retrieved: typeof captured.retrieved === "string" ? captured.retrieved : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z",
+          via: "direct",
+          retrievalLocator: typeof captured.retrievalLocator === "string" ? captured.retrievalLocator : null,
+          authorityKind: "sweep",
+          authority: String(bundleId),
+          observe: false
+        });
+      }
+    }
+    const row = _Store.monitorObservationFor({
+      outcome,
+      baseline,
+      seen,
+      httpStatus,
+      reason,
+      captured: capturedSha,
+      uncaptured: uncapturedWhy
+    });
     if (!row) return {
       ok: true,
       written: false,
@@ -72985,7 +73038,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     }, now);
     if (bad) return { ok: false, written: false, refusal: bad };
     const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
-    return { ok: true, written: true, seq: top ? top.m : null, at: now, state: row.state, detail: row.detail };
+    return {
+      ok: true,
+      written: true,
+      seq: top ? top.m : null,
+      at: now,
+      state: row.state,
+      detail: row.detail,
+      /* D-455: the capture the row NAMES, which is the register's answer and not the caller's;
+         null with the reason when a `changed` look could not name one. */
+      ...outcome === "changed" ? { captured: capturedSha, uncaptured: capturedSha ? null : uncapturedWhy } : {}
+    };
   }
   /* REC-191 — WHAT A TICK READ THE ADDRESS AS, for the cadence plan's contract fallback.
      A reading that determined a contract replaces whatever was held; one that could not
@@ -79155,7 +79218,11 @@ async function monitorRecordLook(stub, o) {
         locator: o.locator,
         content: o.content,
         contentBasis: o.contentBasis ?? null
-      } : {}
+      } : {},
+      /* D-455: the capture a `changed` tick filed (the store checks the register
+         before naming it), or why the served bytes were not filed. */
+      ...o.captured ? { captured: o.captured, locator: o.locator } : {},
+      ...o.uncaptured ? { uncaptured: String(o.uncaptured) } : {}
     })
   })));
   return out.answered ? out.result : { ok: false, written: false, why: "the store did not answer the observation write" };
@@ -83166,13 +83233,45 @@ var index_default = {
         afterAt: checked
       });
       const cadence = monitorCadence(fm.monitoring.frequency, graded.content);
-      const observation = await monitorLook({
+      let monCap = null;
+      if (status === "modified" && fetchedBytes && seen && seen !== baseline) {
+        const leaf = (locator.split("?")[0].split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 80) || "capture";
+        monCap = {
+          sha256: seen,
+          file: `snapshots/monitor-${seen.slice(0, 12)}-${leaf}`,
+          bytes: fetchedBytes.length,
+          content_type: fetchedCtx?.content_type || null,
+          retrieved: checked,
+          fetched_address: tickAddress,
+          taken_by: "op=monitor, from the bytes this tick fetched through the per-host governor",
+          held: false,
+          existed: null,
+          registered: false,
+          why: null
+        };
+        if (typeof env.CAPTURES?.put !== "function")
+          monCap.why = "R2 is not configured on this instance, so the served bytes could not be held";
+        else {
+          try {
+            const key = captureKey(storeName, seen);
+            monCap.existed = !!await env.CAPTURES.head(key);
+            if (!monCap.existed)
+              await env.CAPTURES.put(key, fetchedBytes, { sha256: await crypto.subtle.digest("SHA-256", fetchedBytes) });
+            monCap.held = true;
+          } catch (e) {
+            monCap.why = "the served bytes could not be written to R2: " + String(e && e.message || e).slice(0, 90);
+          }
+        }
+      }
+      const lookArgs = {
         outcome: status === "unchanged" ? "unchanged" : status === "modified" ? "changed" : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
         reason: unreachable,
         /* REC-191: only a look that READ a document says what the document is; an
            unreachable or gone source leaves the address's reading as it was. */
         ...fetchedBytes ? { content: graded.content, contentBasis: graded.basis } : {}
-      });
+      };
+      const lookAfterPromote = !!(monCap && monCap.held);
+      let observation = lookAfterPromote ? null : await monitorLook(monCap ? { ...lookArgs, uncaptured: monCap.why } : lookArgs);
       const settledQuiet = !!graded.assessment && ["identical", "unchanged", "restyled", "routine"].includes(graded.assessment.verdict);
       const flags = status === "removed" || status === "modified" && !settledQuiet;
       const out = [];
@@ -83219,14 +83318,19 @@ var index_default = {
       let text = out.join("\n");
       if (!/^\s+last_checked:/m.test(text) && /^monitoring:/m.test(text))
         text = text.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
-      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + (driveTick && driveTick.harvestable ? ` \u2014 fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed from the Drive ${driveTick.kind} in ${driveTick.address}` : "") + "\n";
-      const at = text.indexOf("## Session Log");
-      if (at < 0) text += "\n## Session Log\n\n" + entry;
-      else {
-        const nxt = text.indexOf("\n## ", at + 1);
-        const cut = nxt === -1 ? text.length : nxt + 1;
-        text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
-      }
+      const head = text;
+      const withEntry = (capLine) => {
+        const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + (driveTick && driveTick.harvestable ? ` \u2014 fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed from the Drive ${driveTick.kind} in ${driveTick.address}` : "") + (capLine ? ` \u2014 ${capLine}` : "") + "\n";
+        let t2 = head;
+        const at = t2.indexOf("## Session Log");
+        if (at < 0) t2 += "\n## Session Log\n\n" + entry;
+        else {
+          const nxt = t2.indexOf("\n## ", at + 1);
+          const cut = nxt === -1 ? t2.length : nxt + 1;
+          t2 = t2.slice(0, cut) + entry + "\n" + t2.slice(cut);
+        }
+        return t2;
+      };
       const carried = [];
       for (const [path2, v] of Object.entries(img)) {
         if (path2 === "bundle.md" || path2.startsWith("_history/")) continue;
@@ -83241,38 +83345,63 @@ var index_default = {
         } else carried.push({ path: path2, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
       }
       const liveSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(live)))].map((x) => x.toString(16).padStart(2, "0")).join("");
-      const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))].map((x) => x.toString(16).padStart(2, "0")).join("");
       const stamp = checked.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
-      const promoted = await doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
-        bundleId,
-        base: liveSha,
-        snapKey: stamp,
-        author: "bio-monitor",
-        writer: "mechanical",
-        operation: "monitor-tick",
-        /* D-436: no `group` — a tick is a REVISION, and the store keeps the group the document's creation wrote.
-           This was a literal fallback. */
-        meta: {
-          object_type: fm.object_type,
-          title: fm.title,
-          current_state: fm.current_state,
-          prior_state: fm.prior_state ?? null,
-          created: fm.created,
-          last_updated: checked
-        },
-        /* Every OTHER file carried forward untouched. promote writes a whole
-           image, so a writer that mentions one file deletes the rest: the first
-           version of this tick removed the provenance register, which took the
-           monitoring baseline with it and left an information@2 bundle with no
-           register at all. A mechanical writer silently destroying evidence is
-           the worst thing in this system, and the shape of promote made it the
-           DEFAULT behaviour of a careless caller. */
-        files: [
-          { path: "bundle.md", text, bytes: new TextEncoder().encode(text).length, sha256: textSha },
-          ...carried
-        ],
-        register: []
-      }) }));
+      const capCarried = !!(lookAfterPromote && carried.some((f2) => f2.sha256 === monCap.sha256));
+      const promoteWith = async (withCap) => {
+        const text2 = withEntry(!monCap ? null : withCap ? `the served bytes were captured as ${monCap.file} (sha256 ${monCap.sha256})` : `the served bytes (sha256 ${monCap.sha256}) were not filed: ${monCap.why}`);
+        const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text2)))].map((x) => x.toString(16).padStart(2, "0")).join("");
+        const addCap = withCap && !capCarried;
+        return doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
+          bundleId,
+          base: liveSha,
+          snapKey: stamp,
+          author: "bio-monitor",
+          writer: "mechanical",
+          operation: "monitor-tick",
+          /* D-436: no `group` — a tick is a REVISION, and the store keeps the group the document's creation wrote.
+             This was a literal fallback. */
+          meta: {
+            object_type: fm.object_type,
+            title: fm.title,
+            current_state: fm.current_state,
+            prior_state: fm.prior_state ?? null,
+            created: fm.created,
+            last_updated: checked
+          },
+          /* Every OTHER file carried forward untouched. promote writes a whole
+             image, so a writer that mentions one file deletes the rest: the first
+             version of this tick removed the provenance register, which took the
+             monitoring baseline with it and left an information@2 bundle with no
+             register at all. A mechanical writer silently destroying evidence is
+             the worst thing in this system, and the shape of promote made it the
+             DEFAULT behaviour of a careless caller. */
+          files: [
+            { path: "bundle.md", text: text2, bytes: new TextEncoder().encode(text2).length, sha256: textSha },
+            ...carried,
+            ...addCap ? [{ path: monCap.file, blobSha: monCap.sha256, sha256: monCap.sha256, bytes: monCap.bytes }] : []
+          ],
+          register: addCap ? [{ sha256: monCap.sha256, path: monCap.file, encoding: "binary", bytes: monCap.bytes }] : []
+        }) }));
+      };
+      let promoted = await promoteWith(lookAfterPromote);
+      if (lookAfterPromote && promoted.answered && promoted.result && promoted.result.ok === false) {
+        const r = promoted.result;
+        monCap.why = `the promotion filing them was refused (${r.reason || r.code || "no reason given"}${r.detail ? `: ${String(r.detail).slice(0, 160)}` : ""})`;
+        promoted = await promoteWith(false);
+      } else if (lookAfterPromote && promoted.answered && promoted.result?.ok) monCap.registered = true;
+      if (lookAfterPromote && !promoted.answered)
+        monCap.why = "the store did not answer the promotion that would have filed them";
+      if (lookAfterPromote) {
+        observation = await monitorLook(monCap.registered ? { ...lookArgs, captured: {
+          sha256: monCap.sha256,
+          retrieved: monCap.retrieved,
+          retrievalLocator: monCap.fetched_address
+        } } : { ...lookArgs, uncaptured: monCap.why });
+        if (monCap.registered && !(observation && observation.captured === monCap.sha256)) {
+          monCap.registered = false;
+          monCap.why = observation && observation.uncaptured || "the observation log did not name the capture";
+        }
+      }
       if (!promoted.answered) return storeSilent("monitor/promote");
       return json({
         ok: !!promoted.result?.ok,
@@ -83292,6 +83421,22 @@ var index_default = {
         assessment_basis: graded.basis,
         cadence,
         observation,
+        /* D-455: on a `changed` tick, the capture of the served bytes — its sha, the file it was
+           filed as, whether it was held and registered, and why not when it was not. Null on
+           every other tick, which captures nothing. */
+        capture: monCap ? {
+          sha256: monCap.sha256,
+          file: monCap.registered ? monCap.file : null,
+          bytes: monCap.bytes,
+          content_type: monCap.content_type,
+          retrieved: monCap.retrieved,
+          fetched_address: monCap.fetched_address,
+          taken_by: monCap.taken_by,
+          held: monCap.held,
+          existed: monCap.existed,
+          registered: monCap.registered,
+          why: monCap.registered ? null : monCap.why
+        } : null,
         /* D-472: for a Drive-linked document, which address this tick actually
            fetched and the three facts the plane derived to compose it. Absent for
            every other document, where the locator is the address. */
