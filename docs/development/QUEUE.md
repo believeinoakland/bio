@@ -867,7 +867,7 @@ accepts-when: a revision restating a different `created` is refused by name, and
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-615's worker).
 
 ### D-712 · integrated — **THE PUBLISHED CASE PAGE TELLS EVERY STRANGER A SIGNED, RATIFIED CASE IS UNSIGNED: pubCaseHtml's "The case document · signed by …" line reads `c.document`, which op=publishedcase NEVER serves (Store.publishedCase builds state.document through #caseEditionState and its return omits it), so it prints "This case edition's own document has not been signed yet".** Measured by UI-121's worker: data-casedoc="none" on five cases each signed through op=caseratify. publishedcase.test.mjs's fixture carries a `document` key the live op does not (D-173's class). — owner RECORD.
-status: integrated — SCHEDULER #24 11:49Z: tip 6e1e4669 (on UI-121 6ceb9b9b), GATE 385/385 GREEN FULLREUSE (21884 assertions; excludes 3 untallied), tree 0d63f725; publishedCase returns document (I3 additive); five stranger rows read signed; fixture anchored to the live wire; RIDES WITH UI-121; minted D-731 (the Verify-this-hash button answers NOT PUBLISHED for a ratified doc), design with BOB #36
+status: integrated — CONDUCT #23 11:48Z: worker report — tip 6e1e4669 (on UI-121 6ceb9b9b), GATE 385/385 GREEN FULLREUSE (21884 assertions); I3 additive document on op=publishedcase; UI-121 + D-712 ride batch30 together (BOB #36 hold satisfied); minted D-731
 order: spawned directly, ahead of the backlog: the record claiming LESS than it holds on the one page strangers read is a trustworthiness defect (CLAUDE.md §2, "less narrative" binds us first) and a correction to just-landed work (SCHEDULER #24, 2026-09-25)
 milestone: M10
 interface: I3 — additive `document` on op=publishedcase; the integrator classifies.
