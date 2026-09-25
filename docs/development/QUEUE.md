@@ -1012,7 +1012,7 @@ accepts-when: a divergence whose anchor was written before a later-keyed edit na
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-700's worker).
 
 ### D-719 · integrated — **THE BUNDLE VIEW'S HISTORY LIST (src/setup.mjs, #b-history) SORTS ENTRIES BY SNAP KEY, so a member reads a bundle's history in an order other than the one it was written in, since D-700 made write order the record's.** Found by D-700's worker. — owner UI.
-status: integrated — CONDUCT #23 12:29Z: worker report — tip 8ab99e48 (on D-700 50116ded), GATE 388/388 GREEN FULLREUSE (21912 assertions); setup history list in write order; no IC (served page); minted D-732; rides batch30 after D-700 (keep both 3.write-order amendments with D-718)
+status: integrated — SCHEDULER #24 12:37Z: tip 8ab99e48 (on D-700 50116ded), GATE 388/388 GREEN FULLREUSE (21912 assertions; excludes 3 untallied), tree da080bc5; setup.mjs historyOrder (same predicate as historyWriteOrder), #b-history states which order it shows; reproduced first 2/6; minted D-732 (spawned)
 order: after D-718, the same write-order field; a surface showing an order the record does not hold (SCHEDULER #24, 2026-09-25)
 milestone: M7
 interface: none — reads D-700's additive `seq`.
@@ -1165,6 +1165,17 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
+### D-732 · running — **THE DOCUMENT PAGE (civicos-ui/app.html, stratum 4) LISTS A BUNDLE'S HISTORY BY SNAP KEY under "Everything that has ever happened to this …": parseLog sorts _history/promotion_*.json by path and "Earlier revisions, kept" sorts _history/bundle_*.md by key, though D-700 made write order the record's.** D-719's class on the member surface. Found by D-719's worker. — owner UI.
+order: spawned directly, stacked on D-719: a surface showing an order the record does not hold, under a heading that claims the whole history (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 12:37Z: spawned, stacked on land/worker/D-719 @ 8ab99e48
+milestone: M7
+interface: none — reads D-700's additive `seq`.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, write order, as D-700 amended it).
+depends-on: none (stacked on land/worker/D-719 @ 8ab99e48, integrated, on D-700 @ 50116ded).
+scope: order both lists by the image's _history/manifest.json seq when every entry carries a distinct integer one (historyOrder/historyWriteOrder's predicate), else by key, and state which order is shown, as D-719 did for #b-history.
+accepts-when: a bundle whose keys run against write order lists both its promotions and its kept revisions in write order, and the page says so (moves: a history shown out of write order). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-719's worker).
+
 ### D-645 · queued — **`nc-mk4` arms machinewide/noshare/sharewide, aiscope: ANCHOR DRIFT — three match 0; aiscope matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-644, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -1187,16 +1198,6 @@ added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-647 · queued — **`nc-rec114` arms b, c, e: ANCHOR DRIFT — match 2 each, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-646, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
-milestone: M0
-interface: none (test-only).
-design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
-depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
-scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
-accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
-added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
-
-### D-648 · queued — **`nc-rec118` arms b, d: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-order: after D-647, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
 design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
