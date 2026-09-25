@@ -9,26 +9,6 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
-### M0-186 · queued — **A BATTERY RUN BY HAND OUTSIDE THE GATE IS UNPINNED: nothing records which `origin/main` it measured.** Found by M0-173's worker (D), the half M0-173 left. — owner M0.
-order: after M0-185, behind the product rows (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a gate measures ONE tree), with M0-173's coord pin as the precedent.
-depends-on: M0-173.
-scope: a hand-run battery prints and records the `origin/main` (and coord) sha it read, as M0-173's gate does.
-accepts-when: a hand run's completion line names the main sha (the measured failure it moves: an unpinned hand verdict). NEGATIVE CONTROL: drop the pin and the provenance arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### D-532 · queued — **`bio-plane/test/d280-strengthbar.control.mjs` ARM C2 HAS BEEN STALE SINCE CASE-2 AND UNTRACKED: three of its mustFail entries name d280's §3 shapes, which no longer exist; REC-141 reported it on 2026-09-19 (the note at d280-strengthbar.test.mjs:4) and no row was made.** Id minted by its finder (via CONDUCT #20 21:21Z). — owner RECORD (the control).
-order: after M0-186, behind the product rows: a hand-run driver, no battery effect (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` "The negative-control register" (correct superseded tests, never exempt them).
-depends-on: none.
-scope: drop the three stale mustFail entries naming d280's §3 shapes, with a comment saying why; keep the severedhomes arm; re-run the driver.
-accepts-when: the control reports every arm as declared (the measured failure it moves: C2 reading NOT as declared). NEGATIVE CONTROL: the driver's own arms, recorded on its line.
-added: 2026-09-24 · SCHEDULER #19 (placed; `D-532` minted by its finder).
-
 ### M0-189 · queued — **THE CONTROL REGISTER'S GRAMMAR IS INVISIBLE TO THE WRITER: `readControl` returns `arms: null` or UNDETERMINED when an arm mark is not a lowercase parenthesised ordinal or the NEGATIVE CONTROL marker appears twice, and nothing says which.** Found by M0-178's worker (F3). — owner M0.
 order: after M0-186, behind the product rows (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:02Z)
 milestone: M0

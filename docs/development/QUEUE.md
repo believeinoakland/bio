@@ -909,8 +909,8 @@ scope: refuse each of the five by name in promote's action block, as D-695 did f
 accepts-when: each of the five is refused by name at op=promote and nothing it forbids is saved (moves: five forbidden values saved); an absent counterparty still saves and the audit still reports it. NEGATIVE CONTROL: remove one refusal and its arm saves again, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-695's worker).
 
-### M0-171 · running — **`versions.test.mjs` HARVESTS SCHEMA TABLES WITH A LOOSE PATTERN (`/CREATE TABLE IF NOT EXISTS (\w+)/g`, ~line 719), so it still counts the prose phantom `would` that M0-155 removed from the census.** Found by M0-155's worker. — owner M0.
-status: running — SCHEDULER #24 11:10Z: spawned from main 95fe7bc7
+### M0-171 · integrated — **`versions.test.mjs` HARVESTS SCHEMA TABLES WITH A LOOSE PATTERN (`/CREATE TABLE IF NOT EXISTS (\w+)/g`, ~line 719), so it still counts the prose phantom `would` that M0-155 removed from the census.** Found by M0-155's worker. — owner M0.
+status: integrated — SCHEDULER #24 12:02Z: tip 4a13c257 on main 95fe7bc7, GATE 79/79 GREEN TARGETED (6108 assertions), tree 6e6a9daf; versions.test harvest uses the \s*\( tail and is PINNED to the schema.mjs share of status.mjs tableSites (114=114); measured: the loose pattern did not count `would` on this tree (the -- line filter kept it out); whole census 123 vs status.mjs comments 116 UNDETERMINED (M0-181)
 order: after M0-160, beside the probe-accuracy rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 17:07Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0
 interface: none.
@@ -1064,7 +1064,8 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-637 · queued — **`d85-surface-run.control` arm no-lens-at-open: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+### D-637 · running — **`d85-surface-run.control` arm no-lens-at-open: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: running — SCHEDULER #24 12:02Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
 order: after D-636, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
@@ -1076,6 +1077,26 @@ added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-638 · queued — **`dec65-strength-reach.control` arm a2: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-637, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
+depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
+scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
+accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
+added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
+### D-639 · queued — **`fence-e2e.control` arm (3): ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+order: after D-638, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
+depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
+scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
+accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
+added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
+### D-640 · queued — **`m025-anchor-witness.control` arm T1: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+order: after D-639, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
 design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
