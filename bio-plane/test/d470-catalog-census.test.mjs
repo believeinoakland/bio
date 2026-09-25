@@ -339,6 +339,8 @@ const CATALOG_CENSUS = {
      tree — the figure below is this branch's catalogue and is not the union's. */
 
   /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
+  /* 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): ELEVEN ARRIVALS, NO DEPARTURES — C-94.1-11, LIFECYCLE_CHECKS. 466 -> 477, count AND digest from THIS SUITE'S OWN PRINT on the item's tree over origin/main 964da679. IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, CONDUCT takes the next number and re-reads the census from this suite's print on the merged tree. */
+  "1.30.0": { count: 477, digest: "b06cb8dce8d8ce12f4d719b0b8e44e8d1f78c7501fb1b803126870967bcb39f4" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -436,8 +438,12 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
+/* CORRECTED 2026-09-25 by D-147, never exempted: 1.29.0 -> 1.30.0. The catalogue gained C-94.1-11
+   (LIFECYCLE_CHECKS), so the catalogue under the stamp moved and the stamp moved with it; the old literal
+   named 1.29.0's catalogue, which this tree no longer holds. Edited by hand in the commit that moves the
+   constant, as the note above requires. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under

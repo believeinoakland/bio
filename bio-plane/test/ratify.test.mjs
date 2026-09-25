@@ -237,7 +237,8 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.29.0)");
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.30.0)");
+/* CORRECTED 2026-09-25 by D-147: 1.29.0 -> 1.30.0. Eleven checks arrived (C-94.1-11, LIFECYCLE_CHECKS), so CATALOG_VERSION took the MINOR bump the census arm demands; the stamp a ratification records moved with it. The old literal was right for the old catalogue, and wrong for this one. */
 /* CORRECTED 2026-09-24 (D-491): 1.23.0 -> 1.24.0, and CORRECTED rather than exempted for the
    reason every note above says — the old literal named a catalogue that no longer exists once
    C-28.16 joined CAPTURE_REQUEST_CHECKS (IC-276). FOUND BY ASKING WHO ELSE READS THE CONSTANT
