@@ -513,8 +513,8 @@ scope: op=leadread and frontier level=internet carry `vocabulary: { states: <the
 accepts-when: the surface renders every state from the plane's vocabulary with no client mirror (moves: a mirrored vocabulary). NEGATIVE CONTROL: drop `vocabulary` from the op and the surface's state arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-194's worker).
 
-### D-675 · running — **op=content REFUSES THE PLANE'S OWN `store=` PARAMETER AS A PREDICATE: `op=content&id=<row>&store=bio` answers FIXED_KEY_ONLY rejected ["store"], so op=content cannot be called with store=scratch — which CLAUDE.md §5 requires on EVERY live-verification call, leaving the choice between touching the real record and not verifying.** Driven in miniflare by D-419's worker (minted on land/worker/D-419). — owner RECORD.
-status: running — SCHEDULER #23 08:48Z: spawned from main
+### D-675 · integrated — **op=content REFUSES THE PLANE'S OWN `store=` PARAMETER AS A PREDICATE: `op=content&id=<row>&store=bio` answers FIXED_KEY_ONLY rejected ["store"], so op=content cannot be called with store=scratch — which CLAUDE.md §5 requires on EVERY live-verification call, leaving the choice between touching the real record and not verifying.** Driven in miniflare by D-419's worker (minted on land/worker/D-419). — owner RECORD.
+status: integrated — SCHEDULER #23 09:50Z: tip 977da39d on 5e8a65a8, GATE 386/386 GREEN FULLREUSE (21879 assertions), tree 5f1ca597; the generic DO forward strips store beside token and op, so op=content takes store=scratch; swept the 4 whole-query-set consumers; makes D-419s contentCrop strip redundant (harmless) at union
 order: at the head, spawned directly — a verification-safety defect on main (a live check forced into `bio`) outranks features (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — op=content (and any other fixed-key read found) admits store=; the integrator classifies.
@@ -651,6 +651,17 @@ depends-on: none (stacked on land/worker/D-340 @ fdf6c8c9, integrated — navcha
 scope: op=links and navchanges pass every row through the viewer predicate before grouping or counting; counts move only with visible rows; sweep the other link-family reads for the same.
 accepts-when: a member outside a gated bundle's project sees neither its shas nor its addresses from either op, nor any count that moves with them (moves: disclosure). NEGATIVE CONTROL: a member outside a gated bundle's project calls both ops and must see neither its shas nor its addresses, nor any count that moves with them — drop the filter and it fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
+
+### D-688 · running — **`LIFECYCLE_TEXT_UNWRITABLE` (D-147, C-94.11) IS TWO CONDITIONS UNDER ONE CODE: C-94.11's sentence about exemptions and citation is FALSE for the token-field case (e.g. stage=Appeal), so a member is told something untrue.** Found at batch29's union figures pass (CONDUCT #22); the union declares it in arm G's MULTI_SITE_CANDIDATES and raises CEILING.multiSiteCodes 59->60 for it. — owner RECORD.
+status: running — SCHEDULER #23 09:50Z: spawned from main 95fe7bc7
+order: after D-668, with the one-code-one-condition rows (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 — a new named code for the token-field case; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one code, one condition), with `docs/development/VERIFICATION.md` (arm G).
+depends-on: none (D-147 done, on main 95fe7bc7).
+scope: split the token-field case into its own code, catalogue row and translation; remove LIFECYCLE_TEXT_UNWRITABLE from MULTI_SITE_CANDIDATES and lower CEILING.multiSiteCodes back to 59. Optionally judge the five QUOTE_* candidates (same has()/refusal() shape the union judged CLOSED for D-147's nine) and lower the ceiling for each closed.
+accepts-when: stage=Appeal answers its own code whose words are true of it, through the op (moves: a false sentence). NEGATIVE CONTROL: route the token-field case back to C-94.11 and arm G fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch29 finding).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

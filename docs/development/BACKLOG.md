@@ -126,16 +126,6 @@ scope: C-4.2 passes an undeclared in-bytes edge with D-546's sentence only when 
 accepts-when: the corroborated twin passes with the sentence and the uncorroborated one fails (moves: no reading for an in-bytes undeclared edge). NEGATIVE CONTROL: a fixture carrying a backdated undeclared edge with no record corroboration must fail C-4.2 by name, and the corroborated twin must pass with the sentence.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker; placed on BOB #35's 08:00Z ruling).
 
-### D-688 · queued — **`LIFECYCLE_TEXT_UNWRITABLE` (D-147, C-94.11) IS TWO CONDITIONS UNDER ONE CODE: C-94.11's sentence about exemptions and citation is FALSE for the token-field case (e.g. stage=Appeal), so a member is told something untrue.** Found at batch29's union figures pass (CONDUCT #22); the union declares it in arm G's MULTI_SITE_CANDIDATES and raises CEILING.multiSiteCodes 59->60 for it. — owner RECORD.
-order: after D-668, with the one-code-one-condition rows (SCHEDULER #23, 2026-09-25)
-milestone: M10
-interface: I3 — a new named code for the token-field case; the integrator classifies.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one code, one condition), with `docs/development/VERIFICATION.md` (arm G).
-depends-on: D-147 (integrated, rides batch29).
-scope: split the token-field case into its own code, catalogue row and translation; remove LIFECYCLE_TEXT_UNWRITABLE from MULTI_SITE_CANDIDATES and lower CEILING.multiSiteCodes back to 59. Optionally judge the five QUOTE_* candidates (same has()/refusal() shape the union judged CLOSED for D-147's nine) and lower the ceiling for each closed.
-accepts-when: stage=Appeal answers its own code whose words are true of it, through the op (moves: a false sentence). NEGATIVE CONTROL: route the token-field case back to C-94.11 and arm G fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch29 finding).
-
 ### D-667 · queued — **ELEVEN MORE SUITES CAN ABORT A FIXTURE WITHOUT REPORTING WHICH SECTIONS NEVER RAN: four print "FIXTURE ABORTED" (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding) and seven reach `process.exit` through a bail/abort/die const (case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question, d442-publish-writes-nothing, rec170-manifest-pair).** D-548 and D-564 fixed eight; this is the sweep's remainder. Found by D-564's worker (minted on land/worker/D-564). — owner M0 (the suites).
 order: after D-628, behind the head's product corrections: a process row that cuts false-green risk in the gate, placed near the head but never above product (CLAUDE.md §2, Bob 2026-09-22; SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -1091,4 +1081,24 @@ design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a 
 depends-on: M0-158.
 scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
 accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
+order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
+depends-on: none.
+scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
+accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-149 · queued — **A PUBLISHED `limit` HAS ONE GUARD: only `bounds.test` checks it; `meaning-bounds` grades the row source, not whether an op in the BOUNDED roster publishes its bound.** Found by D-479's worker. — owner M0.
+order: after M0-142, the same suite (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative-control register).
+depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
+scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
+accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
