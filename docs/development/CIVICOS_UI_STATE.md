@@ -50,6 +50,17 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v130 (provisional; CONDUCT numbers at the union), 2026-09-25 session, thread UI, UI-118 (a WORKER of SCHEDULER #23,
+cloud session). Landed on `land/worker/UI-118` (base `origin/main` @ `95fe7bc7`), in the commit that carries this entry.
+SURFACE: **the exported review copy carries the date's tie beside its Date line.** UI-69's file stamped every page with
+`op=reviewcopy`'s `inband` alone, so when D-573's `last_change.undetermined_within` was non-empty the file stated one
+last change the record cannot settle. `rvcTieOf` reads `last_change` from the same fresh answer the pages are drawn
+from and `rvcInbandHtml` draws `last_change.stated` verbatim beneath the Date line on every page; nothing when the
+tied list is empty. No file is made when the answer does not say whether its date is tied, or when the tie's sentence
+would name a recipient as a comment's author (§6A.3 point 3(a); PROVISIONAL, reported to BOB #35). Suite
+`civicos-ui/test/review-copy-tie.test.mjs` (11/0, the real plane in miniflare with one re-stamping door); control
+`review-copy-tie.control.mjs` 6/6 AS DECLARED; UI-69's `review-copy.control.mjs` arm (M) re-anchored, 19/19.
+
 v129, 2026-09-25 session, thread UI, D-617 (a WORKER of SCHEDULER #22, cloud session). Landed on
 `land/worker/D-617`, STACKED on `land/worker/UI-108` @ `80594009`, in the commit that carries this entry; numbered by
 CONDUCT #22 at c22-batch29, which landed v120–v129 together. SURFACE: **the document

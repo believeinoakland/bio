@@ -25930,6 +25930,30 @@ const RVC_EXPORT_AT_THE_ACT = "Exporting makes a file of this copy on this devic
 const RVC_NO_QUARTET = "The record did not answer this copy with all four of its in-band marks (its hash, its date, "
   + "its author and both floors), and a copy may not leave without them. No file was made.";
 const RVC_NOT_DELIVERED = "This browser did not accept the file, so none was made. Nothing left this page.";
+/* UI-118 · THE DATE'S TIE, BESIDE THE DATE (§6A.3 point 1, D-573, BOB #34
+   2026-09-25 01:05Z). When the copy's last change and another act fall inside
+   one second and one of them was stamped only to the second, the plane keeps
+   its pick as the one in-band date and names the other in
+   `last_change.undetermined_within`, and `last_change.stated` says the order
+   between them is undetermined. A file that carried the date without that
+   sentence would state a single last change the record cannot settle. So
+   every page's Date line carries `stated` VERBATIM whenever the tied list is
+   non-empty, and nothing when it is empty. The surface words none of it.
+   Two answers make NO file rather than a date that claims more than the
+   record holds, or words that are not the record's:
+   - the answer does not say whether the date is tied (`last_change` absent,
+     its tied list not a list, or a tie with no sentence);
+   - the sentence would name a recipient as the author of a comment. §6A.3
+     point 3(a) (BOB #35) keeps a recipient's name and words inside the
+     instance; a recipient's acknowledgement is already on the file's first
+     page, a recipient's comment is not. PROVISIONAL, reported to BOB: the
+     surface does not re-word the plane's sentence to drop the name. */
+const RVC_TIE_UNSAID = "The record did not say whether this copy's date settles which change came last, "
+  + "and a copy may not leave carrying a date the record may not hold. No file was made.";
+const RVC_TIE_NAMES_RECIPIENT = "The date of this copy's last change is tied with another change the record "
+  + "cannot order, and the record's own sentence saying so names a person this copy was addressed to as the "
+  + "author of a comment. A file does not carry the names or words of the people a copy was given to, and "
+  + "may not carry the date without that sentence. No file was made.";
 
 /* All four keys present, and the hash a real one. A date or author the record
    answers as null is kept, and said as undetermined — never made up here. */
@@ -25940,13 +25964,24 @@ function rvcQuartetOf(c){
   if(!("date" in q) || !("author" in q) || !q.floors || typeof q.floors !== "object") return null;
   return q;
 }
+function rvcTieOf(c){
+  const lc = c && c.last_change;
+  if(!lc || typeof lc !== "object" || !Array.isArray(lc.undetermined_within)) return { refusal: RVC_TIE_UNSAID };
+  const tied = lc.undetermined_within;
+  if(!tied.length) return { stated: null };
+  if(typeof lc.stated !== "string" || !lc.stated) return { refusal: RVC_TIE_UNSAID };
+  if([lc].concat(tied).some((a) => a && a.kind === "comment" && a.by_kind === "recipient"))
+    return { refusal: RVC_TIE_NAMES_RECIPIENT };
+  return { stated: lc.stated };
+}
 function rvcFloorText(g){ return (typeof g === "string" && g) ? g : "none declared"; }
-function rvcInbandHtml(q){
+function rvcInbandHtml(q, tie){
   const fl = q.floors || {};
   return '<div class="rvx-inband" data-rvx-inband>'
     + '<div><b>Hash</b> <span class="mono">' + esc(q.hash.algorithm || "") + ':' + esc(q.hash.sha256) + '</span>, over '
       + esc(q.hash.over || "") + ' (' + esc(String(q.hash.bytes)) + ' bytes).</div>'
     + '<div><b>Date</b> <span class="mono">' + esc(q.date == null ? "not stated by the record" : q.date) + '</span>, the copy&rsquo;s last change.</div>'
+    + (tie ? '<div class="rvx-tie" data-rvx-tie>' + esc(tie) + '</div>' : '')
     + '<div><b>Author</b> <span class="mono">' + esc(q.author == null ? "not stated by the record" : q.author) + '</span>.</div>'
     + '<div><b>Floors</b> ' + esc(AXIS_SHORT.capture) + ': ' + esc(rvcFloorText(fl.capture)) + ' &middot; '
       + esc(AXIS_SHORT.connection) + ': ' + esc(rvcFloorText(fl.connection)) + '. ' + esc(fl.detail || "") + '</div>'
@@ -25955,8 +25990,8 @@ function rvcInbandHtml(q){
 }
 /* THE PAGES. Each is one `<section>`, and `rvcExportPage` is the only way to
    make one, so a page cannot be drawn without its stamp. */
-function rvcExportPage(q, n, inner){
-  return '<section class="rvx-page" data-rvx-page="' + n + '">' + rvcInbandHtml(q) + inner + '</section>';
+function rvcExportPage(q, tie, n, inner){
+  return '<section class="rvx-page" data-rvx-page="' + n + '">' + rvcInbandHtml(q, tie) + inner + '</section>';
 }
 function rvcExportAcksHtml(c){
   const sa = (c && c.statement_acknowledgements) || {};
@@ -25966,7 +26001,7 @@ function rvcExportAcksHtml(c){
     + (sa.truncated === true ? '<p class="subj-note">Only the first acknowledgements are shown; the record holds more.</p>' : '')
     + (typeof sa.withheld_stated === "string" && sa.withheld_stated ? '<p class="subj-note">' + esc(sa.withheld_stated) + '</p>' : '');
 }
-function rvcExportPages(c, q){
+function rvcExportPages(c, q, tie){
   const a = c.authored || {};
   const pages = [];
   pages.push('<div class="rvc-marking">' + esc(c.marking || "") + '</div>'
@@ -25986,18 +26021,21 @@ function rvcExportPages(c, q){
   const fs = Array.isArray(c.findings) ? c.findings : [];
   if(!fs.length) pages.push('<h2 class="sec">The findings it rests on</h2><div class="q-gap">This draft names no findings yet.</div>');
   for(const f of fs) pages.push('<h2 class="sec">A finding it rests on</h2>' + rvcFindingHtml(f));
-  return pages.map((inner, i) => rvcExportPage(q, i + 1, inner));
+  return pages.map((inner, i) => rvcExportPage(q, tie, i + 1, inner));
 }
 /* THE FILE: standalone, no script, its own styles, one section per page. */
 function rvcExportFile(c){
   const q = rvcQuartetOf(c);
   if(!q) return null;
-  const pages = rvcExportPages(c, q);
+  const tie = rvcTieOf(c);
+  if(tie.refusal) return { refusal: tie.refusal };
+  const pages = rvcExportPages(c, q, tie.stated);
   const name = "review-copy-" + String(c.draft || "draft").replace(/[^A-Za-z0-9._-]/g, "") + "-" + q.hash.sha256.slice(0, 12) + ".html";
   const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>' + esc(c.marking || "Review copy") + '</title>'
     + '<style>body{font:15px/1.5 Georgia,serif;margin:0;color:#111;background:#fff}'
     + '.rvx-page{padding:24px 28px;border-top:2px solid #000;break-before:page}.rvx-page:first-of-type{break-before:auto}'
     + '.rvx-inband{border:1px solid #000;padding:10px 12px;margin:0 0 18px;font-size:13px}'
+    + '.rvx-tie{margin:4px 0 0 1.5em;font-style:italic}'
     + '.rvx-quartet{white-space:pre-wrap;word-break:break-all;font-size:10.5px;margin:8px 0 0}'
     + '.mono{font-family:ui-monospace,Menlo,monospace}.rvc-marking{font-weight:700;border:2px solid #000;padding:8px 10px}'
     + '.card{border:1px solid #bbb;padding:8px 10px;margin:8px 0}.subj-note{color:#444}.q-gap{font-style:italic}</style></head><body>'
@@ -26026,6 +26064,7 @@ async function rvcExport(){
     RVC.copy = c;
     const f = rvcExportFile(c);
     if(!f) RVC.exportRefusal = { detail: RVC_NO_QUARTET };
+    else if(f.refusal) RVC.exportRefusal = { detail: f.refusal };
     else if(!rvcDeliverFile(f.name, f.html)) RVC.exportRefusal = { detail: RVC_NOT_DELIVERED };
     else RVC.exported = { name: f.name, pages: f.pages, sha256: f.sha256 };
   }

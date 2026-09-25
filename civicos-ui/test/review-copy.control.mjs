@@ -122,8 +122,10 @@ const ARMS = [
   /* ---- UI-69: the export (section 6c) and the one way out (section 7) ---- */
   { name: "(M) the quartet dropped from one page", declared: "RED", names: ["EVERY PAGE CARRIES THE QUARTET"],
     mustNotFail: ["THE STATEMENT AT THE ACT", "REACH: the file has"],
-    edits: [["  return pages.map((inner, i) => rvcExportPage(q, i + 1, inner));",
-             "  return pages.map((inner, i) => i === 1 ? '<section class=\"rvx-page\" data-rvx-page=\"' + (i + 1) + '\">' + inner + '</section>' : rvcExportPage(q, i + 1, inner));"]] },
+    /* CORRECTED 2026-09-25 by UI-118: `rvcExportPage` now takes the date's tie beside the quartet, so the old anchor
+       matched nothing and the arm DID NOT ARM (it read GREEN, 18/19). The break is the same: page 2 drawn bare. */
+    edits: [["  return pages.map((inner, i) => rvcExportPage(q, tie, i + 1, inner));",
+             "  return pages.map((inner, i) => i === 1 ? '<section class=\"rvx-page\" data-rvx-page=\"' + (i + 1) + '\">' + inner + '</section>' : rvcExportPage(q, tie, i + 1, inner));"]] },
   { name: "(N) the stamp re-serialised here", declared: "RED", names: ["EVERY PAGE CARRIES THE QUARTET"],
     mustNotFail: ["IN WORDS TOO"],
     edits: [["data-rvx-quartet>' + esc(JSON.stringify(q, null, 1))", "data-rvx-quartet>' + esc(JSON.stringify(q))"]] },
