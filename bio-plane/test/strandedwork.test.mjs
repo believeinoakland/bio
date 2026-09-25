@@ -89,6 +89,9 @@
  *        "a coord finding is REPORTED under --local…" and "…plancheck --local exits 0 over a tree
  *        whose only defect is coord's state": 89 pass / 2 fail; restored by `cp`, sha256
  *        95c986df… before and after, `cmp` identical; the plant took in both runs.
+ *   (A11) D-569, 2026-09-25, RUN BY HAND: plancheck's UNPUSHED routing reverted to `fail()` unconditionally
+ *        (the defect) -> "D-569: plancheck routes a NOTE grade to notes, not to fail()" fails by name, alone;
+ *        93 pass / 1 fail, exit 1 (baseline 94 / 0). Restored by `cp`, `cmp` identical, sha256 4f624ba0… before and after.
  *
  * M0-49 ADDS TWO ARMS TO SECTION 10, AND THEY ARE DRIVEN BY HAND RATHER THAN BY THE DRIVER
  * ABOVE, because their subject is a COMMITTED document and `g(REPO, "show", "HEAD:…")` cannot
@@ -464,6 +467,19 @@ section("9 — THE GATE. `plancheck` must actually RUN this and must NOT fail on
     /says nothing[\s\S]{0,160}STRANDED WORK arm is the estate-wide one/.test(src), true);
   t("...and the two scopes are DIFFERENT words, so a reader cannot read one as the other",
     src.includes("SCOPE: ESTATE-WIDE") && src.includes("SCOPE: THIS CHECKOUT ONLY"), true);
+
+  /* D-569: THE LOCAL-HEAD ARM'S GRADE IS ITS OWN TEXT'S — "a failure on main and a note anywhere else". It called
+     `fail()` on every branch, so no worker's pushed `land/` branch could read 0 fail. The grade is `unpushedGrade`
+     (driven over real git in `unpushedgrade.test.mjs`, which stays cacheable because it does not name this gate);
+     what only the SOURCE can show, for the reason stated above, is that the gate ROUTES by it. Read from the arm's
+     own span, so a `fail(` elsewhere in plancheck is not this arm's. */
+  const arm = src.slice(src.indexOf('const ahead = sh("git rev-list --count origin/main..HEAD")'),
+                        src.indexOf("warn(`local main is behind origin/main"));
+  t("D-569: the UNPUSHED arm's span was found", arm.length > 200 && arm.includes("UNPUSHED —"), true);
+  t("D-569: plancheck grades UNPUSHED by strandedwork's unpushedGrade",
+    /import\("\.\/strandedwork\.mjs"\)/.test(arm) && /unpushedGrade\(\{ branch, head \}\)/.test(arm), true);
+  t("D-569: plancheck routes a NOTE grade to notes, not to fail()",
+    /if \(graded\.grade === "note"\) notes\.push\(/.test(arm) && !/^\s*fail\(`UNPUSHED/m.test(arm), true);
 }
 
 /* ========================================================================== */
