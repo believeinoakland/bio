@@ -6661,3 +6661,14 @@ depends-on: none.
 scope: re-key COORD_BLOCK/DEFS to coord.mjs's current import and export lines; done in D-535's landing.
 accepts-when: statepaths.control arm b reports ARMED and fails by name on the merged tree. NEGATIVE CONTROL: the arm itself.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-312's worker).
+
+### D-677 · done — **THE CONTENT FRAMEWORK'S STATUS BULLET FOR D-454 IS SPLICED MID-SENTENCE INTO D-517's: "that figure is CONFIRMED [D-454's bullet] as its valley's midpoint", so both statements read garbled in the front matter.** Found by D-625's worker (minted on land/worker/D-625). — owner RECORD (docs).
+status: done — SCHEDULER #24 11:35Z: ALREADY FIXED on main 95fe7bc7 by batch29 union (REC-221 merge), verified at the artifact: D-517 sentence reads contiguously, D-454 stands as its own sentence (CONDUCT #22 11:31Z)
+order: after D-676, a docs-only correction to the same document; it may ride any Framework landing (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: none.
+design: `docs/architecture/CORPUS-STANDARD.md` (front matter states what a document contains), for `docs/architecture/BIO_Content_Framework_v0_10.md`'s front matter.
+depends-on: none.
+scope: move D-454's bullet after D-517's sentence ends; no other text changes.
+accepts-when: both bullets read whole in the front matter; corpuscheck 0 fail (moves: a spliced sentence). NEGATIVE CONTROL: none meaningful for prose; state so.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
