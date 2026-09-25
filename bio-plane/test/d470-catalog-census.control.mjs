@@ -114,6 +114,11 @@ const ARMS = {
        apply: () => edit(CATALOG, EMIT_C151,
          "    findings.push(f(\n      'C-15.1',\n      'error',\n      'every Problem, in every disposition including dismissed, carries at least one recheck trigger',\n      ['author a trigger, dual-audience shape, dated when time-bound']\n    ));"),
        mustFail: [], mustNotFail: ALL, expectGreen: true },
+  /* D-450 (2026-09-25): A4 keys on census + `changed`. Strip `changed` from 1.29.0, whose census is 1.28.0's
+     (a CHANGED check, nothing added) — the entry is then indistinguishable from 1.28.0 and A4 must name it. */
+  f: { files: [SUITE], label: "(F) A CHANGED-CHECK ENTRY THAT DOES NOT SAY WHAT CHANGED — `changed` dropped from 1.29.0",
+       apply: () => edit(SUITE, '              changed: ["C-41.12"] },', '              },'),
+       mustFail: [A4], mustNotFail: except(A4) },
 };
 
 const want = process.argv[2];

@@ -135,6 +135,10 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    constant's own rule (Publication §3 rule 17). FIVE ARRIVALS, NO DEPARTURES; C-32.19's row changed only its
    `where` (the region moved into `#machineRiskTierRefusal`), not its condition. The census is the d470 suite's own
    print. If another branch in the batch also takes 1.29.0, CONDUCT re-reads the union's census. */
+/* 1.29.0 (D-450, 2026-09-25, branch land/worker/D-450): NO check added or removed — C-41.12 CHANGED. It
+   admits `null` for a bar axis nobody set (Publication §3 rule 14), so a one-axis bar 1.28.0 refused now
+   signs; rule 17 moves the stamp for a changed check. The d470 census row names it in `changed`. If
+   another branch takes 1.29.0 first, CONDUCT takes the next number at the union. */
 export const CATALOG_VERSION = "1.29.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

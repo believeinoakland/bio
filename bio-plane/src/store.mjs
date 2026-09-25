@@ -9711,7 +9711,7 @@ export class Store extends DurableObject {
          of the document meets that, so it says it. */
       bar.declared
         ? `This case is ${project}'s production and was held to that project's declared standard: `
-          + `capture ${bar.capture ?? "not set"}, connection ${bar.connection ?? "not set"}. `
+          + `${Store.#barAxisWords(bar)}. `
           + `${bar.detail || ""}`.trim()
         : `This case is ${project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. `
           + `An absent bar is not a bar of zero: this case claims no cleared standard, and a reader `
@@ -13022,6 +13022,15 @@ export class Store extends DurableObject {
      project's CURRENT declaration; `publishCase` calls it once and freezes the
      answer into the bytes the member signs, so a later amendment to the project
      never moves a case that is already published. */
+  /* D-450 / BIO_Publication_v0_1.md §3 rule 14 (BOB #32, 2026-09-23): AN AXIS NOBODY SET IS STATED IN WORDS.
+     The frozen pair keeps both keys and writes the unset one `null`; the prose a reader meets says
+     "no bar set on the <axis> axis" rather than a grade, a dash or "null" — never a default. */
+  static #barAxisWords(bar) {
+    return ["capture", "connection"]
+      .map((axis) => bar[axis] == null ? `no bar set on the ${axis} axis` : `${axis} ${bar[axis]}`)
+      .join(", ");
+  }
+
   #projectBar(projectId) {
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, projectId);
     const pfm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
@@ -13046,7 +13055,7 @@ export class Store extends DurableObject {
       return { declared: true, source: "project", project: projectId,
                capture: declared.capture, connection: declared.connection,
                detail: `required by ${projectId}, the project whose production this case is: capture `
-                     + `${declared.capture ?? "not set"}, connection ${declared.connection ?? "not set"}. `
+                     + `${Store.#barAxisWords(declared)}. `
                      + `The bar is the project's own declaration about its own work, stated in advance, and `
                      + `is never set by who a reader is.` };
     /* Undetermined is first-class and must be STATED. An absent bar gates

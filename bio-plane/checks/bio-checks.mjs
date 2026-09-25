@@ -12189,11 +12189,25 @@ export function checkCaseDocument(fm, ctx = {}) {
   } else if (rq.declared) {
     /* THE PAIR, PER R2, and the reason is the one the member-side arm carried:
        a scalar would re-collapse the two axes in the one field a reader is most
-       likely to quote. */
+       likely to quote.
+       D-450 / BIO_Publication_v0_1.md §3 rule 14 (BOB #32, 2026-09-23): AN AXIS NOBODY SET IS NULL.
+       A project may declare its bar on one axis only (`op=publish` admits it: an unset axis gates
+       nothing), and demanding a grade on both refused the very document `op=publish` had authored —
+       a case that published and could never be signed, and a gate pressuring a member to invent a
+       bar on an axis they hold no view on (CLAUDE.md §4). So `null` is ADMITTED; what stays refused
+       is an OMITTED key (the pair stays a pair — silence is not "unset"), any other value, and a
+       bar declared on NEITHER axis, which claims a standard no axis holds. */
     for (const axis of ['capture', 'connection']) {
-      if (!BASIS_GRADES.includes(rq[axis])) {
-        findings.push(f(C41.BAR, 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')} — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
+      if (!Object.prototype.hasOwnProperty.call(rq, axis)) {
+        findings.push(f(C41.BAR, 'error', `required_strength.${axis} is absent — the declared bar is a PAIR per R2 and both keys are always written: an axis nobody set is written null, never omitted, because a reader cannot tell an omitted key from one nobody wrote down`,
+          [`write required_strength.${axis}: null if the project set no bar on the ${axis} axis`]));
+      } else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {
+        findings.push(f(C41.BAR, 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')}, or null for an axis nobody set — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
       }
+    }
+    if (rq.capture === null && rq.connection === null) {
+      findings.push(f(C41.BAR, 'error', 'required_strength is declared with no bar set on either axis — a declared bar that gates nothing claims a standard no axis holds; a case with no bar states declared: false',
+        ['publish with the bar stated absent (declared: false), or declare a grade on at least one axis']));
     }
   }
   /* ===== D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): EVERY CHECK FOLLOWS ITS BLOCK. ========
