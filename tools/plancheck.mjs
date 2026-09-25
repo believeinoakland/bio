@@ -904,7 +904,7 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
     const over = R.check(ROOT);
     notes.push(`reading budget: ${R.readSet(ROOT).length} read-whole file(s), ${over.length} over budget`);
     for (const o of over)
-      (o.verdict === "FAIL" ? fail : warn)(`READING BUDGET — ${o.file} is ${o.bytes} B against ${o.budget} B`
+      (o.verdict === "FAIL" ? fail : warn)(`READING BUDGET — ${R.describe(o)}`
         + (o.verdict === "FAIL" ? ` and its cut has LANDED, so it has grown back. Cut it again.`
            : `; WARN until its cut lands (then add it to CUT in tools/readbudget.mjs). The owner of the file cuts it.`));
   }

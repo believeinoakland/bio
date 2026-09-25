@@ -7,6 +7,11 @@
  * Each arm breaks ONE property of the single source of truth and must turn ONE NAMED assertion
  * red, the file restored by sha256 AND `cmp` AND a floored byte count after every arm. Built on
  * `owed.control.mjs`'s harness, reused rather than reinvented.
+ *
+ * NEGATIVE CONTROL (M0-172, RUN 2026-09-25 by the M0-172 worker, in a scratch worktree): the clean-run
+ * `rmSync(PEN, …)` removed -> exactly "clean run · the pen `.status-harness/` is GONE (M0-172)" FAILS
+ * (89 pass, 1 fail), `.status-harness/pristine.status` (33,690 B) left behind; with it, 90 pass 0 fail
+ * and no `.status-harness/` after the run.
  */
 import { readFileSync, writeFileSync, mkdirSync, statSync, rmSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";

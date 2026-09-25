@@ -99,11 +99,14 @@ export function check(root = ROOT, { budget = BUDGET, cut = CUT, words = WORD_BU
   return over.sort((a, b) => (b.bytes ?? 0) - (a.bytes ?? 0));
 }
 
+/* ONE spelling of an overrun, in its own unit, for this CLI and for plancheck (M0-172): plancheck printed every entry
+   in bytes, so the word overrun read "WORKER.md is undefined B against 1979 B" — a figure the gate did not have. */
+export const describe = (o) => o.unit === "words" ? `${o.file} is ${o.words} words against ${o.budget} words`
+                                                  : `${o.file} is ${o.bytes} B against ${o.budget} B`;
+
 if (process.argv[1] && process.argv[1].endsWith("readbudget.mjs")) {
   const over = check();
-  for (const o of over)
-    console.log(o.unit === "words" ? `${o.verdict}  ${o.file} is ${o.words} words against ${o.budget} words`
-                                   : `${o.verdict}  ${o.file} is ${o.bytes} B against ${o.budget} B`);
+  for (const o of over) console.log(`${o.verdict}  ${describe(o)}`);
   console.log(`readbudget: ${readSet().length} read-whole file(s), ${over.length} over budget, `
             + `${over.filter((o) => o.verdict === "FAIL").length} failing`);
   process.exit(over.some((o) => o.verdict === "FAIL") ? 1 : 0);

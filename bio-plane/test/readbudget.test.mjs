@@ -22,13 +22,16 @@
  * "a word is counted as `wc -w` counts it…" and "the live WORKER.md is inside its word budget" FAIL (21 pass, 2 fail;
  * the split read the live file at 2,004 words where `wc -w` reads 1,899); restored by cp, sha256 1acd186890c551a8 and
  * `cmp` identical, 23 pass.
+ * RUN 2026-09-25 by the M0-172 worker on `describe`: its words branch disarmed (`o.unit === "words" ?` -> `false ?`)
+ * -> exactly "a word overrun is DESCRIBED in words, never as `undefined B`" FAILS (25 pass, 1 fail); restored by cp,
+ * sha256 5d00b0dcc07609e7 and `cmp` identical, 26 pass.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { check, readSet, BUDGET, CUT, ROOT, WORD_BUDGET, wordCount } from "../../tools/readbudget.mjs";
+import { check, readSet, BUDGET, CUT, ROOT, WORD_BUDGET, wordCount, describe } from "../../tools/readbudget.mjs";
 import { plantedCoord, assertPlanted, REPO as PIN_REPO } from "./coordpin.mjs";   /* M0-136: coord read at a PINNED commit */
 
 let pass = 0, fail = 0;
@@ -102,6 +105,11 @@ console.log("6 — M0-194: a WORD budget for one file (BOB #34 2026-09-24 22:50Z
   const o = check(root, { budget: big, cut: new Set([wk]), words: { [wk]: 2 } });
   t("three words over a budget of 2 are NAMED, in words", o.map((x) => [x.file, x.unit, x.words, x.budget]), [[wk, "words", 3, 2]]);
   t("...and FAIL, the file being CUT", o[0]?.verdict, "FAIL");
+  /* M0-172: plancheck spelled every overrun in bytes, so this one printed "undefined B against 2 B". */
+  t("a word overrun is DESCRIBED in words, never as `undefined B`", describe(o[0]), `${wk} is 3 words against 2 words`);
+  t("a byte overrun is described in bytes", describe({ file: "x.md", bytes: 9, budget: 8 }), "x.md is 9 B against 8 B");
+  t("plancheck's READING BUDGET line is spelled by `describe`, not by a second template",
+    /READING BUDGET — \$\{R\.describe\(o\)\}/.test(readFileSync(join(ROOT, "tools/plancheck.mjs"), "utf8")), true);
   t("a word is counted as `wc -w` counts it: a lone `·` or `→` is not one, `a·b` and `—x` are", wordCount("a · b → c a·b —x"), 5);
   t("the declared word budget is half of 3,959, on WORKER.md", WORD_BUDGET, { "docs/development/kickoffs/WORKER.md": 1979 });
   t("WORKER.md is marked CUT", CUT.has("docs/development/kickoffs/WORKER.md"), true);
