@@ -1,0 +1,16 @@
+{
+ "unit": "ui:declared-flow-surface.test.mjs",
+ "inputHash": "009c6713bbf581c7006426d5b0e1905e86a5b233c894893a2f9f136900c3c4f2",
+ "verdict": "PASS",
+ "run": "ca79ef07af53d02ddf438f8550a3cbd94030c1e0.1790303789624.6034.json",
+ "tree": "ca79ef07af53d02ddf438f8550a3cbd94030c1e0",
+ "head": "f89b28d4992eb8ca6df2dc865aab00847a673a6b",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 70,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "2b567a67-6d89-541a-81f2-46262dc4a177",
+ "at": "2026-09-25T02:36:29.645Z"
+}
