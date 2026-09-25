@@ -1066,8 +1066,8 @@ scope: DIST decides the format first and records it in Distribution: a SEPARATEL
 accepts-when: `newgroup/test/` asserts both uploads send the RELEASE's `limits.subrequests`, a release without it is refused by name, and an older installer still verifies its fleet signature (the measured failure it moves: the value read from `wrangler.jsonc`, not the signed release). NEGATIVE CONTROL: strip the field from a signed release and the refusal arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs DIST`).
 
-### D-626 · running — **TWO PLANE SENTENCES STILL SAY A DRAFT THAT NAMES NO CASE IS A NEW CASE (D-538's class): C-87.6 REVIEW_NO_SUCH_CASE's translation ends "Leave the name off and the draft is a new case." (false since D-538: leaving it off lets publication DERIVE the case), and PUBLISH_DRAFT_NOT_THIS_CASE's detail calls `#caseIdentitySentence(di.caseId, di.edition)` without the draft's newCase, so a new-case draft is described with the derivation sentence.** Found by UI-106's worker (06:24Z). — owner RECORD.
-status: running — SCHEDULER #22 06:37Z spawns WORKER D-626 (depth 2)
+### D-626 · integrated — **TWO PLANE SENTENCES STILL SAY A DRAFT THAT NAMES NO CASE IS A NEW CASE (D-538's class): C-87.6 REVIEW_NO_SUCH_CASE's translation ends "Leave the name off and the draft is a new case." (false since D-538: leaving it off lets publication DERIVE the case), and PUBLISH_DRAFT_NOT_THIS_CASE's detail calls `#caseIdentitySentence(di.caseId, di.edition)` without the draft's newCase, so a new-case draft is described with the derivation sentence.** Found by UI-106's worker (06:24Z). — owner RECORD.
+status: integrated — SCHEDULER #23 07:45Z: tip 2a5d4ed8 on 5e8a65a8, GATE 61/61 GREEN FULLREUSE (5816 assertions; 395 units reused from c201e853's 385/385), tree 0de3bdb7; C-87.6 translation, PUBLISH_DRAFT_NOT_THIS_CASE detail/remedy take newCase, acknowledgeStatement fixed; regionLines +3; C-87.6 under changed: at union; derivation-draft condition to BOB (unminted)
 order: after D-618, with the review-copy corrections: D-538's class in two more sentences (SCHEDULER #22, 2026-09-25)
 milestone: M10
 interface: I3 — one translation's wording and one detail; the integrator classifies.
@@ -1231,7 +1231,8 @@ scope: re-anchor (r5) by its region marker, not a line; re-measure (c), (e) and 
 accepts-when: every arm runs and each fails by name when its subject is broken, restored by hash (moves: three arms failing and one throwing on main). NEGATIVE CONTROL: this row is one — its record is the arm table.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-542's worker, relayed by CONDUCT #22).
 
-### REC-201 · queued — **A RECORDS REQUEST CAN ONLY BE A CALIFORNIA ONE: the action kind is `cpra_request`, and sovereign groups sit outside California.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *DESIGN DIRECTION ADOPTED — a law-neutral `records_request` kind carrying a `law` field; `cpra_request` stays readable as written.* — owner RECORD.
+### REC-201 · running — **A RECORDS REQUEST CAN ONLY BE A CALIFORNIA ONE: the action kind is `cpra_request`, and sovereign groups sit outside California.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *DESIGN DIRECTION ADOPTED — a law-neutral `records_request` kind carrying a `law` field; `cpra_request` stays readable as written.* — owner RECORD.
+status: running — SCHEDULER #23 07:45Z: spawned
 order: behind the current M9/M10 product rows, as ruled (SCHEDULER #17, 2026-09-23; D-149's builder)
 milestone: M10
 interface: I3/I5 — a new action kind; the integrator mints the IC.
@@ -1250,6 +1251,26 @@ depends-on: none — PL-15's out-of-inquiry lead is built.
 scope: offer "take this up" and "set aside" at the inquiry grain wherever the code declares the gap; close the declared `options_grain` entries.
 accepts-when: a member takes up and sets aside a finding at the inquiry grain, and no declared `options_grain` gap remains. NEGATIVE CONTROL: withhold the inquiry-grain option, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
+
+### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
+order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
+milestone: M0
+interface: none — a control and one assertion.
+design: `docs/development/VERIFICATION.md` (the negative control and its `NEGATIVE CONTROL:` line; CLAUDE.md §5's *"Run the negative control"*).
+depends-on: none.
+scope: split arm 8 into 8a and 8b, each anchored on its producer's signature line plus the guard; add a `current.test.mjs` assertion driving a finding filed under no project to `available:false, reason:"no_project_scope"` and point arm 7's must-fail at it.
+accepts-when: `node bio-plane/test/current.control.mjs` reports every arm run and 0 NOT as declared; 8a and 8b each fail "PURGE THE SHARED QUESTION AND BOTH ITEMS GO QUIET", arm 7 fails the new no-scope assertion by name. NEGATIVE CONTROL: the control's own arms, each recorded on the suite's `NEGATIVE CONTROL:` line.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs M0`).
+
+### M0-171 · queued — **`versions.test.mjs` HARVESTS SCHEMA TABLES WITH A LOOSE PATTERN (`/CREATE TABLE IF NOT EXISTS (\w+)/g`, ~line 719), so it still counts the prose phantom `would` that M0-155 removed from the census.** Found by M0-155's worker. — owner M0.
+order: after M0-160, beside the probe-accuracy rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 17:07Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument counts code, not prose).
+depends-on: M0-155.
+scope: add the `\s*\(` tail `hygiene.test.mjs` (~line 685) uses; re-read the table count from its print.
+accepts-when: versions.test's table census equals M0-155's 114. NEGATIVE CONTROL: drop the tail and the `would` phantom returns, failing by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
