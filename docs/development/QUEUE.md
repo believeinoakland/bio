@@ -887,9 +887,9 @@ scope: split arm 8 into 8a and 8b, each anchored on its producer's signature lin
 accepts-when: `node bio-plane/test/current.control.mjs` reports every arm run and 0 NOT as declared; 8a and 8b each fail "PURGE THE SHARED QUESTION AND BOTH ITEMS GO QUIET", arm 7 fails the new no-scope assertion by name. NEGATIVE CONTROL: the control's own arms, each recorded on the suite's `NEGATIVE CONTROL:` line.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs M0`).
 
-### D-725 · running — **A SIGNED CASE DOCUMENT CAN NAME THE WRITER OF ANOTHER CASE'S DRAFT: `#statementWriter` reads EVERY no-case draft in the project, not the draft `draft=` named, so a same-bytes no-case draft prepared for another case answers for this one — its author is named in completeness.statement_by, or drafts_disagree/UNDETERMINED if the authors differ.** Stated (not built) by D-703's worker in the code, Publication §3 rule 13 and construct 13.statement-ack. — owner RECORD.
+### D-725 · integrated — **A SIGNED CASE DOCUMENT CAN NAME THE WRITER OF ANOTHER CASE'S DRAFT: `#statementWriter` reads EVERY no-case draft in the project, not the draft `draft=` named, so a same-bytes no-case draft prepared for another case answers for this one — its author is named in completeness.statement_by, or drafts_disagree/UNDETERMINED if the authors differ.** Stated (not built) by D-703's worker in the code, Publication §3 rule 13 and construct 13.statement-ack. — owner RECORD.
+status: integrated — SCHEDULER #24 11:47Z: tip c90c4b10 (on D-703 3401cd78), GATE 385/385 GREEN (21888 assertions; excludes 3 untallied), tree 837962e2; with draft= the writer read consults THAT draft only; reproduced via op=publish 42/2 -> 44/0; rule 13 and 13.statement-ack no longer state the gap; the no-cut hold on D-703 is answered
 order: spawned directly, stacked on D-703: a false attribution in signed bytes outranks every feature (CLAUDE.md §4, never invent an attribution) and corrects just-landed work (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 11:04Z: spawned, stacked on land/worker/D-703 @ 3401cd78
 milestone: M10
 interface: I3 — who a signed statement names as writer when draft= is given; the integrator classifies.
 design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (a no-case draft binds on any edition; the draft named is the draft read) and §6A.4.
@@ -1007,6 +1007,17 @@ design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, write
 depends-on: none (stacked on land/worker/D-700 @ 50116ded, integrated, on D-674 @ 96a7802f).
 scope: classifyDivergence walks historyWriteOrder(hist.entries).entries (D-700's export), falling back to snap-key order with its INFO finding as C-20.1 does; reproduce first with a history whose keys run against write order.
 accepts-when: a divergence whose anchor was written before a later-keyed edit names the write-order anchor and intervening set (moves: a wrong anchor). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-700's worker).
+
+### D-719 · running — **THE BUNDLE VIEW'S HISTORY LIST (src/setup.mjs, #b-history) SORTS ENTRIES BY SNAP KEY, so a member reads a bundle's history in an order other than the one it was written in, since D-700 made write order the record's.** Found by D-700's worker. — owner UI.
+order: after D-718, the same write-order field; a surface showing an order the record does not hold (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:47Z: spawned, stacked on land/worker/D-700 @ 50116ded (D-718 runs beside it on bio-checks.mjs)
+milestone: M7
+interface: none — reads D-700's additive `seq`.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, write order, as D-700 amended it).
+depends-on: none (stacked on land/worker/D-700 @ 50116ded, integrated, on D-674 @ 96a7802f).
+scope: #b-history sorts by seq when every entry carries one, else by snap key as today; the page states which order it shows.
+accepts-when: a bundle whose keys run against write order lists its history in write order (moves: a history shown out of write order). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-700's worker).
 
 ### D-632 · queued — **`aicredential.control` arms 3 and 5: ANCHOR DRIFT — arm 3 matches 0; arm 5 matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
