@@ -169,11 +169,16 @@ const PROJ = await makePublishingProject({
   name: "PROJ-2026-1060-newcase", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
+/* CORRECTED 2026-09-25 at c22-batch29 (D-563, C-86.3), never exempted: the envelope carried `title: t <id>`
+   while the bytes state their own `title:`, and since D-563 the plane derives the title from the document and
+   refuses an envelope that contradicts it (ENVELOPE_TITLE_DISAGREES). The envelope now carries the title the bytes
+   state, falling back to the old label only where they state none. No assertion reads a title. */
+const statedTitle = (text, fallback) => { const m = /^title: "(.*)"$/m.exec(text); return m ? m[1] : fallback; };
 let snapSeq = 0;
 const promote = async (id, text, objectType, state) => await POST("op=promote&token=adm-ui106", {
   bundleId: id, base: null,
   snapKey: `20260925T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+  meta: { object_type: objectType, group: "believe-in-oakland", title: statedTitle(text, `t ${id}`),
           current_state: state, created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],
