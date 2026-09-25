@@ -23,6 +23,7 @@ Bob: CivicOS must not carry so many outward-facing references to Oakland and Ala
 3. **A module that needs local knowledge takes it from a profile.** Its requirements are stated for any jurisdiction, and its tests include at least one profile that is not Oakland's.
 4. **Outward text names the product (CivicOS) and the group.** Believe in Oakland is named only where it is the fact: as the publisher and signer of a release.
 5. A requirement that names a place is a defect in the requirement, except in the `jurisdictions` module's profile data.
+6. **Provenance is not a jurisdiction.** A comment, a test or a basis string that says where a measurement was taken (an Oakland document, M-157) records a fact about the evidence and is allowed. The rule governs behaviour and outward text.
 
 The work this makes is in `plan/next.md`. The UI is worked on elsewhere and carries the same rule.
 

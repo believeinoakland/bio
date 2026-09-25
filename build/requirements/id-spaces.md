@@ -10,24 +10,24 @@ Judges whether one identifier, appearing in two captured documents, is a shared 
 
 ### Provides
 
-Every service takes `profiles`: the active jurisdiction profiles, in the shape `jurisdictions` defines. The identifier spaces are `enactment` (an ordinance or resolution number), `project`, `fund` and `parcel`. A profile supplies each space's forms, the publishing systems, and the coverage floors.
+Every service takes `view`: the combined view of the active jurisdiction profiles that `jurisdictions.combine` gives, with its `conflicts`. The identifier spaces are `enactment` (an ordinance or resolution number), `project`, `fund` and `parcel`. A profile supplies each space's forms, the publishing systems, and the coverage floors.
 
-**spaces(profiles) → `[{space, label, referent, forms}]`**
-- **R1** Lists the four spaces and, for each, the forms the profiles supply. `referent` is `name` for `fund` and `reading` for the others.
+**spaces(view) → `[{space, label, referent, forms}]`**
+- **R1** Lists the four spaces and, for each, the forms the view supplies. `referent` is `name` for `fund` and `reading` for the others.
 - **R2** A space may have several forms at once. Forms are told apart by the value's shape, never by a date.
-- Errors: never throws. A space with no form in any profile is listed with `forms: []`.
+- Errors: never throws. A space with no form in the view is listed with `forms: []`.
 
-**recognise(profiles, space, value) → `{space, value, form, normal, kind?, reach?}` or `null`**
+**recognise(view, space, value) → `{space, value, form, normal, kind?, reach?}` or `null`**
 - **R3** Returns `null` for an unknown space, an empty value, or a value that has the shape of none of the space's forms.
 - **R4** `normal` is the string two values are compared on. It is derived from the value by removing formatting only, as the form defines (spacing, letter case, a prefix, the zero-padding of a numeric part). A digit is never changed.
 - **R5** For `enactment`, the result also gives `kind` (a kind the profile names, such as ordinance or resolution, or `null`), and `reach`, as `reach()` gives it for that number and kind.
 - Errors: never throws.
 
-**reach(profiles, number, kind?) → `{reach, floor?, says}`**
+**reach(view, number, kind?) → `{reach, floor?, says}`**
 - **R6** With a kind, `reach` is `INSIDE` at or above that kind's coverage floor and `OUTSIDE_REACH` below it.
 - **R7** With no kind, `reach` is `OUTSIDE_REACH` below every kind's floor, `INSIDE` at or above every floor, and `UNDETERMINED` otherwise. `says` names the floors and why.
 - **R8** `OUTSIDE_REACH` is never reported as "not found". `says` states that the record's source holds nothing that old.
-- **R9** With no floor in the profiles for the kind, `reach` is `UNDETERMINED`, and `says` states that no coverage floor is measured.
+- **R9** With no floor for the kind, `reach` is `UNDETERMINED`. `says` distinguishes two causes: no coverage floor is measured, or the active profiles give conflicting floors (the view lists the conflict), naming them.
 - Errors: never throws.
 
 **parcelStanding(key, evidence) → `{standing, roll_year?, children?, vintages_searched, says}`.** `evidence` is optional: `current` (the keys in the assessor's current layer), `lineage` (key → the assessor's own retirement records `{roll_year, children}`) and `vintages` (the names of the published vintages searched).
@@ -36,15 +36,15 @@ Every service takes `profiles`: the active jurisdiction profiles, in the shape `
 - **R12** Otherwise `UNDETERMINED`, between "retired before the earliest published lineage" and "never a parcel". `says` gives the number of vintages searched, or says none was held. The answer is never "no such parcel".
 - Errors: never throws. Missing evidence is treated as empty.
 
-**systemOf(profiles, addresses) → `{origin, name, republication, provenance_stated, basis, addresses}` or `{origin: null, addresses, why}`**
-- **R13** One address names the system of the first profile entry that matches its host and, where the entry gives one, its path. A republication names the system it republishes.
-- **R14** A host that serves many offices' publications names no system, and `why` says so. So does an address no profile system matches, and one that cannot be parsed.
+**systemOf(view, addresses) → `{origin, name, republication, provenance_stated, basis, addresses}` or `{origin: null, addresses, why}`**
+- **R13** One address names the system of the first system in the view that matches its host and, where the entry gives one, its path. A republication names the system it republishes.
+- **R14** A host that serves many offices' publications names no system, and `why` says so. So does an address no system in the view matches, and one that cannot be parsed.
 - **R15** Several addresses name a system only when every one names the same system. Otherwise `origin` is `null`, and `why` says whether there were no addresses, different systems, or unknown ones.
 - Errors: never throws.
 
-**judgePair(profiles, space, a, b, reading?) → `{verdict, counts, says, near_miss?, referent?}`.** `a` and `b` are `{rec, system, name?}`: `rec` from `recognise`, `system` from `systemOf`, and `name` for a fund. `reading` is the caller's referent reading: `agrees`, `disagrees` or `null`.
+**judgePair(view, space, a, b, reading?) → `{verdict, counts, says, near_miss?, referent?}`.** `a` and `b` are `{rec, system, name?}`: `rec` from `recognise`, `system` from `systemOf`, and `name` for a fund. `reading` is the caller's referent reading: `agrees`, `disagrees` or `null`.
 - **R16** The checks run in this order, and the first that decides, decides: form, value, the systems' independence, the fund name (fund only), then the referent. So no reading can make two publications of one source count.
-- **R17** Different forms give `FORMS_UNJOINED`: an unmade join, not a mismatch. Two forms never join unless the profiles supply a crosswalk between them.
+- **R17** Different forms give `FORMS_UNJOINED`: an unmade join, not a mismatch. Two forms never join unless the view supplies a crosswalk between them.
 - **R18** Different values give `VALUES_DIFFER`. When they differ only by leading zeros, `near_miss` is `true`. A near miss is never counted.
 - **R19** An end with no known system gives `SYSTEM_UNDETERMINED`. Both ends in one system give `SAME_SYSTEM`.
 - **R20** For a fund, an end with no name gives `FUND_NAME_ABSENT`. Names equal after normalising (case, punctuation, the word "fund") give `SHARED`, with `referent.by` stating that the names were compared.
@@ -56,12 +56,12 @@ Every service takes `profiles`: the active jurisdiction profiles, in the shape `
 
 ### Uses
 
-- `jurisdictions`: the profile shape, and the profiles' identifier spaces, systems, floors and crosswalks.
+- `jurisdictions`: the combined view's shape (`combine`), and its identifier spaces, systems, floors, crosswalks and conflicts.
 
 ### Invariants
 
 - **R23** Pure: no store, no network, no clock. The same inputs always give the same answer.
-- **R24** No place is named in this module. Given two profiles for different jurisdictions, every service answers from the profiles alone. The tests use at least one profile that is not Oakland's.
+- **R24** No place is named in this module. Given two profiles for different jurisdictions, every service answers from the view alone. The tests use at least one profile that is not Oakland's.
 - **R25** Every "no" says which kind of no: outside the reach, undetermined, unjoined, a different value, or one system. Absence is never reported as non-existence.
 
 ### Satisfies
