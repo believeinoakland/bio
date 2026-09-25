@@ -5,7 +5,8 @@
    (3) THE TRAP, PINNED RATHER THAN TRUSTED — A SECOND VERSION TABLE AND A SECOND WRITE SITE. Add `CREATE TABLE IF NOT EXISTS inquiry_basis_versions_shadow (bundle_id TEXT, name TEXT);` before the host_governor block in src/schema.mjs, and a method outside promote carrying an `INSERT INTO inquiry_basis_versions (...)`. MEASURED: 74 pass, 3 FAIL, each naming its own half — "ONE WRITE SITE" reports `[2,1]`, the table-set arm reports the shadow by name, and the REACH arm fails. hygiene.test.mjs ALSO fails, naming `inquiry_basis_versions_shadow` as uncovered by purge. NOTE the shape the control forces: the walk counts over COMMENT-STRIPPED source and is guarded BOTH WAYS (block 10 asserts the stripper removed something AND that a known statement survived), because a walk that stripped everything would report ONE write site over an empty corpus — the ceiling-without-a-floor failure REC-70 measured.
    (4) D-113 — A NEW DERIVED TABLE ABSENT FROM `purge`. Remove `"inquiry_basis_versions"` from purge's TABLES list in src/store.mjs. MEASURED: 76 pass, 1 FAIL here — `op=stats`' count does NOT move (`[true,true]` -> `[false,true]`) — AND hygiene.test.mjs's D-113 sweep fails naming the table. AND THE ARM MEASURED THE SILENT LEFTOVER IN ITS EXACT FORM: the OP-LEVEL arm still PASSES, because the purged bundle is gone and the gate therefore answers empty while the rows sit in the table unreachable and uncounted by anything except stats. That is precisely why the stats arm is here and why "prove it by consequence" needs two readers, not one.
    (5) THE PRUNE OFFER MADE TO DELETE RATHER THAN HIDE. Add ` AND hidden = 0` to both the `total` count and the rows SELECT in src/store.mjs basisVersions. MEASURED: 73 pass, 4 FAIL in block 8 — `[2,true,true,2]` -> `[1,false,null,0]`: the hidden version stops existing for every reader, `total` drops, its legs go with it, and the source-level arm that pins the absence of such a filter fails. D-214 rules that the rejection PATTERN is queryable only if the acts persist, and DEC-29(b)'s wording promise ("hidden versions stay in the record and stay queryable") is worth nothing if the query stops answering.
-   (6) §14b.7 — MAKE THE VERSION A CHILD OF ITS RUN. The acceptance half runs on the whole tree: the proposing run is DELETED out of ai_runs, ai_run_bounds and ai_run_log through the probe door, op=airun then answers that no such run exists, and the version reads back BYTE-IDENTICALLY with its run still named. The CONTROL half breaks it — replace basisVersions' row read with `SELECT v.* FROM inquiry_basis_versions v JOIN ai_runs ar ON ar.run = v.run WHERE v.bundle_id=? ...`. MEASURED: 52 pass, 25 FAIL, the widest arm in this suite, because a version whose run is gone or was never named simply vanishes: the survival arm reads `null` where a whole version belongs, and with it go every arm that reads a version at all. That is the shape of the defect §14b.7 exists to refuse, and the reason the guarantee is enforced by the ABSENCE of a join rather than by a promise about one. */
+   (6) §14b.7 — MAKE THE VERSION A CHILD OF ITS RUN. The acceptance half runs on the whole tree: the proposing run is DELETED out of ai_runs, ai_run_bounds and ai_run_log through the probe door, op=airun then answers that no such run exists, and the version reads back BYTE-IDENTICALLY with its run still named. The CONTROL half breaks it — replace basisVersions' row read with `SELECT v.* FROM inquiry_basis_versions v JOIN ai_runs ar ON ar.run = v.run WHERE v.bundle_id=? ...`. MEASURED: 52 pass, 25 FAIL, the widest arm in this suite, because a version whose run is gone or was never named simply vanishes: the survival arm reads `null` where a whole version belongs, and with it go every arm that reads a version at all. That is the shape of the defect §14b.7 exists to refuse, and the reason the guarantee is enforced by the ABSENCE of a join rather than by a promise about one.
+   (7) M0-171, 2026-09-25 — THE TABLE HARVEST READS A SENTENCE AS A DECLARATION. Whole tree: 80 pass, 0 fail, `census: 114 ... 114`. Four arms on this file ALONE, each restored by copy and verified by sha256 AND `cmp` (77574 bytes). A1 LOOSE PATTERN ONLY (the old harvest back): 79/1, and the ONE failure is the over-strictness fixture's prose half; the census pin HOLDS at 114 = 114, because on this tree the `--` line filter already removes the `would` sentence. That green is the finding, not a hole in the arm: the old pattern was protected by a filter aimed at something else. A2 `--` FILTER REMOVED ONLY: 79/1, WALK GUARD only (tight harvest still 114, so the census pin holds). A3 BOTH (the sentence reaches the loose harvest): 77/3, the census pin fails reading 115 against 114 with `would` the extra name, plus the fixture and WALK GUARD. A4 OVER-STRICT TAIL `\s+\(`: 79/1, the fixture's `t_tight` half fails; the census is unmoved because every declaration in schema.mjs has a space before its `(`. */
 /* IS-BUILD-PLAN PL-1 / IS-1 — VERSIONS OF THE INQUIRY'S BASIS.
  *
  * Bob, 2026-08-05: an inquiry's basis supports multiple VERSIONS, each a
@@ -87,6 +88,7 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { tableSites } from "../../tools/status.mjs"; /* M0-171: the census the table harvest must equal */
 import { createHash } from "node:crypto";
 import { checkBundle, parseFrontmatter, BASIS_VERSION_CHECKS,
          /* CORRECTED 2026-08-08 (PL-2 / IS-2): the catalog now holds a SECOND
@@ -718,7 +720,33 @@ console.log("\n--- 10. the trap: no second version table, and ONE write site ---
   + "promote's own body rather than by reading the comment above it",
     [writes(promoteBody, "inquiry_basis_versions"), writes(promoteBody, "inquiry_basis_version_legs")], [1, 1]);
 
-  const tables = [...SCHEMA_CODE.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);
+  /* M0-171, 2026-09-25 — CORRECTED, NOT EXEMPTED: the harvest was `/CREATE TABLE IF NOT EXISTS (\w+)/g`, which
+     reads the first word after the phrase as a table name, so a SENTENCE about a CREATE mints a table. That is the
+     phantom `would` M0-155 removed from the census (schema.mjs's own `-- ... CREATE TABLE IF NOT EXISTS would
+     rebuild ...`) and the `does` D-137 met in hygiene.test.mjs. MEASURED on 95fe7bc7: the loose harvest read 114
+     names and not 115, because the `--` line filter above happens to remove that one sentence — the phantom was
+     kept out by a filter aimed at something else, not by the harvest. A sentence on any other kind of line
+     (prose inside a template's string, a JS comment the filter does not see) would still have minted a
+     table. The tail is now hygiene.test.mjs's own, `\s*\(`: a declaration is followed by its column list.
+     And the harvest is pinned to the census, not to a number: the names read here must EQUAL the schema.mjs
+     share of tools/status.mjs's `tableSites` (M0-155's shape, M0-181's anchor), so the two readers cannot drift
+     apart unnoticed. 114 = 114 on 95fe7bc7 (the whole census reads 123: 114 in schema.mjs, 9 in store.mjs).
+     What this still cannot see: a declaration written with a comment between its name and its `(`, the blind
+     spot status.mjs states for the same shape. */
+  const DECL_RE = /CREATE TABLE IF NOT EXISTS\s+(\w+)\s*\(/g;
+  const tables = [...SCHEMA_CODE.matchAll(DECL_RE)].map((m) => m[1]);
+  const censused = [...new Set(tableSites().sites.filter((x) => x.file === "bio-plane/src/schema.mjs").map((x) => x.name))].sort();
+  console.log(`  census: ${tables.length} table(s) harvested from schema.mjs, ${censused.length} in status.mjs's census of it`);
+  t("THE HARVEST IS THE CENSUS: the tables read from schema.mjs are exactly the schema.mjs share of M0-155's "
+  + "census (tools/status.mjs tableSites) — non-empty, no name twice, and no sentence read as a table (M0-171)",
+    [tables.length >= 100, new Set(tables).size === tables.length, [...tables].sort()],
+    [true, true, censused]);
+  t("OVER-STRICTNESS: a real declaration spelled with no space before its column list, or with its `(` on "
+  + "the next line, is still harvested — and the prose that minted `would` is not (M0-171)",
+    [["CREATE TABLE IF NOT EXISTS t_tight(a TEXT);", "CREATE TABLE IF NOT EXISTS t_split\n  (a TEXT);",
+      "first read \"because CREATE TABLE IF NOT EXISTS would rebuild the table\""]
+      .map((x) => [...x.matchAll(DECL_RE)].map((m) => m[1]).join())],
+    [["t_tight", "t_split", ""]]);
   t("EXACTLY TWO TABLES carry versions of a basis, and they are the projection pair — no third, no "
   + "shadow, no history table",
     /* CORRECTED 2026-09-23 by CONDUCT #17 at c17-batch4, not exempted: the filter read ANY table whose name
@@ -740,7 +768,7 @@ console.log("\n--- 10. the trap: no second version table, and ONE write site ---
   t("REACH: the same walk over a source that DOES carry a second write site FINDS it, and over a schema "
   + "that DOES carry a third table FINDS that — the pin is a pin and not an exemption",
     [writes(withSecondWrite, "inquiry_basis_versions"),
-     [...withThirdTable.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]).filter((n) => /version/i.test(n) && /basis/i.test(n)).length],
+     [...withThirdTable.matchAll(DECL_RE)].map((m) => m[1]).filter((n) => /version/i.test(n) && /basis/i.test(n)).length],
     [2, 3]);
 }
 
