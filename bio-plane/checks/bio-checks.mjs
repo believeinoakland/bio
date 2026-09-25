@@ -681,8 +681,14 @@ export const CITATION_MAX = 200;
  *  `cpra_request` IS THE ONE KIND THAT NAMES A LAW, and it is read as exactly that and nothing more: the kind
  *  is its member's statement that the CPRA governs (D-149), so the undetermined sentence names it — and the
  *  LIST stays undetermined, because whether a federal law or a local ordinance also governs is not in the
- *  kind. The document is not rewritten and no citation is synthesised from the kind. */
-export function governingLawsOf(fm) {
+ *  kind. The document is not rewritten and no citation is synthesised from the kind.
+ *
+ *  D-689 (BOB #35, 2026-09-25 08:25Z): WHO WROTE THAT KIND, OR THAT `law`, IS READ AND NOT ASSUMED. `statedBy` is
+ *  the store's answer from the record's own author stamps (`recordsLawStatedBy`'s class: `member`, `machine` or
+ *  `undetermined`). A `machine` answer reads MACHINE-STATED — a cpra_request an automated credential created before
+ *  the fence is never read as a member's statement — and `undetermined` says who wrote it is not recorded. Omitted
+ *  (or `member`), the sentence is D-149's and REC-201's, byte for byte. */
+export function governingLawsOf(fm, statedBy = null) {
   const raw = fm && Array.isArray(fm.governing_laws) ? fm.governing_laws : [];
   const laws = raw.filter((l) => l && typeof l === 'object' && !Array.isArray(l))
     .map((l) => ({ level: String(l.level ?? ''), citation: String(l.citation ?? '') }));
@@ -694,15 +700,33 @@ export function governingLawsOf(fm) {
   }
   const kindNames = fm && fm.action_kind === 'cpra_request';
   const lawNamed = recordsLawOf(fm)?.law ?? null;   /* REC-201: records_request's stated law, verbatim */
+  const cls = statedBy && typeof statedBy === 'object' ? statedBy.class : 'member';
+  const machineBy = cls === 'machine' ? `an automated credential (${String(statedBy.by ?? 'unnamed').slice(0, 80)})` : null;
   return { state: 'undetermined', laws: [], by: null, at: null,
            stated: 'UNDETERMINED: no member has stated which laws govern this action. The record assumes none — '
                  + 'not federal law, not state law, not a local ordinance. Which laws apply follows the agency '
                  + 'asked, and a member states them, each by citation.'
-                 + (kindNames ? ' This action\'s kind, cpra_request, is its member\'s statement that the '
+                 + (kindNames ? (cls === 'machine'
+                     ? ` This action's kind, cpra_request, was written by ${machineBy}: it is MACHINE-STATED, not a `
+                       + 'member\'s statement that the California Public Records Act governs it; nothing else is '
+                       + 'inferred from the kind.'
+                     : cls === 'undetermined'
+                     ? ' This action\'s kind, cpra_request, names the California Public Records Act; who wrote that '
+                       + 'kind is not recorded, so it is not read as a member\'s statement; nothing else is inferred '
+                       + 'from the kind.'
+                     : ' This action\'s kind, cpra_request, is its member\'s statement that the '
                               + 'California Public Records Act governs it; nothing else is inferred from the '
-                              + 'kind.' : '')
-                 + (lawNamed ? ` This action's kind, records_request, states the law it is made under — ${lawNamed} — `
-                             + 'as its author\'s statement; nothing else is inferred from it.' : '') };
+                              + 'kind.') : '')
+                 + (lawNamed ? (cls === 'machine'
+                     ? ` This action's kind, records_request, states the law it is made under — ${lawNamed} — as `
+                       + `${machineBy} wrote it: it is MACHINE-STATED, not a member's statement; nothing else is `
+                       + 'inferred from it.'
+                     : cls === 'undetermined'
+                     ? ` This action's kind, records_request, states the law it is made under — ${lawNamed} — and who `
+                       + 'wrote it is not recorded, so it is not read as a member\'s statement; nothing else is '
+                       + 'inferred from it.'
+                     : ` This action's kind, records_request, states the law it is made under — ${lawNamed} — `
+                             + 'as its author\'s statement; nothing else is inferred from it.') : '') };
 }
 
 /** REC-201: THE LAW A `records_request` IS MADE UNDER, AS ITS AUTHOR WROTE IT. The one reader: the action's read
@@ -716,22 +740,52 @@ export function governingLawsOf(fm) {
  *  FOUR ANSWERS, and `null` is one of them: a kind that is not a records request has no `law` to read.
  *  `cpra_request` answers `kind` and is read AS WRITTEN — never rewritten into a records_request with a
  *  synthesised citation, which would be the record stating a citation nobody wrote. A records_request with no
- *  law reads UNDETERMINED in words, never a default. */
-export function recordsLawOf(fm) {
+ *  law reads UNDETERMINED in words, never a default.
+ *
+ *  D-689 (BOB #35, 2026-09-25 08:25Z; `BIO_Case_Making_v0_1.md` §2): WHICH LAW GOVERNS IS THE MEMBER'S
+ *  CHARACTERIZATION. `statedBy`, when the store passes it, is who wrote the statement this function reads —
+ *  `{ class: 'member' | 'machine' | 'undetermined', by, at }`, from the record's own author stamps — and it is
+ *  returned as `stated_by`. A machine-written statement reads MACHINE-STATED in the sentence itself, so a
+ *  cpra_request an automated credential created before the fence is read as what it is and never rewritten. */
+export function recordsLawOf(fm, statedBy = null) {
   const kind = fm && fm.action_kind;
+  const by = statedBy && typeof statedBy === 'object'
+    ? { class: statedBy.class, by: statedBy.by ?? null, at: statedBy.at ?? null } : null;
+  const whose = !by || by.class === 'member' ? ''
+    : by.class === 'machine'
+      ? ` MACHINE-STATED: an automated credential (${String(by.by ?? 'unnamed').slice(0, 80)}) wrote it, and it is not a `
+        + 'member\'s statement of the law that governs this request.'
+      : ' Who wrote it is not recorded, so it is not read as a member\'s statement.';
+  const withBy = (o) => (by ? { ...o, stated_by: by } : o);
   if (kind === 'cpra_request')
-    return { state: 'kind', law: null,
+    return withBy({ state: 'kind', law: null,
              stated: 'This action\'s kind, cpra_request, names the California Public Records Act, read as written; '
-                   + 'no citation is synthesised from the kind.' };
+                   + 'no citation is synthesised from the kind.' + whose });
   if (kind !== 'records_request') return null;
   const law = typeof fm.law === 'string' && fm.law.trim() ? fm.law : null;
-  if (law) return { state: 'stated', law,
+  if (law) return withBy({ state: 'stated', law,
                     stated: `This records request is made under ${law}, as its author stated it; the record holds the `
-                          + 'citation as written and encodes none of that law\'s rules.' };
+                          + 'citation as written and encodes none of that law\'s rules.' + whose });
   return { state: 'undetermined', law: null,
            stated: 'UNDETERMINED: this records request states no law it is made under. The record assumes none — '
-                 + 'not the California Public Records Act, not federal law; its author states one, by citation, in '
-                 + 'the action\'s law field.' };
+                 + 'not the California Public Records Act, not federal law; a member states one, by citation, in '
+                 + 'the action\'s law field (a machine may only propose one: D-689).' };
+}
+
+/** D-689 (BOB #35, 2026-09-25 08:25Z, (b) FENCE BOTH): WHAT AN ACTION STATES ABOUT THE LAW ITS REQUEST IS MADE
+ *  UNDER, as ONE comparable key — the fence in `promote` and the store's attribution walk ask this and nothing
+ *  else, so what counts as "stating the law" cannot differ between the refusal and the read.
+ *
+ *  `null` states nothing: any kind but the two, and a records_request with no `law` (the kind is law-neutral, and
+ *  a machine may create one). A cpra_request states the CPRA in its kind; a records_request with a `law` states
+ *  that citation, verbatim. It never reads `governing_laws[]` — the list has its own act and fence (C-73.1,
+ *  C-32.18). */
+export function recordsLawStatement(fm) {
+  const kind = fm && typeof fm === 'object' ? fm.action_kind : null;
+  if (kind === 'cpra_request') return JSON.stringify(['cpra_request', null]);
+  if (kind !== 'records_request') return null;
+  const law = typeof fm.law === 'string' && fm.law.trim() ? fm.law : null;
+  return law ? JSON.stringify(['records_request', law]) : null;
 }
 
 /** REC-201: C-2.10's `law` arm. Absent, null or empty is the honest undetermined and passes. A `law` on any kind
@@ -10408,6 +10462,22 @@ export const MACHINE_FENCE_CHECKS = {
       + 'follow the agency asked, and somebody has to have read them. The credential that asked here is an '
       + 'automated one, so it can gather what the agency is and cannot state which laws apply. Sign in to set '
       + 'the list yourself.',
+  },
+  /* D-689 (BOB #35, 2026-09-25 08:25Z, (b) FENCE BOTH, from DEC-24 and D-149; BIO_Case_Making_v0_1.md §2): which
+     law governs a records request is the member's characterization. A machine credential may neither CREATE a
+     cpra_request (the kind names the CPRA) nor state, change or remove a records_request's `law` — BOB #32's rule
+     for the risk tier, applied: removing a statement is a change. It may create a records_request stating no law
+     and PROPOSE the law (op=actionlawspropose, REC-195's shape); a member's own act adopts. Carrying the statement
+     forward unchanged is not refused, so a machine-created cpra_request from before the fence is never rewritten —
+     it reads MACHINE-STATED from its recorded author. Asked of a CHANGE, in ONE helper, C-32.19's shape. */
+  MACHINE_CANNOT_STATE_RECORDS_LAW: {
+    check: 'C-32.20',
+    where: 'src/store.mjs #machineRecordsLawRefusal > is-machine-state-records-law',
+    translation: 'Which law governs a records request is a judgement a member makes and answers for. The '
+      + 'credential that asked here is an automated one: it can write the request as a records request that '
+      + 'names no law, and it can propose the law for a member to consider, but it cannot state the law — '
+      + 'neither by the California Public Records Act kind nor by a citation — and cannot change or remove one. '
+      + 'Sign in to state the law yourself.',
   },
 };
 

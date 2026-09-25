@@ -75,7 +75,8 @@ const actionMd = (id, cpLines) => [
   "group: believe-in-oakland", "references: []", "state_history: []",
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
   "  source: null", "visuals: []",
-  "action_kind: cpra_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
+  /* CORRECTED 2026-09-25 by D-689, never exempted: this fixture created a `cpra_request` through an operator bearer token — a machine identity — and C-32.20 now refuses a machine stating the law a records request is made under (BOB #35, 2026-09-25: only a member's act states it; a machine may only propose). The kind is not this suite's subject, so the fixture is the law-neutral `records_request` stating no law, which a machine may create. */
+  "action_kind: records_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
      fixture states through a DEPLOY token — a machine identity — and C-32.19 now refuses a machine
      setting 1, 2 or 3 (D-182: only a member's authored act does). The tier is not this suite's subject,
      so the fixture states what an unassessed action honestly is. */

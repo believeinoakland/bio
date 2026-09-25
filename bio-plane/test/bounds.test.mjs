@@ -1679,7 +1679,8 @@ const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "sche
      REC-189's fence (C-32.19, IC-249) now refuses a machine credential's promote that SETS a tier, and `mem-r57` is one.
      The tier is not this block's subject (the quotes bound is), so the fixture leaves it undetermined, which a machine
      may do where no member set one (BOB #32). The old assertion was right for its day, not wrong. */
-  "action_kind: cpra_request", "risk_tier: undetermined",
+  /* CORRECTED 2026-09-25 by D-689, never exempted: this fixture created a `cpra_request` through an operator bearer token — a machine identity — and C-32.20 now refuses a machine stating the law a records request is made under (BOB #35, 2026-09-25: only a member's act states it; a machine may only propose). The kind is not this suite's subject, so the fixture is the law-neutral `records_request` stating no law, which a machine may create. */
+  "action_kind: records_request", "risk_tier: undetermined",
   "counterparty:", "  state: named", "  name: Bounds Clerk r57",
   "correspondence:",
   "  - direction: sent", "    at: 2026-07-03", '    account: "The request."', "    author: r57",

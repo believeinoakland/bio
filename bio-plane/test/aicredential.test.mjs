@@ -592,6 +592,23 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
        machine CHANGES an action's risk tier, so the thinnest payload that reaches it is a whole action
        stating one. A creation replaces no version, so any stated tier is a change. */
     MACHINE_CANNOT_SET_RISK_TIER: ["promote", riskTierCreation("ACTN-2026-5100-risk-tier")],
+    /* D-689 / C-32.20 (BOB #35, 2026-09-25 08:25Z) — not an act: the fence stands inside `promote`'s action
+       block beside C-32.19 and asks whether a machine CHANGES what an action states about the law its request
+       is made under, so the thinnest payload is a whole action CREATED as a cpra_request, tier left undetermined
+       so the tier fence cannot be what answers. The completeness arm went red naming it until it was driven here. */
+    MACHINE_CANNOT_STATE_RECORDS_LAW: ["promote", (() => {
+      const id = "ACTN-2026-5101-cpra-by-machine";
+      const text = ["---", `id: ${id}`, "object_type: action", "schema: action@1", `title: "Action ${id}"`,
+        "current_state: planned", "prior_state: null", 'created: "2026-07-01T00:00:00Z"',
+        'last_updated: "2026-07-01T00:00:00Z"', "produced_by:", "  mode: assisted", "  capability_tier: session",
+        "group: believe-in-oakland", "references: []", "state_history: []", "action_kind: cpra_request",
+        "risk_tier: undetermined", "counterparty:", "  state: named", "  name: City Clerk", "---", "", "## Plan", "", "P.",
+        "", "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+      return { bundleId: id, base: null, snapKey: `${id}-000001`, register: [],
+        files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+        meta: { object_type: "action", group: "believe-in-oakland", title: `Action ${id}`,
+                current_state: "planned", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } };
+    })()],
   };
   const broad = await mint({ tokenId: "held-open", taskScope: "the negative control's own",
     writes: [...new Set(Object.values(ACTS).map(([op]) => op))] });
