@@ -68540,6 +68540,15 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         hidden: r.hidden === 1,
         claim: r.claim,
         run: r.run,
+        /* D-235: WHICH OF §9's KINDS a run proposed this reading AS — stored
+           inside the frozen composition since PL-3 and published by
+           `op=suggest`'s answer, and until D-235 silent here, so one version
+           read a kind from one op and none from the other. `null` on a reading
+           a member composed by hand, and that is the schema's honest answer
+           rather than a default: a member's own reading is not a suggestion of
+           any kind. The key is present on EVERY version, so a consumer cannot
+           read an absent key as "not asked". */
+        kind: r.kind ?? null,
         author: r.author,
         at: r.at,
         /* PL-2 / IS-2: WHO moved this reading, when, and why — published beside
