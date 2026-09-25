@@ -235,6 +235,7 @@ accepts-when: a subject string read on three pages offers three choices and each
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
 ### UI-107 · queued — **THE MUTE REPORT CANNOT OFFER A PER-CASE UNDO FOR A MUTED KIND THAT HOLDS NOTHING BACK TODAY: UI-97 draws no control there and states the named limit (member-respect SETS).** The surface half of D-534. — owner UI.
+status: queued — D-534 (02:33Z): read mute.case_kinds (beside mute.cases, unchanged) and drop the per-case narrowing; correct the UI quotes of 'the muted KINDS nowhere' (member-respect.test, notifications.test/control, queue-unmute.test, CIVICOS_UI_STATE.md, construct-status 12.unmute's note)
 order: directly after D-534, which it consumes (SCHEDULER #19, 2026-09-24)
 milestone: M8
 interface: I3 consumer (D-534's IC).
@@ -1221,14 +1222,4 @@ design: `docs/development/VERIFICATION.md` (the DEC-49 guard's section, *what a 
 depends-on: none.
 scope: end both patterns in a lookahead for whitespace, a comment close or end of line instead of the word boundary; a sibling-region fixture.
 accepts-when: a file holding regions `x` and `x-y` passes with one opener each, and the `regionLines` floors do not move. NEGATIVE CONTROL: restore the word boundary, and the "one opener per name" arm fails naming two opening markers.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-300 · queued — **A SUITE THAT READS THE WALL CLOCK CAN TURN RED UNTOUCHED, AND THE SWEEP THAT WOULD SAY SO IS RUN BY NOBODY: three suites of about three hundred bind `BIO_NOW_MS`; `clockadvance.control.mjs` exists and no tool, script or gate runs it.** — owner M0.
-order: after D-357; the cheap half (run the sweep) first; threading the clock through every constructor is a later row if the sweep finds decay (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md`.
-depends-on: none.
-scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
-accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
