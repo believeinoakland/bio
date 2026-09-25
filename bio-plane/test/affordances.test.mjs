@@ -653,9 +653,11 @@ t("and each is the constant from the module that owns it, never a copy",
   [true, true]);
 /* CORRECTED 2026-08-05 (REC-24): eight kinds, for the reason stated at the
    ACTION_KINDS pin above. */
-t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the eight action kinds",
+/* CORRECTED 2026-09-25 (REC-201), never exempted: nine, for the reason at the ACTION_KINDS pin above — BOB #32
+   adopted a law-neutral `records_request` kind beside `cpra_request`. */
+t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the nine action kinds",
   [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
-  [["deferred", "dismissed"], 8]);
+  [["deferred", "dismissed"], 9]);
 
 /* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES OVER THE WIRE, and then held
    against WHAT THE STORE ACTUALLY REFUSES.
