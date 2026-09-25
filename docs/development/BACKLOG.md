@@ -45,6 +45,16 @@ scope: (a) promote judges READABILITY before ANY content fence: the four spellin
 accepts-when: each of the four spellings as an action revision gets the readability refusal and never GOVERNING_LAWS_REWRITTEN; a readable revision that rewrites the laws still does (moves: four refusals naming a false cause). NEGATIVE CONTROL: move the readability check behind the fence and the four arms fail naming GOVERNING_LAWS_REWRITTEN.
 added: 2026-09-25 · SCHEDULER #24 (`node tools/mintid.mjs D`, BOB #36 inbox).
 
+### D-738 · queued — **op=promote ACCEPTS A CREATION OR REVISION WHOSE DOCUMENT'S `id:` DIFFERS FROM THE bundleId IT IS FILED UNDER — C-1.1 is judged only in the audit, not at the promote door.** Live census 0/31 in bio (M-185). Found by D-726's worker. — owner RECORD.
+order: behind D-741, the same promote function, one worker at a time (SCHEDULER #24, 2026-09-25)
+milestone: M7
+interface: I3 — a named refusal on op=promote where a write used to land; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (the promote corrections), with C-1.1.
+depends-on: D-741 (same function; stack on its branch once integrated).
+scope: op=promote refuses by name a creation or revision whose document's id: differs from the bundleId it is filed under, before the first write; reproduce through the op first.
+accepts-when: a mismatched id is refused by name and nothing is written; a matching id still lands (moves: a bundle filed under an id its bytes contradict). NEGATIVE CONTROL: drop the refusal and the mismatch arm lands, failing by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-726's worker).
+
 ### D-671 · queued — **`pdf-worker/src/pagepixels.mjs` READS `/Rotate` FROM THE LEAF PAGE ONLY, though `/Rotate` is inheritable: a page inheriting `/Rotate 270` from `/Pages` renders un-turned — CPDF-12's 8.67%-character failure.** Found by D-374's worker (minted on land/worker/D-374). — owner CONTENT-PDF.
 order: after D-670, with the PDF corrections at the head; after D-320, which moves the same line (SCHEDULER #23, 2026-09-25)
 milestone: M2
@@ -1062,13 +1072,3 @@ depends-on: none.
 scope: give the three arms a single-site anchor each; re-run the driver AS DECLARED and record it on the suite's NEGATIVE CONTROL line.
 accepts-when: all three arms report ARMED and fail by name (moves: 3 arms that never armed). NEGATIVE CONTROL: the arms themselves.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; CONDUCT #22's union finding).
-
-### M0-174 · queued — **`mintid`'s `D` NAMESPACE STILL GRADES DUPLICATES ACROSS TWO SHAPES AS ONE: since DEBT's retirement (M0-140) a `D-` is minted as a PLAN ROW, so its allocation site is the heading `### D-n ·`; the DEBT-table rows `| D-n |` are LEGACY allocations frozen at D-443. A heading and a legacy row for one id (M-57's 17 pairs) are the item and the row it closed, never a duplicate.** BOB #33 RULED, 2026-09-24 17:35Z (drained to `BOB-INBOX-drained.md`; cite until folded). — owner M0.
-order: low in the M0 group, beside M0-172: small; fold into an open M0 batch if one fits (BOB #33, 17:35Z; SCHEDULER #19)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses), with BOB #33's ruling of 17:35Z (cite until folded).
-depends-on: M0-140.
-scope: `mintid`'s allocation site for `D` is the plan-row heading in QUEUE, BACKLOG and their archives; the legacy table rows count toward the floor only; the duplicate check grades EACH shape within itself.
-accepts-when: two `### D-n ·` headings are refused; the 17 cross-shape pairs pass; the floor reads 508 on coord f3ca0ad8. NEGATIVE CONTROL: collapse the two patterns into one, and the arm counting 120 false duplicates fails by name.
-added: 2026-09-24 · SCHEDULER #19 (BOB #33 inbox 17:35Z; `node tools/mintid.mjs M0`).

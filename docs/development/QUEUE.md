@@ -220,7 +220,7 @@ accepts-when: `newgroup/test/` asserts both uploads send the RELEASE's `limits.s
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs DIST`).
 
 ### D-734 · running — **op=verify ANSWERS "NOT PUBLISHED" FOR A RATIFIED CASE DOCUMENT's doc_sha (measured on 6 ratified editions): only bundle parts and MANIFEST.json are in published_shas, and op=verify's own sentence equates "not published" with "never ratified" — false, on the no-account verify surface.** D-731's part (b); its part (a), the page's button checking op=casedocument, rides inside D-712. BOB #36 RULED 2026-09-25 11:50Z (drained by SCHEDULER #24; cite until folded). — owner RECORD.
-status: running — SCHEDULER #24 13:00Z: spawned, stacked on land/worker/D-712 @ f10b1024
+status: running — SCHEDULER #24 13:48Z UNDETERMINED at the park deadline (Bob, 13:25Z): NO land/worker/D-734 on origin; its session was still running a gate on tree 4e0ac38e (it fixed hygiene) and never answered the park. Its work lives only in that container. Resume: read that session if it is alive; otherwise restart from land/worker/D-712 @ f10b1024
 order: FIRST queued in the cache, directly after D-712, whose button it lets switch back to op=verify: the record claiming LESS than it holds on the public surface (CLAUDE.md §2) (SCHEDULER #24, 2026-09-25)
 milestone: M10
 interface: I3 — additive published_shas kind `case_document`; op=verify answers published:true naming it; op=publishedbytes serves the bytes; the integrator classifies.
@@ -1133,8 +1133,8 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-643 · running — **`nc-cpdf18` arm textpin: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: running — SCHEDULER #24 12:28Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
+### D-643 · integrated — **`nc-cpdf18` arm textpin: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: integrated — SCHEDULER #24 13:30Z PARKED DONE: tip 480c206b (on M0-197 11818309), GATE 81/81 GREEN (6538 assertions); nc-cpdf18 textpin re-anchored (unique here and on main), allowance deleted, arm alone 28/1 by name
 order: after D-642, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
@@ -1144,9 +1144,9 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-726 · running — **A REVISION WHOSE BYTES RESTATE A DIFFERENT `group` LANDS, and bundles.group_id keeps the creation's (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured through op=promote in a local Miniflare: row group_id believe-in-oakland, head bytes `group: some-other-group`.** D-692's class, one column over. Live-corpus count UNDETERMINED. Found by D-692's worker. — owner RECORD.
+### D-726 · queued — **A REVISION WHOSE BYTES RESTATE A DIFFERENT `group` LANDS, and bundles.group_id keeps the creation's (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured through op=promote in a local Miniflare: row group_id believe-in-oakland, head bytes `group: some-other-group`.** D-692's class, one column over. Live-corpus count UNDETERMINED. Found by D-692's worker. — owner RECORD.
+status: queued — SCHEDULER #24 13:33Z PARKED, WORK DONE, UNGATED: resume from land/worker/D-726 @ 0e0a928e (on D-707 95839afa), clean tree; it OWES ONE FULL GATE (stopped mid-run by the park, so there is no summary line). Built: C-86.14 REVISION_REGROUPS_BUNDLE, reproduced first (d726 suite 11/0, unfixed 5/6), control 5/5 as declared, CATALOG 1.38.0 (514), live census M-185 = 0/31 in bio; minted D-738
 order: after D-707, the same promote function, one worker at a time (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 12:29Z: spawned, stacked on land/worker/D-707 @ 95839afa
 milestone: M7
 interface: I3 — a new named refusal on op=promote where a revision used to land; the integrator classifies.
 design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5; D-692's C-86.9 shape), with State Rules v1.5 §4.7.
@@ -1155,9 +1155,9 @@ scope: refuse a non-replay revision whose document's `group` differs from the he
 accepts-when: a revision restating a different group is refused by name and nothing is written; the same group respelt, and a revision stating none, still land (moves: a row and its head bytes disagreeing on group). NEGATIVE CONTROL: drop the refusal and the regroup arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-692's worker).
 
-### D-729 · running — **THE LINK SURFACE LABELS EVERY chrome=1 LINK "site navigation" (civicos-ui/app.html linkRow), but chrome=1 is CONTAINMENT only, so a page-local <aside> sidebar link is called site navigation — more than BOB #35's 09:30Z ruling (containment AND recurrence) allows.** Found by D-702's worker (minted on land/worker/D-702). — owner UI.
+### D-729 · integrated — **THE LINK SURFACE LABELS EVERY chrome=1 LINK "site navigation" (civicos-ui/app.html linkRow), but chrome=1 is CONTAINMENT only, so a page-local <aside> sidebar link is called site navigation — more than BOB #35's 09:30Z ruling (containment AND recurrence) allows.** Found by D-702's worker (minted on land/worker/D-702). — owner UI.
+status: integrated — SCHEDULER #24 13:31Z PARKED DONE: tip 72e123e2 (on D-702 71a5d050), GATE 73/73 GREEN FULLREUSE (6231 assertions), tree a0dd7c53; linkRow reads in a page-furniture region (<basis>), never site navigation; pin corrected with why; control 4/4 as declared
 order: spawned directly, stacked on D-702: a surface claiming more than the record holds is the "less narrative" defect (CLAUDE.md §2) and corrects just-landed work (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 12:31Z: spawned, stacked on land/worker/D-702 @ 71a5d050
 milestone: M2
 interface: none — the label only.
 design: `docs/development/LINK-FIDELITY.md` §Chrome (containment is a classification recorded on the link; site chrome needs recurrence, BOB #35 09:30Z as D-702 folded it).
@@ -1188,9 +1188,9 @@ scope: order both lists by the image's _history/manifest.json seq when every ent
 accepts-when: a bundle whose keys run against write order lists both its promotions and its kept revisions in write order, and the page says so (moves: a history shown out of write order). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-719's worker).
 
-### D-724 · running — **A PARTIAL CAPTURE INDEX SKIPS AN OVER-BOUND UNIT SILENTLY: both budget loops (index.mjs textUnitsFor, store.mjs #writeCaptureText) `continue` past it and write later units that fit, but only a COUNT is kept, so a search miss in sheet 4 cannot say sheet 4 was NEVER INDEXED rather than holding no match; CONTENT-SEARCH-DESIGN §4.3 calls the index a prefix.** Measured by D-685's worker (M-184, Z5). BOB #36 RULED 2026-09-25 11:20Z, option (b) (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+### D-724 · queued — **A PARTIAL CAPTURE INDEX SKIPS AN OVER-BOUND UNIT SILENTLY: both budget loops (index.mjs textUnitsFor, store.mjs #writeCaptureText) `continue` past it and write later units that fit, but only a COUNT is kept, so a search miss in sheet 4 cannot say sheet 4 was NEVER INDEXED rather than holding no match; CONTENT-SEARCH-DESIGN §4.3 calls the index a prefix.** Measured by D-685's worker (M-184, Z5). BOB #36 RULED 2026-09-25 11:20Z, option (b) (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+status: queued — SCHEDULER #24 13:32Z PARKED, WORK DONE, UNGATED: resume from land/worker/D-724 @ a944481e (on D-685 3094f19b), clean tree; it OWES ONE FULL GATE (the last finished gate, on 07a19650 before the fix, was RED 383/385: derivation-bounds and meaning-bounds; on a944481e those two, bounds and capture-text-index are green standalone). Built: skipped unit keys recorded as runs (capture_text_skipped, purged), op=contentaxis serves index.skipped bounded at 5120 runs; Z5 names S4; controls as declared (one over-strict arm with 2 undeclared same-subject failures, recorded)
 order: behind D-685, the same budget loops, one worker at a time; saying WHICH absence is true is first-class (CLAUDE.md §2), so it leads D-694 (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 12:40Z: spawned, stacked on land/worker/D-685 @ 3094f19b
 milestone: M4
 interface: I3 — additive skipped unit keys on the read that carries `partial`; the integrator classifies.
 design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.3, with BOB #36's 11:20Z ruling.
@@ -1254,8 +1254,8 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-649 · running — **`nc-rec64` arm 1: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: running — SCHEDULER #24 12:54Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
+### D-649 · integrated — **`nc-rec64` arm 1: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: integrated — SCHEDULER #24 13:48Z PARKED DONE: tip 22974e39 (on M0-197 11818309), GATE 80/80 GREEN FULLREUSE (6509 assertions), tree 7feef07d; nc-rec64 arm 1 re-anchored (1 match here and on main), allowance deleted, arm alone as declared; D-758 (arm 3 expect-regex drift after D-257's rewording) minted AND FIXED on this branch, so it rides with D-649 and has no separate row
 order: after D-648, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
