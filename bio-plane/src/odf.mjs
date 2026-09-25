@@ -108,23 +108,24 @@
  *           drawing-page style in automatic styles (where LibreOffice writes
  *           it) or on the page element. Extracted in full and FLAGGED.
  *
- *   NOT CARRIED BY content.xml — SAID, on every entry, in
- *   `evidentiary.undetermined`:
+ *   NOT CARRIED BY content.xml, and READ FROM THEIR OWN PARTS (D-346,
+ *   2026-09-25 — until then each was stated in `evidentiary.undetermined` as
+ *   `outside_content_xml_not_read`, and both markers are gone because both
+ *   parts are now read):
  *     core-properties (creator, title, created/modified, revision) live in
- *           `meta.xml`, which is a DIFFERENT part of the package. The OOXML
- *           entries emit a `core-properties` item from `docProps/core.xml`;
- *           these entries emit NONE, and its absence from `items[]` is NOT
- *           evidence the document carries no author. The named marker
- *           `{part:"meta.xml", why:"outside_content_xml_not_read"}` is what
- *           keeps that distinction visible.
- *     embedded objects (`Object 1/`, `Pictures/`) are separate package
- *           members listed in `META-INF/manifest.xml`. The OOXML entries
- *           content-address each container's own `embeddings/` directory
- *           into the `intra` partition;
- *           these entries read one part and so emit NO `intra` link, with
- *           `{part:"META-INF/manifest.xml", why:"outside_content_xml_not_read"}`
- *           saying so. An empty `intra` count here means NOT LOOKED, not NONE
- *           PRESENT.
+ *           `meta.xml`. Emitted as the SAME `core-properties` item, with the
+ *           SAME fields and no others, that the OOXML entries build from
+ *           `docProps/core.xml` — mapped by MEANING, not by element name,
+ *           because ODF's `dc:creator` is the last editor (`parseOdfMeta`).
+ *           A package WITHOUT meta.xml (OpenDocument permits it) is stated as
+ *           `{part:"meta.xml", why:"part_absent"}`, so a missing item is
+ *           never read as "this document has no author".
+ *     embedded members (`Object 1/…`, an OLE blob, `ObjectReplacements/`)
+ *           are listed in `META-INF/manifest.xml`, walked, and content-
+ *           addressed into `intra` by sha256 exactly as the OOXML entries
+ *           address `embeddings/`. Images under `Pictures/` are `text()`'s
+ *           IC-124 `images`, not `intra` (`manifestIntraLinks` states the
+ *           rule and what it cannot see).
  *
  *   DOES NOT EXIST IN OPENDOCUMENT AT ALL, as distinct from not read:
  *     a sheet's numeric id (xlsx's `sheetId`) — ODF identifies a table by
@@ -163,7 +164,7 @@
 
 import {
   hasZipMagic, readContainer, readPart, normalizePartName, crc32,
-  discriminate, sizeGuard, declaredTextBytes,
+  discriminate, sizeGuard, declaredTextBytes, IMAGE_MIME_BY_EXT,
   CONTAINER_FLAVOURS, ODF_MIMETYPE_PART, ODF_MANIFEST_PART, ODF_MIMETYPE_MAX_BYTES,
   withContainerImages,
 } from "./ooxml.mjs";
@@ -210,9 +211,8 @@ export const ODP_CONTENT_TYPE = ODP_ROW.mimetype;
 /** The one part every entry reads. Taken from the row, not spelled here. */
 const CONTENT_PART = normalizePartName(ODT_ROW.conventionalMainPart);
 
-/** `meta.xml` and `META-INF/manifest.xml` are NAMED so the two DEC-5 absences
- *  above can be stated with the part that would have carried them. Neither is
- *  read. */
+/** `meta.xml` — read for the `core-properties` item (D-346); named so its
+ *  absence or unreadability is stated with the part that would have carried it. */
 const META_PART = "meta.xml";
 
 /* ------------------------------------------------------------------ *
@@ -568,24 +568,183 @@ async function odfParts(row, bytes) {
    * marker itself is the statement, carried by structure()'s envelope and by
    * text() verbatim (the docx.mjs pattern). */
 
-  /* THE TWO NAMED ABSENCES (DEC-5). These are pushed on EVERY read, including
-   * a completely successful one, because their whole purpose is to stop a
-   * consumer reading an absent `core-properties` item as "this document has
-   * no author" or a zero `intra` count as "this document embeds nothing".
-   * `CLAUDE.md`: absence at one level is not evidence of absence at the next,
-   * and saying which is true is a first-class obligation. */
-  undetermined.push({
-    part: META_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument carries the core properties (creator, title, created/modified, revision) in meta.xml; this entry reads content.xml only, so NO core-properties item is emitted and its absence is not evidence the document carries none",
-  });
-  undetermined.push({
-    part: ODF_MANIFEST_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument lists embedded objects and images as separate package members in META-INF/manifest.xml; this entry reads content.xml only, so NO intra link is content-addressed and a zero intra count means NOT LOOKED, never NONE PRESENT",
-  });
+  /* D-346 — THE TWO PARTS BESIDE content.xml THAT CARRY DEC-5 EVIDENCE.
+   * Until D-346 neither was read, and each was STATED as not read (the
+   * `outside_content_xml_not_read` markers) so a consumer could not mistake
+   * silence for a fact. Both are now read, in the siblings' treatment: a
+   * `core-properties` item from meta.xml (docx.mjs's fields, no others) and
+   * sha256 `intra` links for the embedded members META-INF/manifest.xml lists
+   * (docx.mjs's `word/embeddings/` treatment). What cannot be read is still
+   * STATED, by the part and the reason — including a package with NO meta.xml,
+   * which OpenDocument permits and which is therefore said, not left silent:
+   * no core-properties item and no statement would read as "no author". */
+  let core = null;
+  if (hasMember(container, META_PART)) {
+    const read = await readPart(b, container, META_PART);
+    const c = read.ok ? parseOdfMeta(UTF8.decode(read.bytes)) : { ok: false, why: read.why };
+    if (c.ok) core = c;
+    else undetermined.push({ part: META_PART, why: c.why });
+  } else {
+    undetermined.push({
+      part: META_PART,
+      why: "part_absent",
+      detail: "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author",
+    });
+  }
 
-  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, undetermined };
+  const embedded = await manifestIntraLinks(b, container, contentXml, undetermined);
+
+  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, core, embedded, undetermined };
+}
+
+/* ------------------------------------------------------------------ *
+ * D-346 — meta.xml into `core-properties`, the manifest into `intra`
+ * ------------------------------------------------------------------ */
+
+function hasMember(container, name) {
+  return container.byName.has(name)
+    || container.entries.some((e) => normalizePartName(e.name) === name);
+}
+
+const HEX = "0123456789abcdef";
+async function sha256Hex(u8) {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", u8));
+  let out = "";
+  for (let i = 0; i < d.length; i++) out += HEX[d[i] >> 4] + HEX[d[i] & 15];
+  return out;
+}
+
+/** meta.xml's `<office:meta>` as the SAME fields `parseCoreProperties` reads
+ *  from OOXML's docProps/core.xml — and NO others. meta.xml can carry more
+ *  (keywords, description, user-defined fields, the generator, statistics);
+ *  it is personal data in part, and this entry emits only what the OOXML
+ *  path already emits, so no consumer meets a field from an .odt it would
+ *  not meet from a .docx.
+ *
+ *  THE MAPPING, because the two vocabularies name the people differently
+ *  (OpenDocument 1.2 part 1 §4.3): OOXML's `dc:creator` is the AUTHOR and
+ *  `cp:lastModifiedBy` the last editor; ODF's `meta:initial-creator` is the
+ *  author and ODF's `dc:creator` is the LAST EDITOR. So
+ *    creator        ← meta:initial-creator
+ *    lastModifiedBy ← dc:creator
+ *    created        ← meta:creation-date
+ *    modified       ← dc:date
+ *    title          ← dc:title
+ *    revision       ← meta:editing-cycles  (revisionNumber when an integer)
+ *  Mapping by NAME (`dc:creator` → `creator`) would put the last editor in
+ *  the author's field — a false attribution, which is the defect this record
+ *  exists to avoid. Each field is the string the file carries or null when
+ *  absent — never filled in from another. */
+function parseOdfMeta(xml) {
+  const doc = elementsNested(xml, "document-meta")[0];
+  const meta = doc ? elementsNested(doc.inner, "meta")[0] : null;
+  if (!meta) return { ok: false, why: "core_properties_unparseable" };
+  const field = (local) => {
+    const el = elementsNested(meta.inner, local)[0];
+    return el ? visibleText(el.inner) : null;
+  };
+  const revision = field("editing-cycles");
+  const revisionNumber = revision != null && /^\d+$/.test(revision.trim())
+    ? parseInt(revision.trim(), 10) : null;
+  return {
+    ok: true,
+    creator: field("initial-creator"),
+    lastModifiedBy: field("creator"),
+    revision,
+    revisionNumber,
+    created: field("creation-date"),
+    modified: field("date"),
+    title: field("title"),
+  };
+}
+
+/** The `core-properties` item, field for field the one docx.mjs,
+ *  formats-xlsx.mjs and pptx.mjs push (IC-2 as accepted). */
+function corePropertiesItems(parts) {
+  if (!parts.core) return [];
+  const c = parts.core;
+  return [{
+    kind: "core-properties",
+    creator: c.creator, lastModifiedBy: c.lastModifiedBy,
+    revision: c.revision, revisionNumber: c.revisionNumber,
+    created: c.created, modified: c.modified, title: c.title,
+    source: null,
+  }];
+}
+
+/* The package's OWN parts (OpenDocument 1.2 part 3 §3, plus LibreOffice's
+ * `Configurations2/` UI state): the document itself and its machinery, not
+ * something embedded in it. */
+const PACKAGE_OWN = new Set(["mimetype", "content.xml", "styles.xml", "meta.xml", "settings.xml", "manifest.rdf"]);
+const PACKAGE_OWN_DIRS = ["META-INF/", "Thumbnails/", "Configurations2/"];
+
+/** META-INF/manifest.xml walked for the EMBEDDED members, each content-
+ *  addressed into `intra` by the sha256 of its inflated bytes — exactly the
+ *  link docx.mjs builds from `word/embeddings/`.
+ *
+ *  THE RULE IS AN INVERSION, not a list of what counts as embedded: every
+ *  file entry the manifest names is `intra` EXCEPT
+ *    - the package's own parts (PACKAGE_OWN / PACKAGE_OWN_DIRS);
+ *    - an image under `Pictures/` — `text()` already content-addresses those
+ *      as IC-124 `images`, the OOXML `word/media/` treatment, and a second
+ *      address for the same bytes would count one image twice;
+ *    - a font face content.xml names through `font-face-uri` (D-612's
+ *      presentational judgment; OOXML's `word/fonts/` is not `intra` either).
+ *  So an `Object N/` sub-document's members, an OLE blob, an
+ *  `ObjectReplacements/` rendering, and a video or other non-image member are
+ *  `intra`. A directory entry (`Object 1/`) is not a member; its files are
+ *  listed, and linked, on their own.
+ *
+ *  WHAT IS STATED RATHER THAN LINKED: a manifest that cannot be read or
+ *  parsed (the envelope names it — `intra` then means NOT LOOKED); a listed
+ *  member the container does not hold, one encrypted (its stored bytes are
+ *  ciphertext, and a hash of them would address nothing a reader holds), and
+ *  one that will not inflate — each an `undetermined` link naming it.
+ *
+ *  WHAT IT CANNOT SEE: a container member the manifest does NOT list
+ *  (OpenDocument requires the listing; a non-conforming producer can omit
+ *  one); a font face named only from styles.xml, which is not read, and any
+ *  font face when content.xml was not read (over the bound) — those are
+ *  linked as `intra`, an over-inclusion, never an omission. `source` is null:
+ *  locating a member to the `draw:object` that references it is not built. */
+async function manifestIntraLinks(bytes, container, contentXml, undetermined) {
+  const read = await readPart(bytes, container, ODF_MANIFEST_PART);
+  if (!read.ok) { undetermined.push({ part: ODF_MANIFEST_PART, why: read.why }); return []; }
+  const xml = UTF8.decode(read.bytes);
+  const root = elementsNested(xml, "manifest")[0];
+  if (!root) { undetermined.push({ part: ODF_MANIFEST_PART, why: "manifest_unparseable" }); return []; }
+
+  const fonts = new Set();
+  if (contentXml != null) {
+    for (const f of elementsNested(contentXml, "font-face-uri")) {
+      const href = f.attrs.href;
+      if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
+    }
+  }
+
+  const links = [];
+  for (const fe of elementsNested(root.inner, "file-entry")) {
+    const path = fe.attrs["full-path"];
+    if (typeof path !== "string" || !path || path.endsWith("/")) continue;
+    const name = normalizePartName(path);
+    if (PACKAGE_OWN.has(name) || PACKAGE_OWN_DIRS.some((d) => name.startsWith(d))) continue;
+    if (name.startsWith("Pictures/")) {
+      const dot = name.lastIndexOf(".");
+      if (dot > name.lastIndexOf("/") && IMAGE_MIME_BY_EXT[name.slice(dot + 1).toLowerCase()]) continue;
+    }
+    if (fonts.has(name)) continue;
+    const undeterminedLink = (why) => ({ partition: "undetermined", wrapper: null,
+      target: { why, name }, source: null });
+    if (elementsNested(fe.inner, "encryption-data").length) { links.push(undeterminedLink("embedding_encrypted")); continue; }
+    if (!hasMember(container, name)) { links.push(undeterminedLink("manifest_member_absent")); continue; }
+    const got = await readPart(bytes, container, name);
+    if (!got.ok) { links.push(undeterminedLink(`embedding_unreadable:${got.why}`)); continue; }
+    const sha = await sha256Hex(got.bytes);
+    links.push({ partition: "intra", wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name, bytes: got.bytes.length },
+      source: null });
+  }
+  return links;
 }
 
 /* The body of content.xml for a given office body kind, or null. Every walk
@@ -624,11 +783,6 @@ function countPartitions(links) {
   for (const l of links) counts[l.partition]++;
   return counts;
 }
-
-/* The note every entry carries, so the `intra`-is-zero fact is visible in
- * `notes` as well as in the envelope — a reader scanning either surface must
- * meet it. */
-const NO_INTRA_NOTE = "no intra link is emitted: embedded members live outside content.xml (stated in evidentiary.undetermined)";
 
 /* ================================================================== *
  * .odt — the TEXT document, in docx.mjs's shape
@@ -780,7 +934,7 @@ function odtStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = [];
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "text");
@@ -840,6 +994,10 @@ function odtStructure(parts) {
       });
     }
   }
+
+  /* D-346: the manifest's embedded members, and meta.xml's core properties. */
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
 
   return {
     ok: true,
@@ -910,7 +1068,7 @@ function odtText(parts) {
   }
   const body = officeBody(parts.contentXml, "text");
   if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     return {
       ok: true, container: "odt", document: null, paragraphs: [], tables: null,
       undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
@@ -1052,7 +1210,7 @@ function odsStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = [];
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "spreadsheet");
@@ -1104,6 +1262,10 @@ function odsStructure(parts) {
   for (const sheet of sheets) {
     if (sheet.hidden) items.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
   }
+
+  /* D-346: the manifest's embedded members, and meta.xml's core properties. */
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
 
   return {
     ok: true,
@@ -1208,7 +1370,7 @@ function odsText(parts) {
   }
   const body = officeBody(parts.contentXml, "spreadsheet");
   if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
     return {
       ok: true, container: "ods", document: null, sheets: [],
@@ -1372,7 +1534,7 @@ function odpStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = [];
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "presentation");
@@ -1407,6 +1569,10 @@ function odpStructure(parts) {
     }
   }
 
+  /* D-346: the manifest's embedded members, and meta.xml's core properties. */
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
+
   return {
     ok: true,
     container: "odp",
@@ -1435,7 +1601,7 @@ function odpText(parts) {
   }
   const body = officeBody(parts.contentXml, "presentation");
   if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     return {
       ok: true, container: "odp", document: null, slides: [], speakerNotes: [],
       deckLength: null,
@@ -1504,9 +1670,8 @@ function entryFor(row, structureOf, textOf) {
     /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
        exhaustive or NULL, through the one enumerator the OOXML entries use.
        Read off the central directory, so it does NOT depend on
-       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
-       the manifest stays TRUE and stays emitted: it speaks about `intra`
-       embedded objects, which this does not content-address. */
+       META-INF/manifest.xml; the manifest walk (D-346) leaves these images
+       out of `intra` so one image is never addressed twice. */
     text: async (partsOrBytes) => {
       const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
         ? await odfParts(row, partsOrBytes) : partsOrBytes;

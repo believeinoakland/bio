@@ -38,6 +38,7 @@
 /* NEGATIVE CONTROL: five arms, each armed ALONE with the others held open, plus a baseline row. (1) CONTENT.XML REMOVED, per entry — DRIVEN here rather than patched, because the required behaviour is a STATED absence and not a crash: `odfFixture(f, {omitContent:true})` must give `parts.ok === false` with `why === "declared_main_part_absent"` AND `part === "content.xml"` AND `flavourDeclared === f`, and structure()/text() must answer `ok:false` carrying that reason — never an empty structure. RUN 2026-09-14: passes. (2) WRONG FLAVOUR TO EACH ENTRY — also DRIVEN: handing the `.ods` package to the `.odt` entry must refuse by name (`not_odt:ods`), and so for all six cross pairs. RUN 2026-09-14: passes. (3) THE ARM'S OWN ARM — UNREGISTER ONE ENTRY: `unregisterFormat("ods")` then re-assert detection. MUST FAIL: the detect assertions for `.ods` by bytes and by content type. MUST NOT FAIL: `.odt` and `.odp`, which are independent entries. RUN 2026-09-14 in-process at the foot of this suite, restoring by `registerFormat` with the exact entry `unregisterFormat` returned — 2 of 2 armed assertions failed by name, 0 of the other two entries' 8 moved. (4) OVER-STRICTNESS, the OOXML entries: `docx`/`xlsx`/`pptx` structure+text over their own fixtures must be byte-identical to the pre-item run, captured from a pristine `origin/main` worktree at `d791aa7` and COMPARED by sha256, not eyeballed — this item exports `sheetCellRef` from `formats-xlsx.mjs`, and that export must move nothing. RUN 2026-09-14: identical, digest in MEASUREMENTS.md. (5) OVER-STRICTNESS, the spellings this item did not anticipate: `table:display="false"` written on the `<table:table>` ELEMENT rather than on its style, and `presentation:visibility="hidden"` written on `<draw:page>` rather than on its drawing-page style — both are correct OpenDocument a producer may emit, and both must be READ, not refused. RUN 2026-09-14: passes. */
 
 /* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
+/* NEGATIVE CONTROL, D-346 (meta.xml -> core-properties, META-INF/manifest.xml -> sha256 intra) — THREE arms and a baseline, each armed ALONE, re-runnable in one step with `node test/nc-d346.mjs [arm]` from `bio-plane/`. RUN 2026-09-25, ALL THREE AS DECLARED, 0 findings; BASELINE odf 171/0 · docx 82/0 · xlsx 88/0 · pptx 118/0 · ooxml 167/0 · registry 35/0; every restore verified by sha256 AND cmp with a floor: `src/odf.mjs` 89,017 B sha256 7eedc2f7b1ec…. (1) `skipmeta`, THE ROW'S DECLARED ARM — the meta.xml read skipped: MUST FAIL `odt|ods|odp: the planted creator appears as a core-properties item` — 3/3 failed by name (14 in all, the item's other field/key assertions and the respelled-prefix arm with them); MUST NOT FAIL the three "without meta.xml … STATED by part" and the three manifest-walk arms — 0/6 moved; siblings unmoved. (2) `mapbyname` — ODF's `dc:creator` (the LAST EDITOR) put in `creator`: the planted-creator arm 3/3 failed by name, the absence arms 0/3 moved. (3) `fontexempt` — the D-612 font-face exemption dropped from the manifest walk: `images, font faces, thumbnails and the package's own parts are NOT intra` 3/3 failed by name, the planted-creator arm 0/3 moved. OVER-STRICTNESS arm (W27), in the suite: the same meta.xml under respelled namespace prefixes must READ — passes. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
@@ -225,30 +226,44 @@ const CONTENT_FOR = { odt: ODT_CONTENT, ods: ODS_CONTENT, odp: ODP_CONTENT };
 const ENTRY = { odt: odtEntry, ods: odsEntry, odp: odpEntry };
 const CT = { odt: ODT_CONTENT_TYPE, ods: ODS_CONTENT_TYPE, odp: ODP_CONTENT_TYPE };
 
-/* ODF meta.xml — present in the package and DELIBERATELY NOT READ. It carries
- * a creator the entries must NOT surface, which is what makes the "core
- * properties live outside content.xml" assertion below mean something: the
- * fact is THERE and the entry still says it did not look. */
-const ODF_META = `<?xml version="1.0"?><office:document-meta ${NS}><office:meta>`
+/* ODF meta.xml — present in the package and, since D-346, READ. It carries a
+ * PLANTED author and a different last editor, so the D-346 section below can
+ * tell the two apart: ODF's `meta:initial-creator` is the author and ODF's
+ * `dc:creator` is the LAST EDITOR, the reverse of what the element names
+ * suggest to an OOXML reader. (CORRECTED by D-346: this fixture carried only
+ * `dc:creator`, as a fact the entries must NOT surface, because they did not
+ * read meta.xml. It also carries fields OOXML's core-properties item does not
+ * — a generator, keywords, a user-defined field — which must NOT be emitted.) */
+const PLANTED_CREATOR = "R. Planted-Author";
+const ODF_META = `<?xml version="1.0"?><office:document-meta ${NS} office:version="1.3"><office:meta>`
+  + `<meta:initial-creator>${PLANTED_CREATOR}</meta:initial-creator>`
   + `<dc:creator>M. Analyst</dc:creator><dc:title>FY27 Midcycle Amendment</dc:title>`
-  + `<meta:editing-cycles>14</meta:editing-cycles></office:meta></office:document-meta>`;
+  + `<meta:creation-date>2026-08-01T09:00:00</meta:creation-date><dc:date>2026-09-14T11:05:00</dc:date>`
+  + `<meta:editing-cycles>14</meta:editing-cycles>`
+  + `<meta:generator>LibreOffice/26.8.0.3</meta:generator><meta:keyword>reserve</meta:keyword>`
+  + `<meta:user-defined meta:name="Reviewer">J. Private</meta:user-defined>`
+  + `</office:meta></office:document-meta>`;
 
-const manifestXml = (mime) => `<?xml version="1.0" encoding="UTF-8"?>`
+const manifestXml = (mime, extra = "") => `<?xml version="1.0" encoding="UTF-8"?>`
   + `<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">`
   + `<manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="${mime}"/>`
   + `<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>`
   + `<manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/>`
+  + `<manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>`
+  + extra
   + `</manifest:manifest>`;
 
 /** Options: `omitContent` drops content.xml (control arm 1); `content`
- *  substitutes a body (arms 5 and the size-bound case); `extra` appends. */
+ *  substitutes a body (arms 5 and the size-bound case); `extra` appends;
+ *  `omitMeta` drops meta.xml and `meta` substitutes it (D-346); `manifest`
+ *  appends file entries to the manifest (D-346). */
 const odfFixture = (flavour, o = {}) => {
   const mime = ODF_MIME[flavour];
   return zip([
     { name: "mimetype", data: mime, store: true },
-    { name: "META-INF/manifest.xml", data: manifestXml(mime) },
+    { name: "META-INF/manifest.xml", data: manifestXml(mime, o.manifest ?? "") },
     ...(o.omitContent ? [] : [{ name: "content.xml", data: o.content ?? CONTENT_FOR[flavour] }]),
-    { name: "meta.xml", data: ODF_META },
+    ...(o.omitMeta ? [] : [{ name: "meta.xml", data: o.meta ?? ODF_META }]),
     { name: "styles.xml", data: `<?xml version="1.0"?><office:document-styles ${NS}/>` },
     ...(o.extra ?? []),
   ]);
@@ -379,9 +394,12 @@ console.log("\n--- .odt: docx.mjs's shape, doc-para references, tracked changes 
   t("partition counts", st.counts, { anchor: 1, intra: 0, deferred: 1, refused: 1, undetermined: 0 });
 
   /* DEC-5, under IC-2's envelope, with the SAME kind names docx.mjs emits. */
+  /* CORRECTED by D-346: the kinds were `comment` and `tracked-change` only,
+     because meta.xml was not read; the fixture's meta.xml now yields the
+     `core-properties` item every OOXML sibling emits. */
   t("the envelope names its container and kinds",
     [st.evidentiary.container, st.evidentiary.kinds.sort()],
-    ["odt", ["comment", "tracked-change"]]);
+    ["odt", ["comment", "core-properties", "tracked-change"]]);
   const ins = st.evidentiary.items.find((i) => i.change === "insertion");
   t("the INSERTION carries author, date, its wording, and its paragraph",
     [ins.kind, ins.author, ins.date, ins.text, ins.source],
@@ -497,29 +515,132 @@ console.log("\n--- .odp: pptx.mjs's shape, slide-shape references, speaker notes
 }
 
 /* ================================================================== */
-console.log("\n--- the DEC-5 extras content.xml CANNOT supply, STATED on every entry ---");
+console.log("\n--- D-346: meta.xml -> core-properties, the manifest -> sha256 intra, on every entry ---");
+/* CORRECTED by D-346. This section read "the DEC-5 extras content.xml CANNOT
+   supply, STATED on every entry" and asserted NO core-properties item, a zero
+   intra count, and two `outside_content_xml_not_read` markers. That was the
+   honest statement while the entries read content.xml alone; the entries now
+   read meta.xml and walk META-INF/manifest.xml, so the item is emitted, the
+   embedded members are linked, and the markers would now be FALSE. The
+   "absence is stated" half is kept, moved to where it is still true: a package
+   with NO meta.xml. */
+const OLE_BLOB = Buffer.from("OLE compound document stand-in: the embedded budget workbook", "utf-8");
+const SUBDOC = `<?xml version="1.0"?><office:document-content ${NS}><office:body><office:chart/></office:body></office:document-content>`;
+const REPLACEMENT = Buffer.from("replacement rendering of Object 1", "utf-8");
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+const FONT = Buffer.from("font glyphs", "utf-8");
+const fe = (path, type = "application/octet-stream") => `<manifest:file-entry manifest:full-path="${path}" manifest:media-type="${type}"/>`;
+const EMBED_MANIFEST = fe("Object 1/", "application/vnd.oasis.opendocument.chart")
+  + fe("Object 1/content.xml", "text/xml")
+  + fe("Object 2", "application/vnd.sun.star.oleobject")
+  + fe("ObjectReplacements/Object 1")
+  + fe("Pictures/seal.png", "image/png")
+  + fe("Fonts/font1.ttf", "application/x-font-ttf")
+  + fe("Thumbnails/thumbnail.png", "image/png")
+  + fe("Object 3", "application/vnd.sun.star.oleobject")               // listed, NOT in the container
+  + `<manifest:file-entry manifest:full-path="Object 4" manifest:media-type="application/octet-stream">`
+  + `<manifest:encryption-data manifest:checksum-type="SHA1/1K" manifest:checksum="x"/></manifest:file-entry>`;
+const EMBED_EXTRA = [
+  { name: "Object 1/content.xml", data: SUBDOC },
+  { name: "Object 2", data: OLE_BLOB },
+  { name: "ObjectReplacements/Object 1", data: REPLACEMENT },
+  { name: "Pictures/seal.png", data: PNG },
+  { name: "Fonts/font1.ttf", data: FONT },
+  { name: "Thumbnails/thumbnail.png", data: PNG },
+  { name: "Object 4", data: Buffer.from("ciphertext", "utf-8") },
+];
+const { createHash } = await import("node:crypto");
+const hex = (b) => createHash("sha256").update(b).digest("hex");
+/* A font face named from content.xml, as Google's exports do (D-612): the
+   font is presentational and must NOT become an intra link. */
+const withFontFace = (xml) => xml.replace("<office:automatic-styles>",
+  `<office:font-face-decls><style:font-face style:name="Arial"><svg:font-face-src xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0">`
+  + `<svg:font-face-uri xlink:href="Fonts/font1.ttf"/></svg:font-face-src></style:font-face></office:font-face-decls><office:automatic-styles>`);
+
 for (const flavour of ["odt", "ods", "odp"]) {
   const st = await ENTRY[flavour].structure(odfFixture(flavour));
   const u = st.evidentiary.undetermined;
+  const cp = st.evidentiary.items.filter((i) => i.kind === "core-properties");
 
-  /* THE POINT OF THIS SECTION: the fixture's meta.xml DOES carry a creator
-     and a title. The entry reads one part, does not see them, and SAYS SO —
-     rather than emitting no core-properties item and letting a consumer read
-     that silence as "this document has no author". CLAUDE.md: absence at one
-     level is not evidence of absence at the next. */
-  t(`${flavour}: no core-properties item is emitted`,
-    st.evidentiary.items.some((i) => i.kind === "core-properties"), false);
-  t(`${flavour}: and meta.xml is NAMED as not read, so the silence is not mistaken for a fact`,
-    u.some((x) => x.part === "meta.xml" && x.why === "outside_content_xml_not_read"), true);
-  t(`${flavour}: META-INF/manifest.xml is NAMED too — a zero intra count means NOT LOOKED`,
-    [st.counts.intra,
-      u.some((x) => x.part === "META-INF/manifest.xml" && x.why === "outside_content_xml_not_read")],
-    [0, true]);
-  t(`${flavour}: and notes[] carries the same fact, so either surface meets it`,
-    st.notes.some((n) => n.includes("no intra link is emitted")), true);
-  t(`${flavour}: both markers carry a detail saying what would have been there`,
-    u.filter((x) => x.why === "outside_content_xml_not_read").every((x) => typeof x.detail === "string" && x.detail.length > 40),
-    true);
+  /* THE ACCEPTS-WHEN ARM: the planted creator appears as a core-properties
+     item. NEGATIVE CONTROL: skip the meta.xml read and THIS fails by name. */
+  t(`${flavour}: the planted creator appears as a core-properties item`,
+    cp.map((i) => i.creator), [PLANTED_CREATOR]);
+  t(`${flavour}: every field mapped by MEANING — ODF's dc:creator is the LAST EDITOR, not the author`,
+    cp[0] && [cp[0].lastModifiedBy, cp[0].title, cp[0].created, cp[0].modified, cp[0].revision, cp[0].revisionNumber, cp[0].source],
+    ["M. Analyst", "FY27 Midcycle Amendment", "2026-08-01T09:00:00", "2026-09-14T11:05:00", "14", 14, null]);
+  /* meta.xml can carry personal data: the item has EXACTLY the OOXML item's
+     keys, so the generator, keyword and the user-defined reviewer are not
+     emitted. Pinned against the SIBLING's item, not a list typed here. */
+  t(`${flavour}: the item carries exactly the OOXML core-properties keys and nothing more from meta.xml`,
+    cp[0] && Object.keys(cp[0]).sort(),
+    ["created", "creator", "kind", "lastModifiedBy", "modified", "revision", "revisionNumber", "source", "title"]);
+  t(`${flavour}: no user-defined field, generator or keyword leaks into the envelope`,
+    JSON.stringify(st.evidentiary).includes("J. Private") || JSON.stringify(st.evidentiary).includes("LibreOffice/26.8"), false);
+  t(`${flavour}: the not-read markers are GONE — both parts are now read, so they would be false`,
+    [u.some((x) => x.why === "outside_content_xml_not_read"), st.notes.some((n) => n.includes("no intra link is emitted"))],
+    [false, false]);
+  t(`${flavour}: a manifest listing no embedded member gives a TRUE zero intra count, and nothing undetermined about it`,
+    [st.counts.intra, u.some((x) => x.part === "META-INF/manifest.xml")], [0, false]);
+
+  /* A PACKAGE WITHOUT meta.xml STILL STATES THE ABSENCE (accepts-when). */
+  const bare = await ENTRY[flavour].structure(odfFixture(flavour, { omitMeta: true }));
+  t(`${flavour}: without meta.xml, no core-properties item — and the absence is STATED by part`,
+    [bare.ok, bare.evidentiary.items.some((i) => i.kind === "core-properties"),
+      bare.evidentiary.undetermined.filter((x) => x.part === "meta.xml").map((x) => x.why)],
+    [true, false, ["part_absent"]]);
+  t(`${flavour}: and the statement says why the silence is not a fact`,
+    /not evidence the document has no author/.test(bare.evidentiary.undetermined.find((x) => x.part === "meta.xml")?.detail ?? ""), true);
+
+  /* An UNPARSEABLE meta.xml is stated, not read as empty. */
+  const junk = await ENTRY[flavour].structure(odfFixture(flavour, { meta: "<not-meta/>" }));
+  t(`${flavour}: an unparseable meta.xml is stated with the OOXML reason, and emits no item`,
+    [junk.evidentiary.items.some((i) => i.kind === "core-properties"),
+      junk.evidentiary.undetermined.filter((x) => x.part === "meta.xml").map((x) => x.why)],
+    [false, ["core_properties_unparseable"]]);
+
+  /* THE MANIFEST WALK. */
+  const content = withFontFace(CONTENT_FOR[flavour]);
+  const emb = await ENTRY[flavour].structure(odfFixture(flavour, { content, manifest: EMBED_MANIFEST, extra: EMBED_EXTRA }));
+  const intra = emb.links.filter((l) => l.partition === "intra");
+  t(`${flavour}: each embedded member is an intra link content-addressed by sha256 of its bytes`,
+    intra.map((l) => [l.target.name, l.target.sha256, l.target.bytes]),
+    [["Object 1/content.xml", hex(Buffer.from(SUBDOC, "utf-8")), Buffer.byteLength(SUBDOC)],
+      ["Object 2", hex(OLE_BLOB), OLE_BLOB.length],
+      ["ObjectReplacements/Object 1", hex(REPLACEMENT), REPLACEMENT.length]]);
+  t(`${flavour}: through the ONE linkWrapper, byte-identical (the parity pin)`,
+    intra.every((l) => l.wrapper === linkWrapper.intra(l.target.sha256) && l.source === null), true);
+  t(`${flavour}: images, font faces, thumbnails and the package's own parts are NOT intra`,
+    intra.some((l) => /^(Pictures|Fonts|Thumbnails)\/|^(content|meta|styles)\.xml$/.test(l.target.name)), false);
+  t(`${flavour}: a listed-but-absent member and an encrypted one are STATED, never hashed`,
+    emb.links.filter((l) => l.partition === "undetermined" && l.target.name).map((l) => [l.target.name, l.target.why]),
+    [["Object 3", "manifest_member_absent"], ["Object 4", "embedding_encrypted"]]);
+  t(`${flavour}: counts agree with the links`,
+    [emb.counts.intra, emb.counts.undetermined >= 2], [3, true]);
+}
+
+/* OVER-STRICTNESS: the same meta.xml under prefixes this item did not
+   anticipate (namespace prefixes are the producer's choice) must still READ. */
+{
+  const respelled = ODF_META.replace(/<(\/?)meta:/g, "<$1m:").replace(/<(\/?)dc:/g, "<$1purl:").replace(/<(\/?)office:/g, "<$1o:");
+  const st = await odtEntry.structure(odfFixture("odt", { meta: respelled }));
+  const cp = st.evidentiary.items.find((i) => i.kind === "core-properties");
+  t("a respelled-prefix meta.xml is read the same (by local name)", cp && [cp.creator, cp.lastModifiedBy], [PLANTED_CREATOR, "M. Analyst"]);
+}
+
+/* A MANIFEST THAT CANNOT BE PARSED keeps the old statement's meaning where it
+   is still true: intra is then NOT LOOKED, and the envelope names the part. */
+{
+  const bytes = zip([
+    { name: "mimetype", data: ODF_MIME.odt, store: true },
+    { name: "META-INF/manifest.xml", data: "<not-a-manifest/>" },
+    { name: "content.xml", data: ODT_CONTENT },
+    { name: "meta.xml", data: ODF_META },
+  ]);
+  const st = await odtEntry.structure(bytes);
+  t("an unparseable manifest is STATED by part, so a zero intra count cannot be read as none embedded",
+    [st.ok, st.counts.intra, st.evidentiary.undetermined.filter((x) => x.part === "META-INF/manifest.xml").map((x) => x.why)],
+    [true, 0, ["manifest_unparseable"]]);
 }
 
 /* ================================================================== */
