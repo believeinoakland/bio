@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d389-fullfetch.test.mjs",
+ "inputHash": "e8d5cd61ae29cdb71402da2ca7f3d4840b8dfcd7e5179fd241461309065d5c48",
+ "verdict": "PASS",
+ "run": "460ce9fedbc3264774f8f6db53fd82f611980f24.1790338739265.2398.json",
+ "tree": "460ce9fedbc3264774f8f6db53fd82f611980f24",
+ "head": "8e04cbe9e6967a9ffe8bbd533f3d0cb94970bc38",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 163,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "8531e226-c7e3-566f-b4c3-0a1df8db62a9",
+ "at": "2026-09-25T12:18:59.280Z"
+}

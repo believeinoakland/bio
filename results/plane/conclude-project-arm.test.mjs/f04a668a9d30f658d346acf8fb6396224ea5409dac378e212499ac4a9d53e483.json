@@ -1,0 +1,16 @@
+{
+ "unit": "plane:conclude-project-arm.test.mjs",
+ "inputHash": "f04a668a9d30f658d346acf8fb6396224ea5409dac378e212499ac4a9d53e483",
+ "verdict": "PASS",
+ "run": "460ce9fedbc3264774f8f6db53fd82f611980f24.1790338739265.2398.json",
+ "tree": "460ce9fedbc3264774f8f6db53fd82f611980f24",
+ "head": "8e04cbe9e6967a9ffe8bbd533f3d0cb94970bc38",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 149,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "8531e226-c7e3-566f-b4c3-0a1df8db62a9",
+ "at": "2026-09-25T12:18:59.280Z"
+}
