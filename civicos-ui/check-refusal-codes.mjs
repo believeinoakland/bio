@@ -1306,7 +1306,13 @@ const FLOOR = {
      SLACK. Measured unchanged since SCHEDULER #3 re-measured the row on 2026-09-19 (22/110 then too): these two floors
      sat HALF their measurement for at least two days of green runs, so a walk that lost every vocabulary this floor did
      not know about would still have cleared it. The printed list names all 22. */
-  vocabularies: 22,    // the plane's own code->text maps a surface renders verbatim (arm E).
+  /* D-682 (2026-09-25, worktree /home/user/wt-D682 on land/worker/D-682, cloud): vocabularies 22 -> 23 and
+     vocabularyTerms 112 -> 117, from THIS GUARD'S OWN PRINT (`arm E: … 23 vocabularies, 117 terms`) on the item's tree
+     @ 30e7f701, every other ratchet key gated at zero slack in the same run. WHOSE GROWTH IT ABSORBS: exactly this
+     item's one vocabulary and its five terms — `OBSERVATION_STATE_WORDS` in `airun.mjs`, D-129's five states in the words
+     a member reads (a maintainer's trailing note cut), which op=leadread and op=frontier&level=internet now publish as
+     `vocabulary.states`. Zero is pre-existing slack: the base (land/worker/D-194 @ 45437e4d) gated both at zero. */
+  vocabularies: 23,    // the plane's own code->text maps a surface renders verbatim (arm E).
                        // WAS 8. REC-74 added `STANDARD_BASIS` to src/airun.mjs — the five ways a
                        // run's declared standard pair can be known, each carrying the sentence a
                        // member reads instead of the machine word. Moved IN THE SAME TURN from
@@ -1316,6 +1322,7 @@ const FLOOR = {
                        // from RED to GREEN.
   /* D-309 2026-09-10: 63 -> 64. pristine tree printed 64, this item's 64 — so 1 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
   /* D-523 side, kept as history: vocabularyTerms 111 on its own branch (110 -> 111, queuestate.mjs QUEUE_CONDITION_KINDS gained `render-deferred`); the c22-batch29 union's figure is re-read from this guard's print. */
+  /* D-682 side, kept as history: vocabularyTerms 117 on its own branch (112 -> 117, its note above `vocabularies`: OBSERVATION_STATE_WORDS' five terms); the c22-batch30 union's figure is re-read from this guard's print. */
   vocabularyTerms: 113, /* CONDUCT #22 at the c22-batch29 union: 112 -> 113, the union's figure READ from `node civicos-ui/check-refusal-codes.mjs --strict`'s print on the merged tree (`ratchet: vocabularyTerms ... measured 113`). */ /* D-516 (2026-09-24, worktree /home/user/bio on land/worker/D-516, cloud): MOVED 110 -> 112 from
      THIS GUARD'S OWN PRINT on the item's tree, every other ratchet key gated at zero slack in the same run. WHOSE GROWTH
      IT ABSORBS: exactly this item's own two terms and nothing else -- `watermark_band`, added to `MISSING_ROW_CAUSES` and

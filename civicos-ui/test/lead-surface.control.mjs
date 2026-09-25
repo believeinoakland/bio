@@ -15,7 +15,7 @@
  *   (A) THE ROW'S OWN — `op=lead` stubbed: the page answers its own write without asking the plane
  *                                                                                     -> RED, naming
  *       "WRITE AND LOOK: the write is `op=lead` on the wire", "WRITE AND LOOK: the plane holds the lead";
- *       MUST NOT fail "NOTHING PREFILLED", "MIRROR"
+ *       MUST NOT fail "NOTHING PREFILLED", "NO MIRROR"
  *   (B) an outcome preselected on the look                                            -> RED, naming
  *       "NOTHING PRESELECTED: and none is checked"; MUST NOT fail "WRITE AND LOOK: the plane records the look"
  *   (C) a refusal re-worded by the page                                               -> RED, naming
@@ -23,27 +23,49 @@
  *       MUST NOT fail "WRITE AND LOOK: and the member SEES LOOKED_ABSENT"
  *   (D) a share as a side effect of the look                                          -> RED, naming
  *       "NO SHARE AS A SIDE EFFECT", "THE MEMBER'S ACT"; MUST NOT fail "WRITE AND LOOK: the plane records the look"
- *   (E) the plane's word for LOOKED_ABSENT improved by the page                        -> RED, naming
- *       "MIRROR: each of the page's sentences", "in the plane's own words for that state";
- *       MUST NOT fail "WRITE AND LOOK: and the member SEES LOOKED_ABSENT"
+ *   (E) the plane's word for LOOKED_ABSENT improved where the page draws a state     -> RED, naming
+ *       "STATE ARM: every state drawn", "in the plane's own words for that state";
+ *       MUST NOT fail "WRITE AND LOOK: and the member SEES LOOKED_ABSENT", "THE PLANE PUBLISHES IT"
+ *       (CORRECTED by D-682: D-194's (E) edited the page's mirror, which D-682 deleted.)
  *   (F) the list stubbed empty instead of read from the plane                          -> RED, naming
  *       "the list is the plane's lead list", "the list draws LOOKED_ABSENT against that lead";
  *       MUST NOT fail "WRITE AND LOOK: the plane records the look"
- *   (H) D-681, THE ROW'S OWN — the list read from `op=frontier&level=internet` again, grouped per SUBJECT
+ *   (K) D-681, THE ROW'S OWN — the list read from `op=frontier&level=internet` again, grouped per SUBJECT
  *                                                                                     -> RED, naming
  *       "SAME WORDS, TWO LEADS"; MUST NOT fail "WRITE AND LOOK: the plane records the look",
  *       "WRITE AND LOOK: and the member SEES LOOKED_ABSENT"
  *   (G) OVER-STRICTNESS — the heading, the lede and the write button re-worded        -> GREEN
+ *   (H) D-682, THE ROW'S OWN — `vocabulary` dropped from op=leadread, op=frontier and (at the c22-batch30 union)
+ *       op=leadlist (store.mjs)                                                       -> RED, naming
+ *       "STATE ARM: before any look", "NOTHING PRESELECTED: the look offers exactly"; MUST NOT fail
+ *       "NOTHING PREFILLED", "LEAD_NO_WORDS, verbatim", "WRITE AND LOOK: the plane holds the lead"
+ *       (with no outcomes the look cannot be recorded, so the suite ends at the look's budgeted wait, AFTER both)
+ *   (I) `vocabulary` dropped from the list's op only — op=leadlist since the c22-batch30 union (D-681's list; it was
+ *       op=frontier on D-682's branch)                                                -> RED, naming
+ *       "STATE ARM: every state drawn", "and op=leadlist carries the same vocabulary";
+ *       MUST NOT fail "STATE ARM: before any look", "WRITE AND LOOK: the plane records the look", "NO MIRROR"
+ *   (J) a mirror brought back behind the plane's words (one literal sentence as a fallback) -> RED, naming
+ *       "NO MIRROR"; MUST NOT fail "STATE ARM: every state drawn", "STATE ARM: before any look"
  *
  * RUN 2026-09-25 by the D-194 worker, the FIRST run and unamended: 8/8 AS DECLARED against app.html 0c39845f92eaa2d5…
  * (1,650,102 B), IDENTICAL after every arm by sha256 AND cmp, driver exit 0. BASELINE GREEN 48/0 · (A) RED 10/15 · (B) RED
  * 47/1 · (C) RED 45/3 · (D) RED 46/2 · (E) RED 46/2 · (F) RED 43/5 · (G) GREEN 48/0. Every RED arm failed at the lines it
  * named and spared the ones it declared; (A), the row's own, ended at the budgeted look wait (M0-107) AFTER both
  * write-and-look arms had failed by name, and the foot line was reached.
- * RE-RUN 2026-09-25 by the D-681 worker after the list moved to `op=leadlist` and arm (H) was added, the first run:
+ * RE-RUN 2026-09-25 by the D-681 worker after the list moved to `op=leadlist` and arm (H) was added (re-lettered (K) at the c22-batch30 union), the first run:
  * 9/9 AS DECLARED against app.html 0c18e77bfb45… (1,650,107 B), IDENTICAL after every arm by sha256 AND cmp, driver exit
  * 0. BASELINE GREEN 51/0 · (A) RED 10/15 · (B) RED 50/1 · (C) RED 48/3 · (D) RED 49/2 · (E) RED 49/2 · (F) RED 45/6 ·
  * (H) RED 48/3, D-681's own, failing "SAME WORDS, TWO LEADS" by name · (G) GREEN 51/0.
+ * RUN 2026-09-25 by the D-682 worker, after D-682 moved the state words onto the plane's answer (arm (E) re-anchored,
+ * (H)-(J) added, store.mjs a second subject): 11/11 AS DECLARED against app.html d0ff4b0ee513b716… (1,650,111 B) and
+ * store.mjs f5bdc657e9373068… (3,472,676 B), both IDENTICAL after every arm by sha256 AND cmp, driver exit 0. BASELINE
+ * GREEN 55/0 · (A) RED 10/16 · (B) RED 54/1 · (C) RED 52/3 · (D) RED 53/2 · (E) RED 53/2 · (F) RED 49/6 · (G) GREEN 55/0 ·
+ * (H) RED 20/6 · (I) RED 53/2 · (J) RED 54/1. (E)'s FIRST run came back 54/1, "in the plane's own words for that state"
+ * GREEN: that assertion read the whole page, where the look form's LOOKED_ABSENT choice also carries the plane's
+ * sentence. It now reads the state's own spans, and the second run is the one recorded here.
+ * UNION 2026-09-25 at c22-batch30 (CONDUCT #22), D-681 x D-682: D-681's (H) is re-lettered (K), since D-682's (H)-(J)
+ * met it; op=leadlist now carries the lead ops' `vocabulary` too, so (H) drops it from all three ops and (I) moves to
+ * op=leadlist, the op the list reads. The two runs above are each its own branch's; the union's is re-run at integration.
  */
 import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
@@ -55,7 +77,7 @@ import { fileURLToPath } from "url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, "..", "..");
-const FILES = { app: path.join(REPO, "civicos-ui", "app.html") };
+const FILES = { app: path.join(REPO, "civicos-ui", "app.html"), store: path.join(REPO, "bio-plane", "src", "store.mjs") };
 const SUITE = { path: path.join(HERE, "lead-surface.test.mjs"), foot: /lead-surface\.test\.mjs: (\d+ pass, \d+ fail)/ };
 const SCRATCH = fs.mkdtempSync(path.join(os.tmpdir(), "d194-control-"));
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
@@ -64,7 +86,7 @@ const ARMS = [
   { name: "BASELINE", declared: "GREEN" },
   { name: "(A) op=lead stubbed", declared: "RED",
     names: ["WRITE AND LOOK: the write is `op=lead` on the wire", "WRITE AND LOOK: the plane holds the lead"],
-    mustNotFail: ["NOTHING PREFILLED", "MIRROR"],
+    mustNotFail: ["NOTHING PREFILLED", "NO MIRROR"],
     edits: [["app", '  try{ r = await recPostR("lead", body); }',
                     '  try{ r = { ok: true, lead_id: "LEAD-2026-0101-stubbd", says: "" }; }']] },
   { name: "(B) an outcome preselected", declared: "RED",
@@ -82,19 +104,22 @@ const ARMS = [
     mustNotFail: ["WRITE AND LOOK: the plane records the look"],
     edits: [["app", '  try{ r = await recPostR("leadlook", body); }',
                     '  try{ r = await recPostR("leadlook", body); await recPostR("leadshare", { lead: LDS.id, project: "PROJ-none" }); }']] },
+  /* CORRECTED BY D-682: D-194's (E) re-worded LOOKED_ABSENT inside the page's mirror, LEAD_STATE_WORDS, which D-682
+     deleted — that arm's anchor no longer exists, and an arm that cannot arm refutes nothing. The same lie is now told
+     where the page draws a state: it improves the plane's published word. */
   { name: "(E) the plane's word improved", declared: "RED",
-    names: ["MIRROR: each of the page's sentences", "in the plane's own words for that state"],
-    mustNotFail: ["WRITE AND LOOK: and the member SEES LOOKED_ABSENT"],
-    edits: [["app", '  LOOKED_ABSENT:        "we looked and it is positively not there",\n  LOOKED_INDETERMINATE: "we looked and could not tell",\n  PRESENT:              "we looked and it is there",\n  partial:              "we looked and got part of it",',
-                    '  LOOKED_ABSENT:        "we looked and it is not there",\n  LOOKED_INDETERMINATE: "we looked and could not tell",\n  PRESENT:              "we looked and it is there",\n  partial:              "we looked and got part of it",']] },
+    names: ["STATE ARM: every state drawn", "in the plane's own words for that state"],
+    mustNotFail: ["WRITE AND LOOK: and the member SEES LOOKED_ABSENT", "THE PLANE PUBLISHES IT"],
+    edits: [["app", '  const words = states && Object.prototype.hasOwnProperty.call(states, s) ? states[s] : "";',
+                    '  const words = s === "LOOKED_ABSENT" ? "we looked and it is not there" : states && Object.prototype.hasOwnProperty.call(states, s) ? states[s] : "";']] },
   { name: "(F) the list stubbed empty", declared: "RED",
     names: ["the list is the plane's lead list", "the list draws LOOKED_ABSENT against that lead"],
     mustNotFail: ["WRITE AND LOOK: the plane records the look"],
     edits: [["app", '    const r = await recR("leadlist", { limit: String(LEAD_ASK_LIMIT) });',
                     '    const r = { leads: [] };']] },
-  /* D-681 — THE ROW'S OWN: the list read back from the frontier, D-194's spelling byte for byte, which groups the
+  /* D-681 — THE ROW'S OWN (its (H), re-lettered (K) at the c22-batch30 union): the list read back from the frontier, D-194's spelling byte for byte, which groups the
      latest look per SUBJECT — so the first of two leads in the same words vanishes. */
-  { name: "(H) the list grouped by subject again (op=frontier)", declared: "RED",
+  { name: "(K) the list grouped by subject again (op=frontier)", declared: "RED",
     names: ["SAME WORDS, TWO LEADS"],
     mustNotFail: ["WRITE AND LOOK: the plane records the look", "WRITE AND LOOK: and the member SEES LOOKED_ABSENT"],
     edits: [["app", '    const r = await recR("leadlist", { limit: String(LEAD_ASK_LIMIT) });',
@@ -108,6 +133,27 @@ const ARMS = [
             ["app", "    + 'It is somewhere to look and never evidence: nothing in a case can rest on it. Only you can read a lead you write, '",
                     "    + 'It tells you where to look; it is not evidence, and no case can rest on it. A lead you write is yours alone, '"],
             ["app", `onclick="ldWrite()">Record the lead</button>`, `onclick="ldWrite()">Write it down</button>`]] },
+  /* D-682's arms. (H) is the row's own NEGATIVE CONTROL. */
+  { name: "(H) THE ROW'S OWN: vocabulary dropped from the ops", declared: "RED",
+    names: ["STATE ARM: before any look", "NOTHING PRESELECTED: the look offers exactly"],
+    mustNotFail: ["NOTHING PREFILLED", "LEAD_NO_WORDS, verbatim", "WRITE AND LOOK: the plane holds the lead"],
+    edits: [["store", "      vocabulary: Store.LEAD_VOCABULARY,\n      says: !looks.length", "      says: !looks.length"],
+            ["store", "                   vocabulary: Store.LEAD_VOCABULARY };", "                   };"],
+            /* c22-batch30 union (D-681 x D-682): op=leadlist carries the vocabulary too, and the list reads it. */
+            ["store", "the surface's list reads it from here. */\n               vocabulary: Store.LEAD_VOCABULARY };", "the surface's list reads it from here. */\n               };"],
+            ["store", "note: Store.LEAD_LIST_NOTE, vocabulary: Store.LEAD_VOCABULARY };", "note: Store.LEAD_LIST_NOTE };"]] },
+  /* (I) MOVED TO op=leadlist at the c22-batch30 union: the list is op=leadlist's (D-681), so dropping the vocabulary
+     from the list's op is dropping it from op=leadlist; on D-682's branch that op was op=frontier. */
+  { name: "(I) vocabulary dropped from the list's op only", declared: "RED",
+    names: ["STATE ARM: every state drawn", "and op=leadlist carries the same vocabulary"],
+    mustNotFail: ["STATE ARM: before any look", "WRITE AND LOOK: the plane records the look", "NO MIRROR"],
+    edits: [["store", "the surface's list reads it from here. */\n               vocabulary: Store.LEAD_VOCABULARY };", "the surface's list reads it from here. */\n               };"],
+            ["store", "note: Store.LEAD_LIST_NOTE, vocabulary: Store.LEAD_VOCABULARY };", "note: Store.LEAD_LIST_NOTE };"]] },
+  { name: "(J) a mirror brought back behind the plane's words", declared: "RED",
+    names: ["NO MIRROR"],
+    mustNotFail: ["STATE ARM: every state drawn", "STATE ARM: before any look"],
+    edits: [["app", '  const words = states && Object.prototype.hasOwnProperty.call(states, s) ? states[s] : "";',
+                    '  const words = states && Object.prototype.hasOwnProperty.call(states, s) ? states[s] : ({ PRESENT: "we looked and it is there" })[s] || "";']] },
 ];
 
 const orig = {};
@@ -130,13 +176,16 @@ try {
     }
     let armed = true;
     const src = {};
-    for (const f of touched) src[f] = fs.readFileSync(FILES[f], "utf8");
+    /* store.mjs carries a stray byte (CLAUDE.md §7): read and written as latin1, which round-trips every byte, so an
+       arm on it changes its anchor and nothing else. app.html stays utf8, as D-194 drove it. */
+    const ENC = { app: "utf8", store: "latin1" };
+    for (const f of touched) src[f] = fs.readFileSync(FILES[f], ENC[f]);
     for (const [f, from, to] of arm.edits || []) {
       const hits = src[f].split(from).length - 1;
       if (hits !== 1) { armed = false; console.error(`  ARM DID NOT ARM: ${arm.name} — ${f} anchor matched ${hits} time(s): ${from.slice(0, 90)}`); }
       else src[f] = src[f].replace(from, () => to);
     }
-    if (armed) for (const f of touched) fs.writeFileSync(FILES[f], src[f]);
+    if (armed) for (const f of touched) fs.writeFileSync(FILES[f], src[f], ENC[f]);
     const r = spawnSync("node", [SUITE.path], { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, cwd: REPO });
     const out = String(r.stdout || "") + String(r.stderr || "");
     const failLines = out.split("\n").filter((l) => /^\s*FAIL /.test(l));

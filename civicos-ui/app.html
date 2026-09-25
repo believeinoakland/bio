@@ -26747,23 +26747,14 @@ try{ window.addEventListener("hashchange", ()=>{ if(!THM_HASH_LOCK) themeRouteFr
    the plane exactly as one that does not exist; its refusal is rendered in its
    own words (DEC-49), through `refusalWords`, and never re-worded here. */
 
-/* WHAT A LOOK'S STATE MEANS, MIRRORED FROM THE PLANE'S OWN VOCABULARY
-   (`OBSERVATION_STATES` in `bio-plane/src/airun.mjs`), whose wording this copies
-   and does not improve. It is a MIRROR only because no lead op publishes it
-   (D-682); `lead-surface.test.mjs` imports the
-   plane's table and fails if a key here is missing there or a sentence here is
-   not the plane's own sentence. `partial`'s sentence stops where the plane's
-   continues into a measurement note meant for its maintainers. */
-const LEAD_STATE_WORDS = {
-  NEVER_LOOKED:         "nobody looked at this level for this subject",
-  LOOKED_ABSENT:        "we looked and it is positively not there",
-  LOOKED_INDETERMINATE: "we looked and could not tell",
-  PRESENT:              "we looked and it is there",
-  partial:              "we looked and got part of it",
-};
-/* The outcomes a look may RECORD, in the plane's order (`Store.LEAD_LOOK_OUTCOMES`);
-   NEVER_LOOKED is what the record says of a lead with no look, never a choice. */
-const LEAD_LOOK_CHOICES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
+/* WHAT A LOOK'S STATE MEANS, AND WHICH A LOOK MAY RECORD, ARE THE PLANE'S, READ
+   OFF THE ANSWER (D-682): `op=leadread`, `op=frontier&level=internet` and (at the
+   c22-batch30 union with D-681) `op=leadlist` each carry `vocabulary: { states, outcomes }` — the five states in a member's words and the
+   outcomes a look may record, in the plane's order — and this surface keeps the one
+   it last received in `LDS.vocab`. It holds NO copy: D-194's mirror of
+   `OBSERVATION_STATES` was deleted when the plane began publishing it. A state the
+   answer gives no words for is said to be one, never guessed at; an answer with no
+   outcomes offers no choice rather than a list learned somewhere else. */
 const LEAD_UNREACHED = "This page could not reach the record just now, so nothing is shown. Nothing about any lead is implied by that.";
 
 let LDS = null;              /* the surface's state */
@@ -26776,7 +26767,8 @@ function ldRefusalHtml(r){
 }
 function ldStateHtml(st){
   const s = String(st || "");
-  const words = LEAD_STATE_WORDS[s];
+  const states = LDS && LDS.vocab && LDS.vocab.states;
+  const words = states && Object.prototype.hasOwnProperty.call(states, s) ? states[s] : "";
   return '<span class="lead-state" data-lead-state="' + esc(s) + '">'
     + esc(words || "the record gave a state this page has no words for") + '</span>';
 }
@@ -26811,7 +26803,9 @@ async function ldListLoad(){
   LDS.busy = true; ldPaint();
   try{
     const r = await recR("leadlist", { limit: String(LEAD_ASK_LIMIT) });
-    LDS.list = r; LDS.bound = ldBoundSentence(r && r.limit, r && r.truncated, "the leads you may read"); LDS.err = null;
+    /* D-682 x D-681 (c22-batch30 union): the list is op=leadlist's (D-681), and it carries the lead ops' `vocabulary`
+       (D-682) like op=leadread, so the list renders the words its own answer carried. */
+    LDS.list = r; LDS.vocab = (r && r.vocabulary) || null; LDS.bound = ldBoundSentence(r && r.limit, r && r.truncated, "the leads you may read"); LDS.err = null;
   }
   catch(e){ LDS.list = null; LDS.bound = ""; LDS.err = ldIsAnswer(e) ? e : { detail: LEAD_UNREACHED }; }
   LDS.busy = false;
@@ -26878,7 +26872,7 @@ async function ldLoad(){
   LDS.busy = true; ldPaint();
   try{
     const r = await recR("leadread", { id: LDS.id, limit: String(LEAD_ASK_LIMIT) });
-    if(r && r.ok === true){ LDS.read = r; LDS.bound = ldBoundSentence(r.limit, r.truncated, "this lead's looks"); LDS.refusal = null; }
+    if(r && r.ok === true){ LDS.read = r; LDS.vocab = r.vocabulary || null; LDS.bound = ldBoundSentence(r.limit, r.truncated, "this lead's looks"); LDS.refusal = null; }
     else { LDS.read = null; LDS.bound = ""; LDS.refusal = r || {}; }
     LDS.err = null;
   }catch(e){ LDS.read = null; if(ldIsAnswer(e)) LDS.refusal = e; else LDS.err = LEAD_UNREACHED; }
@@ -26922,9 +26916,12 @@ function ldLooksHtml(l){
     + '<p class="subj-note" data-lead-bound>' + esc(LDS.bound || '') + '</p>';
 }
 function ldLookFormHtml(){
-  const radios = LEAD_LOOK_CHOICES.map(st => '<label><input type="radio" name="lead-look-state" value="' + esc(st) + '" '
+  const outcomes = LDS.vocab && Array.isArray(LDS.vocab.outcomes) ? LDS.vocab.outcomes : [];
+  const states = (LDS.vocab && LDS.vocab.states) || {};
+  const radios = outcomes.map(st => '<label><input type="radio" name="lead-look-state" value="' + esc(st) + '" '
     + (LDS.lookState === st ? 'checked ' : '') + 'onchange="ldField(\'lookState\', \'' + esc(st) + '\')"> '
-    + esc(LEAD_STATE_WORDS[st]) + '</label><br>').join("");
+    + esc(states[st] || st) + '</label><br>').join("")
+    || '<p class="subj-note" data-lead-no-outcomes>The record did not say what a look may find, so this page offers no choice.</p>';
   const kinds = [["capture", "a document already in the record, by its capture fingerprint"],
                  ["content", "a passage already in the record, by its id"]]
     .map(([k, label]) => '<label><input type="radio" name="lead-look-kind" value="' + k + '" '

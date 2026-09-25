@@ -24,8 +24,10 @@
  *  (d) A FORM THAT GUESSES — the words, the place to look, the outcome of a look: each asserted empty and unchosen.
  *  (e) A REFUSAL RE-WORDED — the empty lead and the look with no outcome are sent to the plane, and what the page draws
  *      is asserted to be the plane's own translation, byte for byte (DEC-49).
- *  (f) THE PLANE'S VOCABULARY IMPROVED — the page's words for a state are its MIRROR of `OBSERVATION_STATES`; this
- *      suite imports the plane's table and fails if a key is missing there or a sentence is not the plane's own.
+ *  (f) THE PLANE'S VOCABULARY IMPROVED, OR HELD AS A COPY — the page's words for a state, and the outcomes a look
+ *      offers, must be the `vocabulary` the plane's answer carried (D-682), compared here to that answer read
+ *      directly; and the leads block must hold none of the plane's state sentences itself, so a mirror cannot return
+ *      unseen. (D-194's guard compared a client MIRROR to `OBSERVATION_STATES`; it is corrected in section 6.)
  *
  * WHY IT IS REAL: the plane is `bio-plane/src/index.mjs` under miniflare; every act goes through the page's own markup
  * (`onchange` and `onclick` strings read out of what it rendered, run in the page's context). WHAT IT CANNOT SEE: a real
@@ -39,10 +41,21 @@
  * 47/1 · (C) RED 45/3 · (D) RED 46/2 · (E) RED 46/2 · (F) RED 43/5 · (G) GREEN 48/0. Every RED arm failed at the lines it
  * named and spared the ones it declared; (A), the row's own, ended at the budgeted look wait (M0-107) AFTER both
  * write-and-look arms had failed by name, and the foot line was reached.
- * RE-RUN 2026-09-25 by the D-681 worker after the list moved to `op=leadlist` and arm (H) was added, the first run:
+ * RE-RUN 2026-09-25 by the D-681 worker after the list moved to `op=leadlist` and arm (H) was added (re-lettered (K) at the c22-batch30 union, where D-682's (H)-(J) met it), the first run:
  * 9/9 AS DECLARED against app.html 0c18e77bfb45… (1,650,107 B), IDENTICAL after every arm by sha256 AND cmp, driver exit
  * 0. BASELINE GREEN 51/0 · (A) RED 10/15 · (B) RED 50/1 · (C) RED 48/3 · (D) RED 49/2 · (E) RED 49/2 · (F) RED 45/6 ·
  * (H) RED 48/3, D-681's own, failing "SAME WORDS, TWO LEADS" by name · (G) GREEN 51/0.
+ * RUN 2026-09-25 by the D-682 worker, after D-682 moved the state words onto the plane's answer (arm (E) re-anchored,
+ * (H)-(J) added, store.mjs a second subject): 11/11 AS DECLARED against app.html d0ff4b0ee513b716… (1,650,111 B) and
+ * store.mjs f5bdc657e9373068… (3,472,676 B), both IDENTICAL after every arm by sha256 AND cmp, driver exit 0. BASELINE
+ * GREEN 55/0 · (A) RED 10/16 · (B) RED 54/1 · (C) RED 52/3 · (D) RED 53/2 · (E) RED 53/2 · (F) RED 49/6 · (G) GREEN 55/0 ·
+ * (H) RED 20/6 · (I) RED 53/2 · (J) RED 54/1. (E)'s FIRST run came back 54/1, "in the plane's own words for that state"
+ * GREEN: that assertion read the whole page, where the look form's LOOKED_ABSENT choice also carries the plane's
+ * sentence. It now reads the state's own spans, and the second run is the one recorded here.
+ * UNION 2026-09-25 at c22-batch30 (CONDUCT #22), D-681 x D-682: the list is op=leadlist's (D-681) and carries the lead ops'
+ * `vocabulary` (D-682), so section 6's list-vocabulary assertion names op=leadlist, and op=frontier&level=internet's
+ * vocabulary is asserted beside it from a direct read; control arm (I) drops it from op=leadlist, (H) from all three.
+ * D-681's arm (H) is (K). The two run records above are each its own branch's; the union's is re-run at integration.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: shared, for its side effect. */
 import fs from "fs";
@@ -52,7 +65,7 @@ import { pathToFileURL } from "url";
 import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 import { until, budgetAssert } from "../../bio-plane/test/budget.mjs";   /* M0-107: a wait whose expiry is NOT MEASURED */
-import { OBSERVATION_STATES } from "../../bio-plane/src/airun.mjs";
+import { OBSERVATION_STATES, OBSERVATION_STATE_WORDS } from "../../bio-plane/src/airun.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -173,7 +186,7 @@ function page(hash, token, me) {
       return mf.dispatchFetch(url.toString(), opts);
     } };
   ctx.globalThis = ctx; vm.createContext(ctx);
-  vm.runInContext(APP + `;globalThis.__U = { PLANE, get LDS(){ return LDS; }, LEAD_STATE_WORDS, LEAD_LOOK_CHOICES,
+  vm.runInContext(APP + `;globalThis.__U = { PLANE, get LDS(){ return LDS; },
     SURFACES, renderLeads, ldOpen, leadRouteFromHash, go };`, ctx);
   const U = ctx.__U;
   U.PLANE.base = "http://x";
@@ -265,6 +278,13 @@ ok("WRITE AND LOOK: the plane holds the lead the page now shows — its id, the 
 ok("the page moved to the lead's own address", M.hash === "#lead/" + LEAD, M.hash);
 const one1 = M.html("#content");
 tb("WRITE AND LOOK: before any look the page draws the plane's state, NEVER_LOOKED", statesOn(one1), [read1?.state]);
+/* THE STATE ARM, first sighting (D-682): the words drawn for NEVER_LOOKED are the ones op=leadread's answer carried.
+   Asserted HERE, before the look, because without a vocabulary the look form offers no outcome and the suite ends at
+   the look's budgeted wait — the row's control must fail by name before that. */
+const nl1 = (/<span class="lead-state" data-lead-state="NEVER_LOOKED">([^<]*)<\/span>/.exec(one1) || [])[1];
+ok("STATE ARM: before any look, NEVER_LOOKED is drawn in the words op=leadread's answer carried",
+   typeof read1?.vocabulary?.states?.NEVER_LOOKED === "string" && nl1 != null && unesc(nl1) === read1.vocabulary.states.NEVER_LOOKED,
+   JSON.stringify({ drawn: nl1, carried: read1?.vocabulary?.states?.NEVER_LOOKED }));
 ok("and the plane's own sentences about it: what the write said, and what the read says",
    one1.includes(esc1(read1?.says || "\u0000")) && one1.includes(esc1(M.U.LDS.written?.says || "\u0000")));
 /* No outcome is chosen for the member. */
@@ -294,7 +314,13 @@ ok("WRITE AND LOOK: the plane records the look, LOOKED_ABSENT, by iris", read2?.
    && (read2.looks || []).length === 1 && read2.looks[0].state === "LOOKED_ABSENT", JSON.stringify(read2?.looks));
 tb("WRITE AND LOOK: and the member SEES LOOKED_ABSENT against the lead — as where it stands, and on the look itself",
    statesOn(one2), ["LOOKED_ABSENT", "LOOKED_ABSENT"]);
-ok("in the plane's own words for that state", strip(one2).includes(OBSERVATION_STATES.LOOKED_ABSENT));
+/* READ OFF THE STATE'S OWN SPANS, not the page at large (D-682's control, arm E, caught the looser form green: the look
+   form's LOOKED_ABSENT choice also carries the plane's sentence, so "the page contains it" held while the state drawn
+   against the lead said something else). */
+const absentWords = [...one2.matchAll(/<span class="lead-state" data-lead-state="LOOKED_ABSENT">([^<]*)<\/span>/g)].map((m) => unesc(m[1]));
+ok("in the plane's own words for that state, as its answer carried them",
+   !!read2?.vocabulary?.states?.LOOKED_ABSENT && absentWords.length === 2
+   && absentWords.every((w) => w === read2.vocabulary.states.LOOKED_ABSENT), JSON.stringify(absentWords));
 /* The list the rail opens. */
 await M.run(handler(one2, "onclick", /renderLeads\(\)/));
 await drawn("the list is drawn again", () => M.U.LDS && M.U.LDS.mode === "list" && !M.U.LDS.busy && M.U.LDS.list);
@@ -355,20 +381,53 @@ ok("the page lists the project it is shared to", new RegExp(`data-lead-share="${
 const jonAfter = await GET(`op=leadread&id=${E(LEAD)}&token=${JON}`);
 ok("SHARED: jon now reads it, LOOKED_ABSENT", jonAfter?.ok === true && jonAfter.state === "LOOKED_ABSENT", JSON.stringify(jonAfter).slice(0, 200));
 
-console.log("\n--- 6. the page's words for a state are the plane's ---");
-const W = JSON.parse(JSON.stringify(M.U.LEAD_STATE_WORDS));
+console.log("\n--- 6. the page's words for a state are the ones the plane's answer carried (D-682) ---");
+/* CORRECTED BY D-682. D-194's section here held the page's MIRROR of `OBSERVATION_STATES` (LEAD_STATE_WORDS) to the
+   plane's table, and the look's choices (LEAD_LOOK_CHOICES) to `LEAD_LOOK_OUTCOMES` read off store.mjs. That guard
+   was right for its day and wrong as the end state: it proved the copy AGREED, and a copy that agrees is still a
+   second vocabulary the plane cannot change without editing the page. The plane now publishes the vocabulary on the
+   answer, the mirror is deleted, and so the guard becomes: every word drawn is the answer's, and no copy is held. */
+const vocabRead = read2 && read2.vocabulary;
+const vocabList = front1 && front1.vocabulary;
 const storeSrc = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "latin1");
 const outcomes = JSON.parse(((/static LEAD_LOOK_OUTCOMES = (\[[^\]]*\]);/.exec(storeSrc) || [])[1] || "null"));
 ok("REACH: the plane's outcome list was read off store.mjs and is non-empty", Array.isArray(outcomes) && outcomes.length === 4,
    JSON.stringify(outcomes));
-tb("the look's choices are the plane's outcomes, in its order", JSON.parse(JSON.stringify(M.U.LEAD_LOOK_CHOICES)), outcomes);
-const keys = Object.keys(W);
-ok("MIRROR: every state the page has words for is a state the plane defines, and every state a lead can carry has words",
-   keys.length === 5 && keys.every((k) => k in OBSERVATION_STATES) && [...(outcomes || []), "NEVER_LOOKED"].every((k) => k in W),
-   JSON.stringify(keys));
-const off = keys.filter((k) => !(String(OBSERVATION_STATES[k] || "").startsWith(W[k]) && W[k].length > 10));
-ok("MIRROR: each of the page's sentences IS the plane's sentence (the plane may continue past it; the page may not differ) — off: "
-   + (off.length ? off.join(", ") : "none"), off.length === 0);
+tb("THE PLANE PUBLISHES IT: op=leadread carries vocabulary { states, outcomes }, the outcomes in the plane's order",
+   vocabRead && { keys: Object.keys(vocabRead), outcomes: vocabRead.outcomes }, { keys: ["states", "outcomes"], outcomes });
+tb("and op=leadlist carries the same vocabulary", vocabList, vocabRead);
+/* c22-batch30 union: the list moved to op=leadlist (D-681), so the frontier's vocabulary (D-682) is read directly. */
+const frontV = await GET(`op=frontier&level=internet&token=${IRIS}`);
+tb("and op=frontier&level=internet carries it too", frontV && frontV.vocabulary, vocabRead);
+const W = (vocabRead && vocabRead.states) || {};
+ok("the published states are the plane's five, and every one a lead can carry has words",
+   Object.keys(W).length === 5 && Object.keys(W).every((k) => k in OBSERVATION_STATES)
+   && [...(outcomes || []), "NEVER_LOOKED"].every((k) => typeof W[k] === "string" && W[k].length > 10), JSON.stringify(W));
+const off = Object.keys(W).filter((k) => !String(OBSERVATION_STATES[k] || "").startsWith(W[k]));
+ok("each published sentence IS the plane's own sentence, never improved (the plane's may continue past it) — off: "
+   + (off.length ? off.join(", ") : "none"), Object.keys(W).length === 5 && off.length === 0);
+ok("MEMBER TEXT: `partial` reaches a member with no maintainer's note in it",
+   W.partial === "we looked and got part of it" && !/[()]|SWH|CPDF/.test(Object.values(W).join(" ")), JSON.stringify(W.partial));
+/* THE STATE ARM — the row's own: every state the page drew, on the lead's page and on the list, is drawn in the
+   words the plane's answer carried for it. A page that drew its own words, or none, fails here by name. */
+const spans = (h) => [...String(h).matchAll(/<span class="lead-state" data-lead-state="([^"]*)">([^<]*)<\/span>/g)]
+  .map((m) => [m[1], unesc(m[2])]);
+await M.U.ldOpen(LEAD);
+await drawn("the lead's page is drawn for the state arm", () => M.U.LDS && M.U.LDS.mode === "one" && !M.U.LDS.busy && M.U.LDS.read);
+const drawnOne = spans(M.html("#content"));
+const drawnList = spans(rowHtml);
+const wrong = [...drawnOne, ...drawnList].filter(([st, words]) => !W[st] || words !== W[st]);
+ok("STATE ARM: every state drawn is in the vocabulary the plane's answer carried — "
+   + `${drawnOne.length} on the lead's page, ${drawnList.length} in the list; wrong: ` + JSON.stringify(wrong),
+   drawnOne.length >= 2 && drawnList.length === 1 && wrong.length === 0);
+const radios6 = [...M.html("#content").matchAll(/<input type="radio" name="lead-look-state" value="([^"]*)"[^>]*>\s*([^<]*)<\/label>/g)]
+  .map((m) => [m[1], unesc(m[2]).trim()]);
+tb("STATE ARM: the look offers the answer's outcomes, in its order, each in the answer's words",
+   radios6, (vocabRead?.outcomes || []).map((k) => [k, W[k]]));
+/* NO MIRROR: the leads block holds none of the plane's sentences as a literal, so a copy cannot come back unseen. */
+const held = Object.values(OBSERVATION_STATE_WORDS).filter((s) => BLOCK.includes(s));
+ok("NO MIRROR: the leads block holds none of the five state sentences itself — held: " + JSON.stringify(held),
+   Object.keys(OBSERVATION_STATE_WORDS).length === 5 && held.length === 0);
 
 /* app.html's own `esc`, character for character: it escapes & < > " and NOT the apostrophe. */
 function esc1(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
