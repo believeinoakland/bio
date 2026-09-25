@@ -1,0 +1,16 @@
+{
+ "unit": "ui:act-dispose.test.mjs",
+ "inputHash": "6ed60fbd72ecc8d68db0fc4389c28bad17bd2e78b04b486998c483c94657cba5",
+ "verdict": "PASS",
+ "run": "81e40117e2cefc5d51130a1b33ebf85ca31d63a5.1790299356690.11585.json",
+ "tree": "81e40117e2cefc5d51130a1b33ebf85ca31d63a5",
+ "head": "7ceae0cc95064b68c8afe3ecde9fa3ab6e2e7967",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 5,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "a5bfb054-a255-5480-9d80-367aa6bb216a",
+ "at": "2026-09-25T01:22:36.703Z"
+}
