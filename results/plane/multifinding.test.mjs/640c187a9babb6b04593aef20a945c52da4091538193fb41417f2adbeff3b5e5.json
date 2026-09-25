@@ -1,0 +1,16 @@
+{
+ "unit": "plane:multifinding.test.mjs",
+ "inputHash": "640c187a9babb6b04593aef20a945c52da4091538193fb41417f2adbeff3b5e5",
+ "verdict": "PASS",
+ "run": "d6a77c3f687dda8e5d64fb949e6ed8b5d0e541a8.1790308340950.1738.json",
+ "tree": "d6a77c3f687dda8e5d64fb949e6ed8b5d0e541a8",
+ "head": "d55597ca615e8017f01aa5738f01547e4d427845",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 148,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "a4c651e8-91ef-55ad-bce2-e7dfceb80e72",
+ "at": "2026-09-25T03:52:20.965Z"
+}
