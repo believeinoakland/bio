@@ -1,12 +1,12 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/d629-internal-error.control.mjs` (not a `.test.mjs`: it builds ARMED
  * copies of `src/` while it runs). Arms, each ALONE, each declaring what MUST fail by label prefix:
- *   baseline            — nothing fails.
- *   store-stack-back    — `Store.fetch`'s catch answers `String(e && e.stack || e)` again, as before D-629:
- *                         MUST fail M1:, M2:, U1:, U2:, L1: (the member and public no-stack arms, and the log arm,
+ *   (1) baseline            — nothing fails.
+ *   (2) store-stack-back    — `Store.fetch`'s catch answers `String(e && e.stack || e)` again, as before D-629:
+ *                         MUST fail M1:, M2:, U1:, U2:, L1:, L3: (the member and public no-stack arms, and the log arm,
  *                         because nothing is logged); every plane arm stays green.
- *   plane-catch-removed — the control plane's outermost catch is removed (`export default` is `PLANE` again):
- *                         MUST fail P1:, P2:, L2:; every store arm stays green.
- *   over-strict         — the same envelope with its keys in another order and a differently worded log line
+ *   (3) plane-catch-removed — the control plane's outermost catch is removed (`export default` is `PLANE` again):
+ *                         MUST fail P1:, P2:, L2:, L3:; every store arm stays green.
+ *   (4) over-strict         — the same envelope with its keys in another order and a differently worded log line
  *                         carrying the same facts: NOTHING may fail.
  *   RESULTS (2026-09-25, WORKER D-629, worktree of land/worker/D-629 over origin/main 5e8a65a8): all four AS
  *   DECLARED — baseline 17/0, store-stack-back 11/6 (M1 M2 U1 U2 L1 L3), plane-catch-removed 13/4 (P1 P2 L2 L3),
@@ -150,7 +150,7 @@ try {
 
   /* MEMBER OP, STORE THROWS: the pass-through route. */
   const m = await call(`op=index&token=${MEM}`);
-  t("M1: a member op whose store throws answers 500 STORE_INTERNAL_ERROR with its row",
+  t("M1: a member op whose store throws answers 500 STORE_INTERNAL_ERROR (C-69.2) with its row",
     [m.status, facts(m.j)], [500, rowFacts("STORE_INTERNAL_ERROR")]);
   t("M2: and its body carries no stack, path, line or SQLite text", tellsIn(m.text), []);
 
@@ -181,7 +181,7 @@ try {
 
   /* CONTROL PLANE THROWS, on a public op and on a member op. */
   const p1 = await call("op=bootstrap", { planeThrow: true });
-  t("P1: a PUBLIC op whose control plane throws answers 500 PLANE_INTERNAL_ERROR with its row, no stack",
+  t("P1: a PUBLIC op whose control plane throws answers 500 PLANE_INTERNAL_ERROR (C-69.3) with its row, no stack",
     [p1.status, facts(p1.j), tellsIn(p1.text)], [500, rowFacts("PLANE_INTERNAL_ERROR"), []]);
   const p2 = await call(`op=index&token=${MEM}`, { planeThrow: true });
   t("P2: a MEMBER op whose control plane throws answers 500 PLANE_INTERNAL_ERROR with its row, no stack",
@@ -193,7 +193,8 @@ try {
                                                     p2.j?.correlation]).size, 4);
 
   /* NAMED REFUSALS DO NOT MOVE: they are returned, never thrown, and never pass the new catch. */
-  const r1 = await call("op=nosuchop_d629");
+  const NOT_AN_OP = ["nosuch", "opd629"].join("");   /* built apart, d278's way: op-claims reads `op=<name>` in prose */
+  const r1 = await call(`op=${NOT_AN_OP}`);
   t("R1: an unknown op is still 400 UNKNOWN_OP, `error: \"unknown op\"` first after ok",
     [r1.status, r1.j?.reason, Object.keys(r1.j || {}).slice(0, 2)], [400, "UNKNOWN_OP", ["ok", "error"]]);
   const r2 = await call("op=index");

@@ -29,8 +29,8 @@ const STORE_CATCH = "      return Response.json(storeInternalError(e, op), { sta
 const PLANE_CATCH = "    try { return await PLANE.fetch(req, env); }\n    catch (e) { return planeInternalError(e, req); }";
 const STORE_ENVELOPE = "  return { ok: false, error: \"internal error\", reason: \"STORE_INTERNAL_ERROR\", code: \"STORE_INTERNAL_ERROR\",\n"
   + "           check: row.check, translation: row.translation, correlation };";
-const STORE_LOG = "    console.error(JSON.stringify({ event: answer.reason, correlation, op: String(op || \"\"),\n"
-  + "                                   stack: String(e && e.stack || e) }));";
+const STORE_LOG = "  console.error(JSON.stringify({ event: answer.reason, correlation, op: String(op || \"\"),\n"
+  + "                                 stack: String(e && e.stack || e) }));";
 
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
@@ -55,7 +55,7 @@ const ARMS = {
                "  return { correlation, translation: row.translation, check: row.check, code: \"STORE_INTERNAL_ERROR\",\n"
                + "           reason: \"STORE_INTERNAL_ERROR\", error: \"internal error\", ok: false };"],
               ["store.mjs", STORE_LOG,
-               "    console.error(answer.reason + \" \" + correlation + \" op=\" + String(op || \"\") + \"\\n\" + String(e && e.stack || e));"]],
+               "  console.error(answer.reason + \" \" + correlation + \" op=\" + String(op || \"\") + \"\\n\" + String(e && e.stack || e));"]],
     mustFail: [],
   },
 };

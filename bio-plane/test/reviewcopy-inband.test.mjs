@@ -446,7 +446,9 @@ console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review
   const calls = (idx.match(/\binbandQuartet\(/g) || []).length;
   t("index.mjs calls `inbandQuartet` at exactly the TWO sites — the container assembly and the review copy",
     calls, 2);
-  const asm = idx.slice(idx.indexOf("async function assembleCaseContainer"), idx.indexOf("export default {"));
+  /* RE-ANCHORED by D-629 (2026-09-25), not exempted: the handler that follows the assembly is `const PLANE = {` now;
+     `export default {` moved to the file's foot (the outermost catch), so the old end anchor took the whole handler. */
+  const asm = idx.slice(idx.indexOf("async function assembleCaseContainer"), idx.indexOf("const PLANE = {"));
   t("the container assembly holds no SHA-256 of its own and no serialisation of the manifest of its own",
     [asm.length > 1000, /crypto\.subtle\.digest|sha256Hex\(|JSON\.stringify\(manifest/.test(asm)], [true, false]);
   /* CONDUCT #18 at c17-batch7 (2026-09-23): the anchor was the whole condition `(op === "reviewcopy" || op ===

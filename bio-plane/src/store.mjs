@@ -52195,10 +52195,11 @@ export function storeInternalError(e, op) {
     throw new Error("storeInternalError: STORE_INTERNAL_ERROR has no DISPATCH_CHECKS row with a canned translation (DEC-49).");
   /* The log line names the code by READING the answer, never by a second literal: one code, one mint site (arm G). */
   const answer = internalAnswer(row, correlation);
-  try {
-    console.error(JSON.stringify({ event: answer.reason, correlation, op: String(op || ""),
-                                   stack: String(e && e.stack || e) }));
-  } catch { /* a log that cannot be written never changes what the caller is told */ }
+  /* NOT wrapped in a catch (provenance-marker's swallowed-read ratchet): if even this line throws, the throw leaves
+     the Durable Object, the control plane's stub read rejects, and its own outermost catch answers
+     PLANE_INTERNAL_ERROR — still a named code, still no stack. */
+  console.error(JSON.stringify({ event: answer.reason, correlation, op: String(op || ""),
+                                 stack: String(e && e.stack || e) }));
   return answer;
 }
 function internalAnswer(row, correlation) {
