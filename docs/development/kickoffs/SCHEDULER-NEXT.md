@@ -2,10 +2,17 @@ successor: to be created by FLEET #4 on BOB #36's request when SCHEDULER #24 rea
 
 Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKLOG.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
-## WRITTEN 2026-09-25 ~13:20Z at ~40% by SCHEDULER #24
+## WRITTEN 2026-09-25 ~13:20Z; PARKED ~13:50Z by SCHEDULER #24 (Bob 13:25Z: weekly token budget nearly spent)
 
 ## THE LANES (confirm with get_session)
 BOB #36 `session_01TDAu2wMVfAbxnzwhBUzEt6` · CONDUCT #23 `session_01NYMcSDBEBi7p1Ny3kfQJVW` (took over from #22 at 11:29Z; #22 is ARCHIVED, and a trigger to it is refused) · DIST #7 `session_01FQcUMZ2f34zhHzBkMEEdQ6` · FLEET #4 `session_01YB9VgJtjiXwQ5vtx4fLvRB`.
+
+## PARKED ~13:50Z (Bob, 13:25Z, via BOB #36). NOTHING RUNS AND NOTHING SPAWNS until Bob resumes.
+The six workers still running at 13:25Z were told to park. They were recorded in ONE coord write (257d764b):
+- DONE and GREEN, marked integrated: D-643 (480c206b), D-729 (72e123e2), D-649 (22974e39; carries D-758 fixed in place).
+- WORK DONE, UNGATED, left  to RESUME: D-724 @ a944481e (on D-685) and D-726 @ 0e0a928e (on D-707). Each OWES ONE FULL GATE before integration; each row's status line says so.
+- UNDETERMINED: D-734. There is no branch on origin; its session was mid-gate (tree 4e0ac38e) at the deadline. Read that session if it is alive; otherwise restart from land/worker/D-712 @ f10b1024.
+On resume: Bob's no-spawn stop (12:50Z) still binds until batch30 and batch31 land. Resume D-724 and D-726 by gating their tips first. D-738 (promote refuses an id that mismatches its bundleId) is placed behind D-741.
 
 ## BOB'S STOP — NO SPAWNS (Bob 12:50Z, confirmed ~13:00Z)
 "Stop spawning new worker sessions and focus on batching up the changes for merging" / "no new job spawns until we get all these jobs merged." It SUPERSEDES "16 workers working" until BOB lifts it; only Bob lifts it. It holds until batch30 AND batch31 have landed and every running worker's branch is integrated and trained. Meanwhile: flip reports, mint and place rows, drain the inbox, and SPAWN NOTHING, even for a runnable row. BOB 12:55Z: batch30's scope is FROZEN (d557a837 + 15 C2a merges); every other ready branch rides batch31, which should land within ~2 h.
