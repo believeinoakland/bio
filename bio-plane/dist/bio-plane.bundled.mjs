@@ -19433,17 +19433,128 @@ async function odfParts(row, bytes) {
     if (read.ok) contentXml = UTF85.decode(read.bytes);
     else undetermined.push({ part: CONTENT_PART, why: read.why });
   }
-  undetermined.push({
-    part: META_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument carries the core properties (creator, title, created/modified, revision) in meta.xml; this entry reads content.xml only, so NO core-properties item is emitted and its absence is not evidence the document carries none"
-  });
-  undetermined.push({
-    part: ODF_MANIFEST_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument lists embedded objects and images as separate package members in META-INF/manifest.xml; this entry reads content.xml only, so NO intra link is content-addressed and a zero intra count means NOT LOOKED, never NONE PRESENT"
-  });
-  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, undetermined };
+  let core = null;
+  if (hasMember(container, META_PART)) {
+    const read = await readPart(b, container, META_PART);
+    const c = read.ok ? parseOdfMeta(UTF85.decode(read.bytes)) : { ok: false, why: read.why };
+    if (c.ok) core = c;
+    else undetermined.push({ part: META_PART, why: c.why });
+  } else {
+    undetermined.push({
+      part: META_PART,
+      why: "part_absent",
+      detail: "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author"
+    });
+  }
+  const embedded = await manifestIntraLinks(b, container, contentXml, undetermined);
+  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, core, embedded, undetermined };
+}
+function hasMember(container, name) {
+  return container.byName.has(name) || container.entries.some((e) => normalizePartName(e.name) === name);
+}
+var HEX4 = "0123456789abcdef";
+async function sha256Hex4(u8) {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", u8));
+  let out = "";
+  for (let i = 0; i < d.length; i++) out += HEX4[d[i] >> 4] + HEX4[d[i] & 15];
+  return out;
+}
+function parseOdfMeta(xml) {
+  const doc = elementsNested(xml, "document-meta")[0];
+  const meta = doc ? elementsNested(doc.inner, "meta")[0] : null;
+  if (!meta) return { ok: false, why: "core_properties_unparseable" };
+  const field = (local) => {
+    const el = elementsNested(meta.inner, local)[0];
+    return el ? visibleText(el.inner) : null;
+  };
+  const revision = field("editing-cycles");
+  const revisionNumber = revision != null && /^\d+$/.test(revision.trim()) ? parseInt(revision.trim(), 10) : null;
+  return {
+    ok: true,
+    creator: field("initial-creator"),
+    lastModifiedBy: field("creator"),
+    revision,
+    revisionNumber,
+    created: field("creation-date"),
+    modified: field("date"),
+    title: field("title")
+  };
+}
+function corePropertiesItems(parts) {
+  if (!parts.core) return [];
+  const c = parts.core;
+  return [{
+    kind: "core-properties",
+    creator: c.creator,
+    lastModifiedBy: c.lastModifiedBy,
+    revision: c.revision,
+    revisionNumber: c.revisionNumber,
+    created: c.created,
+    modified: c.modified,
+    title: c.title,
+    source: null
+  }];
+}
+var PACKAGE_OWN = /* @__PURE__ */ new Set(["mimetype", "content.xml", "styles.xml", "meta.xml", "settings.xml", "manifest.rdf"]);
+var PACKAGE_OWN_DIRS = ["META-INF/", "Thumbnails/", "Configurations2/"];
+async function manifestIntraLinks(bytes, container, contentXml, undetermined) {
+  const read = await readPart(bytes, container, ODF_MANIFEST_PART);
+  if (!read.ok) {
+    undetermined.push({ part: ODF_MANIFEST_PART, why: read.why });
+    return [];
+  }
+  const xml = UTF85.decode(read.bytes);
+  const root = elementsNested(xml, "manifest")[0];
+  if (!root) {
+    undetermined.push({ part: ODF_MANIFEST_PART, why: "manifest_unparseable" });
+    return [];
+  }
+  const fonts = /* @__PURE__ */ new Set();
+  if (contentXml != null) {
+    for (const f2 of elementsNested(contentXml, "font-face-uri")) {
+      const href = f2.attrs.href;
+      if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
+    }
+  }
+  const links = [];
+  for (const fe of elementsNested(root.inner, "file-entry")) {
+    const path = fe.attrs["full-path"];
+    if (typeof path !== "string" || !path || path.endsWith("/")) continue;
+    const name = normalizePartName(path);
+    if (PACKAGE_OWN.has(name) || PACKAGE_OWN_DIRS.some((d) => name.startsWith(d))) continue;
+    if (name.startsWith("Pictures/")) {
+      const dot = name.lastIndexOf(".");
+      if (dot > name.lastIndexOf("/") && IMAGE_MIME_BY_EXT[name.slice(dot + 1).toLowerCase()]) continue;
+    }
+    if (fonts.has(name)) continue;
+    const undeterminedLink = (why) => ({
+      partition: "undetermined",
+      wrapper: null,
+      target: { why, name },
+      source: null
+    });
+    if (elementsNested(fe.inner, "encryption-data").length) {
+      links.push(undeterminedLink("embedding_encrypted"));
+      continue;
+    }
+    if (!hasMember(container, name)) {
+      links.push(undeterminedLink("manifest_member_absent"));
+      continue;
+    }
+    const got = await readPart(bytes, container, name);
+    if (!got.ok) {
+      links.push(undeterminedLink(`embedding_unreadable:${got.why}`));
+      continue;
+    }
+    const sha = await sha256Hex4(got.bytes);
+    links.push({
+      partition: "intra",
+      wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name, bytes: got.bytes.length },
+      source: null
+    });
+  }
+  return links;
 }
 function officeBody(contentXml, kind) {
   if (contentXml == null) return null;
@@ -19473,7 +19584,6 @@ function countPartitions(links) {
   for (const l of links) counts[l.partition]++;
   return counts;
 }
-var NO_INTRA_NOTE = "no intra link is emitted: embedded members live outside content.xml (stated in evidentiary.undetermined)";
 function walkTextBody(bodyXml) {
   const paragraphs = [];
   const hyperlinks = [];
@@ -19592,7 +19702,7 @@ function odtStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = [];
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "text");
@@ -19637,6 +19747,8 @@ function odtStructure(parts) {
       });
     }
   }
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
   return {
     ok: true,
     container: "odt",
@@ -19705,7 +19817,7 @@ function odtText(parts) {
   }
   const body = officeBody(parts.contentXml, "text");
   if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     return {
       ok: true,
       container: "odt",
@@ -19819,7 +19931,7 @@ function odsStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = [];
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "spreadsheet");
@@ -19868,6 +19980,8 @@ function odsStructure(parts) {
   for (const sheet of sheets) {
     if (sheet.hidden) items.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
   }
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
   return {
     ok: true,
     container: "ods",
@@ -19894,7 +20008,7 @@ function odsText(parts) {
   }
   const body = officeBody(parts.contentXml, "spreadsheet");
   if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
     return {
       ok: true,
@@ -20031,7 +20145,7 @@ function odpStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = [];
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "presentation");
@@ -20066,6 +20180,8 @@ function odpStructure(parts) {
       }
     }
   }
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
   return {
     ok: true,
     container: "odp",
@@ -20095,7 +20211,7 @@ function odpText(parts) {
   }
   const body = officeBody(parts.contentXml, "presentation");
   if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     return {
       ok: true,
       container: "odp",
@@ -20165,9 +20281,8 @@ function entryFor(row, structureOf, textOf2) {
     /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
        exhaustive or NULL, through the one enumerator the OOXML entries use.
        Read off the central directory, so it does NOT depend on
-       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
-       the manifest stays TRUE and stays emitted: it speaks about `intra`
-       embedded objects, which this does not content-address. */
+       META-INF/manifest.xml; the manifest walk (D-346) leaves these images
+       out of `intra` so one image is never addressed twice. */
     text: async (partsOrBytes) => {
       const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes;
       return withContainerImages(textOf2(parts), parts, "Pictures/");
@@ -20233,7 +20348,7 @@ var ODF_EVIDENTIARY_NORMALISE = Object.freeze({
     apply: odtNormalisedContentXml
   }
 });
-async function odfEvidentiaryDigest(bytes, sha256Hex6) {
+async function odfEvidentiaryDigest(bytes, sha256Hex7) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
   const no2 = (flavour2, basis) => ({ determined: false, flavour: flavour2, evidentiary: null, basis });
   let row = null;
@@ -20265,7 +20380,7 @@ async function odfEvidentiaryDigest(bytes, sha256Hex6) {
     determined: true,
     flavour,
     over: CONTENT_PART,
-    evidentiary: await sha256Hex6(digested),
+    evidentiary: await sha256Hex7(digested),
     basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
   };
 }
@@ -21835,12 +21950,12 @@ var hexToBytes = (hex2) => {
   for (let i = 0; i < out.length; i++) out[i] = parseInt(hex2.substr(i * 2, 2), 16);
   return out;
 };
-function timestampRequest(sha256Hex6, nonceBytes) {
+function timestampRequest(sha256Hex7, nonceBytes) {
   const nonce = nonceBytes || crypto.getRandomValues(new Uint8Array(8));
   return {
     der: derSequence(
       derIntegerSmall(1),
-      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex6))),
+      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex7))),
       derInteger(nonce),
       derBoolean(true)
     ),
@@ -23093,13 +23208,13 @@ function searchNameTree(doc, node, name, depth = 0) {
   }
   return null;
 }
-var HEX4 = "0123456789abcdef";
+var HEX5 = "0123456789abcdef";
 function toHex(u8) {
   let out = "";
-  for (let i = 0; i < u8.length; i++) out += HEX4[u8[i] >> 4] + HEX4[u8[i] & 15];
+  for (let i = 0; i < u8.length; i++) out += HEX5[u8[i] >> 4] + HEX5[u8[i] & 15];
   return out;
 }
-async function sha256Hex4(u8) {
+async function sha256Hex5(u8) {
   const d = await crypto.subtle.digest("SHA-256", u8);
   return toHex(new Uint8Array(d));
 }
@@ -23115,7 +23230,7 @@ async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
   const bytes = await doc.streamDecoded(stream);
   if (!bytes)
     return undeterminedRecord3({ page: sourcePage, rect }, "embedded_stream_undecodable", { name: label });
-  const sha = await sha256Hex4(bytes);
+  const sha = await sha256Hex5(bytes);
   return {
     partition: "intra",
     wrapper: linkWrapper.intra(sha),
@@ -23504,7 +23619,7 @@ var HEX_CAP = 64;
 function bytesToHex(bytes, cap = HEX_CAP) {
   const n = Math.min(bytes.length, cap);
   let out = "";
-  for (let i = 0; i < n; i++) out += HEX4[bytes[i] >> 4] + HEX4[bytes[i] & 15];
+  for (let i = 0; i < n; i++) out += HEX5[bytes[i] >> 4] + HEX5[bytes[i] & 15];
   if (bytes.length > cap) out += "\u2026";
   return out;
 }
@@ -79431,7 +79546,7 @@ async function fingerprint(v) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return [...new Uint8Array(b)].slice(0, 8).map((x) => x.toString(16).padStart(2, "0")).join("");
 }
-async function sha256Hex5(v) {
+async function sha256Hex6(v) {
   const b = await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
@@ -79445,7 +79560,7 @@ async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, 
   if (!digestCertain && !profileBytes && containerBytes && !multipart) {
     let od;
     try {
-      od = await odfEvidentiaryDigest(containerBytes, sha256Hex5);
+      od = await odfEvidentiaryDigest(containerBytes, sha256Hex6);
     } catch (e) {
       od = {
         determined: false,
@@ -79454,7 +79569,7 @@ async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, 
       };
     }
     if (od.determined) {
-      if (await sha256Hex5(containerBytes) !== sha)
+      if (await sha256Hex6(containerBytes) !== sha)
         return {
           determined: false,
           rendition: null,
@@ -79481,7 +79596,7 @@ async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, 
       evidentiary: null,
       basis: profileBytes ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined` : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`
     };
-  const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex5 });
+  const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex6 });
   if (dg.identity !== sha)
     return {
       determined: false,
@@ -79567,7 +79682,7 @@ async function monitorAssess(env, storeName, { baseline, seen, bytes, ctx, befor
     return { assessment: null, content, basis: "the bytes held under the baseline's capture key do not hash to it, so they are not compared" };
   let r;
   try {
-    r = await assess(before, bytes, { ...ctx, sha256: sha256Hex5, before_at: beforeAt || null, after_at: afterAt, now: afterAt });
+    r = await assess(before, bytes, { ...ctx, sha256: sha256Hex6, before_at: beforeAt || null, after_at: afterAt, now: afterAt });
   } catch (e) {
     return { assessment: null, content, basis: "assess could not run: " + String(e && e.message || e).slice(0, 90) };
   }
@@ -79669,7 +79784,7 @@ async function aiCredentialPresented(url, env) {
   const t = url.searchParams.get("token");
   if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
   const st = env.STORE.get(env.STORE.idFromName("bio"));
-  const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
+  const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex6(t)}`));
   if (!out.answered) return { silent: "aicredentiallook" };
   return { cred: out.result?.found ? out.result.credential : null };
 }
@@ -79806,7 +79921,7 @@ async function caseReader(url, env, storeName, presentedAi) {
   if (AI_TOKEN_SHAPE.test(t)) {
     let cred = presentedAi === void 0 ? void 0 : presentedAi;
     if (cred === void 0) {
-      const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
+      const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex6(t)}`));
       if (!aOut.answered) return { silent: "aicredentiallook" };
       cred = aOut.result?.found ? aOut.result.credential : null;
     }
@@ -80937,7 +81052,7 @@ var index_default = {
           }, 400);
         const reader = await caseReader(url, env, "bio", presentedAi.cred);
         if (reader.silent) return storeSilent(reader.silent);
-        const docSecret = url.searchParams.has("secret") ? await sha256Hex5(url.searchParams.get("secret") || "") : "";
+        const docSecret = url.searchParams.has("secret") ? await sha256Hex6(url.searchParams.get("secret") || "") : "";
         const out2 = await doAnswer(stub2.fetch(
           `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}` + (docSecret ? `&secretSha=${docSecret}` : "")
         ));
@@ -80972,7 +81087,7 @@ var index_default = {
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
         if (bySecret) {
           q.set("bySecret", "1");
-          q.set("secretSha", await sha256Hex5(url.searchParams.get("secret") || ""));
+          q.set("secretSha", await sha256Hex6(url.searchParams.get("secret") || ""));
         } else {
           const reader = await caseReader(url, env, "bio", presentedAi.cred);
           if (reader.silent) return storeSilent(reader.silent);
@@ -84697,7 +84812,7 @@ var index_default = {
       crypto.getRandomValues(raw);
       const secret = "aik-" + [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-      inner.searchParams.set("secretSha", await sha256Hex5(secret));
+      inner.searchParams.set("secretSha", await sha256Hex6(secret));
       const minted = await doAnswer(stub.fetch(new Request(
         inner,
         { method: req.method, body: JSON.stringify({
@@ -84723,7 +84838,7 @@ var index_default = {
       const raw = new Uint8Array(32);
       crypto.getRandomValues(raw);
       const secret = "rv1_" + btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-      inner.searchParams.set("secretSha", await sha256Hex5(secret));
+      inner.searchParams.set("secretSha", await sha256Hex6(secret));
       const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
       if (!issued.answered) return storeSilent("reviewgrant");
       if (!issued.result || issued.result.ok !== true)
