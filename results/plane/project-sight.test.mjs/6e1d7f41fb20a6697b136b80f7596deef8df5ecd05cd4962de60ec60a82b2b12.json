@@ -1,0 +1,16 @@
+{
+ "unit": "plane:project-sight.test.mjs",
+ "inputHash": "6e1d7f41fb20a6697b136b80f7596deef8df5ecd05cd4962de60ec60a82b2b12",
+ "verdict": "PASS",
+ "run": "d60d35989ecbb965a4fdd4e751901a8e3f7a94b3.1790337861087.20743.json",
+ "tree": "d60d35989ecbb965a4fdd4e751901a8e3f7a94b3",
+ "head": "f10d40885c823b052e84836002576e2c4b11feed",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d7302a3c-2f75-55d2-80ee-f10dc33396e5",
+ "at": "2026-09-25T12:04:21.101Z"
+}
