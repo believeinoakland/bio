@@ -723,8 +723,8 @@ scope: enumerate at the code every code the two ops mint to an anonymous caller 
 accepts-when: each of the enumerated codes reaches a stranger with its translation, driven through the op (moves: five untranslated public codes). NEGATIVE CONTROL: strip one translation and that code's arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-549's worker).
 
-### D-557 · running — **THE DECODE CENSUS NEVER CLASSIFIES TIER-3 TEXT, AND ITS READER LABEL SAYS IT DOES: `fw20-decode-census.mjs` labels the reader from the acquire reading's `text_tier` but judges the PLAIN `op=pdfstructure` text, which stops at tier 2, so 34 of 38 documents labelled "plane (text tier 3)" were judged on EMPTY text while their OCR text exists (M-152).** Found by D-536's worker. — owner CONTENT-PDF (the instrument).
-status: running — SCHEDULER #22 04:36Z spawns WORKER D-557 (depth 2)
+### D-557 · integrated — **THE DECODE CENSUS NEVER CLASSIFIES TIER-3 TEXT, AND ITS READER LABEL SAYS IT DOES: `fw20-decode-census.mjs` labels the reader from the acquire reading's `text_tier` but judges the PLAIN `op=pdfstructure` text, which stops at tier 2, so 34 of 38 documents labelled "plane (text tier 3)" were judged on EMPTY text while their OCR text exists (M-152).** Found by D-536's worker. — owner CONTENT-PDF (the instrument).
+status: integrated — SCHEDULER #22 06:20Z: tip 40b55ddd, GATE 86/86 GREEN TARGETED (6138 assertions); census judges the reading's text_units, label from producers; M-173: 34 of 38 tier-3 docs were judged on empty text, now 0; agenda 132->141, unclassified 202->173; page-one-only caveat (D-606/D-616)
 order: after D-561, with the corrections: M-143's "38 tier 3" states a reading that never reached `judge`, so the record claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M2
 interface: none.
@@ -1018,6 +1018,16 @@ depends-on: M0-188.
 scope: the NO_ARTIFACT sentence names `node tools/bundles.mjs`, and the assembler reports every missing artifact before it dies; extend fleetbundles' TOTAL arm to cover it, or give release-assemble its own arm.
 accepts-when: with two artifacts missing, one run names both and the one command (the measured failure it moves: one-at-a-time, the wrong command). NEGATIVE CONTROL: restore the old sentence and the arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by M0-188's worker).
+
+### D-566 · queued — **THREE MORE HAND-KEPT TOOL COPY LISTS SURVIVE M0-170: `bio-plane/test/gates.test.mjs` ~924 (`["coord.mjs", "statepaths.mjs"]`) and `bio-plane/test/status.test.mjs` ~343 and ~565 (`["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"]`, status.mjs's closure), so a new import in the subject breaks its fixture with a false red.** Found by M0-170's worker (F2, 00:14Z). — owner M0.
+order: after D-560 (D-569 is running), with the process rows: a false red costs a gate round only when the subject gains an import (M0-170's precedent, Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a fixture derives what it carries).
+depends-on: M0-170.
+scope: replace each list with `moduleClosure({ repo, roots: [<tool>], dynamic: false })` as M0-170 did; state the sweep's reach (literal-name copies only).
+accepts-when: an import added to coord.mjs or status.mjs leaves both suites green (moves: three hand lists). NEGATIVE CONTROL: restore one list, add an import, and that suite fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by M0-170's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
