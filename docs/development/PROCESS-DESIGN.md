@@ -1,6 +1,6 @@
 # The process principles
 
-**Status** · APPROVED by Bob 2026-09-25, as written by BOB #36 from his direction in BOB's session that day. These principles REPLACE the current process wholly; nothing in the old process survives unless it is derived from them. They belong in the process's own repository once it exists (P2). Until then they sit here. The restore point before the replacement is the branch `snapshot/pre-refactor-2026-09-25` (5b9c2643): its tree is `main` @ 95fe7bc7, and its parents are every branch tip of that moment, all kept reachable. Tags could not be pushed from the cloud (HTTP 403).
+**Status** · APPROVED by Bob 2026-09-25, as written by BOB #36 from his direction in BOB's session that day. AMENDED the same day: P10 carries Bob's rule that a layer's jobs run concurrently; the tranche-branch wording of P12 is PROPOSED by BOB #36 and awaits his approval. These principles REPLACE the current process wholly; nothing in the old process survives unless it is derived from them. They belong in the process's own repository once it exists (P2). Until then they sit here. The restore point before the replacement is the branch `snapshot/pre-refactor-2026-09-25` (5b9c2643): its tree is `main` @ 95fe7bc7, and its parents are every branch tip of that moment, all kept reachable. Tags could not be pushed from the cloud (HTTP 403).
 
 **P1 · Purpose.** The process exists to put correct, working product behaviour that meets every defined requirement onto `main`. Nothing else is output. A rule, a record or a test has value only as far as it serves that.
 
@@ -30,11 +30,18 @@ Requirements may suggest an implementation but never require one. The module is 
 
 A flaw in the requirements themselves goes to BOB and Bob.
 
-**P10 · Builds happen in tranches.** A tranche's plan is fixed when the tranche starts. Its jobs run in module order: lowest layer first, and in order within a layer. An entry that arises during a tranche goes to the **next** plan. The one exception is a change to a provided service. BOB carries it to the modules that use the service, and those modules come later in the order, so their jobs in this tranche pick it up. When every job of a tranche is merged, its plan is archived and the next plan becomes current.
+**P10 · Builds happen in tranches, one layer at a time.**
+- A tranche's plan is fixed when the tranche starts. An entry that arises during a tranche goes to the **next** plan.
+- The tranche runs one layer at a time, lowest first. **All the module jobs of a layer run concurrently.**
+- All the jobs of the current layer stay active until every one of them has recorded that it is complete.
+- If a job communicates a change to another job of the same layer, through BOB (P5), that other job processes the change and signals completion again, even if it had already said it was complete.
+- Only when every job of the layer is complete are those jobs archived and the jobs of the next higher layer started, concurrently.
+- The one exception to freezing is a change to a provided service. BOB carries it to the modules that use the service, and those are in the same or a later layer, so their jobs in this tranche pick it up.
+- When every layer is complete, the tranche's plan is archived and the next plan becomes current.
 
 **P11 · Tests follow the architecture.** Each module has its own tests, and each layer may have layer tests. A job runs its module's tests and its layer's tests. When it changes what its module provides, it also runs the tests of every module that uses the change. **Because every job in a layer may run that layer's tests, testing lives in module tests wherever possible, and the effort needed to run layer tests is kept as small as possible.** The full regression runs only at release, or when Bob asks.
 
-**P12 · Done means merged.** A job is done when its tests pass and it is merged to `main`. A tranche is done when every one of its jobs is merged.
+**P12 · Done means merged.** A tranche works on its own branch off `main`, and `main` does not change while a tranche runs. A job is done when its tests pass and its work is merged into the tranche's branch. A tranche is done when every job is merged and the tranche's branch is merged to `main`.
 
 **P13 · Sessions are short and single-purpose.** A session does one job, or one planning step, and ends. State lives in the build state, never in a long-running context. A session's cost grows with its context size multiplied by its number of turns: re-reading its own context is most of what it spends. A long-lived session woken again and again is the most expensive thing the process can run.
 
