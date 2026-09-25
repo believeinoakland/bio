@@ -50,6 +50,31 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, UI-76 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-76` (base `origin/main` @ `964da6790`), in the commit that carries this entry; the version number is
+PROVISIONAL — a concurrent UI worker may take v120 on `main` first, and CONDUCT renumbers at integration. SURFACE:
+**THEMES reach a member** — a new rail entry, "Themes" (`screen:themes`), and a theme's own page (`#theme/<id>`), the
+member half of D-162 (framework §8.4, fences 1–3; IC-241 as amended by BOB #32).
+
+**What a member can now do.** Declare a theme — its idea and its TEST, both fields empty until the member writes them,
+with ONE sentence at the act saying what a theme is (DEC-69). Open a theme and read its test, its declarer, its
+members and its hunches APART. Place a document or a passage by naming its id, with an optional note. Confirm a
+hunch with "It passes the test: place it" (`op=themeplace` on that target, which keeps who proposed it); leave one by
+doing nothing. The surface never proposes. Every theme it renders names its declarer AS THE PLANE PROJECTED IT for the
+reader — a handle for a member, the handle with the cover and member id for an administrator — and every hunch
+carries its own label and is never written among the members. Every refusal is the plane's canned translation.
+
+**The guards that fired on the first run, each classified rather than quietened:** `preauth-vocabulary` WALK 2
+(a tenth router, post-authentication, pinned both halves); `member-respect` ARM 4b (the hunch control, a SET of
+decisions, carried with why a bulk confirm is not built); `bound-sweep` WALK 2 and ARM G (`op=themeread` is capped:
+every call names its limit, and the RECORD's bound is stated beside each list, through `thmBoundHtml`, not a fourth
+caller of `meaningBoundHtml`, whose three units ARM H6 pins). One surface defect found by the suite and fixed: a
+declare refusal rendered only inside the form. Suite: `civicos-ui/test/themes.test.mjs` (56 assertions, real plane);
+control: `themes.control.mjs`, seven arms, every one as declared.
+
+**Not built, stated:** no "place in a theme" entry on the document page (a member types an id on the theme's page);
+the `truncated` lines are unexercised (200 of a set would be needed).
+
 v120, 2026-09-25 session, thread UI, UI-109 (a WORKER of SCHEDULER #21, cloud session). Landed on
 `land/worker/UI-109` (base `origin/main` @ `964da679`), in the commit that carries this entry; the number is
 PROVISIONAL — CONDUCT renumbers at integration. SURFACE: **a reopened finding on the queue shows the decision
