@@ -24,7 +24,9 @@ const REAL = ["src/store.mjs", "checks/bio-checks.mjs"].map((p) => join(PLANE, p
 const digest = () => REAL.map((p) => { const b = readFileSync(p); return `${p.slice(PLANE.length)} ${b.length} B ${createHash("sha256").update(b).digest("hex")}`; });
 
 const GATE = "      if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {";
-const DERIVE = "      const promotedType = documentType ?? normalizeType(meta.object_type);";
+/* MOVED BY D-526 (2026-09-24): the derivation is now ONE line at the top of `promote`, read by every fence as well
+   as every projection, so this anchor names that line; arming it types the promotion by the envelope everywhere. */
+const DERIVE = "    const promotedType = documentType ?? (meta && typeof meta === \"object\" ? normalizeType(meta.object_type) : undefined);";
 
 const ARMS = {
   baseline: { patches: [], mustFail: [], mustPass: ["is REFUSED", "the record types it by the DOCUMENT"] },
@@ -32,7 +34,7 @@ const ARMS = {
   /* THE ROW'S CONTROL, HALF ONE — gate the PROJECTED TYPE on the envelope again, which is what `promote` did
      before this item. The refusal is untouched, so only the arms that watch what the record SAYS may move. */
   "envelope-type": {
-    patches: [[DERIVE, "      const promotedType = normalizeType(meta.object_type);"]],
+    patches: [[DERIVE, "    const promotedType = meta && typeof meta === \"object\" ? normalizeType(meta.object_type) : undefined;"]],
     mustFail: ["the record types it by the DOCUMENT", "the action block is there at all",
                "its BASIS is projected", "its CORRESPONDENCE ledger too",
                "the action's kind reads from the same bytes",

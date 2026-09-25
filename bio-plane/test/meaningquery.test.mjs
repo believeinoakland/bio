@@ -781,10 +781,13 @@ console.log("\n--- 11. hidden and absent answer identically ---");
      the same `normalizeType` (`BIO_Case_Making_v0_1.md` §2). The claim this arm makes is unchanged and is
      STRONGER: legs are written only for documents that ARE inquiries, rather than for documents a caller
      CALLED inquiries. The second half of the pin is kept so the arm still fails if the derivation goes back
-     to the envelope. */
+     to the envelope.
+     PIN CORRECTED AGAIN 2026-09-24 BY D-526, NEVER EXEMPTED: the derivation MOVED to the top of `promote`, where
+     every fence reads it too, and its fallback now guards a missing envelope — so the second half names that line.
+     The old line pinned a spelling D-526 removed, not a behaviour: the claim is unchanged. */
   t("promote writes legs only for inquiries, which is WHY the project half cannot be staged THROUGH `leg:`",
     [/const isInquiry = promotedType === "inquiry"/.test(STORE_SRC),
-     /const promotedType = documentType \?\? normalizeType\(meta\.object_type\);/.test(STORE_SRC)],
+     /const promotedType = documentType \?\? \(meta && typeof meta === "object" \? normalizeType\(meta\.object_type\) : undefined\);/.test(STORE_SRC)],
     [true, true]);
 }
 
