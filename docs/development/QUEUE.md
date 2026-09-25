@@ -479,8 +479,8 @@ scope: wire the three to M0-169's static-only mode; delete the hand lists. ALSO 
 accepts-when: an import added to the subject leaves all three green. NEGATIVE CONTROL: restore one hand list, add an import, and that suite fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-541 · running — **`tools/rowsubstrate.mjs` `anchorPairs` CAPTURES DIGITS AND DOTS ONLY (`§\s*(\d+(?:\.\d+)*)`), so `§6A` reads as `6`, and D-404's design-coverage arm falsely notes "substrate not evident" for REC-213, REC-199 and D-448.** Found by REC-213's worker (via CONDUCT #20 22:11Z). A false NOTE, not a failure. — owner M0.
-status: running — SCHEDULER #21 23:50Z spawns WORKER D-541 (depth 2, can report); base origin/main 9f8b69e6
+### D-541 · integrated — **`tools/rowsubstrate.mjs` `anchorPairs` CAPTURES DIGITS AND DOTS ONLY (`§\s*(\d+(?:\.\d+)*)`), so `§6A` reads as `6`, and D-404's design-coverage arm falsely notes "substrate not evident" for REC-213, REC-199 and D-448.** Found by REC-213's worker (via CONDUCT #20 22:11Z). A false NOTE, not a failure. — owner M0.
+status: integrated — SCHEDULER #21 00:05Z: tip a3d2c566, GATE 73/73 GREEN recorded (TARGETED); NARROWED: REC-199/D-448 notes are true readings of §6A.4
 order: after M0-142, with the process rows behind the product rows ahead of them: it prints a false note but fails nothing, so it does not cut gate time (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -578,7 +578,8 @@ scope: `#caseIdentitySentence` takes the draft's `newCase`; with no case named a
 accepts-when: draft DD reads the derivation (or undetermined), not "a new case", in all three reads (the measured failure it moves: block 10's sentence). NEGATIVE CONTROL: ignore `newCase` again and the DD arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-539 · queued — **A REVIEW COPY'S ROUND TRIP DEMOTES A LOAD-BEARING FINDING TO UNDESIGNATED: the absent-target branch of reviewCopy's `findings[]` (`{target, present:false, detail}`) drops `role`.** Found by REC-199's worker (2). — owner RECORD.
+### D-539 · running — **A REVIEW COPY'S ROUND TRIP DEMOTES A LOAD-BEARING FINDING TO UNDESIGNATED: the absent-target branch of reviewCopy's `findings[]` (`{target, present:false, detail}`) drops `role`.** Found by REC-199's worker (2). — owner RECORD.
+status: running — SCHEDULER #21 00:05Z spawns WORKER D-539 (depth 2)
 order: after D-538, the same review-copy read: an edit round trip losing what the member designated (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
 interface: I3 additive — `role` on one branch; the integrator classifies.
@@ -597,6 +598,16 @@ depends-on: REC-200.
 scope: (1) SWEEP every site that orders or compares `at` values of different act kinds by string, and make each compare instants, not strings; (2) ONE stamping helper names the precision, used by every act that stamps, `observation_log` excepted by D-516's ruling; (3) state in the row's landing what the sweep's matcher cannot see.
 accepts-when: an acknowledgement stamped `…:00Z` and a comment stamped `…:00.123Z` in one copy order by instant, and REC-200's last-change date names the later one (the measured failure it moves: the whole-second stamp sorting last). NEGATIVE CONTROL: restore the string compare, and the mixed-precision arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
+
+### D-531 · queued — **A WHITESPACE-ONLY CONTENT UNIT IS STILL EMITTED AND INDEXED AS CONTENT at two emission sites: `index.mjs`'s `arm` helper and `store.mjs`'s `capture_text` ordering filter on `u.text.length`, though §16's comment at that site says a unit with no text is not emitted.** D-514's class surviving at emission; found by D-514's worker (id minted by it). — owner CONTENT-PDF, then RECORD.
+order: after UI-106, with the corrections: the record indexing blank units as content (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:46Z)
+milestone: M2
+interface: I5 — content-unit counts move; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with D-501's glyph rule (M-140).
+depends-on: D-514.
+scope: both filters read `glyphCount(u.text) > 0` (exported from textchain.mjs by D-514); measure content-unit counts and the corpus and retrieval figures resting on them BEFORE and AFTER, recorded with date and instrument.
+accepts-when: a whitespace-only unit is neither emitted nor indexed, and the before/after figures are recorded (the measured failure it moves: blank units indexed as content). NEGATIVE CONTROL: restore `u.text.length` at one site and the whitespace-unit arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (placed; `D-531` minted by D-514's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
