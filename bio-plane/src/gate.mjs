@@ -164,6 +164,10 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    IDSPACE_UNKNOWN, C-91.2 IDSPACE_VALUE_NOT_IN_SPACE and C-91.3 IDSPACE_CAPTURE_NOT_HELD, `op=idmatch`'s
    refusals in the new IDSPACE_CHECKS family. MINOR and additive on this constant's own rule; CONDUCT
    reconciles the number at integration if another branch takes 1.30.0 first. */
+/* REC-186 side, kept as history — took 1.29.0 (REC-186, 2026-09-25): C-33.48 LAST_OWNER_CANNOT_LEAVE joined ACT_SHAPE_CHECKS — op=projectleave refuses a
+   project's ONLY owner (BOB #31, 2026-09-23 21:37Z) — so the catalogue moved 461 -> 462 and the stamp moves with it,
+   MINOR and additive (Publication §3 rule 17). (Renumbered C-33.47 -> C-33.48 at c22-rec186-renumber, REC-207 holding
+   C-33.47.) The integrator takes the union's number once and re-reads the census from the d470 suite's print. */
 export const CATALOG_VERSION = "1.30.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16

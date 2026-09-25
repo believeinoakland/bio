@@ -340,3 +340,6 @@ bio-plane/.nc-d507/
 # REC-220's pen (`bio-plane/test/nc-rec220.mjs`), named for its item on the rule stated at
 # `.rec84-control-pristine/`: an interrupted arm must not leave a copy of `store.mjs` where a walk enrols it.
 .rec220-control-pristine/
+# REC-186's control pen (`bio-plane/test/rec-186-leave-join.control.mjs`): it copies `src/store.mjs` and
+# `src/affordances.mjs` here per arm; a run killed between arm and restore must not leave a second plane source.
+.rec186-harness/

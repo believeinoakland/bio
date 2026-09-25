@@ -475,6 +475,11 @@ const CATALOG_CENSUS = {
      1.30.0 (D-147, 2026-09-25): ELEVEN ARRIVALS, NO DEPARTURES — C-94.1-11, LIFECYCLE_CHECKS, 466 -> 477 over
      origin/main 964da679;
      "1.30.0": { count: 477, digest: "b06cb8dce8d8ce12f4d719b0b8e44e8d1f78c7501fb1b803126870967bcb39f4" } */
+  /* REC-186 side, kept as history (branch row DROPPED at c22-batch29 — its "1.29.0" is a different catalogue from ours'
+     1.29.0; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.29.0 (REC-186, 2026-09-25): C-33.48 LAST_OWNER_CANNOT_LEAVE joined ACT_SHAPE_CHECKS (BOB #31's ruling:
+     op=projectleave refuses a project's only owner), 461 -> 462;
+     "1.29.0": { count: 462, digest: "679731bf482feb496fa2c6fdd0443fc6d503cf8375b52cb6cf98142fd361d73a" } */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -711,6 +716,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
      [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
 */
+/* REC-186 side, kept as history — its A5 pin read 1.29.0 on its own branch (1.28.0 -> 1.29.0, C-33.48); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
