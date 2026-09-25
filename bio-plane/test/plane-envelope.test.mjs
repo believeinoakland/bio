@@ -97,6 +97,8 @@ import { fileURLToPath } from "node:url";
 /* D-240: REC-76's verdict reader, SHARED rather than re-derived. See the block
    above DETECTOR A, and `verdict-reader.mjs`'s own header. */
 import { verdictOf, readerDrift } from "./verdict-reader.mjs";
+/* D-561: C-69.2 and C-98, read from the rows, never a hand copy. */
+import { DISPATCH_CHECKS, PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";
 
 const SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const RAW = readFileSync(SRC_PATH, "utf8");
@@ -889,7 +891,15 @@ console.log("\n--- site 2: op=publishedcase (the item's site (b)) ---");
      bad.body.reason !== "NOT_PUBLISHED" && isSilence(bad));
   ok("and it carries none of the store's not-published sentence",
      !/published projection/.test(JSON.stringify(bad.body)));
+  /* D-561 (C-69.2): the silence a STRANGER meets at the public door carries its code, check and canned translation. */
+  const sd = DISPATCH_CHECKS.STORE_DID_NOT_ANSWER;
+  t("D-561 STORE_DID_NOT_ANSWER at publishedcase, as a caller holding nothing: C-69.2's check and canned translation",
+    [bad.status, bad.body.code, bad.body.check, bad.body.translation], [502, SILENT, sd.check, sd.translation]);
   await poison();
+  /* D-561 (C-98.8): the genuine negative carries ITS translation too, and the two stay apart. */
+  const np = PUBLISHED_READ_CHECKS.NOT_PUBLISHED;
+  t("D-561 NOT_PUBLISHED at publishedcase: C-98.8's check and canned translation, never the silence's",
+    [good.body.code, good.body.check, good.body.translation], ["NOT_PUBLISHED", np.check, np.translation]);
 }
 
 console.log("\n--- site 3: op=publishedmanifest (the published INDEX — not in scope, found by the sweep) ---");
@@ -913,16 +923,24 @@ console.log("\n--- site 4: op=publishedbytes (D-197's own sentence, minted in th
 {
   await poison();
   const good = await GET(`op=publishedbytes&sha256=${HEX}`);
-  t("THE TRUE NEGATIVE: a hash the published projection does not hold answers NOT_FOUND with the "
+  /* CORRECTED by D-561, not exempted: the true negative's CODE was `NOT_FOUND`, which the plane also mints for three
+     other conditions, so it could carry no canned translation; it is now NO_PUBLISHED_PART (C-98.1) with the SAME
+     sentence. What this site asserts — the true negative keeps its indistinguishability clause — is unchanged. */
+  t("THE TRUE NEGATIVE: a hash the published projection does not hold answers NO_PUBLISHED_PART with the "
     + "deliberate-indistinguishability clause, which is TRUE of a real absence",
     [good.status, good.body.reason, /deliberately/.test(good.body.detail || "")],
-    [404, "NOT_FOUND", true]);
+    [404, "NO_PUBLISHED_PART", true]);
 
   await poison("verify");
   const bad = await GET(`op=publishedbytes&sha256=${HEX}`);
-  ok("a Durable Object failure does NOT answer NOT_FOUND, and does not carry the sentence whose "
+  /* CORRECTED by D-561: the true negative's code is NO_PUBLISHED_PART now (was NOT_FOUND); the arm asks the same thing. */
+  ok("a Durable Object failure does NOT answer NO_PUBLISHED_PART, and does not carry the sentence whose "
      + "second clause is exactly what made D-197 convincing",
-     bad.body.reason !== "NOT_FOUND" && !/deliberately/.test(JSON.stringify(bad.body)) && isSilence(bad));
+     bad.body.reason !== "NO_PUBLISHED_PART" && bad.body.reason !== "NOT_FOUND" && !/deliberately/.test(JSON.stringify(bad.body)) && isSilence(bad));
+  /* D-561 (C-69.2): and at publishedbytes, the same row — one condition, one sentence. */
+  const sd = DISPATCH_CHECKS.STORE_DID_NOT_ANSWER;
+  t("D-561 STORE_DID_NOT_ANSWER at publishedbytes, as a caller holding nothing: C-69.2's check and canned translation",
+    [bad.status, bad.body.code, bad.body.check, bad.body.translation], [502, SILENT, sd.check, sd.translation]);
   await poison();
 }
 
@@ -1048,7 +1066,8 @@ console.log("\n--- the collapse must not run the other way ---");
      + "negative it is, and NONE of them reads as a silence — UI-37 measured that this collapse is "
      + "one character away in the other direction",
      v.body.published === false && v.body.ok === true
-     && c.body.reason === "NOT_PUBLISHED" && b.body.reason === "NOT_FOUND"
+     /* CORRECTED by D-561: publishedbytes' true negative is NO_PUBLISHED_PART (C-98.1), was NOT_FOUND. */
+     && c.body.reason === "NOT_PUBLISHED" && b.body.reason === "NO_PUBLISHED_PART"
      && m.body.ok === true && m.body.result.published.length === 0
      && ![v, c, b, m].some((x) => x.body.reason === SILENT));
 }

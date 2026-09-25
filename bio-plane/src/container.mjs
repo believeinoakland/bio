@@ -83,7 +83,8 @@ export function layoutOf(manifest) {
  *  decides it should be the ONE place that knows the manifest.
  *
  *  Returns `{ ok: true, bytes }`, or `{ ok: false, reason, ... }` with a NAMED
- *  reason -- `TOO_LARGE` for a container over the bound, `DUPLICATE_PATH` for
+ *  reason -- `CONTAINER_TOO_LARGE` for a container over the bound (D-561: it was
+ *  `TOO_LARGE`, a code the plane mints for other conditions too), `DUPLICATE_PATH` for
  *  two parts claiming one path (which would make the archive say two things
  *  about one name and let a reader resolve it either way). Never throws on bad
  *  input, never returns a partial archive presented as whole.
@@ -92,15 +93,28 @@ export function serialiseContainer(entries, { maxBytes = CONTAINER_MAX_BYTES } =
   const seen = new Set();
   let total = 0;
   for (const e of entries) {
-    if (seen.has(e.name)) return { ok: false, reason: "DUPLICATE_PATH", path: e.name };
+    if (seen.has(e.name)) {
+      /* DEC-49 REGION is-duplicate-path
+       * D-561 (C-98.6): the code a STRING LITERAL; its translation is attached by the control plane's
+       * `json()` (`dec49Attach`, by code), since this module is pure and reads no catalogue. */
+      return { ok: false, reason: "DUPLICATE_PATH", path: e.name,
+               detail: "two parts in this container claim one path, so an archive of it would say two "
+                     + "things about one name. Each part is still answerable individually by hash." };
+      /* END DEC-49 REGION is-duplicate-path */
+    }
     seen.add(e.name);
     total += e.bytes.length + enc.encode(e.name).length * 2 + 76; // payload + both headers
   }
-  if (total > maxBytes)
-    return { ok: false, reason: "TOO_LARGE", bytes: total, maxBytes,
+  if (total > maxBytes) {
+    /* DEC-49 REGION is-container-too-large
+     * D-561 (C-98.7): `CONTAINER_TOO_LARGE`, renamed from `TOO_LARGE` — that code is minted elsewhere
+     * in the plane for other conditions, so a row under it would put this sentence on theirs. */
+    return { ok: false, reason: "CONTAINER_TOO_LARGE", bytes: total, maxBytes,
              detail: "this container is larger than the plane will serialise in one response. Its parts "
                    + "remain individually answerable by hash at op=publishedbytes, which is the same "
                    + "material by the same mechanism." };
+    /* END DEC-49 REGION is-container-too-large */
+  }
 
   const chunks = [];
   const central = [];
@@ -166,10 +180,15 @@ export async function containerEntries(manifest, manifestBytes, read) {
     if (!part || typeof part.path !== "string" || typeof part.sha256 !== "string") continue;
     if (part.path === layout.manifestAt) continue;   // the manifest is written once, at the root
     const bytes = await read(part.sha256);
-    if (!bytes) return { ok: false, reason: "PART_MISSING", path: part.path, sha256: part.sha256,
-                         detail: "a part named in the manifest is not in the published object store, so this "
-                               + "container cannot be assembled whole. Its other parts are still answerable "
-                               + "individually by hash." };
+    if (!bytes) {
+      /* DEC-49 REGION is-part-missing
+       * D-561 (C-98.5): the code a STRING LITERAL; translated by the control plane's `json()` by code. */
+      return { ok: false, reason: "PART_MISSING", path: part.path, sha256: part.sha256,
+               detail: "a part named in the manifest is not in the published object store, so this "
+                     + "container cannot be assembled whole. Its other parts are still answerable "
+                     + "individually by hash." };
+      /* END DEC-49 REGION is-part-missing */
+    }
     entries.push({ name: layout.root + part.path, bytes });
   }
   return { ok: true, entries, layout };
