@@ -238,3 +238,4 @@ D-709	2026-09-25T10:05:44.851Z	SCHEDULER-23	every no-locator capture states fetc
 D-710	2026-09-25T10:06:45.118Z	SCHEDULER-23	whole-document unit of a mixed document reads mixed (BOB #35 09:35Z on D-686)
 D-711	2026-09-25T10:08:03.133Z	WORKER D-667	the D-548/D-564/D-667 sweep's remainder: 65 suites whose module-wide catch prints 'FAIL  the suite threw' and a foot without naming the sections that never ran, and casepin's inline top-level process.exit(1)
 D-712	2026-09-25T10:10:12.986Z	HEAD	
+D-713	2026-09-25T10:13:36.995Z	SCHEDULER-23	D-635 appended folio may be appended twice after a D-616 re-read (CONDUCT #22 batch30 union)
