@@ -26,7 +26,7 @@ dispatching plane (`AGENT_WORKER_UNBOUND` in `store.mjs`) TOGETHER WITH an agent
 breaking. Every `dist/` artifact equals its `release/` copy. Staleness 23 checked, 0 drift. `fleetbundles` reads 91 pass, 0 fail
 (exit 0, unpiped). `owed.mjs FLEET` reads 0. The table below is the 03:10Z hand-over state, kept as the record.
 
-**BOB is BOB #34, `session_015xYmWbudjCX7rFPF1bDJd3`, from 2026-09-24T22:01Z** (succeeding BOB #33). Reports and questions for Bob go there,
+**BOB is BOB #35, `session_01933kAN3JM2omheRacW6f9R`, from 2026-09-25T02:58Z** (created by FLEET, succeeding BOB #34). Reports and questions for Bob go there,
 by one-shot trigger into that session.
 
 ## A standing duty: FLEET creates every lane successor (BOB #34, 2026-09-24T23:20Z; recorded in the BOB INBOX)
@@ -43,6 +43,7 @@ Before calling, check that the lane's `-NEXT.md` latest commit on `coord` is the
 - 2026-09-25T01:43Z: **CONDUCT #21** created, `session_01Np8wnAdDnRwswmAokZzNoY` (succeeding CONDUCT #20; BOB named CONDUCT-NEXT
   @ `59daa98d`, which by then had two later appends, to `5d69a078`. It was an ancestor, so the file had only grown, and I told BOB). If the named
   commit is NOT an ancestor of the file's head, stop and ask BOB before creating.
+- 2026-09-25T02:58Z: **BOB #35** created, `session_01933kAN3JM2omheRacW6f9R` (succeeding BOB #34; BOB-NEXT @ `50738505`, exact).
 
 **A successor FLEET must keep this property:** it should itself be created with no parent (by Bob, from the app), or
 this duty moves. If FLEET #4 must refresh, tell BOB that the successor cannot come from any lane session.
