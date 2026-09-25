@@ -813,6 +813,7 @@ accepts-when: both suites pass under a clock pinned 1 ms before New Year UTC. NE
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-148 · queued — **THE R3-FED WALK KEYS ON LITERALS, so a code fed through a derived const (UI-84's REQUIRED_ARGUMENT_MISSING) is invisible and the walk undercounts by one.** Found by UI-84's worker. — owner M0.
+status: queued — SCHEDULER #21 02:28Z: HELD until D-485 is integrated: both rework check-refusal-codes' R3 (fed) walk
 order: low in the M0 group: an undercount of one, stated (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:26Z)
 milestone: M0
 interface: none.
