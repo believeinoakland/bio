@@ -166,6 +166,16 @@ scope: extend anchorTable rows with each arm's mustFail/mustNotFail and the suit
 accepts-when: the reader names nc-rec113 on D-646's base and passes on its tip; the estate count is recorded (moves: vacuous verdicts unseen). NEGATIVE CONTROL: restore an I2 declaration in nc-rec113 and the reader fails naming it.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-646's worker).
 
+### D-740 · queued — **A CONTROL DRIVER'S DECLARED mustFail/mustPass NEEDLE CAN NAME NO ASSERTION OF ITS SUITE, AND NO INSTRUMENT SEES IT: the needle is vacuous both ways (never "breaks" while held open; never met when declared to fail). Reach measured: 178 of 316 drivers declare needles; at most 9 carry anything like a label check.** Found by D-648's worker (nc-rec118's "ALL THREE READERS" after the suite relabelled it "ALL FOUR"; fixed there at 1bbab3f1). The same class as D-739 (nc-rec113, D-646). — owner M0.
+order: directly after D-739, the same class: ONE mechanism closes both — D-739's reader (anchorTable + anchordrift) or this row's per-driver check via a shared helper; the first to land narrows the other to what it does not cover (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — test-only.
+design: `docs/development/VERIFICATION.md` (a negative control must be able to fail; admitted for M0 by name).
+depends-on: D-739 (choose the mechanism with it; do not build two).
+scope: every driver's declared-vs-actual step requires each needle to match exactly one PASS/FAIL label the suite printed, failing by name otherwise (as nc-rec118 does at 1bbab3f1), through ONE shared helper (bio-plane/test/pen.mjs or anchortable.mjs) the drivers call; list the drivers it names on first run.
+accepts-when: a needle naming no printed label fails its driver by name across the estate (moves: 178 drivers whose needles are unchecked). NEGATIVE CONTROL: restore nc-rec118's stale needle and the helper fails naming it.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-648's worker).
+
 ### D-653 · queued — **`nc-rec97` arm overstrict: ANCHOR DRIFT — matches 2, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-652, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -1062,13 +1072,3 @@ depends-on: none.
 scope: move the D-263 PROVENANCE block (~2.4 KB, marked at both ends) to `docs/archive/`, and move `bio-plane/test/register-grammar.test.mjs`'s pin to the archived copy in the same landing. ALSO (M0-169's design gap, via CONDUCT #20 19:37Z): one sentence in "The battery runs every suite"'s Incomplete sections — a fixture's carry-list is DERIVED, once (`moduleclosure.mjs`, `gatedeps.mjs`). ALSO (BOB #35 03:25Z, M0-147's gap): beside M0-169's sentence, the instant-independence rule verbatim from the drained entry ("A suite's verdict must not depend on the instant it starts ... never a flake."). ALSO (BOB #35 04:25Z): D-485's R4 arm, written from D-485's report in the DEC-49 section, in as few lines as state it.
 accepts-when: VERIFICATION.md reads ≥ 2 KB under budget and register-grammar stays green (the measured failure it moves: 7 B of headroom). NEGATIVE CONTROL: point the pin back at VERIFICATION.md and register-grammar fails by name. And `grep -c "instant it starts" docs/development/VERIFICATION.md` reads 1. And DEC-49's section names R4.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### M0-166 · queued — **`VERIFICATION.md` HAS NO PROSE ON HOW THE GATE CLASSIFIES A DIFF OR SELECTS UNITS: the rule lives only in `gates.mjs`'s header comments, and M0-116, M0-143 and M0-153 each had to rediscover it.** Found by M0-153's worker. — owner M0 (the document's owner).
-order: after M0-165, the same subject; prose, small (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:33Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (this row adds its missing section).
-depends-on: M0-153, M0-184.
-scope: a VERIFICATION.md section stating the classes, the reader derivation (comment-blanked), the doc-facing rule and its edge rule, citing `gates.mjs` sections, with front matter moved. ALSO (M0-154's F3): beside the D-93 sentence, \"a fixture DERIVES what it must carry from its subject's own imports, never a copy kept by hand (M0-154, `bio-plane/test/gatedeps.mjs`)\".
-accepts-when: the section is on `main` and `corpuscheck` reads 0 fail. NEGATIVE CONTROL: none (prose).
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
