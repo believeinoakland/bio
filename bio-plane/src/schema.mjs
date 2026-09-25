@@ -811,6 +811,17 @@ CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- absence it is, so the null is never bare.
 -- The column arrives WITH its writer (schema.mjs's own standing rule): the
 -- agenda reader emits a position and op=promote projects it in the same landing.
+-- D-454: ONE ROW PER OCCURRENCE, keyed (capture_sha, ref, occurrence). Until this
+-- the key was (capture_sha, ref), so a reference string read on three pages was
+-- ONE row at the first page, and a member choosing a connection's on-point mention
+-- (REC-122) could not choose page 9. occurrence is the place (pos_kind:pos, the
+-- two columns beside it, so it is computable from them), and every unplaced read of
+-- one reference is the ONE row with an empty occurrence -- the record cannot tell
+-- apart reads it cannot place. seq is the reading order, and seq 0 is the FIRST read,
+-- which is exactly the one row every store held before this: a read asking about the
+-- REFERENCE (resolve, the name index, the frontier) reads seq 0, and a read asking
+-- about its MENTIONS reads every row. The re-key keeps every existing row (the
+-- migration renames, recreates and copies forward, store.mjs #migrate).
 CREATE TABLE IF NOT EXISTS reading_refs (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
@@ -821,7 +832,9 @@ CREATE TABLE IF NOT EXISTS reading_refs (
   pos_kind     TEXT,   -- IC-1's discriminator: pdf-page | sheet-cell | slide-shape | doc-para
   pos          TEXT,   -- the per-arm fields as canonical JSON, key-ordered so two reads of one place compare equal
   pos_ref      TEXT,   -- IC-1's REQUIRED human form, produced by the container that knows it
-  PRIMARY KEY (capture_sha, ref)
+  occurrence   TEXT NOT NULL DEFAULT '',  -- D-454: WHICH read of ref this row is, pos_kind:pos, empty = unplaced
+  seq          INTEGER NOT NULL DEFAULT 0, -- D-454: reading order among ref's occurrences, 0 = the first read
+  PRIMARY KEY (capture_sha, ref, occurrence)
 );
 CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
 CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
@@ -1160,6 +1173,12 @@ CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
 -- about (D-113). No position is stored: WHERE the mention was read is the reading's
 -- fact (reading_refs), read at answer time, so a choice cannot freeze a position the
 -- record later corrects.
+-- D-454: the choice NAMES ITS OCCURRENCE, because one reference string may be read at
+-- several places and a choice of the string alone is not a choice between them. The key
+-- is stored, never the position read off it: the answer still joins reading_refs, so a
+-- re-read that no longer carries that occurrence LAPSES the choice rather than moving it
+-- to another. A row chosen before D-454 has NULL here and answers only while its
+-- reference has exactly one occurrence.
 CREATE TABLE IF NOT EXISTS connection_pair_choices (
   choice_id     INTEGER PRIMARY KEY AUTOINCREMENT,
   a_capture_sha TEXT NOT NULL,
@@ -1167,6 +1186,7 @@ CREATE TABLE IF NOT EXISTS connection_pair_choices (
   entity_id     TEXT NOT NULL,
   side          TEXT NOT NULL,  -- which end the choice is about, a or b
   ref           TEXT NOT NULL,  -- the chosen mention, as resolutions.ref holds it
+  occurrence    TEXT,           -- D-454: WHICH read of ref, reading_refs.occurrence. NULL = chosen before D-454, naming the string only
   a_bundle_id   TEXT,
   b_bundle_id   TEXT,
   chosen_by     TEXT NOT NULL,  -- the member, stamped by the control plane

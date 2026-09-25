@@ -36,7 +36,7 @@
  * list of legislation references — nothing more is claimed. What the body DID
  * with each item is the minutes' business, not the agenda's.
  */
-import { CONFIDENCE, CONTRACT, entity, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies }
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies }
   from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
@@ -193,7 +193,8 @@ export default {
     }
 
     const entities = [];
-    const seen = new Set();
+    /* D-454: key -> the entity, so a repeat is recorded as another occurrence (`readAgain`). */
+    const seen = new Map();
     let pendingSubject = null, pendingFrom = null, expect = null;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -216,8 +217,7 @@ export default {
       const key = file[1];
       /* The same file listed twice is one item of legislation; first mention
          carries the description in the measured layout. */
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (seen.has(key)) { readAgain(seen.get(key), locate(offsets[i])); continue; }
       /* The item number immediately precedes the file line; a section item with
          no Subject block takes its heading from the nearest substantive line
          above the item number. */
@@ -237,6 +237,7 @@ export default {
         from: pendingFrom || null,
         item: item || null,
       }, locate(offsets[i])));
+      seen.set(key, entities[entities.length - 1]);
       pendingSubject = null; pendingFrom = null;
     }
 

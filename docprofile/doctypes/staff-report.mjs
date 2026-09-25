@@ -62,7 +62,7 @@
  * not evaluate the recommendation and does not treat the report's account of a fact as
  * the fact.
  */
-import { CONFIDENCE, CONTRACT, entity, diffEntities, flatten, alsoSatisfies } from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
@@ -263,13 +263,16 @@ export default {
     /* The references. Each key is one the SOURCE assigned — an instrument number, a
        Legistar file number, a code section — never a position in a list and never a
        person's name. A reference cited twice is one reference; the FIRST sighting
-       carries the position, because that is where the reader actually read it. */
+       carries `source`, and D-454: every sighting, the first included, is kept in
+       `occurrences` once there is a second, so a later one is not lost. */
     const entities = [];
-    const seen = new Set();
+    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */
+    const seen = new Map();
     const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) return;
-      seen.add(key);
-      entities.push(entity(key, kind, label, facts, locate(offset)));
+      if (seen.has(key)) { readAgain(seen.get(key), locate(offset)); return; }
+      const e = entity(key, kind, label, facts, locate(offset));
+      seen.set(key, e);
+      entities.push(e);
     };
     for (const m of raw.matchAll(INSTRUMENT_REF))
       take(`${m[1].toLowerCase()}:${m[2]}`, "instrument",

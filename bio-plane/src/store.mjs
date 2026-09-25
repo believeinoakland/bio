@@ -401,7 +401,7 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
             inside a content row's extent. Imported for the reason everything
             above it is — the extent vocabulary is ONE construct and a second
             copy here is the drift D-164 names. */
-         readingSource, readingSourceJson, readingSourceFromColumns,
+         readingSource, readingSourceJson, readingSourceFromColumns, readingOccurrenceKey,
          readingPositionInExtent,
          /* D-531: whether a unit carries text is a GLYPH question (D-514's
             rule), asked here where the index decides what to write. */
@@ -912,6 +912,27 @@ export class Store extends DurableObject {
       if (cols.length && !cols.includes("edition"))
         this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
     }
+    /* D-454: reading_refs is RE-KEYED (capture_sha, ref, occurrence). It is DERIVED, so the
+       links/captured_locators DROP above would be defensible — and it is NOT taken, because
+       the row that ordered this (and the rows every connection's pair and every member's
+       choice were read from) says keep every existing row, and a drop would leave each store
+       with no reference index until every capture is re-promoted. Unlike those tables, an old
+       row here is not WRONG under the new key: it is the first occurrence (the readers kept
+       only the first sighting), which is exactly `seq` 0 at its own place. So the old table is
+       renamed out of the way here and copied forward after the schema, published_bundles'
+       precedent.
+       THE TWO INDEXES ARE DROPPED WITH THE RENAME, and that is load-bearing: a renamed table
+       KEEPS its indexes under their old names, so the schema's CREATE INDEX IF NOT EXISTS
+       would find the names taken and create nothing, and the DROP of the interim table below
+       would then remove them — a re-keyed table with neither lookup index, failing nothing. */
+    {
+      const cols = [...this.sql.exec(`PRAGMA table_info(reading_refs)`)].map((r) => r.name);
+      if (cols.length && !cols.includes("occurrence")) {
+        this.sql.exec(`ALTER TABLE reading_refs RENAME TO reading_refs_preoccurrence`);
+        this.sql.exec(`DROP INDEX IF EXISTS reading_refs_ref`);
+        this.sql.exec(`DROP INDEX IF EXISTS reading_refs_bundle`);
+      }
+    }
 
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
        columns added after a store was first written need adding by hand. Done
@@ -1233,6 +1254,12 @@ export class Store extends DurableObject {
          that exists before this column did, and null is the TRUE value for them:
          their ties went to the scan's row order, which no read can recover. */
       ["connections", "pair_rule", "TEXT"],
+      /* D-454: WHICH OCCURRENCE a member's on-point choice names. Null on every choice made
+         before it, and null is the TRUE value: those choices named a string when the record
+         held one occurrence per string, and no backfill can know which read the member meant
+         once a re-read finds more. The read answers such a choice only while its reference
+         has exactly one occurrence (connectionGradeForContent says why). */
+      ["connection_pair_choices", "occurrence", "TEXT"],
       /* FW-19 / IC-125: `cited_as` on a content row. Every row that can exist
          before this column did was minted against a TEXT arm (no `image` kind
          was admissible), so the default IS the true value for all of them —
@@ -1428,6 +1455,29 @@ export class Store extends DurableObject {
            SELECT bundle_id,1,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored
            FROM published_bundles_preeditions`);
         this.sql.exec(`DROP TABLE published_bundles_preeditions`);
+      }
+    }
+    /* D-454: the copy-forward. EVERY row survives: the old key (capture_sha, ref) was unique,
+       so the new one is too, with each old row as its reference's first occurrence (seq 0) at
+       the place it recorded — `occurrence` is computed from the two columns the row already
+       carries, the rule `readingOccurrenceKey` states, and '' where it carried none. A store
+       older than FW-17 has no position columns at all and every row lands unplaced, which is
+       what it was. Keyed on the INTERIM table rather than on the rename above, so a boot that
+       died between the two finishes the copy on the next; OR IGNORE is for that re-run only,
+       since a row already copied is the same row. */
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(reading_refs_preoccurrence)`)].map((r) => r.name);
+      if (old.length) {
+        const col = (c) => (old.includes(c) ? c : "NULL");
+        this.sql.exec(
+          `INSERT OR IGNORE INTO reading_refs
+             (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref,occurrence,seq)
+           SELECT capture_sha, bundle_id, ref, ${col("ref_kind")}, ${col("ref_key")}, ${col("label")},
+                  ${col("pos_kind")}, ${col("pos")}, ${col("pos_ref")},
+                  CASE WHEN ${col("pos_kind")} IS NOT NULL AND ${col("pos")} IS NOT NULL
+                       THEN ${col("pos_kind")} || ':' || ${col("pos")} ELSE '' END, 0
+             FROM reading_refs_preoccurrence`);
+        this.sql.exec(`DROP TABLE reading_refs_preoccurrence`);
       }
     }
     /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */
@@ -14258,7 +14308,7 @@ export class Store extends DurableObject {
               EXISTS (SELECT 1 FROM resolutions r
                        WHERE r.capture_sha = rr.capture_sha AND r.ref = rr.ref AND r.entity_id = ?) AS named
          FROM reading_refs rr
-        WHERE rr.capture_sha=? AND rr.pos_kind IS NOT NULL ORDER BY rr.ref LIMIT ?`, subject ?? "", cap, max * 4 + 1);
+        WHERE rr.capture_sha=? AND rr.pos_kind IS NOT NULL ORDER BY rr.ref, rr.seq LIMIT ?`, subject ?? "", cap, max * 4 + 1);
     if (refRows.length > max * 4) truncated = true;
     for (const r of refRows) {
       const pos = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
@@ -19555,15 +19605,40 @@ export class Store extends DurableObject {
            ALL THREE COLUMNS MOVE TOGETHER: `readingSource` returns the whole
            canonical object or nothing, so a row can never carry a kind with no
            form or a form with no fields. */
-        const pos = readingSource(e.source);
-        this.sql.exec(
-          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref)
-           VALUES (?,?,?,?,?,?,?,?,?)`,
-          sha, bundleId, ref,
-          e.kind == null ? null : String(e.kind),
-          e.key == null ? null : String(e.key),
-          e.label == null ? null : String(e.label),
-          pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null);
+        /* D-454 — EVERY OCCURRENCE, NOT THE LAST. The key was (capture_sha, ref) and this was
+           an INSERT OR REPLACE, so a reference read at several places kept one row; the readers
+           had already dropped every sighting but the first, so which one survived was never
+           tested. Now a reader's `occurrences` (every place, in reading order, `source` first)
+           writes one row per DISTINCT place, `seq` counting them from 0, and a reference read
+           once writes exactly the one row it always did (`source`, seq 0). `source` leads even
+           where a provenance document's `occurrences` omits it, because it is the field every
+           reader before this one emitted. Two reads of one place are one occurrence (the key is
+           the place), and every unplaced read is the one '' occurrence. A document naming
+           `occurrences` and no `source` is taken at its list: prepending the absent `source`
+           would record an unplaced read nobody claimed. */
+        const all = Array.isArray(e.occurrences) ? e.occurrences : [];
+        const listed = all.slice(0, Store.#OCCURRENCES_PER_REF);
+        const places = (e.source || !listed.length ? [e.source] : []).concat(listed).map(readingSource);
+        /* PAST THE BOUND, THE REST ARE READS THIS PROJECTION DOES NOT PLACE — so they are the '' (unplaced)
+           occurrence, which is exactly true of them here, and which the unchosen-mention check reads as
+           possibly inside any part (C-49.4). Dropping them instead would let a portion answer a definite
+           outside while a dropped read sat inside it. */
+        if (all.length > listed.length) places.push(null);
+        const wrote = new Set();
+        for (const pos of places) {
+          const occ = readingOccurrenceKey(pos);
+          if (wrote.has(occ)) continue;
+          this.sql.exec(
+            `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref,occurrence,seq)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+            sha, bundleId, ref,
+            e.kind == null ? null : String(e.kind),
+            e.key == null ? null : String(e.key),
+            e.label == null ? null : String(e.label),
+            pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null,
+            occ, wrote.size);
+          wrote.add(occ);
+        }
         /* REC-36/REC-40: the name index, written in the SAME transaction as the
            row it projects, exactly as the row is a projection of the document
            (D-21). A string the reader did not carry produces no terms and no
@@ -23466,7 +23541,7 @@ export class Store extends DurableObject {
     const stale = this.#rows(
       `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_key, rr.label
          FROM reading_refs rr
-        WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+        WHERE rr.seq = 0 AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
                            WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)
         ORDER BY rr.capture_sha, rr.ref LIMIT ?`, limit);
     let n = 0;
@@ -23495,7 +23570,7 @@ export class Store extends DurableObject {
       limit,
       remaining: this.#one(
         `SELECT count(*) c FROM reading_refs rr
-          WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+          WHERE rr.seq = 0 AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
                              WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)`).c,
     };
   }
@@ -24126,7 +24201,7 @@ export class Store extends DurableObject {
       `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label,
               rr.pos_kind, rr.pos, rr.pos_ref, r.content_type
          FROM reading_refs rr LEFT JOIN readings r ON r.capture_sha = rr.capture_sha
-        WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha`, ref);
+        WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha, rr.seq`, ref);
     /* REC-30: the reverse index answers WHICH DOCUMENTS carry a reference — a
        fact about captures. The bundle back-reference is withheld where the
        viewer may not see the bundle; `count` counts documents, not names.
@@ -24144,10 +24219,22 @@ export class Store extends DurableObject {
        internal, and a projection nothing outside the store can ask for is a
        projection the next session cannot verify. */
     const keep = this.#bundleRedactor(viewer);
-    return { ok: true, ref, count: rows.length,
-             documents: rows.map((r) => ({ capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
-               ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
-               position: readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref) })) };
+    /* D-454: `reading_refs` holds one row per OCCURRENCE, and this read answers per DOCUMENT
+       (`count` counts documents). So the rows fold by capture: the entry is the first
+       occurrence's, `position` exactly what it was before the re-key, and a document that read
+       the reference at more than one place lists EVERY place in `occurrences`, in reading
+       order — carried only then, so a reference read once answers in its old shape. */
+    const byDoc = new Map();
+    for (const r of rows) {
+      const position = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
+      const cur = byDoc.get(r.capture_sha);
+      if (cur) { (cur.occurrences ||= [cur.position]).push(position); continue; }
+      byDoc.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
+        ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
+        position });
+    }
+    const documents = [...byDoc.values()];
+    return { ok: true, ref, count: documents.length, documents };
   }
 
   /** REC-36: THE REVERSE READ FOR A NAME-ONLY MENTION — every captured document
@@ -24600,7 +24687,7 @@ export class Store extends DurableObject {
   static #refTermsSql(nTerms, gateSql) {
     return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
               FROM reading_ref_terms t
-              JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref
+              JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref AND rr.seq = 0
               LEFT JOIN readings r ON r.capture_sha = t.capture_sha
              WHERE t.term IN (${new Array(nTerms).fill("?").join(",")}) AND (${gateSql})
              GROUP BY t.capture_sha, t.ref, t.src
@@ -24956,6 +25043,14 @@ export class Store extends DurableObject {
    * complete answer, and the complete answer needs the query surface D-222/REC-62 is for. */
   static #MEANING_LIMIT_DEFAULT = 500;
   static #MEANING_LIMIT_MAX = 5000;
+  /* D-454: the most occurrences of ONE reference a promotion projects. A provenance document is
+     something a caller can author, so its `occurrences` list is bounded here like every list
+     this store takes from one; a real reader's list is the number of times one file number or
+     instrument is printed in one document. The figure is a CHOSEN bound, not a measured one:
+     no census of occurrences per reference has been taken. Past it the reading blob still
+     carries every entry, and the projection keeps the first 256 places and records the rest
+     as the one unplaced occurrence (`#writeReadings` says why). */
+  static #OCCURRENCES_PER_REF = 256;
 
   /* Upsert one resolution with the improvable-grade rule: a first resolution INSERTs; a
      re-resolution at a STRONGER grade RAISES in place (recording raised_from); an equal
@@ -25115,14 +25210,15 @@ export class Store extends DurableObject {
       if (typeof ref !== "string" || !ref)
         return { ok: false, reason: "NO_REF", detail: "resolve a single reference by its raw kind:key, or omit ref to resolve all" };
       const one = this.#one(
-        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`,
         captureSha, ref);
       if (!one) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
         detail: "this captured document's reading carries no such reference (nothing to resolve)" };
       refs = [one];
     } else {
       refs = this.#rows(
-        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? ORDER BY ref`,
+        /* D-454: seq 0 — a resolution is of the REFERENCE, and its occurrences are one reference. */
+        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND seq=0 ORDER BY ref`,
         captureSha);
     }
     const resolved = [], unresolved = [];
@@ -25515,8 +25611,14 @@ export class Store extends DurableObject {
     for (const e of ends) {
       e.pos = null;
       if (!e.ref) continue;
+      /* D-454: a reference may be read at several places now, and the pair records ONE — the
+         FIRST read (seq 0), which is the only place any pair recorded before the re-key, so a
+         derivation over an unchanged reading writes the row it always wrote. It is a machine
+         selection among occurrences exactly as the strongest grade is among references, and
+         `connectionGradeForContent` treats the other occurrences as other mentions (C-49.4)
+         until a member chooses one. */
       const rr = this.#one(
-        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT 1`,
         e.capture_sha, e.ref);
       if (rr) e.pos = readingSourceFromColumns(rr.pos_kind, rr.pos, rr.pos_ref);
     }
@@ -25789,13 +25891,18 @@ export class Store extends DurableObject {
     const mentionsOf = (entityId) => {
       if (mentionCache.has(entityId)) return mentionCache.get(entityId);
       const rows = this.#rows(
-        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+        /* D-454: one row per OCCURRENCE — a reference read at three places is three mentions,
+           each carrying the `occurrence` a member names to choose it. A resolution whose
+           reading carries no row for it (re-read since) is one mention with no occurrence. */
+        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
+                rp.occurrence AS occurrence
            FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref LIMIT ?`,
+          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref, rp.seq LIMIT ?`,
         row.capture_sha, entityId, Store.#MEANING_LIMIT_MAX + 1);
       const cut = rows.length > Store.#MEANING_LIMIT_MAX;
       const got = { cut, mentions: (cut ? rows.slice(0, Store.#MEANING_LIMIT_MAX) : rows).map((m) => ({
-        ref: m.ref, grade: m.grade, position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) })) };
+        ref: m.ref, occurrence: m.occurrence ?? null, grade: m.grade,
+        position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) })) };
       mentionCache.set(entityId, got);
       return got;
     };
@@ -25830,13 +25937,36 @@ export class Store extends DurableObject {
       const mine = choices[side];
       let lapsed = null;
       if (mine) {
-        const m = this.#one(
-          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+        /* D-454: THE CHOICE IS OF AN OCCURRENCE. Its place is read here from the reading, never
+           from the choice row, so a re-read that no longer reads the reference AT THAT PLACE
+           lapses the choice rather than letting it slide to another read of the same string.
+           A choice made before D-454 names no occurrence: it answers while its reference has
+           exactly one, and where the document now reads it at several it is AMBIGUOUS — the
+           member chose a string when the record could show only one place for it, and which
+           place they meant is not recoverable — so it is stated and read as unchosen. */
+        const reads = this.#rows(
+          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
+                  rp.occurrence AS occurrence
              FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=?`, row.capture_sha, c.entity_id, mine.ref);
-        if (!m) {
-          lapsed = { ref: mine.ref, chosen_by: mine.chosen_by, at: mine.at, lapsed: true,
+            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=? ORDER BY rp.seq LIMIT ?`,
+          row.capture_sha, c.entity_id, mine.ref, Store.#OCCURRENCES_PER_REF + 1);
+        const ambiguous = mine.occurrence == null && reads.length > 1;
+        const m = mine.occurrence == null
+          ? (reads.length === 1 ? reads[0] : null)
+          : (reads.find((x) => (x.occurrence ?? "") === mine.occurrence) || null);
+        const occ = mine.occurrence != null ? { occurrence: mine.occurrence } : {};
+        if (ambiguous) {
+          lapsed = { ref: mine.ref, chosen_by: mine.chosen_by, at: mine.at, lapsed: true, ambiguous: true,
+                     occurrences: reads.map((x) => ({ occurrence: x.occurrence ?? null,
+                       position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref) })),
+                     why: `a member chose ${mine.ref} as on point before the record kept which read of a `
+                        + `reference a choice meant, and this document reads it at ${reads.length} places, `
+                        + `so the choice cannot say which and the machine's selection is read as unchosen. `
+                        + `Choosing again, naming the occurrence, settles it` };
+        } else if (!m) {
+          lapsed = { ref: mine.ref, ...occ, chosen_by: mine.chosen_by, at: mine.at, lapsed: true,
                      why: "a member chose this mention as on point, and this document no longer carries it "
+                        + (mine.occurrence != null ? "at that place " : "")
                         + "for this subject, so the choice cannot answer and the machine's selection is "
                         + "read as unchosen" };
         } else {
@@ -25847,7 +25977,7 @@ export class Store extends DurableObject {
             `SELECT grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
             otherSha, c.entity_id, theirs.ref)?.grade) || (side === "a" ? c.b_grade : c.a_grade);
           const grade = Store.#weakerGrade(m.grade, theirGrade);
-          const onPoint = { ref: m.ref, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
+          const onPoint = { ref: m.ref, ...occ, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
           const chosenEntry = { ...entry, grade, on_point: onPoint };
           const said = `a member (${mine.chosen_by}) chose ${m.ref} as the on-point mention on this end`;
           const verdict = checkConnectionPairCovers(
@@ -25879,6 +26009,9 @@ export class Store extends DurableObject {
       if (!bad || bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT") {
         const unchosen = checkConnectionMentionUnchosen({
           pairRef: side === "a" ? view.determining_pair.a_ref : view.determining_pair.b_ref,
+          /* D-454: the pair's OWN place, so another read of its string is another mention. */
+          pairOccurrence: readingOccurrenceKey(side === "a" ? view.determining_pair.a_position
+                                                            : view.determining_pair.b_position),
           pairGrade: side === "a" ? c.a_grade : c.b_grade, pairReached: !bad,
           ...mentionsOf(c.entity_id), extentKind: row.extent_kind, extent,
           covers: readingPositionInExtent, rank: (g) => Store.#GRADE_RANK[g] || 0 });
@@ -25970,11 +26103,12 @@ export class Store extends DurableObject {
      choice answers — never an older one by scan order. */
   #currentPairChoices(aSha, bSha, entityId) {
     const rows = this.#rows(
-      `SELECT side, ref, chosen_by, at FROM connection_pair_choices
+      `SELECT side, ref, occurrence, chosen_by, at FROM connection_pair_choices
         WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side IN ('a','b')
           AND superseded_at IS NULL ORDER BY choice_id DESC LIMIT 2`, aSha, bSha, entityId);
     const out = { a: null, b: null };
-    for (const r of rows) if (!out[r.side]) out[r.side] = { ref: r.ref, chosen_by: r.chosen_by, at: r.at };
+    for (const r of rows)
+      if (!out[r.side]) out[r.side] = { ref: r.ref, occurrence: r.occurrence ?? null, chosen_by: r.chosen_by, at: r.at };
     return out;
   }
 
@@ -25992,6 +26126,9 @@ export class Store extends DurableObject {
     const other = String(args.other ?? "").trim().toLowerCase();
     const entityId = String(args.entity ?? "").trim();
     const ref = String(args.ref ?? "").trim();
+    /* D-454: WHICH read of `ref`. Optional while the reference was read at one place (every
+       REC-122 caller's shape), required once it was read at several (C-74.4). */
+    const named = args.occurrence == null ? null : String(args.occurrence).trim() || null;
     const aSha = capture < other ? capture : other, bSha = capture < other ? other : capture;
     const conn = (capture && other && entityId && capture !== other)
       ? this.#one(`SELECT a_capture_sha, b_capture_sha, entity_id, a_bundle_id, b_bundle_id, a_ref, b_ref
@@ -26004,6 +26141,26 @@ export class Store extends DurableObject {
       ? this.#one(`SELECT ref, grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
                   capture, entityId, ref)
       : null;
+    /* D-454: the mention's OCCURRENCES, in reading order. The member names one by the key the
+       record lists (`occurrence`, on every mention `op=connections&content=` names) or by the
+       place's human form where exactly one occurrence carries it — correct work in the spelling
+       a person reads must pass. With none named, a reference read at ONE place is that place
+       (REC-122's shape, unchanged) and one read at several is refused, never defaulted. */
+    const reads = mention
+      ? this.#rows(`SELECT occurrence, seq, pos_kind, pos, pos_ref FROM reading_refs
+                     WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT ?`,
+                   capture, mention.ref, Store.#OCCURRENCES_PER_REF + 1)
+      : [];
+    const byForm = named ? reads.filter((x) => x.pos_ref === named) : [];
+    const pick = named
+      ? (reads.find((x) => x.occurrence === named) || (byForm.length === 1 ? byForm[0] : null))
+      : (reads.length <= 1 ? (reads[0] || null) : null);
+    /* Bounded like every list this store publishes, and SAYS when it was cut: the read asks for one more than
+       the bound, and a reference read past it answers `truncated` rather than a list that reads as complete. */
+    const occCut = reads.length > Store.#OCCURRENCES_PER_REF;
+    const listed = () => (occCut ? reads.slice(0, Store.#OCCURRENCES_PER_REF) : reads).map((x) => ({
+      occurrence: x.occurrence, position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref) }));
+    const placeName = (x) => x.pos_ref || "a place the reading did not record";
     /* DEC-49 REGION is-connection-choice */
     if (!who || isMachineIdentity(who))
       return refusal("CONNECTION_CHOICE_NOT_A_MEMBER",
@@ -26025,14 +26182,32 @@ export class Store extends DurableObject {
               + `are the references the record resolved to that subject in it.`
             : `pass ref=: the mention, as the reading recorded it, that is on point for this connection.`,
         { capture, entity_id: entityId, ref: ref || null });
+    if (named && !pick)
+      return refusal("CONNECTION_CHOICE_NOT_A_MENTION",
+        `this document does not read '${mention.ref.slice(0, 80)}' at '${named.slice(0, 120)}'`
+        + (byForm.length > 1 ? ` alone — that place is ${byForm.length} occurrences, so name one by its key` : ``)
+        + `. It reads it at: ${reads.map(placeName).join(", ") || "no place the reading recorded"}.`,
+        { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed(),
+          limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
+    if (!named && reads.length > 1)
+      return refusal("CONNECTION_CHOICE_OCCURRENCE_UNNAMED",
+        `this document reads '${mention.ref.slice(0, 80)}' at ${reads.length} places `
+        + `(${reads.map(placeName).join(", ")}), and each is its own mention. Pass occurrence= naming `
+        + `the one on point.`,
+        { capture, entity_id: entityId, ref: mention.ref, occurrences: listed(),
+          limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
     /* END DEC-49 REGION is-connection-choice */
     const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
-    const pos = this.#one(`SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
-                          capture, mention.ref);
-    const position = pos ? readingSourceFromColumns(pos.pos_kind, pos.pos, pos.pos_ref) : null;
+    /* The chosen occurrence's key, and NULL only where the reading holds no row for the mention
+       at all (a resolution outliving its reading's reference), which names no place to key. */
+    const occurrence = pick ? pick.occurrence : null;
+    const position = pick ? readingSourceFromColumns(pick.pos_kind, pick.pos, pick.pos_ref) : null;
     const answer = (wrote, prior) => ({
       ok: true, wrote, a_capture_sha: aSha, b_capture_sha: bSha, entity_id: entityId, side,
-      chosen: { ref: mention.ref, grade: mention.grade, position,
+      /* D-454: every place this document reads the chosen reference, so a member (and a surface) sees the
+         other occurrences beside the one chosen. */
+      occurrences: listed(), limit: Store.#OCCURRENCES_PER_REF, truncated: occCut,
+      chosen: { ref: mention.ref, occurrence, grade: mention.grade, position,
                 chosen_by: wrote ? who : cur.chosen_by, at: wrote ? at : cur.at },
       superseded: prior,
       machine_pair_ref: side === "a" ? conn.a_ref : conn.b_ref,
@@ -26042,18 +26217,21 @@ export class Store extends DurableObject {
         + `, as chosen by ${wrote ? who : cur.chosen_by}. A citation of a part of this document now `
         + `answers from this mention; the machine's strongest-graded pair is kept beside it, unchanged` });
     const at = new Date().toISOString();
-    if (cur && cur.ref === mention.ref) return answer(false, null);
+    /* D-454: the same choice is the same REFERENCE AT THE SAME PLACE. A choice made before D-454
+       (occurrence NULL) naming this reference is superseded by one that names its place. */
+    if (cur && cur.ref === mention.ref && (cur.occurrence ?? null) === occurrence) return answer(false, null);
     this.ctx.storage.transactionSync(() => {
       if (cur)
         this.sql.exec(`UPDATE connection_pair_choices SET superseded_at=?
                         WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side=?
                           AND superseded_at IS NULL`, at, aSha, bSha, entityId, side);
       this.sql.exec(`INSERT INTO connection_pair_choices
-                       (a_capture_sha,b_capture_sha,entity_id,side,ref,a_bundle_id,b_bundle_id,chosen_by,at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`,
-                    aSha, bSha, entityId, side, mention.ref, conn.a_bundle_id, conn.b_bundle_id, who, at);
+                       (a_capture_sha,b_capture_sha,entity_id,side,ref,occurrence,a_bundle_id,b_bundle_id,chosen_by,at)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                    aSha, bSha, entityId, side, mention.ref, occurrence, conn.a_bundle_id, conn.b_bundle_id, who, at);
     });
-    return answer(true, cur ? { ref: cur.ref, chosen_by: cur.chosen_by, at: cur.at } : null);
+    return answer(true, cur ? { ref: cur.ref, ...(cur.occurrence != null ? { occurrence: cur.occurrence } : {}),
+                                chosen_by: cur.chosen_by, at: cur.at } : null);
   }
 
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
@@ -50901,6 +51079,8 @@ export class Store extends DurableObject {
           other: (body && body.other) || url.searchParams.get("other"),
           entity: (body && body.entity) || url.searchParams.get("entity"),
           ref: (body && body.ref) || url.searchParams.get("ref"),
+          /* D-454: which read of `ref`, required once it was read at more than one place (C-74.4). */
+          occurrence: (body && body.occurrence) || url.searchParams.get("occurrence"),
           author: url.searchParams.get("author"),
           viewer: url.searchParams.get("viewer"),
         }),

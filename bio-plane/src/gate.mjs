@@ -142,6 +142,10 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.29.0 (D-512, 2026-09-24, branch land/worker/D-512): C-66.6 REPLAY_UNVERIFIED joined SURFACE_CHECKS — `op=promote`
    honours `replay` only over a drive-provenance capture it verifies (BOB #33's step (2)). MINOR and additive: one check
    arrives, none moves and none leaves. CONDUCT reconciles the number at integration if another branch takes 1.29.0. */
+/* 1.29.0 (D-454, 2026-09-25): ONE ARRIVAL, NO DEPARTURES — C-74.4 CONNECTION_CHOICE_OCCURRENCE_UNNAMED in
+   CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
+   on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
+   number and re-reads the census from the d470 suite's print on the merged tree. */
 export const CATALOG_VERSION = "1.29.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

@@ -392,6 +392,9 @@ const CATALOG_CENSUS = {
      OWN PRINT on this tree and never 457 + 10: the figure is a measurement of the catalogue that is
      here, and the arithmetic would agree with it for free. */
   /* 1.29.0 (D-530, 2026-09-24): C-89.1 CAPTURE_HELD_IN_PARTS over 1.28.0; count and digest are THIS SUITE'S PRINT on the D-530 tree. */
+  /* 1.29.0 (D-454, 2026-09-25, WORKER D-454, branch land/worker/D-454): ONE ARRIVAL, NO DEPARTURES — C-74.4
+     CONNECTION_CHOICE_OCCURRENCE_UNNAMED. 461 -> 462, count AND digest from THIS SUITE'S OWN PRINT on the item's
+     tree over origin/main 8bdf20e6. IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -521,6 +524,7 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* CORRECTED by D-450 (2026-09-25), never exempted: C-41.12 changed what it admits, so the catalogue
    under the stamp is no longer 1.28.0's and the stamp moves with it (rule 17). */
 /* CORRECTED AGAIN by D-512 (2026-09-24), never exempted: C-66.6 moved the catalogue, so the stamp moved with it. */
+/* CORRECTED 2026-09-25 by D-454: 1.28.0 -> 1.29.0 with the catalogue (C-74.4 arrived); the stamp moves with it. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

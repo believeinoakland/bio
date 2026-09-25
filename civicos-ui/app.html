@@ -4465,6 +4465,23 @@ function entity(key, kind, label, facts, source) {
   return e;
 }
 
+/** D-454 — A REFERENCE READ AGAIN IS ANOTHER OCCURRENCE, NOT NOTHING. A reader keeps ONE
+ *  entity per key (its facts and label come from the first sighting, and `diffEntities`
+ *  diffs by key), and until this every later sighting was dropped whole — so a file
+ *  number listed on pages 3, 9 and 14 was recorded as read on page 3 alone, and a member
+ *  choosing which mention a connection rests on could not choose page 9. `occurrences`
+ *  is EVERY place the reference was read, in reading order, the first included; an entry
+ *  is null where the locator could not say. It is carried only once a second sighting
+ *  exists, so a reference read once has the shape it always had. `source` stays the first
+ *  sighting's, unchanged. The same rule as `source` binds each entry: only `ctx.locate`
+ *  may produce it. */
+function readAgain(e, source) {
+  if (!e) return e;
+  if (!Array.isArray(e.occurrences)) e.occurrences = [e.source || null];
+  e.occurrences.push(source || null);
+  return e;
+}
+
 /** Referential and temporal connections are different things and must not be
  *  collapsed into one edge type.
  *
@@ -5008,7 +5025,8 @@ const meetingAgenda = {
     }
 
     const entities = [];
-    const seen = new Set();
+    /* D-454: key -> the entity, so a repeat is recorded as another occurrence (`readAgain`). */
+    const seen = new Map();
     let pendingSubject = null, pendingFrom = null, expect = null;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -5031,8 +5049,7 @@ const meetingAgenda = {
       const key = file[1];
       /* The same file listed twice is one item of legislation; first mention
          carries the description in the measured layout. */
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (seen.has(key)) { readAgain(seen.get(key), locate(offsets[i])); continue; }
       /* The item number immediately precedes the file line; a section item with
          no Subject block takes its heading from the nearest substantive line
          above the item number. */
@@ -5052,6 +5069,7 @@ const meetingAgenda = {
         from: pendingFrom || null,
         item: item || null,
       }, locate(offsets[i])));
+      seen.set(key, entities[entities.length - 1]);
       pendingSubject = null; pendingFrom = null;
     }
 
@@ -5415,7 +5433,8 @@ const meetingMinutes = {
     }
 
     const entities = [];
-    const seen = new Set();
+    /* D-454: key -> the entity, so a repeat is recorded as another occurrence (`readAgain`). */
+    const seen = new Map();
     let pendingSubject = null, pendingFrom = null, pendingItem = null, expect = null;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -5441,8 +5460,7 @@ const meetingMinutes = {
       const file = MINUTES_FILE_LINE.exec(line);
       if (!file) continue;
       const key = file[1];
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (seen.has(key)) { readAgain(seen.get(key), locate(offsets[i])); continue; }
 
       /* A section item with no Subject block takes its heading from the nearest
          substantive line above; the item number was carried forward (see above). */
@@ -5499,6 +5517,7 @@ const meetingMinutes = {
         moved_by, seconded_by,
         vote: Object.keys(vote).length ? vote : null,
       }, locate(offsets[i])));
+      seen.set(key, entities[entities.length - 1]);
       pendingSubject = null; pendingFrom = null; pendingItem = null;
     }
 
@@ -5826,13 +5845,16 @@ const staffReport = {
     /* The references. Each key is one the SOURCE assigned — an instrument number, a
        Legistar file number, a code section — never a position in a list and never a
        person's name. A reference cited twice is one reference; the FIRST sighting
-       carries the position, because that is where the reader actually read it. */
+       carries `source`, and D-454: every sighting, the first included, is kept in
+       `occurrences` once there is a second, so a later one is not lost. */
     const entities = [];
-    const seen = new Set();
+    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */
+    const seen = new Map();
     const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) return;
-      seen.add(key);
-      entities.push(entity(key, kind, label, facts, locate(offset)));
+      if (seen.has(key)) { readAgain(seen.get(key), locate(offset)); return; }
+      const e = entity(key, kind, label, facts, locate(offset));
+      seen.set(key, e);
+      entities.push(e);
     };
     for (const m of raw.matchAll(INSTRUMENT_REF))
       take(`${m[1].toLowerCase()}:${m[2]}`, "instrument",
@@ -6119,11 +6141,13 @@ const regulation = {
     const recitals = (flat.match(RECITAL) || []).length;
 
     const entities = [];
-    const seen = new Set();
+    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */
+    const seen = new Map();
     const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) return;
-      seen.add(key);
-      entities.push(entity(key, kind, label, facts, locate(offset)));
+      if (seen.has(key)) { readAgain(seen.get(key), locate(offset)); return; }
+      const e = entity(key, kind, label, facts, locate(offset));
+      seen.set(key, e);
+      entities.push(e);
     };
     /* The instruments this one acts on or cites. Its OWN number, when it has one, is a
        document fact rather than an entity — an instrument is not a reference to
