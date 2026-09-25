@@ -8,7 +8,7 @@
    Restored -> 63/63. */
 /* NEGATIVE CONTROL (REC-39, the four RESOLUTIONS — the LAST action-loop set to get a published home), FOUR arms, all RUN 2026-08-05, every file restored BYTE-IDENTICAL (sha256 compared before and after each: src/affordances.mjs 753aa75b…, src/store.mjs 84801ad6…, checks/bio-checks.mjs eaa05176…):
    (e) THE PUBLICATION AS A LITERAL COPY — in src/affordances.mjs replace `resolutions: RESOLUTIONS` with `["complied","denied","escalated","withdrawn"]` -> the identity pin FAILS (68/69) and NOTHING ELSE DOES: the wire pin, both op=actionmove pins and the C-2.10 pin all PASS, because an identical copy agrees at zero cost. REC-35's finding, third restatement, and the identity pin is the whole of this control;
-   (e2) THE SAME LITERAL PLUS ONE EXTRA WORD ("widget") -> FIVE FAIL (64/69) and they name both lists in four different instruments: the identity pin, the over-the-wire pin, `op=actionmove` refusing against a set that no longer matches what it publishes as `legal`, the not-a-superset arm (the published word the act will NOT accept — the shape that costs UI-19's chooser an option that does not work), and C-2.10's own sentence on the document that landed;
+   (e2) THE SAME LITERAL PLUS ONE EXTRA WORD ("widget") -> FIVE FAIL (64/69) and they name both lists in four different instruments: the identity pin, the over-the-wire pin, `op=actionmove` refusing against a set that no longer matches what it publishes as `legal`, the not-a-superset arm (the published word the act will NOT accept — the shape that costs UI-19's chooser an option that does not work), and C-2.10's own sentence on the document that landed [RE-RUN 2026-09-25 by D-717 after that fifth instrument moved to the ACT's refusal (ACTION_RESOLUTION_REFUSED, C-101.4), because the document no longer lands: 94/99, the same five, the fifth BY NAME "C-2.10 REFUSES against exactly the published resolutions … AT THE ACT (D-717)"; src/affordances.mjs restored by cp, cmp and sha256 1a3914e2… at 175,035 B];
    (e3) RESTORE THE STORE'S LOCAL COPY — splice `const RESOLUTIONS = ["complied","denied","escalated","withdrawn"];` back into `actionMove()` above `const res = …`, which is the exact state REC-39 found -> the no-literal-copy pin FAILS (68/69) and nothing else does, because a shadowing copy of the same four words behaves identically until the day the catalogue changes. That is why the pin is structural and not behavioural;
    (e4) RESTORE THE CATALOGUE'S INLINE COPY — put `['complied','denied','escalated','withdrawn']` and its hand-written sentence back into checkActionExtension -> the same no-literal-copy pin FAILS (68/69), from the other enforcement site. Both copies are pinned dead BY NAME so the found state cannot be re-entered from either end.
    Restored -> 69/69. */
@@ -1282,30 +1282,25 @@ for (const r of cat.result.vocabularies.resolutions) {
 }
 t("every published resolution is one op=actionmove ACCEPTS (the publication is not a superset)",
   resolutionAccepted, cat.result.vocabularies.resolutions.map(() => true));
-/* C-2.10's own sentence, the second enforcement site, read off a document that
-   LANDED carrying a resolution the catalogue does not know. The finding is the
-   catalogue's and its list is derived from the same array — before this item the
-   sentence transcribed the four words a second time inside the statement that
-   tested them. */
+/* C-2.10's own sentence, the second enforcement site. CORRECTED 2026-09-25 by D-717, never exempted: this read the
+   sentence off a document that LANDED carrying a resolution the catalogue does not know, through op=audit — and the
+   landing was the defect D-717 closes (the arm ran only in the sweep, so the act saved what it forbids). The write is
+   now refused AT THE ACT as ACTION_RESOLUTION_REFUSED (C-101.4), and the refusal carries the catalogue's own C-2.10
+   sentence in `findings[]`; that is where a caller meets it, so that is where it is read. The property is the one it
+   always was — the sentence's list IS the published resolutions, derived from the same array — and nothing landed,
+   which the old fixture could not say. */
 const BADRES = "ACTN-2026-0005-rec39";
 const badResMd = actnMd(BADRES)
   .replace("current_state: planned", "current_state: resolved")
   .replace("action_kind: records_request", "action_kind: records_request\nresolution: __not_a_resolution__");   /* D-689: the fixture's kind, corrected above */
-await promote(BADRES, badResMd, "action", "resolved");
-/* Read through op=audit, which is the sweep that runs the catalogue over what
-   LANDED — the "audit clean before you call anything done" gate — rather than by
-   calling checkBundle in this process, for the reason stated above the
-   correspondence assertion: a function this harness imports proves nothing about
-   what a caller meets. `after` is set one character short of this bundle's id so
-   the single-row page is this document and no other. */
-const badResAudit = rP(await GET(
-  `op=audit&token=mem-rec19&after=${encodeURIComponent("ACTN-2026-0005-rec3")}&limit=1`));
-const resFinding = (badResAudit.offenders?.[0]?.errors || [])
-  .find((e) => /requires resolution in/.test(e.detail || ""));
-t("C-2.10 REFUSES against exactly the published resolutions, in the catalogue's own sentence",
-  [badResAudit.offenders?.[0]?.bundleId, resFinding?.check,
+const badResRefusal = await promote(BADRES, badResMd, "action", "resolved").then(() => null, (e) => {
+  try { return JSON.parse(String(e.message).replace(/^promote [^:]+: /, "")); } catch { return null; }
+});
+const resFinding = (badResRefusal?.findings || []).find((e) => /requires resolution in/.test(e.detail || ""));
+t("C-2.10 REFUSES against exactly the published resolutions, in the catalogue's own sentence — AT THE ACT (D-717)",
+  [badResRefusal?.reason, badResRefusal?.check, resFinding?.check,
    (/\bin:\s*([^.(]+)/.exec(resFinding?.detail || "")?.[1] || "").trim().split(/\s*,\s*/)],
-  [BADRES, "C-2.10", cat.result.vocabularies.resolutions]);
+  ["ACTION_RESOLUTION_REFUSED", "C-101.4", "C-2.10", cat.result.vocabularies.resolutions]);
 
 /* ----------------------------------------- rung honesty across everything */
 /* CORRECTED BY FW-14. The heading read "rung honesty: null wherever no document
