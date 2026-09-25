@@ -821,8 +821,8 @@ scope: teach the walk to follow a const to its catalogue value; failing that, re
 accepts-when: r3Fed counts REQUIRED_ARGUMENT_MISSING. NEGATIVE CONTROL: inline-break the const's resolution and the arm names the missed code. A code named only in a comment is not counted.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-152 · running — **`fleetbundles.control.mjs` ARM 5(b) JUDGES "OUTSIDE THE DOC-FACING SET" BY READING THE SUITE WHOLE (`suiteSrc.includes(needle)`, line ~291), while `gates.mjs` now strips comments (M0-143): the driver and the gate disagree the moment either file grows a `docs/` comment.** Found by M0-143's worker. — owner FLEET.
-status: running — SCHEDULER #21 02:30Z spawns WORKER M0-152 (depth 2)
+### M0-152 · integrated — **`fleetbundles.control.mjs` ARM 5(b) JUDGES "OUTSIDE THE DOC-FACING SET" BY READING THE SUITE WHOLE (`suiteSrc.includes(needle)`, line ~291), while `gates.mjs` now strips comments (M0-143): the driver and the gate disagree the moment either file grows a `docs/` comment.** Found by M0-143's worker. — owner FLEET.
+status: integrated — SCHEDULER #21 02:57Z: tip 23214fa4, GATE 73/73 GREEN; gates.mjs --explain prints the doc-facing line in every class; conflicts with M0-188 in fleetbundles.test (take both); driver head tally is SEVENTEEN arms on the union
 order: low in the M0 group: a hand-run driver line, not a battery assertion (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:15Z)
 milestone: M0
 interface: none.
