@@ -309,6 +309,11 @@ const DRIVE = {
   actionlaws: () => POST(`op=actionlaws&token=${MEM}&target=${E(ACTN)}`,
     { laws: [{ level: "state", citation: "Cal. Gov. Code 7920.000" }] }),
   projectvisibilityset: () => POST(`op=projectvisibilityset&token=${MEM}&projectId=${PA}&setting=discoverable`),
+  /* ADDED 2026-09-24 by REC-214: `actionrisktier` joined ACTS and the FIXTURE GUARD named it. A real, well-shaped
+     revision — a tier and a reason — so the machine is answered by the store's own fence (MACHINE_CANNOT_SET_RISK_TIER,
+     which MACHINE_REFUSALS lists in the same landing), not by a malformed body. */
+  actionrisktier: () => POST(`op=actionrisktier&token=${MEM}&target=${E(ACTN)}`,
+    { tier: 3, reason: "a machine thinks counsel is needed" }),
 };
 const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k));
 t("FIXTURE GUARD: every object-directed act in ACTS has a drive here — an act added to ACTS without "

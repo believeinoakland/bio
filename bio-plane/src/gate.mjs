@@ -129,6 +129,12 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    more from the catalogue that actually runs and the census is RE-READ from d470-catalog-census.test.mjs's own
    print — never either base's figure plus one. THREE PLACES MOVE WITH THIS CONSTANT and the gate names each if
    one is missed: the census row in d470, that suite's (A5) literal, and ratify.test.mjs's gateVersion literal. */
+/* 1.29.0 (REC-214, 2026-09-24, branch land/worker/REC-214): the new `RISK_TIER_REVISION_CHECKS` family (C-90.1..5) —
+   `op=actionrisktier`'s four conditions and `promote`'s refusal of a revision that moves a tier or its history
+   without the act — so the catalogue moved 461 -> 466 and the stamp moves with it, MINOR and additive on this
+   constant's own rule (Publication §3 rule 17). FIVE ARRIVALS, NO DEPARTURES; C-32.19's row changed only its
+   `where` (the region moved into `#machineRiskTierRefusal`), not its condition. The census is the d470 suite's own
+   print. If another branch in the batch also takes 1.29.0, CONDUCT re-reads the union's census. */
 export const CATALOG_VERSION = "1.29.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

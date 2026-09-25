@@ -357,6 +357,10 @@ const CATALOG_CENSUS = {
      1.26.0 over origin/main 1a7f0bcc0 and then MERGED a main already at 1.28.0 (whose own 1.26.0 row is a
      DIFFERENT catalogue), so the stamp moves once more and the count and digest are THIS SUITE'S OWN PRINT on
      the merged tree -- never either base's figure plus one. */
+  /* 1.29.0 (REC-214, 2026-09-24, branch land/worker/REC-214): FIVE ARRIVALS, NO DEPARTURES — C-90.1..5, the
+     RISK_TIER_REVISION_CHECKS family (`op=actionrisktier` and promote's RISK_TIER_REWRITTEN). 461 -> 466, count AND
+     digest from THIS SUITE'S OWN PRINT on the item's tree over origin/main 9f8b69e6, never arithmetic. If another
+     branch in the batch also adds rows, CONDUCT takes the next number and re-reads the census on the merged tree. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -474,6 +478,7 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    FOUND BY THE GATE, not by reading: D-448 corrected `ratify.test.mjs`'s stamp pin and MISSED THIS ONE,
    which is the second reader of the same constant inside this suite's own file — the rule that a fix
    verified only where you changed it is not verified (CLAUDE.md §5), paid for once more here. */
+/* CORRECTED 2026-09-24 by REC-214: 1.28.0 -> 1.29.0, C-90.1..5 under the stamp; the arm working as the note says. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

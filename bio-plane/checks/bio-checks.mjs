@@ -550,6 +550,96 @@ export function riskTierState(v) {
   return v === 1 || v === 2 || v === 3 ? v : null;
 }
 
+/* REC-214 (BOB #33, 2026-09-24, "Risk-tier revision"; BIO_Case_Making_v0_1.md §2, `risk_tier`): A MEMBER'S
+ * REVISION OF A TIER IS AN AUTHORED, APPEND-ONLY ACT. `op=actionrisktier` is the one writer of
+ * `risk_tier_history[]`; each entry is one revision — the tier it set, the tier it replaced (`prior`), who, when,
+ * and the REQUIRED reason — and the act appends, never edits. The reason is stored as the member wrote it; the
+ * restricted frontmatter grammar has no escapes, so a quote, backslash or line break is refused, not rewritten. */
+export const RISK_TIER_REASON_MAX = 500;
+export const RISK_TIER_HISTORY_MAX = 200;
+
+/** REC-214: THE ONE READER OF AN ACTION'S TIER HISTORY. The action's read (`op=projection`'s action block), the
+ *  act's own answer and the suite read this, so what a surface is shown and what the bytes hold cannot come
+ *  apart (UI-104 renders it; REC-215's labelled machine proposal is read BESIDE it and never inside it).
+ *
+ *  `revisions` is oldest first, exactly as the act appended them. `intake` is the tier the action held before its
+ *  first revision — the tier it was created with — and its author is UNDETERMINED IN WORDS: an intake writes
+ *  `risk_tier` with no attribution of its own (UI-85, D-483), so the record cannot say which member stated it,
+ *  and saying the action's creator did would be an inference it cannot support. With no revision, `intake` is
+ *  the current tier. An entry the grammar cannot read is returned with `readable: false`, never dropped: an
+ *  append-only history that silently loses a row is the overwrite this act exists to refuse. */
+export function riskTierHistoryOf(fm) {
+  const raw = fm && Array.isArray(fm.risk_tier_history) ? fm.risk_tier_history : [];
+  const revisions = raw.map((e, i) => {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) return { ord: i, readable: false };
+    const tier = riskTierState(e.tier);
+    const prior = riskTierState(e.prior);
+    const by = typeof e.by === 'string' && e.by.trim() ? e.by.trim() : null;
+    const at = typeof e.at === 'string' && e.at.trim() ? e.at.trim() : null;
+    const reason = typeof e.reason === 'string' && e.reason.trim() ? e.reason.trim() : null;
+    return { ord: i, readable: tier !== null && tier !== 'undetermined' && prior !== null && !!by && !!at && !!reason,
+             tier, tier_words: RISK_TIERS[tier] ?? null, prior, prior_words: RISK_TIERS[prior] ?? null,
+             by, at, reason };
+  });
+  const current = riskTierState(fm ? fm.risk_tier : undefined);
+  const intakeTier = revisions.length ? revisions[0].prior : current;
+  return {
+    current, current_words: RISK_TIERS[current] ?? null,
+    intake: { tier: intakeTier, tier_words: RISK_TIERS[intakeTier] ?? null, by: null,
+              stated: intakeTier === 'undetermined'
+                ? 'No member stated a tier when this action was created.'
+                : 'Stated when this action was created. UNDETERMINED who stated it: an intake tier carries no '
+                  + 'author of its own in the record.' },
+    revisions,
+    stated: revisions.length
+      ? `${revisions.length} revision${revisions.length === 1 ? '' : 's'} by a member, each with its reason; `
+        + 'every earlier tier stays in this history'
+      : 'Never revised: the tier is the one the action was created with.',
+  };
+}
+
+/** REC-214: C-2.10's tier-history arm. Judges the SHAPE and the CHAIN — each entry names a member, a time, a
+ *  reason, a tier of 1, 2 or 3 and the tier it replaced; each `prior` is the tier the entry before it set; and
+ *  the last entry's tier is the tier the document states. A chain that does not close is the record claiming a
+ *  history its bytes do not carry. It cannot judge whether a reason is a good one, and does not try. */
+function riskTierHistoryFindings(fm, findings) {
+  if (!Object.prototype.hasOwnProperty.call(fm, 'risk_tier_history') || fm.risk_tier_history === null
+      || (Array.isArray(fm.risk_tier_history) && !fm.risk_tier_history.length)) return;
+  if (!Array.isArray(fm.risk_tier_history)) {
+    findings.push(f('C-2.10', 'error', 'risk_tier_history is not a list of revisions (REC-214)'));
+    return;
+  }
+  if (fm.risk_tier_history.length > RISK_TIER_HISTORY_MAX)
+    findings.push(f('C-2.10', 'error', `risk_tier_history holds ${fm.risk_tier_history.length} entries; at most ${RISK_TIER_HISTORY_MAX}`));
+  const h = riskTierHistoryOf(fm);
+  let prev = null;
+  for (const e of h.revisions) {
+    if (!e.readable) {
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}] is not a revision: each names tier (1, 2 or 3), `
+        + 'prior, by, at and a reason (REC-214)', ['revise the tier with op=actionrisktier']));
+      prev = null; continue;
+    }
+    if (isMachineIdentity(e.by))
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}].by '${e.by.slice(0, 40)}' is a machine identity: `
+        + 'a risk tier is revised by a member\'s authored act (REC-214)'));
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(e.at))
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}].at '${e.at}' is not a timestamp`));
+    if (e.reason.length > RISK_TIER_REASON_MAX)
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}].reason is longer than ${RISK_TIER_REASON_MAX} characters`));
+    if (e.prior === e.tier)
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}] replaces tier ${e.tier} with itself: a revision changes the tier`));
+    if (prev && e.prior !== prev.tier)
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}].prior is ${e.prior}, and the revision before it `
+        + `set ${prev.tier}: the history does not close (REC-214)`));
+    prev = e;
+  }
+  const last = h.revisions[h.revisions.length - 1];
+  if (last && last.readable && last.tier !== h.current)
+    findings.push(f('C-2.10', 'error', `risk_tier is ${h.current} and the last revision in risk_tier_history set `
+      + `${last.tier}: the tier stated is not the tier the history ends on (REC-214)`,
+      ['revise the tier with op=actionrisktier']));
+}
+
 /* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
  * THE THREE LEVELS a governing law is stated at. Exported for the reason ACTION_KINDS is: C-2.10 judges an
  * action's `governing_laws[]` against it, `op=actionlaws` refuses against it before anything is written, and
@@ -4784,6 +4874,7 @@ function checkActionExtension(ctx, findings) {
   if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
   checkCounterparty(fm, findings);
   governingLawsFindings(fm, findings);
+  riskTierHistoryFindings(fm, findings);
   /* REC-39: the four words are RESOLUTIONS at module level (exported for
      op=affordances) so this finding, op=actionmove's own refusal and the
      published vocabulary read one array — the ACTION_KINDS line above exactly.
@@ -9767,10 +9858,12 @@ export const MACHINE_FENCE_CHECKS = {
   /* REC-189 — D-182's ruling on the write side (BOB #21: *"Only a member's authored act sets 1, 2 or 3"*).
      Refuses a CHANGE of tier by a machine, never a presence: carrying a member's tier forward unchanged is
      not refused, nor is leaving undetermined a tier no member ever set. BOB #32 (2026-09-24 01:44Z): dropping a
-     member's tier to undetermined IS a change and is refused. Inside `promote`'s action block, not an act. */
+     member's tier to undetermined IS a change and is refused. REC-214 (BOB #33, 2026-09-24): the same code refuses a
+     machine at `op=actionrisktier`, the member's revision act, so the condition lives in ONE helper both `promote`'s
+     action block and the act ask (`#machineRiskTierRefusal`) — one code, one site, one region. */
   MACHINE_CANNOT_SET_RISK_TIER: {
     check: 'C-32.19',
-    where: 'src/store.mjs promote > is-machine-set-risk-tier',
+    where: 'src/store.mjs #machineRiskTierRefusal > is-machine-set-risk-tier',
     translation: 'A risk tier tells whoever reads this action whether it is safe to file, needs caution, or '
       + 'must not be filed without a lawyer, and somebody has to be answerable for that judgement. The '
       + 'credential that asked here is an automated one: it can carry forward the tier a member set, and '
@@ -15093,6 +15186,53 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'an item of information into an action, say. A change can alter what a document says, but not what it '
       + 'is, because what it is decides which rules protect it. Nothing was written. To record it as the other '
       + 'kind, create a new one of that kind and link the two.',
+  },
+};
+
+/* REC-214 / C-90 — A MEMBER REVISES AN ACTION'S RISK TIER BY AN AUTHORED, APPEND-ONLY ACT (BOB #33, 2026-09-24,
+ * "Risk-tier revision"; `BIO_Case_Making_v0_1.md` §2, `risk_tier`). The field carries legal exposure: the record
+ * must show that a "do not file without counsel" tier was changed, by whom, when and why.
+ *
+ * `op=actionrisktier` is the one act that changes a tier after intake, and it writes through the one front-matter
+ * path every reader derives the tier from (`risk_tier`, read by `riskTierState`), appending one entry to
+ * `risk_tier_history[]`. A machine is refused at the act by C-32.19's own code, MACHINE_CANNOT_SET_RISK_TIER — not a
+ * second code for the same condition. Four rows are the act's own conditions; the fifth is `promote`'s: a
+ * revision that changes the tier or edits the history WITHOUT the act is refused, because a member's plain
+ * revision from 3 to 1 would otherwise overwrite "do not file without counsel" with nothing recording that it
+ * was ever there but an older snapshot. A creation may state a tier (that is intake) and may not state a history. */
+export const RISK_TIER_REVISION_CHECKS = {
+  RISK_TIER_REWRITTEN: {
+    check: 'C-90.1',
+    where: 'src/store.mjs promote > is-promote-risk-tier',
+    translation: 'After an action is created, its risk tier changes only through the risk-tier act, which records '
+      + 'who changed it, when and why, and keeps every earlier tier readable. This write would have changed the '
+      + 'tier, or the record of its earlier tiers, some other way, so nothing was written. Use the risk-tier act.',
+  },
+  BAD_RISK_TIER: {
+    check: 'C-90.2',
+    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    translation: 'A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). The '
+      + 'act states one of those three; "not assessed" is what an action reads when nobody has stated one, and '
+      + 'is not something to set. Nothing was written.',
+  },
+  RISK_TIER_REASON_REFUSED: {
+    check: 'C-90.3',
+    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    translation: 'Changing a risk tier needs a reason, and it is kept beside the change for as long as the record '
+      + 'lasts. The reason was missing, longer than 500 characters, or held a quotation mark, backslash or line '
+      + 'break, which this record cannot store. Nothing was written.',
+  },
+  RISK_TIER_UNCHANGED: {
+    check: 'C-90.4',
+    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    translation: 'The action already has that risk tier, so there is nothing to revise. The history records '
+      + 'changes; it has not been touched.',
+  },
+  RISK_TIER_HISTORY_UNSPLICEABLE: {
+    check: 'C-90.5',
+    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    translation: 'This action\'s record of earlier risk tiers is not in a shape the act can add to without '
+      + 'rewriting it, and the act only ever adds. Nothing was written.',
   },
 };
 

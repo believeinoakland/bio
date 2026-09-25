@@ -697,6 +697,10 @@ const OPS = {
      machine class REACHES it and is refused BY THE STORE (MACHINE_CANNOT_SET_LAWS), so the refusal says what
      is wrong. One `target`; the list arrives in the POST body. */
   actionlaws:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-214 (BOB #33, 2026-09-24): a member's revision of an action's risk tier — an authored, append-only act with
+     a REQUIRED reason. `actionlaws`' class list for its reason: a machine class REACHES it and is refused BY THE
+     STORE (MACHINE_CANNOT_SET_RISK_TIER, C-32.19), so the refusal says what is wrong. */
+  actionrisktier:  { classes: ["admin", "member", "probe"],      mutating: true  },
   /* REC-195: the PROPOSAL of that list — D-149's remaining half. `themepropose`'s class cut, for its reason:
      proposing is the MACHINE's half of the ruling, so the `ai` class reaches it through the DEC-55 floor when
      its minted `writes` name it, and the store refuses NOBODY by class here. The fence that matters is one op
@@ -1695,7 +1699,9 @@ const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "pu
 /* D-149 adds `actionlaws`, for REC-24's reason: it needs both SESSION_OPS lists, the server-side viewer stamp
    and the server-side author stamp — the author is the member named beside the list of laws the request is made
    under — and it moves no state, so STATE_ACTIONS would be the wrong list. */
-const ACTION_ACTIONS = ["actionmove", "actioncorrespond", "actionlaws"];
+/* REC-214 adds `actionrisktier` for the same reason: the author is the member named beside the revision and its
+   reason, so the stamp must be the server's; it moves no state. */
+const ACTION_ACTIONS = ["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"];
 /* REC-14 / DEC-17: declaring the group's default required strength is a
    session act whose AUTHOR is part of the declaration — "you can lower your own
    bar; you cannot do it quietly" — so it takes the author stamp without being a
@@ -2362,6 +2368,7 @@ const NEEDS = {
   actionmove:       "contribute",
   actioncorrespond: "contribute",
   actionlaws:       "contribute",
+  actionrisktier:   "contribute",
   /* REC-195: proposing takes `contribute` beside the act it proposes to, and the capability is the only gate
      it has — who proposed is RECORDED and labelled rather than fenced (D-149: the machine may propose). */
   actionlawspropose: "contribute",
