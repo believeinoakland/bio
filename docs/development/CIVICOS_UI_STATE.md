@@ -50,6 +50,25 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, UI-119 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/UI-119`, stacked on `land/worker/REC-201` @ `45ce0bc5` (integrated, not on `main`), in the commit that
+carries this entry; the version number is PROVISIONAL — CONDUCT renumbers at integration. SURFACES: **the app's
+action intake and the plane's setup page let a member state the law a records request is made under.**
+
+**WHAT IT CLOSES.** REC-201 gave the record a `records_request` kind and a `law` field read verbatim onto
+`op=projection`'s action block, and no surface wrote one: every records request filed read its law UNDETERMINED,
+and the setup page could not file the kind at all — it wrote every action as `other`. Now the app draws a `law`
+field when the member chooses `records_request` (EMPTY, no placeholder naming a law — DEC-69) and writes it on
+that kind only; the setup page gains a kind chooser over the catalogue's own list and the same field, and renders
+a refusal in the plane's words instead of `Refused: <CODE>`. Driven through a real plane by
+`civicos-ui/test/ui119-records-law.test.mjs` (37 assertions), its control 7 of 7 AS DECLARED.
+
+**WHAT IT MEASURED AND DID NOT FIX.** C-2.10's `law` arm refuses nothing at the act: `op=promote` lands a 250-character
+law, and the catalogue reports it only in the audit sweep (D-695, RECORD's). So the row's *"C-2.10 renders in its
+DEC-49 words"* has nothing to render yet; the suite pins the landing so D-695's fix turns it red. The action page
+shows `action.law` only inside governing_laws' undetermined sentence, which a stated list replaces (D-696). A
+machine-proposed law is not shown because nothing on this base stores one (D-689).
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
