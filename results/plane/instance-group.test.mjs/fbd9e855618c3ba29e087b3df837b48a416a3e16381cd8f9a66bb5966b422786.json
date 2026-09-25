@@ -1,0 +1,16 @@
+{
+ "unit": "plane:instance-group.test.mjs",
+ "inputHash": "fbd9e855618c3ba29e087b3df837b48a416a3e16381cd8f9a66bb5966b422786",
+ "verdict": "PASS",
+ "run": "20e44f528c946442f3b6fb7ab0519614ab6913f2.1790339925704.898.json",
+ "tree": "20e44f528c946442f3b6fb7ab0519614ab6913f2",
+ "head": "80a66f56a1f00673bb01b2f13e8290561459102a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1066,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "08ef048c-8dac-5887-81b7-4f0c4773831c",
+ "at": "2026-09-25T12:38:45.719Z"
+}
