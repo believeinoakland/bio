@@ -3623,12 +3623,12 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- not extracted, extracted but over the bound, and extracted and indexed are one
 -- vocabulary in one place (section 4.3).
 --
--- WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: a WORKBOOK
--- (a cell is not a passage, and the sheet-range extent arm landed with FW-19 but no unit writer uses it -- written before
--- that, when EXTRACTION-BREADTH section 3.2 had not landed -- 288 workbooks in M-20 census hold
--- 72,651,441 bytes of text over 1,056 sheets and not one indexable unit), and
--- HTML (no dom producer, Part II section 15). Neither is scored zero: the
--- capture's indexed observation says none with the reason.
+-- WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: HTML (no dom
+-- producer, Part II section 15). It is not scored zero: the capture's indexed
+-- observation says none with the reason. A WORKBOOK was the other case (288
+-- workbooks in the M-20 census held 72,651,441 bytes of text over 1,056 sheets
+-- and not one indexable unit) until D-672: a workbook now writes ONE sheet-range
+-- unit per sheet, keyed by the sheet's used range. A cell is still not a passage.
 --
 -- DERIVED, AND PURGED ON BOTH ARMS. It carries bundle_id -- the document this
 -- text is of -- so it rides purge's TABLES list. Text is a PROJECTION and is
@@ -3640,7 +3640,7 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 CREATE TABLE IF NOT EXISTS capture_text (
   capture_sha  TEXT    NOT NULL,   -- the document. The register's trust root
   bundle_id    TEXT    NOT NULL,   -- the join every query arm makes (section 2)
-  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range once a unit writer uses the FW-19 arm
+  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape | sheet-range (one per sheet, D-672)
   extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
   ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
   seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
@@ -32312,7 +32312,7 @@ var TASK_KINDS = ["authority-undetermined"];
 var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 var CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 var CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
-var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp"]);
+var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]);
 var SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 function stampInstant(precision, when = Date.now()) {
@@ -48989,7 +48989,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       author,
       hadText: reading.read_from_text === true,
       unitArm: armed,
-      armReason: armed ? null : container ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, and the \`sheet-range\` extent arm exists (FW-19) but nothing yet writes a workbook's sheet-range units into the index; HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
+      armReason: armed ? null : container ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a workbook's unit is its sheet, a PDF's its page, a document's its paragraph, a deck's its slide; HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
     });
     const extraction = this.#observeExtraction(bundleId, sha, reading, { author });
     this.#observeReaderRun(bundleId, sha, reading, { author });
@@ -49449,7 +49449,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *   - every unit indexed        -> `PRESENT` (section 4.3's `full`)
    *   - indexed to the bound      -> `partial`, `bound` naming the figure
    *   - text, but no unit arm     -> `LOOKED_INDETERMINATE`, `bound` naming the
-   *     container's own limit. **NOT `LOOKED_ABSENT`**: a workbook's text exists
+   *     container's own limit. **NOT `LOOKED_ABSENT`**: an HTML page's text exists
+   *     (a workbook's was the case here until D-672 gave it a sheet unit)
    *     and this record simply cannot address a passage of it yet, so *we looked
    *     and there is nothing* would be a FALSE ABSENCE at the one level the
    *     four-level search exists to keep honest.
@@ -82956,6 +82957,10 @@ function textUnitsFor(i2text) {
       i2text.slides,
       "slide-shape",
       (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
+    ) : Array.isArray(i2text.sheets) ? arm(
+      i2text.sheets.map((u) => u && u.range && typeof u.range.sheet === "string" && typeof u.range.range === "string" ? u : null),
+      "sheet-range",
+      (u) => ({ sheet: u.range.sheet, range: u.range.range })
     ) : null;
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
     for (const u of units || []) {

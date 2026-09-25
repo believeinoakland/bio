@@ -769,8 +769,7 @@ const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
  * question from whether a given capture produced units and must not be folded
- * into it. A workbook with no `sheet-range` UNIT writer (the arm is FW-19's) and an HTML page with no `dom`
- * producer are the none-with-a-reason member of the content-axis vocabulary
+ * into it. An HTML page with no `dom` producer is the none-with-a-reason member of the content-axis vocabulary
  * (spelled in `airun.mjs`, never here); a PDF that produced nothing is a
  * PDF whose pages are scans. Both are absences and only one of them is about
  * the container.
@@ -781,11 +780,20 @@ const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
  * 4.1's whole point about workbooks is that they are two. The spellings are
  * `reading.text_container`'s, which is `detectFormat`'s own format key.
  *
- * `odt` and `odp` ARE HERE and `ods` IS NOT, which is the rule rather than a
- * list: COFF-10's ODF entries return `docx.mjs`'s and `pptx.mjs`'s shapes --
- * `paragraphs[]` and `slides[]` -- while `.ods` returns `sheets[]` like `.xlsx`.
- * The arm follows the SHAPE the producer returns, not the file extension. */
-const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);
+ * `odt` and `odp` ARE HERE BESIDE `docx` and `pptx`, which is the rule rather
+ * than a list: COFF-10's ODF entries return `docx.mjs`'s and `pptx.mjs`'s
+ * shapes -- `paragraphs[]` and `slides[]`. The arm follows the SHAPE the
+ * producer returns, not the file extension.
+ *
+ * D-672: `xlsx`, `ods` AND `csv` JOIN BY THE SAME RULE. All three return
+ * `sheets[]` with each sheet's `range`, and `textUnitsFor` (`index.mjs`) now
+ * emits one `sheet-range` unit per sheet (CONTENT-SEARCH-DESIGN section 4.1:
+ * "a sheet's unit is a sheet-range"). Until D-672 `ods` and `xlsx` were
+ * absent on purpose and `csv` absent by omission (it landed after this list
+ * with the same shape). The writer below never read the kind -- it indexes
+ * whatever canonical extent it is handed -- so admitting sheet-range is
+ * THIS set and nothing else in the store. */
+const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]);
 /* D-104. Closed on purpose: the value of the reachability table is that it tells
    kinds of not-getting-the-bytes apart, and a free string would let a caller
    collapse that distinction by accident. */
@@ -19513,9 +19521,9 @@ export class Store extends DurableObject {
                           reading's own `read_from_text`, the same field
                           `contentObservationsFor` branches on, so the two
                           cannot disagree about whether this document was read.
-           `unitArm`   -- does this CONTAINER have an indexing unit arm. A
-                          workbook and an HTML page do not (section 4.1), and
-                          that is not an absence of text.
+           `unitArm`   -- does this CONTAINER have an indexing unit arm. An
+                          HTML page does not (section 4.1), and that is not an
+                          absence of text. (A workbook did not until D-672.)
            `armReason` -- which container, in the producer's own word, so the
                           sentence names the thing rather than the category.
          `text_units` being ABSENT is not the same as being EMPTY and is not
@@ -19535,10 +19543,14 @@ export class Store extends DurableObject {
               /* CORRECTED IN PLACE BY FW-19, NOT DELETED: this said `sheet-range`
                  "waits on EXTRACTION-BREADTH section 3.2", which was true until
                  the arm landed. What is still absent is the UNIT, not the arm —
-                 nothing writes a workbook's sheet-range units into the index. */
-              + "(CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, and the "
-              + "`sheet-range` extent arm exists (FW-19) but nothing yet writes a workbook's "
-              + "sheet-range units into the index; HTML has no `dom` producer)"
+                 nothing writes a workbook's sheet-range units into the index.
+                 CORRECTED AGAIN BY D-672: the unit exists (one per sheet), so a
+                 workbook no longer reaches this sentence and the clause about it
+                 is gone. What still reaches it is a container with no producer
+                 of addressable units -- HTML -- or one this build does not know. */
+              + "(CONTENT-SEARCH-DESIGN.md section 4.1: a workbook's unit is its sheet, "
+              + "a PDF's its page, a document's its paragraph, a deck's its slide; "
+              + "HTML has no `dom` producer)"
             : "this record does not hold which container this capture is, so it has no unit arm to name",
       });
       const extraction = this.#observeExtraction(bundleId, sha, reading, { author });
@@ -20047,7 +20059,8 @@ export class Store extends DurableObject {
    *   - every unit indexed        -> `PRESENT` (section 4.3's `full`)
    *   - indexed to the bound      -> `partial`, `bound` naming the figure
    *   - text, but no unit arm     -> `LOOKED_INDETERMINATE`, `bound` naming the
-   *     container's own limit. **NOT `LOOKED_ABSENT`**: a workbook's text exists
+   *     container's own limit. **NOT `LOOKED_ABSENT`**: an HTML page's text exists
+   *     (a workbook's was the case here until D-672 gave it a sheet unit)
    *     and this record simply cannot address a passage of it yet, so *we looked
    *     and there is nothing* would be a FALSE ABSENCE at the one level the
    *     four-level search exists to keep honest.
