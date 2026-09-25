@@ -38657,13 +38657,25 @@ export class Store extends DurableObject {
        `test/frontier-chunk.test.mjs`. `json_each(?)` is this file's own precedent (the authored-capture read)
        and binds ONE variable whatever the list's length. Not chunked, because a loop around the read hides
        its row source from `derivation-bounds.test.mjs`'s reader while the per-row work is unchanged. */
+    /* D-598 (BOB #34, 2026-09-25 03:00Z; BIO_Publication_v0_1.md §3 rule 5): EACH ENTRY IS KEYED ON ITS
+       OBJECT TYPE, because C-21.2's inheritance rule applies to published INQUIRIES only. A document or an
+       observation published as a case's EVIDENCE (D-431(b)) sits in `published_bundles` beside the findings
+       and freezes no strength of its own, so a registry that did not say which was which read every
+       evidence document as a published finding and forced every later leg on it to `grade_source:
+       inherited` — from nothing. The type is read from `bundles`, the record's own row, never from a
+       caller; a published row with no `bundles` row answers `object_type: null`, UNDETERMINED, and
+       checkInheritedLeg holds the inquiry rule over it rather than guessing it is evidence. The key is
+       carried rather than the non-inquiries dropped because `publishedTargets` serves this same registry
+       to the public read path, where a published evidence document is still a leg the page can SERVE. */
     const rows = this.#rows(
-      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, strength
-       FROM published_bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, edition`,
+      `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.strength, b.object_type
+       FROM published_bundles p LEFT JOIN bundles b ON b.bundle_id = p.bundle_id
+       WHERE p.bundle_id IN (SELECT value FROM json_each(?)) ORDER BY p.bundle_id, p.edition`,
       JSON.stringify(ids));
     const reg = {};
     for (const r of rows) {
-      const e = reg[r.bundle_id] || (reg[r.bundle_id] = { latest: 0, editions: {} });
+      const e = reg[r.bundle_id]
+        || (reg[r.bundle_id] = { object_type: r.object_type ?? null, latest: 0, editions: {} });
       const strength = r.strength ? JSON.parse(r.strength) : null;
       const byAxis = {};
       for (const a of Array.isArray(strength) ? strength : [])
