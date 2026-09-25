@@ -89,7 +89,9 @@ const ARMS = [
   { id: "p3", file: SWEEP, declared: "a pen path in PROSE is read as a path the driver names",
     mustFail: [/\(p5\) a pen path spelled in PROSE is not a path the driver names/],
     mustNotFail: [/\(p1\) an in-worktree pen no \.gitignore line covers/],
-    from: "  const code = stripComments(src);\n  const local = { ...ctx, file, code, binds: bindings(code) };",
+    /* ANCHOR MOVED by M0-196: the line now restores the trailing-slash regex after stripping; the arm still
+       swaps the WHOLE stripped text for the raw source, which is what it breaks. */
+    from: "  const code = restoreSlashStrip(src, stripComments(src));\n  const local = { ...ctx, file, code, binds: bindings(code) };",
     to: "  const code = src;\n  const local = { ...ctx, file, code, binds: bindings(code) };" },
   { id: "p4", file: REC82, declared: "the pinned-by-name arm FAILS naming .m0107-harness",
     mustFail: [/the seven pens no \.gitignore line covered are not named again/],
