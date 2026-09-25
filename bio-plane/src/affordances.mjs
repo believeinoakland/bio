@@ -2203,9 +2203,16 @@ export const NON_ACTS = {
  * is the one the act enforces. */
 export const PER_ITEM_MAX = 100;
 export const PER_ITEM_ACTS = [
+  /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
+     `store.mjs #perItem` reads this very array and refuses to let a shared value of ONE shape reach an
+     item that named another, which is what lets a project-scoped finding and a progression finding be
+     handled in the same call. `definitionVersion` JOINS `shared_keys` (REC-211/IC-273): the act has
+     taken it as a shared field since REC-211 — a set over one progression names the version once — and
+     it was published in neither list, so a surface holding only this table could not complete an
+     instance-scoped item in a set. It is an identity of nothing, so it is shared and never narrowed. */
   { id: "proposedispose", label: "Defer or dismiss the selected findings", weight: "per-item",
     set_key: "items", item_keys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
-    shared_keys: ["to", "reason", "kind"] },
+    shared_keys: ["to", "reason", "kind", "definitionVersion"] },
   { id: "taskresolve", label: "Resolve the selected obligations", weight: "per-item",
     set_key: "items", item_keys: [["id"]], shared_keys: [] },
   { id: "taskforward", label: "Forward the selected obligations", weight: "per-item",

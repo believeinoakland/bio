@@ -452,6 +452,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        when they landed, which is this pair of arms doing its job. */
     ["C-33.42", "NO_DEFINITION_VERSION"],
     ["C-33.43", "DEFINITION_MOVED"],
+    /* REC-205, 2026-09-24: `op=proposedispose` refuses a CONDITION or an OBLIGATION BY ITS CLASS, naming
+       the act that does reach it (`op=queuemute`, `op=taskresolve`), where it used to answer
+       NO_SUCH_PROGRESSION and tell a member to define a progression — true of the key it read and useless
+       about what they selected. It is member-facing the day the queue lets a selection carry one, so it was
+       translated at the mint rather than added to the untranslated census. D-PIN-B failed naming exactly
+       this row when it landed, which is this pair of arms doing its job. */
+    ["C-33.44", "CLASS_NOT_DISPOSED"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -559,10 +566,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        origin/main 16fe1e7f and not by adding to the number in the file: C-33.40 NO_BASIS and C-33.41 NO_CITATION. */
     /* RE-READ AT THIS UNION (c20-batch14, 2026-09-24): both moves above are in this tree and neither figure is
        the union's. The number below is what this instrument PRINTED here, never 59 + 2 and never 60 + 1. */
+    /* MOVED 63 -> 64 on 2026-09-24 (REC-205), FROM THE FIGURE THIS INSTRUMENT PRINTED ("got 64") on the
+       item's tree over origin/main 1a7f0bcc0: ONE arrival, C-33.44 CLASS_NOT_DISPOSED in ACT_SHAPE_CHECKS,
+       and no departure. */
     /* MOVED 61 -> 63 on 2026-09-24 (REC-211), FROM THE FIGURE THIS INSTRUMENT PRINTED ("got 63") on the
        item's tree over origin/main 58293bf31, and never 61 + 2: C-33.42 NO_DEFINITION_VERSION and
        C-33.43 DEFINITION_MOVED. */
-    rowsSeen, 63);
+    rowsSeen, 64);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

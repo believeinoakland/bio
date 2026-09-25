@@ -382,6 +382,10 @@ const CATALOG_CENSUS = {
   /* D-512 (2026-09-24, branch land/worker/D-512): 1.28.0 -> 1.29.0, MINOR — one check ADDED, none changed or removed:
      C-66.6 `REPLAY_UNVERIFIED` in SURFACE_CHECKS. Count and digest are THIS SUITE'S OWN PRINT on the item's tree over
      origin/main 9f8b69e6, never arithmetic on 461. CONDUCT re-reads it at the union if another branch adds rows. */
+  /* 1.26.0 (REC-205, 2026-09-24, branch land/worker/REC-205): ONE arrival, C-33.44 CLASS_NOT_DISPOSED in
+     ACT_SHAPE_CHECKS, and no departure — MINOR. The code was given a canned translation AT THE MINT rather
+     than added bare to the 293 untranslated ones, which is why `check-refusal-codes`' `untranslated` floor
+     did not move for this landing. Count and digest are THIS SUITE'S OWN PRINT on the item's tree. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the

@@ -239,8 +239,13 @@ import { liveToken, sha256hex, instanceAiCredential, instanceClaudeToken } from 
    once there, and op=affordances publishes that same array. A kind this file
    admits and the catalogue does not publish (or the reverse) is not reachable
    by editing one place, which is the whole of the guarantee. */
+/* REC-205: and `PER_ITEM_ACTS`, for the same reason — the set act's IDENTITY SHAPES are declared
+   there once, published by op=affordances as `set_acts[].item_keys`, and ENFORCED by `#perItem`
+   below. A shape the catalogue publishes and the helper does not honour (or the reverse) would be
+   two answers to "what may an item name", which is the drift this import exists to prevent. */
 import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
-         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, PER_ITEM_MAX } from "./affordances.mjs";
+         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, PER_ITEM_MAX,
+         PER_ITEM_ACTS } from "./affordances.mjs";
 /* REC-21: the queue's PERSONAL half. The CONDITION-kind vocabulary the mute
    fence refuses against, and the ONE admission decision the feed applies — pure,
    so the suite holds the rule directly rather than only through a Durable
@@ -30212,11 +30217,53 @@ export class Store extends DurableObject {
        progression that has nothing to do with what they clicked. The catalogue already knows the
        first segment is a FINDING kind, so this says what is actually missing. It infers NOTHING
        about which project: it refuses, and names the two arguments to send. */
-    if (!scoped && pk && classOfKind(pk) === "FINDING")
+    /* REC-205 WIDENS THE BRIDGE IN TWO DIRECTIONS, and both are the same defect as the paragraph
+       above — a refusal that is true and useless — met by the two things a SELECTION puts in front
+       of this act that a single Adopt button never did.
+         · THE OTHER SPELLING OF THE SAME MISTAKE. A surface composing `key` from the item's own
+           published id sends the WHOLE id, `FINDING::<kind>::<rest>`, not the id with its class
+           segment stripped; then `pk` is the literal "FINDING", the catalogue knows no such kind,
+           and the answer was NO_SUCH_PROGRESSION again. `itemClassOf` is the lookup that reads a
+           published id, and using it here means the bridge does not depend on WHICH of the two
+           spellings a page happened to build.
+         · A CONDITION OR AN OBLIGATION IN THE SELECTION. `#dispositionOf` already publishes, per
+           item, that neither is disposed and WHICH act does reach it (`instead`), so a set arriving
+           here with one is a surface that did not read that block — and under the per-item weight it
+           is ONE item of a selection whose other items are being handled. It is retained with a
+           refusal naming its own act rather than being told to define a progression. The `instead`
+           values are read from the catalogue's class, never listed a second time here.
+       NOTHING IS INFERRED ABOUT THE SUBJECT IN EITHER ARM: nothing is written, and the refusal names
+       the act or the arguments to send. */
+    const keyed = typeof key === "string" ? key.trim() : "";
+    /* A PUBLISHED ID CARRIES ITS CLASS IN ITS FIRST SEGMENT AND ITS KIND IN ITS SECOND; a key with the
+       class segment stripped carries the kind in the FIRST. Both are read here so the bridge does not
+       depend on which spelling a page built, and the kind reported is the item's own either way. */
+    const byId = !scoped && keyed ? itemClassOf(keyed) : null;
+    const keyClass = byId || (!scoped ? classOfKind(pk) : null);
+    const keyKind = byId ? (keyed.split("::")[1] || null) : (keyClass ? pk : null);
+    /* DEC-49 REGION is-dispose-class — REC-205/C-33.44. The code is a STRING LITERAL at its site and the
+       translation comes off the row, so the guard can grade it and a member reads the same sentence
+       wherever this act is reached. */
+    if (keyClass === "CONDITION" || keyClass === "OBLIGATION") {
+      const row = ACT_SHAPE_CHECKS.CLASS_NOT_DISPOSED;
+      return { ok: false, reason: "CLASS_NOT_DISPOSED", code: "CLASS_NOT_DISPOSED",
+               check: row.check, translation: row.translation,
+               class: keyClass, kind: keyKind,
+               instead: keyClass === "CONDITION" ? "queuemute" : "taskresolve",
+               detail: `this names ${keyClass === "CONDITION" ? "a CONDITION" : "an OBLIGATION"} and `
+                     + `${keyClass === "CONDITION" ? "a" : "an"} ${keyClass} is not DISPOSED: a disposition is `
+                     + "an authored record act on a FINDING, and op=queue publishes the act that does "
+                     + "reach this item as its `disposition.instead`. Nothing was written. The rest of "
+                     + "a selection is unaffected — under the per-item weight this item alone is kept, "
+                     + "carrying this reason." };
+    }
+    /* END DEC-49 REGION is-dispose-class */
+    if (keyClass === "FINDING")
       return { ok: false, reason: "NO_PROJECT_SCOPE",
-               finding: `FINDING::${pk}::${sk}`, kind: pk,
+               finding: byId ? keyed : `FINDING::${pk}::${sk}`,
+               kind: keyKind,
                requires: ["project", "finding"],
-               detail: `'${pk}' is a FINDING kind rather than a progression, so this is the `
+               detail: "this names a FINDING that carries no progression stage, so this is the "
                      + "project-scoped disposition and it needs the project you are acting for. "
                      + "Send `project` (one of op=queue's disposition.projects for this item) and "
                      + "`finding` (its disposition.finding) instead of `key`. Nothing was written "
@@ -48481,6 +48528,24 @@ export class Store extends DurableObject {
    * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
    * `reason`, `to` or disposition — and an item may override it for itself.
    *
+   * REC-205 — A SHARED IDENTITY OF ONE SHAPE MUST NOT REACH AN ITEM OF ANOTHER, and this is what lets a
+   * MIXED selection be one act. `op=proposedispose` has three identity shapes (`key`;
+   * `progressionKey`+`stageKey`; `project`+`finding`) and it decides WHICH ACT IT IS by what the caller
+   * SENT. In a set, "what the caller sent" for an item is the shared body plus the item — so a caller
+   * that names the project ONCE for a selection all in one team (a legitimate shape: the item then
+   * carries only its `finding`) was silently making every OTHER item in that set project-scoped too. A
+   * progression finding beside it, naming a perfectly good `key`, came back NO_FINDING: *"a project with
+   * no finding names a team and no decision"* — true of the body the helper built and false of the act
+   * the member asked for. MEASURED at 1a7f0bcc0 before the fix, not inferred.
+   *
+   * SO THE NARROWING IS BY THE PUBLISHED SHAPES AND NOT BY A LIST HERE. `item_keys` already declares each
+   * act's identity groups and `op=affordances` already publishes them; an item that NAMES a key from one
+   * or more groups keeps the shared values of THOSE groups' keys and of `shared_keys`, and the shared
+   * values of the other groups' identity keys are dropped for that item alone. An item naming no identity
+   * at all is unchanged, so the wholly-shared subject still reaches the act to be refused in its own
+   * words. This is a no-op for the three acts with ONE identity group (`taskresolve`, `taskforward`) or
+   * whose second group's extra key is shared anyway (`resolve`'s `ref`) — measured, not assumed.
+   *
    * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
    * at most once, after all of its own refusals, so an item that is refused has written nothing. */
   static PER_ITEM_MAX = PER_ITEM_MAX;   /* affordances.mjs: ONE number, published as set_acts[].max_items */
@@ -48512,6 +48577,29 @@ export class Store extends DurableObject {
       }
       return o;
     };
+    /* REC-205 — THE SHARED BODY, NARROWED TO WHAT THIS ITEM'S OWN SHAPE ADMITS (the reasoning is in the
+       block comment above). `groups` is the act's published `item_keys`; `identity` is every key those
+       groups name that is NOT also a published `shared_key`, so a key an act declares shareable (op=resolve's
+       `ref`) is never taken away from an item that relies on it. NAMED is read the way the acts themselves
+       read an identity — a trimmed, non-empty string — so an item carrying `project: ""` has named nothing
+       and is not told it meant a project. An act not in the catalogue narrows nothing and behaves exactly
+       as it did before this landing; that it cannot happen is asserted structurally in the suite rather
+       than assumed here. */
+    const published = PER_ITEM_ACTS.find((a) => a.id === act) || null;
+    const groups = (published && Array.isArray(published.item_keys)) ? published.item_keys : [];
+    const shareable = new Set((published && Array.isArray(published.shared_keys)) ? published.shared_keys : []);
+    const identity = new Set(groups.flat().filter((k) => !shareable.has(k)));
+    const namesIt = (o, k) => o && typeof o[k] === "string" && o[k].trim() !== "";
+    const sharedFor = (it) => {
+      if (identity.size === 0) return shared;
+      const named = [...identity].filter((k) => namesIt(it, k));
+      if (named.length === 0) return shared;
+      const reach = new Set();
+      for (const g of groups) if (g.some((k) => named.includes(k))) for (const k of g) reach.add(k);
+      const narrowed = { ...shared };
+      for (const k of identity) if (!reach.has(k)) delete narrowed[k];
+      return narrowed;
+    };
     const outcomes = [];
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
@@ -48525,7 +48613,7 @@ export class Store extends DurableObject {
       /* END DEC-49 REGION is-per-item-malformed */
       let r;
       /* `items: undefined` LAST: an item cannot smuggle a nested set back into the act. */
-      try { r = one({ ...shared, ...it, ...stamped, items: undefined }); }
+      try { r = one({ ...sharedFor(it), ...it, ...stamped, items: undefined }); }
       catch (e) {
         /* DEC-49 REGION is-per-item-failed */
         r = refusal("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: `

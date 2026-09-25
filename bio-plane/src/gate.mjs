@@ -180,6 +180,12 @@ export const CATALOG_VERSION = "1.29.0";
    so the catalogue moved 461 -> 462 checks (the d470 suite's print) and the stamp moves with it, MINOR and additive. If
    another branch in the same train also took 1.29.0, the integrator re-reads the census on the union and this row takes
    the next number — one version names one catalogue. */
+/* 1.26.0 (REC-205, 2026-09-24, branch land/worker/REC-205): C-33.44 CLASS_NOT_DISPOSED joins
+   ACT_SHAPE_CHECKS — op=proposedispose refuses a CONDITION or an OBLIGATION by its CLASS, naming the act
+   that does reach it, where it used to answer NO_SUCH_PROGRESSION. One arrival, no departure, nothing
+   moved: MINOR on this constant's own rule (Publication §3 rule 17). 457 + 1 = 458, count and digest
+   re-read from the d470 suite's own print on this tree. */
+export const CATALOG_VERSION = "1.26.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
