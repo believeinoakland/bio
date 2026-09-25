@@ -32622,6 +32622,12 @@ var Store = class _Store extends DurableObject {
         this.sql.exec(`DROP TABLE published_bundles_preeditions`);
       }
     }
+    for (const d of [...this.sql.exec(
+      `SELECT d.case_id, d.edition, d.doc_sha, d.text, d.ratified_at FROM case_documents d
+        WHERE d.ratified_at IS NOT NULL AND d.doc_sha IS NOT NULL AND NOT EXISTS (SELECT 1 FROM published_shas p
+          WHERE p.sha256 = d.doc_sha AND p.bundle_id = d.case_id AND p.kind = 'case_document')`
+    )])
+      this.#registerCaseDocumentSha(d.case_id, d.edition, d.doc_sha, d.text, d.ratified_at);
     {
       const old = [...this.sql.exec(`PRAGMA table_info(reading_refs_preoccurrence)`)].map((r) => r.name);
       if (old.length) {
@@ -42380,6 +42386,7 @@ case_project: ${project}
         id,
         ed
       );
+      this.#registerCaseDocumentSha(id, ed, doc.doc_sha, doc.text, now);
       const stillAwaiting = roster.filter((m) => {
         const r = rows.find((x) => x.target === m) || {};
         return !this.#one(
@@ -65887,6 +65894,46 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     );
     return { published: matches.length > 0, sha256: sha, matches };
   }
+  /* D-734 (BOB #36, 2026-09-25 11:50Z, D-731 (b)): A RATIFIED CASE DOCUMENT'S HASH IS A PUBLISHED HASH,
+     kind `case_document`, `bundle_id` the case, `published` the ratification's own time. ONE writer, called by
+     `ratifyCaseDocument` inside its transaction and by the boot pass for editions ratified before this row
+     existed — that pass writes what the record already holds (a signed sha, its text, its ratified_at) and
+     reaches for no value it does not have. `bytes` is the UTF-8 length of the text the sha was computed over. */
+  static caseDocumentPath(edition) {
+    return `case-document-edition-${Number(edition)}.md`;
+  }
+  #registerCaseDocumentSha(caseId, edition, docSha, text, at) {
+    this.sql.exec(
+      `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+       ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
+      docSha,
+      caseId,
+      _Store.caseDocumentPath(edition),
+      "case_document",
+      new TextEncoder().encode(String(text ?? "")).length,
+      at
+    );
+  }
+  /* D-734: THE BYTES op=publishedbytes SERVES FOR A `case_document` HASH, read from `case_documents.text` —
+     the signed bytes themselves, which never reach the PUBLISHED bucket. Answered ONLY for a sha that BOTH a
+     `case_document` row of published_shas names AND a RATIFIED case document carries, so an unsigned
+     document's text (working material, D-15's fence at op=casedocument) is unreachable here even if its sha
+     were somehow named. The control plane re-hashes before serving; this read does not vouch for the bytes. */
+  publishedCaseDocumentText(sha) {
+    const d = this.#one(
+      `SELECT d.case_id, d.edition, d.text FROM case_documents d
+         JOIN published_shas p ON p.sha256 = d.doc_sha AND p.bundle_id = d.case_id AND p.kind = 'case_document'
+        WHERE d.doc_sha=? AND d.ratified_at IS NOT NULL ORDER BY d.case_id, d.edition LIMIT 1`,
+      sha
+    );
+    return d ? {
+      found: true,
+      case_id: d.case_id,
+      edition: Number(d.edition),
+      text: d.text,
+      path: _Store.caseDocumentPath(d.edition)
+    } : { found: false };
+  }
   /* REC-14 / DEC-12: the public index ENUMERATES EDITIONS rather than one row
      per bundle, because an edition is a separate document and edition 1 keeps
      answering after edition 2 lands. `title` is here — the one deliberate
@@ -79594,6 +79641,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         }),
         publish: () => this.publish(body || {}),
         verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
+        publishedcasedoctext: () => this.publishedCaseDocumentText((url.searchParams.get("sha256") || "").toLowerCase()),
         publishedlist: () => this.publishedList(),
         knock: () => this.knock(body || {}),
         inboxlist: () => this.inboxList(url.searchParams.get("status") || null),
@@ -80365,7 +80413,9 @@ var OPS = {
        "edition 1 still answers after edition 2 lands", checkable rather than
        stated. publishedbytes answers BY HASH AND NEVER BY PATH, so the published
        corpus cannot be walked: a sha with no published_shas row 404s, and it 404s
-       identically whether it was never ratified or never existed. */
+       identically whether it was never ratified or never existed. D-734: a RATIFIED
+       case document's sha has a row (kind `case_document`, written at op=caseratify)
+       and its bytes are served from the signed text, re-hashed first. */
   publishedcase: { classes: null, mutating: false },
   publishedbytes: { classes: null, mutating: false },
   /* CASE-4 / DEC-72: THE REVISION FLAGS ON A PUBLISHED CASE. A case is a frozen,
@@ -83513,6 +83563,27 @@ var index_default = {
             detail: "no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately."
           }, 404);
           if (!v || !v.published) return notFound();
+          if (v.matches.some((m) => m.kind === "case_document") && (url.searchParams.get("format") || "") !== "zip") {
+            const dOut = await doAnswer(stub2.fetch(`http://do/publishedcasedoctext?sha256=${shaParam}`));
+            if (!dOut.answered) return storeSilent("publishedbytes");
+            const d = dOut.result || {};
+            const docBytes = d.found && typeof d.text === "string" ? new TextEncoder().encode(d.text) : null;
+            const docSha = docBytes ? await sha256Hex6(docBytes) : null;
+            if (docSha !== shaParam)
+              return json({
+                ok: false,
+                reason: "CASE_DOCUMENT_UNSERVABLE",
+                sha256: shaParam,
+                detail: "this hash is a ratified case document's and is published, but the record could not produce bytes that hash to it, so nothing is served. Nothing here says the document was never ratified: op=verify still answers for the hash."
+              }, 500);
+            return new Response(docBytes, { status: 200, headers: {
+              "content-type": "application/octet-stream",
+              "access-control-allow-origin": "*",
+              "x-published-sha256": shaParam,
+              "x-published-kind": "case_document",
+              "content-disposition": `attachment; filename="${`${d.case_id}-${d.path}`.replace(/[^\w.\-]/g, "_")}"`
+            } });
+          }
           const storeAbsent = publishedStoreAbsent(env);
           if (storeAbsent)
             return json({

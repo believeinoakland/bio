@@ -1049,7 +1049,9 @@ const OPS = {
      "edition 1 still answers after edition 2 lands", checkable rather than
      stated. publishedbytes answers BY HASH AND NEVER BY PATH, so the published
      corpus cannot be walked: a sha with no published_shas row 404s, and it 404s
-     identically whether it was never ratified or never existed. */
+     identically whether it was never ratified or never existed. D-734: a RATIFIED
+     case document's sha has a row (kind `case_document`, written at op=caseratify)
+     and its bytes are served from the signed text, re-hashed first. */
   publishedcase:  { classes: null,                                 mutating: false },
   publishedbytes: { classes: null,                                 mutating: false },
   /* CASE-4 / DEC-72: THE REVISION FLAGS ON A PUBLISHED CASE. A case is a frozen,
@@ -6144,6 +6146,32 @@ export default {
             detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
                   + "never existed are the same answer here, deliberately." }, 404);
           if (!v || !v.published) return notFound();
+          /* D-734 (BOB #36, 2026-09-25 11:50Z, D-731 (b); BIO_Publication_v0_1.md §4): A RATIFIED CASE
+             DOCUMENT'S HASH is registered at op=caseratify (kind `case_document`), and its bytes never go to the
+             PUBLISHED bucket — they are `case_documents.text`, the signed bytes themselves. So they are read from
+             the store and served only after THIS layer re-hashes them and finds exactly the sha asked for: the
+             store's read does not vouch for its bytes, and a sha op=verify calls published must never be answered
+             with bytes that hash to anything else. Ahead of the bucket's own checks because it needs no bucket; a
+             `format=zip` ask falls through to NOT_A_CONTAINER below, since a case document is a part, not a
+             container. Bytes the record cannot produce at that hash are refused BY NAME and never 404'd: the hash
+             IS published, and NOT_FOUND's sentence would call it never ratified. */
+          if (v.matches.some((m) => m.kind === "case_document") && (url.searchParams.get("format") || "") !== "zip") {
+            const dOut = await doAnswer(stub.fetch(`http://do/publishedcasedoctext?sha256=${shaParam}`));
+            if (!dOut.answered) return storeSilent("publishedbytes");
+            const d = dOut.result || {};
+            const docBytes = d.found && typeof d.text === "string" ? new TextEncoder().encode(d.text) : null;
+            const docSha = docBytes ? await sha256Hex(docBytes) : null;
+            if (docSha !== shaParam)
+              return json({ ok: false, reason: "CASE_DOCUMENT_UNSERVABLE", sha256: shaParam,
+                detail: "this hash is a ratified case document's and is published, but the record could not produce "
+                      + "bytes that hash to it, so nothing is served. Nothing here says the document was never "
+                      + "ratified: op=verify still answers for the hash." }, 500);
+            return new Response(docBytes, { status: 200, headers: {
+              "content-type": "application/octet-stream", "access-control-allow-origin": "*",
+              "x-published-sha256": shaParam, "x-published-kind": "case_document",
+              "content-disposition": `attachment; filename="${`${d.case_id}-${d.path}`.replace(/[^\w.\-]/g, "_")}"`,
+            } });
+          }
           /* D-549: the code, its check and its canned translation come from the ONE governed site;
              `detail` is this site's own sentence, byte-identical to what it said before. */
           const storeAbsent = publishedStoreAbsent(env);

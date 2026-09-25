@@ -1249,7 +1249,8 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "admitted only when its target is itself published; a division's parent and siblings are NAMED and "
       + "never served (R4), and a name-only edge carries an id and a kind and nothing else. Gating this "
       + "would gate the thing the doorbell exists to serve.",
-    publishedbytes: "PUBLISHED PROJECTION (REC-22): streams from the published bucket if and ONLY if a "
+    publishedbytes: "PUBLISHED PROJECTION (REC-22): streams from the published bucket — or, for a RATIFIED case "
+      + "document (D-734), from its signed text, re-hashed before serving — if and ONLY if a "
       + "published_shas row names the hash, and answers BY HASH and never by path, so the corpus cannot "
       + "be walked. A sha that was never ratified 404s identically to one that never existed. The guard is "
       + "not redundant with the bucket boundary and the suite proves it: an object planted in the published "

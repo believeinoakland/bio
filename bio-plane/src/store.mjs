@@ -1457,6 +1457,15 @@ export class Store extends DurableObject {
         this.sql.exec(`DROP TABLE published_bundles_preeditions`);
       }
     }
+    /* D-734 (BOB #36, D-731 (b)): a case document RATIFIED BEFORE its hash was registered at op=caseratify
+       answers op=verify as never ratified. The rows are written here from what the record already holds — the
+       signed doc_sha, the text it was computed over, the ratification's own time — through the one writer the
+       committer uses, only where no row exists, so every boot after the first finds nothing to do. */
+    for (const d of [...this.sql.exec(
+      `SELECT d.case_id, d.edition, d.doc_sha, d.text, d.ratified_at FROM case_documents d
+        WHERE d.ratified_at IS NOT NULL AND d.doc_sha IS NOT NULL AND NOT EXISTS (SELECT 1 FROM published_shas p
+          WHERE p.sha256 = d.doc_sha AND p.bundle_id = d.case_id AND p.kind = 'case_document')`)])
+      this.#registerCaseDocumentSha(d.case_id, d.edition, d.doc_sha, d.text, d.ratified_at);
     /* D-454: the copy-forward. EVERY row survives: the old key (capture_sha, ref) was unique,
        so the new one is too, with each old row as its reference's first occurrence (seq 0) at
        the place it recorded — `occurrence` is computed from the two columns the row already
@@ -12107,6 +12116,17 @@ export class Store extends DurableObject {
            `casepin.control.mjs` arm (b) anchors on it (M0-25's witness caught
            the first spelling of this edit moving it). */
         sigArmored, attestorKey, attestorMember ?? null, gateVersion, deliveredBy ?? null, now, id, ed);
+      /* D-734 / BIO_Publication_v0_1.md §4 (BOB #36, 2026-09-25 11:50Z, D-731 (b)): THE SIGNED DOCUMENT'S
+         OWN HASH IS PUBLISHED, in the same act and the same transaction that signs it. Before this only
+         bundle parts and MANIFEST.json were in published_shas, so op=verify answered "not published" for
+         the one hash a member actually signed here, and its own sentence equates that with "never
+         ratified" — the record claiming LESS than it holds, on the surface a stranger checks with no
+         account. `doc.doc_sha` is the sha checked equal to `docSha` above, so the row names exactly the
+         bytes the signature covers; op=publishedbytes serves them from `case_documents.text` and re-hashes
+         before serving. `bundle_id` is the CASE id: the column names what the hash belongs to, and a case
+         document belongs to its case. Append-only like every row here (the boot pass beside the
+         published_bundles copy-forward carries the rows for editions ratified before this landed). */
+      this.#registerCaseDocumentSha(id, ed, doc.doc_sha, doc.text, now);
       /* D-442 / BIO_Publication_v0_1.md §3 rule 12: A CASE CAN BE COMPLETE THE MOMENT ITS DOCUMENT
          IS RATIFIED — every member pinned at bytes another case already carried across — and then no
          op=ratify will ever complete it. So the edition's state is handed to the control plane here,
@@ -37607,6 +37627,35 @@ export class Store extends DurableObject {
     return { published: matches.length > 0, sha256: sha, matches };
   }
 
+  /* D-734 (BOB #36, 2026-09-25 11:50Z, D-731 (b)): A RATIFIED CASE DOCUMENT'S HASH IS A PUBLISHED HASH,
+     kind `case_document`, `bundle_id` the case, `published` the ratification's own time. ONE writer, called by
+     `ratifyCaseDocument` inside its transaction and by the boot pass for editions ratified before this row
+     existed — that pass writes what the record already holds (a signed sha, its text, its ratified_at) and
+     reaches for no value it does not have. `bytes` is the UTF-8 length of the text the sha was computed over. */
+  static caseDocumentPath(edition) { return `case-document-edition-${Number(edition)}.md`; }
+  #registerCaseDocumentSha(caseId, edition, docSha, text, at) {
+    this.sql.exec(
+      `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+       ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
+      docSha, caseId, Store.caseDocumentPath(edition), "case_document",
+      new TextEncoder().encode(String(text ?? "")).length, at);
+  }
+
+  /* D-734: THE BYTES op=publishedbytes SERVES FOR A `case_document` HASH, read from `case_documents.text` —
+     the signed bytes themselves, which never reach the PUBLISHED bucket. Answered ONLY for a sha that BOTH a
+     `case_document` row of published_shas names AND a RATIFIED case document carries, so an unsigned
+     document's text (working material, D-15's fence at op=casedocument) is unreachable here even if its sha
+     were somehow named. The control plane re-hashes before serving; this read does not vouch for the bytes. */
+  publishedCaseDocumentText(sha) {
+    const d = this.#one(
+      `SELECT d.case_id, d.edition, d.text FROM case_documents d
+         JOIN published_shas p ON p.sha256 = d.doc_sha AND p.bundle_id = d.case_id AND p.kind = 'case_document'
+        WHERE d.doc_sha=? AND d.ratified_at IS NOT NULL ORDER BY d.case_id, d.edition LIMIT 1`, sha);
+    return d ? { found: true, case_id: d.case_id, edition: Number(d.edition), text: d.text,
+                 path: Store.caseDocumentPath(d.edition) }
+             : { found: false };
+  }
+
   /* REC-14 / DEC-12: the public index ENUMERATES EDITIONS rather than one row
      per bundle, because an edition is a separate document and edition 1 keeps
      answering after edition 2 lands. `title` is here — the one deliberate
@@ -52249,6 +52298,7 @@ export class Store extends DurableObject {
                                       viewer: url.searchParams.get("viewer") }),
         publish: () => this.publish(body || {}),
         verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
+        publishedcasedoctext: () => this.publishedCaseDocumentText((url.searchParams.get("sha256") || "").toLowerCase()),
         publishedlist: () => this.publishedList(),
         knock: () => this.knock(body || {}),
         inboxlist: () => this.inboxList(url.searchParams.get("status") || null),

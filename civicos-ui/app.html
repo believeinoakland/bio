@@ -21621,8 +21621,10 @@ function planeSaid(x){
    would replace a considered surface with a generic error pane. `apiQ` is
    therefore UNCHANGED and its three callers keep their error paths. */
 /* D-731 (a), BOB #36 2026-09-25 11:50Z: THE SIGNED CASE DOCUMENT IS CHECKED AGAINST op=casedocument, NEVER op=verify.
-   op=verify answers for the parts in the published bucket, and a case document's sha is not one of them (D-731 (b)
-   is the plane row that will register it). Asked there, a RATIFIED document read "NOT PUBLISHED — a hash that was
+   op=verify answered for the parts in the published bucket, and a case document's sha was not one of them. CORRECTED
+   2026-09-25 (D-734, D-731 (b)): op=caseratify now registers it (kind `case_document`), so op=verify answers
+   published:true for a ratified document's sha; this button stays on op=casedocument, which also names the signer —
+   switching it is an optional UI follow-up, not required. Before D-734, asked there, a RATIFIED document read "NOT PUBLISHED — a hash that was
    never ratified and a hash that never existed are the same answer", which was false about a document the group
    signed. This asks the op that serves the signed bytes to anybody, and it says exactly what it checked: that the
    record holds a RATIFIED document for this case edition AND that its sha is the one printed. Nothing more. */

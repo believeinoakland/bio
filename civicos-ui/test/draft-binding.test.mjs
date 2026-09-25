@@ -74,6 +74,13 @@
  * THE HASH" rows and nothing else. The fixture
  * half of the anchor has its own arm in `publishedcase.test.mjs` (the mock's `delivered_by` dropped -> 246/1).
  * UI-121's six arms above were measured at 38 rows, before these ten were added, and are not re-run here.
+ * D-734's ARMS (section 7, BOB #36 2026-09-25 11:50Z, D-731 (b)), RUN 2026-09-25 by the D-734 worker against
+ * `bio-plane/src/store.mjs` bfd60e4b… (3,484,521 B), each alone, IDENTICAL by sha256 AND `cmp` after, BASELINE 72/0:
+ * (A) the registration call removed from `ratifyCaseDocument` -> 60/12, the six editions' op=verify and publishedbytes
+ * rows and nothing else — op=verify answered `{"published":false,"matches":[]}` for every one, the defect reproduced;
+ * (C) the store's read hands back the text plus one byte -> 66/6, the six publishedbytes rows; (B) the boot backfill
+ * removed and (D) the path re-spelled -> 72/0, as they must be here. `bio-plane/test/d734-casedoc-published.test.mjs`
+ * carries the arms in full.
  */
 import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
@@ -248,6 +255,8 @@ const caseArgs = (target, tag, over = {}) => ({
 });
 const draftOf = async (target, tag, over = {}) =>
   (await must(`casedraft ${tag}`, await POST(`op=casedraft&token=${IRIS}`, caseArgs(target, tag, over)))).draftId;
+/* D-734: every edition this suite ratifies, recorded here, so section 7 asks op=verify about each one. */
+const RATIFIED = [];
 /* PUBLISH AND SIGN — iris owns the project and holds the only key. Returns [caseId, edition]. */
 const publishAndRatify = async (target, tag, extra = {}) => {
   const p = await must(`publish ${tag}`, await POST(`op=publish&token=${IRIS}`, { ...caseArgs(target, tag), ...extra }));
@@ -256,6 +265,7 @@ const publishAndRatify = async (target, tag, extra = {}) => {
   await must(`caseratify ${tag}`, await POST(`op=caseratify&token=${IRIS}`,
     { caseId: d.case_id, edition: d.edition, expectedSha: d.doc_sha,
       sig: signCase("iris", d.case_id, d.edition, d.doc_sha) }));
+  RATIFIED.push({ case_id: d.case_id, edition: d.edition, doc_sha: d.doc_sha, tag });
   return [d.case_id, d.edition, p];
 };
 
@@ -352,7 +362,8 @@ const bindingRows = async (label, caseId, edition, draftId, token, phrase) => {
                       missing: PUBLISHED_CASE_KEYS.filter((k) => !keysOf(wire).includes(k)),
                       document: keysOf(wire && wire.document) }));
   /* D-731 (a), BOB #36 2026-09-25 11:50Z: THE SIGNING LINE'S "Verify this hash" asks op=casedocument, never op=verify
-     (which answers "NOT PUBLISHED" for a ratified case document — measured on six editions). Driven with the
+     (which answered "NOT PUBLISHED" for a ratified case document — measured on six editions; CORRECTED 2026-09-25:
+     since D-734 op=verify answers for it, section 7). Driven with the
      arguments THE PAGE ITSELF wrote into the button, over the live plane, as a stranger; and once with one byte of
      the sha changed, so a constant "SIGNED" cannot pass. */
   {
@@ -499,6 +510,38 @@ console.log("\n--- 6. a link signed before its binding was stated, and a stated 
      P.U.pubDraftLinkHtml({ ...base, caseId: null }, base.text) === ""
      && P.U.pubDraftLinkHtml({ ...base, completeness: { ...base.completeness, draft: undefined } }, base.text) === ""
      && P.U.pubDraftLinkHtml({ caseId: "CASE-x", edition: 1, completeness: null }) === "");
+}
+
+/* ============================================================
+   7. D-734 (BOB #36 2026-09-25 11:50Z, D-731 (b)): EVERY RATIFIED EDITION'S DOCUMENT SHA IS PUBLISHED
+   ============================================================ */
+console.log("\n--- 7. D-734: op=verify and op=publishedbytes answer for each of the six ratified case documents ---");
+ok("FIXTURE: this suite ratified exactly the six editions the row's accepts-when names",
+   RATIFIED.length === 6, JSON.stringify(RATIFIED.map((r) => [r.case_id, r.edition])));
+for (const r of RATIFIED) {
+  const label = `${r.case_id} edition ${r.edition} (${r.tag})`;
+  const v = await GET(`op=verify&sha256=${r.doc_sha}`);
+  const m = (v && v.matches) || [];
+  ok(`D-734 (${label}): op=verify answers published:true for the ratified case document's sha, naming the kind `
+   + `case_document and the case — never "NOT PUBLISHED"`,
+     !!v && v.published === true && m.length === 1 && m[0].kind === "case_document" && m[0].bundle_id === r.case_id,
+     JSON.stringify(v));
+  const res = await mf.dispatchFetch(`http://x/api/?op=publishedbytes&sha256=${r.doc_sha}`);
+  const got = Buffer.from(await res.arrayBuffer());
+  ok(`D-734 (${label}): op=publishedbytes serves the document's bytes, and they hash to the signed sha`,
+     res.status === 200 && res.headers.get("x-published-kind") === "case_document" && sha(got) === r.doc_sha,
+     JSON.stringify({ status: res.status, kind: res.headers.get("x-published-kind"), sha: sha(got) }));
+}
+{
+  /* AN UNRATIFIED DRAFT'S DOCUMENT: published and never signed. */
+  const Q_U = await finding("unsigned", "Was the council told?");
+  const pu = await must("publish unsigned", await POST(`op=publish&token=${IRIS}`, caseArgs(Q_U, "unsigned")));
+  const du = pu.caseDocument || {};
+  const v = await GET(`op=verify&sha256=${du.doc_sha}`);
+  const res = await mf.dispatchFetch(`http://x/api/?op=publishedbytes&sha256=${du.doc_sha}`);
+  ok("D-734: an UNRATIFIED document's sha still answers NOT published — no match, and publishedbytes 404s",
+     /^[0-9a-f]{64}$/.test(String(du.doc_sha)) && !!v && v.published === false && (v.matches || []).length === 0
+     && res.status === 404, JSON.stringify({ v, status: res.status }));
 }
 
 await finish();
