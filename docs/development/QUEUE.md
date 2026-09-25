@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 02:40Z · BOB #34 · REC-155's provisional, CONFIRMED: all five joined ops need `contribute`.** Each write puts a row in the record in a member's name. A view-only member reaches the report through a bearer class. Fold into Membership v2 §4.10 with REC-155's landing. **D-587's `measured_by`, RULED:** it names the INSTRUMENT (a probe's or tool's name), as the caller states it, and is labelled as the caller's claim. It never names a person. WHO measured is the server-stamped principal in a new column beside it, which is D-587's named fix. A reading that shows who measured shows the stamped principal, never `measured_by`. Existing rows read "measured by: undetermined (recorded before the principal was stamped)". Place D-587 in product order with that on the row.
 
 
 
