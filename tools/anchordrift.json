@@ -352,6 +352,198 @@
    "row": "D-661",
    "since": "2026-09-25",
    "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/d479-bounds.control.mjs",
+   "arm": "1-drop-the-limit",
+   "anchor": "        ORDER BY b.bundle_id\n        LIMIT ?`, .",
+   "row": "D-743",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/d479-bounds.control.mjs",
+   "arm": "3-drop-the-published-bound",
+   "anchor": "             limit: cap, truncated,\n            ",
+   "row": "D-743",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/d479-bounds.control.mjs",
+   "arm": "4-over-fetch-by-one",
+   "anchor": "        LIMIT ?`, ...gate.args, cap + 1)",
+   "row": "D-743",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/d497-sight-index.control.mjs",
+   "arm": "1-restore-the-js-filter-over-an-unbounded-scan",
+   "anchor": "    const projects = this.#rows(\n      `SELECT b",
+   "row": "D-744",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/d497-sight-index.control.mjs",
+   "arm": "3-drop-the-negated-gate",
+   "anchor": "        WHERE b.object_type = 'project' AND s.se",
+   "row": "D-744",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/d497-sight-index.control.mjs",
+   "arm": "4-over-strictness",
+   "anchor": "         FROM bundles b JOIN project_sight s ON ",
+   "row": "D-744",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/d510-promoted-type.control.mjs",
+   "arm": "envelope-type",
+   "anchor": "    const promotedType = documentType ?? (meta &",
+   "row": "D-745",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-cpdf10.mjs",
+   "arm": "g",
+   "anchor": "            const m = mergeTier3Text(baseText, b",
+   "row": "D-746",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-cpdf19.mjs",
+   "arm": "candidate",
+   "anchor": "  const stillWanting = wanted && (!filled.length",
+   "row": "D-747",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-cpdf20.mjs",
+   "arm": "A3",
+   "anchor": "                   undetermined: Array.isArray(c",
+   "row": "D-748",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/textchain.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-d490.mjs",
+   "arm": "nobodies",
+   "anchor": "    if (sawNetwork) await collectBodies(conn, se",
+   "row": "D-749",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/browserrender.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-d492.mjs",
+   "arm": "overstrict",
+   "anchor": "body: JSON.stringify({ allowanceMs: renderAllowa",
+   "row": "D-750",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-mk1.mjs",
+   "arm": "pubbundle",
+   "anchor": "      if (facts.testimony && facts.testimony.sel",
+   "row": "D-751",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-mk1.mjs",
+   "arm": "pubcited",
+   "anchor": "      if (facts.testimony && facts.testimony.via",
+   "row": "D-751",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-mk1.mjs",
+   "arm": "pubcase",
+   "anchor": "      if (facts.testimony && facts.testimony.via",
+   "row": "D-751",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-mk1.mjs",
+   "arm": "pubover",
+   "anchor": "      if (facts.testimony && facts.testimony.sel",
+   "row": "D-751",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec82.mjs",
+   "arm": "carry",
+   "anchor": "            const carried = priorContent.get(`${",
+   "row": "D-752",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec93.mjs",
+   "arm": "writer",
+   "anchor": "    let observed = null, wrote = false;\n    if (",
+   "row": "D-753",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec93.mjs",
+   "arm": "edge",
+   "anchor": "    if (detail !== \"unchanged\") {\n      observed",
+   "row": "D-753",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/project-mint.control.mjs",
+   "arm": "accept-supplied-id",
+   "anchor": "        bundleId = this.#mintProjectId(meta.titl",
+   "row": "D-754",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/rec165-production-principal.control.mjs",
+   "arm": "drop-gate-extract",
+   "anchor": "    if (notPrincipal)\n      return { ok: false, ",
+   "row": "D-755",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "bio-plane/test/rec165-production-principal.control.mjs",
+   "arm": "no-sight-extract",
+   "anchor": "    if (!r || !this.#aiRunInSight(runId, viewer)",
+   "row": "D-755",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "civicos-ui/test/content-extent.control.mjs",
+   "arm": "vocabdrift",
+   "anchor": "\"sheet-range\", \"doc-table\", \"image\"];",
+   "row": "D-756",
+   "since": "2026-09-25",
+   "why": "civicos-ui/app.html: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
+  },
+  {
+   "driver": "civicos-ui/test/queue-peritem.control.mjs",
+   "arm": "allornone",
+   "anchor": "      if(o.outcome === \"applied\"){ QUEUE_SEL.del",
+   "row": "D-757",
+   "since": "2026-09-25",
+   "why": "civicos-ui/app.html: matches 0 times — found on the batch30 union by CONDUCT #23; fix: re-anchor the arm on a unique span"
   }
  ],
  "unreadable": {
@@ -536,6 +728,26 @@
    {
     "driver": "civicos-ui/test/content-crop-surface.control.mjs",
     "branch": "land/worker/UI-120 (c22-batch30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d628-promoted-fields.control.mjs",
+    "branch": "land/worker/D-628 (c23-batch30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d674-write-order.control.mjs",
+    "branch": "land/worker/D-674 (c23-batch30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d700-audit-write-order.control.mjs",
+    "branch": "land/worker/D-700 (c23-batch30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d670.mjs",
+    "branch": "land/worker/D-670 (c23-batch30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "civicos-ui/test/ui119-records-law.control.mjs",
+    "branch": "land/worker/UI-119 (c23-batch30 union; written before the M0-197 convention)"
    }
   ]
  }
