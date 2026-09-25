@@ -17497,7 +17497,17 @@ function docProgressionsHtml(p){
 /* One progression instance this document sits in, with its findings. An
    overdue_successor renders the plane's own overdue_by_ms as "N days overdue";
    a missing_predecessor (never overdue) renders no deadline; an undetermined
-   instance grade is STATED, never a guessed letter. */
+   instance grade is STATED, never a guessed letter.
+
+   D-617: AND A FINDING A MEMBER HAS DECIDED SAYS SO, BESIDE ITSELF (framework §12
+   "age rather than vanish", D-79; the plane half is D-552, IC-290). op=captureprogressions
+   publishes on every finding the decision about its (progression, stage) — `disposition`,
+   or null where nobody decided — and this page painted the findings without it, so a
+   question a member had already answered read here as an open one while the progression
+   page (UI-108) said it was decided. Each finding now carries the SAME sentence the
+   progression page renders, through the same `progFindingDecisionHtml`, so the two pages
+   cannot drift into two accounts of one decision. The finding stays listed; a plane that
+   publishes no `disposition` key reads "not known", never "undecided". */
 function docInstanceHtml(inst){
   const gradeBadge = f => (f.grade_determined===false || !f.grade)
     ? `<span class="subj-grade g-unconf">Grade undetermined</span><span class="subj-how">The record cannot yet say how strongly this process is connected, and does not guess.</span>`
@@ -17507,14 +17517,16 @@ function docInstanceHtml(inst){
     if(docFindingOverdue(f)){
       const days = Number.isFinite(f.overdue_by_ms) ? Math.floor(f.overdue_by_ms/86400000) : null;
       const when = days===null ? "overdue" : (days<=0 ? "overdue today" : `${days} day${days===1?"":"s"} overdue`);
-      return `<div class="docprog-finding overdue">
+      return `<div class="docprog-finding overdue" data-finding-stage="${esc(String(f.stage_key || ""))}">
         <div class="ends"><b>The ${esc(f.stage_label||f.stage_key)}</b> is ${req}, and it is <b>${esc(when)}</b>${f.deadline?` — due ${esc(fmtWhenFull(f.deadline))}`:""}.</div>
         <div class="top">${gradeBadge(f)}</div>
+        ${progFindingDecisionHtml(f)}
       </div>`;
     }
-    return `<div class="docprog-finding">
+    return `<div class="docprog-finding" data-finding-stage="${esc(String(f.stage_key || ""))}">
       <div class="ends"><b>The ${esc(f.stage_label||f.stage_key)}</b> is ${req} but no document fills it yet.</div>
       <div class="top">${gradeBadge(f)}</div>
+      ${progFindingDecisionHtml(f)}
     </div>`;
   }).join("");
   return `<div class="subj-doc">
