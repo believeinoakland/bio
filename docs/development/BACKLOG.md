@@ -123,6 +123,27 @@ scope: mergeTier3Text returns refused split by reason (refusedHadText apart); ti
 accepts-when: a stub answer for an unasked empty page yields the neutral clause, and one for a page with glyphs the overwrite clause (moves: a stated overwrite of text that never existed). NEGATIVE CONTROL: collapse the reasons again and the unasked-page arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-607's worker).
 
+### D-321 · blocked — **NO REAL IMAGE-ONLY PAGE IN THE CORPUS CARRIES AGENDA-SHAPED TEXT, SO THE `reading_refs` JOIN OVER REAL OCR IS PROVED ONLY ON SYNTHETIC INK (`ocr-member-e2e.test.mjs`).** — owner CONTENT-PDF.
+status: blocked — SCHEDULER #22 06:10Z: NARROWED, NOT MET: no real scanned agenda page is held (git: M-170; instance biosmoke7 store=bio: 24 image-only pages, none agenda-shaped, M-170 part 2). Unblocks when a Legistar-shaped scanned agenda is held, or non-Legistar agenda breadth lands in the readers. land/worker/D-321b @ 5ebea344 (385/385 GREEN, carries D-321 3d7ad5a4) rides the train as a partial; minted D-622
+order: after D-320; the page must come from bytes already held (the cloud proxy refuses Legistar) (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M2
+interface: none — a fixture and an arm.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §16.
+depends-on: none — the page comes from bytes already held; D-313 (the image-only corpus) is a stated limitation.
+scope: commit one real scanned-agenda page image to the OCR fixtures; drive the join over it.
+accepts-when: a real page's OCR yields a `reading_refs` hit. NEGATIVE CONTROL: switch the recogniser off, and the join reads empty by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-622 · queued — **NO TIER READS A JBIG2 OR JPX IMAGE-ONLY PAGE: `pdf-worker/src/pagepixels.mjs` `decodeImage` has no JBIG2Decode or JPXDecode decoder, so tier 3 refuses them UNSUPPORTED_FILTER while tiers 1-2 read 0 glyphs (M-166). The instance now holds 10 JBIG2 pages of enacted City legislation (Ordinance 13035 C.M.S.; a fund-amendment resolution) and 4 single-image JPX pages; CPDF-12 measured 0 of either in 2026-08.** Found by D-321 part 2's worker (06:00Z). — owner CONTENT-PDF.
+order: after D-614, with the reader corrections: enacted legislation held and unread by every tier (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I6 — the member's pixel route widens; the integrator classifies.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §6, with CPDF-12's refusal as the landing pad and D-320's DCT decoder as the pattern.
+depends-on: D-320 (land/worker/D-320 @ 46b43c35, the decoder seam).
+scope: a JBIG2 generic-region decoder (MMR and arithmetic, with JBIG2Globals) and a JPX decoder in decodeImage, each checked pixel-exact against an independent decoder (jbig2dec or PyMuPDF; openjpeg) as D-320 was against Pillow; what they cannot decode is refused by name; measure CPU and memory in-isolate.
+accepts-when: Ordinance 13035's JBIG2 page and one JPX page transcribe at tier 3 with pixel digests matching the reference decoder (moves: 14 held pages unread by every tier). NEGATIVE CONTROL: a no-op decoder fails the digest arms by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-321 part 2's worker).
+
 ### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
 order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
 milestone: M6
@@ -356,16 +377,6 @@ depends-on: D-312 (land/worker/D-312 @ 223766d9; M-168).
 scope: bound a segment on cumulative bytes re-serialised, with a margin under ~3 GB (M-168); state the unit at BOUND_SOURCE.
 accepts-when: a segment whose turns are few but heavy is cut by the byte bound before the CPU ceiling (moves: a turn count blind to payload size). NEGATIVE CONTROL: bound on turns again and the heavy-turn arm runs past the byte margin, failing by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-312's worker).
-
-### D-574 · queued — **D-550's ONE-MINT-SITE GUARD (arm G) AND ITS SWEEP WALK ONLY `store.mjs` AND `index.mjs`, so multi-site codes in other plane files go unwatched: AI_RUN_BOUND_UNKNOWN (4 sites, airun.mjs), TEXT_ATTEST_EXTENT (4) and TEXT_ANCHOR_MISSING (4, textchain.mjs), CAL_SIGNAL_SHAPE (3, calibration.mjs), AI_RUN_SKILL_VERSION_UNNAMED (2, skillpack.mjs) among them; the whole of `bio-plane/src` reads 93 candidates, not 62.** Found by D-550's worker (00:42Z). — owner M0 (the guard).
-order: after D-542, with the DEC-49 instrument rows behind the product rows: it widens a guard, and no gate result is false today (SCHEDULER #21, 2026-09-25)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument states what it reads), with DEC-49's one-code-one-condition rule as D-484 settled it.
-depends-on: D-550.
-scope: widen `MULTI_SITE_FILES` to every `bio-plane/src` file, excluding by stated reason each file that PUBLISHES codes as data rather than minting them (affordances.mjs first); move the ceiling and candidate set to the printed figures.
-accepts-when: arm G reads every src mint site and names the codes above (moves: two files walked of the plane's many). NEGATIVE CONTROL: plant a second site of a single-site code in textchain.mjs and arm G fails naming it.
-added: 2026-09-25 · SCHEDULER #21 (id minted by D-550's worker).
 
 ### D-590 · queued — **FIVE CODES A REAL-PLANE UI SUITE READS IN A PANE CARRY NO CANNED TRANSLATION: BAD_REQUIRED (intent-write #pg-pf), NO_JUSTIFICATION (#rel-pf), NO_KIND (#ent-pf), each one mint site; NOT_CONCERNED (#pg-th-pf) and NO_REASON (conclude-reading, intent-write #pg-dis-pf, queue-peritem), multi-site (NO_REASON at 13 store.mjs sites + 1 affordances.mjs).** Found by D-485's worker (its ARM H/R4, 02:37Z; owed by name in R4_OWED). — owner RECORD.
 order: after D-574, with the DEC-49 rows: a member meets these untranslated today (DEC-49), and the two multi-site codes are consolidated first (D-550/D-574's class) (SCHEDULER #21, 2026-09-25)
@@ -1190,13 +1201,3 @@ depends-on: none. Sequence after M0-81.
 accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-120 · queued — **`mintid --audit --base` DIFFS `main` ONLY, SO AN ID ALLOCATED ON `coord` IS INVISIBLE TO THE INTEGRATION-SIDE CHECK.** `audit()` (`tools/mintid.mjs`) reads `git diff <base>...HEAD`; since M0-110's cutover every DEBT row, plan heading and ledger archive — the allocation sites — lands on `coord`. Found by M0-110's worker (CONDUCT #14). — owner M0.
-order: first of the ledger tooling, before LED-8: an id collision check blind to where ids are now minted is the costs-nothing green, latent until two lanes mint the same id on `coord`; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-110's finding)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §1 (the state moves to `coord`; every reader follows it), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-110 is done.
-scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
-accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).

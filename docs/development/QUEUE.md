@@ -668,17 +668,6 @@ scope: run the census instrument over the whole corpus with `M032_HALVES=bucket`
 accepts-when: MEASUREMENTS carries the whole-corpus counts with their instrument and date (the measured failure it moves: the order resting on sampled halves only). NEGATIVE CONTROL: fold FINANCIAL REPORT back into budget and the class count moves, by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs FW`).
 
-### D-321 · running — **NO REAL IMAGE-ONLY PAGE IN THE CORPUS CARRIES AGENDA-SHAPED TEXT, SO THE `reading_refs` JOIN OVER REAL OCR IS PROVED ONLY ON SYNTHETIC INK (`ocr-member-e2e.test.mjs`).** — owner CONTENT-PDF.
-status: running — SCHEDULER #22 05:08Z: NARROWED, not met: land/worker/D-321 @ 3d7ad5a4 (385/385 GREEN) records M-170 (0 agenda-shaped image-only pages among 117,950 git blobs; the one scan is a resolution) and a census probe; that branch may ride the train. Re-spawned to search the instance's tier-3 captures read-only (the first worker's read was refused by its session policy)
-order: after D-320; the page must come from bytes already held (the cloud proxy refuses Legistar) (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M2
-interface: none — a fixture and an arm.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §16.
-depends-on: none — the page comes from bytes already held; D-313 (the image-only corpus) is a stated limitation.
-scope: commit one real scanned-agenda page image to the OCR fixtures; drive the join over it.
-accepts-when: a real page's OCR yields a `reading_refs` hit. NEGATIVE CONTROL: switch the recogniser off, and the join reads empty by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
 ### D-610 · integrated — **THREE WRITERS CHANGE `members.status` WITHOUT `status_by` (measured at 964da679: the re-invitation ~34957, the revocation ~35008 and the enrolment ~35183 in `store.mjs`), so a row `memberset` stamped reads a later status under the WRONG actor: a live false attribution.** Measured by BOB #35 on D-134's question (04:00Z). — owner RECORD.
 status: integrated — SCHEDULER #22 04:53Z: tip 733659be, GATE 386/386 GREEN FULLREUSE (21887 assertions), tree 2cd8a884; all 7 members.status writers stamp status_by (5 were not); I5; union with D-134 on memberadd's two INSERTs and with batch-0925c on Membership v2's Status line
 order: after D-586, with the authority and attribution corrections ahead of features: a status stated under an actor who did not cause it is the record claiming more than it supports (CLAUDE.md §2); BOB #35: *"(c) is a DEFECT"* (SCHEDULER #22, 2026-09-25)
@@ -996,6 +985,16 @@ depends-on: D-448.
 scope: teach the walk REACH-BY-OP: a code minted on an op that a surface in `civicos-ui/app.html` calls (by the op's name through its request helpers) is IN REACH whether or not the surface names the code literally; an op no surface calls stays out of reach.
 accepts-when: on D-448's parent (origin/main 9f8b69e6's review-copy mints) the walk sorts the ten review-copy codes IN REACH rather than F6 (the measured failure it moves: ten of eleven scored out of reach while UI-68's surface existed). NEGATIVE CONTROL: remove the surface's call to `reviewcopy`, and those codes fall back to out of reach by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-448's worker).
+
+### D-574 · queued — **D-550's ONE-MINT-SITE GUARD (arm G) AND ITS SWEEP WALK ONLY `store.mjs` AND `index.mjs`, so multi-site codes in other plane files go unwatched: AI_RUN_BOUND_UNKNOWN (4 sites, airun.mjs), TEXT_ATTEST_EXTENT (4) and TEXT_ANCHOR_MISSING (4, textchain.mjs), CAL_SIGNAL_SHAPE (3, calibration.mjs), AI_RUN_SKILL_VERSION_UNNAMED (2, skillpack.mjs) among them; the whole of `bio-plane/src` reads 93 candidates, not 62.** Found by D-550's worker (00:42Z). — owner M0 (the guard).
+order: after D-542, with the DEC-49 instrument rows behind the product rows: it widens a guard, and no gate result is false today (SCHEDULER #21, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument states what it reads), with DEC-49's one-code-one-condition rule as D-484 settled it.
+depends-on: D-550.
+scope: widen `MULTI_SITE_FILES` to every `bio-plane/src` file, excluding by stated reason each file that PUBLISHES codes as data rather than minting them (affordances.mjs first); move the ceiling and candidate set to the printed figures.
+accepts-when: arm G reads every src mint site and names the codes above (moves: two files walked of the plane's many). NEGATIVE CONTROL: plant a second site of a single-site code in textchain.mjs and arm G fails naming it.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-550's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
