@@ -2269,7 +2269,10 @@ const SURFACES = {
        which laws govern a records request is a member's authored statement, and the page that
        shows the ask is the page that offers it. The act was a ROW on `ACTS_AWAITING_SURFACE`
        until this item; striking it there and naming it here are the same landing. */
-    acts: ["actionmove", "actioncorrespond", "actionlaws"],
+    acts: ["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"],
+    /* UI-104: `actionrisktier` joins them (REC-214, BOB #33). A member revises the tier with a
+       REQUIRED reason, and the page that shows the tier history is the page that offers it. Struck
+       from `ACTS_AWAITING_SURFACE` in the same landing. */
     reads: ["image", "projection"],
   },
   published: {
@@ -9332,7 +9335,7 @@ async function openAction(id, fromNav){
     const der = (proj && proj.action && typeof proj.action === "object") ? proj.action : null;
     const actsR = await actsFor(id);
     ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
-    ACTION = { id, title, state, fm, fmj, der, mv:null, corr:null, laws:null };
+    ACTION = { id, title, state, fm, fmj, der, mv:null, corr:null, laws:null, tier:null };
 
     const planText = mdSectionOf(body, (vocabFor(HEADINGS, otype)||[])[0]);
     $("#content").innerHTML = `${crumb}
@@ -9354,6 +9357,9 @@ async function openAction(id, fromNav){
       ${actionLawsHtml(der)}
       <p class="subj-note">And what has been PROPOSED, stood beside that list and never part of it. A proposal is somebody&rsquo;s suggestion of the citations; the list is a member&rsquo;s own act, and nothing here offers a proposal as a way of making one. Each is shown under the record&rsquo;s own words about who proposed it.</p>
       ${actionLawsProposalsHtml(der)}
+      <h2 class="sec">Whether this is safe to file</h2>
+      <p class="subj-note">A member&rsquo;s judgement about the legal exposure of sending this ask, in the record&rsquo;s own words. Every change is a member&rsquo;s act with a reason, and every earlier tier stays in this history.</p>
+      ${actionRiskTierHtml(der)}
       <h2 class="sec">The clock</h2>
       <p class="subj-note">Every deadline carries the statute, the order, or the commitment it comes from. A date with no basis would be the record asserting a deadline it invented.</p>
       ${actionClockHtml(fmj, der)}
@@ -9502,6 +9508,50 @@ function actionLawsProposalsHtml(der){
     </div>`).join("")}
     <div class="ln">${esc(String(p.says||""))}</div>${
     p.truncated?`<div class="ln">The record answered with the most recent ${esc(String(p.limit??rows.length))} of them.</div>`:""}`;
+}
+
+/* UI-104 (REC-214; BOB #33's risk-tier revision ruling, BIO_Case_Making_v0_1.md §2 `risk_tier`): EVERY TIER
+   THIS ACTION HAS HELD, AS THE PLANE STATES IT.
+
+   ONE READER, AND IT IS THE PLANE'S. `action.risk_tier_history` is `riskTierHistoryOf`'s answer — the same
+   function the act answers with and C-2.10 judges the bytes by — so the current tier, the intake tier and
+   each revision are read here and composed nowhere. Every tier is shown in the plane's own words
+   (`current_words`, `tier_words`, `prior_words`: `vocabularies.risk_tiers` exactly), never as a number this
+   page glosses.
+
+   THE INTAKE TIER'S AUTHOR IS UNDETERMINED, AND THE SENTENCE SAYING SO IS THE PLANE'S (`intake.stated`). An
+   intake writes the tier with no author of its own; naming the action's creator here would be the page
+   inferring what the record cannot support.
+
+   AN ENTRY THE PLANE COULD NOT READ is kept and said (`readable: false`), never dropped: an append-only
+   history with a silently missing row is the overwrite the act exists to refuse.
+
+   AN ABSENT BLOCK IS ITS OWN ANSWER, as for the laws above — a plane predating REC-214 carries no key, and
+   "never revised" and "the record did not answer" are different facts.
+
+   ROOM FOR REC-215, NOT BUILT HERE: a machine's PROPOSAL that a tier be reconsidered is labelled machine work,
+   read BESIDE this history under the plane's own label (`actionLawsProposalsHtml`'s shape) and never inside
+   it — this function renders the member's history and nothing else. */
+function actionRiskTierHtml(der){
+  const h = der && der.risk_tier_history;
+  if(!h || typeof h !== "object")
+    return `<div class="empty">The record did not answer with this action's risk-tier history.</div>`;
+  const revs = Array.isArray(h.revisions) ? h.revisions : [];
+  const intake = (h.intake && typeof h.intake === "object") ? h.intake : null;
+  return `<div class="act-law">
+      <div class="act-law-cite">Now: ${esc(String(h.current_words||""))}</div>
+    </div>
+    ${intake ? `<div class="act-law">
+      <div class="act-law-cite">When this action was created: ${esc(String(intake.tier_words||""))}</div>
+      <div class="act-clock-why">${esc(String(intake.stated||""))}</div>
+    </div>` : ""}
+    ${revs.map(r=> r && r.readable === true ? `<div class="act-law act-tier-rev">
+      <div class="act-law-cite">Revised from ${esc(String(r.prior_words||""))} to ${esc(String(r.tier_words||""))}: ${esc(String(r.reason||""))}</div>
+      <div class="ln">By ${esc(String(r.by||""))}${r.at?` &middot; <span class="mono">${esc(String(r.at).slice(0,10))}</span>`:""}</div>
+    </div>` : `<div class="act-law act-tier-rev">
+      <div class="act-clock-why">The record holds a revision here that it could not read. It is kept in the history, not dropped.</div>
+    </div>`).join("")}
+    <div class="ln">${esc(String(h.stated||""))}</div>`;
 }
 
 function actionLedgerHtml(der){
@@ -9888,6 +9938,101 @@ async function doActionLaws(){
   actionLawsPaint();
 }
 
+/* ---------------------------------------------------------------
+   THE RISK-TIER REVISION (UI-104; REC-214, BOB #33) — a tier and a REQUIRED reason, NOTHING PRESELECTED.
+
+   THE WORDS ARE THE PLANE'S. Each option is a sentence of `vocabularies.risk_tiers`, the map the intake
+   chooser (UI-85) already offers; this page spells no tier and no tier's meaning.
+
+   WHICH OF THEM THE ACT SETS IS THE PLANE'S TOO, from its own publication and never a list here. The map
+   also holds `undetermined` — what an action reads when nobody has assessed it, which the act refuses to
+   "set" (BAD_RISK_TIER). The act publishes its settable tiers as that refusal's `legal`, and it judges the
+   tier BEFORE the reason and before any write (store.mjs `actionRiskTier`: the machine fence, the target,
+   then the tier), so one call naming no tier writes nothing and answers with the set — UI-90's `NO_LAWS`
+   probe for `legal_levels`, the same shape. A probe refused for any OTHER reason (a machine credential, an
+   action this credential cannot see) is shown in the plane's words and no option is offered.
+
+   NOTHING IS CHECKED WHEN THE FORM OPENS, not even the tier the action holds: a revision is a member's
+   choice, and a form that arrived answered would be this page making it.
+
+   THE REASON IS REQUIRED, AND THE FORM CANNOT SEND WITHOUT ONE: the commit control is ABSENT until a tier
+   is chosen and the reason holds more than whitespace, and `doActionRiskTier` refuses to call without both.
+   What the reason may hold (its length, the characters the grammar cannot store) is the plane's rule and is
+   stated by the plane when broken — the canned DEC-49 translation through `actRefusalHtml`.
+   --------------------------------------------------------------- */
+async function openActionRiskTier(id, title, act){
+  ACTION.tier = { id, title, act, legal:[], words:null, tier:"", reason:"", probed:false,
+                  busy:false, refusal:null, done:null };
+  actionTierPaint();
+  await loadActSource();
+  const a = await actAsk("actionrisktier", { target:id });
+  const T = ACTION && ACTION.tier; if(!T || T.id !== id) return;
+  const r = a.accepted ? null : a.refusal;
+  T.words = actVocabMap("risk_tiers");
+  T.legal = (r && r.reason === "BAD_RISK_TIER" && Array.isArray(r.legal))
+    ? r.legal.map(String).filter(k => T.words && Object.prototype.hasOwnProperty.call(T.words, k)) : [];
+  if(r && r.reason !== "BAD_RISK_TIER") T.refusal = r;
+  T.probed = true;
+  actionTierPaint();
+}
+function actionTierPick(k){
+  const T = ACTION && ACTION.tier; if(!T) return;
+  if(T.legal.includes(String(k))) T.tier = String(k);
+  actionTierPaint();
+}
+/* The reason's own handler repaints only the commit bar, so typing never redraws the field being typed in. */
+function actionTierWhy(v){
+  const T = ACTION && ACTION.tier; if(!T) return;
+  T.reason = String(v == null ? "" : v);
+  const bar = $("#rt-bar"); if(bar) bar.innerHTML = actionTierBarHtml();
+}
+function actionTierReady(){
+  const T = ACTION && ACTION.tier;
+  return !!(T && T.tier && T.legal.includes(T.tier) && T.reason.trim());
+}
+function actionTierBarHtml(){
+  const T = ACTION && ACTION.tier; if(!T) return "";
+  return `${actionTierReady() ? `<button class="btn" ${T.busy?"disabled":""} onclick="doActionRiskTier()">${esc(T.act.label)}</button>` : ""}
+      <button class="btn ghost" onclick="closeDialog()">Cancel</button>`;
+}
+function actionTierPaint(){
+  const T = ACTION && ACTION.tier; if(!T) return;
+  if(T.done){
+    const d = T.done;
+    actDlg(`<h3>${esc(T.act.label)}</h3>
+      <p class="lede">Revised from ${esc(String(d.prior_words||""))} to ${esc(String(d.risk_tier_words||""))}: ${esc(String(d.reason||""))}</p>
+      <div class="ln">By ${esc(String(d.by||""))}${d.at?` on <span class="mono">${esc(String(d.at).slice(0,10))}</span>`:""}. The tier it replaced stays in the history.</div>
+      <div class="rv-bar"><button class="btn" onclick="closeDialog();openAction(${esc(JSON.stringify(T.id))})">Back to the action</button></div>`);
+    return;
+  }
+  const now = ACTION && ACTION.der && ACTION.der.risk_tier_history;
+  const pick = !T.probed ? `<p class="count-line">Loading&hellip;</p>`
+    : T.legal.length
+      ? T.legal.map(k=>`<label class="ckline"><input type="radio" name="rt-tier" value="${esc(k)}"${
+          T.tier === k ? " checked" : ""} onchange="actionTierPick(${esc(JSON.stringify(k))})"> ${esc(T.words[k])}</label>`).join("")
+      : (T.refusal ? "" : `<div class="empty">The record did not publish the tiers this act sets, so this surface offers none rather than inventing them.</div>`);
+  actDlg(`<h3>${esc(T.act.label)}</h3>
+    ${T.act.prompt?`<p class="lede">${esc(T.act.prompt)}</p>`:""}
+    <p class="subj-note">This is a member&rsquo;s judgement about the legal exposure of sending this ask. Nothing is chosen for you, and the reason is kept beside the change for as long as the record lasts.</p>
+    ${now && now.current_words ? `<div class="ln">Now: ${esc(String(now.current_words))}</div>` : ""}
+    ${pick}
+    ${T.legal.length ? `<label class="fld" for="rt-why">Why &mdash; required</label>
+    <textarea class="txt" id="rt-why" style="min-height:70px" oninput="actionTierWhy(this.value)">${esc(T.reason)}</textarea>` : ""}
+    ${T.refusal ? actRefusalHtml(T.refusal) : ""}
+    <div class="rv-bar" id="rt-bar">${actionTierBarHtml()}</div>`);
+}
+async function doActionRiskTier(){
+  const T = ACTION && ACTION.tier; if(!T || T.busy) return;
+  if(!actionTierReady()) return;
+  T.busy = true; T.refusal = null; actionTierPaint();
+  const a = await actAskPost("actionrisktier", { tier:Number(T.tier), reason:T.reason.trim() }, { target:T.id });
+  T.busy = false;
+  if(!a.accepted){ T.refusal = a.refusal; actionTierPaint(); return; }
+  IMG_CACHE.delete(T.id); PROJ_CACHE.delete(T.id); RECORD_CACHE = null;
+  T.done = a.result || {};
+  actionTierPaint();
+}
+
 /* THE ONE ACT AN OVERDUE ACTION OFFERS, what it deliberately is not, and the
    MEASURED GAP it runs into.
 
@@ -10111,6 +10256,8 @@ const ACT_FLOW = {
      with a shape no other act here has — a LIST the member grows, each row two halves, and a
      body-carried write — arrived and nothing above this line changed. */
   actionlaws:       (id, title, act) => openActionLaws(id, title, act),
+  /* UI-104 added `actionrisktier` (REC-214), one entry and nothing above this line changed. */
+  actionrisktier:   (id, title, act) => openActionRiskTier(id, title, act),
   /* UI-27 added DEC-32's elicitation, and the one-entry-per-act promise held a
      fourth time: a flow with a shape unlike every other one here — ordered
      phases, a derivation, and a strength that may not be shown until the record

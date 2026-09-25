@@ -794,13 +794,10 @@ const ACTS_AWAITING_SURFACE = [
      preselected (§7.14: "each project chooses" is taken literally), and a project with no record reads HIDDEN in
      the plane's own words (`op=projectvisibility`'s `recorded: false`), never as a default the surface picked. */
   { id: "projectvisibilityset", published_by: "REC-149 (Membership v2 §7.14 step 1: the owner's setting)", owed_by: "UI — §7.14 step 3: the owner's setting control, with neither option preselected, and the create/fork forced choice", since: "2026-09-23" },
-  /* REC-214. Registered as a DEBT, never exempted, which is what ARM A4b asked for by name on the item's first run.
-     The act is `op=actionrisktier`: a member REVISES an action's risk tier as an authored, append-only act with a
-     REQUIRED reason (BOB #33, 2026-09-24; BIO_Case_Making_v0_1.md §2). THE SURFACE OWES WHAT THE BUTTON DOES NOT: the
-     tier history beside the act — every earlier tier, who set it and why, and the intake tier's author as the
-     plane's own UNDETERMINED sentence (`action.risk_tier_history`) — a REQUIRED reason field, and no tier
-     preselected. UI-104 is the row that owes it. */
-  { id: "actionrisktier", published_by: "REC-214 (BOB #33's risk-tier revision: authored, append-only, a required reason)", owed_by: "UI-104 — the action page's tier history (action.risk_tier_history, oldest first, the intake author in the plane's own words) and the revise act with a required reason and no tier preselected", since: "2026-09-24" },
+  /* REC-214's `actionrisktier` sat here as a DEBT from 2026-09-24 until UI-104 surfaced it (2026-09-25): the action
+     page renders `action.risk_tier_history` (the intake author in the plane's own UNDETERMINED sentence) and offers
+     the revise act with a REQUIRED reason and no tier preselected; `SURFACES.action.acts` names it in the same
+     landing. Driven against a real plane by `ui104-risk-tier.test.mjs`. */
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls

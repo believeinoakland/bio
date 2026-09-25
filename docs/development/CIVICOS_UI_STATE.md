@@ -50,6 +50,33 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, UI-104 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-104` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
+PROVISIONAL and CONDUCT renumbers at integration. SURFACE: **the action page shows the risk-tier history and offers
+the revision act** — the surface half of REC-214 (BOB #33's risk-tier revision ruling, `BIO_Case_Making_v0_1.md` §2
+`risk_tier`).
+
+**WHAT LANDED**, in `app.html` only at the action page's tier block: a section *"Whether this is safe to file"*
+directly after the governing-laws list and its proposals (UI-90, UI-102), rendered by `actionRiskTierHtml` from
+`action.risk_tier_history` — the current tier, the intake tier with the plane's own UNDETERMINED-author sentence,
+each revision as *"Revised from <prior words> to <tier words>: <reason>"* with its author and date, an unreadable
+entry kept and said, an absent block said as an absence. The act `actionrisktier` gets its flow
+(`openActionRiskTier` … `doActionRiskTier`), one `ACT_FLOW` entry, and its name in `SURFACES.action.acts`; its
+`ACTS_AWAITING_SURFACE` row is struck in the same commit.
+
+**THE FORM'S THREE PROPERTIES, each driven.** The options are the plane's words (`vocabularies.risk_tiers`) for the
+tiers the ACT publishes as settable — the `legal` of its own `BAD_RISK_TIER`, fetched by one call naming no tier,
+which the store judges before the reason and before any write (UI-90's `NO_LAWS` probe, same shape) — so
+`undetermined` is never offered as a tier to set. NOTHING is checked on open, not even the held tier. The reason is
+REQUIRED: the commit control is absent until a tier is chosen and the reason holds more than whitespace, and the
+commit refuses to call without both. Every refusal is the plane's canned DEC-49 translation through `actRefusalHtml`;
+a machine credential sees C-32.19's and is offered nothing.
+
+**EVIDENCE.** `civicos-ui/test/ui104-risk-tier.test.mjs`, against a real plane under miniflare: 35/35; negative
+control `ui104-risk-tier.control.mjs`, six arms, every arm as declared (the row's `noreason` arm fails the three
+REQUIRED REASON arms by name). **NOT BUILT, and left room for:** REC-215's labelled machine PROPOSAL of a
+reconsideration, to be read BESIDE the history and never inside it.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
