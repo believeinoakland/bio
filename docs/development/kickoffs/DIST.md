@@ -172,6 +172,14 @@ In order, and all of it on the merged `main`:
 7a. **The corpus URL preflight (DIST-12):** `node tools/urlpreflight-entry.mjs --release X.Y.Z --id <M-id> --out
    docs/development/measurements/<M-id>.md` — one dated line per URL; REFUSED is this hour's, never rotted; each
    NOT_FOUND goes to SCHEDULER as a row naming its fixture. First reading: M-136.
+7b. **Sweep scratch, LAST of the live checks (DIST-8; BOB #32's ruling 2026-09-23 23:30Z: residue of GONE sessions is DIST's,
+   swept at each cut's live verification).** First `op=list store=scratch`: every bundle must be a gone session's or DIST's
+   own probes — a LIVE session's work in scratch is its own, so if one is there, message it and wait, never purge over it.
+   Then, witness read (`op=stats store=bio`) before and after each arm: the control `POST op=purge confirm=scratch` with NO
+   `store` must answer 400 `expected: "bio"` with `bio` unchanged; then `POST op=purge store=scratch confirm=scratch` (scope
+   ALL); `op=stats store=scratch` must read 0 on every counter and `op=list store=scratch` `[]`. Record before/after in a
+   `measurements/<M-id>.md`. **Never send `confirm=bio`.** Scratch MEMBERS survive every purge (no op deletes one); list
+   them in the entry, never report them swept. First run: M-159 (2026-09-25).
 8. **`op=audit` clean.**
 9. **Re-cut the installer** on the new plane and deploy it, then read the script
    back from the account and confirm the embedded version AND that
