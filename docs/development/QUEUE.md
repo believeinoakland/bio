@@ -855,7 +855,7 @@ accepts-when: a no-locator capture's entry states route unrecorded and its leg r
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 10:05Z ruling).
 
 ### D-692 · integrated — **A REVISION WHOSE BYTES RESTATE `created` LANDS, and bundles.created keeps the creation's value (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row still says 2026-07-24.** None live (M-181). Found by D-615's worker (minted on land/worker/D-615). — owner RECORD.
-status: integrated — SCHEDULER #24 11:40Z: tip 332c594e (on D-628 db3b94a0), GATE 390/390 GREEN FULLREUSE (22031 assertions; excludes 3 untallied), tree 64e66f0a; REVISION_REDATES_CREATION C-86.9 (region is-promote-redates-creation), replay exempt; CATALOG 1.35.0->1.36.0; reproduced first; minted D-726
+status: integrated — CONDUCT #23 11:41Z: worker report — tip 332c594e (on D-628 db3b94a0), GATE 390/390 GREEN FULLREUSE (22031 assertions); C-86.9 REVISION_REDATES_CREATION; CATALOG 1.36.0 to re-read at union; minted D-726; rides batch30 C2 after D-628
 order: after D-628, the same promote function, one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — a named refusal on op=promote; the integrator classifies.
