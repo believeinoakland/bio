@@ -81,3 +81,7 @@ UNION PASSES, in order, after C2 (each by a subagent under a brief; batch29 did 
    (D-701, D-629) and D-686's migration, and: NO CUT until D-725 (false attribution in signed bytes; stacked on D-703) lands; FLEET nothing new; retire batch30 worker sessions (IDLE + tip ancestor of main).
 FINDINGS ALREADY ROUTED (no action): D-713..D-716, D-449, D-666, D-688, UI-118, D-641, D-664, D-697. BOB #36 answered the CLAUDE.md §5
 wording on land/bob/claude-namespace (rides batch30).
+
+## 7. LATE ARRIVALS (after the handoff was written; READY, GATE GREEN on their branches)
+- UI-117 88d67095 (from 95fe7bc7; review-copy form surfaces caseId+newCase; FLOOR.r4Suites 43 — re-read; CIVICOS_UI_STATE v130 provisional). Rides C2.
+- D-706 write half: CONDUCT #22 decided it stays row D-722 stacked on D-706 (told SCHEDULER #24).
