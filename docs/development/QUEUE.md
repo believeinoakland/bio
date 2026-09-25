@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 08:20Z · BOB #35 · D-189's gap (how a reader is shown the bias manifest; D-189 @ 4a9d1b21), CONFIRMED as built.** (1) A published case page shows the bias sets in force AT SIGNING inside DEC-34's "Declared bias" field, read from the FROZEN case document and never recomputed from today's adoptions. What travels with publication is what was signed. (2) An invited-not-joined member does NOT see the project's working lens. Membership §7.9 withholds work product from the invited skeleton, and an unpublished lens is work product. What the public, and therefore the invitee, can see is the lens frozen into any published case. No row. Fold both into BIO_Declared_Bias_v0_1.md §"Bias bundles and adoption" with D-189's landing.
 
 
 
