@@ -173,6 +173,11 @@ export const CATALOG_VERSION = "1.30.0";
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
    466 -> 478, read from d470-catalog-census.test.mjs's own print on this tree. MINOR: arrivals only. */
+/* REC-147 side, kept as history — its own note on its own branch: */
+/* 1.30.0 (REC-147, 2026-09-25, branch land/worker/REC-147): C-93's seven rows arrive in the new
+   CONTRADICTION_CANDIDATE_CHECKS family — op=contradictionpropose's refusals — so the catalogue grew 466 -> 473 and the
+   stamp moves with it, MINOR and additive on this constant's own rule: seven checks arrive, none moves, none leaves.
+   AT A UNION the census is RE-READ from the d470 suite's print on the merged tree, never added by hand. */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

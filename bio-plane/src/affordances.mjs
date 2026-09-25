@@ -941,6 +941,11 @@ export const RUNG_ABSENT = {
      act on the record, corrected forward (a proposal is never deleted — IC-83),
      never signed by the thing that made it (C-35.10). */
   extractpropose:       { ground: "undetermined", is: "an EXTRACT run PROPOSES a reading — what the text this record already holds NAMES, carrying an ai(function, version) step, bounded by the run's `mints` allowance and part of a finding only when a member cites it (§7.3)" },
+  /* REC-147 — `op=contradictionpropose`, on `extractpropose`'s ground directly above and for its reason: a run CHOOSES
+     what to propose over pairs the plane formed, so not `substrate`; it records what a machine judged about two
+     things, not what was observed, so not `observational`. The ladder's own gap, stated: an act on the record,
+     corrected forward (a candidate is never updated), labelled machine work and never signed. */
+  contradictionpropose: { ground: "undetermined", is: "a run PROPOSES how two referents the pairing formed relate — one of §5's five labels and its reason, labelled machine work, state proposed, and never a finding until a member judges it (CONTRADICTION-IDENTIFY-DESIGN.md §8)" },
   /* REC-86 / IC-123 — NARROW, and the ground is the ladder's own gap rather than
      `reasoned`, on MEASUREMENT: the act refuses a new reading with no account of
      what changed (C-50.11, `NARROW_NO_DESCRIPTION`), but that code is not in
@@ -1968,6 +1973,9 @@ export const NON_ACTS = {
      `extractproposals` is a READ and nothing in this registry publishes reads. */
   extractpropose: "run-directed: an EXTRACT run's production, keyed by (run, document); the run is the subject and no bundle state offers it",
   extractproposals: "read: what an EXTRACT run proposed, keyed by a run or a document",
+  /* REC-147: `extractpropose`'s reason exactly — its subject is a run's judgement over a PAIR the plane formed, keyed by
+     (key, both referents at their versions), and `affordanceFacts` holds neither a run nor a pair. */
+  contradictionpropose: "run-directed: a run's judgement over a pair the plane formed, keyed by (key, both referents at their versions); the run is the subject and no bundle state offers it",
   /* Keyed by entity / capture / progression — the framework surface, not a
      bundle-state act. */
   entitycreate: "registry write, keyed by entity",

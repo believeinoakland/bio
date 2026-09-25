@@ -868,6 +868,12 @@ const OPS = {
      viewer, which it takes fail-closed in the stamp block below, because the pairing
      runs AS A MEMBER and pairs only what that member may see. */
   contradictionpairs: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-147 / IC-318 — CONTRADICTION'S IDENTIFY, THE JUDGEMENT'S WRITE. `extractpropose`'s class cut and for its
+     reason: a run's production, reached by the `ai` class through AI_RUN_ACTIONS and by a member or admin session,
+     and narrowed where the run object is — the STORE refuses a proposal with no live run in sight, one whose run
+     is not the caller's (REC-152's gate), and any proposal over a pair the plane does not itself form for the
+     viewer (C-93). The proposer is stamped server-side below and the body's is never read. */
+  contradictionpropose: { classes: ["admin", "member", "probe"], mutating: true },
   /* D-148: A FEE QUOTE IS EVIDENCE — the read that sets quotes side by side, by
      counterparty or by request. A pure read on `contradictionpairs`' cut: whoever
      may read the record may read what a body quoted. It takes the viewer
@@ -1947,7 +1953,10 @@ const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capt
                            The READ is deliberately absent: reading what a run
                            proposed is not a production, and a member reviews
                            proposals without holding a run at all. */
-                        "extractpropose"];
+                        "extractpropose",
+                        /* REC-147: the judgement's candidates are an act OF A RUN, for extractpropose's reason; the
+                           run is checked at the store (C-93.2, C-93.3), not here. */
+                        "contradictionpropose"];
 /* PL-18 / DEC-63 — THE THREE RUN VERBS, AS THEIR OWN LIST, because Bob's
    ruling is about exactly these three and not about the array above them.
    `AI_RUN_ACTIONS` also carries `suggest` and `capturerequest`, which are acts
@@ -1967,7 +1976,8 @@ const RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
    that names a run is a production of that run, so it takes the same stamp and the store asks sight, then
    `runPrincipalGate`, then status, and records the CALLER's principal on the row. It is the ONE list extended, not a
    second stamp condition beside it. Rule 1's TARGET does not reach it (a request names an address, not a question). */
-const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest"];
+/* REC-147 JOINS: a candidate names a run, is read against it, and takes the same principal stamp. */
+const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest", "contradictionpropose"];
 /* REC-134 / C-56: the acts that change a project and read the POSITIONAL `identity` stamp for
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
@@ -2299,6 +2309,9 @@ const NEEDS = {
      capability here would mean a member could be shown a question and refused the
      answer to "what else does this record say about it". */
   contradictionpairs: null,
+  /* REC-147: `extractpropose`'s capability and for its reason — a proposal is CONTRIBUTING, never publishing, and
+     nothing it writes puts the group's name on anything: a candidate is labelled machine work, state proposed. */
+  contradictionpropose: "contribute",
   /* D-148: NO CAPABILITY, on `contradictionpairs`' reasoning: reading what a body
      quoted is READING the record, and it writes nothing. */
   actionquotes: null,
@@ -11878,6 +11891,9 @@ export default {
            READ answers about documents, so an ungated listing would be the
            identical leak one op over. Fails closed on an absent stamp. */
         || op === "extractpropose" || op === "extractproposals"
+        /* REC-147: the candidate write re-forms the pairs AS THIS VIEWER (§6) and pairs only what the viewer may
+           see, so it needs the viewer exactly as `contradictionpairs` does. Fails closed on an absent stamp. */
+        || op === "contradictionpropose"
         /* REC-86: NARROW and its candidate read both NAME A QUESTION and read
            its readings, so a question the caller was never invited to must
            answer exactly as one that does not exist — the version acts' reason
@@ -12243,7 +12259,8 @@ export default {
        writes: permission is granted against a NAMED actor, and a proposal whose
        proposer were anonymous would be one the record could say nothing about,
        which is exactly what `NO_PROPOSER` refuses at the store. */
-    if (op === "extractpropose")
+    /* REC-147: the contradiction candidate's proposer is the same server-side stamp, for the same reason. */
+    if (op === "extractpropose" || op === "contradictionpropose")
       inner.searchParams.set("proposedBy",
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`

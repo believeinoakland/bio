@@ -394,6 +394,11 @@ const CATALOG_CENSUS = {
      catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
      1.30.0 (MK-7, 2026-09-25): TWELVE ARRIVALS, no departures — ATTRIBUTION_CHECKS, C-92.1..C-92.12, 466 -> 478;
      "1.30.0": { count: 478, digest: "7fb9adb53cb99f703ca909c8e27594906ee11ceac381b6e4d778f72e4370cf01" } */
+  /* REC-147 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (REC-147, 2026-09-25, branch land/worker/REC-147): C-93's seven candidate refusals over 1.29.0; count and
+     digest are THIS SUITE'S PRINT on this branch's tree. At a union, re-read them from the merged tree's print. *\/
+     "1.30.0": { count: 473, digest: "9582069bf3086b0cc1a5fda3e50b9535be332ce087565a1163a247ec7831d2d6" }, */
   /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
      rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
      KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
@@ -690,6 +695,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* D-147 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-94.1-11); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* MK-7 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-92's twelve rows); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* REC-147 side, kept as history — its A5 pin read 1.30.0 on its own branch (C-93's seven rows); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives

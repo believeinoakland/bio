@@ -299,6 +299,13 @@ const ROLE = {
      rather than assumed. The `bound` block in its answer is `ai_run_bounds`', a
      different table with its own publisher rules. */
   extractPropose:     "AUTHORISES",
+  /* REC-147's, 2026-09-25, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on the item's first
+     full battery. `contradictionPropose` reads `ai_runs` (`status`, `principal_plane`) to decide whether a DIFFERENT
+     act — writing contradiction candidates — is legal: AUTHORISES, `extractPropose`'s role word for word. NOT
+     `WRITES`: it writes `contradiction_candidates` and not one column of `ai_runs`. NOT `PUBLISHES`: its answers echo
+     only the run id the caller named; its RUN_NOT_RUNNING refusal deliberately carries no `status`, so ARM W4's
+     "exactly three publishers" stands. */
+  contradictionPropose: "AUTHORISES",
   /* REC-152's, 2026-09-19, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on the
      item's first full battery. `#aiRunInSight` reads `ai_runs` (the key and `context_id`, through
      `aiRunRead`'s own `#bundleGate`) to decide whether the TICK and the CLOSE — different acts — may even

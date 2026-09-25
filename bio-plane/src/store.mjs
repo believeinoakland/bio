@@ -205,6 +205,8 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             catalogue rather than restated here. DEC-49: the C-number, the wire code and
             the canned translation are ONE ROW read from one place. */
          CONTRADICTION_PAIR_CHECKS,
+         /* REC-147 / C-93: the candidate write's refusal family, one row per code, from the catalogue. */
+         CONTRADICTION_CANDIDATE_CHECKS,
          /* D-148 / C-72: the fee-quote grammar's one rule and its refusal family. */
          QUOTE_CHECKS, quoteFindings, quoteValue, isQuoteEntry,
          /* D-147 / C-94: the records-request lifecycle's one rule, its refusal family and its one reader. */
@@ -362,6 +364,8 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
 /* REC-152: tick and close are the run's PRINCIPAL's acts — the positional half, decided once in `airun.mjs`.
    Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
 import { runPrincipalGate } from "./airun.mjs";
+/* REC-147: §5's five labels, the one vocabulary the gate scores and this store refuses outside of. */
+import { CONTRADICTION_LABELS } from "./contradiction.mjs";
 /* D-500: §5.1's top-end bound — is this subject's entry provably at or after the log's first row at its
    level — decided ONCE in `airun.mjs`, beside the cause vocabulary it answers into, and asked by the content
    and meaning readers below. Its own import line, for the reason REC-152's gives. */
@@ -15400,6 +15404,147 @@ export class Store extends DurableObject {
         + `never evidence of absence at the next, and a key with nothing to join says the record is `
         + `SPARSE there, not that it is consistent`,
     };
+  }
+
+  /** A side of a formed pair AS A REFERENT AT A VERSION (§8): a claim is the reading it is held on, versioned by the
+   *  digest of the claim text compared; an extent is its content row (or its capture where none is named),
+   *  versioned by the capture, whose bytes never change. `bundle` is where the side lives, for purge (D-113). */
+  #candidateSide(s) {
+    if (s && s.kind === "claim")
+      return { kind: "claim", ref: `${String(s.inquiry ?? "")}|${String(s.version ?? "")}`,
+               version: sha256HexSync(String(s.claim ?? "")), bundle: s.inquiry == null ? null : String(s.inquiry) };
+    const cap = s?.capture_sha == null ? "" : String(s.capture_sha);
+    const cid = s?.content_id == null || s.content_id === "" ? null : String(s.content_id);
+    const home = cid ? this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, cid)
+      : cap ? this.#one(`SELECT bundle_id FROM content WHERE capture_sha=? ORDER BY bundle_id LIMIT 1`, cap) : null;
+    return { kind: s?.kind === "leg" ? "leg" : "extent", ref: cid ?? cap, version: cap,
+             bundle: home ? home.bundle_id : null };
+  }
+
+  /** THE ONE APPEND SITE of `contradiction_candidates` (§8). INSERT OR IGNORE on the candidate digest: a row over
+   *  the same key and the same two referents at the same versions is already there, and is left exactly as it was.
+   *  Returns whether a row was written. Nothing updates or deletes a candidate but purge. */
+  #appendContradictionCandidate(row) {
+    const before = this.#one(`SELECT candidate FROM contradiction_candidates WHERE candidate=?`, row.candidate);
+    if (before) return false;
+    this.sql.exec(
+      `INSERT OR IGNORE INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id,
+         b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed','machine',?)`,
+      row.candidate, row.key, row.a.kind, row.a.ref, row.a.version, row.a.bundle,
+      row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason, row.at);
+    return true;
+  }
+
+  /** op=contradictionpropose — REC-147 / IC-318 (CONTRADICTION-IDENTIFY-DESIGN.md §5, §8, §9 item 3). A RUN'S
+   *  JUDGEMENT OVER FORMED PAIRS ENTERS THE RECORD AS PROPOSED CANDIDATES.
+   *
+   *  The plane cannot judge (§2); what it holds is WHAT WAS COMPARED and WHAT WAS PROPOSED about it. So: every
+   *  proposal is CHECKED before anything is written (a refused batch leaves nothing), and a proposal is written only
+   *  when it names a pair the plane ITSELF forms for this viewer now, with the referents and versions the PLANE
+   *  read — a pair a caller hands in is a provenance hop a caller can invent. A claim side must carry the claim text
+   *  it judged: a claim that changed since is a different referent, so that proposal is about a pair that is no
+   *  longer formed and is refused rather than written against text the machine never saw.
+   *
+   *  THE LABEL IS A PROPOSAL (DEC-24): every row is `origin = 'machine'`, `state = 'proposed'`, and nothing here
+   *  grades, edits or closes either side. THE GATE THIS DOOR RESTS ON IS NOT IN IT: §7's over-strictness gate is a
+   *  property of the JUDGEMENT (M-162 measured the prompt src/contradiction.mjs pins), and no read shows a
+   *  candidate to a member until PRESENT is designed (§9 item 4). */
+  contradictionPropose({ run, proposals, proposedBy, viewer = null, caller = null, at = null } = {}) {
+    const refusal = (code, detail, extra) => {
+      const row = CONTRADICTION_CANDIDATE_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    /* DEC-49 REGION is-candidate-no-proposer */
+    if (typeof proposedBy !== "string" || !proposedBy.trim())
+      return refusal("CANDIDATE_NO_PROPOSER",
+        "a proposed contradiction records who proposed it; the plane stamps that from the credential that asked, "
+        + "so an empty one means the act arrived by a route that does not attribute it");
+    /* END DEC-49 REGION is-candidate-no-proposer */
+    const runId = typeof run === "string" ? run.trim() : "";
+    const r = runId ? this.#one(`SELECT status, principal_plane FROM ai_runs WHERE run=?`, runId) : null;
+    /* SIGHT, THEN POSITION, THEN STATUS — the tick's order (REC-152, REC-165). A run the viewer cannot see answers
+       exactly as one never minted (§7.9). */
+    /* DEC-49 REGION is-candidate-no-run */
+    if (!r || !this.#aiRunInSight(runId, viewer))
+      return refusal("CANDIDATE_NO_RUN",
+        runId ? `no run named '${runId.slice(0, 60)}' is open in this store` 
+              : "pass run=<the run whose judgement this is>: a candidate is machine work and names the run it came from",
+        { run: runId || null });
+    /* END DEC-49 REGION is-candidate-no-run */
+    const notPrincipal = runPrincipalGate({ caller, principal: r.principal_plane,
+                                            act: "proposing contradictions under a run" });
+    if (notPrincipal)
+      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail, run: runId,
+               note: "a proposed contradiction names a run its caller holds. Nothing was written" };
+    /* DEC-49 REGION is-candidate-run-not-running */
+    if (r.status !== "running")
+      return refusal("CANDIDATE_RUN_NOT_RUNNING",
+        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`,
+        { run: runId });
+    /* END DEC-49 REGION is-candidate-run-not-running */
+    const list = Array.isArray(proposals) ? proposals : [];
+    /* DEC-49 REGION is-candidate-no-proposals */
+    if (list.length === 0)
+      return refusal("CANDIDATE_NO_PROPOSALS",
+        "an empty batch is not a judgement that found nothing; that is an observation for the run's log", { run: runId });
+    /* END DEC-49 REGION is-candidate-no-proposals */
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i] || {};
+      /* DEC-49 REGION is-candidate-label-unknown */
+      if (!CONTRADICTION_LABELS.includes(p.label))
+        return refusal("CANDIDATE_LABEL_UNKNOWN",
+          `proposal ${i} carries '${String(p.label).slice(0, 30)}', which is not one of ${CONTRADICTION_LABELS.join(", ")}`,
+          { run: runId, index: i, labels: [...CONTRADICTION_LABELS] });
+      /* END DEC-49 REGION is-candidate-label-unknown */
+      /* DEC-49 REGION is-candidate-no-reason */
+      if (typeof p.reason !== "string" || !p.reason.trim())
+        return refusal("CANDIDATE_NO_REASON", `proposal ${i} carries no reason`, { run: runId, index: i });
+      /* END DEC-49 REGION is-candidate-no-reason */
+    }
+    /* THE PAIRS AS THIS VIEWER'S PAIRING FORMS THEM NOW — the op's own read, so what may be proposed over is
+       exactly what the member could have been shown (§6), bounded as it is bounded. */
+    const read = this.contradictionPairs({ viewer });
+    const handle = (x) => `${x.kind}|${x.ref}@${x.version}`;
+    const formed = new Map();
+    for (const q of (read && Array.isArray(read.pairs)) ? read.pairs : []) {
+      const a = this.#candidateSide(q.a), b = this.#candidateSide(q.b);
+      formed.set(`${q.key}:${[handle(a), handle(b)].sort().join(" <> ")}`, { key: q.key, a, b });
+    }
+    const cutKeys = (read?.keys ?? []).filter((k) => k.truncated).map((k) => k.key);
+    const rows = [];
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      const key = String(p.key ?? "").trim().toUpperCase();
+      const a = this.#candidateSide(p.a), b = this.#candidateSide(p.b);
+      const f = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
+      /* DEC-49 REGION is-candidate-pair-not-formed */
+      if (!f)
+        return refusal("CANDIDATE_PAIR_NOT_FORMED",
+          `proposal ${i} names a ${key || "(no key)"} pair the pairing does not form for this viewer now`
+          + (cutKeys.length ? ` (the read was cut at its bound on ${cutKeys.join(", ")}, and a pair past the bound is not formed here)` : ""),
+          { run: runId, index: i, cut_keys: cutKeys });
+      /* END DEC-49 REGION is-candidate-pair-not-formed */
+      /* The PLANE's referents, ordered so the row reads the way its digest was taken. */
+      const [x, y] = handle(f.a) <= handle(f.b) ? [f.a, f.b] : [f.b, f.a];
+      rows.push({ candidate: sha256HexSync(canonicalJson({ v: 1, key: f.key, sides: [handle(x), handle(y)] })),
+                  key: f.key, a: x, b: y, run: runId, proposed_by: proposedBy.trim(),
+                  label: p.label, reason: p.reason.trim().slice(0, 2000), at: at || new Date().toISOString() });
+    }
+    const written = [];
+    this.ctx.storage.transactionSync(() => {
+      for (const row of rows) written.push(this.#appendContradictionCandidate(row));
+    });
+    const candidates = rows.map((row, i) => ({
+      new: written[i], ...this.#one(`SELECT candidate, key, a_kind, a_ref, a_version, b_kind, b_ref, b_version,
+        run, proposed_by, label, reason, state, origin, at FROM contradiction_candidates WHERE candidate=?`, row.candidate) }));
+    const n = written.filter(Boolean).length;
+    return { ok: true, run: runId, proposed: rows.length, written: n, unchanged: rows.length - n, candidates,
+             says: `${n} candidate(s) written as PROPOSED machine work; ${rows.length - n} named two referents at `
+                 + `versions already proposed over, and were left exactly as they were (§8). A candidate is a `
+                 + `proposal about two things as they were, never a finding: no member has judged it.` };
   }
 
   /** op=narrow — THE ACT. A new basis version, one leg narrower, the old retained. */
@@ -33889,6 +34034,9 @@ export class Store extends DurableObject {
            when EITHER end's bundle is purged, so the reverse-index connection cannot
            outlive a document it joined (D-113). */
         this.sql.exec(`DELETE FROM connections WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
+        /* REC-147 / D-113: a contradiction candidate spans TWO referents, so it is not in TABLES, and it goes when
+           EITHER side's bundle is purged — a candidate outliving a side it compared names a referent nobody holds. */
+        this.sql.exec(`DELETE FROM contradiction_candidates WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
         /* REC-122: a member's on-point choice is ABOUT a connection and goes with it. */
         this.sql.exec(`DELETE FROM connection_pair_choices WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
         /* REC-27 / D-137. Participation and owner-governance votes are keyed on
@@ -34153,6 +34301,8 @@ export class Store extends DurableObject {
            Stages before defs, so nothing outlives the definition it belongs to.
            hygiene.test.mjs asserts this list against schema.mjs. */
         this.sql.exec(`DELETE FROM connections`);
+        /* REC-147: the contradiction candidates, which span two referents and have no single bundle_id. */
+        this.sql.exec(`DELETE FROM contradiction_candidates`);
         /* REC-122: the member's on-point choices, about connections that are gone. */
         this.sql.exec(`DELETE FROM connection_pair_choices`);
         this.sql.exec(`DELETE FROM progression_stages`);
@@ -53354,6 +53504,13 @@ export class Store extends DurableObject {
            would be the impostor hole REC-29 measured. `key` and `limit` are the
            caller's, and both are answered rather than trusted: an unknown key is
            refused BY NAME and a limit out of range is clamped to the published bound. */
+        /* REC-147 / IC-318: the run's judgement enters as candidates. The proposer, the viewer and the principal are
+           the control plane's stamps, never the body's (extractpropose's rule); the run and the proposals are the
+           caller's, and every proposal is re-checked against the pairs the plane forms for that viewer. */
+        contradictionpropose: () => this.contradictionPropose({
+          run: (body || {}).run, proposals: (body || {}).proposals, at: (body || {}).at || null,
+          proposedBy: url.searchParams.get("proposedBy"), viewer: url.searchParams.get("viewer"),
+          caller: url.searchParams.get("principal") }),
         contradictionpairs: () => this.contradictionPairs({
           key: url.searchParams.get("key"), limit: url.searchParams.get("limit"),
           viewer: url.searchParams.get("viewer"),
