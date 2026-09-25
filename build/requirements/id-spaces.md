@@ -61,7 +61,7 @@ Every service takes `view`: the combined view of the active jurisdiction profile
 ### Invariants
 
 - **R23** Pure: no store, no network, no clock. The same inputs always give the same answer.
-- **R24** No place is named in this module. Given two profiles for different jurisdictions, every service answers from the view alone. The tests use at least one profile that is not Oakland's.
+- **R24** No place is named in this module. Given two profiles for different jurisdictions, every service answers from the view alone. The tests use at least one profile other than the first.
 - **R25** Every "no" says which kind of no: outside the reach, undetermined, unjoined, a different value, or one system. Absence is never reported as non-existence.
 
 ### Satisfies

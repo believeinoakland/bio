@@ -220,14 +220,14 @@ accessor today) are this module's interface, not internal helpers:
 - **R24** Pure: no store read or write, no network call, no clock. `extractPdfStructure`,
   `pageShowsText` and `pdfPageImages` answer only from their input bytes/`PdfDoc`, so the same input
   always gives the same output.
-- **R25 · not yet met (D-591).** A Flate-compressed content stream with bytes after the compressed
+- **R25** *(not yet met: D-591)* A Flate-compressed content stream with bytes after the compressed
   data's own end ("trailing junk") still decodes: the decoded bytes are kept, with the trailing-byte
   count recorded, rather than the whole stream reading as undecodable. And a page whose content stream
   could not be decoded for any reason carries a page-level marker (`text.pages[i].undetermined`) rather
   than reading as an ordinary empty page — today `pageContent`'s undecodable case reaches only
   `doc.notes` (`"content_stream_undecodable"`), a document-level note a page-by-page reader does not
   see, so such a page is indistinguishable from a page that is actually blank.
-- **R26 · not yet met (D-627); the exact figures are UNDETERMINED.** A page that shows text (so R14's
+- **R26** *(not yet met: D-627; its exact figures are UNDETERMINED)* A page that shows text (so R14's
   `no_text_layer` rightly does not fire) but whose painted-image area, as a share of the page, is over
   a measured threshold while its glyph count is under a measured floor carries one marker naming both
   figures (`reason` distinct from `no_text_layer`; both this module already computes the image

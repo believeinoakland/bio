@@ -176,7 +176,7 @@ deckLength, undetermined, counts:{chars, notesChars, undetermined}}`; `images` i
   `intra` link — each `{part, why:"outside_content_xml_not_read", detail}` — unconditionally,
   because this module reads `content.xml` only. `notes` always adds the sentence that no
   `intra` link is emitted because embedded members live outside `content.xml`.
-- **R29 (D-346 — not yet met, see Status)** narrows R28: when `meta.xml` is present,
+- **R29** *(not yet met: D-346)* narrows R28: when `meta.xml` is present,
   `structure()` reads it and emits one `core-properties` item (creator, title, created/
   modified, revision — each `null` when the file omits it) instead of the `meta.xml` marker; a
   package without `meta.xml` still states the absence. When the manifest is present,
@@ -208,7 +208,7 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   attribute in any namespace, a package member whose bytes are not `content.xml` (naming up to
   3 of them, with the total count) — a digest of `content.xml` alone cannot speak for a member
   it does not hold, so none is claimed.
-- **R36 (D-612 — not yet met, see Status)** narrows R35: an `href` on an element whose local
+- **R36** *(not yet met: D-612)* narrows R35: an `href` on an element whose local
   name is `font-face-uri` does not count as a referenced member. A `Pictures/`- or
   `Object N/`-referencing `href` still refuses under R35 unchanged.
 - **R37** The digested bytes are, for `.odt`, `content.xml` with every `<text:list

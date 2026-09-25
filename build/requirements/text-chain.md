@@ -277,11 +277,10 @@ contain the place a reference was read? The default is NO.
   - `sheet-cell`: `extent.sheet === position.sheet` and `extent.cell === position.cell`, exact.
   - `slide-shape`: `extent.slide === position.slide`; when `extent.shape` is absent the whole slide
     counts, when present it must equal the position's `.shape`.
-- **R72** [NOT MET — D-416] `extentKind === "sheet-range"` is not yet an accepted arm: today R71's
-  equal-kind rule makes a `sheet-cell` position answer `false` against it. The row's rule: a
-  `sheet-cell` position whose `.sheet` matches the range's and whose `.cell` falls within the range's
-  bounds is contained. `EXTRACTION-BREADTH-DESIGN.md` §3.2 is the design; D-415 (landed) is what emits
-  the units this reads.
+- **R72** *(not yet met: D-416)* A `sheet-cell` position is contained in a `sheet-range` extent when its
+  `.sheet` is the range's sheet and its `.cell` falls within the range's bounds. Today R71's equal-kind rule
+  answers `false`. Design: `EXTRACTION-BREADTH-DESIGN.md` §3.2. The units this reads are emitted by
+  `office-readers` R9 (D-415, built but not merged).
 - Errors: never throws.
 
 **`glyphCount(s) → integer`** (D-501/D-514) The number of non-whitespace Unicode CODE POINTS in `s`.
@@ -304,7 +303,7 @@ page. `base`/`t2` are `{document, pages:[{page, text, undetermined:[{count}]}], 
   2's page has strictly FEWER undetermined characters (summed `.undetermined[].count`) than tier 1's
   AND strictly MORE glyphs (`glyphCount` of `.text`, R73) than tier 1's. Otherwise tier 1's page is
   kept, spread unchanged plus `tier:1`.
-- **R77** [NOT MET — D-633] When tier 2 wins a page (R76), every field on the base page whose name
+- **R77** *(not yet met: D-633)* When tier 2 wins a page (R76), every field on the base page whose name
   starts with `image_content_` is copied onto the merged page unchanged — they are facts about the
   page's images, not about which decode won. Today the tier-2-won page carries only `page`, `text`,
   `undetermined` and `tier`; any `image_content_*` field the base page carried is dropped.
@@ -329,7 +328,7 @@ covered by derivation steps of two different kinds (D-635's shape: a text layer'
 transcription appended over the same page). BOB #35's 09:35Z rule (in D-723) is that such a page reads
 `mixed`, and BOB #36 superseded D-686's page rule for this one case (11:05Z, 2026-09-25). This module
 must add a service that:
-- **R81** Given a chain and a page, answers `mixed` when that page is covered by derivation steps of
+- **R81** *(not yet met: D-723)* Given a chain and a page, answers `mixed` when that page is covered by derivation steps of
   more than one kind (the same extent test R22/R27 use — a step's extent, or unscoped meaning the
   whole document), and answers the one kind covering it otherwise — undetermined (`null`) when no
   derivation step covers the page or the covering extent is unreadable (R30's rule). `terminalStep`
@@ -392,7 +391,7 @@ new refusal condition in this module mints the next one in the family and is add
   not once per document) is met.
 - D-635 and D-665 are carried rows against `mergeTier3Text` and OCR-routing measurement, both in
   `index.mjs` today (`extraction`/`legacy-index` territory once extracted), not in this module's
-  `paths`. They are not requirements here; BOB should re-target them.
+  `paths`. They are not requirements here; BOB #37 moved both rows (D-635, D-665) to `extraction` on 2026-09-25.
 - The D-501/D-514 sweep found three OTHER readers outside this module comparing the same
   producer-reported character counts instead of glyphs (`needsTier2` and the tier-3 layer attribution
   in `index.mjs`); they are that module's requirements, not this one's, once it is written.

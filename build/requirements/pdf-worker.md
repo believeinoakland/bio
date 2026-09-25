@@ -75,7 +75,7 @@ member has no member-facing route for it).
   source:{filters, colorSpace, bitsPerComponent, imageMask}, page_geometry:{mediaBoxPt, rotate, dpi},
   page_marks:{hasTextOps, hasVectorOps}, …(ccitt|dct detail when decoded), …(pixels_sha256 when
   decoded)}`.
-- **R21** `rotate_deg` and the rotation applied to the pixels are the page's own `/Rotate` (0/90/180/270),
+- **R21** *(not yet met: D-671)* `rotate_deg` and the rotation applied to the pixels are the page's own `/Rotate` (0/90/180/270),
   read from the LEAF page only. `opts.rotate`, if given, is ignored — the page's own value always wins.
   **Not yet met: see Status (D-671, inherited `/Rotate` is not read).**
 
@@ -101,8 +101,10 @@ member has no member-facing route for it).
   `pixels_sha256` on the 8-bit route. Any other colour-space/bit-depth combination (CMYK, 16-bit, …)
   answers `UNSUPPORTED_SAMPLES`; data short of the declared height answers `TRUNCATED_IMAGE_DATA`; a
   missing width/height or unreadable stream answers `IMAGE_UNREADABLE`.
-- **R25** JBIG2Decode and JPXDecode both answer `UNSUPPORTED_FILTER`. **Not yet met: see Status (D-622,
-  neither is decoded).**
+- **R25** *(not yet met: D-622)* A `JBIG2Decode` image (generic region, MMR and arithmetic coding, with
+  `JBIG2Globals`) and a `JPXDecode` image are decoded to a PNG like R23 and R24, carrying `pixels_sha256`,
+  pixel-exact against an independent reference decoder. What cannot be decoded answers `UNSUPPORTED_FILTER`,
+  naming the feature. Today both filters answer `UNSUPPORTED_FILTER`.
 - **R26** A route that DECODES samples (R23, R24, or R22 with `decodeDct`) carries `pixels_sha256`, a
   SHA-256 over the normalised packed/interleaved samples taken before any container is built; a
   pass-through route (R22 default) carries none, its bytes being the publisher's own and byte-stable by

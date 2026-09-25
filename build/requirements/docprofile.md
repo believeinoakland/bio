@@ -52,7 +52,7 @@ profiles that `jurisdictions.combine` gives.
   states all of them rather than letting the first match stand for the whole document. A type
   whose `detect` throws during this pass is reported as an error entry in `also`, never dropped
   and never propagated.
-- **R6** Every registered content type's own `detect`/`parse`/`assess` takes its recogniser
+- **R6** *(not yet met: N3)* Every registered content type's own `detect`/`parse`/`assess` takes its recogniser
   vocabulary — masthead and self-naming phrases, furniture lines, operative-voice and caption
   forms, code-citation forms, report-template section headings, reference-line shapes, recognition
   floors and thresholds, and publishing-system address shapes — from `ctx.view`'s recogniser-
@@ -219,7 +219,7 @@ reported "unchanged") (**R29**).
 
 ### Invariants
 
-- **R30** No place is named in this module's own code. Every masthead, furniture, caption,
+- **R30** *(not yet met: N3)* No place is named in this module's own code. Every masthead, furniture, caption,
   code-citation, template-section, reference-shape, directory-floor and practice-threshold fact a
   content type tests for comes from the active jurisdiction profiles; the tests include at least
   one profile that is not Oakland's, for every content type. The four stack handlers hold no such
