@@ -550,6 +550,15 @@ const CATALOG_CENSUS = {
   "1.31.0": { count: 569, digest: "d1e8a679256b530d49f955460b893064fdb2e6bea67f19a6b3f94a2684d592b0",
               changed: ["C-2.8", "C-2.10", "C-21.2", "C-41.1", "C-41.13", "C-53.10", "C-53.11", "C-53.12", "C-70.3"],
               source: "832fbe02962e8f75e5b75b28d6ab83a08d083c8124a864c5b5260110ad6ceda9" },
+  /* 1.32.0 (D-688, 2026-09-25, WORKER D-688, branch land/worker/D-688 over origin/main 95fe7bc7): ONE ARRIVAL, NO
+     DEPARTURES — C-94.12 LIFECYCLE_TOKEN_MALFORMED, split out of C-94.11 so each condition carries a sentence true of
+     it. ONE CHANGED under an unmoved id: C-94.11 LIFECYCLE_TEXT_UNWRITABLE no longer answers a stage, follows, outcome
+     or due_by that is not one token (those now answer C-94.12); nothing that passed is refused. MINOR. Count, digest
+     and source are this suite's own print on the item's tree; CONDUCT re-reads them on the union (D-668 and D-641 move
+     this constant too). */
+  "1.32.0": { count: 570, digest: "d5f4e2dd0c69093ebcceb096a8a218ab27b879b590c0f0cf1105793ab9634cc0",
+              changed: ["C-94.11"],
+              source: "1aabe731ea2c9e1d32b0021c7eff89de82cbe926ea0bddb5652eaf1bfd2130b5" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -742,13 +751,13 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    every branch below (the catalogue under the stamp moved 502 -> 569 by this suite's print); the literal moves by
    hand with the constant, which is its whole rule. */
 t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.32.0)", "1.32.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue
       under the stamp (466 -> 475) and this literal moves in the same commit as the constant, which is its whole rule. *\/
    t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
-     [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
+     [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.32.0)", "1.32.0"]);
 */
 /* D-134 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, the C-96 rows); ours is kept
    at c22-batch29 and CONDUCT moves this literal with the constant once. */

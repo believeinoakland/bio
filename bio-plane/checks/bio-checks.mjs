@@ -14943,6 +14943,15 @@ export const LIFECYCLE_CHECKS = {
     translation: 'The exemptions or the citation is too long, or holds a quotation mark, a backslash or a line '
       + 'break, which the record cannot store. Shorten it or leave those characters out.',
   },
+  /* D-688: split from C-94.11, whose sentence names the exemptions and the citation and so is false of these four
+     fields — a member sending stage=Appeal was told about exemptions. */
+  LIFECYCLE_TOKEN_MALFORMED: {
+    check: 'C-94.12',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-token',
+    translation: 'The stage, the entry it follows, the outcome and the due date are each written as one short word '
+      + 'of lower-case letters, digits, underscores or hyphens, with no spaces: appeal, not Appeal; 3, not entry 3; '
+      + '2026-08-30 for a date. Rewrite the value that way.',
+  },
 };
 
 /* D-394 / C-80 — THE CROSS-VERSION NOTICE'S REFUSALS

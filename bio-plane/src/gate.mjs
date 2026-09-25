@@ -177,7 +177,12 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    (D-598), C-2.10 (D-147), C-41.1 and C-41.13 (REC-219), C-53.10..12 (MK-7), C-70.3 (REC-197). MINOR: the one
    departure refused nothing any input could reach. Count 569, digest d1e8a679…, source 832fbe02… — the d470
    suite's own print on the merged tree (HEAD ee29c763 + this commit), never 502 + 68 - 1. */
-export const CATALOG_VERSION = "1.31.0";
+/* 1.32.0 (D-688, 2026-09-25, WORKER D-688, branch land/worker/D-688 over origin/main 95fe7bc7): ONE ARRIVAL, NO
+   DEPARTURES — C-94.12 LIFECYCLE_TOKEN_MALFORMED, the token case of actionCorrespond split out of C-94.11, whose
+   sentence about the exemptions and the citation was false of it; C-94.11 CHANGED (it no longer answers that case).
+   MINOR: nothing that passed is refused. Count 570, digest d5f4e2dd…, source 1aabe731… — the d470 suite's own print
+   on this item's tree. CONDUCT re-reads them on the union if another branch moves this constant. */
+export const CATALOG_VERSION = "1.32.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.

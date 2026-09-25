@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (RUN 2026-09-25 by WORKER D-147, each arm ALONE through a harness that copied a uniquely-named per-arm pristine file, armed it by an anchor asserted to match exactly once, ran this suite, and restored it verified by sha256 AND cmp with a byte count printed — checks/bio-checks.mjs c730c511… 980,181 B, src/store.mjs fc2bb576… 3,356,700 B; re-run after the last store edit, identical tallies) (0) baseline, nothing armed -> 65 pass / 0 fail. (a) THE ROW'S OWN — default a due date from the action's KIND in `requestLifecycleOf` (a cpra_request entry with none stated reads due ten days after it, cited `CPRA`). DECLARED: section 2's UNDETERMINED ARM fails by name, with section 3's no-law-encoded arms; sections 4 and 6 do not move. ACTUAL -> 59/6: "UNDETERMINED ARM: on a cpra_request action, every entry with no stated due date reads undetermined — none computed", its sentence arm, the three section-3 kind arms, and section 5's not-stated read (OLD is a cpra_request too); nothing in 4 or 6. Section 1's `passed_unanswered` stayed GREEN because the armed default reads `open` — which is why the undetermined arm, not the passed list, carries this control. (b) OVER-STRICTNESS — drop `none_stated` from CORRESPONDENCE_OUTCOMES. DECLARED: the over-strictness arm fails. ACTUAL -> 63/2: it, and the published vocabulary's literal. (c) drop the op's citation-on-the-list judgement (`onList = cited ? listed.includes(cited) : true` -> `true`). DECLARED: the DUE_CITE_NOT_GOVERNING arms fail. ACTUAL -> 58/7: both refusal arms, the code tally, "every code of the family was driven", and three downstream arms that move because the refused entries were then WRITTEN. (d) drop the lifecycle arm from `correspondenceFindings`. DECLARED: the catalog and promote arms fail and the op's refusals do not. ACTUAL -> 63/2, exactly those two. */
+/* NEGATIVE CONTROL: (RUN 2026-09-25 by WORKER D-147, each arm ALONE through a harness that copied a uniquely-named per-arm pristine file, armed it by an anchor asserted to match exactly once, ran this suite, and restored it verified by sha256 AND cmp with a byte count printed — checks/bio-checks.mjs c730c511… 980,181 B, src/store.mjs fc2bb576… 3,356,700 B; re-run after the last store edit, identical tallies) (0) baseline, nothing armed -> 65 pass / 0 fail. (a) THE ROW'S OWN — default a due date from the action's KIND in `requestLifecycleOf` (a cpra_request entry with none stated reads due ten days after it, cited `CPRA`). DECLARED: section 2's UNDETERMINED ARM fails by name, with section 3's no-law-encoded arms; sections 4 and 6 do not move. ACTUAL -> 59/6: "UNDETERMINED ARM: on a cpra_request action, every entry with no stated due date reads undetermined — none computed", its sentence arm, the three section-3 kind arms, and section 5's not-stated read (OLD is a cpra_request too); nothing in 4 or 6. Section 1's `passed_unanswered` stayed GREEN because the armed default reads `open` — which is why the undetermined arm, not the passed list, carries this control. (b) OVER-STRICTNESS — drop `none_stated` from CORRESPONDENCE_OUTCOMES. DECLARED: the over-strictness arm fails. ACTUAL -> 63/2: it, and the published vocabulary's literal. (c) drop the op's citation-on-the-list judgement (`onList = cited ? listed.includes(cited) : true` -> `true`). DECLARED: the DUE_CITE_NOT_GOVERNING arms fail. ACTUAL -> 58/7: both refusal arms, the code tally, "every code of the family was driven", and three downstream arms that move because the refused entries were then WRITTEN. (d) drop the lifecycle arm from `correspondenceFindings`. DECLARED: the catalog and promote arms fail and the op's refusals do not. ACTUAL -> 63/2, exactly those two. D-688 (RUN 2026-09-25 by WORKER D-688, same harness shape, restores by sha256 AND cmp — src/store.mjs e8b6d649… 3,653,617 B, checks/bio-checks.mjs d4e64091… 1,067,650 B): (0) baseline -> 71/0, check-refusal-codes --strict exit 0. (a) THE ROW'S OWN — route the token case back to C-94.11 (`refusal("LIFECYCLE_TOKEN_MALFORMED"` -> `refusal("LIFECYCLE_TEXT_UNWRITABLE"`). DECLARED: arm G fails BY NAME and this suite's token arms fail; the due_cite arm does not. ACTUAL -> 64/7 (the Appeal refused-by-name arm, the code tally, every-code-driven, the four token arms) and check-refusal-codes exit 1: `arm G: LIFECYCLE_CHECKS.LIFECYCLE_TEXT_UNWRITABLE is now minted at 2 literal sites … and was ONE`, `55 DEC-49 codes … ceiling 54`, and the site guard's own words `src/store.mjs:7075 (in actionCorrespond > is-lifecycle-token) calls refusal("LIFECYCLE_TEXT_UNWRITABLE"), which is NOT a row in LIFECYCLE_CHECKS`, quoted as printed. (b) OVER-STRICTNESS — reword C-94.12's translation in words these arms never saw, still true. DECLARED: all green. ACTUAL -> 71/0, exit 0. (c) make C-94.12's sentence false again (prefix it with C-94.11's `The exemptions or the citation is too long`). DECLARED: the four token arms fail, nothing else. ACTUAL -> 67/4, exactly those; check-refusal-codes exit 0 (arm G judges sites, not words — this suite carries the truth of the sentence). */
 /* D-147: A RECORDS REQUEST IS ONE ROUND TRIP (BOB #27, 2026-09-22; `BIO_Case_Making_v0_1.md` §2,
  * *THE RECORDS-REQUEST LIFECYCLE*), on D-148's entry grammar and bound by D-149.
  *
@@ -265,6 +265,10 @@ console.log("\n--- 4. refused by name ---");
       follows: "0", due_by: "2026-08-30", due_cite: "5 U.S.C. § 552" }, "DUE_CITE_NOT_GOVERNING"],
     ["exemptions the grammar cannot hold", { direction: "received", stage: "denial", follows: "0", outcome: "denied",
       exemptions: "the \"deliberative\" exemption" }, "LIFECYCLE_TEXT_UNWRITABLE"],
+    /* D-688: a bare field that is not one token is its OWN condition. Until D-688 these answered
+       LIFECYCLE_TEXT_UNWRITABLE, whose sentence is about the exemptions and the citation — false of stage=Appeal. */
+    ["a stage that is not one lower-case token", { direction: "sent", stage: "Appeal", follows: "0" },
+     "LIFECYCLE_TOKEN_MALFORMED"],
   ];
   const before = (await lifecycle(ACT))?.entries?.length;
   const seen = {};
@@ -278,8 +282,26 @@ console.log("\n--- 4. refused by name ---");
     STAGE_NOT_OF_DIRECTION: "C-94.1", FOLLOWS_NO_ENTRY: "C-94.2", APPEAL_NAMES_NO_DECISION: "C-94.3",
     OUTCOME_NOT_ON_RECEIVED: "C-94.4", OUTCOME_NOT_IN_VOCABULARY: "C-94.5", DECISION_WITHOUT_OUTCOME: "C-94.6",
     FEE_ESTIMATE_WITHOUT_QUOTE: "C-94.7", DUE_HALF_STATED: "C-94.8", DUE_NOT_A_DATE: "C-94.9",
-    DUE_CITE_NOT_GOVERNING: "C-94.10", LIFECYCLE_TEXT_UNWRITABLE: "C-94.11" });
+    DUE_CITE_NOT_GOVERNING: "C-94.10", LIFECYCLE_TEXT_UNWRITABLE: "C-94.11", LIFECYCLE_TOKEN_MALFORMED: "C-94.12" });
   t("every code of the family was driven", Object.keys(seen).sort(), Object.keys(LIFECYCLE_CHECKS).sort());
+  /* D-688: each of the two conditions answers a sentence TRUE of it, read off the refusal the op returned. The
+     token case names the field the member sent and not the two prose fields; the prose case still names them. */
+  for (const [label, field, e] of [
+    ["stage=Appeal", "stage", { direction: "sent", stage: "Appeal", follows: "0" }],
+    ["follows=entry 3", "follows", { direction: "received", stage: "acknowledgement", follows: "entry 3" }],
+    ["outcome=Denied", "outcome", { direction: "received", stage: "denial", follows: "0", outcome: "Denied" }],
+    ["due_by=30 Aug 2026", "due_by", { direction: "received", stage: "extension_notice", follows: "0",
+      due_by: "30 Aug 2026", due_cite: CPRA }]]) {
+    const r = await correspond(NADIA, { ...base, ...e });
+    t(`${label}: refused as LIFECYCLE_TOKEN_MALFORMED (C-94.12) naming ${field}, and its sentence says nothing of `
+      + "exemptions or a citation", [r.code, r.check, r.field, /exemption|citation/i.test(r.translation)],
+      ["LIFECYCLE_TOKEN_MALFORMED", "C-94.12", field, false]);
+  }
+  const longCite = await correspond(NADIA, { ...base, direction: "received", stage: "extension_notice", follows: "0",
+    due_by: "2026-08-30", due_cite: "Gov. Code \u00a7 7922.535\nand more" });
+  t("a citation holding a line break still answers LIFECYCLE_TEXT_UNWRITABLE (C-94.11), whose sentence is about it",
+    [longCite.code, longCite.check, longCite.field, /citation/.test(longCite.translation)],
+    ["LIFECYCLE_TEXT_UNWRITABLE", "C-94.11", "due_cite", true]);
   t("nothing was written by any refusal", (await lifecycle(ACT))?.entries?.length, before);
   const noLaws = await correspond(NADIA, { target: OLD, direction: "sent", at: "2026-08-01", account: "Request.",
     stage: "request", due_by: "2026-08-11", due_cite: CPRA });
