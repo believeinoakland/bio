@@ -457,8 +457,8 @@ scope: a sweep listing Drive-address bundles whose baseline capture's handler is
 accepts-when: the sweep names every shell baseline and a re-acquired one reads `unchanged` across two ticks (the measured failure it moves: a permanent `modified`). NEGATIVE CONTROL: skip the re-acquire and the two-tick arm reads `modified` by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-526 · running — **WHICH REFUSAL A CALLER MEETS ON `op=promote` STILL DEPENDS ON THE ENVELOPE: the fences above bundle.md's parse (NAME_TAKEN, CITED retirement, LAWS_ACT carry-forward) read the envelope's type, and `#projectRow`'s action columns compare `fm.object_type === "action"` raw, not through `normalizeType`. Nothing wrong can land (D-510's fence refuses it).** Found by D-510's worker (F1, F3). — owner RECORD.
-status: running — SCHEDULER #21 23:50Z spawns WORKER D-526 (depth 2, can report); base origin/main 9f8b69e6
+### D-526 · integrated — **WHICH REFUSAL A CALLER MEETS ON `op=promote` STILL DEPENDS ON THE ENVELOPE: the fences above bundle.md's parse (NAME_TAKEN, CITED retirement, LAWS_ACT carry-forward) read the envelope's type, and `#projectRow`'s action columns compare `fm.object_type === "action"` raw, not through `normalizeType`. Nothing wrong can land (D-510's fence refuses it).** Found by D-510's worker (F1, F3). — owner RECORD.
+status: integrated — SCHEDULER #21 00:49Z: tip d1622057, GATE 92/92 GREEN (FULLREUSE); refusals change on the wire (5 promotions that landed now refused); no IC minted
 order: after D-525, with the promote corrections: the answer a caller meets should not depend on a label D-510 ruled untrusted (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:25Z)
 milestone: M7
 interface: none unless a refusal's order changes on the wire (the integrator classifies).
@@ -534,8 +534,8 @@ scope: (1) measure navigation times over the client-rendered sources already cap
 accepts-when: the bound reads from a measurement id, and a burst above the cap renders no more than the cap at once with the rest completing later (the measured failure it moves: an unmeasured 30,000 ms and an uncapped burst). NEGATIVE CONTROL: remove the cap and the burst arm counts more concurrent renders than the cap, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-547 · queued — **A PROMOTE REVISION CAN RETYPE A BUNDLE IN PLACE: `#projectRow`'s write (store.mjs ~17747, `const projectedType = promotedType`) never compares the new type with `cur.object_type`, so after a retyping revision every type-scoped fence asks the wrong machine.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD.
-status: queued — SCHEDULER #21: HELD until D-526 is integrated; both edit op=promote's act
+### D-547 · running — **A PROMOTE REVISION CAN RETYPE A BUNDLE IN PLACE: `#projectRow`'s write (store.mjs ~17747, `const projectedType = promotedType`) never compares the new type with `cur.object_type`, so after a retyping revision every type-scoped fence asks the wrong machine.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD.
+status: running — SCHEDULER #21 00:49Z spawns WORKER D-547 on land/worker/D-526 (both edit promote's act)
 order: before D-538, at the head of the backlog with the promote corrections: a record whose type silently changes under its own fences claims more than it can support (CLAUDE.md §2), and it outranks new features (SCHEDULER #21, 2026-09-24)
 milestone: M7
 interface: I3 — a new refusal code on op=promote; the integrator classifies.

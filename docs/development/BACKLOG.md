@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-563 · queued — **`op=promote` TAKES A BUNDLE'S TITLE AND STATE FROM THE ENVELOPE, NOT THE DOCUMENT: it projects `bundles.title`, `current_state`, `prior_state`, `created` and `last_updated` from the envelope, and 7.1's name scan, 7.11's owner test and REC-181's retirement arm read `meta.title` / `meta.current_state`; MEASURED: a second project whose bytes name a TAKEN title LANDED when `meta.title` named another, and the projection shows the envelope's title over the bytes'.** D-526's class one field over; found by D-526's worker (00:48Z). — owner RECORD.
+order: at the head of the backlog with the promote corrections: a name fence and an owner test a caller can steer with a label are authority defects, which outrank features (SCHEDULER #21, 2026-09-25)
+milestone: M7
+interface: I3 — refusals on op=promote for a contradicting envelope; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, with C-2.5 and D-510's derivation (the document states what it is; the envelope is a label).
+depends-on: D-526.
+scope: extend D-510's derivation to title and state: derive both from the document, refuse an envelope that contradicts it by name, and make 7.1's name scan, 7.11's owner test and REC-181's retirement arm read the derived values; the projection writes the derived values.
+accepts-when: the taken-title promotion is refused NAME_TAKEN whatever meta.title says, and the projection shows the document's title (moves: a taken name landing under another label). NEGATIVE CONTROL: read meta.title in the name scan again and the taken-title arm lands, failing by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-526's worker).
+
 ### D-546 · queued — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
 order: after D-547, with the promote corrections: a disallowed move lands in the record (CLAUDE.md §2); BOB #34 ruled it product order (SCHEDULER #21, 2026-09-24)
 milestone: M7
@@ -1199,23 +1209,3 @@ depends-on: REC-189 (finished; rides the train after c19-batch9).
 scope: re-run the driver and move its declared figures to 14 fences.
 accepts-when: `node bio-plane/test/machine-fences.control.mjs` reports every arm as declared at 14. NEGATIVE CONTROL: the driver's own arms, recorded on its `NEGATIVE CONTROL:` line.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-477 · queued — **`existed`-STYLE ANSWERS COMPUTED FROM THE DURABLE OBJECT'S SQLITE (`INSERT OR IGNORE` then `changes()`) IN `store.mjs` WERE NEVER SWEPT FOR D-469's CLASS: an answer read after the write that decides it.** — owner RECORD.
-order: with the M0 sweeps, after D-474: D-469's class may recur where no suite looks (SCHEDULER #17, 2026-09-24; D-469's worker via CONDUCT #19)
-milestone: M0 (a class sweep)
-interface: none unless a site is wrong.
-design: `docs/development/VERIFICATION.md` (a class is swept, not one site).
-depends-on: none.
-scope: enumerate every `existed`/`created`/`new` answer in `store.mjs` derived after its own write; for each, show it is read before the write or fix it; name each site in the sweep's verdict list.
-accepts-when: the verdict list names every site with its evidence, and any wrong site is fixed with a first-call arm. NEGATIVE CONTROL: for a fixed site, move the read after the write again, and its first-call arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-457 · queued — **CPDF-20's PER-PAGE TIER IS SHIPPED AND UNRECORDED: `mergeTier2Text` has emitted `text.pages[].tier` since `1240af81` with no IC on I2, and Framework §16's closing table and front matter still list "a per-page rule for tier-2 replacement" ABSENT, though it is built and was watched live (D-283, M-120).** — owner CONTENT-PDF.
-order: with the M0 record-hygiene rows, after D-441: a record that says less than is built (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
-milestone: M0 (the record of what is built)
-interface: I2 additive MINOR — filed by CONTENT-PDF, resolved by CONDUCT.
-design: `docs/development/VERIFICATION.md` (the construct record is checked against the code), for `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
-depends-on: none.
-scope: file the I2 IC for `tier`; correct §16's table and front matter; add a construct-5 claim in `construct-status.json` probing `export function mergeTier2Text(` in `textchain.mjs`.
-accepts-when: `node tools/status.mjs 5` reads the per-page rule BUILT by its probe, and I2 documents `tier`. NEGATIVE CONTROL: rename the probed function, and the status check fails naming the claim.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
