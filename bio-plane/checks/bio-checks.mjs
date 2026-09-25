@@ -4014,7 +4014,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   if (earned && earned.mode === 'ceiling' && earned.grade == null) {
     findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ''}`,
       [`state NO capture grade on basis[${i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-       'or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns',
+       'or have the transcription measured (the MEASUREMENTS ledger, per engine, per version) and state the letter the record then earns',
        'or state this leg as testimony (grade D, with an author and a date) if it is a member\'s own account']));
     return;
   }

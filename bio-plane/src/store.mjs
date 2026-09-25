@@ -19226,12 +19226,12 @@ export class Store extends DurableObject {
       const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
       bound = (byUnits
                 ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20's "
+                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's "
                 + "largest-promote-that-fits and M-35's two route ceilings) -- the index costs "
                 + "ROWS, not only bytes, and this capture offered more pieces than a promote "
                 + "may spend its CPU window on"
                 : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20)")
+                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)")
             + " or the acquire answer's own budget, whichever bit first -- the last is "
             + "the smaller in bytes and is what the promote path's inline-file limit forces";
       detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; `
@@ -25839,7 +25839,7 @@ export class Store extends DurableObject {
           determined: false,
           undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
           empty_level: "transcription fidelity — this document's text was derived by a machine and no "
-                     + "step in that derivation carries a measured fidelity (MEASUREMENTS.md, per engine, "
+                     + "step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, "
                      + "per version)",
           why: `${captureWord}, but every transcription of its text is UNMEASURED: no step in the `
              + `provenance of this document's text carries a measured fidelity, so what a leg resting on `

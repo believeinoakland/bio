@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* M0-121's NEGATIVE CONTROL DRIVER — three arms plus a baseline — over `tools/statepaths.mjs`, `tools/coord.mjs` and
+/* M0-121's NEGATIVE CONTROL DRIVER — six arms plus a baseline (M0-121 a–c, M0-165 d, D-535 e–f) — over `tools/statepaths.mjs`, `tools/coord.mjs` and
  * `bio-plane/scripts/op-claims.mjs`, each driven through `bio-plane/test/statepaths.test.mjs`.
  *
  *   node bio-plane/test/statepaths.control.mjs        (from the repo root)
@@ -26,6 +26,15 @@
  *      (CPDF-9)"` -> `"MEASUREMENTS.md 2026-08-03           into the selection). MUST NOT: "the method sees a real reader"
  *      (CPDF-9)"`)                                          (`entries.mjs` spells the path and is unaffected), the
  *                                                           one-definition arms, the clone arms.
+ *   e  D-535's control: ONE plane citation gets its    -> "no plane or check string names MEASUREMENTS by its file" FAILS,
+ *      file name back — index.mjs' OCR cost sentence       NAMING `bio-plane/src/index.mjs`; "calibration.test.mjs, which
+ *      (`the MEASUREMENTS ledger)` -> `MEASUREMENTS.md)`)   imports the plane … does NOT take" FAILS (it comes back); "taken by
+ *                                                           at most N doc-facing units" and "selects at most N units" FAIL by
+ *                                                           count. MUST NOT: "the method sees a real reader" (both arms),
+ *                                                           the one-definition arms, the clone arms.
+ *   f  OVER-STRICTNESS: the same sentence cites the     -> NOTHING fails: a citation the gate cannot read as a path is
+ *      ledger in a prose spelling the row did not           exactly what the fix asks for.
+ *      write (`recorded in MEASUREMENTS under CPDF-10`)
  */
 import { readFileSync, writeFileSync, statSync, mkdtempSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -42,8 +51,9 @@ const FILES = {
   coord: { abs: join(REPO, "tools/coord.mjs"), min: 30000 },
   opclaims: { abs: join(REPO, "bio-plane/scripts/op-claims.mjs"), min: 20000 },
   textchain: { abs: join(REPO, "bio-plane/test/textchain.test.mjs"), min: 50000 },
+  index: { abs: join(REPO, "bio-plane/src/index.mjs"), min: 700000 },
 };
-const DECLARED_ARMS = 4;
+const DECLARED_ARMS = 6;
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -99,7 +109,15 @@ const IMPORT_LINE = 'import { isMovedPath } from "../../tools/statepaths.mjs";';
    ALONE — the other three suites' labels stay as they are, so the arm moves exactly one variable. */
 const LABEL_WITHOUT_MD = 'measured_by: "MEASUREMENTS 2026-08-03 (CPDF-9)", confidence_floor: 0.6, pages,';
 const LABEL_WITH_MD = 'measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)", confidence_floor: 0.6, pages,';
-const COORD_BLOCK = 'import { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath } from "./statepaths.mjs";\nexport { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath };';
+/* D-535's arms (e, f): the plane's OCR cost sentence, which calibration.test.mjs reaches by importing index.mjs. */
+const COST_PROSE = "(CPDF-10's measurement, the MEASUREMENTS ledger)";
+const COST_BY_NAME = "(CPDF-10's measurement, MEASUREMENTS.md)";
+const COST_OTHER_PROSE = "(CPDF-10's measurement, recorded in MEASUREMENTS under CPDF-10)";
+/* RE-ANCHORED by D-535 (2026-09-25): M0-140 added `RETIRED_FILES, isRetiredPath` to coord.mjs' re-export and this
+   anchor did not follow, so arm (b) matched 0 times and NEVER ARMED (measured by D-535's first run of this driver). The
+   names are now one list, read by both the anchor and the liar's re-export, so the next binding added moves both. */
+const REEXPORTED = "MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath, RETIRED_FILES, isRetiredPath";
+const COORD_BLOCK = `import { ${REEXPORTED} } from "./statepaths.mjs";\nexport { ${REEXPORTED} };`;
 const DEFS = FILES.statepaths.pristine.toString("utf8").slice(FILES.statepaths.pristine.toString("utf8").indexOf("export const MOVED_FILES"));
 
 console.log("\n=== ARM baseline · nothing armed ===");
@@ -116,7 +134,7 @@ const ARMS = [
     mustHold: ["IS statepaths.mjs' isMovedPath", "byte for byte"] },
   { id: "b", title: "THE LIAR — statepaths.mjs re-exports from coord.mjs, which holds the definitions again",
     arm: () => [patch(FILES.coord, COORD_BLOCK, DEFS.trimEnd()),
-      (writeFileSync(FILES.statepaths.abs, 'export { MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath } from "./coord.mjs";\n'), 1)],
+      (writeFileSync(FILES.statepaths.abs, `export { ${REEXPORTED} } from "./coord.mjs";\n`), 1)],
     mustBreak: ["selects at most", "imports nothing"],
     mustHold: ["IS statepaths.mjs' isMovedPath", "byte for byte"] },
   { id: "c", title: "OVER-STRICTNESS — op-claims.mjs imports the module by namespace",
@@ -127,6 +145,15 @@ const ARMS = [
     arm: () => [patch(FILES.textchain, LABEL_WITHOUT_MD, LABEL_WITH_MD)],
     mustBreak: ["basename-only provenance label", "selects at most"],
     mustHold: ["the method sees a real reader", "IS statepaths.mjs' isMovedPath", "byte for byte"] },
+  { id: "e", title: "D-535 — ONE plane citation in index.mjs gets its file name back",
+    arm: () => [patch(FILES.index, COST_PROSE, COST_BY_NAME)],
+    mustBreak: ["no plane or check string names MEASUREMENTS", "calibration.test.mjs, which imports the plane",
+      "doc-facing units (40 while", "selects at most"],
+    mustHold: ["the method sees a real reader", "IS statepaths.mjs' isMovedPath", "byte for byte"] },
+  { id: "f", title: "OVER-STRICTNESS — the same sentence cites the ledger in a prose spelling the row did not write",
+    arm: () => [patch(FILES.index, COST_PROSE, COST_OTHER_PROSE)],
+    mustBreak: [], mustHold: ["no plane or check string names MEASUREMENTS", "calibration.test.mjs, which imports the plane",
+      "doc-facing units (40 while", "selects at most"] },
 ];
 
 let ran = 0;
@@ -147,7 +174,7 @@ for (const a of ARMS) {
   }
   const back = restoreAll();
   armed = false;
-  t(`arm ${a.id} · RESTORED all three files byte-identically (sha256 + cmp + size floor)`, back, true);
+  t(`arm ${a.id} · RESTORED every file byte-identically (sha256 + cmp + size floor)`, back, true);
 }
 
 t(`FOOT — ${DECLARED_ARMS} arms declared, ${ran} ran`, ran, DECLARED_ARMS);

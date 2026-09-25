@@ -4384,7 +4384,7 @@ function needsTier2(text) {
  * (never "authored" — an absent marker is an absent marker). */
 const LAYER_FIDELITY_CAP = null;
 const LAYER_FIDELITY_SOURCE = "unmeasured: a text layer is itself an unverified transcription "
-                            + "(CPDF-9, MEASUREMENTS.md 2026-08-03)";
+                            + "(CPDF-9, the MEASUREMENTS ledger 2026-08-03)";
 
 /* D-251 — AND NOW THE FILE ITSELF SAYS WHO MADE THAT LAYER, ON THE DOCUMENTS
  * THE RECORD ALREADY HOLDS.
@@ -4414,7 +4414,7 @@ const LAYER_FIDELITY_SOURCE = "unmeasured: a text layer is itself an unverified 
  * reader would need to re-run the claim. */
 const NAMED_ENGINE_CAP = null;
 const NAMED_ENGINE_SOURCE = "unmeasured: the engine is NAMED by the document's own /Info producer "
-                          + "metadata (D-251; CPDF-9, MEASUREMENTS.md 2026-08-03), and no "
+                          + "metadata (D-251; CPDF-9, the MEASUREMENTS ledger 2026-08-03), and no "
                           + "calibration of it exists here (CPDF-13)";
 
 /* The chain a document's own text layer produces, EXTENDED by what the file
@@ -7319,7 +7319,7 @@ export default {
         const stored = (reBasis && reBasis.reading) || {};
         const t3 = await tier3Extend(env, { sha, storeName, i2text: structure.text, wiredTier: structureTier,
                                             tier2PerPage: readT2PerPage, fmt: "pdf" });
-        const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, MEASUREMENTS.md)";
+        const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)";
         /* ONE RETURN FOR EVERY ANSWER OF THIS OP, the plain read's own, below. The
            re-read only DECORATES `structure`; it adds no `json()` site of its own,
            so `plane-envelope.test.mjs`'s unclassified-site census (D-240 (e)) is not
