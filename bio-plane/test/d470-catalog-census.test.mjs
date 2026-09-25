@@ -133,12 +133,28 @@
  * with the constant): 6 OF 6 AS DECLARED — baseline 9/0; (b) 8/1; (c) 8/1; (d) 7/2;
  * (e) 9/0; (f) 8/1, A4 alone. Every restore verified by sha256, by content and by
  * `cmp`, driver exit 0.
+ * (g)-(k) ADDED BY M0-195, 2026-09-25 — THE SOURCE PIN (A9), rule 17's backstop for a CHANGED check, declared
+ * before the first run: (g) THE ROW'S OWN NAMED CONTROL — C-15.1's body edited ('error' -> 'warning'), no id
+ * moved, no census row: A9 MUST FAIL BY NAME, alone (A3 cannot see it, which is the defect). (h) ACCEPTS-WHEN —
+ * the same edit under a NEW version whose row declares `changed: ["C-15.1"]` and the source THE SUITE PRINTED
+ * on the armed tree: every arm GREEN. (i) OVER-STRICTNESS — comment-only edits to the REAL catalogue (a line
+ * comment on its own line, a trailing one, a block comment across lines inside the call): every arm GREEN.
+ * (j) a behaviour-free code edit (`void 0;`) declared `behaviour: "unchanged"` against the printed digest under
+ * the SAME version: every arm GREEN. (k) OVER-STRICTNESS FOR A4's widening — C-41.12 changed AGAIN at a later
+ * version with nothing added, a different source: GREEN (before M0-195 A4 would call it a collision). Arms
+ * (b) and (c) now ALSO fail A9 — adding a row or an emission site is a code edit — and are re-declared so.
+ * RUN IN FULL 2026-09-25 by M0-195 on origin/main 5e8a65a8 + this change: 11 OF 11 AS DECLARED — baseline
+ * 13/0; (b) 11/2, A3+A9; (c) 11/2, A2+A9; (d) 11/2, A3+A5; (e) 13/0 (a check re-laid across lines leaves the
+ * source digest unmoved); (f) 12/1, A4; (g) 12/1, A9 ALONE; (h) 13/0; (i) 13/0; (j) 13/0; (k) 13/0. Every
+ * restore verified by sha256, by content and by `cmp` (bio-checks.mjs 1,006,173 B; gate.mjs 24,856 B; this
+ * file 50,959 B at the run, before this record was written), driver exit 0.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { transformSync, version as ESBUILD_VERSION } from "esbuild";   /* M0-195: the parser behind `behaviourSource` */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const CATALOG = join(DIR, "..", "checks", "bio-checks.mjs");
@@ -183,6 +199,25 @@ export function codeOnly(src) {
     out += c; i++;
   }
   return out;
+}
+
+/* M0-195 — THE CATALOGUE'S BEHAVIOUR SOURCE: the file with everything that cannot change what a check does taken
+   out, so its digest moves on a CODE edit and stays put on a COMMENT edit (rule 17's backstop, BOB #35).
+   HOW COMMENTS ARE STRIPPED: not by a scanner of our own but by a real JavaScript PARSER — esbuild's, from this
+   package's lockfile — which parses the module and prints it back with `minifyWhitespace` and no comments
+   (`legalComments: "none"`). Because it is a parse, a `//` inside a string, a template or a regex is code, and
+   a comment anywhere is gone; because it is a print, layout is gone too — indentation, a check's arguments
+   re-laid across lines, and blank lines — and automatic semicolon insertion is RESOLVED by the parser, so a
+   line break that changes what ASI inserts changes the print while one that does not, does not. Nothing is
+   renamed or folded (whitespace minification only), so every token of code survives into the digest.
+   So: A COMMENT-ONLY EDIT DOES NOT MOVE THE DIGEST (A11 and control arm (i) prove it on the real file), and an
+   edit to any token of code does. What the print ALSO normalises, and is therefore also invisible: a string's
+   quote style and a number's spelling (`1.0` / `1`), which change no behaviour. What it can move WITHOUT a code
+   edit: an esbuild upgrade that prints differently — loud, never silent, and answered by a `behaviour:
+   "unchanged"` declaration; the version in use is printed beside the digest. A `@__PURE__`-style
+   annotation esbuild keeps is the one kind of comment that can move it. */
+export function behaviourSource(src) {
+  return transformSync(src, { loader: "js", format: "esm", minifyWhitespace: true, legalComments: "none" }).code;
 }
 
 /* Every call of the catalogue's one finding constructor. `\s*` after `f(` is what
@@ -408,8 +443,19 @@ const CATALOG_CENSUS = {
      base is DROPPED, its comment kept; the union's ONE new number holds all of them (REC-207's ids renumbered off
      D-468's C-26.12 and REC-205's C-33.44), and CARRIES D-450's `changed: ["C-41.12"]` as its note above asks.
      Count and digest are THIS SUITE'S PRINT on the merged tree. */
+  /* THE SOURCE PIN (M0-195, 2026-09-25; rule 17 as BOB #35 folded it). `source` is the sha256 of the catalogue's
+     BEHAVIOUR SOURCE (`behaviourSource` above — the file parsed and printed back without comments or layout, esbuild 0.25.12), so
+     a check whose BODY changes under an unmoved version fails (A9) by name even though its number did not move.
+     1.30.0's is THIS SUITE'S OWN PRINT on origin/main 5e8a65a8, and it IS 1.30.0's source: `git diff d5d437c46
+     origin/main -- bio-plane/checks/bio-checks.mjs` is empty, d5d437c46 being the commit that set 1.30.0. No
+     EARLIER version carries a `source`: nobody measured the code those versions stamped, and inventing it now
+     would be the defect this table exists to close. An edit that moves `source` without changing what any check
+     refuses or admits is recorded, under the SAME version, as
+         unchanged: [{ source: "<the new print>", behaviour: "unchanged", by: "<the landing's id>" }]
+     and anything else takes a new version, with `changed: [C-n.m, …]` naming the checks whose behaviour moved. */
   "1.30.0": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f",
-              changed: ["C-41.12"] },
+              changed: ["C-41.12"],
+              source: "58c505cd178722403908de61287fbdfe60418b90b57f6cacf882f865a7766514" },
   /* 1.29.0 (D-520, 2026-09-25): C-83.8 RENDER_AT_CAPACITY added to RENDER_CAPTURE_CHECKS, none changed or removed. Count and
      digest are THIS SUITE'S OWN PRINT on the item's tree over origin/main 8bdf20e6. CONDUCT reconciles at the union. */
   /* D-520 side, kept as history (branch row DROPPED at c22-batch29; CONDUCT takes the union's number once and re-reads
@@ -441,6 +487,8 @@ const src = readFileSync(CATALOG, "utf8");
 const tables = declaredTables(mod);
 const { literal, computed } = emissionSites(src);
 
+const behaviour = behaviourSource(src);
+const sourceDigest = createHash("sha256").update(behaviour).digest("hex");
 const tableIds = new Set([...tables.values()].flat());
 const census = new Set([...tableIds, ...literal]);
 const count = census.size, digest = digestOf(census);
@@ -450,6 +498,7 @@ say(`  S1  declared tables:        ${tables.size} tables, ${tableIds.size} disti
 say(`  S2  literal emission sites: ${literal.size} distinct C-numbers`);
 say(`  computed emission sites:    ${computed.size} spelling(s) — ${[...computed.keys()].sort().join(", ")}`);
 say(`  CENSUS: ${count} checks · sha256 ${digest}`);
+say(`  SOURCE: ${src.length} bytes, ${behaviour.length} once comments and layout are stripped (esbuild ${ESBUILD_VERSION}) · sha256 ${sourceDigest}`);
 say(`  THE LIMIT: this census is a census OF THE CATALOGUE FILE. It establishes what the`);
 say(`  catalogue HOLDS, and it does not establish that any check RAN, nor that a version`);
 say(`  recorded below was the version actually stamped on any past ratification.`);
@@ -498,12 +547,88 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
   const seen = new Map();
   const collisions = [];
   for (const [v, e] of Object.entries(CATALOG_CENSUS)) {
-    const key = `${e.digest}|${[...(e.changed || [])].sort().join(",")}`;
+    /* M0-195: an entry that DECLARES a change is also identified by its `source`, so the same check changed
+       twice with nothing added (C-41.12 again at a later version, say) is two catalogues, not a collision.
+       An entry declaring no change is keyed as before — it cannot escape A4 by carrying a new source. */
+    const ch = [...(e.changed || [])].sort().join(",");
+    const key = `${e.digest}|${ch}|${ch && e.source ? e.source : ""}`;
     if (seen.has(key)) collisions.push(`${seen.get(key)} and ${v} record the same census`);
     else seen.set(key, v);
   }
   for (const c of collisions) console.log(`          ${c}`);
   t("(A4) ONE VERSION, ONE CATALOGUE — no two recorded versions carry the same census", collisions, []);
+}
+
+/* (A9) THE SOURCE PIN — M0-195, rule 17's backstop (BOB #35, 2026-09-25). A3 sees a check ADDED or REMOVED; it
+   cannot see a check CHANGED, because a census of ids is blind to a body. This arm pins the current version to
+   the digest of the catalogue's behaviour source, so an edit to any check's code under an unmoved version fails
+   HERE, by name, unless the landing either takes a new version (A3 then wants its census row, with `changed`) or
+   declares under this one `{ source, behaviour: "unchanged", by }` against the new digest. A comment-only edit
+   does not move the digest (A11), so a comment never costs a version. If esbuild's version moved and the code
+   did not, the print may have moved alone: that too is a `behaviour: "unchanged"` declaration, saying so.
+   THE LIMIT: `behaviour: "unchanged"` is a declaration, not a proof — the same record-of-intent limit as the
+   header's; what the arm removes is the SILENT path. And it pins the catalogue FILE: a check whose behaviour
+   moves through a helper imported from elsewhere is not seen. No entry for CATALOG_VERSION is A3's to name;
+   this arm does not count it twice. */
+{
+  const recorded = CATALOG_CENSUS[CATALOG_VERSION] || null;
+  const problems = [];
+  if (recorded) {
+    const declared = recorded.unchanged || [];
+    for (const d of declared) {
+      if (!d || d.behaviour !== "unchanged" || !/^[a-f0-9]{64}$/.test(d.source || "") || !d.by)
+        problems.push(`${CATALOG_VERSION}: an \`unchanged\` declaration must be { source: <sha256>, behaviour: "unchanged", by: <id> } — got ${JSON.stringify(d)}`);
+    }
+    const admitted = [recorded.source, ...declared.filter((d) => d && d.behaviour === "unchanged").map((d) => d.source)];
+    if (!recorded.source) {
+      problems.push(`${CATALOG_VERSION} records NO source digest`);
+      console.log(`          CATALOG_VERSION ${CATALOG_VERSION} pins no source. Add to its entry:  source: "${sourceDigest}"`);
+    } else if (!admitted.includes(sourceDigest)) {
+      problems.push(`THE CATALOGUE'S CODE MOVED AND THE STAMP DID NOT: ${CATALOG_VERSION} pins source ${recorded.source}`
+                  + (declared.length ? ` (+${declared.length} declared unchanged)` : "") + `, measured ${sourceDigest}`);
+      console.log(`          A CHECK'S CODE CHANGED UNDER ${CATALOG_VERSION}. Either MOVE CATALOG_VERSION and record`);
+      console.log(`            "<new version>": { count: ${count}, digest: "${digest}", changed: ["C-n.m", …], source: "${sourceDigest}" },`);
+      console.log(`          or, ONLY if no check refuses or admits anything differently, add to ${CATALOG_VERSION}'s entry`);
+      console.log(`            unchanged: [{ source: "${sourceDigest}", behaviour: "unchanged", by: "<this landing's id>" }]`);
+    }
+  }
+  for (const p of problems) console.log(`          ${p}`);
+  t("(A9) THE SOURCE PIN: the catalogue's behaviour source is the one pinned for CATALOG_VERSION", problems, []);
+}
+
+/* (A10) THE STRIPPED SOURCE IS NOT EMPTY AND STILL HOLDS THE CODE. A digest of an empty or truncated print agrees
+   with every other one for free (CLAUDE.md §5), so the print is floored, and every C-number the census found at a
+   literal emission site (S2, read by a different matcher) must still be in it. */
+{
+  const lost = [...literal].filter((id) => !behaviour.includes(`"${id}"`) && !behaviour.includes(`'${id}'`)).sort();
+  t("(A10) THE STRIPPED SOURCE IS NOT EMPTY AND STILL HOLDS THE CODE — floored, every literal emission site present",
+    [behaviour.length > 100000, lost], [true, []]);
+}
+
+/* (A11) OVER-STRICTNESS FOR A9: a comment-only edit is not a behaviour change and must not move the digest —
+   a comment added on its own line, at the end of a line, inside a template's `${}`, a block comment spanning
+   lines, a line re-indented, and a call's arguments re-laid across lines. And the other direction, so the arm
+   is not satisfied by a function that returns a constant: a changed token, a `//` INSIDE A STRING or a regex
+   (which is code), and a line break that changes what ASI inserts, do move it. */
+{
+  const base = "const re = /a\\/b[/]c/g;\nexport function g(x) {\n  if (x > 1) return f('C-1.1', 'error', `n=${x}`);\n  return x / 2;\n}\n";
+  const same = [
+    "// a new comment\n" + base,
+    base.replace("if (x > 1)", "if (x > 1) /* inline */"),
+    base.replace("return x / 2;", "return x / 2; // trailing"),
+    base.replace("`n=${x}`", "`n=${x /* inside */}`"),
+    base.replace("{\n  if", "{ /* spans\n lines */\n  if"),
+    base.replace("  return x / 2;", "        return   x  /  2;"),
+  ];
+  same.push(base.replace("f('C-1.1', 'error', `n=${x}`)", "f(\n      'C-1.1',\n      'error',\n      `n=${x}`\n    )"));
+  const moved = [base.replace("x > 1", "x > 2"), base.replace("'error'", "'error // not a comment'"),
+                 base.replace("/a\\/b[/]c/g", "/a\\/b[/]c\/\/d/g"),
+                 base.replace("return x / 2;", "return\n x / 2;")];   /* ASI: now returns undefined */
+  const d0 = behaviourSource(base);
+  t("(A11) OVER-STRICTNESS FOR A9: a comment-only or layout-only edit leaves the source digest unmoved",
+    same.map((s) => behaviourSource(s) === d0), same.map(() => true));
+  t("(A11) …and a code edit, a `//` inside a string or a regex, or an ASI-changing break, MOVES it",
+    moved.map((s) => behaviourSource(s) !== d0), moved.map(() => true));
 }
 
 /* (A5) THE STAMP READS THE CATALOGUE'S VERSION, and reads the bumped one. */

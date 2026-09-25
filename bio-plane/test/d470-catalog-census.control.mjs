@@ -29,6 +29,12 @@
  *  (e) OVER-STRICTNESS — correct work in a spelling this suite did not anticipate: C-15.1's emission site
  *      rewritten with its arguments across four lines and extra whitespace. EVERY ARM MUST STAY GREEN. This
  *      item changes what is SEEN and must change nothing that is TRUE.
+ *  (f) D-450's: a changed-check entry that does not say what changed — A4 alone.
+ *  (g)-(k) M0-195 (2026-09-25), the SOURCE PIN (A9): (g) a check's BODY edited with no census row — A9 ALONE;
+ *      (h) the same edit under a new version declaring `changed: ["C-15.1"]` — GREEN; (i) comment-only edits to
+ *      the real catalogue — GREEN; (j) a behaviour-free code edit declared `behaviour: "unchanged"` — GREEN;
+ *      (k) the same check changed again at a later version, a different source — A4 GREEN. Arms (b) and (c)
+ *      also fail A9 from M0-195 on: a new row and a new emission site are code edits.
  *
  * MEASURED figures are at the foot of this file.
  */
@@ -92,8 +98,32 @@ const A6a = "(A6) OVER-STRICTNESS: a check emitted in a spelling";
 const A6b = "(A6) OVER-STRICTNESS: a family table under a name";
 const A7 = "(A7) THE MATCHER READS CODE, NOT PROSE";
 const A8 = "(A8) THE LIMIT IS PRINTED";
+const A9 = "(A9) THE SOURCE PIN";
+const A10 = "(A10) THE STRIPPED SOURCE IS NOT EMPTY";
+const A11a = "(A11) OVER-STRICTNESS FOR A9";
+const A11b = "(A11) …and a code edit";
 
-const ALL = [A1, A2, A3, A4, A5, A6a, A6b, A7, A8];
+const ALL = [A1, A2, A3, A4, A5, A6a, A6b, A7, A8, A9, A10, A11a, A11b];
+
+/* M0-195: arm (h) needs the source digest of the EDITED catalogue, which cannot be written down in advance — so,
+   as the pin's own instructions say, it is read from THE SUITE'S OWN PRINT on the armed tree, never computed here. */
+const printedSource = () => {
+  try {
+    execFileSync("/bin/sh", ["-c", `${JSON.stringify(process.execPath)} ${JSON.stringify(SUITE)} > ${JSON.stringify(LOG)} 2>&1`],
+      { cwd: ROOT, stdio: "ignore" });
+  } catch { /* A9 red is expected here */ }
+  const m = /SOURCE: .* sha256 ([a-f0-9]{64})/.exec(existsSync(LOG) ? readFileSync(LOG, "utf8") : "");
+  if (!m) throw new Error("NOT ARMED: the suite printed no SOURCE digest");
+  return m[1];
+};
+const CENSUS_HEAD = "const CATALOG_CENSUS = {\n";
+const A5_PIN = `["plane-gate/1.0 (bio-checks ${CURRENT_VERSION})", "${CURRENT_VERSION}"]`;
+/* The edited lines are written OUT, never derived with a string replace: the M0-25 anchor witness reads a
+   `.replace(` argument in a driver as an arm anchor, and 'error' occurs in the catalogue many times. */
+const EMIT_C151_WARNING = "    findings.push(f('C-15.1', 'warning', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
+const EMIT_C151_COMMENTED = "    // M0-195 arm (i): a comment on its own line\n"
+  + "    findings.push( /* M0-195 arm (i):\n       a block comment across lines */ f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound'])); // and a trailing one";
+const BODY_EDIT = () => edit(CATALOG, EMIT_C151, EMIT_C151_WARNING);
 const except = (...xs) => ALL.filter((x) => !xs.includes(x));
 
 const ARMS = {
@@ -102,11 +132,11 @@ const ARMS = {
   b: { files: [CATALOG], label: "(B) ADD A CHECK WITHOUT MOVING THE VERSION — the row's own control: C-73.99 joins GOVERNING_LAW_CHECKS",
        apply: () => edit(CATALOG, FAMILY_HEAD,
          FAMILY_HEAD + "  ARM_D470_ADDED: { check: 'C-73.99', where: 'nowhere — a control arm', translation: 'x' },\n"),
-       mustFail: [A3], mustNotFail: except(A3) },
+       mustFail: [A3, A9], mustNotFail: except(A3, A9) },
   c: { files: [CATALOG], label: "(C) ADD A CHECK AT AN UNRESOLVABLE EMISSION SITE — f(NEW_FAMILY.THING, …)",
        apply: () => edit(CATALOG, EMIT_C151,
          EMIT_C151 + "\n    if (false) findings.push(f(NEW_FAMILY.THING, 'error', 'a control arm the census cannot read'));"),
-       mustFail: [A2], mustNotFail: except(A2) },
+       mustFail: [A2, A9], mustNotFail: except(A2, A9) },
   d: { files: [GATE], label: `(D) MOVE THE VERSION AND LEAVE THE PIN — CATALOG_VERSION ${CURRENT_VERSION} -> ${BUMPED_VERSION}`,
        apply: () => edit(GATE, VERSION, `export const CATALOG_VERSION = "${BUMPED_VERSION}";`),
        mustFail: [A3, A5], mustNotFail: except(A3, A5) },
@@ -121,10 +151,39 @@ const ARMS = {
      with nothing (the arm read 9/0, NOT AS DECLARED). The arm now PLANTS the shape it was written for — a
      changed-only successor "1.30.1" carrying 1.30.0's census — and strips `changed` from 1.30.0, so the two
      entries are indistinguishable exactly as 1.28.0/1.29.0 were on D-450's branch, and A4 must name it. */
+  /* RE-ANCHORED by M0-195, not exempted: 1.30.0's entry now carries `source` on the line after `changed`, so the
+     old anchor (`changed` closing the entry) no longer existed. The arm is the same: strip `changed`, plant a
+     changed-only successor with 1.30.0's census. */
   f: { files: [SUITE], label: "(F) A CHANGED-CHECK ENTRY THAT DOES NOT SAY WHAT CHANGED — `changed` dropped beside a planted changed-only successor",
-       apply: () => edit(SUITE, '              changed: ["C-41.12"] },',
-         '              },\n  "1.30.1": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f" },'),
+       apply: () => { edit(SUITE, '              changed: ["C-41.12"],\n', "");
+         edit(SUITE, CENSUS_HEAD, CENSUS_HEAD + '  "1.30.1": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f" },\n'); },
        mustFail: [A4], mustNotFail: except(A4) },
+  /* M0-195 (2026-09-25) — rule 17's backstop, a CHANGED check. */
+  g: { files: [CATALOG], label: "(G) EDIT A CHECK'S BODY WITH NO CENSUS ROW — the row's own control: C-15.1 'error' -> 'warning', no id moved",
+       apply: BODY_EDIT, mustFail: [A9], mustNotFail: except(A9) },
+  h: { files: [CATALOG, GATE, SUITE], label: `(H) ACCEPTS-WHEN — the same body edit under a NEW version ${BUMPED_VERSION} whose row declares changed: ["C-15.1"]`,
+       apply: () => {
+         BODY_EDIT();
+         const source = DRY ? "0".repeat(64) : printedSource();
+         edit(GATE, VERSION, `export const CATALOG_VERSION = "${BUMPED_VERSION}";`);
+         edit(SUITE, A5_PIN, `["plane-gate/1.0 (bio-checks ${BUMPED_VERSION})", "${BUMPED_VERSION}"]`);
+         edit(SUITE, CENSUS_HEAD, CENSUS_HEAD + `  "${BUMPED_VERSION}": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f", changed: ["C-15.1"], source: "${source}" },\n`);
+       },
+       mustFail: [], mustNotFail: ALL, expectGreen: true },
+  i: { files: [CATALOG], label: "(I) OVER-STRICTNESS — COMMENT-ONLY edits to the real catalogue: a line comment above C-15.1, a trailing one, a block across lines",
+       apply: () => edit(CATALOG, EMIT_C151, EMIT_C151_COMMENTED),
+       mustFail: [], mustNotFail: ALL, expectGreen: true },
+  j: { files: [CATALOG, SUITE], label: "(J) A CODE EDIT DECLARED `behaviour: \"unchanged\"` under the same version — `void 0;` before C-15.1, the print's digest declared",
+       apply: () => {
+         edit(CATALOG, EMIT_C151, "    void 0;\n" + EMIT_C151);
+         const source = DRY ? "0".repeat(64) : printedSource();
+         edit(SUITE, '              changed: ["C-41.12"],\n',
+           `              changed: ["C-41.12"],\n              unchanged: [{ source: "${source}", behaviour: "unchanged", by: "M0-195 arm (j)" }],\n`);
+       },
+       mustFail: [], mustNotFail: ALL, expectGreen: true },
+  k: { files: [SUITE], label: "(K) OVER-STRICTNESS FOR A4 — the same check changed AGAIN at a later version, nothing added: a distinct source is a distinct catalogue",
+       apply: () => edit(SUITE, CENSUS_HEAD, CENSUS_HEAD + '  "1.30.1": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f", changed: ["C-41.12"], source: "' + "1".repeat(64) + '" },\n'),
+       mustFail: [], mustNotFail: ALL, expectGreen: true },
 };
 
 const want = process.argv[2];
@@ -252,3 +311,15 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
                                     exit 4, `NOT ARMED: arm (d) needs gate.mjs to declare … found 0` — a reformatted
                                     declaration is refused loudly, never read as a silent no-op
    Every edit to gate.mjs and to this file restored from a scratchpad copy and verified sha256 OK and cmp SAME. */
+
+/* MEASURED 2026-09-25 by the M0-195 worker (cloud clone, branch `land/worker/M0-195`, base origin/main 5e8a65a8,
+   CATALOG_VERSION 1.30.0, esbuild 0.25.12). 15 anchors over 10 arms, every one LIVE at the preflight; every label
+   fragment present in the suite; every restore sha256 MATCH, content IDENTICAL and cmp SAME — bio-checks.mjs
+   1,006,173 B, gate.mjs 24,856 B, the suite 50,959 B (at the run, before its record was written). Driver exit 0.
+     baseline 13/0 · (b) 11/2 A3+A9 · (c) 11/2 A2+A9 · (d) 11/2 A3+A5 · (e) 13/0 · (f) 12/1 A4
+     (g) 12/1 A9 ALONE — THE ROW'S CONTROL: a body edit A3 cannot see, named by A9
+     (h) 13/0 — ACCEPTS-WHEN: the edit under 1.99.0 with changed: ["C-15.1"] and the printed source
+     (i) 13/0 — comment-only edits to the real catalogue move nothing
+     (j) 13/0 — `behaviour: "unchanged"` against the printed digest is honoured
+     (k) 13/0 — a second change to C-41.12 at a new source is not a collision
+   11 OF 11 AS DECLARED. */
