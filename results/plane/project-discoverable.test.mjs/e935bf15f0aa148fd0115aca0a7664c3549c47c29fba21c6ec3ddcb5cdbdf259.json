@@ -1,0 +1,16 @@
+{
+ "unit": "plane:project-discoverable.test.mjs",
+ "inputHash": "e935bf15f0aa148fd0115aca0a7664c3549c47c29fba21c6ec3ddcb5cdbdf259",
+ "verdict": "PASS",
+ "run": "f274fe7c0c0c8679f6eb8140e3b11278d5479914.1790333739501.2076.json",
+ "tree": "f274fe7c0c0c8679f6eb8140e3b11278d5479914",
+ "head": "b6ebf6251422bdbe8f807a738093c5ca84b950db",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 141,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "9dff3543-7948-571a-9d6f-f2ca6f49d9d5",
+ "at": "2026-09-25T10:55:39.514Z"
+}
