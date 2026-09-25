@@ -219,3 +219,4 @@ D-690	2026-09-25T08:48:35.519Z	land/worker/D-664
 D-691	2026-09-25T09:02:17.458Z	land/worker/D-690	
 D-692	2026-09-25T09:03:24.383Z	WORKER D-615	a revision restating created lands; bundles.created keeps the creation's, so row and head bytes disagree
 D-693	2026-09-25T09:05:00.872Z	SCHEDULER-23	archive capture earns C as a measured value (BOB #35 07:55Z, D-177's remainder)
+D-694	2026-09-25T09:06:32.158Z	HEAD	
