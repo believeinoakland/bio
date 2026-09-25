@@ -84,3 +84,4 @@ IC-323	2026-09-25T06:41:36.689Z	CONDUCT#22	REC-196: reads naming a discoverable 
 IC-324	2026-09-25T06:41:41.805Z	CONDUCT#22	D-521b: C-82.1 retired; case_documents_limit/_truncated leave op=statementack's answer (c22-batch29)
 IC-325	2026-09-25T06:41:46.876Z	CONDUCT#22	D-561: op=publishedbytes NOT_FOUND->NO_PUBLISHED_PART, TOO_LARGE->CONTAINER_TOO_LARGE, OBJECT_MISSING (c22-batch29)
 IC-326	2026-09-25T06:41:51.980Z	CONDUCT#22	D-563: promote refuses ENVELOPE_TITLE_DISAGREES / ENVELOPE_STATE_DISAGREES; title and state from the document (c22-batch29)
+IC-327	2026-09-25T06:41:57.117Z	CONDUCT#22	D-568: a derived-case draft's edition is null on the wire (c22-batch29)
