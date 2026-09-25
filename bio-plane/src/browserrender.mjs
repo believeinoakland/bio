@@ -71,6 +71,8 @@
  * this protocol, which proves the DRIVER and proves nothing about the service.
  */
 
+import { SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "./subresources.mjs";
+
 /* The host the binding ignores; puppeteer's own constant, kept identical so the
    two clients are visibly speaking to the same endpoints. */
 const FAKE_HOST = "https://fake.host";
@@ -87,8 +89,14 @@ const CLIENT_HEADER = "bio-plane";
    matches it so the two agree about what the word means. */
 const IDLE_QUIET_MS = 500;
 
-/* Responses whose bodies this driver does NOT hash. It hashes none: see
-   `requests[].sha256` below. */
+/* D-529 — HOW LONG THE DRIVER SPENDS COLLECTING RESPONSE BODIES, in total, after
+   the wait. A CHOICE, not a measurement. It is bounded so the render stays inside
+   what D-492 RESERVES at admission (navigation timeout + wait timeout): this driver's
+   navigation and wait share ONE deadline of the wait timeout, so the navigation half
+   of the reservation is the slack this phase spends. Past the bound, a body not yet
+   collected is `body_unavailable` saying so — its digest reads undetermined. */
+const BODY_PHASE_MS = 10000;
+const BODY_CALL_MS = 5000;
 
 /** Open a CDP socket on a fresh browser session. Throws with a sentence naming
  *  which of the two calls failed and what it answered — never a bare `undefined`. */
@@ -108,6 +116,41 @@ async function openSession(binding) {
     throw new Error(`the Browser Rendering binding did not upgrade session ${sessionId} to a websocket (HTTP ${up.status})`);
   up.webSocket.accept();
   return { sessionId, ws: up.webSocket };
+}
+
+/** D-529 — the bytes of every response the render LOADED, as the browser has them.
+ *  `Network.getResponseBody` per completed request, BOUNDED in count, bytes and time by
+ *  subresource capture's own ceilings and `BODY_PHASE_MS`. Mutates each entry to carry
+ *  `body_base64` (exact bytes), `body_text` (the browser's decoding of a text body, which
+ *  is what CDP returns for text) or `body_unavailable` (the browser's or the bound's own
+ *  sentence). The driver hashes NOTHING: the plane hashes what it keeps (`render.mjs`
+ *  `keepRenderBodies`), so the digest on the record is never the renderer's word. */
+export async function collectBodies(conn, sessionId, entries, { now = () => Date.now() } = {}) {
+  const deadline = now() + BODY_PHASE_MS;
+  let taken = 0, spent = 0;
+  for (const e of entries) {
+    if (e.outcome !== "completed") continue;
+    if (e.redirect) { e.body_unavailable = "a redirect hop, whose body the browser does not keep"; continue; }
+    if (!e.rid) { e.body_unavailable = "the browser gave this request no id to ask its body by"; continue; }
+    if (taken >= SUBRESOURCE_CAP) { e.body_unavailable = `past the ${SUBRESOURCE_CAP}-body ceiling`; continue; }
+    if (spent >= SUBRESOURCE_BUDGET) { e.body_unavailable = `the ${SUBRESOURCE_BUDGET}-byte body budget was spent`; continue; }
+    const left = deadline - now();
+    if (left <= 0) { e.body_unavailable = `the ${BODY_PHASE_MS} ms body-collection bound was spent`; continue; }
+    try {
+      const b = await conn.send("Network.getResponseBody", { requestId: e.rid }, sessionId, Math.min(BODY_CALL_MS, left));
+      if (typeof b.body !== "string") { e.body_unavailable = "the browser answered with no body"; continue; }
+      /* The bound is on what the PLANE will keep, so it is taken on the decoded size;
+         base64 is 4/3 of it and a text body is at least its character count. */
+      const size = b.base64Encoded ? Math.floor(b.body.length * 3 / 4) : b.body.length;
+      if (size > SUBRESOURCE_MAX) { e.body_unavailable = `the body is about ${size} bytes, over the ${SUBRESOURCE_MAX}-byte ceiling`; continue; }
+      if (b.base64Encoded) e.body_base64 = b.body; else e.body_text = b.body;
+      taken++; spent += size;
+    } catch (err) {
+      /* The browser REFUSES bodies it no longer holds (evicted, or a resource type it
+         never buffers). Its own words are the reason, never ours. */
+      e.body_unavailable = `the browser would not give the body: ${String((err && err.message) || err).slice(0, 200)}`;
+    }
+  }
 }
 
 /** The CDP connection: one socket, ids, per-session events.
@@ -253,9 +296,9 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
           if (p.redirectResponse && requests.has(p.requestId)) {
             const prev = requests.get(p.requestId);
             requests.set(`${p.requestId}#${requests.size}`, { ...prev, outcome: "completed",
-              status: Number(p.redirectResponse.status) || prev.status });
+              status: Number(p.redirectResponse.status) || prev.status, redirect: true });
           } else inflight++;
-          requests.set(p.requestId, { url: String(p.request?.url || ""), type: resourceType(p.type),
+          requests.set(p.requestId, { rid: p.requestId, url: String(p.request?.url || ""), type: resourceType(p.type),
                                       outcome: "pending", status: null, blocked_by: null });
           break;
         case "Network.responseReceived": {
@@ -339,6 +382,10 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     if (typeof html !== "string" || !html)
       throw new Error("the browser returned no serialised document after the render");
 
+    /* D-529: AFTER the document is taken, so collecting bodies cannot change what the
+       page showed, and before the session closes, which is when the browser drops them. */
+    if (sawNetwork) await collectBodies(conn, sessionId, [...requests.values()], { now });
+
     const elapsed = now() - started;
     return {
       ok: true, html,
@@ -355,14 +402,18 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       elapsed_ms: elapsed,
       navigated_to: navigatedTo,
       status: mainStatus,
-      /* `sha256` IS NEVER SET, AND THAT IS A STATEMENT: hashing a subresource body
-         means `Network.getResponseBody` per request, which the browser refuses for
-         many resources and which would put the renderer's copy of the bytes in the
-         record beside the plane's. `renderBlock` already records a missing hash as
-         `null` with `reported_by: "renderer"`, so the record says the renderer
-         reported the request and did not report its bytes. */
+      /* `sha256` IS NEVER SET HERE, AND THAT IS A STATEMENT. CORRECTED by D-529 (BOB #33,
+         2026-09-24 21:05Z), which superseded this comment's old conclusion that no body
+         should be taken because it "would put the renderer's copy of the bytes in the
+         record": the ruling is that a per-subresource digest IS owed. The driver
+         carries the BYTES (`collectBodies`) and the PLANE hashes and keeps them, so
+         the digest is still never the renderer's word; a body the browser would not
+         give reads `body_unavailable`, and its digest `undetermined` with that reason. */
       requests: sawNetwork ? [...requests.values()].map((r) => ({ url: r.url, type: r.type, outcome: r.outcome,
-        ...(r.status !== null ? { status: r.status } : {}), ...(r.blocked_by ? { blocked_by: r.blocked_by } : {}) })) : null,
+        ...(r.status !== null ? { status: r.status } : {}), ...(r.blocked_by ? { blocked_by: r.blocked_by } : {}),
+        ...(typeof r.body_base64 === "string" ? { body_base64: r.body_base64 } : {}),
+        ...(typeof r.body_text === "string" ? { body_text: r.body_text } : {}),
+        ...(r.body_unavailable ? { body_unavailable: r.body_unavailable } : {}) })) : null,
       /* WHAT `scripts` CAN AND CANNOT SEE, because the count feeds an authority
          verdict: `Debugger.scriptParsed` fires for every script the ENGINE parsed,
          which is every script resource that reached execution. It OVER-reports in

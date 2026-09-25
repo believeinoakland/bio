@@ -33,6 +33,12 @@ const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 /* DECLARED BEFORE ARMING. `must` is what the arm is FOR; `mustNot` is the
    over-strictness half — an arm that also breaks these broke more than one thing. */
 const ARMS = {
+  /* D-529: the driver never asks the browser for a body. MUST FAIL: A8h (nothing verifies),
+     A8i (the reason is no longer the browser's words), B7. MUST NOT FAIL: anything else. */
+  nobodies: { file: "src/browserrender.mjs",
+    from: `    if (sawNetwork) await collectBodies(conn, sessionId, [...requests.values()], { now });`,
+    to:   `    if (false) await collectBodies(conn, sessionId, [...requests.values()], { now });`,
+    must: ["A8h", "A8i", "B7"] },
   /* THE ROW'S CONTROL (QUEUE.md D-490): take the driver back out, so a BROWSER
      binding is once more a binding with nothing behind it. Every arm that needs a
      render must fail; the two arms that assert the UNBOUND case (A9, A10) and every
@@ -40,7 +46,9 @@ const ARMS = {
   nodriver: { file: "src/render.mjs",
     from: `  if (env && env.BROWSER && typeof env.BROWSER.fetch === "function")\n    return browserBindingRenderer(env.BROWSER);`,
     to:   `  if (env && env.BROWSER && typeof env.BROWSER.fetch === "function")\n    return { kind: "browser-binding-without-driver", render: null };`,
-    must: ["A1", "A2", "A3", "A3b", "A4", "A5", "A6", "A7", "A8", "A8b", "A8c", "A8d", "A8e", "A8f", "A8g"] },
+    /* WIDENED by D-529 by A8h and A8i: they assert the digests of the same render, so
+       with no renderer they fail for the reason every other A-arm here does. */
+    must: ["A1", "A2", "A3", "A3b", "A4", "A5", "A6", "A7", "A8", "A8b", "A8c", "A8d", "A8e", "A8f", "A8g", "A8h", "A8i"] },
   /* A request ledger nobody could record, read as "the page made no requests". */
   emptyrequests: { file: "src/browserrender.mjs", from: `      requests: sawNetwork ? `, to: `      requests: true ? `,
     must: ["C1"] },

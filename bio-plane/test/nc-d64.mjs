@@ -63,6 +63,24 @@ const ARMS = {
   waitcase: { file: "src/render.mjs",
     from: `  const f = fired.trim().toLowerCase();`,
     to:   `  const f = fired;` },
+  /* D-529'S CONTROL, the row's own words: DROP THE DIGEST from each recorded subresource.
+     MUST FAIL: K0, K2, K3 (THE VERIFY ARM, by name), K4, K5, K6, K7, K8, K9, K10. MUST NOT
+     FAIL: A13 (render.data keeps its own digest) or anything in A–J. */
+  nodigest: { file: "src/render.mjs",
+    from: `      return { address: r.url, type: isStr(r.type) ? r.type : null, sha256: d.sha256,`,
+    to:   `      return { address: r.url, type: isStr(r.type) ? r.type : null,` },
+  /* The rule D-529 replaced: a digest the renderer REPORTED with no bytes is recorded as
+     the digest. MUST FAIL: A13, K0, K3 (the verify arm: the store holds no bytes under a
+     claimed digest), K4, K6, K7, K8. MUST NOT FAIL: K2, K5, K9, K10. */
+  rendererclaim: { file: "src/render.mjs",
+    from: `      out.push(undet(\`the renderer did not deliver`,
+    to:   `      if (claim.renderer_sha256) { out.push({ sha256: r.sha256, bytes: 0, body_as: "claimed", kept: true }); continue; }\n      out.push(undet(\`the renderer did not deliver` },
+  /* OVER-STRICTNESS: keep only base64 bodies, so a CORRECT text body (the form CDP gives
+     for text) is treated as missing. MUST FAIL: K0, K3, K4, K5, K6, K8. MUST NOT FAIL:
+     K2, K7, K9, K10, A–J. */
+  textstrict: { file: "src/render.mjs",
+    from: `    } else if (typeof r.body_text === "string") {`,
+    to:   `    } else if (false) {` },
 };
 
 const run = () => {

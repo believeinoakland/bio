@@ -21797,6 +21797,8 @@ function archiveLocatorFrom(res, requested) {
 var FAKE_HOST = "https://fake.host";
 var CLIENT_HEADER = "bio-plane";
 var IDLE_QUIET_MS = 500;
+var BODY_PHASE_MS = 1e4;
+var BODY_CALL_MS = 5e3;
 async function openSession(binding) {
   const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
   if (acq.status !== 200) {
@@ -21818,6 +21820,52 @@ async function openSession(binding) {
     throw new Error(`the Browser Rendering binding did not upgrade session ${sessionId} to a websocket (HTTP ${up.status})`);
   up.webSocket.accept();
   return { sessionId, ws: up.webSocket };
+}
+async function collectBodies(conn, sessionId, entries, { now = () => Date.now() } = {}) {
+  const deadline = now() + BODY_PHASE_MS;
+  let taken = 0, spent = 0;
+  for (const e of entries) {
+    if (e.outcome !== "completed") continue;
+    if (e.redirect) {
+      e.body_unavailable = "a redirect hop, whose body the browser does not keep";
+      continue;
+    }
+    if (!e.rid) {
+      e.body_unavailable = "the browser gave this request no id to ask its body by";
+      continue;
+    }
+    if (taken >= SUBRESOURCE_CAP) {
+      e.body_unavailable = `past the ${SUBRESOURCE_CAP}-body ceiling`;
+      continue;
+    }
+    if (spent >= SUBRESOURCE_BUDGET) {
+      e.body_unavailable = `the ${SUBRESOURCE_BUDGET}-byte body budget was spent`;
+      continue;
+    }
+    const left = deadline - now();
+    if (left <= 0) {
+      e.body_unavailable = `the ${BODY_PHASE_MS} ms body-collection bound was spent`;
+      continue;
+    }
+    try {
+      const b = await conn.send("Network.getResponseBody", { requestId: e.rid }, sessionId, Math.min(BODY_CALL_MS, left));
+      if (typeof b.body !== "string") {
+        e.body_unavailable = "the browser answered with no body";
+        continue;
+      }
+      const size = b.base64Encoded ? Math.floor(b.body.length * 3 / 4) : b.body.length;
+      if (size > SUBRESOURCE_MAX) {
+        e.body_unavailable = `the body is about ${size} bytes, over the ${SUBRESOURCE_MAX}-byte ceiling`;
+        continue;
+      }
+      if (b.base64Encoded) e.body_base64 = b.body;
+      else e.body_text = b.body;
+      taken++;
+      spent += size;
+    } catch (err) {
+      e.body_unavailable = `the browser would not give the body: ${String(err && err.message || err).slice(0, 200)}`;
+    }
+  }
 }
 function cdpConnection(ws) {
   let nextId = 1, closed = null;
@@ -21977,10 +22025,12 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
             requests.set(`${p.requestId}#${requests.size}`, {
               ...prev,
               outcome: "completed",
-              status: Number(p.redirectResponse.status) || prev.status
+              status: Number(p.redirectResponse.status) || prev.status,
+              redirect: true
             });
           } else inflight++;
           requests.set(p.requestId, {
+            rid: p.requestId,
             url: String(p.request?.url || ""),
             type: resourceType(p.type),
             outcome: "pending",
@@ -22058,6 +22108,7 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     }
     if (typeof html !== "string" || !html)
       throw new Error("the browser returned no serialised document after the render");
+    if (sawNetwork) await collectBodies(conn, sessionId, [...requests.values()], { now });
     const elapsed = now() - started;
     return {
       ok: true,
@@ -22076,18 +22127,22 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
       elapsed_ms: elapsed,
       navigated_to: navigatedTo,
       status: mainStatus,
-      /* `sha256` IS NEVER SET, AND THAT IS A STATEMENT: hashing a subresource body
-         means `Network.getResponseBody` per request, which the browser refuses for
-         many resources and which would put the renderer's copy of the bytes in the
-         record beside the plane's. `renderBlock` already records a missing hash as
-         `null` with `reported_by: "renderer"`, so the record says the renderer
-         reported the request and did not report its bytes. */
+      /* `sha256` IS NEVER SET HERE, AND THAT IS A STATEMENT. CORRECTED by D-529 (BOB #33,
+         2026-09-24 21:05Z), which superseded this comment's old conclusion that no body
+         should be taken because it "would put the renderer's copy of the bytes in the
+         record": the ruling is that a per-subresource digest IS owed. The driver
+         carries the BYTES (`collectBodies`) and the PLANE hashes and keeps them, so
+         the digest is still never the renderer's word; a body the browser would not
+         give reads `body_unavailable`, and its digest `undetermined` with that reason. */
       requests: sawNetwork ? [...requests.values()].map((r) => ({
         url: r.url,
         type: r.type,
         outcome: r.outcome,
         ...r.status !== null ? { status: r.status } : {},
-        ...r.blocked_by ? { blocked_by: r.blocked_by } : {}
+        ...r.blocked_by ? { blocked_by: r.blocked_by } : {},
+        ...typeof r.body_base64 === "string" ? { body_base64: r.body_base64 } : {},
+        ...typeof r.body_text === "string" ? { body_text: r.body_text } : {},
+        ...r.body_unavailable ? { body_unavailable: r.body_unavailable } : {}
       })) : null,
       /* WHAT `scripts` CAN AND CANNOT SEE, because the count feeds an authority
          verdict: `Debugger.scriptParsed` fires for every script the ENGINE parsed,
@@ -22178,6 +22233,70 @@ var NON_DATA_TYPES = Object.freeze({
 });
 var isStr = (s) => typeof s === "string" && s.length > 0;
 var num = (n) => typeof n === "number" && Number.isFinite(n) ? n : null;
+var HEX64 = /^[0-9a-f]{64}$/;
+function b64bytes(s) {
+  if (typeof s !== "string" || !/^[A-Za-z0-9+/]*={0,2}$/.test(s) || s.length % 4 !== 0) return null;
+  try {
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  } catch {
+    return null;
+  }
+}
+async function keepRenderBodies(answer, { put, sha256: sha2562 }) {
+  if (!answer || !Array.isArray(answer.requests)) return null;
+  let kept = 0, spent = 0;
+  const out = [];
+  for (const r of answer.requests) {
+    if (!r || typeof r !== "object" || !isStr(r.url) || r.outcome !== "completed") {
+      out.push(null);
+      continue;
+    }
+    const claim = HEX64.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {};
+    const undet = (why) => ({ sha256: "undetermined", digest_reason: why, ...claim });
+    let bytes = null, as = null;
+    if (typeof r.body_base64 === "string") {
+      bytes = b64bytes(r.body_base64);
+      as = "bytes";
+      if (!bytes) {
+        out.push(undet("the renderer's body for this request was not valid base64, so no bytes were kept"));
+        continue;
+      }
+    } else if (typeof r.body_text === "string") {
+      bytes = new TextEncoder().encode(r.body_text);
+      as = "decoded_text";
+    } else {
+      out.push(undet(`the renderer did not deliver this response's bytes${isStr(r.body_unavailable) ? ` (${String(r.body_unavailable).slice(0, 200)})` : ""}, so none were kept` + (claim.renderer_sha256 ? "; the digest it reported is recorded as renderer_sha256, its claim, which nothing here can recompute" : "")));
+      continue;
+    }
+    if (bytes.length > SUBRESOURCE_MAX) {
+      out.push(undet(`the body is ${bytes.length} bytes, over the ${SUBRESOURCE_MAX}-byte per-subresource ceiling, so it was not kept`));
+      continue;
+    }
+    if (kept >= SUBRESOURCE_CAP) {
+      out.push(undet(`past the ${SUBRESOURCE_CAP}-body per-capture ceiling, so it was not kept`));
+      continue;
+    }
+    if (spent + bytes.length > SUBRESOURCE_BUDGET) {
+      out.push(undet(`the capture's ${SUBRESOURCE_BUDGET}-byte subresource budget was spent, so it was not kept`));
+      continue;
+    }
+    let digest = null;
+    try {
+      digest = await sha2562(bytes);
+      await put(digest, bytes);
+    } catch (e) {
+      out.push(undet(`the plane could not keep the bytes (${String(e && e.message || e).slice(0, 200)})`));
+      continue;
+    }
+    kept++;
+    spent += bytes.length;
+    out.push({ sha256: digest, bytes: bytes.length, body_as: as, kept: true, ...claim });
+  }
+  return out;
+}
 function originKey(u) {
   try {
     const x = new URL(u);
@@ -22186,7 +22305,7 @@ function originKey(u) {
     return null;
   }
 }
-function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at }) {
+function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at, digests: digests2 = null }) {
   if (!answer || typeof answer !== "object" || answer.ok !== true)
     return { ok: false, problem: `the renderer did not answer ok (${answer && answer.error ? String(answer.error).slice(0, 200) : "no answer"})` };
   if (typeof answer.html !== "string" || answer.html.length === 0)
@@ -22199,8 +22318,18 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at })
       return null;
     }
   })();
-  let requests = null, data = null;
+  let requests = null, data = null, subresources = null;
   if (Array.isArray(answer.requests)) {
+    const digestOf = (r) => {
+      const i = answer.requests.indexOf(r);
+      const d = Array.isArray(digests2) ? digests2[i] : null;
+      if (d && (HEX64.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
+      return {
+        sha256: "undetermined",
+        digest_reason: "the plane did not keep this render's subresource bytes",
+        ...HEX64.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {}
+      };
+    };
     const rq = answer.requests.filter((r) => r && typeof r === "object" && isStr(r.url));
     const by = (o) => rq.filter((r) => r.outcome === o).length;
     const blockedBy = {};
@@ -22217,15 +22346,31 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at })
       blocked_by: blockedBy,
       outcome_unstated: unclassified
     };
+    subresources = rq.filter((r) => r.outcome === "completed").map((r) => {
+      const d = digestOf(r);
+      return {
+        address: r.url,
+        type: isStr(r.type) ? r.type : null,
+        sha256: d.sha256,
+        ...d.sha256 === "undetermined" ? { digest_reason: d.digest_reason } : { bytes: d.bytes, body_as: d.body_as, digest_by: "plane" },
+        ...d.renderer_sha256 ? { renderer_sha256: d.renderer_sha256 } : {}
+      };
+    });
+    const undigested = subresources.filter((x) => x.sha256 === "undetermined").length;
+    if (undigested)
+      undetermined.push(`subresources: ${undigested} of the ${subresources.length} subresources the render loaded carry no digest, because their bytes were not kept; each names its reason (BOB #33, 2026-09-24)`);
     data = rq.filter((r) => r.outcome === "completed" && !NON_DATA_TYPES[String(r.type || "").toLowerCase()]).map((r) => {
       const o = originOf(r.url, pageHost);
+      const d = digestOf(r);
       return {
         address: r.url,
         type: isStr(r.type) ? r.type : null,
         origin: o.origin,
         host: o.host,
         ...o.approximate ? { approximate: true } : {},
-        sha256: /^[0-9a-f]{64}$/.test(String(r.sha256 || "")) ? r.sha256 : null,
+        sha256: d.sha256,
+        ...d.sha256 === "undetermined" ? { digest_reason: d.digest_reason } : {},
+        ...d.renderer_sha256 ? { renderer_sha256: d.renderer_sha256 } : {},
         reported_by: "renderer"
       };
     });
@@ -22276,6 +22421,7 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at })
     navigated_to: isStr(answer.navigated_to) ? answer.navigated_to : null,
     status: num(answer.status),
     requests,
+    subresources,
     data,
     scripts_executed: scriptsExecuted,
     third_party_executed: thirdParty,
@@ -81685,6 +81831,14 @@ var index_default = {
             filed: false,
             detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.` : rb.problem
           }, 502);
+        const renderDigests = await keepRenderBodies(answer, {
+          sha256: async (b) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", b))].map((x) => x.toString(16).padStart(2, "0")).join(""),
+          put: async (s, b) => {
+            const k = `${storeName}/captures/${s}`;
+            if (!await env.CAPTURES.head(k)) await env.CAPTURES.put(k, b, { sha256: await crypto.subtle.digest("SHA-256", b) });
+          }
+        });
+        rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved, digests: renderDigests });
         const rd = await crypto.subtle.digest("SHA-256", rbytes);
         const rsha = [...new Uint8Array(rd)].map((x) => x.toString(16).padStart(2, "0")).join("");
         renderedExisted = !!await env.CAPTURES.head(`${storeName}/captures/${rsha}`);
