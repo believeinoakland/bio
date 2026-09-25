@@ -1,5 +1,5 @@
-/* d564-block.control.mjs — D-564's NEGATIVE CONTROL, deliberately NOT a `.test.mjs`: it runs ARMED COPIES of the seven
- * suites D-564 moved onto D-548's `block()` recorder, so the battery must not discover it. D-548's driver
+/* d564-block.control.mjs — D-564's NEGATIVE CONTROL, deliberately NOT a `.test.mjs`: it runs ARMED COPIES of the
+ * suites D-564 and D-667 moved onto D-548's `block()` recorder, so the battery must not discover it. D-548's driver
  * (`d548-block.control.mjs`) generalised to a table of suites; its rules are kept: the real suite is never edited — each
  * arm's copy is written into a temporary mirror of the repository (its `bio-plane/test/` holds the armed copy beside
  * symlinks to every other test file; every other entry is a symlink), and the real suite is hashed before and after and
@@ -23,6 +23,27 @@
  * RE-RUN 2026-09-25 at the c23-batch30 union (reviewcopy only): baseline and fixture NOT AS DECLARED on the first run,
  * each for D-618's new section 14 (4/0) alone; reviewcopy's baseline re-declared from the union's print and its three
  * arms re-ran AS DECLARED. Re-declared again at the D-708 merge (section 14 -> 6/0) and re-run.
+ * RE-RUN 2026-09-25 at the c23-batch30 union's D-667 merge (whole driver, eighteen suites): 4 arms NOT AS DECLARED
+ * on the first run — rec213's section 4 (D-540's arm, [1,0] -> [2,0]) and rec217's four union sections — both
+ * re-declared from the union's print, and both suites' arms re-ran AS DECLARED; the other 50 were AS DECLARED.
+ *
+ * D-667 (2026-09-25, WORKER D-667 (SCHEDULER #23)) — the sweep's remainder: eleven more suites join the table
+ * (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding,
+ * case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question,
+ * d442-publish-writes-nothing, rec170-manifest-pair), eighteen in all, each with the same three arms.
+ * RUN 2026-09-25 on land/worker/D-667 @ dc55ae9e (whole driver, eighteen suites): 54 arms, every one AS DECLARED,
+ * every real suite hashed unchanged before and after; exit 0. A suite whose foot
+ * reads `<name>.test.mjs:` rather than `<name>:` is matched as it prints (the foot pattern takes either); no foot's
+ * wording was changed to suit the driver.
+ * THE MATCHER'S BLIND SPOT, stated: the sweep that found these twenty-six suites (D-548's, D-564's, D-667's) matched
+ * the text "FIXTURE ABORTED" and a `const bail|abort|die = …` helper reaching `process.exit`. It cannot see (i) an
+ * abort under another name — a MODULE-WIDE `try { … } catch (e) { "FAIL  the suite threw" … }` that prints a foot
+ * with one failure and names no section that never ran: 65 suites on this tree (measured 2026-09-25 by `git grep -l
+ * "FAIL  the suite threw"` over bio-plane/test/*.test.mjs, none of them in this table); nor (ii) an INLINE top-level
+ * `if (…) { …; process.exit(1) }` — casepin.test.mjs's rat1 guard is the one found. Both are D-711. Not in the class:
+ * refusal-wire's corpus-floor HALT (it states that nothing below it is claimed — a deliberate closure) and
+ * observation-meaning's foot guard (it prints -1, the unrun sentinel). A suite that throws with no catch at all prints
+ * no foot, and the battery already reads it as a count it cannot read (RED, M0-107): not hidden, so not in the class.
  */
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, symlinkSync, readdirSync, openSync, closeSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -34,7 +55,7 @@ import { tmpdir } from "node:os";
 const PLANE = fileURLToPath(new URL("..", import.meta.url)).replace(/\/$/, "");
 const REPO = dirname(PLANE);
 
-/* The recorder's own anchor, identical in all seven suites (the recorder text is shared verbatim). */
+/* The recorder's own anchor, identical in all eighteen suites (the recorder text is shared verbatim). */
 const DISARM = ["  catch (e) {\n    died = true;", "  catch (e) {\n    throw e;"];
 
 /* Declared BEFORE running, per suite: the baseline per-section tallies measured 2026-09-25 on the D-564 tree, the one
@@ -98,6 +119,87 @@ const SUITES = {
             "14": [6, 0] },
     fixture: ['answered?`, INFO), "inquiry", "open")', 'answered?`, INFO), "nosuchtype", "open")'],
     died: { "11": "(fixture) promote INQ-2026-1260-later-lb (after the trip)" } },
+  /* D-667. Section 8's INFORMATION re-promote names a type the plane refuses (ENVELOPE_TYPE_DISAGREES); no later section
+     reads 8, and 9 and 10 MUST still report 6/0. Section 8 passes one arm before it dies, so the foot's total is 66. */
+  caselifecycle: {
+    base: { "0 (setup)": [0, 0], "0b (findings)": [0, 0], "0c (cases)": [5, 0], "1": [5, 0], "2": [7, 0], "3": [5, 0],
+            "4": [6, 0], "5": [8, 0], "6": [13, 0], "7": [4, 0], "8": [3, 0], "9": [6, 0], "10": [6, 0] },
+    fixture: ['infoMd(INFO_B) + "\\n", "information", "collected"', 'infoMd(INFO_B) + "\\n", "nosuchtype", "collected"'],
+    died: { "8": "(fixture) promote INFO-2026-4400-left-out" } },
+  /* D-667. The fixture's acknowledgement is made with a secret no grant issued (NO_REVIEW_COPY), so "fixture" DIES, and
+     3 and 2, which read that acknowledgement, MUST die NAMING it; 1 and 4 report their baseline tallies. */
+  "d543-instant-precision": {
+    base: { "1": [3, 0], "fixture": [0, 0], "3": [2, 0], "2": [3, 0], "4": [3, 0] },
+    fixture: ['op=statementack&draft=${DRAFT}&secret=${SEC}`', 'op=statementack&draft=${DRAFT}&secret=${SEC}-BROKEN`'],
+    died: { "fixture": "(fixture) statementack", "3": "rests on section fixture, which did not produce a1",
+            "2": "rests on section fixture, which did not produce a1" } },
+  /* D-667. Section 4's project D is made current on a reading its question does not hold (VERSION_ACT_NO_SUCH_VERSION);
+     no later section reads 4, so every other section reports its baseline tally. */
+  "case-project-conclusion": {
+    base: { "0 (setup)": [0, 0], "1": [8, 0], "2": [4, 0], "3": [5, 0], "4": [2, 0], "5": [2, 0], "6": [4, 0] },
+    fixture: ["makeCurrent(D, WD, VA.name)", 'makeCurrent(D, WD, "nosuch reading")'],
+    died: { "4": "(fixture) D stands on the reading" } },
+  /* D-667. Every bail of this suite is setup's or section 1's: the arm breaks 1's first make-current (no such reading),
+     and 2 and 3, which read its case and pin, MUST die NAMING section 1; 4 reports its baseline tally. */
+  "current-shared-question": {
+    base: { "0 (setup)": [0, 0], "1": [4, 0], "2": [7, 0], "3": [5, 0], "4": [2, 0] },
+    fixture: ["makeCurrent(A, Q, V1.name)", 'makeCurrent(A, Q, "nosuch reading")'],
+    died: { "1": "(fixture) A stands on reading 1", "2": "rests on section 1, which did not produce CASE, PIN, pinnedText",
+            "3": "rests on section 1, which did not produce CASE, PIN, pinnedText" } },
+  /* D-667. Section 2's project B is made current on a reading Q does not hold (no such reading); 3, 4 and 5 read B's case
+     and its document, so they MUST die NAMING section 2, while 1 reports its baseline tally. */
+  "d442-publish-writes-nothing": {
+    base: { "0 (setup)": [0, 0], "1": [4, 0], "2": [13, 0], "3": [4, 0], "4": [7, 0], "5": [7, 0] },
+    fixture: ["makeCurrent(B, V2.name)", 'makeCurrent(B, "nosuch reading")'],
+    died: { "2": "(fixture) B stands on reading 2", "3": "rests on section 2, which did not produce pubB",
+            "4": "rests on section 2, which did not produce pubB", "5": "rests on section 2, which did not produce pubB" } },
+  /* ^ D-667: 4 and 5 are declared by the invariant head their message shares with 3 (a prefix: the driver matches with
+     `includes`). The full lists ("pubB, fmB", "pubB, fmB, bodyB") are fragments of `needs()`'s composed label with the
+     section in its slot, which m025-arm-anchor-witness L3 refuses a driver to quote (D-329's rule). */
+  /* D-667. Section 7's project P is made current on a question id that does not exist (VERSION_ACT_NO_SUCH_VERSION); no
+     later section reads 7 (8 and 9 own their projects), so every other section reports its baseline tally. */
+  "case-edition-conclusion": {
+    base: { "0 (setup)": [0, 0], "1": [2, 0], "2": [4, 0], "3": [3, 0], "4": [8, 0], "5": [2, 0], "6": [4, 0],
+            "7": [5, 0], "8": [6, 0], "9": [2, 0] },
+    fixture: ["makeCurrent(P, QP, VA.name)", 'makeCurrent(P, "INQ-2026-4157-nosuch", VA.name)'],
+    died: { "7": "(fixture) P stands on reading A" } },
+  /* D-667. Section 3's re-publication targets a bundle that does not exist (NO_SUCH_BUNDLE); no later section reads 3
+     (4 owns project U), so every other section reports its baseline tally. */
+  "caseratify-conclusion": {
+    base: { "0 (setup)": [0, 0], "1": [8, 0], "2": [5, 0], "3": [6, 0], "4": [2, 0] },
+    fixture: ["const prep2 = await publish(A, Q);", 'const prep2 = await publish(A, "INQ-2026-4167-nosuch");'],
+    died: { "3": "(fixture) A publishes again" } },
+  /* D-667. Section 2's re-grade of Q0 is promoted under a type the plane refuses (ENVELOPE_TYPE_DISAGREES); section 3
+     reads case Y, which 2 produces, so it MUST die NAMING section 2, while 1 reports its baseline tally. */
+  "rec170-manifest-pair": {
+    base: { "0 (setup)": [0, 0], "1": [2, 0], "2": [3, 0], "3": [8, 0] },
+    fixture: ['q0Md("C", "2026-07-03T00:00:00Z"), "inquiry"', 'q0Md("C", "2026-07-03T00:00:00Z"), "nosuchtype"'],
+    died: { "2": "(fixture) Q0 re-graded to C", "3": "rests on section 2, which did not produce CASE_Y, ED_Y, yQ, yS" } },
+  /* D-667. Section 3's fixture draft names a project that does not exist (the plane answers REVIEW_NOT_PROJECT_OWNER);
+     section 4 reads only the source, so 0, 1, 2 and 4 report their baseline tallies. */
+  "d448-review-copy-translation": {
+    base: { "0": [1, 0], "1": [36, 0], "2": [44, 0], "3": [47, 0], "4": [2, 0] },
+    fixture: ['{ project: PROJ, scope: "Whether', '{ project: "PROJ-2026-1448-BROKEN", scope: "Whether'],
+    died: { "3": "(fixture) casedraft fixture" } },
+  /* D-667. Section 5's ED2 inquiry is promoted under a type the plane refuses (it answers SURFACE_NO_RUN first); no
+     later section reads 5, and section 6 MUST still report 2/0 after it. */
+  "rec213-reviewcopy-writer": {
+    /* CORRECTED 2026-09-25 at the c23-batch30 union: "4" 1 -> 2 (foot 19 -> 20), read from this driver's baseline
+       print on the union; section 4 gained D-540's arm ("the PROSE the owner signs says the same TWO", on main after
+       D-667's base). */
+    base: { "0 (setup)": [0, 0], "0b (corpus)": [0, 0], "1": [3, 0], "2": [6, 0], "3": [3, 0], "4": [2, 0],
+            "5": [4, 0], "6": [2, 0] },
+    fixture: ['recorded?`, INFO)), "inquiry", "open")', 'recorded?`, INFO)), "nosuchtype", "open")'],
+    died: { "5": "(fixture) promote INQ-2026-2130-ed2" } },
+  /* D-667. Section 2's acknowledgement names a draft that does not exist; no later section reads 2 (its reading is of
+     the "plain" sentence alone), so 3-6 report their baseline tallies. */
+  "rec217-draft-binding": {
+    /* ADDED 2026-09-25 at the c23-batch30 union: ours' sections 7 (D-521), 8 (D-626), 8 (D-680) and 9 (D-683), run
+       inside block() under unique names at the union; figures from this driver's baseline print on the union. */
+    base: { "0 (setup)": [0, 0], "0b (corpus)": [0, 0], "1": [7, 0], "2": [1, 0], "3": [3, 0], "4": [5, 0],
+            "5": [5, 0], "6": [2, 0], "7": [4, 0], "8 (D-626)": [5, 0], "8 (D-680)": [11, 0], "9": [2, 0] },
+    fixture: ['ack(`draft=${D2}&token=${ELLA}`)', 'ack(`draft=${D2}-BROKEN&token=${ELLA}`)'],
+    died: { "2": "(fixture) ack D2" } },
 };
 
 const armsOf = (spec) => ({
@@ -145,7 +247,7 @@ for (const [suite, spec] of Object.entries(SUITES)) {
       const r = spawnSync(process.execPath, [join(test, NAME)], { cwd: plane, stdio: ["ignore", fd, fd] });
       closeSync(fd);
       const log = readFileSync(out, "utf8");
-      const foot = log.match(new RegExp(`^${suite}: (\\d+) pass, (\\d+) fail {2}\\[FOOT REACHED`, "m"));
+      const foot = log.match(new RegExp(`^${suite}(?:\\.test\\.mjs)?: (\\d+) pass, (\\d+) fail {2}\\[FOOT REACHED`, "m"));
       const got = {};
       for (const m of log.matchAll(/^ {2}section (.+?): (-?\d+) pass, (-?\d+) fail( {2}\[DIED\])?$/gm))
         got[m[1]] = m[4] ? "DIED" : [Number(m[2]), Number(m[3])];

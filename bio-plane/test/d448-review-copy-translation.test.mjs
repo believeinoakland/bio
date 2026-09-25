@@ -79,6 +79,17 @@
  * THE FIRST RUN and both were findings recorded at that file's `NEGATIVE CONTROL:` line rather than
  * smoothed — (b) proved this suite's wire assertion compared "" with "" and agreed for free, and (d),
  * the over-strictness arm, proved this suite STRICTER THAN ITS RULE on how a region marker is spelled.
+ *
+ * D-667 (RUN 2026-09-25 by WORKER D-667, D-564's pattern), THE RECORDER — every section now runs in `block()`
+ * (D-548's recorder), so the arms break a section's FIXTURE. Re-run in one step: `node test/d564-block.control.mjs
+ * d448-review-copy-translation` from bio-plane/. BASELINE -> **130 pass, 0 fail**, per section (0..4) 1/0, 36/0,
+ * 44/0, 47/0, 2/0, foot reached — the same 130 the suite printed before the change.
+ *   (f) SECTION 3's FIXTURE BROKEN — the fixture draft's `project: PROJ` -> `project: "PROJ-2026-1448-BROKEN"`.
+ *     MEASURED: **83 pass, 1 fail**, exit 1, foot reached, `BLOCK 3 DIED: (fixture) casedraft fixture` (the plane
+ *     answered REVIEW_NOT_PROJECT_OWNER — it does not say whether the project exists); 0, 1, 2 and 4 at 1/0, 36/0, 44/0,
+ *     2/0. No section reads 3's values, so none dies after it.
+ *   (g) THE RECORDER DISARMED (`block()` rethrows) over (f)'s fixture — MEASURED: no foot and no section tally (-1),
+ *     exit 1: the first failure ended the run, which is the shape before D-667.
  */
 import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -106,12 +117,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`);
-  fail++;
-  console.log(`\nd448-review-copy-translation: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
@@ -124,14 +153,18 @@ const rawOf = async (q, init) => {
 };
 
 console.log("\n--- d448: the review copy's eleven refusals, translated ---");
+/* D-667: the value a later section reads, declared once here and ASSIGNED inside the section that makes it. */
+let CODES;
 
 /* ========================================================================= 0
  * THE CORPUS IS NON-EMPTY AND IS PRINTED. A headline assertion over an empty
  * corpus has passed in this repository three times; the floor is stated here.
  * ======================================================================== */
-const CODES = Object.keys(REVIEW_COPY_CHECKS);
+await block("0", async () => {
+CODES = Object.keys(REVIEW_COPY_CHECKS);
 console.log(`  corpus: ${CODES.length} codes in REVIEW_COPY_CHECKS — ${CODES.join(", ")}`);
 t("the family is the ELEVEN codes UI-68's surface can show, and no fewer", CODES.length, 11);
+});
 
 /* ========================================================================= 1
  * THE CATALOGUE ROWS. A row per code, each carrying a C-number, a `where`
@@ -139,6 +172,8 @@ t("the family is the ELEVEN codes UI-68's surface can show, and no fewer", CODES
  * a restatement of the machine code.
  * ======================================================================== */
 console.log("\n--- 1. the catalogue rows ---");
+await block("1", async () => {
+needs("0", { CODES });
 /* EACH C-NUMBER AS A LITERAL, and that is a requirement rather than a style. `scripts/coverage.mjs`
    derives the catalogue by reading C-numbers out of bio-checks.mjs and then demands that an ASSERTION
    NAME each one — "never NAMED means no assertion proves the check FIRES on a violation, so it is
@@ -170,6 +205,7 @@ t("no two of the eleven share a translation", new Set(sentences).size, 11);
 /* Every region name is distinct, or two rows would claim one span. */
 t("no two of the eleven share a `where`",
   new Set(Object.values(REVIEW_COPY_CHECKS).map(r => r.where)).size, 11);
+});
 
 /* ========================================================================= 2
  * THE ROUTING, PINNED STRUCTURALLY. Each code is minted EXACTLY ONCE, through
@@ -177,6 +213,7 @@ t("no two of the eleven share a `where`",
  * `dec49Decorate` cannot satisfy — see the header.
  * ======================================================================== */
 console.log("\n--- 2. every code is minted once, through the helper, inside its own region ---");
+await block("2", async () => {
 /* THE MARKERS ARE MATCHED THE WAY THE GUARD MATCHES THEM, and this is a CORRECTION made by this
    suite's own over-strictness arm (control arm (d), first run 2026-09-24). The first draft looked for
    the literal string `/* DEC-49 REGION <name> *\/`, so a marker re-spelled as `/**  DEC-49 REGION
@@ -210,6 +247,7 @@ for (const [code, row] of Object.entries(REVIEW_COPY_CHECKS)) {
   t(`${code} is no longer returned as a bare \`reason:\` object literal`,
     new RegExp(`reason:\\s*"${code}"`).test(STORE_SRC), false);
 }
+});
 
 /* ========================================================================= 3
  * THE WIRE. Nine of the eleven driven through the CONTROL PLANE — a real
@@ -217,6 +255,7 @@ for (const [code, row] of Object.entries(REVIEW_COPY_CHECKS)) {
  * still there, with `code`, `check` and `translation` joining them.
  * ======================================================================== */
 console.log("\n--- 3. nine of the eleven, driven through the op ---");
+await block("3", async () => {
 const enrol = async (memberId, password, role, capabilities) => {
   const add = rP(await POST("op=memberadd&token=adm-d448",
     { memberId, cover: `cover for ${memberId}`, role, capabilities }));
@@ -304,6 +343,7 @@ await wire("a withdrawal naming no grant", "REVIEW_NO_GRANT",
 await wire("a comment that says nothing", "REVIEW_NO_COMMENT_TEXT",
   await rawOf(`op=reviewcomment&draft=${D1}&token=${encodeURIComponent(IRIS)}`,
     { method: "POST", body: JSON.stringify({ text: "   " }) }));
+});
 
 /* ========================================================================= 4
  * THE TWO THIS SUITE DOES NOT DRIVE, established AT THE CODE rather than
@@ -312,12 +352,24 @@ await wire("a comment that says nothing", "REVIEW_NO_COMMENT_TEXT",
  * first-class and must be STATED).
  * ======================================================================== */
 console.log("\n--- 4. the two the wire cannot reach, and why (at the code, not by assumption) ---");
+await block("4", async () => {
 const IDX_SRC = readFileSync(IDX, "utf8");
 t("REVIEW_UNKNOWN_ACT: the store binds `act` as a literal per op, so no caller presents a fourth",
   ["draft", "grant", "revoke"].every(a => STORE_SRC.includes(`act: "${a}"`)), true);
 t("REVIEW_NO_SECRET: op=reviewgrant MINTS the secret in the control plane and always sets secretSha",
   /inner\.searchParams\.set\("secretSha", await sha256Hex\(secret\)\)/.test(IDX_SRC), true);
+});
 
-console.log(`\nd448-review-copy-translation: ${pass} pass, ${fail} fail`);
+/* D-667: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0", "1", "2", "3", "4"];
+console.log("\n--- per-section tallies (D-667: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nd448-review-copy-translation: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

@@ -1,4 +1,18 @@
 /* NEGATIVE CONTROL: RUN BY `test/caseratify-conclusion.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ while it runs). Each arm armed ALONE, restored by cp from a per-arm pristine copy and verified by sha256, by content AND by cmp; the declarations are on that driver, checked against each run as a TOTAL. RUN 2026-09-22 by the REC-167 worker, every restore MATCH / IDENTICAL / SAME (store.mjs 2,794,793 bytes): baseline 21/0 * (a) THE COMPARISON DROPPED, concluded-ness alone, the row's named control -> 17/4, failing BY NAME at "THE CONCLUDE-AGAIN ARM" and its names-what-moved arm, with the declared cascade (the old preparation SIGNED, so "and still nothing was signed" and "the OLD preparation ... is STILL refused" fall), while all of section 1 stayed GREEN — the withdrawn arm alone cannot tell this liar apart * (b) THE WHOLE REFUSAL DROPPED, the plane as M-92 measured it -> 11/10, every refusal arm of sections 1-3, op=ratify included * (c) CONCLUDED-NESS DROPPED, only the comparison -> 21/0, DECLARED to show no effect (a not-concluded answer renders a row no recorded conclusion can equal), so the refusal does not depend on the explicit gate, which is kept as item 4's question by name and the source of `why` * (d) OVER-STRICTNESS, the signer's sight dropped -> 14/7, the ratify arms of sections 3 and 4 and the two names-what-moved arms. EVERY ARM AS DECLARED on the first run.
+ *
+ *   D-667 (declared and RUN 2026-09-25, WORKER D-667; D-564's pattern), THE RECORDER — every section now runs in
+ *   `block()` (D-548's recorder, d84-case-manifest.test.mjs); `bail()` THROWS where it tallied, disposed and exited, so
+ *   the subject is the SUITE and the arms break a section's FIXTURE. Re-run in one step:
+ *   `node test/d564-block.control.mjs caseratify-conclusion` from bio-plane/. BASELINE -> **21 pass, 0 fail**, per section 0 (setup) 0/0,
+ *   1 8/0, 2 5/0, 3 6/0, 4 2/0, foot reached.
+ *   SECTION 3's FIXTURE BROKEN — A's re-publication targets a bundle that does not exist (NO_SUCH_BUNDLE); no later
+ *     section reads 3. Declared: 3 DIES by name with tally -1, every other section at its baseline tally
+ *     -> **15 pass, 2 fail** (section 3's own publish arm FAILS before its fixture check throws; both are inside the
+ *     dead section), `BLOCK 3 DIED: (fixture) A publishes again: {"ok":false,"reason":"NO_SUCH_BUNDLE",…`, every
+ *     other section at its baseline tally, foot reached, exit 1, as declared.
+ *   THE RECORDER DISARMED (`block()` rethrows) over the same fixture — declared: NO foot and no section tally, exit 1
+ *     -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real
+ *     suite hashed unchanged before and after).
  * ========================================================================= */
 /* REC-167 — A CASE DOCUMENT IS SIGNED ONLY WHILE ITS PROJECT STILL STANDS ON THE
  * CONCLUSION IT RECORDS (INVESTIGATIVE-SESSION.md §7.1 item 4: `NOT_CONCLUDED` at
@@ -88,15 +102,30 @@ const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json());
-/* A FIXTURE FAILURE ENDS THE RUN WITH A TALLY, NEVER A BARE THROW — a control arm
-   that breaks the subject can make a fixture step refuse, and a suite that died
-   before its own foot reads as a clean count to anything that only checks an
-   exit status (`caselifecycle.test.mjs`'s receipt). */
-const bail = async (what, r) => {
-  t(`FIXTURE: ${what}`, [r?.ok === true, r?.reason ?? null], [true, null]);
-  console.log(`\ncaseratify-conclusion.test.mjs: ${pass} pass, ${fail} fail`);
-  await mf.dispose();
-  process.exit(1);
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure, so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 const must = async (what, r) => { if (!r || r.ok !== true) await bail(what, r); return r; };
 
@@ -121,12 +150,7 @@ const enrol = async (memberId, role, caps) => {
   if (!lg?.token) await bail(`login ${memberId}`, lg);
   return lg.token;
 };
-/* ONE member creates, owns and joins every project and signs every edition —
-   the member and the finding are held fixed so that what moves between two
-   publications is only what the arm moves. */
-const IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
-await must("register iris's signing key",
-  await POST("op=signeradd&token=adm-r167", { keyB64, memberId: "iris", comment: "iris laptop" }));
+let IRIS, A, U;
 
 /* ------------------------------------------------------------- DOCUMENTS */
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
@@ -221,7 +245,6 @@ const bundleRow = async (id) => (await GET(`op=list&token=${IRIS}&limit=1000`))
   ?.bundles?.find((b) => b.bundle_id === id) ?? null;
 
 const LEDGER = "INFO-2026-4167-ledger", MINUTES = "INFO-2026-4167-minutes", AUDIT = "INFO-2026-4167-audit";
-for (const d of [LEDGER, MINUTES, AUDIT]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
 
 const CLAIM_A = "The transfer followed the process the council adopted in 2024.";
 const CLAIM_B = "The transfer bypassed the council vote the adopted process requires.";
@@ -235,17 +258,10 @@ const VB = { name: "the audit", claim: CLAIM_B,
 
 const Q = "INQ-2026-4167-transfer";          /* sections 1-3: M-92's path, then concluded again */
 const QU = "INQ-2026-4167-unchanged";        /* section 4: nothing moved */
-for (const [id, title] of [[Q, "Did the sewer fund transfer follow the adopted process?"],
-                           [QU, "Was the vote recorded?"]])
-  await must(`promote ${id}`, await promote(id, inquiryMd(id, { title, versions: [VA, VB], basis: [LEDGER] }), "inquiry"));
-
-const A = await createProject("oversight", projectMd("Oversight", [Q]));
-const U = await createProject("unchanged", projectMd("Unchanged", [QU]));
 
 const accept = async (target, version) =>
   POST(`op=versionaccept&token=${IRIS}&target=${enc(target)}&version=${enc(version)}`
      + `&reason=${enc("the evidence holds")}`, {});
-for (const id of [Q, QU]) for (const v of [VA, VB]) await must(`accept ${v.name} on ${id}`, await accept(id, v.name));
 const makeCurrent = async (project, target, version) =>
   POST(`op=versioncurrent&token=${IRIS}&target=${enc(target)}&version=${enc(version)}&project=${enc(project)}`, {});
 /* A FALSIFIER IS STATED ON EVERY CONCLUSION, never overridden (REC-135's reason). */
@@ -289,20 +305,40 @@ const docState = async (caseId, edition) =>
   GET(`op=casedocument&token=${IRIS}&case=${enc(caseId ?? "none")}&edition=${edition}`);
 const CATALOGUE_ROW = CASE_CONCLUSION_CHECKS.CASE_CONCLUSION_MOVED;
 
+await block("0 (setup)", async () => {
+/* ONE member creates, owns and joins every project and signs every edition —
+   the member and the finding are held fixed so that what moves between two
+   publications is only what the arm moves. */
+IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
+await must("register iris's signing key",
+  await POST("op=signeradd&token=adm-r167", { keyB64, memberId: "iris", comment: "iris laptop" }));
+for (const d of [LEDGER, MINUTES, AUDIT]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
+for (const [id, title] of [[Q, "Did the sewer fund transfer follow the adopted process?"],
+                           [QU, "Was the vote recorded?"]])
+  await must(`promote ${id}`, await promote(id, inquiryMd(id, { title, versions: [VA, VB], basis: [LEDGER] }), "inquiry"));
+A = await createProject("oversight", projectMd("Oversight", [Q]));
+U = await createProject("unchanged", projectMd("Unchanged", [QU]));
+for (const id of [Q, QU]) for (const v of [VA, VB]) await must(`accept ${v.name} on ${id}`, await accept(id, v.name));
+});
+
+let prep1, CASE, SHA1, FSHA1;
+
 /* =======================================================================
    1. M-92's PATH — prepared, withdrawn, signed. Refused, nothing signed.
    ======================================================================= */
 console.log("\n--- 1. M-92's path: A concludes, publishes, WITHDRAWS; op=caseratify is refused and nothing is signed ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, A });
 
 await must("A stands on reading A", await makeCurrent(A, Q, VA.name));
 await must("A concludes on it", await concludeFor(A, Q));
 /* THE POINTER MOVES TO B BEFORE PUBLICATION so section 2 can conclude on B with
    nothing else moving (since REC-166 a make-current writes only the project). */
 await must("A moves its pointer to reading B, still standing on its conclusion A", await makeCurrent(A, Q, VB.name));
-const prep1 = await publish(A, Q);
+prep1 = await publish(A, Q);
 t("(fixture) A prepares edition 1 of a new case", [prep1?.ok, prep1?.edition], [true, 1]);
 if (prep1?.ok !== true) await bail("A prepares edition 1", prep1);
-const CASE = prep1.caseId, SHA1 = prep1.caseDocument?.doc_sha, FSHA1 = prep1.bundleSha;
+CASE = prep1.caseId; SHA1 = prep1.caseDocument?.doc_sha; FSHA1 = prep1.bundleSha;
 const doc1 = await caseDoc(CASE, 1);
 t("(fixture) the preparation's document records A's conclusion: reading A, claim A",
   [doc1.row.relationship, doc1.row.project, doc1.row.version, doc1.row.claim], ["project", A, VA.name, CLAIM_A]);
@@ -323,11 +359,15 @@ t("NOTHING WAS SIGNED: the case document is still unratified, carrying no signat
 const f1 = await ratifyFinding(Q, FSHA1);
 t("and op=ratify — the finding-side path M-92 named too — signs nothing either: no RATIFIED case pins these bytes "
 + "(D-431), so the refusal at the case reaches it", [f1?.ok, f1?.reason], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE"]);
+});
 
 /* =======================================================================
    2. CONCLUDED AGAIN ON ANOTHER CLAIM — the arm concluded-ness alone passes.
    ======================================================================= */
 console.log("\n--- 2. A concludes again on reading B: concluded, and the OLD preparation is still refused ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS, A });
+needs("1", { prep1, CASE, FSHA1 });
 
 const cB = await must("A concludes on reading B, which it already stands on", await concludeFor(A, Q));
 t("(fixture) A is CONCLUDED again, on claim B", [cB?.version, cB?.claim?.text], [VB.name, CLAIM_B]);
@@ -343,11 +383,15 @@ t("and it names what moved: recorded claim A, A now concluded on reading B throu
   [[Q, CLAIM_A, "concluded", "project", VB.name, CLAIM_B]]);
 const st2 = await docState(CASE, 1);
 t("and still nothing was signed", [st2?.ratified, st2?.sig_armored], [false, null]);
+});
 
 /* =======================================================================
    3. PUBLISH AGAIN — the route the refusal names — and the new edition signs.
    ======================================================================= */
 console.log("\n--- 3. publishing again prepares a document recording claim B, and THAT one ratifies ---");
+await block("3", async () => {
+needs("0 (setup)", { IRIS, A });
+needs("1", { prep1, CASE });
 
 const prep2 = await publish(A, Q);
 t("A publishes again: a fresh preparation (the unsigned one was never a case, so nothing pins the finding and "
@@ -368,11 +412,14 @@ t("the signed edition is the one recording claim B",
 const rOld = await caseRatify(prep1);
 t("and the OLD preparation, still unsigned beside it and still recording claim A, is STILL refused by name",
   [rOld?.ok, rOld?.reason, (await docState(CASE, 1))?.ratified], [false, "CASE_CONCLUSION_MOVED", false]);
+});
 
 /* =======================================================================
    4. AN UNCHANGED CONCLUSION RATIFIES AS TODAY — the over-strictness arm.
    ======================================================================= */
 console.log("\n--- 4. nothing moved: an unchanged conclusion ratifies as today, even over a moved pointer ---");
+await block("4", async () => {
+needs("0 (setup)", { IRIS, U });
 
 await must("U stands on reading A", await makeCurrent(U, QU, VA.name));
 await must("U concludes on it", await concludeFor(U, QU));
@@ -387,7 +434,18 @@ t("OVER-STRICTNESS: an unchanged conclusion RATIFIES, a pointer moved after prep
   [rU?.ok, rU?.reason ?? null], [true, null]);
 const fU = await ratifyFinding(QU, prepU.bundleSha);
 t("and its finding ratifies", [fU?.ok, fU?.reason ?? null], [true, null]);
+});
 
-console.log(`\ncaseratify-conclusion.test.mjs: ${pass} pass, ${fail} fail`);
+/* D-667 (D-564's pattern): every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "1", "2", "3", "4"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\ncaseratify-conclusion.test.mjs: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

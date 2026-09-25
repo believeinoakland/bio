@@ -1,4 +1,12 @@
 /* NEGATIVE CONTROL: RUN BY `test/case-project-conclusion.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ while it runs). Each arm is armed ALONE, restored by cp from a per-arm pristine copy and verified by sha256 AND cmp. Declared and run figures are on that driver. RUN 2026-09-19 by the REC-135 worker, every restore sha256 MATCH and content IDENTICAL: baseline 25/0 * (a) THE GATE BACK ON THE INQUIRY'S SHARED STATE 17/8 - A's publish, the two-answers discriminator, all four case-document arms, D's fixture publish and the act-the-surface-offered arm FAILED * (b) THE STATE FLOOR DROPPED 24/1 - the set-down arm alone * (c) THE RELATIONSHIP COLLAPSED IN THE RECORD 23/2 - both no-project disclosure arms, while every arm in sections 1 and 2 stayed GREEN, which is the whole shape of that liar * (d) THE WITHDRAWAL MADE INVISIBLE 24/1 - the after-withdrawal arm alone * (e) THE STRICT READING OF ITEM 8 (the no-project disjunct removed) 22/3 - the three legacy-path arms, which is also the MEASUREMENT of what that tightening costs here * (f) THE AFFORDANCE BACK ON THE STATE WORD 24/1 - the publish-is-offered arm alone, while the store still accepted the act, which is the DEC-8 disagreement in the direction that fails. EVERY ARM AS DECLARED and the MUST-NOT halves held. ONE DECLARATION CAME BACK WRONG AND IS RECORDED AT THE DRIVER: arm (a) was declared to fail the after-withdrawal arm too and did not - it changes the gate's CONDITION and not the answer the refusal reports, so it is blind to what a refusal SAYS.
+ *
+ * D-667 (declared and RUN 2026-09-25, WORKER D-667), THE RECORDER — every section now runs in `block()` (D-548's
+ * recorder, D-564's pattern), so the arms break a section's FIXTURE. Re-run in one step: `node test/d564-block.control.mjs
+ * case-project-conclusion` from bio-plane/. BASELINE -> 25 pass, 0 fail, per section (0 (setup), 1..6) 0/0, 8/0, 4/0,
+ * 5/0, 2/0, 2/0, 4/0, foot reached. (g) SECTION 4's FIXTURE BROKEN — D's make-current on WD names a reading the
+ * question does not hold (anchor on d564-block.control.mjs) -> MEASURED 23 pass, 1 fail, `BLOCK 4 DIED: (fixture) D stands on the reading` (the plane
+ * answered VERSION_ACT_NO_SUCH_VERSION), every other section at its baseline tally, foot reached, exit 1. (h) THE
+ * RECORDER DISARMED (`block()` rethrows) over (g)'s fixture -> MEASURED no foot and no section tally, exit 1.
  * ========================================================================= */
 /* REC-135 — A PROJECT'S CONCLUSION REACHES THE CASE
  * (INVESTIGATIVE-SESSION.md §7.1 item 4, BOB #15 2026-09-18; the State Rules
@@ -102,8 +110,31 @@ const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
   { method: "POST", body: JSON.stringify(body) })).json());
-const bail = (what, r) => { console.log(`\nFIXTURE FAILED — ${what}: ${JSON.stringify(r).slice(0, 900)}`);
-  mf.dispose().then(() => process.exit(1)); throw new Error(what); };
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs),
+   adopted. Before it, `bail()` printed "FIXTURE FAILED", disposed the sandbox and exited on the FIRST fixture
+   failure, so one broken fixture ended the run and every later section went unmeasured. Now a fixture failure is a
+   THROW that `block()` records as ONE failure naming its section, and the sections after it still run and report.
+   Each section's own tally is printed at the foot; a section that DIED prints -1, never the partial count it
+   reached; a section expected but never reported fails by name. A section resting on an earlier one's values asks
+   for them with `needs()` and dies naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
+};
 const must = (what, r) => { if (!r || r.ok !== true) bail(what, r); return r; };
 
 const enrol = async (memberId, role, caps) => {
@@ -118,8 +149,9 @@ const enrol = async (memberId, role, caps) => {
 };
 /* ONE member owns and has joined every project below. That is the whole of the
    discriminator's construction: if the member is held fixed and the question is
-   held fixed, the only thing an answer can differ ON is the relationship. */
-const IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
+   held fixed, the only thing an answer can differ ON is the relationship.
+   D-667: the values later sections read are declared here and ASSIGNED inside block "0 (setup)" below. */
+let IRIS, A, B, C, D, E;
 
 /* ------------------------------------------------------------- FIXTURES */
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
@@ -223,7 +255,6 @@ const stateOf = async (id) => (await GET(`op=list&token=${IRIS}&limit=1000`))
   ?.bundles?.find((b) => b.bundle_id === id)?.current_state ?? null;
 
 const LEDGER = "INFO-2026-4135-ledger", MINUTES = "INFO-2026-4135-minutes", AUDIT = "INFO-2026-4135-audit";
-for (const d of [LEDGER, MINUTES, AUDIT]) await mustPromote(d, infoMd(d), "information");
 
 const CLAIM_A = "The transfer followed the process the council adopted in 2024.";
 const CLAIM_B = "The transfer bypassed the council vote the adopted process requires.";
@@ -241,24 +272,7 @@ const WD = "INQ-2026-4135-withdrawn";             /* concluded then withdrawn �
 const SETDOWN = "INQ-2026-4135-set-down";         /* concluded, then deferred — arm 5 */
 const NOBODY = "INQ-2026-4135-nobody";            /* nobody concluded — arm 6's over-strictness */
 
-await mustPromote(SHARED, inquiryMd(SHARED, { title: "Did the sewer fund transfer follow the adopted process?",
-  versions: [VA, VB], basis: [LEDGER, MINUTES] }), "inquiry");
-await mustPromote(WD, inquiryMd(WD, { title: "Was the vote recorded?", versions: [VA], basis: [LEDGER] }), "inquiry");
-await mustPromote(SETDOWN, inquiryMd(SETDOWN, { title: "Was the ledger reconciled?",
-  versions: [VA], basis: [LEDGER] }), "inquiry");
-await mustPromote(NOBODY, inquiryMd(NOBODY, { title: "Was the auditor engaged?",
-  versions: [VA], basis: [LEDGER] }), "inquiry");
 const LEGACY_TEXT = "The legacy transfer was authorised.";
-await mustPromote(LEG, inquiryMd(LEG, { title: "Was the legacy transfer authorised?",
-  versions: [{ ...VA, state: "accepted" }], basis: [LEDGER],
-  concluded: { conclusion: LEGACY_TEXT, falsifier: "a rescinding minute" } }), "inquiry", "concluded");
-
-const A = await createProject("oversight", projectMd("Oversight", [SHARED]));
-const B = await createProject("budget", projectMd("Budget", [SHARED]));
-const C = await createProject("legacy", projectMd("Legacy", [LEG]));
-const D = await createProject("withdrawer", projectMd("Withdrawer", [WD]));
-const E = await createProject("setdown", projectMd("Setdown", [SETDOWN]));
-
 const accept = async (target, version) =>
   POST(`op=versionaccept&token=${IRIS}&target=${enc(target)}&version=${enc(version)}`
      + `&reason=${enc("the evidence holds")}`, {});
@@ -280,16 +294,42 @@ const publish = async (project, target) => POST(`op=publish&token=${IRIS}`, {
   biasAcknowledgement: "The publishing project is funded by a party with an interest in the outcome.",
   excluded: [{ target: null, description: "The 2025 transfers", reason: "Out of scope." }] });
 
+/* D-667: THE SETUP, in the order it always ran — the member, the documents, the questions, the projects — as
+   block "0 (setup)"; only pure definitions stand outside it. */
+await block("0 (setup)", async () => {
+IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
+for (const d of [LEDGER, MINUTES, AUDIT]) await mustPromote(d, infoMd(d), "information");
+await mustPromote(SHARED, inquiryMd(SHARED, { title: "Did the sewer fund transfer follow the adopted process?",
+  versions: [VA, VB], basis: [LEDGER, MINUTES] }), "inquiry");
+await mustPromote(WD, inquiryMd(WD, { title: "Was the vote recorded?", versions: [VA], basis: [LEDGER] }), "inquiry");
+await mustPromote(SETDOWN, inquiryMd(SETDOWN, { title: "Was the ledger reconciled?",
+  versions: [VA], basis: [LEDGER] }), "inquiry");
+await mustPromote(NOBODY, inquiryMd(NOBODY, { title: "Was the auditor engaged?",
+  versions: [VA], basis: [LEDGER] }), "inquiry");
+await mustPromote(LEG, inquiryMd(LEG, { title: "Was the legacy transfer authorised?",
+  versions: [{ ...VA, state: "accepted" }], basis: [LEDGER],
+  concluded: { conclusion: LEGACY_TEXT, falsifier: "a rescinding minute" } }), "inquiry", "concluded");
+
+A = await createProject("oversight", projectMd("Oversight", [SHARED]));
+B = await createProject("budget", projectMd("Budget", [SHARED]));
+C = await createProject("legacy", projectMd("Legacy", [LEG]));
+D = await createProject("withdrawer", projectMd("Withdrawer", [WD]));
+E = await createProject("setdown", projectMd("Setdown", [SETDOWN]));
+
 /* Every reading accepted once, so nothing below is refused for a reason that is
    not this item's. */
 for (const [target, v] of [[SHARED, VA.name], [SHARED, VB.name], [WD, VA.name],
                            [SETDOWN, VA.name], [NOBODY, VA.name]])
   must(`accept ${v} on ${target}`, await accept(target, v));
+});
 
+let pubA;   /* D-667: section 1 makes it, section 2 reads it */
 /* =======================================================================
    1. THE DISAGREEMENT — one shared question, two projects, two answers.
    ======================================================================= */
 console.log("\n--- 1. one shared question, two projects: only the one that CONCLUDED it may publish ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, A, B });
 
 must("A stands on its reading", await makeCurrent(A, SHARED, VA.name));
 must("B stands on the OTHER reading", await makeCurrent(B, SHARED, VB.name));
@@ -315,7 +355,7 @@ t("the refusal publishes the BOUND of that read, so an ABSENCE over a truncated 
    bFirst.concluded_elsewhere_bounds?.projects_truncated],
   ["number", false]);
 
-const pubA = await publish(A, SHARED);
+pubA = await publish(A, SHARED);
 t("A, which DID conclude it, publishes — the act REC-124 shipped could not reach a case at all before this",
   [pubA.ok, typeof pubA.caseDocument?.doc_sha], [true, "string"]);
 
@@ -330,10 +370,15 @@ t("after A has published, B is STILL refused NOT_CONCLUDED and not ALREADY_A_CAS
 + "conclusion gate is asked before the membership gate, so B is told what it actually lacks",
   [bAgain.ok, bAgain.reason, bAgain.why], [false, "NOT_CONCLUDED", "project_has_never_concluded"]);
 
+});
+
 /* =======================================================================
    2. THE CLAIM IN THE CASE DOCUMENT.
    ======================================================================= */
 console.log("\n--- 2. the case records the ADOPTED CLAIM as it stood, and whose it was ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS, A });
+needs("1", { pubA });
 
 /* EVERY READ BELOW IS DEFENSIVE, and that is not politeness — a control arm
    that breaks the gate makes `pubA` a refusal, and a suite that then threw on
@@ -358,11 +403,15 @@ t("the BODY says it in prose, which is what a member reviews and signs",
    textA.includes(`Every conclusion this case records is ${A}'s own.`)],
   [true, true, true, true]);
 
+});
+
 /* =======================================================================
    3. THE NO-PROJECT CONCLUSION STILL PUBLISHES, AND IS DISCLOSED AS NOT THIS
       PROJECT'S OWN.
    ======================================================================= */
 console.log("\n--- 3. a question concluded in its own bytes still publishes, and the document SAYS whose ---");
+await block("3", async () => {
+needs("0 (setup)", { IRIS, C });
 
 t("(fixture) LEG is concluded in its OWN bytes and no project has concluded it",
   await stateOf(LEG), "concluded");
@@ -384,10 +433,14 @@ t("and the body tells the reader plainly, rather than letting them assume the pu
    textC.includes("AT LEAST ONE MEMBER ENTERED THIS CASE ON A CONCLUSION THAT IS NOT THIS PROJECT'S OWN")],
   [true, true]);
 
+});
+
 /* =======================================================================
    4. A WITHDRAWAL REACHES THE CASE (REC-136 item 7 meeting item 4).
    ======================================================================= */
 console.log("\n--- 4. a project that WITHDREW its conclusion stands on none, and the case says which fact that is ---");
+await block("4", async () => {
+needs("0 (setup)", { IRIS, D });
 
 must("D stands on the reading", await makeCurrent(D, WD, VA.name));
 must("D concludes", await conclude({ target: WD, project: D }));
@@ -401,10 +454,14 @@ t("a project that withdrew is refused, and WITHDREW is not the same fact as NEVE
   [afterWd.ok, afterWd.reason, afterWd.why, afterWd.stance?.act],
   [false, "NOT_CONCLUDED", "project_withdrew_its_conclusion", "withdrawn"]);
 
+});
+
 /* =======================================================================
    5. THE STATE FLOOR — the hole this item could have opened.
    ======================================================================= */
 console.log("\n--- 5. a conclusion written while the question was open does not outlive the group setting it down ---");
+await block("5", async () => {
+needs("0 (setup)", { IRIS, E });
 
 must("E stands on the reading", await makeCurrent(E, SETDOWN, VA.name));
 must("E concludes", await conclude({ target: SETDOWN, project: E }));
@@ -419,10 +476,14 @@ t("and E is refused even though its conclusions[] row still stands — the state
   [pubE.ok, pubE.reason, pubE.why, pubE.from],
   [false, "NOT_CONCLUDED", "question_not_case_bearing", "deferred"]);
 
+});
+
 /* =======================================================================
    6. THE AFFORDANCE AGREES WITH THE REFUSAL (DEC-8).
    ======================================================================= */
 console.log("\n--- 6. the surface offers exactly what the act would accept ---");
+await block("6", async () => {
+needs("0 (setup)", { IRIS });
 
 const affNobody = await GET(`op=affordances&token=${IRIS}&target=${enc(NOBODY)}`);
 t("OVER-STRICTNESS ARM: on a question nobody has concluded, `publish` is NOT offered — widening the "
@@ -463,6 +524,19 @@ t("and the act the surface offered SUCCEEDS — a pre-flight that offers what th
 + "one thing affordances.mjs exists to prevent",
   (await publish(F, AFF)).ok, true);
 
-console.log(`\ncase-project-conclusion.test.mjs: ${pass} pass, ${fail} fail`);
+});
+
+/* D-667: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. The
+   `case-project-conclusion.control.mjs` driver reads `N pass, M fail` off the foot line; its prefix is unchanged. */
+const EXPECTED = ["0 (setup)", "1", "2", "3", "4", "5", "6"];
+console.log("\n--- per-section tallies (D-667: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\ncase-project-conclusion.test.mjs: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

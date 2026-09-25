@@ -136,7 +136,17 @@
    WHAT A LIAR WOULD DO: bind by the statement's bytes (block 3 fails); accept `draft=` and bind nothing (block 1
    fails); bind and never say so (block 1's prose and frontmatter rows fail); bind the draft door only before
    publication (block 4 fails). EXPECTATIONS ARE NOT DERIVED FROM THE THING UNDER TEST: every statement is a
-   string this suite passed in and every fingerprint is computed here with node:crypto. */
+   string this suite passed in and every fingerprint is computed here with node:crypto.
+
+   D-667 NEGATIVE CONTROL (RUN 2026-09-25 by WORKER D-667, D-564's pattern), THE RECORDER — every section now runs in
+   `block()` (D-548's recorder), so the arms break a section's FIXTURE. Re-run in one step: `node
+   test/d564-block.control.mjs rec217-draft-binding` from bio-plane/. BASELINE -> **23 pass, 0 fail**, per section
+   0 (setup) 0/0, 0b (corpus) 0/0, 1..6 7/0, 1/0, 3/0, 5/0, 5/0, 2/0, foot reached — the same 23 as before.
+   (f) SECTION 2's FIXTURE BROKEN — ella's acknowledgement names `${D2}-BROKEN`, a draft that does not exist.
+       MEASURED: **22 pass, 1 fail**, exit 1, foot reached, `BLOCK 2 DIED: (fixture) ack D2`; 1 and 3-6 at their
+       baseline tallies (no later section reads 2's reading, which is of the "plain" sentence alone).
+   (g) THE RECORDER DISARMED (`block()` rethrows) over (f)'s fixture — MEASURED: no foot and no section tally (-1),
+       exit 1. */
 
 import { statedJSON } from "./stated.mjs";
 import { withSurfacingRun } from "./surfacing-run.mjs";
@@ -176,12 +186,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 700)}`);
-  fail++;
-  console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-667 (D-564's pattern): EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -214,18 +242,22 @@ const enrol = async (memberId, password, role, capabilities) => {
   if (!lg.token) bail(`login ${memberId}`, lg);
   return lg.token;
 };
+/* D-667: the values a later section reads, declared once here and ASSIGNED inside the section that makes them. */
+let IRIS, ELLA, PAT, PROJ, OTHER, S1, D1, C1;
+console.log("\n--- 0. setup: two administrators, iris, ella and pat, and the two projects ---");
+await block("0 (setup)", async () => {
 await enrol("nadia", "nadia-passphrase-217", "admin", ["contribute", "publish", "create_projects"]);
 await enrol("omar", "omar-passphrase-217", "admin", ["contribute", "publish"]);
 /* iris OWNS both projects, writes every statement and signs; ella and pat are JOINED participants of PROJ. */
-const IRIS = await enrol("iris", "iris-passphrase-217", "member", ["contribute", "publish"]);
-const ELLA = await enrol("ella", "ella-passphrase-217", "member", ["contribute", "publish"]);
-const PAT = await enrol("pat", "pat-passphrase-217", "member", ["contribute", "publish"]);
+IRIS = await enrol("iris", "iris-passphrase-217", "member", ["contribute", "publish"]);
+ELLA = await enrol("ella", "ella-passphrase-217", "member", ["contribute", "publish"]);
+PAT = await enrol("pat", "pat-passphrase-217", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-r217", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 
-const PROJ = await makePublishingProject({
+PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r217", owner: "iris",
   name: "PROJ-2026-2170-named-draft", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
-const OTHER = await makePublishingProject({
+OTHER = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r217", owner: "iris",
   name: "PROJ-2026-2171-other", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 for (const [h, tok] of [["ella", ELLA], ["pat", PAT]]) {
@@ -234,6 +266,7 @@ for (const [h, tok] of [["ella", ELLA], ["pat", PAT]]) {
   const jn = rP(await GET(`op=projectjoin&token=${tok}&projectId=${encodeURIComponent(PROJ)}`));
   if (jn?.state !== "joined") bail(`projectjoin ${h}`, jn);
 }
+});
 
 /* ---- the corpus: d150's shapes, lifted rather than invented ---- */
 let snapSeq = 0;
@@ -285,7 +318,10 @@ const inquiryMd = (id, question, info) => ["---",
   "## Review Notes", ""].join("\n");
 
 const INFO = "INFO-2026-2170-memo";
+console.log("\n--- 0b. the corpus: the memo every finding cites ---");
+await block("0b (corpus)", async () => {
 if ((await promote(INFO, infoMd(INFO), "information", "collected")).ok === false) bail("promote info", {});
+});
 const finding = async (tag) => {
   const id = `INQ-2026-2170-${tag}`;
   const r = await promote(id, withAdoptableReading(inquiryMd(id, `Was ${tag} authorised?`, INFO)), "inquiry", "open");
@@ -324,9 +360,11 @@ console.log("\n--- rec217-draft-binding ---");
 
 /* =========================================================================== 1 */
 console.log("\n--- 1. ACCEPTS-WHEN: a reading of a NEW case's draft reaches the signed list, the link stated ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 const LEAD = await finding("lead");
-const S1 = args(PROJ, "lead").statement;
-const D1 = await draftOf("lead", [LEAD]);
+S1 = args(PROJ, "lead").statement;
+D1 = await draftOf("lead", [LEAD]);
 const G1 = rP(await POST(`op=reviewgrant&token=${IRIS}`, { draft: D1, recipient: "Dana Ruiz, City Auditor's office" }));
 if (!G1?.ok || !G1.secret) bail("reviewgrant D1", G1);
 const A1 = await ack(`draft=${D1}&token=${ELLA}`);
@@ -337,7 +375,7 @@ t("FIXTURE: ella and the recipient read the draft of a NEW case — recorded at 
   [true, null, D1, true, D1, false]);
 const P1 = await publish("lead", [LEAD], { draft: D1 });
 if (P1?.ok === false || !P1?.caseDocument?.doc_sha) bail("publish lead with draft", P1);
-const C1 = P1.caseDocument.case_id;
+C1 = P1.caseDocument.case_id;
 t("op=publish NAMING the draft lists BOTH readings — ella and the recipient's grant — each marked with the draft, "
 + "and counts NONE as unbindable",
   [(P1?.completeness?.acknowledgements || []).map((a) => [a.kind, a.by, a.draft ?? null]),
@@ -376,9 +414,12 @@ t("and the answer states the link AS AN ACT: which draft, named by whom, when �
      comp.draft?.draft_id, comp.draft?.named_by, comp.draft?.named_at === fm.completeness?.draft_named_at],
     [[["participant", "ella", D1], ["recipient", G1.grantId, D1]], D1, "iris", true]);
 }
+});
 
 /* =========================================================================== 2 */
 console.log("\n--- 2. WITHOUT draft=, REC-194's undetermined count STANDS ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 {
   const Q2 = await finding("plain");
   const D2 = await draftOf("plain", [Q2]);
@@ -395,9 +436,13 @@ console.log("\n--- 2. WITHOUT draft=, REC-194's undetermined count STANDS ---");
      (doc?.text || "").includes("named as this case's draft at publication")],
     [0, 1, null, null, true, false, false]);
 }
+});
 
 /* =========================================================================== 3 */
 console.log("\n--- 3. THE TWIN: a BYTE-IDENTICAL statement under another named draft binds nothing ---");
+await block("3", async () => {
+needs("0 (setup)", { IRIS, PROJ });
+needs("1", { S1 });
 {
   const QT = await finding("twin");
   /* The SAME sentence as block 1's, on purpose: `args(PROJ, "lead")` — asserted byte-identical from the strings. */
@@ -422,9 +467,12 @@ console.log("\n--- 3. THE TWIN: a BYTE-IDENTICAL statement under another named d
      /Nobody but its author acknowledged it\./.test(doc?.text || ""), (doc?.text || "").includes(LINK(DT))],
     [0, true, true]);
 }
+});
 
 /* =========================================================================== 4 */
 console.log("\n--- 4. THE DRAFT DOOR AFTER PUBLICATION reaches the document the draft was named for ---");
+await block("4", async () => {
+needs("0 (setup)", { IRIS, ELLA, PAT, PROJ });
 {
   const Q4 = await finding("late");
   const D4 = await draftOf("late", [Q4]);
@@ -460,9 +508,13 @@ console.log("\n--- 4. THE DRAFT DOOR AFTER PUBLICATION reaches the document the 
     [after?.ok, after?.draft_link?.signed, (after?.case_documents || []).length, /already SIGNED/.test(after?.listed || "")],
     [true, true, 0, true]);
 }
+});
 
 /* =========================================================================== 5 */
 console.log("\n--- 5. THE THREE REFUSALS: a link that would be false is refused by its row ---");
+await block("5", async () => {
+needs("0 (setup)", { IRIS, PROJ, OTHER });
+needs("1", { D1, C1 });
 {
   const Q5 = await finding("refused");
   const row = (code) => [code, CASE_DERIVATION_CHECKS[code].check, CASE_DERIVATION_CHECKS[code].translation];
@@ -488,9 +540,12 @@ console.log("\n--- 5. THE THREE REFUSALS: a link that would be false is refused 
   + "draft=, as a new case (ALREADY_A_CASE_MEMBER would refuse a finding a refused act had prepared)",
     [ok?.ok !== false, typeof ok?.caseId === "string" && ok.caseId !== C1], [true, true]);
 }
+});
 
 /* =========================================================================== 6 */
 console.log("\n--- 6. ONE SENTENCE READ ON TWO DRAFTS IS TWO READINGS ---");
+await block("6", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 {
   const Qa = await finding("pairA"), Qb = await finding("pairB");
   const SP = args(PROJ, "pair").statement;
@@ -511,6 +566,7 @@ console.log("\n--- 6. ONE SENTENCE READ ON TWO DRAFTS IS TWO READINGS ---");
      Pb?.completeness?.acknowledgements_unbindable_to_this_case],
     [[["ella", Db]], 1]);
 }
+});
 
 /* =========================================================================== 7 */
 console.log("\n--- 7. D-521: the draft door's read can return TWO documents, never more ---");
@@ -529,6 +585,8 @@ console.log("\n--- 7. D-521: the draft door's read can return TWO documents, nev
    is harmless today. The FIRST row is the risk. The read orders by `case_id`, and case ids are opaque, so a
    read collapsed to `#one` would keep X instead of Y whenever X sorts first, and Y's document would then keep a
    list without ella, with no refusal and nothing said. */
+await block("7", async () => {
+needs("0 (setup)", { IRIS, ELLA, PAT, PROJ });
 {
   const qx = await finding("rtX1"), qy = await finding("rtY1");
   const pX = await publish("rtX1", [qx]), pY = await publish("rtY1", [qy]);
@@ -573,6 +631,7 @@ console.log("\n--- 7. D-521: the draft door's read can return TWO documents, nev
      (fmOf((await docOf(Y, 2))?.text).completeness_acknowledgements || []).map((a) => a.by)],
     [true, true, ["pat"], ["ella"]]);
 }
+});
 
 /* =========================================================================== 8 */
 /* Block 7 on land/worker/D-626; renumbered 8 at the c22-batch30 union, where D-521b's block 7 was already on main. */
@@ -580,6 +639,9 @@ console.log("\n--- 7. D-521: the draft door's read can return TWO documents, nev
    publication to DERIVE the case — and three plane sentences still told them apart by the case id alone. Every
    expectation below is a phrase this suite writes out, never one read off the sentence helper. */
 console.log("\n--- 8. D-626: A DRAFT THAT NAMES NO CASE IS NOT CALLED A NEW CASE UNLESS IT ASKS FOR ONE ---");
+await block("8 (D-626)", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
+needs("1", { C1 });
 {
   const NEW = /prepared for a new case, whose identity is not yet allocated/;
   const DERIVED = /prepared for a case this draft does not name and publication DERIVES/;
@@ -619,11 +681,20 @@ console.log("\n--- 8. D-626: A DRAFT THAT NAMES NO CASE IS NOT CALLED A NEW CASE
     ["REVIEW_NO_SUCH_CASE", false, true, true]);
   const Da = await draftOf("d626a", [Q7], { caseId: C1, newCase: true });
   const aa = await ack(`draft=${Da}&token=${ELLA}`);
+  /* CORRECTED 2026-09-25 at the c23-batch30 union (CONDUCT #23), never exempted: this arm (D-626's) read the pair's
+     wording off `#caseIdentitySentence` ("… also asks for a new case"), which the ack's `listed` sentence used for
+     this draft until D-708 gave the pair its OWN sentence ("which names <C1> AND asks for a new case — … UNDETERMINED
+     until one of them is withdrawn, and this answer states no edition for it and promises no listing"). D-708 is
+     merged beside this suite, so the old phrase is no longer the plane's and the arm failed on words, not on the
+     identity. It now reads D-708's sentence, and asserts the rule's second half too: no edition stated. */
   t("a draft naming C1 AND asking for a new case: the statement acknowledgement states that identity as "
   + "UNDETERMINED, never as the next edition of C1 alone",
-    [aa?.ok, /also asks for a new case/.test(aa?.listed || ""), /UNDETERMINED until one of them is withdrawn/.test(aa?.listed || "")],
-    [true, true, true]);
+    [aa?.ok, (aa?.listed || "").includes(`names ${C1} AND asks for a new case`),
+     /UNDETERMINED until one of them is withdrawn/.test(aa?.listed || ""),
+     /states no edition for it/.test(aa?.listed || "") && !/next edition/.test(aa?.listed || "")],
+    [true, true, true, true]);
 }
+});
 
 /* =========================================================================== 8 */
 /* D-680 (BOB #35, 2026-09-25 07:35Z; BIO_Publication §3 rule 13): A DERIVATION DRAFT — no caseId, no newCase —
@@ -632,6 +703,9 @@ console.log("\n--- 8. D-626: A DRAFT THAT NAMES NO CASE IS NOT CALLED A NEW CASE
    with both. Derivation yielding no case is refused as before. The signed document states how the case was
    settled. Every expected phrase is written out here, never read off the plane's helpers. */
 console.log("\n--- 8. D-680: A DERIVATION DRAFT BINDS TO THE CASE PUBLICATION DERIVES, ANY EDITION ---");
+await block("8 (D-680)", async () => {
+needs("0 (setup)", { IRIS, ELLA, PAT, PROJ });
+needs("1", { C1 });
 {
   let n8 = 0;
   /* THE ROUTE DEC-12 BUILT TO A FURTHER EDITION: the finding is reopened and concluded again, so its bytes move and
@@ -734,6 +808,7 @@ console.log("\n--- 8. D-680: A DERIVATION DRAFT BINDS TO THE CASE PUBLICATION DE
     ["PUBLISH_DRAFT_NOT_THIS_CASE", CASE_DERIVATION_CHECKS.PUBLISH_DRAFT_NOT_THIS_CASE.check,
      CASE_DERIVATION_CHECKS.PUBLISH_DRAFT_NOT_THIS_CASE.translation, true, false]);
 }
+});
 
 /* =========================================================================== 9 */
 /* D-683 (BIO_Publication §3 rule 13; §6A.4): A READING OF A NO-CASE DRAFT IS COUNTED UNDETERMINED ON A FURTHER EDITION
@@ -741,6 +816,8 @@ console.log("\n--- 8. D-680: A DERIVATION DRAFT BINDS TO THE CASE PUBLICATION DE
    whose edition reads 1 (D-568), so the unbound count may not ask the edition either — as D-680 took it off the link
    arm. Without it, edition 2 printed no tail over a record holding a reading of its exact sentence. */
 console.log("\n--- 9. D-683: WITHOUT draft=, A FURTHER EDITION COUNTS THE NO-CASE DRAFT'S READING UNDETERMINED ---");
+await block("9", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 {
   const Q9 = await finding("d683");
   const P9a = await publish("d683", [Q9]);
@@ -774,7 +851,21 @@ console.log("\n--- 9. D-683: WITHOUT draft=, A FURTHER EDITION COUNTS THE NO-CAS
      /Nobody but its author acknowledged it\./.test(doc?.text || "")],
     [true, 2, 0, 1, true, false]);
 }
+});
 
-console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail`);
+/* D-667: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+/* c23-batch30 (2026-09-25): ours' sections 7 (D-521), 8 (D-626), 8 (D-680) and 9 (D-683) were written as bare
+   `{ … }` blocks over the old bail() and run inside `block()` at the union, each with its needs(); the two
+   sections numbered 8 on their own branches take unique names, so neither can report as the other. */
+const EXPECTED = ["0 (setup)", "0b (corpus)", "1", "2", "3", "4", "5", "6", "7", "8 (D-626)", "8 (D-680)", "9"];
+console.log("\n--- per-section tallies (D-667: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);
