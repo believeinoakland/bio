@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-627 · queued — **A FULL-PAGE IMAGE WHOSE ONLY TEXT IS A FOLIO IS NOT ROUTED TO OCR SINCE D-608: the page bears text so it rightly carries no `no_text_layer`, but its CONTENT is unread and nothing says so (INFO-2026-0301 pages 633, 634, 645-651: a coverage regression D-608's provisional accepts until this lands).** BOB #35 RULED 05:50Z: two facts, two markers. — owner CONTENT-PDF.
+order: at the head of the backlog, beside D-606 (per-page OCR, running): a coverage regression on landed work outranks features; BOB #35: *"say WHICH absence"* (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I6 — a new page marker `image_content_unread` and its OCR route; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with BOB #35's 05:50Z ruling (this row's worker folds it) and D-420's `container_extent.images`.
+depends-on: D-608 (land/worker/D-608 @ ffcc300b).
+scope: MEASURE FIRST over the FY23-25 budget book and M-174's corpus each page's painted-image share of its area and its glyph count; set both thresholds where image-only pages separate from text pages (in-between pages read UNDETERMINED, never forced); a page over the image share and under the glyph floor carries `image_content_unread` naming both figures, and `needsTier3` routes it to OCR as it routes a no-text page. OCR output stays machine-read and never raises a grade (DEC-4).
+accepts-when: those 9 pages carry the marker with their figures and route to OCR; text pages do not (moves: 9 unread pages routed nowhere). NEGATIVE CONTROL: drop the coverage arm and INFO-2026-0301's pages 633/634/645-651 read no marker and route nowhere, by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 05:50Z).
+
 ### D-615 · queued — **`op=promote` STILL PROJECTS `bundles.created` AND `last_updated` FROM THE ENVELOPE, though the document states both (CORE_FIELDS): D-563's class, the last two fields.** Found by D-563's worker (05:47Z). — owner RECORD.
 order: after D-546, the same promote function one worker at a time: the envelope is a label, the document states what it is (SCHEDULER #22, 2026-09-25)
 milestone: M7
@@ -1190,13 +1200,3 @@ depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): wh
 accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The … (whole text: the cut archive)
-order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget … (whole text: the cut archive)
-depends-on: none. Sequence after M0-81.
-accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
-added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
