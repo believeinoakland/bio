@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec180-promote-rollback.test.mjs",
+ "inputHash": "89b09384af72f7ac0483f1e6a3f79a68d1d5ee8a4a9b7741d9421a349185aea3",
+ "verdict": "PASS",
+ "run": "6ebbd5effee3a2e95c00340145f4585964b9dac0.1790312994357.9980.json",
+ "tree": "6ebbd5effee3a2e95c00340145f4585964b9dac0",
+ "head": "30b019e23a60cb568709581b46b4df728e84c0f6",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 137,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d1c7dcb0-0d22-58f4-9fab-93f7ea6fbd14",
+ "at": "2026-09-25T05:09:54.372Z"
+}
