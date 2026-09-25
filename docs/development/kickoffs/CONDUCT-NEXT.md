@@ -62,3 +62,13 @@ ID COLLISION: REC-205 C-33.44 (CLASS_NOT_DISPOSED) vs REC-207 C-33.44/.45/.46 �
 - D-548 281a96eb (hygiene.test named-walk list) · D-569 715c6ef5 (WORKER.md step 4 + VERIFICATION.md lines) · D-571 509d70d7
   (monitor-cadence only) · D-450 f325c440 (see CATALOG; m025 A8 roster).
 - Still running at 01:45Z (SCHEDULER spawned): D-451, D-454, D-547. D-563 at backlog head (depends on D-526).
+
+## 6. ARRIVED AFTER THE HANDOFF (01:36–01:38Z)
+- D-547 a1a56e0a — CARRIES D-526 (built on d1622057): integrate it IN PLACE OF D-526. New DEC-49 region `promote > is-promote-retypes-bundle`,
+  REVISION_RETYPES_BUNDLE C-86.2 (IC I3: new refusal on op=promote). CATALOG bump (fold into 1.30.0). Re-read every refusal-guard key and
+  regionLines on the union; REGISTER_FLOOR one key set. M-156: no bundle ever retyped. D-578 minted (no-type revision throws raw NOT NULL).
+- D-454 25e4c242 — reading_refs re-keyed (capture_sha, ref, occurrence)+seq, migration keeps every row (M-155); op=connectionchoose
+  occurrence=, C-74.4; edited INSIDE region `chooseConnectionPair > is-connection-choice` (re-read regionLines). CATALOG bump. Floors incl.
+  hygiene reach 45, meaning-bounds OPAQUE 10. app.html __DOCPROFILE__ regenerated (UI path) — regenerate on the union. ICs: I5 (reading_refs
+  PK, connection_pair_choices.occurrence) + I3 (occurrence=, C-74.4, answer fields occurrences/limit/truncated/chosen.occurrence, lapsed/ambiguous).
+  Touches the on-point choice UI-91 builds on — check UI-91's suite on the union.
