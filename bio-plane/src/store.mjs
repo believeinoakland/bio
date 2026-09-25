@@ -11347,7 +11347,7 @@ export class Store extends DurableObject {
        authored `detail` with no translation at all (UI-89's worker's finding): a helper a return
        cannot see is a helper that return does not use. Declared here, before the first refusal, so
        every one of the seven is built the same way and each row's `where` names the smallest span in
-       which its refusal is enforced. ADDITIVE ON THE WIRE (IC-270): `reason`, the site's own `detail`
+       which its refusal is enforced. (Six since D-521 retired C-82.1, the bound no input could reach.) ADDITIVE ON THE WIRE (IC-270): `reason`, the site's own `detail`
        and its per-site keys are unchanged; `code`, `check` and `translation` JOIN them. */
     const refusal = (code, detail, extra) => {
       const row = STATEMENT_ACK_CHECKS[code];
@@ -11519,10 +11519,11 @@ export class Store extends DurableObject {
        - THE PROJECT IS MATCHED IN SQL, spelled as `#caseDocumentText` writes it. It was filtered AFTER a `LIMIT 8`,
          so another project's documents of the same sentence could fill the page and crowd this project's out —
          an acknowledgement recorded and never listed where it belongs.
-       - OVER THE BOUND IS A REFUSAL, NOT A CUT. A cut would leave the ninth document listing fewer second readers
-         than the record holds, and its owner would SIGN that absence. So the read is `max + 1`, and more than
-         `max` refuses by name with nothing written. The parse filter stays, applied after the bound is decided. */
-    const ackMax = Store.STATEMENT_ACK_DOCUMENTS_MAX;
+       - NO CUT, AND SINCE D-521 NO BOUND EITHER. IC-246 read at `max + 1` and refused over `max` (C-82.1), because a
+         cut would leave a document listing fewer second readers than the record holds and its owner would sign
+         that absence. The two keyed reads below bound it by construction (see D-521's note at them), so the
+         bound could never fire. Its refusal, its catalogue row and its constant are retired. The parse filter
+         stays. */
     const needle = `\n  statement_sha: ${statementSha}\n`;
     const projectLine = `\ncase_project: ${project}\n`;
     /* REC-194 / §3 rule 13 — THE DOOR REACHES ONLY ITS OWN DOCUMENT, AND A DRAFT OF A NEW CASE HAS NONE.
@@ -11538,32 +11539,37 @@ export class Store extends DurableObject {
        than letting a case document say nobody read the sentence. The fix that would bind it — `op=publish`
        naming the draft it publishes — was ruled by BOB #33 and is BUILT (REC-217): the found read below
        reaches the document a publisher named this draft for.
-       THE BOUND AND ITS REFUSAL ARE KEPT AND ARE NOW UNREACHABLE BY CONSTRUCTION, WHICH IS SAID RATHER
-       THAN LEFT TO BE NOTICED: `(case_id, edition)` is `case_documents`' PRIMARY KEY, so a read naming
-       both returns at most one row and `found.length` cannot exceed 1. IC-246's refusal is retained as a
-       guard over this read — deleting it would move the DEC-49 refusal floor and drop C-82.1 from the
-       catalogue, which is a landing of its own — and the removal is reported as a nameable fix. */
+       REC-194 found IC-246's bound unreachable here (`(case_id, edition)` is the PRIMARY KEY, so one row at
+       most) and kept it as a guard; D-521 retired it, after re-deriving the count on REC-217's wider read. */
     /* REC-217 / §3 rule 13 (BOB #33): AND A DRAFT A PUBLISHER NAMED REACHES THE DOCUMENT IT WAS NAMED FOR.
        REC-194's "a draft naming none reaches NOTHING" was true while nothing linked a draft to its case; the
        link is that act, recorded on the case document's row (`draft_id`), so a reading given through the
        named draft after publication re-authors that unsigned document exactly as a reading given there
-       before publication is listed in it. Still ONE document at most: the link names one (case, edition),
-       and `op=publish` refuses a second (PUBLISH_DRAFT_ALREADY_BOUND). */
-    const found = this.#rows(
-                            `SELECT case_id, edition, doc_sha, text, draft_id, authored_by, authored_at
-                               FROM case_documents
-                              WHERE sig_armored IS NULL AND edition=? AND (case_id IS ? OR draft_id = ?)
-                                AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
-                             ident.edition, ident.caseId ?? null, draftId ?? "", needle, projectLine, ackMax + 1);
-    /* DEC-49 REGION is-statement-ack-documents-bound */
-    if (found.length > ackMax)
-      return refusal("STATEMENT_ACK_DOCUMENTS_OVER_BOUND",
-               `more than ${ackMax} unsigned case documents of this project carry this exact statement at `
-                     + `this case identity. Each would have to be re-authored to list the acknowledgement, and `
-                     + `re-authoring only some would leave the rest listing fewer second readers than the record `
-                     + `holds. Nothing was written: sign or supersede some of them, then acknowledge.`,
-               { limit: ackMax, statement_sha: statementSha, edition: ident.edition, case_id: ident.caseId ?? null });
-    /* END DEC-49 REGION is-statement-ack-documents-bound */
+       before publication is listed in it.
+       D-521 (2026-09-25): AT MOST TWO DOCUMENTS, AND THEY CAN BE TWO DIFFERENT ONES. This comment said "Still ONE
+       document at most", which stopped being true when this read became a union of two keys (REC-217 wrote it as
+       one statement, `edition=? AND (case_id IS ? OR draft_id = ?)`). The two keys are now read as TWO keyed
+       reads, so the bound is visible in the code rather than argued in a comment:
+       - BY IDENTITY: `(case_id, edition)` is the PRIMARY KEY, so one row. A draft naming no case has no identity,
+         and the old `case_id IS NULL` matched nothing because the column is NOT NULL, so that read is skipped.
+       - BY LINK: `draft_id` at this edition is one row, because `op=publish` refuses a second binding of a draft
+         (PUBLISH_DRAFT_ALREADY_BOUND) and nothing else writes the column. `#draftLinkOf` rests on the same key.
+       They are two different documents when a draft named for one case is then re-pointed by `op=casedraft` at
+       another case's same edition. MEASURED in `test/rec217-draft-binding.test.mjs` block 7: both come back.
+       Collapsing to ONE read would keep whichever it asked first and could drop the document the reading belongs
+       to, with no refusal (that block's control arm (b) measured the loss). Where both keys name the same document
+       it is kept once. The pair is ordered by case id, as the single statement's `ORDER BY case_id` did. */
+    const docCols = `case_id, edition, doc_sha, text, draft_id, authored_by, authored_at`;
+    const docMatch = `sig_armored IS NULL AND edition=? AND instr(text, ?) > 0 AND instr(text, ?) > 0`;
+    const byIdentity = ident.caseId == null ? null
+      : this.#one(`SELECT ${docCols} FROM case_documents WHERE case_id=? AND ${docMatch}`,
+                  ident.caseId, ident.edition, needle, projectLine);
+    const byLink = !draftId ? null
+      : this.#one(`SELECT ${docCols} FROM case_documents WHERE draft_id=? AND ${docMatch}`,
+                  draftId, ident.edition, needle, projectLine);
+    const found = [byIdentity, byLink]
+      .filter((d, i, all) => d && all.findIndex((e) => e && e.case_id === d.case_id) === i)
+      .sort((a, b) => (a.case_id < b.case_id ? -1 : a.case_id > b.case_id ? 1 : 0));
     /* REC-217: AT NO CASE IDENTITY THE DRAFT IS PART OF WHAT WAS READ. REC-194 made a draft naming no case
        its own identity for the LISTING and left this idempotence key without it, so a participant who
        acknowledged the same sentence on two such drafts was told the second `existed` and was recorded on
@@ -11595,7 +11601,6 @@ export class Store extends DurableObject {
              /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
-             case_documents_limit: ackMax, case_documents_truncated: false,
              /* REC-194 / §3 rule 13: THE ANSWER SAYS WHICH OF THE TWO THINGS HAPPENED, because they are
                 different facts and one sentence used to claim the stronger of them for both. An
                 acknowledgement given at a CASE IDENTITY is listed by that case's document and by no
@@ -11633,10 +11638,6 @@ export class Store extends DurableObject {
                    + `draft=, it is counted there as undetermined and never named. A statement edited `
                    + `afterwards is a different sentence, and this acknowledgement is not listed under it.` };
   }
-
-  /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).
-     The figure D-150's literal carried; over it the act is REFUSED (C-82.1), never cut. */
-  static STATEMENT_ACK_DOCUMENTS_MAX = 8;
 
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
      `op=publish` authors a document, and spliced by `#reauthorAcknowledgements` when an

@@ -497,6 +497,17 @@ const CATALOG_CENSUS = {
      never 466 + 2. 1.29.0's row STAYS. **IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE
      UNION'S: CONDUCT takes the next number and re-reads the census from this suite's print on the merged tree.** *\/
      "1.30.0": { count: 468, digest: "78740e5c8072d6d694c354539ffa0f2d3d0924c3ecc8f38a4437fbb1953c09ad" }, */
+  /* D-521b side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.31.0 (D-521, 2026-09-25, branch land/worker/D-521b): NO ARRIVALS, ONE DEPARTURE. C-82.1
+     STATEMENT_ACK_DOCUMENTS_OVER_BOUND is RETIRED: the read it guarded returns at most two rows by its keys, against
+     a bound of 8, so no input could reach it. Rule 17 moves the version for a REMOVED check. A departure changes the
+     census, so A4 needs no `changed` note. (M0-195's `changed:` grammar is not built; this row follows the table's
+     current grammar, and the departure is named here in words.) MINOR: nothing that passed now fails. 502 -> 501,
+     count AND digest from THIS SUITE'S OWN PRINT on the item's tree over origin/main 5e8a65a8, never arithmetic.
+     If another branch in the batch also moves this constant, CONDUCT takes the next number and re-reads the
+     census on the merged tree. *\/
+     "1.31.0": { count: 501, digest: "398bfcff3bb62cdfefd1cac1c96deb94928ab20af1e07627de634a4474cab2ad" }, */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -707,6 +718,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* REC-147 side, kept as history — its A5 pin read 1.30.0 on its own branch (C-93's seven rows); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* REC-197 side, kept as history — its A5 pin read 1.30.0 on its own branch (C-97's two rows); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* D-521b side, kept as history — its A5 pin read 1.31.0 on its own branch (C-82.1 retired, one departure); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives

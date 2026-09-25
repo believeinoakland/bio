@@ -183,6 +183,11 @@ export const CATALOG_VERSION = "1.30.0";
    PROJECT_VISIBILITY_NO_OWNER and C-97.2 PROJECT_VISIBILITY_NOT_A_CREATION, the new PROJECT_CREATION_VISIBILITY_CHECKS
    family (a creation's `visibility`, BOB #32's ruling (b)). TWO ARRIVALS, NO DEPARTURES: MINOR and additive on this
    constant's own rule. CONDUCT reconciles the VERSION at integration if another branch takes 1.30.0 first. */
+/* D-521b side, kept as history — its own note on its own branch: */
+/* 1.31.0 (D-521, 2026-09-25, branch land/worker/D-521b): ONE DEPARTURE, NO ARRIVALS. C-82.1
+   STATEMENT_ACK_DOCUMENTS_OVER_BOUND is retired as unreachable (the read it guarded returns at most two rows against a
+   bound of 8). Rule 17 moves the stamp for a removed check. MINOR: nothing that passed now fails. The census is the
+   d470 suite's own print; CONDUCT re-reads it on the union if another branch moves this constant. */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
