@@ -121,6 +121,8 @@ const tier1 = async (bytes) => {
 console.log("\n--- 1. THE PREDICATE: text is SHOWN, not declared and not opened ---");
 t("the text-showing operators are the four ISO 32000-1 §9.4.3 names, and BT is not one of them",
   [...TEXT_SHOWING_OPERATORS].sort(), ["\"", "'", "TJ", "Tj"]);
+/* A text-showing page with NO painted image (the /text-shape.pdf over-strictness arm; not in the corpus F). */
+const TEXT_NO_SCAN = page({ second: "BT /F1 12 Tf 10 10 Td (x) Tj ET", image: false });
 const WANT = {
   cafr: false, tj: true, tjTight: true, tjArray: true, quote: true, dquote: true,
   formText: true, formEmpty: false, stringTj: false, unreadable: null, formMissing: null, blank: false, noFont: false,
@@ -144,11 +146,15 @@ t("every answer is the one declared", SHOWN, WANT);
 console.log("\n--- 2. TIER 1: the CAFR-shape page is UNREAD, not read-and-empty ---");
 const T1 = {};
 for (const [k, bytes] of Object.entries(F)) T1[k] = await tier1(bytes);
+/* CORRECTED 2026-09-25 (CONDUCT #23, batch30 union): every fixture below paints a FULL-PAGE image (PAINT: 64x64 over a
+   64x64 MediaBox), and since D-665 a page whose content is a painted image it did not read ALSO carries `image_unread`
+   (pdfstructure.mjs, D-665). The old want of ["no_text_layer"] alone was written before that marker existed; the page
+   is still marked no_text_layer, which is what these arms test, and now says the second true thing too. */
 t("tier 1 MARKS the CAFR-shape page no_text_layer (it read zero characters and says it could not read it)",
-  T1.cafr, { chars: 0, reasons: ["no_text_layer"] });
-t("the no-font page is marked, as it was before this item", T1.noFont.reasons, ["no_text_layer"]);
-t("a drawn form that shows nothing: marked", T1.formEmpty.reasons, ["no_text_layer"]);
-t("a string holding the letters Tj: marked", T1.stringTj.reasons, ["no_text_layer"]);
+  T1.cafr, { chars: 0, reasons: ["no_text_layer", "image_unread"] });
+t("the no-font page is marked, as it was before this item", T1.noFont.reasons, ["no_text_layer", "image_unread"]);
+t("a drawn form that shows nothing: marked", T1.formEmpty.reasons, ["no_text_layer", "image_unread"]);
+t("a string holding the letters Tj: marked", T1.stringTj.reasons, ["no_text_layer", "image_unread"]);
 t("OVER-STRICTNESS: a page that shows text is NOT marked, whatever tier 1 could decode of it",
   ["tj", "tjTight", "tjArray", "quote", "dquote", "formText"].filter((k) => T1[k].reasons.includes("no_text_layer")), []);
 t("UNDETERMINED is not NO: a page whose stream could not be read is NOT marked", T1.unreadable.reasons.includes("no_text_layer"), false);
@@ -193,7 +199,10 @@ const base = {
     const u = new URL(request.url);
     const bin = (b) => new Response(b, { headers: { "content-type": "application/pdf" } });
     if (u.pathname === "/cafr-shape.pdf") return bin(F.cafr);
-    if (u.pathname === "/text-shape.pdf") return bin(F.tj);
+    /* CORRECTED 2026-09-25 (CONDUCT #23, batch30 union): F.tj shows ONE glyph over a full-page painted image, which is
+       exactly D-627's folio-only page (an image of content with at most a folio), so it is RIGHTLY a Tier-3 candidate now.
+       The over-strictness arm means "a page that shows text is not routed", so it is served a text page with no scan. */
+    if (u.pathname === "/text-shape.pdf") return bin(TEXT_NO_SCAN);
     return new Response("unscripted", { status: 500 });
   },
 };
