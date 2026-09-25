@@ -146,7 +146,13 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.30.0";
+/* 1.31.0 (D-680, 2026-09-25, branch land/worker/D-680, stacked on D-626): ONE ARRIVAL, C-44.6
+   PUBLISH_DRAFT_CASE_NOT_DERIVED in CASE_DERIVATION_CHECKS (a derivation draft named on a case that is not the one
+   publication derives for it, BOB #35 07:35Z), and TWO CHANGED: C-44.4's translation now names its derivation arm, and
+   C-87.6's, which D-626 changed below this branch without a census row (its base lacked M0-195's pin). MINOR and
+   additive on this constant's own rule (Publication §3 rule 17). If another branch takes 1.31.0 first, CONDUCT takes
+   the next number and re-reads the census from the d470 suite's print on the merged tree. */
+export const CATALOG_VERSION = "1.31.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

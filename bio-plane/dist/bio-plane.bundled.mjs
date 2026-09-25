@@ -11384,12 +11384,24 @@ var CASE_DERIVATION_CHECKS = {
   PUBLISH_DRAFT_NOT_THIS_CASE: {
     check: "C-44.4",
     where: "src/store.mjs publishCase > is-publish-draft-this-case",
-    translation: "The draft named here was prepared for a different case than the one being published, so its readers did not read this one. Nothing was published. Publish the case that draft is for, or name the draft of this case."
+    /* D-680 (BOB #35, 2026-09-25): CHANGED. A draft naming no case now binds to the case publication derives, any
+       edition, so this condition refuses such a draft only where derivation yields NO case (its findings serve
+       several); the sentence says that second reason too. A named case that differs from the derived one is C-44.6. */
+    translation: "The draft named here was prepared for a different case than the one being published, so its readers did not read this one \u2014 or it left its case to be worked out at publication, and its findings serve several published cases, so no one case can be worked out for it. Nothing was published. Publish the case that draft is for, name the case in the draft, or name the draft of this case."
   },
   PUBLISH_DRAFT_ALREADY_BOUND: {
     check: "C-44.5",
     where: "src/store.mjs publishCase > is-publish-draft-bound",
     translation: "That draft has already been named as the draft of another published case, and the people who read it are listed there. One draft becomes one case, so it cannot be named for this one too. Nothing was published."
+  },
+  /* D-680 (BOB #35, 2026-09-25 07:35Z; BIO_Publication_v0_1.md §3 rule 13 (ii)): a draft that names no case binds to
+     the case publication DERIVES for its findings. When the publisher also NAMES a case, the draft binds only if the
+     named case IS the derived one; if they differ, the record will not settle the ambiguity silently (C-44.1's
+     posture) and refuses by name, stating both cases (`case_id`, `derived_case`). */
+  PUBLISH_DRAFT_CASE_NOT_DERIVED: {
+    check: "C-44.6",
+    where: "src/store.mjs publishCase > is-publish-draft-derived-case",
+    translation: "The draft named here left its case to be worked out at publication, and the case worked out from its findings is not the case this publication names. The record will not choose between them. Nothing was published. Publish without naming a case, and the draft goes to the case its findings lead to, or name the draft of the case you are publishing."
   }
 };
 var MACHINE_FENCE_CHECKS = {
@@ -16155,7 +16167,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.30.0";
+var CATALOG_VERSION = "1.31.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -39512,7 +39524,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         };
     }
     const draftNamed = String(draft ?? "").trim() || null;
-    let boundDraft = null;
+    let boundDraft = null, boundDraftCase = null;
     if (draftNamed) {
       const d = this.#draftForMember(draftNamed, viewer);
       const predicted = theCase ? (() => {
@@ -39527,15 +39539,26 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         });
       const di = this.#draftIdentity(d);
       const diNewCase = !!JSON.parse(d.params).newCase;
-      if (di.caseId ? di.caseId !== theCase || di.edition !== predicted : predicted !== 1)
+      const derivation = !di.caseId && !diNewCase;
+      const derived = distinct.length > 1 ? void 0 : distinct[0] || (claimedInBytes.length === 1 ? claimedInBytes[0] : null) || null;
+      if (di.caseId ? di.caseId !== theCase || di.edition !== predicted : diNewCase ? predicted !== 1 : !newCase && derived === void 0)
         return refusal6("PUBLISH_DRAFT_NOT_THIS_CASE", {
           draft: draftNamed,
           draft_case: di.caseId ?? null,
           draft_edition: di.edition,
           case_id: theCase ?? null,
           edition: predicted,
-          detail: `draft ${draftNamed} is prepared for ${_Store.#caseIdentitySentence(di.caseId, di.edition, diNewCase)}, and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it would bind its readings to a case they were not given for. ` + (di.caseId ? `Publish the case the draft names (case=${di.caseId}), or name the draft of this one.` : diNewCase ? `Publish the new case the draft asks for (newCase=true), or name the draft of this one.` : `A draft that names no case is accepted here only at a new case's first edition: publish it with newCase=true, or name the draft of this one.`)
+          detail: `draft ${draftNamed} is prepared for ${_Store.#caseIdentitySentence(di.caseId, di.edition, diNewCase)}, and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it would bind its readings to a case they were not given for. ` + (di.caseId ? `Publish the case the draft names (case=${di.caseId}), or name the draft of this one.` : diNewCase ? `Publish the new case the draft asks for (newCase=true), or name the draft of this one.` : `A draft that names no case binds to the case publication derives for its findings, and these findings serve ${distinct.length} published cases (${distinct.slice().sort().join(", ")}), so publication derives none: name the case in the draft, or name the draft of this one.`)
         });
+      if (derivation && !newCase && (theCase ?? null) !== derived)
+        return refusal6("PUBLISH_DRAFT_CASE_NOT_DERIVED", {
+          draft: draftNamed,
+          case_id: theCase ?? null,
+          edition: predicted,
+          derived_case: derived,
+          detail: `draft ${draftNamed} names no case and leaves its case to publication, which derives ${derived ? `the case ${derived}` : "a new case"} for these findings; this act names ${theCase}. The two disagree and the record will not settle it silently: publish without case= and the draft binds to ${derived ? derived : "the new case"}, or name the draft of ${theCase}.`
+        });
+      boundDraftCase = di.caseId ? "named_by_draft" : diNewCase ? "new_case_asked_by_draft" : newCase ? "new_case_asked_at_publication" : String(caseId ?? "").trim() ? "named_and_confirmed" : "derived_at_publication";
       const already = this.#one(`SELECT case_id, edition FROM case_documents WHERE draft_id=?
                                    AND NOT (case_id IS ? AND edition=?) LIMIT 1`, d.draft_id, theCase ?? null, predicted);
       if (already)
@@ -39710,7 +39733,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       stated: lens.in_force === true ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed` : lens.in_force === null ? String(lens.stated) : "no manifest was in force"
     };
     const writer = this.#statementWriter(proj, theCase, edition, stmt, who2);
-    const draftLink = boundDraft ? { draft: boundDraft, by: who2, at: when } : null;
+    const draftLink = boundDraft ? { draft: boundDraft, by: who2, at: when, case: boundDraftCase } : null;
     const acks = this.#statementAcknowledgements(proj, theCase, edition, stmt, who2, writer, null, draftLink);
     const docText = _Store.#caseDocumentText({
       caseId: theCase,
@@ -39844,6 +39867,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           draft_id: draftLink.draft,
           named_by: draftLink.by,
           named_at: draftLink.at,
+          /* D-680: how the draft's case was settled (BOB #35). */
+          case: draftLink.case,
           acknowledgements_bound: acks.boundByLink
         } } : {}
       },
@@ -40042,7 +40067,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       ...acks.link ? [
         `  draft: ${acks.link.draft}`,
         `  draft_named_by: ${acks.link.by}`,
-        `  draft_named_at: "${acks.link.at}"`
+        `  draft_named_at: "${acks.link.at}"`,
+        /* D-680 (BOB #35, 2026-09-25 07:35Z): HOW THE DRAFT'S CASE WAS SETTLED — for a draft naming
+           no case, DERIVED AT PUBLICATION or NAMED AND CONFIRMED — beside the link whose author and
+           time are the two keys above. Absent on a document authored before this key existed. */
+        ...acks.link.case ? [`  draft_case: ${acks.link.case}`] : []
       ] : [],
       /* D-150 / §3 rule 11 — THE STATEMENT'S SECOND READERS, IN THE SIGNED BLOCK. The hash
          names the sentence they read (a reader can recompute it from `statement` above); the
@@ -41570,7 +41599,7 @@ case_project: ${project}
     const found = this.#rows(
       `SELECT case_id, edition, doc_sha, text, draft_id, authored_by, authored_at
                                FROM case_documents
-                              WHERE sig_armored IS NULL AND edition=? AND (case_id IS ? OR draft_id = ?)
+                              WHERE sig_armored IS NULL AND ((edition=? AND case_id IS ?) OR draft_id = ?)
                                 AND instr(text, ?) > 0 AND instr(text, ?) > 0 ORDER BY case_id LIMIT ?`,
       ident.edition,
       ident.caseId ?? null,
@@ -41708,8 +41737,30 @@ case_project: ${project}
     if (!acks.link) return [];
     return [
       "",
-      `Readings given on draft ${acks.link.draft}, which ${acks.link.by} named as this case's draft at publication on ${acks.link.at}, are readings of this case, and each one listed above says so. That link is ${acks.link.by}'s act, recorded with the publication, and not an inference from the statement's words: another draft or case carrying the same sentence binds nothing here (BIO_Publication \xA73 rule 13).`
+      `Readings given on draft ${acks.link.draft}, which ${acks.link.by} named as this case's draft at publication on ${acks.link.at}, are readings of this case, and each one listed above says so. That link is ${acks.link.by}'s act, recorded with the publication, and not an inference from the statement's words: another draft or case carrying the same sentence binds nothing here (BIO_Publication \xA73 rule 13).`,
+      ..._Store.#draftCaseSentence(acks.link) ? ["", _Store.#draftCaseSentence(acks.link)] : []
     ];
+  }
+  /* D-680 (BOB #35, 2026-09-25 07:35Z; §3 rule 13): HOW THE CASE THE DRAFT BINDS TO WAS SETTLED, in words, from the
+     signed key `draft_case`. A draft that names no case DEFERS its case to publication, so the document says the case
+     was DERIVED AT PUBLICATION — or, where the publisher also named it, NAMED AND CONFIRMED as the derived one — with
+     the author and time of the act that settled it. `null` (a document authored before the key) says nothing. */
+  static #draftCaseSentence(link) {
+    const at = `${link.by}'s act on ${link.at}`;
+    switch (link.case) {
+      case "derived_at_publication":
+        return `Draft ${link.draft} named no case and left its case to publication: this case was DERIVED AT PUBLICATION from the cases its findings already serve (a new case where they serve none), at ${at}.`;
+      case "named_and_confirmed":
+        return `Draft ${link.draft} named no case and left its case to publication; ${link.by} named this case at publication, and it IS the case publication derives for the draft's findings: NAMED AND CONFIRMED, at ${at}.`;
+      case "new_case_asked_at_publication":
+        return `Draft ${link.draft} named no case and left its case to publication; ${link.by} asked for a NEW case at publication, and this case was minted at ${at}.`;
+      case "named_by_draft":
+        return `Draft ${link.draft} named this case itself, and this edition is the one it was prepared for.`;
+      case "new_case_asked_by_draft":
+        return `Draft ${link.draft} asked for a new case itself, and this case was minted for it at ${at}.`;
+      default:
+        return null;
+    }
   }
   static #ackBodyHeadLines(acks, project) {
     return acks.rows.length ? [
@@ -41764,7 +41815,14 @@ case_project: ${project}
       };
     const project = String(fm.case_project ?? "").trim();
     const writer = Object.prototype.hasOwnProperty.call(c, "statement_by") ? { by: typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null } : null;
-    const link = doc.draft_id ? { draft: doc.draft_id, by: doc.authored_by ?? null, at: doc.authored_at ?? null } : null;
+    const link = doc.draft_id ? {
+      draft: doc.draft_id,
+      by: doc.authored_by ?? null,
+      at: doc.authored_at ?? null,
+      /* D-680: the settled case, read off the document's own bytes, so a splice's
+         prose states what `op=publish` stated. */
+      case: typeof c.draft_case === "string" && c.draft_case.trim() ? c.draft_case.trim() : null
+    } : null;
     const acks = this.#statementAcknowledgements(
       project,
       doc.case_id,
@@ -41856,8 +41914,8 @@ case_project: ${project}
     const rows = this.#rows(
       `SELECT acknowledger_kind, acknowledger, recipient, at, case_id, draft_id
                               FROM statement_acknowledgements
-                             WHERE project_id=? AND statement_sha=? AND edition=?
-                               AND ((case_id IS ? AND (? = '*' OR draft_id = ?))
+                             WHERE project_id=? AND statement_sha=?
+                               AND ((edition=? AND case_id IS ? AND (? = '*' OR draft_id = ?))
                                     OR (case_id IS NULL AND draft_id = ?))
                              ORDER BY at, ack_id LIMIT ?`,
       project,
@@ -41892,7 +41950,7 @@ case_project: ${project}
       statementSha: sha,
       truncated,
       /* REC-217: the link this read was asked under, carried so every rendering states one act. */
-      link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null } : null,
+      link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null, case: link.case ?? null } : null,
       /* REC-217: how many LISTED rows rest on the link (the rest were given at this case identity). */
       boundByLink: linked ? listed.filter((r) => r.case_id == null).length : 0,
       /* UNCHANGED IN MEANING: the publisher's own, counted apart from every exclusion added since,
@@ -42280,7 +42338,9 @@ case_project: ${project}
           ...typeof fm.completeness.draft === "string" && fm.completeness.draft && fm.completeness.draft !== "null" ? { draft: {
             draft_id: fm.completeness.draft,
             named_by: fm.completeness.draft_named_by ?? null,
-            named_at: fm.completeness.draft_named_at ?? null
+            named_at: fm.completeness.draft_named_at ?? null,
+            /* D-680: how the draft's case was settled, from the signed bytes; null where unstated. */
+            case: typeof fm.completeness.draft_case === "string" && fm.completeness.draft_case && fm.completeness.draft_case !== "null" ? fm.completeness.draft_case : null
           } } : {},
           acknowledgements_truncated: Array.isArray(fm.completeness_acknowledgements) ? fm.completeness.acknowledgements_truncated === true : null
         }) : null,

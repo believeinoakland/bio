@@ -9833,9 +9833,13 @@ export const CASE_DERIVATION_CHECKS = {
   PUBLISH_DRAFT_NOT_THIS_CASE: {
     check: 'C-44.4',
     where: 'src/store.mjs publishCase > is-publish-draft-this-case',
+    /* D-680 (BOB #35, 2026-09-25): CHANGED. A draft naming no case now binds to the case publication derives, any
+       edition, so this condition refuses such a draft only where derivation yields NO case (its findings serve
+       several); the sentence says that second reason too. A named case that differs from the derived one is C-44.6. */
     translation: 'The draft named here was prepared for a different case than the one being published, so its '
-      + 'readers did not read this one. Nothing was published. Publish the case that draft is for, or name '
-      + 'the draft of this case.',
+      + 'readers did not read this one — or it left its case to be worked out at publication, and its findings '
+      + 'serve several published cases, so no one case can be worked out for it. Nothing was published. Publish '
+      + 'the case that draft is for, name the case in the draft, or name the draft of this case.',
   },
   PUBLISH_DRAFT_ALREADY_BOUND: {
     check: 'C-44.5',
@@ -9843,6 +9847,18 @@ export const CASE_DERIVATION_CHECKS = {
     translation: 'That draft has already been named as the draft of another published case, and the people who '
       + 'read it are listed there. One draft becomes one case, so it cannot be named for this one too. '
       + 'Nothing was published.',
+  },
+  /* D-680 (BOB #35, 2026-09-25 07:35Z; BIO_Publication_v0_1.md §3 rule 13 (ii)): a draft that names no case binds to
+     the case publication DERIVES for its findings. When the publisher also NAMES a case, the draft binds only if the
+     named case IS the derived one; if they differ, the record will not settle the ambiguity silently (C-44.1's
+     posture) and refuses by name, stating both cases (`case_id`, `derived_case`). */
+  PUBLISH_DRAFT_CASE_NOT_DERIVED: {
+    check: 'C-44.6',
+    where: 'src/store.mjs publishCase > is-publish-draft-derived-case',
+    translation: 'The draft named here left its case to be worked out at publication, and the case worked out from '
+      + 'its findings is not the case this publication names. The record will not choose between them. Nothing was '
+      + 'published. Publish without naming a case, and the draft goes to the case its findings lead to, or name the '
+      + 'draft of the case you are publishing.',
   },
 };
 

@@ -44,6 +44,30 @@
    (d) C-87.6's translation reverted to "Leave the name off and the draft is a new case." DECLARED: MUST FAIL the
        C-87.6 row alone. RAN 27 pass, 1 FAIL — that row. AS DECLARED.
 
+   D-680 NEGATIVE CONTROL (blocks 7 and 8; BOB #35 2026-09-25 07:35Z; declared before arming, each arm ALONE on
+   `src/store.mjs`, restored by `cp` from a per-arm pristine copy, `sha256sum -c` OK 3ed5b3a6…8de5 and `cmp`
+   identical, 3,479,349 bytes):
+   (0) BASELINE 39 pass, 0 fail.
+   (a) THE ROW'S OWN CONTROL — `predicted !== 1` restored for the derivation arm of is-publish-draft-this-case.
+       DECLARED: MUST FAIL block 8's ACCEPTS-WHEN row BY NAME; MUST NOT fail blocks 1-6. RAN 27 pass, 8 FAIL and
+       FIXTURE ABORTED: the ACCEPTS-WHEN row BY NAME, with its dependents (the derived-case answer, the draft door,
+       the signed list, the signed document, the public read) and block 7's derivation row (C1 named: refused
+       NOT_THIS_CASE); then the second reopen aborts, because a finding edition 2 never published is not
+       reopenable. Blocks 1-6 GREEN. AS DECLARED, the abort recorded rather than smoothed.
+   (b) is-publish-draft-derived-case disarmed (a named case that is not the derived one accepted). DECLARED: MUST
+       FAIL block 7's derivation row and block 8's C-44.6 row. RAN 35 pass, 4 FAIL — those two, and the liar's own
+       write cascading: the mismatched act PREPARED Q8 into C1, so the new-case act meets that unsigned preparation
+       (ALREADY_A_CASE_MEMBER) and the no-case row loses its second case. Accepts-when GREEN.
+   (c) OVER-STRICTNESS — the `!newCase` exemption dropped, so a publisher asking for a new case is refused. DECLARED:
+       MUST FAIL block 8's new-case row and the no-case row that rests on it; MUST NOT fail accepts-when. RAN 37
+       pass, 2 FAIL — exactly those. AS DECLARED.
+   (d) `edition=?` restored over the link arm of `#statementAcknowledgements`. DECLARED: MUST FAIL block 8's
+       ACCEPTS-WHEN and signed-list rows; MUST NOT fail blocks 1-7. RAN 36 pass, 3 FAIL — those two and the draft
+       door's (it counts one reading, not two). Blocks 1-7 GREEN.
+   (e) `edition=?` restored over the draft arm of `acknowledgeStatement`'s document read. DECLARED: MUST FAIL block
+       8's draft-door row; MUST NOT fail block 4. RAN 37 pass, 2 FAIL — the draft door and the signed list that
+       rests on it. Block 4 GREEN.
+
    REC-217 / BIO_Publication_v0_1.md §3 rules 11 and 13 — BOB #33 RULED 2026-09-24 19:14Z: `op=publish` NAMES THE
    DRAFT IT PUBLISHES (`draft=`, optional, additive), and AT THAT ACT the readings taken through that draft BIND to
    the case it produced. The link is an ACT, recorded with who made it (the publisher) and when, and the case
@@ -464,12 +488,18 @@ console.log("\n--- 7. D-626: A DRAFT THAT NAMES NO CASE IS NOT CALLED A NEW CASE
   t("the same with newCase spelled as the string \"true\" — read for truthiness, as publication reads it",
     [rs?.reason, NEW.test(rs?.detail || ""), DERIVED.test(rs?.detail || "")],
     ["PUBLISH_DRAFT_NOT_THIS_CASE", true, false]);
-  t("a draft that names no case and asks for none reads the DERIVATION sentence: it is not called a new case, "
-  + "and the remedy does not claim the draft names one",
-    [rd?.reason, DERIVED.test(rd?.detail || ""), NEW.test(rd?.detail || ""),
+  /* CORRECTED BY D-680 (BOB #35, 2026-09-25 07:35Z), never exempted. This row asserted PUBLISH_DRAFT_NOT_THIS_CASE
+     and D-626's remedy "accepted here only at a new case's first edition", which was true of the plane D-626 worded
+     and is the defect D-680 corrects: a derivation draft binds to the case publication DERIVES, any edition. Here
+     derivation yields a NEW case (Q7 serves none) and the act names C1, so the two disagree and the act is refused by
+     name with BOTH cases (C-44.6). The derivation arm of C-44.4 — derivation yields NO case — is driven in block 8. */
+  t("a draft that names no case and asks for none, named on C1 while its findings derive a NEW case: refused "
+  + "PUBLISH_DRAFT_CASE_NOT_DERIVED naming both, never called a new-case draft, and no remedy claims it names a case",
+    [rd?.reason, rd?.case_id, rd?.derived_case, NEW.test(rd?.detail || ""),
      /the case the draft names/.test(rd?.detail || ""),
-     /accepted here only at a new case's first edition: publish it with newCase=true/.test(rd?.detail || "")],
-    ["PUBLISH_DRAFT_NOT_THIS_CASE", true, false, false, true]);
+     /derives a new case for these findings; this act names /.test(rd?.detail || ""),
+     (rd?.detail || "").includes(`this act names ${C1}`)],
+    ["PUBLISH_DRAFT_CASE_NOT_DERIVED", C1, null, false, false, true, true]);
   const ns = rP(await POST(`op=casedraft&token=${IRIS}`,
     withRoles({ ...args(PROJ, "d626x"), caseId: "CASE-2026-9999-none", targets: [Q7] })));
   t("C-87.6 REVIEW_NO_SUCH_CASE, driven through op=casedraft: its translation no longer says leaving the name off "
@@ -484,6 +514,116 @@ console.log("\n--- 7. D-626: A DRAFT THAT NAMES NO CASE IS NOT CALLED A NEW CASE
   + "UNDETERMINED, never as the next edition of C1 alone",
     [aa?.ok, /also asks for a new case/.test(aa?.listed || ""), /UNDETERMINED until one of them is withdrawn/.test(aa?.listed || "")],
     [true, true, true]);
+}
+
+/* =========================================================================== 8 */
+/* D-680 (BOB #35, 2026-09-25 07:35Z; BIO_Publication §3 rule 13): A DERIVATION DRAFT — no caseId, no newCase —
+   DEFERS ITS CASE TO PUBLICATION and binds to the case publication derives at that act, a first edition OR A
+   FURTHER ONE. A case the publisher also names binds it only if it IS the derived case; if not, refused by name
+   with both. Derivation yielding no case is refused as before. The signed document states how the case was
+   settled. Every expected phrase is written out here, never read off the plane's helpers. */
+console.log("\n--- 8. D-680: A DERIVATION DRAFT BINDS TO THE CASE PUBLICATION DERIVES, ANY EDITION ---");
+{
+  let n8 = 0;
+  /* THE ROUTE DEC-12 BUILT TO A FURTHER EDITION: the finding is reopened and concluded again, so its bytes move and
+     ALREADY_A_CASE_MEMBER (which compares the pin for a finding concluded with no project) does not refuse. */
+  const reconclude = async (id) => {
+    n8++;
+    const o = rP(await GET(`op=reopen&token=${IRIS}&target=${encodeURIComponent(id)}`
+      + `&reason=${encodeURIComponent(`D-680 re-read ${n8}: the memo has to be read again`)}`));
+    if (o?.ok === false) bail(`reopen ${id} ${n8}`, o);
+    const c = rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(id)}`
+      + `&conclusion=${encodeURIComponent(`The answer to ${id} is on the memo (re-read ${n8}).`)}`
+      + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${id} (re-read ${n8}).`)}` + adoptedVersionParam()));
+    if (c?.ok === false) bail(`reconclude ${id} ${n8}`, c);
+  };
+  /* A REFUSED publication is a FAILED ROW above it, never a fixture crash here: a control arm must fail by name. */
+  const signIt = async (P, what) => {
+    if (!P?.caseDocument) return null;
+    const doc = await docOf(P.caseDocument.case_id, P.caseDocument.edition ?? P.edition);
+    const r = await ratify(P.caseDocument.case_id, P.caseDocument.edition ?? P.edition, doc?.doc_sha);
+    if (r?.ok === false) bail(`ratify ${what}`, r);
+    return doc;
+  };
+  const Q8 = await finding("d680");
+  const P1st = await publish("d680", [Q8]);
+  if (P1st?.ok === false || !P1st?.caseDocument?.doc_sha) bail("publish d680 edition 1", P1st);
+  const C8 = P1st.caseDocument.case_id;
+  await signIt(P1st, "d680 edition 1");
+  await reconclude(Q8);
+  const D8 = await draftOf("d680e2", [Q8]);
+  const A8 = await ack(`draft=${D8}&token=${ELLA}`);
+  if (!A8?.ok) bail("ack D8", A8);
+  const P2nd = await publish("d680e2", [Q8], { draft: D8 });
+  t("ACCEPTS-WHEN: a DERIVATION draft publishes as a FURTHER EDITION of the case publication derives — edition 2 of "
+  + "C8, not refused PUBLISH_DRAFT_NOT_THIS_CASE — and binds ella's reading of it",
+    [P2nd?.ok !== false, P2nd?.reason ?? null, P2nd?.caseDocument?.case_id === C8, P2nd?.caseDocument?.edition ?? P2nd?.edition,
+     (P2nd?.completeness?.acknowledgements || []).map((a) => [a.by, a.draft ?? null])],
+    [true, null, true, 2, [["ella", D8]]]);
+  t("and the answer states HOW the case was settled: DERIVED AT PUBLICATION, beside the link's author and time",
+    [P2nd?.completeness?.draft?.draft_id, P2nd?.completeness?.draft?.named_by, P2nd?.completeness?.draft?.case],
+    [D8, "iris", "derived_at_publication"]);
+  const Ap8 = await ack(`draft=${D8}&token=${PAT}`);
+  t("THE DRAFT DOOR AFTER PUBLICATION reaches the FURTHER edition the derivation draft bound to: pat's reading "
+  + "re-authors edition 2 of C8, unsigned",
+    [Ap8?.ok, Ap8?.bound_to_a_case, Ap8?.draft_link?.case_id === C8, Ap8?.draft_link?.edition,
+     (Ap8?.case_documents || []).map((d) => [d.case_id === C8, d.edition, d.reauthored, d.acknowledged])],
+    [true, true, true, 2, [[true, 2, true, 2]]]);
+  const doc2 = await signIt(P2nd, "d680 edition 2");
+  t("and the signed edition 2 lists ella and pat, each on the draft",
+    [(fmOf(doc2?.text).completeness_acknowledgements || []).map((a) => [a.by, a.draft])],
+    [[["ella", D8], ["pat", D8]]]);
+  t("THE SIGNED DOCUMENT states it: `draft_case: derived_at_publication` in the frontmatter and the words DERIVED AT "
+  + "PUBLICATION, with the publisher, in the prose",
+    [fmOf(doc2?.text).completeness?.draft_case,
+     (doc2?.text || "").includes(`Draft ${D8} named no case and left its case to publication: this case was DERIVED AT PUBLICATION`),
+     (doc2?.text || "").includes("at iris's act on ")],
+    ["derived_at_publication", true, true]);
+  const pc2 = rP(await GET(`op=publishedcase&id=${C8}&edition=2`));
+  const comp2 = pc2?.completeness ?? pc2?.case?.completeness ?? {};
+  t("THROUGH THE PUBLIC READ, committed FROM THE SIGNED BYTES: the link carries case derived_at_publication",
+    [comp2.draft?.draft_id, comp2.draft?.case], [D8, "derived_at_publication"]);
+
+  await reconclude(Q8);
+  const D8c = await draftOf("d680e3", [Q8]);
+  const P3rd = await publish("d680e3", [Q8], { draft: D8c, caseId: C8 });
+  t("NAMED AND CONFIRMED: the publisher names C8 and C8 IS the derived case, so the derivation draft binds — edition "
+  + "3 — and the document says NAMED AND CONFIRMED",
+    [P3rd?.ok !== false, P3rd?.reason ?? null, P3rd?.caseDocument?.edition ?? P3rd?.edition, P3rd?.completeness?.draft?.case],
+    [true, null, 3, "named_and_confirmed"]);
+  const doc3 = await signIt(P3rd, "d680 edition 3");
+  t("and the signed bytes carry `draft_case: named_and_confirmed` and the sentence",
+    [fmOf(doc3?.text).completeness?.draft_case, (doc3?.text || "").includes("NAMED AND CONFIRMED, at iris's act on ")],
+    ["named_and_confirmed", true]);
+
+  const D8x = await draftOf("d680x", [Q8]);
+  const rx = await publish("d680x", [Q8], { draft: D8x, caseId: C1 });
+  t("A NAMED CASE THAT IS NOT THE DERIVED ONE is refused by name, C-44.6's row, stating BOTH cases",
+    [rx?.reason, rx?.check, rx?.translation, rx?.case_id, rx?.derived_case,
+     (rx?.detail || "").includes(`derives the case ${C8} for these findings; this act names ${C1}`)],
+    ["PUBLISH_DRAFT_CASE_NOT_DERIVED", CASE_DERIVATION_CHECKS.PUBLISH_DRAFT_CASE_NOT_DERIVED.check,
+     CASE_DERIVATION_CHECKS.PUBLISH_DRAFT_CASE_NOT_DERIVED.translation, C1, C8, true]);
+
+  const D8n = await draftOf("d680n", [Q8]);
+  const Pn = await publish("d680n", [Q8], { draft: D8n, newCase: true });
+  t("A PUBLISHER WHO ASKS FOR A NEW CASE is not deriving: the derivation draft binds to the new case exactly as "
+  + "before this row, and the document says the new case was the publisher's ask",
+    [Pn?.ok !== false, Pn?.reason ?? null, typeof Pn?.caseDocument?.case_id === "string" && Pn.caseDocument.case_id !== C8,
+     Pn?.completeness?.draft?.case],
+    [true, null, true, "new_case_asked_at_publication"]);
+  const CN = Pn?.caseDocument?.case_id ?? null;
+  await signIt(Pn, "d680 new case");
+
+  await reconclude(Q8);
+  const D8z = await draftOf("d680z", [Q8]);
+  const rz = await publish("d680z", [Q8], { draft: D8z, caseId: C8 });
+  t("DERIVATION YIELDS NO CASE — the findings now serve two cases — so a named case is refused as before, "
+  + "PUBLISH_DRAFT_NOT_THIS_CASE with C-44.4's row, and the detail says why derivation yields none",
+    [rz?.reason, rz?.check, rz?.translation,
+     (rz?.detail || "").includes(`serve 2 published cases (${[C8, CN].sort().join(", ")})`),
+     /accepted here only at a new case's first edition/.test(rz?.detail || "")],
+    ["PUBLISH_DRAFT_NOT_THIS_CASE", CASE_DERIVATION_CHECKS.PUBLISH_DRAFT_NOT_THIS_CASE.check,
+     CASE_DERIVATION_CHECKS.PUBLISH_DRAFT_NOT_THIS_CASE.translation, true, false]);
 }
 
 console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail`);
