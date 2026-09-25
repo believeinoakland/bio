@@ -823,7 +823,7 @@ accepts-when: a member of no project calling op=linkproject on a shared or hidde
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-701's worker).
 
 ### D-702 · integrated — **D-340 JUDGES A LINK AS SITE CHROME BY CONTAINMENT ONLY, so a page-local sidebar that varies reads as a LOST chrome link (same_page:false).** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): chrome for links needs containment AND recurrence — site chrome is what RECURS across the site's pages in a chrome region; a page-local sidebar is page content; where recurrence cannot be measured (one page of the site held) the link reads chrome UNDETERMINED, never a loss. — owner CAPTURE.
-status: integrated — CONDUCT #23 12:19Z: worker report — tip 71a5d050 (on D-701 414439d2), GATE 388/388 GREEN FULLREUSE (21964 assertions); navchanges recurred_on/page_content/undetermined; IC owed (narrower lost = MAJOR candidate); minted D-729; rides batch30 after D-701/D-706
+status: integrated — SCHEDULER #24 12:31Z: tip 71a5d050 (on D-701 414439d2), GATE 388/388 GREEN FULLREUSE (21964 assertions), tree 5d403292; chromeJudge weighs recurrence over viewer-visible observations: lost only when 2+ distinct pages carried it, else page content or chrome undetermined; navchanges adds pages and undetermined (shape change, I3/I5); d340/d701 pins corrected; minted D-729
 order: after D-701, the same op's second correction (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3/I5 — navchanges' judgement and the derived site_chrome; the integrator classifies.
@@ -1141,6 +1141,17 @@ depends-on: none (stacked on land/worker/D-707 @ 95839afa, integrated, on D-692 
 scope: refuse a non-replay revision whose document's `group` differs from the head's group_id (REVISION_REGROUPS_BUNDLE), replay exempt, after CAS and before the first write, as C-86.9 does. Measure the live-corpus count if reachable, else state it undetermined. STATE, do not sweep further: other columns written only at creation.
 accepts-when: a revision restating a different group is refused by name and nothing is written; the same group respelt, and a revision stating none, still land (moves: a row and its head bytes disagreeing on group). NEGATIVE CONTROL: drop the refusal and the regroup arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-692's worker).
+
+### D-729 · running — **THE LINK SURFACE LABELS EVERY chrome=1 LINK "site navigation" (civicos-ui/app.html linkRow), but chrome=1 is CONTAINMENT only, so a page-local <aside> sidebar link is called site navigation — more than BOB #35's 09:30Z ruling (containment AND recurrence) allows.** Found by D-702's worker (minted on land/worker/D-702). — owner UI.
+order: spawned directly, stacked on D-702: a surface claiming more than the record holds is the "less narrative" defect (CLAUDE.md §2) and corrects just-landed work (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 12:31Z: spawned, stacked on land/worker/D-702 @ 71a5d050
+milestone: M2
+interface: none — the label only.
+design: `docs/development/LINK-FIDELITY.md` §Chrome (containment is a classification recorded on the link; site chrome needs recurrence, BOB #35 09:30Z as D-702 folded it).
+depends-on: none (stacked on land/worker/D-702 @ 71a5d050, integrated, on D-701 @ 414439d2).
+scope: label the stored classification as what it is ("in a page-furniture region (<basis>)"), never "site navigation"; correct link-surface.test.mjs's pin (~228-231) with a comment saying why the old label was wrong. NOT in scope: a per-link recurrence verdict on op=links that would let the surface say "site navigation" for a `site` link — plane work, with BOB #36.
+accepts-when: no link row says "site navigation" from containment alone; a contained link reads its region and basis (moves: a sidebar link called site navigation). NEGATIVE CONTROL: restore the old label and the no-overclaim arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-702's worker).
 
 ### D-644 · queued — **`nc-fw17` arm nullhonest: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-643, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
