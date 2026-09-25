@@ -322,7 +322,9 @@ What binds instead is `CLAUDE.md` §2: a member whose search finds nothing in sh
 sheet 4 was NEVER INDEXED, not that it holds no match. So a `partial` capture records the unit keys it SKIPPED,
 from BOTH loops, in `capture_text_skipped` (derived, purged on both arms, deleted and rewritten with the
 capture's units), and `op=contentaxis`'s `index.skipped` serves them in reading order, each stated *not
-indexed: over the bound*; a capture under the bound serves an empty list. **Keys travel as RUNS** — each
+indexed: over the bound*; a capture under the bound serves an empty list. The read is BOUNDED at 5,120 runs
+(`CAPTURE_TEXT_SKIPPED_RUNS_MAX`: the unit bound plus 1,024, above anything either loop can produce) and
+publishes `skipped_limit` and `skipped_truncated`, so a longer caller-authored list is cut and says so. **Keys travel as RUNS** — each
 maximal stretch of consecutive skipped units, named by its first and last unit (extent, `ref`, `seq`) and
 counted — because the wire's keys ride in `data/provenance.json` under `INLINE_MAX`: one extent per unit for
 M-20's worst docx (~17,700 skipped paragraphs) would blow the file and refuse the promote the list describes.

@@ -508,6 +508,16 @@ const ARMS = {
                             "    /* ARMED */"),
   },
 
+  /* D-724's BOUND: the read keeps the row past the cap (it reads cap+1 to know) and serves it. */
+  d724nocap: {
+    files: [STORE], suite: SUBJECT,
+    why: "the skipped-unit read serves the row it read past its cap, so a cut list is served whole-looking",
+    mustFail: ["Z7: THE BITE"],
+    mustPass: "`Z7a`, `Z7b` and every other arm — a list under the cap never reaches the cut",
+    patch: () => arm(STORE, "    if (skippedTruncated) skipped.length = CAPTURE_TEXT_SKIPPED_RUNS_MAX;",
+                            "    /* ARMED */"),
+  },
+
   /* D-724's OVER-STRICTNESS DIRECTION: name a CUT unit as skipped too, the "safe-looking" way to be sure
      nothing incomplete goes unsaid. It is not safe: the unit's prefix IS indexed and found, so naming it
      "not indexed" tells a member a sheet was never read when its first 131,072 characters were. */

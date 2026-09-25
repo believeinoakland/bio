@@ -32352,6 +32352,7 @@ var TASK_KINDS = ["authority-undetermined"];
 var CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 var CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 var CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
+var CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
 var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]);
 var SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
@@ -72292,8 +72293,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ORDER BY seq DESC LIMIT 1`,
       sha
     );
-    const skipped = indexRow ? this.#rows(`SELECT first_seq, last_seq, units, first_extent, first_ref, last_extent, last_ref
-                      FROM capture_text_skipped WHERE capture_sha = ? ORDER BY first_seq`, sha) : [];
+    const skipped = indexRow ? this.#rows(
+      `SELECT first_seq, last_seq, units, first_extent, first_ref, last_extent, last_ref
+                      FROM capture_text_skipped WHERE capture_sha = ? ORDER BY first_seq LIMIT ?`,
+      sha,
+      CAPTURE_TEXT_SKIPPED_RUNS_MAX + 1
+    ) : [];
+    const skippedTruncated = skipped.length > CAPTURE_TEXT_SKIPPED_RUNS_MAX;
+    if (skippedTruncated) skipped.length = CAPTURE_TEXT_SKIPPED_RUNS_MAX;
     const axis = contentAxisFor({
       observed: latest ? latest.state : null,
       /* THE MECHANISM EXISTS FROM THIS ITEM ONWARD — `capture_text` and
@@ -72382,7 +72389,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           units: k.units,
           first: { extent: safeJson(k.first_extent), seq: k.first_seq },
           last: { extent: safeJson(k.last_extent), seq: k.last_seq }
-        }))
+        })),
+        skipped_limit: CAPTURE_TEXT_SKIPPED_RUNS_MAX,
+        skipped_truncated: skippedTruncated
       } : null,
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
       vocabulary: CONTENT_AXIS_STATES,

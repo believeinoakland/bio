@@ -618,7 +618,13 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      reads, and `derivation-bounds` and `meaning-bounds` each named it; it was fixed at the cause — LIMIT cap+1
      under DRIVE_SHELLS_LIMIT_DEFAULT/MAX, a keyset cursor, `limit` and `truncated` published. Its envelope is in
      the map below and its BITE in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
-  OPS.size, 46);
+  /* MOVED 46 -> 47 on 2026-09-25 by D-724, from THIS ARM'S OWN FAILURE OUTPUT (`want 46 / got 47`), never by adding
+     one: op=contentaxis, which now serves a partial capture's SKIPPED units by name (`index.skipped`). Its first
+     cut read `capture_text_skipped` with no LIMIT, and `derivation-bounds` and `meaning-bounds` each named it; the
+     read is capped at CAPTURE_TEXT_SKIPPED_RUNS_MAX (LIMIT cap+1) with `skipped_limit` and `skipped_truncated`
+     published. Its envelope is in the map below and its BITE in `test/capture-text-index.test.mjs` Z7
+     (DRIVEN_ELSEWHERE). */
+  OPS.size, 47);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1445,6 +1451,11 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      the pages unioned to the whole, FALSE at the default, and an over-ask
                                      answered at the ceiling with `limit` read back as the bound applied. */
                                   "driveshells",
+                                  /* D-724: op=contentaxis takes no `limit` — its bound is
+                                     CAPTURE_TEXT_SKIPPED_RUNS_MAX over one capture's skipped-unit runs, and the
+                                     bite needs a promoted capture carrying more runs than that, which is
+                                     `test/capture-text-index.test.mjs` Z7's authored provenance. */
+                                  "contentaxis",
                                   "capturerequests", "capturerequestdrain", "versionstrength",
                                   "textprovenance", "textattest", "caseflags",
                                   /* REC-116 / IC-120: the ENVELOPE and bound-published arms are
@@ -1974,6 +1985,9 @@ const answersByOp = new Map([
   /* D-525: the envelope of the Drive shell sweep over a store holding no Drive-linked bundle — an object with its
      named lists, never an array. The bite is driven in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
   ["driveshells", await GET("op=driveshells&token=mem-r57&limit=1")],
+  /* D-724: the envelope of the content-axis read for a capture this store does not hold — an object, never an
+     array. The bite is driven in `test/capture-text-index.test.mjs` Z7 (DRIVEN_ELSEWHERE). */
+  ["contentaxis", await GET(`op=contentaxis&token=mem-r57&captureSha=${"0".repeat(64)}`)],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

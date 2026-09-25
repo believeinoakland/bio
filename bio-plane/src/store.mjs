@@ -775,6 +775,12 @@ const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 /* D-724 (BOB #36, 2026-09-25 11:20Z): the words a skipped unit is served in, one constant so the read
    and any surface that renders it say the same thing. */
 const CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
+/* D-724: the most skipped-unit RUNS `op=contentaxis` serves for one capture, PUBLISHED on the answer with
+   `skipped_truncated`. Not a guess: the store's loop can write at most one run more than the units it
+   indexes (4,096), and the wire sends at most ~1,018 (a run ends only at a carried unit, and after the
+   first skip the wire carries under 131,200 B at >= 129 B a unit) -- so 5,120 covers every run either
+   route can produce, and a caller-authored list longer than that is cut and SAID to be cut. */
+const CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
  * question from whether a given capture produced units and must not be folded
  * into it. An HTML page with no `dom` producer is the none-with-a-reason member of the content-axis vocabulary
@@ -44473,8 +44479,11 @@ export class Store extends DurableObject {
     /* D-724: the named gaps, read beside the index row they qualify (served on `index` below). */
     const skipped = indexRow
       ? this.#rows(`SELECT first_seq, last_seq, units, first_extent, first_ref, last_extent, last_ref
-                      FROM capture_text_skipped WHERE capture_sha = ? ORDER BY first_seq`, sha)
+                      FROM capture_text_skipped WHERE capture_sha = ? ORDER BY first_seq LIMIT ?`,
+                   sha, CAPTURE_TEXT_SKIPPED_RUNS_MAX + 1)
       : [];
+    const skippedTruncated = skipped.length > CAPTURE_TEXT_SKIPPED_RUNS_MAX;
+    if (skippedTruncated) skipped.length = CAPTURE_TEXT_SKIPPED_RUNS_MAX;
     const axis = contentAxisFor({
       observed: latest ? latest.state : null,
       /* THE MECHANISM EXISTS FROM THIS ITEM ONWARD — `capture_text` and
@@ -44546,7 +44555,8 @@ export class Store extends DurableObject {
               says: CAPTURE_TEXT_SKIPPED_SAYS,
               from: k.first_ref, to: k.last_ref, units: k.units,
               first: { extent: safeJson(k.first_extent), seq: k.first_seq },
-              last: { extent: safeJson(k.last_extent), seq: k.last_seq } })) }
+              last: { extent: safeJson(k.last_extent), seq: k.last_seq } })),
+            skipped_limit: CAPTURE_TEXT_SKIPPED_RUNS_MAX, skipped_truncated: skippedTruncated }
         : null,
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
       vocabulary: CONTENT_AXIS_STATES,

@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: D-724 (a partial capture NAMES the units it skipped over the bound; BOB #36 2026-09-25 11:20Z, option (b)), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, FOUR NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (`src/store.mjs` 3,480,187 B sha256 dfc6659a4284…, `src/index.mjs` 895,904 B sha256 43616b2ba8f3…). Baseline 86/0. Declared before arming: (q) `d724nowrite` — THE ROW'S CONTROL: drop the skipped-key write; MUST fail G6b, G6c, Z5d (naming S4), Z5e → 82/4, exactly those four, as declared. (r) `d724wire` — the wire drops a unit without naming it; MUST fail Z5c, Z5d, Z5e and MUST NOT move G6b/G6c (the store's loop) → 83/3, as declared. (s) `d724nodelete` — the rewrite leaves the named gaps standing; MUST fail Z5f alone → 85/1, as declared. (t) `d724cutisskip` — OVER-STRICTNESS: name a unit the wire CUT (and carried) as skipped; declared Z3b and Z5c → 82/4: both, AND Z5d/Z5e UNDECLARED — recorded, not smoothed: S1–S3 are named beside S4, the arm's own subject reaching the read. The seventeen earlier arms re-run on this tree, every one AS DECLARED; the new assertions each reaches are the arm's own subject: `noobs`/`overstrict` G6b G6c G7b Z3b Z5d Z5e Z5f (no index row / a 64 B bound), `d685whole` Z3b Z5c Z5d Z5e (the whole-unit wire skips different sheets), `d672nosheets` Z5c Z5d Z5e, `d672storeset` Z5e Z5f, `nowire` Z5d. First run found an INSTRUMENT defect, fixed: Z5e's pattern required the `;` of a trailing truncated clause, so `d685storeflag` failed it; it now reads the clause it tests. REC-91's `nopurge` anchor moved with the purge list (D-724 appends an entry) and arms once, as before. */
+/* NEGATIVE CONTROL: D-724 (a partial capture NAMES the units it skipped over the bound; BOB #36 2026-09-25 11:20Z, option (b)), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, FIVE NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (first run `src/store.mjs` 3,480,187 B sha256 dfc6659a4284…, `src/index.mjs` 895,904 B sha256 43616b2ba8f3…, baseline 86/0, figures below; RE-RUN after the gate named the unbounded read and the cap landed — `src/store.mjs` 3,481,086 B sha256 1ed386f531d4…, baseline 89/0: `d724nowrite` 84/5 (its four AND Z7, no rows to cut), `d724wire` 86/3, `d724nodelete` 88/1, `d724cutisskip` 85/4, and (u) `d724nocap` — serve the row read past the cap; MUST fail Z7 alone → 88/1, as declared). Baseline 86/0. Declared before arming: (q) `d724nowrite` — THE ROW'S CONTROL: drop the skipped-key write; MUST fail G6b, G6c, Z5d (naming S4), Z5e → 82/4, exactly those four, as declared. (r) `d724wire` — the wire drops a unit without naming it; MUST fail Z5c, Z5d, Z5e and MUST NOT move G6b/G6c (the store's loop) → 83/3, as declared. (s) `d724nodelete` — the rewrite leaves the named gaps standing; MUST fail Z5f alone → 85/1, as declared. (t) `d724cutisskip` — OVER-STRICTNESS: name a unit the wire CUT (and carried) as skipped; declared Z3b and Z5c → 82/4: both, AND Z5d/Z5e UNDECLARED — recorded, not smoothed: S1–S3 are named beside S4, the arm's own subject reaching the read. The seventeen earlier arms re-run on this tree, every one AS DECLARED; the new assertions each reaches are the arm's own subject: `noobs`/`overstrict` G6b G6c G7b Z3b Z5d Z5e Z5f (no index row / a 64 B bound), `d685whole` Z3b Z5c Z5d Z5e (the whole-unit wire skips different sheets), `d672nosheets` Z5c Z5d Z5e, `d672storeset` Z5e Z5f, `nowire` Z5d. First run found an INSTRUMENT defect, fixed: Z5e's pattern required the `;` of a trailing truncated clause, so `d685storeflag` failed it; it now reads the clause it tests. REC-91's `nopurge` anchor moved with the purge list (D-724 appends an entry) and arms once, as before. */
 /* NEGATIVE CONTROL: D-685 (a unit over the acquire wire's budget is carried as its capped prefix, marked truncated), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, THREE NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (first on `src/index.mjs` 893,432 B sha256 cdf667478865… / `src/store.mjs` 3,473,715 B sha256 03139705cbdb…; RE-RUN, the four arms here with the same verdicts, after the cap moved to `checks/bio-checks.mjs` — `src/index.mjs` 893,527 B sha256 6298c78c9352…, `src/store.mjs` 3,473,965 B sha256 d26738241468…). Baseline 78/0. Declared before arming: (n) `d685whole` — THE ROW'S CONTROL: charge and carry the WHOLE unit again (the pre-D-685 wire); MUST fail Z1, Z2, Z3, Z4, Z4b, Z5 and MUST NOT move Z5b or Z6 → 72/6, exactly those six BY NAME, as declared. (o) `d685storeflag` — the writer ignores the wire's `truncated: true`; MUST fail Z2 and Z4b alone (the prefix arrives AT the cap, so the writer's own comparison calls it whole) → 76/2, as declared. (p) `d685flagall` — OVER-STRICTNESS: mark every carried unit truncated, cut or not; MUST fail Z5, Z5b, Z6 → 75/3, as declared. Zero undeclared failures on any arm. The fourteen earlier arms re-run on this tree, every one AS DECLARED; their new failures in §Z are each the arm's own subject reaching the new section and are recorded, not smoothed: `noobs` adds Z3/Z5b (the axis reads), `overstrict` Z2/Z3/Z4b (a 64 B capture bound), `d672storeset` Z3/Z5b (no sheet arm in the store's set), `nowire` and `d672nosheets` Z1–Z6 (no units at all). Those last two first THREW at Z6 (`bookDoc.text_units.some` over an absent list) — a finding about the suite, fixed with `?.` so the arm fails Z6 BY NAME instead: `nowire` 53/25, `d672nosheets` 61/17. The BEFORE reading (the HEAD sources swapped in) is M-184: 71/7. */
 /* NEGATIVE CONTROL: D-684 (a text/csv capture read as text at intake reaches its format entry), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, THREE NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (`src/index.mjs` 892,191 B sha256 da5f850111be…, re-run after the D-70 comment rewording). Baseline 70/0. Declared before arming: (k) `d684shortcircuit` — THE ROW'S CONTROL: skip D-684's block so the content-type reader's branch short-circuits again (the pre-D-684 tree); MUST fail Y1 and Y3 and MUST NOT move Y2 (the profile reading is the same either way) or Y4 → 68/2, exactly Y1 and Y3 BY NAME, as declared. (l) `d684certain` — OVER-STRICTNESS: admit the entry only on a CERTAIN detection, which a csv never has (no magic bytes; `likely` by construction); MUST fail Y1 and Y3 → 68/2, as declared. (m) `d684overreach` — SCOPE: write `text_container` for any detected format before the `text()` guard; MUST fail Y4 alone (an HTML reading claiming a container the wire never read) → 69/1, as declared. Zero undeclared failures on any arm. */
 /* NEGATIVE CONTROL: D-672 (the workbook's sheet unit), run 2026-09-25 through `node test/nc-rec91.mjs` from `bio-plane/`, THREE NEW ARMS beside REC-91's seven, every arm ALONE, every restore byte-identical by sha256 AND content (`src/index.mjs` 889,784 B sha256 d62623fb8d0c…; `src/store.mjs` 3,472,630 B sha256 764a2df0f8b1…). Declared before arming: (h) `d672nosheets` — THE ROW'S CONTROL: drop the `sheets[]` arm from `textUnitsFor`; MUST fail B3, B3b, C1, C3c, X1 (the workbook passage search returns 0 rows), X2, X2b and MUST NOT move the document, deck or no-arm arms → 59/7, exactly those seven BY NAME, as declared. (i) `d672storeset` — revert the store's container set to its pre-D-672 five; MUST fail C3c, X2b, X3 and MUST NOT move B3, C1 or X1 — the units are emitted, WRITTEN and FOUND while the observation says the container has no unit arm, the record contradicting itself → 63/3, as declared. (j) `d672strict` — OVER-STRICTNESS: admit a sheet only when its grid bound is stated, dropping the .ods sheet (bound NULL by format, used range measured); MUST fail X2, X2b and MUST NOT move the .xlsx arms → 64/2, as declared. REC-91's arms re-run on this tree: baseline 66/0; `nowire` had NOT ARMED since CPDF-19 moved its anchor line from sixteen spaces of indent to four (matched 0×, a control that could never fail) — re-anchored, now 51/15, 8/8 declared; `armsopen` 64/2 (C3b and X3, X3 newly declared because it reads the set this arm replaces); `noobs` 51/15, `overstrict` 49/17, `replace` 58/8, `nopurge` and `nodelete` -1 (THREW, declared) — every arm AS DECLARED. `d672nosheets` IS the pre-D-672 wire, so it is the before-the-fix reading. */
@@ -367,6 +367,7 @@ const promote = async (id, { document = null } = {}) => {
   return r;
 };
 const axisOf = async (s) => get("contentaxis", `captureSha=${encodeURIComponent(s)}`);
+let ax4Truncated = null, ax4Limit = null;   /* D-724: Z5's workbook, read back at Z7b */
 
 try {
 
@@ -1316,6 +1317,7 @@ console.log("\n--- Z · D-685: a unit over the acquire wire's budget is carried 
     [[["S1", CAP, true], ["S2", CAP, true], ["S3", CAP, true], ["S5", FIFTH_TERM.length, false]], 1]);
   await promote("INFO-2026-9310-four", { document: fourDoc });
   const ax4 = await axisOf(fourDoc.capture.sha256);
+  ax4Truncated = ax4.index?.skipped_truncated; ax4Limit = ax4.index?.skipped_limit;   /* read at Z7b */
   t("Z5b: promoted, the capture reads PARTIAL, the dropped sheet's text is NOT found and the fifth's is",
     [ax4.indexed, ((await passageRows(FOURTH_OPEN))?.rows || []).length,
      ((await passageRows(FIFTH_TERM))?.rows || []).map((r) => [r.ref, r.truncated])],
@@ -1354,6 +1356,43 @@ console.log("\n--- Z · D-685: a unit over the acquire wire's budget is carried 
   + "carry no `truncated` key at all",
     [bookDoc.text_units?.some((u) => "truncated" in u), "truncated" in (s5 || {}), s5?.text === FIFTH_TERM],
     [false, false, true]);
+}
+
+/* D-724 — THE READ IS BOUNDED, AND A CUT LIST SAYS SO. `op=contentaxis` serves at most
+   CAPTURE_TEXT_SKIPPED_RUNS_MAX (5,120: the unit bound plus 1,024) runs for one capture, reading one past the
+   cap to know. Neither product route can produce that many (the store writes at most 4,097, the wire ~1,018),
+   so the bite is driven with a caller-AUTHORED provenance document of 5,121 single-page runs — the one route
+   that can carry them, and under `INLINE_MAX`. The literal 5,120 is written here, not read from the source. */
+console.log("\n--- Z7 · D-724: the skipped-unit read is bounded and says when it is cut ---");
+{
+  const RUNS_MAX = 5120, N = RUNS_MAX + 1;
+  const sh7 = sha("a capture authored with more skipped-unit runs than the read serves");
+  const page = (n) => ({ kind: "pdf-page", page: n, rect: null });
+  const doc7 = {
+    file: "snapshots/runs.pdf", locator: "https://www.oaklandca.gov/runs.pdf", retrieved: NOW,
+    capture: { sha256: sh7, encoding: "binary", bytes: 1 << 20 },
+    reading: { content_type: "meeting_packet", reader_version: 1, read_from_text: true, found: false,
+               entities: [], facts: {}, at: NOW, text_source: [{ step: "layer", tier: 1, container: "pdf" }],
+               text_tier: 1, text_container: "pdf", page_count: 2 * N + 1, container_extent: null,
+               basis: "a synthetic reading whose every other page was skipped over the bound" },
+    text_units: [{ extent: page(0), seq: 0, text: "Measure QQ first page" }],
+    text_units_over_bound: N,
+    text_units_skipped: Array.from({ length: N }, (_, i) =>
+      ({ first: page(2 * i + 1), first_seq: 2 * i + 1, last: page(2 * i + 1), last_seq: 2 * i + 1, units: 1 })),
+  };
+  const bytes7 = JSON.stringify({ documents: [doc7] }).length;
+  t("Z7a: the fixture is under INLINE_MAX (the promote path accepts it) and carries one run more than the cap",
+    [bytes7 < 1048576, doc7.text_units_skipped.length], [true, N]);
+  await promote("INFO-2026-9310-runs", { document: doc7 });
+  const ax7 = await axisOf(sh7);
+  const sk = ax7.index?.skipped || [];
+  t("Z7: THE BITE — the read serves exactly the cap, the FIRST runs in reading order, publishes the cap it "
+  + "applied and says the list is cut (moves: an unbounded read, or a cut list read as whole)",
+    [ax7.indexed, sk.length, sk[0]?.first.seq, sk[sk.length - 1]?.first.seq, ax7.index?.skipped_limit,
+     ax7.index?.skipped_truncated],
+    [PARTIAL, RUNS_MAX, 1, 2 * RUNS_MAX - 1, RUNS_MAX, true]);
+  t("Z7b: and a list under the cap is WHOLE — the four-sheet workbook's one run reads not truncated",
+    [ax4Truncated, ax4Limit], [false, RUNS_MAX]);
 }
 
 /* THE STORE'S HALF, READ OUT OF THE SOURCE. The writer never reads the kind, so
