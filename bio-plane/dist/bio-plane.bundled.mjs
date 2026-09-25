@@ -40833,12 +40833,26 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
      rehomes it). A draft naming an existing case stands at that case's next
      edition; a draft naming none stands at edition 1, the edition a MINTED case has — which is the case only
      when it asks for a new one or the derivation finds nothing (D-538: the identity SENTENCE says which; this
-     `edition` does not, and is kept because grants and acknowledgements are keyed on it). */
+     `edition` does not, and is kept because grants and acknowledgements are keyed on it — D-568: it is the
+     INTERNAL key, and every answer states it through `#statedEdition`, null for a derived draft). */
   #draftIdentity(row) {
     const named = String(row.case_id ?? "").trim() || null;
     if (!named) return { caseId: null, edition: 1 };
     const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, named);
     return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
+  }
+  /* D-568 (BIO_Publication_v0_1.md 6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE EDITION A
+     DRAFT'S ANSWERS STATE IS NULL WHERE ITS CASE IS DERIVED. `#draftIdentity`'s edition 1 for a draft naming no
+     case is the edition a MINTED case has, and it stays the INTERNAL key — `review_grants` rows and
+     `statement_acknowledgements` rows are written and matched at (case_id NULL, edition 1), so moving it would
+     orphan every grant and reading already given. But ON THE WIRE it claimed more than the record holds: a draft
+     that names no case and does not set `newCase` has its case DERIVED at publication (D-538's sentence), and
+     over findings a published case already serves that is C1's NEXT edition, not edition 1 (reviewcopy.test.mjs
+     block 12, draft DD). Which edition it becomes is UNDETERMINED until then, so the answer says `null`, never a
+     number. A draft naming a case keeps that case's next edition; one asking for a new case keeps 1, which is
+     true of it. `newCase` is read for truthiness, as `publishCase` reads it. */
+  static #statedEdition(ident, newCase) {
+    return ident.caseId || newCase ? ident.edition : null;
   }
   /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
      off the act's own record (`case_documents.draft_id`, with the act's `authored_by` and `authored_at` as who and
@@ -40956,7 +40970,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       project: owning,
       edited: !!existing,
       caseId: ident.caseId,
-      edition: ident.edition,
+      edition: _Store.#statedEdition(ident, !!params.newCase),
       caseIdentity: _Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
       read: `op=reviewcopy&draft=${id}`
     };
@@ -41096,19 +41110,20 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     };
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, a.who, when);
+    const newCase = !!JSON.parse(d.params).newCase;
     return {
       ok: true,
       grantId: id,
       draftId: d.draft_id,
       caseId: ident.caseId,
-      edition: ident.edition,
+      edition: _Store.#statedEdition(ident, newCase),
       recipient: to,
       issuedBy: a.who,
       issuedAt: when,
       boundTo: `this grant reads ${_Store.#caseIdentitySentence(
         ident.caseId,
         ident.edition,
-        !!JSON.parse(d.params).newCase
+        newCase
       )} and nothing else. It ends when it is revoked, and when that edition is published and signed.`
     };
   }
@@ -41277,10 +41292,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,
                                            revoked_by, revoked_at FROM review_grants WHERE draft_id=?
                                     ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, cap + 1);
-      const grants = grantRows.slice(0, cap).map((g) => ({
-        ...g,
-        live: !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition
-      }));
+      const grants = grantRows.slice(0, cap).map((g) => {
+        const live = !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition;
+        return {
+          ...g,
+          live,
+          edition: g.case_id ? g.edition : live ? _Store.#statedEdition(ident, !!params.newCase) : null
+        };
+      });
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
     const writer = { by: d.statement_by ?? null };
@@ -41339,9 +41358,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
          UNDETERMINED). THE IDENTITY SENTENCE BESIDE IT READS THE SAME FIELD (D-538): before it, with no
          case named, that sentence read *a new case* whether or not this field was set — REC-199's
          reported finding, fixed in `#caseIdentitySentence` for every answer that prints it. */
+      /* D-568: `edition` is null for a DERIVED draft — see `#statedEdition`; the grants' liveness above is
+         still decided at the internal key. */
       case: {
         case_id: ident.caseId,
-        edition: ident.edition,
+        edition: _Store.#statedEdition(ident, !!params.newCase),
         identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
         newCase: !!params.newCase
       },
@@ -41467,6 +41488,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     bySecret = false
   } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
+    let draftNewCase = false;
     let authorFromDraft = false;
     const refusal7 = (code, detail, extra) => {
       const row = STATEMENT_ACK_CHECKS[code];
@@ -41481,6 +41503,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       project = d.project_id;
       ident = this.#draftIdentity(d);
       draftId = d.draft_id;
+      draftNewCase = !!JSON.parse(d.params).newCase;
       statement = JSON.parse(d.params).statement;
       statementAuthor = d.statement_by ?? null;
       authorFromDraft = true;
@@ -41498,6 +41521,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         project = d.project_id;
         ident = this.#draftIdentity(d);
         draftId = d.draft_id;
+        draftNewCase = !!JSON.parse(d.params).newCase;
         statement = JSON.parse(d.params).statement;
         statementAuthor = d.statement_by ?? null;
         authorFromDraft = true;
@@ -41625,7 +41649,7 @@ case_project: ${project}
         at: when,
         project,
         case_id: ident.caseId ?? null,
-        edition: ident.edition,
+        edition: _Store.#statedEdition(ident, draftNewCase),
         draft_id: draftId,
         statement_sha: statementSha
       },
@@ -42028,9 +42052,10 @@ case_project: ${project}
       const ident = this.#draftIdentity(d);
       return {
         draft_id: d.draft_id,
+        /* D-568: null for a DERIVED draft (`#statedEdition`), as the single read states it. */
         case: {
           case_id: ident.caseId,
-          edition: ident.edition,
+          edition: _Store.#statedEdition(ident, !!JSON.parse(d.params).newCase),
           identity: _Store.#caseIdentitySentence(
             ident.caseId,
             ident.edition,

@@ -344,14 +344,18 @@ const A1 = await ack(`draft=${D1}&token=${ELLA}`);
    copy stamped that way while its edit, comments and grants carry milliseconds — so an acknowledgement made
    in the same second as a comment was dated EARLIER than it, and a string compare ranked it LATER. The
    acknowledgement is now stamped `stampInstant("millisecond")` like the copy's other acts; what this arm
-   asserts, a real dated instant, is unchanged. */
+   asserts, a real dated instant, is unchanged.
+   CORRECTED 2026-09-25 (D-568), NOT EXEMPTED: the answer's edition was pinned at 1, the MINTED-case edition, for a
+   draft that names no case and sets no `newCase` — whose case publication DERIVES, so which edition it becomes is
+   UNDETERMINED here. The answer states `null`; the row is still written at the internal (no case, 1) key, which
+   the "SAME act" arm below still reads. */
 t("A JOINED PARTICIPANT ACKNOWLEDGES — attributed to her, dated, of THIS statement's hash (computed here), at "
-+ "the draft's case identity (no case id, edition 1 — a draft naming no case, whose case publication derives; "
-+ "the label read \"a new case\", which D-538 corrected: the draft sets no `newCase`)",
++ "the draft's case identity (no case id, edition UNDETERMINED (null) — a draft naming no case, whose case "
++ "publication derives; the label read \"a new case\", which D-538 corrected: the draft sets no `newCase`)",
   [A1?.ok, A1?.existed, A1?.acknowledgement?.kind, A1?.acknowledgement?.by,
    A1?.acknowledgement?.statement_sha === sha(STMT), A1?.acknowledgement?.case_id, A1?.acknowledgement?.edition,
    /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(A1?.acknowledgement?.at || "")],
-  [true, false, "participant", "ella", true, null, 1, true]);
+  [true, false, "participant", "ella", true, null, null, true]);
 t("and again is the SAME act, not a second one",
   [(await ack(`draft=${D1}&token=${ELLA}`))?.existed], [true]);
 const A2 = await ack(`draft=${D1}&secret=${encodeURIComponent(G1.secret)}`);
@@ -662,12 +666,15 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
      before.every((x) => typeof x === "string"), fmOf((await docOf(po.caseDocument.case_id, 1, SOL))?.text).case_project],
     [true, SA_MAX + 1, SA_MAX + 1, true, SOLO]);
   const over = await ack(`draft=${Dm.draftId}&token=${ELLA}`);
+  /* CORRECTED 2026-09-25 (D-568), NOT EXEMPTED: the edition was pinned at 1 for a draft naming no case and not
+     setting `newCase`, whose case (and so edition) publication DERIVES; the answer states null. What this arm is
+     about — the door lands and re-authors none of the MAX + 1 documents — is unchanged. */
   t("ACCEPTS-WHEN (second clause): with MAX + 1 unsigned edition-1 documents of this EXACT sentence in this "
   + "project, the draft door of a new case LANDS and re-authors NONE OF THEM — a draft that names no case has no "
   + "document of its own, and none of those MAX + 1 cases is it",
     [over?.ok, over?.existed, over?.bound_to_a_case, over?.acknowledgement?.case_id, over?.acknowledgement?.edition,
      over?.acknowledgement?.draft_id, (over?.case_documents || []).length, over?.reason ?? null],
-    [true, false, false, null, 1, Dm.draftId, 0, null]);
+    [true, false, false, null, null, Dm.draftId, 0, null]);
   t("and NOTHING WAS WRITTEN to any document: every one, this project's MAX + 1 and the other project's, holds the "
   + "bytes it was authored with",
     await shaNow(), before);
