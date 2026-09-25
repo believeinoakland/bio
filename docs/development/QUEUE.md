@@ -1164,7 +1164,7 @@ accepts-when: no link row says "site navigation" from containment alone; a conta
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-702's worker).
 
 ### D-644 · integrated — **`nc-fw17` arm nullhonest: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — CONDUCT #23 12:55Z: worker report — tip eb82f304 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6572 assertions); nc-fw17 nullhonest re-anchored, allowance removed; test-only, no IC; rides batch31
+status: integrated — SCHEDULER #24 13:05Z: tip eb82f304 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6572 assertions), tree a04c8c91; nc-fw17 nullhonest re-anchored on the reading_refs INSERT position line (1 match here and on main), allowance deleted, arm alone 56/7 as declared
 order: after D-643, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
