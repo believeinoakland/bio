@@ -367,6 +367,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        action's risk tier. Inside `promote`'s action block, a region and not a method. D-PIN-B failed naming
        exactly this row until it was written here. */
     ["C-32.19", "MACHINE_CANNOT_SET_RISK_TIER"],
+    /* D-689, 2026-09-25 — BOB #35's (b) FENCE BOTH: a machine credential may not state the law a records request is
+       made under (a cpra_request created, a records_request's `law` set, changed or removed). Inside `promote`'s
+       action block through one helper, C-32.19's shape. D-PIN-B failed naming exactly this row until it was written here. */
+    ["C-32.20", "MACHINE_CANNOT_STATE_RECORDS_LAW"],
     /* ACT_SHAPE_CHECKS — the single-homed tail, plus §14a's capability sentence */
     ["C-33.1", "NO_CONCLUSION"],
     ["C-33.2", "NO_FALSIFIER"],
@@ -561,7 +565,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 54 -> 55 on 2026-09-23 (REC-175), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 55 rows across 2 families" on the item's tree
      over origin/main 14faa089) and not by adding to the number in the file: C-33.38 FILE_DIGEST_MISMATCH. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one, REC-176's one, D-168's one, D-149's one and REC-189's one — a walk that lost a "
+    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one, REC-176's one, D-168's one, D-149's one, REC-189's one and D-689's one — a walk that lost a "
     + "family would run fewer arms and every one of them would still pass",
     /* MOVED 54 -> 55 on 2026-09-23 (REC-176), FROM THE FIGURE THIS INSTRUMENT PRINTED on the item's tree over
        origin/main 0e7cc03e and not by adding to the number in the file: C-67.1 SNAP_KEY_TAKEN. */
@@ -588,7 +592,9 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        the re-run link's three refusals at `aiRunOpen > is-airun-rerun-link`. */
     /* CONDUCT #21 at c21-batch28: 67 at the union — REC-205's C-33.44 (64 on its branch) and REC-207's three,
        renumbered C-33.45..C-33.47 off that collision; RE-READ from this suite's print on the merged tree. */
-    rowsSeen, 67);
+    /* MOVED 67 -> 68 on 2026-09-25 (D-689), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 68 rows across 2
+       families", "got 68") on the item's tree over REC-201 @ 45ce0bc5: C-32.20 MACHINE_CANNOT_STATE_RECORDS_LAW. */
+    rowsSeen, 68);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

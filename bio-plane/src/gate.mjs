@@ -146,7 +146,10 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.30.0";
+/* 1.34.0 (D-689, 2026-09-25, branch land/worker/D-689): ONE ARRIVAL, NO DEPARTURES — C-32.20
+   MACHINE_CANNOT_STATE_RECORDS_LAW in MACHINE_FENCE_CHECKS; the census row also names REC-201's changed C-2.10.
+   1.31.0-1.33.0 and 2.0.0 are held by other in-flight branches; CONDUCT takes the union's one number. */
+export const CATALOG_VERSION = "1.34.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

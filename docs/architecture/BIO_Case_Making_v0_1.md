@@ -243,8 +243,9 @@ refuses a machine credential (REC-46's one predicate) whose write CHANGES what t
 request is made under — `recordsLawStatement`, the one key: a `cpra_request` states the CPRA, a `records_request` its
 `law`, anything else nothing — as `MACHINE_CANNOT_STATE_RECORDS_LAW` (C-32.20), naming `op=actionlawspropose` as the
 path it may take. A creation stating a law is a change from nothing; setting, changing or REMOVING a law on a revision
-is a change (BOB #32's rule for the risk tier, applied by the builder: removing a member's statement is writing it —
-**for BOB to confirm**); carrying the statement forward unchanged is not, so a pre-fence machine `cpra_request` is
+is a change (BOB #32's rule for the risk tier, applied: removing a member's statement is writing it). **CONFIRMED
+2026-09-25 08:55Z by BOB #35, the tighter edge included:** a machine may not remove or retype a records-law statement,
+not even a pre-fence machine one; a member withdraws it herself. Carrying the statement forward unchanged is not, so a pre-fence machine `cpra_request` is
 revised without being rewritten, and a machine may create a `records_request` naming no law. A member ADOPTS by her
 own act: a revision stating the `law` (UI-119 is its intake control), and `op=actionlaws` for the list; nothing
 relates the adoption to the proposal. The action's read carries WHO STATED IT (`law.stated_by`: `member`, `machine`
