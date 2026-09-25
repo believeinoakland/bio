@@ -257,8 +257,8 @@ ${GROUP_LINE_UNREAD}
   <h2>Files in this bundle</h2>
   <div class="card" id="b-files"></div>
   <h2>History</h2>
-  <p class="small">Every revision this bundle has ever had, oldest first. The
-  record is append-only: nothing here can be edited or removed.</p>
+  <p class="small">Every revision this bundle has ever had. The record is
+  append-only: nothing here can be edited or removed.</p>
   <div class="card" id="b-history"></div>
   <div id="b-ratify"></div>
 </section>
@@ -691,6 +691,17 @@ async function openBundle(id){
   CURRENT = { id, img };
   renderBundle(id, img, null);
 }
+/* D-719 (State Rules §6, I-20 as D-674 and D-700 amended it): the history reads in WRITE order, never the
+   caller-chosen snap key, whose lexical order is not a clock. The image carries each entry's write-order rank as
+   seq; when EVERY entry carries a distinct integer one the list follows it (the gate's historyWriteOrder, D-700),
+   else it is listed by key as before and the page says which order it shows. */
+function historyOrder(raw){
+  const list = Array.isArray(raw) ? raw.filter(e=>e && typeof e === "object") : [];
+  const seqs = list.map(e=>e.seq);
+  const write = list.length > 0 && seqs.every(v=>Number.isSafeInteger(v)) && new Set(seqs).size === list.length;
+  return write ? { order:"write", entries: list.slice().sort((a,b)=>a.seq-b.seq) }
+    : { order:"key", entries: list.slice().sort((a,b)=>String(a.key).localeCompare(String(b.key))) };
+}
 function renderBundle(id, img, revisionKey){
   const liveText = typeof img["bundle.md"] === "string" ? img["bundle.md"] : "";
   /* Canonical snapshot path: the key lives in the filename, not a directory. */
@@ -721,8 +732,12 @@ function renderBundle(id, img, revisionKey){
 
   let entries = [];
   try { entries = JSON.parse(img["_history/manifest.json"]||"{}").entries || []; } catch {}
-  entries = entries.slice().sort((a,b)=>String(a.key).localeCompare(String(b.key)));
-  $("#b-history").innerHTML = entries.map(e=>{
+  const hist = historyOrder(entries);
+  entries = hist.entries;
+  $("#b-history").innerHTML = (entries.length ? '<p class="small" style="margin-top:0">'
+    + (hist.order === "write" ? "Listed in the order they were written, oldest first."
+      : "Listed by snapshot key: this copy of the record does not carry the order they were written, and key order is not necessarily the order they were written.")
+    + "</p>" : "") + entries.map(e=>{
     const viewable = typeof img["_history/bundle_"+e.key+".md"] === "string";
     return '<div class="kv"><span class="k mono">'+escH(e.key)+'</span><span class="v">'
       + escH(e.kind||"") + " by " + escH(e.author||"unknown") + ' <span class="dim">' + fmtWhen(e.created) + "</span> "
