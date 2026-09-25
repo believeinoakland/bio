@@ -50,6 +50,32 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, D-194 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/D-194` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
+PROVISIONAL — CONDUCT renumbers at integration if a concurrent UI worker took v120 first. SURFACE: **a member's LEAD
+has a surface** (`MEMBER-KNOWLEDGE-DESIGN.md` §5). The plane half (MK-4, REC-129) was built and `app.html` made no lead call.
+
+**WHAT MOVED.** A rail entry, *Leads*, and two addresses, `#leads` and `#lead/<LEAD-…>` (`leadRouteFromHash`, in
+`boot()`'s chain, classified post-auth in `preauth-vocabulary.test.mjs` WALK 2 — nine routers to ten). The list is
+`op=frontier&level=internet`, the plane's list of the leads THIS viewer may read, with the bound the answer published
+stated under it. Writing is `op=lead` (the words and an optional place to look; nothing prefilled, nothing refused
+locally). A lead's page is `op=leadread`; recording a look is `op=leadlook` with the plane's four outcomes offered and
+NONE preselected; sharing is `op=leadshare`, the author's own act and nothing else's. Every refusal is the plane's
+DEC-49 translation through `refusalWords`. `SURFACES.lead` declares it (levels `[]`: it reaches no open internet
+through capture, ARM L6); `member-respect.test.mjs` classifies the look's radios as a CHOOSER FOR ONE DECISION.
+
+**PROVED** by `civicos-ui/test/lead-surface.test.mjs` against the real plane (48/0): a member writes a lead, records a
+look, and sees `LOOKED_ABSENT` against it on its page and in the list, each state compared to the plane read directly;
+an unshared lead is answered to a joined member of the author's project as a lead that does not exist, until the
+author shares it. Negative control `lead-surface.control.mjs`, 8/8 as declared on its first run; the row's own arm
+(`op=lead` stubbed) fails the write-and-look arms by name.
+
+**WHAT IT COULD NOT DO, AND WHERE THAT WENT.** Two plane gaps, minted and sent to SCHEDULER: **D-681** — no lead op
+lists a member's leads, and the frontier keeps the latest look per SUBJECT (the lead's words), so a lead whose words
+repeat another's that was looked at later is not listed; **D-682** — no lead op publishes what a look's state MEANS,
+so this surface MIRRORS `OBSERVATION_STATES` (`LEAD_STATE_WORDS`, guarded by the suite against the plane's table).
+`status.mjs 9.ui` moves ABSENT → PARTIAL: the frontier's internet level has a member surface, the other three do not.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it

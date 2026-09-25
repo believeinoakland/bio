@@ -685,6 +685,10 @@ const CHOOSERS = {
   /* D-126, 2026-09-23. */
   "queueSelBarHtml":       "the acts the record publishes (`set_acts`, weight per-item) over ONE held selection — `finderPaintSelection`'s shape on the queue; the per-item ticks that build the selection are `queueEntryControlsHtml`'s",
   "queueRetainedHtml":     "clears ONE retained item's note from this screen; it touches the record not at all (the item's own acts are still `queueEntryControlsHtml`'s)",
+  /* D-194 (MEMBER-KNOWLEDGE-DESIGN.md §5). ONE decision by the act's own shape: `op=leadlook` records ONE
+     look at ONE lead with ONE outcome, so the four outcome radios choose the single state and the two
+     referent radios the single kind of what that one look found. There is no set of leads here to act over. */
+  "ldLookFormHtml":        "D-194: radios choosing the ONE outcome, and the ONE kind of referent, of one look at one lead (op=leadlook takes one state)",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is
