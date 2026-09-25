@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d85-surface-run.test.mjs",
+ "inputHash": "57b7c9373ac3e22146264f5ac667304859272935104b29632ed3d51d5b2184d0",
+ "verdict": "PASS",
+ "run": "a1bde48f7ede0dafee750e44531301b305dc0515.1790327194098.29901.json",
+ "tree": "a1bde48f7ede0dafee750e44531301b305dc0515",
+ "head": "fdf6c8c91215fc8d4994c74998d8c01d17a3134d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 140,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "0390ed20-5409-55ce-bc8f-04afb3381f32",
+ "at": "2026-09-25T09:06:34.120Z"
+}
