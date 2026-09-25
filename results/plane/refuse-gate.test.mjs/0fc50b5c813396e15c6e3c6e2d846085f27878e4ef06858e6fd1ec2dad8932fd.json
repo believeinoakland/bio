@@ -1,0 +1,16 @@
+{
+ "unit": "plane:refuse-gate.test.mjs",
+ "inputHash": "0fc50b5c813396e15c6e3c6e2d846085f27878e4ef06858e6fd1ec2dad8932fd",
+ "verdict": "PASS",
+ "run": "65e12b65d19605f0b49efd88a22daa589fc498b1.1790315614790.1229.json",
+ "tree": "65e12b65d19605f0b49efd88a22daa589fc498b1",
+ "head": "ed23fdb174acc9e3c7a4fd3ca0355707acb90bba",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 136,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f30b0089-05c2-5f0e-a457-25a356228cdc",
+ "at": "2026-09-25T05:53:34.806Z"
+}
