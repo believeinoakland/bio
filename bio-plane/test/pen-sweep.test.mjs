@@ -111,7 +111,11 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
    derived verbatim (read here: the same plane-root READ and `dirname` of it; every write goes to a
    `mkdtempSync(join(tmpdir(), …))` mirror, removed after the arm; the real sources are hashed before and after). The walk
    resolving that READ is the row that lets this fall again. */
-t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus the copy sources of D-510, D-526, D-547, D-548, D-563, D-578, D-546 and D-615 (<= 22)", g("UNCLASSIFIED").length <= 22, true);
+/* MOVED 22 -> 23 by D-628 (2026-09-25), BY NAME, never as slack: `d628-promoted-fields.control.mjs` is D-578's driver
+   derived verbatim (read here: the same plane-root READ and `dirname` of it; every write goes to a
+   `mkdtempSync(join(tmpdir(), …))` mirror, removed after the arm; the real sources are hashed before and after). The walk
+   resolving that READ is the row that lets this fall again. */
+t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus the copy sources of D-510, D-526, D-547, D-548, D-563, D-578, D-546, D-615 and D-628 (<= 23)", g("UNCLASSIFIED").length <= 23, true);
 /* The named drivers this row moved FIRST, each by name rather than by a count. */
 t("the six drivers that owned those seven pens are all graded, and none is dirty",
   ["coord.control.mjs", "delegations.control.mjs", "entries.control.mjs", "m0107-budget.control.mjs",

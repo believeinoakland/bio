@@ -422,6 +422,11 @@ const CATALOG_CENSUS = {
      the item's tree; no `changed` field (M0-195's grammar). IF ANOTHER BRANCH IN THE SAME BATCH ALSO MOVES THE VERSION,
      THIS ROW IS NOT THE UNION'S. */
   "1.34.0": { count: 507, digest: "e48c0453b285721b1969e2b522340babb67cd0e5a1a9dc8e6ae6b95ffa63b74b" },
+  /* 1.35.0 (D-628, 2026-09-25, WORKER D-628, branch land/worker/D-628 stacked on land/worker/D-615 8b3ab6ae): ONE ARRIVAL,
+     NO DEPARTURES, NONE CHANGED — C-86.8 PROMOTED_FIELD_UNSTATED. 507 -> 508, count AND digest from THIS SUITE'S OWN PRINT on
+     the item's tree; no `changed` field (M0-195's grammar). IF ANOTHER BRANCH IN THE SAME BATCH ALSO MOVES THE VERSION,
+     THIS ROW IS NOT THE UNION'S. */
+  "1.35.0": { count: 508, digest: "1f4066611742427ca673d8ecb9b3ef4b4e41b202c319615d0c1cadd0ac608d88" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -531,8 +536,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED by D-578 (2026-09-25): 1.31.0 -> 1.32.0 — C-86.5 joined the catalogue, so 1.31.0 names the old one. */
 /* CORRECTED by D-546 (2026-09-25): 1.32.0 -> 1.33.0 — C-86.6 joined the catalogue, so 1.32.0 names the old one. */
 /* CORRECTED by D-615 (2026-09-25): 1.33.0 -> 1.34.0 — C-86.7 joined the catalogue, so 1.33.0 names the old one. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.34.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.34.0)", "1.34.0"]);
+/* CORRECTED by D-628 (2026-09-25): 1.34.0 -> 1.35.0 — C-86.8 joined the catalogue, so 1.34.0 names the old one. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.35.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.35.0)", "1.35.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under
