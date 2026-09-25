@@ -677,8 +677,8 @@ scope: re-key `reading_refs` by position with a migration that keeps every exist
 accepts-when: a ref read on three pages yields three mentions, each choosable. NEGATIVE CONTROL: restore the two-column key, and the three-occurrences arm reads one by name. Extend the reading suite (`bio-plane/test/reading-position*.test.mjs`).
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-571 · running — **`bio-plane/test/monitor-cadence.test.mjs`'s LAST SECTION (~520, "one whole cadence later") DEPENDS ON LOAD: its tick waits on the plane completing a real fallback fetch, so under two concurrent full gates 2 arms failed ("and re-checks the address", "so the second genuine check is a second genuine observation") while the same tree ran it alone 4 of 4 at 0 failures.** Measured by CONDUCT #20 on c20-batch27's full gate (00:16Z); the suite's header already fixed the STRAY alarm arm this way. — owner CAPTURE (the suite).
-status: running — SCHEDULER #21 00:24Z spawns WORKER D-571 (depth 2)
+### D-571 · integrated — **`bio-plane/test/monitor-cadence.test.mjs`'s LAST SECTION (~520, "one whole cadence later") DEPENDS ON LOAD: its tick waits on the plane completing a real fallback fetch, so under two concurrent full gates 2 arms failed ("and re-checks the address", "so the second genuine check is a second genuine observation") while the same tree ran it alone 4 of 4 at 0 failures.** Measured by CONDUCT #20 on c20-batch27's full gate (00:16Z); the suite's header already fixed the STRAY alarm arm this way. — owner CAPTURE (the suite).
+status: integrated — SCHEDULER #21 01:22Z: tip 509d70d7, GATE 73/73 GREEN; cause NARROWED to the web.archive.org governor bucket (24/min host row), whether it fired under CONDUCT's load UNDETERMINED
 order: at the head of the backlog, AHEAD of product by Bob's 17:41Z rule: a false red on a full gate costs a whole integration round (SCHEDULER #21, 2026-09-25)
 milestone: M0
 interface: none.
@@ -820,6 +820,16 @@ depends-on: D-65 (`integrated` on c17-batch6).
 scope: an unmonitorable arm in D-65's monitor suite (`bio-plane/test/monitor-assess.test.mjs`); fix any hash-delta report it exposes.
 accepts-when: a shell-profiled document's answer states unmonitorable and grades no change. NEGATIVE CONTROL: map unmonitorable to weekly, and the arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### REC-162 · queued — **A FOUNDER-ONLY OP'S REFUSAL CALLS AN ENROLLED ADMINISTRATOR A NON-ADMINISTRATOR.** Five ops sit in `SESSION_OPS.admin` and … (whole text: the cut archive)
+order: back to back after REC-159, the same two suites (`d270-refusal-truth`'s ROLE literal, `adminvote` §8f), the second re-reading the first's pins; a false refusal sentence, CLAUDE.md §2's class (BOB #23's entry, 2026-09-21; SCHEDULER #7)
+milestone: M8
+interface: I3 — the refusal's sentence; the integrator classifies it in IC-55's family.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE* (BOB #23, 2026-09-21).
+depends-on: REC-159 (sequence: the same `SESSION_OPS` sets and ROLE literal; made a dependency 2026-09-23 by SCHEDULER #16 so no refill takes this row ahead of it).
+accepts-when: an enrolled administrator and a member, each refused `governorconfig`, read the founder's-session sentence; the founder's session and the ADMIN_TOKEN bearer still set an … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+scope-add: 2026-09-24 by SCHEDULER #17, BOB #32's ruling (00:00Z): correct `AI_SCOPE_BEYOND_MEMBER_REACH`'s detail ("not reachable by a member"), now loosely false for REC-159's four custodial acts, in the same `SESSION_OPS` sets this row touches; no new row. The founder's NOT_AN_ADMIN on an unclaimed store (scratch) STANDS: a live verification claims an administrator in scratch first.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
