@@ -899,8 +899,8 @@ scope: the set act sends each project-scoped item's own project; where an item h
 accepts-when: a project-scoped finding joins a selection and the set act carries its project; an item with two homes is not sent until the member names one (the measured failure it moves: null for scope=project). NEGATIVE CONTROL: return null again and the selection arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
-### D-623 · running — **`op=proposedispose` MINTS NO_PROJECT_SCOPE AT TWO SITES (store.mjs proposeDispose: the scoped-without-project refusal and the IC-60 key bridge) WITH NO DEC-49 CODE OR TRANSLATION, so a member meets the plane's raw detail and UI-110's clause "NO_PROJECT_SCOPE reaches the member in its DEC-49 words" cannot be met.** Found by UI-110's worker (06:19Z). — owner RECORD.
-status: running — SCHEDULER #22 06:23Z spawns WORKER D-623 (depth 2)
+### D-623 · integrated — **`op=proposedispose` MINTS NO_PROJECT_SCOPE AT TWO SITES (store.mjs proposeDispose: the scoped-without-project refusal and the IC-60 key bridge) WITH NO DEC-49 CODE OR TRANSLATION, so a member meets the plane's raw detail and UI-110's clause "NO_PROJECT_SCOPE reaches the member in its DEC-49 words" cannot be met.** Found by UI-110's worker (06:19Z). — owner RECORD.
+status: integrated — SCHEDULER #23 07:26Z: tip 1c701e33 on 5e8a65a8, GATE 79/79 GREEN FULLREUSE (6478 assertions, 378 units reused); actNoProjectScope + region is-act-no-project-scope, C-33.48, I3 additive; CATALOG 1.30.0->1.31.0; d470 census 502->503; D-624 may render the new translation
 order: at the head, with the DEC-49 translation rows: a member-facing refusal with no canned words (SCHEDULER #22, 2026-09-25)
 milestone: M8
 interface: I3 additive — a catalogued code and translation; the integrator classifies.
@@ -1175,7 +1175,8 @@ scope: the PDF member emits page and rect per tier-1 unit and anchor text plus r
 accepts-when: an agenda's item-to-file membership reads derived, labelled machine work, graded inferred. NEGATIVE CONTROL: present it as a publisher link, and the labelling arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-340 · queued — **CHROME IS A PROPERTY OF THE SITE AND THE PLANE RECORDS IT NOWHERE: `site_chrome` exists only in `LINK-FIDELITY.md`, which RATIFIES it as a derived table regenerable by scan; no table and no per-host navigation-change read are built.** — owner CAPTURE, then RECORD.
+### D-340 · running — **CHROME IS A PROPERTY OF THE SITE AND THE PLANE RECORDS IT NOWHERE: `site_chrome` exists only in `LINK-FIDELITY.md`, which RATIFIES it as a derived table regenerable by scan; no table and no per-host navigation-change read are built.** — owner CAPTURE, then RECORD.
+status: running — SCHEDULER #23 07:26Z: spawned
 order: after D-419, with the M4 extraction rows (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M4
 interface: I5 — a derived table (in `purge`); I3 — a per-host read; the integrator mints and classifies the ICs.
