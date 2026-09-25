@@ -42115,8 +42115,15 @@ ${lines.join("\n")}
     } else {
       const subject = typeof parsed.data.subject_entity === "string" && parsed.data.subject_entity.trim() !== "" ? parsed.data.subject_entity.trim() : null;
       const reg = this.earnedBasisRegistry(subject, add);
+      const pinOf = (target) => {
+        if (typeof legFields.content_id === "string" && legFields.content_id.trim()) return null;
+        if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "information") return null;
+        return this.#captureForContent(target);
+      };
       filled = add.map((target) => {
         const earned = reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
+        const pin = pinOf(target);
+        const pinned = pin ? { extent_capture: pin } : {};
         return earned && earned.grade ? {
           target,
           role: rl,
@@ -42125,8 +42132,9 @@ ${lines.join("\n")}
           grade_source: "resolution",
           note: nt,
           why: earned.why,
-          ...legFields
-        } : { target, role: rl, note: nt, why: null, ...legFields };
+          ...legFields,
+          ...pinned
+        } : { target, role: rl, note: nt, why: null, ...legFields, ...pinned };
       });
       const newRefs = add.filter((t) => !referenced.has(t)).map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }));
       const withRefs = newRefs.length ? _Store.#spliceReferences(liveMd.content, newRefs) : liveMd.content;
@@ -42253,6 +42261,10 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           grade_axis: l.grade_axis ?? null,
           grade_source: l.grade_source ?? null,
           why: l.why ?? null,
+          /* REC-220: the capture this act PINNED into the leg's bytes, or
+             null where it pinned none (a content id already names one; a
+             question has no bytes; the record holds none). */
+          pinned_capture: l.extent_capture ?? null,
           ...Object.keys(legFields).length ? {
             extent: legExtent(l),
             ...l.content_id ? { content_id: l.content_id } : {}
@@ -46126,14 +46138,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       ]))
         this.#writeSupersededBy(t);
       const priorContent = /* @__PURE__ */ new Map();
+      const priorContentAt = /* @__PURE__ */ new Map();
       const priorRows = this.#rows(
-        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext
+        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext, c.capture_sha AS cap
            FROM inquiry_basis b LEFT JOIN content c ON c.content_id = b.content_id
           WHERE b.bundle_id=? AND b.content_id IS NOT NULL`,
         bundleId
       );
       for (const r of priorRows)
-        if (r.ext != null) priorContent.set(`${r.t}\0${r.ext}`, r.cid);
+        if (r.ext != null) {
+          priorContent.set(`${r.t}\0${r.ext}`, r.cid);
+          if (r.cap != null) priorContentAt.set(`${r.t}\0${r.ext}\0${r.cap}`, r.cid);
+        }
       const contentProjected = [];
       const contentPlan = isInquiry ? this.#contentPlanFor(basisLegs) : /* @__PURE__ */ new Map();
       this.sql.exec(`DELETE FROM inquiry_basis WHERE bundle_id=?`, bundleId);
@@ -46149,7 +46165,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             if (namedRow) {
               legRowId = namedRow;
             } else {
-              const carried = priorContent.get(`${leg.target}\0${canonicalExtent(ext)}`);
+              const carried = cp.authored ? priorContentAt.get(`${leg.target}\0${canonicalExtent(ext)}\0${cp.captureSha}`) : priorContent.get(`${leg.target}\0${canonicalExtent(ext)}`);
               if (carried) {
                 legRowId = carried;
                 legCarried = true;
@@ -64019,6 +64035,62 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  inquiry invisible -> the whole answer withheld as an absent one; a TARGET
    *  the viewer may not see -> dropped from the registry, with the fact that
    *  something was dropped stated and NO id and NO count leaked. */
+  /** REC-220 — WHICH VERSION EACH LEG RESTS ON, AND WHETHER THE RECORD CAN SAY (Bob, 2026-09-25 00:40Z,
+   *  rule 1). Sets `version` on every leg onto a DOCUMENT, in place, from the leg's own BYTES:
+   *
+   *    `pinned`        the bytes name the capture — `extent_capture` (written by op=cite at the act since
+   *                    REC-220, or by op=narrow, or by the author) or a `content_id` (a hash over its
+   *                    capture). `by` says which. This is a fact the record holds.
+   *    `only_capture`  no pin, and the record holds exactly ONE capture of the document: there is only one
+   *                    version the leg can rest on.
+   *    `undetermined`  no pin, and the record holds SEVERAL captures. The leg's content row is about the
+   *                    capture the resolver answered when the question was first projected, carried
+   *                    forward since in a DERIVED table (REC-82) — not a record of which bytes the member
+   *                    read. That row's capture is named as `resolved_capture`, and it is never back-filled
+   *                    into the leg by guess.
+   *
+   *  A leg onto a question (no bytes, DEC-21) or one whose document the record holds no capture of gets
+   *  no `version`; its `null_case` already says which. TWO set-based reads, never one per leg (the
+   *  derivation-bounds class): the document's bytes once, and one grouped count over the targets. */
+  #legVersions(id, legs) {
+    const docs = legs.filter((l) => normalizeType(l.target_type) === "information");
+    if (!docs.length) return;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+    let bytesLegs = [];
+    try {
+      bytesLegs = md && md.content !== null ? parseFrontmatter(md.content).data?.basis || [] : [];
+    } catch {
+      bytesLegs = [];
+    }
+    const targets = [...new Set(docs.map((l) => l.target))];
+    const held = new Map(this.#rows(
+      `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n FROM (
+         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${targets.map(() => "?").join(",")})
+         UNION ALL
+         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${targets.map(() => "?").join(",")}))
+       GROUP BY bundle_id`,
+      ...targets,
+      ...targets
+    ).map((r) => [r.t, r.n]));
+    const cids = [...new Set(docs.map((l) => l.content_id).filter(Boolean))];
+    const capOf = new Map(cids.length ? this.#rows(
+      `SELECT content_id, capture_sha FROM content WHERE content_id IN (${cids.map(() => "?").join(",")})`,
+      ...cids
+    ).map((r) => [r.content_id, r.capture_sha]) : []);
+    for (const l of docs) {
+      const n = held.get(l.target) || 0;
+      if (!n) continue;
+      const bl = bytesLegs[l.ord] && typeof bytesLegs[l.ord] === "object" && bytesLegs[l.ord].target === l.target ? bytesLegs[l.ord] : {};
+      const cap = l.content_id ? capOf.get(l.content_id) ?? null : null;
+      const pin = typeof bl.extent_capture === "string" && bl.extent_capture.trim() ? "extent_capture" : legContentId(bl) ? "content_id" : null;
+      l.version = pin ? { state: "pinned", by: pin, capture: cap } : n === 1 ? { state: "only_capture", capture: cap } : {
+        state: "undetermined",
+        resolved_capture: cap,
+        captures_held: n,
+        detail: `the record holds ${n} captures of ${l.target} and this leg's bytes name none of them, so which version it was made against is undetermined. The capture named is the one the record resolved when this question was first projected; it is not a record of what the member read, and nothing here moves it`
+      };
+    }
+  }
   earnedBasis({ id, targets = null, viewer = null } = {}) {
     if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
     if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
@@ -64053,6 +64125,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       visible,
       legs.map((l) => l.content_id).filter(Boolean)
     );
+    this.#legVersions(id, legs);
     for (const l of legs) {
       if (l.content_id) continue;
       if (!l.null_case && !l.why_no_content) {

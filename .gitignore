@@ -482,3 +482,6 @@ bio-plane/.nc-d507/
 # walk to enrol, which has already been measured happening. The driver removes each copy as its
 # restore verifies and removes the pen on exit IF EMPTY; this line is for the run killed between the two.
 bio-plane/test/.nc-d508-pen/
+# REC-220's pen (`bio-plane/test/nc-rec220.mjs`), named for its item on the rule stated at
+# `.rec84-control-pristine/`: an interrupted arm must not leave a copy of `store.mjs` where a walk enrols it.
+.rec220-control-pristine/

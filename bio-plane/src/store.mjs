@@ -13262,12 +13262,32 @@ export class Store extends DurableObject {
       const subject = typeof parsed.data.subject_entity === "string" && parsed.data.subject_entity.trim() !== ""
         ? parsed.data.subject_entity.trim() : null;
       const reg = this.earnedBasisRegistry(subject, add);
+      /* REC-220 — THE VERSION THE LEG WAS MADE AGAINST IS RECORDED AT THE ACT (Bob, 2026-09-25 00:40Z,
+         rule 1: a reference is PINNED to the version it was made against and the system never moves it).
+         Until this item a leg this act wrote named only a BUNDLE, and which capture it rested on was
+         RE-DERIVED by `#captureForContent` at every later promotion — a resolver's answer, not a fact
+         the record held, and one a later registration can change (the earliest-capture order reads
+         `register.registered`, which a re-registration overwrites). So the capture that resolver
+         answers NOW — the one every read of this document presents at this instant — is written INTO
+         THE LEG as `extent_capture`, the field `#contentPlanFor` already honours as authored, and from
+         then on the leg names its bytes rather than asking for them.
+         NOT stamped where the leg names a `content_id` (the id is a hash OVER its capture, so it is
+         already pinned and a second statement of it could disagree), on a QUESTION target (no bytes,
+         DEC-21), or where the record holds no capture (nothing to pin; `content_id` stays NULL and says
+         so, as before). */
+      const pinOf = (target) => {
+        if (typeof legFields.content_id === "string" && legFields.content_id.trim()) return null;
+        if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "information") return null;
+        return this.#captureForContent(target);
+      };
       filled = add.map((target) => {
         const earned = reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
+        const pin = pinOf(target);
+        const pinned = pin ? { extent_capture: pin } : {};
         return earned && earned.grade
           ? { target, role: rl, grade: earned.grade, grade_axis: "connection", grade_source: "resolution",
-              note: nt, why: earned.why, ...legFields }
-          : { target, role: rl, note: nt, why: null, ...legFields };
+              note: nt, why: earned.why, ...legFields, ...pinned }
+          : { target, role: rl, note: nt, why: null, ...legFields, ...pinned };
       });
       /* references FIRST and only where the document does not already carry the
          target: C-6.3 refuses a leg whose target is not in references[], and the
@@ -13444,6 +13464,10 @@ export class Store extends DurableObject {
                                  legs: filled.map((l) => ({ target: l.target, role: l.role,
                                    grade: l.grade ?? null, grade_axis: l.grade_axis ?? null,
                                    grade_source: l.grade_source ?? null, why: l.why ?? null,
+                                   /* REC-220: the capture this act PINNED into the leg's bytes, or
+                                      null where it pinned none (a content id already names one; a
+                                      question has no bytes; the record holds none). */
+                                   pinned_capture: l.extent_capture ?? null,
                                    ...(Object.keys(legFields).length
                                        ? { extent: legExtent(l),
                                            ...(l.content_id ? { content_id: l.content_id } : {}) }
@@ -17847,12 +17871,21 @@ export class Store extends DurableObject {
          so `for (const r of this.#rows(...))` self-classifies as amplifying and
          put `promote` itself on REC-66's roster. One read, then one pass over
          what it returned, is what this actually is. */
+      /* REC-220: AND BY CAPTURE, for a leg that NAMES one. `extent_capture` is the member's (or the
+         act's, at the moment of citing) statement of WHICH BYTES the leg rests on, so a prior referent
+         about DIFFERENT bytes is not carried over it — that would be the record overriding an authored
+         pin, 5.8's forbidden direction with the member's act present. A leg naming no capture keeps
+         the (target, extent) key exactly as before. */
+      const priorContentAt = new Map();
       const priorRows = this.#rows(
-        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext
+        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext, c.capture_sha AS cap
            FROM inquiry_basis b LEFT JOIN content c ON c.content_id = b.content_id
           WHERE b.bundle_id=? AND b.content_id IS NOT NULL`, bundleId);
       for (const r of priorRows)
-        if (r.ext != null) priorContent.set(`${r.t}\u0000${r.ext}`, r.cid);
+        if (r.ext != null) {
+          priorContent.set(`${r.t}\u0000${r.ext}`, r.cid);
+          if (r.cap != null) priorContentAt.set(`${r.t}\u0000${r.ext}\u0000${r.cap}`, r.cid);
+        }
       const contentProjected = [];
       /* ONE resolution for the whole basis, on the refusal arm's own terms and
          through the same method — see `#contentPlanFor`. */
@@ -17913,7 +17946,9 @@ export class Store extends DurableObject {
             const namedRow = legContentId(leg);
             if (namedRow) { legRowId = namedRow; }
             else {
-              const carried = priorContent.get(`${leg.target}\u0000${canonicalExtent(ext)}`);
+              const carried = cp.authored
+                ? priorContentAt.get(`${leg.target}\u0000${canonicalExtent(ext)}\u0000${cp.captureSha}`)
+                : priorContent.get(`${leg.target}\u0000${canonicalExtent(ext)}`);
               if (carried) { legRowId = carried; legCarried = true; }
               else if (cp.captureSha) {
                 const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
@@ -37024,6 +37059,59 @@ export class Store extends DurableObject {
    *  inquiry invisible -> the whole answer withheld as an absent one; a TARGET
    *  the viewer may not see -> dropped from the registry, with the fact that
    *  something was dropped stated and NO id and NO count leaked. */
+  /** REC-220 — WHICH VERSION EACH LEG RESTS ON, AND WHETHER THE RECORD CAN SAY (Bob, 2026-09-25 00:40Z,
+   *  rule 1). Sets `version` on every leg onto a DOCUMENT, in place, from the leg's own BYTES:
+   *
+   *    `pinned`        the bytes name the capture — `extent_capture` (written by op=cite at the act since
+   *                    REC-220, or by op=narrow, or by the author) or a `content_id` (a hash over its
+   *                    capture). `by` says which. This is a fact the record holds.
+   *    `only_capture`  no pin, and the record holds exactly ONE capture of the document: there is only one
+   *                    version the leg can rest on.
+   *    `undetermined`  no pin, and the record holds SEVERAL captures. The leg's content row is about the
+   *                    capture the resolver answered when the question was first projected, carried
+   *                    forward since in a DERIVED table (REC-82) — not a record of which bytes the member
+   *                    read. That row's capture is named as `resolved_capture`, and it is never back-filled
+   *                    into the leg by guess.
+   *
+   *  A leg onto a question (no bytes, DEC-21) or one whose document the record holds no capture of gets
+   *  no `version`; its `null_case` already says which. TWO set-based reads, never one per leg (the
+   *  derivation-bounds class): the document's bytes once, and one grouped count over the targets. */
+  #legVersions(id, legs) {
+    const docs = legs.filter((l) => normalizeType(l.target_type) === "information");
+    if (!docs.length) return;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+    let bytesLegs = [];
+    try { bytesLegs = md && md.content !== null ? (parseFrontmatter(md.content).data?.basis || []) : []; }
+    catch { bytesLegs = []; }
+    const targets = [...new Set(docs.map((l) => l.target))];
+    const held = new Map(this.#rows(
+      `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n FROM (
+         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${targets.map(() => "?").join(",")})
+         UNION ALL
+         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${targets.map(() => "?").join(",")}))
+       GROUP BY bundle_id`, ...targets, ...targets).map((r) => [r.t, r.n]));
+    const cids = [...new Set(docs.map((l) => l.content_id).filter(Boolean))];
+    const capOf = new Map(cids.length ? this.#rows(
+      `SELECT content_id, capture_sha FROM content WHERE content_id IN (${cids.map(() => "?").join(",")})`,
+      ...cids).map((r) => [r.content_id, r.capture_sha]) : []);
+    for (const l of docs) {
+      const n = held.get(l.target) || 0;
+      if (!n) continue;
+      const bl = bytesLegs[l.ord] && typeof bytesLegs[l.ord] === "object" && bytesLegs[l.ord].target === l.target
+        ? bytesLegs[l.ord] : {};
+      const cap = l.content_id ? capOf.get(l.content_id) ?? null : null;
+      const pin = typeof bl.extent_capture === "string" && bl.extent_capture.trim() ? "extent_capture"
+                : legContentId(bl) ? "content_id" : null;
+      l.version = pin ? { state: "pinned", by: pin, capture: cap }
+                : n === 1 ? { state: "only_capture", capture: cap }
+                : { state: "undetermined", resolved_capture: cap, captures_held: n,
+                    detail: `the record holds ${n} captures of ${l.target} and this leg's bytes name none of `
+                          + `them, so which version it was made against is undetermined. The capture named is `
+                          + `the one the record resolved when this question was first projected; it is not `
+                          + `a record of what the member read, and nothing here moves it` };
+    }
+  }
+
   earnedBasis({ id, targets = null, viewer = null } = {}) {
     if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
     if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
@@ -37117,6 +37205,7 @@ export class Store extends DurableObject {
        from `ensureLegContent`, which is where the distinction is decided, and
        is carried here rather than re-derived. A leg still NULL with no case
        named is one the bound above did not reach, and that is said too. */
+    this.#legVersions(id, legs);
     for (const l of legs) {
       if (l.content_id) continue;
       if (!l.null_case && !l.why_no_content) {
