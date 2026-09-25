@@ -64,6 +64,8 @@ const SOURCES = {
   otherlegistar: ["https://webapi.legistar.com/v1/sanjose/matters/1", "SAN JOSE LEGISTAR: C329142"],
 };
 
+/* THE BITE: the ODP bytes served again at 32 more addresses of the same system, so one capture is located at 33. */
+const MANY = "https://data.oaklandca.gov/resource/vmzx-e5fe.csv?page=";
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -72,6 +74,7 @@ const mf = new Miniflare({
   bindings: { ADMIN_TOKEN: "adm-r203", MEMBER_TOKEN: "mem-r203", PROBE_TOKEN: "prb-r203", VERSION: "test",
               GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
   outboundService(request) {
+    if (request.url.startsWith(MANY)) return new Response(SOURCES.odp[1], { headers: { "content-type": "text/plain" } });
     const hit = Object.values(SOURCES).find(([u]) => u === request.url);
     return hit ? new Response(hit[1], { headers: { "content-type": "text/plain" } })
                : new Response("unscripted", { status: 500 });
@@ -241,6 +244,20 @@ console.log("\n--- the three refusals (C-91), each with its catalogue row ---");
     row("IDSPACE_CAPTURE_NOT_HELD"));
   t("a pair naming no capture at all: C-91.3, the same answer",
     pick(await idmatch({ space: "project", a: "C329142", b: "C329142", b_capture: CAP.leg })), row("IDSPACE_CAPTURE_NOT_HELD"));
+}
+
+console.log("\n--- the BOUND: a system is judged from EVERY address, and a cut read judges none ---");
+{
+  const within = await idmatch({ space: "project", a: "C329142", a_capture: CAP.odp, b: "C329142", b_capture: CAP.leg, referent: "agrees" });
+  t("under the bound: the bound is published and the read is not cut", [within.limit, within.truncated], [32, false]);
+  for (let i = 1; i <= 32; i++) {
+    const r = await POST("op=acquire&token=adm-r203", { locator: `${MANY}${i}`, authority: "REC-203 fixture" });
+    if (!r || !r.ok || r.document.capture.sha256 !== CAP.odp) throw new Error(`bite acquire ${i}: ${JSON.stringify(r).slice(0, 300)}`);
+  }
+  const cut = await idmatch({ space: "project", a: "C329142", a_capture: CAP.odp, b: "C329142", b_capture: CAP.leg, referent: "agrees" });
+  t("33 addresses for one capture: the read is CUT, and says so", [cut.limit, cut.truncated], [32, true]);
+  t("and a cut capture's system is UNDETERMINED, never judged off the addresses that fit",
+    [cut.verdict, cut.counts, cut.a.system.origin], ["SYSTEM_UNDETERMINED", false, null]);
 }
 
 console.log("\n--- the module: a system is judged from EVERY address the record holds for the bytes ---");

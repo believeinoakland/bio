@@ -21696,8 +21696,13 @@ export class Store extends DurableObject {
         `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
           WHERE r.capture_sha = ? AND (${g.sql})`, k, ...g.args);
       if (!r) return null;
-      return this.#rows(`SELECT DISTINCT address FROM captured_locators WHERE capture_sha = ? ORDER BY address LIMIT 32`, k)
-        .map((x) => x.address);
+      /* BOUNDED, and the bound is PUBLISHED: one row past the cap is read so a cut is MEASURED, and a cut
+         capture's system is UNDETERMINED rather than judged off the addresses that happened to fit — an
+         unread address could be another system's. */
+      const cap = Store.IDMATCH_ADDRESS_LIMIT;
+      const rows = this.#rows(
+        `SELECT DISTINCT address FROM captured_locators WHERE capture_sha = ? ORDER BY address LIMIT ?`, k, cap + 1);
+      return { addresses: rows.slice(0, cap).map((x) => x.address), truncated: rows.length > cap };
     };
     const addrA = held(aCapture), addrB = held(bCapture);
     /* DEC-49 REGION is-idspace-capture */
@@ -21709,19 +21714,26 @@ export class Store extends DurableObject {
     }
     /* END DEC-49 REGION is-idspace-capture */
     const reading = referent === "agrees" || referent === "disagrees" ? referent : null;
-    const endA = { rec: ra, system: systemOfAddresses(addrA), name: aName };
-    const endB = { rec: rb, system: systemOfAddresses(addrB), name: bName };
+    const systemOf = (h) => (h.truncated
+      ? { origin: null, why: `the record holds more than ${Store.IDMATCH_ADDRESS_LIMIT} addresses for these bytes, `
+          + `and a system is judged from EVERY address, so it is undetermined` }
+      : systemOfAddresses(h.addresses));
+    const endA = { rec: ra, system: systemOf(addrA), name: aName };
+    const endB = { rec: rb, system: systemOf(addrB), name: bName };
     const j = judgePair(sp, endA, endB, reading);
     const sys = (e) => (e.system.origin
       ? { origin: e.system.origin, name: e.system.name, republication: e.system.republication,
           provenance_stated: e.system.provenance_stated, basis: e.system.basis }
       : { origin: null, why: e.system.why });
     return { ok: true, space: sp, label: ID_SPACES[sp].label, evidence: false, ...j,
+             limit: Store.IDMATCH_ADDRESS_LIMIT, truncated: addrA.truncated || addrB.truncated,
              a: { ...view(ra), capture: String(aCapture).trim().toLowerCase(), system: sys(endA),
                   ...(sp === "fund" ? { name: aName ?? null } : {}) },
              b: { ...view(rb), capture: String(bCapture).trim().toLowerCase(), system: sys(endB),
                   ...(sp === "fund" ? { name: bName ?? null } : {}) } };
   }
+  /* op=idmatch's bound: the most addresses read per capture to judge its system. */
+  static IDMATCH_ADDRESS_LIMIT = 32;
 
   /* ====================================================================== *
    * SK-8 REGION — THE EXTRACT RUN'S PRODUCTIONS, AND THE FIRST CALLER OF THE
