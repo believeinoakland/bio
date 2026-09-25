@@ -1,0 +1,16 @@
+{
+ "unit": "plane:mint-ledger.test.mjs",
+ "inputHash": "bcd5bd4f5da0a04ddfd06d5fb37e21b3cbb5036781dfac9166a4e62f93becdd4",
+ "verdict": "PASS",
+ "run": "f78db25ae2746f6492c9d9eb8c7d7c4d4b359e77.1790295045112.25761.json",
+ "tree": "f78db25ae2746f6492c9d9eb8c7d7c4d4b359e77",
+ "head": "afcf112859a2f6393d6292f41a88e4119d58ea8c",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 986,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4ec119c4-defa-586c-9bdb-1dcc8d466b42",
+ "at": "2026-09-25T00:10:45.131Z"
+}
