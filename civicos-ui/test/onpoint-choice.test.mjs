@@ -277,8 +277,17 @@ asMember();
 
 /* ============================================================ 4. A LAPSED CHOICE, AS THE PLANE STATES IT */
 console.log("\n--- 4. a lapsed choice (FIXTURE-VERIFIED: no op can produce one today; the sentence is the plane's) ---");
-const whyM = /lapsed = \{ ref: mine\.ref, chosen_by: mine\.chosen_by, at: mine\.at, lapsed: true,\s*why: ((?:"[^"]*"\s*\+?\s*)+)\}/.exec(STORE_SRC);
-const LAPSE_WHY = whyM ? whyM[1].split(/"\s*\+\s*"/).join("").replace(/^"|"\s*$/g, "") : null;
+/* CORRECTED at c21-batch28 (CONDUCT #21), where UI-91 first met D-454, never exempted: D-454 made the
+   no-longer-carried lapse a TEMPLATE — `...occ` spread into the object and a conditional "at that place "
+   when the choice named an occurrence — so the old anchor (the literal object head, then plain string
+   concatenation) matched nothing and the sentence read null. This page's fixture choice names NO occurrence,
+   so the sentence the plane states for it is the template with that clause EMPTY: read the template's string
+   literals and drop the ternary's. Still read from store.mjs, never typed here. The page's handling of a
+   NAMED occurrence is UI-112's (placed by SCHEDULER #21 for this meet). */
+const whyM = /lapsed = \{ ref: mine\.ref, (?:\.\.\.occ, )?chosen_by: mine\.chosen_by, at: mine\.at, lapsed: true,\s*why: ([\s\S]*?)\};/.exec(STORE_SRC);
+const LAPSE_WHY = whyM
+  ? [...whyM[1].replace(/\(mine\.occurrence != null \? "[^"]*" : ""\)/g, "").matchAll(/"([^"]*)"/g)].map((m) => m[1]).join("")
+  : null;
 ok("the plane's lapse sentence was READ out of store.mjs (not typed here)", typeof LAPSE_WHY === "string" && LAPSE_WHY.length > 60,
    String(LAPSE_WHY));
 const lapsedConn = { ...AB1, on_point: { [sideA]: { ref: "ordinance:13579-amended", chosen_by: "ruth", at: AB1.on_point[sideA].at,

@@ -38388,7 +38388,7 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
         max: RISK_TIER_HISTORY_MAX,
         detail: `this action's risk_tier_history is not a block the act can append to in place (or it holds ${RISK_TIER_HISTORY_MAX} revisions already); the act only appends, so nothing was written.`
       };
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     const entry = { tier: next, prior: held, by: _Store.#fmSafe(who2), at: when, reason: why };
     let text = _Store.#appendRiskTierHistory(liveMd.content, entry);
     text = _Store.#setOrAddScalar(text, "risk_tier", String(next));
@@ -46961,7 +46961,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     }
     return {
       ok: true,
-      generated: (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z",
+      generated: stampInstant("second"),
       swept: rows.length,
       limit: cap,
       truncated,
@@ -48968,7 +48968,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const digest = sha256HexSync(json2);
     const provOf = (r) => r && typeof r === "object" && r.provenance && typeof r.provenance === "object" && r.provenance.scheme === PROVENANCE_SCHEME ? r.provenance : null;
     const textShaOf = (p) => p && typeof p.text_sha256 === "string" ? p.text_sha256 : null;
-    const now = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const now = stampInstant("second");
     let last = this.#one(
       `SELECT seq, reading_sha256, provenance FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`,
       sha
@@ -75250,7 +75250,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         "this obligation has already been settled, and a settlement is appended rather than replaced",
         { run: id, settled: _Store.#biasDebtSettledView(row) }
       );
-    const when = at && ISO_INSTANT.test(at) ? at : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const when = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
     const settled = this.#biasDebtSettle({
       run: id,
       kind: "resolved",

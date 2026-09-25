@@ -15,6 +15,7 @@
  * refused REVISION_RETYPES_BUNDLE (C-86.2) after the compare-and-swap and before the first write.
  * NOT here: a bundle ALREADY retyped is not rewritten — M-156 counted none in either register.
  */
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -79,13 +80,21 @@ const inquiryMd = (id, type = "inquiry", question = "Where did the sewer transfe
 ].join(NL);
 
 let seq = 0;
-const promote = async (id, text, { type, state, token, base = null, extra = {} }) => post("promote", {
-  bundleId: id, base, snapKey: `20260724T0400${String(++seq).padStart(2, "0")}Z_d547`,
-  author: "member-ruth",
-  meta: { group: "believe-in-oakland", title: "Records request", object_type: type,
-          current_state: state, created: NOW, last_updated: NOW },
-  files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [], ...extra,
-}, token);
+/* CORRECTED at c21-batch28 (CONDUCT #21), where D-547 first met D-512: a REPLAYED promotion is now honoured only
+   over a drive-provenance capture the plane verifies (C-66.6 REPLAY_UNVERIFIED), so §5's bare admin `replay: true`
+   was refused before it could reach D-547's exemption. Its replays now carry the proof D-512's own suites use
+   (`withReplayProof`), so §5 still asks the question it was written for — does a VERIFIED replay that retypes
+   pass this fence — rather than D-512's. */
+const promote = async (id, text, { type, state, token, base = null, extra = {} }) => {
+  const pkg = {
+    bundleId: id, base, snapKey: `20260724T0400${String(++seq).padStart(2, "0")}Z_d547`,
+    author: "member-ruth",
+    meta: { group: "believe-in-oakland", title: "Records request", object_type: type,
+            current_state: state, created: NOW, last_updated: NOW },
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [], ...extra,
+  };
+  return post("promote", extra.replay ? await withReplayProof(mf, `token=${token}`, pkg) : pkg, token);
+};
 const head = async (id) => {
   const r = await get(`op=list&limit=500`);
   const row = (r?.bundles || []).find((b) => b.bundle_id === id);

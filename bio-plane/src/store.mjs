@@ -7398,7 +7398,7 @@ export class Store extends DurableObject {
                      + `${RISK_TIER_HISTORY_MAX} revisions already); the act only appends, so nothing was written.` };
     /* END DEC-49 REGION is-risk-tier-act */
 
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     const entry = { tier: next, prior: held, by: Store.#fmSafe(who), at: when, reason: why };
     let text = Store.#appendRiskTierHistory(liveMd.content, entry);
     text = Store.#setOrAddScalar(text, "risk_tier", String(next));
@@ -16856,7 +16856,7 @@ export class Store extends DurableObject {
           then: "append the answer's `document` to data/provenance.json — op=monitor prefers the row naming the export address" };
       ({ shell: shells, export: exported, undetermined, no_baseline: noBaseline })[c.verdict].push(entry);
     }
-    return { ok: true, generated: new Date().toISOString().split(".")[0] + "Z",
+    return { ok: true, generated: stampInstant("second"),
              swept: rows.length, limit: cap, truncated,
              cursor: truncated ? rows[rows.length - 1].id : null,
              drive: driveLinked, shells, export: exported, undetermined, no_baseline: noBaseline, unreadable,
@@ -19760,7 +19760,7 @@ export class Store extends DurableObject {
     const provOf = (r) => (r && typeof r === "object" && r.provenance && typeof r.provenance === "object"
                            && r.provenance.scheme === PROVENANCE_SCHEME ? r.provenance : null);
     const textShaOf = (p) => (p && typeof p.text_sha256 === "string" ? p.text_sha256 : null);
-    const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const now = stampInstant("second");
     let last = this.#one(
       `SELECT seq, reading_sha256, provenance FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (!last) {
@@ -48044,7 +48044,7 @@ export class Store extends DurableObject {
         "this obligation has already been settled, and a settlement is appended rather than replaced",
         { run: id, settled: Store.#biasDebtSettledView(row) });
     /* END DEC-49 REGION is-bias-debt-resolve-subject */
-    const when = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
+    const when = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
     const settled = this.#biasDebtSettle({ run: id, kind: "resolved", at: when, actor: who, reason: said,
                                            lensThen: row.lens_then, lensNow: row.lens_now });
     return { ok: true, run: id, settled };
