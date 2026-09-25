@@ -164,9 +164,12 @@ Three consequences give the construct its shape. The record must be able to prov
     unstated, `new_case_asked_at_publication`, `named_by_draft` or `new_case_asked_by_draft` — and the prose says it in
     words; `op=caseratify` commits it and `op=publishedcase` serves it. The link's readings reach the further edition: the
     listing and the draft door no longer ask the edition of a reading recorded through the named draft, whose identity
-    reads edition 1 (D-568). NOT RULED, and kept as before rather than tightened: a publisher who asks for a NEW case
-    (`newCase`) with a derivation draft whose findings derive an existing one is not deriving, so the draft binds to the
-    new case and the document says the new case was the publisher's ask. NOT BUILT (D-683): a reading of a no-case draft
+    reads edition 1 (D-568). **RULED 2026-09-25 by BOB #35 on D-680's gap, (a) KEEP AS BUILT:** a publisher who asks
+    for a NEW case (`newCase`) with a derivation draft whose findings derive an existing one is not deriving, so the draft
+    binds to the new case and the document says the new case was the publisher's ask. A newCase ask asserts nothing
+    the record contradicts, because the act itself makes the new case one those findings serve; a named existing case
+    that derivation does not yield would assert a case the findings do not lead to, which is false, and that is why
+    (ii) refuses it. NOT BUILT (D-683): a reading of a no-case draft
     is not counted UNDETERMINED on a further edition published WITHOUT `draft=`, because that count asks the edition too
     (`bio-plane/test/rec217-draft-binding.test.mjs` blocks 7 and 8).
 
