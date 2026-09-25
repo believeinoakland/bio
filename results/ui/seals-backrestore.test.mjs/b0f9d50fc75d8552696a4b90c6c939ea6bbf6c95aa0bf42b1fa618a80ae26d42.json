@@ -1,0 +1,16 @@
+{
+ "unit": "ui:seals-backrestore.test.mjs",
+ "inputHash": "b0f9d50fc75d8552696a4b90c6c939ea6bbf6c95aa0bf42b1fa618a80ae26d42",
+ "verdict": "PASS",
+ "run": "eb5f0233bb7946f86454d915e48e6f62e7919cd2.1790304542629.26960.json",
+ "tree": "eb5f0233bb7946f86454d915e48e6f62e7919cd2",
+ "head": "6f040db132da9638bf13869558bcdad6de3ca839",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 3,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "489caeaf-6f7d-5cb6-9ef0-da7219dbd580",
+ "at": "2026-09-25T02:49:02.641Z"
+}
