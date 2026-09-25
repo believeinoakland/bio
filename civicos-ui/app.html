@@ -15717,10 +15717,33 @@ function subjConcernsHtml(c){
    among these documents" — reads as all of them. The figure comes off the wire
    through the shared function above, stated over CONNECTIONS because that is
    what the record says it bounded. */
+/* UI-95 — THE DERIVATION'S EXTENT, beside the page's. `connectionsBoundHtml`
+   states whether THIS PAGE was cut at `limit`; it cannot say whether the
+   derivation that WROTE the rows was cut at its pair bound, and a cut
+   derivation read under the ceiling is a whole page of a partial set — the
+   list read as every connection through the subject when it was part of them.
+   D-241 publishes the entity arm's `derivation` ({cut, derived, says}) and
+   this renders its `says` VERBATIM (DEC-8): the sentence is the plane's
+   (`derivationStatement` in `bio-plane/src/airun.mjs`), never paraphrased here.
+   It is shown when the derivation was CUT, or when it is not a recorded
+   derivation at all (never derived, pre-log, undetermined); a whole recorded
+   derivation shows nothing, because "not cut" beside a list is what a list
+   already implies. The ENTITY arm only: the capture arm spans many entities
+   and the plane publishes no derivation there, so the document page's
+   `docConnectionsHtml` does not call this. An entity-arm answer WITHOUT the
+   key is stated as undetermined rather than read as complete — an absent key
+   is exactly the silence D-241 was written to end. */
+function connectionsDerivationHtml(ans){
+  const d = ans && ans.derivation;
+  if(!d || typeof d !== "object" || typeof d.says !== "string" || !d.says)
+    return ` The record did not say whether the derivation behind this list was cut, so this screen cannot tell you whether these are all the connections through this subject.`;
+  if(d.cut !== true && d.derived === "derived") return ``;
+  return ` <b>The record says of the derivation behind this list:</b> &ldquo;${esc(d.says)}&rdquo;`;
+}
 function subjConnectionsHtml(c){
   const conns = c.connections || [];
   const head = `<section class="tsec"><h2>Connections among these documents</h2>`
-    + `<p class="subj-note">Two documents that concern this subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.${c && c._err ? "" : connectionsBoundHtml(c, "this list")}</p>`;
+    + `<p class="subj-note">Two documents that concern this subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.${c && c._err ? "" : connectionsBoundHtml(c, "this list")}${c && c._err ? "" : connectionsDerivationHtml(c)}</p>`;
   if(c && c._err) return head + `<div class="empty">The record could not read this subject's connections.</div></section>`;
   if(!conns.length) return head + `<div class="empty">No connections among these documents have been derived yet.</div></section>`;
   const rows = conns.map(x=>{
