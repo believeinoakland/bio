@@ -32111,6 +32111,8 @@ function actNoCitation(detail, extra = {}) {
     ...extra
   };
 }
+var ARCHIVE_VIA = "archive.org";
+var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
@@ -56112,7 +56114,10 @@ ${words}`;
           transcribed: 0,
           authored: 0,
           direct: 0,
+          archive: 0,
+          unrecorded: 0,
           measured: null,
+          measuredVia: null,
           otherVia: /* @__PURE__ */ new Set()
         });
       const e = perBundle.get(r.bundle_id);
@@ -56125,10 +56130,15 @@ ${words}`;
       const b = captureBound(chain2, EARNED_CAPTURE_CEILING);
       if (isTranscribed(chain2)) e.transcribed++;
       const vias = String(r.vias || "").split(",").filter(Boolean);
-      if (vias.includes("direct")) {
-        e.direct++;
-        if (b != null) e.measured = e.measured == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.measured) ? b : e.measured;
-      } else if (vias.length) e.otherVia.add(String(r.vias));
+      const routed = vias.includes("direct") ? b : vias.includes(ARCHIVE_VIA) ? captureBound(chain2, ARCHIVE_CAPTURE_GRADE) : null;
+      if (vias.includes("direct")) e.direct++;
+      else if (vias.includes(ARCHIVE_VIA)) e.archive++;
+      else if (!vias.length) e.unrecorded++;
+      if (!vias.includes("direct") && vias.length) e.otherVia.add(String(r.vias));
+      if (routed != null && (e.measured == null || BASIS_GRADES.indexOf(routed) < BASIS_GRADES.indexOf(e.measured))) {
+        e.measured = routed;
+        e.measuredVia = vias.includes("direct") ? "direct" : ARCHIVE_VIA;
+      }
       if (b == null) continue;
       e.bound = e.bound == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.bound) ? b : e.bound;
     }
@@ -56212,13 +56222,19 @@ ${words}`;
       const entry = out.earned.capture[bundleId];
       if (!entry || entry.captures === 0 || !e.direct && !e.otherVia.size) continue;
       const other = [...new Set([...e.otherVia].join(",").split(",").filter(Boolean))].sort();
+      const unrecorded = e.unrecorded;
+      const byArchive = e.measured != null && e.measuredVia === ARCHIVE_VIA;
       entry.fetch = {
         direct: e.direct,
+        archive: e.archive,
         other_via: other,
+        unrecorded,
         earned: e.measured,
+        earned_via: e.measured != null ? e.measuredVia : null,
         determined: e.measured != null,
-        ...e.measured == null ? { undetermined_because: e.direct ? "CAPTURE_FIDELITY_UNMEASURED" : "CAPTURE_GRADE_VIA_UNRULED" } : {},
-        why: e.measured != null ? `this instance fetched ${bundleId} directly from its own address (${e.direct} capture(s)), so its capture grade is ${e.measured} by that fact rather than by a member's account: a leg on it is read at that letter, never below it.` : e.direct ? `this instance fetched ${bundleId} directly, but every direct capture's text is unmeasured, so no capture grade is measured for it.` : `every capture of ${bundleId} the record holds was served by someone other than its publisher (${other.join(", ")}), and what such a capture earns on the capture axis is UNDETERMINED: no ruling names that grade yet. A leg on it keeps the letter its author gave, under the ceiling.`
+        whole: e.measured != null && e.direct + e.archive === e.n,
+        ...e.measured == null ? { undetermined_because: e.direct || e.archive ? "CAPTURE_FIDELITY_UNMEASURED" : "CAPTURE_GRADE_VIA_UNRULED" } : {},
+        why: byArchive ? `this instance fetched ${bundleId} only through an archive replay (${ARCHIVE_VIA}, ${e.archive} capture(s)), never from its publisher: one more party stands between the record and the publisher, so its capture grade is ${e.measured}, measured from how it was fetched and ranked below a direct capture (ARCHIVE-FALLBACK's two-hop chain; transitive trust with its grade adjusted).` : e.measured != null ? `this instance fetched ${bundleId} directly from its own address (${e.direct} capture(s)), so its capture grade is ${e.measured} by that fact rather than by a member's account: a leg on it is read at that letter, never below it.` : e.direct || e.archive ? `this instance fetched ${bundleId}, but the text of every capture it fetched is unmeasured, so no capture grade is measured for it.` : `every capture of ${bundleId} the record holds was served by a route no ruling grades (${other.join(", ")}), and what such a capture earns on the capture axis is UNDETERMINED: no ruling names that grade yet. A leg on it keeps the letter its author gave, under the ceiling.`
       };
     }
     if (Array.isArray(contentIds) && contentIds.length)
@@ -61187,10 +61203,15 @@ ${words}`;
         why: earned.why ?? `what this document's capture can support is undetermined, so this leg claims nothing on the capture axis`
       };
     const routeGrade = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;
+    if (routeGrade != null && earned.fetch.whole && _Store.#GRADE_RANK[routeGrade] < _Store.#GRADE_RANK[earned.grade] && _Store.#GRADE_RANK[stated] > _Store.#GRADE_RANK[routeGrade])
+      return {
+        grade: routeGrade,
+        why: `the record holds ${targetId}'s capture grade at ${routeGrade}, from how this instance fetched it, so this leg is read at ${routeGrade} here and not at the ${stated} it carries. ` + `${earned.fetch.why}`.trimEnd()
+      };
     if (routeGrade != null && _Store.#GRADE_RANK[stated] < _Store.#GRADE_RANK[routeGrade])
       return {
         grade: routeGrade,
-        why: `this instance fetched ${targetId} itself, so the record holds its capture grade at ${routeGrade}, and this leg is read at ${routeGrade} here and not at the ${stated} it carries. ` + `${earned.fetch.why}`.trimEnd()
+        why: `this instance fetched ${targetId} ${earned.fetch.earned_via === "direct" ? "itself" : "through an archive replay"}, so the record holds its capture grade at ${routeGrade}, and this leg is read at ${routeGrade} here and not at the ${stated} it carries. ` + `${earned.fetch.why}`.trimEnd()
       };
     if (_Store.#GRADE_RANK[stated] <= _Store.#GRADE_RANK[earned.grade]) return null;
     return {

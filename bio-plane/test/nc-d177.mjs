@@ -4,7 +4,7 @@
  * (anchor exactly once, a per-arm pristine copy in `controlPen`, restore verified by sha256 AND `cmp` AND
  * size with a floor, the suite's own foot read or -1) are REC-105's driver's, reused unchanged below.
  *
- * Run: `node test/nc-d177.mjs <none|a|b|c|d>` from `bio-plane/`. */
+ * Run: `node test/nc-d177.mjs <none|a|b|c|d|e|f|g>` from `bio-plane/`. Arms (e)-(g) are D-693's. */
 import "./stdio.mjs";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -19,6 +19,10 @@ const PEN = `${controlPen("d177")}/`;
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 const HEADLINE = "A MEMBER-AUTHORED WEAKER LETTER ON A DIRECT CAPTURE READS THE EARNED GRADE";
+/* D-693's labels. */
+const ARCHIVE_HEADLINE = "A LEG ON AN ARCHIVE-ONLY CAPTURE READS THE MEASURED LETTER";
+const DERIVED = "the store DERIVES the archive letter one rank below the enforced ceiling";
+const UNRULED_NAMED = "a route NO ruling names is NAMED";
 const ARMS = {
   a: {
     what: "THE ROW'S OWN — READ THE AUTHORED GRADE AGAIN. The measured floor in `#capturedAt` never "
@@ -26,23 +30,34 @@ const ARMS = {
         + "reads as authored, exactly as before this item.",
     find: "    if (routeGrade != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[routeGrade])",
     with: "    if (false && routeGrade != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[routeGrade])",
-    mustFail: [HEADLINE, "and the walk says WHY, in the registry's own words"],
+    /* D-693, RECORDED RATHER THAN SMOOTHED: first declared with ARCHIVE_HEADLINE held OPEN, and it broke —
+       the floor this arm disarms is the ONE floor both routes are read through, so an archive-only leg
+       reads its authored letter again too. A finding about the declaration, not the code. */
+    mustFail: [HEADLINE, "and the walk says WHY, in the registry's own words", ARCHIVE_HEADLINE,
+               "and the walk says it was fetched through an archive replay"],
     mustPass: ["BEFORE the fetch is recorded the route is unrecorded",
                "the registry now MEASURES the document's capture grade",
                "the leg's own AUTHORED letter is untouched in the record",
                "a direct capture's measured letter is its fidelity bound",
                "a leg stating exactly the measured letter reads it with NO reason",
-               "an archive-only document's route is NAMED",
-               "and the member's weaker letter on it STANDS",
+               UNRULED_NAMED,
                "a leg stating a WEAKER letter than the ceiling keeps its own"],
   },
+  /* D-693 · FLIPPED, NOT EXEMPTED. D-177 armed (b) as "the route ignored — any recorded source counts
+     as direct", declaring the archive route's UNDETERMINED reading must fail; that reading was the
+     pre-ruling answer, and BOB #35 (2026-09-25 07:55Z) ruled the archive case. The arm now returns the
+     archive via to what D-177 shipped — a via no ruling names, CAPTURE_GRADE_VIA_UNRULED — which is
+     the row's own declared NEGATIVE CONTROL: 9d must fail BY NAME. */
   b: {
-    what: "THE ROUTE IGNORED — any recorded source counts as a direct fetch, so an archive replay earns "
-        + "the direct letter: a doctrine value nobody ruled, invented by the code.",
-    find: "      if (vias.includes(\"direct\")) {",
-    with: "      if (vias.length) {",
-    mustFail: ["an archive-only document's route is NAMED", "and the member's weaker letter on it STANDS"],
-    mustPass: [HEADLINE, "BEFORE the fetch is recorded the route is unrecorded",
+    what: "THE ARCHIVE RULING UNDONE — archive.org is no longer the ruled archive route, so an "
+        + "archive-only capture reads CAPTURE_GRADE_VIA_UNRULED again, as D-177 shipped it.",
+    find: "const ARCHIVE_VIA = \"archive.org\";",
+    with: "const ARCHIVE_VIA = \"(no ruled archive route)\";",
+    mustFail: ["an archive-only document's capture grade is MEASURED", ARCHIVE_HEADLINE,
+               "and the walk says it was fetched through an archive replay",
+               "a leg stating the DIRECT ceiling on an archive-only capture"],
+    mustPass: [HEADLINE, "BEFORE the fetch is recorded the route is unrecorded", DERIVED, UNRULED_NAMED,
+               "and the member's weaker letter on it STANDS",
                "a leg stating a WEAKER letter than the ceiling keeps its own"],
   },
   c: {
@@ -56,9 +71,12 @@ const ARMS = {
        with the first, which refutes nothing. The arm now gives the sentence an empty reason so ONLY the
        floor's source moves. */
     with: "    const routeGrade = earned.grade; if (!earned.fetch) earned.fetch = { why: \"\" };",
+    /* D-693, RECORDED RATHER THAN SMOOTHED: first declared with ARCHIVE_HEADLINE held OPEN, and it broke —
+       with the ceiling read as the measurement an archive-only leg reads at the DIRECT ceiling, which is
+       this arm's own defect seen one route over. Moved to must-FAIL. */
     mustFail: ["BEFORE the fetch is recorded the route is unrecorded",
                "and the member's weaker letter on it STANDS",
-               "a leg stating a WEAKER letter than the ceiling keeps its own"],
+               "a leg stating a WEAKER letter than the ceiling keeps its own", ARCHIVE_HEADLINE],
     mustPass: [HEADLINE, "a direct capture's measured letter is its fidelity bound",
                "a leg stating exactly the measured letter reads it with NO reason"],
   },
@@ -70,8 +88,35 @@ const ARMS = {
     with: "    if (routeGrade != null && BASIS_GRADES.indexOf(stated) > BASIS_GRADES.indexOf(routeGrade))",
     mustFail: [],
     mustPass: [HEADLINE, "and the walk says WHY, in the registry's own words",
-               "an archive-only document's route is NAMED",
+               ARCHIVE_HEADLINE, UNRULED_NAMED,
                "a leg stating a WEAKER letter than the ceiling keeps its own"],
+  },
+  /* D-693's own arms. */
+  e: {
+    what: "THE ARCHIVE LETTER TYPED — an identical copy that agrees today and would not follow the ceiling. "
+        + "Only the structural pin can see it.",
+    find: "const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;",
+    with: "const ARCHIVE_CAPTURE_GRADE = \"C\";",
+    mustFail: [DERIVED],
+    mustPass: [HEADLINE, ARCHIVE_HEADLINE, "an archive-only document's capture grade is MEASURED", UNRULED_NAMED],
+  },
+  f: {
+    what: "NO CAP FROM ABOVE — an archive-only document is floored at its measured letter but a leg stating "
+        + "the direct ceiling on it is read at that ceiling: the record claims a direct capture's worth.",
+    find: "    if (routeGrade != null && earned.fetch.whole\n",
+    with: "    if (false && routeGrade != null && earned.fetch.whole\n",
+    mustFail: ["a leg stating the DIRECT ceiling on an archive-only capture"],
+    mustPass: [HEADLINE, ARCHIVE_HEADLINE, "an archive-only document's capture grade is MEASURED", UNRULED_NAMED,
+               "and its AUTHORED letter is untouched in the record"],
+  },
+  g: {
+    what: "OVER-STRICTNESS. The archive letter derived by a different correct spelling — the SLICE after the "
+        + "ceiling — must PASS every behavioural assertion; only the structural pin on the spelling may move.",
+    find: "const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;",
+    with: "const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES.slice(BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1)[0] ?? null;",
+    mustFail: [DERIVED],
+    mustPass: [HEADLINE, ARCHIVE_HEADLINE, "an archive-only document's capture grade is MEASURED",
+               "a leg stating the DIRECT ceiling on an archive-only capture", UNRULED_NAMED],
   },
 };
 
