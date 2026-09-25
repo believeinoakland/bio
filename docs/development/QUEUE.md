@@ -809,8 +809,8 @@ scope: keep the internal (case_id NULL, edition 1) key that grants and statement
 accepts-when: DD answers `edition: null` in all four while its grant and acknowledgements still bind (moves: edition 1 stated for a derived case). NEGATIVE CONTROL: answer the internal edition again and the DD edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-538's worker).
 
-### UI-108 · running — **THE PROGRESSION PAGE SHOWS A DISMISSED FINDING AS AN OPEN QUESTION: `progPaintInstance()` renders `inst.findings` verbatim and cannot say a member decided it.** The surface half of D-552. — owner UI.
-status: running — SCHEDULER #22 04:57Z spawns WORKER UI-108 (depth 2)
+### UI-108 · integrated — **THE PROGRESSION PAGE SHOWS A DISMISSED FINDING AS AN OPEN QUESTION: `progPaintInstance()` renders `inst.findings` verbatim and cannot say a member decided it.** The surface half of D-552. — owner UI.
+status: integrated — SCHEDULER #22 05:45Z: tip 80594009, GATE 233/233 GREEN FULLREUSE (15352 assertions), tree 75aefa90; decisions beside findings on the progression page; refused op=instance read now translated; r3Fed 82, census 729; CIVICOS_UI_STATE v120 provisional; minted D-617
 order: directly after D-552, which it consumes (SCHEDULER #20, 2026-09-24)
 milestone: M4
 interface: I3 consumer (D-552's IC).
@@ -819,6 +819,17 @@ depends-on: D-552.
 scope: on the progression page, render each finding's disposition as the plane states it (who, when, the reason, and whether the decision still applies to the current definition_version), in the plane's words; the finding stays listed.
 accepts-when: against a real-plane suite a dismissed finding renders its decision beside it (the measured failure it moves: an answered question shown as open). NEGATIVE CONTROL: render `inst.findings` without the view and the decided-finding arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
+
+### D-617 · running — **THE DOCUMENT PAGE STILL SHOWS A DISMISSED FINDING AS OPEN: `docInstanceHtml` (app.html, the UI-9 block) renders op=captureprogressions' findings, which carry D-552's disposition, without it.** Found by UI-108's worker (05:41Z), the second of the two sites that render progression findings. — owner UI.
+status: running — SCHEDULER #22 05:45Z spawns WORKER D-617 (depth 2), stacked on land/worker/UI-108 @ 80594009 (it reuses progFindingDecisionHtml)
+order: directly after UI-108, its twin: an answered question shown as open on the other page (SCHEDULER #22, 2026-09-25)
+milestone: M4
+interface: none (I3 consumer of D-552).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §12 "age rather than vanish" (D-79), with D-552's published view.
+depends-on: none (stacked on UI-108's branch, which builds the renderer).
+scope: render progFindingDecisionHtml(f) (or a sibling) inside each docprog-finding; a real-plane suite.
+accepts-when: against the real plane a dismissed finding on the document page renders its decision beside it (moves: an answered question shown as open). NEGATIVE CONTROL: render the findings without the disposition and the decided-finding arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by UI-108's worker).
 
 ### D-605 · running — **REGISTERING A SIGNING KEY FROM THE SETUP PAGE IS ALWAYS REFUSED BAD_KEY: `bio-plane/src/setup.mjs`'s key form posts the WHOLE `ssh-ed25519 AAAA… label` line as keyB64, and `Store#signerAdd`'s `/^AAAA[A-Za-z0-9+/=]+$/` can never match it.** Found by D-134's worker (05:15Z), by reading describeKey and the regex; D-134's suite shows a whole line refused. — owner DIST (the plane's setup page).
 status: running — SCHEDULER #22 05:19Z spawns WORKER D-605 (depth 2), stacked on land/worker/D-596 @ 37430658 (same setup page)
