@@ -14059,7 +14059,7 @@ var REVIEW_COPY_CHECKS = {
   REVIEW_NO_SUCH_CASE: {
     check: "C-87.6",
     where: "src/store.mjs #caseDraft > is-review-no-such-case",
-    translation: "This project has published no case by that name. A draft may name an existing case, which makes the draft that case's next edition; a case another project published is answered exactly as one that does not exist. Leave the name off and the draft is a new case."
+    translation: "This project has published no case by that name. A draft may name an existing case, which makes the draft that case's next edition; a case another project published is answered exactly as one that does not exist. Leave the name off and publication derives the case from what its findings already serve; asking for a new case is a separate choice (newCase)."
   },
   REVIEW_DRAFT_TOO_LARGE: {
     check: "C-87.7",
@@ -39526,6 +39526,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           detail: `no draft of ${proj} that you can read answers to ${draftNamed}. A draft you cannot read is answered exactly as one that does not exist. Name the draft this case was prepared in, or publish without draft= and its readings are stated as undetermined.`
         });
       const di = this.#draftIdentity(d);
+      const diNewCase = !!JSON.parse(d.params).newCase;
       if (di.caseId ? di.caseId !== theCase || di.edition !== predicted : predicted !== 1)
         return refusal6("PUBLISH_DRAFT_NOT_THIS_CASE", {
           draft: draftNamed,
@@ -39533,7 +39534,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           draft_edition: di.edition,
           case_id: theCase ?? null,
           edition: predicted,
-          detail: `draft ${draftNamed} is prepared for ${_Store.#caseIdentitySentence(di.caseId, di.edition)}, and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names ` + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.`
+          detail: `draft ${draftNamed} is prepared for ${_Store.#caseIdentitySentence(di.caseId, di.edition, diNewCase)}, and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it would bind its readings to a case they were not given for. ` + (di.caseId ? `Publish the case the draft names (case=${di.caseId}), or name the draft of this one.` : diNewCase ? `Publish the new case the draft asks for (newCase=true), or name the draft of this one.` : `A draft that names no case is accepted here only at a new case's first edition: publish it with newCase=true, or name the draft of this one.`)
         });
       const already = this.#one(`SELECT case_id, edition FROM case_documents WHERE draft_id=?
                                    AND NOT (case_id IS ? AND edition=?) LIMIT 1`, d.draft_id, theCase ?? null, predicted);
@@ -41467,7 +41468,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     bySecret = false
   } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
-    let authorFromDraft = false;
+    let authorFromDraft = false, draftNewCase = false;
     const refusal7 = (code, detail, extra) => {
       const row = STATEMENT_ACK_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
@@ -41481,6 +41482,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       project = d.project_id;
       ident = this.#draftIdentity(d);
       draftId = d.draft_id;
+      draftNewCase = !!JSON.parse(d.params).newCase;
       statement = JSON.parse(d.params).statement;
       statementAuthor = d.statement_by ?? null;
       authorFromDraft = true;
@@ -41498,6 +41500,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         project = d.project_id;
         ident = this.#draftIdentity(d);
         draftId = d.draft_id;
+        draftNewCase = !!JSON.parse(d.params).newCase;
         statement = JSON.parse(d.params).statement;
         statementAuthor = d.statement_by ?? null;
         authorFromDraft = true;
@@ -41648,7 +41651,7 @@ case_project: ${project}
         named_at: linkedTo.authored_at ?? null,
         signed: !!linkedTo.sig_armored
       } } : {},
-      listed: linkedTo ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), so it is a reading of that case (BIO_Publication \xA73 rule 13). ` + (linkedTo.sig_armored ? `That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.` : `Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.`) : ident.caseId != null ? `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.` : `this is a reading of draft ${draftId}, which names no case \u2014 a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (\xA73 rule 13) \u2014 UNTIL the case is published naming this draft (op=publish&draft=${draftId}): at that act this reading binds to the case it produced, and its document lists it with the link stated (REC-217, BOB #33). Published without draft=, it is counted there as undetermined and never named. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
+      listed: linkedTo ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), so it is a reading of that case (BIO_Publication \xA73 rule 13). ` + (linkedTo.sig_armored ? `That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.` : `Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.`) : ident.caseId != null ? `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId, ident.edition, draftNewCase)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.` : `this is a reading of draft ${draftId}, which names no case \u2014 a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (\xA73 rule 13) \u2014 UNTIL the case is published naming this draft (op=publish&draft=${draftId}): at that act this reading binds to the case it produced, and its document lists it with the link stated (REC-217, BOB #33). Published without draft=, it is counted there as undetermined and never named. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
     };
   }
   /* IC-246: the bound on the unsigned documents one acknowledgement re-authors, declared BELOW its method (REC-116).

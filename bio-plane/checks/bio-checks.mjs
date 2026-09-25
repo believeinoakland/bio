@@ -14437,7 +14437,8 @@ export const REVIEW_COPY_CHECKS = {
     where: 'src/store.mjs #caseDraft > is-review-no-such-case',
     translation: 'This project has published no case by that name. A draft may name an existing case, which '
       + 'makes the draft that case\'s next edition; a case another project published is answered exactly as '
-      + 'one that does not exist. Leave the name off and the draft is a new case.',
+      + 'one that does not exist. Leave the name off and publication derives the case from what its findings '
+      + 'already serve; asking for a new case is a separate choice (newCase).',
   },
   REVIEW_DRAFT_TOO_LARGE: {
     check: 'C-87.7',

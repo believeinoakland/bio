@@ -8893,15 +8893,24 @@ export class Store extends DurableObject {
                 + `publish without draft= and its readings are stated as undetermined.` });
       /* END DEC-49 REGION is-publish-draft-found */
       const di = this.#draftIdentity(d);
+      /* D-626 (D-538's class): the draft's own `newCase` goes into the identity sentence, because a case id of
+         null is two different drafts — one asking for a new case and one leaving publication to DERIVE it. The
+         sentence read *a new case* for both, so a draft that asked for nothing was described as asking for one.
+         The remedy clause says the same: `newCase=true` is what such a draft is accepted at HERE, and it is not
+         the case the draft names (it names none). WHICH drafts this condition refuses is unchanged. */
+      const diNewCase = !!JSON.parse(d.params).newCase;
       /* DEC-49 REGION is-publish-draft-this-case */
       if (di.caseId ? (di.caseId !== theCase || di.edition !== predicted) : predicted !== 1)
         return refusal("PUBLISH_DRAFT_NOT_THIS_CASE", { draft: draftNamed,
           draft_case: di.caseId ?? null, draft_edition: di.edition,
           case_id: theCase ?? null, edition: predicted,
-          detail: `draft ${draftNamed} is prepared for ${Store.#caseIdentitySentence(di.caseId, di.edition)}, and `
-                + `this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it `
-                + `would bind its readings to a case they were not given for. Publish the case the draft names `
-                + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.` });
+          detail: `draft ${draftNamed} is prepared for ${Store.#caseIdentitySentence(di.caseId, di.edition, diNewCase)}, `
+                + `and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it `
+                + `would bind its readings to a case they were not given for. `
+                + (di.caseId ? `Publish the case the draft names (case=${di.caseId}), or name the draft of this one.`
+                   : diNewCase ? `Publish the new case the draft asks for (newCase=true), or name the draft of this one.`
+                   : `A draft that names no case is accepted here only at a new case's first edition: publish `
+                     + `it with newCase=true, or name the draft of this one.`) });
       /* END DEC-49 REGION is-publish-draft-this-case */
       const already = this.#one(`SELECT case_id, edition FROM case_documents WHERE draft_id=?
                                    AND NOT (case_id IS ? AND edition=?) LIMIT 1`, d.draft_id, theCase ?? null, predicted);
@@ -11015,7 +11024,7 @@ export class Store extends DurableObject {
     /* REC-193: whether the author was read from a DRAFT's `statement_by` — the column an older draft
        does not carry, and the one place UNDETERMINED is reachable. A case document states its author
        in its own bytes, so that door is not this one. */
-    let authorFromDraft = false;
+    let authorFromDraft = false, draftNewCase = false;
     /* REC-79'S SINGLE-HELPER SHAPE, as `BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates DEC-49:
        ONE constructor for every refusal this op makes, reading the CANNED TRANSLATION off the
        catalogue row rather than repeating a sentence here. IT WAS DECLARED BELOW THE FIRST SIX
@@ -11041,6 +11050,7 @@ export class Store extends DurableObject {
       if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();
       const d = live.draft;
       project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
+      draftNewCase = !!JSON.parse(d.params).newCase;
       /* REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES, stamped at the
          draft write that changed them — never `updated_by`, which is the last editor of any field. */
       statement = JSON.parse(d.params).statement; statementAuthor = d.statement_by ?? null;
@@ -11054,6 +11064,7 @@ export class Store extends DurableObject {
         const d = this.#draftForMember(draft, v);
         if (!d) return Store.#noReviewCopy();
         project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
+        draftNewCase = !!JSON.parse(d.params).newCase;
         /* REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES, stamped at the
          draft write that changed them — never `updated_by`, which is the last editor of any field. */
       statement = JSON.parse(d.params).statement; statementAuthor = d.statement_by ?? null;
@@ -11293,7 +11304,7 @@ export class Store extends DurableObject {
                      : `Its case document is authored and unsigned, so it now lists this reading (case_documents), `
                        + `re-authored; its owner signs the new bytes.`)
                : ident.caseId != null
-               ? `the completeness block of ${Store.#caseIdentitySentence(ident.caseId, ident.edition)} `
+               ? `the completeness block of ${Store.#caseIdentitySentence(ident.caseId, ident.edition, draftNewCase)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `
                    + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
                    + `(case_documents). A statement edited afterwards is a different sentence, and this `
