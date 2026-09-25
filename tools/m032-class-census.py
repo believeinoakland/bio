@@ -1456,7 +1456,9 @@ def read_one(rec, tmp):
         ptext, reader, preason = plane_text(rec, data)
         plane_prov = {'sha': hashlib_sha(data),
                       'structure_provenance': LAST_PLANE_ROW.get('structure_provenance'),
-                      'reading_provenance': LAST_PLANE_ROW.get('reading_provenance')}
+                      'reading_provenance': LAST_PLANE_ROW.get('reading_provenance'),
+                      # D-557: what was judged — units, chars, producers' tiers, digest agreement.
+                      'judged': LAST_PLANE_ROW.get('judged')}
         if preason:
             reason = preason
         else:

@@ -6,8 +6,10 @@
  * (`src/index.mjs`) and the REAL OCR member (its committed bundle, wasm core and model,
  * `ocr-worker/test/memberworker.mjs`'s recipe) in miniflare, serves each cached PDF's
  * bytes from a local outbound service, and drives `op=acquire` — the capture path that
- * reaches tiers 2 (the committed pdf-worker bundle, as the live fleet binds it) and 3 — once per document, then `op=pdfstructure&ocr=1` (D-319's seam) for
- * any page the acquire left unread. It records what the plane's own reading says:
+ * reaches tiers 2 (the committed pdf-worker bundle, as the live fleet binds it) and 3 — once per document, then,
+ * with FW20_TEXT_DIR set, the plain `op=pdfstructure` for audit. (CORRECTED 2026-09-25 by D-557: this line said
+ * the script then called `op=pdfstructure&ocr=1` for any page the acquire left unread. It never did, and it
+ * cannot: `ocr=1` re-reads only a PROMOTED capture, `REEXTRACT_NOT_READ` otherwise.) It records what the plane's own reading says:
  * text tier, whether it read from text, the content type the registry chose, and the
  * basis sentence. Nothing here classifies a document itself.
  *
@@ -38,8 +40,9 @@
  *
  * NEGATIVE CONTROL: `node test/nc-d557.mjs` from `bio-plane/` (D-557, 2026-09-25) — arm `plain` judges the
  * plain `op=pdfstructure` answer again and `d557-census-judged-text.test.mjs`'s TIER-3 arm fails by name;
- * arm `texttier` labels the reader from `text_tier` again and the label arm fails. Results in the driver's
- * header.
+ * arm `texttier` labels the reader from `text_tier` again and the label arm fails. RUN 2026-09-25: 3 arms, 0 not
+ * as declared — baseline 16/0 · plain 12/4, "TIER-3 TEXT JUDGED" failing by name · texttier 15/1, exactly "THE MIXED
+ * LABEL"; restored by sha256 AND byte comparison. Figures: `docs/development/measurements/M-173.md`.
  */
 import { createHash } from "node:crypto";
 import { Miniflare } from "miniflare";
