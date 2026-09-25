@@ -3,6 +3,7 @@
    (B) OVER-STRICT — `=== "retired"` -> `!== "collected"` (refuses the verified removed-source bundle too, the liar that reads a second axis). DECLARED: the four §2 arms fail, §1 holds. RESULT 15/4, AS DECLARED.
    (C) THE PRE-FLIGHT — in src/affordances.mjs `cite`, `(ty === "information" && f.current_state !== "retired")` -> `(ty === "information")`. DECLARED: §4 fails alone. RESULT 18/1, AS DECLARED.
    RE-RUN 2026-09-23 by the REC-181 worker after §3's fixture was corrected (see §3's fixture note; src/store.mjs sha256 46596c65df89…, restored by cp and verified by sha256 and cmp): (A) RESULT 10/9 — every §1 arm and §3's re-cite arm fail as before, and §3's BYTE-IDENTICAL arm now fails too: the older edge onto OLD is SEVERED rather than confirmed, so a re-cite is no longer the idempotent `already` partition and (A) lets it write. Stronger than the original, not a regression. */
+/* NEGATIVE CONTROL (D-553, §5): RUN 2026-09-25 by the D-553 worker, ALONE, src/store.mjs restored by cp from a per-arm pristine copy and verified by sha256 AND cmp (3,350,918 B, sha256 54bfa2754d8a…); baseline 21 pass / 0 fail. In suggestVersion's CHECK 1, `if (retired) unreachable.push(` -> `if (false && retired) unreachable.push(`. DECLARED: §5's RETIRED arm fails ALONE; §5's hidden-target arm and every §1-§4 arm hold. RESULT 20/1, AS DECLARED. */
 /* =========================================================================
  * D-168 — A RETIRED ITEM IS NOT CITABLE.
  * State Rules & Consistency v1.5 §4.1, the paragraph *"A RETIRED ITEM IS NOT
@@ -268,6 +269,42 @@ t("§3 ... and the leg is still there, confirmed on HELD; the case's edge onto O
 const acts = async (id) => ((await GET(`op=affordances&token=${MTOK}&target=${E(id)}`))?.acts ?? []).map((a) => a.id);
 t("§4 op=affordances does NOT offer `cite` on a RETIRED bundle, and DOES on a removed-source one",
   [(await acts(RET)).includes("cite"), (await acts(GONE)).includes("cite")], [false, true]);
+
+/* =============================================== §5 THE SUGGEST DOOR ASKS THE SAME PREDICATE (D-553)
+   BOB #34 (2026-09-24): the rule follows the STATE, the store asks it through ONE helper at all three doors,
+   and viewer-gating never decides citability, only the refusal's WORDING. Driven through `op=suggest` as a
+   MEMBER SESSION under a run the member opened. Two arms: a leg onto RET is refused and the refusal says
+   RETIRED (the member can read RET); a leg onto a project the member was never invited to is STILL refused,
+   worded as unreadable and never naming what the record holds. The cell "retired AND hidden" is not
+   reachable today — the viewer filter hides only PROJECT bundles and no project machine has a `retired`
+   state — so that it is asked apart from the viewer is pinned structurally in affordances.test.mjs §0. */
+const HIDDEN = await (async () => {
+  const text = projectMd("d553-hidden");
+  const r = must("promote d553-hidden", await POST(`op=promote&token=${ADM}`, { base: null,
+    snapKey: `d168-${String(++snapSeq).padStart(6, "0")}`,
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: "Project d553-hidden",
+            current_state: "forming", created: NOW, last_updated: LATER } }));
+  must("claim d553-hidden", await DO("projectclaimowner", { projectId: r.bundleId, memberId: "ruth" }));
+  return r.bundleId;
+})();
+const RUN5 = "RUN-2026-0925-d553";
+must("airunopen d553", await POST(`op=airunopen&token=${IRIS}`, {
+  run: RUN5, contextType: "inquiry", contextId: Q, label: "D-553 — the suggest door", mode: "check",
+  principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+  skillVersion: "investigative-session@1", biasManifest: null,
+  bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 }));
+const suggestLeg = async (leg, name) => POST(`op=suggest&token=${IRIS}`, { target: Q, run: RUN5,
+  kind: "basis-version", name, description: `A reading resting on ${leg}, for the D-553 arm.`,
+  relationship: "and", grounds: [{ ground: "paper trail" }],
+  legs: [{ target: leg, role: "supports", ground: "paper trail" }] });
+const sRet = await suggestLeg(RET, "resting on retired material");
+t("§5 SUGGEST onto a RETIRED item is refused, and the refusal says RETIRED — the same predicate `op=cite` asks",
+  [sRet?.ok, sRet?.code, /RETIRED/.test(String(sRet?.detail))], [false, "SUGGEST_LEG_UNREACHABLE", true]);
+const sHid = await suggestLeg(HIDDEN, "resting on a case this member cannot see");
+t("§5 SUGGEST onto a target the VIEWER CANNOT SEE is still refused, worded as unreadable, naming nothing it holds",
+  [sHid?.ok, sHid?.code, /readable from here/.test(String(sHid?.detail)), /RETIRED/.test(String(sHid?.detail))],
+  [false, "SUGGEST_LEG_UNREACHABLE", true, false]);
 
 } catch (e) {
   console.log(`  FAIL  the suite threw before its foot: ${e && e.stack ? e.stack : e}`);

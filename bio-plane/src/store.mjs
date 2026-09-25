@@ -5213,15 +5213,23 @@ export class Store extends DurableObject {
    * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
    *
    * `source_status` is not read, as at cite and at reinstate: a removed or
-   * modified source stays citable, and `retired` is the other axis. Only
-   * Information has the state — an inquiry target answers false, exactly as
-   * `#edgeTransition` leaves it un-refused — and an id with no row answers
-   * false too, because an absent target is refused by another door and this
-   * one claims nothing about it. */
+   * modified source stays citable, and `retired` is the other axis. An id with
+   * no row answers false, because an absent target is refused by another door
+   * and this one claims nothing about it.
+   *
+   * D-553 (BOB #34, 2026-09-24): THE STORE'S ONE RETIRED-TARGET PREDICATE, AND
+   * TYPE-BLIND. The rule follows the STATE, not the type — any object in a
+   * `retired` state is not citable, by any door and for every caller — so the
+   * Information test this carried is gone. Two machines carry the state today,
+   * measured from `STATES` in the catalogue: `information` and `bias`; a future
+   * machine meaning something else must name its state differently. It is read
+   * at all three doors that ask the question: `#edgeTransition` (reinstate) and
+   * `affordanceFacts`, `op=cite`'s `is-cite-retired` region, and the suggest
+   * path's CHECK 1. It is NEVER viewer-gated: whether the viewer can see the
+   * target decides only the refusal's WORDING, never citability. */
   #retiredNotCitable(id) {
-    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-    return !!b && normalizeType(b.object_type) === "information"
-        && String(b.current_state ?? "").trim() === "retired";
+    const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, id);
+    return !!b && String(b.current_state ?? "").trim() === "retired";
   }
 
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
@@ -13115,9 +13123,10 @@ export class Store extends DurableObject {
        `retire` already refuses while a live edge cites the item (CITED); a
        citation made AFTER the retirement is the same harm entered by the other
        door. Asked HERE, in the store, so a member's session and a machine
-       credential meet one rule (DEC-8: never on a surface) — the suggest path's
-       CHECK 1 (SUGGEST_LEG_UNREACHABLE) asks the same question of the same
-       column.
+       credential meet one rule (DEC-8: never on a surface), and asked through
+       `#retiredNotCitable`, the ONE predicate the suggest path's CHECK 1 and
+       reinstate also call (D-553; this comment used to claim CHECK 1 asked "the
+       same question of the same column" while it held its own type-blind copy).
 
        WHAT IS NOT ASKED, and each absence is the ruling's, not an omission:
          - `source_status`. A publisher that withdraws or changes a document is
@@ -13128,12 +13137,7 @@ export class Store extends DurableObject {
            predates the retirement is the record's history and is not rewritten.
        The whole call is refused with the retired members named, never narrowed
        to the rest, the same reason as every refusal above. */
-    const retiredMembers = [];
-    for (const id of sel.members) {
-      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (b && normalizeType(b.object_type) === "information"
-          && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
-    }
+    const retiredMembers = sel.members.filter((id) => this.#retiredNotCitable(id));
     if (retiredMembers.length)
       return { ok: false, reason: "RETIRED_NOT_CITABLE", code: "RETIRED_NOT_CITABLE",
                check: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.check,
@@ -40715,11 +40719,16 @@ export class Store extends DurableObject {
     /* CHECK 1 — EVERY LEG EXISTS AND IS REACHABLE AT ITS ADDRESS.
        D-168 IS THE WHOLE REASON THIS IS NOT A TYPE CHECK. `op=cite` WAS TYPE-ONLY
        when this was written (since D-168, 2026-09-23, it refuses a retired member
-       too — RETIRED_NOT_CITABLE, the same question of the same column). A
-       type-only check here would PASS RETIRED INFORMATION — a leg resting on a
-       document the record itself retired, reading to every later member as live
-       support. So three questions are asked and not one: is it IN the record, is
-       it READABLE from here, and has the record RETIRED it. */
+       too — RETIRED_NOT_CITABLE). A type-only check here would PASS RETIRED
+       INFORMATION — a leg resting on a document the record itself retired,
+       reading to every later member as live support. So three questions are
+       asked and not one: is it IN the record, is it READABLE from here, and has
+       the record RETIRED it.
+       D-553 (BOB #34): the third is asked through `#retiredNotCitable`, the
+       store's ONE retired predicate, and it is asked BEFORE and APART FROM the
+       viewer: citability is never viewer-gated. What the viewer decides is only
+       the WORDING — a target this viewer cannot read is named as unreadable,
+       retired or not, so the refusal does not tell it what the record holds. */
     const unreachable = [];
     for (let i = 0; i < legsIn.length; i++) {
       const t = str(legsIn[i]?.target);
@@ -40731,12 +40740,12 @@ export class Store extends DurableObject {
          second one. A different alias here failed at the FIRST leg with a raw
          SQLITE_ERROR, which is the whole reason the leg walk is driven through
          the op in this item's suite rather than reasoned about. */
+      const retired = this.#retiredNotCitable(t);
       const row = this.#one(
-        `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+        `SELECT b.bundle_id FROM bundles b
          WHERE b.bundle_id=? AND (${g2.sql})`, t, ...g2.args);
       if (!row) { unreachable.push({ ord: i, target: t, why: "not in the record, or not readable from here" }); continue; }
-      if (String(row.current_state ?? "").trim() === "retired")
-        unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
+      if (retired) unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
     }
     if (unreachable.length)
       return remember(refusal("SUGGEST_LEG_UNREACHABLE",
