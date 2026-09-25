@@ -1,0 +1,16 @@
+{
+ "unit": "plane:deploybindings.test.mjs",
+ "inputHash": "028e17ed7bbf2ee4571fd8d7dc4e2405db691a2ae36ce55692ca9ac4f51c287f",
+ "verdict": "PASS",
+ "run": "6d0c4afbfea07f3b072d2360de90af3f1ede73e6.1790338423545.3487.json",
+ "tree": "6d0c4afbfea07f3b072d2360de90af3f1ede73e6",
+ "head": "1ca6abd4e057f0d999c93f268a2e00fbcfe04112",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 917,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "fae5b12b-7259-5e7c-ae7b-9fb359db6c0d",
+ "at": "2026-09-25T12:13:43.564Z"
+}
