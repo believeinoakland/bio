@@ -306,18 +306,6 @@ scope: rewrite the four citations as prose ("the MEASUREMENTS ledger"), the corr
 accepts-when: a MEASUREMENTS-only diff no longer selects `calibration.test.mjs` and selects 37 units (the measured failure it moves: 39, M0-176's unmet accepts-when). NEGATIVE CONTROL: restore one citation by name and the selection re-admits the importing suites, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by M0-176's worker).
 
-## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
-
-`docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
-
-| who | row | what | blocked on |
-| --- | --- | --- | --- |
-| RECORD | PL-16 | the published case (IS-8, M10) — **RESHAPED BY DEC-72, not merely blocked.** Its finding-side stamping and its NO-case-level-bar assumption are both overtaken; `CASE-AS-PRODUCTION.md` and the CASE-1..CASE-6 rows are the live decomposition | **Bob** (DEC-33's ceremony deferral) **AND now DEC-72's redesign.** Read the design doc before touching it — supersession is never silent, so the row keeps its id and names what overtook it |
-| **DIST** | DS-1 | D-115 — the installer installs the FLEET | **DONE 2026-09-19 — THIS TABLE WAS THE RECORD THAT WAS WRONG, corrected here with the reason (DIST-5's own act).** Landed at `8decf468` ("D-297: the installer installs the FLEET — verified, templated, degrading per member, on install AND update"). DIST #2 confirmed at its touch; VERIFIED INDEPENDENTLY BY SCHEDULER #2 AT THE CODE, not from either row: `8decf468` is an ancestor of `origin/main`, and `newgroup/src/index.mjs` carries a section headed "the fleet (IC-82/D-297)" and names `fleet` **27 times** — D-297's own opening measurement was that this file mentioned it **zero** times, which is the evidence from D-297 itself that DIST-5's accepts-when demanded |
-| **DIST** | DS-2 | D-116 — version authority spans the fleet | **DONE 2026-09-19**, landed at `da3d4f17` ("DS-2: the version authority spans the fleet — and five of six sites disagreed with it"). VERIFIED BY SCHEDULER #2 AT THE CODE: ancestor of `origin/main`; `bio-plane/scripts/resolve-version.mjs` CONSUMES FLEET's own `discoverMembers` rather than re-implementing it, so the set checked cannot drift from the set built, and takes `bio-plane/package.json` as THE authority; `tools/release-assemble.mjs` refuses `VERSION_SKEW` and `VERSION_DISAGREES`; `resolveversion.test.mjs` arms BEHIND (ARM 2) and AHEAD (ARM 3) — the direction a one-sided check misses |
-| **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
-| FLEET | FL-6 | the Claude-account cascade at runtime | **D-260 (the plane's caller does not exist), PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling**; FL-6's member half LANDED at `f5ed2bfa` (2026-09-12) and DS-3's config half at `2de6f25f` — DIST #3 and FLEET #3, verified by SCHEDULER #4 |
-
 ### D-542 · queued — **THE DEC-49 GUARD SCORES A CODE "OUT OF REACH" WHEN ITS SURFACE RENDERS THE PLANE'S OWN WORDS: `check-refusal-codes.mjs` puts a code in reach only by R1 (a catalogue row), R2 (a code LITERAL in `app.html`) or R3 (a harness mock), so UI-68's review-copy surface, which renders `detail` and keys on no literal, left TEN of D-448's eleven codes scored out of reach for a day while a member could meet them.** Found by D-448's worker (branch `land/worker/D-448` 5eadd905: the Publication front matter and `13.review-copy` both carry "D-542 carries that fix (reach-by-op) and is NOT BUILT"). — owner M0 (the guard).
 order: after D-550, with the DEC-49 instrument rows behind the product rows: it makes a false gate result (a reachable code read as unreachable) visible, which is product quality, but nothing regresses today since D-448 catalogues all eleven (Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-24)
 milestone: M0
@@ -1214,3 +1202,23 @@ depends-on: D-50 (`integrated` on c18-batch8).
 scope: a read-only op running C-77 over the instance's project bundles and naming each collision.
 accepts-when: two projects with one name are named; a clean record reads none; counters unchanged. NEGATIVE CONTROL: feed the check one bundle, and the collision arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### REC-208 · queued — **TWO PROJECT TITLES A MEMBER CANNOT TELL APART ON SCREEN CAN BE TWO NAMES: the project-name key does not fold Unicode-equivalent forms (NFC and NFD), so a lookalike project could claim a name that is taken.** BOB #32's ruling of 2026-09-23 23:44Z (cite until folded into Membership §7.1): *Unicode-equivalent titles are ONE name; the key normalises to NFC before §7.1's existing comparison; existing titles stay as written, and a pair that collides after normalising is STATED by the census, never renamed.* — owner RECORD.
+order: after D-458, the same name check (SCHEDULER #17, 2026-09-23; D-50's worker)
+milestone: M7
+interface: I3 — the name refusal widens; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.1), with BOB #32's ruling of 2026-09-23 23:44Z (cite until folded into Membership §7.1).
+depends-on: D-50 (`integrated` on c18-batch8).
+scope: NFC normalisation in the name key at the write and in C-77; D-458's census states any post-normalisation pair.
+accepts-when: an NFD title equivalent to a taken NFC title is refused by name; existing titles read byte-unchanged. NEGATIVE CONTROL: drop the normalisation, and the NFD-lookalike arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
+
+### UI-87 · queued — **THE ANALYST-VOCABULARY GATE FIRES ON PLAIN ENGLISH: `civicos-ui/test/analyst-vocabulary.mjs`'s `BANNED` connective rule `(AND|OR)\s+(of|…|set|sets)` carries `/i`, so "reason 1 and set 2" and "two or more sets" fail as analyst jargon.** Measured with node (CONDUCT #17, re-measured by SCHEDULER #17 on c17-batch5 @ 7c4f6b5f); the file's other connective rules are case-sensitive and its own header, finding (i), says a case-insensitive `AND` fires on correct English. — owner UI.
+order: after M0-139, among the verification rows: a gate that refuses correct member copy pushes surface authors toward worse words, so it goes ahead of pure process tooling (SCHEDULER #17, 2026-09-23, CONDUCT #17's 22:00Z finding (4))
+milestone: M0
+interface: none — a test rule.
+design: `docs/development/VERIFICATION.md` (a suite asserts what it claims), with DEC-32 clause 1 as the file itself states it.
+depends-on: none.
+scope: drop the `i` flag on that one rule; keep "the OR set" and "AND of the legs" caught. Extend `civicos-ui/test/analyst-vocabulary.test.mjs` with a must-pass fixture.
+accepts-when: "reason 1 and set 2" passes and "the OR set" is still refused. NEGATIVE CONTROL: restore `/i`, and the plain-English must-pass arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
