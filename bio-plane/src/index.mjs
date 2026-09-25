@@ -12442,7 +12442,14 @@ const PLANE = {
     const DO_PATH = { inbox: "inboxlist", memberlist: "memberlist", signerlist: "signerlist",
                       publish: "publishcase" };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
-    for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
+    /* D-675: `store` joins `token` and `op` as a parameter THE EDGE CONSUMES. `scopeFor` has already turned it into
+       the Durable Object this URL is sent to, so inside the store it names nothing (no DO route reads it) — and a
+       read that declares its whole grammar as an ACCEPT set (op=content's `Store.CONTENT_READ_PARAMS`) refused it by
+       name, so `op=content&store=scratch` could not be called at all and CLAUDE.md §5's scratch rule forced a live
+       check into `bio`. Stripped HERE rather than admitted to the accept set: admitting it would make the store
+       claim to understand a parameter it ignores, and every future accept-set read would have to remember it again.
+       D-419's `contentCrop` strips it the same way. test/content-store-param.test.mjs drives it through the op. */
+    for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op" && k !== "store") inner.searchParams.set(k, v);
     /* REC-132 / D-422: `identity` — WHO is asking, beside `viewer`'s what they may see —
        is the SERVER's stamp and nothing else. Deleted for every op before anything is
        stamped, so a caller naming a member here reads as nobody rather than as them. */

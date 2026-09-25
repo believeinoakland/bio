@@ -91513,7 +91513,7 @@ var index_default = {
       publish: "publishcase"
     };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
-    for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
+    for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op" && k !== "store") inner.searchParams.set(k, v);
     inner.searchParams.delete("identity");
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
