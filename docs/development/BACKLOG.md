@@ -56,6 +56,16 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
+### D-697 · queued — **D-665's per-image `image_unread` MARKER IS NOT HANDLED BY ITS TWO SIBLINGS' MERGES: D-633's carry in `mergeTier2Text` takes only image_content_*, so a page tier 2 wins drops a still-true `image_unread`; D-635's APPEND in `mergeTier3Text` does not discharge `image_unread` on a page OCR fills, as the replace path already does.** All three sit on land/worker/D-627 separately, so no branch holds the combination. From D-665's worker's union notes. — owner CONTENT-PDF.
+order: head of the backlog after D-686 — a correction joining three just-landed rows (D-633, D-635, D-665), built on main once batch30 carries them (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: none expected (markers carried/discharged as their meaning already says); the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (tier markers; BOB #35's 06:25Z per-image ruling and 08:05Z re-grade).
+depends-on: D-633, D-635, D-665 (all integrated on D-627; ride batch30).
+scope: mergeTier2Text carries `image_unread` with image_content_*; mergeTier3Text's append path discharges `image_unread` on a page OCR fills; nothing else moves.
+accepts-when: a tier-2-won page keeps its image_unread, and an OCR-appended page loses it (moves: a dropped true marker, a kept false one). NEGATIVE CONTROL: drop either change and its arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, D-665's union notes).
+
 ### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
 order: at the backlog head after D-682 — a correction joining two just-landed rows (D-625, UI-112) (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -105,16 +115,6 @@ depends-on: D-546 (running, stacked on D-578; builds the fence and `statemovecen
 scope: C-4.2 passes an undeclared in-bytes edge with D-546's sentence only when the census corroborates it at or before the fence; otherwise ERROR as today.
 accepts-when: the corroborated twin passes with the sentence and the uncorroborated one fails (moves: no reading for an in-bytes undeclared edge). NEGATIVE CONTROL: a fixture carrying a backdated undeclared edge with no record corroboration must fail C-4.2 by name, and the corroborated twin must pass with the sentence.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker; placed on BOB #35's 08:00Z ruling).
-
-### D-668 · queued — **FIVE REFUSAL CODES TELL A MEMBER SOMETHING FALSE AT ONE OF THEIR SITES (DEC-49's one-code-one-condition rule, D-484): `calibrationSubjectRegister` refuses REGISTERING a subject with CAL_NO_PROBE / CAL_UNNAMED (written for a calibration MEASUREMENT); `checkAttestation` answers a missing DATE with TEXT_ATTEST_EXTENT ("say how much you checked") and a missing member with TEXT_ATTEST_MACHINE ("the credential is an automated one"); a `typed` step with no member gets TEXT_CHAIN_STEP_UNNAMED ("a machine read the text").** OBS_PRESENT_NO_REFERENT (airun.mjs) is UNDETERMINED: judge it. Found by D-574's worker (minted on land/worker/D-574). — owner RECORD (text-chain, calibration, airun paths), M0 for the ceiling.
-order: after D-641, with the DEC-49 translation rows — a false sentence to a member is the over-claim CLAUDE.md §2 ranks worst (SCHEDULER #23, 2026-09-25)
-milestone: M7
-interface: I3 — new named codes; an IC if a surface builds on them; the integrator classifies.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one code, one condition), with `docs/development/VERIFICATION.md` (the DEC-49 guard, arm G).
-depends-on: D-574 (integrated, land/worker/D-574 @ 06494735 — arm G walks the files these sites are in).
-scope: give each of the five conditions its own code, catalogue row and translation; judge OBS_PRESENT_NO_REFERENT at its site and split it if false; remove each from MULTI_SITE_CANDIDATES and lower CEILING.multiSiteCodes in the same landing.
-accepts-when: each of the five conditions answers its own code whose words are true of it, through the op (moves: five false translations). NEGATIVE CONTROL: route one condition back to its old code and arm G fails by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-574's worker).
 
 ### D-688 · queued — **`LIFECYCLE_TEXT_UNWRITABLE` (D-147, C-94.11) IS TWO CONDITIONS UNDER ONE CODE: C-94.11's sentence about exemptions and citation is FALSE for the token-field case (e.g. stage=Appeal), so a member is told something untrue.** Found at batch29's union figures pass (CONDUCT #22); the union declares it in arm G's MULTI_SITE_CANDIDATES and raises CEILING.multiSiteCodes 59->60 for it. — owner RECORD.
 order: after D-668, with the one-code-one-condition rows (SCHEDULER #23, 2026-09-25)
@@ -1092,4 +1092,14 @@ design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure 
 depends-on: land/conduct/c20-batch11fix on `main`.
 scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
 accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-156 · queued — **`check-refusal-codes` ARM C READS ONLY THE SPANS A `where` NAMES, so a code re-minted OUTSIDE every governed region is invisible, for all 170 governed sites.** Found by D-484's worker. — owner M0 (RECORD reviews).
+order: after M0-155, the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
+depends-on: D-484.
+scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plane/src` per region row, failing on any outside its claimed span.
+accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

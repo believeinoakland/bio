@@ -1310,8 +1310,8 @@ scope: append the transcription to the page's layer text and list the page in bo
 accepts-when: a routed page with a decoded folio keeps its folio and gains its transcription, appears in both parts, and every named partition reader reads it correctly (moves: layer text lost or a page in one part only). NEGATIVE CONTROL: list the page in one part only and the both-parts arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-627's worker; BOB #35 06:25Z).
 
-### D-665 · running — **A CHART OR TABLE PAINTED AS AN IMAGE UNDER A TEXT TITLE IS NEVER ROUTED TO OCR, AND NO SIGNAL YET SEPARATES IT FROM A PHOTO: BOB #35 RULED 06:25Z that the per-image `image_unread` marker states the truth without a classifier, and that ROUTING waits on one measured signal.** — owner CONTENT-PDF.
-status: running — SCHEDULER #23 08:20Z: spawned, stacked on land/worker/D-627 @ 056d3092
+### D-665 · integrated — **A CHART OR TABLE PAINTED AS AN IMAGE UNDER A TEXT TITLE IS NEVER ROUTED TO OCR, AND NO SIGNAL YET SEPARATES IT FROM A PHOTO: BOB #35 RULED 06:25Z that the per-image `image_unread` marker states the truth without a classifier, and that ROUTING waits on one measured signal.** — owner CONTENT-PDF.
+status: integrated — SCHEDULER #23 09:25Z: tip e9392ac8 (on D-627 056d3092), GATE 388/388 GREEN FULLREUSE (21960 assertions), tree 0354e698; per-image image_unread above a measured 0.001 floor (M-182: 323 markers, 209 pages); ROUTING STAYS OFF, measured (no signal separates charts from photos); decodeView keeps markers out of needsTier2/readText; union with D-633/D-635 is D-697
 order: after D-635, the follow-up BOB #35 named after D-627: routing is a cost question, measured before it is switched on (SCHEDULER #22, 2026-09-25)
 milestone: M2
 interface: I6 only if a routing rule is set (the integrator classifies).
@@ -1460,6 +1460,17 @@ depends-on: none (stacked on land/worker/D-542 @ fac514e0, integrated — the re
 scope: for each of the 107, a DEC-49 row with its translation, OR show at the code that it never leaves on the wire and narrow the walk at that op; lower CEILING.reachGap in the same commit to the measured remainder. Batches of about 20 per commit are fine; the row closes when the gap is 39 or below and each exception is stated.
 accepts-when: reachGap reads the measured remainder and every in-reach code carries words or a stated not-on-the-wire reason (moves: reachGap 146). NEGATIVE CONTROL: strip one new translation and the guard names that code.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-542's worker, relayed by CONDUCT #22).
+
+### D-668 · running — **FIVE REFUSAL CODES TELL A MEMBER SOMETHING FALSE AT ONE OF THEIR SITES (DEC-49's one-code-one-condition rule, D-484): `calibrationSubjectRegister` refuses REGISTERING a subject with CAL_NO_PROBE / CAL_UNNAMED (written for a calibration MEASUREMENT); `checkAttestation` answers a missing DATE with TEXT_ATTEST_EXTENT ("say how much you checked") and a missing member with TEXT_ATTEST_MACHINE ("the credential is an automated one"); a `typed` step with no member gets TEXT_CHAIN_STEP_UNNAMED ("a machine read the text").** OBS_PRESENT_NO_REFERENT (airun.mjs) is UNDETERMINED: judge it. Found by D-574's worker (minted on land/worker/D-574). — owner RECORD (text-chain, calibration, airun paths), M0 for the ceiling.
+status: running — SCHEDULER #23 09:25Z: spawned, stacked on land/worker/D-574 @ 06494735
+order: after D-641, with the DEC-49 translation rows — a false sentence to a member is the over-claim CLAUDE.md §2 ranks worst (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — new named codes; an IC if a surface builds on them; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one code, one condition), with `docs/development/VERIFICATION.md` (the DEC-49 guard, arm G).
+depends-on: none (stacked on land/worker/D-574 @ 06494735, integrated — arm G walks the files these sites are in).
+scope: give each of the five conditions its own code, catalogue row and translation; judge OBS_PRESENT_NO_REFERENT at its site and split it if false; remove each from MULTI_SITE_CANDIDATES and lower CEILING.multiSiteCodes in the same landing.
+accepts-when: each of the five conditions answers its own code whose words are true of it, through the op (moves: five false translations). NEGATIVE CONTROL: route one condition back to its old code and arm G fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-574's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
