@@ -41,7 +41,10 @@ export const BUDGET = {
      each cell's first sentence at CELL_CAP (240) at a word boundary, so the map read 44,617 B at 130 claims on 548eb2c5. */
   /* 48 KiB -> 52 KiB (BOB #34, 2026-09-25): the map grows as constructs are BUILT, each §3 cell up to CELL_CAP, so a
      budget the product's own progress breaks blocks trains for finishing work. c21-batch28 read 50,427 B. */
-  map: 52 * 1024,
+  /* 52 KiB -> 60 KiB, TEMPORARY (BOB #36 RULED (A), 2026-09-25 13:21Z): c23-batch30's §3 render grew the map 4,303 B over
+     181 claims (56,177 B after a 1,328 B prose cut). An allowance, not a new norm: a batch31 row (BOB's (B)) renders §3's
+     cells shorter so the map reads <= 52 KiB, and restores 52 KiB in the same landing. */
+  map: 60 * 1024,
 };
 
 /* A WORD budget for one file, on top of its class's byte budget (M0-194, BOB #34 2026-09-24 22:50Z): WORKER.md, read by
