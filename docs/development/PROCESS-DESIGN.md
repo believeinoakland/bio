@@ -20,7 +20,7 @@ Requirements may suggest an implementation but never require one. The module is 
 
 **P6 · A module fits in one reading.** A module is sized so that one session can read, in full, its code, its requirements, and the requirements of the services it uses.
 
-**P7 · Only module jobs change module code, and every change meets every requirement.** A change to a module meets all of that module's requirements as they stand at that moment. A module's tests rigorously confirm that the module meets every one of its requirements: each requirement is shown by at least one test. The tests check behaviour at the module's interface, never its source text.
+**P7 · Only module jobs change module code, and every requirement is proven met.** Every change to a module meets all of that module's requirements as they stand at that moment. **Every requirement is tested, and the tests confirm the module is fully compliant with it.** No requirement goes untested, and no test merely samples one. The tests check behaviour at the module's interface, never its source text. When a module, or a user of a module, finds an ambiguity in the definition of a service, BOB updates the requirements to remove it and to state the service as it now is. The module's tests then confirm compliance with the clarified text.
 
 **P8 · The unit of work is the module job.** A module has at most one job at a time. A job applies every plan entry for its module. When the job finds a problem in its own module (a requirement not met, an inefficiency, a gap or error in its tests, or anything else), it fixes the problem in the job, or it adds an entry for it to the next tranche. Which one is the job's choice.
 
@@ -38,12 +38,11 @@ A flaw in the requirements themselves goes to BOB and Bob.
 
 **P13 · Sessions are short and single-purpose.** A session does one job, or one planning step, and ends. State lives in the build state, never in a long-running context. A session's cost grows with its context size multiplied by its number of turns: re-reading its own context is most of what it spends. A long-lived session woken again and again is the most expensive thing the process can run.
 
-**P14 · Usage is measured, bounded, and explained.**
+**P14 · Usage is measured first, then bounded.**
 - **The authoritative measure** is Bob's plan meter: the share of the weekly limit used, as Bob reads it.
-- **The process measures TOKENS PROCESSED per session** (cache reads plus cache writes plus input plus output), summed by tag per job and per tranche. It never uses dollar estimates, which understate and are unreliable across container restarts. Each session records its counts before it ends.
-- **Each tranche is calibrated:** tokens processed against the change in Bob's weekly meter, so every estimate can be stated as a share of the week.
-- **Each tranche starts with an estimate**, as a share of the week, that Bob approves.
-- **A job that passes twice its estimate stops and reports why** before it spends more: its context size, its number of turns, and its test attempts.
+- **The process measures TOKENS PROCESSED per session** (cache reads plus cache writes plus input plus output), tagged by tranche and job, and recorded by each session before it ends. It never uses dollar estimates, which understate and are unreliable across container restarts.
+- **The first tranches COLLECT METRICS; they are not bounded by them.** Token counts per job are recorded alongside job size (the module's lines, its entries, its test runs, its session turns) and against the movement of Bob's weekly meter, to build an empirical model of what a job costs.
+- **Real budget bounds are set only once that model exists**, and Bob approves them. Until then Bob sees each tranche's measured usage when it ends.
 
 **P15 · A ruling is made once.** A decision is recorded once, in its home document, and it is not reopened without new evidence named in writing.
 
