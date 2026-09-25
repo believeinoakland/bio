@@ -21,7 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-25 03:25Z · BOB #35 · M0-147's design gap (via SCHEDULER #22 03:20Z), RULED: the instant-independence rule is FOLDED into `VERIFICATION.md`, and it RIDES M0-184.** Verified on main 03:24Z: no sentence in VERIFICATION.md says a suite's verdict must not depend on the instant it starts (grep for instant/clock finds none), yet M0-147's and D-594's rows cite it. The rule, verbatim for the fold: *"A suite's verdict must not depend on the instant it starts: a suite that reads the clock pins it (`clockpin.preload.mjs`, M0-147), and an assertion that passes or fails with the wall-clock time is the instant-dependent class (D-231, D-487, M0-147, D-594), a defect in the suite, never a flake."* No budget ruling: VERIFICATION.md is 24,573 B against 24,576 B on main, and M0-184 already frees ≥ 2 KB and already carries one sentence the same way (M0-169's). So ADD this sentence to M0-184's scope, beside M0-169's, in the section that names the battery's rules; M0-184's accepts-when adds: `grep -c "instant it starts" docs/development/VERIFICATION.md` reads 1. D-594's row cites M0-184's landing for the rule instead of the missing sentence. No new row.
 
 
 
@@ -878,8 +877,8 @@ added: 2026-09-19 · SCHEDULER (same entry, item 3).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-147» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 note: 2026-09-23 by SCHEDULER #17 (M0-71's worker, via CONDUCT #18): the contradiction gate cannot see a detector that ABSTAINS (recall 2/9 sits beside it); this row stays blocked until its machine judgement is measured on this gate WITH its recall reported. The measurement is M-118 (M-117 was burned by a collision).
 
-### UI-69 · running — **EXPORT OF A REVIEW COPY carrying the quartet in-band on every page, with §6A.3 point 2 said AT the act: what leaves cannot be revoked; the grant can.** — owner UI.
-status: running — SCHEDULER #21 02:40Z spawns WORKER UI-69 (depth 2)
+### UI-69 · integrated — **EXPORT OF A REVIEW COPY carrying the quartet in-band on every page, with §6A.3 point 2 said AT the act: what leaves cannot be revoked; the grant can.** — owner UI.
+status: integrated — SCHEDULER #22 03:30Z: tip 0406203f, GATE 305/305 GREEN FULLREUSE (18006 assertions), tree 2dfab35e; 13.review-copy export BUILT (still PARTIAL); two provisionals + one design gap with BOB #35
 order: after UI-68 and REC-148: export only once the quartet travels with it (SCHEDULER, 2026-09-19)
 milestone: M10
 interface: I3 consumer (REC-148's IC)
@@ -997,7 +996,8 @@ scope: the capture manifest (or its reading) states the earliest and latest part
 accepts-when: a composite whose parts were fetched at two instants states both. NEGATIVE CONTROL: drop the spread, and the two-instant arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
-### D-320 · queued — **THE PASS-THROUGH JPEG ROUTE CANNOT BE TRANSCRIBED IN-ISOLATE: `ocr-worker`'s `transcribe.mjs` refuses every non-PNG route (PIXELS_UNREADABLE), so 17 of CPDF-12's 24 image-only pages (DCT) go untranscribed; 8-bit rotation is not built either (`pagepixels.mjs`).** — owner CONTENT-PDF.
+### D-320 · running — **THE PASS-THROUGH JPEG ROUTE CANNOT BE TRANSCRIBED IN-ISOLATE: `ocr-worker`'s `transcribe.mjs` refuses every non-PNG route (PIXELS_UNREADABLE), so 17 of CPDF-12's 24 image-only pages (DCT) go untranscribed; 8-bit rotation is not built either (`pagepixels.mjs`).** — owner CONTENT-PDF.
+status: running — SCHEDULER #22 03:30Z spawns WORKER D-320 (depth 2)
 order: with the M2 extraction rows, after D-191: the route with the strongest provenance reads nothing (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M2
 interface: I6 — the member's pixel route; the integrator mints and classifies the IC.
@@ -1006,6 +1006,26 @@ depends-on: none — CPDF-12's census answered the share.
 scope: a baseline DCT decoder in the member, checked against Pillow digests as `pagepixels.test.mjs` does; after decoding apply `/Rotate` (3 of the 24 are /Rotate 270; from D-244); 8-bit rotation. Extend `pdf-worker/test/pagepixels.test.mjs` and `ocr-member-e2e.test.mjs`.
 accepts-when: a DCT image-only page transcribes, rotated, and its pixel hash matches Pillow's. NEGATIVE CONTROL: a no-op decoder fails on the digest by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-312 · queued — **`memoryUsageBytes` IS NOT A FRACTION OF THE 128 MB ISOLATE, AND LIVE SITES STILL SAY "of 128 MB": `agent-worker/src/index.mjs` (the shipped `BOUND_SOURCE`, and the segment bound sized on that reading), `fl1-cpu-probe.mjs`, `INTERFACES.md` §"The segment bound…", `pagepixels.mjs`.** The rule is stated in `INTERFACES.md` §"The memory bound, and how it is expressed". — owner FLEET, CONTENT-PDF.
+order: after D-320, the M2 measurement corrections: a shipped bound rests on the misreading (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M0 (measurement wording, and one shipped bound)
+interface: none — wording, and a re-check of one bound.
+design: `docs/development/VERIFICATION.md` (measure; do not recall), for the rule stated in `docs/development/INTERFACES.md` §"The memory bound, and how it is expressed".
+depends-on: none.
+scope: correct each live site; re-check the agent-worker segment bound against the rule and state the result.
+accepts-when: no live site divides by 128 or says "of 128"; the bound's re-check is recorded. NEGATIVE CONTROL: a grep arm over the live sites fails by name on a planted "of 128 MB".
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-460 · queued — **DIAGNOSIS: SOME TIER-3 AGENDAS AND MINUTES READ AS GENERIC, AND NOBODY KNOWS WHY.** FW-20 observed it on its walk (M-121, on c18-batch8) without diagnosing it; one suspected cause is that the OCR member transcribes one page per invocation and the plane reads only the first. Its finder's session is archived and no CONTENT-PDF lane is live, so the diagnosis is rowed. — owner CONTENT-PDF.
+order: after D-312, with the M2 extraction measurements: a possible silent under-read of scanned civic records, the class CLAUDE.md §2 ranks worst if confirmed (SCHEDULER #17, 2026-09-23; CONDUCT #18 23:51Z)
+milestone: M0 (a diagnosis — a measurement)
+interface: none until the fix is named.
+design: `docs/development/VERIFICATION.md` (measure; do not recall), for FW-20's M-121 walk.
+depends-on: FW-20 (`integrated` on c18-batch8; M-121 lists the walk).
+scope: take the tier-3 walk documents M-121 names as agendas or minutes that read generic; establish whether the member transcribes one page per invocation and the plane keeps only the first; name the fix, or show the documents are generic.
+accepts-when: the named fix (then placed as its own row) or the refutation, recorded with date and instrument. NEGATIVE CONTROL: a two-page scanned fixture whose second page alone carries the agenda heading reads generic before the fix, or the refutation shows it read whole.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
