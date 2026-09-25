@@ -255,6 +255,16 @@ accepts-when: a proposal reads labelled machine work and the tier is unchanged u
 context: REC-216's audit (F1-F4, SCHEDULER #19's worker) and BOB #33's 21:55Z ruling: every `*propose` op is NON_ACTS in `bio-plane/src/affordances.mjs` (REC-195's reasoning) and a member states the value with their own act; so this proposal is a machine READ, never a member act in ACTS, and its surface SHOWS it beside the member's tier with no adopt control, as UI-102 (a2d974aa) does for the governing-laws proposal.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
+### D-580 · queued — **`#captureForContent`'s "earliest" ORDERS TWO DIFFERENT CLOCKS IN ONE COLUMN: `register.registered` (the server's instant) and `readings.at` (a reading's OWN date from provenance bytes), so a capture held LATER of an older-dated document sorts first and the record presents the wrong version as the one it held first.** Found by REC-220's worker (measured in rec220-version-pin; a re-registration does not move it). — owner RECORD.
+order: before REC-222, with the version-pinning corrections: the version a reference resolves to must be the one the record first held (Bob's 2026-09-25 00:40Z doctrine, rule 1) (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: none unless a resolved capture changes on the wire (the integrator classifies).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the cross-version relation), with Bob's 00:40Z doctrine as REC-220 built it.
+depends-on: REC-220.
+scope: order by when the record first held the bytes (a server stamp for the readings arm, or `captured_locators.first_retrieved`), never by a date read from the document.
+accepts-when: an older-dated document captured later sorts after the earlier-held capture (moves: the wrong earliest). NEGATIVE CONTROL: order by `readings.at` again and the held-order arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by REC-220's worker).
+
 ### REC-222 · queued — **A MEMBER HOLDING A REFERENCE IS NEVER TOLD A NEWER VERSION AFFECTS IT: `op=versionnotice` is a PULL read, and nothing is pushed.** Bob's 00:40Z doctrine, rule 2 (item 3). — owner RECORD.
 status: queued — REC-221 (01:51Z): notice-level affects reads 'undetermined' for chain_unread; REC-222 DECIDES whether chain_unread raises a notice (rule 2 says never silence; every address-less capture may be noisy) and states the decision
 order: after REC-221, whose grade it reads (SCHEDULER #21, 2026-09-25)
@@ -267,6 +277,7 @@ accepts-when: an AFFECTED reference raises one notice and an A-graded one raises
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
 
 ### REC-223 · queued — **A MEMBER CANNOT ADOPT A NEWER VERSION OR RECORD KEEPING THE EARLIER ONE, so a notice can never close.** Bob's 00:40Z doctrine, rule 3 (item 4). — owner RECORD.
+status: queued — REC-220 (02:20Z): KEEP can write extent_capture to pin an UNDETERMINED leg; use it
 order: after REC-222, which raises the notice these acts close (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: I3 — two member acts; the integrator classifies.
@@ -388,16 +399,6 @@ depends-on: DIST-7.
 scope: DIST decides the format first and records it in Distribution: a SEPARATELY signed plane-limits field, or a `/3` statement older installers are told to skip; then the installer carries `limits.subrequests` from the signed release and refuses a release without it by name.
 accepts-when: `newgroup/test/` asserts both uploads send the RELEASE's `limits.subrequests`, a release without it is refused by name, and an older installer still verifies its fleet signature (the measured failure it moves: the value read from `wrangler.jsonc`, not the signed release). NEGATIVE CONTROL: strip the field from a signed release and the refusal arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs DIST`).
-
-### M0-147 · queued — **TWO SUITES READ THE YEAR OFF THEIR OWN CLOCK: `mint-ledger.test.mjs` (line 76) and `opaque-ids.test.mjs` (line 67) set `YEAR = new Date()…slice(0, 4)`, so a run straddling New Year's midnight UTC compares ids minted in one year with the next.** Found by D-487's worker's sweep (the instant-dependent class, D-231, D-487). — owner M0.
-order: low in the M0 group: latent, fires only across a year boundary (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:25Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a suite's verdict must not depend on the instant it starts).
-depends-on: none.
-scope: read the year off the plane's first minted id in each suite, not the suite's clock.
-accepts-when: both suites pass under a clock pinned 1 ms before New Year UTC. NEGATIVE CONTROL: restore the clock read under that pin and the id arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-148 · queued — **THE R3-FED WALK KEYS ON LITERALS, so a code fed through a derived const (UI-84's REQUIRED_ARGUMENT_MISSING) is invisible and the walk undercounts by one.** Found by UI-84's worker. — owner M0.
 order: low in the M0 group: an undercount of one, stated (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:26Z)

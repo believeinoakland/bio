@@ -526,8 +526,8 @@ accepts-when: a citation to a superseded passage shows the notice; an unread new
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 note: 2026-09-24 — RE-SCOPED by Bob's ruling (Framework §18.1, option D; folds-0924b): the proactive notice reaches a published case's OWNERS only (delivery is REC-209); the surface shows it to owners, and anyone may still ASK at a citation.
 
-### REC-220 · running — **NOT EVERY REFERENCE IS PINNED TO A VERSION: a basis leg, a cite onto a case or question, or a claim with no `content_id` names only a BUNDLE, so a later capture changes what it resolves to.** Bob's 00:40Z doctrine, rule 1 (item 1 of BOB #34's decomposition). — owner RECORD.
-status: running — SCHEDULER #21 00:58Z spawns WORKER REC-220 (depth 2)
+### REC-220 · integrated — **NOT EVERY REFERENCE IS PINNED TO A VERSION: a basis leg, a cite onto a case or question, or a claim with no `content_id` names only a BUNDLE, so a later capture changes what it resolves to.** Bob's 00:40Z doctrine, rule 1 (item 1 of BOB #34's decomposition). — owner RECORD.
+status: integrated — SCHEDULER #21 02:22Z: tip 903c2023, GATE 361/361 GREEN; I3 extent_capture/pinned_capture/version.state; M-158; census 118; D-579 (case/action/suggest legs) to BOB for grammar
 order: after REC-215, first of the version-doctrine rows in product order; it completes construct 4.cross-version (BOB #34 00:55Z) (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: I3 — the capture a reference was made against, recorded at the act; the integrator classifies.
@@ -799,6 +799,16 @@ depends-on: none.
 scope: narrow every aiRunOpen catalogue row's `where` into its own DEC-49 region, as REC-71 did for its function; move the guard's floors to the printed figures.
 accepts-when: a new region added inside aiRunOpen is judged once and passes (moves: a double judgement). NEGATIVE CONTROL: restore one whole-function `where` and the planted region's arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
+
+### M0-147 · queued — **TWO SUITES READ THE YEAR OFF THEIR OWN CLOCK: `mint-ledger.test.mjs` (line 76) and `opaque-ids.test.mjs` (line 67) set `YEAR = new Date()…slice(0, 4)`, so a run straddling New Year's midnight UTC compares ids minted in one year with the next.** Found by D-487's worker's sweep (the instant-dependent class, D-231, D-487). — owner M0.
+order: low in the M0 group: latent, fires only across a year boundary (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:25Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a suite's verdict must not depend on the instant it starts).
+depends-on: none.
+scope: read the year off the plane's first minted id in each suite, not the suite's clock.
+accepts-when: both suites pass under a clock pinned 1 ms before New Year UTC. NEGATIVE CONTROL: restore the clock read under that pin and the id arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
