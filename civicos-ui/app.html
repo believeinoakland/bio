@@ -3082,18 +3082,36 @@ async function openArtifact(k, atPage){
   }
   note(`<div class="avok">\u2713 opened \u00b7 every byte verified against the record</div>`);
 }
+/* D-732 (State Rules §6, I-20 as D-674 and D-700 amended it): the record stratum reads in WRITE order, never the
+   caller-chosen snap key, whose lexical order is not a clock. The image's _history/manifest.json carries each entry's
+   write-order rank as seq; when EVERY entry carries a distinct integer one (the gate's historyWriteOrder, D-700, and
+   setup.mjs's historyOrder, D-719) the ranks are returned by key, else null. */
+function historyRanks(img){
+  let raw = [];
+  try{ raw = JSON.parse(img["_history/manifest.json"]||"{}").entries || []; }catch(_){}
+  const list = Array.isArray(raw) ? raw.filter(e=>e && typeof e === "object") : [];
+  const seqs = list.map(e=>e.seq);
+  const write = list.length > 0 && seqs.every(v=>Number.isSafeInteger(v)) && new Set(seqs).size === list.length;
+  return write ? new Map(list.map(e=>[String(e.key), e.seq])) : null;
+}
+/* Items named by snap key, in write order when the ranks hold EVERY item's key, else by key as before; `order` says
+   which, so the page can say so rather than present a key-order list as the order written. */
+function writeOrdered(items, keyOf, ranks){
+  if(ranks && items.every(it=>ranks.has(keyOf(it))))
+    return { order:"write", items: items.slice().sort((a,b)=>ranks.get(keyOf(a))-ranks.get(keyOf(b))) };
+  return { order:"key", items: items.slice().sort((a,b)=>keyOf(a)<keyOf(b)?-1:keyOf(a)>keyOf(b)?1:0) };
+}
 /* The session log, read from the record itself: _history/promotion_*.json.
    Fields render when present and are never invented; whatever else an entry
-   carries stays readable in the raw line. */
-function parseLog(img){
+   carries stays readable in the raw line. Ordered by writeOrdered (D-732). */
+function parseLog(img, ranks){
   const entries = [];
   for(const k of Object.keys(img)){
     if(!/^_history\/promotion_.*\.json$/.test(k) || typeof img[k]!=="string") continue;
     let j = null; try{ j = JSON.parse(img[k]); }catch(_){}
-    entries.push({ path:k, j, raw: img[k] });
+    entries.push({ path:k, key:k.replace(/^_history\/promotion_|\.json$/g,""), j, raw: img[k] });
   }
-  entries.sort((a,b)=>a.path<b.path?-1:1);
-  return entries;
+  return writeOrdered(entries, e=>e.key, ranks);
 }
 function parseSessionLog(md){
   /* bundle.md's own Session Log: "### Session DATE | TITLE | AUTHOR" headings.
@@ -7282,7 +7300,8 @@ async function openBundle(id, fromNav){
     /* The document's own facts, computed BEFORE the seals so the seals can
        speak them: who released it, which cases lean on it, when the monitor
        last looked and looks next. Information density in context. */
-    const log = parseLog(img);
+    const ranks = historyRanks(img);
+    const logO = parseLog(img, ranks), log = logO.items;
     /* WHICH CASES LEAN ON THIS DOCUMENT — `op=backlinks`, the record's own
        gated reverse index (UI-21 deleted the client-side walk that stood here).
        A refusal or an outage is CARRIED, not swallowed: `revErr` makes the
@@ -7381,13 +7400,21 @@ async function openBundle(id, fromNav){
       <p class="lede" style="margin:6px 0 0">Anyone may confirm the captured material against these hashes, without this group's cooperation.</p>`, true) : "";
 
     /* --- stratum 4: the record --- */
-    const revs = Object.keys(img).filter(k=>/^_history\/bundle_.*\.md$/.test(k)).sort();
+    /* D-732: the promotions and the kept revisions in write order when the image carries it for every one of them,
+       else by key, and the stratum says which — one statement for both, so it is write order only when both are. */
+    const revsO = writeOrdered(Object.keys(img).filter(k=>/^_history\/bundle_.*\.md$/.test(k)),
+      k=>k.replace(/^_history\/bundle_|\.md$/g,""), ranks);
+    const revs = revsO.items;
+    const orderSaid = (log.length || revs.length)
+      ? `<p class="lede" style="margin:0 0 10px">${(logO.order === "write" || !log.length) && (revsO.order === "write" || !revs.length)
+          ? "Listed in the order they were written, oldest first."
+          : "Listed by snapshot key: this copy of the record does not carry the order they were written, and key order is not necessarily the order they were written."}</p>` : "";
     const revRowsHtml = revs.map(k=>{
       const tag = k.replace(/^_history\/bundle_|\.md$/g,"");
       return `<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(tag)}</span><span class="v"><button class="copybtn" onclick="toggleDiff(this,'${esc(k)}','${esc(id)}')">compare to current</button></span></div>`;
     }).join("");
     const s4 = stratum("s4", `<p class="lede" style="margin-top:0">Everything that has ever happened to this ${esc(noun)}. Nothing here can be edited or removed.</p>
-      ${log.length?log.map(renderLogEntry).join(""):`<div class="empty">No promotions recorded yet.</div>`}
+      ${orderSaid}${log.length?log.map(renderLogEntry).join(""):`<div class="empty">No promotions recorded yet.</div>`}
       ${revs.length?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:16px 0 6px">Earlier revisions, kept</h3><div id="diff-holder" data-open=""></div><div class="card">${revRowsHtml}</div>`:""}`, true);
 
     /* --- THE ONE AFFORDANCES READ FOR THIS PAGE, taken BEFORE the three
