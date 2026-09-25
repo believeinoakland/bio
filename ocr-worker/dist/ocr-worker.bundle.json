@@ -25,8 +25,8 @@
     },
     {
       "path": "../bio-plane/src/pdfstructure.mjs",
-      "bytes": 108945,
-      "sha256": "7fcfe6006439d5e7b5f4aad9cd734670171aecf8c8dbba51934dfaa37ea5b20b"
+      "bytes": 114915,
+      "sha256": "ca7504ac4e9e84443841a753b5e0ae1cff4810ae52e571ea8597960b4e572ed3"
     },
     {
       "path": "../bio-plane/src/subresources.mjs",
@@ -40,8 +40,8 @@
     },
     {
       "path": "../pdf-worker/src/pagepixels.mjs",
-      "bytes": 47791,
-      "sha256": "26aabf0952077049ac33bcfefba9b70b703db14ca3ede4c31977afbfd1703aa3"
+      "bytes": 47931,
+      "sha256": "19095d618080e6518f8d720ff131d60531e88bd470cd390c846118e6494f7274"
     },
     {
       "path": "src/contract.mjs",

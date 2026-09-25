@@ -40430,6 +40430,19 @@ function tokenizeContent(s2, opts = {}) {
   }
   return toks;
 }
+function textShowBytes(toks) {
+  let n2 = 0;
+  const pending = [];
+  for (const tk of toks) {
+    if (tk.t !== "op") {
+      if (tk.t === "str") pending.push(tk.bytes.length);
+      continue;
+    }
+    if (tk.v === "Tj" || tk.v === "TJ" || tk.v === "'" || tk.v === '"') for (const b2 of pending) n2 += b2;
+    pending.length = 0;
+  }
+  return n2;
+}
 function readLiteralBytes(s2, pos) {
   pos++;
   const bytes = [];
@@ -40772,10 +40785,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   let curFont = null;
   let curFontName = null;
   const stack = [];
+  let curResources = resources;
+  let curFontDict = fontDict;
+  let scopeTag = "";
   const getFont = async (name) => {
-    if (!fontDict || !(name in fontDict)) return null;
-    const ref = fontDict[name];
-    const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + name;
+    if (!curFontDict || !(name in curFontDict)) return null;
+    const ref = curFontDict[name];
+    const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + scopeTag + name;
     if (fontCache.has(key)) return fontCache.get(key);
     const f2 = await loadFont(doc, ref);
     fontCache.set(key, f2);
@@ -40934,132 +40950,207 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     penKnown = true;
     markInk();
   };
-  for (const tk of toks) {
-    if (tk.t !== "op") {
-      stack.push(tk);
-      continue;
-    }
-    switch (tk.v) {
-      case "Tf": {
-        const nameTok = lastOfType("name");
-        curFontName = nameTok ? nameTok.v : null;
-        curFont = curFontName ? await getFont(curFontName) : null;
-        const sz = numArgs(1);
-        if (sz) tfs = sz[0];
-        break;
+  const run = async (toks2, depth, formChain) => {
+    for (const tk of toks2) {
+      if (tk.t !== "op") {
+        stack.push(tk);
+        continue;
       }
-      case "Tj": {
-        const st2 = lastOfType("str");
-        if (st2) show(st2.bytes);
-        break;
-      }
-      case "TJ": {
-        let inArr = false;
-        for (const it2 of stack) {
-          if (it2.t === "arr_open") {
-            inArr = true;
-            continue;
-          }
-          if (it2.t === "arr_close") {
-            inArr = false;
-            continue;
-          }
-          if (!inArr) continue;
-          if (it2.t === "str") show(it2.bytes);
-          else if (it2.t === "num") {
-            if (-it2.v / 1e3 > TJ_WORD_GAP_EM) softSpace();
-            advanceBy(it2.v);
-          }
+      switch (tk.v) {
+        case "Do": {
+          const nameTok = lastOfType("name");
+          stack.length = 0;
+          await paintForm(nameTok ? nameTok.v : null, depth, formChain);
+          break;
         }
-        break;
-      }
-      case "'":
-      case '"': {
-        if (tk.v === '"') {
+        case "Tf": {
+          const nameTok = lastOfType("name");
+          curFontName = nameTok ? nameTok.v : null;
+          curFont = curFontName ? await getFont(curFontName) : null;
+          const sz = numArgs(1);
+          if (sz) tfs = sz[0];
+          break;
+        }
+        case "Tj": {
+          const st2 = lastOfType("str");
+          if (st2) show(st2.bytes);
+          break;
+        }
+        case "TJ": {
+          let inArr = false;
+          for (const it2 of stack) {
+            if (it2.t === "arr_open") {
+              inArr = true;
+              continue;
+            }
+            if (it2.t === "arr_close") {
+              inArr = false;
+              continue;
+            }
+            if (!inArr) continue;
+            if (it2.t === "str") show(it2.bytes);
+            else if (it2.t === "num") {
+              if (-it2.v / 1e3 > TJ_WORD_GAP_EM) softSpace();
+              advanceBy(it2.v);
+            }
+          }
+          break;
+        }
+        case "'":
+        case '"': {
+          if (tk.v === '"') {
+            const a2 = numArgs(2);
+            if (a2) {
+              tw = a2[0];
+              tc2 = a2[1];
+            }
+          }
+          tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+          breakLine();
+          penToLine();
+          const st2 = lastOfType("str");
+          if (st2) show(st2.bytes);
+          break;
+        }
+        case "q":
+          ctmStack.push(ctm.slice());
+          break;
+        case "Q":
+          if (ctmStack.length) ctm = ctmStack.pop();
+          break;
+        case "cm": {
+          const m2 = numArgs(6);
+          if (m2) ctm = matMul(m2, ctm);
+          break;
+        }
+        case "BT":
+          tlm = IDENTITY_MATRIX.slice();
+          tmat = tlm.slice();
+          penKnown = true;
+          break;
+        case "TL": {
+          const a2 = numArgs(1);
+          if (a2) leading = a2[0];
+          break;
+        }
+        /* D-502: the three text-state parameters that enter a glyph's horizontal
+           displacement beside the width itself. They change no character. */
+        case "Tc": {
+          const a2 = numArgs(1);
+          if (a2) tc2 = a2[0];
+          break;
+        }
+        case "Tw": {
+          const a2 = numArgs(1);
+          if (a2) tw = a2[0];
+          break;
+        }
+        case "Tz": {
+          const a2 = numArgs(1);
+          if (a2) th = a2[0] / 100;
+          break;
+        }
+        case "Td":
+        case "TD": {
           const a2 = numArgs(2);
-          if (a2) {
-            tw = a2[0];
-            tc2 = a2[1];
-          }
+          if (!a2) break;
+          const [tx, ty] = a2;
+          if (tk.v === "TD") leading = -ty;
+          tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
+          if (ty !== 0) breakLine();
+          else if (lineY === null) lineY = baselineOf(tlm, ctm);
+          else if (Math.abs(baselineOf(tlm, ctm) - lineY) > BASELINE_EPS) breakLine();
+          else judgeGap(deviceX(tlm));
+          penToLine();
+          break;
         }
-        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
-        breakLine();
-        penToLine();
-        const st2 = lastOfType("str");
-        if (st2) show(st2.bytes);
-        break;
+        case "Tm": {
+          const m2 = numArgs(6);
+          if (!m2) break;
+          tlm = m2;
+          const y2 = baselineOf(tlm, ctm);
+          if (lineY === null || Math.abs(y2 - lineY) > BASELINE_EPS) breakLine();
+          else judgeGap(deviceX(tlm));
+          penToLine();
+          break;
+        }
+        case "T*":
+          tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+          breakLine();
+          penToLine();
+          break;
+        default:
+          break;
       }
-      case "q":
-        ctmStack.push(ctm.slice());
-        break;
-      case "Q":
-        if (ctmStack.length) ctm = ctmStack.pop();
-        break;
-      case "cm": {
-        const m2 = numArgs(6);
-        if (m2) ctm = matMul(m2, ctm);
-        break;
-      }
-      case "BT":
-        tlm = IDENTITY_MATRIX.slice();
-        tmat = tlm.slice();
-        penKnown = true;
-        break;
-      case "TL": {
-        const a2 = numArgs(1);
-        if (a2) leading = a2[0];
-        break;
-      }
-      /* D-502: the three text-state parameters that enter a glyph's horizontal
-         displacement beside the width itself. They change no character. */
-      case "Tc": {
-        const a2 = numArgs(1);
-        if (a2) tc2 = a2[0];
-        break;
-      }
-      case "Tw": {
-        const a2 = numArgs(1);
-        if (a2) tw = a2[0];
-        break;
-      }
-      case "Tz": {
-        const a2 = numArgs(1);
-        if (a2) th = a2[0] / 100;
-        break;
-      }
-      case "Td":
-      case "TD": {
-        const a2 = numArgs(2);
-        if (!a2) break;
-        const [tx, ty] = a2;
-        if (tk.v === "TD") leading = -ty;
-        tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
-        if (ty !== 0) breakLine();
-        else if (lineY === null) lineY = baselineOf(tlm, ctm);
-        else judgeGap(deviceX(tlm));
-        penToLine();
-        break;
-      }
-      case "Tm": {
-        const m2 = numArgs(6);
-        if (!m2) break;
-        tlm = m2;
-        const y2 = baselineOf(tlm, ctm);
-        if (lineY === null || Math.abs(y2 - lineY) > BASELINE_EPS) breakLine();
-        else judgeGap(deviceX(tlm));
-        penToLine();
-        break;
-      }
-      case "T*":
-        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
-        breakLine();
-        penToLine();
-        break;
-      default:
-        break;
+      stack.length = 0;
     }
-    stack.length = 0;
-  }
+  };
+  const paintForm = async (name, depth, formChain) => {
+    const xobjects = curResources ? doc.dictOf(curResources.XObject) : null;
+    const ref = name != null && xobjects ? xobjects[name] : null;
+    const st2 = ref ? doc.resolve(ref) : null;
+    if (!st2 || st2.t !== "stream" || nameOf(doc, st2.dict.Subtype) !== "Form") return;
+    const key = ref.t === "ref" ? ref.n : null;
+    const data = await doc.streamDecoded(st2);
+    if (!data) {
+      doc.note("form_stream_undecodable");
+      undetermined.push({ page: pageIdx, reason: "form_stream_undecodable", font: null, codes: "", count: 0 });
+      return;
+    }
+    const formToks = tokenizeContent(LATIN1.decode(data));
+    if (depth >= FORM_DEPTH_LIMIT || key != null && formChain.includes(key)) {
+      const unread = textShowBytes(formToks);
+      if (unread > 0) {
+        undetermined.push({ page: pageIdx, reason: "form_text_unread", font: null, codes: "", count: unread });
+      }
+      return;
+    }
+    const saved = {
+      ctm,
+      curResources,
+      curFontDict,
+      scopeTag,
+      curFont,
+      curFontName,
+      tfs,
+      tc: tc2,
+      tw,
+      th,
+      leading,
+      tlm,
+      tmat,
+      penKnown
+    };
+    const m2 = matrixOf(doc, st2.dict.Matrix) || IDENTITY_MATRIX;
+    ctm = matMul(m2, ctm);
+    const formRes = doc.dictOf(st2.dict.Resources);
+    if (formRes) {
+      curResources = formRes;
+      curFontDict = doc.dictOf(formRes.Font);
+      scopeTag = "f" + (key ?? "?" + depth) + ":";
+    }
+    try {
+      await run(formToks, depth + 1, key != null ? [...formChain, key] : formChain);
+    } finally {
+      ({
+        ctm,
+        curResources,
+        curFontDict,
+        scopeTag,
+        curFont,
+        curFontName,
+        tfs,
+        tc: tc2,
+        tw,
+        th,
+        leading,
+        tlm,
+        tmat,
+        penKnown
+      } = saved);
+    }
+  };
+  await run(toks, 0, []);
   let text = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
   if (!text.length && !undetermined.length && pageDrawsImage(doc, resources) && (!fontDict || await pageShowsText(doc, pageMap) === false)) {
     undetermined.push({
