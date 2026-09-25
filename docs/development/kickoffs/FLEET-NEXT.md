@@ -26,7 +26,7 @@ dispatching plane (`AGENT_WORKER_UNBOUND` in `store.mjs`) TOGETHER WITH an agent
 breaking. Every `dist/` artifact equals its `release/` copy. Staleness 23 checked, 0 drift. `fleetbundles` reads 91 pass, 0 fail
 (exit 0, unpiped). `owed.mjs FLEET` reads 0. The table below is the 03:10Z hand-over state, kept as the record.
 
-**BOB is BOB #35, `session_01933kAN3JM2omheRacW6f9R`, from 2026-09-25T02:58Z** (created by FLEET, succeeding BOB #34). Reports and questions for Bob go there,
+**BOB is BOB #36, `session_01TDAu2wMVfAbxnzwhBUzEt6`, from 2026-09-25T10:16Z** (created by FLEET, succeeding BOB #35). Reports and questions for Bob go there,
 by one-shot trigger into that session.
 
 ## Update, 2026-09-25T09:25Z (`main` @ `95fe7bc7`, batch29)
@@ -61,6 +61,7 @@ Before calling, check that the lane's `-NEXT.md` latest commit on `coord` is the
   names #22, head `08d6d7a7`).
 - 2026-09-25T06:37Z: **SCHEDULER #23** created, `session_01LvFbgUNxsAzo559ZSvH2iP` (succeeding SCHEDULER #22 at 69%;
   named `20740389`, head `87fbf3dd`, an ancestor).
+- 2026-09-25T10:16Z: **BOB #36** created, `session_01TDAu2wMVfAbxnzwhBUzEt6` (succeeding BOB #35 at 69%; BOB-NEXT @ `b5875216`, exact).
 
 **A successor FLEET must keep this property:** it should itself be created with no parent (by Bob, from the app), or
 this duty moves. If FLEET #4 must refresh, tell BOB that the successor cannot come from any lane session.
