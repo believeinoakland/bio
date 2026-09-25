@@ -12558,7 +12558,43 @@ export const CONTENT_EXTENT_KINDS = {
   'sheet-range': { landed: true,  human: 'a range of cells in a spreadsheet' },
   'doc-table':   { landed: true,  human: 'a table in a document' },
   image:         { landed: true,  human: 'an image in a document' },
+  /* REC-204 (OFFICE-FORMATS.md "THE ENVELOPE AS CONTENT", D-124's 2026-07-31
+     row) — THE NINTH KIND. One item of what DEC-5 calls the evidentiary
+     envelope: a tracked change, a comment, a core property or a slide's speaker
+     notes, addressed by the PART of the container its bytes sit in, the element
+     it is anchored at, and the item's own kind (`ENVELOPE_ITEM_KINDS`). The
+     human form says ENVELOPE on purpose and is never the body's: under DEC-5 a
+     reviewer's comment and an editor's name are the document's own content, and
+     they are still not what the document SAYS. `cited_as` keeps them apart on
+     every row (`contentCitedAs`). */
+  envelope:      { landed: true,  human: "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body" },
 };
+
+/** REC-204 — THE ITEM KINDS AN `envelope` EXTENT NAMES, and the member's word
+ *  for each. The design's four, exactly; the producers' other envelope kinds
+ *  (a formula beside its cached value, a hidden sheet, row, column or slide) are
+ *  NOT here, because the design names these four and a flag with no text of its
+ *  own is not a passage — stated in `envelopeUnitsFor`, never silently dropped.
+ *  The producers spell two of them in the plural (`core-properties` is ONE item
+ *  carrying several fields; `speaker-notes` one slide's notes); the extent names
+ *  ONE property and one slide's notes, so the singular is the address's word. */
+export const ENVELOPE_ITEM_KINDS = {
+  'tracked-change': 'a tracked change',
+  comment:          'a comment',
+  'core-property':  'a core property',
+  'speaker-note':   "a slide's speaker notes",
+};
+
+/** REC-204 — `cited_as` on an envelope item. Neither `text` (the body) nor
+ *  `bytes` (the part as itself): the item's own words, read by the same layer
+ *  as the body and carrying the capture's chain and grade, and never presented
+ *  as the body. */
+export const CONTENT_CITED_AS_ENVELOPE = 'envelope';
+
+/** The element kinds an envelope item may be ANCHORED at — the two the
+ *  producers emit (`docParaRef`, `slideShapeRef`). A core property is anchored
+ *  at nothing and says so with `at: null`. */
+const ENVELOPE_ANCHOR_KINDS = ['doc-para', 'slide-shape'];
 
 /** FW-19 / IC-125 — A RANGE IN A1:A1 NOTATION, or one cell standing for a
  *  one-cell range. `$` markers and case are admitted and normalised away by
@@ -12612,7 +12648,8 @@ export function canonicalRange(range) {
 export function contentCitedAs(extent) {
   const e = extent && typeof extent === 'object' ? extent : {};
   const v = e.cited_as;
-  if (v === undefined || v === null || v === '') return e.kind === 'image' ? 'bytes' : 'text';
+  if (v === undefined || v === null || v === '')
+    return e.kind === 'image' ? 'bytes' : e.kind === 'envelope' ? CONTENT_CITED_AS_ENVELOPE : 'text';
   return v;
 }
 
@@ -13073,6 +13110,23 @@ export function canonicalExtent(extent) {
       rect: ok ? [Math.min(e.rect[0], e.rect[2]), Math.min(e.rect[1], e.rect[3]),
                   Math.max(e.rect[0], e.rect[2]), Math.max(e.rect[1], e.rect[3])] : null });
   }
+  /* REC-204 — THE ENVELOPE ITEM. `cited_as` is IN the address, for the
+     image's reason: an envelope item and a body passage must never share an
+     address. `at` is the anchoring element's OWN canonical form (so `¶3`
+     spelled two ways is one anchor), `name` is the core property's name (null
+     on every other item), and `n` is the item's ordinal among items of its kind
+     sharing that part, anchor and name, in the producer's order — two comments
+     on one paragraph are two items. */
+  if (e.kind === 'envelope') {
+    const at = e.at && typeof e.at === 'object' && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind)
+      ? JSON.parse(canonicalExtent(e.at)) : null;
+    return canonicalJson({ kind: 'envelope', cited_as: contentCitedAs(e),
+      item: typeof e.item === 'string' ? e.item.trim() : null,
+      part: typeof e.part === 'string' && e.part.trim() ? e.part.trim() : null,
+      at,
+      name: typeof e.name === 'string' && e.name.trim() ? e.name.trim() : null,
+      n: Number.isInteger(e.n) ? e.n : null });
+  }
   /* AN EXTENT NOBODY CAN EVALUATE STILL GETS A CANONICAL FORM, because this
      function is total and `checkContentExtent` is what refuses — but nothing
      ever mints one, so this branch addresses no row. It is kept honest rather
@@ -13147,6 +13201,15 @@ export function describeExtent(extent) {
     if (typeof e.part === 'string' && e.part.trim()) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
     if (Number.isInteger(e.page)) return `an image on page ${e.page + 1}`;
     return 'an image in this document';
+  }
+  /* REC-204 — THE WORD `envelope` LEADS, so a surface that shows nothing but
+     this sentence still cannot present a reviewer's comment as the body. */
+  if (e.kind === 'envelope') {
+    const what = ENVELOPE_ITEM_KINDS[e.item] || 'an item';
+    const name = typeof e.name === 'string' && e.name.trim() ? ` '${e.name.trim()}'` : '';
+    const at = e.at && typeof e.at === 'object' && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind)
+      ? ` at ${describeExtent({ ...e.at, ref: undefined })}` : '';
+    return `envelope: ${what}${name}${at}`;
   }
   const row = CONTENT_EXTENT_KINDS[e.kind];
   return row ? row.human : 'a part of this document the record cannot name';
@@ -14763,10 +14826,22 @@ export function checkContentExtent(extent, ctx = {}) {
      below applies at all. Two values, and `bytes` only on an `image`.
      ==================================================================== */
   const citedAs = contentCitedAs(e);
-  if (citedAs !== 'text' && citedAs !== 'bytes')
+  if (citedAs !== 'text' && citedAs !== 'bytes' && citedAs !== CONTENT_CITED_AS_ENVELOPE)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of `
-      + `text, bytes. This one says '${String(citedAs).slice(0, 40)}'`);
+      `cited_as says whether a part is cited for its TEXT, as its own BYTES, or as an item of the `
+      + `document's ENVELOPE, and is one of text, bytes, envelope. This one says `
+      + `'${String(citedAs).slice(0, 40)}'`);
+  /* REC-204 — BOTH DIRECTIONS, because each is a claim about what the citation
+     is: an envelope item cited as `text` would present a reviewer's comment as
+     the document's body, and a body passage cited as `envelope` would present
+     the document's words as somebody's annotation of them. */
+  if ((citedAs === CONTENT_CITED_AS_ENVELOPE) !== (e.kind === 'envelope'))
+    return refusal("CONTENT_EXTENT_UNREADABLE",
+      e.kind === 'envelope'
+        ? `an envelope item is cited as the envelope and never as '${String(citedAs).slice(0, 40)}': `
+          + `a tracked change, comment, core property or speaker note is not the document's body`
+        : `only an envelope item is cited as the envelope. A ${e.kind} extent addresses the `
+          + `document's body, and reading it as an annotation would change what the citation claims`);
   if (citedAs === 'bytes' && e.kind !== 'image')
     return refusal("CONTENT_EXTENT_UNREADABLE",
       `only an image can be cited as its bytes. A ${e.kind} extent addresses text, and reading `
@@ -14795,6 +14870,40 @@ export function checkContentExtent(extent, ctx = {}) {
         + `that is present and unreadable is worse than none, because it looks like one somebody chose`);
     const outside = coversDocTable(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
+  /* REC-204 — THE ENVELOPE ITEM'S SHAPE. Its CONTAINER half is skipped and
+     that is stated rather than guessed: the record persists no list of a
+     capture's envelope items to bound one against (the acquire wire carries
+     the items as index units, not as a container extent), so an item that is
+     well-formed is admitted and its existence rests on the index that found it.
+     The ANCHOR is checked as the address it is — by this same function, so a
+     paragraph past the document's count is refused here exactly as a doc-para
+     citation of it would be. */
+  if (e.kind === 'envelope') {
+    if (typeof e.item !== 'string' || !Object.prototype.hasOwnProperty.call(ENVELOPE_ITEM_KINDS, e.item.trim()))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `an envelope extent names which kind of item, one of `
+        + `${Object.keys(ENVELOPE_ITEM_KINDS).join(', ')}. This one names '${String(e.item).slice(0, 40)}'`);
+    if (typeof e.part !== 'string' || !e.part.trim())
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `an envelope extent names the part of the container the item's bytes sit in (word/comments.xml, `
+        + `docProps/core.xml). This one names '${String(e.part).slice(0, 40)}'`);
+    if (!Number.isInteger(e.n) || e.n < 0)
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `an envelope extent names which item, as a 0-based ordinal among items of its kind at the same `
+        + `part and anchor. This one names '${String(e.n).slice(0, 40)}'`);
+    if (e.item.trim() === 'core-property' && !(typeof e.name === 'string' && e.name.trim()))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a core-property envelope item names which property (creator, lastModifiedBy, title), and this `
+        + `one names none`);
+    if (e.at !== undefined && e.at !== null) {
+      if (!(typeof e.at === 'object' && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind)))
+        return refusal("CONTENT_EXTENT_UNREADABLE",
+          `an envelope item is anchored at a paragraph or a slide (${ENVELOPE_ANCHOR_KINDS.join(', ')}) `
+          + `or at nothing. This one is anchored at '${String(e.at && e.at.kind).slice(0, 40)}'`);
+      const anchor = checkContentExtent(e.at, ctx);
+      if (anchor) return anchor;
+    }
   }
   if (e.kind === 'image') {
     /* EXACTLY ONE ADDRESS FORM: the part's content hash for a container, or

@@ -119,7 +119,7 @@ const ARMS = {
   unlanded: {
     files: [CHECKS],
     why: "flip `sheet-cell` back to UNLANDED, so a built arm is refused as un-evaluable and mints nothing — the `landed` gate still exists for `dom` and must stay under a control",
-    mustFail: ["the grammar names eight kinds and ALL EIGHT are now LANDED",  /* FW-19: label moved with the roster */
+    mustFail: ["the grammar names nine kinds and ALL NINE are now LANDED",  /* FW-19, then REC-204: label moved with the roster */
                "a LANDED arm still refuses an incomplete address at the pure catalogue",
                "AN INCOMPLETE ADDRESS IS REFUSED BY NAME AT THE OP AND NEVER MINTED"],
     mustPass: "every other refusal — the arm must withdraw exactly one kind and nothing else",

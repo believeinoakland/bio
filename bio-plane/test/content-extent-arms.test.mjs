@@ -269,11 +269,15 @@ t("the fixture is non-empty and is the three arms' three containers",
    what this asserts — every kind the grammar names is evaluable — so the roster
    moves and the shape of the check does not. FW-19's three are driven end to
    end in `fw19-extent-arms.test.mjs`. */
-t("ALL EIGHT KINDS ARE NOW LANDED — REC-82 landed two, this item three, FW-19 the last three",
+/* CORRECTED BY REC-204 on the same rule: the NINTH kind, `envelope` (an item
+   of an office document's envelope, never its body), landed and the roster
+   moves; the totality check does not. It is driven end to end in
+   `search.test.mjs` Phase 4. */
+t("ALL NINE KINDS ARE NOW LANDED — REC-82 landed two, this item three, FW-19 three, REC-204 the envelope",
   [Object.keys(CONTENT_EXTENT_KINDS).sort(),
    Object.entries(CONTENT_EXTENT_KINDS).filter(([, v]) => v.landed).map(([k]) => k).sort()],
-  [["doc-para", "doc-table", "document", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"],
-   ["doc-para", "doc-table", "document", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]]);
+  [["doc-para", "doc-table", "document", "envelope", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"],
+   ["doc-para", "doc-table", "document", "envelope", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]]);
 
 /* ===================== 1. EACH ARM MINTS, THROUGH THE OP ================ */
 

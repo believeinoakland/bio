@@ -20078,7 +20078,14 @@ export class Store extends DurableObject {
       state = "LOOKED_INDETERMINATE";
       bound = armReason || "this container has no indexing unit arm";
       detail = `text was extracted and this record cannot address a passage of it: ${bound}. `
-             + "That is not an absence of text and must not be read as one";
+             + "That is not an absence of text and must not be read as one"
+             /* REC-204: a workbook's ENVELOPE items (its core properties) are
+                indexed although its cells are not, and saying nothing of them
+                here would read as the capture holding no searchable unit at all. */
+             + (r.written > 0
+               ? `. ${r.written} unit(s) of its ENVELOPE are indexed (core properties, comments, `
+                 + "tracked changes or speaker notes), labelled as envelope and never as its body"
+               : "");
     } else if (r.over_bound > 0) {
       state = "partial";
       /* REC-111 -- THE SENTENCE NAMES THE UNIT BOUND AND THE BYTE BOUND, AND IT

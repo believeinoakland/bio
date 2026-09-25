@@ -3640,7 +3640,7 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 CREATE TABLE IF NOT EXISTS capture_text (
   capture_sha  TEXT    NOT NULL,   -- the document. The register's trust root
   bundle_id    TEXT    NOT NULL,   -- the join every query arm makes (section 2)
-  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range once a unit writer uses the FW-19 arm
+  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape | envelope (REC-204, an item of the envelope, never the body). sheet-range once a unit writer uses the FW-19 arm
   extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
   ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
   seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
@@ -4449,6 +4449,7 @@ __export(bio_checks_exports, {
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
   CONNECTION_CHOICE_CHECKS: () => CONNECTION_CHOICE_CHECKS,
   CONNECTION_PAIR_CHECKS: () => CONNECTION_PAIR_CHECKS,
+  CONTENT_CITED_AS_ENVELOPE: () => CONTENT_CITED_AS_ENVELOPE,
   CONTENT_EXTENT_A1_RE: () => CONTENT_EXTENT_A1_RE,
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
   CONTENT_EXTENT_DOCUMENT_ONLY: () => CONTENT_EXTENT_DOCUMENT_ONLY,
@@ -4466,6 +4467,7 @@ __export(bio_checks_exports, {
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
   EARNED_SOURCE_AXIS: () => EARNED_SOURCE_AXIS,
+  ENVELOPE_ITEM_KINDS: () => ENVELOPE_ITEM_KINDS,
   FILENAME_RE: () => FILENAME_RE,
   FORBIDDEN_ALIASES: () => FORBIDDEN_ALIASES,
   GOVERNING_LAWS_MAX: () => GOVERNING_LAWS_MAX,
@@ -13025,8 +13027,26 @@ var CONTENT_EXTENT_KINDS = {
      is not its kind but `cited_as` — see `contentCitedAs` below. */
   "sheet-range": { landed: true, human: "a range of cells in a spreadsheet" },
   "doc-table": { landed: true, human: "a table in a document" },
-  image: { landed: true, human: "an image in a document" }
+  image: { landed: true, human: "an image in a document" },
+  /* REC-204 (OFFICE-FORMATS.md "THE ENVELOPE AS CONTENT", D-124's 2026-07-31
+     row) — THE NINTH KIND. One item of what DEC-5 calls the evidentiary
+     envelope: a tracked change, a comment, a core property or a slide's speaker
+     notes, addressed by the PART of the container its bytes sit in, the element
+     it is anchored at, and the item's own kind (`ENVELOPE_ITEM_KINDS`). The
+     human form says ENVELOPE on purpose and is never the body's: under DEC-5 a
+     reviewer's comment and an editor's name are the document's own content, and
+     they are still not what the document SAYS. `cited_as` keeps them apart on
+     every row (`contentCitedAs`). */
+  envelope: { landed: true, human: "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body" }
 };
+var ENVELOPE_ITEM_KINDS = {
+  "tracked-change": "a tracked change",
+  comment: "a comment",
+  "core-property": "a core property",
+  "speaker-note": "a slide's speaker notes"
+};
+var CONTENT_CITED_AS_ENVELOPE = "envelope";
+var ENVELOPE_ANCHOR_KINDS = ["doc-para", "slide-shape"];
 var CONTENT_EXTENT_RANGE_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}(:\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6})?$/;
 function rangeCorners(range) {
   const t = String(range == null ? "" : range).trim();
@@ -13054,7 +13074,8 @@ function canonicalRange(range) {
 function contentCitedAs(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
   const v = e.cited_as;
-  if (v === void 0 || v === null || v === "") return e.kind === "image" ? "bytes" : "text";
+  if (v === void 0 || v === null || v === "")
+    return e.kind === "image" ? "bytes" : e.kind === "envelope" ? CONTENT_CITED_AS_ENVELOPE : "text";
   return v;
 }
 var CONTENT_EXTENT_A1_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}$/;
@@ -13324,6 +13345,18 @@ function canonicalExtent(extent) {
       ] : null
     });
   }
+  if (e.kind === "envelope") {
+    const at = e.at && typeof e.at === "object" && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? JSON.parse(canonicalExtent(e.at)) : null;
+    return canonicalJson({
+      kind: "envelope",
+      cited_as: contentCitedAs(e),
+      item: typeof e.item === "string" ? e.item.trim() : null,
+      part: typeof e.part === "string" && e.part.trim() ? e.part.trim() : null,
+      at,
+      name: typeof e.name === "string" && e.name.trim() ? e.name.trim() : null,
+      n: Number.isInteger(e.n) ? e.n : null
+    });
+  }
   return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
 }
 function describeExtent(extent) {
@@ -13359,6 +13392,12 @@ function describeExtent(extent) {
     if (typeof e.part === "string" && e.part.trim()) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
     if (Number.isInteger(e.page)) return `an image on page ${e.page + 1}`;
     return "an image in this document";
+  }
+  if (e.kind === "envelope") {
+    const what = ENVELOPE_ITEM_KINDS[e.item] || "an item";
+    const name = typeof e.name === "string" && e.name.trim() ? ` '${e.name.trim()}'` : "";
+    const at = e.at && typeof e.at === "object" && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? ` at ${describeExtent({ ...e.at, ref: void 0 })}` : "";
+    return `envelope: ${what}${name}${at}`;
   }
   const row = CONTENT_EXTENT_KINDS[e.kind];
   return row ? row.human : "a part of this document the record cannot name";
@@ -14254,10 +14293,15 @@ function checkContentExtent(extent, ctx = {}) {
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   const citedAs = contentCitedAs(e);
-  if (citedAs !== "text" && citedAs !== "bytes")
+  if (citedAs !== "text" && citedAs !== "bytes" && citedAs !== CONTENT_CITED_AS_ENVELOPE)
     return refusal(
       "CONTENT_EXTENT_UNREADABLE",
-      `cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of text, bytes. This one says '${String(citedAs).slice(0, 40)}'`
+      `cited_as says whether a part is cited for its TEXT, as its own BYTES, or as an item of the document's ENVELOPE, and is one of text, bytes, envelope. This one says '${String(citedAs).slice(0, 40)}'`
+    );
+  if (citedAs === CONTENT_CITED_AS_ENVELOPE !== (e.kind === "envelope"))
+    return refusal(
+      "CONTENT_EXTENT_UNREADABLE",
+      e.kind === "envelope" ? `an envelope item is cited as the envelope and never as '${String(citedAs).slice(0, 40)}': a tracked change, comment, core property or speaker note is not the document's body` : `only an envelope item is cited as the envelope. A ${e.kind} extent addresses the document's body, and reading it as an annotation would change what the citation claims`
     );
   if (citedAs === "bytes" && e.kind !== "image")
     return refusal(
@@ -14291,6 +14335,37 @@ function checkContentExtent(extent, ctx = {}) {
       );
     const outside = coversDocTable(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
+  if (e.kind === "envelope") {
+    if (typeof e.item !== "string" || !Object.prototype.hasOwnProperty.call(ENVELOPE_ITEM_KINDS, e.item.trim()))
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `an envelope extent names which kind of item, one of ${Object.keys(ENVELOPE_ITEM_KINDS).join(", ")}. This one names '${String(e.item).slice(0, 40)}'`
+      );
+    if (typeof e.part !== "string" || !e.part.trim())
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `an envelope extent names the part of the container the item's bytes sit in (word/comments.xml, docProps/core.xml). This one names '${String(e.part).slice(0, 40)}'`
+      );
+    if (!Number.isInteger(e.n) || e.n < 0)
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `an envelope extent names which item, as a 0-based ordinal among items of its kind at the same part and anchor. This one names '${String(e.n).slice(0, 40)}'`
+      );
+    if (e.item.trim() === "core-property" && !(typeof e.name === "string" && e.name.trim()))
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `a core-property envelope item names which property (creator, lastModifiedBy, title), and this one names none`
+      );
+    if (e.at !== void 0 && e.at !== null) {
+      if (!(typeof e.at === "object" && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind)))
+        return refusal(
+          "CONTENT_EXTENT_UNREADABLE",
+          `an envelope item is anchored at a paragraph or a slide (${ENVELOPE_ANCHOR_KINDS.join(", ")}) or at nothing. This one is anchored at '${String(e.at && e.at.kind).slice(0, 40)}'`
+        );
+      const anchor = checkContentExtent(e.at, ctx);
+      if (anchor) return anchor;
+    }
   }
   if (e.kind === "image") {
     const hasPart = e.part !== void 0 && e.part !== null && e.part !== "";
@@ -49291,7 +49366,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     } else if (!unitArm) {
       state = "LOOKED_INDETERMINATE";
       bound = armReason || "this container has no indexing unit arm";
-      detail = `text was extracted and this record cannot address a passage of it: ${bound}. That is not an absence of text and must not be read as one`;
+      detail = `text was extracted and this record cannot address a passage of it: ${bound}. That is not an absence of text and must not be read as one` + (r.written > 0 ? `. ${r.written} unit(s) of its ENVELOPE are indexed (core properties, comments, tracked changes or speaker notes), labelled as envelope and never as its body` : "");
     } else if (r.over_bound > 0) {
       state = "partial";
       const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
@@ -82745,11 +82820,11 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
   const stillWanting = wanted && (!filled.length || unanswered.length > 0);
   return { i2text, wiredTier, chain: chain2, chainSet, ocrNote, filled, engine, stillWanting };
 }
-function textUnitsFor(i2text) {
+function textUnitsFor(i2text, evidentiary = null) {
   let textUnits = null, textUnitsOverBound = 0;
   if (i2text) {
     const arm = (list, kind, fields) => (Array.isArray(list) ? list : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0 ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
-    const units = Array.isArray(i2text.pages) ? arm(
+    let units = Array.isArray(i2text.pages) ? arm(
       i2text.pages,
       "pdf-page",
       (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null })
@@ -82762,6 +82837,9 @@ function textUnitsFor(i2text) {
       "slide-shape",
       (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
     ) : null;
+    const bodyLen = [i2text.pages, i2text.paragraphs, i2text.slides].reduce((n, l) => Array.isArray(l) ? Math.max(n, l.length) : n, 0);
+    const env = envelopeUnitsFor(evidentiary, i2text, bodyLen);
+    if (env.length) units = [...units || [], ...env];
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
     for (const u of units || []) {
       const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
@@ -82776,6 +82854,82 @@ function textUnitsFor(i2text) {
     textUnitsOverBound = dropped;
   }
   return { textUnits, textUnitsOverBound };
+}
+var ENVELOPE_PARTS = {
+  docx: {
+    "tracked-change": "word/document.xml",
+    comment: "word/comments.xml",
+    "core-properties": CORE_PROPERTIES_PART
+  },
+  pptx: { "core-properties": CORE_PROPERTIES_PART },
+  xlsx: { "core-properties": CORE_PROPERTIES_PART },
+  odt: { "tracked-change": "content.xml", comment: "content.xml", "core-properties": "meta.xml" },
+  ods: { "core-properties": "meta.xml" },
+  odp: { "speaker-notes": "content.xml", "core-properties": "meta.xml" }
+};
+var ENVELOPE_ITEM_OF = {
+  "tracked-change": "tracked-change",
+  comment: "comment",
+  "core-properties": "core-property",
+  "speaker-notes": "speaker-note"
+};
+var CORE_PROPERTY_FIELDS = ["creator", "lastModifiedBy", "title", "created", "modified", "revision"];
+function envelopeUnitsFor(evidentiary, i2text, seqFrom) {
+  const items = evidentiary && typeof evidentiary === "object" && Array.isArray(evidentiary.items) ? evidentiary.items : [];
+  if (!items.length) return [];
+  const container = typeof evidentiary.container === "string" ? evidentiary.container : i2text && typeof i2text.container === "string" ? i2text.container : null;
+  const parts = ENVELOPE_PARTS[container] || null;
+  const str = (v) => typeof v === "string" && glyphCount(v) > 0 ? v : null;
+  const anchorOf = (src) => src && typeof src === "object" && (src.kind === "doc-para" && Number.isInteger(src.para) || src.kind === "slide-shape" && Number.isInteger(src.slide)) ? src.kind === "doc-para" ? { kind: "doc-para", para: src.para, ...Number.isInteger(src.run) ? { run: src.run } : {} } : { kind: "slide-shape", slide: src.slide, ...Number.isInteger(src.shape) ? { shape: src.shape } : {} } : null;
+  const byAuthor = (a) => str(a) ? `by ${a}` : "by an author the document does not name";
+  const dated = (d) => str(d) ? `, dated ${d}` : ", undated in the document";
+  const out = [], ordinals = /* @__PURE__ */ new Map();
+  const push = (item, part, at, name, body) => {
+    const key = JSON.stringify([item, part, at, name]);
+    const n = ordinals.get(key) ?? 0;
+    ordinals.set(key, n + 1);
+    out.push({
+      extent: { kind: "envelope", item, part, at, ...name ? { name } : {}, n },
+      seq: seqFrom + out.length,
+      text: `ENVELOPE \u2014 ${body}`
+    });
+  };
+  for (const it of items) {
+    if (!it || typeof it !== "object") continue;
+    const item = ENVELOPE_ITEM_OF[it.kind];
+    if (!item || !Object.prototype.hasOwnProperty.call(ENVELOPE_ITEM_KINDS, item)) continue;
+    const part = str(it.part) || parts && parts[it.kind] || null;
+    if (!part) continue;
+    const at = anchorOf(it.source);
+    if (item === "core-property") {
+      for (const f2 of CORE_PROPERTY_FIELDS) {
+        const v = it[f2];
+        const val = typeof v === "number" && Number.isFinite(v) ? String(v) : str(v);
+        if (val) push(item, part, null, f2, `core property ${f2}: ${val}`);
+      }
+      continue;
+    }
+    if (item === "tracked-change") {
+      const words = it.change === "deletion" ? str(it.superseded) : str(it.text);
+      if (!words && !str(it.author)) continue;
+      const change = str(it.change) || "change of an undetermined kind";
+      push(item, part, at, null, `tracked change (${change}) ${byAuthor(it.author)}${dated(it.date)}` + (words ? `. ${it.change === "deletion" ? "Removed wording" : "Wording"}: ${words}` : ". It carries no wording"));
+      continue;
+    }
+    if (item === "comment") {
+      const words = str(it.text);
+      if (!words && !str(it.author)) continue;
+      push(item, part, at, null, `comment ${byAuthor(it.author)}` + (str(it.initials) ? ` (${it.initials})` : "") + `${dated(it.date)}` + (words ? `: ${words}` : ". It carries no wording"));
+      continue;
+    }
+    if (item === "speaker-note") {
+      const words = str(it.text);
+      if (!words) continue;
+      const where = Number.isInteger(it.slide) ? `slide ${it.slide}` : "a slide the deck does not place";
+      push(item, part, at, null, `speaker notes, ${where}: ${words}`);
+    }
+  }
+  return out;
 }
 var readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
   key: e && e.key != null ? String(e.key) : null,
@@ -85341,13 +85495,22 @@ var index_default = {
             if (entry && (typeof entry.text === "function" || typeof entry.structure === "function")) {
               const wobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
               const wbytes = wobj ? new Uint8Array(await wobj.arrayBuffer()) : null;
-              let i2text = null;
+              let i2text = null, evidentiary = null;
               if (wbytes && typeof entry.text === "function") {
                 const parts2 = typeof entry.parts === "function" ? await entry.parts(wbytes) : wbytes;
                 const tt = await entry.text(parts2);
                 if (tt && tt.ok !== false) {
                   i2text = tt;
                   wiredTier = 1;
+                }
+                if (i2text && typeof entry.structure === "function") {
+                  try {
+                    const st = await entry.structure(parts2);
+                    if (st && st.ok !== false && st.evidentiary && typeof st.evidentiary === "object")
+                      evidentiary = st.evidentiary;
+                  } catch {
+                    evidentiary = null;
+                  }
                 }
               } else if (wbytes && typeof entry.structure === "function") {
                 const st = await entry.structure(wbytes);
@@ -85458,7 +85621,7 @@ var index_default = {
                 };
               }
               {
-                const u = textUnitsFor(i2text);
+                const u = textUnitsFor(i2text, evidentiary);
                 textUnits = u.textUnits;
                 textUnitsOverBound = u.textUnitsOverBound;
               }
