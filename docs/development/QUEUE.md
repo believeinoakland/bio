@@ -480,7 +480,7 @@ accepts-when: an import added to the subject leaves all three green. NEGATIVE CO
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### D-541 · integrated — **`tools/rowsubstrate.mjs` `anchorPairs` CAPTURES DIGITS AND DOTS ONLY (`§\s*(\d+(?:\.\d+)*)`), so `§6A` reads as `6`, and D-404's design-coverage arm falsely notes "substrate not evident" for REC-213, REC-199 and D-448.** Found by REC-213's worker (via CONDUCT #20 22:11Z). A false NOTE, not a failure. — owner M0.
-status: integrated — SCHEDULER #21 00:05Z: tip a3d2c566, GATE 73/73 GREEN recorded (TARGETED); NARROWED: REC-199/D-448 notes are true readings of §6A.4
+status: integrated — CONDUCT #20 verified 00:16Z: a3d2c566, 73/73 GREEN, A7 as declared; rides c20-batch28; finding 2 dropped (no instance)
 order: after M0-142, with the process rows behind the product rows ahead of them: it prints a false note but fails nothing, so it does not cut gate time (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
