@@ -40984,7 +40984,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           detail: `no draft of ${proj} that you can read answers to ${draftNamed}. A draft you cannot read is answered exactly as one that does not exist. Name the draft this case was prepared in, or publish without draft= and its readings are stated as undetermined.`
         });
       const di = this.#draftIdentity(d);
-      if (di.caseId ? di.caseId !== theCase || di.edition !== predicted : predicted !== 1)
+      const diNewCase = !!JSON.parse(d.params).newCase;
+      if (di.caseId ? di.caseId !== theCase || _Store.#statedEdition(di, diNewCase) !== predicted : predicted !== 1)
         return refusal6("PUBLISH_DRAFT_NOT_THIS_CASE", {
           draft: draftNamed,
           /* D-721: `draft_edition` is `#statedEdition`'s, as on every other answer about a draft: null for a draft
@@ -40992,14 +40993,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
              the internal key. The sentence reads the draft's `newCase` as every other answer's does, so a new
              case's draft is no longer described with the derivation sentence either. */
           draft_case: di.caseId ?? null,
-          draft_edition: _Store.#statedEdition(di, !!JSON.parse(d.params).newCase),
+          draft_edition: _Store.#statedEdition(di, diNewCase),
           case_id: theCase ?? null,
           edition: predicted,
-          detail: `draft ${draftNamed} is prepared for ${_Store.#caseIdentitySentence(
-            di.caseId,
-            di.edition,
-            !!JSON.parse(d.params).newCase
-          )}, and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names ` + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.`
+          detail: `draft ${draftNamed} is prepared for ${_Store.#caseIdentitySentence(di.caseId, di.edition, diNewCase)}, and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it would bind its readings to a case they were not given for. ` + (di.caseId && diNewCase ? `Withdraw one of the draft's two instructions, or name the draft of this one.` : `Publish the case the draft names ` + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.`)
         });
       const already = this.#one(`SELECT case_id, edition FROM case_documents WHERE draft_id=?
                                    AND NOT (case_id IS ? AND edition=?) LIMIT 1`, d.draft_id, theCase ?? null, predicted);

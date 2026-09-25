@@ -30,6 +30,16 @@
    was RE-RUN ALONE on the changed `src/store.mjs` (restored `sha256sum -c` OK e52d8160…0786c9, `cmp` identical,
    3,337,185 bytes): 8 pass, 15 FAIL, the same fifteen rows, block 2 GREEN — the control still bites.
 
+   NEGATIVE CONTROL: RUN 2026-09-25 by WORKER D-728 (cloud, SCHEDULER #24), block 5's pair-on-C1 row. DECLARED
+   before arming: (d728) is-publish-draft-this-case compares the draft's internal key again (`di.edition !== predicted`
+   for `#statedEdition`'s). MUST FAIL "D-728: THE PAIR DRAFT named on C1 ITSELF…" by name, and with it the block's two
+   rows after it (PUBLISH_DRAFT_ALREADY_BOUND, "none of them left anything behind"), which the landed publish takes
+   `Q5` from — the unfixed plane failed exactly those three when this row was first run; MUST NOT fail any other row,
+   and block 8's fixture (a draft naming X ALONE published on X as edition 2, `completeness.draft` = that draft) must
+   stay green: the over-strictness arm. RESULT: 26 pass, 3 FAIL, those three by name. AS DECLARED. Restored by `cp`
+   from a per-arm pristine copy in the session scratchpad, `sha256sum -c` OK and `cmp` identical, 3,658,652 B.
+   BASELINE on the same tree: 29 pass, 0 fail.
+
    NEGATIVE CONTROL: RUN 2026-09-25 by WORKER D-721 (cloud, SCHEDULER #24), block 5's pair-draft row. DECLARED
    before arming: (d721) publish's PUBLISH_DRAFT_NOT_THIS_CASE restored to the plane before D-721 — `draft_edition`
    read as `di.edition` and the sentence called without the draft's `newCase`. MUST FAIL "D-721: THE PAIR DRAFT named
@@ -453,7 +463,21 @@ console.log("\n--- 5. THE THREE REFUSALS: a link that would be false is refused 
     [...said(np), np?.draft_case, np?.draft_edition, /edition \(\d+\) of|edition \d+ of C/.test(np?.detail ?? ""),
      (np?.detail ?? "").includes(C1) && /UNDETERMINED/.test(np?.detail ?? "")],
     [...row("PUBLISH_DRAFT_NOT_THIS_CASE"), C1, null, false, true]);
-  const ab = await publish("refused", [Q5], { draft: D1 });
+  /* D-728 (BIO_Publication §3 rule 13, §6A.4; D-618): THE SAME PAIR DRAFT NAMED ON C1 ITSELF. The region compared
+     the draft's INTERNAL key (C1's next edition) with the edition this act authors, found them equal, and
+     PUBLISHED — ok:true, C1's next edition, `completeness.draft` = the pair draft: a signed binding of a draft whose
+     case D-618 rules UNDETERMINED, while every sentence about it says publication refuses the pair. A pair draft
+     stands at no case edition, so it is refused by name and nothing is written: C1 gains no edition, and `Q5` is
+     still no case's member (the block's last row publishes it as a new case). */
+  const topOf = async (c) => { let e = 0; while ((await docOf(c, e + 1))?.doc_sha) e++; return e; };
+  const top1 = await topOf(C1);
+  const pc = await publish("refused", [Q5], { draft: Dp.draftId, caseId: C1 });
+  t("D-728: THE PAIR DRAFT named on C1 ITSELF is refused PUBLISH_DRAFT_NOT_THIS_CASE, stating no edition for it, "
+  + "and C1 gains no edition",
+    [...said(pc), pc?.ok === true, pc?.draft_case, pc?.draft_edition, pc?.case_id, pc?.edition === top1 + 1,
+     /UNDETERMINED/.test(pc?.detail ?? ""), await topOf(C1)],
+    [...row("PUBLISH_DRAFT_NOT_THIS_CASE"), false, C1, null, C1, true, true, top1]);
+  const ab =await publish("refused", [Q5], { draft: D1 });
   t("block 1's draft, already bound to its case, named for another: PUBLISH_DRAFT_ALREADY_BOUND, with C-44.5's row",
     [...said(ab), ab?.bound_to?.case_id, ab?.bound_to?.edition], [...row("PUBLISH_DRAFT_ALREADY_BOUND"), C1, 1]);
   const ok = await publish("refused", [Q5]);

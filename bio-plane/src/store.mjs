@@ -9013,20 +9013,27 @@ export class Store extends DurableObject {
                 + `publish without draft= and its readings are stated as undetermined.` });
       /* END DEC-49 REGION is-publish-draft-found */
       const di = this.#draftIdentity(d);
+      /* D-728 (§3 rule 13, §6A.4; D-618): the draft's edition is compared as `#statedEdition` states it, never as
+         its internal key. A draft naming a case AND asking for a new one stands at NO case edition — which case it
+         is stays UNDETERMINED — so it matches no act and is refused here; compared at the key, `case=C1` naming it
+         matched C1's next edition and PUBLISHED, binding a draft the record's own sentences say publication refuses. */
+      const diNewCase = !!JSON.parse(d.params).newCase;
       /* DEC-49 REGION is-publish-draft-this-case */
-      if (di.caseId ? (di.caseId !== theCase || di.edition !== predicted) : predicted !== 1)
+      if (di.caseId ? (di.caseId !== theCase || Store.#statedEdition(di, diNewCase) !== predicted) : predicted !== 1)
         return refusal("PUBLISH_DRAFT_NOT_THIS_CASE", { draft: draftNamed,
           /* D-721: `draft_edition` is `#statedEdition`'s, as on every other answer about a draft: null for a draft
              naming a case AND asking for a new one (D-618) and for one whose case is DERIVED (D-568), where it read
              the internal key. The sentence reads the draft's `newCase` as every other answer's does, so a new
              case's draft is no longer described with the derivation sentence either. */
-          draft_case: di.caseId ?? null, draft_edition: Store.#statedEdition(di, !!JSON.parse(d.params).newCase),
+          draft_case: di.caseId ?? null, draft_edition: Store.#statedEdition(di, diNewCase),
           case_id: theCase ?? null, edition: predicted,
-          detail: `draft ${draftNamed} is prepared for ${Store.#caseIdentitySentence(di.caseId, di.edition,
-                                                                                     !!JSON.parse(d.params).newCase)}, and `
-                + `this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it `
-                + `would bind its readings to a case they were not given for. Publish the case the draft names `
-                + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.` });
+          detail: `draft ${draftNamed} is prepared for ${Store.#caseIdentitySentence(di.caseId, di.edition, diNewCase)}, `
+                + `and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it `
+                + `would bind its readings to a case they were not given for. `
+                + (di.caseId && diNewCase
+                    ? `Withdraw one of the draft's two instructions, or name the draft of this one.`
+                    : `Publish the case the draft names ` + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`)
+                      + `, or name the draft of this one.`) });
       /* END DEC-49 REGION is-publish-draft-this-case */
       const already = this.#one(`SELECT case_id, edition FROM case_documents WHERE draft_id=?
                                    AND NOT (case_id IS ? AND edition=?) LIMIT 1`, d.draft_id, theCase ?? null, predicted);
