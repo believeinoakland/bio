@@ -988,8 +988,8 @@ scope: resolve that expression (and its `new URL("../..", …)` siblings) as a T
 accepts-when: D-526's, D-547's and D-548's drivers read classified and the ceiling falls by name (moves: 3 drivers UNCLASSIFIED). NEGATIVE CONTROL: drop the new resolution and those three read UNCLASSIFIED over the lowered ceiling, failing by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; CONDUCT #21's batch28 finding).
 
-### D-620 · running — **363 OF 376 bio-plane SUITES COMPARE WITH `JSON.stringify` EQUALITY, WHICH READS AN ABSENT VALUE IN AN ARRAY AS `null`, so any arm asserting a STATED null cannot tell it from a dropped key (measured in reviewcopy.control arm v, which stayed green until hardened).** Found by D-568's worker (05:36Z). — owner M0.
-status: running — SCHEDULER #22 06:07Z spawns WORKER D-620 (depth 2)
+### D-620 · integrated — **363 OF 376 bio-plane SUITES COMPARE WITH `JSON.stringify` EQUALITY, WHICH READS AN ABSENT VALUE IN AN ARRAY AS `null`, so any arm asserting a STATED null cannot tell it from a dropped key (measured in reviewcopy.control arm v, which stayed green until hardened).** Found by D-568's worker (05:36Z). — owner M0.
+status: integrated — SCHEDULER #23 07:21Z: tip 72d488e0 (one commit over main 5e8a65a8), GATE 310/310 GREEN TARGETED (19125 assertions), tree 4dea9721; test-only: statedJSON comparator in 268 null-asserting suites + stated-null guard; hygiene reach floor 45->47; no defect minted
 order: after M0-196, with the gate-instrument rows: an arm that cannot fail on a dropped key is a control that refutes nothing (SCHEDULER #22, 2026-09-25)
 milestone: M0
 interface: none.
@@ -1153,7 +1153,8 @@ scope: distinguish `occurrence` absent from `occurrence` present and empty in th
 accepts-when: a fixture string read at two places, one unplaced, is chosen at its unplaced occurrence and the portion grade answers from it. NEGATIVE CONTROL: restore the `|| null` collapse and the unplaced-choice arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (from SCHEDULER #22's hand-over; fix named by UI-112's worker).
 
-### D-629 · queued — **THE STORE ANSWERS ANY THROWN ERROR WITH ITS STACK: `Store.fetch`'s catch (store.mjs, the outermost handler) returns `String(e.stack)` to the caller for ANY throw on ANY op, and `index.mjs` has the same shape — so file paths, line numbers and constraint text reach a caller, and a constraint error reads as a stack instead of a refusal.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
+### D-629 · running — **THE STORE ANSWERS ANY THROWN ERROR WITH ITS STACK: `Store.fetch`'s catch (store.mjs, the outermost handler) returns `String(e.stack)` to the caller for ANY throw on ANY op, and `index.mjs` has the same shape — so file paths, line numbers and constraint text reach a caller, and a constraint error reads as a stack instead of a refusal.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
+status: running — SCHEDULER #23 07:21Z: spawned
 order: near the head — a disclosure defect outranks features (SCHEDULER.md loop step 3), behind D-625 only because that corrects just-landed work (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — every op's unhandled-error answer becomes a named internal-error code with no stack; the integrator classifies (BREAKING-shaped for any caller reading the text).
@@ -1172,6 +1173,26 @@ depends-on: CPDF-3 (`integrated`).
 scope: the PDF member emits page and rect per tier-1 unit and anchor text plus rect per link; the plane derives item-to-file membership by containment, labelled and graded inferred.
 accepts-when: an agenda's item-to-file membership reads derived, labelled machine work, graded inferred. NEGATIVE CONTROL: present it as a publisher link, and the labelling arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
+
+### D-340 · queued — **CHROME IS A PROPERTY OF THE SITE AND THE PLANE RECORDS IT NOWHERE: `site_chrome` exists only in `LINK-FIDELITY.md`, which RATIFIES it as a derived table regenerable by scan; no table and no per-host navigation-change read are built.** — owner CAPTURE, then RECORD.
+order: after D-419, with the M4 extraction rows (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
+milestone: M4
+interface: I5 — a derived table (in `purge`); I3 — a per-host read; the integrator mints and classifies the ICs.
+design: `docs/development/LINK-FIDELITY.md` §"Chrome: rendering and connection are different problems".
+depends-on: none.
+scope: derive `site_chrome` per host by scan, add it to `purge`, and a read naming links a host's navigation lost between captures.
+accepts-when: two captures of one host whose nav lost a link make the read name that link. NEGATIVE CONTROL: derive per page instead of per host, and the arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-177 · queued — **THE CAPTURE GRADE BELOW THE CEILING IS STILL AUTHORED: `store.mjs` says *"there is no per-document capture grade anywhere in this schema"*; `#legEarnedCapture` applies REC-88/105's CEILING, not a measured value, so a member-authored grade under it stands unmeasured.** — owner CAPTURE, then RECORD.
+order: after D-191 (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
+milestone: M9
+interface: I3/I5 — a derived per-capture grade read by the strength walk; the integrator mints and classifies the ICs.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` Part I (the chain rules), with DEC-4 and DEC-75 (*capture grade is about the fetch path*).
+depends-on: none — the ceiling (REC-88, REC-105) is built.
+scope: derive a per-capture grade from `captured_locators.via` plus authority state, read it in `#strengthWalk`. The letter for a non-direct `via` is UNDETERMINED by any ruling found; if none covers it, that part goes to BOB (REC-50's precedent) and the row builds the direct case first.
+accepts-when: a member-authored C on a direct capture reads the earned grade, not the authored one. NEGATIVE CONTROL: read the authored grade again, and that arm fails by name. Extend the strength suite.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
