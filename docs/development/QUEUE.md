@@ -732,7 +732,8 @@ accepts-when: a citation to a superseded passage shows the notice; an unread new
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 note: 2026-09-24 — RE-SCOPED by Bob's ruling (Framework §18.1, option D; folds-0924b): the proactive notice reaches a published case's OWNERS only (delivery is REC-209); the surface shows it to owners, and anyone may still ASK at a citation.
 
-### REC-220 · queued — **NOT EVERY REFERENCE IS PINNED TO A VERSION: a basis leg, a cite onto a case or question, or a claim with no `content_id` names only a BUNDLE, so a later capture changes what it resolves to.** Bob's 00:40Z doctrine, rule 1 (item 1 of BOB #34's decomposition). — owner RECORD.
+### REC-220 · running — **NOT EVERY REFERENCE IS PINNED TO A VERSION: a basis leg, a cite onto a case or question, or a claim with no `content_id` names only a BUNDLE, so a later capture changes what it resolves to.** Bob's 00:40Z doctrine, rule 1 (item 1 of BOB #34's decomposition). — owner RECORD.
+status: running — SCHEDULER #21 00:58Z spawns WORKER REC-220 (depth 2)
 order: after REC-215, first of the version-doctrine rows in product order; it completes construct 4.cross-version (BOB #34 00:55Z) (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: I3 — the capture a reference was made against, recorded at the act; the integrator classifies.
@@ -742,7 +743,8 @@ scope: record the capture (document grain) at every reference act; MEASURE exist
 accepts-when: a new whole-document citation stores its capture sha, and a later capture on the same bundle does not change what the leg resolves to (moves: bundle-only references). NEGATIVE CONTROL: resolve to the newest capture and the pin arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
 
-### REC-221 · queued — **NOTHING GRADES WHETHER A NEWER VERSION AFFECTS THE REFERENCED PART: `op=versionnotice`'s extent test does not produce §5.8's grades.** Bob's 00:40Z doctrine, rule 2 (item 2). — owner RECORD.
+### REC-221 · running — **NOTHING GRADES WHETHER A NEWER VERSION AFFECTS THE REFERENCED PART: `op=versionnotice`'s extent test does not produce §5.8's grades.** Bob's 00:40Z doctrine, rule 2 (item 2). — owner RECORD.
+status: running — SCHEDULER #21 00:58Z spawns WORKER REC-221 (depth 2)
 order: after REC-220, in the version-doctrine chain (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: I3 — the grade on versionnotice's answer; the integrator classifies.
