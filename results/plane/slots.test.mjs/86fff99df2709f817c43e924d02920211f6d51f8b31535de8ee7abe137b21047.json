@@ -1,0 +1,16 @@
+{
+ "unit": "plane:slots.test.mjs",
+ "inputHash": "86fff99df2709f817c43e924d02920211f6d51f8b31535de8ee7abe137b21047",
+ "verdict": "PASS",
+ "run": "02cb97cc2b989bc3d17ee36642925ee006cb6f1a.1790318920364.4774.json",
+ "tree": "02cb97cc2b989bc3d17ee36642925ee006cb6f1a",
+ "head": "17cc3d742a66cdb437c83cdc06db2cdd7f7fa482",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 492,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "6922ed51-71ab-542e-be0c-5a5bfd511972",
+ "at": "2026-09-25T06:48:40.375Z"
+}
