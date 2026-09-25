@@ -11691,7 +11691,7 @@ export class Store extends DurableObject {
      document, and it carries it by the STATEMENT'S OWN IDENTITY: `#fmSafe` of the sentence — the
      normalisation `#statementSha` hashes, and the one REC-193's stamp itself compares — at the case
      identity `#statementAcknowledgements` binds an acknowledgement to (this case, or a draft naming no
-     case at edition 1, which is the only edition a new case has). One identity for the writer of the
+     case, at any edition since D-680/D-683/D-703). One identity for the writer of the
      bytes and for their readers, never two.
 
      FOUR ANSWERS, EACH A FACT AND NONE A FALLBACK:
@@ -11727,8 +11727,16 @@ export class Store extends DurableObject {
                stated: `UNDETERMINED: ${project} holds more drafts than one bounded read of them lists `
                      + `(${cap}), so which draft this sentence was written in — and therefore who wrote it — `
                      + `cannot be established here. ${notFromAuthor}` };
-    const here = (d) => (d.case_id ?? null) === (caseId ?? null)
-                      || ((d.case_id ?? null) === null && Number(edition) === 1);
+    /* D-703 (§3 rule 13; §6A.4): A DRAFT NAMING NO CASE IS AT THIS IDENTITY AT ANY EDITION. Its identity reads edition
+       1 (D-568), but since D-680 it publishes any edition, and this arm asked `Number(edition) === 1`: an editor's
+       sentence written in a no-case draft and published as edition 2 without `draft=` found no draft, and the
+       no-draft branch below credited the PUBLISHER with it, in signed bytes. D-683 took the same predicate off the
+       unbound reading count. KNOWN GAP, STATED AND NOT WIDENED HERE: this read looks at EVERY no-case draft of the
+       project, not the draft `draft=` named. So a no-case draft prepared for ANOTHER case that holds these exact
+       bytes answers for this one: its author is named if it alone holds them, and two authors answer
+       `drafts_disagree` (UNDETERMINED, stated). The gap stood at edition 1 before this row; dropping the edition
+       carries it to further editions, and reading the named draft is the fix, not made here. */
+    const here = (d) => (d.case_id ?? null) === (caseId ?? null) || (d.case_id ?? null) === null;
     /* A DRAFT AT THIS IDENTITY WHOSE ARGUMENTS WILL NOT PARSE IS UNDETERMINED, NOT A NON-MATCH, and this is
        the arm `provenance-marker.test.mjs` §I's ceiling caught in this method's first cut. That cut returned
        `false` for such a draft, which turned a read the plane COULD NOT MAKE into the normal-looking answer

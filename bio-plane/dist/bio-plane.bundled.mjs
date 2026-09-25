@@ -41981,7 +41981,7 @@ case_project: ${project}
        document, and it carries it by the STATEMENT'S OWN IDENTITY: `#fmSafe` of the sentence — the
        normalisation `#statementSha` hashes, and the one REC-193's stamp itself compares — at the case
        identity `#statementAcknowledgements` binds an acknowledgement to (this case, or a draft naming no
-       case at edition 1, which is the only edition a new case has). One identity for the writer of the
+       case, at any edition since D-680/D-683/D-703). One identity for the writer of the
        bytes and for their readers, never two.
   
        FOUR ANSWERS, EACH A FACT AND NONE A FALLBACK:
@@ -42019,7 +42019,7 @@ case_project: ${project}
         from: "drafts_unbounded",
         stated: `UNDETERMINED: ${project} holds more drafts than one bounded read of them lists (${cap}), so which draft this sentence was written in \u2014 and therefore who wrote it \u2014 cannot be established here. ${notFromAuthor}`
       };
-    const here = (d) => (d.case_id ?? null) === (caseId ?? null) || (d.case_id ?? null) === null && Number(edition) === 1;
+    const here = (d) => (d.case_id ?? null) === (caseId ?? null) || (d.case_id ?? null) === null;
     const unreadable = [];
     const matches = rows.filter((d) => {
       if (!here(d)) return false;

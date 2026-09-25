@@ -172,7 +172,15 @@ Three consequences give the construct its shape. The record must be able to prov
     (ii) refuses it. **As built 2026-09-25 (D-683; I3):** a reading of a no-case
     draft is counted UNDETERMINED on a further edition published WITHOUT `draft=` as on a first: the unbound count asks
     no edition either, since that reading is recorded at edition 1 (D-568) (`bio-plane/test/rec217-draft-binding.test.mjs`
-    block 9).
+    block 9). **As built 2026-09-25 (D-703; I3):** the WRITER read does the same. `op=publish`'s writer read matched a
+    no-case draft only at edition 1, so an editor's sentence written in a no-case draft and published as a further
+    edition WITHOUT `draft=` found no draft and `completeness.statement_by` named the PUBLISHER, "in the act that
+    published this case" — a signed document crediting the publisher with an editor's bytes. A no-case draft is now at
+    the case identity at any edition, for the writer as for the readings (block 9). STATED, NOT WIDENED: the writer read
+    still reads every no-case draft of the project that holds the sentence, not the draft `draft=` named, so a no-case
+    draft prepared for another case holding the same bytes answers for this one — its author named if it alone holds
+    them, `drafts_disagree` (UNDETERMINED) if authors differ. The gap stood at edition 1 before; this row carries it to
+    further editions. Reading the named draft is the fix, not made here.
 
 14. **THE BAR IS A PAIR, AND AN AXIS NOBODY SET IS NULL** (BOB #32, 2026-09-23, D-450 on SCHEDULER #17's 22:56Z questions). A project may
     set a bar on one axis only. Both keys are always present, the unset one is `null`, and the case document says in

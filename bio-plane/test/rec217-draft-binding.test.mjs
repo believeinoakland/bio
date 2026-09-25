@@ -77,6 +77,17 @@
    (b) OVER-STRICTNESS — the count spelled `edition=1`, the edition D-568 records every no-case reading at. DECLARED:
        MUST PASS every row (the suite asserts the count, not the predicate's shape). RAN 41 pass, 0 fail. AS DECLARED.
 
+   D-703 NEGATIVE CONTROL (block 9's writer row; declared before arming, each arm ALONE on `src/store.mjs`, restored by
+   `cp` from a per-arm pristine copy, `sha256sum -c` OK 79aaa1d0…3dedd, `cmp` identical, 3,480,624 bytes):
+   (0) BASELINE 42 pass, 0 fail. (Before the fix, driven through op=publish: 41 pass, 1 FAIL — the D-703 ACCEPTS-WHEN,
+       got statement_by "iris" in the answer and the signed bytes, and "iris wrote this exclusion statement in the act
+       that published this case".)
+   (a) THE ROW'S OWN CONTROL — `&& Number(edition) === 1` restored on `#statementWriter`'s no-case arm of `here`.
+       DECLARED: MUST FAIL the D-703 ACCEPTS-WHEN BY NAME; MUST NOT fail any other row. RAN 41 pass, 1 FAIL — exactly
+       that row. AS DECLARED.
+   (b) OVER-STRICTNESS — `here` spelled `d.case_id == null || d.case_id === caseId`. DECLARED: MUST PASS every row.
+       RAN 42 pass, 0 fail. AS DECLARED.
+
    REC-217 / BIO_Publication_v0_1.md §3 rules 11 and 13 — BOB #33 RULED 2026-09-24 19:14Z: `op=publish` NAMES THE
    DRAFT IT PUBLISHES (`draft=`, optional, additive), and AT THAT ACT the readings taken through that draft BIND to
    the case it produced. The link is an ACT, recorded with who made it (the publisher) and when, and the case
@@ -670,6 +681,37 @@ console.log("\n--- 9. D-683: WITHOUT draft=, A FURTHER EDITION COUNTS THE NO-CAS
      /whether any of them is a reading of THIS case is UNDETERMINED/.test(doc?.text || ""),
      /Nobody but its author acknowledged it\./.test(doc?.text || "")],
     [true, 2, 0, 1, true, false]);
+
+  /* D-703 (BIO_Publication §3 rule 13; §6A.4): WHO WROTE THE SENTENCE ON A FURTHER EDITION PUBLISHED WITHOUT `draft=`.
+     `#statementWriter` matched a no-case draft only at edition 1, so ella's sentence, written in a draft naming no case
+     and published by iris as edition 2, found no draft and was credited to iris as "wrote this exclusion statement in
+     the act that published this case" — the publisher credited with an editor's bytes, inside a signed document. The
+     draft's identity reads edition 1 (D-568) and since D-680 it publishes any edition, so the writer read may not ask
+     the edition either. A fresh case, so ella's draft is the only one holding this sentence. */
+  const Q9w = await finding("d703");
+  const P9w1 = await publish("d703", [Q9w]);
+  if (P9w1?.ok === false || !P9w1?.caseDocument?.doc_sha) bail("publish d703 edition 1", P9w1);
+  const C9w = P9w1.caseDocument.case_id;
+  if ((await ratify(C9w, 1, (await docOf(C9w, 1))?.doc_sha))?.ok === false) bail("ratify d703 edition 1", {});
+  if (rP(await GET(`op=reopen&token=${IRIS}&target=${encodeURIComponent(Q9w)}`
+    + `&reason=${encodeURIComponent("D-703 re-read: the memo has to be read again")}`))?.ok === false) bail("reopen d703", {});
+  if (rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(Q9w)}`
+    + `&conclusion=${encodeURIComponent(`The answer to ${Q9w} is on the memo (re-read).`)}`
+    + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${Q9w} (re-read).`)}`
+    + adoptedVersionParam()))?.ok === false) bail("reconclude d703", {});
+  const Dw = rP(await POST(`op=casedraft&token=${ELLA}`, withRoles({ ...args(PROJ, "d703e2"), targets: [Q9w] })));
+  if (!Dw?.ok) bail("casedraft d703e2 by ella", Dw);
+  const Pw = await publish("d703e2", [Q9w]);
+  if (Pw?.ok === false || !Pw?.caseDocument?.doc_sha) bail("publish d703 edition 2", Pw);
+  const docW = await docOf(C9w, 2);
+  const fmW = fmOf(docW?.text);
+  t("D-703 ACCEPTS-WHEN: edition 2, published by iris WITHOUT draft=, names ELLA — who wrote the sentence in a draft "
+  + "naming no case — as its writer, in the answer and in the signed bytes, and never credits iris with it",
+    [Pw?.caseDocument?.case_id === C9w, Pw?.caseDocument?.edition ?? Pw?.edition,
+     Pw?.completeness?.statement_by, fmW.completeness?.statement_by,
+     (docW?.text || "").includes("ella wrote this exclusion statement, in the draft it was prepared in."),
+     /iris wrote this exclusion statement in the act that published this case/.test(docW?.text || "")],
+    [true, 2, "ella", "ella", true, false]);
 }
 
 console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail`);
