@@ -176,5 +176,12 @@ export function archiveHop(chosen, replay, { mementoDatetime = null, warcSource 
     bound: false,
     unsigned_reason: "no cryptographic attestation exists over a Wayback capture; this is a dated third-party claim we are trusting, not verifying",
     via: "archive.org",
+    /* D-524: the document these bytes are a capture OF, as a named key, as
+       `driveHop` carries it. The capture is FILED under the CDX original while
+       `op=acquire` answers `locator` as the replay address it fetched, so a
+       register row built from that answer names the replay; this key is what
+       lets op=monitor find the row for the bundle's own address. Taken from the
+       CDX record this instance fetched, never from the request (D-112). */
+    document_address: chosen.original,
   };
 }
