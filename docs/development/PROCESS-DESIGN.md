@@ -1,6 +1,6 @@
 # The process principles
 
-**Status** · PROPOSED 2026-09-25 by BOB #36, from Bob's direction in BOB's session that day, awaiting his approval. These principles REPLACE the current process wholly; nothing in the old process survives unless it is derived from them. They belong in the process's own repository once it exists (P2). Until then they sit here. The restore point before the replacement is the branch `snapshot/pre-refactor-2026-09-25` (5b9c2643): its tree is `main` @ 95fe7bc7, and its parents are every branch tip of that moment, all kept reachable. Tags could not be pushed from the cloud (HTTP 403).
+**Status** · APPROVED by Bob 2026-09-25, as written by BOB #36 from his direction in BOB's session that day. These principles REPLACE the current process wholly; nothing in the old process survives unless it is derived from them. They belong in the process's own repository once it exists (P2). Until then they sit here. The restore point before the replacement is the branch `snapshot/pre-refactor-2026-09-25` (5b9c2643): its tree is `main` @ 95fe7bc7, and its parents are every branch tip of that moment, all kept reachable. Tags could not be pushed from the cloud (HTTP 403).
 
 **P1 · Purpose.** The process exists to put correct, working product behaviour that meets every defined requirement onto `main`. Nothing else is output. A rule, a record or a test has value only as far as it serves that.
 
