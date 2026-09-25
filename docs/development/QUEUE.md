@@ -1043,8 +1043,8 @@ scope: replace each list with `moduleClosure({ repo, roots: [<tool>], dynamic: f
 accepts-when: an import added to coord.mjs or status.mjs leaves both suites green (moves: three hand lists). NEGATIVE CONTROL: restore one list, add an import, and that suite fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by M0-170's worker).
 
-### D-564 · running — **SEVEN MORE SUITES END AT THEIR FIRST FIXTURE FAILURE ("FIXTURE ABORTED": dispose and exit), so one broken fixture hides every later section: casesearched, casesign, d150-statement-acknowledgement, d507-statement-ack-translation, rec212-statement-writer, reviewcopy, reviewcopy-inband.** Found by D-548's worker (00:33Z); 3 of 351 suites carry a `block()` recorder. — owner RECORD (the suites).
-status: running — SCHEDULER #22 06:26Z spawns WORKER D-564 (depth 2)
+### D-564 · integrated — **SEVEN MORE SUITES END AT THEIR FIRST FIXTURE FAILURE ("FIXTURE ABORTED": dispose and exit), so one broken fixture hides every later section: casesearched, casesign, d150-statement-acknowledgement, d507-statement-ack-translation, rec212-statement-writer, reviewcopy, reviewcopy-inband.** Found by D-548's worker (00:33Z); 3 of 351 suites carry a `block()` recorder. — owner RECORD (the suites).
+status: integrated — SCHEDULER #23 07:30Z: tip ae807e25 on 5e8a65a8, GATE 77/77 GREEN TARGETED (5899 assertions; the seven suites 85/85 on 0cdf6408); block() recorder in seven suites; coverage arms 2357->2368; pen-sweep UNCLASSIFIED ceiling 18->19 (M0-196 drops it to 13 at union); minted D-667
 order: after D-566, with the process rows behind the product rows: it hides later failures for a round but no gate result is false (D-548's precedent) (SCHEDULER #21, 2026-09-25)
 milestone: M0
 interface: none.
@@ -1186,7 +1186,8 @@ scope: derive `site_chrome` per host by scan, add it to `purge`, and a read nami
 accepts-when: two captures of one host whose nav lost a link make the read name that link. NEGATIVE CONTROL: derive per page instead of per host, and the arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-177 · queued — **THE CAPTURE GRADE BELOW THE CEILING IS STILL AUTHORED: `store.mjs` says *"there is no per-document capture grade anywhere in this schema"*; `#legEarnedCapture` applies REC-88/105's CEILING, not a measured value, so a member-authored grade under it stands unmeasured.** — owner CAPTURE, then RECORD.
+### D-177 · running — **THE CAPTURE GRADE BELOW THE CEILING IS STILL AUTHORED: `store.mjs` says *"there is no per-document capture grade anywhere in this schema"*; `#legEarnedCapture` applies REC-88/105's CEILING, not a measured value, so a member-authored grade under it stands unmeasured.** — owner CAPTURE, then RECORD.
+status: running — SCHEDULER #23 07:30Z: spawned
 order: after D-191 (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
 milestone: M9
 interface: I3/I5 — a derived per-capture grade read by the strength walk; the integrator mints and classifies the ICs.
