@@ -146,6 +146,11 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
+/* REC-150 side, kept as history — took 1.31.0 (REC-150, 2026-09-25, branch land/worker/REC-150): the C-95 family PROJECT_JOIN_REQUEST_CHECKS — §7.14's
+   request to join, nine refusals (C-95.1..C-95.9) — so the catalogue moved 466 -> 475, NINE ARRIVALS, NO DEPARTURES,
+   MINOR and additive. NOT 1.30.0: CONDUCT #21's c21-batch28 (integrated, not yet on main) already published a
+   DIFFERENT catalogue under 1.30.0, and one version names one catalogue. Figures are the d470 suite's print on this
+   item's tree over origin/main 964da679; the integrator takes the union's number once and re-reads it. */
 export const CATALOG_VERSION = "1.30.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

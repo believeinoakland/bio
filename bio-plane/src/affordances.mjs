@@ -828,6 +828,11 @@ export const RUNG_ABSENT = {
   projectinvite:        { ground: "credential", is: "roster act on a project, position-enforced by the store" },
   projectjoin:          { ground: "credential", is: "roster act on a project" },
   projectleave:         { ground: "credential", is: "roster act on a project" },
+  /* REC-150 (Membership v2 §7.14): the request to join is participation — WHO may act in a project — exactly as the
+     roster acts beside it are; a GRANT writes the same `invited` row `projectinvite` does. */
+  projectrequest:         { ground: "credential", is: "a member outside a discoverable project asks to be added (§7.14); one open at a time, withdrawn by the requester" },
+  projectrequestwithdraw: { ground: "credential", is: "the requester closes their own open request to join" },
+  projectrequestanswer:   { ground: "credential", is: "an owner grants a request to join (an invitation: `invited`, never `joined`) or declines it" },
   projectremove:        { ground: "credential", is: "roster act on a project" },
   projectowneradd:      { ground: "credential", is: "roster act on a project" },
 
@@ -2056,6 +2061,16 @@ export const NON_ACTS = {
         the addition and the machine narrowing each being stated on its own (the report's IC
         proposal carries both halves, classified apart). */
   projectfork: "creates a NEW project; gated on the create_projects shape, not on the source object's state",
+  /* REC-150 (Membership v2 §7.14, the request to join). NOT ACTS, and each for a reason of its own shape:
+     the ASK is made at EXISTENCE sight, where no object is before the caller — op=affordances answers a project the
+     caller cannot see fully as it answers an absent one, so a control there would be offered beside nothing; it is
+     reached from op=projectdirectory's row instead, which carries the caller's own request state. WITHDRAW and
+     ANSWER act on a REQUEST, not on the project's state: their subject is the (project, requester) pair, which
+     op=projectrequests lists — the requester's own list, and the owner's queue — and that is where §7.14 step 4's
+     surface (UI-71) renders them. */
+  projectrequest: "request to join (§7.14): made at EXISTENCE sight, where no object is before the caller — reached from op=projectdirectory's row, not from a target's control strip",
+  projectrequestwithdraw: "request to join (§7.14): the requester's act on their own REQUEST, not on a bundle — listed by op=projectrequests",
+  projectrequestanswer: "request to join (§7.14): an owner's grant or decline of a REQUEST, not a state of the project — listed in the owner's queue by op=projectrequests",
   /* Identity, roster and operator surface. */
   expertisedeclare: "a member's own declaration, not a corpus act",
   expertiseconfirm: "administrator act on a declaration, class-gated",

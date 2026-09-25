@@ -2,6 +2,7 @@
    RESULTS, RUN 2026-09-23 on branch land/worker/REC-149 over base 02603e88 (real sources untouched: YES, by sha256): (a) baseline 154/0 · (b) widen-viewerPredicate 98/56 — the row's own control: `viewerPredicate` admits every discoverable project, and the CONTENTS arms fail by name (§5 op=list and op=backlinks, among others) · (c) existence-as-absent 132/22 — every §3h act answers "does not exist" again · (d) default-discoverable 104/50 — a project with no record reads discoverable, and §1 (the predecessor's projects) and §2 fail · (e) owner-fence-dropped 146/8 — §6a-e · (f) latest-by-max-seq 154/0, the over-strictness arm. RECORDED, NOT SMOOTHED: the first run had (b), (d) and (e) NOT AS DECLARED. (b) and (e) were declarations one consequence short (reasons in the driver). (d) was the SUBJECT: 1e and 2e PASSED because the directory took its candidates from the visibility table, a second copy of "no record = hidden" that the flipped default never reached; the directory now asks `#sight` over every project, and the re-run's two further consequences (3e, 3g: every project a caller is not in is offered) are declared. Re-run, every arm AS DECLARED.
    RE-RUN 2026-09-23 after the affordance registration (CONDUCT #18's return: `projectvisibilityset` is a PUBLISHED act, and §6 gained its DEC-8 arm) — every arm AS DECLARED: (a) baseline 155/0 · (b) widen-viewerPredicate 99/56 · (c) existence-as-absent 133/22 · (d) default-discoverable 105/50 · (e) owner-fence-dropped 147/8 · (f) latest-by-max-seq 155/0 (each +1 pass, the new arm).
    RE-RUN 2026-09-25 by REC-196 on base origin/main 964da679 AFTER correcting §3l to BOB #32's ruling (a) (a read naming P's own id answers C-70.1 at EXISTENCE; it had asserted the absent answer) and adding §3l+ — real sources untouched: YES (index.mjs 857,558 B sha256 28bfd3677c8c…, store.mjs 3,355,514 B sha256 b854b3303ef9…) — every arm AS DECLARED: (a) baseline 157/0 · (b) widen-viewerPredicate 95/62 · (c) existence-as-absent 123/34 (now also §3l's reads, declared by name) · (d) default-discoverable 96/61 · (e) owner-fence-dropped 149/8 · (f) latest-by-max-seq 157/0 · act-not-reindexed 101/56. RECORDED, NOT SMOOTHED: (d) default-discoverable had NOT ARMED since D-497 landed (D-601): its anchor ended `END,`, the comma before the `at` column D-497 removed, so it matched zero times and the default's one control reported ARM DID NOT ARM. Anchor corrected; its first armed run failed every §2c read beyond its declaration — under a flipped default every project is at EXISTENCE, and since REC-196 a read of a project's own id answers C-70.1 there — so the reads are now a second witness, declared. (b) failed §3l+ undeclared on its first run (its `3l:` fragment does not match `3l+:`); extended.
+   RE-RUN 2026-09-25 by REC-150 on its branch over origin/main 964da679 (real sources untouched: YES), after REC-150 moved `act-not-reindexed`'s anchor (the lapse now sits between the re-derivation and the return) and corrected `default-discoverable`'s (D-602: its trailing comma had not occurred since D-497, so on pristine 964da679 that arm reported ARM DID NOT ARM) — every arm AS DECLARED: (a) baseline 156/0 · (b) widen-viewerPredicate 100/56 · (c) existence-as-absent 134/22 · (d) default-discoverable 106/50 · (e) owner-fence-dropped 148/8 · (f) latest-by-max-seq 156/0 · (g) act-not-reindexed 112/44. REC-150 corrected 3c in place and added no assertion to this suite.
  * =========================================================================
  * REC-149 / C-70 / IC-231 — DISCOVERABLE OR HIDDEN (Membership Architecture v2 §7, item 7.14, BOB #16 from
  * Bob's ruling of 2026-09-18: *"The project's contents might be private, though the existence of the project
@@ -9,9 +10,10 @@
  *
  * WHAT IS BUILT AND ASSERTED HERE (7.14's decomposition, step 1): the setting (an OWNER's recorded act,
  * append-only, latest wins, no record = HIDDEN); `#sight`'s three levels at the one predicate; the positional
- * refusal at EXISTENCE (C-70.1, the id and name and nothing else); the DIRECTORY. NOT BUILT, and asserted as
- * not built rather than skipped: the request to join (step 2) — so at EXISTENCE EVERY act is refused, the
- * request included because it does not exist yet, and the directory's `request` is null with the reason said.
+ * refusal at EXISTENCE (C-70.1, the id and name and nothing else); the DIRECTORY. The request to join (step 2)
+ * was NOT BUILT when this suite was written; REC-150 built it (2026-09-25) and drives it in
+ * `project-join-request.test.mjs`. Every act THIS suite's table names is still refused at EXISTENCE — the request
+ * is not in that table — and 3c was corrected, with its reason, when the directory's "not built" caveat went.
  *
  * HOW A LIAR PASSES THE OBVIOUS TEST, stated before what this checks:
  *   (1) WIDEN `viewerPredicate` so a discoverable project is seen by everybody. The directory can then list it
@@ -331,8 +333,14 @@ console.log("\n--- 3. the owner sets P DISCOVERABLE; the uninvited member sees i
   const dir = await GET(`op=projectdirectory&token=${VERA}`);
   t("3b: vera's DIRECTORY lists P — its id and name and her own request state, and NOTHING else",
     dir && dir.projects, [{ id: P, name: TITLE_P, request: null }]);
-  t("3c: the request is NOT BUILT, and the directory says so rather than letting null read as a fact",
-    typeof (dir && dir.requests) === "string" && dir.requests.startsWith("NOT_BUILT"), true);
+  /* CORRECTED 2026-09-25 by REC-150, never exempted: this read "the request is NOT BUILT, and the directory says so
+     rather than letting null read as a fact" and asserted a `requests: "NOT_BUILT…"` field. That was true while
+     §7.14's step 2 was absent; REC-150 built it, so `request: null` (3b) is NOW the fact it names — vera has never
+     asked — and a field still saying "not built" would be the record claiming an absence that is false. The
+     subject is unchanged (null must not be allowed to mean two things), so the arm now asserts the caveat is GONE;
+     the request's own states in the directory are driven in `project-join-request.test.mjs`. */
+  t("3c: the request IS built, so the directory no longer says it is not — `request: null` means vera never asked",
+    dir && "requests" in dir, false);
   t("3d: Q, still hidden, is NOT listed", (dir && dir.projects || []).some((p) => p.id === Q), false);
   t("3e: olga (INVITED to P) is not offered P — she is already in it",
     (await GET(`op=projectdirectory&token=${OLGA}`))?.projects, []);

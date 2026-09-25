@@ -879,6 +879,11 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     projectdirectory: "REC-149: every row is asked through `Store#sight` and listed only at EXISTENCE — a "
       + "DISCOVERABLE project the caller is outside; it names the id and name and nothing else, and a hidden "
       + "project is never in it (driven in project-discoverable.test.mjs §2-§3)",
+    /* REC-150 (Membership v2 §7.14, the request to join), classified at birth. */
+    projectrequests: "REC-150: a project's requests are answered only through `#inSight` (FULL sight) and then "
+      + "only to its owners and administrators (C-95.9 for any other participant); at EXISTENCE the project's id "
+      + "answers C-70.1 and without sight the absent answer. Without a project it lists the CALLER'S OWN requests "
+      + "only, naming the id and the name that caller was shown when asking (driven in project-join-request.test.mjs §2, §5)",
     /* REC-14's reads, classified at the merge (2026-08-04, rec30-agent). The
        classifications are security judgments and they are this item's to make. */
     excludedby: "REC-14 gated it at birth, correctly and through the same one compilation point. It is "

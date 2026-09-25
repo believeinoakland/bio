@@ -618,6 +618,13 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      reads, and `derivation-bounds` and `meaning-bounds` each named it; it was fixed at the cause — LIMIT cap+1
      under DRIVE_SHELLS_LIMIT_DEFAULT/MAX, a keyset cursor, `limit` and `truncated` published. Its envelope is in
      the map below and its BITE in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
+  /* REC-150 side, kept as history: MOVED 45 -> 46 on 2026-09-25 by REC-150 on its own branch, from THIS ARM'S OWN FAILURE OUTPUT (`want 45 / got 46`), never by adding
+     one: op=projectrequests, a project's requests to join and a member's own (Membership v2 §7.14). It was written
+     unbounded first and `derivation-bounds` named it the one arrival in its census; §7.14 lets a requester ask again
+     after every decline, so the list grows with the record. Its cap is PROJECT_REQUESTS_LIMIT beside `LIMIT ?`,
+     declared BELOW the method, with `limit` and `truncated` published; carried in DRIVEN_ELSEWHERE for the reason
+     there. The c22-batch29 union carries BOTH arrivals (driveshells, projectrequests); its figure is
+     re-read from this arm's own failure output. */
   OPS.size, 46);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
@@ -1507,7 +1514,15 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      bound REFUSES and its bite lives in
                                      `test/d150-statement-acknowledgement.test.mjs`; its named-constant arm is
                                      above and its envelope below. */
-                                  "groupidentity", "statementack"]);
+                                  "groupidentity", "statementack",
+                                  /* REC-150: op=projectrequests takes a `limit` and COULD sit in the loop; what keeps
+                                     it out is projectdirectory's reason exactly — it answers only a MEMBER SESSION
+                                     (C-95.1 refuses a credential with no member behind it) and its bite needs
+                                     requests that only members' sessions can make. The bite (a limit of two over four
+                                     of a member's own requests, and three over a project's), `limit` read back as
+                                     the clamped cap, `truncated` both ways and an over-ask answered AT the ceiling are
+                                     driven in `test/project-join-request.test.mjs` §8, in this loop's shape. */
+                                  "projectrequests"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1793,12 +1808,17 @@ t("op=projectdirectory: AN OVER-ASK IS ANSWERED AT THE CEILING, and the CEILING 
 t("op=projectdirectory: the CUT PAGE is the FIRST two in the SAME order the whole answer lists them — a page "
 + "means the same thing twice, which is what makes a lowered `limit` usable rather than a lottery",
   D479_BITE?.projects?.map((p) => p.id), D479_WHOLE?.projects?.slice(0, 2).map((p) => p.id));
+/* CORRECTED 2026-09-25 by REC-150, never exempted: the third element asserted a `requests: "NOT_BUILT:…"` field,
+   because a `request` of null meant "not built" while §7.14's step 2 was absent. REC-150 built the request, so null
+   now means THIS CALLER NEVER ASKED — which d479out has not — and a field still saying "not built" would be false.
+   The subject is unchanged (the cut page says only what §7.14 lets it), so the third element now asserts the
+   caveat is gone rather than present. */
 t("op=projectdirectory: and the cut page still says only what §7.14 lets it — an id, a name, and a `request` "
-+ "that is null because the request to join is NOT BUILT",
++ "that is null because this caller never asked",
   [D479_BITE?.projects?.every((p) => JSON.stringify(Object.keys(p).sort()) === '["id","name","request"]'),
    D479_BITE?.projects?.every((p) => p.request === null),
-   typeof D479_BITE?.requests === "string" && D479_BITE.requests.startsWith("NOT_BUILT:")],
-  [true, true, true]);
+   "requests" in (D479_BITE || {})],
+  [true, true, false]);
 
 /* ------------------------------------------------------ D-497's ARMS (the row D-479 reported to SCHEDULER).
    D-479 bounded what this read PUBLISHES and left what it SCANS: sight was a JS predicate with no row source,
@@ -1974,6 +1994,10 @@ const answersByOp = new Map([
   /* D-525: the envelope of the Drive shell sweep over a store holding no Drive-linked bundle — an object with its
      named lists, never an array. The bite is driven in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
   ["driveshells", await GET("op=driveshells&token=mem-r57&limit=1")],
+  /* REC-150: the envelope of a member's own requests to join over a member who has made none — an answer object with
+     its bound, never an array. It needs a member SESSION (C-95.1), so D-479's outside member asks. The bite is driven
+     in `test/project-join-request.test.mjs` §8 (DRIVEN_ELSEWHERE). */
+  ["projectrequests", await GET(`op=projectrequests&token=${D479_TOK}&limit=1`)],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "
