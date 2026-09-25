@@ -106,13 +106,16 @@ const mkMd = (id, locator) => [
 ].join("\n");
 const inline = (path, text) => ({ path, text, bytes: Buffer.byteLength(text), sha256: sha(text) });
 /* `blobs` are the image's capture files; `doc` the register document; ONE register row for the WHOLE. */
-const promote = (id, doc, blobs, snap) => POST("op=promote&token=mem-556", {
+const LIVE = new Map();   /* each bundle's live sha, as its promote answered it */
+const promote = async (id, doc, blobs, snap) => { const r = await POST("op=promote&token=mem-556", {
   bundleId: id, base: null, snapKey: snap, author: "claude",
   meta: { object_type: "information", group: "believe-in-oakland", title: `Parted ${id}`,
           current_state: "collected", created: NOW, last_updated: NOW },
   files: [inline("bundle.md", mkMd(id, doc.locator)), inline("data/provenance.json", JSON.stringify({ documents: [doc] })),
           ...blobs.map((b) => ({ path: b.path, blobSha: b.sha256, sha256: b.sha256, bytes: b.bytes }))],
   register: [{ sha256: doc.capture.sha256, path: doc.file, encoding: "binary", bytes: doc.capture.bytes }] });
+  if (r.result?.bundleSha) LIVE.set(id, r.result.bundleSha);
+  return r; };
 const acquire = (path) => POST("op=acquire&token=mem-556",
   { locator: `https://www.oaklandca.gov${path}`, authority: "City Auditor" });
 const bare = (s) => String(s).replace(/^sha256:/i, "").toLowerCase();
@@ -165,9 +168,7 @@ const storeDO = async (path, b) => {
 await restOnARatifiedCase({ post: POST, get: GET, doPost: storeDO, sha, promoteToken: "mem-556",
   owner: "sparky", ownerToken: SESS, signText, targets: [FILED, WHOLE, MISSING, CORRUPT], n: "5565", at: NOW });
 
-const live = async (id) => (await GET(`op=get&token=mem-556&id=${id}`)).result?.bundle_sha
-  ?? (await GET(`op=list&token=mem-556`)).result?.find((b) => b.bundle_id === id)?.bundle_sha;
-const ratify = async (id) => { const s = await live(id);
+const ratify = async (id) => { const s = LIVE.get(id);
   return POST(`op=ratify&token=${SESS}`, { bundleId: id, expectedSha: s, sig: signText(`bio-ratify ${id} ${s}\n`) }); };
 const planeFindings = (r) => (r.findings || []).filter((f) => /^PLANE_/.test(f.check));
 
