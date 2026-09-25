@@ -767,8 +767,8 @@ scope: `acerOriginsRead` reads the version arm of the independence read; no code
 accepts-when: before the affirmation the ceremony's network log holds no strength-bearing answer. NEGATIVE CONTROL: point `acerOriginsRead` back at `op=versionstrength`, and the pre-affirmation fetch arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
-### D-504 · running — **D-453 LEFT SIX IDENTIFIER-SPACE MEASUREMENTS OPEN (M-132): (1) Accela not read (APN ↔ permit, scope (c)'s other half; a session-based ASP.NET UI); (2) whether data.oaklandca.gov c3xp-qcgn copies the county roll, and whether any HISTORICAL roll is published (33 of 102 Legistar APNs are retired parcels); (3) the 100xxxx join, to be sought in the CIP line-item tables, not budget prose; (4) data.acgov.org unidentified; (5) M-119's recorded tool sha256 (322fcb95…) ≠ main's (b204fc1e…); (6) 0201-cafr-2002 is a scan, unread.** — owner CONTENT (measurements).
-status: running — SCHEDULER #21 01:07Z spawns WORKER D-504 (depth 2)
+### D-504 · integrated — **D-453 LEFT SIX IDENTIFIER-SPACE MEASUREMENTS OPEN (M-132): (1) Accela not read (APN ↔ permit, scope (c)'s other half; a session-based ASP.NET UI); (2) whether data.oaklandca.gov c3xp-qcgn copies the county roll, and whether any HISTORICAL roll is published (33 of 102 Legistar APNs are retired parcels); (3) the 100xxxx join, to be sought in the CIP line-item tables, not budget prose; (4) data.acgov.org unidentified; (5) M-119's recorded tool sha256 (322fcb95…) ≠ main's (b204fc1e…); (6) 0201-cafr-2002 is a scan, unread.** — owner CONTENT (measurements).
+status: integrated — SCHEDULER #21 01:47Z: tip 2ca08780, GATE 43/43 GREEN; M-157 all six items; §8.3 rule 3 amendment sent to BOB
 order: before REC-203, whose recognisers rest on these joins (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:41Z)
 milestone: M0 (measurements for M4's identifier spaces)
 interface: none — measurements.
@@ -779,7 +779,7 @@ accepts-when: each item recorded with date, instrument and counts, a refused hos
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### REC-203 · queued — UNBLOCKED 2026-09-24 by BOB #32: Framework §8.3 now carries M-132 (concurrent project-number forms told apart by shape; C.M.S. referent check and coverage floor; APN apn_sort and RETIRED parcels; contract/PO unpublished at source), on land/bob/fold-m132 awaiting its train. Build to §8.3 as amended.
-status: queued — SCHEDULER #21 01:16Z: HELD until D-504's measurements land (its order line: its recognisers rest on those joins)
+status: queued — SCHEDULER #21 01:47Z: HELD until BOB rules the Framework §8.3 rule 3 APN amendment D-504's M-157 sent him (c3xp-qcgn is a partial 2012-13 snapshot, not the current roll)
 order: behind D-453, whose measurements it rests on, as BOB #32 ruled (*Row them RECORD, blocked behind D-453's egress*) (SCHEDULER #17, 2026-09-23)
 milestone: M4
 interface: I3/I5 — three recognisers and their eras; the integrator mints and classifies the ICs.
@@ -897,6 +897,16 @@ depends-on: none.
 scope: ARM 3b matches stems at word boundaries that exclude `_` and identifier characters, or only inside string text that reaches markup.
 accepts-when: a snake_case state code in a comparison passes and the prose "unread" in markup still fails (moves: identifiers read as prose). NEGATIVE CONTROL: restore the raw substring match and the snake_case over-strictness arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by UI-96's worker).
+
+### D-585 · queued — **A SCANNED PAGE WITH AN INHERITED FONT DICTIONARY AND AN EMPTY BT…ET IS READ AS HAVING A TEXT LAYER, TWICE: `pdfstructure.mjs`'s tier-1 no_text_layer marker requires "no font declared", so CAFR-2002's 161 such pages read as 0 characters of TEXT, not UNREAD (and `needsTier2` stays false); `pdf-worker/src/pagepixels.mjs` `analyzePage` counts a bare BT as text, so the OCR member refuses the page PAGE_HAS_TEXT_LAYER.** Found by D-504's worker (M-157, 01:45Z). — owner CONTENT-PDF, fleet.
+order: after D-557, with the reader corrections: a page never read stated as read and empty claims more than the record supports (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M2
+interface: none unless a page's tier or grade changes on the wire (the integrator classifies).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with D-501's glyph rule and the OCR member's page contract.
+depends-on: none.
+scope: both predicates test for a text-SHOWING operator (the renderer's own TEXT_OPS: Tj, TJ, ', "), ideally one shared predicate; re-read CAFR-2002 and record the moved counts.
+accepts-when: an inherited-font page with an empty BT…ET reads no_text_layer at tier 1 and is admitted by the OCR member (moves: 161 pages read as 0 characters of text). NEGATIVE CONTROL: count a bare BT as text again and both arms fail by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-504's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
