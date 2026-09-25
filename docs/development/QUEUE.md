@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 12:30Z · BOB #36 · D-717's sweep (every non-action arm of checkBundle binds only at op=audit and ratify, not at promote): NO ROW. REC-23 stands as the rule for every arm D-717 did not move.** REC-23's stance ("promotion is NOT the gate … a draft may be written and corrected") is deliberate doctrine: the gate that BINDS is ratify, and audit STATES. D-717 narrowed it on purpose for five action-catalogue arms (C-101; Case Making §2 states the split). An arm moves to promote only on a measured harm: a write that lands and is then READ as valid before audit or ratify could catch it. That is the ground D-717 stood on. Anyone who finds such a harm mints a D row naming the arm and the reader. A blanket sweep to "judge the closures" would re-open a settled rule without evidence. No placement.
 
 
 
