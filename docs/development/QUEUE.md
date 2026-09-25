@@ -1220,8 +1220,8 @@ scope: the project and publication surfaces read the manifest at project scope a
 accepts-when: a project with an adopted set shows it; an empty manifest shows no indicator. NEGATIVE CONTROL: render the indicator on an empty manifest, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
-### D-664 · running — **`civicos-ui/test/refusal-codes.control.mjs` IS STALE ON MAIN: on 5e8a65a8 arms (c), (e) and (r2) fail and (r5) THROWS on a moved anchor (store.mjs ~18517), so no arm after (r5) runs — the negative control for the refusal-code guard is not controlling anything.** Found by D-542's worker (minted on land/worker/D-542). — owner M0.
-status: running — SCHEDULER #23 07:40Z: spawned
+### D-664 · integrated — **`civicos-ui/test/refusal-codes.control.mjs` IS STALE ON MAIN: on 5e8a65a8 arms (c), (e) and (r2) fail and (r5) THROWS on a moved anchor (store.mjs ~18517), so no arm after (r5) runs — the negative control for the refusal-code guard is not controlling anything.** Found by D-542's worker (minted on land/worker/D-542). — owner M0.
+status: integrated — SCHEDULER #23 09:02Z: tip 597afbb3 on 5e8a65a8, GATE 73/73 GREEN FULLREUSE (6222 assertions), tree 60d5cc9b; test-only: (r5) anchored on the region END marker, (c)(e)(r2)(r6) re-measured, 47 arms 0 FAIL; D-662 (the same arm) closes with this landing; union with D-542 merges clean, needs (o1)/(o2) in the table and D-690; minted D-690
 order: after D-641 — the control of the guard D-641 moves; a check that cannot fail is worse than none, so it precedes the rest of the process rows (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
@@ -1384,6 +1384,16 @@ depends-on: none (stacked on land/worker/D-419 @ 914bb380, integrated).
 scope: where a content row cites an image extent, the page offers its crop from the new content-crop read; C-99's refusals render in the plane's DEC-49 words; the crop is labelled as derived from the capture it names; nothing prefetched for a stranger.
 accepts-when: a member viewing a cited image extent sees its crop, and a non-image extent shows no control (moves: a built op no surface asks). NEGATIVE CONTROL: stub the new content-crop read and the render arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, D-419's owed surface).
+
+### D-690 · running — **`civicos-ui/check-refusal-codes.mjs` ENDS IN A BARE `process.exit(1)` WITHOUT THE D-282 FLUSH IMPORT, and D-542 grows its output 38 KB -> 61 KB: measured on the D-542 union with a plant, 7 of 32 parallel runs lost the tail (zero ratchet lines), so the guard's FAIL lines can vanish under load.** stdio-census ARM D's known residual, now LIVE. Found by D-664's worker (minted on land/worker/D-664). — owner UI (the 2026-09-16 M0->UI delegation).
+order: running now — it must land WITH or BEFORE D-542 (integrated, batch30), or the refusal-code guard can read green by losing its failures; a gate-trust defect that blocks a product landing (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (a run without its final line did not finish; admitted for M0 by name), with D-282's flush import.
+depends-on: none (on main; measured against D-542's union).
+scope: add `import "../bio-plane/test/stdio.mjs";` on line 2 after the shebang; remove the file from stdio-census.test.mjs RESIDUAL and shrink its header; do the same for check-semantics.mjs and check-mock-envelope.mjs (the same residual).
+accepts-when: 16 parallel runs x2 of the guard with a plant on the D-542 union lose no bytes (moves: 7 of 32 truncated). NEGATIVE CONTROL: remove the import and the truncation trial fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-664's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
