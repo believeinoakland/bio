@@ -1208,8 +1208,8 @@ scope: a member writes a lead, records a look, and sees the frontier's LOOKED_AB
 accepts-when: a member writes a lead, records a look, and sees LOOKED_ABSENT against it. NEGATIVE CONTROL: stub `op=lead`, and the write-and-look arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; the plane half closed; keeps its `D-` id).
 
-### D-189 · running — **NO SURFACE CAN SAY A PROJECT CARRIES ITS OWN BIAS: `op=biasmanifest` computes the effective set with project nullifications, `7.ui` is ABSENT, and `app.html` still says *"DECLARED BIAS is the HUNCH legs and nothing else"*.** — owner UI.
-status: running — SCHEDULER #23 07:36Z: spawned
+### D-189 · integrated — **NO SURFACE CAN SAY A PROJECT CARRIES ITS OWN BIAS: `op=biasmanifest` computes the effective set with project nullifications, `7.ui` is ABSENT, and `app.html` still says *"DECLARED BIAS is the HUNCH legs and nothing else"*.** — owner UI.
+status: integrated — SCHEDULER #23 08:20Z: tip 4a9d1b21 on 5e8a65a8, GATE 111/111 GREEN FULLREUSE (8245 assertions; 281 units reused), tree 37ceea6b; project workspace reads op=biasmanifest at project scope; published case page adds the frozen bias sets to DEC-34 Declared bias; construct 7.ui ABSENT->PARTIAL; design gap (how a reader is shown the manifest; invited-not-joined) provisional, to BOB; reads REC-219's pins_proposed once it lands
 order: after D-194 (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
 milestone: M8
 interface: I3 consumer.
@@ -1306,6 +1306,17 @@ depends-on: none (stacked on land/worker/D-627 @ 056d3092, integrated, itself on
 scope: append the transcription to the page's layer text and list the page in both parts; FIND EVERY READER that assumes the parts partition pages (the "who else reads it" rule, CLAUDE.md §5), list each by name in the landing, and correct or prove each one.
 accepts-when: a routed page with a decoded folio keeps its folio and gains its transcription, appears in both parts, and every named partition reader reads it correctly (moves: layer text lost or a page in one part only). NEGATIVE CONTROL: list the page in one part only and the both-parts arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-627's worker; BOB #35 06:25Z).
+
+### D-665 · running — **A CHART OR TABLE PAINTED AS AN IMAGE UNDER A TEXT TITLE IS NEVER ROUTED TO OCR, AND NO SIGNAL YET SEPARATES IT FROM A PHOTO: BOB #35 RULED 06:25Z that the per-image `image_unread` marker states the truth without a classifier, and that ROUTING waits on one measured signal.** — owner CONTENT-PDF.
+status: running — SCHEDULER #23 08:20Z: spawned, stacked on land/worker/D-627 @ 056d3092
+order: after D-635, the follow-up BOB #35 named after D-627: routing is a cost question, measured before it is switched on (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I6 only if a routing rule is set (the integrator classifies).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with BOB #35's 06:25Z ruling and M-178.
+depends-on: none (stacked on land/worker/D-627 @ 056d3092, integrated, itself on D-608 @ ffcc300b; D-633 and D-635 run on the same base).
+scope: over M-178's 49 classified pages MEASURE one signal (image pixel dimensions against the page's text area, or glyph density outside the painted rects) and set the routing rule where the classes separate; if none separates, routing stays off and the measurement says so. If D-627 did not carry the per-image `image_unread` marker (rect and area share, above D-420's size floor), build it here.
+accepts-when: the signal's separation is recorded with date and instrument, and either a routing rule routes the chart-under-title pages or the record states none separates (moves: the class unrouted with no measurement). NEGATIVE CONTROL: invert the rule and the chart arm routes nowhere, by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 06:25Z).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

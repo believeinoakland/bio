@@ -56,16 +56,6 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
-### D-665 · queued — **A CHART OR TABLE PAINTED AS AN IMAGE UNDER A TEXT TITLE IS NEVER ROUTED TO OCR, AND NO SIGNAL YET SEPARATES IT FROM A PHOTO: BOB #35 RULED 06:25Z that the per-image `image_unread` marker states the truth without a classifier, and that ROUTING waits on one measured signal.** — owner CONTENT-PDF.
-order: after D-635, the follow-up BOB #35 named after D-627: routing is a cost question, measured before it is switched on (SCHEDULER #22, 2026-09-25)
-milestone: M2
-interface: I6 only if a routing rule is set (the integrator classifies).
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with BOB #35's 06:25Z ruling and M-178.
-depends-on: D-627.
-scope: over M-178's 49 classified pages MEASURE one signal (image pixel dimensions against the page's text area, or glyph density outside the painted rects) and set the routing rule where the classes separate; if none separates, routing stays off and the measurement says so. If D-627 did not carry the per-image `image_unread` marker (rect and area share, above D-420's size floor), build it here.
-accepts-when: the signal's separation is recorded with date and instrument, and either a routing rule routes the chart-under-title pages or the record states none separates (moves: the class unrouted with no measurement). NEGATIVE CONTROL: invert the rule and the chart arm routes nowhere, by name.
-added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 06:25Z).
-
 ### D-615 · queued — **`op=promote` STILL PROJECTS `bundles.created` AND `last_updated` FROM THE ENVELOPE, though the document states both (CORE_FIELDS): D-563's class, the last two fields.** Found by D-563's worker (05:47Z). — owner RECORD.
 order: after D-546, the same promote function one worker at a time: the envelope is a label, the document states what it is (SCHEDULER #22, 2026-09-25)
 milestone: M7
@@ -1092,4 +1082,14 @@ design: `docs/development/VERIFICATION.md` (an instrument refuses what it cannot
 depends-on: M0-159.
 scope: `--branch` and `--trailer` refuse a value starting with `--` by name, with an escape for a literal one.
 accepts-when: `--trailer --full` is refused by name, and the escaped form is taken literally. NEGATIVE CONTROL: drop the check and the refusal arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-177 · queued — **A SUITE CAN NAME A `docs/` BASENAME ONLY IN A SLASH-FREE STRING, which the gate reads as a reader edge (M0-165: "MEASUREMENTS" alone is a quoted token); the worker's sweep lists 40 candidates, none confirmed.** Found by M0-165's worker. — owner M0.
+order: after M0-175, behind the product rows: a sweep of candidates after M0-176 narrows the door (Bob's 17:41Z rule; SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:02Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
+depends-on: M0-176.
+scope: an estate-wide arm failing a suite that names a docs basename only in a slash-free string with no other edge; confirm or clear each of the 40.
+accepts-when: the arm passes with each candidate fixed or stated legitimate. NEGATIVE CONTROL: plant a bare "MEASUREMENTS" label in one suite and the arm names it.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
