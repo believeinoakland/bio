@@ -155,6 +155,11 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    cap WAITS (BOB #33) — so the catalogue moved 461 -> 462 checks and the stamp moves with it, MINOR and additive on
    this constant's own rule (Publication §3 rule 17): one check arrives, none moves and none leaves. Figures are the d470
    suite's own print on the item's tree over origin/main 8bdf20e6; CONDUCT reconciles the number at the union. */
+/* REC-219 side, kept as history — took 1.30.0 (REC-219, 2026-09-25): C-41.14 and C-41.15 joined CASE_DOCUMENT_FAMILY — a `bio-case-document/4`
+   must state the adoptions of its scope pinning a PROPOSED revision at signing, and its citation edges each with
+   the version it rests on (BIO_Publication_v0_1.md §3 rule 18; D-579(a)) — so the catalogue moved 466 -> 468 checks, MINOR and additive on this constant's own rule: nothing that passed
+   is refused, because /3, /2 and /1 documents are never asked the new question. Figures from the d470
+   suite's own print; CONDUCT re-reads them on the union if another branch moves this constant too. */
 export const CATALOG_VERSION = "1.30.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

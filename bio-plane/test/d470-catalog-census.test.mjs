@@ -380,6 +380,11 @@ const CATALOG_CENSUS = {
      catalogue, and one version names one catalogue; CONDUCT takes the union's number once and re-reads count and digest
      from this suite's print): 1.30.0 (D-134, 2026-09-25): CUSTODIAL_CHECKS C-96.1-.9 over 1.29.0;
      "1.30.0": { count: 475, digest: "7792c2e9a57e10c68358c11e922932b08b9a42c2c2632959964d073e42037447" } */
+  /* REC-219 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (REC-219, 2026-09-25): TWO ARRIVALS, NO DEPARTURES — C-41.14 `CASE_DOCUMENT_FAMILY.PENDING` and C-41.15
+     `CITATIONS` (D-579(a)) (§3 rule 18, BOB #34), 466 -> 468 over origin/main 964da679;
+     "1.30.0": { count: 468, digest: "ce0367d3116f97e0947d02029ae42648b93e613f0f92bcc098197243d9758706" } */
   /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
      rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
      KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
@@ -477,6 +482,10 @@ const RELAYS = {
      union. It is the thirteenth member of the SAME family as the twelve above,
      relayed the same way; nothing about the mechanism changed. */
   "C41.DISCLOSURES": "CASE_DOCUMENT_FAMILY",
+  /* REC-219 (2026-09-25): the fourteenth member, C-41.14 (a /4 document's adoptions pinning a proposed
+     revision), and C-41.15 (its citation edges and their versions, D-579(a)), relayed the same way. */
+  "C41.PENDING": "CASE_DOCUMENT_FAMILY",
+  "C41.CITATIONS": "CASE_DOCUMENT_FAMILY",
   "row.check": "BASIS_VERSION_CHECKS and SUGGEST_CHECKS (basisVersionFindings' two push helpers)",
   "checkId": "checkLegExtentGrammar's parameter — 'C-2.8' here, 'C-25.10' from src/store.mjs "
            + "(BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE)",
@@ -655,6 +664,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 */
 /* D-134 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, the C-96 rows); ours is kept
    at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* REC-219 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-41.14/C-41.15); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under

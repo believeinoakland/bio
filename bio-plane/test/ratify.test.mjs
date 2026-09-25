@@ -223,6 +223,8 @@ t("... and NOT the gate's own version alone — the recorded stamp names the cat
   [rat.gateVersion === "plane-gate/1.0", String(rat.gateVersion).includes(`(bio-checks ${CATALOG_VERSION})`)], [false, true]);
 /* D-134 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for the C-96 rows; since
    D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* REC-219 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for C-41.14 and C-41.15; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong
