@@ -1,6 +1,6 @@
 # Spreadsheets, word-processing and presentation documents
 
-**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. **A NINTH ENTRY landed 2026-09-24 (FW-23): `csv`, the first on this axis that is not a container** — BOB #32's design, written from all 166 `.csv` keys of `s3://cao-94612` measured whole (M-144), with the delimiter and the encoding found by signature and RECORDED on the reading, and byte detection REFUSED because prose wears a CSV's shape. as of 2026-09-24.
+**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. **A NINTH ENTRY landed 2026-09-24 (FW-23): `csv`, the first on this axis that is not a container** — BOB #32's design, written from all 166 `.csv` keys of `s3://cao-94612` measured whole (M-144), with the delimiter and the encoding found by signature and RECORDED on the reading, and byte detection REFUSED because prose wears a CSV's shape. **Since 2026-09-25 (REC-218, BOB #33's ruling) the dialect is PERSISTED as `reading.dialect`, a key of its own** — see the CSV section. as of 2026-09-25.
 
 **Place in the system** · A level-2 design serving construct 5 of `BIO_System_Design.md` §3, *document profile and the extraction substrate*, whose level-1 home is `BIO_Content_Framework_v0_10.md` **Part I**; §3 row 5 lists this document beside `DOCUMENT-PROFILES.md` as the two level-2 designs under it, and Part II §16 places the format entries in the extraction process as built ("delegated to format entries and members"). It is the FORMAT axis — framework §4's third axis, the one D-70 said had never been exercised — so it is also the evidence for a claim the framework makes about itself. Interfaces: it created I7 (the registry entry shape) and it drove IC-1 against I2, the element reference union that legs, connections and citations will share. What depends on it: `formats.mjs`, `ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`, `odf.mjs`, `csv.mjs`, and `CONTENT-EXTENT-DESIGN-SPACE.md`, which treats IC-1's union as D-164's per-container leaf.
 
@@ -21,6 +21,9 @@
   namespace; deploying is DIST's and FW-23 did not take it.** Until it is taken the bound excludes exactly 1 of the
   166 corpus keys, with that body's dialect still stated. Also unmeasured, and stated at the suite: no corpus body
   carried a UTF-16 BOM or a semicolon, tab or pipe delimiter, so those four arms are driven by fixture only.
+  AND ITS TEXT AT ACQUIRE IS NOT THE ENTRY'S (REC-218's finding, D-593): a `text/csv` body is read at intake as
+  lossy UTF-8 and never through `csv.mjs`'s `text()`, so the dialect is persisted (BOB #33's ruling, folded into
+  the section) while the reading's text is not yet decoded in it.
 
 **Contents**
 - [The finding that shapes everything: three formats, one container](#the-finding-that-shapes-everything-three-formats-one-container)
@@ -252,10 +255,31 @@ scratch namespace — has NOT been taken, because deploying is DIST's.** The bou
 of 166 keys, whose dialect is still stated. M-144 §5 carries the figures.
 
 **THE INTERFACE HALF IS `IC-283`** (I2 2.7.0 → 2.8.0 proposed, MINOR ADDITIVE: the `dialect` key on the entry's
-`structure()` and `text()`), and its RESIDUE is the part to carry forward: **the dialect is EMITTED AND NOT
-PERSISTED.** The acquire wire's `container_extent` projection writes a named key list and `dialect` is not in it,
-so the delimiter and the encoding reach a caller that invokes the entry and do NOT reach the record — COFF-11's
-finding one construct over, and the passthrough is rowed rather than done.
+`structure()` and `text()`). Its residue — **the dialect was EMITTED AND NOT PERSISTED** — is CLOSED by REC-218
+(2026-09-25) under the ruling below.
+
+**RULED 2026-09-24 21:55Z by BOB #33, option (b): THE DIALECT IS A KEY OF ITS OWN ON THE READING.**
+`reading.dialect = {delimiter, encoding}`, persisted on the acquire document and read back through `op=reading` —
+NOT inside `container_extent`, which says what a container ITEMISES, and not inside D-536's `reading.provenance`,
+which says WHO read which text. The dialect is a third fact: the decoding choice made before any text existed. The
+ruling suits ANY text format that involves a decoding choice, so the projection (`readingDialect`) lives on the
+REGISTRY in `formats.mjs`, not in `csv.mjs`, and the next such entry's dialect reaches the record with no edit
+anywhere else. Each half is a name or NULL; a NULL carries the entry's own reason code in `undetermined`
+(`encoding_undetermined`, `delimiter_undetermined_tied`, …) beside the signals and confidences. The key is ABSENT on
+a reading no decoding-choice entry produced (PDF, office containers, HTML). **A latin-1 body reads its ENCODING
+UNDETERMINED, never "latin-1"**: this section's signature has no latin-1 outcome on purpose (the `0x96` finding
+above), and REC-218's row, which asked for a latin-1 body to read "both", was narrowed at the code to both KEYS
+present with the encoding stated undetermined.
+
+**WHAT REC-218 FOUND BEHIND THE RESIDUE, and it is wider than the residue said.** The residue read "the acquire
+wire's projection drops the key", which presumes the entry RAN at acquire. For a `text/csv` body it did not: any
+`text/*` body within `PROFILE_TEXT_MAX` (8 MiB) is read AS TEXT at intake by a lossy UTF-8 decode, and one over it
+is streamed in 8 MiB parts and read by neither path, so only an `application/csv` body ever reached the entry's
+`text()` at acquire. So the dialect is persisted from TWO sources with ONE builder: the wire's own `text()` answer,
+and — for the intake read — an OPTIONAL fifth I7 slot, `dialect(bytes)`, signatures only and no record walk
+(`reading-dialect.test.mjs` pins the two byte-identical). **What stays open is the TEXT, not the dialect:** a
+`text/csv` body's reading is still the intake decode, so an undetermined-encoding byte reaches the content-type
+reader as U+FFFD and the sheet's cells are not the units the reader sees. That is **D-593**, rowed.
 
 The 50 legacy `.xls` keys wait on the section below.
 
