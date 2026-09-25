@@ -690,8 +690,8 @@ scope: extend D-510's derivation to title and state: derive both from the docume
 accepts-when: the taken-title promotion is refused NAME_TAKEN whatever meta.title says, and the projection shows the document's title (moves: a taken name landing under another label). NEGATIVE CONTROL: read meta.title in the name scan again and the taken-title arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-526's worker).
 
-### D-556 · running — **A WHOLE-HASH REGISTER ROW HELD IN PARTS CANNOT RATIFY: the gate refuses it PLANE_HELD_IN_PARTS (D-530) because publication copies a capture by its whole hash, while the audit calls the same bytes SOUND (D-533).** Found by D-533's worker (M-150). BOB #34 RULED YES 2026-09-25 00:00Z (drained to `BOB-INBOX-drained.md`; cite until folded): BOTH halves in ONE landing, never the gate alone. — owner RECORD.
-status: running — SCHEDULER #22 04:25Z spawns WORKER D-556 (depth 2)
+### D-556 · integrated — **A WHOLE-HASH REGISTER ROW HELD IN PARTS CANNOT RATIFY: the gate refuses it PLANE_HELD_IN_PARTS (D-530) because publication copies a capture by its whole hash, while the audit calls the same bytes SOUND (D-533).** Found by D-533's worker (M-150). BOB #34 RULED YES 2026-09-25 00:00Z (drained to `BOB-INBOX-drained.md`; cite until folded): BOTH halves in ONE landing, never the gate alone. — owner RECORD.
+status: integrated — SCHEDULER #22 05:28Z: tip 99b81cc9, GATE 80/80 GREEN FULLREUSE (378 units reused; earlier full 385/386, its op-claims red fixed), tree c9acfd64; parted captures ratify AND publish part by part (BOB #34 00:00Z); I3 wire; new PLANE_* gate findings, untranslated like D-530's (stated in §8)
 order: after D-546, with the corrections: a gate that treats sound bytes as missing contradicts the record, but D-530's refusal is honest until both halves land (BOB #34 00:00Z) (SCHEDULER #21, 2026-09-25)
 milestone: M10
 interface: I3 — publication's copy and the gate's verdict; the integrator classifies.
@@ -723,8 +723,8 @@ scope: the census judges the text the acquire reading classified (its `text_unit
 accepts-when: the 34 documents are judged on their tier-3 text, and no document is labelled tier 3 unless tier-3 text was judged (moves: 34 of 38 judged on empty text). NEGATIVE CONTROL: judge the plain answer again and the tier-3 arm reads empty, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-536's worker).
 
-### D-573 · running — **A REVIEW COPY'S `last_change` PICKS SILENTLY BETWEEN TWO ACTS IN THE SAME SECOND when one carries a whole-second stamp from before D-543, so the one in-band date claims an order the record cannot support.** Found by D-543's worker. BOB #34 RULED (1) 2026-09-25 01:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): keep the instant-order pick as the ONE in-band date (DEC-31), and STATE the tie in `last_change.stated` ("which of <act A> and <act B> came later is undetermined: <act A> was recorded to the second"), naming the tied act in `last_change.undetermined_within`. — owner RECORD.
-status: running — SCHEDULER #22 04:31Z spawns WORKER D-573 (depth 2)
+### D-573 · integrated — **A REVIEW COPY'S `last_change` PICKS SILENTLY BETWEEN TWO ACTS IN THE SAME SECOND when one carries a whole-second stamp from before D-543, so the one in-band date claims an order the record cannot support.** Found by D-543's worker. BOB #34 RULED (1) 2026-09-25 01:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): keep the instant-order pick as the ONE in-band date (DEC-31), and STATE the tie in `last_change.stated` ("which of <act A> and <act B> came later is undetermined: <act A> was recorded to the second"), naming the tied act in `last_change.undetermined_within`. — owner RECORD.
+status: integrated — SCHEDULER #22 05:28Z: tip 114c6e0d, GATE 386/386 GREEN FULLREUSE (21882 assertions), tree 02f32dc3; tie stated in last_change.stated + undetermined_within (I3 additive); UI owed: UI-115
 order: after D-557, with the corrections: a date that claims an order it cannot know is the record claiming more than it holds (CLAUDE.md §2; BOB #33's D-516 band rule) (SCHEDULER #21, 2026-09-25)
 milestone: M10
 interface: I3 additive — two keys on `last_change`; the integrator classifies.
@@ -776,8 +776,8 @@ scope: tier3Extend re-asks the member for each page in `deferred`, one invocatio
 accepts-when: the committed two-page fixture (bio-plane/test/fixtures/d460/) reads meeting_agenda through the op (moves: 174 of 190 pages untranscribed). NEGATIVE CONTROL: stop reading `deferred` and the fixture reads generic, 1/1 unread, by name (scripts/d460-perpage-ocr.mjs).
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
 
-### D-607 · running — **`tier3Note` SAYS "the page that already had text kept it" ON A WHOLLY SCANNED DOCUMENT WHERE NO PAGE HAD TEXT (live: FINAL-2-6-PC-Agenda, 7 of 7 no_text_layer), so the record states a text layer that never existed.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF.
-status: running — SCHEDULER #22 04:44Z spawns WORKER D-607 (depth 2)
+### D-607 · integrated — **`tier3Note` SAYS "the page that already had text kept it" ON A WHOLLY SCANNED DOCUMENT WHERE NO PAGE HAD TEXT (live: FINAL-2-6-PC-Agenda, 7 of 7 no_text_layer), so the record states a text layer that never existed.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF.
+status: integrated — SCHEDULER #22 05:28Z: tip 3206221a, GATE 385/385 GREEN FULLREUSE (21873 assertions), tree b093f1a2; union with D-606 keeps layerPages at tier3Note's call; re-run nc-rec102 after; minted D-614
 order: directly after D-606, the same seam: a small overclaim in the tier-3 note (SCHEDULER #22, 2026-09-25)
 milestone: M2
 interface: none (a note's wording).
@@ -841,6 +841,36 @@ depends-on: REC-205, UI-94.
 scope: the set act sends each project-scoped item's own project; where an item has several homes the surface asks the member and NEVER defaults one (D-266); the plane's NO_PROJECT_SCOPE reaches the member in its DEC-49 words.
 accepts-when: a project-scoped finding joins a selection and the set act carries its project; an item with two homes is not sent until the member names one (the measured failure it moves: null for scope=project). NEGATIVE CONTROL: return null again and the selection arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
+
+### D-576 · queued — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
+order: after UI-110, with the surface corrections: a receipt reading a cut set as whole claims more than the record holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: none (reads op=connect's existing `truncated` and `documents`).
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` (D-241's derivation statement, as UI-95 renders it).
+depends-on: UI-95.
+scope: when `r.truncated === true`, the receipt adds that the derivation was cut at its bound after `r.documents` of the subject's documents, so the connections are part of the set.
+accepts-when: a truncated connect answer's receipt states the cut; an untruncated one does not (moves: a cut receipt reading as whole). NEGATIVE CONTROL: ignore `truncated` again and the cut-receipt arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by UI-95's worker).
+
+### D-575 · queued — **A CONNECTION'S PAIR SAYS "which nobody has chosen" WHILE A MEMBER'S CHOICE STANDS, AND NEVER STATES A LAPSE: `Store#pairSelection`'s `says` ends that way on every row on `op=connections&id=`/`&sha256=`, including one carrying a current `on_point`; that arm's `on_point` never states a lapse (only the `content=` arm does).** Found by UI-91's worker (01:25Z). — owner RECORD.
+order: after D-576, with the connection corrections: the record contradicting itself about a member's act (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: I3 additive — `lapsed`/`why` on `on_point[side]`, and the selection sentence's content; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair), with REC-122's on-point choice (IC-232, C-74).
+depends-on: UI-91.
+scope: in `connectionsFor`'s `withChoice` (store.mjs, REC-122 block) check each current choice's ref against resolutions as `connectionGradeForContent` does and carry lapsed/why on `on_point[side]`; pass the choice state into `#pairSelection` so the sentence does not say "nobody has chosen" where a choice exists.
+accepts-when: a chosen pair's sentence names the choice, and a choice whose resolution is gone reads lapsed with its why, on both arms (moves: a self-contradicting sentence). NEGATIVE CONTROL: drop the choice state from `#pairSelection` and the chosen-pair arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by UI-91's worker).
+
+### UI-112 · queued — **UI-91's ON-POINT CHOICE WILL BE REFUSED FOR A MENTION READ ON SEVERAL PAGES ONCE D-454 LANDS: D-454 makes `op=connectionchoose` take `occurrence=` and refuse C-74.4 CONNECTION_CHOICE_OCCURRENCE_UNNAMED when a string read at several places is named alone, and UI-91's `docChooseOnPoint` (both integrated, neither on main) sends no occurrence.** Found at SCHEDULER #21's reading of both reports (01:38Z). — owner UI.
+order: after D-575, with the connection surface: a chooser that the plane refuses for the common case offers an act that fails (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: none (reads D-454's I3: `occurrence=`, `occurrences` on the act and on connections&content= mentions).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair), with D-454's occurrence key and REC-122's choice (C-74).
+depends-on: UI-91, D-454.
+scope: the chooser offers each OCCURRENCE (page and position, from the plane's `occurrences`), sends `occurrence=` on the act, renders C-74.4 in its DEC-49 words, and shows a pre-D-454 choice the plane states AMBIGUOUS as it says.
+accepts-when: a subject string read on three pages offers three choices and each is accepted (moves: C-74.4 on every multi-page mention). NEGATIVE CONTROL: omit `occurrence=` and the three-page arm reads C-74.4, failing by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

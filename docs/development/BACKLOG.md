@@ -93,6 +93,16 @@ scope: (1) Tier 1 inflate tolerates bytes after the compressed stream's end (kee
 accepts-when: CAFR-2002's pages read with text where their streams decode, and no page reads 0 chars without a marker (measured into a measurements/ file). NEGATIVE CONTROL: restore the strict inflate and the trailing-bytes arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-585's worker).
 
+### D-614 · queued — **`tier3Note`'s THIRD CLAUSE SAYS REFUSED PAGES "were dropped rather than allowed to overwrite text this document already had", BUT `mergeTier3Text` REFUSES FOR THREE REASONS (no such page; not asked about; carries glyphs) AND ONLY THE THIRD HAD TEXT, so the record can state text a page never had.** Found by D-607's worker (05:23Z). Not reachable with today's member, which answers only pages it is asked for: defence in depth. — owner CONTENT-PDF.
+order: after D-591, with the reader corrections but behind the reachable ones: the same note class as D-607, unreachable today (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: none (a note's wording).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
+depends-on: D-607 (land/worker/D-607 @ 3206221a, the same function).
+scope: mergeTier3Text returns refused split by reason (refusedHadText apart); tier3Note says "overwrite text" only for that count, and neutral wording ("were not pages it was asked about, and were dropped") for the rest; test through op=acquire with a stub OCR member that answers for an unasked empty page.
+accepts-when: a stub answer for an unasked empty page yields the neutral clause, and one for a page with glyphs the overwrite clause (moves: a stated overwrite of text that never existed). NEGATIVE CONTROL: collapse the reasons again and the unasked-page arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-607's worker).
+
 ### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
 order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
 milestone: M6
@@ -163,6 +173,16 @@ scope: the published case page renders the frozen bias_manifest as the document 
 accepts-when: a /4 case with a pending adoption shows it; a /3 case shows its own statement and nothing invented (moves: no surface); a /4 citation shows its pin state.  NEGATIVE CONTROL: drop the block and the pending arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
+### UI-115 · queued — **UI-69's EXPORTED REVIEW COPY OMITS D-573's TIE STATEMENT: the export prints "Date … the copy's last change" from the in-band quartet and carries no `last_change`, so a file that leaves the instance claims an order of two same-second acts the record cannot support.** Found by D-573's worker (05:23Z). — owner UI.
+order: after UI-113, with the surface halves of landed record rows: a file read away from the instance holds only the page (SCHEDULER #22, 2026-09-25)
+milestone: M10
+interface: none (reads D-573's I3 key).
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 point 1 (D-573's fold) and point 2 (UI-69's export).
+depends-on: UI-69, D-573.
+scope: beside the export's Date line, draw last_change.stated's tie sentence verbatim when last_change.undetermined_within is non-empty; the in-band quartet unchanged; the same on the member door's copy view if it shows the date.
+accepts-when: an exported copy whose pick ties a whole-second act carries the plane's tie sentence beside its date, and an untied one carries none (moves: a tied date exported as ordered). NEGATIVE CONTROL: drop the sentence and the tied-export arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs UI`; D-573's finding).
+
 ### D-609 · queued — **A MEMBER CAN PLACE A DOCUMENT OR PASSAGE IN A THEME ONLY FROM THE THEME'S PAGE, BY TYPING ITS BUNDLE ID OR CONTENT ID: the document page and the passage row offer no "place in a theme" entry.** Found by UI-76's worker (04:05Z). — owner UI.
 order: after UI-113, with the surface halves of landed rows: the act exists and is reachable only by an id a member must copy by hand (SCHEDULER #22, 2026-09-25)
 milestone: M8
@@ -203,16 +223,6 @@ scope: a labelled corpus from REAL captured documents (minutes, staff reports, b
 accepts-when: the corpus size, its hard-negative count and the labellers' agreement are measured into a measurement, and the judgement's score over it is reported against the lexical baseline. NEGATIVE CONTROL: score the judgement with the disagreed pairs included and the reported figure moves, by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by REC-147's worker; BOB #35 04:50Z).
 
-### D-576 · queued — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
-order: after UI-110, with the surface corrections: a receipt reading a cut set as whole claims more than the record holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
-milestone: M4
-interface: none (reads op=connect's existing `truncated` and `documents`).
-design: `docs/development/CONTENT-SEARCH-DESIGN.md` (D-241's derivation statement, as UI-95 renders it).
-depends-on: UI-95.
-scope: when `r.truncated === true`, the receipt adds that the derivation was cut at its bound after `r.documents` of the subject's documents, so the connections are part of the set.
-accepts-when: a truncated connect answer's receipt states the cut; an untruncated one does not (moves: a cut receipt reading as whole). NEGATIVE CONTROL: ignore `truncated` again and the cut-receipt arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (id minted by UI-95's worker).
-
 ### D-592 · queued — **A REOPENED FINDING CANNOT SAY WHO REOPENED IT: `op=queue`'s `prior_disposition` names who DECIDED, and nothing publishes who REVISED the declared flow, so UI-109's item states that name is not on it.** Found by UI-109's worker (02:57Z). — owner RECORD, then UI.
 order: after D-576, with the surface corrections: the reopened question's own account is incomplete where the record holds the fact (SCHEDULER #21, 2026-09-25)
 milestone: M4
@@ -222,26 +232,6 @@ depends-on: UI-109.
 scope: proposalsFeed publishes, from progression_def_versions, the revising version's number, `declared_by` and `at` beside `prior_disposition`; UI-109's item renders them in the plane's words.
 accepts-when: a reopened item names who revised the flow and when (moves: "not on it"). NEGATIVE CONTROL: drop the revising fields and the reopener arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by UI-109's worker).
-
-### D-575 · queued — **A CONNECTION'S PAIR SAYS "which nobody has chosen" WHILE A MEMBER'S CHOICE STANDS, AND NEVER STATES A LAPSE: `Store#pairSelection`'s `says` ends that way on every row on `op=connections&id=`/`&sha256=`, including one carrying a current `on_point`; that arm's `on_point` never states a lapse (only the `content=` arm does).** Found by UI-91's worker (01:25Z). — owner RECORD.
-order: after D-576, with the connection corrections: the record contradicting itself about a member's act (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
-milestone: M4
-interface: I3 additive — `lapsed`/`why` on `on_point[side]`, and the selection sentence's content; the integrator classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair), with REC-122's on-point choice (IC-232, C-74).
-depends-on: UI-91.
-scope: in `connectionsFor`'s `withChoice` (store.mjs, REC-122 block) check each current choice's ref against resolutions as `connectionGradeForContent` does and carry lapsed/why on `on_point[side]`; pass the choice state into `#pairSelection` so the sentence does not say "nobody has chosen" where a choice exists.
-accepts-when: a chosen pair's sentence names the choice, and a choice whose resolution is gone reads lapsed with its why, on both arms (moves: a self-contradicting sentence). NEGATIVE CONTROL: drop the choice state from `#pairSelection` and the chosen-pair arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (id minted by UI-91's worker).
-
-### UI-112 · queued — **UI-91's ON-POINT CHOICE WILL BE REFUSED FOR A MENTION READ ON SEVERAL PAGES ONCE D-454 LANDS: D-454 makes `op=connectionchoose` take `occurrence=` and refuse C-74.4 CONNECTION_CHOICE_OCCURRENCE_UNNAMED when a string read at several places is named alone, and UI-91's `docChooseOnPoint` (both integrated, neither on main) sends no occurrence.** Found at SCHEDULER #21's reading of both reports (01:38Z). — owner UI.
-order: after D-575, with the connection surface: a chooser that the plane refuses for the common case offers an act that fails (SCHEDULER #21, 2026-09-25)
-milestone: M4
-interface: none (reads D-454's I3: `occurrence=`, `occurrences` on the act and on connections&content= mentions).
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair), with D-454's occurrence key and REC-122's choice (C-74).
-depends-on: UI-91, D-454.
-scope: the chooser offers each OCCURRENCE (page and position, from the plane's `occurrences`), sends `occurrence=` on the act, renders C-74.4 in its DEC-49 words, and shows a pre-D-454 choice the plane states AMBIGUOUS as it says.
-accepts-when: a subject string read on three pages offers three choices and each is accepted (moves: C-74.4 on every multi-page mention). NEGATIVE CONTROL: omit `occurrence=` and the three-page arm reads C-74.4, failing by name.
-added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
 ### UI-107 · queued — **THE MUTE REPORT CANNOT OFFER A PER-CASE UNDO FOR A MUTED KIND THAT HOLDS NOTHING BACK TODAY: UI-97 draws no control there and states the named limit (member-respect SETS).** The surface half of D-534. — owner UI.
 status: queued — D-534 (02:33Z): read mute.case_kinds (beside mute.cases, unchanged) and drop the per-case narrowing; correct the UI quotes of 'the muted KINDS nowhere' (member-respect.test, notifications.test/control, queue-unmute.test, CIVICOS_UI_STATE.md, construct-status 12.unmute's note)
@@ -1201,3 +1191,13 @@ depends-on: none.
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
+order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
+depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
+accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
