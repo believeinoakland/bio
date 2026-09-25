@@ -116,16 +116,6 @@ scope: a revision carries the head's value for each field; a creation missing on
 accepts-when: each of the four fields absent on a creation is refused by name and on a revision is carried, with no stack in any answer (moves: a raw NOT NULL stack from promote). NEGATIVE CONTROL: remove the pre-write check and the creation arms fail by name, reading a stack.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
 
-### D-673 · queued — **C-4.2 AND A DOCUMENT'S IN-BYTES `state_history`: an undeclared edge in a document's OWN bytes has no reading under D-546's fence.** BOB #35 RULED 2026-09-25 08:00Z, option (b) (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): it gets D-546's sentence ("made by a path the current rules do not allow (before <fence date>)") ONLY where the record's own history corroborates the same move — the pair in D-546's `statemovecensus` chain-joined moves for that bundle, at or before the fence; otherwise C-4.2 keeps the ERROR. A writer's timestamp never buys the pre-fence reading alone. M-179: 11 in-bytes entries, 0 undeclared — nothing live changes today. Minted by D-546's worker. — owner RECORD.
-order: after D-628, with the promote corrections: it reads D-546's census and fence (SCHEDULER #23, 2026-09-25)
-milestone: M7
-interface: I3 — C-4.2's corroborated reading; the integrator classifies.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.7, with BOB #35's 08:00Z ruling, folded into §4.7 by this row (clearing its D-673 Incomplete-sections bullet).
-depends-on: D-546 (running, stacked on D-578; builds the fence and `statemovecensus`).
-scope: C-4.2 passes an undeclared in-bytes edge with D-546's sentence only when the census corroborates it at or before the fence; otherwise ERROR as today.
-accepts-when: the corroborated twin passes with the sentence and the uncorroborated one fails (moves: no reading for an in-bytes undeclared edge). NEGATIVE CONTROL: a fixture carrying a backdated undeclared edge with no record corroboration must fail C-4.2 by name, and the corroborated twin must pass with the sentence.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker; placed on BOB #35's 08:00Z ruling).
-
 ### D-667 · queued — **ELEVEN MORE SUITES CAN ABORT A FIXTURE WITHOUT REPORTING WHICH SECTIONS NEVER RAN: four print "FIXTURE ABORTED" (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding) and seven reach `process.exit` through a bail/abort/die const (case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question, d442-publish-writes-nothing, rec170-manifest-pair).** D-548 and D-564 fixed eight; this is the sweep's remainder. Found by D-564's worker (minted on land/worker/D-564). — owner M0 (the suites).
 order: after D-628, behind the head's product corrections: a process row that cuts false-green risk in the gate, placed near the head but never above product (CLAUDE.md §2, Bob 2026-09-22; SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -1101,4 +1091,14 @@ design: `docs/development/VERIFICATION.md` (the negative-control register).
 depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
 scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
 accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-150 · queued — **AN OP LEAVING THE BARE ROSTER INTO THE UNJUDGED BUCKET IS INVISIBLE TO THE FLOOR, which counts only what it still sees: `op=caseratify` was lost that way on `main`, found only by c20-batch11fix's RETURN-DELEGATE rule.** — owner M0.
+order: after M0-149, the same suite; the class behind a silent loss (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
+depends-on: land/conduct/c20-batch11fix on `main`.
+scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
+accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
