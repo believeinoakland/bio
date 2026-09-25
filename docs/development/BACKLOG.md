@@ -23,15 +23,15 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-627 · queued — **A FULL-PAGE IMAGE WHOSE ONLY TEXT IS A FOLIO IS NOT ROUTED TO OCR SINCE D-608: the page bears text so it rightly carries no `no_text_layer`, but its CONTENT is unread and nothing says so (INFO-2026-0301 pages 633, 634, 645-651: a coverage regression D-608's provisional accepts until this lands).** BOB #35 RULED 05:50Z: two facts, two markers. — owner CONTENT-PDF.
-order: at the head of the backlog, beside D-606 (per-page OCR, running): a coverage regression on landed work outranks features; BOB #35: *"say WHICH absence"* (SCHEDULER #22, 2026-09-25)
-milestone: M2
-interface: I6 — a new page marker `image_content_unread` and its OCR route; the integrator classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with BOB #35's 05:50Z ruling (this row's worker folds it) and D-420's `container_extent.images`.
-depends-on: D-608 (land/worker/D-608 @ ffcc300b).
-scope: MEASURE FIRST over the FY23-25 budget book and M-174's corpus each page's painted-image share of its area and its glyph count; set both thresholds where image-only pages separate from text pages (in-between pages read UNDETERMINED, never forced); a page over the image share and under the glyph floor carries `image_content_unread` naming both figures, and `needsTier3` routes it to OCR as it routes a no-text page. OCR output stays machine-read and never raises a grade (DEC-4).
-accepts-when: those 9 pages carry the marker with their figures and route to OCR; text pages do not (moves: 9 unread pages routed nowhere). NEGATIVE CONTROL: drop the coverage arm and INFO-2026-0301's pages 633/634/645-651 read no marker and route nowhere, by name.
-added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 05:50Z).
+### D-542 · queued — **THE DEC-49 GUARD SCORES A CODE "OUT OF REACH" WHEN ITS SURFACE RENDERS THE PLANE'S OWN WORDS: `check-refusal-codes.mjs` puts a code in reach only by R1 (a catalogue row), R2 (a code LITERAL in `app.html`) or R3 (a harness mock), so UI-68's review-copy surface, which renders `detail` and keys on no literal, left TEN of D-448's eleven codes scored out of reach for a day while a member could meet them.** Found by D-448's worker (branch `land/worker/D-448` 5eadd905: the Publication front matter and `13.review-copy` both carry "D-542 carries that fix (reach-by-op) and is NOT BUILT"). — owner M0 (the guard).
+order: after D-550, with the DEC-49 instrument rows behind the product rows: it makes a false gate result (a reachable code read as unreachable) visible, which is product quality, but nothing regresses today since D-448 catalogues all eleven (Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a guard's verdict is a statement about its walk, never about the member), with DEC-49's rule that every refusal a member can meet carries a canned translation.
+depends-on: D-448.
+scope: teach the walk REACH-BY-OP: a code minted on an op that a surface in `civicos-ui/app.html` calls (by the op's name through its request helpers) is IN REACH whether or not the surface names the code literally; an op no surface calls stays out of reach.
+accepts-when: on D-448's parent (origin/main 9f8b69e6's review-copy mints) the walk sorts the ten review-copy codes IN REACH rather than F6 (the measured failure it moves: ten of eleven scored out of reach while UI-68's surface existed). NEGATIVE CONTROL: remove the surface's call to `reviewcopy`, and those codes fall back to out of reach by name.
+added: 2026-09-24 · SCHEDULER #21 (id minted by D-448's worker).
 
 ### D-615 · queued — **`op=promote` STILL PROJECTS `bundles.created` AND `last_updated` FROM THE ENVELOPE, though the document states both (CORE_FIELDS): D-563's class, the last two fields.** Found by D-563's worker (05:47Z). — owner RECORD.
 order: after D-546, the same promote function one worker at a time: the envelope is a label, the document states what it is (SCHEDULER #22, 2026-09-25)
