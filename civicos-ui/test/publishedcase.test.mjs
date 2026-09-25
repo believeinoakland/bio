@@ -2315,9 +2315,12 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
      `op=instancegroup` — public since REC-163 (IC-174), answering a stranger the recorded slug and nothing else —
      so the header shows whose record this is from the record instead of a literal group name (Publication §7
      point 1). The pin was right that the surface reaches only credential-free reads; the set it named was the
-     set before that read existed. The token and working-record assertions below are unchanged. */
+     set before that read existed. The token and working-record assertions below are unchanged.
+     CORRECTED 2026-09-25 (UI-78), never exempted: the header's read is now `op=groupidentity` (REC-164, IC-223),
+     which answers the same public slug and, beside it, the display name and a domain only while verified
+     (Publication §7 points 2 and 3). Still five credential-free ops; one of them renamed. */
   ok("the whole surface reached exactly the five credential-free ops and no other",
-     JSON.stringify(ops) === JSON.stringify(["instancegroup", "publishedbytes", "publishedcase", "publishedmanifest", "verify"]));
+     JSON.stringify(ops) === JSON.stringify(["groupidentity", "publishedbytes", "publishedcase", "publishedmanifest", "verify"]));
   ok("NOT ONE request carried a token — the evidence, not the promise",
      WIRE.length > 10 && WIRE.every(w => !w.token));
   ok("and none of them reached a working-record op",

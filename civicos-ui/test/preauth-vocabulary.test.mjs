@@ -1161,8 +1161,13 @@ function makePlane(mode){
     /* UI-77, 2026-09-22: the public header's group read, answered as the plane answers a stranger since REC-163
        (IC-174) — `{ok:true, group:<slug>}` inside the control plane's envelope — with a slug that is NOT this
        project's, through `say` so the slug is attributed to the PLANE, not to the surface. Before UI-77 the
-       header painted a literal and this op was never asked. */
-    if(op === "instancegroup") return W(say({ ok:true, group:"harbour-watch-coalition" }));
+       header painted a literal and this op was never asked.
+       CORRECTED 2026-09-25 (UI-78), never exempted: the header now reads `op=groupidentity` (REC-164, IC-223), the
+       stranger's projection — the slug, the display name beside it, and a domain only with its verified date. The
+       fixture answers a display name and a VERIFIED domain, so `#p-gid` is a surface again (below) and the name is
+       walked where it is shown, beside the slug. */
+    if(op === "groupidentity") return W(say({ ok:true, group:"harbour-watch-coalition", display_name:"Harbour Watch",
+                                               domain:"harbour.example", domain_verified_at:"2026-09-25T00:00:00.000Z" }));
     /* UI-68: the recipient's door — FLAT, as index.mjs answers it; only the fixture's own secret reads a copy. */
     if(op === "reviewcopy")
       return url.searchParams.get("secret") === REVIEW_SECRET ? R(say(REVIEW_COPY_ANSWER))
@@ -1676,9 +1681,12 @@ const ALL_SURFACES = [...new Set(SCENARIOS.flatMap(s => [...s.surfaces.keys()]))
    (one group's, on every instance); Publication §7 point 3 shows a domain only while VERIFIED, and verification
    is not built, so the header leaves it empty and an empty element is not something a reader reads. When a
    verified domain is built this surface returns and this list gains it back. `#p-gname` and `#p-mono` stay:
-   they now carry the recorded slug and its first character, read from `op=instancegroup`. */
+   they now carry the recorded slug and its first character, read from `op=instancegroup`.
+   CORRECTED 2026-09-25 (UI-78), as that note said it would be: the verified domain is built (REC-164 on the plane,
+   UI-78 here), so `#p-gid` is a surface again — it carries a domain the answer dates as verified, with its date —
+   and it is back in this list. `#p-gname` now carries the display name WITH the slug, read from `op=groupidentity`. */
 const EXPECT_SURFACES = ["#content","#g-err","#m-grp","#m-handle","#m-idstr",
-                         "#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED,
+                         "#p-gid","#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED,
                          "#v-c-" + FIND_ID, "#v-f-" + FIND_ID, "#v-man",
                          "#v-part-" + SHA.slice(0, 12), "#v-part-" + CAP.slice(0, 12),
                          "#v-refused", "#v-unreachable",
@@ -2066,8 +2074,11 @@ if(S("case-address-at-load") && !HID("case-verify")){
         error reads as the record NOT REACHED, never as a refusal. The old pin was right about `apiQ` and about the
         discipline; its set predates the second write. `statement-ack.test.mjs` drives both halves through the real
         plane, and asserts on the WIRE that the acknowledgement carried the secret and no token. */
+     /* CORRECTED 2026-09-25 (UI-78), never exempted: still EIGHT callers; the header's group read is renamed
+        `op=groupidentity` (REC-164, IC-223) and `groupFromAnswer` is still the same SHAPE test on its `group`, so an
+        `ok:false` through this seam still reads as a SILENCE (group-surface.test.mjs's SILENCE arms drive it). */
      && APIQ_CALLERS.length === 8
-     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
+     && APIQ_CALLERS.join(",") === "groupidentity,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the
