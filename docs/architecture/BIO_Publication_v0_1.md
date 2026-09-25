@@ -149,7 +149,13 @@ Three consequences give the construct its shape. The record must be able to prov
     any container is built, as the VERIFYING value. The file's own sha256 is recorded beside it, labelled "this file's
     bytes", and is informative only. A check that fails honestly on another runtime is a check that gets switched off.
     NOT BUILT (rowed).
-17. **THE GATE STAMP'S CATALOGUE VERSION MOVES WHENEVER THE CATALOGUE DOES** (BOB #32, 2026-09-24, D-470). A case document's gate stamp names the check-catalogue version it was judged against, so one version names exactly one catalogue: any added, removed or changed check moves the version in the same landing. The per-version census pin enforces it and fails by name. A stamp whose version is ambiguous proves nothing about what judged it.
+17. **THE GATE STAMP'S CATALOGUE VERSION MOVES WHENEVER THE CATALOGUE DOES** (BOB #32, 2026-09-24, D-470). A case document's gate stamp names the check-catalogue version it was judged against, so one version names exactly one catalogue: any added, removed or changed check moves the version in the same landing. The per-version census pin enforces it and fails by name. A stamp whose version is ambiguous proves nothing about what judged it. **A CHANGED check is a change the census must see (BOB #35, 2026-09-25, on D-598's question):** the rule is
+NOT narrowed to the C-number set. A landing that changes what a check refuses or admits, adding and removing no number,
+takes a new version whose census row DECLARES `changed: [C-n.m, …]`, and the declared list is part of the version's
+identity for the census's distinct-digest arm. The backstop is mechanical: the census pins each version to the digest of
+the catalogue's comment-stripped source, and a moved digest under an unmoved version fails by name unless the landing
+records a new version or declares the edit `behaviour: unchanged` against the new digest — so the stamp never claims a
+precision nobody asserted.
 
 ## 4. What is built
 
