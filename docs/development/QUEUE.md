@@ -557,8 +557,8 @@ scope: in op=acquire, run the registered format entry's text() and textUnitsFor 
 accepts-when: a captured .csv is found by passage search in one sheet-range unit and its reading names its container (moves: text_units absent for CSV). NEGATIVE CONTROL: let the canRead branch short-circuit again and the CSV arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
 
-### UI-119 · running — **NO SURFACE LETS A MEMBER STATE A RECORDS REQUEST'S `law`: REC-201 added the `records_request` kind and its `law` field, and neither app.html's action intake nor setup.mjs's page offers it, so every request filed there reads law UNDETERMINED — honest, and thin.** From REC-201's worker's report. — owner UI.
-status: running — SCHEDULER #23 09:05Z: spawned, stacked on land/worker/REC-201 @ 45ce0bc5
+### UI-119 · integrated — **NO SURFACE LETS A MEMBER STATE A RECORDS REQUEST'S `law`: REC-201 added the `records_request` kind and its `law` field, and neither app.html's action intake nor setup.mjs's page offers it, so every request filed there reads law UNDETERMINED — honest, and thin.** From REC-201's worker's report. — owner UI.
+status: integrated — SCHEDULER #23 10:50Z: tip 530a3559 (on REC-201 45ce0bc5), GATE 101/101 GREEN FULLREUSE (8063 assertions) on tree f6580fa9, full battery 384/385 on c9c136e8 (its two reds fixed in 530a3559); law field on action intake and setup.mjs (kind chooser, refusedWhy); construct 8.records-request PARTIAL; CIVICOS_UI_STATE v120 provisional; minted D-695, D-696
 order: after D-689 — the member's statement surface, after the fence that keeps a machine from making it (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 consumer.
@@ -763,6 +763,16 @@ depends-on: none (stacked on land/worker/D-683 @ 80d1db46, integrated, on D-680 
 scope: drop the edition condition from `here` (a no-case draft's identity reads edition 1 per D-568, and since D-680 it publishes any edition); state, do not widen, the known gap that the writer read looks at every no-case draft rather than the named one.
 accepts-when: edition 2 published without draft= names ella as writer in the signed block (moves: the publisher credited with an editor's bytes). NEGATIVE CONTROL: restore `Number(edition) === 1` and the edition-2 writer arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-683's worker).
+
+### D-695 · running — **C-2.10's `law` ARM NEVER RUNS AT THE ACT: REC-201's recordsLawFindings is called only by the audit sweep (checkBundle), so op=promote LANDS a 250-character law (measured) and a law on a kind that is not records_request — the refusal REC-201 declared exists only in the catalogue.** Found by UI-119's worker (minted on land/worker/UI-119). — owner RECORD.
+order: spawned directly — a declared refusal the act does not enforce lets the record hold what its rules forbid (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 MAJOR-shaped — a refusal where an answer stood; the integrator mints and classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*), with DEC-49 as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it.
+depends-on: none (stacked on land/worker/D-689 @ 4ef3d303, integrated, on REC-201 @ 45ce0bc5 — the same promote action block).
+scope: in promote's action block, run recordsLawFindings beside actionBasisFindings and refuse under a named reason carrying findings[].detail (a new DEC-49 region); sweep other catalogue arms that run only in checkBundle and list each; correct ui119's "D-695 PINNED" arm into a driven refusal.
+accepts-when: a 250-character law and a law on another kind are refused by name at op=promote (moves: a forbidden value landing). NEGATIVE CONTROL: remove the call and the over-long-law arm lands, failing by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by UI-119's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

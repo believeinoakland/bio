@@ -96,6 +96,16 @@ scope: DRIVE it first; then seed from the transcription part only, OR make the a
 accepts-when: a D-635-appended page re-read by D-616's path holds its folio once (moves: a duplicated folio). NEGATIVE CONTROL: restore the double append and the once-only arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch30 finding).
 
+### D-696 · queued — **THE ACTION PAGE NEVER READS `action.law`: a member sees a records request's law only inside governing_laws' undetermined sentence, and that sentence goes away once a member states the list.** Found by UI-119's worker (minted on land/worker/UI-119). — owner UI.
+order: after D-713, with the head product corrections (UI-121, the sibling surface, is running) (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 consumer.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (the law a request names), with D-689's law.stated_by.
+depends-on: UI-119 (integrated, land/worker/UI-119 @ 530a3559), D-689 (integrated, 4ef3d303) — build on main after both land.
+scope: render action.law.stated (the plane's sentence, including MACHINE-STATED) on the action page; nothing prefilled.
+accepts-when: a records_request with a stated law shows it on its page, and a machine-stated one says so (moves: a stated law no page shows). NEGATIVE CONTROL: drop the render and the stated-law arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by UI-119's worker).
+
 ### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
 order: at the backlog head after D-682 — a correction joining two just-landed rows (D-625, UI-112) (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -1101,14 +1111,4 @@ design: `docs/development/VERIFICATION.md` (an instrument reads the forms the le
 depends-on: none.
 scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
 accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-149 · queued — **A PUBLISHED `limit` HAS ONE GUARD: only `bounds.test` checks it; `meaning-bounds` grades the row source, not whether an op in the BOUNDED roster publishes its bound.** Found by D-479's worker. — owner M0.
-order: after M0-142, the same suite (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the negative-control register).
-depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
-scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
-accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
