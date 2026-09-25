@@ -845,10 +845,15 @@ export const CHAIN_LAST = "chain";
  *  extraction method is one of a content unit's two intrinsic facts (Part II §14.2), so it is asked of
  *  the unit. Three targets:
  *
- *    `{ page }`     the kind of the LAST derivation step covering that page. Walked from the END, so on a
- *                   page two parts share (D-635) the part appended last answers. A step whose extent this
- *                   module cannot read, met before a covering one, could be covering the page, so the answer
- *                   is UNDETERMINED (null), stated, as `derivationCap` answers it; so is a page no step covers.
+ *    `{ page }`     how that page was read: each PART covering it (`partKeyOf`) answers the kind of its
+ *                   last derivation step, and the page reads that kind when every part agrees and `mixed`
+ *                   when they differ (D-723, BOB #36 11:05Z) — so a page two parts share (D-635: folio from
+ *                   the layer, transcription appended) reads `mixed`, and a page read one way keeps its one
+ *                   kind. Walked from the END: an unscoped step met first read the page last and answers it
+ *                   alone; one met after a covering part is history the parts came after and ends the walk.
+ *                   A step whose extent this module cannot read, met before an unscoped one, could be a part
+ *                   covering the page, so the answer is UNDETERMINED (null), stated, as `derivationCap`
+ *                   answers it; so is a page no step covers.
  *    `null`         a unit with NO page (a whole document, an office unit), which every page's reading
  *                   covers. BOB #35 09:35Z: the single kind when every page the chain's scoped steps name was
  *                   read the same way, and `mixed` when they differ — NOT null, because the record knows the
@@ -899,12 +904,25 @@ export function chainKindFor(chain, target = null) {
     }
     return kinds.size === 1 ? [...kinds][0] : CHAIN_KIND_MIXED;
   }
+  /* D-723 (BOB #36, 2026-09-25 11:05Z) — A PAGE IS READ BY EVERY PART THAT COVERS IT. Until D-723 the walk
+     returned the first covering step from the end, so on a D-635 page (the folio decoded from the layer, the
+     transcription appended) the part appended LAST answered, and the record called the layer's text
+     machine-read. Each part answers its own last step (`pixels` then `ocr` is one reading, `ocr`), and the
+     parts' kinds are compared exactly as the no-page branch compares pages. */
+  const byPart = new Map();
   for (let i = derivations.length - 1; i >= 0; i--) {
     const ext = extentOf(derivations[i]);
     if (ext === "unreadable") return null;
-    if (ext === "all" || ext.includes(page)) return derivations[i].step;
+    if (ext === "all") {
+      if (!byPart.size) return derivations[i].step;
+      break;
+    }
+    const key = partKeyOf(derivations[i]);
+    if (ext.includes(page) && !byPart.has(key)) byPart.set(key, derivations[i].step);
   }
-  return null;
+  if (!byPart.size) return null;
+  const partKinds = new Set(byPart.values());
+  return partKinds.size === 1 ? [...partKinds][0] : CHAIN_KIND_MIXED;
 }
 
 /** A one-line human sentence for the whole chain. Composed FROM the chain, so

@@ -3357,7 +3357,7 @@ CREATE TABLE IF NOT EXISTS content (
   at             TEXT NOT NULL,
   stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
   cited_as       TEXT    NOT NULL DEFAULT 'text', -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
-  chain_kind     TEXT               -- D-686. how THIS unit was read: the last derivation step covering its page, or for a unit with no page its pages' one kind or mixed. Written at mint by chainKindFor. NULL = undetermined. See the index block below
+  chain_kind     TEXT               -- D-686. how THIS unit was read: the one kind every part covering its page was read with, or mixed (D-723), or for a unit with no page its pages' one kind or mixed. Written at mint by chainKindFor. NULL = undetermined. See the index block below
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis

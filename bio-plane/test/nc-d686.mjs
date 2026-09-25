@@ -62,6 +62,7 @@ function arm(file, find, replace) {
 }
 
 const TEXT_LAYER_OP = "a TEXT-LAYER page's unit reads `layer` on a partitioned mixed document";
+/* D-723 re-anchored `wholechain` and `overstrict` onto the per-part page walk; their declarations stand. */
 
 const ARMS = {
   baseline: {
@@ -90,8 +91,10 @@ const ARMS = {
     mustFail: ["a TEXT-LAYER page of a mixed document reads `layer`",
                "every row is RECOMPUTED per unit", TEXT_LAYER_OP],
     mustPass: "every OCR'd-page and document-level arm — the whole chain's last step IS their answer",
-    patch: () => arm(TEXTCHAIN, "    if (ext === \"all\" || ext.includes(page)) return derivations[i].step;",
-                                "    return derivations[i].step;"),
+    /* RE-ANCHORED BY D-723: the page walk it patched was rewritten to compare parts, so the arm now answers
+       the page question with the chain's last derivation step before the walk runs — the same defect. */
+    patch: () => arm(TEXTCHAIN, "  const byPart = new Map();\n",
+                                "  return derivations[derivations.length - 1].step;\n  const byPart = new Map();\n"),
   },
   nowrite: {
     files: [STORE],
@@ -131,21 +134,13 @@ const ARMS = {
   },
   overstrict: {
     files: [TEXTCHAIN],
-    why: "OVER-STRICTNESS: the page question rewritten as a FORWARD scan keeping the last covering (or "
-       + "unreadable) step — a different, correct spelling. The suites test what the function answers, "
-       + "not how it walks, so everything MUST PASS",
+    why: "OVER-STRICTNESS: the page question rewritten as a FORWARD scan over the steps after the last unscoped "
+       + "one, keeping each part's last step — a different, correct spelling. The suites test what the function "
+       + "answers, not how it walks, so everything MUST PASS. RE-ANCHORED BY D-723 (the backward walk it "
+       + "rewrote became a per-part walk)",
     mustFail: [], mustPass: "everything", passArm: true,
-    patch: () => arm(TEXTCHAIN,
-      "  for (let i = derivations.length - 1; i >= 0; i--) {\n"
-    + "    const ext = extentOf(derivations[i]);\n"
-    + "    if (ext === \"unreadable\") return null;\n"
-    + "    if (ext === \"all\" || ext.includes(page)) return derivations[i].step;\n"
-    + "  }\n  return null;",
-      "  let kind = null;\n  for (const step of derivations) {\n"
-    + "    const ext = extentOf(step);\n"
-    + "    if (ext === \"unreadable\") kind = null;\n"
-    + "    else if (ext === \"all\" || ext.includes(page)) kind = step.step;\n"
-    + "  }\n  return kind;"),
+    patch: () => arm(TEXTCHAIN, "  const byPart = new Map();\n  for (let i = derivations.length - 1; i >= 0; i--) {\n    const ext = extentOf(derivations[i]);\n    if (ext === \"unreadable\") return null;\n    if (ext === \"all\") {\n      if (!byPart.size) return derivations[i].step;\n      break;\n    }\n    const key = partKeyOf(derivations[i]);\n    if (ext.includes(page) && !byPart.has(key)) byPart.set(key, derivations[i].step);\n  }\n  if (!byPart.size) return null;\n  const partKinds = new Set(byPart.values());\n  return partKinds.size === 1 ? [...partKinds][0] : CHAIN_KIND_MIXED;",
+      "  const lastAll = derivations.findLastIndex((s) => extentOf(s) === \"all\");\n  const tail = derivations.slice(lastAll + 1);\n  if (tail.some((s) => extentOf(s) === \"unreadable\")) return null;\n  const covering = tail.filter((s) => extentOf(s).includes(page));\n  if (!covering.length) return lastAll > -1 ? derivations[lastAll].step : null;\n  const lastOf = new Map();\n  for (const s of covering) lastOf.set(partKeyOf(s), s.step);\n  const ks = new Set(lastOf.values());\n  return ks.size === 1 ? [...ks][0] : CHAIN_KIND_MIXED;"),
   },
 };
 
@@ -218,4 +213,7 @@ process.exit(0);
  * Every restore byte-identical (store.mjs 3474857 bytes, schema.mjs 259517, textchain.mjs 95758).
  * RECORDED, NOT SMOOTHED: the first run after the `mixed` ruling read baseline NOT AS DECLARED — content-arm's
  * pin that the `chain` vocabulary is exactly STEP_KINDS failed on the new word. That pin was superseded by the
- * ruling and is corrected at its site, and this run is the one after the correction. */
+ * ruling and is corrected at its site, and this run is the one after the correction.
+ * RE-RUN 2026-09-25 by D-723's worker after re-anchoring `wholechain` and `overstrict` onto the per-part page
+ * walk: every arm AS DECLARED — baseline 57/0, generated 43/14, wholechain 40/17, nowrite 49/8 · 104/6,
+ * nomigrate 48/9, xinfo 52/5, lastkind 51/6, overstrict 57/0 (content-arm 110/0 except nowrite). */

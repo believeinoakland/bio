@@ -669,8 +669,8 @@ export const MEANING = {
          whole chain per row — unindexable, the slowest filter on the table
          (M-23), and REC-90's stated DESIGN GAP against §4.2, since §4.1 gives
          `capture_text` a `chain_kind` column for the identical question.
-         D-686 (BOB #35): `chain_kind` is the kind of the last derivation step
-         covering the UNIT's page, written at mint by `textchain.mjs`
+         D-686 (BOB #35): `chain_kind` is how the UNIT's page was read (the
+         one kind of the parts covering it, or `mixed`, D-723), written at mint by `textchain.mjs`
          `chainKindFor` (schema.mjs says why), so on a mixed document a
          text-layer page answers `layer` and an OCR'd page `ocr`.
          ONLY TWO VALUES KEEP A PREDICATE OF THEIR OWN, each for a reason:

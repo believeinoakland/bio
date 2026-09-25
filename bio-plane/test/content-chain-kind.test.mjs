@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: two harnesses drive this suite, each run from `bio-plane/` in one step. D-686's arms live in `test/nc-d686.mjs` (`node test/nc-d686.mjs [arm]`), declared there before arming, each edits ONE real source ALONE and is restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content with a byte count floored: (a) `baseline` — nothing armed -> green. (b) `generated` — THE ROW'S OWN ARM: `schema.mjs` and `store.mjs` as they stood at D-686's base (d31c52bf, the generated whole-chain column) -> section 3's "a TEXT-LAYER page's unit reads `layer`" FAILS BY NAME, and the pure-function section 1b stays green. (c) `wholechain` — the page question ignores the page -> the text-layer-page arms of 1b, 2b and 3 FAIL by name and every OCR-page arm stays green. (c2) `lastkind` — BOB #35's arm (09:35Z): the no-page question answers the chain's last derivation step again -> the whole-document `mixed` arms of 1b, 2b and 3 FAIL by name and every per-page arm stays green. (d) `nowrite` — `mintContent` stops writing the column -> section 3's minted rows read NULL and FAIL by name. (e) `nomigrate` — the recompute loop removed -> section 2b's recomputed-row assertions FAIL. (f) `xinfo` — the guard reads `table_info` -> section 2b's migration of a REC-104 store FAILS by name (the generated column is hidden from `table_info`, so the ALTER duplicates it and the Durable Object bricks). (g) `overstrict` — the page question rewritten as a forward scan keeping the last covering step, a different correct spelling -> MUST PASS. RUN 2026-09-25 by D-686's worker on the final sources (after BOB #35's 09:35Z `mixed` ruling): EVERY ARM AS DECLARED, every restore byte-identical by sha256 and content; `lastkind` failed exactly the four whole-document `mixed` assertions (figures at the foot of `nc-d686.mjs`). D-710's arms live in `test/nc-d710.mjs`, same rules: `unscopedfirst` — the guard that an unscoped step before scoped parts is undetermined removed -> 1b's D-710 undetermined arm FAILS by name; `endasnull` — the capture_text writer asks about no page instead of `CHAIN_LAST` -> section 3's KEPT arm FAILS by name; `overstrict` — the guard spelled as a forward scan -> MUST PASS. RUN 2026-09-25 by D-710's worker: EVERY ARM AS DECLARED, and `nc-d686.mjs` re-run on the same sources, all eight AS DECLARED (`lastkind` 48/4 — the row's named control). REC-104's surviving arms (`baseline`, `baseline2`, `parseback`, `preitem`) stay in `test/nc-rec104.mjs`; its `firststep` and `nowriter` arms were SUPERSEDED by D-686 (they broke a generated column that no longer exists) and are carried by (b) and (d) here. */
+/* NEGATIVE CONTROL: two harnesses drive this suite, each run from `bio-plane/` in one step. D-686's arms live in `test/nc-d686.mjs` (`node test/nc-d686.mjs [arm]`), declared there before arming, each edits ONE real source ALONE and is restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content with a byte count floored: (a) `baseline` — nothing armed -> green. (b) `generated` — THE ROW'S OWN ARM: `schema.mjs` and `store.mjs` as they stood at D-686's base (d31c52bf, the generated whole-chain column) -> section 3's "a TEXT-LAYER page's unit reads `layer`" FAILS BY NAME, and the pure-function section 1b stays green. (c) `wholechain` — the page question ignores the page -> the text-layer-page arms of 1b, 2b and 3 FAIL by name and every OCR-page arm stays green. (c2) `lastkind` — BOB #35's arm (09:35Z): the no-page question answers the chain's last derivation step again -> the whole-document `mixed` arms of 1b, 2b and 3 FAIL by name and every per-page arm stays green. (d) `nowrite` — `mintContent` stops writing the column -> section 3's minted rows read NULL and FAIL by name. (e) `nomigrate` — the recompute loop removed -> section 2b's recomputed-row assertions FAIL. (f) `xinfo` — the guard reads `table_info` -> section 2b's migration of a REC-104 store FAILS by name (the generated column is hidden from `table_info`, so the ALTER duplicates it and the Durable Object bricks). (g) `overstrict` — the page question rewritten as a forward scan keeping the last covering step, a different correct spelling -> MUST PASS. RUN 2026-09-25 by D-686's worker on the final sources (after BOB #35's 09:35Z `mixed` ruling): EVERY ARM AS DECLARED, every restore byte-identical by sha256 and content; `lastkind` failed exactly the four whole-document `mixed` assertions (figures at the foot of `nc-d686.mjs`). D-710's arms live in `test/nc-d710.mjs`, same rules: `unscopedfirst` — the guard that an unscoped step before scoped parts is undetermined removed -> 1b's D-710 undetermined arm FAILS by name; `endasnull` — the capture_text writer asks about no page instead of `CHAIN_LAST` -> section 3's KEPT arm FAILS by name; `overstrict` — the guard spelled as a forward scan -> MUST PASS. RUN 2026-09-25 by D-710's worker: EVERY ARM AS DECLARED, and `nc-d686.mjs` re-run on the same sources, all eight AS DECLARED (`lastkind` 48/4 — the row's named control). D-723's arms live in `test/nc-d723.mjs`, same rules: `lastappended` — THE ROW'S OWN ARM (BOB #36 11:05Z), D-686's page rule restored so the first covering step from the end answers -> 1b's shared-page arm, 2b's recompute, section 3's shared-page and `content:ocr` arms FAIL by name; `stepblind` — every step its own part, so `pixels` then `ocr` compares as two readings -> the OCR-page arms FAIL; `unreadafter` — an unreadable extent behind a covering part skipped -> 1b's D-723 undetermined arm FAILS; `overstrict` — the per-part walk spelled as a forward scan -> MUST PASS. D-723 re-anchored `nc-d686.mjs`'s `wholechain` and `overstrict` onto the per-part walk (the backward walk they patched was rewritten); their declarations stand. RUN 2026-09-25 by D-723's worker: all three harnesses, every arm AS DECLARED (figures at the foot of `nc-d723.mjs`). REC-104's surviving arms (`baseline`, `baseline2`, `parseback`, `preitem`) stay in `test/nc-rec104.mjs`; its `firststep` and `nowriter` arms were SUPERSEDED by D-686 (they broke a generated column that no longer exists) and are carried by (b) and (d) here. */
 /* REC-104 / CONTENT-SEARCH-DESIGN.md §4.2, AND D-686 (BOB #35, 2026-09-25 09:05Z) — `content.chain_kind`:
  * THE `chain` FILTER ANSWERS OFF A COLUMN, AND THE COLUMN SAYS HOW THE UNIT WAS READ.
  *
@@ -8,14 +8,15 @@
  *
  *   1. THE PARSE IS RETIRED, NOT KEPT BESIDE. The compiled statement carries no JSON parse of the chain,
  *      and its plan inside workerd SEEKS the index rather than scanning the table.
- *   1b. THE ONE FUNCTION. `textchain.mjs` `chainKindFor` answers a page by the last derivation step
- *      covering it; a unit with no page by the single kind its pages were read with, or `mixed` (BOB #35,
+ *   1b. THE ONE FUNCTION. `textchain.mjs` `chainKindFor` answers a page by the kind every part covering
+ *      it was read with, or `mixed` (D-723, BOB #36 11:05Z); a unit with no page by the single kind its pages were read with, or `mixed` (BOB #35,
  *      09:35Z); and `capture_text`'s document-level fact (`CHAIN_LAST`) by the chain's last derivation step.
  *   2. A STORE CREATED BEFORE REC-104 MIGRATES: the column is added, plain, and every row recomputed.
  *   2b. A STORE CREATED BEFORE D-686 MIGRATES: REC-104's GENERATED whole-chain column is dropped, re-added
  *      plain, and every row RECOMPUTED per unit — a derived value, so not a rewrite of history — ONCE.
  *   3. ON A MIXED DOCUMENT, THROUGH THE OP: a text-layer page's unit reads `layer`, an OCR'd page's reads
- *      `ocr` (D-686's accepts-when), on a partitioned chain and on D-635's overlapping parts.
+ *      `ocr` (D-686's accepts-when), on a partitioned chain and on D-635's overlapping parts, where the page
+ *      both parts read reads `mixed` (D-723).
  *
  * CORRECTED BY D-686, NOT EXEMPTED: this suite asserted that the column was GENERATED — that an INSERT
  * naming it was refused by the engine and an UPDATE of `chain` moved it. That was right for REC-104's
@@ -137,7 +138,7 @@ console.log("\n--- 1. the parse is retired, not kept beside the column ---");
  * D-686 — THE ONE FUNCTION, driven directly. The chains are built by `mergedChain`, the product's own
  * builder, never typed, so they are the shapes the record actually holds.
  * ================================================================== */
-console.log("\n--- 1b. chainKindFor: the last derivation step covering the unit's page ---");
+console.log("\n--- 1b. chainKindFor: how every part covering the unit's page read it ---");
 const LAYER = [{ step: "layer" }];
 const OCR = [{ step: "pixels" },
              { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" } }];
@@ -152,8 +153,19 @@ t("ARMED: both chains are real mergedChain output — scoped, and the overlap ca
 t("a TEXT-LAYER page of a mixed document reads `layer` — the defect D-686 closes",
   [chainKindFor(MIXED, { page: 0 }), chainKindFor(MIXED, { page: 1 })], ["layer", "layer"]);
 t("the OCR'd page of the same document reads `ocr`", chainKindFor(MIXED, { page: 2 }), "ocr");
-t("a page two parts share answers the part appended LAST (D-635), and its other pages their layer",
-  [chainKindFor(OVERLAP, { page: 2 }), chainKindFor(OVERLAP, { page: 0 })], ["ocr", "layer"]);
+/* CORRECTED BY D-723, NOT EXEMPTED. This asserted that a page two parts share answers the part appended
+   LAST (`ocr`). That was D-686's 09:05Z page rule, written before D-635 appended a transcription to a page
+   whose folio the layer had already decoded; on such a page the layer's text is still there, so `ocr` called
+   the publisher's typing machine-read. BOB #36 (2026-09-25 11:05Z) SUPERSEDED it for this case: a page
+   covered by parts of different kinds reads `mixed`, and a page read one way keeps its one kind. */
+t("D-723: a page two parts share (D-635) reads `mixed` — not the part appended last — and its other pages their layer",
+  [chainKindFor(OVERLAP, { page: 2 }), chainKindFor(OVERLAP, { page: 0 })], ["mixed", "layer"]);
+t("D-723: in either order of appending, and a page two parts of ONE kind share keeps that kind",
+  [chainKindFor(mergedChain([{ chain: OCR, pages: [2] }, { chain: LAYER, pages: [0, 1, 2] }]), { page: 2 }),
+   chainKindFor(mergedChain([{ chain: OCR, pages: [0, 1] }, { chain: OCR, pages: [1] }]), { page: 1 })],
+  ["mixed", "ocr"]);
+t("D-723: a part's own steps are ONE reading — the OCR-only page of the overlap reads `ocr`, not pixels-and-ocr `mixed`",
+  chainKindFor(mergedChain([{ chain: LAYER, pages: [0, 2] }, { chain: OCR, pages: [1, 2] }]), { page: 1 }), "ocr");
 /* BOB #35 09:35Z: a unit with NO page answers the single kind when every page was read one way and
    `mixed` when they differ — never null, because the record knows. */
 t("a WHOLE-DOCUMENT unit of a mixed document reads `mixed` — not the kind its chain happens to end on",
@@ -176,6 +188,11 @@ t("an UNSCOPED chain answers every page alike, so a one-provenance document read
 t("UNDETERMINED, stated as null: a page no step covers, a step of no known kind, no chain",
   [chainKindFor(MIXED, { page: 9 }), chainKindFor([{ step: "nope" }], { page: 0 }), chainKindFor(null)],
   [null, null, null]);
+/* D-723: the walk no longer stops at the first covering step, so an unreadable extent met AFTER one (earlier
+   in the chain) could be a second part covering the page — as undetermined as one met before. */
+t("D-723: an unreadable extent earlier in the chain than a covering part could be a second part: undetermined",
+  chainKindFor([{ step: "ocr", engine: "t", version: "1", confidence: { basis: "none" }, extent: { kind: "rows" } },
+                { step: "layer", extent: { kind: "pages", pages: [0] } }], { page: 0 }), null);
 t("an extent this module cannot read, met before a covering step, could cover the page: undetermined",
   chainKindFor([{ step: "layer", extent: { kind: "pages", pages: [0] } },
                 { step: "ocr", engine: "t", version: "1", confidence: { basis: "none" }, extent: { kind: "rows" } }],
@@ -321,24 +338,29 @@ const genCol = ((await raw("PRAGMA table_xinfo(content)")).rows || []).find((r) 
 t("ARMED: the store booted on REC-104's schema holds chain_kind as a GENERATED column", (genCol?.hidden ?? 0) > 0, true);
 const LEGACY = [["m-page0", '{"kind":"pdf-page","page":0,"rect":null}', "page 1"],
                 ["m-page2", '{"kind":"pdf-page","page":2,"rect":null}', "page 3"],
-                ["m-doc", '{"kind":"document"}', "the whole document"]];
-for (const [id, extent, ref] of LEGACY) {
+                ["m-doc", '{"kind":"document"}', "the whole document"],
+                /* D-723: a page two parts SHARE, held by a legacy store — the recompute is the only writer that
+                   reaches a row minted before the rule, so the shared page is driven through it too. */
+                ["m-shared2", '{"kind":"pdf-page","page":2,"rect":null}', "page 3", OVERLAP]];
+for (const [id, extent, ref, chain = MIXED] of LEGACY) {
   const w = await raw(INS, id, "sha-mixed-legacy", DOC_MIX_OLD, JSON.parse(extent).kind, extent, ref,
-                      JSON.stringify(MIXED), null, 3, "plane", NOW);
+                      JSON.stringify(chain), null, 3, "plane", NOW);
   if (!w.ok) throw new Error(`legacy insert ${id}: ${w.error}`);
 }
 const kinds = async () => ((await raw("SELECT content_id, chain_kind FROM content ORDER BY content_id")).rows || [])
   .map((r) => `${r.content_id}=${r.chain_kind}`);
 t("ARMED: under REC-104 the TEXT-LAYER page's unit reads `ocr` — the defect, present before the migration",
-  await kinds(), ["m-doc=ocr", "m-page0=ocr", "m-page2=ocr"]);
+  await kinds(), ["m-doc=ocr", "m-page0=ocr", "m-page2=ocr", "m-shared2=ocr"]);
 
 await mf.setOptions(opts(null));            // same storage, the CURRENT schema
 
 const plain = ((await raw("PRAGMA table_xinfo(content)")).rows || []).filter((r) => r.name === "chain_kind");
 t("the reboot REPLACES the generated column with a plain one — one column, `hidden` 0",
   plain.map((r) => r.hidden), [0]);
+/* CORRECTED BY D-723: this held three rows, none on a page two parts share, so it could not see that the
+   recompute wrote such a page's LAST part (`ocr`); the shared page's row is added and asserted `mixed`. */
 t("every row is RECOMPUTED per unit: the text-layer page reads `layer`, the OCR'd page `ocr`, the whole document `mixed`",
-  await kinds(), ["m-doc=mixed", "m-page0=layer", "m-page2=ocr"]);
+  await kinds(), ["m-doc=mixed", "m-page0=layer", "m-page2=ocr", "m-shared2=mixed"]);
 t("and the index the filter seeks is back on the new column",
   ((await raw("SELECT name FROM sqlite_master WHERE type='index' AND name='content_chain_kind'")).rows || []).length, 1);
 t("THROUGH THE OP: `content:layer` now names the mixed document, by its text-layer page",
@@ -349,7 +371,7 @@ t("THROUGH THE OP: `content:layer` now names the mixed document, by its text-lay
 await raw("UPDATE content SET chain_kind='typed' WHERE content_id='m-doc'");
 await mf.setOptions(opts(null));
 t("a SECOND boot does not recompute — the converted store is left as it is",
-  await kinds(), ["m-doc=typed", "m-page0=layer", "m-page2=ocr"]);
+  await kinds(), ["m-doc=typed", "m-page0=layer", "m-page2=ocr", "m-shared2=mixed"]);
 await mf.dispose();
 
 /* ==================================================================== 3
@@ -406,8 +428,12 @@ t("a TEXT-LAYER page's unit reads `layer` on a partitioned mixed document (D-686
   LABELS.filter((x) => x.startsWith("mix.page0")), ["mix.page0=layer"]);
 t("and on D-635's overlapping parts, a page only the layer read reads `layer`",
   LABELS.filter((x) => x.startsWith("over.page0")), ["over.page0=layer"]);
-t("an OCR'd page's unit reads `ocr`, and so does the page both parts read (the part appended last)",
-  LABELS.filter((x) => /page2/.test(x)), ["mix.page2=ocr", "over.page2=ocr"]);
+/* CORRECTED BY D-723, NOT EXEMPTED: this asserted the page both parts read reads `ocr`, the part appended
+   last — D-686's 09:05Z page rule, which BOB #36 (11:05Z) superseded for a D-635 shared page because its layer
+   text was not machine-read. The OCR-only page of the partitioned document still reads `ocr`. */
+t("an OCR'd page's unit reads `ocr`", LABELS.filter((x) => x.startsWith("mix.page2")), ["mix.page2=ocr"]);
+t("D-723: the page both parts read (D-635) reads `mixed` through the op — not the part appended last",
+  LABELS.filter((x) => x.startsWith("over.page2")), ["over.page2=mixed"]);
 t("the whole-document unit of a mixed document reads `mixed` (BOB #35 09:35Z)",
   LABELS.filter((x) => /\.doc=/.test(x)), ["mix.doc=mixed", "over.doc=mixed"]);
 {
@@ -419,9 +445,18 @@ t("the whole-document unit of a mixed document reads `mixed` (BOB #35 09:35Z)",
 }
 t("THROUGH THE SEARCH: `content:mixed` is a word, and names each mixed document by its whole-document unit",
   await ids("content:mixed"), [DOC_MIX, DOC_OVER].sort());
-t("THROUGH THE SEARCH: `content:layer` and `content:ocr` BOTH name each mixed document",
+/* CORRECTED BY D-723: `content:ocr` named the overlapping document by its shared page, which read `ocr`. That
+   page reads `mixed` now, and `content:ocr` stays an EQUALITY that never names a mixed unit (BOB #36 11:05Z,
+   CONFIRMED), so the overlap — whose only OCR'd page is the shared one — leaves `content:ocr` and is named by
+   `content:mixed` and by `content:layer` through page 0. */
+t("THROUGH THE SEARCH: `content:layer` names each mixed document; `content:ocr` only the one with an OCR-only page",
   [await ids("content:layer"), await ids("content:ocr")],
-  [[DOC_MIX, DOC_OVER].sort(), [DOC_MIX, DOC_OVER].sort()]);
+  [[DOC_MIX, DOC_OVER].sort(), [DOC_MIX]]);
+/* The UNITS the equality selects, on the column the compiled filter reads (section 1 pins that it is
+   `chain_kind = ?`): `rows=content` projects every unit of a matched document, so it cannot show this. */
+t("D-723: the units `content:ocr`'s equality selects are the OCR-only page alone — never the shared page",
+  ((await raw("SELECT content_id FROM content WHERE chain_kind = ?", "ocr")).rows || [])
+    .map((r) => minted[r.content_id]).filter(Boolean).sort(), ["mix.page2"]);
 /* The cap and the kind are asked of ONE target (`unitTargetOf`), so they cannot describe different
    pages: a text-layer page is undetermined (its layer is unmeasured), the OCR-only page is the engine's C. */
 const caps = (await rowsOf("has:content")).filter((r) => minted[r.content_id] && minted[r.content_id].startsWith("mix."))

@@ -1374,8 +1374,8 @@ export class Store extends DurableObject {
     addColumns();
 
     /* REC-104: `content.chain_kind` -- and D-686 (BOB #35, 2026-09-25 09:05Z), which changed what it is.
-       REC-104 made it a GENERATED column over the whole chain's last step; D-686 makes it the kind of the
-       last derivation step covering the UNIT's page, a PLAIN column written at mint by `chainKindFor`
+       REC-104 made it a GENERATED column over the whole chain's last step; D-686 makes it how the UNIT's
+       page was read (the one kind of the parts covering it, or `mixed`, D-723), a PLAIN column written at mint by `chainKindFor`
        (schema.mjs says why). A store may hold either earlier shape, and this block brings both to the
        current one. FOUR THINGS ARE LOAD-BEARING AND NONE IS STYLE.
        (1) IT RUNS BEFORE THE SCHEMA, not in the additive ALTER list further down,
@@ -20919,7 +20919,7 @@ export class Store extends DurableObject {
            PDF page asks about its page and rectangle, like `pdf-page`. */
         citedAs === "bytes" ? null : derivationCap(chain, unitTargetOf(extent)),
         ctx.pageCount, mintedBy, at || new Date().toISOString(), citedAs,
-        /* D-686: HOW THIS UNIT WAS READ -- the last derivation step covering its page, asked of the same
+        /* D-686: HOW THIS UNIT WAS READ -- its page's one kind or `mixed` (D-723), asked of the same
            target as the cap. A bytes row's chain is NULL, so its kind is too, as it always was. */
         chainKindFor(chain, unitTargetOf(extent)));
     }

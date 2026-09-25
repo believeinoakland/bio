@@ -3364,7 +3364,7 @@ CREATE TABLE IF NOT EXISTS content (
   at             TEXT NOT NULL,
   stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
   cited_as       TEXT    NOT NULL DEFAULT 'text', -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
-  chain_kind     TEXT               -- D-686. how THIS unit was read: the last derivation step covering its page, or for a unit with no page its pages' one kind or mixed. Written at mint by chainKindFor. NULL = undetermined. See the index block below
+  chain_kind     TEXT               -- D-686. how THIS unit was read: the one kind every part covering its page was read with, or mixed (D-723), or for a unit with no page its pages' one kind or mixed. Written at mint by chainKindFor. NULL = undetermined. See the index block below
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis
@@ -25991,12 +25991,20 @@ function chainKindFor(chain2, target = null) {
     }
     return kinds.size === 1 ? [...kinds][0] : CHAIN_KIND_MIXED;
   }
+  const byPart = /* @__PURE__ */ new Map();
   for (let i = derivations.length - 1; i >= 0; i--) {
     const ext = extentOf(derivations[i]);
     if (ext === "unreadable") return null;
-    if (ext === "all" || ext.includes(page)) return derivations[i].step;
+    if (ext === "all") {
+      if (!byPart.size) return derivations[i].step;
+      break;
+    }
+    const key = partKeyOf(derivations[i]);
+    if (ext.includes(page) && !byPart.has(key)) byPart.set(key, derivations[i].step);
   }
-  return null;
+  if (!byPart.size) return null;
+  const partKinds = new Set(byPart.values());
+  return partKinds.size === 1 ? [...partKinds][0] : CHAIN_KIND_MIXED;
 }
 function describeChain(chain2) {
   if (checkChain(chain2)) return "this text's provenance was not recorded";
@@ -29635,8 +29643,8 @@ var MEANING = {
          whole chain per row — unindexable, the slowest filter on the table
          (M-23), and REC-90's stated DESIGN GAP against §4.2, since §4.1 gives
          `capture_text` a `chain_kind` column for the identical question.
-         D-686 (BOB #35): `chain_kind` is the kind of the last derivation step
-         covering the UNIT's page, written at mint by `textchain.mjs`
+         D-686 (BOB #35): `chain_kind` is how the UNIT's page was read (the
+         one kind of the parts covering it, or `mixed`, D-723), written at mint by `textchain.mjs`
          `chainKindFor` (schema.mjs says why), so on a mixed document a
          text-layer page answers `layer` and an OCR'd page `ocr`.
          ONLY TWO VALUES KEEP A PREDICATE OF THEIR OWN, each for a reason:
@@ -50285,7 +50293,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         mintedBy,
         at || (/* @__PURE__ */ new Date()).toISOString(),
         citedAs,
-        /* D-686: HOW THIS UNIT WAS READ -- the last derivation step covering its page, asked of the same
+        /* D-686: HOW THIS UNIT WAS READ -- its page's one kind or `mixed` (D-723), asked of the same
            target as the cap. A bytes row's chain is NULL, so its kind is too, as it always was. */
         chainKindFor(chain2, unitTargetOf(extent))
       );
