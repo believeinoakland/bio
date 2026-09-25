@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec-181-promote-retire.test.mjs",
+ "inputHash": "a259043a2330cdd63de78aa7d62e8ee047d1d6bcef0228f6e53e761a1e3c458c",
+ "verdict": "PASS",
+ "run": "618f07c1fa533226a79c993aa5cb3cae56825792.1790332632473.1200.json",
+ "tree": "618f07c1fa533226a79c993aa5cb3cae56825792",
+ "head": "3401cd78dcaf676e6cc93902104c93a8652e827e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 148,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "2245f573-98c6-54c4-b8b9-6ff7bee3ae81",
+ "at": "2026-09-25T10:37:12.486Z"
+}
