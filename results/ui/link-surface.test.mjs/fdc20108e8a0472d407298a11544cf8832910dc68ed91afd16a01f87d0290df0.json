@@ -1,0 +1,16 @@
+{
+ "unit": "ui:link-surface.test.mjs",
+ "inputHash": "fdc20108e8a0472d407298a11544cf8832910dc68ed91afd16a01f87d0290df0",
+ "verdict": "PASS",
+ "run": "edbd52f7630484318712dfa0554e1bbf4d3ad5cf.1790319399724.15807.json",
+ "tree": "edbd52f7630484318712dfa0554e1bbf4d3ad5cf",
+ "head": "40389ce669b32f4584a64f434f2e782d7c6c84c4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 69,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "b0194cc6-edfd-5cab-b5b5-3958bfcccf3b",
+ "at": "2026-09-25T06:56:39.739Z"
+}

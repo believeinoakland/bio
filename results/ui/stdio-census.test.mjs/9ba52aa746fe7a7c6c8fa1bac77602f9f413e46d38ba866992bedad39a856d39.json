@@ -1,0 +1,16 @@
+{
+ "unit": "ui:stdio-census.test.mjs",
+ "inputHash": "9ba52aa746fe7a7c6c8fa1bac77602f9f413e46d38ba866992bedad39a856d39",
+ "verdict": "PASS",
+ "run": "edbd52f7630484318712dfa0554e1bbf4d3ad5cf.1790319399724.15807.json",
+ "tree": "edbd52f7630484318712dfa0554e1bbf4d3ad5cf",
+ "head": "40389ce669b32f4584a64f434f2e782d7c6c84c4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 139,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "b0194cc6-edfd-5cab-b5b5-3958bfcccf3b",
+ "at": "2026-09-25T06:56:39.739Z"
+}

@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d522-unattended-render.test.mjs",
+ "inputHash": "4c9658eafa0906fcf78d3f19cc4a7219f2404df2a079fbb8201ac9031774f10c",
+ "verdict": "PASS",
+ "run": "edbd52f7630484318712dfa0554e1bbf4d3ad5cf.1790319399724.15807.json",
+ "tree": "edbd52f7630484318712dfa0554e1bbf4d3ad5cf",
+ "head": "40389ce669b32f4584a64f434f2e782d7c6c84c4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 144,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "b0194cc6-edfd-5cab-b5b5-3958bfcccf3b",
+ "at": "2026-09-25T06:56:39.738Z"
+}
