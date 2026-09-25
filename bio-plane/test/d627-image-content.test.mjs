@@ -172,8 +172,12 @@ t("GLYPH GAP: 8 glyphs, a count no measured page has, reads UNDETERMINED, not fo
 t("SHARE GAP: a folio beside an image covering 0.0206 of the page reads UNDETERMINED",
   imageMark(syn, 3), ["image_content_undetermined", 0.0206, 1]);
 t("BLANK FOLIO: a folio and no image says nothing", reasonsOn(syn, 4), []);
-t("SCAN: a page with no font keeps no_text_layer and gains nothing (it is routed already)",
-  reasonsOn(syn, 5), ["no_text_layer"]);
+/* CORRECTED BY D-665 (2026-09-25), not exempted: this said the scan "gains nothing", and D-665 now adds the
+   per-image `image_unread` marker to every painted image above M-182's floor, a scan's included (BOB #35 06:25Z:
+   whatever the image depicts). What D-627 guarantees is narrower and still pinned: no page-level image-content
+   marker on a page already routed as a scan. */
+t("SCAN: a page with no font keeps no_text_layer and gains no image-content marker (it is routed already)",
+  reasonsOn(syn, 5).filter((r) => r !== "image_unread"), ["no_text_layer"]);
 /* OVER-STRICTNESS: correct figures in shapes the simplest reading gets wrong. */
 t("UNION: two overlapping images count their overlap once (share 1, where a sum reads 1.2525)",
   imageMark(syn, 6), ["image_content_unread", 1, 1]);
