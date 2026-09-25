@@ -29,8 +29,9 @@ record, writes nothing, and reports the running build's own version.
   condition is exactly "no namespace was named", whether the field is absent or of another type.
 - **R3** A named `store` that is not exactly `"bio"` or `"scratch"` (case-sensitive) is refused
   `NAMESPACE_UNKNOWN` (400), naming what was asked (`asked`, truncated to 80 characters) and the two
-  names that exist (`namespaces`). This is refused before R2 is addressed at all, even when bytes sit
-  under that exact key — the fence is the NAME, not whether the bucket holds something there. The
+  names that exist (`namespaces`). This is refused before the R2 bucket is addressed at all, even
+  when bytes sit under that exact key — the fence is the NAME, not whether the bucket holds
+  something there. The
   two names this module accepts are fixed in its own source; a caller depending on them matching the
   record's namespace set relies on that set not changing without this module changing too.
 - **R4** `pages` must be a non-empty array, or the request is refused `BAD_PAGES` (400). An array
@@ -52,14 +53,20 @@ record, writes nothing, and reports the running build's own version.
      measured pair (checked before any bytes are touched).
   2. `PAGE_NOT_RENDERABLE` (200) — the page renderer (`pdf-worker`) refused it; this member forwards
      that refusal's own reason rather than reinterpreting it.
-  3. `PIXELS_UNREADABLE` (200) — the renderer answered in a container this member cannot turn back
-     into samples (anything other than `image/png`, or a PNG shape this member's own reader refuses).
+  3. `PIXELS_UNREADABLE` (200) — the renderer answered in a container this member cannot read at all
+     (anything other than `image/png`).
   4. `FRAME_OVER_MEASURED_BOUND` (200) — the page's RGBA frame (`width * height * 4` bytes) exceeds
      `MAX_FRAME_BYTES` (61,300,000, the largest frame CPDF-15 measured completing on the deployed
-     runtime); the refusal names `width`, `height`, `frame_bytes` and `bound_bytes`.
-  5. `ENGINE_FAILED` (200) — the engine threw or refused on this frame; the refusal carries the
+     runtime); the refusal names `width`, `height`, `frame_bytes` and `bound_bytes`. Checked only
+     once the container has passed step 3, so a page too large is refused by its true reason even
+     when its container would also have been unreadable.
+  5. `PIXELS_UNREADABLE` again (200) — the PNG this member did receive is a shape its own reader
+     refuses (interlaced, an unsupported colour-type/bit-depth pair, a scanline filter it does not
+     implement, or truncated data). Same reason code as step 3, reached only once the frame has
+     passed the size check.
+  6. `ENGINE_FAILED` (200) — the engine threw or refused on this frame; the refusal carries the
      engine's own error name and message.
-  6. `NOTHING_TRANSCRIBED` (200) — the engine boxed no region carrying both non-blank text and a
+  7. `NOTHING_TRANSCRIBED` (200) — the engine boxed no region carrying both non-blank text and a
      finite rectangle. This is answered exactly the same way for a blank page and for a page of pure
      noise: an engine that answers nothing on either is reporting a finding, not failing, and the
      refusal names how many boxes it found and how many were blank or unanchored.
@@ -100,7 +107,9 @@ engine_loaded, engine_unavailable?}`.
   it is `false`, `engine_unavailable` names why. A member deployed without its wasm part answers
   every other route normally and is caught here rather than on the first page asked of it.
 
-**Any other method or path** — R14 — is refused `{ok:false, reason:"UNKNOWN"}` with HTTP 404.
+**Any other method or path.**
+
+- **R14** Refused `{ok:false, reason:"UNKNOWN"}` with HTTP 404.
 
 ## Private
 
@@ -119,8 +128,8 @@ engine_loaded, engine_unavailable?}`.
   (Durable Object) or `PUBLISHED` binding — so it structurally cannot write the record — and the
   bucket it reads from is byte-for-byte unchanged, object-for-object, after any sequence of calls.
 - **R16** The namespace set this module will read from is exactly `["bio", "scratch"]`, case-
-  sensitive, fixed in its own source; a name outside it is refused (R3) before R2 is ever addressed,
-  even when bytes already sit under that exact key. This set names the same two namespaces the
+  sensitive, fixed in its own source; a name outside it is refused (R3) before the R2 bucket is ever
+  addressed, even when bytes already sit under that exact key. This set names the same two namespaces the
   record it reads from actually holds — a caller extending the record's namespace set without this
   module's set moving too is a defect in this module's copy, not a defect in the request.
   (D-478, C-78.1's rule extended to every fleet member — see Suggestions.)
