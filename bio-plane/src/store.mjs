@@ -11992,6 +11992,30 @@ export class Store extends DurableObject {
                        + `can appear in no signed document of it, and is recorded as the act it was.`
                      : `Its case document is authored and unsigned, so it now lists this reading (case_documents), `
                        + `re-authored; its owner signs the new bytes.`)
+               /* D-708 (BIO_Publication_v0_1.md 6A.4, BOB #32's newCase ruling, D-618's `#statedEdition`): A DRAFT
+                  THAT NAMES A CASE AND ALSO ASKS FOR A NEW ONE GETS ITS OWN SENTENCE. The branch below called
+                  `#caseIdentitySentence` without `newCase`, so it told the reader the named case's NEXT EDITION (N)
+                  would list this acknowledgement, beside `edition: null` — an edition and a listing for a case the
+                  record has not chosen. Passing `newCase` there was not enough: that sentence still states the
+                  edition, and the listing clause around it still promised one. Publication refuses the pair
+                  together, so no case document can be authored FROM THIS DRAFT while both stand; the reading is
+                  recorded, the review copy lists it, and which document can list it depends on which instruction is
+                  withdrawn, so this answer names none. Documents re-authored above (another draft's unsigned document
+                  at the key this draft names, carrying this exact statement) are the record's own act and are said. */
+               : ident.caseId != null && draftNewCase
+               ? `this is a reading of draft ${draftId}, which names ${ident.caseId} AND asks for a new case — `
+                   + `publication refuses those two instructions together, so which case this draft becomes stays `
+                   + `UNDETERMINED until one of them is withdrawn, and this answer states no edition for it and `
+                   + `promises no listing. op=reviewcopy lists it for this draft. No case document can be authored `
+                   + `from this draft while both instructions stand (op=publish refuses it). `
+                   + (reauthored.length
+                     ? `The unsigned case document${reauthored.length > 1 ? "s" : ""} returned beside this answer `
+                       + `(case_documents) carr${reauthored.length > 1 ? "y" : "ies"} this exact statement at the `
+                       + `key this draft names, and now list${reauthored.length > 1 ? "" : "s"} it, re-authored; `
+                       + `${reauthored.length > 1 ? "their owners sign" : "its owner signs"} the new bytes. `
+                     : ``)
+                   + `A statement edited afterwards is a different sentence, and this acknowledgement is not listed `
+                   + `under it.`
                : ident.caseId != null
                ? `the completeness block of ${Store.#caseIdentitySentence(ident.caseId, ident.edition, draftNewCase)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `

@@ -22,7 +22,7 @@
  * AS DECLARED on the first run.
  * RE-RUN 2026-09-25 at the c23-batch30 union (reviewcopy only): baseline and fixture NOT AS DECLARED on the first run,
  * each for D-618's new section 14 (4/0) alone; reviewcopy's baseline re-declared from the union's print and its three
- * arms re-ran AS DECLARED.
+ * arms re-ran AS DECLARED. Re-declared again at the D-708 merge (section 14 -> 6/0) and re-run.
  */
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, symlinkSync, readdirSync, openSync, closeSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -92,8 +92,10 @@ const SUITES = {
                inside block() too; 5/0, measured by this driver's baseline on the union. */
             "13": [5, 0],
             /* ADDED 2026-09-25 at the c23-batch30 union: D-618's block 14 runs inside block() at the union; 4/0,
-               measured by this driver's baseline on the union (the old base, which lacked it, read it as an extra). */
-            "14": [4, 0] },
+               measured by this driver's baseline on the union (the old base, which lacked it, read it as an extra).
+               CORRECTED 2026-09-25 at the same union's D-708 merge: 4 -> 6, D-708's two arms in block 14 (the suite's
+               own per-section print, 6 pass, 0 fail); 4/0 was block 14 before D-708 joined it. */
+            "14": [6, 0] },
     fixture: ['answered?`, INFO), "inquiry", "open")', 'answered?`, INFO), "nosuchtype", "open")'],
     died: { "11": "(fixture) promote INQ-2026-1260-later-lb (after the trip)" } },
 };

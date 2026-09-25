@@ -265,6 +265,35 @@ const ARMS = {
        apply: () => edit(STORE,
          "    if (ident.caseId && newCase) return null;\n    return ident.caseId || newCase ? ident.edition : null;",
          "    return !ident.caseId === !newCase ? null : ident.edition;") },
+
+  /* D-708 — the acknowledgement's `listed` sentence for a draft naming a case AND asking for a new one. Declarations
+     in the suite's header, made before arming. */
+  aa: { files: [STORE],
+        label: "(aa) THE ROW'S NEGATIVE CONTROL: the pair's branch removed and `newCase` dropped from the call — the "
+             + "plane exactly as before D-708, C1's next edition and a listing beside `edition: null`",
+        apply: () => {
+          edit(STORE, "               : ident.caseId != null && draftNewCase\n",
+                      "               : false && ident.caseId != null && draftNewCase\n");
+          edit(STORE, "Store.#caseIdentitySentence(ident.caseId, ident.edition, draftNewCase)} `",
+                      "Store.#caseIdentitySentence(ident.caseId, ident.edition)} `");
+        } },
+
+  ab: { files: [STORE],
+        label: "(ab) THE ALTERNATIVE ALONE: the pair's branch removed, `newCase` still passed to the sentence helper — "
+             + "its pair sentence still states the edition and the clause around it a listing",
+        apply: () => edit(STORE, "               : ident.caseId != null && draftNewCase\n",
+                                 "               : false && ident.caseId != null && draftNewCase\n") },
+
+  ac: { files: [STORE],
+        label: "(ac) THE BRANCH TAKEN FOR EVERY NAMED-CASE DRAFT: its `draftNewCase` test dropped",
+        apply: () => edit(STORE, "               : ident.caseId != null && draftNewCase\n",
+                                 "               : ident.caseId != null\n") },
+
+  ad: { files: [STORE],
+        label: "(ad) OVER-STRICTNESS: the pair's sentence reworded, a spelling this suite did not write — must PASS",
+        apply: () => edit(STORE,
+          "`this is a reading of draft ${draftId}, which names ${ident.caseId} AND asks for a new case — `",
+          "`you read draft ${draftId}; it names ${ident.caseId} and also asks for a new case, so `") },
 };
 
 anchorEach(ARMS, (a) => a.apply());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
@@ -439,7 +468,24 @@ console.log(`\npen removed: ${PEN}`);
      v 3 -> 5  the stated edition used as the key kills DB's grant (null never equals the stored edition): D-618
                ACCEPTS-WHEN and BINDS — the same fact D-568's (v) measured for DD, now for the pair
 
+   RE-MEASURED 2026-09-25 by WORKER D-708 (cloud, SCHEDULER #23), all THIRTY arms, pen in the session scratchpad via
+   `BIO_NC_PEN`, 30 of 30 restores of a 3,656,661-byte `store.mjs` (sha256 817e1c30…) sha256 MATCH / content IDENTICAL
+   / size ok:
+     baseline  104/0
+     a 99/5   b 103/1  d 102/2  e 102/2  f 103/1  g 96/8   h 103/1  i 98/6   j 101/3  k 104/0  l 101/3
+     m 102/2  n 104/0  o 102/2  p 104/0  q 102/2  r 100/4  s 104/0  t 101/3  u 103/1  w 104/0  x 103/1
+     y 103/1  z 104/0 — failure counts unchanged
+     aa 103/1  the row's control, the plane before D-708 — "D-708 ACCEPTS-WHEN", by name
+     ab 103/1  `newCase` passed but no branch — "D-708 ACCEPTS-WHEN", by name (the alternative does not meet the row)
+     ac 103/1  the branch for every named-case draft — "D-708: A DRAFT NAMING C1 ONLY KEEPS ITS `listed` SENTENCE"
+     ad 104/0  the reworded sentence passes
+   Two older arms MOVED, each by one, in the arm's own direction: c 6 -> 7 and v 5 -> 6, both "D-708 ACCEPTS-WHEN" —
+   each kills DB's grant, so the recipient's reading is refused and carries no `listed`.
+
    RE-MEASURED 2026-09-25 at the c23-batch30 union (CONDUCT #23), all TWENTY-SIX arms, pen in the session scratchpad,
    store.mjs 3,733,197 B restored sha256 MATCH each time, with block 14 now inside D-564's `block()`: baseline 102/0
    and every arm's count IDENTICAL to D-618's figures above (c 96/6, r 98/4, v 97/5, x 101/1, y 101/1, z 102/0).
+   RE-MEASURED again at the same union after D-708 merged, all THIRTY arms, every restore sha256 MATCH: baseline
+   104/0 and every arm's count IDENTICAL to D-708's figures above (c 97/7, v 98/6, aa 103/1, ab 103/1, ac 103/1,
+   ad 104/0).
 */
