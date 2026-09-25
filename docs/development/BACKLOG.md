@@ -114,6 +114,7 @@ accepts-when: a case published under a proposed-only adoption signs a /4 block n
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs REC`).
 
 ### UI-106 · queued — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
+status: queued — D-577 (minted by D-539's worker 00:55Z: rvcFormFromCopy never reads c.case.newCase, and its comment is stale) is this row's finding and closes with it; also correct that comment
 order: after D-539, the surface half of the review-copy corrections (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
 milestone: M10
 interface: I3 consumer (REC-199's IC-285 and D-538's IC).
@@ -1189,13 +1190,3 @@ depends-on: none.
 scope: bring the three historical forms to the grammar; a `planning-hygiene` arm pins it.
 accepts-when: every released block carries the in-block line. NEGATIVE CONTROL: plant a `### RELEASED` heading, and the pin fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
-
-### D-459 · queued — **`case-opened.test.mjs` IS UNCLASSIFIED IN THE COVERAGE REGISTER, AND WAS BEFORE D-241.** — owner M0.
-order: with the M0 instrument rows, after D-342 (SCHEDULER #17, 2026-09-23; D-241's worker via CONDUCT #18 00:15Z)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (the negative-control register).
-depends-on: none.
-scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
-accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
