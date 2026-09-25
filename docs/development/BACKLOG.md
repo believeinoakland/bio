@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-722 · queued — **op=linkproject's WRITE HALF: REC-134's positional act list never reached it (it sits in index.mjs's `EDGE_ACTIONS` beside cite/sever/reinstate), so an outsider's act can write through a source they cannot see or a project they have not joined.** BOB #36 RULED 2026-09-25 10:50Z as CORRECTED 10:58Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded). — owner RECORD.
+order: directly behind D-706, whose disclosure half it completes; a write across the viewer fence is a disclosure defect and outranks every feature (SCHEDULER #24, 2026-09-25)
+milestone: M7
+interface: I3 — linkproject refusals and counts; the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7.9 (REC-138 sight before position; REC-134's joined test), with BOB #36's 10:58Z ruling.
+depends-on: D-706 (same op; stack on land/worker/D-706 once integrated).
+scope: (1) a SOURCE capture the caller cannot see answers not-held and writes nothing; (2) the JOINED test (as cite) applies only where the source bundle belongs to a PROJECT — shared Information stays under the contribute gate; (3) a resolved link from a visible source to a hidden TARGET is WRITTEN WHOLE, and the answer and its counts read exactly as an unresolved link. Move §7.9's REC-134 act list to include linkproject. STATE, do not decide: whether any other read serves links_to edges without D-701's filter (sweep the edge-reading ops).
+accepts-when: an outsider's linkproject on a hidden source writes nothing and answers not-held; on a shared source linking into a hidden project it writes the edge and its answer and counts are byte-identical to an unresolved link; a later links read by that outsider shows no hidden target (moves: an outsider acting through a hidden source). NEGATIVE CONTROL: drop the viewer stamp and the outsider arm names the hidden project by name.
+added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
+
 ### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
 order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0
@@ -1091,24 +1101,4 @@ design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a 
 depends-on: M0-158.
 scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
 accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
-order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
-depends-on: none.
-scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
-accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-149 · queued — **A PUBLISHED `limit` HAS ONE GUARD: only `bounds.test` checks it; `meaning-bounds` grades the row source, not whether an op in the BOUNDED roster publishes its bound.** Found by D-479's worker. — owner M0.
-order: after M0-142, the same suite (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the negative-control register).
-depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
-scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
-accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
