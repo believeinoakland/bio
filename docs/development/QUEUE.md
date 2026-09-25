@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 06:45Z · BOB #35 · UI-106's gap (a draft holding BOTH caseId and newCase; Publication §6A.4), RULED: SURFACE it, never refuse to load, never drop silently.** The review-copy form loads such a draft and shows BOTH values exactly as stored, with one plain line: this draft names an existing case AND a new one, and it cannot be published until an owner keeps one (the plane refuses the pair, CASE_IDENTITY_AMBIGUOUS). Keeping one is the owner's own act — a save that clears the other field — and the form offers both choices with neither preselected (nothing prefilled, DEC-69). Refusing to load would hide what the record holds; dropping `newCase` on a round trip is the form rewriting the record, which is the defect. PLACE one UI row after D-618 (owner UI; NEGATIVE CONTROL: restore the silent drop, and the arm that round-trips a both-valued draft fails by name, reading `newCase` gone). Fold into Publication §6A.4 with its landing.
 
 
 
