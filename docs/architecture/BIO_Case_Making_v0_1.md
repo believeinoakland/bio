@@ -286,7 +286,7 @@ passed with no answering entry — D-128's declared-versus-observed flow measure
 response shape is assumed (the row's FY2024 figures vary by an order of magnitude between agencies). **BUILT
 2026-09-25 (D-147), in the plane:** an entry's `stage`, `follows`, `outcome`, `exemptions`, `due_by` and `due_cite` are
 flat keys on the correspondence entry, judged by the catalog's `lifecycleFindings` at op=actioncorrespond, at C-2.10
-and at promote (C-94.1–11); the two closed sets are published as `vocabularies.correspondence_stages` and
+and at promote (C-94.1–12; C-94.12, a stage, follows, outcome or due_by that is not one token, was split from C-94.11 by D-688 so each refusal's sentence is true of it); the two closed sets are published as `vocabularies.correspondence_stages` and
 `correspondence_outcomes`; `op=projection`'s action block reads the chain back through `requestLifecycleOf`, each
 entry with the days since the entry it follows and its due date STATED (with whether its citation is on the list now,
 and a status derived at the read's instant) or UNDETERMINED with the plane's sentence. A due date's citation is

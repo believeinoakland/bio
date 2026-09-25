@@ -7151,19 +7151,23 @@ export class Store extends DurableObject {
                target, detail, ...(extra || {}) };
     };
     /* DEC-49 REGION is-lifecycle-writable — D-147/C-94.11. The two prose values
-       a stage carries are written quoted into a grammar with no escapes; the four
-       tokens are bare, so each must be the token its grammar names before any
-       byte is spliced (the grammar below judges which token). */
+       a stage carries are written quoted into a grammar with no escapes. */
     for (const [k, max] of [["exemptions", Store.RELEASE_ACK_MAX], ["due_cite", CITATION_MAX]])
       if (life[k] !== undefined && (life[k].length > max || /["\\\r\n]/.test(life[k])))
         return refusal("LIFECYCLE_TEXT_UNWRITABLE",
           `${k} is at most ${max} characters and cannot contain a quote, a backslash, or a newline: the `
           + `restricted frontmatter grammar has no escapes`, { field: k });
+    /* END DEC-49 REGION is-lifecycle-writable */
+    /* DEC-49 REGION is-lifecycle-token — D-688/C-94.12. The four bare values are
+       each ONE token, checked before any byte is spliced (the grammar below judges
+       which token). A value that is not one (`stage=Appeal`) is its own condition,
+       split from C-94.11, whose sentence about the exemptions and the citation is
+       false of it. */
     for (const k of ["stage", "follows", "outcome", "due_by"])
       if (life[k] !== undefined && !/^[a-z0-9_-]{1,40}$/.test(life[k]))
-        return refusal("LIFECYCLE_TEXT_UNWRITABLE",
+        return refusal("LIFECYCLE_TOKEN_MALFORMED",
           `${k} is a single token of lower-case letters, digits, underscores or hyphens`, { field: k });
-    /* END DEC-49 REGION is-lifecycle-writable */
+    /* END DEC-49 REGION is-lifecycle-token */
     /* DEC-49 REGION is-quote-writable — D-148/C-72.6. The two prose values a
        quote carries are written quoted into a grammar with no escapes. */
     for (const k of ["quote_currency", "quote_basis"])

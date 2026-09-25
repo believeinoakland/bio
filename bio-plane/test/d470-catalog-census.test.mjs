@@ -602,6 +602,13 @@ const CATALOG_CENSUS = {
      CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
      1.31.0 (D-670, 2026-09-25, branch land/worker/D-670): ONE ARRIVAL, NO DEPARTURES — C-45.13 CONTENT_EXTENT_NOT_USER_SPACE in CONTENT_EXTENT_CHECKS, 502 -> 503; by this suite's print on the item's tree.
      "1.31.0": { count: 503, digest: "fab9c4d6128e1c03462812da7c0eed4d0af1d7ae090b786e47a8e854c82858fa" }, */
+  /* D-688 side, kept as history (branch row DROPPED at c23-batch30 — ours holds "1.31.0" for the union catalogue;
+     CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.32.0 (D-688, 2026-09-25, WORKER D-688, branch land/worker/D-688 over origin/main 95fe7bc7): ONE ARRIVAL, NO
+     DEPARTURES — C-94.12 LIFECYCLE_TOKEN_MALFORMED, split out of C-94.11; ONE CHANGED under an unmoved id, C-94.11
+     (it no longer answers a stage/follows/outcome/due_by that is not one token) — for the union's own `changed`.
+     "1.32.0": { count: 570, digest: "d5f4e2dd0c69093ebcceb096a8a218ab27b879b590c0f0cf1105793ab9634cc0",
+                 changed: ["C-94.11"], source: "1aabe731ea2c9e1d32b0021c7eff89de82cbe926ea0bddb5652eaf1bfd2130b5" }, */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -842,6 +849,9 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    kept at c23-batch30 and CONDUCT moves this literal with the constant once. */
 /* D-695 side, kept as history — its A5 pin read 1.35.0 on its own branch (C-73.6, one arrival); ours is
    kept at c23-batch30 and CONDUCT moves this literal with the constant once. */
+/* D-688 side, kept as history — its A5 pin read 1.32.0 on its own branch (C-94.12, one arrival; C-94.11 changed; its
+   merge also rewrote the REC-150 history comment's literal to 1.32.0, put back); ours is kept at c23-batch30 and
+   CONDUCT moves this literal with the constant once. */
 /* D-670 side, kept as history — its A5 pin read 1.31.0 on its own branch (ONE ARRIVAL, NO DEPARTURES — C-45.13 CONTENT_EXTENT_NOT_USER_SPACE in CONTENT_EXTENT_CHECKS, 502 -> 503); ours is
    kept at c23-batch30 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
