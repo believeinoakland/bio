@@ -36099,14 +36099,23 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
    * differently. A SECOND COPY WOULD HAVE BEEN THE DEFECT ITSELF, one layer on.
    *
    * `source_status` is not read, as at cite and at reinstate: a removed or
-   * modified source stays citable, and `retired` is the other axis. Only
-   * Information has the state — an inquiry target answers false, exactly as
-   * `#edgeTransition` leaves it un-refused — and an id with no row answers
-   * false too, because an absent target is refused by another door and this
-   * one claims nothing about it. */
+   * modified source stays citable, and `retired` is the other axis. An id with
+   * no row answers false, because an absent target is refused by another door
+   * and this one claims nothing about it.
+   *
+   * D-553 (BOB #34, 2026-09-24): THE STORE'S ONE RETIRED-TARGET PREDICATE, AND
+   * TYPE-BLIND. The rule follows the STATE, not the type — any object in a
+   * `retired` state is not citable, by any door and for every caller — so the
+   * Information test this carried is gone. Two machines carry the state today,
+   * measured from `STATES` in the catalogue: `information` and `bias`; a future
+   * machine meaning something else must name its state differently. It is read
+   * at all three doors that ask the question: `#edgeTransition` (reinstate) and
+   * `affordanceFacts`, `op=cite`'s `is-cite-retired` region, and the suggest
+   * path's CHECK 1. It is NEVER viewer-gated: whether the viewer can see the
+   * target decides only the refusal's WORDING, never citability. */
   #retiredNotCitable(id) {
-    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-    return !!b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired";
+    const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, id);
+    return !!b && String(b.current_state ?? "").trim() === "retired";
   }
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
    *
@@ -43892,11 +43901,7 @@ ${lines.join("\n")}
         citable: ["information", "inquiry"],
         detail: "a case rests on material, or on a question the group is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are."
       };
-    const retiredMembers = [];
-    for (const id of sel.members) {
-      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
-    }
+    const retiredMembers = sel.members.filter((id) => this.#retiredNotCitable(id));
     if (retiredMembers.length)
       return {
         ok: false,
@@ -69753,8 +69758,9 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         continue;
       }
       const g2 = viewerPredicate(args.viewer ?? null);
+      const retired = this.#retiredNotCitable(t);
       const row = this.#one(
-        `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+        `SELECT b.bundle_id FROM bundles b
          WHERE b.bundle_id=? AND (${g2.sql})`,
         t,
         ...g2.args
@@ -69763,8 +69769,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         unreachable.push({ ord: i, target: t, why: "not in the record, or not readable from here" });
         continue;
       }
-      if (String(row.current_state ?? "").trim() === "retired")
-        unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
+      if (retired) unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
     }
     if (unreachable.length)
       return remember(refusal7(

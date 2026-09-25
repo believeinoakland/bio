@@ -17,6 +17,7 @@
    (b) THE SAME LITERAL, AND THEN MOVE THE RULE — keep the literal and set `EARNED_CAPTURE_CEILING = 'C'` in checks/bio-checks.mjs -> THREE FAIL (75/78) and they name the drift in both directions: the publication no longer equals the enforcement's own value, and the two letters the fence states are no longer the rule's. THIS IS WHAT THE COPY COSTS: a member co-attesting is told the capture is strengthened toward evidentiary weight at Grade B while the gate refuses any leg above C — the record overclaiming on a doctrine sentence, which is the failure CLAUDE.md ranks worse than a missing feature;
    (c) THE COMPOSED FENCE UNDER THE SAME MOVED RULE — restore the composition, leave the ceiling at C -> TWO FAIL (76/78) and they are the RIGHT two: "the published fence IS Bob's sentence" (the publication has moved off the ruling, which is precisely what must stop a turn), and the counterfactual, which goes degenerate because attestFence("C","B") is now the published string. What does NOT happen in this arm is the thing arm (b) does: no member is told a grade the gate will not accept, because the sentence followed the rule. That difference between (b) and (c) is the item.
    Restored -> 78/78. */
+/* NEGATIVE CONTROL (D-553, ONE type-blind retired predicate read at every door — BOB #34), THREE arms ADDED TO `test/d444-reinstate-project-arm.control.mjs` and RUN 2026-09-25 with its four D-444 arms, each ALONE, src/store.mjs restored from a per-arm pristine copy verified by sha256 AND byte compare (3,350,918 B, sha256 54bfa2754d8a…); BASELINE 99 pass / 0 fail. (citecopy) THE ROW'S OWN — `op=cite`'s `is-cite-retired` region restores D-168's inline Information-typed copy: DECLARED fail §0 ALONE; RESULT 98/1, AS DECLARED. (suggestcopy) the suggest path's CHECK 1 asks its own copy of the column inside the viewer-gated query, as before D-553: DECLARED fail §0 ALONE; RESULT 98/1, AS DECLARED. (typed) the helper regains its Information test: DECLARED fail §0 ALONE; RESULT 98/1, AS DECLARED — all three are invisible to behaviour today (no project can be `retired`, and cite refuses a bias as NOT_INFORMATION first), so the structural pin is the whole control. The four D-444 arms re-ran AS DECLARED over the corrected §0 (revert 96/3, drop 96/3, copy 98/1, blind 97/2). */
 /* NEGATIVE CONTROL (D-444, the PROJECT arm of `reinstate`), FOUR arms, DECLARED IN AND RUN BY `test/d444-reinstate-project-arm.control.mjs` — deliberately not a `.test.mjs`, because it edits real sources while it runs. RUN 2026-09-24, each arm ALONE, every arm AS DECLARED, both sources restored from uniquely-named per-arm pristine copies verified by sha256 AND by byte compare with the byte count printed and floored (src/affordances.mjs 171,437 B sha256 86a6d1ba17c7…; src/store.mjs 3,289,632 B sha256 baf6dd975e99…), pristine copies kept OUTSIDE the worktree (BOB #32). BASELINE 99 pass / 0 fail, so a run with every arm broken is distinguishable from one with every arm working.
    (revert) THE ROW'S OWN — the PROJECT arm keys back on `cites_out.severed`. DECLARED fail §0, §1, §4; hold §2, §3. RESULT 96/3, AS DECLARED: the retired-only project is offered an act the store refuses again, which is the defect re-entered, and §4 catches the same project once its live edge is back.
    (drop) HOW A LIAR PASSES, named on the row — the PROJECT arm is removed from `reinstate` altogether, which satisfies "never offer what the store refuses" for free. DECLARED fail §0 and §2's OFFER; hold §1, §3, §4 and §2's ACCEPTANCE. RESULT 96/3, AS DECLARED — and NOT PREDICTED: it also failed REC-19's own "the project now publishes {cite, reinstate}" above, so that assertion was already a second catcher for this lie and is recorded here rather than left to be rediscovered.
@@ -1044,35 +1045,47 @@ t("... and op=reinstate onto the retired item is refused RETIRED_NOT_CITABLE, as
 console.log("\n--- D-444: the project arm of `reinstate` follows the TARGETS, not the count ---");
 const storeSrcNoComments = stripComments(storeSrc);
 const reinstateApplies = String(ACTS.find((a) => a.id === "reinstate").applies);
-/* THE SPELLING IS COUNTED AT TWO, NOT AT ONE, AND THE SECOND IS NAMED RATHER THAN ROUNDED OFF.
-   `#retiredNotCitable` is DEFINED once and READ twice — by `#edgeTransition`'s refusal and by
-   `affordanceFacts` — so the offer and the refusal cannot drift, which is this item. A SECOND
-   spelling of the same question survives inside D-168's `is-cite-retired` DEC-49 region at
-   `op=cite`, and a THIRD, type-blind one at the suggest path's SUGGEST_LEG_UNREACHABLE. Folding
-   those is a separate act: the cite copy sits inside a governed region whose `regionLines` floor a
-   4-line contraction would breach, and the suggest copy asks the question of a DIFFERENT column set
-   (viewer-gated, no type test), so collapsing them is a decision and not a rename. Reported to
-   SCHEDULER as a class finding. THE PIN IS WRITTEN SO IT FAILS ON A THIRD COPY: the total is 2 and
-   exactly ONE of them is inside the cite region, so a copy grown anywhere else — above all inside
-   the new fact — turns this red rather than passing at zero cost (REC-35's finding, on a
-   predicate). */
+/* CORRECTED 2026-09-25 by D-553, never exempted: this pin counted the spelling at TWO — the helper
+   and D-168's copy inside the `is-cite-retired` region — and could not see the THIRD at all, because
+   the suggest path spelled it `String(row.current_state ...)` and the literal was anchored on `b.`.
+   BOB #34 (2026-09-24) ruled ONE helper, type-blind, read at every door: `#retiredNotCitable` is
+   DEFINED once and READ four times — `affordanceFacts`, `#edgeTransition` (reinstate), `op=cite`'s
+   region and the suggest path's CHECK 1 — and the inline spelling survives ONLY inside the helper.
+   THE LITERAL NOW MATCHES ANY RECEIVER (`\w+\.current_state`), so a copy on any variable name turns
+   this red. WHAT IT CANNOT SEE: a copy spelled without the `String(... ?? "").trim()` shape (e.g.
+   `x.current_state === "retired"`). Two such comparisons exist on purpose and are NOT citability:
+   `promote`'s transition INTO `retired` (REC-181, the CITED question) and the bias-in-force read's
+   `<> 'retired'` in SQL. THE HELPER IS TYPE-BLIND: its body names no `object_type` (the rule follows
+   the STATE — `information` and `bias` carry it today). THE SUGGEST DOOR ASKS IT APART FROM THE VIEWER:
+   the viewer-gated leg query selects no `current_state`, so sight can decide only the wording. */
 /* THE REGION IS TAKEN FROM THE RAW SOURCE AND NOT THE STRIPPED ONE, corrected after the first run
    (which read 0 and was RIGHT to): a DEC-49 marker lives INSIDE a block comment, so the span does not
    exist in a comment-blanked copy at all. The total is still counted on the stripped source, where a
    spelling quoted in prose cannot inflate it. */
 const citeRegion = (storeSrc.match(
   /DEC-49 REGION is-cite-retired[\s\S]*?END DEC-49 REGION is-cite-retired/) || [""])[0];
-const RETIRED_LITERAL = /String\(b\.current_state \?\? ""\)\.trim\(\) === "retired"/g;
-t("§0 STRUCTURAL: `#retiredNotCitable` is DEFINED once and READ twice — by the refusal and by the "
-+ "fact; the only other spelling is D-168's, inside the cite region; and the arm keys on the "
-+ "reinstatable count, never on the bare `severed` one",
+const RETIRED_LITERAL = /String\(\w+\.current_state \?\? ""\)\.trim\(\) === "retired"/g;
+const helperBody = (storeSrcNoComments.match(/#retiredNotCitable\(id\) \{[\s\S]*?\n  \}/) || [""])[0];
+const suggestCheck1 = storeSrcNoComments.slice(
+  storeSrcNoComments.indexOf("const unreachable = [];"),
+  storeSrcNoComments.indexOf('refusal("SUGGEST_LEG_UNREACHABLE"'));
+t("§0 STRUCTURAL (D-444, D-553): `#retiredNotCitable` is DEFINED once and READ at all four sites — "
++ "the fact, reinstate, the cite region, the suggest path; the inline spelling survives only in the "
++ "helper, which names no type; the suggest door asks it outside the viewer-gated query; and the arm "
++ "keys on the reinstatable count, never on the bare `severed` one",
   [(storeSrcNoComments.match(/#retiredNotCitable\(/g) || []).length,
    (storeSrcNoComments.match(RETIRED_LITERAL) || []).length,
+   (helperBody.match(RETIRED_LITERAL) || []).length,
+   /object_type/.test(helperBody),
+   (citeRegion.match(/this\.#retiredNotCitable\(/g) || []).length,
    (citeRegion.match(RETIRED_LITERAL) || []).length,
+   suggestCheck1.length > 200,
+   (suggestCheck1.match(/this\.#retiredNotCitable\(/g) || []).length,
+   /current_state/.test(suggestCheck1),
    /cites_out\.severed_reinstatable/.test(reinstateApplies),
    /cites_out\.severed\b/.test(reinstateApplies),
    /cites_out\.confirmed\b/.test(String(ACTS.find((a) => a.id === "sever").applies))],
-  [3, 2, 1, true, false, true]);
+  [5, 1, 1, false, 1, 0, true, 1, false, true, false, true]);
 
 /* §1 THE ITEM'S OWN ARM. P holds exactly ONE cites edge; it is severed; its
    target B is retired. The store would refuse a reinstate here — it just did,

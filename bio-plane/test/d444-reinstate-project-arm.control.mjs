@@ -27,6 +27,16 @@
  *               rather than the catalogue's. MUST FAIL: §2's offer. MUST HOLD: §0, §1, §3, §4 and
  *               §2's acceptance.
  *
+ * D-553 (2026-09-25) ADDS THREE ARMS, all on the store and all STRUCTURAL, because BOB #34's one
+ * type-blind helper is invisible to behaviour today (no project can be `retired`, and `op=cite`'s
+ * NOT_INFORMATION refuses a bias before the retired question is reached):
+ *   citecopy    THE ROW'S OWN — `op=cite`'s `is-cite-retired` region restores D-168's inline copy,
+ *               Information-typed. MUST FAIL: §0 ALONE. MUST HOLD: every behavioural arm.
+ *   suggestcopy the suggest path's CHECK 1 asks its own type-blind copy of the column inside the
+ *               viewer-gated query, as it did before D-553. MUST FAIL: §0 ALONE. MUST HOLD: the rest.
+ *   typed       the helper regains its Information test (the rule on the TYPE, not the state).
+ *               MUST FAIL: §0 ALONE. MUST HOLD: the rest.
+ *
  * Every restore is verified by sha256 AND by a byte compare against a uniquely named per-arm
  * pristine copy, and the pristine copy's size is printed and floored.
  *
@@ -64,6 +74,25 @@ const COPY = `          if (typeof r.target === "string") {\n`
            + `              citesOut.severed_reinstatable++;\n`
            + `          }`;
 
+const CITE_ONE = `    const retiredMembers = sel.members.filter((id) => this.#retiredNotCitable(id));\n`;
+const CITE_COPY = `    const retiredMembers = [];\n`
+                + `    for (const id of sel.members) {\n`
+                + `      const b = this.#one(\`SELECT object_type, current_state FROM bundles WHERE bundle_id=?\`, id);\n`
+                + `      if (b && normalizeType(b.object_type) === "information"\n`
+                + `          && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);\n`
+                + `    }\n`;
+const SUG_ONE = `      const retired = this.#retiredNotCitable(t);\n`
+              + `      const row = this.#one(\n`
+              + `        \`SELECT b.bundle_id FROM bundles b\n`;
+const SUG_COPY = `      const row = this.#one(\n`
+               + `        \`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b\n`;
+const SUG_USE = `      if (retired) unreachable.push(`;
+const HELPER = `    const b = this.#one(\`SELECT current_state FROM bundles WHERE bundle_id=?\`, id);\n`
+             + `    return !!b && String(b.current_state ?? "").trim() === "retired";\n`;
+const HELPER_TYPED = `    const b = this.#one(\`SELECT object_type, current_state FROM bundles WHERE bundle_id=?\`, id);\n`
+                   + `    return !!b && normalizeType(b.object_type) === "information"\n`
+                   + `        && String(b.current_state ?? "").trim() === "retired";\n`;
+
 const S0 = "§0 STRUCTURAL", S1 = "§1 a project whose ONLY severed edge", S3 = "§3 the project-side offer";
 const OFFER = "§2 the project IS offered reinstate again", ACCEPT = "§2 ... and the store ACCEPTS it";
 const S4 = "§4 after the live edge is reinstated";
@@ -80,6 +109,13 @@ const ARMS = {
     to: `          if (false && typeof r.target === "string" && !this.#retiredNotCitable(r.target))\n`
       + `            citesOut.severed_reinstatable++;`,
     mustFail: [OFFER], mustHold: [S0, S1, ACCEPT, S3, S4] },
+  citecopy: { file: STORE, floor: 1_000_000, from: CITE_ONE, to: CITE_COPY,
+    mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
+  suggestcopy: { file: STORE, floor: 1_000_000, from: SUG_ONE, to: SUG_COPY,
+    also: [SUG_USE, `      if (String(row.current_state ?? "").trim() === "retired") unreachable.push(`],
+    mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
+  typed: { file: STORE, floor: 1_000_000, from: HELPER, to: HELPER_TYPED,
+    mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
 };
 
 function runSuite() {
@@ -110,7 +146,14 @@ for (const [arm, a] of Object.entries(ARMS)) {
   const text = bytes.toString("latin1");
   const n = text.split(a.from).length - 1;
   if (n !== 1) { console.log(`  ARM DID NOT ARM: anchor matched ${n} times`); bad++; continue; }
-  writeFileSync(a.file, Buffer.from(text.replace(a.from, a.to), "latin1"));
+  let armed = text.replace(a.from, a.to);
+  /* D-553: an arm may move a SECOND anchor in the same file (`also: [from, to]`), each held to one match. */
+  if (a.also) {
+    const m = armed.split(a.also[0]).length - 1;
+    if (m !== 1) { console.log(`  ARM DID NOT ARM: second anchor matched ${m} times`); bad++; continue; }
+    armed = armed.replace(a.also[0], a.also[1]);
+  }
+  writeFileSync(a.file, Buffer.from(armed, "latin1"));
   let r;
   try { r = runSuite(); }
   finally {
