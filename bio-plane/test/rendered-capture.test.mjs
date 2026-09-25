@@ -43,6 +43,10 @@
  *     and a zero allowance. WHAT IS STILL NOT DRIVEN ANYWHERE, and what this bullet
  *     now means: an unattended render that SUCCEEDS. No instance has a renderer
  *     (2.rendered), and this suite's success arms are a member's, through the op.
+ *     CORRECTED 2026-09-24 BY D-522, NOT EXEMPTED: the unattended SUCCESS is now
+ *     driven, through the drain with a stub renderer and an allowance of one
+ *     reservation, in `d522-unattended-render.test.mjs`. What stays true of the
+ *     sentence above is its second half: no deployed instance has rendered anything.
  *   - Promotion of the pair into a bundle and the catalogue's C-18.1 over it.
  */
 import "./stdio.mjs";                 /* D-282 */
