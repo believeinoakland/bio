@@ -51,6 +51,14 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { ratifyCase } from "./caseceremony.mjs";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- rec170-manifest-pair ---");
@@ -194,13 +202,13 @@ const promote = async (id, text, type, base = null) => POST(`op=promote&token=${
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
   meta: { object_type: type, group: "believe-in-oakland",
-          current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
+          current_state: type === "inquiry" ? "open" : "collected", ...datesOf(text, NOW, LATER) } });
 const createProject = async (label, text) => {
   const r = await POST(`op=promote&token=${IRIS}`, {
     base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
     meta: { object_type: "project", group: "believe-in-oakland",
-            current_state: "investigating", created: NOW, last_updated: LATER } });
+            current_state: "investigating", ...datesOf(text, NOW, LATER) } });
   if (!r?.ok || typeof r.bundleId !== "string") await bail(`create project ${label}`, r);
   return r.bundleId;
 };

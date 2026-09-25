@@ -4138,7 +4138,7 @@ export class Store extends DurableObject {
 
      "Latest" is `created DESC, rowid DESC` (D-171), the order REC-32's
      #conditionsCaptureUnattended reads, and the two sites agree on purpose.
-     `created` is the DOCUMENT's time (promote stores meta.last_updated), so two
+     `created` is the DOCUMENT's time (promote stores the document's last_updated, D-615), so two
      revisions can tie on it; `snap_key` is an opaque caller-chosen string whose
      lexical order is not a clock, so a `snap_key DESC` tiebreak named the WRONG
      writer whenever the later write carried the smaller key. `rowid` is the
@@ -16666,8 +16666,9 @@ export class Store extends DurableObject {
          document's value, which is the value the bundle's own bytes have always carried. */
       meta: { object_type: seen.object_type, group: seen.group_id,
               ...Store.#rowUnlessStated(carried, { title: seen.title, current_state: seen.current_state,
-                                                   prior_state: seen.prior_state ?? null }),
-              created: seen.created, last_updated: seen.last_updated,
+                                                   prior_state: seen.prior_state ?? null,
+                                                   /* D-615: the two dates on the same terms (M-181: 0 live drifts) */
+                                                   created: seen.created, last_updated: seen.last_updated }),
               criticality: seen.criticality ?? null },
     });
     if (!promoted.ok) return { ...promoted, bundleId, documents: report };
@@ -17983,6 +17984,20 @@ export class Store extends DurableObject {
     const promotedClosedReason = fmHas(sentFm, "closed_reason") ? (sentFm.closed_reason ?? null)
       : (envelopeMeta ? envelopeMeta.closed_reason : undefined);
     /* ===== END D-563 derivation ===== */
+    /* ===== D-615 (`BIO_Case_Making_v0_1.md` §2; C-2.5 and D-510/D-563's derivation, C-86.7) — AND WHEN IT WAS MADE AND
+       LAST CHANGED. `created` and `last_updated` are CORE_FIELDS: the document states both, and `bundles.created`,
+       `bundles.last_updated`, the manifest row's `created` and a minted content row's `at` were still read off `meta`.
+       D-563's rule, the last two fields: derived ONCE here from the bytes the caller sent, the envelope only where the
+       document states none, and a non-replay envelope contradicting the document is refused by name below
+       (`is-promoted-dates-disagree`). M-181 measured the live record first: 0 of 31 head rows in `bio` differ from their
+       documents on either date, so no row an envelope wrote apart from its bytes stands for an internal relabel to meet. ===== */
+    const documentCreated = sentFm && typeof sentFm === "object" ? textStated(sentFm.created) : null;
+    const documentLastUpdated = sentFm && typeof sentFm === "object" ? textStated(sentFm.last_updated) : null;
+    const envelopeCreated = envelopeMeta ? textStated(envelopeMeta.created) : null;
+    const envelopeLastUpdated = envelopeMeta ? textStated(envelopeMeta.last_updated) : null;
+    const promotedCreated = documentCreated ?? (envelopeMeta ? envelopeMeta.created : undefined);
+    const promotedLastUpdated = documentLastUpdated ?? (envelopeMeta ? envelopeMeta.last_updated : undefined);
+    /* ===== END D-615 derivation ===== */
     const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object"
       && (promotedType === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
@@ -18658,6 +18673,32 @@ export class Store extends DurableObject {
                        + `the document first. Nothing was written.` };
       }
       /* END DEC-49 REGION is-promoted-state-disagrees */
+      /* D-615 — D-563's two halves for the two dates. Two statements AGREE when both parse to the same instant (a
+         respelling of one instant — `…:00Z` against `…:00.000Z` — is not a contradiction), else when their trimmed text
+         is equal; only a contradiction between two statements is refused. */
+      const sameInstant = (a, b) => {
+        const x = Date.parse(String(a).trim()), y = Date.parse(String(b).trim());
+        return Number.isFinite(x) && Number.isFinite(y) ? x === y : String(a).trim() === String(b).trim();
+      };
+      const dateContradiction = envelopeCreated !== null && documentCreated !== null
+          && !sameInstant(envelopeCreated, documentCreated) ? ["created", documentCreated, envelopeCreated]
+        : envelopeLastUpdated !== null && documentLastUpdated !== null
+          && !sameInstant(envelopeLastUpdated, documentLastUpdated) ? ["last_updated", documentLastUpdated, envelopeLastUpdated]
+        : null;
+      /* DEC-49 REGION is-promoted-dates-disagree */
+      if (dateContradiction && !pkg.replay) {
+        const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_DATES_DISAGREE;
+        const [field, said, asked] = dateContradiction;
+        return { ok: false, reason: "ENVELOPE_DATES_DISAGREE", code: "ENVELOPE_DATES_DISAGREE",
+                 check: dtRow.check, translation: dtRow.translation, field,
+                 document_value: String(said).slice(0, 80), envelope_value: String(asked).slice(0, 80),
+                 detail: `the document being promoted says ${field} '${String(said).slice(0, 40)}' and this request's `
+                       + `meta says '${String(asked).slice(0, 40)}'. The record goes by the document: when a thing was `
+                       + `made and last changed is what its history is ordered by. Send it again with the meta naming `
+                       + `the document's date, or leave it out of the meta, or change the document first. Nothing was `
+                       + `written.` };
+      }
+      /* END DEC-49 REGION is-promoted-dates-disagree */
       /* `promotedType` (D-526, derived at the top of `promote`) is the one value every projection below reads. The
          envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
          the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
@@ -19368,7 +19409,9 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           bundleId, snapKey, pkg.replay ? "promotion-replay" : "promotion", EMPTY_STRING_SHA, author,
-          meta.last_updated || new Date().toISOString(),
+          /* D-615: the DOCUMENT's last_updated (the envelope's only where the bytes state none). D-674's steerable
+             order is untouched by this: the writer authors the document too. */
+          promotedLastUpdated || new Date().toISOString(),
           JSON.stringify(files.map((f) => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
       }
       if (cur) {
@@ -19388,7 +19431,7 @@ export class Store extends DurableObject {
              signed ratification legitimately backdates last_updated to the
              transition instant. Stamping server time here made that comparison
              fail on honest content. */
-          meta.last_updated || new Date().toISOString(),
+          promotedLastUpdated || new Date().toISOString(),   /* D-615: the document's, as the creation arm above */
           JSON.stringify(files.map(f => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
       }
 
@@ -19452,7 +19495,9 @@ export class Store extends DurableObject {
            NOT NULL is checked before it, so the value handed in must be real); a creation writes the one decided
            above, before the transaction. `meta.group` is read nowhere but that decision. */
         bundleId, projectedType, cur ? cur.group_id : createdGroup, projectedTitle, promotedState, promotedPriorState,
-        meta.created, meta.last_updated, meta.criticality ?? null, newSha, bundleId);
+        /* D-615: the document's two dates (the envelope's only where the bytes state none). `created` is written by
+           the creation alone — the ON CONFLICT arm keeps it, as before. */
+        promotedCreated, promotedLastUpdated, meta.criticality ?? null, newSha, bundleId);
 
       /* D-497: the SIGHT INDEX follows the bundle row that decides whether this is a project at all. ONE call
          covers all three arrivals — a project created here gains a row carrying the derivation's default, a
@@ -19620,7 +19665,7 @@ export class Store extends DurableObject {
               if (carried) { legRowId = carried; legCarried = true; }
               else if (cp.captureSha) {
                 const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
-                  extent: ext, mintedBy: CONTENT_MINTED_BY_PLANE, at: meta.last_updated || null, ctx: cp.ctx });
+                  extent: ext, mintedBy: CONTENT_MINTED_BY_PLANE, at: promotedLastUpdated || null, ctx: cp.ctx });   /* D-615 */
                 if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted;
                                legUndetermined = mint.undetermined || null; }
               }
@@ -19777,7 +19822,7 @@ export class Store extends DurableObject {
               if (namedId) vContentId = namedId;
               else if (vp.captureSha) {
                 const m = this.mintContent({ bundleId: l.target_id, captureSha: vp.captureSha,
-                  extent: vp.extent, mintedBy: "plane", at: meta.last_updated || null, ctx: vp.ctx });
+                  extent: vp.extent, mintedBy: "plane", at: promotedLastUpdated || null, ctx: vp.ctx });   /* D-615 */
                 if (m.ok) vContentId = m.content_id;
               }
             }
@@ -29486,7 +29531,7 @@ export class Store extends DurableObject {
    *  reader.
    *
    *  ORDERING. `created` is the DOCUMENT's own time (promote records
-   *  meta.last_updated, never the wall clock — C-12.1 depends on that). The
+   *  the document's last_updated (D-615), never the wall clock — C-12.1 depends on that). The
    *  tiebreak is `rowid DESC`, the store's own write order, because `snap_key`
    *  is an opaque caller-chosen string and its lexical order is not a clock: two
    *  snapshots stamped at the same instant would otherwise be ordered by a hash.
@@ -37310,6 +37355,9 @@ export class Store extends DurableObject {
        has not earned, and inheriting `closed` would create a project born
        deactivated. */
     text = Store.#setScalar(text, "current_state", "forming");
+    /* D-615: and it is CREATED now. The fork's bytes kept the origin's `created` while its envelope said `when`, and the
+       row took the envelope's; `promote` now takes the document's, so the document says what the row always did. */
+    text = Store.#setOrAddScalar(text, "created", `"${when}"`);
     text = Store.#setScalar(text, "last_updated", `"${when}"`);
     const entry = `### Session ${when} | forked from ${projectId} | ${by}\n`
                 + `Trigger: fork\n`

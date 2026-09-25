@@ -58,6 +58,14 @@ import { CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../checks/bio-c
    conclude that names no reading (NO_CLAIM), so the concluded inquiry carries REC-136's ONE adoptable reading and
    the call names it, exactly as REC-136 corrected 27 suites. Nothing this suite asserts (case authority) moves. */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- case-authority ---");
@@ -192,7 +200,7 @@ const promote = async (id, text, objectType, state, label = id) => {
     ...(id ? { bundleId: id } : {}), base: null,
     snapKey: `20260918T${String(800000 + (++snapSeq)).slice(-6)}Z_${sha(label).slice(0, 8)}`,
     meta: { object_type: objectType, group: "believe-in-oakland",
-            current_state: state, created: NOW, last_updated: LATER },
+            current_state: state, ...datesOf(text, NOW, LATER) },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [] });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 800)}`);

@@ -16513,6 +16513,18 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'document, so it stops and tells you both. Nothing was written. Send it again with the request saying what '
       + 'the document says, or saying nothing about it, or change the document first.',
   },
+  /* D-615 (2026-09-25) — D-563's rule for the last two CORE_FIELDS: the document states when it was made and last
+   * changed, and the record's history is ordered by those dates (the manifest's `created` is the document's
+   * `last_updated`), so a label a caller can steer was an authority over that order. Two statements of one instant in
+   * different spellings agree. Replay is exempt, as for C-86.1. */
+  ENVELOPE_DATES_DISAGREE: {
+    check: 'C-86.7',
+    where: 'src/store.mjs promote > is-promoted-dates-disagree',
+    translation: 'The document being filed says when it was made or last changed, and the request that carried it says '
+      + 'a different time. The record keeps its history in the order those dates give, and it goes by the document, so '
+      + 'it stops and tells you both. Nothing was written. Send it again with the request giving the document\'s dates, '
+      + 'or giving none, or change the document first.',
+  },
   /* D-578 (2026-09-25) — the THIRD way, and the only one where neither statement exists: a CREATION whose document and
    * envelope both state no type. `bundles.object_type` is NOT NULL, so it was refused by a raw constraint error
    * carrying a stack; a revision in the same position keeps its head's type (stated on the answer), because the head

@@ -123,6 +123,9 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
 /* D-546 side, kept as history (c22-batch30): its branch MOVED this ceiling 20 -> 21 BY NAME for
    `d546-state-edge.control.mjs`, D-578's driver derived verbatim; ours (<= 13) is kept and the print on the union
    decides. NUMBER TO RE-READ. */
+/* D-615 side, kept as history (c22-batch30): its branch MOVED this ceiling 21 -> 22 BY NAME for
+   `d615-promoted-dates.control.mjs`, D-563's driver derived; ours (<= 13) is kept and the print on the union
+   decides. NUMBER TO RE-READ. */
 t("the estate's UNCLASSIFIED drivers have not grown past what M0-196 left (<= 13)", g("UNCLASSIFIED").length <= 13, true);
 t("M0-196, BY NAME: the copy-source drivers of D-510, D-526, D-547, D-548 and REC-180 read their tree root and are classified",
   ["d510-promoted-type", "d526-refusal-order", "d547-revision-retype", "d548-block", "rec180-promote-rollback"]

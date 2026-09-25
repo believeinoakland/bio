@@ -272,6 +272,10 @@ export const CATALOG_VERSION = "1.31.0";
    CHANGED — C-86.6 STATE_MOVE_UNDECLARED in PROMOTED_TYPE_CHECKS (op=promote asks every type's state-edge table). MINOR;
    505 -> 506, count and digest from the d470 suite's print on this tree. If another branch in the batch also moves the
    version, CONDUCT takes the next number at the union and re-reads the print on the merged tree. */
+/* D-615 side, kept as history — took 1.34.0 (D-615, 2026-09-25, branch land/worker/D-615, stacked on land/worker/D-546); superseded by the union's 1.31.0 (c22-batch30): ONE ARRIVAL, NO DEPARTURES, NONE
+   CHANGED — C-86.7 ENVELOPE_DATES_DISAGREE in PROMOTED_TYPE_CHECKS (op=promote takes created and last_updated from the
+   document). MINOR; 506 -> 507, count and digest from the d470 suite's print on this tree. If another branch in the batch
+   also moves the version, CONDUCT takes the next number at the union and re-reads the print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

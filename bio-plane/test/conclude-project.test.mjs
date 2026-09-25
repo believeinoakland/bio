@@ -67,6 +67,14 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { classOfKind, QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -207,7 +215,7 @@ const createProject = async (name, text) => {
     base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
     meta: { object_type: "project", group: "believe-in-oakland",
-            current_state: "forming", created: NOW, last_updated: LATER } });
+            current_state: "forming", ...datesOf(text, NOW, LATER) } });
   if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 800)}`);
   return r.bundleId;
 };
@@ -617,7 +625,7 @@ console.log("\n--- 5. §7.1 item 7: WITHDRAWAL APPENDS — conclude, withdraw, c
     bundleId: B, base: await shaOf(B), snapKey: "99991231T235959Z_tamper",
     files: [{ path: "bundle.md", text: cut, bytes: cut.length, sha256: sha(cut) }], register: [],
     meta: { object_type: "project", group: "believe-in-oakland",
-            current_state: "forming", created: NOW, last_updated: LATER } });
+            current_state: "forming", ...datesOf(cut, NOW, LATER) } });
   t("the fixture's cut really removed an entry (else the next arm proves nothing)", entriesIn(cut), 2);
   t("the rewrite lands (promote gates on shape, not on the catalogue's history rules)", tamper?.ok, true);
   const afterAudit = await auditB();

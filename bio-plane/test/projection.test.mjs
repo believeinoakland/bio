@@ -27,6 +27,14 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -224,7 +232,7 @@ await call("/promote", {
   bundleId: INFO_ID, base: sha(infoMd), snapKey: "20260725T130000Z_projtest2", author: "seed",
   meta: { object_type: "information", group: "believe-in-oakland",
           title: "Sewer Service Fund transfer series", current_state: "collected",
-          created: "2026-07-18T22:00:00Z", last_updated: "2026-07-20T19:00:00Z",
+          ...datesOf(infoMd2, "2026-07-18T22:00:00Z", "2026-07-20T19:00:00Z"),
           criticality: "crucial" },
   files: [{ path: "bundle.md", text: infoMd2, bytes: infoMd2.length, sha256: sha(infoMd2) }],
   refs: [], register: [],

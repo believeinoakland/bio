@@ -124,11 +124,17 @@ const projectMd = (id, title, state, v = 0) => ["---",
   "## Session Log", "", "## Review Notes", ""].join(NL);
 
 let seq = 0;
-const promote = async (tok, { id = null, base = null, text, type, state, when = NOW }) =>
-  POST(`op=promote&token=${tok}`, {
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: `when` dated the manifest row through the ENVELOPE while the
+   document said NOW, and a label contradicting the document's dates is now refused; the manifest row is dated by the
+   DOCUMENT's last_updated. So `when` is written INTO the bytes, where the writer's date now lives, and the census still
+   reads the same dates. */
+const promote = async (tok, { id = null, base = null, text: text0, type, state, when = NOW }) => {
+  const text = text0.replace(/^last_updated: .*$/m, `last_updated: "${when}"`);
+  return POST(`op=promote&token=${tok}`, {
     ...(id ? { bundleId: id } : {}), base, snapKey: `20260724T${String(++seq).padStart(6, "0")}Z_d546`, author: "x",
     meta: { object_type: type, current_state: state, created: NOW, last_updated: when },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [] });
+};
 const listed = async (id) => ((await GET(`op=list&token=${ADM}&limit=1000`)) || {}).bundles?.find((b) => b.bundle_id === id) ?? null;
 const census = async (tok = ADM) => GET(`op=statemovecensus&token=${tok}&limit=500`);
 const stats = async () => GET(`op=stats&token=${ADM}`);

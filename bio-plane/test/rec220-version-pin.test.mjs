@@ -94,6 +94,14 @@ const infoMd = (id, rev = 1) => ["---",
 
 let snapSeq = 0;
 const live = {};
+/* CORRECTED at c22-batch30 (CONDUCT #22), never exempted: this item was cut before D-615, whose C-86.7 refuses an
+   envelope `created`/`last_updated` the held document contradicts; a fixed NOW/LATER label over bytes the plane had
+   re-stamped said dates the document does not state. `datesOf` is D-615's own fixture helper (publish.test.mjs):
+   each label names the document's own dates, the old value only where the bytes state none. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 const promote = async (id, text, type, register = [], reading = null) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
@@ -105,7 +113,7 @@ const promote = async (id, text, type, register = [], reading = null) => {
     snapKey: `20260925T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: this item was cut before D-563, whose C-86.3 refuses an envelope title the held document contradicts; the envelope title `Bundle <id>` is dropped as D-563 dropped it in its own fixtures, and promote derives it from the document. */
     meta: { object_type: type, group: "believe-in-oakland",
-            current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
+            current_state: type === "inquiry" ? "open" : "collected", ...datesOf(text, NOW, LATER) },
     files, register });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
   live[id] = r.bundleSha ?? r.sha ?? live[id];
