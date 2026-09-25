@@ -722,8 +722,8 @@ scope: export ARCHIVE_CAPTURE_GRADE from checks/bio-checks.mjs beside UNREACHABL
 accepts-when: the acquire stamp and the grade reader read one exported constant (moves: a typed duplicate of a ruled value). NEGATIVE CONTROL: change the exported letter and both the acquire stamp arm and 9d move together, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-693's worker).
 
-### UI-118 · running — **THE EXPORTED REVIEW COPY OMITS THE DATE TIE: when op=reviewcopy's `last_change.undetermined_within` is non-empty, UI-69's exported page carries `inband` but not `last_change`, so its Date line states a single last change the record cannot settle.** An owed UI act from D-573's report (via CONDUCT #22, batch29 union). — owner UI.
-status: running — SCHEDULER #23 10:20Z: spawned from main 95fe7bc7
+### UI-118 · integrated — **THE EXPORTED REVIEW COPY OMITS THE DATE TIE: when op=reviewcopy's `last_change.undetermined_within` is non-empty, UI-69's exported page carries `inband` but not `last_change`, so its Date line states a single last change the record cannot settle.** An owed UI act from D-573's report (via CONDUCT #22, batch29 union). — owner UI.
+status: integrated — SCHEDULER #24 11:20Z: tip 14d8ae9e on main 95fe7bc7, GATE 77/77 GREEN FULLREUSE (6610 assertions; 411 reused; full run 336/336 on 01af37f1, its three reds fixed), tree c574f6d3; the exported review copy carries last_change.stated beneath each Date line when a tie exists; no file when the tie names a recipient (BOB #36 10:26Z: keep the refusal); CIVICOS_UI_STATE v130 provisional; union with UI-117 by hand on the export functions and review-copy.control arm (M)
 order: after UI-117, with the review-copy surface rows (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 consumer.
@@ -917,7 +917,8 @@ scope: add the `\s*\(` tail `hygiene.test.mjs` (~line 685) uses; re-read the tab
 accepts-when: versions.test's table census equals M0-155's 114. NEGATIVE CONTROL: drop the tail and the `would` phantom returns, failing by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
+### M0-172 · running — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
+status: running — SCHEDULER #24 11:20Z: spawned from main 95fe7bc7
 order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0
 interface: none.
@@ -940,6 +941,16 @@ added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
 
 ### D-630 · queued — **`suggest.control` arm 7: ANCHOR DRIFT — `    if (prior) {` matches 2 since D-536, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-667, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
+depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
+scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
+accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
+added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
+### D-631 · queued — **`adminvote.control` arm stamp-dropped: ANCHOR DRIFT — matches 2 (REC-164), so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+order: after D-630, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
 design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
