@@ -62,6 +62,20 @@ const SUITES = {
             "6": [3, 0], "7": [16, 0] },
     fixture: ['"inquiry", "open");   /* REC-136', '"nosuchtype", "open");   /* REC-136'],
     died: { "6": "(fixture) promote INQ-2026-7700-solo" } },
+  /* Section 7's member comment is posted to a draft id that does not exist (NO_REVIEW_COPY); no later section reads 7.
+     Section 7 passes two arms before it dies, so the foot's total is 25 and not 23 — the per-section -1 is the tally. */
+  "reviewcopy-inband": {
+    base: { "0 (setup)": [0, 0], "1": [4, 0], "2": [3, 0], "6a": [1, 0], "3": [2, 0], "6b": [2, 0], "4": [7, 0],
+            "5": [4, 0], "7": [8, 0] },
+    fixture: ['D7}&token=${IRIS}`, { text: "a member', 'D7}-BROKEN&token=${IRIS}`, { text: "a member'],
+    died: { "7": "(fixture) reviewcomment (block 7, member)" } },
+  /* Section 11's after-the-trip promote names a type the plane refuses (it answers SURFACE_NO_RUN first); no later
+     section reads 11, and section 12 MUST still report 6/0 after it. */
+  reviewcopy: {
+    base: { "0 (setup)": [0, 0], "0 (corpus)": [0, 0], "1": [1, 0], "2": [12, 0], "3": [6, 0], "4": [12, 0],
+            "5": [6, 0], "6": [6, 0], "7": [13, 0], "8": [7, 0], "9": [14, 0], "10": [5, 0], "11": [5, 0], "12": [6, 0] },
+    fixture: ['answered?`, INFO), "inquiry", "open")', 'answered?`, INFO), "nosuchtype", "open")'],
+    died: { "11": "(fixture) promote INQ-2026-1260-later-lb (after the trip)" } },
 };
 
 const armsOf = (spec) => ({

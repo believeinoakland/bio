@@ -85,7 +85,7 @@
    four assertions never ran.
 
    (g) THE RECORDER DISARMED (`block()` rethrows) over the fixture arm above — declared: NO foot and no section
-   tally, exit 1 -> (see d564-block.control.mjs run).
+   tally, exit 1 -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after).
 
    ---
 

@@ -76,6 +76,18 @@
    what it did not measure: EVERY ARM UNCHANGED — baseline 31/0, (a) 22/9, (b) 31/0, (c) 28/3, (d) 26/5 with
    the same five arms named, (e) 31/0, (f) 22/9. The subject's control is re-run because the subject moved,
    not because anything was expected to differ.
+
+   (g) D-564 (declared and RUN 2026-09-25, WORKER D-564 (SCHEDULER #22)), THE RECORDER — every section now runs in
+   `block()`, and the subject is the SUITE, so the arms break a section's FIXTURE rather than the plane. Re-run in one
+   step: `node test/d564-block.control.mjs reviewcopy-inband` from bio-plane/. BASELINE -> **31 pass, 0 fail**, per
+   section 0 (setup) 0/0, 1 4/0, 2 3/0, 6a 1/0, 3 2/0, 6b 2/0, 4 7/0, 5 4/0, 7 8/0, foot reached.
+   (g) SECTION 7's FIXTURE BROKEN (the member's comment posted to `draft=${D7}-BROKEN`, a draft that does not
+   exist; no later section reads block 7) — declared: section 7 DIES by name with tally -1, every other section
+   reports its baseline tally -> **25 pass, 1 fail**, exit 1, `BLOCK 7 DIED: (fixture) reviewcomment (block 7,
+   member): {"ok":false,"reason":"NO_REVIEW_COPY"…`, foot `[FOOT REACHED; DIED: 7]`, sections 0-5 at baseline, as
+   declared. The restore was verified by sha256 against a pristine copy (MATCH).
+   (h) THE RECORDER DISARMED (`block()` rethrows) over (g)'s fixture — declared: NO foot and no section tally, exit 1:
+   the driver cannot read an early end as a finished run -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after).
  */
 
 /* REC-148 / DEC-31's BOUND RULE — THE REVIEW COPY CARRIES ITS HASH, DATE, AUTHOR AND BOTH FLOORS IN-BAND.
@@ -146,15 +158,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const finish = async (aborted = false) => {
-  console.log(`\nreviewcopy-inband: ${pass} pass, ${fail} fail${aborted ? "  [FIXTURE ABORTED]" : ""}`);
-  await mf.dispose();
-  process.exit(fail || aborted ? 1 : 0);
+/* D-564: EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
 };
-const bail = async (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`);
-  fail++;
-  await finish(true);
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -174,8 +201,10 @@ const rehashServed = (bytes) => {
   return sha(Buffer.from(JSON.stringify(rest, null, 1), "utf8"));
 };
 
+let dir, IRIS, PROJ, PROJ_ASYM, LEAD, ARGS;
+await block("0 (setup)", async () => {
 /* ---- roster, keys, project with an ASYMMETRIC declared bar ---- */
-const dir = mkdtempSync(join(tmpdir(), "rc-inband-"));
+dir = mkdtempSync(join(tmpdir(), "rc-inband-"));
 execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", "iris", "-f", join(dir, "iris"), "-q"]);
 const irisKey = readFileSync(join(dir, "iris.pub"), "utf8").trim().split(/\s+/)[1];
 const enrol = async (memberId, password, role, capabilities) => {
@@ -188,7 +217,7 @@ const enrol = async (memberId, password, role, capabilities) => {
 };
 await enrol("nadia", "nadia-passphrase-148", "admin", ["contribute", "publish", "create_projects"]);
 await enrol("omar", "omar-passphrase-148", "admin", ["contribute", "publish"]);   /* ADMINS_FIRST: two before a member */
-const IRIS = await enrol("iris", "iris-passphrase-148", "member", ["contribute", "publish"]);
+IRIS = await enrol("iris", "iris-passphrase-148", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-r148", { keyB64: irisKey, memberId: "iris", comment: "iris laptop" }));
 
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
@@ -200,11 +229,11 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
    frozen `capture: null` — reported by REC-148)". That was true when written and is no longer: C-41.12
    admits null for an axis nobody set (Publication §3 rule 14), and caseproduction §10 publishes and
    ratifies one. The fixture still only drafts it because this suite's subject is the review copy. */
-const PROJ = await makePublishingProject({
+PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r148", owner: "iris",
   name: "PROJ-2026-1480-inband", created: NOW, updated: LATER,
   bar: { capture: "C", connection: "D", author: "iris", at: NOW } });
-const PROJ_ASYM = await makePublishingProject({
+PROJ_ASYM = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r148", owner: "iris",
   name: "PROJ-2026-1481-oneaxis", created: NOW, updated: LATER,
   bar: { capture: "null", connection: "D", author: "iris", at: NOW } });
@@ -218,7 +247,7 @@ const promote = async (id, text, objectType, state, register = []) => rP(await P
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register,
 }));
-const INFO = "INFO-2026-1480-memo", LEAD = "INQ-2026-1480-lead";
+const INFO = "INFO-2026-1480-memo"; LEAD = "INQ-2026-1480-lead";
 const infoMd = ["---", `id: ${INFO}`, "object_type: information", "schema: information@1",
   `title: "Info ${INFO}"`, "current_state: collected", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -263,7 +292,7 @@ if ((await promote(INFO, infoMd, "information", "collected",
     + `&falsifier=${encodeURIComponent("An adopted resolution would overturn it.")}` + adoptedVersionParam()));
   if (!c?.ok) await bail("conclude lead", c);
 }
-const ARGS = {
+ARGS = {
   project: PROJ, targets: [LEAD], roles: allLoadBearing({ targets: [LEAD] }),
   scope: "Whether the FY2024 transfer was authorised.",
   statement: "This case covers the FY2024 transfer only.",
@@ -272,17 +301,21 @@ const ARGS = {
   subjectJustification: "We put the claims to the City Administrator.",
   biasAcknowledgement: "This group holds that transfers should be adopted in public.",
 };
+});
 
 console.log("\n--- reviewcopy-inband ---");
 
 /* ======================================================================= 1. the quartet is there */
+let dr, DRAFT, read1, rc1, q1;
 console.log("\n--- 1. the review copy carries hash, date, author and both floors in-band ---");
-const dr = rP(await POST(`op=casedraft&token=${IRIS}`, ARGS));
+await block("1", async () => {
+needs("0 (setup)", { IRIS, ARGS });
+dr = rP(await POST(`op=casedraft&token=${IRIS}`, ARGS));
 if (!dr?.ok) await bail("casedraft", dr);
-const DRAFT = dr.draftId;
-const read1 = await rawGet(`op=reviewcopy&draft=${DRAFT}&token=${IRIS}`);
-const rc1 = JSON.parse(read1.bytes.toString("utf8"));
-const q1 = rc1.inband || {};
+DRAFT = dr.draftId;
+read1 = await rawGet(`op=reviewcopy&draft=${DRAFT}&token=${IRIS}`);
+rc1 = JSON.parse(read1.bytes.toString("utf8"));
+q1 = rc1.inband || {};
 t("the review copy answers, and carries an `inband` quartet in the format the container's carries",
   [read1.status, rc1.ok, rc1.kind, q1.format], [200, true, "review-copy", "bio-inband/1"]);
 t("HASH: a SHA-256, named as such, over a stated subject with its byte count",
@@ -302,9 +335,12 @@ t("DATE is the copy's LAST CHANGE and AUTHOR is the draft's own editor — never
   [rc1.updated_at, "iris", true, true, true]);
 t("the store's `required_strength` is read INTO the floors and is not served a second time beside them",
   "required_strength" in rc1, false);
+});
 
 /* ======================================================================= 2. the floors are the bar */
 console.log("\n--- 2. the floors are the project's DECLARED bar, axis by axis ---");
+await block("2", async () => {
+needs("0 (setup), 1", { IRIS, ARGS, PROJ_ASYM, q1 });
 t("FLOORS: capture C and connection D, exactly as the publishing project declared them — different, so a "
 + "swapped axis fails here — and `declared` true",
   [q1.floors?.capture, q1.floors?.connection, q1.floors?.declared], ["C", "D", true]);
@@ -318,24 +354,34 @@ t("FLOORS: capture C and connection D, exactly as the publishing project declare
   t("and the unset axis is an ABSENT floor (null), never a floor of the weakest grade",
     qa.floors?.capture === null, true);
 }
+});
 
 /* ======================================================================= 6 (first half). stability */
 console.log("\n--- 6a. nothing moved: the hash does not move ---");
+await block("6a", async () => {
+needs("0 (setup), 1", { IRIS, DRAFT, q1 });
 const read1b = await rawGet(`op=reviewcopy&draft=${DRAFT}&token=${IRIS}`);
 t("two reads with nothing changed between them answer the SAME hash — a hash that moves on every read would "
 + "pass the one-byte arm below and mean nothing",
   JSON.parse(read1b.bytes.toString("utf8")).inband?.hash?.sha256, q1.hash?.sha256);
+});
 
 /* ======================================================================= 3a. agreement, review side */
 console.log("\n--- 3. AGREEMENT: each hash re-computed here, over the bytes that side serves ---");
+await block("3", async () => {
+needs("1", { read1, rc1, q1 });
 t("REVIEW SIDE: the served hash IS the SHA-256 of the served answer minus `inband`, serialised as the "
 + "quartet states — re-computed with node:crypto, sharing no code with src/",
   rehashServed(read1.bytes), q1.hash?.sha256);
 t("and the byte count it states is that serialisation's",
   Buffer.byteLength(JSON.stringify((({ inband, ...r }) => r)(rc1), null, 1), "utf8"), q1.hash?.bytes);
+});
 
 /* ======================================================================= 6 (second half). one byte */
+let qF;
 console.log("\n--- 6b. one byte of the answer moves: the hash moves ---");
+await block("6b", async () => {
+needs("0 (setup), 1", { IRIS, ARGS, DRAFT, q1 });
 const edited = rP(await POST(`op=casedraft&token=${IRIS}`,
   { draft: DRAFT, ...ARGS, statement: ARGS.statement.replace("only.", "only!") }));
 if (!edited?.ok) await bail("casedraft edit", edited);
@@ -366,10 +412,13 @@ t("A ONE-CHARACTER COMMENT, which moves the answer but not the draft's own edit 
   if (!back?.ok) await bail("casedraft restore", back);
 }
 const readF = await rawGet(`op=reviewcopy&draft=${DRAFT}&token=${IRIS}`);
-const qF = JSON.parse(readF.bytes.toString("utf8")).inband || {};
+qF = JSON.parse(readF.bytes.toString("utf8")).inband || {};
+});
 
 /* ======================================================================= 3b/4. the same case edition, published */
 console.log("\n--- 4. the SAME case edition published and signed: the container's quartet ---");
+await block("4", async () => {
+needs("0 (setup), 1, 6b", { IRIS, ARGS, LEAD, dir, dr, qF });
 const pub = rP(await POST(`op=publish&token=${IRIS}`, ARGS));
 if (pub?.ok === false || !pub?.caseDocument?.doc_sha) await bail("publish", pub);
 let rat;
@@ -438,9 +487,11 @@ t("FLOORS AGREE: the draft's floors (the project's bar read now) and the contain
      doc?.ratified_at === cq.date ? "the same instant in this run" : "a different instant, as the record holds them"],
     [true, true, "a different instant, as the record holds them"]);
 }
+});
 
 /* ======================================================================= 5. one function */
 console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review copy ---");
+await block("5", async () => {
 {
   const idx = codeOf(SRC("index.mjs"));
   const calls = (idx.match(/\binbandQuartet\(/g) || []).length;
@@ -474,6 +525,7 @@ console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review
   t("and inside `inband.mjs` there is ONE canonical serialisation and ONE digest",
     [(ib.match(/JSON\.stringify\(/g) || []).length, (ib.match(/crypto\.subtle\.digest\(/g) || []).length], [1, 1]);
 }
+});
 
 /* ======================================================================= 7. the date is the LAST CHANGE */
 /* REC-200 / BOB #32, 2026-09-23 23:08Z (`BIO_Publication_v0_1.md` §6A.3 point 1): *the copy carries the date
@@ -483,6 +535,8 @@ console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review
    acknowledgement, on both doors. What the date CANNOT see is stated by the copy itself and asserted here,
    because a scope nobody can read is not a scope. */
 console.log("\n--- 7. REC-200: the date is the copy's LAST CHANGE, act by act, on both doors ---");
+await block("7", async () => {
+needs("0 (setup)", { IRIS, ARGS });
 {
   /* A FRESH DRAFT, so nothing here disturbs the edition published above. */
   const d7 = rP(await POST(`op=casedraft&token=${IRIS}`, ARGS));
@@ -584,8 +638,19 @@ console.log("\n--- 7. REC-200: the date is the copy's LAST CHANGE, act by act, o
      gates' verdict, the project's floors — are outside the date by construction, which is why the copy says
      so rather than this suite asserting they move it. */
 }
+});
 
 /* The suite ends on its own explicit exit (hygiene's rule), after the tally it printed. */
-console.log(`\nreviewcopy-inband: ${pass} pass, ${fail} fail`);
+/* D-564: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "1", "2", "6a", "3", "6b", "4", "5", "7"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nreviewcopy-inband: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

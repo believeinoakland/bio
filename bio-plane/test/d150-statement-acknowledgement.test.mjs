@@ -111,7 +111,7 @@
    "REVIEW_NOT_PROJECT_OWNER"`, every other section at its baseline tally, foot reached, as declared. Before D-564
    the same break ended the run at `[FIXTURE ABORTED]` and sections 7-11 went unmeasured.
    (e) THE RECORDER DISARMED (`block()` rethrows) over (d)'s fixture — declared: NO foot and no section tally, exit 1
-   -> (see d564-block.control.mjs run).
+   -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after).
 
    D-150 / BIO_Publication_v0_1.md §3 rule 11 (BOB #27, 2026-09-22) — THE EXCLUSION STATEMENT IS
    CHECKED BY A SECOND PERSON, AND THE CHECK IS DISCLOSED, NEVER ENFORCED.

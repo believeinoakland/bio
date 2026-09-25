@@ -90,7 +90,7 @@
  *     `BLOCK 4 DIED: rests on section 3, which did not produce D1, DNOSTMT, CS`, `BLOCK 5 DIED: rests on
  *     section 3, which did not produce D1`; 1, 2, 6 at 21/0, 23/0, 1/0, foot reached, exit 1, as declared.
  *   (e) THE RECORDER DISARMED (`block()` rethrows) over (d)'s fixture — declared: NO foot and no section tally,
- *     exit 1 -> (see d564-block.control.mjs run).
+ *     exit 1 -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after).
  */
 import { withSurfacingRun } from "./surfacing-run.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */

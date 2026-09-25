@@ -125,7 +125,7 @@
    tally, as declared. Before D-564 the same break ended the run at `bail()` [FIXTURE ABORTED], and section 7's
    sixteen assertions never ran.
    (j) THE RECORDER DISARMED (`block()` rethrows) over (i)'s fixture — declared: NO foot and no section tally, exit
-   1 -> (see d564-block.control.mjs run).
+   1 -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after).
 
    See `test/casesign.control.mjs` for each arm's exact edit and its reasoning. */
 

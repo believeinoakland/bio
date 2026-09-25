@@ -183,7 +183,22 @@
    e 86/2, f 87/1, g 80/8, h 87/1, i 82/6, j 85/3, k 88/0, l 85/3 (re-anchored), m 86/2, n 88/0 — EVERY failure count
    unchanged from REC-199's measurement, block 12's (then 11's) six arms landing whole in each tally's pass column. A FIRST RUN
    (87/0 baseline, the same counts) measured a sentence that NAMED the refusal's code; civicos-ui's DEC-49 guards
-   refused it on the page, it was reworded, the no-code arm was added, and this is the re-run. */
+   refused it on the page, it was reworded, the no-code arm was added, and this is the re-run.
+
+   (t) D-564 (declared and RUN 2026-09-25, WORKER D-564 (SCHEDULER #22)), THE RECORDER — every section now runs in
+   `block()` (D-548's recorder, d84-case-manifest.test.mjs), and the subject is the SUITE, so the arms break a
+   section's FIXTURE, not `src/`. Before it, `bail()` printed "[FIXTURE ABORTED]", disposed and exited, so one broken
+   fixture hid every later section. Re-run in one step: `node test/d564-block.control.mjs reviewcopy` from bio-plane/.
+   BASELINE -> **93 pass, 0 fail**, per section 0 (setup) 0/0, 0 (corpus) 0/0, 1 1/0, 2 12/0, 3 6/0, 4 12/0, 5 6/0,
+   6 6/0, 7 13/0, 8 7/0, 9 14/0, 10 5/0, 11 5/0, 12 6/0, foot reached.
+   (t) SECTION 11's FIXTURE BROKEN — block 11's after-the-trip promote (`Was ${id} answered?`) given the type
+   `"nosuchtype"` in place of `"inquiry"`; no later section reads block 11. Declared: section 11 DIES by name with
+   tally -1 and every other section reports its baseline tally -> **92 pass, 1 fail** [FOOT REACHED; DIED: 11]:
+   `BLOCK 11 DIED: (fixture) promote INQ-2026-1260-later-lb (after the trip): {"ok":false,"reason":"SURFACE_NO_RUN"…`,
+   block 11's four arms before the promote counted in the total but not in its -1 tally, and section 12 AFTER it
+   6/0. AS DECLARED; the restore of this file read sha256 MATCH.
+   (u) THE RECORDER DISARMED (`block()` rethrows) over (t)'s fixture — declared: NO foot and no section tally, exit 1,
+   so a driver cannot read an early end as a finished run -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after). */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -252,12 +267,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`);
-  fail++;
-  console.log(`\nreviewcopy: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-564: EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -296,20 +329,23 @@ const enrol = async (memberId, password, role, capabilities) => {
   if (!lg.token) bail(`login ${memberId}`, lg);
   return lg.token;
 };
+/* D-564: the values later sections read, hoisted so each section can run inside block(). */
+let OMAR, IRIS, VIC, PROJ, VIC_PROJ, ELLA, PAT, UMA;
+await block("0 (setup)", async () => {
 await enrol("nadia", "nadia-passphrase-126", "admin", ["contribute", "publish", "create_projects"]);
-const OMAR = await enrol("omar", "omar-passphrase-126", "admin", ["contribute", "publish"]);
-const IRIS = await enrol("iris", "iris-passphrase-126", "member", ["contribute", "publish"]);
+OMAR = await enrol("omar", "omar-passphrase-126", "admin", ["contribute", "publish"]);
+IRIS = await enrol("iris", "iris-passphrase-126", "member", ["contribute", "publish"]);
 /* A MEMBER WITH NO STANDING in the producing project — signed in, holding `publish`,
    owning a project of her own. The caller a member-side read is refused to. */
-const VIC = await enrol("vic", "vic-passphrase-126", "member", ["contribute", "publish"]);
+VIC = await enrol("vic", "vic-passphrase-126", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-r126", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
    the fixture takes a `name` and returns the minted id (PROJ holds it; vic's own project is never cited). */
-const PROJ = await makePublishingProject({
+PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r126", owner: "iris",
   name: "PROJ-2026-1260-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
-const VIC_PROJ = await makePublishingProject({
+VIC_PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r126", owner: "vic",
   name: "PROJ-2026-1261-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
@@ -324,9 +360,9 @@ const VIC_PROJ = await makePublishingProject({
      uma  — a JOINED participant holding publish WITHOUT contribute: the capability
             half of the edit permission, refused at the control plane.
    omar (above) is the ADMINISTRATOR who is not an owner and not a participant. */
-const ELLA = await enrol("ella", "ella-passphrase-133", "member", ["contribute", "publish"]);
-const PAT = await enrol("pat", "pat-passphrase-133", "member", ["contribute", "publish"]);
-const UMA = await enrol("uma", "uma-passphrase-133", "member", ["publish"]);
+ELLA = await enrol("ella", "ella-passphrase-133", "member", ["contribute", "publish"]);
+PAT = await enrol("pat", "pat-passphrase-133", "member", ["contribute", "publish"]);
+UMA = await enrol("uma", "uma-passphrase-133", "member", ["publish"]);
 for (const [h, tok, join] of [["ella", ELLA, true], ["pat", PAT, false], ["uma", UMA, true]]) {
   const inv = rP(await GET(`op=projectinvite&token=${IRIS}&projectId=${encodeURIComponent(PROJ)}&handle=${h}`));
   if (!inv?.ok) bail(`projectinvite ${h}`, inv);
@@ -335,6 +371,7 @@ for (const [h, tok, join] of [["ella", ELLA, true], ["pat", PAT, false], ["uma",
     if (jn?.state !== "joined") bail(`projectjoin ${h}`, jn);
   }
 }
+});
 
 /* ---- the corpus: the shapes are casesign.test.mjs's, lifted rather than invented ---- */
 let snapSeq = 0;
@@ -395,6 +432,8 @@ const OPENQ = "INQ-2026-1260-open";       /* never concluded */
 const Q = { [LEAD]: "Was the transfer authorised?", [LEAD2]: "Was notice given?",
             [LEAD3]: "Was the memo adopted?", [LEAD4]: "Was the auditor told?",
             [LEAD5]: "Who signed the memo?", [OPENQ]: "Is the fund solvent?" };
+await block("0 (corpus)", async () => {
+needs("0 (setup)", { IRIS });
 if ((await promote(INFO, infoMd(INFO), "information", "collected")).ok === false) bail("promote info", {});
 /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
    conclusion drawn with no project NAMES the accepted reading whose claim it
@@ -414,6 +453,7 @@ for (const id of [LEAD, LEAD2, LEAD3, LEAD4, LEAD5]) {
     + adoptedVersionParam()));
   if (!r.ok) bail(`conclude ${id}`, r);
 }
+});
 
 /* THE AUTHORED ARGUMENTS, per edition. C-21.1 demands a fresh statement and a fresh
    acknowledgement per edition, so each carries its own. */
@@ -429,14 +469,18 @@ const args = (n, over = {}) => ({
 const withRoles = (b) => ({ ...b, roles: allLoadBearing(b) });
 
 console.log("\n--- reviewcopy ---");
+/* D-564: the section values later sections (and blocks) read, hoisted so each section can run inside block(). */
+let C1, D1, D2, D3, D5, DEr, D6r, DEO_ID, O1, O2, O3, O5, G1, G2, S1, S2, never;
 
 /* =========================================================================== 1
  * THE GROUND: a signed case at edition 1, so a draft can name an existing case.
  * ========================================================================= */
 console.log("\n--- 1. the ground: case edition 1 is published and SIGNED ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS });
 const pub1 = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(1), targets: [LEAD] })));
 if (pub1.ok === false || !pub1.caseDocument?.doc_sha) bail("publish edition 1", pub1);
-const C1 = pub1.caseDocument.case_id;
+C1 = pub1.caseDocument.case_id;
 {
   const r = rP(await POST(`op=caseratify&token=${IRIS}`, { caseId: C1, edition: 1,
     expectedSha: pub1.caseDocument.doc_sha, sig: signCase("iris", C1, 1, pub1.caseDocument.doc_sha) }));
@@ -444,6 +488,7 @@ const C1 = pub1.caseDocument.case_id;
 }
 t("the ground: the case the drafts will name is signed at edition 1 and is what a stranger can read",
   (parsed(await rawOf(`op=casedocument&case=${C1}&edition=1`)) || {}).ratified, true);
+});
 
 /* =========================================================================== 2
  * THE DRAFT: authored by the project's owner, identified BEFORE any gate runs.
@@ -452,14 +497,16 @@ t("the ground: the case the drafts will name is signed at edition 1 and is what 
    else's", which was REC-126's PROVISIONAL authority. §6A.2 (BOB #15) makes
    authoring the project's EDIT permission; the owner arms below still hold (an
    owner is an editor) and the editor arms are added after them. */
-console.log("\n--- 2. the draft case: the project's editors' act (§6A.2), and nobody else's ---");
 const draft = async (token, body) => rP(await POST(`op=casedraft&token=${token}`, body));
+console.log("\n--- 2. the draft case: the project's editors' act (§6A.2), and nobody else's ---");
+await block("2", async () => {
+needs("0 (setup) and 1", { IRIS, ELLA, PAT, UMA, VIC, OMAR, PROJ, C1 });
 const D1r = await draft(IRIS, withRoles({ ...args(2), caseId: C1, targets: [LEAD2] }));
 const D2r = await draft(IRIS, withRoles({ ...args(1), targets: [OPENQ] }));
 const D3r = await draft(IRIS, withRoles({ ...args(1, { biasAcknowledgement: "" }), targets: [LEAD3] }));
 const D5r = await draft(IRIS, withRoles({ ...args(1), targets: [LEAD5] }));
 for (const [n, r] of [["D1", D1r], ["D2", D2r], ["D3", D3r], ["D5", D5r]]) if (!r?.ok) bail(`casedraft ${n}`, r);
-const [D1, D2, D3, D5] = [D1r.draftId, D2r.draftId, D3r.draftId, D5r.draftId];
+[D1, D2, D3, D5] = [D1r.draftId, D2r.draftId, D3r.draftId, D5r.draftId];
 
 t("a draft naming an existing case stands at THAT CASE'S NEXT EDITION — the edition is read from the "
 + "published record, never taken from the caller",
@@ -486,11 +533,11 @@ t("and to an administrator who is not an owner — an administrator sees every p
   (await draft(OMAR, withRoles({ ...args(2), caseId: C1, targets: [LEAD2] })))?.reason, "REVIEW_NOT_PROJECT_OWNER");
 
 /* REC-133: AUTHORING IS THE EDITOR'S ACT (§6A.2). */
-const DEr = await draft(ELLA, withRoles({ ...args(1), targets: [LEAD5] }));
+DEr = await draft(ELLA, withRoles({ ...args(1), targets: [LEAD5] }));
 t("REC-133: A NON-OWNER EDITOR AUTHORS A DRAFT — a joined participant holding contribute, the draft "
 + "attributed to her project and standing as a new case",
   [DEr?.ok, DEr?.project, DEr?.edited, DEr?.edition], [true, PROJ, false, 1]);
-const D6r = await draft(IRIS, withRoles({ ...args(1), targets: [LEAD3] }));
+D6r = await draft(IRIS, withRoles({ ...args(1), targets: [LEAD3] }));
 if (!D6r?.ok) bail("casedraft D6", D6r);
 const D6e = await draft(ELLA, { draft: D6r.draftId, ...withRoles({ ...args(1), targets: [LEAD3] }) });
 t("and she EDITS the owner's draft IN PLACE — a review copy is mutable, and editing is the editor's act",
@@ -504,7 +551,7 @@ t("nor edit an existing draft of the project",
 t("THE CAPABILITY HALF: a JOINED participant without `contribute` is refused at the control plane, "
 + "before the store — the edit permission is position AND capability, and neither alone",
   (await draft(UMA, withRoles({ ...args(1), targets: [LEAD5] })))?.reason, "NOT_CAPABLE");
-let DEO_ID = null;   /* REC-198: every draft of PROJ is tracked by the id its act answered, for block 9's list */
+DEO_ID = null;   /* REC-198: every draft of PROJ is tracked by the id its act answered, for block 9's list */
 {
   /* THE GATES ARE RUN AS THE PUBLISHER. `publishCase` runs its owner fence first, so
      a dry run as the non-owner editor would answer NOT_THE_PROJECT_OWNER for every
@@ -526,13 +573,17 @@ t("and to a machine credential, BY NAME — a review copy is an attributed act a
 t("a draft naming a case this project does not own is answered exactly as a case that does not exist",
   [(await draft(IRIS, withRoles({ ...args(2), caseId: "CASE-2026-9999", targets: [LEAD2] })))?.reason],
   ["REVIEW_NO_SUCH_CASE"]);
+});
 
 /* =========================================================================== 3
  * WHAT IS MISSING IS THE PUBLISH GATES' OWN REFUSAL, RUN AND ROLLED BACK.
  * ========================================================================= */
-console.log("\n--- 3. what is missing: the publish gates' own refusals, not a list ---");
+const grant = async (token, body) => rP(await POST(`op=reviewgrant&token=${token}`, body));
 const ownerRead = async (d) => rP(await GET(`op=reviewcopy&draft=${d}&token=${IRIS}`));
-const O1 = await ownerRead(D1), O2 = await ownerRead(D2), O3 = await ownerRead(D3), O5 = await ownerRead(D5);
+console.log("\n--- 3. what is missing: the publish gates' own refusals, not a list ---");
+await block("3", async () => {
+needs("1 and 2", { C1, D1, D2, D3, D5 });
+O1 = await ownerRead(D1), O2 = await ownerRead(D2), O3 = await ownerRead(D3), O5 = await ownerRead(D5);
 t("THREE DRAFTS, THREE DIFFERENT GATE ANSWERS — the one whose every gate passes names nothing; the one "
 + "over an open question names NOT_CONCLUDED on THAT question; the one with no acknowledgement names "
 + "NO_BIAS_ACKNOWLEDGEMENT. A hardcoded list could not produce all three",
@@ -559,18 +610,20 @@ t("and it is as complete as a publication can be: every authored argument, and e
   [O1?.authored?.scope, O1?.authored?.statement, O1?.findings?.map((f) => f.target),
    (O1?.findings?.[0]?.text || "").includes(Q[LEAD2])],
   [args(2).scope, args(2).statement, [LEAD2], true]);
+});
 
 /* =========================================================================== 4
  * THE GRANT: issued by the owner, attributed, its secret never stored.
  * ========================================================================= */
 console.log("\n--- 4. the grant: attributed, scoped to one production, its secret held only as a hash ---");
+await block("4", async () => {
+needs("1, 2 and 3", { C1, D1, D2, DEr, O1 });
 const membersBefore = (rP(await GET("op=memberlist&token=adm-r126"))?.members || []).length;
-const grant = async (token, body) => rP(await POST(`op=reviewgrant&token=${token}`, body));
-const G1 = await grant(IRIS, { draft: D1, recipient: "Dana Ruiz, City Auditor's office" });
-const G2 = await grant(IRIS, { draft: D2, recipient: "Sam Ortiz, council staff" });
+G1 = await grant(IRIS, { draft: D1, recipient: "Dana Ruiz, City Auditor's office" });
+G2 = await grant(IRIS, { draft: D2, recipient: "Sam Ortiz, council staff" });
 if (!G1?.ok || !G1.secret) bail("reviewgrant D1", G1);
 if (!G2?.ok || !G2.secret) bail("reviewgrant D2", G2);
-const S1 = G1.secret, S2 = G2.secret;
+S1 = G1.secret, S2 = G2.secret;
 t("the grant is ATTRIBUTED — who issued it, to whom, and against which case edition",
   [G1.issuedBy, G1.recipient, G1.draftId, G1.caseId, G1.edition],
   ["iris", "Dana Ruiz, City Auditor's office", D1, C1, 2]);
@@ -610,12 +663,15 @@ t("and the store is never handed the value: the secret is generated at the edge,
   /rv1_/.test(STORE_SRC), false);
 t("THE RECIPIENT NEVER BECOMES A MEMBER — issuing two grants added nobody to the roster",
   (rP(await GET("op=memberlist&token=adm-r126"))?.members || []).length, membersBefore);
+});
 
 /* =========================================================================== 5
  * THE RECIPIENT READS ONE PRODUCTION AND NOTHING ELSE.
  * ========================================================================= */
-console.log("\n--- 5. the recipient: one production, read and comment, and nothing else ---");
 const recipientRead = (secret, extra = "") => rawOf(`op=reviewcopy&secret=${encodeURIComponent(secret)}${extra}`);
+console.log("\n--- 5. the recipient: one production, read and comment, and nothing else ---");
+await block("5", async () => {
+needs("1, 2 and 4", { C1, D1, D2, S1, S2 });
 const R1raw = await recipientRead(S1);
 const R1 = parsed(R1raw);
 t("a recipient holding the secret reads THE ONE production, with no credential at all",
@@ -637,11 +693,14 @@ t("NOT AN ATTESTED ACT: the secret presented as a credential to op=publish is no
   [false, false, false, false]);
 t("and it is not a member's read either: op=list with the secret as a token reads nothing",
   parsed(await rawOf(`op=list&token=${encodeURIComponent(S1)}`))?.ok === true, false);
+});
 
 /* =========================================================================== 6
  * THE COMMENT: attributed, and a recipient's comment is a recipient's.
  * ========================================================================= */
 console.log("\n--- 6. comments: a recipient's is a RECIPIENT's, a member's is a member's ---");
+await block("6", async () => {
+needs("2 and 4", { D1, D2, G1, S1 });
 const RC = parsed(await rawPost(`op=reviewcomment&secret=${encodeURIComponent(S1)}`,
   { text: "Page 3 cites a memo I have not seen." }));
 const MC = rP(await POST(`op=reviewcomment&draft=${D1}&token=${IRIS}`, { text: "We will attach the memo." }));
@@ -678,11 +737,14 @@ t("a comment is refused with no text",
 t("a comment on ANOTHER draft with this draft's secret is the dead answer",
   (await rawPost(`op=reviewcomment&secret=${encodeURIComponent(S1)}&draft=${D2}`, { text: "x" })).body,
   (await rawPost(`op=reviewcomment&secret=${encodeURIComponent("rv1_" + "A".repeat(43))}`, { text: "x" })).body);
+});
 
 /* =========================================================================== 7
  * REVOCATION, AND THE ONE DEAD ANSWER.
  * ========================================================================= */
 console.log("\n--- 7. revocation is real, and a dead secret is a secret that never existed ---");
+await block("7", async () => {
+needs("2 and 4", { D1, D2, G2, S2 });
 t("revocation is REFUSED to a member who does not own the producing project",
   rP(await POST(`op=reviewrevoke&token=${VIC}`, { grant: G2.grantId }))?.reason, "REVIEW_NOT_PROJECT_OWNER");
 const RV = rP(await POST(`op=reviewrevoke&token=${IRIS}`, { grant: G2.grantId }));
@@ -690,7 +752,7 @@ t("the owner revokes, and the revocation is attributed",
   [RV?.ok, RV?.revokedBy, typeof RV?.revokedAt], [true, "iris", "string"]);
 const revoked = await recipientRead(S2);
 t("THE REVOKED RECIPIENT READS NOTHING", parsed(revoked)?.kind === "review-copy", false);
-const never = await recipientRead("rv1_" + "B".repeat(43));
+never = await recipientRead("rv1_" + "B".repeat(43));
 const malformed = await recipientRead("not-a-secret");
 const empty = await rawOf("op=reviewcopy&secret=");
 t("REVOKED, NEVER-ISSUED AND MALFORMED ARE BYTE-IDENTICAL — status, content type and every byte of the body",
@@ -738,11 +800,14 @@ t("a revocation that names no grant is the payload complaint it is, not an answe
   rP(await POST(`op=reviewrevoke&token=${IRIS}`, {}))?.reason, "REVIEW_NO_GRANT");
 t("revoking again is idempotent and says so",
   rP(await POST(`op=reviewrevoke&token=${IRIS}`, { grant: G2.grantId }))?.existed, true);
+});
 
 /* =========================================================================== 8
  * THE EDITION BINDING, driven across a real publication and a real signature.
  * ========================================================================= */
 console.log("\n--- 8. bound to one case edition: the unsigned document of THAT edition, and no other ---");
+await block("8", async () => {
+needs("1, 2, 3, 4 and 7", { C1, D1, O5, S1, S2, never });
 const pub2 = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(2), caseId: C1, targets: [LEAD2] })));
 if (pub2.ok === false || pub2.caseDocument?.edition !== 2) bail("publish edition 2", pub2);
 const docAnon2 = await rawOf(`op=casedocument&case=${C1}&edition=2`);
@@ -783,6 +848,7 @@ t("NOT ANOTHER EDITION: the edition-2 secret reads the UNSIGNED edition-3 docume
   (await rawOf(`op=casedocument&case=${C1}&edition=3`)).body);
 t("and the owner still reads the draft, now at edition 3 — the copy is MUTABLE and its grants are not",
   (await ownerRead(D1))?.ok, true);
+});
 
 /* =========================================================================== 9
  * REC-198 — THE LIST OF A PROJECT'S DRAFTS, FENCED EXACTLY LIKE READING ONE.
@@ -801,6 +867,8 @@ t("and the owner still reads the draft, now at edition 3 — the copy is MUTABLE
  * differ in shape by design and only "reads no drafts" is asserted. The uninvited arm is a SIGNED-IN member.
  * ========================================================================= */
 console.log("\n--- 9. REC-198: the list of a project's drafts, fenced exactly like reading one ---");
+await block("9", async () => {
+needs("2", { D1, D2, D3, D5, DEr, D6r, DEO_ID });
 const PROJ_DRAFTS = [D1, D2, D3, D5, DEr.draftId, D6r.draftId, DEO_ID];
 if (PROJ_DRAFTS.some((d) => !d) || new Set(PROJ_DRAFTS).size !== 7) bail("block 9's draft roster", PROJ_DRAFTS);
 const listOf = async (token, extra = "") => rP(await GET(`op=casedrafts&token=${token}&project=${encodeURIComponent(PROJ)}${extra}`));
@@ -898,6 +966,7 @@ t("REC-198: A JOINED PARTICIPANT WHO IS NOT THE OWNER LISTS THE SAME SEVEN — t
   t("and the fence has exactly those two callers in the store",
     (STORE_SRC.match(/this\.#seesProjectDrafts\(/g) || []).length, 2);
 }
+});
 
 /* =========================================================================== 10
  * REC-199 / BOB #32 (2026-09-23 23:08Z), `BIO_Publication_v0_1.md` §6A.4: `op=reviewcopy`
@@ -927,7 +996,8 @@ t("REC-198: A JOINED PARTICIPANT WHO IS NOT THE OWNER LISTS THE SAME SEVEN — t
  * it without anybody remembering to extend a list.
  * ========================================================================= */
 console.log("\n--- 10. REC-199: the copy says `newCase` back, so an edit does not lose it ---");
-{
+await block("10", async () => {
+  needs("1 and 2", { C1, D1, D2 });
   /* THE WRITE-BACK, BUILT FROM THE ANSWER ALONE. Every value here is read off the review
      copy; nothing is carried over from the body that made the draft. */
   const bodyFromCopy = (c) => {
@@ -1008,7 +1078,7 @@ console.log("\n--- 10. REC-199: the copy says `newCase` back, so an edit does no
   + "verdict come back unchanged. A twelfth field the answer forgets fails this without a list to extend",
     [[okN, okD, ok1, ok2], JSON.stringify([bN, bD, b1, b2]) === JSON.stringify([aN, aD, a1, a2])],
     [[true, true, true, true], true]);
-}
+});
 
 /* =========================================================================== 11
  * D-539, `BIO_Publication_v0_1.md` §6A.4: A FINDING THE COPY CANNOT SHOW KEEPS ITS
@@ -1032,7 +1102,7 @@ console.log("\n--- 10. REC-199: the copy says `newCase` back, so an edit does no
  * block-scoped there: a finding with no role is written back with no role.
  * ========================================================================= */
 console.log("\n--- 11. D-539: a finding the copy cannot show keeps its designation across an edit ---");
-{
+await block("11", async () => {
   const LATER_LB = "INQ-2026-1260-later-lb", LATER_SUP = "INQ-2026-1260-later-sup";
   const writeBack = (c) => {
     const b = { project: c?.project, draft: c?.draft };
@@ -1083,7 +1153,7 @@ console.log("\n--- 11. D-539: a finding the copy cannot show keeps its designati
   + "the present branch, after an edit made while they were absent. A trip that lost the role reads `null` "
   + "here, and the load-bearing finding the case was to rest on has been demoted to undesignated",
     pick(DA3), [[LEAD, true, "supporting"], [LATER_LB, true, "load_bearing"], [LATER_SUP, true, "supporting"]]);
-}
+});
 
 /* =========================================================================== 12
  * D-538 (`BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE
@@ -1101,7 +1171,8 @@ console.log("\n--- 11. D-539: a finding the copy cannot show keeps its designati
  * rather than "the next edition" of a case it cannot become as it stands.
  * ========================================================================= */
 console.log("\n--- 12. D-538: the identity sentence reads `newCase`, in every answer that prints it ---");
-{
+await block("12", async () => {
+  needs("1 and 2", { C1, D1 });
   /* Matched by what the sentence must SAY, not by its spelling: arm (p) rewords it and must pass. */
   const NEW = /not yet allocated/i, DERIVED = (x) => typeof x === "string" && /deriv/i.test(x)
     && /undetermined/i.test(x) && !NEW.test(x);
@@ -1146,8 +1217,18 @@ console.log("\n--- 12. D-538: the identity sentence reads `newCase`, in every an
     [DNr, DDr, DBr].flatMap((r) => [r.caseIdentity, row(r.draftId)])
       .concat([cN, cD, c1, cB].map((c) => c?.case?.identity), [gN.boundTo, gD.boundTo])
       .filter((x) => typeof x !== "string" || /\b[A-Z]{2,}(?:_[A-Z]+)+\b/.test(x)), []);
-}
+});
 
-console.log(`\nreviewcopy: ${pass} pass, ${fail} fail`);
+/* D-564: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "0 (corpus)", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nreviewcopy: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

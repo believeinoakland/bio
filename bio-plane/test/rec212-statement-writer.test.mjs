@@ -50,7 +50,7 @@
    1 fail**, `BLOCK 4 DIED: (fixture) publish own: {"ok":false,"reason":"NO_SUCH_BUNDLE",...}`, foot reached, as
    declared; restored by `cp` from a pristine copy, `sha256sum -c` OK.
    (e) THE RECORDER DISARMED (`block()` rethrows) over the fixture arm — declared: NO foot, no section tally, exit 1
-   -> (see d564-block.control.mjs run).
+   -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after).
    NOT DRIVEN, AND SAID RATHER THAN SCORED: no arm reaches `#statementWriter`'s `drafts_unbounded` answer
    (it needs more than REVIEW_LIST_MAX drafts of one project), and none produces a draft holding a statement
    with no `statement_by` — REC-193 measured that state unreachable through any act on a store this code
