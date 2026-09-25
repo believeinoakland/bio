@@ -1,0 +1,16 @@
+{
+ "unit": "ui:content-extent.test.mjs",
+ "inputHash": "cf9c27d93a32082a2ff935e3546527d3650f8c6d0a69a5cfbe12a66fd57d41bd",
+ "verdict": "PASS",
+ "run": "80c0ce1b39b3c7b0f8f538d79d64c2d1c86f168e.1790334103849.1692.json",
+ "tree": "80c0ce1b39b3c7b0f8f538d79d64c2d1c86f168e",
+ "head": "a53d7bb847a551d3f55d0897874d801fb30d21eb",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 98,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "15d2479a-6bf0-571f-ae82-af7be02dd52a",
+ "at": "2026-09-25T11:01:43.862Z"
+}
