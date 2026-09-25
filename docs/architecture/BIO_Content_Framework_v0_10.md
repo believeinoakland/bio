@@ -1000,10 +1000,13 @@ names the four measurements owed and what a match must show to count.
    - **The project number**, under rule 2's concurrent forms.
    - **The fund code**, counted only when the fund NAME agrees (rule 1).
    - **The APN** (assessor's parcel number): normalised to the roll's own canonical key (`apn_sort`), because Legistar
-     pads every part and the roll does not; and a parcel absent from the CURRENT roll reads RETIRED (merged, split or
-     taken), never NO SUCH PARCEL — 33 of 102 Legistar APNs are retired, including exactly the takings a case documents.
-     The roll read is Oakland's republication, whose provenance the portal does not state: an APN pair is
-     cross-institution only once the county's own roll is captured.
+     pads every part and the roll does not. A parcel absent from a roll is NEVER "no such parcel". It reads RETIRED
+     (merged, split or taken) only where the assessor's own lineage records it, with a roll year and children
+     (data.acgov.org). Otherwise it reads UNDETERMINED between retired-before-the-lineage and never-a-parcel, naming
+     the vintages searched. AMENDED 2026-09-25 by BOB #34 on M-157 (D-504): the roll M-132 read (Oakland's
+     republication) is a partial 2012-13 snapshot, not the current roll. Of the 33 Legistar APNs it lacked, 27 are
+     retired, 1 is current and 5 are undetermined, so "absent ⇒ retired" would have written 6 false retirements.
+     The county's own layer, lineage and secured rolls are now captured, so an APN pair is cross-institution.
    The contract/PO space is UNPUBLISHED AT SOURCE (Oakland's own systems catalogue, M-132), not undetermined.
 
 ## 8.4 Themes: a connection through an IDEA — RULED BY BOB 2026-09-21 (D-162), Part I's one amendment since approval
