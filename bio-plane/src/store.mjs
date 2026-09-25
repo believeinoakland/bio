@@ -16621,7 +16621,11 @@ export class Store extends DurableObject {
       snapFiles.get(r.snap_key).push({ name: r.path, sha256: r.sha256 });
     }
     const entries = [];
-    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json, writer, operation FROM manifest WHERE bundle_id=?`, bundleId)) {
+    /* D-700 (State Rules §6, I-20 as D-674 amended it): "prior" is WRITE order, and the gate walks THIS image,
+       so the image carries it. Read by `rowid`; each entry's `seq` is its write-order rank (1..n). The file stays
+       sorted by snap key below (C-12.1 requires that order), and C-20.1 walks `seq`, not the file's order. */
+    let seq = 0;
+    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json, writer, operation FROM manifest WHERE bundle_id=? ORDER BY rowid`, bundleId)) {
       /* files_json holds the files as WRITTEN by this promotion, with their
          hashes. Two consumers want different views of it and both are right:
          the manifest entry wants names, because C-20.1 asks whether a later
@@ -16635,7 +16639,7 @@ export class Store extends DurableObject {
       const writtenPairs = written.map((f) => typeof f === "string" ? { name: f, sha256: null } : f);
       const files = writtenPairs.map((f) => f.name);
       const snapshotted = (snapFiles.get(r.snap_key) || []).map((f) => f.name);
-      entries.push({ key: r.snap_key, kind: r.kind, base: r.base, author: r.author,
+      entries.push({ key: r.snap_key, seq: ++seq, kind: r.kind, base: r.base, author: r.author,
                      created: r.created, files, snapshotted,
                      ...(r.writer ? { writer: r.writer, operation: r.operation } : {}) });
       /* The verbatim promotion record, in the shape the original accelerator

@@ -5830,6 +5830,21 @@ function bodySections(body) {
   return out;
 }
 
+/** D-700 (State Rules §6, I-20 as D-674 amended it): a history manifest's entries in WRITE order. "Prior" is the
+ *  snapshot written before, never the caller-chosen snap key's lexical neighbour, so when EVERY entry carries a
+ *  distinct integer `seq` (the plane's image writes each entry's write-order rank) the walk follows it. An image
+ *  without it — an old or a foreign one — is walked in snap-key order, as before, and `order` says which, so the
+ *  caller can say so rather than present a key-order walk as write order. The file itself stays sorted by key
+ *  (C-12.1); only the walk changes. */
+export function historyWriteOrder(raw) {
+  const list = Array.isArray(raw) ? raw.filter((e) => e && typeof e === 'object') : [];
+  const seqs = list.map((e) => e.seq);
+  const write = list.length > 0 && seqs.every((s) => Number.isSafeInteger(s)) && new Set(seqs).size === list.length;
+  return write
+    ? { order: 'write', entries: [...list].sort((a, b) => a.seq - b.seq) }
+    : { order: 'key', entries: [...list].sort((a, b) => a.key < b.key ? -1 : 1) };
+}
+
 /** C-20.1 (error): mechanical-writer diff conformance. Reads the history
  *  manifest and the verbatim promotion records; for each mechanical entry with
  *  a recoverable pre-snapshot, asserts the diff against the declared envelope. */
@@ -5838,7 +5853,8 @@ async function checkMechanicalConformance(ctx, findings) {
   if (!manRaw) return;
   let man;
   try { man = JSON.parse(asText(manRaw)); } catch { return; } // C-12 reports
-  const entries = Array.isArray(man.entries) ? [...man.entries].sort((a, b) => a.key < b.key ? -1 : 1) : [];
+  const { order, entries } = historyWriteOrder(man.entries);
+  let keyOrderSaid = false;
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
     if (!e || e.kind !== 'promotion' || !e.key) continue;
@@ -5849,6 +5865,11 @@ async function checkMechanicalConformance(ctx, findings) {
     const man2 = rec.manifest || rec;
     const writer = man2.writer || rec.writer;
     if (writer !== 'mechanical') continue;
+    if (order !== 'write' && entries.length > 1 && !keyOrderSaid) {
+      keyOrderSaid = true;
+      findings.push(f('C-20.1', 'info', `the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: "prior" may not be the snapshot written before (I-20)`,
+        ['re-export the bundle from a plane that writes seq into _history/manifest.json']));
+    }
     const op = man2.operation || rec.operation;
     if (!op || !(op in MECHANICAL_FIELD_SETS)) {
       findings.push(f('C-20.1', 'error', `history entry '${e.key}' is marked mechanical but names undeclared operation '${op}'`,
