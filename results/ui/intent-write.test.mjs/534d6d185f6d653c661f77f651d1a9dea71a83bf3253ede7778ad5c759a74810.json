@@ -1,0 +1,16 @@
+{
+ "unit": "ui:intent-write.test.mjs",
+ "inputHash": "534d6d185f6d653c661f77f651d1a9dea71a83bf3253ede7778ad5c759a74810",
+ "verdict": "PASS",
+ "run": "75aefa90739af252b89ff74e7729e86023bffcd0.1790314600719.7745.json",
+ "tree": "75aefa90739af252b89ff74e7729e86023bffcd0",
+ "head": "6a9e1274ddb60fba207807fefca03f116e2cdad8",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 79,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "1a2434c9-d4ed-59bb-8c1a-d327691f4eaf",
+ "at": "2026-09-25T05:36:40.735Z"
+}
