@@ -91,11 +91,14 @@ export function layoutOf(manifest) {
 export function serialiseContainer(entries, { maxBytes = CONTAINER_MAX_BYTES } = {}) {
   const seen = new Set();
   let total = 0;
+  /* DEC-49 REGION is-container-paths — D-641 / C-100.102. The span the row's `where` names:
+     the condition of DUPLICATE_PATH and the refusal it mints, nothing else. */
   for (const e of entries) {
     if (seen.has(e.name)) return { ok: false, reason: "DUPLICATE_PATH", path: e.name };
     seen.add(e.name);
     total += e.bytes.length + enc.encode(e.name).length * 2 + 76; // payload + both headers
   }
+  /* END DEC-49 REGION is-container-paths */
   if (total > maxBytes)
     return { ok: false, reason: "TOO_LARGE", bytes: total, maxBytes,
              detail: "this container is larger than the plane will serialise in one response. Its parts "
@@ -165,11 +168,14 @@ export async function containerEntries(manifest, manifestBytes, read) {
   for (const part of Array.isArray(manifest?.parts) ? manifest.parts : []) {
     if (!part || typeof part.path !== "string" || typeof part.sha256 !== "string") continue;
     if (part.path === layout.manifestAt) continue;   // the manifest is written once, at the root
+    /* DEC-49 REGION is-container-part — D-641 / C-100.103. The span the row's `where` names:
+       the condition of PART_MISSING and the refusal it mints, nothing else. */
     const bytes = await read(part.sha256);
     if (!bytes) return { ok: false, reason: "PART_MISSING", path: part.path, sha256: part.sha256,
                          detail: "a part named in the manifest is not in the published object store, so this "
                                + "container cannot be assembled whole. Its other parts are still answerable "
                                + "individually by hash." };
+    /* END DEC-49 REGION is-container-part */
     entries.push({ name: layout.root + part.path, bytes });
   }
   return { ok: true, entries, layout };

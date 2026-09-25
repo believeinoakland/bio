@@ -524,6 +524,8 @@ import { REVIEW_COPY_CHECKS } from "../checks/bio-checks.mjs";
 /* D-508 / C-85: the doorbell's rate refusals — the one door open to the public, and the one
    refusal surface whose reader is guaranteed not to be a member. */
 import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
+/* D-641 / C-100: the refusals the by-op walk brought into reach; read by the `refuse*` mints below. */
+import { REACH_BY_OP_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
@@ -641,6 +643,565 @@ function actNoCitation(detail, extra = {}) {
   return { ok: false, reason: "NO_CITATION", code: "NO_CITATION", check: row.check,
            translation: row.translation, detail, ...extra };
   /* END DEC-49 REGION is-act-no-citation */
+}
+
+/* D-641 — ONE MINT PER CODE FOR THE REFUSALS D-542's BY-OP WALK BROUGHT INTO REACH (REACH_BY_OP_CHECKS, C-100).
+ *
+ * Each code below was minted at several literal sites for ONE condition. A DEC-49 row holds one `where` and one
+ * canned sentence, and arm G of the guard refuses a catalogued code at two literal sites, because a second site is
+ * where a second condition starts borrowing the first one's sentence (D-484, D-550). So each has exactly one mint
+ * here, and every site calls it with the per-site fields it passed before: `reason` and every field are unchanged
+ * on the wire, and `code`, `check` and `translation` join them on the way out (`dec49Decorate`, index.mjs). The
+ * sentence was checked against EVERY former site before the site was routed here; a site whose condition differs
+ * does not call these, it mints its own code. Exported so that a site of the same condition in index.mjs, where
+ * there is one, calls the same mint: that is the only way such a code has one site. */
+
+export function refuseUnknownKind(fields = {}) {
+  /* DEC-49 REGION is-unknown-kind — D-641 / C-100.7. The ONE mint of UNKNOWN_KIND: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.UNKNOWN_KIND;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseUnknownKind: UNKNOWN_KIND has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "UNKNOWN_KIND", code: "UNKNOWN_KIND", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-unknown-kind */
+}
+
+export function refuseNoMember(fields = {}) {
+  /* DEC-49 REGION is-no-member — D-641 / C-100.8. The ONE mint of NO_MEMBER: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_MEMBER;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoMember: NO_MEMBER has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_MEMBER", code: "NO_MEMBER", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-member */
+}
+
+export function refuseNoSuchCase(fields = {}) {
+  /* DEC-49 REGION is-no-such-case — D-641 / C-100.10. The ONE mint of NO_SUCH_CASE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_CASE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchCase: NO_SUCH_CASE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_SUCH_CASE", code: "NO_SUCH_CASE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-such-case */
+}
+
+export function refuseNoKey(fields = {}) {
+  /* DEC-49 REGION is-no-key — D-641 / C-100.13. The ONE mint of NO_KEY: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_KEY;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoKey: NO_KEY has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_KEY", code: "NO_KEY", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-key */
+}
+
+export function refuseNoStage(fields = {}) {
+  /* DEC-49 REGION is-no-stage — D-641 / C-100.20. The ONE mint of NO_STAGE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_STAGE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoStage: NO_STAGE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_STAGE", code: "NO_STAGE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-stage */
+}
+
+export function refuseNoCapture(fields = {}) {
+  /* DEC-49 REGION is-no-capture — D-641 / C-100.21. The ONE mint of NO_CAPTURE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_CAPTURE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoCapture: NO_CAPTURE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_CAPTURE", code: "NO_CAPTURE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-capture */
+}
+
+export function refuseNoSuchProgression(fields = {}) {
+  /* DEC-49 REGION is-no-such-progression — D-641 / C-100.23. The ONE mint of NO_SUCH_PROGRESSION: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_PROGRESSION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchProgression: NO_SUCH_PROGRESSION has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_SUCH_PROGRESSION", code: "NO_SUCH_PROGRESSION", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-such-progression */
+}
+
+export function refuseNoProjectScope(fields = {}) {
+  /* DEC-49 REGION is-no-project-scope — D-641 / C-100.26. The ONE mint of NO_PROJECT_SCOPE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_PROJECT_SCOPE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoProjectScope: NO_PROJECT_SCOPE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_PROJECT_SCOPE", code: "NO_PROJECT_SCOPE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-project-scope */
+}
+
+export function refuseNoActor(fields = {}) {
+  /* DEC-49 REGION is-no-actor — D-641 / C-100.27. The ONE mint of NO_ACTOR: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_ACTOR;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoActor: NO_ACTOR has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_ACTOR", code: "NO_ACTOR", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-actor */
+}
+
+export function refuseNoSuchMember(fields = {}) {
+  /* DEC-49 REGION is-no-such-member — D-641 / C-100.30. The ONE mint of NO_SUCH_MEMBER: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_MEMBER;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchMember: NO_SUCH_MEMBER has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_SUCH_MEMBER", code: "NO_SUCH_MEMBER", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-such-member */
+}
+
+export function refuseNoSuchHandle(fields = {}) {
+  /* DEC-49 REGION is-no-such-handle — D-641 / C-100.32. The ONE mint of NO_SUCH_HANDLE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_HANDLE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchHandle: NO_SUCH_HANDLE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_SUCH_HANDLE", code: "NO_SUCH_HANDLE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-such-handle */
+}
+
+export function refuseAlreadyVoted(fields = {}) {
+  /* DEC-49 REGION is-already-voted — D-641 / C-100.33. The ONE mint of ALREADY_VOTED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.ALREADY_VOTED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseAlreadyVoted: ALREADY_VOTED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "ALREADY_VOTED", code: "ALREADY_VOTED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-already-voted */
+}
+
+export function refusePasswordTooShort(fields = {}) {
+  /* DEC-49 REGION is-password-too-short — D-641 / C-100.37. The ONE mint of PASSWORD_TOO_SHORT: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.PASSWORD_TOO_SHORT;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refusePasswordTooShort: PASSWORD_TOO_SHORT has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "PASSWORD_TOO_SHORT", code: "PASSWORD_TOO_SHORT", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-password-too-short */
+}
+
+export function refuseNoOwner(fields = {}) {
+  /* DEC-49 REGION is-no-owner — D-641 / C-100.40. The ONE mint of NO_OWNER: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_OWNER;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoOwner: NO_OWNER has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_OWNER", code: "NO_OWNER", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-owner */
+}
+
+export function refuseConnectionPairNoPair(fields = {}) {
+  /* DEC-49 REGION is-connection-pair-no-pair — D-641 / C-100.45. The ONE mint of CONNECTION_PAIR_NO_PAIR: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.CONNECTION_PAIR_NO_PAIR;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseConnectionPairNoPair: CONNECTION_PAIR_NO_PAIR has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "CONNECTION_PAIR_NO_PAIR", code: "CONNECTION_PAIR_NO_PAIR", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-connection-pair-no-pair */
+}
+
+export function refuseNoId(fields = {}) {
+  /* DEC-49 REGION is-no-id — D-641 / C-100.41. The ONE mint of NO_ID: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_ID;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoId: NO_ID has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_ID", code: "NO_ID", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-id */
+}
+
+export function refuseNoRef(fields = {}) {
+  /* DEC-49 REGION is-no-ref — D-641 / C-100.42. The ONE mint of NO_REF: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_REF;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoRef: NO_REF has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_REF", code: "NO_REF", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-ref */
+}
+
+export function refuseNoSuchReference(fields = {}) {
+  /* DEC-49 REGION is-no-such-reference — D-641 / C-100.43. The ONE mint of NO_SUCH_REFERENCE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_REFERENCE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchReference: NO_SUCH_REFERENCE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_SUCH_REFERENCE", code: "NO_SUCH_REFERENCE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-such-reference */
+}
+
+export function refuseNoDocument(fields = {}) {
+  /* DEC-49 REGION is-no-document — D-641 / C-100.47. The ONE mint of NO_DOCUMENT: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_DOCUMENT;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoDocument: NO_DOCUMENT has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_DOCUMENT", code: "NO_DOCUMENT", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-document */
+}
+
+export function refuseUnspliceableStateHistory(fields = {}) {
+  /* DEC-49 REGION is-unspliceable-state-history — D-641 / C-100.48. The ONE mint of UNSPLICEABLE_STATE_HISTORY: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.UNSPLICEABLE_STATE_HISTORY;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseUnspliceableStateHistory: UNSPLICEABLE_STATE_HISTORY has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", code: "UNSPLICEABLE_STATE_HISTORY", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-unspliceable-state-history */
+}
+
+export function refuseUnspliceableBasis(fields = {}) {
+  /* DEC-49 REGION is-unspliceable-basis — D-641 / C-100.49. The ONE mint of UNSPLICEABLE_BASIS: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.UNSPLICEABLE_BASIS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseUnspliceableBasis: UNSPLICEABLE_BASIS has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "UNSPLICEABLE_BASIS", code: "UNSPLICEABLE_BASIS", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-unspliceable-basis */
+}
+
+export function refuseBadPartition(fields = {}) {
+  /* DEC-49 REGION is-bad-partition — D-641 / C-100.57. The ONE mint of BAD_PARTITION: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.BAD_PARTITION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseBadPartition: BAD_PARTITION has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "BAD_PARTITION", code: "BAD_PARTITION", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-bad-partition */
+}
+
+export function refuseBasisRefused(fields = {}) {
+  /* DEC-49 REGION is-basis-refused — D-641 / C-100.62. The ONE mint of BASIS_REFUSED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.BASIS_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseBasisRefused: BASIS_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "BASIS_REFUSED", code: "BASIS_REFUSED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-basis-refused */
+}
+
+export function refuseNoBundleMd(fields = {}) {
+  /* DEC-49 REGION is-no-bundle-md — D-641 / C-100.63. The ONE mint of NO_BUNDLE_MD: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_BUNDLE_MD;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoBundleMd: NO_BUNDLE_MD has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_BUNDLE_MD", code: "NO_BUNDLE_MD", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-bundle-md */
+}
+
+export function refuseUnparseableFrontmatter(fields = {}) {
+  /* DEC-49 REGION is-unparseable-frontmatter — D-641 / C-100.64. The ONE mint of UNPARSEABLE_FRONTMATTER: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.UNPARSEABLE_FRONTMATTER;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseUnparseableFrontmatter: UNPARSEABLE_FRONTMATTER has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", code: "UNPARSEABLE_FRONTMATTER", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-unparseable-frontmatter */
+}
+
+export function refuseMalformed(fields = {}) {
+  /* DEC-49 REGION is-malformed — D-641 / C-100.69. The ONE mint of MALFORMED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.MALFORMED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseMalformed: MALFORMED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "MALFORMED", code: "MALFORMED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-malformed */
+}
+
+export function refuseExists(fields = {}) {
+  /* DEC-49 REGION is-exists — D-641 / C-100.70. The ONE mint of EXISTS: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.EXISTS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseExists: EXISTS has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "EXISTS", code: "EXISTS", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-exists */
+}
+
+export function refuseAbsent(fields = {}) {
+  /* DEC-49 REGION is-absent — D-641 / C-100.71. The ONE mint of ABSENT: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.ABSENT;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseAbsent: ABSENT has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "ABSENT", code: "ABSENT", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-absent */
+}
+
+export function refuseMintExhausted(fields = {}) {
+  /* DEC-49 REGION is-mint-exhausted — D-641 / C-100.72. The ONE mint of MINT_EXHAUSTED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.MINT_EXHAUSTED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseMintExhausted: MINT_EXHAUSTED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-mint-exhausted */
+}
+
+export function refuseNameTaken(fields = {}) {
+  /* DEC-49 REGION is-name-taken — D-641 / C-100.73. The ONE mint of NAME_TAKEN: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NAME_TAKEN;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNameTaken: NAME_TAKEN has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NAME_TAKEN", code: "NAME_TAKEN", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-name-taken */
+}
+
+export function refuseActionBasisRefused(fields = {}) {
+  /* DEC-49 REGION is-action-basis-refused — D-641 / C-100.77. The ONE mint of ACTION_BASIS_REFUSED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.ACTION_BASIS_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseActionBasisRefused: ACTION_BASIS_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "ACTION_BASIS_REFUSED", code: "ACTION_BASIS_REFUSED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-action-basis-refused */
+}
+
+export function refuseCorrespondenceRefused(fields = {}) {
+  /* DEC-49 REGION is-correspondence-refused — D-641 / C-100.78. The ONE mint of CORRESPONDENCE_REFUSED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.CORRESPONDENCE_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseCorrespondenceRefused: CORRESPONDENCE_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "CORRESPONDENCE_REFUSED", code: "CORRESPONDENCE_REFUSED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-correspondence-refused */
+}
+
+export function refuseRespondsToRefused(fields = {}) {
+  /* DEC-49 REGION is-responds-to-refused — D-641 / C-100.79. The ONE mint of RESPONDS_TO_REFUSED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.RESPONDS_TO_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseRespondsToRefused: RESPONDS_TO_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "RESPONDS_TO_REFUSED", code: "RESPONDS_TO_REFUSED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-responds-to-refused */
+}
+
+export function refuseSupersessionRefused(fields = {}) {
+  /* DEC-49 REGION is-supersession-refused — D-641 / C-100.80. The ONE mint of SUPERSESSION_REFUSED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.SUPERSESSION_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseSupersessionRefused: SUPERSESSION_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "SUPERSESSION_REFUSED", code: "SUPERSESSION_REFUSED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-supersession-refused */
+}
+
+export function refuseNoSiblingDisclosure(fields = {}) {
+  /* DEC-49 REGION is-no-sibling-disclosure — D-641 / C-100.81. The ONE mint of NO_SIBLING_DISCLOSURE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_SIBLING_DISCLOSURE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSiblingDisclosure: NO_SIBLING_DISCLOSURE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_SIBLING_DISCLOSURE", code: "NO_SIBLING_DISCLOSURE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-sibling-disclosure */
+}
+
+export function refuseBasisVersionRefused(fields = {}) {
+  /* DEC-49 REGION is-basis-version-refused — D-641 / C-100.82. The ONE mint of BASIS_VERSION_REFUSED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.BASIS_VERSION_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseBasisVersionRefused: BASIS_VERSION_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "BASIS_VERSION_REFUSED", code: "BASIS_VERSION_REFUSED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-basis-version-refused */
+}
+
+export function refuseHostCoolingOff(fields = {}) {
+  /* DEC-49 REGION is-host-cooling-off — D-641 / C-100.85. The ONE mint of HOST_COOLING_OFF: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.HOST_COOLING_OFF;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseHostCoolingOff: HOST_COOLING_OFF has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "HOST_COOLING_OFF", code: "HOST_COOLING_OFF", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-host-cooling-off */
+}
+
+export function refuseBadAddress(fields = {}) {
+  /* DEC-49 REGION is-bad-address — D-641 / C-100.86. The ONE mint of BAD_ADDRESS: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.BAD_ADDRESS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseBadAddress: BAD_ADDRESS has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "BAD_ADDRESS", code: "BAD_ADDRESS", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-bad-address */
+}
+
+export function refuseNotPermitted(fields = {}) {
+  /* DEC-49 REGION is-not-permitted — D-641 / C-100.87. The ONE mint of NOT_PERMITTED: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NOT_PERMITTED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNotPermitted: NOT_PERMITTED has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NOT_PERMITTED", code: "NOT_PERMITTED", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-not-permitted */
+}
+
+export function refuseTooLargeToParse(fields = {}) {
+  /* DEC-49 REGION is-too-large-to-parse — D-641 / C-100.95. The ONE mint of TOO_LARGE_TO_PARSE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.TOO_LARGE_TO_PARSE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseTooLargeToParse: TOO_LARGE_TO_PARSE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "TOO_LARGE_TO_PARSE", code: "TOO_LARGE_TO_PARSE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-too-large-to-parse */
+}
+
+export function refuseNotHtml(fields = {}) {
+  /* DEC-49 REGION is-not-html — D-641 / C-100.96. The ONE mint of NOT_HTML: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NOT_HTML;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNotHtml: NOT_HTML has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NOT_HTML", code: "NOT_HTML", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-not-html */
+}
+
+export function refusePrimaryUnreadable(fields = {}) {
+  /* DEC-49 REGION is-primary-unreadable — D-641 / C-100.97. The ONE mint of PRIMARY_UNREADABLE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.PRIMARY_UNREADABLE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refusePrimaryUnreadable: PRIMARY_UNREADABLE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "PRIMARY_UNREADABLE", code: "PRIMARY_UNREADABLE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-primary-unreadable */
+}
+
+export function refuseNoSuchSession(fields = {}) {
+  /* DEC-49 REGION is-no-such-session — D-641 / C-100.98. The ONE mint of NO_SUCH_SESSION: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_SESSION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchSession: NO_SUCH_SESSION has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_SUCH_SESSION", code: "NO_SUCH_SESSION", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-no-such-session */
+}
+
+export function refuseSessionUnreadable(fields = {}) {
+  /* DEC-49 REGION is-session-unreadable — D-641 / C-100.99. The ONE mint of SESSION_UNREADABLE: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.SESSION_UNREADABLE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseSessionUnreadable: SESSION_UNREADABLE has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "SESSION_UNREADABLE", code: "SESSION_UNREADABLE", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-session-unreadable */
+}
+
+export function refuseObjectMissing(fields = {}) {
+  /* DEC-49 REGION is-object-missing — D-641 / C-100.104. The ONE mint of OBJECT_MISSING: every site that meets
+     its one condition calls here with its own fields, which follow the code unchanged on the wire. */
+  const row = REACH_BY_OP_CHECKS.OBJECT_MISSING;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseObjectMissing: OBJECT_MISSING has no REACH_BY_OP_CHECKS row with a canned translation "
+                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "OBJECT_MISSING", code: "OBJECT_MISSING", check: row.check, translation: row.translation,
+           ...fields };
+  /* END DEC-49 REGION is-object-missing */
+}
+
+/* A code that is STATED rather than refused (a reason inside an answer that succeeded, or one entry of a list the
+ * answer carries) takes its code, check and sentence from the same one mint, with the verdict dropped: the
+ * row is then true where it is read, and `dec49Decorate`, which only ever decorates a refusal, is not needed. */
+export function asStatement(refusal) {
+  const { ok: _notARefusal, ...stated } = refusal;
+  return stated;
 }
 
 
@@ -4029,7 +4590,7 @@ export class Store extends DurableObject {
    *  selection. Bob settled that select-all means the query, 2026-07-25. */
   async selectionCreate({ q = "", viewer = null, owner = null, sort = null, dir = null,
                           ids = null, kind = null } = {}) {
-    if (!owner) return { ok: false, reason: "NO_OWNER", detail: "a selection is owned by the credential that made it" };
+    if (!owner) return refuseNoOwner({ detail: "a selection is owned by the credential that made it" });
     this.#sweepSelections();
     const wanted = kind || (Array.isArray(ids) && ids.length ? "enumerated" : "query");
     if (wanted !== "query" && wanted !== "enumerated")
@@ -4254,7 +4815,7 @@ export class Store extends DurableObject {
 
   selectionList({ owner = null, viewer } = {}) {
     this.#sweepSelections();
-    if (!owner) return { ok: false, reason: "NO_OWNER" };
+    if (!owner) return refuseNoOwner();
     return {
       ok: true, ttlSeconds: Store.SELECTION_TTL_MS / 1000,
       selections: this.#rows(
@@ -4276,7 +4837,7 @@ export class Store extends DurableObject {
   }
 
   selectionRelease({ handle = null, owner = null } = {}) {
-    if (!owner) return { ok: false, reason: "NO_OWNER" };
+    if (!owner) return refuseNoOwner();
     const sel = handle ? this.#one(`SELECT owner FROM selections WHERE handle=?`, handle) : null;
     if (handle && (!sel || sel.owner !== owner)) return { ok: false, reason: "NOT_YOURS" };
     const before = this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c;
@@ -4506,9 +5067,9 @@ export class Store extends DurableObject {
     }
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
-    if (!liveMd || typeof liveMd.content !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
+    if (!liveMd || typeof liveMd.content !== "string") return refuseNoBundleMd({ project });
     const parsed = parseFrontmatter(liveMd.content);
-    if (!parsed.data) return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project };
+    if (!parsed.data) return refuseUnparseableFrontmatter({ project });
 
     const current = new Map();
     for (const r of Array.isArray(parsed.data.references) ? parsed.data.references : [])
@@ -4716,6 +5277,8 @@ export class Store extends DurableObject {
     /* CASE-4 / DEC-72. Before the generic transition refusal, for
        PUBLISHED_CANNOT_DIVIDE's reason: a member told the move is illegal would
        go looking at the state table and find the edge sitting right there. */
+    /* DEC-49 REGION is-dispose-published — D-641 / C-100.55. The span the row's `where` names:
+       the condition of PUBLISHED_CANNOT_BE_SET_DOWN and the refusal it mints, nothing else. */
     if (published.length)
       return { ok: false, reason: "PUBLISHED_CANNOT_BE_SET_DOWN", to,
                offenders: published.sort((a, b) => a.id < b.id ? -1 : 1),
@@ -4726,6 +5289,7 @@ export class Store extends DurableObject {
                      + "out in the world and cannot stop being worked on quietly — a reader is holding it. "
                      + "What IS available is the route DEC-12 built: reopen it (op=reopen), and let the "
                      + "next edition say what changed." };
+    /* END DEC-49 REGION is-dispose-published */
     if (illegal.length)
       return { ok: false, reason: "ILLEGAL_TRANSITION", to, offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
                detail: "these are not legal moves in the catalog's state table. A move to the state "
@@ -4772,8 +5336,8 @@ export class Store extends DurableObject {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", bundleId: id,
-                 detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+        return refuseNoDocument({ bundleId: id,
+                 detail: "this inquiry has no readable bundle.md, so its state cannot be moved" });
       let text = liveMd.content;
       /* C-4.2: prior_state obliges a state_history ENTRY. Naming where a state
          came from without recording the transition leaves the document asserting
@@ -4785,10 +5349,10 @@ export class Store extends DurableObject {
         timestamp: when, from_state: cur.current_state, to_state: to,
         blurb: why, author: author || "member" });
       if (!withHistory)
-        return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id, disposedSoFar: disposed,
+        return refuseUnspliceableStateHistory({ bundleId: id, disposedSoFar: disposed,
                  detail: "this document's state_history block is not in a shape this grammar can extend in "
                        + "place, and a disposition that recorded no transition would leave prior_state "
-                       + "pointing at a history the document does not carry (C-4.2)" };
+                       + "pointing at a history the document does not carry (C-4.2)" });
       text = withHistory;
       text = Store.#setScalar(text, "prior_state", cur.current_state);
       text = Store.#setScalar(text, "current_state", to);
@@ -5432,16 +5996,16 @@ export class Store extends DurableObject {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", bundleId: id, retiredSoFar: retired };
+        return refuseNoDocument({ bundleId: id, retiredSoFar: retired });
       let text = liveMd.content;
       const withHistory = Store.#appendStateHistory(text, {
         timestamp: when, from_state: cur.current_state, to_state: "retired",
         blurb: why, author: author || "member" });
       if (!withHistory)
-        return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id, retiredSoFar: retired,
+        return refuseUnspliceableStateHistory({ bundleId: id, retiredSoFar: retired,
                  detail: "this document's state_history block cannot be extended in place, and a "
                        + "retirement recording no transition would leave prior_state pointing at a "
-                       + "history the document does not carry (C-4.2)" };
+                       + "history the document does not carry (C-4.2)" });
       text = withHistory;
       text = Store.#setScalar(text, "prior_state", cur.current_state);
       text = Store.#setScalar(text, "current_state", "retired");
@@ -5607,12 +6171,15 @@ export class Store extends DurableObject {
                offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
                detail: "only collected Information may be released. Something already verified has been "
                      + "released once and release is not repeatable; something retired is terminal." };
+    /* DEC-49 REGION is-release-crucial — D-641 / C-100.54. The span the row's `where` names:
+       the condition of CRUCIAL_IN_BATCH and the refusal it mints, nothing else. */
     if (crucial.length)
       return { ok: false, reason: "CRUCIAL_IN_BATCH", offenders: crucial.sort(),
                detail: "crucial-criticality material is never batch-released (Intake Doctrine v1.2): "
                      + "ratifying it requires verifying its co-attestations, which is per-document work, "
                      + "and a batch containing crucial material is not a low-variance collection. Release "
                      + "these individually, or re-select without them." };
+    /* END DEC-49 REGION is-release-crucial */
     /* DEC-49 REGION is-release-entry — REC-64/C-33.12. */
     if (entry.length)
       return { ok: false, reason: "ENTRY_REQUIREMENTS",
@@ -5629,17 +6196,17 @@ export class Store extends DurableObject {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", bundleId: id, releasedSoFar: released };
+        return refuseNoDocument({ bundleId: id, releasedSoFar: released });
       let text = liveMd.content;
       const withHistory = Store.#appendStateHistory(text, {
         timestamp: when, from_state: cur.current_state, to_state: "verified",
         blurb: `batch release via selection ${handle}; acknowledgment and mitigation in Session Log`,
         author: who });
       if (!withHistory)
-        return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id, releasedSoFar: released,
+        return refuseUnspliceableStateHistory({ bundleId: id, releasedSoFar: released,
                  detail: "this document's state_history block cannot be extended in place, and a release "
                        + "recording no transition would leave prior_state pointing at a history the "
-                       + "document does not carry (C-4.2)" };
+                       + "document does not carry (C-4.2)" });
       text = withHistory;
       text = Store.#setScalar(text, "prior_state", cur.current_state);
       text = Store.#setScalar(text, "current_state", "verified");
@@ -5882,8 +6449,8 @@ export class Store extends DurableObject {
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+      return refuseNoDocument({ target,
+               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" });
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
 
@@ -5935,8 +6502,8 @@ export class Store extends DurableObject {
       if (denied) return denied;
       const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
       if (!pmd || pmd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", target, project: pid,
-                 detail: "this project has no readable bundle.md, so its conclusion cannot be recorded" };
+        return refuseNoDocument({ target, project: pid,
+                 detail: "this project has no readable bundle.md, so its conclusion cannot be recorded" });
       pfm = parseFrontmatter(pmd.content).data || {};
     }
 
@@ -6063,10 +6630,10 @@ export class Store extends DurableObject {
       timestamp: when, from_state: b.current_state, to_state: "concluded",
       blurb: concl, author: who });
     if (!withHistory)
-      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+      return refuseUnspliceableStateHistory({ target,
                detail: "this document's state_history block cannot be extended in place, and a conclusion "
                      + "recording no transition would leave prior_state pointing at a history the document "
-                     + "does not carry (C-4.2)" };
+                     + "does not carry (C-4.2)" });
     text = withHistory;
     text = Store.#setScalar(text, "prior_state", b.current_state);
     text = Store.#setScalar(text, "current_state", "concluded");
@@ -6251,8 +6818,8 @@ export class Store extends DurableObject {
     const pid = projectRow.bundle_id;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
     if (!md || md.content === null)
-      return { ok: false, reason: "NO_DOCUMENT",
-               detail: `${pid} has no readable file, so its conclusion cannot be recorded` };
+      return refuseNoDocument({
+               detail: `${pid} has no readable file, so its conclusion cannot be recorded` });
     const pfm = parseFrontmatter(md.content).data || {};
     let text = Store.#appendConclusionEntry(md.content, inquiryId, f);
     if (text === null)
@@ -6811,8 +7378,8 @@ export class Store extends DurableObject {
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this action has no readable bundle.md, so its state cannot be moved" };
+      return refuseNoDocument({ target,
+               detail: "this action has no readable bundle.md, so its state cannot be moved" });
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
 
@@ -6857,10 +7424,10 @@ export class Store extends DurableObject {
     const withHistory = Store.#appendStateHistory(text, {
       timestamp: when, from_state: b.current_state, to_state: to, blurb: why, author: who });
     if (!withHistory)
-      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+      return refuseUnspliceableStateHistory({ target,
                detail: "this document's state_history block cannot be extended in place, and a move recording "
                      + "no transition would leave prior_state pointing at a history the document does not "
-                     + "carry (C-4.2)" };
+                     + "carry (C-4.2)" });
     text = withHistory;
     text = Store.#setScalar(text, "prior_state", b.current_state);
     text = Store.#setScalar(text, "current_state", to);
@@ -6983,10 +7550,13 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-correspond-entry */
     if (sha && !/^[0-9a-f]{64}$/.test(sha))
       return { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" };
+    /* DEC-49 REGION is-correspond-no-response — D-641 / C-100.53. The span the row's `where` names:
+       the condition of NO_RESPONSE_HAS_NO_BYTES and the refusal it mints, nothing else. */
     if (sha && direction === "no_response")
       return { ok: false, reason: "NO_RESPONSE_HAS_NO_BYTES", target,
                detail: "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named "
                      + "account with its date (DEC-13)." };
+    /* END DEC-49 REGION is-correspond-no-response */
     for (const [name, v] of [["account", acct], ["medium", String(medium ?? "")], ["party", String(party ?? "")]])
       if (v.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
@@ -7035,17 +7605,20 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-correspond-artifact */
 
     /* THE COURTESY LOCK, under the acting member. */
+    /* DEC-49 REGION is-correspond-lease — D-641 / C-100.52. The span the row's `where` names:
+       the condition of LEASE_HELD and the refusal it mints, nothing else. */
     const lease = this.acquireLease(target, who, Store.CORRESPOND_LEASE_MS);
     if (!lease.ok)
       return { ok: false, reason: "LEASE_HELD", target, heldBy: lease.heldBy, until: lease.until,
                detail: "another member is writing to this action right now. The ledger is append-only, so a "
                      + "second writer would not lose an entry — but it would interleave two accounts of the "
                      + "same exchange with no way to tell which was written first." };
+    /* END DEC-49 REGION is-correspond-lease */
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this action has no readable bundle.md, so nothing can be appended to it" };
+      return refuseNoDocument({ target,
+               detail: "this action has no readable bundle.md, so nothing can be appended to it" });
     const fm = parseFrontmatter(liveMd.content).data || {};
     const when = stampInstant("second", this.#nowMs(null));
     const ledgerNow = Array.isArray(fm.correspondence) ? fm.correspondence : [];
@@ -7084,11 +7657,14 @@ export class Store extends DurableObject {
         return refusal("QUOTE_REVISES_NO_QUOTE", has("QUOTE_REVISES_NO_QUOTE").message, all);
       /* END DEC-49 REGION is-quote-grammar */
     }
+    /* DEC-49 REGION is-correspond-splice — D-641 / C-100.50. The span the row's `where` names:
+       the condition of UNSPLICEABLE_CORRESPONDENCE and the refusal it mints, nothing else. */
     let text = Store.#spliceCorrespondence(liveMd.content, entryFm);
     if (!text)
       return { ok: false, reason: "UNSPLICEABLE_CORRESPONDENCE", target,
                detail: "this action's correspondence block is not in a shape this grammar can extend in "
                      + "place. Appending never rewrites the rest of the document, so nothing was written." };
+    /* END DEC-49 REGION is-correspond-splice */
     text = Store.#setScalar(text, "last_updated", `"${when}"`);
     text = Store.#appendSessionLog(text,
       `### Session ${when} | Correspondence ${direction} | ${who}\n`
@@ -7180,16 +7756,19 @@ export class Store extends DurableObject {
                detail: "governing laws belong to an action: they are the laws its request is made under." };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this action has no readable bundle.md, so its governing laws cannot be set" };
+      return refuseNoDocument({ target,
+               detail: "this action has no readable bundle.md, so its governing laws cannot be set" });
     const fm = parseFrontmatter(liveMd.content).data || {};
     const before = governingLawsOf(fm);
     const when = stampInstant("second", this.#nowMs(null));
+    /* DEC-49 REGION is-laws-splice — D-641 / C-100.51. The span the row's `where` names:
+       the condition of UNSPLICEABLE_GOVERNING_LAWS and the refusal it mints, nothing else. */
     let text = Store.#replaceGoverningLaws(liveMd.content, entries);
     if (!text)
       return { ok: false, reason: "UNSPLICEABLE_GOVERNING_LAWS", target,
                detail: "this action's governing_laws block is not in a shape this grammar can replace in place, "
                      + "so nothing was written." };
+    /* END DEC-49 REGION is-laws-splice */
     text = Store.#setOrAddScalar(text, "governing_laws_by", `"${Store.#fmSafe(who)}"`);
     text = Store.#setOrAddScalar(text, "governing_laws_at", `"${when}"`);
     text = Store.#setScalar(text, "last_updated", `"${when}"`);
@@ -7367,8 +7946,8 @@ export class Store extends DurableObject {
                detail: "a risk tier belongs to an action: it is the legal exposure of filing it." };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this action has no readable bundle.md, so its risk tier cannot be revised" };
+      return refuseNoDocument({ target,
+               detail: "this action has no readable bundle.md, so its risk tier cannot be revised" });
     const fm = parseFrontmatter(liveMd.content).data || {};
     const held = riskTierState(fm.risk_tier);
     const before = riskTierHistoryOf(fm);
@@ -7900,8 +8479,8 @@ export class Store extends DurableObject {
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+      return refuseNoDocument({ target,
+               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" });
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
 
@@ -7974,10 +8553,10 @@ export class Store extends DurableObject {
       timestamp: when, from_state: b.current_state, to_state: "open",
       blurb: why, author: who });
     if (!withHistory)
-      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+      return refuseUnspliceableStateHistory({ target,
                detail: "this document's state_history block cannot be extended in place, and a reopening "
                      + "recording no transition would leave prior_state pointing at a history the document "
-                     + "does not carry (C-4.2)" };
+                     + "does not carry (C-4.2)" });
     text = withHistory;
     text = Store.#setScalar(text, "prior_state", b.current_state);
     text = Store.#setScalar(text, "current_state", "open");
@@ -8336,8 +8915,8 @@ export class Store extends DurableObject {
                        + "member of a case." };
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
       if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", target: id,
-                 detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+        return refuseNoDocument({ target: id,
+                 detail: "this inquiry has no readable bundle.md, so its state cannot be moved" });
       const fm = parseFrontmatter(liveMd.content).data || {};
       /* ===== CASE-4 / DEC-72: THE PRECONDITION, NOW SAID RATHER THAN IMPLIED.
          THIS IS THE SENTENCE THE RULING TOLD US TO KEEP.
@@ -8730,10 +9309,10 @@ export class Store extends DurableObject {
                 : String(caseId ?? "").trim() || distinct[0]
                 || (claimedInBytes.length === 1 ? claimedInBytes[0] : null) || null;
     if (caseId && !this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, theCase))
-      return { ok: false, reason: "NO_SUCH_CASE", caseId: theCase,
+      return refuseNoSuchCase({ caseId: theCase,
                detail: `no published case answers to ${theCase}. A case identity is minted by this act and `
                      + `carried in the signed bytes; it is never taken from a caller, because an identity a `
-                     + `caller can hand us is one a caller can invent.` };
+                     + `caller can hand us is one a caller can invent.` });
     /* ===== D-442 (BIO_Publication_v0_1.md §3 rule 12's accepts-when): ALREADY_A_CASE_MEMBER
        IS ASKED OF THE CASE THIS ACT PUBLISHES, AND OF NO OTHER. =====================
        REC-157 asked it of EVERY edition pinning the member's current bytes, which was right
@@ -8928,8 +9507,8 @@ export class Store extends DurableObject {
           || this.#one(`SELECT 1 FROM published_cases WHERE case_id=? LIMIT 1`, id)
           || this.#one(`SELECT 1 FROM case_documents WHERE case_id=? LIMIT 1`, id)
           || this.#one(`SELECT 1 FROM published_case_members WHERE case_id=? LIMIT 1`, id)));
-      if (!theCase) return { ok: false, reason: "MINT_EXHAUSTED",
-                             detail: "the plane could not find a free case id; nothing was published" };
+      if (!theCase) return refuseMintExhausted({
+                             detail: "the plane could not find a free case id; nothing was published" });
     }
 
     /* CASE-2 / DEC-72: A CASE'S PRODUCING PROJECT IS INVARIANT ACROSS ITS
@@ -10045,7 +10624,7 @@ export class Store extends DurableObject {
   caseDocumentFacts(caseId, edition, viewer, secretSha = null) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
-    if (!id || !Number.isInteger(ed) || ed < 1) return { ok: false, reason: "MALFORMED" };
+    if (!id || !Number.isInteger(ed) || ed < 1) return refuseMalformed();
     const doc = this.#one(
       `SELECT case_id, edition, doc_sha, text, authored_at, authored_by,
               sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
@@ -10525,8 +11104,8 @@ export class Store extends DurableObject {
       id = this.#mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) =>
         !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d)
           || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
-      if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
-                        detail: "the plane could not find a free draft id; nothing was written" };
+      if (!id) return refuseMintExhausted({
+                        detail: "the plane could not find a free draft id; nothing was written" });
       this.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
                      updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
                     id, owning, named, json, a.who, when, a.who, when, statementBy);
@@ -10661,8 +11240,8 @@ export class Store extends DurableObject {
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7) — a grant is its project owner's alone. */
     const id = this.#mintOpaqueId("RVG", when.slice(0, 4), "",
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g));
-    if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
-                      detail: "the plane could not find a free grant id; nothing was issued" };
+    if (!id) return refuseMintExhausted({
+                      detail: "the plane could not find a free grant id; nothing was issued" });
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, a.who, when);
     return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId, edition: ident.edition,
@@ -11772,7 +12351,7 @@ export class Store extends DurableObject {
                        gateVersion, deliveredBy = null } = {}) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
-    if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return { ok: false, reason: "MALFORMED" };
+    if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return refuseMalformed();
     if (!sigArmored || !attestorKey || !gateVersion)
       return { ok: false, reason: "CASE_UNSIGNED", caseId: id, edition: ed,
                detail: `a case's own assertions — its identity, its producing project, its scope, its `
@@ -12177,8 +12756,8 @@ export class Store extends DurableObject {
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+      return refuseNoDocument({ target,
+               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" });
     const parentText = liveMd.content;
     const fm = parseFrontmatter(parentText).data || {};
 
@@ -12493,10 +13072,10 @@ export class Store extends DurableObject {
       timestamp: when, from_state: b.current_state, to_state: "divided",
       blurb: why, author: who });
     if (!withHistory)
-      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+      return refuseUnspliceableStateHistory({ target,
                detail: "this document's state_history block cannot be extended in place, and a division "
                      + "recording no transition would leave prior_state pointing at a history the document "
-                     + "does not carry (C-4.2)" };
+                     + "does not carry (C-4.2)" });
     text = withHistory;
     text = Store.#setScalar(text, "prior_state", b.current_state);
     text = Store.#setScalar(text, "current_state", "divided");
@@ -12720,12 +13299,15 @@ export class Store extends DurableObject {
     if (!target)
       return { ok: false, reason: "NO_TARGET",
                detail: "grouping authors the structure of ONE question: pass target=<inquiry id>" };
+    /* DEC-49 REGION is-ground-named — D-641 / C-100.56. The span the row's `where` names:
+       the condition of NO_PARTITION and the refusal it mints, nothing else. */
     if (grounds === undefined)
       return { ok: false, reason: "NO_PARTITION", target,
                detail: "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per "
                      + "group, where each ord is a leg's position in this question's basis. Pass an EMPTY "
                      + "array to remove the grouping entirely and let the answer read as its weakest leg "
                      + "again; that is a restructuring like any other and takes a reason." };
+    /* END DEC-49 REGION is-ground-named */
 
     /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
        inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
@@ -12744,6 +13326,8 @@ export class Store extends DurableObject {
        document composing to something the edition on the record contradicts,
        which is what the refusal below says and what the removal of the state
        would silently have permitted. */
+    /* DEC-49 REGION is-ground-published — D-641 / C-100.60. The span the row's `where` names:
+       the condition of PUBLISHED_CANNOT_RESTRUCTURE and the refusal it mints, nothing else. */
     if (this.#caseRelationOf(target).member)
       return { ok: false, reason: "PUBLISHED_CANNOT_RESTRUCTURE", target, from: b.current_state,
                detail: "a published case's composed strength and its per-group breakdown are inside signed, "
@@ -12751,16 +13335,20 @@ export class Store extends DurableObject {
                      + "composing to something the edition on the record contradicts. Reopen it "
                      + "(op=reopen), restructure, and publish what changed as a new edition — the route "
                      + "DEC-12 built for exactly this." };
+    /* END DEC-49 REGION is-ground-published */
+    /* DEC-49 REGION is-ground-divided — D-641 / C-100.61. The span the row's `where` names:
+       the condition of DIVIDED_CANNOT_RESTRUCTURE and the refusal it mints, nothing else. */
     if (b.current_state === "divided")
       return { ok: false, reason: "DIVIDED_CANNOT_RESTRUCTURE", target, from: b.current_state,
                detail: "this question was declared malformed and carried forward into children that "
                      + "supersede it. Re-deriving its strength now would move a number its children's own "
                      + "disclosure already points at. Restructure the CHILD that carries the half you mean." };
+    /* END DEC-49 REGION is-ground-divided */
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its structure cannot be authored" };
+      return refuseNoDocument({ target,
+               detail: "this inquiry has no readable bundle.md, so its structure cannot be authored" });
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
     const all = Array.isArray(fm.basis) ? fm.basis : [];
@@ -12771,9 +13359,9 @@ export class Store extends DurableObject {
                       + "what it rests on first (op=cite); an assertion that nothing is enough on its own is "
                       + "not a thing the record can hold.", { target });
     if (legs.length !== all.length)
-      return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
+      return refuseUnspliceableBasis({ target,
                detail: "this question's basis carries an entry that is not a leg, so the ordinals a "
-                     + "partition addresses cannot be lined up against the document. Nothing was written." };
+                     + "partition addresses cannot be lined up against the document. Nothing was written." });
 
     /* WHAT STANDS TODAY, read from the DOCUMENT — `inquiry_basis` is a
        projection of it and never a second place to state it (D-21). */
@@ -12809,24 +13397,26 @@ export class Store extends DurableObject {
        CANDIDATE further down — one grammar, at both gates, never a second copy
        written here because it was convenient. */
     if (!Array.isArray(grounds))
-      return { ok: false, reason: "BAD_PARTITION", target,
-               detail: "grounds must be an ARRAY of groups, each { ground, legs: [ord, ...] }" };
+      return refuseBadPartition({ target,
+               detail: "grounds must be an ARRAY of groups, each { ground, legs: [ord, ...] }" });
     const nextLabel = new Array(legs.length).fill(null);
     const claimed = new Map();          // ord -> the label that claimed it
     const asked = [];                   // [{ label, ords, statement }] in the caller's own order
     for (let i = 0; i < grounds.length; i++) {
       const row = grounds[i];
       if (!row || typeof row !== "object" || Array.isArray(row))
-        return { ok: false, reason: "BAD_PARTITION", target, at: i,
-                 detail: `grounds[${i}] is not an object` };
+        return refuseBadPartition({ target, at: i,
+                 detail: `grounds[${i}] is not an object` });
       const label = typeof row.ground === "string" ? row.ground.trim() : row.ground;
       const ords = row.legs;
       if (!Array.isArray(ords))
-        return { ok: false, reason: "BAD_PARTITION", target, at: i,
+        return refuseBadPartition({ target, at: i,
                  detail: `grounds[${i}].legs must be an array of ordinals — a group is a partition OF THE `
                        + `LEGS, and a group naming none asserts that nothing is enough on its own. Legs are `
                        + `addressed by ORDINAL (their position in basis[]) and never by target id, because `
-                       + `one document legitimately carries two legs (D4).` };
+                       + `one document legitimately carries two legs (D4).` });
+      /* DEC-49 REGION is-ground-statement — D-641 / C-100.58. The span the row's `where` names:
+         the condition of BAD_STATEMENT and the refusal it mints, nothing else. */
       const stmt = row.statement === undefined || row.statement === null ? null : row.statement;
       if (stmt !== null && (typeof stmt !== "string"
           || stmt.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(stmt)))
@@ -12834,18 +13424,19 @@ export class Store extends DurableObject {
                  detail: `grounds[${i}].statement is at most ${Store.EDGE_REASON_MAX} characters and cannot `
                        + `contain a quote, a backslash, or a newline: the restricted frontmatter grammar `
                        + `has no escapes` };
+      /* END DEC-49 REGION is-ground-statement */
       for (const raw of ords) {
         if (!Number.isInteger(raw) || raw < 0 || raw >= legs.length)
-          return { ok: false, reason: "BAD_PARTITION", target, at: i, ord: raw ?? null, legs: legs.length,
+          return refuseBadPartition({ target, at: i, ord: raw ?? null, legs: legs.length,
                    detail: `grounds[${i}].legs names ord ${JSON.stringify(raw) ?? "null"}, and this question `
-                         + `has legs 0..${legs.length - 1}. An ordinal that addresses no leg groups nothing.` };
+                         + `has legs 0..${legs.length - 1}. An ordinal that addresses no leg groups nothing.` });
         if (claimed.has(raw))
-          return { ok: false, reason: "BAD_PARTITION", target, ord: raw,
+          return refuseBadPartition({ target, ord: raw,
                    claimed_by: [claimed.get(raw), label],
                    detail: `basis[${raw}] is claimed by two groups. A leg belongs to exactly ONE group: a `
                          + `leg that is needed whatever else holds is NECESSARY, and the honest way to say `
                          + `so is to leave the reasons ungrouped — an ungrouped basis is read as no `
-                         + `stronger than its weakest leg, which is the conservative reading.` };
+                         + `stronger than its weakest leg, which is the conservative reading.` });
         claimed.set(raw, label);
         nextLabel[raw] = label;
       }
@@ -12883,6 +13474,8 @@ export class Store extends DurableObject {
        Session Log entry and a promotion over an identical partition is a
        revision of nothing, and a record that holds one has a restructuring in
        it that never happened. */
+    /* DEC-49 REGION is-ground-changed — D-641 / C-100.59. The span the row's `where` names:
+       the condition of PARTITION_UNCHANGED and the refusal it mints, nothing else. */
     if (same(nextLabel.map((g) => String(g)), standingLabel.map((g) => String(g)))
         && rowsOut.every((r) => r.carried_forward)
         && standingByLabel.size === rowsOut.length)
@@ -12890,6 +13483,7 @@ export class Store extends DurableObject {
                detail: "this is the structure this question already carries, leg for leg. Nothing was "
                      + "written: a revision that changes nothing would put a restructuring in the record "
                      + "that did not happen." };
+    /* END DEC-49 REGION is-ground-changed */
 
     /* ---------------- ONE GRAMMAR, judged before a byte moves ---------------
        The CANDIDATE frontmatter, checked by the catalog's own function over the
@@ -12913,19 +13507,19 @@ export class Store extends DurableObject {
       this.earnedRegistryForDoc(candidate, candidate.basis));
     const errs = bf.filter((x) => x.severity === "error");
     if (errs.length)
-      return { ok: false, reason: "BASIS_REFUSED", target,
+      return refuseBasisRefused({ target,
                findings: errs.map((x) => ({ check: x.check, detail: x.message, repairs: x.repairs ?? [] })),
                detail: "the structure this would author is refused by the SAME catalog function op=promote "
                      + "runs at the write, so nothing was written. Every group is a claim that its legs are "
-                     + "enough on their own, and that claim carries a name and a date." };
+                     + "enough on their own, and that claim carries a name and a date." });
 
     /* ---------------------------------------------------- and now the bytes */
     const before = this.strengthOf(target);
     const spliced = Store.#spliceBasisGround(text, nextLabel);
     if (!spliced)
-      return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
+      return refuseUnspliceableBasis({ target,
                detail: "this document's basis block is not in a shape this grammar can edit in place. "
-                     + "Nothing was written — a partial edit of a basis is worse than none." };
+                     + "Nothing was written — a partial edit of a basis is worse than none." });
     text = spliced;
     text = grounds.length
       ? Store.#setOrAddBlock(text, "grounds", rowsOut.flatMap((r) => [
@@ -13698,11 +14292,11 @@ export class Store extends DurableObject {
 
     const liveMd = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string")
-      return { ok: false, reason: "NO_BUNDLE_MD", project };
+      return refuseNoBundleMd({ project });
     const parsed = parseFrontmatter(liveMd.content);
     if (!parsed.data)
-      return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project,
-               detail: "the project's own bundle.md does not parse under the restricted grammar" };
+      return refuseUnparseableFrontmatter({ project,
+               detail: "the project's own bundle.md does not parse under the restricted grammar" });
 
     /* Partition the selection against the edges the document already carries.
      *
@@ -13882,12 +14476,12 @@ export class Store extends DurableObject {
                             "C-2.8", ef);
       const exErrs = ef.filter((x) => x.severity === "error");
       if (exErrs.length)
-        return { ok: false, reason: "BASIS_REFUSED", project, handle, drift: sel.drift,
+        return refuseBasisRefused({ project, handle, drift: sel.drift,
                  findings: exErrs.map((x) => ({ check: x.check, code: x.code ?? null,
                                                 detail: x.message, repairs: x.repairs ?? [] })),
                  detail: "the part of the document this citation names is refused by the SAME catalog "
                        + "function op=promote runs at the write, so nothing was written. A citation that "
-                       + "names no part means the whole document, which is always a legal thing to cite." };
+                       + "names no part means the whole document, which is always a legal thing to cite." });
     }
 
     const when = stampInstant("second");
@@ -13977,9 +14571,9 @@ export class Store extends DurableObject {
       if (!spliced)
         /* ITS OWN REASON: a member told "references" about a basis failure would
            look in the wrong block. */
-        return { ok: false, reason: "UNSPLICEABLE_BASIS", project,
+        return refuseUnspliceableBasis({ project,
                  detail: "the question's basis block is not in a shape this grammar can extend in place. "
-                       + "Citing appends legs to that block and never rewrites the rest of the document." };
+                       + "Citing appends legs to that block and never rewrites the rest of the document." });
     }
 
     /* last_updated moves, so C-13.2 requires a Session Log entry. That is not
@@ -15088,11 +15682,11 @@ export class Store extends DurableObject {
       checkLegExtentGrammar(legFields, "the part of the document this narrowing names", "C-25.10", ef);
       const errs = ef.filter((x) => x.severity === "error");
       if (errs.length)
-        return { ok: false, reason: "BASIS_REFUSED", target: src.b.bundle_id,
+        return refuseBasisRefused({ target: src.b.bundle_id,
                  findings: errs.map((x) => ({ check: x.check, code: x.code ?? null, detail: x.message,
                                               repairs: x.repairs ?? [] })),
                  detail: "the part named is refused by the SAME catalog function op=promote runs at the "
-                       + "write, so nothing was written." };
+                       + "write, so nothing was written." });
     }
     const newExtent = chosenRow ? chosenRow.extent : legExtent(legFields);
     const relation = extentRelation(src.extent, newExtent);
@@ -15191,9 +15785,9 @@ export class Store extends DurableObject {
        document parsed and the source reading was found in it, its version blocks
        are in the appendable shape. `op=cite`'s own name for the same condition. */
     if (text === null)
-      return { ok: false, reason: "UNSPLICEABLE_BASIS", target: src.b.bundle_id,
+      return refuseUnspliceableBasis({ target: src.b.bundle_id,
                detail: "this question's version block is in a shape the restricted frontmatter grammar "
-                     + "cannot extend in place, so nothing was written." };
+                     + "cannot extend in place, so nothing was written." });
     /* WAS IT ONE OF THE MACHINE'S PROPOSALS? Derived here and never taken from
        the caller — a provenance hop a caller can hand us is one a caller can
        invent. It is recorded so the record says the member CHOSE among
@@ -17287,7 +17881,11 @@ export class Store extends DurableObject {
    * manifest base-sha CAS provided on Drive.
    */
   promote(pkg) {
-    if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
+    /* DEC-49 REGION is-promote-body — D-641 / C-100.65. The span the row's `where` names:
+       the condition of NO_BODY and the refusal it mints, nothing else. */
+    if (!pkg || typeof pkg !== "object")
+      return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
+    /* END DEC-49 REGION is-promote-body */
     const { base, meta, snapKey, author, register = [] } = pkg;
     /* REC-141: `let`, because a NEW project's id and its document are the plane's to write (below). */
     let { bundleId, files } = pkg;
@@ -17298,16 +17896,21 @@ export class Store extends DurableObject {
        ratification, when the revision is already in the history. */
     const writer = pkg.writer === "mechanical" ? "mechanical" : null;
     const operation = writer ? pkg.operation : null;
+    /* DEC-49 REGION is-promote-operation — D-641 / C-100.66. The span the row's `where` names:
+       the condition of UNDECLARED_OPERATION and the refusal it mints, nothing else. */
     if (writer && !(operation in MECHANICAL_FIELD_SETS))
       return { ok: false, reason: "UNDECLARED_OPERATION",
                detail: `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS).join(", ")}`,
                got: operation ?? null };
+    /* END DEC-49 REGION is-promote-operation */
     /* References used to arrive in the payload AND live in the frontmatter, and
        only the frontmatter was ever checked, so the two could disagree with
        nothing noticing (DEBT D-21). The document is authoritative. A caller
        still sending the old field is refused rather than quietly overridden,
        because a silent override is how the two drifted apart in the first
        place. */
+    /* DEC-49 REGION is-promote-payload — D-641 / C-100.67/C-100.68. The span the row's `where` names:
+       the conditions of REFS_IN_PAYLOAD and BASIS_IN_PAYLOAD, and the refusals they mint, nothing else. */
     if (Array.isArray(pkg.refs) && pkg.refs.length)
       return { ok: false, reason: "REFS_IN_PAYLOAD",
                detail: "references are read from bundle.md frontmatter, not from the promote payload; remove the refs field" };
@@ -17316,6 +17919,7 @@ export class Store extends DurableObject {
     if (Array.isArray(pkg.basis) && pkg.basis.length)
       return { ok: false, reason: "BASIS_IN_PAYLOAD",
                detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field" };
+    /* END DEC-49 REGION is-promote-payload */
     /* ===== REC-141 / C-59 — THE PLANE MINTS PROJECT IDS (Membership v2 §7, *"HOW the plane mints a
        project id"*, BOB #15; §7.9 *"not its existence"*). A creation that named its project's id answered
        EXISTS at a hidden project's id and CREATED at a free one — D-428's creation half. So a NEW project
@@ -17375,7 +17979,7 @@ export class Store extends DurableObject {
       /* END DEC-49 REGION is-project-id-bytes */
     }
     /* ===== END REC-141 (the mint itself is the first act inside the transaction) ===== */
-    if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return refuseMalformed({ detail: "bundleId, files and meta are required" });
     /* ===== REC-175 — A STORED DIGEST IS OF THE STORED BYTES (the Mechanical Verification Law,
        `BIO_State_Rules_Consistency_v1_5.md` §8; CLAUDE.md §5, *an equality that costs nothing to produce is
        not evidence*). `files.sha256` and the bundle's head (`newSha`, read from bundle.md's row below) were
@@ -17491,8 +18095,8 @@ export class Store extends DurableObject {
          registered. Inside the transaction, so the sequence step and the write are one act. */
       if (creatingProject) {
         bundleId = this.#mintProjectId(meta.title);
-        if (!bundleId) return { ok: false, reason: "MINT_EXHAUSTED",
-                                detail: "the plane could not find a free project id in the current sequence" };
+        if (!bundleId) return refuseMintExhausted({
+                                detail: "the plane could not find a free project id in the current sequence" });
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
         const text = lines.join("\n");
@@ -17556,7 +18160,7 @@ export class Store extends DurableObject {
       }
       /* ===== END REC-176 is-promote-resend ===== */
       if (cur && base === null)
-        return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
+        return refuseExists({ detail: "creation attempted against an existing bundle" });
       if (!cur && base !== null)
         return Store.#promoteAbsent();
 
@@ -17620,10 +18224,10 @@ export class Store extends DurableObject {
            one point BOB #15 left OPEN for Bob, and refusing tells the caller only that SOME project
            holds the name they typed. */
         if (clash)
-          return { ok: false, reason: "NAME_TAKEN",
+          return refuseNameTaken({
                    detail: "a project by that name already exists on this instance, compared without regard "
                          + "to case or spacing. This holds for deactivated projects too, because their "
-                         + "names are still cited." };
+                         + "names are still cited." });
       }
 
       /* 7.11: only an OWNER deactivates or reactivates a project.
@@ -17807,8 +18411,11 @@ export class Store extends DurableObject {
         /* REC-178: judged in UTF-8 BYTES, the unit INLINE_MAX is stated in — never `text.length`, which counts UTF-16
            units and admitted a non-ASCII file up to three times the limit. */
         const inlineBytes = Store.#inlineBytesOf(f);
+        /* DEC-49 REGION is-promote-inline-size — D-641 / C-100.74. The span the row's `where` names:
+           the condition of OVERSIZE_INLINE and the refusal it mints, nothing else. */
         if (inlineBytes !== null && inlineBytes > INLINE_MAX)
           return { ok: false, reason: "OVERSIZE_INLINE", path: f.path, bytes: inlineBytes };
+        /* END DEC-49 REGION is-promote-inline-size */
       }
       /* A gathering queue is validated at the WRITE, not only at ratification.
          C-18.5's grammar exists because a leaked write token must be able to
@@ -17831,9 +18438,12 @@ export class Store extends DurableObject {
         const gf = [];
         checkGatheringGrammar({ files: new Map([["data/gathering.json", gj.text]]) }, gf);
         const errs = gf.filter((x) => x.severity === "error");
+        /* DEC-49 REGION is-promote-gathering — D-641 / C-100.75. The span the row's `where` names:
+           the condition of GATHERING_REFUSED and the refusal it mints, nothing else. */
         if (errs.length)
           return { ok: false, reason: "GATHERING_REFUSED",
                    findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
+        /* END DEC-49 REGION is-promote-gathering */
       }
 
       /* REC-11: an inquiry's basis[] is validated at the WRITE, before anything
@@ -17943,7 +18553,7 @@ export class Store extends DurableObject {
              left a member told they were wrong and not told what right was,
              which is the shape of gate that pressures someone into guessing.
              ADDITIVE: an existing caller reading only check+detail is unaffected. */
-          return { ok: false, reason: "BASIS_REFUSED",
+          return refuseBasisRefused({
                    findings: errs.map((x) => ({ check: x.check, detail: x.message,
                                                 /* REC-84 / DEC-49: A CODE ON A BASIS FINDING NOW TRAVELS
                                                    WITH ITS CANNED TRANSLATION. `checkInquiryBasis`'s arms
@@ -17958,7 +18568,7 @@ export class Store extends DurableObject {
                                                    code, so nothing existing changes shape. */
                                                 ...(x.code ? { code: x.code,
                                                                translation: CONTENT_EXTENT_CHECKS[x.code]?.translation } : {}),
-                                                ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+                                                ...(x.repairs ? { repairs: x.repairs } : {}) })) });
         /* REC-82 / IC-83: THE CONTENT EXTENT, refused at the write and BEFORE
            anything lands, on `checkInquiryBasis`'s own terms and inside its own
            guard — so a leg naming a part of a document the record cannot address
@@ -17985,7 +18595,7 @@ export class Store extends DurableObject {
            two a NAMED content id can fail (C-45.5 / C-45.6). */
         const cerrs = this.#contentLegRefusals(
           basisLegs, this.#contentPlanFor(basisLegs), (i) => `basis[${i}]`);
-        if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
+        if (cerrs.length) return refuseBasisRefused({ findings: cerrs });
       }
       /* REC-18: an inquiry naming a SUBJECT ENTITY that does not resolve in this
          store is refused, on op=promote's own supersedes-target precedent a few
@@ -17998,6 +18608,8 @@ export class Store extends DurableObject {
       if (isInquiry && docFmW && !pkg.replay && typeof docFmW.subject_entity === "string"
           && docFmW.subject_entity.trim() !== "") {
         const se = docFmW.subject_entity.trim();
+        /* DEC-49 REGION is-promote-subject — D-641 / C-100.76. The span the row's `where` names:
+           the condition of SUBJECT_REFUSED and the refusal it mints, nothing else. */
         if (!this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, se))
           return { ok: false, reason: "SUBJECT_REFUSED", target: se,
                    findings: [{ check: "C-2.8",
@@ -18006,6 +18618,7 @@ export class Store extends DurableObject {
                            + `entity has. Register the subject with op=entitycreate, or omit subject_entity `
                            + `— an inquiry may name no subject, and then no leg of it earns an A/B/C `
                            + `connection grade (DEC-15).` }] };
+        /* END DEC-49 REGION is-promote-subject */
       }
       /* REC-16 / R4: THE SUPERSESSION EDGE AND THE DIVISION DISCLOSURE, checked
        * at the WRITE, on exactly the basis arm's reasoning above — the catalog's
@@ -18119,24 +18732,24 @@ export class Store extends DurableObject {
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");
         if (aerrs.length)
-          return { ok: false, reason: "ACTION_BASIS_REFUSED",
+          return refuseActionBasisRefused({
                    findings: aerrs.map((x) => ({ check: x.check, detail: x.message,
-                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) });
         const cf2 = [];
         correspondenceFindings(docFmW, cf2);
         const cerrs = cf2.filter((x) => x.severity === "error");
         if (cerrs.length)
-          return { ok: false, reason: "CORRESPONDENCE_REFUSED",
+          return refuseCorrespondenceRefused({
                    findings: cerrs.map((x) => ({ check: x.check, detail: x.message,
-                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) });
         for (const leg of (Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [])) {
           if (!leg || typeof leg.target !== "string") continue;
           if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target))
-            return { ok: false, reason: "ACTION_BASIS_REFUSED", target: leg.target,
+            return refuseActionBasisRefused({ target: leg.target,
                      findings: [{ check: "C-2.10",
                        detail: `action_basis target '${leg.target}' does not resolve in this store: an action `
                              + `that names why it exists names something that exists, or it points a reader at `
-                             + `nothing while claiming a reason` }] };
+                             + `nothing while claiming a reason` }] });
         }
         /* THE HALF THE CATALOG DELIBERATELY CANNOT DO. `register` is the trust
            root — the only thing that proves bytes — and a hash that resolves in
@@ -18147,13 +18760,13 @@ export class Store extends DurableObject {
           if (!e || typeof e.artifact_sha !== "string" || !e.artifact_sha.trim()) continue;
           const sha = e.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase();
           if (!this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
-            return { ok: false, reason: "CORRESPONDENCE_REFUSED", artifact_sha: sha,
+            return refuseCorrespondenceRefused({ artifact_sha: sha,
                      findings: [{ check: "C-2.10",
                        detail: `correspondence artifact_sha '${sha.slice(0, 16)}...' does not resolve in the `
                              + `register: an entry claiming captured bytes names bytes this store holds, or it `
                              + `is testimony and says so with an account and an author (DEC-13)`,
                        repairs: ["capture the artifact first (op=capture), then record its sha",
-                                 "or record a named account instead"] }] };
+                                 "or record a named account instead"] }] });
         }
       }
       /* REC-24 (g): the new relation is governed at the write on the supersedes
@@ -18167,16 +18780,16 @@ export class Store extends DurableObject {
         respondsToEdgeFindings(docFmW, rf);
         const rerrs = rf.filter((x) => x.severity === "error");
         if (rerrs.length)
-          return { ok: false, reason: "RESPONDS_TO_REFUSED",
+          return refuseRespondsToRefused({
                    findings: rerrs.map((x) => ({ check: x.check, detail: x.message,
-                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) });
         for (const r of (Array.isArray(docFmW.references) ? docFmW.references : [])) {
           if (!r || typeof r !== "object" || r.rel !== "responds_to") continue;
           if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
-            return { ok: false, reason: "RESPONDS_TO_REFUSED", target: r.target,
+            return refuseRespondsToRefused({ target: r.target,
                      findings: [{ check: "C-6.1",
                        detail: `responds_to target '${r.target}' does not resolve in this store: this document `
-                             + `claims to be what came back from an ask that is not here` }] };
+                             + `claims to be what came back from an ask that is not here` }] });
         }
       }
       if (docFmW && !pkg.replay) {
@@ -18184,27 +18797,27 @@ export class Store extends DurableObject {
         supersedesEdgeFindings(docFmW, sf);
         const serrs = sf.filter((x) => x.severity === "error");
         if (serrs.length)
-          return { ok: false, reason: "SUPERSESSION_REFUSED",
-                   findings: serrs.map((x) => ({ check: x.check, detail: x.message })) };
+          return refuseSupersessionRefused({
+                   findings: serrs.map((x) => ({ check: x.check, detail: x.message })) });
         for (const r of (Array.isArray(docFmW.references) ? docFmW.references : [])) {
           if (!r || typeof r !== "object" || r.rel !== "supersedes") continue;
           if (r.target === bundleId)
-            return { ok: false, reason: "SUPERSESSION_REFUSED", target: r.target,
+            return refuseSupersessionRefused({ target: r.target,
                      findings: [{ check: "C-6.1",
-                       detail: `${bundleId} supersedes itself: a question cannot be the thing it replaced` }] };
+                       detail: `${bundleId} supersedes itself: a question cannot be the thing it replaced` }] });
           if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
-            return { ok: false, reason: "SUPERSESSION_REFUSED", target: r.target,
+            return refuseSupersessionRefused({ target: r.target,
                      findings: [{ check: "C-6.1",
                        detail: `supersedes target '${r.target}' does not resolve in this store: an edge that `
                              + `asserts a lineage must name a question that exists, or it points a reader at `
-                             + `nothing while claiming a replacement happened` }] };
+                             + `nothing while claiming a replacement happened` }] });
         }
         const df = [];
         divisionDisclosureFindings(docFmW, df);
         const derrs = df.filter((x) => x.severity === "error");
         if (derrs.length)
-          return { ok: false, reason: "NO_SIBLING_DISCLOSURE",
-                   findings: derrs.map((x) => ({ check: x.check, detail: x.message })) };
+          return refuseNoSiblingDisclosure({
+                   findings: derrs.map((x) => ({ check: x.check, detail: x.message })) });
         const parentId = typeof docFmW.division_parent === "string" && docFmW.division_parent !== "null"
           ? docFmW.division_parent : null;
         if (parentId) {
@@ -18213,16 +18826,16 @@ export class Store extends DurableObject {
           const into = pfm && pfm.division && Array.isArray(pfm.division.into)
             ? pfm.division.into.filter((x) => typeof x === "string") : null;
           if (!into || !into.includes(bundleId))
-            return { ok: false, reason: "NO_SIBLING_DISCLOSURE", parent: parentId,
+            return refuseNoSiblingDisclosure({ parent: parentId,
                      detail: `${parentId} does not record ${bundleId} as one of the questions it was divided `
                            + `into, so the parent and the child disagree about whether this division happened. `
                            + `A child names a parent that names it back, or the disclosure is a claim nobody `
-                           + `can check.` };
+                           + `can check.` });
           const declared = new Set(Array.isArray(docFmW.division_siblings) ? docFmW.division_siblings : []);
           const missing = into.filter((x) => x !== bundleId && !declared.has(x));
           const invented = [...declared].filter((x) => !into.includes(x));
           if (missing.length || invented.length)
-            return { ok: false, reason: "NO_SIBLING_DISCLOSURE", parent: parentId,
+            return refuseNoSiblingDisclosure({ parent: parentId,
                      missing, not_siblings: invented,
                      detail: (missing.length
                        ? `this child does not name ${missing.join(", ")}, which ${parentId} was also divided `
@@ -18232,7 +18845,7 @@ export class Store extends DurableObject {
                        + `operation (R4). `
                        : "")
                      + (invented.length
-                       ? `it also names ${invented.join(", ")}, which ${parentId} was not divided into.` : "") };
+                       ? `it also names ${invented.join(", ")}, which ${parentId} was not divided into.` : "") });
         }
       }
       /* PL-1 / IS-1: THE BASIS-VERSION ARM, and it is the inquiry basis arm
@@ -18260,7 +18873,7 @@ export class Store extends DurableObject {
         basisVersionFindings(docFmW, vf);
         const verrs = vf.filter((x) => x.severity === "error");
         if (verrs.length)
-          return { ok: false, reason: "BASIS_VERSION_REFUSED",
+          return refuseBasisVersionRefused({
                    findings: verrs.map((x) => ({ check: x.check, detail: x.message, code: x.code,
                                                  /* PL-3 / IS-4: BOTH REGISTRIES, and the DEC-49 guard
                                                     is not what found this — the item its own negative
@@ -18279,7 +18892,7 @@ export class Store extends DurableObject {
                                                     very line was written to end. */
                                                  translation: (BASIS_VERSION_CHECKS[x.code] ?? SUGGEST_CHECKS[x.code]
                                                                ?? CONTENT_EXTENT_CHECKS[x.code])?.translation,
-                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) });
         const offered = Store.basisVersionsOf(docFmW);
         /* DEC-49 REGION basis-version-resolve
          *
@@ -18338,7 +18951,7 @@ export class Store extends DurableObject {
           const verrs2 = this.#contentLegRefusals(vLegRows, vplan, (i) =>
             `basis_version_legs[${i}] (version '${String(vLegRows[i]?.version ?? "").slice(0, 48)}')`);
           if (verrs2.length)
-            return { ok: false, reason: "BASIS_VERSION_REFUSED", findings: verrs2 };
+            return refuseBasisVersionRefused({ findings: verrs2 });
         }
         /* DEC-49 REGION basis-version-freeze
          *
@@ -18549,7 +19162,7 @@ export class Store extends DurableObject {
                          + "Carry them forward, or name them in drop[] to delete them on purpose." };
       }
       /* END DEC-49 REGION is-promote-files */
-      if (!files.find(f => f.path === "bundle.md")?.sha256) return { ok: false, reason: "NO_BUNDLE_MD" };
+      if (!files.find(f => f.path === "bundle.md")?.sha256) return refuseNoBundleMd();
       /* DEC-49 REGION is-promote-snapkey */
       if (heldAtKey)
         return { ok: false, reason: "SNAP_KEY_TAKEN", code: "SNAP_KEY_TAKEN",
@@ -22907,11 +23520,14 @@ export class Store extends DurableObject {
    *  information object the record holds no bytes for has nothing to address.
    *  Both answer null and say which. */
   ensureLegContent(bundleId, ord) {
+    /* DEC-49 REGION is-leg-present — D-641 / C-100.44. The span the row's `where` names:
+       the condition of NO_LEG and the refusal it mints, nothing else. */
     const leg = this.#one(
       `SELECT bundle_id, ord, target_id, target_type, content_id
          FROM inquiry_basis WHERE bundle_id=? AND ord=?`, bundleId, ord);
     if (!leg) return { ok: false, reason: "NO_LEG",
                        detail: `no basis leg ${ord} on ${bundleId}` };
+    /* END DEC-49 REGION is-leg-present */
     if (leg.content_id)
       return { ok: true, content_id: leg.content_id, minted: false, backfilled: false };
     /* REC-83: THE CASE IS NAMED, NOT ONLY DESCRIBED. IC-83's AMENDMENT 2 says
@@ -23444,7 +24060,7 @@ export class Store extends DurableObject {
                      + `refuses rather than ignores — a parameter silently dropped is a filter the `
                      + `caller believes was applied` };
     if (typeof id !== "string" || !id)
-      return { ok: false, reason: "NO_ID", detail: "content requires ?id=<content_id>" };
+      return refuseNoId({ detail: "content requires ?id=<content_id>" });
     const r = this.#one(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
               derivation_cap, page_count, minted_by, at, stale, cited_as
@@ -24800,13 +25416,16 @@ export class Store extends DurableObject {
      because a registry that silently accepts any kind is not a registry. */
   createEntity({ kind, label, note = null, aliases = [], declaredBy = null } = {}) {
     const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
+    /* DEC-49 REGION is-entity-kind-named — D-641 / C-100.6. The span the row's `where` names:
+       the condition of NO_KIND and the refusal it mints, nothing else. */
     if (!k) return { ok: false, reason: "NO_KIND",
       detail: "an entity needs a kind: one of " + [...Store.#ENTITY_KINDS].join(", ") };
+    /* END DEC-49 REGION is-entity-kind-named */
     if (!Store.#ENTITY_KINDS.has(k))
-      return { ok: false, reason: "UNKNOWN_KIND", kind: k,
+      return refuseUnknownKind({ kind: k,
         detail: "the subject registry admits a closed kind vocabulary (D-83 reconciles safeguard 4 with the "
               + "framework's entity axis): one of " + [...Store.#ENTITY_KINDS].join(", ")
-              + ". Introducing a new kind is a doctrine change, not a write." };
+              + ". Introducing a new kind is a doctrine change, not a write." });
     const lab = Store.#cleanLabel(label);
     if (!lab) return { ok: false, reason: "NO_LABEL", detail: "an entity needs a canonical label, such as 'City Clerk'" };
     const extra = Array.isArray(aliases) ? aliases : [];
@@ -24848,8 +25467,11 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-alias-named */
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
+    /* DEC-49 REGION is-alias-new — D-641 / C-100.5. The span the row's `where` names:
+       the condition of ALREADY_ALIASED and the refusal it mints, nothing else. */
     const dup = this.#one(`SELECT alias FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
     if (dup) return { ok: false, reason: "ALREADY_ALIASED", entity_id: entityId, alias: dup.alias };
+    /* END DEC-49 REGION is-alias-new */
     const at = new Date().toISOString();
     this.sql.exec(
       `INSERT INTO entity_aliases (entity_id,alias,alias_norm,canonical,declared_by,at) VALUES (?,?,?,?,?,?)`,
@@ -24866,6 +25488,8 @@ export class Store extends DurableObject {
      restraint. */
   declareRelation({ fromEntity, toEntity, relation, justification, citation, declaredBy = null } = {}) {
     const rel = typeof relation === "string" ? relation.trim().toLowerCase() : "";
+    /* DEC-49 REGION is-relation-ends — D-641 / C-100.1/C-100.2/C-100.3. The span the row's `where` names:
+       the conditions of UNKNOWN_RELATION, NO_ENDS and SELF_RELATION, and the refusals they mint, nothing else. */
     if (!Store.#RELATION_KINDS.has(rel))
       return { ok: false, reason: "UNKNOWN_RELATION", relation: rel,
         detail: "a declared relation is one of " + [...Store.#RELATION_KINDS].join(", ")
@@ -24875,13 +25499,17 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_ENDS", detail: "a relation names two entities by id: fromEntity and toEntity" };
     if (fromEntity === toEntity)
       return { ok: false, reason: "SELF_RELATION", detail: "a relation is between two distinct entities" };
+    /* END DEC-49 REGION is-relation-ends */
     const just = typeof justification === "string" ? justification.trim() : "";
     const cite = typeof citation === "string" ? citation.trim() : "";
     /* Justified AND citable, like a pattern statement (safeguard 4). Refused fail-
        closed rather than stored empty, so an un-justified or un-cited relation
        cannot enter the registry. */
+    /* DEC-49 REGION is-relation-justified — D-641 / C-100.4. The span the row's `where` names:
+       the condition of NO_JUSTIFICATION and the refusal it mints, nothing else. */
     if (!just) return { ok: false, reason: "NO_JUSTIFICATION",
       detail: "a declared relation carries a justification, like a pattern statement (safeguard 4)" };
+    /* END DEC-49 REGION is-relation-justified */
     /* D-484: routed through the ONE governed site (see `actNoCitation`). */
     if (!cite) return actNoCitation("a declared relation carries a citation, like a pattern statement (safeguard 4)");
     const from = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, fromEntity);
@@ -25208,12 +25836,12 @@ export class Store extends DurableObject {
     let refs;
     if (ref != null) {
       if (typeof ref !== "string" || !ref)
-        return { ok: false, reason: "NO_REF", detail: "resolve a single reference by its raw kind:key, or omit ref to resolve all" };
+        return refuseNoRef({ detail: "resolve a single reference by its raw kind:key, or omit ref to resolve all" });
       const one = this.#one(
         `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`,
         captureSha, ref);
-      if (!one) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
-        detail: "this captured document's reading carries no such reference (nothing to resolve)" };
+      if (!one) return refuseNoSuchReference({ capture_sha: captureSha, ref,
+        detail: "this captured document's reading carries no such reference (nothing to resolve)" });
       refs = [one];
     } else {
       refs = this.#rows(
@@ -25265,15 +25893,15 @@ export class Store extends DurableObject {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "testimony is about a captured document, named by its capture sha256" };
     if (typeof ref !== "string" || !ref)
-      return { ok: false, reason: "NO_REF", detail: "testimony names the raw reference (kind:key) the document carries" };
+      return refuseNoRef({ detail: "testimony names the raw reference (kind:key) the document carries" });
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
     const b = typeof basis === "string" ? basis.trim() : "";
     /* D-484: routed through the ONE governed site (see `actNoBasis`). */
     if (!b) return actNoBasis("grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=?`, captureSha, ref);
-    if (!rr) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
-      detail: "this captured document's reading carries no such reference to testify about" };
+    if (!rr) return refuseNoSuchReference({ capture_sha: captureSha, ref,
+      detail: "this captured document's reading carries no such reference to testify about" });
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
     /* D-219 (BOB #30, framework 8.1): what grade D lacks is a captured DOCUMENT, not a basis
@@ -25748,7 +26376,7 @@ export class Store extends DurableObject {
         `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id LIMIT ?`,
         captureSha, captureSha, cap + 1);
     } else {
-      return { ok: false, reason: "NO_KEY", detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" };
+      return refuseNoKey({ detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" });
     }
     const truncated = scan.length > cap;
     const rows = truncated ? scan.slice(0, cap) : scan;
@@ -25992,7 +26620,7 @@ export class Store extends DurableObject {
       }
       if (lapsed) entry.on_point = lapsed;
       if (!view.determining_pair) {
-        undetermined.push({ ...entry, code: "CONNECTION_PAIR_NO_PAIR",
+        undetermined.push({ ...entry, ...asStatement(refuseConnectionPairNoPair()),
           why: "this connection was derived before the record kept which reference established it, so "
              + "whether that reference falls inside this part cannot be asked. Re-deriving the "
              + "subject's connections records the pair" });
@@ -26263,10 +26891,12 @@ export class Store extends DurableObject {
      and is not refused for lacking one. */
   defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "a progression definition is named by a key, e.g. 'meeting' or 'procurement'" };
+      return refuseNoKey({ detail: "a progression definition is named by a key, e.g. 'meeting' or 'procurement'" });
     const key = progressionKey.trim();
     if (typeof label !== "string" || !label.trim())
       return { ok: false, reason: "NO_LABEL", detail: "a progression definition carries a human label" };
+    /* DEC-49 REGION is-progression-stages — D-641 / C-100.14/C-100.15/C-100.16/C-100.17/C-100.18. The span the row's `where` names:
+       the conditions of NO_STAGES, NO_STAGE_KEY, DUPLICATE_STAGE, NO_CARDINALITY and BAD_REQUIRED, and the refusals they mint, nothing else. */
     if (!Array.isArray(stages) || stages.length === 0)
       return { ok: false, reason: "NO_STAGES", detail: "a progression is its ordered stages; name at least one" };
     /* Normalise and validate every stage before writing any, so a bad row refuses the
@@ -26290,6 +26920,7 @@ export class Store extends DurableObject {
            shape every closed-vocabulary refusal in this file takes. */
         return { ok: false, reason: "BAD_REQUIRED", stage_key: sk,
                  detail: `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", ") };
+    /* END DEC-49 REGION is-progression-stages */
       norm.push({ stage_key: sk, stage_no: i + 1,
                   label: typeof s.label === "string" && s.label ? s.label : null,
                   after_stage: typeof s.after === "string" && s.after.trim() ? s.after.trim()
@@ -26497,7 +27128,7 @@ export class Store extends DurableObject {
      of versions the record holds, each with its author, date and basis. */
   readProgression({ progressionKey, version = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "read a progression definition by its key (op=progression&key=meeting)" };
+      return refuseNoKey({ detail: "read a progression definition by its key (op=progression&key=meeting)" });
     const key = progressionKey.trim();
     const cur = this.#progressionCurrent(key);
     if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
@@ -27099,16 +27730,19 @@ export class Store extends DurableObject {
      -- grade and findings derived. */
   async threadInstance({ progressionKey, entityId, placements, threadedBy = null, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "a progression instance names its definition by key (op=thread)" };
+      return refuseNoKey({ detail: "a progression instance names its definition by key (op=thread)" });
     const key = progressionKey.trim();
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "a progression instance is threaded by an entity, named by its id" };
     const eid = entityId.trim();
+    /* DEC-49 REGION is-thread-placements — D-641 / C-100.19. The span the row's `where` names:
+       the condition of NO_PLACEMENTS and the refusal it mints, nothing else. */
     if (!Array.isArray(placements) || placements.length === 0)
       return { ok: false, reason: "NO_PLACEMENTS", detail: "name at least one {stage, captureSha} placement to thread" };
+    /* END DEC-49 REGION is-thread-placements */
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
-    if (!def) return { ok: false, reason: "NO_SUCH_PROGRESSION", progression_key: key,
-      detail: "define the progression first (op=progressiondefine), then thread documents through it" };
+    if (!def) return refuseNoSuchProgression({ progression_key: key,
+      detail: "define the progression first (op=progressiondefine), then thread documents through it" });
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, eid);
     if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: eid,
       detail: "the threading entity must be registered (op=entitycreate)" };
@@ -27122,18 +27756,21 @@ export class Store extends DurableObject {
     for (let i = 0; i < placements.length; i++) {
       const p = placements[i] || {};
       const sk = typeof p.stage === "string" ? p.stage.trim() : (typeof p.stageKey === "string" ? p.stageKey.trim() : "");
-      if (!sk) return { ok: false, reason: "NO_STAGE", detail: `placement ${i + 1} names no stage`, placement: i + 1 };
+      if (!sk) return refuseNoStage({ detail: `placement ${i + 1} names no stage`, placement: i + 1 });
       if (!stageKeys.has(sk)) return { ok: false, reason: "BAD_STAGE", stage_key: sk,
         detail: `'${sk}' is not a stage of progression '${key}'` };
       const cs = typeof p.captureSha === "string" ? p.captureSha.trim()
                : (typeof p.capture_sha === "string" ? p.capture_sha.trim() : "");
-      if (!cs) return { ok: false, reason: "NO_CAPTURE", stage_key: sk, detail: `placement for '${sk}' names no capture sha` };
+      if (!cs) return refuseNoCapture({ stage_key: sk, detail: `placement for '${sk}' names no capture sha` });
       /* NUL cannot occur in a stage key or a sha, so the pair key is unambiguous.
          Written as the ESCAPE, never a raw byte: one raw NUL here made this whole
          file read as BINARY to grep, which then silently matched nothing (D-131). */
       const dup = sk + "\u0000" + cs;
+      /* DEC-49 REGION is-thread-placement-once — D-641 / C-100.22. The span the row's `where` names:
+         the condition of DUPLICATE_PLACEMENT and the refusal it mints, nothing else. */
       if (seen.has(dup)) return { ok: false, reason: "DUPLICATE_PLACEMENT", stage_key: sk, capture_sha: cs,
         detail: `the same document is placed at '${sk}' twice` };
+      /* END DEC-49 REGION is-thread-placement-once */
       seen.add(dup);
       const res = concerning.get(cs);
       if (!res) return { ok: false, reason: "NOT_CONCERNED", stage_key: sk, capture_sha: cs, entity_id: eid,
@@ -27205,7 +27842,7 @@ export class Store extends DurableObject {
      missing-predecessor findings, all DERIVED on read from the CURRENT definition. */
   readInstance({ progressionKey, entityId, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
+      return refuseNoKey({ detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" });
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
     return this.#instanceAnswer(progressionKey.trim(), entityId.trim(), viewer);
@@ -27231,16 +27868,16 @@ export class Store extends DurableObject {
      different stage or from a different document ADDS (a stage may be discharged by several). */
   dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "an exception document names its progression by key (op=discharge)" };
+      return refuseNoKey({ detail: "an exception document names its progression by key (op=discharge)" });
     const key = progressionKey.trim();
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "an exception document discharges a skip in one entity's instance, named by id" };
     const eid = entityId.trim();
     const sk = typeof stageKey === "string" ? stageKey.trim() : (typeof stage === "string" ? stage.trim() : "");
-    if (!sk) return { ok: false, reason: "NO_STAGE", detail: "an exception document NAMES the stage it discharges" };
+    if (!sk) return refuseNoStage({ detail: "an exception document NAMES the stage it discharges" });
     const cs = typeof captureSha === "string" ? captureSha.trim()
              : (typeof capture_sha === "string" ? capture_sha.trim() : "");
-    if (!cs) return { ok: false, reason: "NO_CAPTURE", detail: "an exception document IS a captured document, named by its capture sha" };
+    if (!cs) return refuseNoCapture({ detail: "an exception document IS a captured document, named by its capture sha" });
     const rsn = typeof reason === "string" ? reason.trim() : "";
     if (!rsn) return { ok: false, reason: "NO_REASON",
       detail: "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)" };
@@ -27248,8 +27885,8 @@ export class Store extends DurableObject {
     /* D-484: routed through the ONE governed site (see `actNoCitation`). */
     if (!cite) return actNoCitation("an exception document carries a citation -- where the justification for the skip is published");
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
-    if (!def) return { ok: false, reason: "NO_SUCH_PROGRESSION", progression_key: key,
-      detail: "define the progression first (op=progressiondefine), then discharge a skip in one of its instances" };
+    if (!def) return refuseNoSuchProgression({ progression_key: key,
+      detail: "define the progression first (op=progressiondefine), then discharge a skip in one of its instances" });
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, eid);
     if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: eid,
       detail: "the threading entity must be registered (op=entitycreate)" };
@@ -27286,7 +27923,7 @@ export class Store extends DurableObject {
      "discharged" states; this shows every exception recorded, applied or not. */
   readExceptions({ progressionKey, entityId, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" };
+      return refuseNoKey({ detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" });
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" };
     const key = progressionKey.trim(), eid = entityId.trim();
@@ -30279,8 +30916,11 @@ export class Store extends DurableObject {
    *  probe for the existence of a project nobody invited you to. */
   #queueCaseFor(caseId, viewer) {
     const id = typeof caseId === "string" ? caseId.trim() : "";
+    /* DEC-49 REGION is-queue-case-named — D-641 / C-100.9. The span the row's `where` names:
+       the condition of NO_CASE and the refusal it mints, nothing else. */
     if (!id) return { ok: false, reason: "NO_CASE",
                       detail: "a personal preference is keyed (member, case); name the case it is about" };
+    /* END DEC-49 REGION is-queue-case-named */
     const gate = viewerPredicate(viewer);
     /* `FROM bundles b` and not `FROM bundles`: viewerPredicate compiles a
        predicate over the alias `b`, which is the shape every other gated read in
@@ -30288,15 +30928,18 @@ export class Store extends DurableObject {
     const row = this.#one(
       `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
         WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
-    if (!row) return { ok: false, reason: "NO_SUCH_CASE", case: id,
+    if (!row) return refuseNoSuchCase({ case: id,
       detail: "no case by that id is visible to you. A case you may not see and a case that does not "
-            + "exist answer identically here (D-15), so this refusal reveals nothing either way." };
+            + "exist answer identically here (D-15), so this refusal reveals nothing either way." });
     const ty = normalizeType(row.object_type);
+    /* DEC-49 REGION is-queue-case-type — D-641 / C-100.11. The span the row's `where` names:
+       the condition of NOT_A_CASE and the refusal it mints, nothing else. */
     if (!Store.QUEUE_CASE_TYPES.includes(ty))
       return { ok: false, reason: "NOT_A_CASE", case: id, object_type: ty,
         detail: "a queue entry is filed under a CASE — an inquiry or a project — and personal state is "
               + "keyed to that. A document is a SUBJECT, not a home: muting one would be muting every "
               + "question that rests on it, for reasons none of those questions' owners could see." };
+    /* END DEC-49 REGION is-queue-case-type */
     const spec = vocabFor(STATES, row.object_type);
     return { ok: true, id: row.bundle_id, type: ty, title: row.title ?? null,
              state: row.current_state ?? null,
@@ -30336,9 +30979,9 @@ export class Store extends DurableObject {
   queueMute({ member = null, case: caseId = null, kinds = null, item = null, unmute = false,
               viewer = null, at = null } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
-    if (!me) return { ok: false, reason: "NO_MEMBER",
+    if (!me) return refuseNoMember({
       detail: "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine "
-            + "credential has no member behind it. There is no instance-wide mute and there must not be." };
+            + "credential has no member behind it. There is no instance-wide mute and there must not be." });
     const mutableKinds = [...Object.keys(QUEUE_CONDITION_KINDS), ...Object.keys(QUEUE_FINDING_KINDS)];
     const itemId = typeof item === "string" ? item.trim() : "";
     const named = Array.isArray(kinds) ? kinds.map((k) => (typeof k === "string" ? k.trim() : "")).filter(Boolean) : [];
@@ -30361,12 +31004,15 @@ export class Store extends DurableObject {
     } else {
       c = this.#queueCaseFor(caseId, viewer);
       if (c.ok !== true) return c;
+      /* DEC-49 REGION is-queue-mute-kinds — D-641 / C-100.12. The span the row's `where` names:
+         the condition of NO_KINDS and the refusal it mints, nothing else. */
       if (named.length === 0)
         return { ok: false, reason: "NO_KINDS", case: c.id,
           detail: "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it "
                 + "was made — that is what lets a NEW kind on this case still reach you — so there is no "
                 + "whole-case mute to ask for.",
           available: mutableKinds };
+      /* END DEC-49 REGION is-queue-mute-kinds */
       for (const k of named) subjects.push({ kind: k, cls: classOfKind(k) });
     }
     for (const sb of subjects) {
@@ -30374,7 +31020,7 @@ export class Store extends DurableObject {
         return { ok: false, reason: "BAD_KIND", kind: sb.kind, case: c.id,
           detail: "a kind is a slug and may not contain a comma; the stored set is comma-separated" };
       if (sb.cls === null)
-        return { ok: false, reason: "UNKNOWN_KIND", ...(sb.item ? { item: sb.item } : { kind: sb.kind }),
+        return refuseUnknownKind({ ...(sb.item ? { item: sb.item } : { kind: sb.kind }),
           case: c ? c.id : null,
           detail: sb.item
             ? "no queue item by that id is one this plane can classify: a FINDING's or CONDITION's id "
@@ -30382,7 +31028,7 @@ export class Store extends DurableObject {
               + "not the same as forbidden, and this refusal is the first rather than the second."
             : "the notification catalogue does not name that kind. Unknown is not the same as "
               + "forbidden, and this refusal is the first rather than the second.",
-          available: mutableKinds };
+          available: mutableKinds });
       /* DEC-49 REGION is-mute-class — REC-64/C-33.27. */
       if (!PERSONALLY_MUTABLE_CLASSES.includes(sb.cls))
         return { ok: false, reason: "KIND_NOT_PERSONAL",
@@ -30465,9 +31111,9 @@ export class Store extends DurableObject {
   queueSnooze({ member = null, case: caseId = null, until = null, clear = false,
                 viewer = null, at = null } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
-    if (!me) return { ok: false, reason: "NO_MEMBER",
+    if (!me) return refuseNoMember({
       detail: "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a "
-            + "machine credential has no member behind it." };
+            + "machine credential has no member behind it." });
     const c = this.#queueCaseFor(caseId, viewer);
     if (c.ok !== true) return c;
     const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
@@ -30588,18 +31234,21 @@ export class Store extends DurableObject {
       if (!pk) pk = key.slice(0, i).trim();
       if (!sk) sk = key.slice(i + 2).trim();
     }
+    /* DEC-49 REGION is-dispose-finding-named — D-641 / C-100.25. The span the row's `where` names:
+       the condition of NO_FINDING and the refusal it mints, nothing else. */
     if (scoped && !find) return { ok: false, reason: "NO_FINDING", project: proj,
       detail: "a project-scoped disposition names the FINDING it ages, by the queue item's own id "
             + "(op=queue publishes it as disposition.finding). A project with no finding names a "
             + "team and no decision." };
-    if (scoped && !proj) return { ok: false, reason: "NO_PROJECT_SCOPE", finding: find,
+    /* END DEC-49 REGION is-dispose-finding-named */
+    if (scoped && !proj) return refuseNoProjectScope({ finding: find,
       detail: "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, "
             + "and that act is scoped to ONE project's feed (D-266: a stance is expressly one "
             + "project's own property, §7/D-216, and R5 makes forks at the judgment layer "
             + "legitimate). Name the project you are acting for — op=queue publishes the candidates "
             + "as disposition.projects. It is not defaulted even when there is only one, because a "
             + "plane choosing whose judgment the record carries is the single shared stance §7 "
-            + "rejected, arriving through a defaulted parameter." };
+            + "rejected, arriving through a defaulted parameter." });
     /* THE BRIDGE FOR A SURFACE BUILT BEFORE IC-60, AND IT NAMES THE FIX RATHER THAN THE SYMPTOM.
        A page that learned this act before the second shape existed composes `key` from the queue
        item's own id, so a stance-scoped finding arrives here as key='<kind>::<rest>'. Read as the
@@ -30649,7 +31298,7 @@ export class Store extends DurableObject {
     }
     /* END DEC-49 REGION is-dispose-class */
     if (keyClass === "FINDING")
-      return { ok: false, reason: "NO_PROJECT_SCOPE",
+      return refuseNoProjectScope({
                finding: byId ? keyed : `FINDING::${pk}::${sk}`,
                kind: keyKind,
                requires: ["project", "finding"],
@@ -30657,11 +31306,11 @@ export class Store extends DurableObject {
                      + "project-scoped disposition and it needs the project you are acting for. "
                      + "Send `project` (one of op=queue's disposition.projects for this item) and "
                      + "`finding` (its disposition.finding) instead of `key`. Nothing was written "
-                     + "and no team's feed moved." };
-    if (!scoped && !pk) return { ok: false, reason: "NO_KEY",
-      detail: "a proposal disposition names its progression (progressionKey, or key='progression::stage')" };
-    if (!scoped && !sk) return { ok: false, reason: "NO_STAGE",
-      detail: "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')" };
+                     + "and no team's feed moved." });
+    if (!scoped && !pk) return refuseNoKey({
+      detail: "a proposal disposition names its progression (progressionKey, or key='progression::stage')" });
+    if (!scoped && !sk) return refuseNoStage({
+      detail: "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')" });
     /* deferred (parked, returnable) or dismissed (declined). Both age the proposal out of the open
        feed. Elevating/adopting is a DIFFERENT act (op=promote authors a focus) and is not a
        disposition here — the same line op=dispose draws between a disposition and elevation.
@@ -30682,10 +31331,13 @@ export class Store extends DurableObject {
                detail: `a reason is at most ${Store.EDGE_REASON_MAX} characters and cannot contain a quote, `
                      + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
     const by = decidedBy == null ? "" : String(decidedBy).trim();
+    /* DEC-49 REGION is-dispose-decider — D-641 / C-100.24. The span the row's `where` names:
+       the condition of NO_DECIDER and the refusal it mints, nothing else. */
     if (!by)
       return { ok: false, reason: "NO_DECIDER",
                detail: "a disposition is recorded under the deciding member, stamped from the session. An "
                      + "unnamed decider cannot age the record's question." };
+    /* END DEC-49 REGION is-dispose-decider */
     /* ================================================ D-266 · THE JUDGMENT-LAYER ARM
        Everything above is SHARED and is reached by both shapes on purpose: the vocabulary, the
        required reason, its grammar bound and the server-stamped decider are properties of the ACT
@@ -30745,8 +31397,8 @@ export class Store extends DurableObject {
        the disposition is a standing decision keyed by identity, and D-79 keeps it until re-triaged
        even if the gap comes and goes. */
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, pk);
-    if (!def) return { ok: false, reason: "NO_SUCH_PROGRESSION", progression_key: pk,
-      detail: "define the progression first (op=progressiondefine); a proposal exists only for a defined one" };
+    if (!def) return refuseNoSuchProgression({ progression_key: pk,
+      detail: "define the progression first (op=progressiondefine); a proposal exists only for a defined one" });
     const stageRow = this.#one(
       `SELECT stage_key FROM progression_stages WHERE progression_key=? AND stage_key=?`, pk, sk);
     if (!stageRow) return { ok: false, reason: "BAD_STAGE", progression_key: pk, stage_key: sk,
@@ -31045,10 +31697,13 @@ export class Store extends DurableObject {
        the courtesy of the caller. It bounds nothing about WHICH named actor may
        hold the lease — the lease is a courtesy lock, and promote's CAS on `base`
        is the integrity mechanism that this does not touch. */
+    /* DEC-49 REGION is-lease-named — D-641 / C-100.39. The span the row's `where` names:
+       the condition of ANONYMOUS_LEASE and the refusal it mints, nothing else. */
     if (typeof actor !== "string" || !actor.trim())
       return { ok: false, reason: "ANONYMOUS_LEASE",
                detail: "a lease is taken under a named actor — a member (from a session) or a machine "
                      + "identity (token:<class>). An unnamed writer cannot hold the courtesy lock." };
+    /* END DEC-49 REGION is-lease-named */
     return this.ctx.storage.transactionSync(() => {
       const now = Date.now();
       const cur = this.#one(`SELECT actor, expires, base_sha FROM leases WHERE bundle_id=?`, bundleId);
@@ -31469,7 +32124,7 @@ export class Store extends DurableObject {
      makes a leg addressable. A read of the PROJECTION; bundle.md stays the
      authority. */
   basisFor(bundleId) {
-    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "basis requires ?id=" };
+    if (!bundleId) return refuseNoId({ detail: "basis requires ?id=" });
     const legs = this.#rows(
       `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
        FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, bundleId);
@@ -31481,7 +32136,7 @@ export class Store extends DurableObject {
      inquiry_basis_target, never a graph walk. Answers for an INFO- target and
      for an INQ- target alike, because a leg to an inquiry is the same edge. */
   restingOn(targetId) {
-    if (!targetId) return { ok: false, reason: "NO_ID", detail: "restson requires ?id=" };
+    if (!targetId) return refuseNoId({ detail: "restson requires ?id=" });
     /* D-280, site (d) — `#restsOnLive`'s UNCONFIRMED TWIN. `inquiry_basis` is a
        projection of `references[]` that drops the STATUS, so this read could
        not tell a leg somebody still rests on from one they recorded the
@@ -32514,7 +33169,7 @@ export class Store extends DurableObject {
    *  connection } as two" until then) — and NO scalar: there is nothing here for a caller to render as "the strength",
    *  because a case does not have one. */
   strengthOf(bundleId) {
-    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
+    if (!bundleId) return refuseNoId({ detail: "strength requires ?id=" });
     const bound = Store.QUEUE_ANCESTOR_DEPTH;
     /* REC-105 / D-373: THE ONE PLACE THE RESOLUTION IS TURNED ON, and it is
        this function rather than the walk because this function IS the class.
@@ -32606,8 +33261,8 @@ export class Store extends DurableObject {
    *  `state` field and stay two here (DEC-18): the cached columns could not
    *  tell them apart and that is half of why this op exists. */
   inquiryStrength({ id = null, viewer = null } = {}) {
-    if (!id) return { ok: false, reason: "NO_ID",
-      detail: "the derived pair is asked of one inquiry: pass id=<bundle id>" };
+    if (!id) return refuseNoId({
+      detail: "the derived pair is asked of one inquiry: pass id=<bundle id>" });
     /* THE SUBJECT ROW. An invisible inquiry and an absent one answer the same
        bytes, deliberately: a distinguishable refusal is the disclosure. */
     if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
@@ -33555,10 +34210,13 @@ export class Store extends DurableObject {
      ADMIN_TOKEN cannot silently re-claim a running instance. */
   async claim({ role = "admin", password, tokenFp = null } = {}) {
     if (typeof password !== "string" || password.length < 12)
-      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+      return refusePasswordTooShort({ minimum: 12 });
+    /* DEC-49 REGION is-claim-unspent — D-641 / C-100.38. The span the row's `where` names:
+       the condition of ALREADY_CLAIMED and the refusal it mints, nothing else. */
     const st = this.bootstrapState(tokenFp);
     if (st.claimed)
       return { ok: false, reason: "ALREADY_CLAIMED", consumedAt: st.consumedAt };
+    /* END DEC-49 REGION is-claim-unspent */
     await this.setPassword({ role, password });
     const now = new Date().toISOString();
     this.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)
@@ -35056,7 +35714,7 @@ export class Store extends DurableObject {
       acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s) };
   }
   static #promoteAbsent() {
-    return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+    return refuseAbsent({ detail: "update attempted against a bundle that does not exist" });
   }
   static #noSuchProject(project) {
     return { ok: false, reason: "NO_SUCH_PROJECT", project: project ?? null,
@@ -35149,7 +35807,7 @@ export class Store extends DurableObject {
                detail: "only an owner of this project invites participants to it. An administrator sees "
                      + "every project and directs none of them." };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     if (this.#participation(projectId, target.member_id))
       return { ok: false, reason: "ALREADY_A_PARTICIPANT", handle };
@@ -35205,7 +35863,7 @@ export class Store extends DurableObject {
                detail: "only an owner of this project removes a participant from it. This REVERSES the "
                      + "earlier rule, under which an administrator removed and an owner could not." };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     const p = this.#participation(projectId, target.member_id);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT", handle };
     if (p.owner) return { ok: false, reason: "OWNER",
@@ -35231,7 +35889,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: "only an owner of this project may propose another owner of it" };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     const p = this.#participation(projectId, target.member_id);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
@@ -35324,7 +35982,7 @@ export class Store extends DurableObject {
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
 
     const now = new Date().toISOString();
@@ -35358,7 +36016,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: "only an owner of this project votes on its ownership" };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     if (!this.#isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
     const why = String(reason ?? "").trim();
@@ -35381,7 +36039,7 @@ export class Store extends DurableObject {
     if (this.#one(
       `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? AND voter=?`,
       projectId, target.member_id, by))
-      return { ok: false, reason: "ALREADY_VOTED", by };
+      return refuseAlreadyVoted({ by });
     const now = new Date().toISOString();
     this.sql.exec(
       `INSERT INTO project_owner_votes (project_id,kind,target,voter,reason,created) VALUES (?,'remove',?,?,?,?)`,
@@ -35466,9 +36124,9 @@ export class Store extends DurableObject {
     const clash = this.#rows(`SELECT bundle_id, title FROM bundles WHERE object_type='project'`)
       .find((r) => Store.projectNameKey(r.title) === want);
     /* REC-139 / D-428: names neither the other project's id nor its title — `promote`'s reason, stated there. */
-    if (clash) return { ok: false, reason: "NAME_TAKEN",
+    if (clash) return refuseNameTaken({
       detail: "a project by that name already exists on this instance, and project names are unique. "
-            + "This holds for deactivated projects too, because their names are still cited." };
+            + "This holds for deactivated projects too, because their names are still cited." });
     /* The clone is a real bundle, written through `promote` like every other
        write, so it passes the same gate and lands in the same history. Composed
        here rather than left to the caller: a fork the caller has to assemble is
@@ -35477,7 +36135,7 @@ export class Store extends DurableObject {
       `SELECT content, bundle_sha FROM files f JOIN bundles b ON b.bundle_id=f.bundle_id
        WHERE f.bundle_id=? AND f.path='bundle.md'`, projectId);
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", detail: "the origin has no readable bundle.md to fork" };
+      return refuseNoDocument({ detail: "the origin has no readable bundle.md to fork" });
 
     const when = new Date().toISOString();
     /* THE ORIGIN EDGE, written into the document and not merely reported.
@@ -35814,7 +36472,7 @@ export class Store extends DurableObject {
   /** The member's own statement about themselves. */
   expertiseDeclare({ memberId, label } = {}) {
     const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
     const lab = Store.#normLabel(label);
     if (!lab) return { ok: false, reason: "NO_LABEL", detail: "a declaration needs a label, such as 'CPA'" };
@@ -35836,7 +36494,7 @@ export class Store extends DurableObject {
                detail: "an administrator confirms a declared license, and may do so for another "
                      + "administrator: vouching for someone is the same act whoever they are" };
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     const lab = Store.#normLabel(label);
     const cur = this.#expertiseState(memberId, lab);
     /* An administrator cannot introduce a label. Confirming something never
@@ -36057,7 +36715,7 @@ export class Store extends DurableObject {
                      + "stamps who is asking from the signed-in session rather than taking it from the "
                      + "caller. This caller is not one of the active administrators." };
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     const want = Array.isArray(capabilities) ? capabilities : null;
     if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
     if (want.includes("administer") || m.role === "admin")
@@ -36081,7 +36739,7 @@ export class Store extends DurableObject {
    *  manufactures the majority that ejects the honest ones. */
   async adminEndorse({ memberId, by } = {}) {
     const m = this.#one(`SELECT member_id, status, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.status !== "proposed") return { ok: false, reason: "NOT_PROPOSED", status: m.status };
     const admins = this.#activeAdmins();
     if (!by || !admins.includes(by)) return { ok: false, reason: "NOT_AN_ADMIN", by };
@@ -36119,7 +36777,7 @@ export class Store extends DurableObject {
                      + "arrangement in which nobody holds that power, because the instance runs in somebody's "
                      + "hosting account. The remedy is at the hosting account, not here (section 4.6)." };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.role !== "admin") return { ok: false, reason: "NOT_AN_ADMIN", detail: "this member is not an administrator" };
     const admins = this.#activeAdmins();
     if (memberId === by) return { ok: false, reason: "TARGET_CANNOT_VOTE",
@@ -36136,7 +36794,7 @@ export class Store extends DurableObject {
                      + `a defect: a lone administrator must never be able to eject the other.` };
 
     if (this.#one(`SELECT voter FROM admin_votes WHERE kind='remove' AND target=? AND voter=?`, memberId, by))
-      return { ok: false, reason: "ALREADY_VOTED", by };
+      return refuseAlreadyVoted({ by });
     const now = new Date().toISOString();
     this.sql.exec(`INSERT INTO admin_votes (kind,target,voter,reason,created) VALUES ('remove',?,?,?,?)`,
       memberId, by, why, now);
@@ -36186,7 +36844,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_COVER",
                detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name" };
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return { ok: false, reason: "EXISTS", memberId };
+      return refuseExists({ memberId });
 
     /* D-51. v1.4 let an administrator ASSIGN expertise when creating the
        invitation, and v2 1.3 forbids exactly that: a member declares what they
@@ -36307,6 +36965,8 @@ export class Store extends DurableObject {
        across the instance, because a roster in which two people can answer to one
        name defeats the purpose of having one. */
     const h = String(handle ?? "").trim();
+    /* DEC-49 REGION is-enroll-handle — D-641 / C-100.34/C-100.35/C-100.36. The span the row's `where` names:
+       the conditions of NO_HANDLE, BAD_HANDLE and HANDLE_TAKEN, and the refusals they mint, nothing else. */
     if (!h) return { ok: false, reason: "NO_HANDLE",
       detail: "choose a handle. It is what the record shows: the author of a promotion, the attestor of a "
             + "ratification, the participant list of a project. It is yours, not the label the administrator "
@@ -36315,8 +36975,9 @@ export class Store extends DurableObject {
       return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
     if (this.#one(`SELECT member_id FROM members WHERE handle=? AND member_id<>?`, h, m.member_id))
       return { ok: false, reason: "HANDLE_TAKEN", handle: h };
+    /* END DEC-49 REGION is-enroll-handle */
     if (typeof password !== "string" || password.length < 12)
-      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+      return refusePasswordTooShort({ minimum: 12 });
     await this.setPassword({ role: `member:${m.member_id}`, password });
     /* Cover, capabilities and role are the administrator's and are NOT read from
        this call. An invitee who posts their own is ignored rather than refused,
@@ -36382,7 +37043,7 @@ export class Store extends DurableObject {
     if (barSet) return barSet;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     /* 4.4: administrator status cannot be taken away by another administrator.
        Revoking an administrator IS taking it away, so it goes through the
        section 4.7 vote or it does not happen. This is what stops an instance
@@ -36475,7 +37136,7 @@ export class Store extends DurableObject {
    * `const bar = …; if (bar) return bar;` and nothing else. */
   #signerMemberBar(memberId) {
     const m = this.#one(`SELECT member_id, status, handle FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.status === "active") return null;
     const enrolled = typeof m.handle === "string" && m.handle !== "";
     const refusal = (code, detail) => {
@@ -36602,7 +37263,7 @@ export class Store extends DurableObject {
     /* REC-149: EXISTENCE answers C-70.1 (ratify is an act on the bundle); NONE is the line below, unchanged. */
     { const existence = row ? this.#existenceAct(bundleId, viewer) : null; if (existence) return existence; }
     if (!row || (viewer !== null && viewer !== undefined && !this.#inSight(bundleId, viewer)))
-      return { ok: false, reason: "ABSENT", bundleId };
+      return refuseAbsent({ bundleId });
     return {
       ok: true, row,
       /* REC-182: on a `created` tie the prior promotion is the one WRITTEN first (`rowid`, D-171). */
@@ -36681,7 +37342,7 @@ export class Store extends DurableObject {
                edition and frozen pair are then read from the case documents pinning it. */
             memberCarriesBlocks = false } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
-      return { ok: false, reason: "MALFORMED" };
+      return refuseMalformed();
     return this.ctx.storage.transactionSync(() => {
       /* ===== REC-140 / D-429 — A FINDING A RATIFIED CASE PINS IS PUBLISHED UNDER THE CASE'S RULES ====
          BIO_Publication_v0_1.md §3 rule 2, as BOB #15 applied it: *wherever op=ratify ratifies a
@@ -37447,7 +38108,7 @@ export class Store extends DurableObject {
      op=publishedbytes checks before serving anything. */
   recordCaseManifest({ caseId, edition, manifest, manifestSha, bytes = null } = {}) {
     if (!caseId || !Number.isInteger(Number(edition)) || !manifest || !manifestSha)
-      return { ok: false, reason: "MALFORMED" };
+      return refuseMalformed();
     const ed = Number(edition);
     return this.ctx.storage.transactionSync(() => {
       const c = this.#one(`SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
@@ -37569,7 +38230,7 @@ export class Store extends DurableObject {
      frozen PAIR the group signed. This is what makes "edition 1 still answers"
      checkable rather than merely stated. */
   publishedEditions(bundleId) {
-    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "publishededitions requires ?id=" };
+    if (!bundleId) return refuseNoId({ detail: "publishededitions requires ?id=" });
     const rows = this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
               delivered_by, gate_version, sig_armored, strength, required
@@ -38327,7 +38988,7 @@ export class Store extends DurableObject {
    *  the viewer may not see -> dropped from the registry, with the fact that
    *  something was dropped stated and NO id and NO count leaked. */
   earnedBasis({ id, targets = null, viewer = null } = {}) {
-    if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
+    if (!id) return refuseNoId({ detail: "earnedbasis requires ?id=<inquiry>" });
     if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     const b = this.#one(`SELECT object_type, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, id);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
@@ -38465,7 +39126,7 @@ export class Store extends DurableObject {
      D-15: viewer-gated like every other read that can name a bundle, and fails
      closed on an absent viewer. */
   excludedBy(targetId, viewer = null) {
-    if (!targetId) return { ok: false, reason: "NO_ID", detail: "excludedby requires ?id=" };
+    if (!targetId) return refuseNoId({ detail: "excludedby requires ?id=" });
     const gate = viewerPredicate(viewer);
     const rows = this.#rows(
       `SELECT x.bundle_id, x.ord, x.edition, x.description, x.reason, x.author, x.at,
@@ -48938,8 +49599,11 @@ export class Store extends DurableObject {
       { files: new Map([["data/inbox.json", JSON.stringify({ tasks: [task] })]]),
         resolveTarget: (id) => !!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id) },
       findings);
+    /* DEC-49 REGION is-task-grammar — D-641 / C-100.31. The span the row's `where` names:
+       the condition of UNGRAMMATICAL and the refusal it mints, nothing else. */
     const errs = findings.filter((x) => x.severity === "error");
     return errs.length ? { ok: false, reason: "UNGRAMMATICAL", findings: errs.map((e) => ({ check: e.check, detail: e.message })) } : null;
+    /* END DEC-49 REGION is-task-grammar */
   }
 
   /** CONSUMER, and the SOLE writer of tasks.
@@ -49191,7 +49855,7 @@ export class Store extends DurableObject {
        onto every item. */
     if (items !== undefined)
       return this.#perItem("taskforward", { items, to, now }, { actor }, (b) => this.taskForward(b));
-    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
+    if (!actor) return refuseNoActor({ detail: "a forward is recorded under the member who made it" });
     /* DEC-49 REGION is-machine-forward — REC-64/C-32.10. The fence alone. REC-73
        measured that this pair is the ONLY one of the twelve with a second
        independent fence behind it, so the span stops before that one. */
@@ -49204,12 +49868,22 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-machine-forward */
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
-    if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
+    /* DEC-49 REGION is-forward-open — D-641 / C-100.28. The span the row's `where` names:
+       the condition of ALREADY_RESOLVED and the refusal it mints, nothing else. */
+    if (row.status === "resolved")
+      return { ok: false, reason: "ALREADY_RESOLVED",
+               detail: "a resolved task is not forwarded; a new determination opens a new task" };
+    /* END DEC-49 REGION is-forward-open */
     const fenced = this.#refuseNotYours(row, actor, "forward");
     if (fenced) return fenced;
     const target = this.#one(`SELECT member_id FROM members WHERE member_id=? AND status='active'`, to);
-    if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
-    if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
+    if (!target) return refuseNoSuchMember({ detail: "a task is forwarded to an active member of this group" });
+    /* DEC-49 REGION is-forward-elsewhere — D-641 / C-100.29. The span the row's `where` names:
+       the condition of ALREADY_THEIRS and the refusal it mints, nothing else. */
+    if (target.member_id === row.assignee)
+      return { ok: false, reason: "ALREADY_THEIRS",
+               detail: "the task is already assigned to the member it would be forwarded to" };
+    /* END DEC-49 REGION is-forward-elsewhere */
     const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "forwarded", actor });
@@ -49242,7 +49916,7 @@ export class Store extends DurableObject {
     /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor is forced onto every item. */
     if (items !== undefined)
       return this.#perItem("taskresolve", { items, now }, { actor }, (b) => this.taskResolve(b));
-    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
+    if (!actor) return refuseNoActor({ detail: "a resolution is recorded under the member who made it" });
     /* DEC-49 REGION is-machine-resolve — REC-64/C-32.11. The fence alone. */
     if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
       return { ok: false, reason: "MACHINE_CANNOT_RESOLVE",

@@ -221,11 +221,14 @@ async function archiveSelect(env, st, address) {
   const addrNorm = normalizeAddress(address);
   const reach = (await (await st.fetch(
     `http://x/sourcereach?address=${encodeURIComponent(addrNorm)}`)).json()).result;
+  /* DEC-49 REGION is-archive-eligible — D-641 / C-100.88. The span the row's `where` names:
+     the condition of NOT_ELIGIBLE and the refusal it mints, nothing else. */
   if (!reach.fallback_eligible) {
     return { ok: false, status: 409, payload: { ok: false, reason: "NOT_ELIGIBLE",
       detail: "archive.org is a backup source and this document has not been unreachable long enough to justify one",
       reachability: reach } };
   }
+  /* END DEC-49 REGION is-archive-eligible */
   /* THEIR figure, ours to obey conservatively. Set on first contact, recorded as
      a third-party number in ARCHIVE-FALLBACK.md, never presented as measured. */
   try {
@@ -239,18 +242,25 @@ async function archiveSelect(env, st, address) {
   try {
     const g = await governedFetch(env, st, cdxQuery(address), "archive-lookup");
     if (g.refusedByGovernor)
-      return { ok: false, status: 429, payload: { ok: false, reason: "HOST_COOLING_OFF",
+      return { ok: false, status: 429, payload: refuseHostCoolingOff({
         detail: `the governor is holding requests to web.archive.org (${g.reason})`,
-        retry_in_ms: g.retry_in_ms || 0 } };
+        retry_in_ms: g.retry_in_ms || 0 }) };
     res = g.res;
   } catch (e) {
-    return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } };
+    /* DEC-49 REGION is-archive-reached — D-641 / C-100.89. The span the row's `where` names:
+       the condition of ARCHIVE_UNREACHABLE and the refusal it mints, nothing else. */
+    return { ok: false, status: 502,
+             payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } };
+    /* END DEC-49 REGION is-archive-reached */
   }
+  /* DEC-49 REGION is-archive-answered — D-641 / C-100.90. The span the row's `where` names:
+     the condition of ARCHIVE_REFUSED and the refusal it mints, nothing else. */
   if (!res.ok)
     return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_REFUSED", status: res.status,
       detail: res.status === 429
         ? "the Internet Archive is rate-limiting us; the governor will hold this host"
         : "the CDX endpoint did not answer with a record" } };
+  /* END DEC-49 REGION is-archive-answered */
 
   const parsed = parseCdx(await res.text());
   if (!parsed.ok) return { ok: false, status: 502, payload: { ok: false, ...parsed } };
@@ -311,6 +321,8 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
 import { cpuProbe } from "./cpu.mjs";
 import { readingProvenance } from "./readingprov.mjs";
 import { Store, stampInstant } from "./store.mjs";
+/* D-641 / C-100: the one mint of each code this file shares with the store, so the code has one site (arm G). */
+import { refuseMalformed, refuseAbsent, refuseHostCoolingOff, refuseBadAddress, refuseNotPermitted, refuseTooLargeToParse, refuseNotHtml, refusePrimaryUnreadable, refuseNoSuchSession, refuseSessionUnreadable, refuseObjectMissing, asStatement } from "./store.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -6017,8 +6029,8 @@ export default {
         const caseId = url.searchParams.get("case") || "";
         const ed = url.searchParams.get("edition");
         if (!caseId || !ed)
-          return json({ ok: false, reason: "MALFORMED",
-                        detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>" }, 400);
+          return json(refuseMalformed({
+                        detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>" }), 400);
         /* REC-130: the viewer is STAMPED here from the credential and never read
            from the request — the inner URL is built from nothing of the caller's
            but the two keys. The store answers an unsigned document to standing
@@ -6159,10 +6171,13 @@ export default {
              serving the part instead. */
           const wantZip = (url.searchParams.get("format") || "") === "zip";
           const isManifest = v.matches.some((m) => m.kind === "manifest");
+          /* DEC-49 REGION is-published-zip-container — D-641 / C-100.100. The span the row's `where` names:
+             the condition of NOT_A_CONTAINER and the refusal it mints, nothing else. */
           if (wantZip && !isManifest)
             return json({ ok: false, reason: "NOT_A_CONTAINER", sha256: shaParam,
               detail: "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. "
                     + "This hash names a part inside a container, not a container." }, 400);
+          /* END DEC-49 REGION is-published-zip-container */
           const raw = await pubBytes(shaParam);
           if (!raw) return notFound();
           if (!wantZip) {
@@ -6176,10 +6191,13 @@ export default {
               "content-disposition": `attachment; filename="${(m.path || shaParam).split("/").pop().replace(/[^\w.\-]/g, "_")}"`,
             } });
           }
+          /* DEC-49 REGION is-published-manifest-read — D-641 / C-100.101. The span the row's `where` names:
+             the condition of MANIFEST_UNREADABLE and the refusal it mints, nothing else. */
           let manifest = null;
           try { manifest = JSON.parse(new TextDecoder().decode(raw)); } catch { manifest = null; }
           if (!manifest || typeof manifest !== "object")
             return json({ ok: false, reason: "MANIFEST_UNREADABLE", sha256: shaParam }, 500);
+          /* END DEC-49 REGION is-published-manifest-read */
           const built = await containerEntries(manifest, raw, pubBytes);
           if (!built.ok) return json({ ok: false, ...built }, 409);
           const zip = serialiseContainer(built.entries);
@@ -6264,7 +6282,7 @@ export default {
              again. The helper's `ok: false` is dropped here: this is one finding's body stated
              unavailable inside a case that answered, not a refusal of the request. */
           const { ok: _refused, ...whyUnavailable } = text ? {}
-            : (publishedStoreAbsent(env) ?? { reason: "OBJECT_MISSING" });
+            : (publishedStoreAbsent(env) ?? refuseObjectMissing());
           const body = text
             ? { state: "published", from_sha: fnd.bundle_sha,
                 question: sectionText(text, "## Question"),
@@ -7212,9 +7230,12 @@ export default {
         if (!r.answered) return storeSilent("links");
         return json({ ok: true, ...r.result });
       }
+      /* DEC-49 REGION is-links-named — D-641 / C-100.46. The span the row's `where` names:
+         the condition of NEED_CAPTURE_OR_ADDRESS and the refusal it mints, nothing else. */
       if (!/^[0-9a-f]{64}$/.test(capture || ""))
         return json({ ok: false, reason: "NEED_CAPTURE_OR_ADDRESS",
           detail: "pass capture=<sha256> for a document's outbound links, or address=<url> for what points at it" }, 400);
+      /* END DEC-49 REGION is-links-named */
       /* REC-52: same again for a document's outbound links. */
       const r = await doAnswer(st.fetch(`http://x/resolvelinks?capture=${capture}`));
       if (!r.answered) return storeSilent("links");
@@ -7609,8 +7630,8 @@ export default {
       const body = req.method === "POST" ? await req.json().catch(() => null) : null;
       const address = body?.address || url.searchParams.get("address");
       if (typeof address !== "string" || !isPublicHttpsLocator(address))
-        return json({ ok: false, reason: "BAD_ADDRESS",
-                      detail: "the document address must be https on a public host" }, 400);
+        return json(refuseBadAddress({
+                      detail: "the document address must be https on a public host" }), 400);
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const sel = await archiveSelect(env, st, address);
       if (!sel.ok) return json(sel.payload, sel.status);
@@ -7654,11 +7675,11 @@ export default {
          narrower than the class list, exactly as the archive arm is: it admits
          only a request row the drain has already put in `draining`. */
       if (cls === "daemon" && body?.via !== "archive.org" && body?.via !== "capture-request")
-        return json({ ok: false, reason: "NOT_PERMITTED", op, cls,
+        return json(refuseNotPermitted({ op, cls,
           detail: "the daemon class reaches op=acquire through the archive fallback "
                 + "(via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). "
                 + "Direct acquisition is a member's or an operator's act, and the "
-                + "unattended credential is scoped to the verbs the unattended paths need." }, 403);
+                + "unattended credential is scoped to the verbs the unattended paths need." }), 403);
       /* D-112. An archive-sourced capture names the DOCUMENT and lets the plane
          find the replay address, rather than being handed one. The lookup runs
          HERE, inside the same call that will file the bytes, for two reasons:
@@ -7680,13 +7701,13 @@ export default {
            true — the daemon class this sentence already described exists, and
            it joins admin and probe here. This is one of its exactly two verbs. */
         if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
-          return json({ ok: false, reason: "NOT_PERMITTED", op, via: "archive.org",
+          return json(refuseNotPermitted({ op, via: "archive.org",
             detail: "the archive fallback is a monitoring path: it runs under an operator or daemon credential, "
-                  + "never a member's. Capture the document directly, or ask an administrator to run the fallback." }, 403);
+                  + "never a member's. Capture the document directly, or ask an administrator to run the fallback." }), 403);
         const addr = body?.address;
         if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
-          return json({ ok: false, reason: "BAD_ADDRESS",
-            detail: "an archive-sourced capture names the document address, not a replay locator" }, 400);
+          return json(refuseBadAddress({
+            detail: "an archive-sourced capture names the document address, not a replay locator" }), 400);
         const sel = await archiveSelect(env, stArc, addr);
         if (!sel.ok) return json(sel.payload, sel.status);
         archiveHopRecorded = sel.hop;
@@ -7983,9 +8004,9 @@ export default {
              an operator can tell a source nobody could reach from a source
              nobody asked. */
           await noteOutcome("governed", null);
-          return json({ ok: false, reason: "HOST_COOLING_OFF",
+          return json(refuseHostCoolingOff({
                         detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
-                        retry_in_ms: g.retry_in_ms || 0, locator }, 429);
+                        retry_in_ms: g.retry_in_ms || 0, locator }), 429);
         }
         res = g.res;
       } catch (e) {
@@ -8103,8 +8124,11 @@ export default {
          and the registry agree about how much a header is. */
       const driveHead = driveCapture ? new Uint8Array(1024) : null;
       let driveHeadBytes = 0;
+      /* DEC-49 REGION is-fetch-body — D-641 / C-100.83. The span the row's `where` names:
+         the condition of FETCH_NO_BODY and the refusal it mints, nothing else. */
       const reader = res.body && res.body.getReader ? res.body.getReader() : null;
-      if (!reader) return json({ ok: false, reason: "NO_BODY", locator }, 502);
+      if (!reader) return json({ ok: false, reason: "FETCH_NO_BODY", locator }, 502);
+      /* END DEC-49 REGION is-fetch-body */
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -8194,6 +8218,8 @@ export default {
       let existedUndetermined = null;
       if (!multipart) {
         const only = parts[0];
+        /* DEC-49 REGION is-capture-hash-agrees — D-641 / C-100.84. The span the row's `where` names:
+           the condition of HASH_DISAGREEMENT and the refusal it mints, nothing else. */
         if (only.sha256 !== sha) {
           /* Cannot happen: one part IS the whole. Asserted rather than assumed,
              because a mismatch here would mean the incremental hasher and
@@ -8201,6 +8227,7 @@ export default {
           return json({ ok: false, reason: "HASH_DISAGREEMENT",
                         detail: "the incremental hash and the block hash of the same bytes differ" }, 500);
         }
+        /* END DEC-49 REGION is-capture-hash-agrees */
         /* D-469: the answer flush() took BEFORE it wrote the one part, which for
            one part is the whole. Re-asking here would find this call's own write. */
         existed = partHeldBefore[0];
@@ -8497,15 +8524,15 @@ export default {
       let subs = null, subsSkipped = null, sessionId = null;
       if (body.subresources === true) {
         if (multipart || total > SUB_PARSE_MAX)
-          subsSkipped = { reason: "TOO_LARGE_TO_PARSE", detail:
+          subsSkipped = asStatement(refuseTooLargeToParse({ detail:
             "subresource capture reads the primary back into memory to parse it, so it is bounded to "
-            + `${SUB_PARSE_MAX} bytes; this document is ${total}` };
+            + `${SUB_PARSE_MAX} bytes; this document is ${total}` }));
         else if (detectFormat(null, ct || null).format !== "html")
-          subsSkipped = { reason: "NOT_HTML", content_type: ct || null, detail:
-            "only an HTML page has subresources; the capture is unaffected and complete" };
+          subsSkipped = asStatement(refuseNotHtml({ content_type: ct || null, detail:
+            "only an HTML page has subresources; the capture is unaffected and complete" }));
         else {
           const obj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
-          if (!obj) subsSkipped = { reason: "PRIMARY_UNREADABLE", detail: "the primary capture did not read back" };
+          if (!obj) subsSkipped = asStatement(refusePrimaryUnreadable({ detail: "the primary capture did not read back" }));
           else {
             const primaryBytes = new Uint8Array(await obj.arrayBuffer());
             const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -8527,8 +8554,8 @@ export default {
               try {
                 const ld = (await (await stLim.fetch(`http://x/loadcapturesession?session=${encodeURIComponent(sessionId)}`)).json()).result;
                 if (ld && ld.found) resumeState = ld.state;
-                else subsSkipped = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
-              } catch { subsSkipped = { reason: "SESSION_UNREADABLE" }; }
+                else subsSkipped = asStatement(refuseNoSuchSession({ detail: ld && ld.note }));
+              } catch { subsSkipped = asStatement(refuseSessionUnreadable()); }
             }
             let limit = null;
             try { limit = (await (await stLim.fetch("http://x/capturelimit?runtime=subrequests")).json()).result; }
@@ -8591,7 +8618,7 @@ export default {
                     const st = await (await stGov.fetch(`http://x/governorstate?host=${encodeURIComponent(subHost)}`)).json();
                     const row = st?.result?.hosts?.[0];
                     if (row && row.cooloff_until > Date.now())
-                      return { ok: false, status: 0, reason: "HOST_COOLING_OFF" };
+                      return refuseHostCoolingOff({ status: 0 });
                   } catch { /* an unreadable governor never blocks; politeness, not coordination */ }
                 }
                 const stagger = env.GOVERNOR_SUBRESOURCE_STAGGER_MS !== undefined
@@ -9933,7 +9960,7 @@ export default {
       if (!imgOut.answered) return storeSilent("monitor");
       const img = imgOut.result;
       if (!img || typeof img["bundle.md"] !== "string")
-        return json({ ok: false, reason: "ABSENT", bundleId }, 404);
+        return json(refuseAbsent({ bundleId }), 404);
       const live = img["bundle.md"];
       const fm = parseFrontmatter(live).data || {};
       if (!fm.monitoring || fm.monitoring.enabled !== true)
@@ -10069,13 +10096,13 @@ export default {
         if (g.refusedByGovernor) {
           /* D-65: a governed tick is still a look, and §4.1 says so with `governed = 1`. */
           const observation = await monitorLook({ outcome: "governed", reason: g.reason });
-          return json({ ok: false, reason: "HOST_COOLING_OFF",
+          return json(refuseHostCoolingOff({
                         detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
                         retry_in_ms: g.retry_in_ms || 0, locator,
                         /* D-472: the governed host is the EXPORT's when a Drive document is
                            watched, and `docs.google.com` is not the host the bundle names. */
                         ...(driveTick && driveTick.harvestable ? { fetched_address: tickAddress } : {}),
-                        observation }, 429);
+                        observation }), 429);
         }
         const res = g.res;
         httpStatus = res.status;
@@ -10432,9 +10459,9 @@ export default {
       const body = await req.json().catch(() => null);
       if (!body?.caseId || !Number.isInteger(body?.edition) || !body?.expectedSha
           || typeof body?.sig !== "string")
-        return json({ ok: false, reason: "MALFORMED",
+        return json(refuseMalformed({
                       detail: "caseratify requires caseId, edition (integer), expectedSha, and sig "
-                            + "(armored SSH signature over the case document's sha)" }, 400);
+                            + "(armored SSH signature over the case document's sha)" }), 400);
 
       const factsOut = await doAnswer(stub.fetch(
         `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
@@ -10626,7 +10653,7 @@ export default {
       /* END DEC-49 REGION is-operator-ratify-bundle */
       const body = await req.json().catch(() => null);
       if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")
-        return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
+        return json(refuseMalformed({ detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }), 400);
 
       /* REC-53: EVERY Durable Object read in this block goes through REC-52's
          chokepoint (`doAnswer`/`storeSilent`), and not one of them keeps a local

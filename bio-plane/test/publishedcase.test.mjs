@@ -1142,8 +1142,16 @@ console.log("\n--- D-549: C-68.5, the published store absent, at both public ops
   const miss = ((((await anonCase(`id=${CASE}`)).findings) || [])[0] || {}).body || {};
   t("D-549 (i): a bound store missing the finding's object answers the missing-object code, not NO_PUBLISHED_STORE",
     [miss.state, miss.reason, miss.from_sha], ["unavailable", "OBJECT_MISSING", pinned]);
-  t("D-549 (i) over-strictness: and carries NO C-68.5 check or translation — the store-absent sentence would be false here",
-    [miss.check ?? null, miss.translation ?? null], [null, null]);
+  /* CORRECTED by D-641 (2026-09-25), never exempted. D-549 asserted that this body carried NO check and NO translation,
+     and that was right when written: OBJECT_MISSING was a bare code, and the assertion's PURPOSE was that C-68.5's
+     store-absent sentence must not land on a store that IS bound. D-641 gives OBJECT_MISSING its OWN row (C-100.104),
+     stated through `asStatement`, so "no translation at all" is no longer true and no longer the point. The purpose is
+     kept and sharpened: the body carries OBJECT_MISSING's own check and sentence, and still NOT C-68.5's. */
+  const { REACH_BY_OP_CHECKS } = await import("../checks/bio-checks.mjs");
+  t("D-549 (i) over-strictness: and carries OBJECT_MISSING's own C-100.104 sentence, NOT C-68.5's — the store-absent sentence would be false here",
+    [miss.check ?? null, miss.translation === REACH_BY_OP_CHECKS.OBJECT_MISSING.translation,
+     miss.translation === INSTALLATION_CHECKS.NO_PUBLISHED_STORE.translation],
+    ["C-100.104", true, false]);
 
   /* (ii) the SAME record, rebooted with no published store bound. */
   await mf.setOptions({ ...MF_OPTS, r2Buckets: ["CAPTURES"] });

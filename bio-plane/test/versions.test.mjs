@@ -874,7 +874,14 @@ console.log("\n--- 13. DEC-49: every refusal carries a code and a translation, a
      the registry the assertion compares against — otherwise the pin would be a
      value compared with itself, which is a shape this project has measured. */
   const wire = new Map();
+  /* CORRECTED by D-641 (2026-09-25), never exempted. Until D-641 the promote ENVELOPE a basis-version refusal
+     travels in, BASIS_VERSION_REFUSED, carried no row and so no `code`, and every code this collector saw was a
+     BASIS_VERSION_CHECKS row. D-641 gives the envelope its own row (C-100.82, REACH_BY_OP_CHECKS), so `dec49Decorate`
+     now puts `code` on it and the ceiling below read it as an undeclared registry member. It is not one: it is
+     the wrapper whose `findings` ARE this registry's codes. So it is set aside BY NAME here and asserted on its own. */
+  const envelopes = new Map();
   const collect = (r) => {
+    if (r && r.code === "BASIS_VERSION_REFUSED") { envelopes.set(r.code, r.check); r = { ...r, code: undefined, check: undefined }; }
     for (const c of codesOf(r)) reached.add(c);
     if (r && typeof r.code === "string" && typeof r.check === "string") wire.set(r.code, r.check);
     for (const fnd of (r?.findings ?? []))
@@ -930,6 +937,8 @@ console.log("\n--- 13. DEC-49: every refusal carries a code and a translation, a
   t("THE FLOOR: every refusal the registry declares is REACHABLE, driven through a real write or a real "
   + "read — a row nobody can reach is a refusal nobody can be given",
     keys.filter((k) => !reached.has(k)), []);
+  t("D-641: the envelope a basis-version refusal travels in carries its OWN row, C-100.82, and never a C-25 number",
+    Object.fromEntries(envelopes), { BASIS_VERSION_REFUSED: "C-100.82" });
   t("THE CEILING: and the plane sends nothing the registry does not declare",
     [...reached].filter((c) => !keys.includes(c)), []);
   /* AND EVERY C-NUMBER IS PINNED BY NAME, against the value the plane SENT.

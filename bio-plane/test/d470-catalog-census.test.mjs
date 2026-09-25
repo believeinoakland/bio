@@ -401,6 +401,11 @@ const CATALOG_CENSUS = {
      Count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.30.0": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f",
               changed: ["C-41.12"] },
+  /* 1.31.0 (D-641, 2026-09-25, branch land/worker/D-641, stacked on land/worker/D-542 @ fac514e0): ONE FAMILY ARRIVES,
+     REACH_BY_OP_CHECKS, C-100.1..C-100.104 — the canned translations for the codes D-542's by-op walk brought into
+     reach — and nothing departs or changes. 502 -> 606; count and digest are THIS SUITE'S OWN PRINT on the item's tree,
+     never 502 + 104. IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S. */
+  "1.31.0": { count: 606, digest: "eeac68d42b2faafd53314416c87071c8322ff7a5f08dfb1cf4bc46711a6f4f30" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -506,8 +511,11 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 /* CORRECTED at c21-batch28 (CONDUCT #21): 1.29.0 -> 1.30.0, the union's one number for this batch's rows. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
+/* CORRECTED by D-641 (2026-09-25), never exempted: 1.30.0 -> 1.31.0. 1.30.0 was right when written — it named the
+   catalogue of 502 checks — and D-641 adds REACH_BY_OP_CHECKS (C-100.1..C-100.104), so the catalogue under the stamp
+   moved and the stamp moved with it, by hand, in the same commit, as this pin's note requires. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under

@@ -35,6 +35,8 @@ export const EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
  *  by column position, because the column set is theirs to change. */
 export function parseCdx(text) {
   let raw;
+  /* DEC-49 REGION is-cdx-shape — D-641 / C-100.91/C-100.92/C-100.93. The span the row's `where` names:
+     the conditions of CDX_UNPARSEABLE, CDX_NOT_AN_ARRAY and CDX_NO_HEADER, and the refusals they mint, nothing else. */
   try { raw = JSON.parse(text); } catch (e) { return { ok: false, reason: "CDX_UNPARSEABLE", detail: String(e && e.message || e) }; }
   if (!Array.isArray(raw)) return { ok: false, reason: "CDX_NOT_AN_ARRAY" };
   if (raw.length === 0) return { ok: true, rows: [] };
@@ -42,6 +44,7 @@ export function parseCdx(text) {
   if (!Array.isArray(header) || !header.includes("timestamp") || !header.includes("original")) {
     return { ok: false, reason: "CDX_NO_HEADER", detail: "the first row does not name timestamp and original" };
   }
+  /* END DEC-49 REGION is-cdx-shape */
   const rows = [];
   for (let i = 1; i < raw.length; i++) {
     const r = raw[i];
@@ -102,11 +105,14 @@ export function selectCapture(rows, { notAfter = null } = {}) {
     }
     usable.push(r);
   }
+  /* DEC-49 REGION is-cdx-usable — D-641 / C-100.94. The span the row's `where` names:
+     the condition of NO_USABLE_CAPTURE and the refusal it mints, nothing else. */
   if (!usable.length) {
     return { ok: false, reason: "NO_USABLE_CAPTURE",
              detail: "the index holds no 200 response with a non-empty body for this address",
              considered };
   }
+  /* END DEC-49 REGION is-cdx-usable */
   usable.sort((a, b) => (String(a.timestamp) < String(b.timestamp) ? 1 : -1));
   const chosen = usable[0];
   return {

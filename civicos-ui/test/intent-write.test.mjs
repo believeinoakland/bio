@@ -230,6 +230,10 @@ import { webcrypto, createHash } from "crypto";
 import { createRequire } from "node:module";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { appScript } from "./extract.mjs";
+/* The surface HTML-escapes what it renders; compare like with like. */
+const esc2 = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+/* D-641: the canned sentences this surface now shows for three refusals it drives, read from the ONE place they live. */
+import { REACH_BY_OP_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
 
 /* UI-26. This file re-runs ITSELF under the envelope guard's own probe to
    measure arm B's coverage (section 4c). The child does the driving and skips
@@ -521,8 +525,9 @@ ok("the kind chooser renders the plane's options", /ordinance/.test(html("#subj-
    ============================================================ */
 console.log("\n--- op=entitycreate: pre-flight, then the entity with its alias ---");
 ok("with nothing chosen, the commit control is ABSENT, not disabled", !/ent-go/.test(html("#ent-pf")));
+/* CORRECTED by D-641 (2026-09-25), never exempted. This asserted the plane's own `detail` words, and that was right when written: the code had no canned translation, so `refusalWords` fell back to `detail`. D-641 gives it one (C-100 .6, NO_KIND), and `refusalWords` prefers a translation, as DEC-49 intends: the member now reads the canned sentence, with the code beside it. The code half is kept; the words half now asserts the canned sentence. */
 ok("and the plane's own refusal is what stands in its place",
-   /an entity needs a kind/.test(html("#ent-pf")) && /NO_KIND/.test(html("#ent-pf")));
+   html("#ent-pf").includes(esc2(REACH_BY_OP_CHECKS.NO_KIND.translation)) && /NO_KIND/.test(html("#ent-pf")));
 
 $$("#ent-kind").value = "contract";
 await U.entityPreflight();
@@ -572,8 +577,9 @@ $$("#rel-other").value = "Office of the City Administrator";
 await U.relationFindOther();
 ok("the other end was found THROUGH THE PLANE, by name", CALLED.includes("entitybyalias"));
 await U.relationPreflight();
+/* CORRECTED by D-641 (2026-09-25), never exempted. This asserted the plane's own `detail` words, and that was right when written: the code had no canned translation, so `refusalWords` fell back to `detail`. D-641 gives it one (C-100 .4, NO_JUSTIFICATION), and `refusalWords` prefers a translation, as DEC-49 intends: the member now reads the canned sentence, with the code beside it. The code half is kept; the words half now asserts the canned sentence. */
 ok("the plane refuses a relation with no justification, in its own words",
-   /justification/.test(html("#rel-pf")) && /NO_JUSTIFICATION/.test(html("#rel-pf")));
+   html("#rel-pf").includes(esc2(REACH_BY_OP_CHECKS.NO_JUSTIFICATION.translation)) && /NO_JUSTIFICATION/.test(html("#rel-pf")));
 ok("and the commit control is ABSENT while it refuses", !/rel-go/.test(html("#rel-pf")));
 $$("#rel-just").value = "The contract is administered on the city's behalf by this office, which signs for it.";
 await U.relationPreflight();
@@ -879,8 +885,9 @@ $$("#pg-st-0-card").value = "1"; $$("#pg-st-0-req").value = "always";
 $$("#pg-st-1-key").value = "award"; $$("#pg-st-1-label").value = "The award";
 $$("#pg-st-1-card").value = "1"; $$("#pg-st-1-after").value = "solicitation";
 await U.progDefinePreflight();
+/* CORRECTED by D-641 (2026-09-25), never exempted. This asserted the plane's own `detail` words, and that was right when written: the code had no canned translation, so `refusalWords` fell back to `detail`. D-641 gives it one (C-100 .18, BAD_REQUIRED; the old words half read `always` out of the detail's list of words), and `refusalWords` prefers a translation, as DEC-49 intends: the member now reads the canned sentence, with the code beside it. The code half is kept; the words half now asserts the canned sentence. */
 ok("the plane refuses a stage with no answer about whether it is expected",
-   /BAD_REQUIRED/.test(html("#pg-pf")) && /always/.test(html("#pg-pf")));
+   /BAD_REQUIRED/.test(html("#pg-pf")) && html("#pg-pf").includes(esc2(REACH_BY_OP_CHECKS.BAD_REQUIRED.translation)));
 ok("and the commit control is ABSENT while it refuses", !/pg-go/.test(html("#pg-pf")));
 $$("#pg-st-1-req").value = "always";
 await U.progAddStage();

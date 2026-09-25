@@ -15458,6 +15458,649 @@ export const RISK_TIER_REVISION_CHECKS = {
   },
 };
 
+
+/* D-641 / C-100 — THE REFUSALS D-542's BY-OP WALK BROUGHT INTO REACH, EACH GIVEN ITS CANNED SENTENCE.
+ *
+ * D-542 taught `civicos-ui/check-refusal-codes.mjs` two reach rules (R5: the surface CALLS an op that mints the
+ * code; R6: a stranger can call such an op), and the reach rose 488 -> 595. The 107 codes that only those rules put
+ * in reach had no row in any `*_CHECKS` family, so each could reach a member as bare machine vocabulary: the state
+ * DEC-49 exists to make impossible (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10). They are scattered over some
+ * forty ops and no existing family is the home of more than a handful, so they are gathered here under one C-number
+ * rather than spread as dotted members of families other areas own. Four of the 107 are not here, because they never
+ * leave on the wire at the op that put them in reach; the guard declares each one, with the reason, where it narrows
+ * the walk (`NOT_ON_THE_WIRE`).
+ *
+ * THE RULE EVERY SENTENCE WAS HELD TO (D-484: one code, one condition; D-668 and D-688 are the rows about codes
+ * whose words are FALSE): each was written AT ITS SITE, against the condition the code is minted for there, and says
+ * only what that condition establishes: what was refused, that nothing was changed where that is true of the site,
+ * and what the member can do. `dec49Decorate` attaches a row's sentence to ANY `ok:false` answer whose reason matches,
+ * so a sentence true at one site only would be false at the others; that is why every site of a code was read, and
+ * why a code minted at several sites for one condition now has one mint (store.mjs, the `refuse*` helpers above
+ * the Store class). `detail` and every per-site field are unchanged on the wire; `code`, `check` and `translation`
+ * join them. */
+export const REACH_BY_OP_CHECKS = {
+  UNKNOWN_RELATION: {
+    check: 'C-100.1',
+    where: 'src/store.mjs declareRelation > is-relation-ends',
+    translation: 'That is not one of the relations the subject registry records. A declared relation is one of a small '
+      + 'closed set the registry fixes, and a new kind of relation is a decision for the group, not a write. '
+      + 'Nothing was recorded.',
+  },
+  NO_ENDS: {
+    check: 'C-100.2',
+    where: 'src/store.mjs declareRelation > is-relation-ends',
+    translation: 'A relation joins two entries in the subject registry, and this one did not name both of them. Name the '
+      + 'entry it runs from and the entry it runs to. Nothing was recorded.',
+  },
+  SELF_RELATION: {
+    check: 'C-100.3',
+    where: 'src/store.mjs declareRelation > is-relation-ends',
+    translation: 'A relation is between two different entries, and this one names the same entry at both ends. Nothing was '
+      + 'recorded.',
+  },
+  NO_JUSTIFICATION: {
+    check: 'C-100.4',
+    where: 'src/store.mjs declareRelation > is-relation-justified',
+    translation: 'A declared relation carries the reason for it, the way a pattern statement does, and this one gave none. '
+      + 'Say why the two entries are related. Nothing was recorded.',
+  },
+  ALREADY_ALIASED: {
+    check: 'C-100.5',
+    where: 'src/store.mjs addEntityAlias > is-alias-new',
+    translation: 'That entry in the subject registry already answers to this name, so there was nothing to add. Nothing '
+      + 'was changed.',
+  },
+  NO_KIND: {
+    check: 'C-100.6',
+    where: 'src/store.mjs createEntity > is-entity-kind-named',
+    translation: 'Every entry in the subject registry has a kind, and this request named none. Choose a kind and try '
+      + 'again. Nothing was created.',
+  },
+  UNKNOWN_KIND: {
+    check: 'C-100.7',
+    where: 'src/store.mjs refuseUnknownKind > is-unknown-kind',
+    translation: 'The record does not recognise the kind of thing this names: it is not one of the kinds the record keeps '
+      + 'here. Nothing was changed.',
+  },
+  NO_MEMBER: {
+    check: 'C-100.8',
+    where: 'src/store.mjs refuseNoMember > is-no-member',
+    translation: 'Muting and snoozing are personal: each belongs to the member whose attention it is about, and this '
+      + 'request came with no member behind it (an automated credential has none). Nothing was changed.',
+  },
+  NO_CASE: {
+    check: 'C-100.9',
+    where: 'src/store.mjs #queueCaseFor > is-queue-case-named',
+    translation: 'A personal preference like this is kept for one case, and the request did not say which case. Nothing '
+      + 'was changed.',
+  },
+  NO_SUCH_CASE: {
+    check: 'C-100.10',
+    where: 'src/store.mjs refuseNoSuchCase > is-no-such-case',
+    translation: 'No case answers to that id here, or none you are able to see; the two are answered the same way on '
+      + 'purpose. Nothing was changed.',
+  },
+  NOT_A_CASE: {
+    check: 'C-100.11',
+    where: 'src/store.mjs #queueCaseFor > is-queue-case-type',
+    translation: 'Muting and snoozing are kept per case, meaning a question or a project, and what this names is neither. '
+      + 'Mute the question or the project it belongs to instead. Nothing was changed.',
+  },
+  NO_KINDS: {
+    check: 'C-100.12',
+    where: 'src/store.mjs queueMute > is-queue-mute-kinds',
+    translation: 'A mute names the kinds of notice to silence on this case, or one item, and this request named neither. '
+      + 'There is no mute for a whole case, so that a new kind of notice can still reach you. Nothing was '
+      + 'changed.',
+  },
+  NO_KEY: {
+    check: 'C-100.13',
+    where: 'src/store.mjs refuseNoKey > is-no-key',
+    translation: 'This request did not say which one it means: the key or id that names what it is about was missing. '
+      + 'Nothing was changed.',
+  },
+  NO_STAGES: {
+    check: 'C-100.14',
+    where: 'src/store.mjs defineProgression > is-progression-stages',
+    translation: 'A progression is the ordered stages something goes through, and this definition named none. Nothing was '
+      + 'recorded.',
+  },
+  NO_STAGE_KEY: {
+    check: 'C-100.15',
+    where: 'src/store.mjs defineProgression > is-progression-stages',
+    translation: 'Every stage of a progression has a key it is known by, and one of the stages here has none. Nothing was '
+      + 'recorded.',
+  },
+  DUPLICATE_STAGE: {
+    check: 'C-100.16',
+    where: 'src/store.mjs defineProgression > is-progression-stages',
+    translation: 'Two stages in this definition have the same key, so the record could not tell them apart. Give each '
+      + 'stage its own key. Nothing was recorded.',
+  },
+  NO_CARDINALITY: {
+    check: 'C-100.17',
+    where: 'src/store.mjs defineProgression > is-progression-stages',
+    translation: 'Every stage says how many documents it takes (exactly one, at most one, or any number), and one stage '
+      + 'here does not. Nothing was recorded.',
+  },
+  BAD_REQUIRED: {
+    check: 'C-100.18',
+    where: 'src/store.mjs defineProgression > is-progression-stages',
+    translation: 'Each stage says how far it is expected to happen, in one of a fixed set of words, and one stage here '
+      + 'gives none of them. Nothing was recorded.',
+  },
+  NO_PLACEMENTS: {
+    check: 'C-100.19',
+    where: 'src/store.mjs threadInstance > is-thread-placements',
+    translation: 'Threading places documents at the stages of a progression, and this request placed none. Name at least '
+      + 'one document and the stage it belongs at. Nothing was changed.',
+  },
+  NO_STAGE: {
+    check: 'C-100.20',
+    where: 'src/store.mjs refuseNoStage > is-no-stage',
+    translation: 'This request did not name the stage it is about. Name the stage and try again. Nothing was changed.',
+  },
+  NO_CAPTURE: {
+    check: 'C-100.21',
+    where: 'src/store.mjs refuseNoCapture > is-no-capture',
+    translation: 'This request did not name the captured document it is about. Name the document and try again. Nothing '
+      + 'was changed.',
+  },
+  DUPLICATE_PLACEMENT: {
+    check: 'C-100.22',
+    where: 'src/store.mjs threadInstance > is-thread-placement-once',
+    translation: 'The same document is placed at the same stage twice in this request. Place it once. Nothing was changed.',
+  },
+  NO_SUCH_PROGRESSION: {
+    check: 'C-100.23',
+    where: 'src/store.mjs refuseNoSuchProgression > is-no-such-progression',
+    translation: 'No progression is defined under that key here. Define it first, then try again. Nothing was changed.',
+  },
+  NO_DECIDER: {
+    check: 'C-100.24',
+    where: 'src/store.mjs proposeDispose > is-dispose-decider',
+    translation: 'A decision to set a proposal aside is recorded under the member who made it, and this request came with '
+      + 'no member behind it. Sign in as a member. Nothing was recorded.',
+  },
+  NO_FINDING: {
+    check: 'C-100.25',
+    where: 'src/store.mjs proposeDispose > is-dispose-finding-named',
+    translation: 'Setting a finding aside for a project names the finding, and this request named the project but no '
+      + 'finding. Nothing was recorded.',
+  },
+  NO_PROJECT_SCOPE: {
+    check: 'C-100.26',
+    where: 'src/store.mjs refuseNoProjectScope > is-no-project-scope',
+    translation: 'A finding like this one is set aside for one project at a time, so the request has to say which project '
+      + 'you are acting for; the queue shows the projects it can be set aside for. Nothing was recorded.',
+  },
+  NO_ACTOR: {
+    check: 'C-100.27',
+    where: 'src/store.mjs refuseNoActor > is-no-actor',
+    translation: 'Forwarding or resolving a task is recorded under the member who does it, and this request came with no '
+      + 'member behind it. Nothing was changed.',
+  },
+  ALREADY_RESOLVED: {
+    check: 'C-100.28',
+    where: 'src/store.mjs taskForward > is-forward-open',
+    translation: 'This task is already resolved, so it cannot be forwarded. If something new needs doing, that opens a new '
+      + 'task. Nothing was changed.',
+  },
+  ALREADY_THEIRS: {
+    check: 'C-100.29',
+    where: 'src/store.mjs taskForward > is-forward-elsewhere',
+    translation: 'This task is already with the member you named, so there was nothing to forward. Nothing was changed.',
+  },
+  NO_SUCH_MEMBER: {
+    check: 'C-100.30',
+    where: 'src/store.mjs refuseNoSuchMember > is-no-such-member',
+    translation: 'No member of this group that this act can apply to answers to the one named, so nothing was changed. '
+      + 'Check who was meant.',
+  },
+  UNGRAMMATICAL: {
+    check: 'C-100.31',
+    where: 'src/store.mjs #refuseUngrammatical > is-task-grammar',
+    translation: 'The task, as this would leave it, breaks the rules the record\'s task list keeps, so the change was not '
+      + 'made.',
+  },
+  NO_SUCH_HANDLE: {
+    check: 'C-100.32',
+    where: 'src/store.mjs refuseNoSuchHandle > is-no-such-handle',
+    translation: 'No member of this group goes by that handle. Check the spelling: a handle is the name a member chose for '
+      + 'themselves. Nothing was changed.',
+  },
+  ALREADY_VOTED: {
+    check: 'C-100.33',
+    where: 'src/store.mjs refuseAlreadyVoted > is-already-voted',
+    translation: 'You have already voted on this removal, and a vote is counted once, so nothing was changed.',
+  },
+  NO_HANDLE: {
+    check: 'C-100.34',
+    where: 'src/store.mjs enroll > is-enroll-handle',
+    translation: 'Choose a handle: it is the name the record will show for you on everything you write, sign or join. '
+      + 'Nothing was saved yet.',
+  },
+  BAD_HANDLE: {
+    check: 'C-100.35',
+    where: 'src/store.mjs enroll > is-enroll-handle',
+    translation: 'A handle is 2 to 41 characters of lowercase letters, digits and dashes, and does not start with a dash. '
+      + 'Choose one in that form. Nothing was saved yet.',
+  },
+  HANDLE_TAKEN: {
+    check: 'C-100.36',
+    where: 'src/store.mjs enroll > is-enroll-handle',
+    translation: 'Someone in this group already uses that handle. Choose another. Nothing was saved yet.',
+  },
+  PASSWORD_TOO_SHORT: {
+    check: 'C-100.37',
+    where: 'src/store.mjs refusePasswordTooShort > is-password-too-short',
+    translation: 'A password here is at least 12 characters long. Choose a longer one. Nothing was saved yet.',
+  },
+  ALREADY_CLAIMED: {
+    check: 'C-100.38',
+    where: 'src/store.mjs claim > is-claim-unspent',
+    translation: 'This copy of the record has already been claimed by its first administrator, and it can be claimed only '
+      + 'once. Nothing was changed. If you are that administrator, sign in instead.',
+  },
+  ANONYMOUS_LEASE: {
+    check: 'C-100.39',
+    where: 'src/store.mjs acquireLease > is-lease-named',
+    translation: 'Only a named writer, a signed-in member or a named automated credential, can hold a document open for '
+      + 'writing, and this request carried no name. Nothing was held.',
+  },
+  NO_OWNER: {
+    check: 'C-100.40',
+    where: 'src/store.mjs refuseNoOwner > is-no-owner',
+    translation: 'A selection belongs to the signed-in credential that made it, and this request came with none. Sign in '
+      + 'and try again. Nothing was changed.',
+  },
+  NO_ID: {
+    check: 'C-100.41',
+    where: 'src/store.mjs refuseNoId > is-no-id',
+    translation: 'This read is about one thing, named by its id, and the request did not give the id. Nothing was looked '
+      + 'up.',
+  },
+  NO_REF: {
+    check: 'C-100.42',
+    where: 'src/store.mjs refuseNoRef > is-no-ref',
+    translation: 'This request did not name the reference in the document it is about. Name the reference as the document '
+      + 'carries it. Nothing was changed.',
+  },
+  NO_SUCH_REFERENCE: {
+    check: 'C-100.43',
+    where: 'src/store.mjs refuseNoSuchReference > is-no-such-reference',
+    translation: 'The record\'s reading of that captured document carries no such reference, so there was nothing to act '
+      + 'on. Check the reference against the document. Nothing was changed.',
+  },
+  NO_LEG: {
+    check: 'C-100.44',
+    where: 'src/store.mjs ensureLegContent > is-leg-present',
+    translation: 'That question has no basis entry at the position named, so there was nothing to look up. Nothing was '
+      + 'changed.',
+  },
+  CONNECTION_PAIR_NO_PAIR: {
+    check: 'C-100.45',
+    where: 'src/store.mjs refuseConnectionPairNoPair > is-connection-pair-no-pair',
+    translation: 'This connection was worked out before the record kept which reference established it, so whether that '
+      + 'reference falls inside this part of the document cannot be told. Working out the subject\'s connections '
+      + 'again records it.',
+  },
+  NEED_CAPTURE_OR_ADDRESS: {
+    check: 'C-100.46',
+    where: 'src/index.mjs fetch > is-links-named',
+    translation: 'Name the document to ask about: its capture, for the links it makes, or its web address, for what links '
+      + 'to it. This request named neither in a form the record reads, so nothing was looked up.',
+  },
+  NO_DOCUMENT: {
+    check: 'C-100.47',
+    where: 'src/store.mjs refuseNoDocument > is-no-document',
+    translation: 'A document this act needed has no readable text in the record, so the act could not go ahead with it. '
+      + 'This is a fault in the record rather than in the request; whoever runs this copy can look into it.',
+  },
+  UNSPLICEABLE_STATE_HISTORY: {
+    check: 'C-100.48',
+    where: 'src/store.mjs refuseUnspliceableStateHistory > is-unspliceable-state-history',
+    translation: 'A document\'s history of state changes is not in a shape the record can add to without rewriting it, so '
+      + 'this change of state was not recorded for that document. The record only ever adds to that history.',
+  },
+  UNSPLICEABLE_BASIS: {
+    check: 'C-100.49',
+    where: 'src/store.mjs refuseUnspliceableBasis > is-unspliceable-basis',
+    translation: 'This question\'s basis, or its record of the versions the basis cites, is not in a shape the record can '
+      + 'edit in place, and a partial edit would be worse than none, so nothing was written.',
+  },
+  UNSPLICEABLE_CORRESPONDENCE: {
+    check: 'C-100.50',
+    where: 'src/store.mjs actionCorrespond > is-correspond-splice',
+    translation: 'This action\'s record of correspondence is not in a shape the record can add to without rewriting it, and '
+      + 'adding is all this act does, so nothing was written.',
+  },
+  UNSPLICEABLE_GOVERNING_LAWS: {
+    check: 'C-100.51',
+    where: 'src/store.mjs actionLaws > is-laws-splice',
+    translation: 'This action\'s list of governing laws is not in a shape the record can replace in place, so nothing was '
+      + 'written.',
+  },
+  LEASE_HELD: {
+    check: 'C-100.52',
+    where: 'src/store.mjs actionCorrespond > is-correspond-lease',
+    translation: 'Someone else is writing to this action\'s correspondence right now. Wait a moment and try again. Nothing '
+      + 'was written.',
+  },
+  NO_RESPONSE_HAS_NO_BYTES: {
+    check: 'C-100.53',
+    where: 'src/store.mjs actionCorrespond > is-correspond-no-response',
+    translation: 'A reply that never came has no captured material behind it, so an entry recording a non-response cannot '
+      + 'point to any. Record it as an account, dated when the reply was due. Nothing was written.',
+  },
+  CRUCIAL_IN_BATCH: {
+    check: 'C-100.54',
+    where: 'src/store.mjs release > is-release-crucial',
+    translation: 'Material marked crucial is never released as part of a batch, because each piece needs its supporting '
+      + 'attestations checked on its own. Release those items one at a time, or select again without them. '
+      + 'Nothing was released.',
+  },
+  PUBLISHED_CANNOT_BE_SET_DOWN: {
+    check: 'C-100.55',
+    where: 'src/store.mjs dispose > is-dispose-published',
+    translation: 'A finding that belongs to a published case cannot be deferred or dismissed: setting a question aside is '
+      + 'for work nobody published. Reopen it instead, and let the next edition say what changed. Nothing was '
+      + 'changed.',
+  },
+  NO_PARTITION: {
+    check: 'C-100.56',
+    where: 'src/store.mjs groundInquiry > is-ground-named',
+    translation: 'Grouping a question\'s basis names the groups, and this request named none. To remove the grouping, send '
+      + 'an empty list; that is a change like any other and takes a reason. Nothing was written.',
+  },
+  BAD_PARTITION: {
+    check: 'C-100.57',
+    where: 'src/store.mjs refuseBadPartition > is-bad-partition',
+    translation: 'The grouping sent is not one the record can hold: each group lists the basis entries it covers by their '
+      + 'position, every position must exist, and no entry may be in two groups. Nothing was written.',
+  },
+  BAD_STATEMENT: {
+    check: 'C-100.58',
+    where: 'src/store.mjs groundInquiry > is-ground-statement',
+    translation: 'A group\'s statement is at most 160 characters and cannot contain a quotation mark, a backslash or a line '
+      + 'break, which the record\'s document format cannot hold. Nothing was written.',
+  },
+  PARTITION_UNCHANGED: {
+    check: 'C-100.59',
+    where: 'src/store.mjs groundInquiry > is-ground-changed',
+    translation: 'This is the grouping the question already has, entry for entry, so there was nothing to change. Nothing '
+      + 'was written.',
+  },
+  PUBLISHED_CANNOT_RESTRUCTURE: {
+    check: 'C-100.60',
+    where: 'src/store.mjs groundInquiry > is-ground-published',
+    translation: 'This question belongs to a published case, and its grouping is part of what that edition signed. Reopen '
+      + 'it, change it, and publish the change as a new edition. Nothing was written.',
+  },
+  DIVIDED_CANNOT_RESTRUCTURE: {
+    check: 'C-100.61',
+    where: 'src/store.mjs groundInquiry > is-ground-divided',
+    translation: 'This question was divided into narrower questions that replace it, so its structure is no longer changed '
+      + 'here. Change the narrower question that carries the part you mean. Nothing was written.',
+  },
+  BASIS_REFUSED: {
+    check: 'C-100.62',
+    where: 'src/store.mjs refuseBasisRefused > is-basis-refused',
+    translation: 'What this would write into a question\'s basis does not pass the record\'s own checks, the same ones every '
+      + 'write runs, so it was refused.',
+  },
+  NO_BUNDLE_MD: {
+    check: 'C-100.63',
+    where: 'src/store.mjs refuseNoBundleMd > is-no-bundle-md',
+    translation: 'The document this act works on has no main file, so the act could not go ahead.',
+  },
+  UNPARSEABLE_FRONTMATTER: {
+    check: 'C-100.64',
+    where: 'src/store.mjs refuseUnparseableFrontmatter > is-unparseable-frontmatter',
+    translation: 'The project\'s own document cannot be read in the record\'s document format, so nothing could be added to '
+      + 'it. This is a fault in the record\'s copy of that document rather than in the request; whoever runs this '
+      + 'copy can look into it.',
+  },
+  NO_BODY: {
+    check: 'C-100.65',
+    where: 'src/store.mjs promote > is-promote-body',
+    translation: 'A write sends the document it writes, and this request sent nothing. Nothing was written.',
+  },
+  UNDECLARED_OPERATION: {
+    check: 'C-100.66',
+    where: 'src/store.mjs promote > is-promote-operation',
+    translation: 'An automated write names the kind of change it makes, from a fixed list, and this one named something '
+      + 'else. Nothing was written.',
+  },
+  REFS_IN_PAYLOAD: {
+    check: 'C-100.67',
+    where: 'src/store.mjs promote > is-promote-payload',
+    translation: 'The references a document makes are read from the document itself, and this request also sent them as a '
+      + 'separate list. Remove the separate list and send the document alone. Nothing was written.',
+  },
+  BASIS_IN_PAYLOAD: {
+    check: 'C-100.68',
+    where: 'src/store.mjs promote > is-promote-payload',
+    translation: 'The entries a question rests on are read from the document itself, and this request also sent them as a '
+      + 'separate list. Remove the separate list and send the document alone. Nothing was written.',
+  },
+  MALFORMED: {
+    check: 'C-100.69',
+    where: 'src/store.mjs refuseMalformed > is-malformed',
+    translation: 'This request left out something the operation needs, or sent it in a shape the operation cannot read, so '
+      + 'nothing was changed.',
+  },
+  EXISTS: {
+    check: 'C-100.70',
+    where: 'src/store.mjs refuseExists > is-exists',
+    translation: 'Something with that identity already exists in this record, so nothing new was created.',
+  },
+  ABSENT: {
+    check: 'C-100.71',
+    where: 'src/store.mjs refuseAbsent > is-absent',
+    translation: 'No document answers to that id here, or none you are able to see; the two are answered the same way on '
+      + 'purpose. Nothing was changed.',
+  },
+  MINT_EXHAUSTED: {
+    check: 'C-100.72',
+    where: 'src/store.mjs refuseMintExhausted > is-mint-exhausted',
+    translation: 'The record could not find a free identifier for what this would create, so nothing was created. Whoever '
+      + 'runs this copy can look into it.',
+  },
+  NAME_TAKEN: {
+    check: 'C-100.73',
+    where: 'src/store.mjs refuseNameTaken > is-name-taken',
+    translation: 'A project by that name already exists on this copy of the record. Names are compared without regard to '
+      + 'capital letters or spacing, and stay taken by projects that are no longer active, because those are '
+      + 'still cited. Choose another name. Nothing was created.',
+  },
+  OVERSIZE_INLINE: {
+    check: 'C-100.74',
+    where: 'src/store.mjs promote > is-promote-inline-size',
+    translation: 'A file in this write is larger than the record keeps inside a document, so the write was refused.',
+  },
+  GATHERING_REFUSED: {
+    check: 'C-100.75',
+    where: 'src/store.mjs promote > is-promote-gathering',
+    translation: 'The document\'s gathering queue does not follow the rules the record keeps for it, so the write was '
+      + 'refused.',
+  },
+  SUBJECT_REFUSED: {
+    check: 'C-100.76',
+    where: 'src/store.mjs promote > is-promote-subject',
+    translation: 'The question names a subject that is not in this record\'s subject registry, so the write was refused. '
+      + 'Register the subject first, or leave the subject out.',
+  },
+  ACTION_BASIS_REFUSED: {
+    check: 'C-100.77',
+    where: 'src/store.mjs refuseActionBasisRefused > is-action-basis-refused',
+    translation: 'The reasons this action gives for existing do not pass the record\'s checks, so the write was refused.',
+  },
+  CORRESPONDENCE_REFUSED: {
+    check: 'C-100.78',
+    where: 'src/store.mjs refuseCorrespondenceRefused > is-correspondence-refused',
+    translation: 'This action\'s record of correspondence does not pass the record\'s checks, so the write was refused.',
+  },
+  RESPONDS_TO_REFUSED: {
+    check: 'C-100.79',
+    where: 'src/store.mjs refuseRespondsToRefused > is-responds-to-refused',
+    translation: 'The document says it answers an earlier request, and that link does not pass the record\'s checks, so the '
+      + 'write was refused.',
+  },
+  SUPERSESSION_REFUSED: {
+    check: 'C-100.80',
+    where: 'src/store.mjs refuseSupersessionRefused > is-supersession-refused',
+    translation: 'The document says it replaces an earlier question, and that link does not pass the record\'s checks, so '
+      + 'the write was refused.',
+  },
+  NO_SIBLING_DISCLOSURE: {
+    check: 'C-100.81',
+    where: 'src/store.mjs refuseNoSiblingDisclosure > is-no-sibling-disclosure',
+    translation: 'This question says it came from dividing an earlier one, and what it says about that division does not '
+      + 'agree with the record: the earlier question must list it, and it must name every other question the '
+      + 'division produced, and no others. The write was refused.',
+  },
+  BASIS_VERSION_REFUSED: {
+    check: 'C-100.82',
+    where: 'src/store.mjs refuseBasisVersionRefused > is-basis-version-refused',
+    translation: 'The versions this question\'s basis cites do not pass the record\'s checks, so the write was refused.',
+  },
+  FETCH_NO_BODY: {
+    check: 'C-100.83',
+    where: 'src/index.mjs fetch > is-fetch-body',
+    translation: 'The source answered, but with no content to read, so nothing was captured. Try again later; if it keeps '
+      + 'happening, the source may not be serving this document.',
+  },
+  HASH_DISAGREEMENT: {
+    check: 'C-100.84',
+    where: 'src/index.mjs fetch > is-capture-hash-agrees',
+    translation: 'Two ways of computing this capture\'s fingerprint disagreed, which should never happen, so the record '
+      + 'stopped rather than stand behind a fingerprint it cannot vouch for. Try the capture again, and tell '
+      + 'whoever runs this copy if it happens again.',
+  },
+  HOST_COOLING_OFF: {
+    check: 'C-100.85',
+    where: 'src/store.mjs refuseHostCoolingOff > is-host-cooling-off',
+    translation: 'This copy of the record is pacing its requests to that website and is holding them for now, so nothing '
+      + 'was fetched this time. Try again in a little while.',
+  },
+  BAD_ADDRESS: {
+    check: 'C-100.86',
+    where: 'src/store.mjs refuseBadAddress > is-bad-address',
+    translation: 'The document\'s address must be a secure web address (https) on a public host, and this one is missing or '
+      + 'is not. Nothing was fetched.',
+  },
+  NOT_PERMITTED: {
+    check: 'C-100.87',
+    where: 'src/store.mjs refuseNotPermitted > is-not-permitted',
+    translation: 'This way of collecting a document is not open to the credential making the request, so nothing was '
+      + 'collected.',
+  },
+  NOT_ELIGIBLE: {
+    check: 'C-100.88',
+    where: 'src/index.mjs archiveSelect > is-archive-eligible',
+    translation: 'The Internet Archive is used only as a backup, once a document has been unreachable for long enough, and '
+      + 'this one has not been. Collect it from its own address instead. Nothing was fetched.',
+  },
+  ARCHIVE_UNREACHABLE: {
+    check: 'C-100.89',
+    where: 'src/index.mjs archiveSelect > is-archive-reached',
+    translation: 'The Internet Archive could not be reached, so no archived copy was found. Nothing was fetched; try again '
+      + 'later.',
+  },
+  ARCHIVE_REFUSED: {
+    check: 'C-100.90',
+    where: 'src/index.mjs archiveSelect > is-archive-answered',
+    translation: 'The Internet Archive did not answer with its record of this document, so no archived copy was found. '
+      + 'Nothing was fetched; try again later.',
+  },
+  CDX_UNPARSEABLE: {
+    check: 'C-100.91',
+    where: 'src/cdx.mjs parseCdx > is-cdx-shape',
+    translation: 'The Internet Archive\'s index answered with something that is not readable data, so no archived copy '
+      + 'could be chosen. Nothing was fetched.',
+  },
+  CDX_NOT_AN_ARRAY: {
+    check: 'C-100.92',
+    where: 'src/cdx.mjs parseCdx > is-cdx-shape',
+    translation: 'The Internet Archive\'s index answered, but not with the list of records it normally sends, so no '
+      + 'archived copy could be chosen. Nothing was fetched.',
+  },
+  CDX_NO_HEADER: {
+    check: 'C-100.93',
+    where: 'src/cdx.mjs parseCdx > is-cdx-shape',
+    translation: 'The Internet Archive\'s index answered with a list whose first row does not say what its columns are, so '
+      + 'no archived copy could be chosen. Nothing was fetched.',
+  },
+  NO_USABLE_CAPTURE: {
+    check: 'C-100.94',
+    where: 'src/cdx.mjs selectCapture > is-cdx-usable',
+    translation: 'The Internet Archive holds no complete, successful copy of this address, so there was nothing to collect '
+      + 'from it. Nothing was fetched.',
+  },
+  TOO_LARGE_TO_PARSE: {
+    check: 'C-100.95',
+    where: 'src/store.mjs refuseTooLargeToParse > is-too-large-to-parse',
+    translation: 'The page itself was captured in full. The files it uses, such as images and stylesheets, were not '
+      + 'collected, because the page is larger than the record reads through for them.',
+  },
+  NOT_HTML: {
+    check: 'C-100.96',
+    where: 'src/store.mjs refuseNotHtml > is-not-html',
+    translation: 'The document itself was captured in full. Only a web page uses other files such as images and '
+      + 'stylesheets, and this document is not a web page, so there were none to collect.',
+  },
+  PRIMARY_UNREADABLE: {
+    check: 'C-100.97',
+    where: 'src/store.mjs refusePrimaryUnreadable > is-primary-unreadable',
+    translation: 'The page was captured, but it could not be read back to find the files it uses, so those were not '
+      + 'collected this time.',
+  },
+  NO_SUCH_SESSION: {
+    check: 'C-100.98',
+    where: 'src/store.mjs refuseNoSuchSession > is-no-such-session',
+    translation: 'The earlier collection of this page\'s files that this request asked to continue could not be found, so '
+      + 'it was not continued from where it stopped. The page itself was captured.',
+  },
+  SESSION_UNREADABLE: {
+    check: 'C-100.99',
+    where: 'src/store.mjs refuseSessionUnreadable > is-session-unreadable',
+    translation: 'The earlier collection of this page\'s files that this request asked to continue could not be read back, '
+      + 'so it was not continued from where it stopped. The page itself was captured.',
+  },
+  NOT_A_CONTAINER: {
+    check: 'C-100.100',
+    where: 'src/index.mjs fetch > is-published-zip-container',
+    translation: 'A zip file is made only for a whole published case, asked for by the fingerprint of its list of '
+      + 'contents, and this fingerprint names one part of a case. Ask for that part without the zip format, or '
+      + 'for the case by its list of contents.',
+  },
+  MANIFEST_UNREADABLE: {
+    check: 'C-100.101',
+    where: 'src/index.mjs fetch > is-published-manifest-read',
+    translation: 'This published case\'s list of contents could not be read, so the case cannot be assembled into one file. '
+      + 'Each of its parts can still be fetched on its own by its fingerprint.',
+  },
+  DUPLICATE_PATH: {
+    check: 'C-100.102',
+    where: 'src/container.mjs serialiseContainer > is-container-paths',
+    translation: 'This published case lists two parts under the same name, so it cannot be assembled into one file. Each '
+      + 'part can still be fetched on its own by its fingerprint.',
+  },
+  PART_MISSING: {
+    check: 'C-100.103',
+    where: 'src/container.mjs containerEntries > is-container-part',
+    translation: 'A part this published case lists is not in the store of published documents, so the case cannot be '
+      + 'assembled whole into one file. Its other parts can still be fetched on their own by their fingerprints.',
+  },
+  OBJECT_MISSING: {
+    check: 'C-100.104',
+    where: 'src/store.mjs refuseObjectMissing > is-object-missing',
+    translation: 'This finding belongs to a published case, but the published copy of its document is not in this record\'s '
+      + 'store, so its text cannot be shown here. The case and its other findings are unaffected.',
+  },
+};
+
 /** May this connection's determining pair grade THIS content row's extent?
  *
  *  `pair` is the row's own `{a_ref, a_position, b_ref, b_position}` (the

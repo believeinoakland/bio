@@ -232,6 +232,13 @@ function reachFrom(storeRaw, checksRaw, roots) {
   const universe = new Map();
   for (const [n, spans] of methods) universe.set("Store." + n, { file: "store", spans });
   for (const [n, spans] of checkFns) if (!universe.has(n)) universe.set(n, { file: "checks", spans });
+  /* D-641 (2026-09-25): store.mjs's own TOP-LEVEL functions join the universe, spans bounded at the Store class
+     line so the last one cannot swallow the class. Before D-641 no method this walk reaches called one, so the gap
+     was invisible; D-641 routed codes minted at several sites through one module-level mint (`refuseNoId`, which
+     `strengthOf` now calls), and an unresolved name is what this suite exists to refuse. Followed, not excused:
+     a mint that read the attribution field would then be found like any other reader. */
+  for (const [n, spans] of topLevelFns(sCode.slice(0, classAt)))
+    if (!universe.has(n)) universe.set(n, { file: "store", spans });
 
   const seen = new Set(), unresolved = new Set(), queue = [...roots];
   while (queue.length) {

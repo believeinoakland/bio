@@ -516,7 +516,16 @@ t("D-240 (e) THE UNCLASSIFIED RESIDUAL IS NAMED AND CEILINGED, and CROSS-CHECKED
      hiding this detector's own subject. Verified by the printed site list, which names all 17
      individually; a raise that could not name its arrivals would be this ceiling becoming a place
      to hide, which is precisely what it exists to prevent. */
-  [A_CENSUS.unclassified.length <= 17, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
+  /* 17 -> 27, RAISED 2026-09-25 by D-641, with its reason at the site as the 14 -> 17 raise above carries its own.
+     The ten arrivals are ten index.mjs refusals that now hand `json()` the answer of a governed DEC-49 mint in
+     store.mjs rather than an object literal — `refuseMalformed` (casedocument, caseratify, ratify), `refuseBadAddress`
+     (archivelookup and the archive arm of acquire), `refuseNotPermitted` (acquire's two class fences),
+     `refuseHostCoolingOff` (acquire and the monitor tick) and `refuseAbsent` (monitor) — because each code was minted
+     at several sites for one condition and a DEC-49 row holds one `where` (arm G of the guard refuses a catalogued
+     code at two sites). NOT A LITERAL is this gate's stated blind spot, not a new one; the site list above names all
+     27. THE CROSS-CHECK IS UNMOVED AND GATED AT ZERO: none of the ten reads the store — each mint returns a literal
+     `ok: false` with its code — so the residual still cannot hide this detector's subject. */
+  [A_CENSUS.unclassified.length <= 27, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
 /* (f) AND THE DECLARED REFUSALS THAT DO SPREAD ONE — outside this detector's
    subject by construction, so they are pinned BY SITE rather than left as a
    sentence. `{ ok: false, ...rec.result }` cannot report a success, but it is

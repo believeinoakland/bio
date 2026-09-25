@@ -154,13 +154,22 @@ function indexFunctions(stripped) {
   return { defs, imports };
 }
 
+/* A BARE CALL `name(`, not preceded by `.`, a word character, `$` or `#`. The guard is a LOOKBEHIND, never a
+   consumed character (D-641, 2026-09-25): consuming it made `matchAll` step past the `(` of an enclosing call, so
+   a call nested as the first argument of another — `json(refuseMalformed({…}), 400)` — was never seen and its
+   codes were attributed to no op. Measured on fac514e0 before D-641 touched a site: the union over the surface's
+   and the public ops grew 349 -> 352 (KNOCK_EMPTY, KNOCK_ENVELOPE_TOO_LARGE, KNOCK_PAYLOAD_TOO_LARGE, all three
+   already catalogued), so the blind spot was hiding no untranslated code. D-641's one-mint helpers are called in
+   exactly that nested shape from index.mjs, which is how it was found. */
+const BARE_CALL = /(^|(?<=[^.\w$#]))([A-Za-z_$][\w$]*)\s*\(/g;
+
 function calleesOf(file, text, idx) {
   const out = new Set();
   if (file === "store.mjs")
     for (const m of text.matchAll(/\b(?:this|Store)\s*\.\s*(#?[A-Za-z_$][\w$]*)\s*\(/g))
       if (idx.defs.has(`Store.${m[1]}`)) out.add(`Store.${m[1]}`);
   const imp = idx.imports.get(file) || new Map();
-  for (const m of text.matchAll(/(^|[^.\w$#])([A-Za-z_$][\w$]*)\s*\(/g)) {
+  for (const m of text.matchAll(BARE_CALL)) {
     const n = m[2];
     if (idx.defs.has(`${file}:${n}`)) out.add(`${file}:${n}`);
     else if (imp.has(n) && idx.defs.has(imp.get(n))) out.add(imp.get(n));
@@ -314,7 +323,7 @@ export function reachByOp({ planeDir, appPath }) {
         if (innermost(spans, sp.start + at) === sp) add(op, code, "index.mjs");
       /* Calls made from this span (and not from a narrower span inside it). */
       const roots = new Set();
-      for (const m of text.matchAll(/(^|[^.\w$#])([A-Za-z_$][\w$]*)\s*\(/g)) {
+      for (const m of text.matchAll(BARE_CALL)) {
         const at = sp.start + m.index + m[1].length;
         if (innermost(spans, at) !== sp) continue;
         for (const k of calleesOf("index.mjs", m[0].slice(m[1].length), idx)) roots.add(k);

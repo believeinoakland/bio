@@ -4508,6 +4508,7 @@ __export(bio_checks_exports, {
   QUOTE_CHECKS: () => QUOTE_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
   RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
+  REACH_BY_OP_CHECKS: () => REACH_BY_OP_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
@@ -14623,6 +14624,528 @@ var RISK_TIER_REVISION_CHECKS = {
     translation: "This action's record of earlier risk tiers is not in a shape the act can add to without rewriting it, and the act only ever adds. Nothing was written."
   }
 };
+var REACH_BY_OP_CHECKS = {
+  UNKNOWN_RELATION: {
+    check: "C-100.1",
+    where: "src/store.mjs declareRelation > is-relation-ends",
+    translation: "That is not one of the relations the subject registry records. A declared relation is one of a small closed set the registry fixes, and a new kind of relation is a decision for the group, not a write. Nothing was recorded."
+  },
+  NO_ENDS: {
+    check: "C-100.2",
+    where: "src/store.mjs declareRelation > is-relation-ends",
+    translation: "A relation joins two entries in the subject registry, and this one did not name both of them. Name the entry it runs from and the entry it runs to. Nothing was recorded."
+  },
+  SELF_RELATION: {
+    check: "C-100.3",
+    where: "src/store.mjs declareRelation > is-relation-ends",
+    translation: "A relation is between two different entries, and this one names the same entry at both ends. Nothing was recorded."
+  },
+  NO_JUSTIFICATION: {
+    check: "C-100.4",
+    where: "src/store.mjs declareRelation > is-relation-justified",
+    translation: "A declared relation carries the reason for it, the way a pattern statement does, and this one gave none. Say why the two entries are related. Nothing was recorded."
+  },
+  ALREADY_ALIASED: {
+    check: "C-100.5",
+    where: "src/store.mjs addEntityAlias > is-alias-new",
+    translation: "That entry in the subject registry already answers to this name, so there was nothing to add. Nothing was changed."
+  },
+  NO_KIND: {
+    check: "C-100.6",
+    where: "src/store.mjs createEntity > is-entity-kind-named",
+    translation: "Every entry in the subject registry has a kind, and this request named none. Choose a kind and try again. Nothing was created."
+  },
+  UNKNOWN_KIND: {
+    check: "C-100.7",
+    where: "src/store.mjs refuseUnknownKind > is-unknown-kind",
+    translation: "The record does not recognise the kind of thing this names: it is not one of the kinds the record keeps here. Nothing was changed."
+  },
+  NO_MEMBER: {
+    check: "C-100.8",
+    where: "src/store.mjs refuseNoMember > is-no-member",
+    translation: "Muting and snoozing are personal: each belongs to the member whose attention it is about, and this request came with no member behind it (an automated credential has none). Nothing was changed."
+  },
+  NO_CASE: {
+    check: "C-100.9",
+    where: "src/store.mjs #queueCaseFor > is-queue-case-named",
+    translation: "A personal preference like this is kept for one case, and the request did not say which case. Nothing was changed."
+  },
+  NO_SUCH_CASE: {
+    check: "C-100.10",
+    where: "src/store.mjs refuseNoSuchCase > is-no-such-case",
+    translation: "No case answers to that id here, or none you are able to see; the two are answered the same way on purpose. Nothing was changed."
+  },
+  NOT_A_CASE: {
+    check: "C-100.11",
+    where: "src/store.mjs #queueCaseFor > is-queue-case-type",
+    translation: "Muting and snoozing are kept per case, meaning a question or a project, and what this names is neither. Mute the question or the project it belongs to instead. Nothing was changed."
+  },
+  NO_KINDS: {
+    check: "C-100.12",
+    where: "src/store.mjs queueMute > is-queue-mute-kinds",
+    translation: "A mute names the kinds of notice to silence on this case, or one item, and this request named neither. There is no mute for a whole case, so that a new kind of notice can still reach you. Nothing was changed."
+  },
+  NO_KEY: {
+    check: "C-100.13",
+    where: "src/store.mjs refuseNoKey > is-no-key",
+    translation: "This request did not say which one it means: the key or id that names what it is about was missing. Nothing was changed."
+  },
+  NO_STAGES: {
+    check: "C-100.14",
+    where: "src/store.mjs defineProgression > is-progression-stages",
+    translation: "A progression is the ordered stages something goes through, and this definition named none. Nothing was recorded."
+  },
+  NO_STAGE_KEY: {
+    check: "C-100.15",
+    where: "src/store.mjs defineProgression > is-progression-stages",
+    translation: "Every stage of a progression has a key it is known by, and one of the stages here has none. Nothing was recorded."
+  },
+  DUPLICATE_STAGE: {
+    check: "C-100.16",
+    where: "src/store.mjs defineProgression > is-progression-stages",
+    translation: "Two stages in this definition have the same key, so the record could not tell them apart. Give each stage its own key. Nothing was recorded."
+  },
+  NO_CARDINALITY: {
+    check: "C-100.17",
+    where: "src/store.mjs defineProgression > is-progression-stages",
+    translation: "Every stage says how many documents it takes (exactly one, at most one, or any number), and one stage here does not. Nothing was recorded."
+  },
+  BAD_REQUIRED: {
+    check: "C-100.18",
+    where: "src/store.mjs defineProgression > is-progression-stages",
+    translation: "Each stage says how far it is expected to happen, in one of a fixed set of words, and one stage here gives none of them. Nothing was recorded."
+  },
+  NO_PLACEMENTS: {
+    check: "C-100.19",
+    where: "src/store.mjs threadInstance > is-thread-placements",
+    translation: "Threading places documents at the stages of a progression, and this request placed none. Name at least one document and the stage it belongs at. Nothing was changed."
+  },
+  NO_STAGE: {
+    check: "C-100.20",
+    where: "src/store.mjs refuseNoStage > is-no-stage",
+    translation: "This request did not name the stage it is about. Name the stage and try again. Nothing was changed."
+  },
+  NO_CAPTURE: {
+    check: "C-100.21",
+    where: "src/store.mjs refuseNoCapture > is-no-capture",
+    translation: "This request did not name the captured document it is about. Name the document and try again. Nothing was changed."
+  },
+  DUPLICATE_PLACEMENT: {
+    check: "C-100.22",
+    where: "src/store.mjs threadInstance > is-thread-placement-once",
+    translation: "The same document is placed at the same stage twice in this request. Place it once. Nothing was changed."
+  },
+  NO_SUCH_PROGRESSION: {
+    check: "C-100.23",
+    where: "src/store.mjs refuseNoSuchProgression > is-no-such-progression",
+    translation: "No progression is defined under that key here. Define it first, then try again. Nothing was changed."
+  },
+  NO_DECIDER: {
+    check: "C-100.24",
+    where: "src/store.mjs proposeDispose > is-dispose-decider",
+    translation: "A decision to set a proposal aside is recorded under the member who made it, and this request came with no member behind it. Sign in as a member. Nothing was recorded."
+  },
+  NO_FINDING: {
+    check: "C-100.25",
+    where: "src/store.mjs proposeDispose > is-dispose-finding-named",
+    translation: "Setting a finding aside for a project names the finding, and this request named the project but no finding. Nothing was recorded."
+  },
+  NO_PROJECT_SCOPE: {
+    check: "C-100.26",
+    where: "src/store.mjs refuseNoProjectScope > is-no-project-scope",
+    translation: "A finding like this one is set aside for one project at a time, so the request has to say which project you are acting for; the queue shows the projects it can be set aside for. Nothing was recorded."
+  },
+  NO_ACTOR: {
+    check: "C-100.27",
+    where: "src/store.mjs refuseNoActor > is-no-actor",
+    translation: "Forwarding or resolving a task is recorded under the member who does it, and this request came with no member behind it. Nothing was changed."
+  },
+  ALREADY_RESOLVED: {
+    check: "C-100.28",
+    where: "src/store.mjs taskForward > is-forward-open",
+    translation: "This task is already resolved, so it cannot be forwarded. If something new needs doing, that opens a new task. Nothing was changed."
+  },
+  ALREADY_THEIRS: {
+    check: "C-100.29",
+    where: "src/store.mjs taskForward > is-forward-elsewhere",
+    translation: "This task is already with the member you named, so there was nothing to forward. Nothing was changed."
+  },
+  NO_SUCH_MEMBER: {
+    check: "C-100.30",
+    where: "src/store.mjs refuseNoSuchMember > is-no-such-member",
+    translation: "No member of this group that this act can apply to answers to the one named, so nothing was changed. Check who was meant."
+  },
+  UNGRAMMATICAL: {
+    check: "C-100.31",
+    where: "src/store.mjs #refuseUngrammatical > is-task-grammar",
+    translation: "The task, as this would leave it, breaks the rules the record's task list keeps, so the change was not made."
+  },
+  NO_SUCH_HANDLE: {
+    check: "C-100.32",
+    where: "src/store.mjs refuseNoSuchHandle > is-no-such-handle",
+    translation: "No member of this group goes by that handle. Check the spelling: a handle is the name a member chose for themselves. Nothing was changed."
+  },
+  ALREADY_VOTED: {
+    check: "C-100.33",
+    where: "src/store.mjs refuseAlreadyVoted > is-already-voted",
+    translation: "You have already voted on this removal, and a vote is counted once, so nothing was changed."
+  },
+  NO_HANDLE: {
+    check: "C-100.34",
+    where: "src/store.mjs enroll > is-enroll-handle",
+    translation: "Choose a handle: it is the name the record will show for you on everything you write, sign or join. Nothing was saved yet."
+  },
+  BAD_HANDLE: {
+    check: "C-100.35",
+    where: "src/store.mjs enroll > is-enroll-handle",
+    translation: "A handle is 2 to 41 characters of lowercase letters, digits and dashes, and does not start with a dash. Choose one in that form. Nothing was saved yet."
+  },
+  HANDLE_TAKEN: {
+    check: "C-100.36",
+    where: "src/store.mjs enroll > is-enroll-handle",
+    translation: "Someone in this group already uses that handle. Choose another. Nothing was saved yet."
+  },
+  PASSWORD_TOO_SHORT: {
+    check: "C-100.37",
+    where: "src/store.mjs refusePasswordTooShort > is-password-too-short",
+    translation: "A password here is at least 12 characters long. Choose a longer one. Nothing was saved yet."
+  },
+  ALREADY_CLAIMED: {
+    check: "C-100.38",
+    where: "src/store.mjs claim > is-claim-unspent",
+    translation: "This copy of the record has already been claimed by its first administrator, and it can be claimed only once. Nothing was changed. If you are that administrator, sign in instead."
+  },
+  ANONYMOUS_LEASE: {
+    check: "C-100.39",
+    where: "src/store.mjs acquireLease > is-lease-named",
+    translation: "Only a named writer, a signed-in member or a named automated credential, can hold a document open for writing, and this request carried no name. Nothing was held."
+  },
+  NO_OWNER: {
+    check: "C-100.40",
+    where: "src/store.mjs refuseNoOwner > is-no-owner",
+    translation: "A selection belongs to the signed-in credential that made it, and this request came with none. Sign in and try again. Nothing was changed."
+  },
+  NO_ID: {
+    check: "C-100.41",
+    where: "src/store.mjs refuseNoId > is-no-id",
+    translation: "This read is about one thing, named by its id, and the request did not give the id. Nothing was looked up."
+  },
+  NO_REF: {
+    check: "C-100.42",
+    where: "src/store.mjs refuseNoRef > is-no-ref",
+    translation: "This request did not name the reference in the document it is about. Name the reference as the document carries it. Nothing was changed."
+  },
+  NO_SUCH_REFERENCE: {
+    check: "C-100.43",
+    where: "src/store.mjs refuseNoSuchReference > is-no-such-reference",
+    translation: "The record's reading of that captured document carries no such reference, so there was nothing to act on. Check the reference against the document. Nothing was changed."
+  },
+  NO_LEG: {
+    check: "C-100.44",
+    where: "src/store.mjs ensureLegContent > is-leg-present",
+    translation: "That question has no basis entry at the position named, so there was nothing to look up. Nothing was changed."
+  },
+  CONNECTION_PAIR_NO_PAIR: {
+    check: "C-100.45",
+    where: "src/store.mjs refuseConnectionPairNoPair > is-connection-pair-no-pair",
+    translation: "This connection was worked out before the record kept which reference established it, so whether that reference falls inside this part of the document cannot be told. Working out the subject's connections again records it."
+  },
+  NEED_CAPTURE_OR_ADDRESS: {
+    check: "C-100.46",
+    where: "src/index.mjs fetch > is-links-named",
+    translation: "Name the document to ask about: its capture, for the links it makes, or its web address, for what links to it. This request named neither in a form the record reads, so nothing was looked up."
+  },
+  NO_DOCUMENT: {
+    check: "C-100.47",
+    where: "src/store.mjs refuseNoDocument > is-no-document",
+    translation: "A document this act needed has no readable text in the record, so the act could not go ahead with it. This is a fault in the record rather than in the request; whoever runs this copy can look into it."
+  },
+  UNSPLICEABLE_STATE_HISTORY: {
+    check: "C-100.48",
+    where: "src/store.mjs refuseUnspliceableStateHistory > is-unspliceable-state-history",
+    translation: "A document's history of state changes is not in a shape the record can add to without rewriting it, so this change of state was not recorded for that document. The record only ever adds to that history."
+  },
+  UNSPLICEABLE_BASIS: {
+    check: "C-100.49",
+    where: "src/store.mjs refuseUnspliceableBasis > is-unspliceable-basis",
+    translation: "This question's basis, or its record of the versions the basis cites, is not in a shape the record can edit in place, and a partial edit would be worse than none, so nothing was written."
+  },
+  UNSPLICEABLE_CORRESPONDENCE: {
+    check: "C-100.50",
+    where: "src/store.mjs actionCorrespond > is-correspond-splice",
+    translation: "This action's record of correspondence is not in a shape the record can add to without rewriting it, and adding is all this act does, so nothing was written."
+  },
+  UNSPLICEABLE_GOVERNING_LAWS: {
+    check: "C-100.51",
+    where: "src/store.mjs actionLaws > is-laws-splice",
+    translation: "This action's list of governing laws is not in a shape the record can replace in place, so nothing was written."
+  },
+  LEASE_HELD: {
+    check: "C-100.52",
+    where: "src/store.mjs actionCorrespond > is-correspond-lease",
+    translation: "Someone else is writing to this action's correspondence right now. Wait a moment and try again. Nothing was written."
+  },
+  NO_RESPONSE_HAS_NO_BYTES: {
+    check: "C-100.53",
+    where: "src/store.mjs actionCorrespond > is-correspond-no-response",
+    translation: "A reply that never came has no captured material behind it, so an entry recording a non-response cannot point to any. Record it as an account, dated when the reply was due. Nothing was written."
+  },
+  CRUCIAL_IN_BATCH: {
+    check: "C-100.54",
+    where: "src/store.mjs release > is-release-crucial",
+    translation: "Material marked crucial is never released as part of a batch, because each piece needs its supporting attestations checked on its own. Release those items one at a time, or select again without them. Nothing was released."
+  },
+  PUBLISHED_CANNOT_BE_SET_DOWN: {
+    check: "C-100.55",
+    where: "src/store.mjs dispose > is-dispose-published",
+    translation: "A finding that belongs to a published case cannot be deferred or dismissed: setting a question aside is for work nobody published. Reopen it instead, and let the next edition say what changed. Nothing was changed."
+  },
+  NO_PARTITION: {
+    check: "C-100.56",
+    where: "src/store.mjs groundInquiry > is-ground-named",
+    translation: "Grouping a question's basis names the groups, and this request named none. To remove the grouping, send an empty list; that is a change like any other and takes a reason. Nothing was written."
+  },
+  BAD_PARTITION: {
+    check: "C-100.57",
+    where: "src/store.mjs refuseBadPartition > is-bad-partition",
+    translation: "The grouping sent is not one the record can hold: each group lists the basis entries it covers by their position, every position must exist, and no entry may be in two groups. Nothing was written."
+  },
+  BAD_STATEMENT: {
+    check: "C-100.58",
+    where: "src/store.mjs groundInquiry > is-ground-statement",
+    translation: "A group's statement is at most 160 characters and cannot contain a quotation mark, a backslash or a line break, which the record's document format cannot hold. Nothing was written."
+  },
+  PARTITION_UNCHANGED: {
+    check: "C-100.59",
+    where: "src/store.mjs groundInquiry > is-ground-changed",
+    translation: "This is the grouping the question already has, entry for entry, so there was nothing to change. Nothing was written."
+  },
+  PUBLISHED_CANNOT_RESTRUCTURE: {
+    check: "C-100.60",
+    where: "src/store.mjs groundInquiry > is-ground-published",
+    translation: "This question belongs to a published case, and its grouping is part of what that edition signed. Reopen it, change it, and publish the change as a new edition. Nothing was written."
+  },
+  DIVIDED_CANNOT_RESTRUCTURE: {
+    check: "C-100.61",
+    where: "src/store.mjs groundInquiry > is-ground-divided",
+    translation: "This question was divided into narrower questions that replace it, so its structure is no longer changed here. Change the narrower question that carries the part you mean. Nothing was written."
+  },
+  BASIS_REFUSED: {
+    check: "C-100.62",
+    where: "src/store.mjs refuseBasisRefused > is-basis-refused",
+    translation: "What this would write into a question's basis does not pass the record's own checks, the same ones every write runs, so it was refused."
+  },
+  NO_BUNDLE_MD: {
+    check: "C-100.63",
+    where: "src/store.mjs refuseNoBundleMd > is-no-bundle-md",
+    translation: "The document this act works on has no main file, so the act could not go ahead."
+  },
+  UNPARSEABLE_FRONTMATTER: {
+    check: "C-100.64",
+    where: "src/store.mjs refuseUnparseableFrontmatter > is-unparseable-frontmatter",
+    translation: "The project's own document cannot be read in the record's document format, so nothing could be added to it. This is a fault in the record's copy of that document rather than in the request; whoever runs this copy can look into it."
+  },
+  NO_BODY: {
+    check: "C-100.65",
+    where: "src/store.mjs promote > is-promote-body",
+    translation: "A write sends the document it writes, and this request sent nothing. Nothing was written."
+  },
+  UNDECLARED_OPERATION: {
+    check: "C-100.66",
+    where: "src/store.mjs promote > is-promote-operation",
+    translation: "An automated write names the kind of change it makes, from a fixed list, and this one named something else. Nothing was written."
+  },
+  REFS_IN_PAYLOAD: {
+    check: "C-100.67",
+    where: "src/store.mjs promote > is-promote-payload",
+    translation: "The references a document makes are read from the document itself, and this request also sent them as a separate list. Remove the separate list and send the document alone. Nothing was written."
+  },
+  BASIS_IN_PAYLOAD: {
+    check: "C-100.68",
+    where: "src/store.mjs promote > is-promote-payload",
+    translation: "The entries a question rests on are read from the document itself, and this request also sent them as a separate list. Remove the separate list and send the document alone. Nothing was written."
+  },
+  MALFORMED: {
+    check: "C-100.69",
+    where: "src/store.mjs refuseMalformed > is-malformed",
+    translation: "This request left out something the operation needs, or sent it in a shape the operation cannot read, so nothing was changed."
+  },
+  EXISTS: {
+    check: "C-100.70",
+    where: "src/store.mjs refuseExists > is-exists",
+    translation: "Something with that identity already exists in this record, so nothing new was created."
+  },
+  ABSENT: {
+    check: "C-100.71",
+    where: "src/store.mjs refuseAbsent > is-absent",
+    translation: "No document answers to that id here, or none you are able to see; the two are answered the same way on purpose. Nothing was changed."
+  },
+  MINT_EXHAUSTED: {
+    check: "C-100.72",
+    where: "src/store.mjs refuseMintExhausted > is-mint-exhausted",
+    translation: "The record could not find a free identifier for what this would create, so nothing was created. Whoever runs this copy can look into it."
+  },
+  NAME_TAKEN: {
+    check: "C-100.73",
+    where: "src/store.mjs refuseNameTaken > is-name-taken",
+    translation: "A project by that name already exists on this copy of the record. Names are compared without regard to capital letters or spacing, and stay taken by projects that are no longer active, because those are still cited. Choose another name. Nothing was created."
+  },
+  OVERSIZE_INLINE: {
+    check: "C-100.74",
+    where: "src/store.mjs promote > is-promote-inline-size",
+    translation: "A file in this write is larger than the record keeps inside a document, so the write was refused."
+  },
+  GATHERING_REFUSED: {
+    check: "C-100.75",
+    where: "src/store.mjs promote > is-promote-gathering",
+    translation: "The document's gathering queue does not follow the rules the record keeps for it, so the write was refused."
+  },
+  SUBJECT_REFUSED: {
+    check: "C-100.76",
+    where: "src/store.mjs promote > is-promote-subject",
+    translation: "The question names a subject that is not in this record's subject registry, so the write was refused. Register the subject first, or leave the subject out."
+  },
+  ACTION_BASIS_REFUSED: {
+    check: "C-100.77",
+    where: "src/store.mjs refuseActionBasisRefused > is-action-basis-refused",
+    translation: "The reasons this action gives for existing do not pass the record's checks, so the write was refused."
+  },
+  CORRESPONDENCE_REFUSED: {
+    check: "C-100.78",
+    where: "src/store.mjs refuseCorrespondenceRefused > is-correspondence-refused",
+    translation: "This action's record of correspondence does not pass the record's checks, so the write was refused."
+  },
+  RESPONDS_TO_REFUSED: {
+    check: "C-100.79",
+    where: "src/store.mjs refuseRespondsToRefused > is-responds-to-refused",
+    translation: "The document says it answers an earlier request, and that link does not pass the record's checks, so the write was refused."
+  },
+  SUPERSESSION_REFUSED: {
+    check: "C-100.80",
+    where: "src/store.mjs refuseSupersessionRefused > is-supersession-refused",
+    translation: "The document says it replaces an earlier question, and that link does not pass the record's checks, so the write was refused."
+  },
+  NO_SIBLING_DISCLOSURE: {
+    check: "C-100.81",
+    where: "src/store.mjs refuseNoSiblingDisclosure > is-no-sibling-disclosure",
+    translation: "This question says it came from dividing an earlier one, and what it says about that division does not agree with the record: the earlier question must list it, and it must name every other question the division produced, and no others. The write was refused."
+  },
+  BASIS_VERSION_REFUSED: {
+    check: "C-100.82",
+    where: "src/store.mjs refuseBasisVersionRefused > is-basis-version-refused",
+    translation: "The versions this question's basis cites do not pass the record's checks, so the write was refused."
+  },
+  FETCH_NO_BODY: {
+    check: "C-100.83",
+    where: "src/index.mjs fetch > is-fetch-body",
+    translation: "The source answered, but with no content to read, so nothing was captured. Try again later; if it keeps happening, the source may not be serving this document."
+  },
+  HASH_DISAGREEMENT: {
+    check: "C-100.84",
+    where: "src/index.mjs fetch > is-capture-hash-agrees",
+    translation: "Two ways of computing this capture's fingerprint disagreed, which should never happen, so the record stopped rather than stand behind a fingerprint it cannot vouch for. Try the capture again, and tell whoever runs this copy if it happens again."
+  },
+  HOST_COOLING_OFF: {
+    check: "C-100.85",
+    where: "src/store.mjs refuseHostCoolingOff > is-host-cooling-off",
+    translation: "This copy of the record is pacing its requests to that website and is holding them for now, so nothing was fetched this time. Try again in a little while."
+  },
+  BAD_ADDRESS: {
+    check: "C-100.86",
+    where: "src/store.mjs refuseBadAddress > is-bad-address",
+    translation: "The document's address must be a secure web address (https) on a public host, and this one is missing or is not. Nothing was fetched."
+  },
+  NOT_PERMITTED: {
+    check: "C-100.87",
+    where: "src/store.mjs refuseNotPermitted > is-not-permitted",
+    translation: "This way of collecting a document is not open to the credential making the request, so nothing was collected."
+  },
+  NOT_ELIGIBLE: {
+    check: "C-100.88",
+    where: "src/index.mjs archiveSelect > is-archive-eligible",
+    translation: "The Internet Archive is used only as a backup, once a document has been unreachable for long enough, and this one has not been. Collect it from its own address instead. Nothing was fetched."
+  },
+  ARCHIVE_UNREACHABLE: {
+    check: "C-100.89",
+    where: "src/index.mjs archiveSelect > is-archive-reached",
+    translation: "The Internet Archive could not be reached, so no archived copy was found. Nothing was fetched; try again later."
+  },
+  ARCHIVE_REFUSED: {
+    check: "C-100.90",
+    where: "src/index.mjs archiveSelect > is-archive-answered",
+    translation: "The Internet Archive did not answer with its record of this document, so no archived copy was found. Nothing was fetched; try again later."
+  },
+  CDX_UNPARSEABLE: {
+    check: "C-100.91",
+    where: "src/cdx.mjs parseCdx > is-cdx-shape",
+    translation: "The Internet Archive's index answered with something that is not readable data, so no archived copy could be chosen. Nothing was fetched."
+  },
+  CDX_NOT_AN_ARRAY: {
+    check: "C-100.92",
+    where: "src/cdx.mjs parseCdx > is-cdx-shape",
+    translation: "The Internet Archive's index answered, but not with the list of records it normally sends, so no archived copy could be chosen. Nothing was fetched."
+  },
+  CDX_NO_HEADER: {
+    check: "C-100.93",
+    where: "src/cdx.mjs parseCdx > is-cdx-shape",
+    translation: "The Internet Archive's index answered with a list whose first row does not say what its columns are, so no archived copy could be chosen. Nothing was fetched."
+  },
+  NO_USABLE_CAPTURE: {
+    check: "C-100.94",
+    where: "src/cdx.mjs selectCapture > is-cdx-usable",
+    translation: "The Internet Archive holds no complete, successful copy of this address, so there was nothing to collect from it. Nothing was fetched."
+  },
+  TOO_LARGE_TO_PARSE: {
+    check: "C-100.95",
+    where: "src/store.mjs refuseTooLargeToParse > is-too-large-to-parse",
+    translation: "The page itself was captured in full. The files it uses, such as images and stylesheets, were not collected, because the page is larger than the record reads through for them."
+  },
+  NOT_HTML: {
+    check: "C-100.96",
+    where: "src/store.mjs refuseNotHtml > is-not-html",
+    translation: "The document itself was captured in full. Only a web page uses other files such as images and stylesheets, and this document is not a web page, so there were none to collect."
+  },
+  PRIMARY_UNREADABLE: {
+    check: "C-100.97",
+    where: "src/store.mjs refusePrimaryUnreadable > is-primary-unreadable",
+    translation: "The page was captured, but it could not be read back to find the files it uses, so those were not collected this time."
+  },
+  NO_SUCH_SESSION: {
+    check: "C-100.98",
+    where: "src/store.mjs refuseNoSuchSession > is-no-such-session",
+    translation: "The earlier collection of this page's files that this request asked to continue could not be found, so it was not continued from where it stopped. The page itself was captured."
+  },
+  SESSION_UNREADABLE: {
+    check: "C-100.99",
+    where: "src/store.mjs refuseSessionUnreadable > is-session-unreadable",
+    translation: "The earlier collection of this page's files that this request asked to continue could not be read back, so it was not continued from where it stopped. The page itself was captured."
+  },
+  NOT_A_CONTAINER: {
+    check: "C-100.100",
+    where: "src/index.mjs fetch > is-published-zip-container",
+    translation: "A zip file is made only for a whole published case, asked for by the fingerprint of its list of contents, and this fingerprint names one part of a case. Ask for that part without the zip format, or for the case by its list of contents."
+  },
+  MANIFEST_UNREADABLE: {
+    check: "C-100.101",
+    where: "src/index.mjs fetch > is-published-manifest-read",
+    translation: "This published case's list of contents could not be read, so the case cannot be assembled into one file. Each of its parts can still be fetched on its own by its fingerprint."
+  },
+  DUPLICATE_PATH: {
+    check: "C-100.102",
+    where: "src/container.mjs serialiseContainer > is-container-paths",
+    translation: "This published case lists two parts under the same name, so it cannot be assembled into one file. Each part can still be fetched on its own by its fingerprint."
+  },
+  PART_MISSING: {
+    check: "C-100.103",
+    where: "src/container.mjs containerEntries > is-container-part",
+    translation: "A part this published case lists is not in the store of published documents, so the case cannot be assembled whole into one file. Its other parts can still be fetched on their own by their fingerprints."
+  },
+  OBJECT_MISSING: {
+    check: "C-100.104",
+    where: "src/store.mjs refuseObjectMissing > is-object-missing",
+    translation: "This finding belongs to a published case, but the published copy of its document is not in this record's store, so its text cannot be shown here. The case and its other findings are unaffected."
+  }
+};
 function checkConnectionPairCovers(pair, side, extentKind, extent, covers2) {
   const p = pair && typeof pair === "object" ? pair : null;
   const position = p ? side === "b" ? p.b_position : p.a_position : null;
@@ -16155,7 +16678,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.30.0";
+var CATALOG_VERSION = "1.31.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -32111,6 +32634,595 @@ function actNoCitation(detail, extra = {}) {
     ...extra
   };
 }
+function refuseUnknownKind(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.UNKNOWN_KIND;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseUnknownKind: UNKNOWN_KIND has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "UNKNOWN_KIND",
+    code: "UNKNOWN_KIND",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoMember(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_MEMBER;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoMember: NO_MEMBER has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_MEMBER",
+    code: "NO_MEMBER",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoSuchCase(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_CASE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchCase: NO_SUCH_CASE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_SUCH_CASE",
+    code: "NO_SUCH_CASE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoKey(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_KEY;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoKey: NO_KEY has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_KEY",
+    code: "NO_KEY",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoStage(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_STAGE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoStage: NO_STAGE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_STAGE",
+    code: "NO_STAGE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoCapture(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_CAPTURE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoCapture: NO_CAPTURE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_CAPTURE",
+    code: "NO_CAPTURE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoSuchProgression(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_PROGRESSION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchProgression: NO_SUCH_PROGRESSION has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_SUCH_PROGRESSION",
+    code: "NO_SUCH_PROGRESSION",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoProjectScope(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_PROJECT_SCOPE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoProjectScope: NO_PROJECT_SCOPE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_PROJECT_SCOPE",
+    code: "NO_PROJECT_SCOPE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoActor(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_ACTOR;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoActor: NO_ACTOR has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_ACTOR",
+    code: "NO_ACTOR",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoSuchMember(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_MEMBER;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchMember: NO_SUCH_MEMBER has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_SUCH_MEMBER",
+    code: "NO_SUCH_MEMBER",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoSuchHandle(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_HANDLE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchHandle: NO_SUCH_HANDLE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_SUCH_HANDLE",
+    code: "NO_SUCH_HANDLE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseAlreadyVoted(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.ALREADY_VOTED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseAlreadyVoted: ALREADY_VOTED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "ALREADY_VOTED",
+    code: "ALREADY_VOTED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refusePasswordTooShort(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.PASSWORD_TOO_SHORT;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refusePasswordTooShort: PASSWORD_TOO_SHORT has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "PASSWORD_TOO_SHORT",
+    code: "PASSWORD_TOO_SHORT",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoOwner(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_OWNER;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoOwner: NO_OWNER has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_OWNER",
+    code: "NO_OWNER",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseConnectionPairNoPair(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.CONNECTION_PAIR_NO_PAIR;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseConnectionPairNoPair: CONNECTION_PAIR_NO_PAIR has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "CONNECTION_PAIR_NO_PAIR",
+    code: "CONNECTION_PAIR_NO_PAIR",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoId(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_ID;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoId: NO_ID has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_ID",
+    code: "NO_ID",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoRef(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_REF;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoRef: NO_REF has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_REF",
+    code: "NO_REF",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoSuchReference(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_REFERENCE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchReference: NO_SUCH_REFERENCE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_SUCH_REFERENCE",
+    code: "NO_SUCH_REFERENCE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoDocument(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_DOCUMENT;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoDocument: NO_DOCUMENT has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_DOCUMENT",
+    code: "NO_DOCUMENT",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseUnspliceableStateHistory(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.UNSPLICEABLE_STATE_HISTORY;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseUnspliceableStateHistory: UNSPLICEABLE_STATE_HISTORY has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "UNSPLICEABLE_STATE_HISTORY",
+    code: "UNSPLICEABLE_STATE_HISTORY",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseUnspliceableBasis(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.UNSPLICEABLE_BASIS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseUnspliceableBasis: UNSPLICEABLE_BASIS has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "UNSPLICEABLE_BASIS",
+    code: "UNSPLICEABLE_BASIS",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseBadPartition(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.BAD_PARTITION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseBadPartition: BAD_PARTITION has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "BAD_PARTITION",
+    code: "BAD_PARTITION",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseBasisRefused(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.BASIS_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseBasisRefused: BASIS_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "BASIS_REFUSED",
+    code: "BASIS_REFUSED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoBundleMd(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_BUNDLE_MD;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoBundleMd: NO_BUNDLE_MD has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_BUNDLE_MD",
+    code: "NO_BUNDLE_MD",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseUnparseableFrontmatter(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.UNPARSEABLE_FRONTMATTER;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseUnparseableFrontmatter: UNPARSEABLE_FRONTMATTER has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "UNPARSEABLE_FRONTMATTER",
+    code: "UNPARSEABLE_FRONTMATTER",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseMalformed(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.MALFORMED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseMalformed: MALFORMED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "MALFORMED",
+    code: "MALFORMED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseExists(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.EXISTS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseExists: EXISTS has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "EXISTS",
+    code: "EXISTS",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseAbsent(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.ABSENT;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseAbsent: ABSENT has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "ABSENT",
+    code: "ABSENT",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseMintExhausted(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.MINT_EXHAUSTED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseMintExhausted: MINT_EXHAUSTED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "MINT_EXHAUSTED",
+    code: "MINT_EXHAUSTED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNameTaken(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NAME_TAKEN;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNameTaken: NAME_TAKEN has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NAME_TAKEN",
+    code: "NAME_TAKEN",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseActionBasisRefused(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.ACTION_BASIS_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseActionBasisRefused: ACTION_BASIS_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "ACTION_BASIS_REFUSED",
+    code: "ACTION_BASIS_REFUSED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseCorrespondenceRefused(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.CORRESPONDENCE_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseCorrespondenceRefused: CORRESPONDENCE_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "CORRESPONDENCE_REFUSED",
+    code: "CORRESPONDENCE_REFUSED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseRespondsToRefused(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.RESPONDS_TO_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseRespondsToRefused: RESPONDS_TO_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "RESPONDS_TO_REFUSED",
+    code: "RESPONDS_TO_REFUSED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseSupersessionRefused(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.SUPERSESSION_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseSupersessionRefused: SUPERSESSION_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "SUPERSESSION_REFUSED",
+    code: "SUPERSESSION_REFUSED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoSiblingDisclosure(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_SIBLING_DISCLOSURE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSiblingDisclosure: NO_SIBLING_DISCLOSURE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_SIBLING_DISCLOSURE",
+    code: "NO_SIBLING_DISCLOSURE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseBasisVersionRefused(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.BASIS_VERSION_REFUSED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseBasisVersionRefused: BASIS_VERSION_REFUSED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "BASIS_VERSION_REFUSED",
+    code: "BASIS_VERSION_REFUSED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseHostCoolingOff(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.HOST_COOLING_OFF;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseHostCoolingOff: HOST_COOLING_OFF has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "HOST_COOLING_OFF",
+    code: "HOST_COOLING_OFF",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseBadAddress(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.BAD_ADDRESS;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseBadAddress: BAD_ADDRESS has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "BAD_ADDRESS",
+    code: "BAD_ADDRESS",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNotPermitted(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NOT_PERMITTED;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNotPermitted: NOT_PERMITTED has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NOT_PERMITTED",
+    code: "NOT_PERMITTED",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseTooLargeToParse(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.TOO_LARGE_TO_PARSE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseTooLargeToParse: TOO_LARGE_TO_PARSE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "TOO_LARGE_TO_PARSE",
+    code: "TOO_LARGE_TO_PARSE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNotHtml(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NOT_HTML;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNotHtml: NOT_HTML has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NOT_HTML",
+    code: "NOT_HTML",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refusePrimaryUnreadable(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.PRIMARY_UNREADABLE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refusePrimaryUnreadable: PRIMARY_UNREADABLE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "PRIMARY_UNREADABLE",
+    code: "PRIMARY_UNREADABLE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseNoSuchSession(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.NO_SUCH_SESSION;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseNoSuchSession: NO_SUCH_SESSION has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "NO_SUCH_SESSION",
+    code: "NO_SUCH_SESSION",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseSessionUnreadable(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.SESSION_UNREADABLE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseSessionUnreadable: SESSION_UNREADABLE has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "SESSION_UNREADABLE",
+    code: "SESSION_UNREADABLE",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function refuseObjectMissing(fields = {}) {
+  const row = REACH_BY_OP_CHECKS.OBJECT_MISSING;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("refuseObjectMissing: OBJECT_MISSING has no REACH_BY_OP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return {
+    ok: false,
+    reason: "OBJECT_MISSING",
+    code: "OBJECT_MISSING",
+    check: row.check,
+    translation: row.translation,
+    ...fields
+  };
+}
+function asStatement(refusal7) {
+  const { ok: _notARefusal, ...stated } = refusal7;
+  return stated;
+}
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
@@ -34838,7 +35950,7 @@ var Store = class _Store extends DurableObject {
     ids = null,
     kind = null
   } = {}) {
-    if (!owner) return { ok: false, reason: "NO_OWNER", detail: "a selection is owned by the credential that made it" };
+    if (!owner) return refuseNoOwner({ detail: "a selection is owned by the credential that made it" });
     this.#sweepSelections();
     const wanted = kind || (Array.isArray(ids) && ids.length ? "enumerated" : "query");
     if (wanted !== "query" && wanted !== "enumerated")
@@ -35052,7 +36164,7 @@ var Store = class _Store extends DurableObject {
   }
   selectionList({ owner = null, viewer } = {}) {
     this.#sweepSelections();
-    if (!owner) return { ok: false, reason: "NO_OWNER" };
+    if (!owner) return refuseNoOwner();
     return {
       ok: true,
       ttlSeconds: _Store.SELECTION_TTL_MS / 1e3,
@@ -35077,7 +36189,7 @@ var Store = class _Store extends DurableObject {
     };
   }
   selectionRelease({ handle = null, owner = null } = {}) {
-    if (!owner) return { ok: false, reason: "NO_OWNER" };
+    if (!owner) return refuseNoOwner();
     const sel = handle ? this.#one(`SELECT owner FROM selections WHERE handle=?`, handle) : null;
     if (handle && (!sel || sel.owner !== owner)) return { ok: false, reason: "NOT_YOURS" };
     const before = this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c;
@@ -35268,9 +36380,9 @@ var Store = class _Store extends DurableObject {
         };
     }
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
-    if (!liveMd || typeof liveMd.content !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
+    if (!liveMd || typeof liveMd.content !== "string") return refuseNoBundleMd({ project });
     const parsed = parseFrontmatter(liveMd.content);
-    if (!parsed.data) return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project };
+    if (!parsed.data) return refuseUnparseableFrontmatter({ project });
     const current = /* @__PURE__ */ new Map();
     for (const r of Array.isArray(parsed.data.references) ? parsed.data.references : [])
       if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
@@ -35529,12 +36641,10 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
-        return {
-          ok: false,
-          reason: "NO_DOCUMENT",
+        return refuseNoDocument({
           bundleId: id,
           detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
-        };
+        });
       let text = liveMd.content;
       const withHistory = _Store.#appendStateHistory(text, {
         timestamp: when,
@@ -35544,13 +36654,11 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         author: author || "member"
       });
       if (!withHistory)
-        return {
-          ok: false,
-          reason: "UNSPLICEABLE_STATE_HISTORY",
+        return refuseUnspliceableStateHistory({
           bundleId: id,
           disposedSoFar: disposed,
           detail: "this document's state_history block is not in a shape this grammar can extend in place, and a disposition that recorded no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-        };
+        });
       text = withHistory;
       text = _Store.#setScalar(text, "prior_state", cur.current_state);
       text = _Store.#setScalar(text, "current_state", to);
@@ -36203,7 +37311,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", bundleId: id, retiredSoFar: retired };
+        return refuseNoDocument({ bundleId: id, retiredSoFar: retired });
       let text = liveMd.content;
       const withHistory = _Store.#appendStateHistory(text, {
         timestamp: when,
@@ -36213,13 +37321,11 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         author: author || "member"
       });
       if (!withHistory)
-        return {
-          ok: false,
-          reason: "UNSPLICEABLE_STATE_HISTORY",
+        return refuseUnspliceableStateHistory({
           bundleId: id,
           retiredSoFar: retired,
           detail: "this document's state_history block cannot be extended in place, and a retirement recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-        };
+        });
       text = withHistory;
       text = _Store.#setScalar(text, "prior_state", cur.current_state);
       text = _Store.#setScalar(text, "current_state", "retired");
@@ -36413,7 +37519,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", bundleId: id, releasedSoFar: released };
+        return refuseNoDocument({ bundleId: id, releasedSoFar: released });
       let text = liveMd.content;
       const withHistory = _Store.#appendStateHistory(text, {
         timestamp: when,
@@ -36423,13 +37529,11 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
         author: who2
       });
       if (!withHistory)
-        return {
-          ok: false,
-          reason: "UNSPLICEABLE_STATE_HISTORY",
+        return refuseUnspliceableStateHistory({
           bundleId: id,
           releasedSoFar: released,
           detail: "this document's state_history block cannot be extended in place, and a release recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-        };
+        });
       text = withHistory;
       text = _Store.#setScalar(text, "prior_state", cur.current_state);
       text = _Store.#setScalar(text, "current_state", "verified");
@@ -36648,12 +37752,10 @@ Mitigation: ${mit}
       };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         target,
         detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
-      };
+      });
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
@@ -36693,13 +37795,11 @@ Mitigation: ${mit}
       if (denied) return denied;
       const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
       if (!pmd || pmd.content === null)
-        return {
-          ok: false,
-          reason: "NO_DOCUMENT",
+        return refuseNoDocument({
           target,
           project: pid,
           detail: "this project has no readable bundle.md, so its conclusion cannot be recorded"
-        };
+        });
       pfm = parseFrontmatter(pmd.content).data || {};
     }
     let adopted = null;
@@ -36822,12 +37922,10 @@ Mitigation: ${mit}
       author: who2
     });
     if (!withHistory)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_STATE_HISTORY",
+      return refuseUnspliceableStateHistory({
         target,
         detail: "this document's state_history block cannot be extended in place, and a conclusion recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-      };
+      });
     text = withHistory;
     text = _Store.#setScalar(text, "prior_state", b.current_state);
     text = _Store.#setScalar(text, "current_state", "concluded");
@@ -37002,11 +38100,9 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
     const pid = projectRow.bundle_id;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
     if (!md || md.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         detail: `${pid} has no readable file, so its conclusion cannot be recorded`
-      };
+      });
     const pfm = parseFrontmatter(md.content).data || {};
     let text = _Store.#appendConclusionEntry(md.content, inquiryId, f2);
     if (text === null)
@@ -37647,12 +38743,10 @@ Claim: ${f2.claim}
       };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         target,
         detail: "this action has no readable bundle.md, so its state cannot be moved"
-      };
+      });
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
@@ -37704,12 +38798,10 @@ Claim: ${f2.claim}
       author: who2
     });
     if (!withHistory)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_STATE_HISTORY",
+      return refuseUnspliceableStateHistory({
         target,
         detail: "this document's state_history block cannot be extended in place, and a move recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-      };
+      });
     text = withHistory;
     text = _Store.#setScalar(text, "prior_state", b.current_state);
     text = _Store.#setScalar(text, "current_state", to);
@@ -37942,12 +39034,10 @@ Reason: ${why}
       };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         target,
         detail: "this action has no readable bundle.md, so nothing can be appended to it"
-      };
+      });
     const fm = parseFrontmatter(liveMd.content).data || {};
     const when = stampInstant("second", this.#nowMs(null));
     const ledgerNow = Array.isArray(fm.correspondence) ? fm.correspondence : [];
@@ -38095,12 +39185,10 @@ Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who
       };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         target,
         detail: "this action has no readable bundle.md, so its governing laws cannot be set"
-      };
+      });
     const fm = parseFrontmatter(liveMd.content).data || {};
     const before = governingLawsOf(fm);
     const when = stampInstant("second", this.#nowMs(null));
@@ -38341,12 +39429,10 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
       };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         target,
         detail: "this action has no readable bundle.md, so its risk tier cannot be revised"
-      };
+      });
     const fm = parseFrontmatter(liveMd.content).data || {};
     const held = riskTierState(fm.risk_tier);
     const before = riskTierHistoryOf(fm);
@@ -38996,12 +40082,10 @@ Changes: responds_to edge added to ${actionId}.
       };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         target,
         detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
-      };
+      });
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
     if (!REOPENABLE_FROM.includes(b.current_state) && !this.#caseRelationOf(target).member)
@@ -39034,12 +40118,10 @@ Changes: responds_to edge added to ${actionId}.
       author: who2
     });
     if (!withHistory)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_STATE_HISTORY",
+      return refuseUnspliceableStateHistory({
         target,
         detail: "this document's state_history block cannot be extended in place, and a reopening recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-      };
+      });
     text = withHistory;
     text = _Store.#setScalar(text, "prior_state", b.current_state);
     text = _Store.#setScalar(text, "current_state", "open");
@@ -39366,12 +40448,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         };
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
       if (!liveMd || liveMd.content === null)
-        return {
-          ok: false,
-          reason: "NO_DOCUMENT",
+        return refuseNoDocument({
           target: id,
           detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
-        };
+        });
       const fm = parseFrontmatter(liveMd.content).data || {};
       const conc = this.#caseConclusionFor(proj, id, viewer, b.current_state);
       if (conc.state !== "concluded")
@@ -39487,12 +40567,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       });
     let theCase = newCase ? null : String(caseId ?? "").trim() || distinct[0] || (claimedInBytes.length === 1 ? claimedInBytes[0] : null) || null;
     if (caseId && !this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, theCase))
-      return {
-        ok: false,
-        reason: "NO_SUCH_CASE",
+      return refuseNoSuchCase({
         caseId: theCase,
         detail: `no published case answers to ${theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.`
-      };
+      });
     for (const p of prepared) {
       const same = p.warrant ? p.warrant.same.filter((e) => theCase && e.case_id === theCase || e.state === "prepared") : [];
       if (same.length)
@@ -39548,11 +40626,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const minted = !theCase;
     if (minted) {
       theCase = this.#mintOpaqueId("CASE", (/* @__PURE__ */ new Date()).toISOString().slice(0, 4), "", (id) => !!(this.#one(`SELECT 1 FROM cases WHERE case_id=?`, id) || this.#one(`SELECT 1 FROM published_cases WHERE case_id=? LIMIT 1`, id) || this.#one(`SELECT 1 FROM case_documents WHERE case_id=? LIMIT 1`, id) || this.#one(`SELECT 1 FROM published_case_members WHERE case_id=? LIMIT 1`, id)));
-      if (!theCase) return {
-        ok: false,
-        reason: "MINT_EXHAUSTED",
+      if (!theCase) return refuseMintExhausted({
         detail: "the plane could not find a free case id; nothing was published"
-      };
+      });
     }
     const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
     const claimedProject = ownedBy ? ownedBy.project_id : [...new Set(prepared.map((p) => typeof p.fm.case_project === "string" && p.fm.case_project !== "null" ? p.fm.case_project : null).filter(Boolean))][0] || null;
@@ -40474,7 +41550,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
   caseDocumentFacts(caseId, edition, viewer, secretSha = null) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
-    if (!id || !Number.isInteger(ed) || ed < 1) return { ok: false, reason: "MALFORMED" };
+    if (!id || !Number.isInteger(ed) || ed < 1) return refuseMalformed();
     const doc = this.#one(
       `SELECT case_id, edition, doc_sha, text, authored_at, authored_by,
               sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
@@ -40930,11 +42006,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       );
     } else {
       id = this.#mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) => !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d) || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
-      if (!id) return {
-        ok: false,
-        reason: "MINT_EXHAUSTED",
+      if (!id) return refuseMintExhausted({
         detail: "the plane could not find a free draft id; nothing was written"
-      };
+      });
       this.sql.exec(
         `INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
                      updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -41089,11 +42163,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       "",
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g)
     );
-    if (!id) return {
-      ok: false,
-      reason: "MINT_EXHAUSTED",
+    if (!id) return refuseMintExhausted({
       detail: "the plane could not find a free grant id; nothing was issued"
-    };
+    });
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, a.who, when);
     return {
@@ -42104,7 +43176,7 @@ case_project: ${project}
   } = {}) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
-    if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return { ok: false, reason: "MALFORMED" };
+    if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return refuseMalformed();
     if (!sigArmored || !attestorKey || !gateVersion)
       return {
         ok: false,
@@ -42480,12 +43552,10 @@ case_project: ${project}
       };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         target,
         detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
-      };
+      });
     const parentText = liveMd.content;
     const fm = parseFrontmatter(parentText).data || {};
     if (this.#caseRelationOf(target).member)
@@ -42740,12 +43810,10 @@ case_project: ${project}
       author: who2
     });
     if (!withHistory)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_STATE_HISTORY",
+      return refuseUnspliceableStateHistory({
         target,
         detail: "this document's state_history block cannot be extended in place, and a division recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-      };
+      });
     text = withHistory;
     text = _Store.#setScalar(text, "prior_state", b.current_state);
     text = _Store.#setScalar(text, "current_state", "divided");
@@ -43033,12 +44101,10 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
       };
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return {
-        ok: false,
-        reason: "NO_DOCUMENT",
+      return refuseNoDocument({
         target,
         detail: "this inquiry has no readable bundle.md, so its structure cannot be authored"
-      };
+      });
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
     const all = Array.isArray(fm.basis) ? fm.basis : [];
@@ -43046,12 +44112,10 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
     if (!legs.length)
       return actNoBasis("a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite); an assertion that nothing is enough on its own is not a thing the record can hold.", { target });
     if (legs.length !== all.length)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_BASIS",
+      return refuseUnspliceableBasis({
         target,
         detail: "this question's basis carries an entry that is not a leg, so the ordinals a partition addresses cannot be lined up against the document. Nothing was written."
-      };
+      });
     const standingLabel = legs.map((l) => typeof l.ground === "string" && l.ground.trim() ? l.ground.trim() : null);
     const standingRows = Array.isArray(fm.grounds) ? fm.grounds : [];
     const standingByLabel = /* @__PURE__ */ new Map();
@@ -43076,35 +44140,29 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
         detail: `a reason is at most ${_Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
       };
     if (!Array.isArray(grounds))
-      return {
-        ok: false,
-        reason: "BAD_PARTITION",
+      return refuseBadPartition({
         target,
         detail: "grounds must be an ARRAY of groups, each { ground, legs: [ord, ...] }"
-      };
+      });
     const nextLabel = new Array(legs.length).fill(null);
     const claimed = /* @__PURE__ */ new Map();
     const asked = [];
     for (let i = 0; i < grounds.length; i++) {
       const row = grounds[i];
       if (!row || typeof row !== "object" || Array.isArray(row))
-        return {
-          ok: false,
-          reason: "BAD_PARTITION",
+        return refuseBadPartition({
           target,
           at: i,
           detail: `grounds[${i}] is not an object`
-        };
+        });
       const label = typeof row.ground === "string" ? row.ground.trim() : row.ground;
       const ords = row.legs;
       if (!Array.isArray(ords))
-        return {
-          ok: false,
-          reason: "BAD_PARTITION",
+        return refuseBadPartition({
           target,
           at: i,
           detail: `grounds[${i}].legs must be an array of ordinals \u2014 a group is a partition OF THE LEGS, and a group naming none asserts that nothing is enough on its own. Legs are addressed by ORDINAL (their position in basis[]) and never by target id, because one document legitimately carries two legs (D4).`
-        };
+        });
       const stmt = row.statement === void 0 || row.statement === null ? null : row.statement;
       if (stmt !== null && (typeof stmt !== "string" || stmt.length > _Store.EDGE_REASON_MAX || /["\\\r\n]/.test(stmt)))
         return {
@@ -43116,24 +44174,20 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
         };
       for (const raw of ords) {
         if (!Number.isInteger(raw) || raw < 0 || raw >= legs.length)
-          return {
-            ok: false,
-            reason: "BAD_PARTITION",
+          return refuseBadPartition({
             target,
             at: i,
             ord: raw ?? null,
             legs: legs.length,
             detail: `grounds[${i}].legs names ord ${JSON.stringify(raw) ?? "null"}, and this question has legs 0..${legs.length - 1}. An ordinal that addresses no leg groups nothing.`
-          };
+          });
         if (claimed.has(raw))
-          return {
-            ok: false,
-            reason: "BAD_PARTITION",
+          return refuseBadPartition({
             target,
             ord: raw,
             claimed_by: [claimed.get(raw), label],
             detail: `basis[${raw}] is claimed by two groups. A leg belongs to exactly ONE group: a leg that is needed whatever else holds is NECESSARY, and the honest way to say so is to leave the reasons ungrouped \u2014 an ungrouped basis is read as no stronger than its weakest leg, which is the conservative reading.`
-          };
+          });
         claimed.set(raw, label);
         nextLabel[raw] = label;
       }
@@ -43197,22 +44251,18 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
     );
     const errs = bf.filter((x) => x.severity === "error");
     if (errs.length)
-      return {
-        ok: false,
-        reason: "BASIS_REFUSED",
+      return refuseBasisRefused({
         target,
         findings: errs.map((x) => ({ check: x.check, detail: x.message, repairs: x.repairs ?? [] })),
         detail: "the structure this would author is refused by the SAME catalog function op=promote runs at the write, so nothing was written. Every group is a claim that its legs are enough on their own, and that claim carries a name and a date."
-      };
+      });
     const before = this.strengthOf(target);
     const spliced = _Store.#spliceBasisGround(text, nextLabel);
     if (!spliced)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_BASIS",
+      return refuseUnspliceableBasis({
         target,
         detail: "this document's basis block is not in a shape this grammar can edit in place. Nothing was written \u2014 a partial edit of a basis is worse than none."
-      };
+      });
     text = spliced;
     text = grounds.length ? _Store.#setOrAddBlock(text, "grounds", rowsOut.flatMap((r) => [
       `  - ground: ${r.ground}`,
@@ -43912,15 +44962,13 @@ ${lines.join("\n")}
       };
     const liveMd = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string")
-      return { ok: false, reason: "NO_BUNDLE_MD", project };
+      return refuseNoBundleMd({ project });
     const parsed = parseFrontmatter(liveMd.content);
     if (!parsed.data)
-      return {
-        ok: false,
-        reason: "UNPARSEABLE_FRONTMATTER",
+      return refuseUnparseableFrontmatter({
         project,
         detail: "the project's own bundle.md does not parse under the restricted grammar"
-      };
+      });
     const existing = Array.isArray(parsed.data.references) ? parsed.data.references : [];
     const byTarget = /* @__PURE__ */ new Map();
     for (const r of existing)
@@ -44037,9 +45085,7 @@ ${lines.join("\n")}
       );
       const exErrs = ef.filter((x) => x.severity === "error");
       if (exErrs.length)
-        return {
-          ok: false,
-          reason: "BASIS_REFUSED",
+        return refuseBasisRefused({
           project,
           handle,
           drift: sel.drift,
@@ -44050,7 +45096,7 @@ ${lines.join("\n")}
             repairs: x.repairs ?? []
           })),
           detail: "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite."
-        };
+        });
     }
     const when = stampInstant("second");
     if (!sel.members.length)
@@ -44124,12 +45170,10 @@ ${lines.join("\n")}
         };
       spliced = _Store.#spliceBasis(withRefs, filled);
       if (!spliced)
-        return {
-          ok: false,
-          reason: "UNSPLICEABLE_BASIS",
+        return refuseUnspliceableBasis({
           project,
           detail: "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document."
-        };
+        });
     }
     let text = _Store.#setScalar(spliced, "last_updated", `"${when}"`);
     const shown = add.slice(0, _Store.CITE_LOG_SAMPLE);
@@ -45279,9 +46323,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       checkLegExtentGrammar(legFields, "the part of the document this narrowing names", "C-25.10", ef);
       const errs = ef.filter((x) => x.severity === "error");
       if (errs.length)
-        return {
-          ok: false,
-          reason: "BASIS_REFUSED",
+        return refuseBasisRefused({
           target: src.b.bundle_id,
           findings: errs.map((x) => ({
             check: x.check,
@@ -45290,7 +46332,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
             repairs: x.repairs ?? []
           })),
           detail: "the part named is refused by the SAME catalog function op=promote runs at the write, so nothing was written."
-        };
+        });
     }
     const newExtent = chosenRow ? chosenRow.extent : legExtent(legFields);
     const relation = extentRelation(src.extent, newExtent);
@@ -45380,12 +46422,10 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     if (text !== null && gRows.length) text = _Store.#appendFmRows(text, "basis_version_grounds", gRows);
     if (text !== null && lRows.length) text = _Store.#appendFmRows(text, "basis_version_legs", lRows);
     if (text === null)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_BASIS",
+      return refuseUnspliceableBasis({
         target: src.b.bundle_id,
         detail: "this question's version block is in a shape the restricted frontmatter grammar cannot extend in place, so nothing was written."
-      };
+      });
     const toKey = canonicalExtent(newExtent);
     const matched = this.#narrowCandidateList(src).candidates.find((c) => canonicalExtent(c.extent) === toKey) || null;
     text = _Store.#setScalar(text, "last_updated", `"${nowIso}"`);
@@ -47436,7 +48476,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    * manifest base-sha CAS provided on Drive.
    */
   promote(pkg) {
-    if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
+    if (!pkg || typeof pkg !== "object")
+      return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
     const { base, meta, snapKey, author, register: register2 = [] } = pkg;
     let { bundleId, files } = pkg;
     const writer = pkg.writer === "mechanical" ? "mechanical" : null;
@@ -47492,7 +48533,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           "the new project's bundle.md already carries a top-level id: line. The plane writes the id it mints; remove the line and send it again. Nothing was created."
         );
     }
-    if (!bundleId && !creatingProject || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    if (!bundleId && !creatingProject || !Array.isArray(files) || !meta) return refuseMalformed({ detail: "bundleId, files and meta are required" });
     const digested = _Store.#digestFiles(files);
     if (digested.disagree.length)
       return {
@@ -47541,11 +48582,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const act = () => {
       if (creatingProject) {
         bundleId = this.#mintProjectId(meta.title);
-        if (!bundleId) return {
-          ok: false,
-          reason: "MINT_EXHAUSTED",
+        if (!bundleId) return refuseMintExhausted({
           detail: "the plane could not find a free project id in the current sequence"
-        };
+        });
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
         const text = lines.join("\n");
@@ -47590,7 +48629,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         };
       }
       if (cur && base === null)
-        return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
+        return refuseExists({ detail: "creation attempted against an existing bundle" });
       if (!cur && base !== null)
         return _Store.#promoteAbsent();
       if (cur && (meta.title === void 0 || meta.title === null || meta.title === "")) {
@@ -47610,11 +48649,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           bundleId
         ).find((r) => _Store.projectNameKey(r.title) === key);
         if (clash)
-          return {
-            ok: false,
-            reason: "NAME_TAKEN",
+          return refuseNameTaken({
             detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited."
-          };
+          });
       }
       if (cur && cur.object_type === "project") {
         const to = meta.current_state, from = cur.current_state;
@@ -47758,9 +48795,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         );
         const errs = bf.filter((x) => x.severity === "error");
         if (errs.length)
-          return {
-            ok: false,
-            reason: "BASIS_REFUSED",
+          return refuseBasisRefused({
             findings: errs.map((x) => ({
               check: x.check,
               detail: x.message,
@@ -47781,13 +48816,13 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
               } : {},
               ...x.repairs ? { repairs: x.repairs } : {}
             }))
-          };
+          });
         const cerrs = this.#contentLegRefusals(
           basisLegs,
           this.#contentPlanFor(basisLegs),
           (i) => `basis[${i}]`
         );
-        if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
+        if (cerrs.length) return refuseBasisRefused({ findings: cerrs });
       }
       if (isInquiry && docFmW && !pkg.replay && typeof docFmW.subject_entity === "string" && docFmW.subject_entity.trim() !== "") {
         const se = docFmW.subject_entity.trim();
@@ -47830,48 +48865,40 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");
         if (aerrs.length)
-          return {
-            ok: false,
-            reason: "ACTION_BASIS_REFUSED",
+          return refuseActionBasisRefused({
             findings: aerrs.map((x) => ({
               check: x.check,
               detail: x.message,
               ...x.repairs ? { repairs: x.repairs } : {}
             }))
-          };
+          });
         const cf2 = [];
         correspondenceFindings(docFmW, cf2);
         const cerrs = cf2.filter((x) => x.severity === "error");
         if (cerrs.length)
-          return {
-            ok: false,
-            reason: "CORRESPONDENCE_REFUSED",
+          return refuseCorrespondenceRefused({
             findings: cerrs.map((x) => ({
               check: x.check,
               detail: x.message,
               ...x.repairs ? { repairs: x.repairs } : {}
             }))
-          };
+          });
         for (const leg of Array.isArray(docFmW.action_basis) ? docFmW.action_basis : []) {
           if (!leg || typeof leg.target !== "string") continue;
           if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target))
-            return {
-              ok: false,
-              reason: "ACTION_BASIS_REFUSED",
+            return refuseActionBasisRefused({
               target: leg.target,
               findings: [{
                 check: "C-2.10",
                 detail: `action_basis target '${leg.target}' does not resolve in this store: an action that names why it exists names something that exists, or it points a reader at nothing while claiming a reason`
               }]
-            };
+            });
         }
         for (const e of Array.isArray(docFmW.correspondence) ? docFmW.correspondence : []) {
           if (!e || typeof e.artifact_sha !== "string" || !e.artifact_sha.trim()) continue;
           const sha = e.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase();
           if (!this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
-            return {
-              ok: false,
-              reason: "CORRESPONDENCE_REFUSED",
+            return refuseCorrespondenceRefused({
               artifact_sha: sha,
               findings: [{
                 check: "C-2.10",
@@ -47881,7 +48908,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                   "or record a named account instead"
                 ]
               }]
-            };
+            });
         }
       }
       if (docFmW && !pkg.replay) {
@@ -47889,27 +48916,23 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         respondsToEdgeFindings(docFmW, rf);
         const rerrs = rf.filter((x) => x.severity === "error");
         if (rerrs.length)
-          return {
-            ok: false,
-            reason: "RESPONDS_TO_REFUSED",
+          return refuseRespondsToRefused({
             findings: rerrs.map((x) => ({
               check: x.check,
               detail: x.message,
               ...x.repairs ? { repairs: x.repairs } : {}
             }))
-          };
+          });
         for (const r of Array.isArray(docFmW.references) ? docFmW.references : []) {
           if (!r || typeof r !== "object" || r.rel !== "responds_to") continue;
           if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
-            return {
-              ok: false,
-              reason: "RESPONDS_TO_REFUSED",
+            return refuseRespondsToRefused({
               target: r.target,
               findings: [{
                 check: "C-6.1",
                 detail: `responds_to target '${r.target}' does not resolve in this store: this document claims to be what came back from an ask that is not here`
               }]
-            };
+            });
         }
       }
       if (docFmW && !pkg.replay) {
@@ -47917,67 +48940,55 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         supersedesEdgeFindings(docFmW, sf);
         const serrs = sf.filter((x) => x.severity === "error");
         if (serrs.length)
-          return {
-            ok: false,
-            reason: "SUPERSESSION_REFUSED",
+          return refuseSupersessionRefused({
             findings: serrs.map((x) => ({ check: x.check, detail: x.message }))
-          };
+          });
         for (const r of Array.isArray(docFmW.references) ? docFmW.references : []) {
           if (!r || typeof r !== "object" || r.rel !== "supersedes") continue;
           if (r.target === bundleId)
-            return {
-              ok: false,
-              reason: "SUPERSESSION_REFUSED",
+            return refuseSupersessionRefused({
               target: r.target,
               findings: [{
                 check: "C-6.1",
                 detail: `${bundleId} supersedes itself: a question cannot be the thing it replaced`
               }]
-            };
+            });
           if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
-            return {
-              ok: false,
-              reason: "SUPERSESSION_REFUSED",
+            return refuseSupersessionRefused({
               target: r.target,
               findings: [{
                 check: "C-6.1",
                 detail: `supersedes target '${r.target}' does not resolve in this store: an edge that asserts a lineage must name a question that exists, or it points a reader at nothing while claiming a replacement happened`
               }]
-            };
+            });
         }
         const df = [];
         divisionDisclosureFindings(docFmW, df);
         const derrs = df.filter((x) => x.severity === "error");
         if (derrs.length)
-          return {
-            ok: false,
-            reason: "NO_SIBLING_DISCLOSURE",
+          return refuseNoSiblingDisclosure({
             findings: derrs.map((x) => ({ check: x.check, detail: x.message }))
-          };
+          });
         const parentId = typeof docFmW.division_parent === "string" && docFmW.division_parent !== "null" ? docFmW.division_parent : null;
         if (parentId) {
           const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, parentId);
           const pfm = pmd && pmd.content !== null ? parseFrontmatter(pmd.content).data || {} : null;
           const into = pfm && pfm.division && Array.isArray(pfm.division.into) ? pfm.division.into.filter((x) => typeof x === "string") : null;
           if (!into || !into.includes(bundleId))
-            return {
-              ok: false,
-              reason: "NO_SIBLING_DISCLOSURE",
+            return refuseNoSiblingDisclosure({
               parent: parentId,
               detail: `${parentId} does not record ${bundleId} as one of the questions it was divided into, so the parent and the child disagree about whether this division happened. A child names a parent that names it back, or the disclosure is a claim nobody can check.`
-            };
+            });
           const declared = new Set(Array.isArray(docFmW.division_siblings) ? docFmW.division_siblings : []);
           const missing = into.filter((x) => x !== bundleId && !declared.has(x));
           const invented = [...declared].filter((x) => !into.includes(x));
           if (missing.length || invented.length)
-            return {
-              ok: false,
-              reason: "NO_SIBLING_DISCLOSURE",
+            return refuseNoSiblingDisclosure({
               parent: parentId,
               missing,
               not_siblings: invented,
               detail: (missing.length ? `this child does not name ${missing.join(", ")}, which ${parentId} was also divided into. A reader who can see one half of a divided inquiry must be able to see that the other half EXISTS \u2014 otherwise dividing is a cheaper way to shed a finding that cuts against you than severing it, and invariant 7 falls to a housekeeping operation (R4). ` : "") + (invented.length ? `it also names ${invented.join(", ")}, which ${parentId} was not divided into.` : "")
-            };
+            });
         }
       }
       if (isInquiry && docFmW && !pkg.replay) {
@@ -47985,9 +48996,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         basisVersionFindings(docFmW, vf);
         const verrs = vf.filter((x) => x.severity === "error");
         if (verrs.length)
-          return {
-            ok: false,
-            reason: "BASIS_VERSION_REFUSED",
+          return refuseBasisVersionRefused({
             findings: verrs.map((x) => ({
               check: x.check,
               detail: x.message,
@@ -48010,7 +49019,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
               translation: (BASIS_VERSION_CHECKS[x.code] ?? SUGGEST_CHECKS[x.code] ?? CONTENT_EXTENT_CHECKS[x.code])?.translation,
               ...x.repairs ? { repairs: x.repairs } : {}
             }))
-          };
+          });
         const offered = _Store.basisVersionsOf(docFmW);
         for (const v of offered) {
           for (const leg of v.legs) {
@@ -48038,7 +49047,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           const vplan = this.#contentPlanFor(vLegRows);
           const verrs2 = this.#contentLegRefusals(vLegRows, vplan, (i) => `basis_version_legs[${i}] (version '${String(vLegRows[i]?.version ?? "").slice(0, 48)}')`);
           if (verrs2.length)
-            return { ok: false, reason: "BASIS_VERSION_REFUSED", findings: verrs2 };
+            return refuseBasisVersionRefused({ findings: verrs2 });
         }
         for (const v of offered) {
           const prior = this.#one(
@@ -48142,7 +49151,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             detail: "this promotion would remove files the previous revision had. Carry them forward, or name them in drop[] to delete them on purpose."
           };
       }
-      if (!files.find((f2) => f2.path === "bundle.md")?.sha256) return { ok: false, reason: "NO_BUNDLE_MD" };
+      if (!files.find((f2) => f2.path === "bundle.md")?.sha256) return refuseNoBundleMd();
       if (heldAtKey)
         return {
           ok: false,
@@ -52759,7 +53768,7 @@ ${words}`;
         detail: `the content read is FIXED-KEY: it resolves ONE row by content_id and takes no predicate and no paging (D-222 puts the content-grain query arm in stage C, behind D-225's caps). This call carried ${unknown.join(", ")}, which it refuses rather than ignores \u2014 a parameter silently dropped is a filter the caller believes was applied`
       };
     if (typeof id !== "string" || !id)
-      return { ok: false, reason: "NO_ID", detail: "content requires ?id=<content_id>" };
+      return refuseNoId({ detail: "content requires ?id=<content_id>" });
     const r = this.#one(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
               derivation_cap, page_count, minted_by, at, stale, cited_as
@@ -54047,12 +55056,10 @@ ${words}`;
       detail: "an entity needs a kind: one of " + [..._Store.#ENTITY_KINDS].join(", ")
     };
     if (!_Store.#ENTITY_KINDS.has(k))
-      return {
-        ok: false,
-        reason: "UNKNOWN_KIND",
+      return refuseUnknownKind({
         kind: k,
         detail: "the subject registry admits a closed kind vocabulary (D-83 reconciles safeguard 4 with the framework's entity axis): one of " + [..._Store.#ENTITY_KINDS].join(", ") + ". Introducing a new kind is a doctrine change, not a write."
-      };
+      });
     const lab = _Store.#cleanLabel(label);
     if (!lab) return { ok: false, reason: "NO_LABEL", detail: "an entity needs a canonical label, such as 'City Clerk'" };
     const extra = Array.isArray(aliases) ? aliases : [];
@@ -54553,19 +55560,17 @@ ${words}`;
     let refs;
     if (ref != null) {
       if (typeof ref !== "string" || !ref)
-        return { ok: false, reason: "NO_REF", detail: "resolve a single reference by its raw kind:key, or omit ref to resolve all" };
+        return refuseNoRef({ detail: "resolve a single reference by its raw kind:key, or omit ref to resolve all" });
       const one = this.#one(
         `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`,
         captureSha,
         ref
       );
-      if (!one) return {
-        ok: false,
-        reason: "NO_SUCH_REFERENCE",
+      if (!one) return refuseNoSuchReference({
         capture_sha: captureSha,
         ref,
         detail: "this captured document's reading carries no such reference (nothing to resolve)"
-      };
+      });
       refs = [one];
     } else {
       refs = this.#rows(
@@ -54619,19 +55624,17 @@ ${words}`;
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "testimony is about a captured document, named by its capture sha256" };
     if (typeof ref !== "string" || !ref)
-      return { ok: false, reason: "NO_REF", detail: "testimony names the raw reference (kind:key) the document carries" };
+      return refuseNoRef({ detail: "testimony names the raw reference (kind:key) the document carries" });
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
     const b = typeof basis === "string" ? basis.trim() : "";
     if (!b) return actNoBasis("grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=?`, captureSha, ref);
-    if (!rr) return {
-      ok: false,
-      reason: "NO_SUCH_REFERENCE",
+    if (!rr) return refuseNoSuchReference({
       capture_sha: captureSha,
       ref,
       detail: "this captured document's reading carries no such reference to testify about"
-    };
+    });
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
     const method = `testimony -- asserted by ${resolvedBy || "a member"} on the member's stated basis, with no captured document (framework 8.1 grade D)`;
@@ -55072,7 +56075,7 @@ ${words}`;
         cap + 1
       );
     } else {
-      return { ok: false, reason: "NO_KEY", detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" };
+      return refuseNoKey({ detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" });
     }
     const truncated = scan.length > cap;
     const rows = truncated ? scan.slice(0, cap) : scan;
@@ -55300,7 +56303,7 @@ ${words}`;
       if (!view.determining_pair) {
         undetermined.push({
           ...entry,
-          code: "CONNECTION_PAIR_NO_PAIR",
+          ...asStatement(refuseConnectionPairNoPair()),
           why: "this connection was derived before the record kept which reference established it, so whether that reference falls inside this part cannot be asked. Re-deriving the subject's connections records the pair"
         });
         continue;
@@ -55596,7 +56599,7 @@ ${words}`;
      and is not refused for lacking one. */
   defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "a progression definition is named by a key, e.g. 'meeting' or 'procurement'" };
+      return refuseNoKey({ detail: "a progression definition is named by a key, e.g. 'meeting' or 'procurement'" });
     const key = progressionKey.trim();
     if (typeof label !== "string" || !label.trim())
       return { ok: false, reason: "NO_LABEL", detail: "a progression definition carries a human label" };
@@ -55901,7 +56904,7 @@ ${words}`;
      of versions the record holds, each with its author, date and basis. */
   readProgression({ progressionKey, version = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "read a progression definition by its key (op=progression&key=meeting)" };
+      return refuseNoKey({ detail: "read a progression definition by its key (op=progression&key=meeting)" });
     const key = progressionKey.trim();
     const cur = this.#progressionCurrent(key);
     if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
@@ -56395,7 +57398,7 @@ ${words}`;
      -- grade and findings derived. */
   async threadInstance({ progressionKey, entityId, placements, threadedBy = null, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "a progression instance names its definition by key (op=thread)" };
+      return refuseNoKey({ detail: "a progression instance names its definition by key (op=thread)" });
     const key = progressionKey.trim();
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "a progression instance is threaded by an entity, named by its id" };
@@ -56403,12 +57406,10 @@ ${words}`;
     if (!Array.isArray(placements) || placements.length === 0)
       return { ok: false, reason: "NO_PLACEMENTS", detail: "name at least one {stage, captureSha} placement to thread" };
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
-    if (!def) return {
-      ok: false,
-      reason: "NO_SUCH_PROGRESSION",
+    if (!def) return refuseNoSuchProgression({
       progression_key: key,
       detail: "define the progression first (op=progressiondefine), then thread documents through it"
-    };
+    });
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, eid);
     if (!ent) return {
       ok: false,
@@ -56426,7 +57427,7 @@ ${words}`;
     for (let i = 0; i < placements.length; i++) {
       const p = placements[i] || {};
       const sk = typeof p.stage === "string" ? p.stage.trim() : typeof p.stageKey === "string" ? p.stageKey.trim() : "";
-      if (!sk) return { ok: false, reason: "NO_STAGE", detail: `placement ${i + 1} names no stage`, placement: i + 1 };
+      if (!sk) return refuseNoStage({ detail: `placement ${i + 1} names no stage`, placement: i + 1 });
       if (!stageKeys.has(sk)) return {
         ok: false,
         reason: "BAD_STAGE",
@@ -56434,7 +57435,7 @@ ${words}`;
         detail: `'${sk}' is not a stage of progression '${key}'`
       };
       const cs = typeof p.captureSha === "string" ? p.captureSha.trim() : typeof p.capture_sha === "string" ? p.capture_sha.trim() : "";
-      if (!cs) return { ok: false, reason: "NO_CAPTURE", stage_key: sk, detail: `placement for '${sk}' names no capture sha` };
+      if (!cs) return refuseNoCapture({ stage_key: sk, detail: `placement for '${sk}' names no capture sha` });
       const dup = sk + "\0" + cs;
       if (seen.has(dup)) return {
         ok: false,
@@ -56515,7 +57516,7 @@ ${words}`;
      missing-predecessor findings, all DERIVED on read from the CURRENT definition. */
   readInstance({ progressionKey, entityId, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
+      return refuseNoKey({ detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" });
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
     return this.#instanceAnswer(progressionKey.trim(), entityId.trim(), viewer);
@@ -56540,15 +57541,15 @@ ${words}`;
      different stage or from a different document ADDS (a stage may be discharged by several). */
   dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "an exception document names its progression by key (op=discharge)" };
+      return refuseNoKey({ detail: "an exception document names its progression by key (op=discharge)" });
     const key = progressionKey.trim();
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "an exception document discharges a skip in one entity's instance, named by id" };
     const eid = entityId.trim();
     const sk = typeof stageKey === "string" ? stageKey.trim() : typeof stage === "string" ? stage.trim() : "";
-    if (!sk) return { ok: false, reason: "NO_STAGE", detail: "an exception document NAMES the stage it discharges" };
+    if (!sk) return refuseNoStage({ detail: "an exception document NAMES the stage it discharges" });
     const cs = typeof captureSha === "string" ? captureSha.trim() : typeof capture_sha === "string" ? capture_sha.trim() : "";
-    if (!cs) return { ok: false, reason: "NO_CAPTURE", detail: "an exception document IS a captured document, named by its capture sha" };
+    if (!cs) return refuseNoCapture({ detail: "an exception document IS a captured document, named by its capture sha" });
     const rsn = typeof reason === "string" ? reason.trim() : "";
     if (!rsn) return {
       ok: false,
@@ -56558,12 +57559,10 @@ ${words}`;
     const cite = typeof citation === "string" ? citation.trim() : "";
     if (!cite) return actNoCitation("an exception document carries a citation -- where the justification for the skip is published");
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
-    if (!def) return {
-      ok: false,
-      reason: "NO_SUCH_PROGRESSION",
+    if (!def) return refuseNoSuchProgression({
       progression_key: key,
       detail: "define the progression first (op=progressiondefine), then discharge a skip in one of its instances"
-    };
+    });
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, eid);
     if (!ent) return {
       ok: false,
@@ -56622,7 +57621,7 @@ ${words}`;
      "discharged" states; this shows every exception recorded, applied or not. */
   readExceptions({ progressionKey, entityId, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
-      return { ok: false, reason: "NO_KEY", detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" };
+      return refuseNoKey({ detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" });
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" };
     const key = progressionKey.trim(), eid = entityId.trim();
@@ -59245,12 +60244,10 @@ ${words}`;
       id,
       ...gate.args
     );
-    if (!row) return {
-      ok: false,
-      reason: "NO_SUCH_CASE",
+    if (!row) return refuseNoSuchCase({
       case: id,
       detail: "no case by that id is visible to you. A case you may not see and a case that does not exist answer identically here (D-15), so this refusal reveals nothing either way."
-    };
+    });
     const ty = normalizeType(row.object_type);
     if (!_Store.QUEUE_CASE_TYPES.includes(ty))
       return {
@@ -59309,11 +60306,9 @@ ${words}`;
     at = null
   } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
-    if (!me) return {
-      ok: false,
-      reason: "NO_MEMBER",
+    if (!me) return refuseNoMember({
       detail: "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it. There is no instance-wide mute and there must not be."
-    };
+    });
     const mutableKinds = [...Object.keys(QUEUE_CONDITION_KINDS), ...Object.keys(QUEUE_FINDING_KINDS)];
     const itemId = typeof item === "string" ? item.trim() : "";
     const named = Array.isArray(kinds) ? kinds.map((k) => typeof k === "string" ? k.trim() : "").filter(Boolean) : [];
@@ -59353,14 +60348,12 @@ ${words}`;
           detail: "a kind is a slug and may not contain a comma; the stored set is comma-separated"
         };
       if (sb.cls === null)
-        return {
-          ok: false,
-          reason: "UNKNOWN_KIND",
+        return refuseUnknownKind({
           ...sb.item ? { item: sb.item } : { kind: sb.kind },
           case: c ? c.id : null,
           detail: sb.item ? "no queue item by that id is one this plane can classify: a FINDING's or CONDITION's id begins with its class (as op=queue publishes it), and it names no obligation. Unknown is not the same as forbidden, and this refusal is the first rather than the second." : "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
           available: mutableKinds
-        };
+        });
       if (!PERSONALLY_MUTABLE_CLASSES.includes(sb.cls))
         return {
           ok: false,
@@ -59468,11 +60461,9 @@ ${words}`;
     at = null
   } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
-    if (!me) return {
-      ok: false,
-      reason: "NO_MEMBER",
+    if (!me) return refuseNoMember({
       detail: "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it."
-    };
+    });
     const c = this.#queueCaseFor(caseId, viewer);
     if (c.ok !== true) return c;
     const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
@@ -59638,12 +60629,10 @@ ${words}`;
       project: proj,
       detail: "a project-scoped disposition names the FINDING it ages, by the queue item's own id (op=queue publishes it as disposition.finding). A project with no finding names a team and no decision."
     };
-    if (scoped && !proj) return {
-      ok: false,
-      reason: "NO_PROJECT_SCOPE",
+    if (scoped && !proj) return refuseNoProjectScope({
       finding: find,
       detail: "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, and that act is scoped to ONE project's feed (D-266: a stance is expressly one project's own property, \xA77/D-216, and R5 makes forks at the judgment layer legitimate). Name the project you are acting for \u2014 op=queue publishes the candidates as disposition.projects. It is not defaulted even when there is only one, because a plane choosing whose judgment the record carries is the single shared stance \xA77 rejected, arriving through a defaulted parameter."
-    };
+    });
     const keyed = typeof key === "string" ? key.trim() : "";
     const byId = !scoped && keyed ? itemClassOf(keyed) : null;
     const keyClass = byId || (!scoped ? classOfKind(pk) : null);
@@ -59663,24 +60652,18 @@ ${words}`;
       };
     }
     if (keyClass === "FINDING")
-      return {
-        ok: false,
-        reason: "NO_PROJECT_SCOPE",
+      return refuseNoProjectScope({
         finding: byId ? keyed : `FINDING::${pk}::${sk}`,
         kind: keyKind,
         requires: ["project", "finding"],
         detail: "this names a FINDING that carries no progression stage, so this is the project-scoped disposition and it needs the project you are acting for. Send `project` (one of op=queue's disposition.projects for this item) and `finding` (its disposition.finding) instead of `key`. Nothing was written and no team's feed moved."
-      };
-    if (!scoped && !pk) return {
-      ok: false,
-      reason: "NO_KEY",
+      });
+    if (!scoped && !pk) return refuseNoKey({
       detail: "a proposal disposition names its progression (progressionKey, or key='progression::stage')"
-    };
-    if (!scoped && !sk) return {
-      ok: false,
-      reason: "NO_STAGE",
+    });
+    if (!scoped && !sk) return refuseNoStage({
       detail: "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')"
-    };
+    });
     const st = typeof to === "string" ? to.trim() : typeof state === "string" ? state.trim() : "";
     if (!DISPOSITIONS.includes(st))
       return {
@@ -59764,12 +60747,10 @@ ${words}`;
       };
     }
     const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, pk);
-    if (!def) return {
-      ok: false,
-      reason: "NO_SUCH_PROGRESSION",
+    if (!def) return refuseNoSuchProgression({
       progression_key: pk,
       detail: "define the progression first (op=progressiondefine); a proposal exists only for a defined one"
-    };
+    });
     const stageRow = this.#one(
       `SELECT stage_key FROM progression_stages WHERE progression_key=? AND stage_key=?`,
       pk,
@@ -60445,7 +61426,7 @@ ${words}`;
      makes a leg addressable. A read of the PROJECTION; bundle.md stays the
      authority. */
   basisFor(bundleId) {
-    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "basis requires ?id=" };
+    if (!bundleId) return refuseNoId({ detail: "basis requires ?id=" });
     const legs = this.#rows(
       `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
        FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`,
@@ -60458,7 +61439,7 @@ ${words}`;
      inquiry_basis_target, never a graph walk. Answers for an INFO- target and
      for an INQ- target alike, because a leg to an inquiry is the same edge. */
   restingOn(targetId) {
-    if (!targetId) return { ok: false, reason: "NO_ID", detail: "restson requires ?id=" };
+    if (!targetId) return refuseNoId({ detail: "restson requires ?id=" });
     const dependents = this.#rows(
       `SELECT bundle_id, ord, role, grade, grade_axis, grade_source
        FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`,
@@ -61311,7 +62292,7 @@ ${words}`;
    *  connection } as two" until then) — and NO scalar: there is nothing here for a caller to render as "the strength",
    *  because a case does not have one. */
   strengthOf(bundleId) {
-    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
+    if (!bundleId) return refuseNoId({ detail: "strength requires ?id=" });
     const bound = _Store.QUEUE_ANCESTOR_DEPTH;
     const pair = this.#strengthWalk(
       bundleId,
@@ -61399,11 +62380,9 @@ ${words}`;
    *  `state` field and stay two here (DEC-18): the cached columns could not
    *  tell them apart and that is half of why this op exists. */
   inquiryStrength({ id = null, viewer = null } = {}) {
-    if (!id) return {
-      ok: false,
-      reason: "NO_ID",
+    if (!id) return refuseNoId({
       detail: "the derived pair is asked of one inquiry: pass id=<bundle id>"
-    };
+    });
     if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     const row = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
     const ty = normalizeType(row?.object_type);
@@ -61961,7 +62940,7 @@ ${words}`;
      ADMIN_TOKEN cannot silently re-claim a running instance. */
   async claim({ role = "admin", password, tokenFp = null } = {}) {
     if (typeof password !== "string" || password.length < 12)
-      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+      return refusePasswordTooShort({ minimum: 12 });
     const st = this.bootstrapState(tokenFp);
     if (st.claimed)
       return { ok: false, reason: "ALREADY_CLAIMED", consumedAt: st.consumedAt };
@@ -63545,7 +64524,7 @@ ${words}`;
     };
   }
   static #promoteAbsent() {
-    return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+    return refuseAbsent({ detail: "update attempted against a bundle that does not exist" });
   }
   static #noSuchProject(project) {
     return {
@@ -63648,7 +64627,7 @@ ${words}`;
         detail: "only an owner of this project invites participants to it. An administrator sees every project and directs none of them."
       };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     if (this.#participation(projectId, target.member_id))
       return { ok: false, reason: "ALREADY_A_PARTICIPANT", handle };
@@ -63729,7 +64708,7 @@ ${words}`;
         detail: "only an owner of this project removes a participant from it. This REVERSES the earlier rule, under which an administrator removed and an owner could not."
       };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     const p = this.#participation(projectId, target.member_id);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT", handle };
     if (p.owner) return {
@@ -63761,7 +64740,7 @@ ${words}`;
         detail: "only an owner of this project may propose another owner of it"
       };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     const p = this.#participation(projectId, target.member_id);
     if (!p) return {
@@ -63877,7 +64856,7 @@ ${words}`;
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     const now = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
@@ -63930,7 +64909,7 @@ ${words}`;
         detail: "only an owner of this project votes on its ownership"
       };
     const target = this.#memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!target) return refuseNoSuchHandle({ handle });
     if (!this.#isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
     const why = String(reason ?? "").trim();
@@ -63957,7 +64936,7 @@ ${words}`;
       target.member_id,
       by
     ))
-      return { ok: false, reason: "ALREADY_VOTED", by };
+      return refuseAlreadyVoted({ by });
     const now = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_owner_votes (project_id,kind,target,voter,reason,created) VALUES (?,'remove',?,?,?,?)`,
@@ -64060,18 +65039,16 @@ ${words}`;
     const want = _Store.projectNameKey(title);
     if (!want) return { ok: false, reason: "NO_TITLE", detail: "a fork needs a name of its own" };
     const clash = this.#rows(`SELECT bundle_id, title FROM bundles WHERE object_type='project'`).find((r) => _Store.projectNameKey(r.title) === want);
-    if (clash) return {
-      ok: false,
-      reason: "NAME_TAKEN",
+    if (clash) return refuseNameTaken({
       detail: "a project by that name already exists on this instance, and project names are unique. This holds for deactivated projects too, because their names are still cited."
-    };
+    });
     const liveMd = this.#one(
       `SELECT content, bundle_sha FROM files f JOIN bundles b ON b.bundle_id=f.bundle_id
        WHERE f.bundle_id=? AND f.path='bundle.md'`,
       projectId
     );
     if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", detail: "the origin has no readable bundle.md to fork" };
+      return refuseNoDocument({ detail: "the origin has no readable bundle.md to fork" });
     const when = (/* @__PURE__ */ new Date()).toISOString();
     const withEdge = _Store.#spliceReferences(
       liveMd.content,
@@ -64382,7 +65359,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   /** The member's own statement about themselves. */
   expertiseDeclare({ memberId, label } = {}) {
     const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
     const lab = _Store.#normLabel(label);
     if (!lab) return { ok: false, reason: "NO_LABEL", detail: "a declaration needs a label, such as 'CPA'" };
@@ -64414,7 +65391,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         detail: "an administrator confirms a declared license, and may do so for another administrator: vouching for someone is the same act whoever they are"
       };
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     const lab = _Store.#normLabel(label);
     const cur = this.#expertiseState(memberId, lab);
     if (cur === null)
@@ -64663,7 +65640,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         detail: "setting a member's capabilities is an administrator's act (4.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators."
       };
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     const want = Array.isArray(capabilities) ? capabilities : null;
     if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
     if (want.includes("administer") || m.role === "admin")
@@ -64688,7 +65665,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  manufactures the majority that ejects the honest ones. */
   async adminEndorse({ memberId, by } = {}) {
     const m = this.#one(`SELECT member_id, status, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.status !== "proposed") return { ok: false, reason: "NOT_PROPOSED", status: m.status };
     const admins = this.#activeAdmins();
     if (!by || !admins.includes(by)) return { ok: false, reason: "NOT_AN_ADMIN", by };
@@ -64730,7 +65707,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         detail: "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the application. Whoever can set ADMIN_TOKEN can take the group over, and there is no arrangement in which nobody holds that power, because the instance runs in somebody's hosting account. The remedy is at the hosting account, not here (section 4.6)."
       };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.role !== "admin") return { ok: false, reason: "NOT_AN_ADMIN", detail: "this member is not an administrator" };
     const admins = this.#activeAdmins();
     if (memberId === by) return {
@@ -64750,7 +65727,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         detail: `removal takes ${math.votesNeeded} of ${math.administrators} administrators and only ${math.eligibleVoters} may vote, so it cannot be carried. That is the rule working, not a defect: a lone administrator must never be able to eject the other.`
       };
     if (this.#one(`SELECT voter FROM admin_votes WHERE kind='remove' AND target=? AND voter=?`, memberId, by))
-      return { ok: false, reason: "ALREADY_VOTED", by };
+      return refuseAlreadyVoted({ by });
     const now = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO admin_votes (kind,target,voter,reason,created) VALUES ('remove',?,?,?,?)`,
@@ -64813,7 +65790,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name"
       };
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return { ok: false, reason: "EXISTS", memberId };
+      return refuseExists({ memberId });
     if (expertise !== null && expertise !== void 0)
       return {
         ok: false,
@@ -64931,7 +65908,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (this.#one(`SELECT member_id FROM members WHERE handle=? AND member_id<>?`, h, m.member_id))
       return { ok: false, reason: "HANDLE_TAKEN", handle: h };
     if (typeof password !== "string" || password.length < 12)
-      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+      return refusePasswordTooShort({ minimum: 12 });
     await this.setPassword({ role: `member:${m.member_id}`, password });
     this.sql.exec(
       `UPDATE members SET status='active', handle=?, invite_hash=NULL, updated=? WHERE member_id=?`,
@@ -64963,7 +65940,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (barSet) return barSet;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.role === "admin" && status === "revoked")
       return {
         ok: false,
@@ -65038,7 +66015,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    * `const bar = …; if (bar) return bar;` and nothing else. */
   #signerMemberBar(memberId) {
     const m = this.#one(`SELECT member_id, status, handle FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return refuseNoSuchMember();
     if (m.status === "active") return null;
     const enrolled = typeof m.handle === "string" && m.handle !== "";
     const refusal7 = (code, detail) => {
@@ -65168,7 +66145,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       if (existence) return existence;
     }
     if (!row || viewer !== null && viewer !== void 0 && !this.#inSight(bundleId, viewer))
-      return { ok: false, reason: "ABSENT", bundleId };
+      return refuseAbsent({ bundleId });
     return {
       ok: true,
       row,
@@ -65269,7 +66246,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     memberCarriesBlocks = false
   } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
-      return { ok: false, reason: "MALFORMED" };
+      return refuseMalformed();
     return this.ctx.storage.transactionSync(() => {
       const pinnedBy = this.#pinnedCaseEditionsOf(bundleId, bundleSha);
       if (pinnedBy.length) {
@@ -65729,7 +66706,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      op=publishedbytes checks before serving anything. */
   recordCaseManifest({ caseId, edition, manifest, manifestSha, bytes = null } = {}) {
     if (!caseId || !Number.isInteger(Number(edition)) || !manifest || !manifestSha)
-      return { ok: false, reason: "MALFORMED" };
+      return refuseMalformed();
     const ed = Number(edition);
     return this.ctx.storage.transactionSync(() => {
       const c = this.#one(`SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
@@ -65860,7 +66837,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      frozen PAIR the group signed. This is what makes "edition 1 still answers"
      checkable rather than merely stated. */
   publishedEditions(bundleId) {
-    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "publishededitions requires ?id=" };
+    if (!bundleId) return refuseNoId({ detail: "publishededitions requires ?id=" });
     const rows = this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
               delivered_by, gate_version, sig_armored, strength, required
@@ -66546,7 +67523,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  the viewer may not see -> dropped from the registry, with the fact that
    *  something was dropped stated and NO id and NO count leaked. */
   earnedBasis({ id, targets = null, viewer = null } = {}) {
-    if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
+    if (!id) return refuseNoId({ detail: "earnedbasis requires ?id=<inquiry>" });
     if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     const b = this.#one(`SELECT object_type, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, id);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
@@ -66618,7 +67595,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
        D-15: viewer-gated like every other read that can name a bundle, and fails
        closed on an absent viewer. */
   excludedBy(targetId, viewer = null) {
-    if (!targetId) return { ok: false, reason: "NO_ID", detail: "excludedby requires ?id=" };
+    if (!targetId) return refuseNoId({ detail: "excludedby requires ?id=" });
     const gate = viewerPredicate(viewer);
     const rows = this.#rows(
       `SELECT x.bundle_id, x.ord, x.edition, x.description, x.reason, x.author, x.at,
@@ -76424,7 +77401,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   taskForward({ id = null, to = null, actor = null, now = null, items } = {}) {
     if (items !== void 0)
       return this.#perItem("taskforward", { items, to, now }, { actor }, (b) => this.taskForward(b));
-    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
+    if (!actor) return refuseNoActor({ detail: "a forward is recorded under the member who made it" });
     if (isMachineStamp(actor))
       return {
         ok: false,
@@ -76433,12 +77410,22 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       };
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
-    if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
+    if (row.status === "resolved")
+      return {
+        ok: false,
+        reason: "ALREADY_RESOLVED",
+        detail: "a resolved task is not forwarded; a new determination opens a new task"
+      };
     const fenced = this.#refuseNotYours(row, actor, "forward");
     if (fenced) return fenced;
     const target = this.#one(`SELECT member_id FROM members WHERE member_id=? AND status='active'`, to);
-    if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
-    if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
+    if (!target) return refuseNoSuchMember({ detail: "a task is forwarded to an active member of this group" });
+    if (target.member_id === row.assignee)
+      return {
+        ok: false,
+        reason: "ALREADY_THEIRS",
+        detail: "the task is already assigned to the member it would be forwarded to"
+      };
     const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "forwarded", actor });
@@ -76475,7 +77462,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   taskResolve({ id = null, actor = null, now = null, items } = {}) {
     if (items !== void 0)
       return this.#perItem("taskresolve", { items, now }, { actor }, (b) => this.taskResolve(b));
-    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
+    if (!actor) return refuseNoActor({ detail: "a resolution is recorded under the member who made it" });
     if (isMachineStamp(actor))
       return {
         ok: false,
@@ -79567,15 +80554,17 @@ async function archiveSelect(env, st, address) {
   try {
     const g = await governedFetch(env, st, cdxQuery(address), "archive-lookup");
     if (g.refusedByGovernor)
-      return { ok: false, status: 429, payload: {
-        ok: false,
-        reason: "HOST_COOLING_OFF",
+      return { ok: false, status: 429, payload: refuseHostCoolingOff({
         detail: `the governor is holding requests to web.archive.org (${g.reason})`,
         retry_in_ms: g.retry_in_ms || 0
-      } };
+      }) };
     res = g.res;
   } catch (e) {
-    return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } };
+    return {
+      ok: false,
+      status: 502,
+      payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) }
+    };
   }
   if (!res.ok)
     return { ok: false, status: 502, payload: {
@@ -83347,11 +84336,9 @@ var index_default = {
         const caseId = url.searchParams.get("case") || "";
         const ed = url.searchParams.get("edition");
         if (!caseId || !ed)
-          return json({
-            ok: false,
-            reason: "MALFORMED",
+          return json(refuseMalformed({
             detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>"
-          }, 400);
+          }), 400);
         const reader = await caseReader(url, env, "bio", presentedAi.cred);
         if (reader.silent) return storeSilent(reader.silent);
         const docSecret = url.searchParams.has("secret") ? await sha256Hex6(url.searchParams.get("secret") || "") : "";
@@ -83512,7 +84499,7 @@ var index_default = {
           const md = await pubBytes(fnd.bundle_sha);
           const text = md ? new TextDecoder().decode(md) : null;
           const fm = text ? parseFrontmatter(text).data || {} : null;
-          const { ok: _refused, ...whyUnavailable } = text ? {} : publishedStoreAbsent(env) ?? { reason: "OBJECT_MISSING" };
+          const { ok: _refused, ...whyUnavailable } = text ? {} : publishedStoreAbsent(env) ?? refuseObjectMissing();
           const body2 = text ? {
             state: "published",
             from_sha: fnd.bundle_sha,
@@ -84419,11 +85406,9 @@ var index_default = {
       const body2 = req.method === "POST" ? await req.json().catch(() => null) : null;
       const address = body2?.address || url.searchParams.get("address");
       if (typeof address !== "string" || !isPublicHttpsLocator(address))
-        return json({
-          ok: false,
-          reason: "BAD_ADDRESS",
+        return json(refuseBadAddress({
           detail: "the document address must be https on a public host"
-        }, 400);
+        }), 400);
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const sel = await archiveSelect(env, st, address);
       if (!sel.ok) return json(sel.payload, sel.status);
@@ -84449,31 +85434,25 @@ var index_default = {
         return storageAbsent(op, "this instance has no evidence storage configured");
       const body2 = await req.json().catch(() => null);
       if (cls === "daemon" && body2?.via !== "archive.org" && body2?.via !== "capture-request")
-        return json({
-          ok: false,
-          reason: "NOT_PERMITTED",
+        return json(refuseNotPermitted({
           op,
           cls,
           detail: `the daemon class reaches op=acquire through the archive fallback (via: "archive.org") and through the capture-request drain (via: "capture-request"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the verbs the unattended paths need.`
-        }, 403);
+        }), 403);
       const stArc = env.STORE.get(env.STORE.idFromName(storeName));
       let archiveHopRecorded = null, archiveChosen = null, archiveAddress = null;
       if (body2?.via === "archive.org") {
         if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
-          return json({
-            ok: false,
-            reason: "NOT_PERMITTED",
+          return json(refuseNotPermitted({
             op,
             via: "archive.org",
             detail: "the archive fallback is a monitoring path: it runs under an operator or daemon credential, never a member's. Capture the document directly, or ask an administrator to run the fallback."
-          }, 403);
+          }), 403);
         const addr = body2?.address;
         if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
-          return json({
-            ok: false,
-            reason: "BAD_ADDRESS",
+          return json(refuseBadAddress({
             detail: "an archive-sourced capture names the document address, not a replay locator"
-          }, 400);
+          }), 400);
         const sel = await archiveSelect(env, stArc, addr);
         if (!sel.ok) return json(sel.payload, sel.status);
         archiveHopRecorded = sel.hop;
@@ -84660,13 +85639,11 @@ var index_default = {
         const g = await governedFetch(env, stGov, locator, crPurpose || "acquire", crAgent);
         if (g.refusedByGovernor) {
           await noteOutcome("governed", null);
-          return json({
-            ok: false,
-            reason: "HOST_COOLING_OFF",
+          return json(refuseHostCoolingOff({
             detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
             retry_in_ms: g.retry_in_ms || 0,
             locator
-          }, 429);
+          }), 429);
         }
         res2 = g.res;
       } catch (e) {
@@ -84754,7 +85731,7 @@ var index_default = {
       const driveHead = driveCapture ? new Uint8Array(1024) : null;
       let driveHeadBytes = 0;
       const reader = res2.body && res2.body.getReader ? res2.body.getReader() : null;
-      if (!reader) return json({ ok: false, reason: "NO_BODY", locator }, 502);
+      if (!reader) return json({ ok: false, reason: "FETCH_NO_BODY", locator }, 502);
       for (; ; ) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -85012,12 +85989,12 @@ var index_default = {
       let subs = null, subsSkipped = null, sessionId = null;
       if (body2.subresources === true) {
         if (multipart || total > SUB_PARSE_MAX)
-          subsSkipped = { reason: "TOO_LARGE_TO_PARSE", detail: `subresource capture reads the primary back into memory to parse it, so it is bounded to ${SUB_PARSE_MAX} bytes; this document is ${total}` };
+          subsSkipped = asStatement(refuseTooLargeToParse({ detail: `subresource capture reads the primary back into memory to parse it, so it is bounded to ${SUB_PARSE_MAX} bytes; this document is ${total}` }));
         else if (detectFormat(null, ct || null).format !== "html")
-          subsSkipped = { reason: "NOT_HTML", content_type: ct || null, detail: "only an HTML page has subresources; the capture is unaffected and complete" };
+          subsSkipped = asStatement(refuseNotHtml({ content_type: ct || null, detail: "only an HTML page has subresources; the capture is unaffected and complete" }));
         else {
           const obj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
-          if (!obj) subsSkipped = { reason: "PRIMARY_UNREADABLE", detail: "the primary capture did not read back" };
+          if (!obj) subsSkipped = asStatement(refusePrimaryUnreadable({ detail: "the primary capture did not read back" }));
           else {
             const primaryBytes = new Uint8Array(await obj.arrayBuffer());
             const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -85027,9 +86004,9 @@ var index_default = {
               try {
                 const ld = (await (await stLim.fetch(`http://x/loadcapturesession?session=${encodeURIComponent(sessionId)}`)).json()).result;
                 if (ld && ld.found) resumeState = ld.state;
-                else subsSkipped = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
+                else subsSkipped = asStatement(refuseNoSuchSession({ detail: ld && ld.note }));
               } catch {
-                subsSkipped = { reason: "SESSION_UNREADABLE" };
+                subsSkipped = asStatement(refuseSessionUnreadable());
               }
             }
             let limit = null;
@@ -85088,7 +86065,7 @@ var index_default = {
                     const st = await (await stGov.fetch(`http://x/governorstate?host=${encodeURIComponent(subHost)}`)).json();
                     const row = st?.result?.hosts?.[0];
                     if (row && row.cooloff_until > Date.now())
-                      return { ok: false, status: 0, reason: "HOST_COOLING_OFF" };
+                      return refuseHostCoolingOff({ status: 0 });
                   } catch {
                   }
                 }
@@ -85908,7 +86885,7 @@ var index_default = {
       if (!imgOut.answered) return storeSilent("monitor");
       const img = imgOut.result;
       if (!img || typeof img["bundle.md"] !== "string")
-        return json({ ok: false, reason: "ABSENT", bundleId }, 404);
+        return json(refuseAbsent({ bundleId }), 404);
       const live = img["bundle.md"];
       const fm = parseFrontmatter(live).data || {};
       if (!fm.monitoring || fm.monitoring.enabled !== true)
@@ -85997,9 +86974,7 @@ var index_default = {
         const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), tickAddress, "monitor");
         if (g.refusedByGovernor) {
           const observation2 = await monitorLook({ outcome: "governed", reason: g.reason });
-          return json({
-            ok: false,
-            reason: "HOST_COOLING_OFF",
+          return json(refuseHostCoolingOff({
             detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
             retry_in_ms: g.retry_in_ms || 0,
             locator,
@@ -86007,7 +86982,7 @@ var index_default = {
                watched, and `docs.google.com` is not the host the bundle names. */
             ...driveTick && driveTick.harvestable ? { fetched_address: tickAddress } : {},
             observation: observation2
-          }, 429);
+          }), 429);
         }
         const res2 = g.res;
         httpStatus = res2.status;
@@ -86350,11 +87325,9 @@ var index_default = {
         }, 403);
       const body2 = await req.json().catch(() => null);
       if (!body2?.caseId || !Number.isInteger(body2?.edition) || !body2?.expectedSha || typeof body2?.sig !== "string")
-        return json({
-          ok: false,
-          reason: "MALFORMED",
+        return json(refuseMalformed({
           detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
-        }, 400);
+        }), 400);
       const factsOut = await doAnswer(stub.fetch(
         `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(sessViewer)}`
       ));
@@ -86500,7 +87473,7 @@ var index_default = {
         }, 403);
       const body2 = await req.json().catch(() => null);
       if (!body2?.bundleId || !body2?.expectedSha || typeof body2?.sig !== "string")
-        return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
+        return json(refuseMalformed({ detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }), 400);
       const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
       const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body2.bundleId)}&viewer=${ratViewer}`));
       if (!factsOut.answered) return storeSilent("ratify/gatefacts");
