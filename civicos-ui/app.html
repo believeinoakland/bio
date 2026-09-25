@@ -14994,7 +14994,7 @@ function queueFindingPriorHtml(it){
   if(p === null)
     return `<div class="q-gap" data-prior="none"><b>Nobody has decided this question before.</b> The record holds no earlier decision on it.</div>`;
   if(!p || typeof p !== "object")
-    return `<div class="q-gap" data-prior="unreadable">The record published an earlier decision on this question in a shape this page cannot read, and none is invented here.</div>`;
+    return `<div class="q-gap" data-prior="malformed">The record published an earlier decision on this question in a shape this page cannot read, and none is invented here.</div>`;
   const state = String(p.state || "").trim();
   const who   = String(p.decided_by || "").trim();
   const at    = String(p.at || "").trim();

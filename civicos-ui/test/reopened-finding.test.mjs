@@ -253,7 +253,7 @@ const p = it2 && it2.prior_disposition;
 /* THE CORPUS, PRINTED AND FLOORED: the subject must be on the feed, non-null, before any render
    assertion can mean anything. */
 console.log(`  CORPUS: queue ${q2.length} bytes; feed items ${(f2.items||[]).length}; grant item `
-  + `${it2 ? "present" : "ABSENT"}; its prior_disposition ${JSON.stringify(p)}`);
+  + `${it2 ? "present" : "absent"}; its prior_disposition ${JSON.stringify(p)}`);
 ok("FIXTURE: the plane reopened the grant finding and published its earlier decision on the item (D-527)",
    !!p && p.state === "dismissed" && p.applies === false && p.definition_version === 1
    && it2.subject && it2.subject.definition_version === 2);
