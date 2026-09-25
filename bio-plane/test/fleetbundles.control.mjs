@@ -147,6 +147,30 @@ const report = (label, r, { mustFail, mustNot }) => {
 };
 const named = (r, ...needles) => needles.every((n) => r.out.includes(n));
 
+/* ARM 5(b)'s QUESTION — "is fleetbundles doc-facing?" — ANSWERED BY THE GATE, never restated here (M0-152).
+   CORRECTED 2026-09-25, never exempted: until M0-152 this arm decided it itself, `suiteSrc.includes(needle)` over the
+   suite and this driver read WHOLE, comments included. That restated the rule as it stood before M0-143, which made
+   the gate read every file as CODE with its comments blanked (`walkfloor.mjs` `stripComments`) and follow the tools a
+   suite names in code — so the arm and the gate disagreed the moment either file grew a comment naming the prose
+   directory, and neither ever saw the other's edge rule. A second copy of a rule is how the next one goes stale, so
+   there is none: the verdict is whether `gates.mjs --explain`'s own derived line lists this suite. The whole-file
+   read is still computed, printed beside the verdict for CONTRAST only (this arm's negative control reads the two
+   disagreeing). `--explain` prints the derivation in every class since M0-152; a run that prints none is UNDETERMINED
+   (`null`), never "not doc-facing". The gate is named as two arguments so this driver's CODE never spells the tool's
+   path — a `tools/<name>.mjs` literal in code would itself make the suite doc-facing through the gate's edge rule. */
+const GATES = join(REPO, "tools", "gates.mjs");
+function docFacingVerdict() {
+  const g = spawnSync("node", [GATES, "--explain"], { cwd: REPO, encoding: "utf8", env: { ...process.env, BIO_GATE_RESULTS: "off" } });
+  const out = (g.stdout || "") + (g.stderr || "");
+  writeFileSync(join(PEN, "explain.out"), out);
+  const cls = (/gates: change class (\w+)/.exec(out) || [, "UNREAD"])[1];
+  const m = /doc-facing suites derived fresh[^\n]*?plane \[([^\]]*)\]/.exec(out);
+  const docFacing = m ? m[1].split(", ").includes("fleetbundles.test.mjs") : null;
+  const needle = "do" + "cs/";
+  const wholeRead = readFileSync(SUITE, "utf8").includes(needle) || readFileSync(fileURLToPath(import.meta.url), "utf8").includes(needle);
+  return { status: g.status, cls, docFacing, wholeRead };
+}
+
 const ARMS = {
   baseline: {
     /* The count in this label is the SAME CLAIM as the head's tally and was stale the same way
@@ -280,17 +304,13 @@ const ARMS = {
         mustNot: "any assertion — a legitimately rebuilt, byte-identical bundle must still pass",
       });
 
-      console.log("  (b) gates' doc-facing derivation");
-      /* gates.mjs decides doc-facing by whether the suite's source or its sibling
-         control mentions the documentation directory. Asserted over the REAL
-         files rather than reimplemented, because a second copy of a rule is how
-         the next one goes stale. */
-      const needle = "do" + "cs/";
-      const suiteSrc = readFileSync(SUITE, "utf8");
-      const ctrlSrc = readFileSync(fileURLToPath(import.meta.url), "utf8");
-      console.log(`      suite mentions the prose directory:   ${suiteSrc.includes(needle)}  (must be false)`);
-      console.log(`      control mentions the prose directory: ${ctrlSrc.includes(needle)}  (must be false)`);
-      console.log("      -> a DOCS-class run does not select this suite, so a docs-only change cannot fail on it");
+      console.log("  (b) gates' doc-facing derivation, READ OFF `gates.mjs --explain`");
+      const b = docFacingVerdict();
+      console.log(`      gates.mjs --explain: class ${b.cls}; fleetbundles.test.mjs doc-facing: ${b.docFacing}  (must be false)`);
+      console.log(`      superseded whole-file read, printed for CONTRAST and never the verdict: ${b.wholeRead}`);
+      console.log(b.docFacing === false
+        ? "      -> a DOCS-class run does not select this suite, so a docs-only change cannot fail on it"
+        : "      !! the gate counts this suite doc-facing, or printed no derivation — a FINDING, not a pass");
 
       console.log("  (c) coverage --strict, status read from the process, never a pipeline");
       const cov = spawnSync("node", ["scripts/coverage.mjs", "--strict"], { cwd: PLANE, encoding: "utf8" });
@@ -298,6 +318,36 @@ const ARMS = {
       return r;
     },
   },
+};
+
+/* ---- M0-152's ARMS, beside arm 5 whose (b) they control. No other arm is edited. Each arms THE SUITE ALONE, append-only,
+ * restored with both proofs, and reads arm 5(b)'s own `docFacingVerdict` — the gate's `--explain`, not a restatement. */
+const DOCS_WORD = "do" + "cs/";                       /* spelled in two pieces so THIS driver's code never names it */
+
+ARMS["5b-comment"] = {
+  label: "(5b-comment) M0-152's NEGATIVE CONTROL — append a COMMENT naming the prose directory to the suite. The gate "
+    + "blanks comments (M0-143), so it must still say NOT doc-facing; the superseded whole-file read says the opposite.",
+  run: () => withAppended(SUITE, `\n/* see ${DOCS_WORD}architecture/BIO_System_Design.md */\n`, () => {
+    const b = docFacingVerdict();
+    console.log(`  -> class ${b.cls} · gate says doc-facing: ${b.docFacing} · superseded whole-file read: ${b.wholeRead}`);
+    console.log("     MUST : the gate's verdict stays false (a comment reads nothing); the whole-file read turns true — they DISAGREE");
+    console.log("     MUST NOT : the gate's verdict turn true, or come back null (no derivation printed in a non-DOCS class)");
+    console.log(`     held: ${b.docFacing === false && b.wholeRead === true}`);
+    return b;
+  }),
+};
+
+ARMS["5b-code"] = {
+  label: "(5b-code) THE OVER-LENIENCY ARM — append CODE whose string names the prose directory to the suite. A verdict "
+    + "that is false whatever the tree says would pass 5b-comment for free; this one the gate must turn TRUE.",
+  run: () => withAppended(SUITE, `\nexport const __m0152ArmedProbe = "${DOCS_WORD}";\n`, () => {
+    const b = docFacingVerdict();
+    console.log(`  -> class ${b.cls} · gate says doc-facing: ${b.docFacing} · superseded whole-file read: ${b.wholeRead}`);
+    console.log("     MUST : the gate's verdict turns true — a string path reads prose");
+    console.log("     MUST NOT : stay false or come back null");
+    console.log(`     held: ${b.docFacing === true}`);
+    return b;
+  }),
 };
 
 /* ---- FL-10's ARMS, APPENDED (D-298: the plane's own bundle gets the guard).
