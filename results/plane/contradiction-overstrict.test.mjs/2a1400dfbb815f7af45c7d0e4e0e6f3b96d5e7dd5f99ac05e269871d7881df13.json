@@ -1,0 +1,16 @@
+{
+ "unit": "plane:contradiction-overstrict.test.mjs",
+ "inputHash": "2a1400dfbb815f7af45c7d0e4e0e6f3b96d5e7dd5f99ac05e269871d7881df13",
+ "verdict": "PASS",
+ "run": "97c5e3cd34e6198b70ab8533291e1400aadebfd7.1790308089250.27407.json",
+ "tree": "97c5e3cd34e6198b70ab8533291e1400aadebfd7",
+ "head": "93c8518ce424810d4ec201a366ca61b7b2726992",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 150,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "95c46cea-e05f-5710-bd14-9dc1a271d47a",
+ "at": "2026-09-25T03:48:09.262Z"
+}
