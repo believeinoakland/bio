@@ -64,7 +64,14 @@
  * `Store.publishedCase()`'s success return in `bio-plane/src/store.mjs` (anchor matched exactly once) and the file
  * restored from a per-arm copy, IDENTICAL by sha256 (59abe06a…) AND `cmp` (3,480,319 B): 48/0 whole -> 38/10, the
  * five "THE CASE DOCUMENT IS SIGNED, AND THE STRANGER'S PAGE SAYS SO" rows and the five "THE LIVE WIRE'S SHAPE" rows,
- * and nothing else. OVER-STRICTNESS: the same line spelled `document: state.document ?? null,` -> 48/0. The fixture
+ * and nothing else; RE-RUN at 58 rows after D-731 (a) -> 38/15, the same ten plus the five "VERIFY THE SIGNED
+ * DOCUMENT" rows (no signing line, so no button; the five hash rows are not reached, 53 run). OVER-STRICTNESS: the
+ * same line spelled `document: state.document ?? null,` -> 48/0 (measured before D-731 (a)).
+ * D-731 (a)'s TWO ARMS, RUN 2026-09-25 against `civicos-ui/app.html` 78ef2d7f… (1,641,039 B), each alone, IDENTICAL by
+ * sha256 AND `cmp` after: (G) the button restored to `pubVerify(doc_sha)` — op=verify — (anchor matched once) -> 48/5,
+ * the five "VERIFY THE SIGNED DOCUMENT" rows (the five hash rows are not reached without the button, 53 run);
+ * (H) `pubVerifyCaseDoc` stops comparing the sha (`&& v.doc_sha === sha` removed) -> 53/5, the five "AND IT CHECKS
+ * THE HASH" rows and nothing else. The fixture
  * half of the anchor has its own arm in `publishedcase.test.mjs` (the mock's `delivered_by` dropped -> 246/1).
  * UI-121's six arms above were measured at 38 rows, before these ten were added, and are not re-run here.
  */
@@ -281,7 +288,7 @@ function page() {
     window: { addEventListener() {}, open: () => null },
     fetch: async (u, opts) => mf.dispatchFetch(new URL(u, "http://x").toString(), opts) };
   ctx.globalThis = ctx; vm.createContext(ctx);
-  vm.runInContext(APP + `;globalThis.__U = { PLANE, pubOpen, pubDraftLinkHtml };`, ctx);
+  vm.runInContext(APP + `;globalThis.__U = { PLANE, pubOpen, pubDraftLinkHtml, pubVerifyCaseDoc };`, ctx);
   const U = ctx.__U;
   U.PLANE.base = "http://x";
   return { U, html: (sel) => $$(sel)._html };
@@ -324,7 +331,7 @@ const openCase = async (caseId, edition, what) => {
   const b = block(html);
   /* THE SIGNED BYTES, read here as a stranger through the same op the page reads — no token. */
   const doc = await GET(`op=casedocument&case=${encodeURIComponent(caseId)}&edition=${edition}`);
-  return { html, t: strip(html), b, bt: strip(b), cm: (wire && wire.completeness) || null, wire, doc,
+  return { P, html, t: strip(html), b, bt: strip(b), cm: (wire && wire.completeness) || null, wire, doc,
            signed: (doc && doc.ratified === true && doc.text) || "" };
 };
 /* THE LINE OF THE SIGNED TEXT a phrase stands in — found HERE by the phrase the plane's own suite pins, never
@@ -332,7 +339,7 @@ const openCase = async (caseId, edition, what) => {
 const signedLine = (signed, phrase) => String(signed).split("\n").find((l) => l.includes(phrase)) || null;
 /* The one assertion every live binding makes, row-labelled by the binding. */
 const bindingRows = async (label, caseId, edition, draftId, token, phrase) => {
-  const { html, t, b, bt, cm, signed, wire, doc } = await openCase(caseId, edition, label);
+  const { P, html, t, b, bt, cm, signed, wire, doc } = await openCase(caseId, edition, label);
   /* D-712: THE SIGNED-DOCUMENT LINE, READ BY A STRANGER. Every case here is signed through op=caseratify, and
      until D-712 op=publishedcase served no `document`, so this same page told every stranger each of them was
      "not been signed yet" (data-casedoc="none", measured by UI-121's worker on all five). The signer and the
@@ -344,6 +351,29 @@ const bindingRows = async (label, caseId, edition, draftId, token, phrase) => {
      JSON.stringify({ extra: keysOf(wire).filter((k) => !PUBLISHED_CASE_KEYS.includes(k)),
                       missing: PUBLISHED_CASE_KEYS.filter((k) => !keysOf(wire).includes(k)),
                       document: keysOf(wire && wire.document) }));
+  /* D-731 (a), BOB #36 2026-09-25 11:50Z: THE SIGNING LINE'S "Verify this hash" asks op=casedocument, never op=verify
+     (which answers "NOT PUBLISHED" for a ratified case document — measured on six editions). Driven with the
+     arguments THE PAGE ITSELF wrote into the button, over the live plane, as a stranger; and once with one byte of
+     the sha changed, so a constant "SIGNED" cannot pass. */
+  {
+    const btn = (html.match(/<button[^>]*data-casedoc-verify="casedocument"[^>]*onclick="pubVerifyCaseDoc\('([^']*)','([^']*)','([^']*)','([^']*)'\)"/) || []);
+    const [ , bc, be, bs, bin ] = btn;
+    if (btn.length) await P.U.pubVerifyCaseDoc(bc, be, bs, bin);
+    const said = btn.length ? strip(P.html(bin)) : "";
+    ok(`VERIFY THE SIGNED DOCUMENT (${label}): the button asks op=casedocument with the page's own case, edition and `
+     + `sha, and a stranger reads SIGNED AND HELD naming the signer — never op=verify's "NOT PUBLISHED"`,
+       btn.length > 0 && bc === caseId && Number(be) === Number(edition) && !!doc && bs === doc.doc_sha
+       && /SIGNED AND HELD/.test(said) && said.includes(String(doc.attestor_member)) && !/NOT PUBLISHED/.test(said)
+       && !/pubVerify\('[^']*','#v-casedoc'\)/.test(html),
+       JSON.stringify({ btn: btn.slice(1), said: said.slice(0, 300) }));
+    if (btn.length) {
+      const wrong = (bs[0] === "0" ? "1" : "0") + bs.slice(1);
+      await P.U.pubVerifyCaseDoc(bc, be, wrong, bin);
+      const s2 = strip(P.html(bin));
+      ok(`AND IT CHECKS THE HASH (${label}): the same button handed a sha one character off reads DIFFERENT HASH, not SIGNED`,
+         /DIFFERENT HASH/.test(s2) && !/SIGNED AND HELD/.test(s2), s2.slice(0, 300));
+    }
+  }
   const casedoc = (html.match(/<div class="pub-file" data-casedoc="signed"[\s\S]*?<\/div><\/div>/) || [""])[0];
   ok(`THE CASE DOCUMENT IS SIGNED, AND THE STRANGER'S PAGE SAYS SO (${label}): the signing line names `
    + `${doc && doc.attestor_member} and the signed document's sha, and never "not been signed yet"`,

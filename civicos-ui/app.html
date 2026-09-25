@@ -21229,8 +21229,9 @@ async function pubOpen(id, edition, fromNav){
     PUB.data = c;
     PUB.edition = Number(c.edition);
     /* UI-121: THE SIGNED TEXT, read only where the answer states a draft link — the one block that quotes it
-       (`pubDraftLinkHtml`). `op=publishedcase` does not serve the case document's text; `op=casedocument`
-       serves a RATIFIED edition's to anybody (an unsigned one answers as absent), so a stranger reads the very
+       (`pubDraftLinkHtml`). CORRECTED 2026-09-25 (D-712): this said `op=publishedcase` does not serve the
+       case document's text — true when written; since D-712 it does, as `c.document.text`. The quote still reads
+       `op=casedocument`, which serves a RATIFIED edition's to anybody (an unsigned one answers as absent), so a stranger reads the very
        bytes the attestor signed. A failed read leaves nothing to quote, and the block says so. */
     PUB.signed = null;
     if(pubCaseId(c) && c.completeness && c.completeness.draft){
@@ -21481,7 +21482,7 @@ function pubCaseHtml(c, floors){
          if(!d) return `<div class="pub-drop" data-casedoc="none"><b>This case edition's own document has not been signed yet.</b> Its findings are each verifiable now, by hash, on their own signatures. The case's assertions are not: until the document is ratified there is nothing signed for a stranger to check them against, and this page does not present them as though there were.</div>`;
          return `<div class="pub-file" data-casedoc="signed" data-case="${esc(String(pubCaseId(c)))}">The case document &middot; signed by ${esc((d.attestor && d.attestor.member) || "not named")} &middot; ratified ${esc(String(d.ratified_at || "").slice(0, 10))}
            <div class="mono">sha256:${esc(String(d.doc_sha || ""))} &middot; key ${esc(String((d.attestor && d.attestor.key_b64) || "")).slice(0, 44)}&hellip; &middot; gate ${esc(String(d.gate_version || ""))}
-             &middot; <button class="btn ghost" onclick="pubVerify('${esc(String(d.doc_sha || ""))}','#v-casedoc')">Verify this hash</button><span id="v-casedoc"></span></div></div>`;
+             &middot; <button class="btn ghost" data-casedoc-verify="casedocument" onclick="pubVerifyCaseDoc('${esc(String(pubCaseId(c)))}','${esc(String(c.edition))}','${esc(String(d.doc_sha || ""))}','#v-casedoc')">Verify this hash</button><span id="v-casedoc"></span></div></div>`;
        })()}
        ${(c.verification && Array.isArray(c.verification.findings) ? c.verification.findings : findings.map((f) => ({ bundle_id: f.bundle_id }))).map((v) => `<div class="mono">${esc(String(v.bundle_id))} &middot; <button class="btn ghost" onclick="pubVerify('${esc(String((findings.find((f) => f.bundle_id === v.bundle_id) || {}).bundle_sha || ""))}','#v-c-${esc(String(v.bundle_id))}')">Verify ${esc(String(v.bundle_id))}</button><span id="v-c-${esc(String(v.bundle_id))}"></span></div>`).join("")}</div>
      <div id="v-case"></div>
@@ -21619,6 +21620,34 @@ function planeSaid(x){
    so it can keep a heading and a way back, and converting that into a throw
    would replace a considered surface with a generic error pane. `apiQ` is
    therefore UNCHANGED and its three callers keep their error paths. */
+/* D-731 (a), BOB #36 2026-09-25 11:50Z: THE SIGNED CASE DOCUMENT IS CHECKED AGAINST op=casedocument, NEVER op=verify.
+   op=verify answers for the parts in the published bucket, and a case document's sha is not one of them (D-731 (b)
+   is the plane row that will register it). Asked there, a RATIFIED document read "NOT PUBLISHED — a hash that was
+   never ratified and a hash that never existed are the same answer", which was false about a document the group
+   signed. This asks the op that serves the signed bytes to anybody, and it says exactly what it checked: that the
+   record holds a RATIFIED document for this case edition AND that its sha is the one printed. Nothing more. */
+async function pubVerifyCaseDoc(caseId, edition, sha, into){
+  const el = $(into);
+  if(el) el.innerHTML = ` <span class="subj-how">asking the record&hellip;</span>`;
+  try{
+    const v = await apiQ("casedocument", { case: caseId, edition: String(edition) });
+    if(!el) return v;
+    if(v && v.ok !== false && v.ratified === true && v.doc_sha === sha){
+      el.innerHTML = ` <span class="served yes">SIGNED AND HELD.</span> <span class="subj-how">The record holds a ratified case document for ${esc(caseId)} edition ${esc(String(edition))} whose sha256 is exactly the one printed here, signed by ${esc(String(v.attestor_member || "a member it does not name"))} and ratified ${esc(String(v.ratified_at || "").slice(0, 10))}. What was checked: the record's own copy of the signed document, by its hash. Nothing about this answer required a credential.</span>`;
+    }else if(v && v.ok !== false && v.ratified === true){
+      el.innerHTML = ` <span class="served no">DIFFERENT HASH.</span> <span class="subj-how">The record holds a ratified case document for this edition, but its sha256 is ${esc(String(v.doc_sha || "not stated"))}, not the one printed here. This page and the record disagree about what was signed.</span>`;
+    }else if(v && v.ok !== false){
+      el.innerHTML = ` <span class="served no">NOT RATIFIED.</span> <span class="subj-how">The record holds no ratified case document for this edition, so there is no signed document here to check the printed hash against.</span>`;
+    }else{
+      const said = planeSaid(v);
+      el.innerHTML = ` <span class="served no">NOT ANSWERED.</span> <span class="subj-how">Nothing here says whether the record holds this signed document, because the question was not answered${said ? `. The record's own words: <b>${esc(said)}</b>` : `, and the record did not say why`}.</span>`;
+    }
+    return v;
+  }catch(e){
+    if(el) el.innerHTML = ` <span class="served no">Could not ask.</span> <span class="subj-how">${esc(planeSaid(e) || "the record did not answer")}</span>`;
+    return null;
+  }
+}
 async function pubVerify(sha, into){
   const el = $(into);
   if(el) el.innerHTML = ` <span class="subj-how">asking the record&hellip;</span>`;
