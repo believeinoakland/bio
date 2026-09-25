@@ -95,3 +95,4 @@ filter-branch (it strips the SSH signatures and re-shas every worker commit).
   census moves; shares store/affordances/construct 1.discoverable/Membership §7.14 with REC-196 and REC-186 — compose; D-602 fixed inside;
   FLEET coverage floor `arms: 86` measures 90 on pristine main — slack reported, re-read). Relayed to SCHEDULER #22 by #21.
 - DIST-14: BLOCKED on a deploy (live biosmoke7 is 0.79.0 @ dd324152, no FW-23 CSV reader); nothing pushed. SCHEDULER #22 (cc) flips the row; it stays blocked while Bob holds releases.
+- bob/batch-0925c now **fc85cb3c** (merges 0925a — already on main — plus REC-203 Framework §8.3 rulings). Supersedes the 2e9d4f4e line above.
