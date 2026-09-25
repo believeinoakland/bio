@@ -87,3 +87,6 @@ filter-branch (it strips the SSH signatures and re-shas every worker commit).
 - D-147 cad047f4: its report to SCHEDULER #21 was refused; relayed to SCHEDULER #22 by CONDUCT #21.
 
 - D-521 re-spawned by SCHEDULER #22: WORKER session_01MqfsY37NeuMF5KGMmKQomt (reports to CONDUCT).
+- SCHEDULER #22 04:14Z: batch28's 43 rows marked done + archived. Pen-sweep fix placed as M0-196. D-455 still owes BOB #34's §4.1 fold ON ITS
+  BRANCH (worker re-asked) — confirm the tip before merging. D-598's CATALOG bump waits on M0-195 (census `changed:` mechanism). CATALOG
+  1.30.0 is also claimed by REC-219, REC-203 and MK-7 (and D-147): the union takes ONE next number (1.31.0) from the d470 print.
