@@ -1230,8 +1230,8 @@ scope: re-anchor (r5) by its region marker, not a line; re-measure (c), (e) and 
 accepts-when: every arm runs and each fails by name when its subject is broken, restored by hash (moves: three arms failing and one throwing on main). NEGATIVE CONTROL: this row is one — its record is the arm table.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-542's worker, relayed by CONDUCT #22).
 
-### REC-201 · running — **A RECORDS REQUEST CAN ONLY BE A CALIFORNIA ONE: the action kind is `cpra_request`, and sovereign groups sit outside California.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *DESIGN DIRECTION ADOPTED — a law-neutral `records_request` kind carrying a `law` field; `cpra_request` stays readable as written.* — owner RECORD.
-status: running — SCHEDULER #23 07:45Z: spawned
+### REC-201 · integrated — **A RECORDS REQUEST CAN ONLY BE A CALIFORNIA ONE: the action kind is `cpra_request`, and sovereign groups sit outside California.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *DESIGN DIRECTION ADOPTED — a law-neutral `records_request` kind carrying a `law` field; `cpra_request` stays readable as written.* — owner RECORD.
+status: integrated — SCHEDULER #23 08:35Z: tip 45ce0bc5 on 5e8a65a8, GATE 81/81 GREEN (6597 assertions; 377 units reused; first run's affordances pin corrected 8->9), tree bfc5338a; records_request kind + law on op=projection, C-2.10; construct 8.records-request PARTIAL; I3/I5 IC the integrator's; union with D-147 adds no conflicted file (rebuild bundles, status --write)
 order: behind the current M9/M10 product rows, as ruled (SCHEDULER #17, 2026-09-23; D-149's builder)
 milestone: M10
 interface: I3/I5 — a new action kind; the integrator mints the IC.
@@ -1339,6 +1339,17 @@ depends-on: none (stacked on land/worker/D-194 @ 45437e4d, integrated — the su
 scope: a new leads read (the author's and shared-to-me leads, bounded, each with its latest state) OR key `#frontierInternet`'s `looked` grouping on the lead rather than the subject — state which and why; the surface swaps its list read.
 accepts-when: two readable leads with the same words, looked at in turn, both appear in the member's list with their own latest states (moves: a lead vanishing). NEGATIVE CONTROL: group by subject again and the same-words arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-194's worker).
+
+### D-689 · running — **A MACHINE CREDENTIAL CAN STATE A RECORDS REQUEST'S GOVERNING LAW: nothing fences `law` on a `records_request` (REC-201) or the creation of a `cpra_request` from an `ai` credential, though which law governs is the member's characterization (D-149's C-32.18 fences only the governing-laws list).** BOB #35 RULED 2026-09-25 08:25Z, (b) FENCE BOTH, from DEC-24 and D-149 (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): a machine may only PROPOSE either (REC-195's shape) and a member's act adopts; existing machine-created `cpra_request` rows read MACHINE-STATED, never rewritten. — owner RECORD.
+status: running — SCHEDULER #23 08:35Z: spawned, stacked on land/worker/REC-201 @ 45ce0bc5
+order: at the backlog head after D-682, the first row after REC-201 (running), which adds the `law` field this fences (BOB #35's placement; SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 — a named refusal for a machine credential; a machine-stated reading on existing rows; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*), with BOB #35's 08:25Z ruling, folded into §2 by this row.
+depends-on: none (stacked on land/worker/REC-201 @ 45ce0bc5, integrated — it adds the `law` field this fences).
+scope: refuse by name an `ai` credential stating `law` or creating a `cpra_request`; offer the propose-then-adopt path as REC-195 does for the list; a pre-fence machine-created row reads machine-stated from its recorded author class, unchanged.
+accepts-when: an `ai` credential's cpra_request is refused by name and a member adopts its proposal (moves: a machine stating the law). NEGATIVE CONTROL: an `ai` credential creating a cpra_request is refused by name, and the pre-fence machine row reads machine-stated — lift the fence and the first arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 08:25Z ruling).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
