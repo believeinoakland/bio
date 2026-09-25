@@ -501,8 +501,8 @@ scope: a gated CEILING arm in check-refusal-codes' ratchet shape at the printed 
 accepts-when: the gate reads the ceiling at its printed figure, and a planted second mint site of a single-site code fails by name (the measured failure it moves: 60 candidates, none gated). NEGATIVE CONTROL: plant the second site, and the ceiling arm fails naming the code.
 added: 2026-09-24 · SCHEDULER #20 (id minted by D-513's worker).
 
-### D-559 · running — **TWO NEGATIVE-CONTROL HARNESSES HAVE DECAYED (D-353 decay mode c), on origin/main as on the branches: `nc-rec66.mjs` ARM 1 throws "anchor is not unique" on `const scan = this.#rows(` (store.mjs now holds more than one such line), and `nc-rec129.mjs` reports 10 of 19 arms "DID NOT ARM" with every restore byte-identical.** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
-status: running — SCHEDULER #21 23:50Z spawns WORKER D-559 (depth 2, can report); base origin/main 9f8b69e6
+### D-559 · integrated — **TWO NEGATIVE-CONTROL HARNESSES HAVE DECAYED (D-353 decay mode c), on origin/main as on the branches: `nc-rec66.mjs` ARM 1 throws "anchor is not unique" on `const scan = this.#rows(` (store.mjs now holds more than one such line), and `nc-rec129.mjs` reports 10 of 19 arms "DID NOT ARM" with every restore byte-identical.** Found by M0-182's worker (via CONDUCT #20 23:00Z). — owner M0.
+status: integrated — SCHEDULER #21 00:12Z: tip e3d62fa3, GATE 74/74 GREEN recorded; 5 unarmed arms not 10 (double count fixed); merges clean with M0-182
 order: after D-550, with the process rows behind the product rows: the controls fail loudly rather than pass falsely, so no gate result is wrong today (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
