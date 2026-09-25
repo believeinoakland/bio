@@ -1,0 +1,16 @@
+{
+ "unit": "ui:onpoint-choice.test.mjs",
+ "inputHash": "2ea5738b681aaf872616827fdb079cac0fbb0adebe2e0edf16842d96059b4626",
+ "verdict": "PASS",
+ "run": "30e7f70154dad7d7ae25a65b6d5fc7c95ea5d1c0.1790328663667.1771.json",
+ "tree": "30e7f70154dad7d7ae25a65b6d5fc7c95ea5d1c0",
+ "head": "4ba6de8b2313433e15038101d224d6c751057bed",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 95,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4aff75bf-bf14-5d15-901e-3991fd61998f",
+ "at": "2026-09-25T09:31:03.684Z"
+}
