@@ -1199,8 +1199,8 @@ scope: derive a per-capture grade from `captured_locators.via` plus authority st
 accepts-when: a member-authored C on a direct capture reads the earned grade, not the authored one. NEGATIVE CONTROL: read the authored grade again, and that arm fails by name. Extend the strength suite.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
-### D-194 · running — **A MEMBER'S LEAD HAS A PLANE AND NO SURFACE: `op=lead`, `leadlook`, `leadread` and `leadshare`, the `leads` table and the internet frontier's read of them are built (`status.mjs` 10.lead), and `app.html` makes no lead call.** — owner UI.
-status: running — SCHEDULER #23 07:33Z: spawned
+### D-194 · integrated — **A MEMBER'S LEAD HAS A PLANE AND NO SURFACE: `op=lead`, `leadlook`, `leadread` and `leadshare`, the `leads` table and the internet frontier's read of them are built (`status.mjs` 10.lead), and `app.html` makes no lead call.** — owner UI.
+status: integrated — SCHEDULER #23 08:30Z: tip 45437e4d on 5e8a65a8, GATE 320/320 GREEN (18842 assertions; 70 plane units reused), tree 93d52578; LEADS surface (op=lead, frontier internet, leadread, leadlook, leadshare); construct 10.lead surface BUILT, 9.ui PARTIAL; CIVICOS_UI_STATE v120 provisional; minted D-681, D-682
 order: after D-177, a member surface on a built plane (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
 milestone: M4
 interface: I3 consumer.
@@ -1266,7 +1266,7 @@ accepts-when: a derivation draft publishes as a further edition of the derived c
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, on BOB #35's 07:35Z ruling).
 
 ### D-633 · running — **WHEN TIER 2 WINS A PAGE, `mergeTier2Text` REPLACES ITS MARKERS, SO D-627's `image_content_unread` IS LOST AND THE PAGE ROUTES NOWHERE.** Reproduced through op=acquire with an answering tier-2 stub (the held INFO-2026-0301 does not escalate, so D-627's own pages are routed today). Found by D-627's worker (minted on land/worker/D-627). — owner CONTENT-PDF.
-status: running — SCHEDULER #23 08:00Z: spawned, stacked on land/worker/D-627 @ 056d3092
+status: running — SCHEDULER #23 08:30Z: first landing at ae6d5a49 GATE 388/388 GREEN FULLREUSE (tree b8990290); BOB #35 08:05Z re-grade forwarded to the same worker, which is adding it — flip on that report
 order: head of the backlog, before D-635 — a correction to just-landed work (D-627 integrated) outranks new work, and D-635 builds on the same routed pages (SCHEDULER #23, 2026-09-25)
 milestone: M2
 interface: none expected (a marker kept, not a new one); the integrator classifies if the chain's wire moves.
@@ -1330,6 +1330,17 @@ depends-on: none (stacked on land/worker/D-546 @ b690552a, integrated, itself on
 scope: derive created and last_updated from the document as D-563 derives title and state; take a read-only census of live drifts FIRST (as M-172 did) before refusing a contradicting envelope; envelope as fallback only where the bytes state none.
 accepts-when: the projection shows the document's dates, and a contradicting envelope is refused by name or recorded per the census (moves: envelope dates over the document's). NEGATIVE CONTROL: project the envelope's dates again and the date arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-563's worker).
+
+### D-681 · running — **NO LEAD OP LISTS A MEMBER'S LEADS: D-194's surface lists from op=frontier&level=internet, whose `looked` keeps the latest look per SUBJECT (the lead's words; `#frontierInternet`), so a lead whose words equal another readable lead looked at later appears in neither `looked` nor `never_looked` — it vanishes from the member's list.** Found by D-194's worker (minted on land/worker/D-194). — owner RECORD.
+status: running — SCHEDULER #23 08:30Z: spawned, stacked on land/worker/D-194 @ 45437e4d
+order: head of the backlog after D-671 — a correction to just-landed D-194: the list claims to be the member's leads and drops one (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3 — a new leads read or a regrouped frontier; the integrator mints and classifies.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (the lead's surface; its Incomplete bullet names this).
+depends-on: none (stacked on land/worker/D-194 @ 45437e4d, integrated — the surface swaps its list read in the same landing).
+scope: a new leads read (the author's and shared-to-me leads, bounded, each with its latest state) OR key `#frontierInternet`'s `looked` grouping on the lead rather than the subject — state which and why; the surface swaps its list read.
+accepts-when: two readable leads with the same words, looked at in turn, both appear in the member's list with their own latest states (moves: a lead vanishing). NEGATIVE CONTROL: group by subject again and the same-words arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-194's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

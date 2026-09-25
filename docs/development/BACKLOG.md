@@ -56,6 +56,16 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
+### D-682 · queued — **NO LEAD OP PUBLISHES WHAT A LOOK'S STATE MEANS: D-194's surface mirrors OBSERVATION_STATES in app.html (LEAD_STATE_WORDS, guarded against airun.mjs), and `partial`'s plane sentence carries a maintainer's parenthetical that is not member text.** Found by D-194's worker (minted on land/worker/D-194). — owner RECORD.
+order: head of the backlog after D-671, with D-681 (running): the same surface's second plane gap (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3 additive — a `vocabulary` block on op=leadread and op=frontier level=internet; the integrator classifies.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5, with op=airunlog's `vocabulary` as the precedent shape.
+depends-on: D-194 (integrated, land/worker/D-194 @ 45437e4d — the surface deletes its mirror in the same landing).
+scope: op=leadread and frontier level=internet carry `vocabulary: { states: <the five>, outcomes: LEAD_LOOK_OUTCOMES }` with member-safe wording for `partial`; the surface reads it and deletes LEAD_STATE_WORDS.
+accepts-when: the surface renders every state from the plane's vocabulary with no client mirror (moves: a mirrored vocabulary). NEGATIVE CONTROL: drop `vocabulary` from the op and the surface's state arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-194's worker).
+
 ### D-628 · queued — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
 order: after D-615 — the same promote function as D-546, D-578 and D-615: one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M7
@@ -1072,14 +1082,4 @@ design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure 
 depends-on: land/conduct/c20-batch11fix on `main`.
 scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
 accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-156 · queued — **`check-refusal-codes` ARM C READS ONLY THE SPANS A `where` NAMES, so a code re-minted OUTSIDE every governed region is invisible, for all 170 governed sites.** Found by D-484's worker. — owner M0 (RECORD reviews).
-order: after M0-155, the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
-depends-on: D-484.
-scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plane/src` per region row, failing on any outside its claimed span.
-accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
