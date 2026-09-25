@@ -533,8 +533,11 @@ console.log("\n--- 4. THE FIXTURE'S OWN MARGIN, asserted so it cannot go quiet -
   t("tier 1 ordered three pages", t1.pages.length, 3);
   t("page 0 decoded NOTHING and produced one marker per run",
     [t1.pages[0].text.length, t1.pages[0].undetermined.length], [0, 20]);
-  t("page 1 is named a scan by tier 1 itself — the marker the tier-3 predicate reads",
-    t1.pages[1].undetermined.map((m) => m.reason), ["no_text_layer"]);
+  /* CORRECTED BY D-665 (2026-09-25), not exempted: the scan page paints an image, and tier 1 now also states it
+     with a per-image `image_unread` marker (BOB #35 06:25Z, M-182), which routes nothing. So the page's markers are
+     the scan marker the tier-3 predicate reads and that one, in either order. */
+  t("page 1 is named a scan by tier 1 itself — the marker the tier-3 predicate reads — and its image is stated",
+    t1.pages[1].undetermined.map((m) => m.reason).sort(), ["image_unread", "no_text_layer"]);
   t("page 2 decoded its short line byte-for-byte", t1.pages[2].text.includes(GOOD_LINE), true);
   /* CORRECTED AT D-514, 2026-09-24. This read `t1.counts.chars` — the RAW
      character count — and said the predicate clears its margin over 8
@@ -548,9 +551,13 @@ console.log("\n--- 4. THE FIXTURE'S OWN MARGIN, asserted so it cannot go quiet -
   const glyphsOf = (str) => { let n = 0; for (const ch of str) if (!/\s/u.test(ch)) n++; return n; };
   t("the RAW counter is untouched and still reports 8 characters for the good line",
     t1.counts.chars, GOOD_LINE.length);
-  t("and the escalation predicate's own input clears it with margin: 21 markers over 7 GLYPHS",
-    [t1.counts.undetermined, glyphsOf(t1.document), t1.counts.undetermined > glyphsOf(t1.document)],
-    [21, 7, true]);
+  /* CORRECTED BY D-665 (2026-09-25): tier 1's count is now 22, the 21 decode markers and page 1's `image_unread`.
+     `needsTier2` reads the text through `decodeView`, which takes the per-image markers out, so its own input
+     is still 21 and the margin is unchanged. Both figures are pinned. */
+  const decodeMarks = t1.undetermined.filter((m) => m.reason !== "image_unread").length;
+  t("and the escalation predicate's own input clears it with margin: 21 decode markers over 7 GLYPHS (22 with the image)",
+    [t1.counts.undetermined, decodeMarks, glyphsOf(t1.document), decodeMarks > glyphsOf(t1.document)],
+    [22, 21, 7, true]);
 }
 
 /* ===================================================================== *

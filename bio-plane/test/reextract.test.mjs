@@ -253,8 +253,14 @@ const graded = (b) => ({ code: b?.code, check: b?.check, translation: b?.transla
    hashes to EXACTLY the two literals it replaces (scan 335b802e…ecc3a, layer 26c35ac5…e176b7), so
    D-536's key is the whole difference and CPDF-19's default path is still untouched. The new literals
    are the printout on D-536's tree. */
+/* RE-TAKEN 2026-09-25 by D-665 (scan only), AS THIS COMMENT PRESCRIBES — the scan's page paints an image, and
+   tier 1 now states it with a per-image `image_unread` marker (BOB #35 06:25Z; M-182). PROVED rather than
+   assumed, and kept as an assertion below: the new plain answer with those markers taken out and its count
+   lowered by as many hashes to EXACTLY the literal it replaces (c5d019ae…61ad8), so D-665's markers are the
+   whole difference and CPDF-19's default path is still untouched. The layer document paints no image and is
+   unchanged. The new literal is the printout on D-665's tree. */
 const PRE_ITEM_DIGEST = {
-  scan: "c5d019aedaa9afc682fdd20cc82054b7bee493a7955e09490e170bfea3861ad8",
+  scan: "88497d1a949a6152f1fe0b5a4afb7b19be15cbb90624d647b907a787d07ff4ba",
   layer: "2a04e765d906eeabe38cb143d8dd1dd92a4a8aa4cafc178ffe4ea7f33bdd64b1",
 };
 
@@ -293,6 +299,20 @@ console.log("\n--- 1 · WITHOUT THE FLAG: byte-identical to the pre-item read, a
   const plainLayer = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${L}`);
   console.log(`  printout: scan digest ${sha(plainScan.text)} · layer digest ${sha(plainLayer.text)}`);
   t("the plain read of the scan is BYTE-IDENTICAL to the pre-item answer (digest)", sha(plainScan.text), PRE_ITEM_DIGEST.scan);
+  /* D-665's proof that its markers are the WHOLE difference, kept as an assertion (the pattern of the RE-TAKEN
+     notes above): the scan's plain answer with every `image_unread` marker taken out, and its count lowered by
+     as many, re-serialised as `json()` does, hashes to the literal D-536 pinned. */
+  {
+    const o = JSON.parse(plainScan.text);
+    const keep = (arr) => (Array.isArray(arr) ? arr.filter((m) => !(m && m.reason === "image_unread")) : arr);
+    const had = o.text.undetermined.length;
+    o.text.pages = o.text.pages.map((pg) => ({ ...pg, undetermined: keep(pg.undetermined) }));
+    o.text.undetermined = keep(o.text.undetermined);
+    o.text.counts = { ...o.text.counts, undetermined: o.text.counts.undetermined - (had - o.text.undetermined.length) };
+    t("  and D-665's per-image markers are the whole difference: without them it is D-536's answer exactly",
+      [had > o.text.undetermined.length, sha(JSON.stringify(o, null, 1))],
+      [true, "c5d019aedaa9afc682fdd20cc82054b7bee493a7955e09490e170bfea3861ad8"]);
+  }
   t("the plain read of the text-layer document is BYTE-IDENTICAL to the pre-item answer (digest)",
     sha(plainLayer.text), PRE_ITEM_DIGEST.layer);
   t("the plain read of the scan does NOT reach tier 3 — the seam is opt-in, never automatic",

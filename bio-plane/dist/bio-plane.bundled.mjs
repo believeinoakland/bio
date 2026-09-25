@@ -24970,6 +24970,41 @@ function markImageContent(doc, pageOrder, text, images) {
   ];
   text.counts = { ...text.counts, undetermined: text.undetermined.length };
 }
+var IMAGE_UNREAD_MIN_SHARE = 1e-3;
+function markImagesUnread(doc, pageOrder, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[pg.page] });
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const boxArea = box ? rectArea(box) : 0;
+    const marks = [];
+    for (const im of painted) {
+      const raw = boxArea > 0 ? rectArea(clipRect(im.rect, box)) / boxArea : null;
+      if (raw !== null && raw < IMAGE_UNREAD_MIN_SHARE) continue;
+      marks.push({
+        page: pg.page,
+        reason: "image_unread",
+        font: null,
+        codes: "",
+        count: 0,
+        rect: im.rect,
+        area_share: raw === null ? null : Math.round(raw * 1e4) / 1e4
+      });
+    }
+    if (!marks.length) continue;
+    pg.undetermined = [...Array.isArray(pg.undetermined) ? pg.undetermined : [], ...marks];
+    added += marks.length;
+  }
+  if (!added) return;
+  text.undetermined = [
+    ...text.pages.flatMap((p) => p.undetermined || []),
+    ...(text.undetermined || []).filter((m) => m && !Number.isInteger(m.page))
+  ];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
@@ -25038,6 +25073,7 @@ async function extractPdfStructure(bytes) {
   const text = await extractText(doc, pageOrder);
   const imgs = await extractImages(doc, pageOrder);
   if (imgs.images) markImageContent(doc, pageOrder, text, imgs.images);
+  if (imgs.images) markImagesUnread(doc, pageOrder, text, imgs.images);
   return {
     ok: true,
     container: "pdf",
@@ -82710,7 +82746,21 @@ async function migrationReplayOf(env, storeName, b) {
   if (!match) return null;
   return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
 }
+function decodeView(text) {
+  const marks = text && Array.isArray(text.undetermined) ? text.undetermined : null;
+  if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text;
+  const keep = (a) => Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a;
+  const undetermined = keep(marks);
+  const c = text.counts;
+  return {
+    ...text,
+    undetermined,
+    ...Array.isArray(text.pages) ? { pages: text.pages.map((p) => p ? { ...p, undetermined: keep(p.undetermined) } : p) } : {},
+    ...c && typeof c.undetermined === "number" ? { counts: { ...c, undetermined: c.undetermined - (marks.length - undetermined.length) } } : {}
+  };
+}
 function needsTier2(text) {
+  text = decodeView(text);
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
   const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
@@ -84501,7 +84551,7 @@ var index_default = {
         } else {
           let chain2 = t3.chainSet ? t3.chain : null;
           if (!chain2) chain2 = layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
-          const wired = readText(t3.i2text, {
+          const wired = readText(decodeView(t3.i2text), {
             headers: null,
             locator: reBasis.locator || null,
             content_type: null,
@@ -85636,7 +85686,7 @@ var index_default = {
                 textUnits = u.textUnits;
                 textUnitsOverBound = u.textUnitsOverBound;
               }
-              if (i2text) wired = readText(i2text, {
+              if (i2text) wired = readText(decodeView(i2text), {
                 headers: profHeaders,
                 locator: documentAddress,
                 content_type: ct || null,

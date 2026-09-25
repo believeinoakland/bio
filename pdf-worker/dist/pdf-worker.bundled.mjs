@@ -41457,6 +41457,41 @@ function markImageContent(doc, pageOrder, text, images) {
   ];
   text.counts = { ...text.counts, undetermined: text.undetermined.length };
 }
+var IMAGE_UNREAD_MIN_SHARE = 1e-3;
+function markImagesUnread(doc, pageOrder, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[pg.page] });
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const boxArea = box ? rectArea(box) : 0;
+    const marks = [];
+    for (const im of painted) {
+      const raw = boxArea > 0 ? rectArea(clipRect(im.rect, box)) / boxArea : null;
+      if (raw !== null && raw < IMAGE_UNREAD_MIN_SHARE) continue;
+      marks.push({
+        page: pg.page,
+        reason: "image_unread",
+        font: null,
+        codes: "",
+        count: 0,
+        rect: im.rect,
+        area_share: raw === null ? null : Math.round(raw * 1e4) / 1e4
+      });
+    }
+    if (!marks.length) continue;
+    pg.undetermined = [...Array.isArray(pg.undetermined) ? pg.undetermined : [], ...marks];
+    added += marks.length;
+  }
+  if (!added) return;
+  text.undetermined = [
+    ...text.pages.flatMap((p2) => p2.undetermined || []),
+    ...(text.undetermined || []).filter((m2) => m2 && !Number.isInteger(m2.page))
+  ];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
@@ -41525,6 +41560,7 @@ async function extractPdfStructure(bytes) {
   const text = await extractText2(doc, pageOrder);
   const imgs = await extractImages(doc, pageOrder);
   if (imgs.images) markImageContent(doc, pageOrder, text, imgs.images);
+  if (imgs.images) markImagesUnread(doc, pageOrder, text, imgs.images);
   return {
     ok: true,
     container: "pdf",

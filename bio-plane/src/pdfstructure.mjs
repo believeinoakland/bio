@@ -2405,6 +2405,63 @@ function markImageContent(doc, pageOrder, text, images) {
 }
 
 /* ------------------------------------------------------------------ *
+ * D-665 — EVERY PAINTED IMAGE ABOVE A SIZE FLOOR SAYS ITS CONTENT IS UNREAD
+ * ------------------------------------------------------------------ *
+ *
+ * BOB #35, 2026-09-25 06:25Z: the true statement is per IMAGE, not per page,
+ * and it needs no classifier. An image a page paints is content whose text, if
+ * it has any, is UNREAD until a pass reads it. That holds for a photo as for a
+ * chart, so tier 1 says it for every placement above a size floor without
+ * deciding what the image depicts. The marker is `image_unread`, count 0 (it is
+ * not an undecoded character), with the placement's `rect` exactly as CPDF-18
+ * emits it (so it names the same `image {page, rect}` reference) and its
+ * `area_share`: the part of the rect inside the page's visible box, over the
+ * box's area, rounded to 4 places. With no readable page box the share is NULL
+ * and the image is still marked: that it was painted is known, its size is not.
+ *
+ * THE FLOOR IS MEASURED (M-182), NOT GUESSED. Over the 1,104 placements the
+ * three held documents paint (1,788 pages), 781 are 12x12-pixel bullets about
+ * 5.5 points square, with shares of at most 0.0000624. The smallest other
+ * placement, a 68x56-point photo, has 0.0079. Every floor between the two gives
+ * the same split. 0.001 sits inside that gap, nearer the bullets, so an image
+ * smaller than any measured one is stated rather than hidden.
+ *
+ * WHAT THIS DOES NOT DO: route. OCR is a cost question, and D-665 measured the
+ * two signals BOB named (the image's pixels against the page's text area, and
+ * glyph density outside the painted rects) over M-178's 49 classified pages.
+ * Neither separates a chart painted under a text title from a photo page, so
+ * `image_unread` is NOT in the tier-3 reasons and routes nothing. Only D-627's
+ * folio pages are routed. The marker says what is true in the meantime. */
+export const IMAGE_UNREAD_MIN_SHARE = 0.001;
+
+/** Add D-665's per-image markers to tier 1's text, in place. `images` is CPDF-18's list. */
+function markImagesUnread(doc, pageOrder, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[pg.page] });
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const boxArea = box ? rectArea(box) : 0;
+    const marks = [];
+    for (const im of painted) {
+      const raw = boxArea > 0 ? rectArea(clipRect(im.rect, box)) / boxArea : null;
+      if (raw !== null && raw < IMAGE_UNREAD_MIN_SHARE) continue;
+      marks.push({ page: pg.page, reason: "image_unread", font: null, codes: "", count: 0,
+                   rect: im.rect, area_share: raw === null ? null : Math.round(raw * 10000) / 10000 });
+    }
+    if (!marks.length) continue;
+    pg.undetermined = [...(Array.isArray(pg.undetermined) ? pg.undetermined : []), ...marks];
+    added += marks.length;
+  }
+  if (!added) return;
+  text.undetermined = [...text.pages.flatMap((p) => p.undetermined || []),
+                       ...(text.undetermined || []).filter((m) => m && !Number.isInteger(m.page))];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
+
+/* ------------------------------------------------------------------ *
  * The public entry point
  * ------------------------------------------------------------------ */
 
@@ -2520,6 +2577,8 @@ export async function extractPdfStructure(bytes) {
   const imgs = await extractImages(doc, pageOrder);
   /* D-627: a page an image fills while its text is a folio says so (see above). */
   if (imgs.images) markImageContent(doc, pageOrder, text, imgs.images);
+  /* D-665: and every painted image above the floor says its content is unread. */
+  if (imgs.images) markImagesUnread(doc, pageOrder, text, imgs.images);
 
   return {
     ok: true,

@@ -4423,6 +4423,29 @@ async function migrationReplayOf(env, storeName, b) {
   return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
 }
 
+/* D-665 — THE TEXT AS A DECODE, WITHOUT THE PER-IMAGE MARKERS.
+   Tier 1 adds `image_unread` (pdfstructure.mjs) for every painted image above
+   M-182's floor. It says an image is painted and its content unread, not that a
+   character went undecoded, and it carries count 0. But two readers judge the
+   DECODE by the marker COUNT (`counts.undetermined`): `needsTier2` below, and
+   `readText` (docprofile/readtext.mjs), which fails a reading when that count
+   exceeds the decoded characters and states it in the reading's basis. Without
+   this view a page of photos with short captions would escalate to tier 2 on its
+   picture count and could read as a FAILED reading. So both are handed the text
+   with those markers taken out and the count lowered by as many. The markers stay
+   on the text itself, which is what `op=pdfstructure` returns. */
+function decodeView(text) {
+  const marks = text && Array.isArray(text.undetermined) ? text.undetermined : null;
+  if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text;
+  const keep = (a) => (Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a);
+  const undetermined = keep(marks);
+  const c = text.counts;
+  return { ...text, undetermined,
+           ...(Array.isArray(text.pages) ? { pages: text.pages.map((p) => (p ? { ...p, undetermined: keep(p.undetermined) } : p)) } : {}),
+           ...(c && typeof c.undetermined === "number"
+             ? { counts: { ...c, undetermined: c.undetermined - (marks.length - undetermined.length) } } : {}) };
+}
+
 /* Escalate a PDF to the pdf-worker (I6) ONLY when Tier 1 got essentially nothing:
    more undetermined REGIONS than decoded characters. That is the measured line
    between CPDF-5's buckets — the whole-document no-/ToUnicode case (many regions,
@@ -4432,6 +4455,7 @@ async function migrationReplayOf(env, storeName, b) {
    what makes the zero-char encrypted case cross the line. A `text` that is
    missing or malformed escalates nothing. */
 function needsTier2(text) {
+  text = decodeView(text);
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
   /* D-514 — THE ROUTING COUNTS GLYPHS TOO. This compared the marker count against
@@ -4584,7 +4608,11 @@ function layerChainFor(i2text, { tier, container }) {
 /* D-627 (BOB #35, 2026-09-25 05:50Z): a page an image fills while its text is
    a folio is `image_content_unread` (pdfstructure.mjs, thresholds in M-178),
    and it is routed exactly as a no-text page is. `image_content_undetermined`
-   is NOT routed: routing it would force it to the image side. */
+   is NOT routed: routing it would force it to the image side.
+   D-665 (BOB #35, 06:25Z): `image_unread`, the per-image marker, is NOT routed
+   either. Over M-178's 49 classified pages no measured signal separates a chart
+   painted under a text title from a photo page (M-182), so routing that class
+   stays off and the marker says what is true. */
 const TIER3_REASONS = Object.freeze(["no_text_layer", "image_content_unread"]);
 function needsTier3(text) {
   const marks = (text && Array.isArray(text.undetermined)) ? text.undetermined : [];
@@ -7519,7 +7547,7 @@ export default {
              `ctx.content_type`, and the one handler that reads headers treats their
              absence as empty. The LOCATOR is the acquire's own, read back from the
              bundle's provenance document. */
-          const wired = readText(t3.i2text, { headers: null, locator: reBasis.locator || null,
+          const wired = readText(decodeView(t3.i2text), { headers: null, locator: reBasis.locator || null,
                                                content_type: null, at: stored.at ?? null });
           const reading = readingFromWire({
             wired, docType: { type: { key: stored.content_type ?? null, version: stored.reader_version ?? null } },
@@ -9403,7 +9431,7 @@ export default {
               }
               /* REC-91's units, by `textUnitsFor` (CPDF-19: one rule for both paths). */
               { const u = textUnitsFor(i2text); textUnits = u.textUnits; textUnitsOverBound = u.textUnitsOverBound; }
-              if (i2text) wired = readText(i2text, { headers: profHeaders,
+              if (i2text) wired = readText(decodeView(i2text), { headers: profHeaders,
                 locator: documentAddress, content_type: ct || null, at: retrieved });
               /* D-536: the reader was handed `i2text` — digested as such on the reading's provenance. */
               if (i2text) classifiedText = i2text;

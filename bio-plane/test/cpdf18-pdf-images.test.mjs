@@ -338,9 +338,22 @@ console.log("\n--- 4. a page with no images yields no rows and says so ---");
 const cropEmpty = await cropImage(IMAGES_PDF, { kind: "image", page: 1, rect: [50, 600, 250, 700] });
 t("a crop asked of a page that paints nothing is refused NO_IMAGE_AT_RECT with an EMPTY painted list — "
   + "the page was walked and holds none", [cropEmpty.reason, cropEmpty.painted], ["NO_IMAGE_AT_RECT", []]);
+/* CORRECTED BY D-665 (2026-09-25), not exempted. This pinned the whole `text` object, and D-665 now ADDS an
+   `image_unread` marker per painted image above M-182's floor. The pin's question is whether the IMAGE WALK moved
+   what the text walk decodes, so the digest is taken over the text with those markers taken back out: it must be
+   the pre-D-665 digest exactly. The markers themselves are pinned in `d665-image-unread.test.mjs`. */
+const withoutImageUnread = (tx) => {
+  const keep = (a) => (Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a);
+  const undetermined = keep(tx.undetermined);
+  return { ...tx, pages: tx.pages.map((p) => ({ ...p, undetermined: keep(p.undetermined) })), undetermined,
+           counts: { ...tx.counts, undetermined: undetermined.length } };
+};
 t("TIER 1's TEXT over the image fixture and over a real agenda is unchanged by the image walk "
-  + "(the tokenizer's inline-image option is off for text) — pinned by digest",
-  [sha(JSON.stringify(st.text)), sha(JSON.stringify(agenda.text))], [TEXT_PIN_SYNTH, TEXT_PIN_AGENDA]);
+  + "(the tokenizer's inline-image option is off for text) — pinned by digest, D-665's per-image markers aside",
+  [sha(JSON.stringify(withoutImageUnread(st.text))), sha(JSON.stringify(withoutImageUnread(agenda.text)))],
+  [TEXT_PIN_SYNTH, TEXT_PIN_AGENDA]);
+t("  and D-665 did add per-image markers to the image fixture (the correction above is not vacuous)",
+  st.text.undetermined.some((m) => m && m.reason === "image_unread"), true);
 
 await mf.dispose();
 console.log(`\n${pass} pass, ${fail} fail`);
