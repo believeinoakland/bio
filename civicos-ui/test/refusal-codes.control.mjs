@@ -47,6 +47,8 @@ const F = {
   catalog: path.join(PLANE, "checks", "bio-checks.mjs"),
   airun:   path.join(PLANE, "src", "airun.mjs"),
   store:   path.join(PLANE, "src", "store.mjs"),
+  /* D-574: arm G walks every src file now, and its row's control plants in textchain.mjs, a file it could not see. */
+  textchain: path.join(PLANE, "src", "textchain.mjs"),
   app:     path.join(UI, "app.html"),
   guard:   path.join(UI, "check-refusal-codes.mjs"),
   /* D-254: the guard IMPORTS REC-76's verdict reader from here, so an arm that
@@ -408,10 +410,13 @@ arm("(r4)", [{
    work because they worked in the other one: a narrowing is only as good as the
    arm that shows it did not blind the guard, and each region owes its own. */
 console.log("\n(r5) THE TEETH INSIDE THE **BIAS** REGION — each newly narrowed region owes its own arm");
+/* CORRECTED 2026-09-25 by D-574, never exempted: D-526 (c4a65ae0) respelled the guard line this arm anchors on
+   (`(promotedType === "bias" || normalizeType(…) === "bias")`), so the arm threw "the text this control removes is
+   not in store.mjs" and the harness died here, before any later arm ran. The plant and its expectation are unchanged. */
 arm("(r5)", [{
   file: F.store,
-  from: `      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {`,
-  to: `      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+  from: `      if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {`,
+  to: `      if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {
         if (pkg.__rec71_bias_control__) return { ok: false, detail: "a refusal nobody gave a code" };`,
 }], guard, r => ({
   ok: r.exit === 1
@@ -747,6 +752,27 @@ arm("(g1)", [{
     ok: r.exit === 1 && f.length === 2 && f.every(l => /^FAIL: arm G: /.test(l))
       && /arm G: VERSION_ACT_CHECKS\.MACHINE_CANNOT_MOVE_VERSION is now minted at 2 literal sites/.test(r.out),
     what: `the guard exits 1 naming MACHINE_CANNOT_MOVE_VERSION at 2 sites, and nothing but arm G fails `
+        + `(${f.length} FAIL line(s): ${f.map(l => l.slice(6, 60)).join(" | ")})`,
+  };
+});
+
+/* ================================================================ D-574
+   (g2) THE WIDENED WALK — ARMED AGAINST THE REAL textchain.mjs, a file arm G did not read before D-574 (D-550 walked
+   store.mjs and index.mjs only, so this very plant passed). TEXT_CONFIDENCE_PSEUDO is minted ONCE today, in
+   textchain.mjs's `checkConfidence`, and is not in MULTI_SITE_CANDIDATES. The plant sits at module scope before
+   `glyphCount`, OUTSIDE every governed span. DECLARED BEFORE ARMING: MUST FAIL on exactly two lines, both arm G's —
+   the code named with its two sites, and the ceiling breached (66 against 65); MUST NOT fail anything else. */
+console.log("\n(g2) A SECOND MINT SITE OF A SINGLE-SITE CODE in the real textchain.mjs — arm G fails naming it");
+arm("(g2)", [{
+  file: F.textchain,
+  from: `export function glyphCount(s) {`,
+  to: `const d574Control = () => ({ ok: false, reason: "TEXT_CONFIDENCE_PSEUDO" });\nexport function glyphCount(s) {`,
+}], guard, r => {
+  const f = failLines(r.out);
+  return {
+    ok: r.exit === 1 && f.length === 2 && f.every(l => /^FAIL: arm G: /.test(l))
+      && /arm G: TEXT_CHAIN_CHECKS\.TEXT_CONFIDENCE_PSEUDO is now minted at 2 literal sites \(src\/textchain\.mjs/.test(r.out),
+    what: `the guard exits 1 naming TEXT_CONFIDENCE_PSEUDO at 2 sites in textchain.mjs, and nothing but arm G fails `
         + `(${f.length} FAIL line(s): ${f.map(l => l.slice(6, 60)).join(" | ")})`,
   };
 });

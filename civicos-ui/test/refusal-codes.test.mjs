@@ -262,6 +262,26 @@
  *   (s2 multiSiteCodes) the ceiling raised 59 -> 60 fails on CEILING SLACK alone (the generic (s2) loop).
  *   (m1) now fails ARM 12b too — measured, and corrected at its site in the harness.
  *   After: exactly (c), (e), (r2), (r6) fail, the four that fail on the untouched base.
+ *
+ *   D-574's, RUN 2026-09-25 by cloud WORKER D-574 (branch land/worker/D-574), base origin/main @ 5e8a65a8 —
+ *   ARM G now walks EVERY bio-plane/src file but the three `MULTI_SITE_EXCLUDED` names with its reason
+ *   (affordances.mjs publishes codes as data; setup.mjs and livefire.mjs read them). 79 multi-site codes, 14
+ *   declared closures, ceiling 59 -> 65 (a wider reading, not a new site). This suite unchanged at 127/0 — the
+ *   fixture replaces MULTI_SITE_FILES whole, so ARM 12 reads the same fixture tree it did.
+ *   ON THE REAL TREE, each arm ALONE, every restore by hash AND content:
+ *   (g2) THE ROW'S — a second mint site of TEXT_CONFIDENCE_PSEUDO (minted once, textchain.mjs `checkConfidence`)
+ *        planted in textchain.mjs at module scope. DECLARED MUST FAIL on exactly two lines, both arm G's, naming
+ *        the code in textchain.mjs. RUN: exit 1,
+ *          FAIL: arm G: TEXT_CHAIN_CHECKS.TEXT_CONFIDENCE_PSEUDO is now minted at 2 literal sites (src/textchain.mjs …
+ *          FAIL: arm G: 66 DEC-49 codes are minted at more than one site, ceiling 65 …
+ *        and nothing else; textchain.mjs restored to sha256 9bf52c56… . THE SAME PLANT under the base's guard
+ *        (5e8a65a8, store/index only): exit 0 — the measured failure this row moves.
+ *   (g1) still fails as D-550 declared, now at 66 against 65.
+ *   (p) OVER-STRICTNESS, by hand: the same second site in an UNTRACKED src file (zz-d574-phantom.mjs) — the walk
+ *       lists only files in the commit at HEAD (`inCommit`) — DECLARED MUST PASS. RUN: guard exit 0 at 65; the
+ *       sweep printed "src/zz-d574-phantom.mjs is UNTRACKED — NOT walked". File removed after.
+ *   (r5) CORRECTED at its site: D-526 respelled its anchor, and the harness died there before any later arm ran.
+ *   After: exactly (c), (e), (r2), (r6) fail, the four D-550 recorded as failing on the untouched base.
  * ============================================================================
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
