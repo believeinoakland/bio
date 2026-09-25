@@ -53,6 +53,16 @@ scope: as ruled; both refusals carry DEC-49 rows; one committed-owner helper ser
 accepts-when: of two owners, the second to ask is refused while the first's request stands; removing the last committed owner while the others are leaving is refused by name (moves: an unhonourable request). NEGATIVE CONTROL: count owner flags instead of committed owners and both arms fail by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs REC`).
 
+### D-586 · queued — **AN `ai` CREDENTIAL'S SCOPE ACCEPTS OPS NO CREDENTIAL CAN EVER PERFORM: `aiReachesAsMember` admits any op whose classes include `member` with no machineClasses, which covers GOVERNANCE_ACTIONS (adminendorse, adminremove, membercaps) and IDENTITY_ACTIONS (groupnameset, groupdomainset), whose `!viaSession` fences refuse every credential; so `op=aicredentialmint` records a permission that can never be honoured (MEASURED for adminendorse: mint ok:true, the act refused OPERATOR_TOKEN_CANNOT_GOVERN).** Found by REC-162's worker (02:37Z). — owner RECORD.
+order: after REC-224, with the authority corrections: a recorded permission that can never be honoured is an overclaim on an authority surface (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M8
+interface: I3 — the mint refuses those five ops; the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (administrators do not run the instance) and §4.10, with the AI-credential scope's AI_SCOPE_BEYOND_MEMBER_REACH (C-29.9).
+depends-on: REC-162.
+scope: `aiReachesAsMember` returns false for ops fenced to sessions, expressed as one property of the op rather than two lists; the mint refuses them AI_SCOPE_BEYOND_MEMBER_REACH.
+accepts-when: a machine-attest arm minting each of the five is refused by name, and a member op still mints (moves: a mint that records the impossible). NEGATIVE CONTROL: drop the session-fence test and the five arms mint, failing by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by REC-162's worker).
+
 ### D-546 · queued — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
 order: after D-547, with the promote corrections: a disallowed move lands in the record (CLAUDE.md §2); BOB #34 ruled it product order (SCHEDULER #21, 2026-09-24)
 milestone: M7
@@ -441,6 +451,16 @@ accepts-when: a bearer `apply=1` and a bearer `provenanceroute` are refused by n
 added: 2026-09-21 · SCHEDULER #5 (BOB #20's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-158» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
+### D-587 · queued — **`op=calibrate`'s `measured_by` IS A CALLER-SUPPLIED FREE STRING ("who or what ran the probe"), for bearers already and for sessions since REC-155, so the record can attribute a measurement to anyone.** Found by REC-155's worker (02:37Z). — owner RECORD.
+order: after REC-158, with the calibration-write rows: an attribution a caller can hand the record is one a caller can invent (CLAUDE.md §5) (SCHEDULER #21, 2026-09-25)
+milestone: M8
+interface: I3/I5 — a server-stamped principal column beside `measured_by`; the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.10 (the five session-reachable judgement and calibration acts), with the calibration register's provenance rules.
+depends-on: REC-155.
+scope: stamp the caller's principal server-side in a new column beside `measured_by` (session: its member; bearer: token:<class>), and label `measured_by` on every read as the caller's statement, never the record's attribution.
+accepts-when: a calibration written through op=calibrate carries the server-stamped principal, and a reader sees measured_by as the caller's words (moves: attribution by free string). NEGATIVE CONTROL: drop the stamp and the principal arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by REC-155's worker).
+
 ### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's … (whole text: the cut archive)
 order: rests on MK-7's attribution act — re-pointed from MK-3, superseded 2026-09-21 (`MEMBER-KNOWLEDGE-DESIGN.md` §8) (SCHEDULER, first order audit, 2026-09-18; SCHEDULER #4, 2026-09-21)
 milestone: M3 — the member's own knowledge enters the record as what it is
@@ -450,27 +470,6 @@ depends-on: MK-7 (it carries MK-7's attribution; §8 names MK-3's replacement (i
 accepts-when: an opinion lands as a case element with its attribution and is refused as a leg, by name, through the ops; battery green by its COMPLETION LINE.
 added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### REC-147 · queued — UNBLOCKED 2026-09-24 by BOB #32: its dependency is met (M0-71 done, gate on main; M-118). The old block confused an ACCEPTANCE condition with a precondition — the judgement this row builds is what the gate measures. RULED: accepts-when adds that the run REPORTS recall beside false conflicts on M0-71's gate (the gate alone cannot see a detector that abstains); a judgement whose recall does not beat the lexical baseline's 2/9 (M-118) is the finding and returns to BOB.
-order: blocked on M0-71's measured gate (SCHEDULER, 2026-09-19)
-milestone: M9
-interface: I3 and I5 (a table; ICs minted with `node tools/mintid.mjs IC`)
-design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §5 (the judgement and its vocabulary), §8 (where a candidate lives) and §9 item 3.
-depends-on: M0-71, AND its measured gate met — a threshold missed is the finding, and this row then goes back to BOB.
-accepts-when: M0-71's gate passes on the built judgement; a re-run over unchanged referents writes nothing new; every row names both referents and versions, the key, the run, the label and … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER (same entry, item 3).
-cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-147» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-note: 2026-09-23 by SCHEDULER #17 (M0-71's worker, via CONDUCT #18): the contradiction gate cannot see a detector that ABSTAINS (recall 2/9 sits beside it); this row stays blocked until its machine judgement is measured on this gate WITH its recall reported. The measurement is M-118 (M-117 was burned by a collision).
-
-### UI-69 · queued — **EXPORT OF A REVIEW COPY carrying the quartet in-band on every page, with §6A.3 point 2 said AT the act: what leaves cannot be revoked; the grant can.** — owner UI.
-order: after UI-68 and REC-148: export only once the quartet travels with it (SCHEDULER, 2026-09-19)
-milestone: M10
-interface: I3 consumer (REC-148's IC)
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 point 2.
-depends-on: UI-68 and REC-148.
-accepts-when: an exported copy carries the quartet on every page byte-equal to the plane's; the statement renders at the act and nowhere else. NEGATIVE CONTROL: drop the quartet from one … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER (same entry, item 8).
-cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### D-147 · queued — **A RECORDS REQUEST IS ONE ROUND TRIP: `awaiting_response` HIDES THE FEE ESTIMATE, THE WAIVER DECISION, A PARTIAL PRODUCTION AND** … (whole text: the cut archive)
 order: directly after D-149, on D-148's entry grammar, which it extends (BOB #27: *"depends-on D-148"*), the M10 action path (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 2)

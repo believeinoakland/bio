@@ -613,8 +613,8 @@ scope: an unmonitorable arm in D-65's monitor suite (`bio-plane/test/monitor-ass
 accepts-when: a shell-profiled document's answer states unmonitorable and grades no change. NEGATIVE CONTROL: map unmonitorable to weekly, and the arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### REC-162 · running — **A FOUNDER-ONLY OP'S REFUSAL CALLS AN ENROLLED ADMINISTRATOR A NON-ADMINISTRATOR.** Five ops sit in `SESSION_OPS.admin` and … (whole text: the cut archive)
-status: running — SCHEDULER #21 01:23Z spawns WORKER REC-162 (depth 2)
+### REC-162 · integrated — **A FOUNDER-ONLY OP'S REFUSAL CALLS AN ENROLLED ADMINISTRATOR A NON-ADMINISTRATOR.** Five ops sit in `SESSION_OPS.admin` and … (whole text: the cut archive)
+status: integrated — SCHEDULER #21 02:39Z: tip 8c56415d, GATE 59/59 GREEN; I3 in IC-55's family, BREAKING-shaped (role -> session + reachedBy); fixed adminvote.control stamp-dropped arm (unarmed since REC-164)
 order: back to back after REC-159, the same two suites (`d270-refusal-truth`'s ROLE literal, `adminvote` §8f), the second re-reading the first's pins; a false refusal sentence, CLAUDE.md §2's class (BOB #23's entry, 2026-09-21; SCHEDULER #7)
 milestone: M8
 interface: I3 — the refusal's sentence; the integrator classifies it in IC-55's family.
@@ -624,8 +624,8 @@ accepts-when: an enrolled administrator and a member, each refused `governorconf
 added: 2026-09-21 · SCHEDULER #7 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 scope-add: 2026-09-24 by SCHEDULER #17, BOB #32's ruling (00:00Z): correct `AI_SCOPE_BEYOND_MEMBER_REACH`'s detail ("not reachable by a member"), now loosely false for REC-159's four custodial acts, in the same `SESSION_OPS` sets this row touches; no new row. The founder's NOT_AN_ADMIN on an unclaimed store (scratch) STANDS: a live verification claims an administrator in scratch first.
 
-### REC-155 · running — **SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED** … (whole text: the cut archive)
-status: running — SCHEDULER #21 01:24Z spawns WORKER REC-155 (depth 2)
+### REC-155 · integrated — **SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED** … (whole text: the cut archive)
+status: integrated — SCHEDULER #21 02:39Z: tip badb54c2, GATE 361/361 GREEN; I3 MINOR; SESSION_OPS: one line after ...CUSTODIAL_ACTIONS in each set (union with REC-162); NEEDS contribute PROVISIONAL (to BOB); REGISTER_FLOOR 2180
 order: where it stood, now with its design (BOB #20's entry): the plane is honest here — a determination was owed, not a defect shipping — and this landing refuses nobody (SCHEDULER #5, 2026-09-21; placed by SCHEDULER #3, 2026-09-19)
 milestone: M8
 interface: I3 — MINOR: sessions gain reach and no class list moves; the integrator mints the IC.
@@ -865,6 +865,27 @@ depends-on: MK-6; REC-126 (the review copy, built).
 accepts-when: through the ops, each level round-trips into the published projection exactly as chosen; nothing is prefilled; an unchosen reached observation refuses ratification BY NAME; `name` without a … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs MK`).
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-7» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### REC-147 · queued — UNBLOCKED 2026-09-24 by BOB #32: its dependency is met (M0-71 done, gate on main; M-118). The old block confused an ACCEPTANCE condition with a precondition — the judgement this row builds is what the gate measures. RULED: accepts-when adds that the run REPORTS recall beside false conflicts on M0-71's gate (the gate alone cannot see a detector that abstains); a judgement whose recall does not beat the lexical baseline's 2/9 (M-118) is the finding and returns to BOB.
+order: blocked on M0-71's measured gate (SCHEDULER, 2026-09-19)
+milestone: M9
+interface: I3 and I5 (a table; ICs minted with `node tools/mintid.mjs IC`)
+design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §5 (the judgement and its vocabulary), §8 (where a candidate lives) and §9 item 3.
+depends-on: M0-71, AND its measured gate met — a threshold missed is the finding, and this row then goes back to BOB.
+accepts-when: M0-71's gate passes on the built judgement; a re-run over unchanged referents writes nothing new; every row names both referents and versions, the key, the run, the label and … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (same entry, item 3).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-147» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+note: 2026-09-23 by SCHEDULER #17 (M0-71's worker, via CONDUCT #18): the contradiction gate cannot see a detector that ABSTAINS (recall 2/9 sits beside it); this row stays blocked until its machine judgement is measured on this gate WITH its recall reported. The measurement is M-118 (M-117 was burned by a collision).
+
+### UI-69 · queued — **EXPORT OF A REVIEW COPY carrying the quartet in-band on every page, with §6A.3 point 2 said AT the act: what leaves cannot be revoked; the grant can.** — owner UI.
+order: after UI-68 and REC-148: export only once the quartet travels with it (SCHEDULER, 2026-09-19)
+milestone: M10
+interface: I3 consumer (REC-148's IC)
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 point 2.
+depends-on: UI-68 and REC-148.
+accepts-when: an exported copy carries the quartet on every page byte-equal to the plane's; the statement renders at the act and nowhere else. NEGATIVE CONTROL: drop the quartet from one … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (same entry, item 8).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
