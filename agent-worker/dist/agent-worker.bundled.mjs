@@ -698,7 +698,7 @@ async function resolveClaudeCascade(accounts = {}) {
 // src/index.mjs
 var PLANE_ORIGIN = "http://plane";
 var DEFAULT_MAX_TURNS_PER_SEGMENT = 120;
-var BOUND_SOURCE = "FL-1 2026-08-08 memory curve (120.4 MB P99 of 128 MB at 200 turns), not the CPU curve";
+var BOUND_SOURCE = "FL-1 2026-08-08 curve, re-checked by D-312 2026-09-25 (M-168): CPU binds, not memory; 120 turns is ~1/8 of the ~1,000 the 30 s CPU default fits at FL-1's payload size";
 var AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {

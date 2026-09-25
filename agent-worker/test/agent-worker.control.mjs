@@ -289,9 +289,10 @@ arm({
 });
 
 /* THE SIZING, MADE FALSIFIABLE. 1,100 is the figure FL-1's CPU curve
-   extrapolates to; the memory curve says ~10x too long. */
+   extrapolates to — AT the CPU ceiling, no margin. (D-312, M-168: this said "the
+   memory curve says ~10x too long"; there is no memory wall below it.) */
 arm({
-  id: "A5", subject: "THE SEGMENT BOUND IS SIZED ON MEMORY, NOT CPU",
+  id: "A5", subject: "THE SEGMENT BOUND IS PINNED INSIDE ITS CPU MARGIN",
   what: "the default bound is set to 1100 — the number FL-1's CPU curve extrapolates to",
   mustFail: "the 'inside FL-1's measured 100-150 band' arm and the 'default bound is 120' arm",
   mustNot: "the over-bound refusal arm (it still refuses, just at the wrong number) and every source-scan arm",

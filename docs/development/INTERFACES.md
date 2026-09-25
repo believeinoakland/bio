@@ -1193,14 +1193,23 @@ DEC-49's guard exists to close.
 
 `MAX_TURNS_PER_SEGMENT` defaults to **120**, overridable by env.
 
-**It is set on FL-1's MEMORY curve and NOT on its CPU curve, and the difference is a
-factor of about ten.** FL-1 measured (2026-08-08, platform GraphQL analytics, not
-self-timed): at **200 turns the isolate reports `memoryUsageBytesP99` = 120.4 MB against
-a 128 MB ceiling**, while billed CPU is 757.65 ms — **2.5% of the 30 s ceiling**.
-Extrapolated on the measured CPU exponent (~n^1.9), ~1,100 turns would fit that ceiling.
-**A segment sized on CPU headroom would therefore be roughly 10× too long, and would meet
-the memory wall instead.** 120 sits inside the 100–150 band FL-1 named as inside both:
-the 100-turn point measured 51.2 MB P50 and 189.28 ms.
+**The ceiling it keeps clear of is CPU, not memory — re-checked by D-312 on 2026-09-25
+(`measurements/M-168.md`), because it was first sized on a misreading.** FL-1 measured
+(2026-08-08, platform GraphQL analytics, not self-timed) `memoryUsageBytesP99` = 120.4 MB at
+200 turns, and this section read that as a share of the 128 MB isolate — a memory wall ~200
+turns away, a CPU-sized segment "10× too long". The metric is not a share of anything
+(§"The memory bound, and how it is expressed" below), and walking the same loop up until
+refused found no memory wall: from 400 to 1,400 turns the P99 stays flat at 95–123 MB while
+the transcript grows 3.5×, and every invocation is `success`. **What binds is CPU spent
+re-serialising the transcript every turn**, which grows with the cumulative bytes sent
+(~7–10 ms billed per MB); this member runs under the 30 s default, which fits ~3–4 GB
+re-serialised — **~900–1,050 turns at FL-1's payload size**, where 120 turns cost ~0.3 s.
+
+So **120 is safe and carries ~8× headroom**, not the ~1.7× its first reading claimed. It
+is kept rather than raised because the payload size of a REAL run is unmeasured, and a
+larger one lowers the ceiling as its square root. A turn count is the wrong unit for a
+bound that scales with bytes; **D-611** names the fix (bound the segment on bytes
+re-serialised) and is FLEET's.
 
 Two of FL-1's other findings are load-bearing here and are recorded so a later session
 does not re-derive them:
@@ -1208,7 +1217,7 @@ does not re-derive them:
 - **Waiting is effectively free**: 25 subrequests each held open 2 s cost **4.29 ms**
   billed CPU across 50.0 SECONDS of wall time — ~0.16 ms per awaited subrequest,
   independent of how long the wait lasts. So a run that spends its life waiting on model
-  responses is not what bounds a segment. Memory is.
+  responses is not what bounds a segment. Re-serialising the transcript is (D-312).
 - **At least 160 external subrequests per invocation with no refusal**, and that is a
   FLOOR on the ceiling rather than the ceiling — the walk stopped at its own cap.
 

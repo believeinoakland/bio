@@ -31,7 +31,7 @@
    (A2) FL-2'S NAMED CONTROL, HALF TWO — A SECOND CREDENTIAL. Call the plane again under a token of the member's own -> **86 pass, 3 FAIL** (one-credential arm + compiled-in-credential arm); the write arm HELD, which is why this is armed separately: a member may write nothing and still act as somebody it was not handed. **THIS ARM CAME BACK HALF-GREEN FIRST AND THE SOURCE SCAN WAS WRONG:** it read `/aik-[0-9a-f]/`, and a credential spelled `"aik-" + "f".repeat(64)` has no hex after the prefix anywhere in the source, so the scan reported the member clean while it was calling the plane under its own token. Tightened to match the START of any string literal.
    (A3) THE BINDING IS THE ONLY ROUTE. Replace `env.PLANE.fetch(url)` with a bare global fetch at this account's own workers.dev name -> **54 pass, 35 FAIL**: the URL-literal, workers.dev and bare-fetch source arms all fail, and so does the round trip. FL-1 MEASURED that route as a 404 every time, so this demonstrates the routing finding rather than restating it. **THIS ARM FIRST KILLED THE SUITE INSTEAD OF FAILING IT** — `out.plane_says.token_class` threw on a refusal body, there was no tail line, and the harness would have read the whole file as "stayed GREEN" had it not treated a missing tally as `-1` rather than `0`. That is the exact defect PL-11's own control met. Every nested read in this suite is now null-tolerant: the CLASS was swept, not the one site.
    (A4) THE SCOPE IS THE PLANE'S. Give the member a second op it may name -> **87 pass, 2 FAIL** on the pinned-op-set arm; the write arm HELD, because the gained op is non-mutating — which is exactly why a write test alone would not catch it. D-199 (2): a scope compiled into a Worker is the settings row the determination refused.
-   (A5) THE BOUND IS SIZED ON MEMORY, NOT CPU. Set DEFAULT_MAX_TURNS_PER_SEGMENT to 1100 (the figure FL-1's CPU curve extrapolates to) -> **82 pass, 7 FAIL**: the "inside FL-1's measured 100-150 band" arm and the exact-value arm both fail. A bound sized on CPU headroom is ~10x too long and meets the MEMORY wall instead.
+   (A5) THE BOUND IS PINNED INSIDE ITS MARGIN. Set DEFAULT_MAX_TURNS_PER_SEGMENT to 1100 (the figure FL-1's CPU curve extrapolates to) -> **82 pass, 7 FAIL**: the "inside FL-1's measured 100-150 band" arm and the exact-value arm both fail. Re-run 2026-09-25 by D-312 at baseline 133/0: **126 pass, 7 FAIL**, AS DECLARED, restore verified. (Its rationale corrected by D-312, M-168: 1,100 is AT the CPU ceiling with no margin; there is no memory wall below it — this arm used to say 1,100 "meets the MEMORY wall instead".)
    (A6) A REFUSAL IS PASSED THROUGH, NOT RE-WORDED. Replace the plane's refusal body with the member's own sentence -> **86 pass, 3 FAIL**, all three verbatim arms (code, C-number, canned translation). A component that paraphrases a refusal is thirteen surfaces inventing wording.
    (V1) **VF-3'S NAMED CONTROL — HIDE THE FLEET MANIFEST.** Rename `agent-worker/fleet-member.json` away -> `coverage.mjs --strict` **exits 1** naming the undeclared Worker directory, instead of reporting the pre-FL-2 figure. The fleet FLOOR fired too (two gates over one arm, recorded rather than claimed as one). The plane's own OPS/CHECKS figures held at 100%.
    (V2) THE FLOOR — a whole member DIRECTORY vanishing, which the undeclared-Worker gate structurally cannot see. Raise FLEET_FLOOR.members to 3 -> **exit 1** naming FLEET FLOOR; the undeclared-Worker gate stayed silent, as declared.
@@ -319,21 +319,25 @@ console.log("\n--- 1 · the round trip: the member asks the plane and reports wh
 }
 
 /* ================================================================ 2 · THE SEGMENT BOUND */
-console.log("\n--- 2 · the segment bound, SIZED ON FL-1's MEMORY CURVE AND NOT ITS CPU CURVE ---");
+console.log("\n--- 2 · the segment bound, and the ceiling it keeps clear of: CPU, not memory (D-312) ---");
 {
   const mf = newMf();
   const out = await (await run(mf, { run_id: "r", store: "scratch", credential: AIK })).json();
   const bound = out.segment?.turns_bound ?? null;
-  /* THE ASSERTION THAT MAKES THE SIZING FALSIFIABLE. FL-1 measured 120.4 MB of a
-     128 MB isolate at 200 turns while CPU sat at 2.5% of its ceiling, and named
-     100–150 as inside both. Extrapolated on the measured CPU exponent, ~1,100
-     turns fit the CPU ceiling — so a bound sized on CPU headroom is ~10x too long
-     and meets the memory wall instead. A default outside the measured band fails
-     here rather than being discovered in production. */
+  /* THE ASSERTION THAT MAKES THE SIZING FALSIFIABLE. The value is pinned; its REASON
+     was corrected by D-312 (2026-09-25, measurements/M-168.md). This comment used to
+     read FL-1's 120.4 MB with 128 MB as its denominator, and say a bound sized on CPU
+     headroom "meets the memory wall instead" — WRONG: `memoryUsageBytes` is not a share
+     of 128 MB, and walking the loop to 1,400 turns found it flat (95-123 MB) with every
+     invocation `success`. What binds is CPU, ~1,000 turns at FL-1's payload size under
+     the 30 s default, so 1,100 is not "10x too long for memory" but AT the CPU ceiling
+     with no margin — which is why a default outside 100–150 still fails here. */
   t("the default bound is inside FL-1's measured 100-150 band", bound >= 100 && bound <= 150, true);
   t("the default bound is 120", bound, 120);
-  t("the answer names which measurement set it", /memory curve/i.test(out.segment?.bound_source ?? ""), true);
-  t("and names that it was NOT the CPU curve", /not the CPU curve/i.test(out.segment?.bound_source ?? ""), true);
+  /* CORRECTED, NOT EXEMPTED (D-312): these two asserted /memory curve/ and /not the CPU curve/,
+     which pinned the misreading into the shipped string. They now pin the re-checked basis. */
+  t("the answer names which measurement set it", /M-168/.test(out.segment?.bound_source ?? ""), true);
+  t("and names that CPU binds, not memory", /CPU binds, not memory/i.test(out.segment?.bound_source ?? ""), true);
   t("omitting turns takes the bound", out.segment?.turns_requested ?? null, 120);
 
   console.log("\n  -- over the bound is REFUSED, never silently clamped --");

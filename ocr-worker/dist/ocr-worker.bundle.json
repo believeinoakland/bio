@@ -35,8 +35,8 @@
     },
     {
       "path": "../pdf-worker/src/pagepixels.mjs",
-      "bytes": 41194,
-      "sha256": "afe3e2cd933841e1f6c44deb94ae5c738d320a164b5ce9f678b12641b69b80f6"
+      "bytes": 41334,
+      "sha256": "d0ae4ad2a65c1594924f17a8d8e8d6dffc6fcc7c2642deff7c1dc99f300e87c2"
     },
     {
       "path": "src/contract.mjs",
