@@ -18,17 +18,18 @@
  *
  * NEGATIVE CONTROL: `node bio-plane/test/nc-d585.mjs` — committed; each arm ALONE, declared before it is armed,
  * every restore verified by sha256 AND byte comparison against a per-arm pristine copy in the pen. RUN 2026-09-25
- * against a baseline of 34 pass / 0 fail / foot reached, 6/6 arms as declared: (A) THE ROW'S CONTROL — count a bare
- * `BT` as text again, by adding it to `TEXT_SHOWING_OPERATORS` — 21 pass, 13 fail, BOTH halves by name ("tier 1
- * MARKS the CAFR-shape page…" and "the OCR member's renderer ADMITS the CAFR-shape page…") and all three op arms.
- * (B) the renderer's old `SHOW_TEXT_BLOCK` test joins `hasTextOps` again, tier 1 untouched — 31/3, the renderer's
- * admission and the `shown === true` pin, and NOT tier 1's marker. (C) tier 1's condition back to "no font declared"
- * alone, the renderer untouched — 28/6, tier 1's marker and the op arms, and NOT the renderer. (D1) `null` read as
- * `false` on the form path — 31/3 at the unresolvable-form arms. (D2) the same on the page path — 31/3 at the
- * undecodable-stream arm and tier 1's "UNDETERMINED is not NO". (E) OVER-STRICTNESS: the operator list reordered —
- * 34/0, as declared. **D WAS ONE ARM ON THE FIRST RUN AND DISAGREED**: declared at the undecodable-stream assertion,
- * armed at `unread`, it failed at the FORM arms instead, because that fixture leaves by the early return — a finding
- * about the arm, recorded in the driver at its site and split into D1/D2 rather than smoothed.
+ * against a baseline of 34 pass / 0 fail / foot reached, 6/6 arms as declared (the driver's arm id in brackets):
+ * (a) [A] THE ROW'S CONTROL — count a bare `BT` as text again, by adding it to `TEXT_SHOWING_OPERATORS` — 21 pass,
+ * 13 fail, BOTH halves by name ("tier 1 MARKS the CAFR-shape page…" and "the OCR member's renderer ADMITS the
+ * CAFR-shape page…") and all three op arms. (b) [B] the renderer's old `SHOW_TEXT_BLOCK` test joins `hasTextOps`
+ * again, tier 1 untouched — 31/3, the renderer's admission and the `shown === true` pin, and NOT tier 1's marker.
+ * (c) [C] tier 1's condition back to "no font declared" alone, the renderer untouched — 28/6, tier 1's marker and
+ * the op arms, and NOT the renderer. (d) [D1] `null` read as `false` on the form path — 31/3 at the
+ * unresolvable-form arms. (e) [D2] the same on the page path — 31/3 at the undecodable-stream arm and tier 1's
+ * "UNDETERMINED is not NO". (f) [E] OVER-STRICTNESS: the operator list reordered — 34/0, as declared.
+ * **D WAS ONE ARM ON THE FIRST RUN AND DISAGREED**: declared at the undecodable-stream assertion, armed at `unread`,
+ * it failed at the FORM arms instead, because that fixture leaves by the early return — a finding about the arm,
+ * recorded in the driver at its site and split into D1/D2 rather than smoothed.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
