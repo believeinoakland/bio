@@ -4737,6 +4737,7 @@ __export(bio_checks_exports, {
   extentRelation: () => extentRelation,
   extentSpace: () => extentSpace,
   governingLawsOf: () => governingLawsOf,
+  historyWriteOrder: () => historyWriteOrder,
   imagePageUndetermined: () => imagePageUndetermined,
   imagePartUndetermined: () => imagePartUndetermined,
   inquiryQuestionOf: () => inquiryQuestionOf,
@@ -8834,6 +8835,12 @@ function bodySections(body) {
   }
   return out;
 }
+function historyWriteOrder(raw) {
+  const list = Array.isArray(raw) ? raw.filter((e) => e && typeof e === "object") : [];
+  const seqs = list.map((e) => e.seq);
+  const write = list.length > 0 && seqs.every((s) => Number.isSafeInteger(s)) && new Set(seqs).size === list.length;
+  return write ? { order: "write", entries: [...list].sort((a, b) => a.seq - b.seq) } : { order: "key", entries: [...list].sort((a, b) => a.key < b.key ? -1 : 1) };
+}
 async function checkMechanicalConformance(ctx, findings) {
   const manRaw = ctx.files.get("_history/manifest.json");
   if (!manRaw) return;
@@ -8843,7 +8850,8 @@ async function checkMechanicalConformance(ctx, findings) {
   } catch {
     return;
   }
-  const entries = Array.isArray(man.entries) ? [...man.entries].sort((a, b) => a.key < b.key ? -1 : 1) : [];
+  const { order, entries } = historyWriteOrder(man.entries);
+  let keyOrderSaid = false;
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
     if (!e || e.kind !== "promotion" || !e.key) continue;
@@ -8858,6 +8866,15 @@ async function checkMechanicalConformance(ctx, findings) {
     const man2 = rec.manifest || rec;
     const writer = man2.writer || rec.writer;
     if (writer !== "mechanical") continue;
+    if (order !== "write" && entries.length > 1 && !keyOrderSaid) {
+      keyOrderSaid = true;
+      findings.push(f(
+        "C-20.1",
+        "info",
+        `the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: "prior" may not be the snapshot written before (I-20)`,
+        ["re-export the bundle from a plane that writes seq into _history/manifest.json"]
+      ));
+    }
     const op = man2.operation || rec.operation;
     if (!op || !(op in MECHANICAL_FIELD_SETS)) {
       findings.push(f(
@@ -49173,13 +49190,15 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       snapFiles.get(r.snap_key).push({ name: r.path, sha256: r.sha256 });
     }
     const entries = [];
-    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json, writer, operation FROM manifest WHERE bundle_id=?`, bundleId)) {
+    let seq = 0;
+    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json, writer, operation FROM manifest WHERE bundle_id=? ORDER BY rowid`, bundleId)) {
       const written = JSON.parse(r.files_json);
       const writtenPairs = written.map((f2) => typeof f2 === "string" ? { name: f2, sha256: null } : f2);
       const files = writtenPairs.map((f2) => f2.name);
       const snapshotted = (snapFiles.get(r.snap_key) || []).map((f2) => f2.name);
       entries.push({
         key: r.snap_key,
+        seq: ++seq,
         kind: r.kind,
         base: r.base,
         author: r.author,
