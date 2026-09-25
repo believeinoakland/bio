@@ -831,8 +831,8 @@ scope: read the suite through the same `stripComments` M0-143 uses before the ch
 accepts-when: the driver's verdict equals `gates.mjs --explain`'s for fleetbundles. NEGATIVE CONTROL: add a `docs/` comment to the suite and the old whole-read line disagrees, the new one does not.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### UI-75 · running — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two** … (whole text: the cut archive)
-status: running — SCHEDULER #21 02:35Z spawns WORKER UI-75 (depth 2)
+### UI-75 · integrated — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two** … (whole text: the cut archive)
+status: integrated — SCHEDULER #22 03:12Z: tip b287db8b, GATE 154/154 GREEN (10819 assertions); r3Fed 80->81; union with UI-88: keep both hits, drop the none, re-grade 8.partition-independence BUILT
 order: 2 of 2, after REC-161; with UI-74, whichever lands second reuses the first's rendering (BOB #22, 2026-09-21)
 milestone: M9
 interface: I3 consumer (REC-161's IC).
@@ -952,7 +952,8 @@ accepts-when: the harness cannot submit a create or fork without the choice, and
 added: 2026-09-19 · SCHEDULER (same entry, item 3).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-70» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-134 · queued — **NO SURFACE PERFORMS §4.9's CUSTODIAL ACTS: `memberadd`, `memberset`, `signeradd` and `signerset` have ZERO call sites in** … (whole text: the cut archive)
+### D-134 · running — **NO SURFACE PERFORMS §4.9's CUSTODIAL ACTS: `memberadd`, `memberset`, `signeradd` and `signerset` have ZERO call sites in** … (whole text: the cut archive)
+status: running — SCHEDULER #22 03:12Z spawns WORKER D-134 (depth 2)
 order: with the M8 features after D-126, a surface over built ops; BOB #17 ordered it behind D-136's fence (*"a member surface over an act whose voter the caller can name is a SECOND path to a forgeable vote"*), which is built, and BOB #18 discharged BOB's half; it rests on REC-159's session reach (SCHEDULER #13, 2026-09-22, LED-7 batch S13-1)
 milestone: M8
 interface: I3 consumer (the four ops, reachable from an enrolled administrator's session once REC-159 lands).
