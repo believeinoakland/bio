@@ -1,0 +1,16 @@
+{
+ "unit": "plane:tally-through-pipe.test.mjs",
+ "inputHash": "65e39a776d3a08547c7be0f2ab925fa50a23f64e596561d32c22fc143d268893",
+ "verdict": "PASS",
+ "run": "8c7f9d5542f7eb749b48cc76540465023746128b.1790318660247.20465.json",
+ "tree": "8c7f9d5542f7eb749b48cc76540465023746128b",
+ "head": "72842a17cdcc129aa50ea0850e68b613dad30d9a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 994,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "fde48ed3-16ee-5bb3-b0b4-24b5dc1b94bf",
+ "at": "2026-09-25T06:44:20.257Z"
+}
