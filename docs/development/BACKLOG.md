@@ -63,6 +63,16 @@ scope: in is-publish-draft-this-case, a draft with neither caseId nor newCase pa
 accepts-when: a derivation draft publishes as a further edition of the derived case, and a mismatched named case is refused with both cases (moves: `predicted !== 1` refusing a further edition). NEGATIVE CONTROL: restore `predicted !== 1` for the derivation arm and rec217-draft-binding's new further-edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, on BOB #35's 07:35Z ruling).
 
+### D-672 · queued — **A WORKBOOK'S SHEET-RANGE UNITS EXIST AND NOTHING INDEXES THEM: `textUnitsFor` (index.mjs) yields nothing for `sheets[]`, and the store says so ("nothing yet writes a workbook's sheet-range units into the index"); CONTENT-SEARCH-DESIGN §4.1's Incomplete bullet still says the index "waits on the sheet-range arm", which has existed since FW-19.** Found by D-415's worker (minted on land/worker/D-415). — owner RECORD.
+order: after D-680 — it makes D-415's just-emitted units findable, on a unit §4.1 already designs (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3/I5 — the index admits sheet-range units; the integrator mints and classifies.
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.1 (*a sheet's unit is a sheet-range*).
+depends-on: D-415 (integrated, land/worker/D-415 @ 48245247 — for the named units; the whole-sheet unit rests only on FW-19, done).
+scope: `textUnitsFor` recognises `sheets[]` by shape and emits one unit per sheet keyed by its `range` extent; the store's unit arm admits sheet-range; §4.1's Incomplete bullet corrected. Indexing the NAMED units (per-cell text subsets) is NOT designed — state it, do not build it.
+accepts-when: a passage search over a captured workbook finds a cell's text in one unit labelled sheet-range (moves: workbook text unsearchable). NEGATIVE CONTROL: drop the sheets[] arm and the workbook search arm returns 0 rows, failing by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-415's worker).
+
 ### D-635 · queued — **A PAGE ROUTED TO OCR WHOSE FOLIO DECODED LOSES ITS DERIVATION-PART PLACEMENT: BOB #35 RULED 06:25Z APPEND — the page keeps its layer text, the transcription is appended, and the page is listed in BOTH derivation parts, because D-252's guarantee that layer text is never lost outranks the parts' partition.** Minted by D-627's worker (its full finding rides its report). — owner CONTENT-PDF.
 order: directly after D-627, which creates the routed-with-folio pages it concerns (SCHEDULER #22, 2026-09-25)
 milestone: M2
@@ -620,17 +630,6 @@ depends-on: D-419 (renderings reach the plane).
 scope: when renderings join `published_shas`, the verifying value is `pixels_sha256`, the file hash beside it labelled; `imagecrop.mjs` already emits both.
 accepts-when: a rendering published from workerd verifies against a Pillow-computed pixel hash. NEGATIVE CONTROL: verify by the file hash, and the cross-runtime arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
-
-### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
-order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a driver cleans up after a clean run), with BOB #33's ruling of 17:12Z (cite until folded).
-depends-on: M0-155.
-scope: (1) status.control.mjs removes `.status-harness/` on a clean run; (2) `.gitignore`'s pen preamble says pens are a driver's mechanism, gitignored and item-named, distinct from session scratch; (3) WORKER.md's scratch bullet adds "a control driver's declared, gitignored pen is not scratch".
-accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup and the pen-gone arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
-scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): control drivers writing `${file}.pristine-<arm>` beside the source, an UNDECLARED pen BOB's ruling does not stand — battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor, and every `nc-*.mjs` harness (D-499 fixed nc-d64). Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`.
 
 ### D-594 · queued — **`bio-plane/test/delegations.control.mjs` ARM A6 (~265) READS TODAY'S LOCAL DATE IN THE DRIVER AND COMPARES IT WITH THE DATE ITS CHILD `plancheck` READS FOR ITSELF (the cohort regex ~287), so the control fails on a correct tool across local midnight.** Found by M0-147's worker's class sweep (03:15Z). Latent; control driver only. — owner M0.
 order: after M0-172, with the control-driver rows behind the product rows: no gate verdict is false today, it only reddens a control run that straddles midnight (SCHEDULER #22, 2026-09-25)
