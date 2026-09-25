@@ -765,7 +765,8 @@ scope: descend into Form XObjects in the text walk the way CPDF-18's image walk 
 accepts-when: p38 reads its form text at tier 1 (moves: 9 pages reading as decoded while missing form text). NEGATIVE CONTROL: stop descending at `Do` and the form arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-515's worker).
 
-### D-606 · queued — **A SCANNED DOCUMENT IS OCR'D ONE PAGE PER ACQUIRE AND THE REST IS DROPPED: `index.mjs` `tier3Extend` (the only OCR_WORKER.fetch call site) calls the member once and never reads its answer's `deferred`, while `contract.mjs` `chooseChunk` takes the lowest page. MEASURED (M-165): on FW-20's walk rebuilt, 174 of 190 selected scanned pages were never transcribed; a per-page loop transcribes 183.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF (the plane seam).
+### D-606 · running — **A SCANNED DOCUMENT IS OCR'D ONE PAGE PER ACQUIRE AND THE REST IS DROPPED: `index.mjs` `tier3Extend` (the only OCR_WORKER.fetch call site) calls the member once and never reads its answer's `deferred`, while `contract.mjs` `chooseChunk` takes the lowest page. MEASURED (M-165): on FW-20's walk rebuilt, 174 of 190 selected scanned pages were never transcribed; a per-page loop transcribes 183.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF (the plane seam).
+status: running — SCHEDULER #22 04:42Z spawns WORKER D-606 (depth 2)
 order: after D-608, with the reader corrections: most of a scanned civic record going unread is the silent under-read CLAUDE.md §2 ranks worst (SCHEDULER #22, 2026-09-25)
 milestone: M2
 interface: I6 — more pages transcribed per acquire; the member contract is unchanged; the integrator classifies.
