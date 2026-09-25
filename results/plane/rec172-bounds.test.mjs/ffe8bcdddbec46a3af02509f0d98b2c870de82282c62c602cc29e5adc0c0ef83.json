@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec172-bounds.test.mjs",
+ "inputHash": "ffe8bcdddbec46a3af02509f0d98b2c870de82282c62c602cc29e5adc0c0ef83",
+ "verdict": "PASS",
+ "run": "eb36166421e01acbc9b851b6be89484de3adc3b9.1790305118699.25451.json",
+ "tree": "eb36166421e01acbc9b851b6be89484de3adc3b9",
+ "head": "e5b171699be8a54cbb670c166ee2f2a93b08f908",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 146,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "3962bd78-728d-5bf7-8cc7-23b78f091037",
+ "at": "2026-09-25T02:58:38.709Z"
+}

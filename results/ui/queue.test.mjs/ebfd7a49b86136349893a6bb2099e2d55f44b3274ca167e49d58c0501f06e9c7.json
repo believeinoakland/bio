@@ -1,0 +1,16 @@
+{
+ "unit": "ui:queue.test.mjs",
+ "inputHash": "ebfd7a49b86136349893a6bb2099e2d55f44b3274ca167e49d58c0501f06e9c7",
+ "verdict": "PASS",
+ "run": "eb36166421e01acbc9b851b6be89484de3adc3b9.1790305118699.25451.json",
+ "tree": "eb36166421e01acbc9b851b6be89484de3adc3b9",
+ "head": "e5b171699be8a54cbb670c166ee2f2a93b08f908",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 16,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "3962bd78-728d-5bf7-8cc7-23b78f091037",
+ "at": "2026-09-25T02:58:38.710Z"
+}
