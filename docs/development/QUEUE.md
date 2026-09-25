@@ -931,8 +931,8 @@ scope: in `connectionsFor`'s `withChoice` (store.mjs, REC-122 block) check each 
 accepts-when: a chosen pair's sentence names the choice, and a choice whose resolution is gone reads lapsed with its why, on both arms (moves: a self-contradicting sentence). NEGATIVE CONTROL: drop the choice state from `#pairSelection` and the chosen-pair arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by UI-91's worker).
 
-### UI-112 · running — **UI-91's ON-POINT CHOICE WILL BE REFUSED FOR A MENTION READ ON SEVERAL PAGES ONCE D-454 LANDS: D-454 makes `op=connectionchoose` take `occurrence=` and refuse C-74.4 CONNECTION_CHOICE_OCCURRENCE_UNNAMED when a string read at several places is named alone, and UI-91's `docChooseOnPoint` (both integrated, neither on main) sends no occurrence.** Found at SCHEDULER #21's reading of both reports (01:38Z). — owner UI.
-status: running — SCHEDULER #22 05:30Z spawns WORKER UI-112 (depth 2)
+### UI-112 · integrated — **UI-91's ON-POINT CHOICE WILL BE REFUSED FOR A MENTION READ ON SEVERAL PAGES ONCE D-454 LANDS: D-454 makes `op=connectionchoose` take `occurrence=` and refuse C-74.4 CONNECTION_CHOICE_OCCURRENCE_UNNAMED when a string read at several places is named alone, and UI-91's `docChooseOnPoint` (both integrated, neither on main) sends no occurrence.** Found at SCHEDULER #21's reading of both reports (01:38Z). — owner UI.
+status: integrated — SCHEDULER #22 06:36Z: tip bfd57de2, GATE 233/233 GREEN FULLREUSE (15352 assertions), tree 7d91b35f; the chooser offers each occurrence; r3Fed 82->83; rides batch30; minted D-625 (unplaced, see SCHEDULER-NEXT)
 order: after D-575, with the connection surface: a chooser that the plane refuses for the common case offers an act that fails (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: none (reads D-454's I3: `occurrence=`, `occurrences` on the act and on connections&content= mentions).
