@@ -93,3 +93,4 @@ IC-332	2026-09-25T06:42:23.219Z	CONDUCT#22	D-338: op=monitor grades no change fo
 IC-333	2026-09-25T06:42:29.146Z	CONDUCT#22	REC-191: monitor cadence per ADDRESS; table monitor_address_type (c22-batch29)
 IC-334	2026-09-25T06:42:34.645Z	CONDUCT#22	D-455: a changed monitor tick captures the bytes; the look names the new capture (c22-batch29)
 IC-335	2026-09-25T06:42:39.794Z	CONDUCT#22	D-451: op=airun context.questions (c22-batch29)
+IC-336	2026-09-25T06:42:45.155Z	CONDUCT#22	D-534: op=queue mute.case_kinds (c22-batch29)
