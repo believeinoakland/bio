@@ -29,16 +29,20 @@
  * (2) A PAGE WITH SYNTHETIC PIXELS, and it is here because of a MEASUREMENT
  *     rather than convenience. The accepts-when asks that OCR'd text reach
  *     `reading_refs`, and a reference only enters that index when a docprofile
- *     recogniser mints an entity from the text. The only recogniser in this
- *     estate that mints one is `meeting-agenda`, which needs line-anchored file
- *     numbers, `Subject:`/`Recommendation:` blocks and an agenda heading —
+ *     recogniser mints an entity from the text. This arm uses `meeting-agenda`,
+ *     which needs line-anchored file numbers, `Subject:`/`Recommendation:`
+ *     blocks and an agenda heading (CORRECTED by D-321 part 2: this said it was
+ *     the ONLY recogniser that mints one; at the code, minutes, calendar,
+ *     regulation, staff-report and staff-directory mint entities too) —
  *     **and the real page is a RESOLUTION, not an agenda, so it yields none.
  *     That is asserted below rather than worked around, and the gap is filed as
  *     D-321.** D-313 measured why there is no second real page to reach for: the
  *     image-only class is rare and clumped, and two harvests of 1,377 pages
  *     hours apart returned ZERO of it. D-321 then searched every byte held in
  *     git (M-170, 2026-09-25: 52 pages, ONE image-only, and it is this
- *     resolution); the instance's own captures stay unsearched. So the
+ *     resolution) and the instance's own captures (M-170 part 2: 11 PDFs, 24
+ *     image-only candidates, none agenda-shaped by eye, and none the tier-3
+ *     path can render: JBIG2, JPX or several images, D-622). So the
  *     `reading_refs` arm draws agenda text as PIXELS and sends them through the
  *     SAME real engine over the SAME real wire. **What is synthetic is the ink,
  *     never the engine, the renderer, the binding or the chain** — and the arm
@@ -354,7 +358,7 @@ console.log("\n--- 3 · WITHOUT THE MEMBER the SAME page stays honestly unread (
 console.log("\n--- 4 · THE CHAIN REACHES reading_refs — through the real engine ---");
 {
   /* THE REAL PAGE FIRST, AND ITS HONEST ANSWER. A scanned RESOLUTION page mints
-     no entity: the only recogniser here that mints one needs agenda-shaped text.
+     no entity: no recogniser fires on it (the arm below uses the agenda one).
      Asserted rather than skipped, because "no rows" for the right reason and
      "no rows" because the wire is broken look identical from outside. */
   t("the real page's reading is recorded and read from text", real.reading.read_from_text, true);
