@@ -18661,6 +18661,69 @@ function usedSheetRange(name, usedRows, usedCols) {
   if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
   return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
 }
+function a1Corner(s) {
+  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(String(s ?? "").trim());
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { col, row: parseInt(m[2], 10) };
+}
+function rangeUnitFor(sheetName, a, b, sheets, grid) {
+  let sheet = sheets.includes(sheetName) ? sheetName : null;
+  if (sheet == null) {
+    const ci = sheets.filter((s) => s.toLowerCase() === String(sheetName).toLowerCase());
+    if (ci.length === 1) sheet = ci[0];
+  }
+  if (sheet == null) return { why: "no_such_sheet" };
+  const c1 = Math.min(a.col, b.col), c2 = Math.max(a.col, b.col);
+  const r1 = Math.min(a.row, b.row), r2 = Math.max(a.row, b.row);
+  if (grid && (c2 > grid.cols || r2 > grid.rows)) return { why: "outside_grid" };
+  return { unit: sheetRangeRef(sheet, `${columnLetters(c1)}${r1}:${columnLetters(c2)}${r2}`) };
+}
+function splitTopLevel(s, sep) {
+  const out = [];
+  let depth = 0, quoted = false, cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'") {
+      if (quoted && s[i + 1] === "'") {
+        cur += "''";
+        i++;
+        continue;
+      }
+      quoted = !quoted;
+    } else if (!quoted && ch === "(") depth++;
+    else if (!quoted && ch === ")") depth--;
+    else if (!quoted && depth === 0 && ch === sep) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+function xlsxDefinedNameUnit(formula, sheets) {
+  const f2 = String(formula ?? "").trim();
+  if (!f2) return { why: "empty_reference" };
+  if (/#REF!/i.test(f2)) return { why: "broken_reference" };
+  if (splitTopLevel(f2, ",").length > 1 || /^\(.*\)$/.test(f2)) return { why: "multi_area" };
+  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f2);
+  if (!m) return { why: "not_a_range_reference" };
+  const sheetName = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
+  if (/\[[^\]]*\]/.test(sheetName)) return { why: "external_workbook" };
+  if (sheetName.includes(":")) return { why: "multi_sheet_reference" };
+  const corners = m[3].split(":");
+  if (corners.length > 2) return { why: "not_a_range_reference" };
+  const a = a1Corner(corners[0]);
+  const b = corners.length === 2 ? a1Corner(corners[1]) : a;
+  if (!a || !b) {
+    if (corners.every((c) => /^\$?(?:[A-Za-z]{1,3}|\d+)$/.test(c.trim()))) return { why: "whole_row_or_column" };
+    return { why: "not_a_range_reference" };
+  }
+  return rangeUnitFor(sheetName, a, b, sheets, { rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS });
+}
 var XLSX_GRID_ROWS = 1048576;
 var XLSX_GRID_COLS = 16384;
 function a1Col(ref) {
@@ -18723,7 +18786,38 @@ async function xlsxParts(bytes) {
       why: rel ? null : "sheet_rel_unresolved"
     };
   });
-  const definedNames = elements(wbXml, "definedName").filter((d) => d.attrs.name != null).map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities2(d.inner).trim() }));
+  const definedNames = elements(wbXml, "definedName").filter((d) => d.attrs.name != null).map((d) => ({
+    name: d.attrs.name,
+    ref: decodeXmlEntities2(d.inner).trim(),
+    localSheetId: /^\d+$/.test(d.attrs.localSheetId ?? "") ? parseInt(d.attrs.localSheetId, 10) : null,
+    hidden: d.attrs.hidden === "1" || d.attrs.hidden === "true"
+  }));
+  const tables = [];
+  for (const sheet of sheets) {
+    if (!sheet.part) continue;
+    const relsPart = relsPartFor(sheet.part);
+    if (!container.byName.has(relsPart)) continue;
+    const rr = await readPart(b, container, relsPart);
+    const parsed = rr.ok ? parseRels(UTF83.decode(rr.bytes)) : null;
+    if (!parsed || !parsed.ok) continue;
+    for (const r of parsed.relationships) {
+      if (r.external || !/\/relationships\/table$/.test(String(r.type ?? ""))) continue;
+      const part = resolveTarget(sheet.part, r.target);
+      const tr = await readPart(b, container, part);
+      if (!tr.ok) {
+        tables.push({ sheet: sheet.name, part, name: null, ref: null, why: `table_part_unreadable:${tr.why}` });
+        continue;
+      }
+      const t = elements(UTF83.decode(tr.bytes), "table")[0];
+      tables.push({
+        sheet: sheet.name,
+        part,
+        name: t ? t.attrs.displayName ?? t.attrs.name ?? null : null,
+        ref: t ? t.attrs.ref ?? null : null,
+        why: t ? null : "table_element_absent"
+      });
+    }
+  }
   const sheetParts = new Set(sheets.map((s) => s.part).filter(Boolean));
   const isTextPart = (n) => sheetParts.has(n) || n === SHARED_STRINGS_PART;
   const declared = declaredTextBytes(container, isTextPart);
@@ -18762,6 +18856,7 @@ async function xlsxParts(bytes) {
     container,
     sheets,
     definedNames,
+    tables,
     sharedStrings,
     core,
     declared,
@@ -19014,6 +19109,29 @@ async function xlsxStructure(parts) {
     notes
   };
 }
+function xlsxRangeUnits(parts) {
+  const names = parts.sheets.map((s) => s.name);
+  const units = [], skipped = [];
+  for (const dn of parts.definedNames) {
+    const r = xlsxDefinedNameUnit(dn.ref, names);
+    const scope = dn.localSheetId != null ? parts.sheets[dn.localSheetId]?.name ?? null : null;
+    if (r.unit) units.push({ source: "defined-name", name: dn.name, scope, hidden: dn.hidden, unit: r.unit });
+    else skipped.push({ source: "defined-name", name: dn.name, ref: dn.ref, why: r.why });
+  }
+  for (const t of parts.tables ?? []) {
+    if (t.why) {
+      skipped.push({ source: "table", name: t.name, ref: t.ref, part: t.part, why: t.why });
+      continue;
+    }
+    const corners = String(t.ref ?? "").split(":");
+    const a = corners.length <= 2 ? a1Corner(corners[0]) : null;
+    const b = corners.length === 2 ? a1Corner(corners[1]) : a;
+    const r = a && b ? rangeUnitFor(t.sheet, a, b, names, { rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS }) : { why: "not_a_range_reference" };
+    if (r.unit) units.push({ source: "table", name: t.name, scope: t.sheet, hidden: false, unit: r.unit });
+    else skipped.push({ source: "table", name: t.name, ref: t.ref, part: t.part, why: r.why });
+  }
+  return { rangeUnits: units, rangeUnitsSkipped: skipped };
+}
 function xlsxText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
@@ -19025,6 +19143,7 @@ function xlsxText(parts) {
       container: "xlsx",
       document: null,
       sheets: [],
+      ...xlsxRangeUnits(parts),
       undetermined: [guard],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
@@ -19090,6 +19209,9 @@ function xlsxText(parts) {
     container: "xlsx",
     document,
     sheets: outSheets,
+    /* D-415: the defined names and tables as `sheet-range` units, beside
+       each sheet's whole-sheet `range`. */
+    ...xlsxRangeUnits(parts),
     undetermined: allUndetermined,
     counts: {
       chars: document.length,
@@ -20385,6 +20507,70 @@ function odsStructure(parts) {
     notes
   };
 }
+function splitUnquoted(s, sepRe) {
+  const out = [];
+  let quoted = false, cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'") {
+      if (quoted && s[i + 1] === "'") {
+        cur += "''";
+        i++;
+        continue;
+      }
+      quoted = !quoted;
+    } else if (!quoted && sepRe.test(ch)) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+function odfCellAddress(s) {
+  const m = /^\$?(?:'((?:[^']|'')*)'|([^'.\s]*))\.(\S+)$/.exec(String(s ?? "").trim());
+  if (!m) return null;
+  const corner = a1Corner(m[3]);
+  if (!corner) return null;
+  const sheet = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
+  return { sheet: sheet === "" ? null : sheet, corner };
+}
+function odsRangeAddressUnit(address, sheets) {
+  const a = String(address ?? "").trim();
+  if (!a) return { why: "empty_reference" };
+  if (/#REF/i.test(a)) return { why: "broken_reference" };
+  if (splitUnquoted(a, /\s/).filter((x) => x !== "").length > 1) return { why: "multi_area" };
+  if (/^(?:'(?:[^']|'')*'|[^'.\s]*)#/.test(a)) return { why: "external_workbook" };
+  const ends = splitUnquoted(a, /:/);
+  if (ends.length > 2) return { why: "not_a_range_reference" };
+  const first = odfCellAddress(ends[0]);
+  const second = ends.length === 2 ? odfCellAddress(ends[1]) : first;
+  if (!first || !second || first.sheet == null) return { why: "not_a_range_reference" };
+  if (second.sheet != null && second.sheet !== first.sheet) return { why: "multi_sheet_reference" };
+  return rangeUnitFor(first.sheet, first.corner, second.corner, sheets, null);
+}
+function odsRangeUnits(bodyXml, sheets) {
+  const names = sheets.map((s) => s.name);
+  const units = [], skipped = [];
+  const found = [];
+  for (const nr of elementsNested(stripElement(bodyXml, "table"), "named-range")) found.push({ el: nr, scope: null });
+  for (const sh of sheets) for (const nr of elementsNested(sh.xml, "named-range")) found.push({ el: nr, scope: sh.name });
+  for (const { el, scope } of found) {
+    const ref = el.attrs["cell-range-address"] ?? null;
+    const r = odsRangeAddressUnit(ref, names);
+    if (r.unit) units.push({ source: "named-range", name: el.attrs.name ?? null, scope, hidden: false, unit: r.unit });
+    else skipped.push({ source: "named-range", name: el.attrs.name ?? null, ref, why: r.why });
+  }
+  for (const dr of elementsNested(bodyXml, "database-range")) {
+    const ref = dr.attrs["target-range-address"] ?? null;
+    const r = odsRangeAddressUnit(ref, names);
+    if (r.unit) units.push({ source: "database-range", name: dr.attrs.name ?? null, scope: r.unit.sheet, hidden: false, unit: r.unit });
+    else skipped.push({ source: "database-range", name: dr.attrs.name ?? null, ref, why: r.why });
+  }
+  return { rangeUnits: units, rangeUnitsSkipped: skipped };
+}
 function odsText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
@@ -20395,6 +20581,9 @@ function odsText(parts) {
       container: "ods",
       document: null,
       sheets: [],
+      rangeUnits: null,
+      rangeUnitsSkipped: null,
+      /* D-415: content.xml not read — NOT LOOKED, never none */
       undetermined: [parts.guard],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
@@ -20408,6 +20597,9 @@ function odsText(parts) {
       container: "ods",
       document: null,
       sheets: [],
+      rangeUnits: null,
+      rangeUnitsSkipped: null,
+      /* D-415: content.xml not read — NOT LOOKED, never none */
       undetermined: [marker],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
@@ -20415,7 +20607,8 @@ function odsText(parts) {
   const styles = automaticStyles(parts.contentXml);
   const outSheets = [];
   let cellCount = 0, formulaCount = 0;
-  for (const sheet of sheetsOf(body, styles)) {
+  const odsSheets = sheetsOf(body, styles);
+  for (const sheet of odsSheets) {
     const walked = walkSheet(sheet.xml);
     const lines = [];
     for (const row of walked.rows) {
@@ -20458,6 +20651,8 @@ function odsText(parts) {
     container: "ods",
     document,
     sheets: outSheets,
+    /* D-415: named ranges and database ranges as `sheet-range` units. */
+    ...odsRangeUnits(body, odsSheets),
     undetermined: [],
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 }
   };

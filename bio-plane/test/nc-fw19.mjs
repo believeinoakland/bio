@@ -43,8 +43,15 @@ const SAFE = controlPen("fw19");
 mkdirSync(SAFE, { recursive: true });
 
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
+const XLSXSRC = join(PLANE, "src/formats-xlsx.mjs");
+const ODFSRC = join(PLANE, "src/odf.mjs");
+/* D-415: the commit the named units were built on, BEFORE them — the `prefix`
+   arm restores that file whole, which is the row's "before the fix". */
+const D415_BASE = "5e8a65a837";
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 500000;   // bio-checks.mjs is ~713 KB; a restore over a stub must fail loudly.
+/* D-415 added two smaller subjects: each carries its own floor (~45 KB and ~90 KB). */
+const MIN_FOR = { [XLSXSRC]: 30000, [ODFSRC]: 60000 };
 
 const SUITES = { fw19: "test/fw19-extent-arms.test.mjs" };
 function runSuite(key) {
@@ -75,6 +82,14 @@ const PURE_NULLS = "PURE: an image as bytes over a capture with NO chain is not 
 const TEXT_REFUSED = "the SAME image cited as TEXT is REFUSED";
 const PIN = "OVER-STRICTNESS: REC-85's";
 const PARITY = "PARITY:";
+const D415_NAME = "D-415 a workbook's DEFINED NAME emits its";
+const D415_SCOPED = "D-415 a sheet-scoped name carries its sheet";
+const D415_TABLE = "D-415 a workbook's TABLE PART emits";
+const D415_EXACT = "D-415 exactly these units and no others";
+const D415_MULTI = "D-415 a MULTI-AREA name is SKIPPED";
+const D415_OVER = "D-415 OVER-STRICTNESS";
+const D415_ODS = "D-415 the .ods NAMED RANGE";
+const D415_OP = "D-415 THROUGH THE OP";
 
 const ARMS = {
   baseline: {
@@ -134,6 +149,66 @@ const ARMS = {
   },
 };
 
+/* D-415's arms. Each edits ONE source ALONE. `prefix` is the row's declared
+   control: the reader as it stood before D-415, restored whole from git. */
+Object.assign(ARMS, {
+  d415prefix: {
+    /* BOTH readers, because `odf.mjs` imports D-415's helpers from
+       `formats-xlsx.mjs`: restoring the xlsx reader alone left the .ods one
+       importing names that no longer exist and the suite died at LINK time
+       (-1/-1, run 2026-09-25) — a control that moved a second variable. */
+    files: [XLSXSRC, ODFSRC], suites: ["fw19"],
+    why: `formats-xlsx.mjs and odf.mjs as they stood at ${D415_BASE}, BEFORE D-415: the defined-name arm emits none and fails BY NAME`,
+    mustFail: [D415_NAME, D415_TABLE, D415_ODS, D415_OP],
+    mustNotFail: [RANGE_REFUSED, TABLE_REFUSED, IMAGE_REFUSED, PIN, PARITY],
+    patch: () => {
+      for (const [file, rel, mark] of [[XLSXSRC, "bio-plane/src/formats-xlsx.mjs", "xlsxRangeUnits"],
+                                       [ODFSRC, "bio-plane/src/odf.mjs", "odsRangeUnits"]]) {
+        const r = spawnSync("git", ["show", `${D415_BASE}:${rel}`],
+          { cwd: REPO, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+        if (r.status !== 0 || !r.stdout || r.stdout.includes(mark)) return { armed: false, matches: 0 };
+        writeFileSync(file, r.stdout);
+      }
+      return { armed: true, matches: 2 };
+    },
+  },
+  d415names: {
+    files: [XLSXSRC], suites: ["fw19"],
+    why: "skip the defined-name walk: no name's unit is emitted, while the TABLE part's still is",
+    mustFail: [D415_NAME, D415_SCOPED, D415_OVER, D415_EXACT, D415_OP],
+    mustNotFail: [D415_TABLE, D415_ODS, PARITY, PIN],
+    patch: () => arm(XLSXSRC, "  for (const dn of parts.definedNames) {", "  for (const dn of []) {"),
+  },
+  d415tables: {
+    files: [XLSXSRC], suites: ["fw19"],
+    why: "skip the table-part walk: the table's unit is not emitted, while every defined name's still is",
+    mustFail: [D415_TABLE, D415_EXACT],
+    mustNotFail: [D415_NAME, D415_SCOPED, D415_OVER, D415_MULTI, D415_ODS, D415_OP],
+    patch: () => arm(XLSXSRC, "  for (const t of parts.tables ?? []) {", "  for (const t of []) {"),
+  },
+  d415multi: {
+    files: [XLSXSRC], suites: ["fw19"],
+    why: "drop the multi-area guard: the two-area name is no longer skipped AS multi-area — its stated reason is wrong",
+    mustFail: [D415_MULTI],
+    mustNotFail: [D415_NAME, D415_TABLE, D415_OVER, D415_ODS, D415_OP],
+    patch: () => arm(XLSXSRC, String.raw`  if (splitTopLevel(f, ",").length > 1 || /^\(.*\)$/.test(f)) return { why: "multi_area" };` + "\n", ""),
+  },
+  d415exact: {
+    files: [XLSXSRC], suites: ["fw19"],
+    why: "OVER-STRICTNESS: match sheet names only exactly: the lower-cased spelling of a sheet the workbook HAS is skipped",
+    mustFail: [D415_OVER, D415_EXACT],
+    mustNotFail: [D415_NAME, D415_TABLE, D415_MULTI, D415_OP, PARITY],
+    patch: () => arm(XLSXSRC, "    if (ci.length === 1) sheet = ci[0];", "    if (false) sheet = ci[0];"),
+  },
+  d415ods: {
+    files: [ODFSRC], suites: ["fw19"],
+    why: "skip the .ods named-range walk: the .ods arm fails BY NAME while every XLSX unit holds",
+    mustFail: [D415_ODS],
+    mustNotFail: [D415_NAME, D415_TABLE, D415_EXACT, D415_OP, PARITY],
+    patch: () => arm(ODFSRC, "  for (const { el, scope } of found) {", "  for (const { el, scope } of []) {"),
+  },
+});
+
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);
 if (only && !ARMS[only]) {
@@ -153,7 +228,7 @@ for (const name of names) {
     const dest = join(SAFE, `${name}-${f.split("/").pop()}`);
     copyFileSync(f, dest);
     const bytes = statSync(dest).size;
-    if (bytes < MIN_BYTES) { console.log(`  ABORT        pristine copy of ${f} is ${bytes} B — below the guarded minimum`); process.exit(3); }
+    if (bytes < (MIN_FOR[f] ?? MIN_BYTES)) { console.log(`  ABORT        pristine copy of ${f} is ${bytes} B — below the guarded minimum`); process.exit(3); }
     saved.push({ f, dest, bytes, sha: sha(f) });
     console.log(`  PRISTINE     ${f.replace(REPO + "/", "")}  ${bytes} bytes  sha256 ${sha(f).slice(0, 12)}…`);
   }
