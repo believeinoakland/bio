@@ -50,12 +50,12 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
-v121, 2026-09-25 session, thread UI, D-617 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/D-617`, STACKED on `land/worker/UI-108` @ `80594009` (integrated, not yet on `main`), in the commit that
-carries this entry; the version number is PROVISIONAL and CONDUCT renumbers at integration. SURFACE: **the document
+v129, 2026-09-25 session, thread UI, D-617 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/D-617`, STACKED on `land/worker/UI-108` @ `80594009`, in the commit that carries this entry; numbered by
+CONDUCT #22 at c22-batch29, which landed v120–v129 together. SURFACE: **the document
 page no longer shows a dismissed finding as an open question.** `docInstanceHtml` (the UI-9 block) painted each
 `op=captureprogressions` finding as its stage, required-ness and grade, while the plane (D-552, IC-290) published the
-member's decision on it and the progression page (UI-108, `v120`) already said so. Each finding, missing or overdue,
+member's decision on it and the progression page (UI-108, `v125`) already said so. Each finding, missing or overdue,
 now carries the SAME sentence beside it, through UI-108's `progFindingDecisionHtml`, so the two pages give one
 account of one decision; the finding stays listed and an overdue one keeps its overdue note; a plane that publishes
 no `disposition` key is said to be not known, never undecided. Suite `civicos-ui/test/document-decided-finding.test.mjs`
@@ -63,9 +63,9 @@ no `disposition` key is said to be not known, never undecided. Suite `civicos-ui
 `document-decided-finding.control.mjs` 4/4 AS DECLARED. Not stated on this page: an open count, which
 `op=captureprogressions` does not publish.
 
-v120, 2026-09-25 session, thread UI, UI-76 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/UI-76` (base `origin/main` @ `964da6790`), in the commit that carries this entry; the version number is
-PROVISIONAL — a concurrent UI worker may take v120 on `main` first, and CONDUCT renumbers at integration. SURFACE:
+v128, 2026-09-25 session, thread UI, UI-76 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-76` (base `origin/main` @ `964da6790`), in the commit that carries this entry; numbered by CONDUCT #22
+at c22-batch29. SURFACE:
 **THEMES reach a member** — a new rail entry, "Themes" (`screen:themes`), and a theme's own page (`#theme/<id>`), the
 member half of D-162 (framework §8.4, fences 1–3; IC-241 as amended by BOB #32).
 
@@ -88,9 +88,9 @@ control: `themes.control.mjs`, seven arms, every one as declared.
 **Not built, stated:** no "place in a theme" entry on the document page (a member types an id on the theme's page);
 the `truncated` lines are unexercised (200 of a set would be needed).
 
-v120, 2026-09-25 session, thread UI, UI-109 (a WORKER of SCHEDULER #21, cloud session). Landed on
-`land/worker/UI-109` (base `origin/main` @ `964da679`), in the commit that carries this entry; the number is
-PROVISIONAL — CONDUCT renumbers at integration. SURFACE: **a reopened finding on the queue shows the decision
+v127, 2026-09-25 session, thread UI, UI-109 (a WORKER of SCHEDULER #21, cloud session). Landed on
+`land/worker/UI-109` (base `origin/main` @ `964da679`), in the commit that carries this entry; numbered by CONDUCT #22
+at c22-batch29. SURFACE: **a reopened finding on the queue shows the decision
 somebody already took on it** (`queueFindingPriorHtml`, drawn in `queueItemHtml` under the item's detail).
 
 **WHAT IT CLOSES.** D-527 put `prior_disposition` on `op=queue`'s FINDING item; no surface read it, so the
@@ -111,10 +111,9 @@ reopened item's words kept it green with the set-aside row's sentence hidden. Ar
 row itself (corrected with a comment, not exempted); 4/4 again. The item's sentence is worded apart from
 `disposedFlowVersionHtml`'s so each control finds its own subject once.
 
-v120, 2026-09-25 session, thread UI, D-134 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/D-134` (base `origin/main` @ `964da6790`), in the commit that carries this entry; the version number is
-PROVISIONAL — UI-78, UI-69 and UI-75 were running or awaiting the train beside me, so CONDUCT renumbers if it collided.
-SURFACE: **the Members screen gains §4.9's custodial WRITE half for an administrator's session.** Invite a member
+v126, 2026-09-25 session, thread UI, D-134 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/D-134` (base `origin/main` @ `964da6790`), in the commit that carries this entry; numbered by CONDUCT #22
+at c22-batch29. SURFACE: **the Members screen gains §4.9's custodial WRITE half for an administrator's session.** Invite a member
 (or, beyond the second administrator, propose one: the answer's own lists say who has endorsed and who it waits on),
 Deactivate / Reactivate on each roster row, and a Signing keys table with Register a signing key and Revoke /
 Reactivate per key — `op=memberadd`, `op=memberset`, `op=signeradd`, `op=signerset`, one call site each in
@@ -132,10 +131,9 @@ own fact while this item ran, and it landed here — `members.invited_by`, writt
 roster row says "invited by <who>", or "not recorded" where the plane says so. Controls and figures:
 `measurements/M-171.md`.
 
-v120, 2026-09-25 session, thread UI, UI-108 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/UI-108` (base `origin/main` @ `5e8a65a8`, which carries D-552), in the commit that carries this entry; the
-version number is PROVISIONAL — concurrent UI branches (UI-69, UI-75, UI-76, UI-78) may take it first, and CONDUCT
-renumbers at integration. SURFACE: **the progression page no longer shows a dismissed finding as an open question.**
+v125, 2026-09-25 session, thread UI, UI-108 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-108` (base `origin/main` @ `5e8a65a8`, which carries D-552), in the commit that carries this entry;
+numbered by CONDUCT #22 at c22-batch29. SURFACE: **the progression page no longer shows a dismissed finding as an open question.**
 `progPaintInstance()` painted `inst.findings` as bare `detail` lines, so a finding a member had already decided read
 exactly like one nobody had looked at, while `op=instance` (D-552, IC-290) published the decision on it. Each finding
 now keeps its place and carries its decision BESIDE it (`progFindingDecisionHtml`): the state, the decider and the
@@ -151,10 +149,9 @@ member); control `progression-decided-finding.control.mjs` 4/4 AS DECLARED. **No
 DOCUMENT page's `docInstanceHtml` paints `op=captureprogressions`' findings, which carry the same `disposition`, just
 as bare — same class, another block.
 
-v120, 2026-09-25 session, thread UI, UI-70 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/UI-70`, STACKED on `land/worker/REC-197` @ `e88ef9d1` (REC-196 and REC-197, integrated, not yet on
-`main`), in the commit that carries this entry; the version number is PROVISIONAL — UI-69, UI-75, UI-76, UI-78 and
-D-134 are live or integrated in the same file, and CONDUCT renumbers at integration. SURFACE: **the create and fork
+v124, 2026-09-25 session, thread UI, UI-70 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-70`, STACKED on `land/worker/REC-197` @ `e88ef9d1` (REC-196 and REC-197), in the commit that carries
+this entry; numbered by CONDUCT #22 at c22-batch29. SURFACE: **the create and fork
 forms ask whether a project can be found, with neither answer preselected, and the project's owner can change it.**
 
 **What moved** (Membership v2 §7.14 step 3; DEC-69, forced at the act). The Add form's project arm and the fork
@@ -175,9 +172,9 @@ the reason at the site: `project-id-surface` and `project-workspace` created and
 The fork arm of the control recorded a finding about itself: unguarded, the fork sends the string "null" and the
 plane refuses it C-70.3 — loud at the plane, where the Add form's liar is silent.
 
-v120, 2026-09-25 session, thread UI, UI-104 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/UI-104` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
-PROVISIONAL and CONDUCT renumbers at integration. SURFACE: **the action page shows the risk-tier history and offers
+v123, 2026-09-25 session, thread UI, UI-104 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-104` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; numbered by CONDUCT #22
+at c22-batch29. SURFACE: **the action page shows the risk-tier history and offers
 the revision act** — the surface half of REC-214 (BOB #33's risk-tier revision ruling, `BIO_Case_Making_v0_1.md` §2
 `risk_tier`).
 
@@ -202,9 +199,9 @@ control `ui104-risk-tier.control.mjs`, six arms, every arm as declared (the row'
 REQUIRED REASON arms by name). **NOT BUILT, and left room for:** REC-215's labelled machine PROPOSAL of a
 reconsideration, to be read BESIDE the history and never inside it.
 
-v120, 2026-09-25 session, thread UI, UI-110 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/UI-110` (base `origin/main` @ `5e8a65a83`), in the commit that carries this entry; the version number
-is PROVISIONAL — a concurrent UI worker may take v120 on `main` first, and CONDUCT renumbers at integration.
+v122, 2026-09-25 session, thread UI, UI-110 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-110` (base `origin/main` @ `5e8a65a83`), in the commit that carries this entry; numbered by CONDUCT
+#22 at c22-batch29.
 SURFACE: **the queue's selection takes a PROJECT-SCOPED finding, and the case its decision is recorded under is the
 item's own or the member's pick — never the surface's.**
 
@@ -233,10 +230,9 @@ not a DEC-49 canned translation: the plane mints `NO_PROJECT_SCOPE` with no `cod
 plane's). The SINGLE-item Defer/Dismiss dialog still sends `key` alone on a project-scoped finding and is refused —
 the 2026-08-10 D-266 DELEGATION to UI, open since, now D-624 in the plan; `queueHomeFor` is the piece it can reuse.
 
-v120, 2026-09-25 session, thread UI, D-576 (a WORKER of SCHEDULER #22, cloud session). Landed on
+v121, 2026-09-25 session, thread UI, D-576 (a WORKER of SCHEDULER #22, cloud session). Landed on
 `land/worker/D-576` (base `origin/main` @ `5e8a65a8`, which carries UI-95), in the commit that carries this entry;
-the version number is PROVISIONAL — concurrent UI workers (UI-112, UI-108, UI-110, UI-70) may take v120 first, and
-CONDUCT renumbers at integration. SURFACE: **the `op=connect` receipt on the subject view now states when the
+numbered by CONDUCT #22 at c22-batch29. SURFACE: **the `op=connect` receipt on the subject view now states when the
 derivation was CUT.**
 
 **WHAT IT CLOSES.** `connectGo` read *"The record derived N connections among the documents that concern this
@@ -254,8 +250,8 @@ receipt and the unbounded re-derivation are each asserted, with the suite's NEGA
 arms.
 
 v120, 2026-09-25 session, thread UI, UI-106 carrying D-619 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/UI-106`, STACKED on `land/worker/D-568` @ `d5da99bb` (integrated, not yet on `main`), in the commit
-that carries this entry; the version number is PROVISIONAL — CONDUCT renumbers at integration. SURFACE: **the
+`land/worker/UI-106`, STACKED on `land/worker/D-568` @ `d5da99bb`, in the commit that carries this entry; numbered
+by CONDUCT #22 at c22-batch29. SURFACE: **the
 review copy's edit form keeps a draft's request for a new case, and its grant roster no longer tells a member a
 grant bound to no case was given "for a new case".**
 
