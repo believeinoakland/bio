@@ -1001,7 +1001,7 @@ await section("ARM D · declared reads are real and reached", () => {
      written. It is moved rather than noted because a floor with slack is not a
      ratchet, and this one would have sat green through the deletion of a fifth
      of the file's static op calls. */
-  ok(called.size >= 78, `ARM D1: ${called.size} ops are called statically from app.html, floor 78 (MOVED 2026-09-24 by UI-92 from the figure this arm PRINTED, the arm forced to print it by raising the floor and restored by sha256 — this item added exactly one, op=casedrafts, and found the floor TWELVE low at 65, which is the fifth consecutive item to find one stale: a floor with slack is not a ratchet. Was 65 under UI-45 when it sat one low, 64 under UI-42, and 50 before that when it sat thirteen low) — an empty call set would make D3 vacuous`);
+  ok(called.size >= 79, `ARM D1: ${called.size} ops are called statically from app.html, floor 79 (MOVED 2026-09-25 by UI-88 from the figure this arm PRINTED, forced by raising the floor and restored by sha256 — this item added exactly one, op=partitionindependence, the accept ceremony's origins read; was 78, MOVED 2026-09-24 by UI-92 from the figure this arm PRINTED, the arm forced to print it by raising the floor and restored by sha256 — this item added exactly one, op=casedrafts, and found the floor TWELVE low at 65, which is the fifth consecutive item to find one stale: a floor with slack is not a ratchet. Was 65 under UI-45 when it sat one low, 64 under UI-42, and 50 before that when it sat thirteen low) — an empty call set would make D3 vacuous`);
 
   let declared = 0;
   for(const [id, s] of Object.entries(SURFACES)){
@@ -1018,7 +1018,7 @@ await section("ARM D · declared reads are real and reached", () => {
   }
   /* MOVED 2026-08-09 (UI-42) FROM 30 TO 39, from the figure THIS ARM PRINTED —
      UI-42's surface declares two reads and the floor was already seven low. */
-  ok(declared >= 54, `ARM D5: ${declared} reads are described, floor 54 (MOVED 2026-09-24 by UI-92 from the figure this arm PRINTED, alongside D1 and in the same forced print — this item declared exactly one more, op=casedrafts on the project surface, and found the floor TWELVE low at 41; was 41 under UI-45, 39 under UI-42, and 30 before that when it sat seven low)`);
+  ok(declared >= 55, `ARM D5: ${declared} reads are described, floor 55 (MOVED 2026-09-25 by UI-88 from the figure this arm PRINTED, in the same forced print as D1 — this item declared exactly one more, partitionindependence on the accept ceremony; was 54, MOVED 2026-09-24 by UI-92 from the figure this arm PRINTED, alongside D1 and in the same forced print — this item declared exactly one more, op=casedrafts on the project surface, and found the floor TWELVE low at 41; was 41 under UI-45, 39 under UI-42, and 30 before that when it sat seven low)`);
 });
 
 /* ================================================= RECIPES ARE DATA, VALIDATED */

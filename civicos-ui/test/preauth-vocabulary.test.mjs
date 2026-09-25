@@ -578,9 +578,9 @@ ok("WALK 2 REACH: it matches exactly three published ADDRESS SHAPES — found ["
      `acceptCeremonyRouteFromHash` is POST-AUTHENTICATION. It is asked inside
      `boot()`'s router chain and NOWHERE at the top level, so
      `#accept/<INQ-…>/<name>` resolves for nobody holding nothing. Its reads
-     (`basisversions`, `affordances`, `airun`, `versionstrength`) are
-     admin/member/probe and its four acts are session-mode, so it adds no
-     member-facing pre-auth vocabulary.
+     (`basisversions`, `affordances`, `airun`, `versionstrength`, and since UI-88
+     `partitionindependence`) are admin/member/probe and its four acts are
+     session-mode, so it adds no member-facing pre-auth vocabulary.
 
    The two pins below check both halves for THIS router as well. */
 /* CORRECTED A FIFTH TIME 2026-09-23 BY CONDUCT #18 at UI-68's merge onto c17-batch7, eight -> NINE: UI-74

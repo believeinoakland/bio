@@ -2329,7 +2329,7 @@ const SURFACES = {
     purpose: "One reading of one question's evidence, acted on: adopted, turned down, set aside with a reason, or put back where nobody had acted on it. The record is asked what the act would do before it is done; where the reading is filed as several sets of reasons each offered as carrying the answer on its own, the page first shows what the record traced about whether those sets rest on the same material, then asks the member to say so about each set before it will put their name on the reading; and what the reading comes to is not shown until after that.",
     levels: ["meaning"],
     acts: ["versionaccept", "versionreject", "versionconsider", "versionrevert"],
-    reads: ["basisversions", "affordances", "airun", "versionstrength"],
+    reads: ["basisversions", "affordances", "airun", "partitionindependence", "versionstrength"],
   },
 
   /* UI-45 · §7's stance, and it is a SECOND surface over one read rather than a
@@ -23152,8 +23152,9 @@ try{ window.addEventListener("hashchange", ()=>{ if(!VREV_HASH_LOCK) versionRevi
    ---- D-195: THE SHARED ORIGIN, DERIVED BY THE PLANE AND SHOWN BEFORE THE
         AFFIRMATION — AND NEVER A REFUSAL (§12 (a))
 
-   `op=versionstrength` publishes `independence` — `Store#independenceOf`,
-   recomputed on the read rather than replayed from the write (IC-52). UI-43's
+   `op=partitionindependence`'s version arm publishes `independence` —
+   `Store#independenceOf`, recomputed on the read rather than replayed from the
+   write (IC-52, IC-248). UI-43's
    branch could only say *nobody looked*; the plane now looks, so this page shows
    what it found, in the reading's own card, ABOVE the affirmation: which sets
    rest on the same document, the same captured copy or the same address, or
@@ -23162,12 +23163,14 @@ try{ window.addEventListener("hashchange", ()=>{ if(!VREV_HASH_LOCK) versionRevi
    still goes through. Derived informs, authored binds.
 
    THE ORDERING RULE (DEC-32 clause 5) SURVIVES THIS, AND HOW IS THE POINT.
-   `independence` rides on the op that also answers the arithmetic, so asking it
-   before the affirmation fetches a pair. `acerOriginsRead` KEEPS `independence`
-   AND NOTHING ELSE — the pair is dropped at the fetch, never stored in `ACER`,
-   so no code path can draw it; the arithmetic is asked AGAIN, and only, from
-   `acerStrengthShow` after the affirmation. A shared origin is a provenance fact
-   and not a grade (§12 (c)), so showing it first does not break the keystone.
+   Until UI-88 `independence` was asked of `op=versionstrength`, which also
+   answers the arithmetic, so the pair crossed the wire before the affirmation
+   and was dropped client-side. BOB #31 (2026-09-23 22:22Z) ruled the separation
+   structural at the wire, not a choice each page makes: `acerOriginsRead` asks
+   the independence-only read, so no strength-bearing answer is FETCHED before
+   the affirmation; the arithmetic is asked only from `acerStrengthShow`, after
+   it. A shared origin is a provenance fact and not a grade (§12 (c)), so
+   showing it first does not break the keystone.
 
    ---- DEC-46: THE LENS DIFF IN THE FLOW, ABOVE THE CONTROL, THREE-VALUED.
    ---- REC-36: A READING COMPOSED BY A RUN THIS CREDENTIAL CANNOT OPEN LOSES
@@ -23607,15 +23610,15 @@ async function acerStrengthShow(){
   acceptCeremonyPaint();
 }
 
-/* D-195's READ, AND IT KEEPS ONE FIELD. The op also answers the pair; the pair
-   is dropped HERE, at the fetch, so nothing before the affirmation can draw it
-   (DEC-32 clause 5). Asked in the reading's own state, because the op refuses a
-   reading outside the state set it counts. `null` on any refusal — which the
+/* D-195's READ, AND THE ANSWER CARRIES NOTHING ELSE (UI-88). The VERSION arm of
+   `op=partitionindependence` (REC-192, IC-248) answers the stored reading's
+   `independence` ON ITS OWN — no pair, no axis, no state set — so no strength
+   crosses the wire before the affirmation (DEC-32 clause 5; BOB #31, 2026-09-23
+   22:22Z). It is not state-gated, so no state is named: the reading a member
+   affirms is by construction not yet adopted. `null` on any refusal — which the
    page renders as NOT TOLD, never as clean. */
 async function acerOriginsRead(v){
-  const st = String((v && v.state) || "").trim();
-  const a = await actAsk("versionstrength",
-    { id: ACER.inquiry, version: String(v.name), ...(st ? { states: st } : {}) });
+  const a = await actAsk("partitionindependence", { id: ACER.inquiry, version: String(v.name) });
   const ind = a.accepted && a.result && typeof a.result === "object" ? a.result.independence : null;
   return (ind && typeof ind === "object") ? ind : null;
 }
