@@ -16,6 +16,7 @@
  * never lands rather than being caught at ratification after a member has
  * already read it.
  */
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -29,6 +30,9 @@ const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  /* D-512: evidence storage, so the replay arm's drive-provenance capture can be HELD — the plane verifies a replay
+     against bytes it reads back, and a copy with no storage can verify none. */
+  r2Buckets: ["CAPTURES"],
   bindings: { ADMIN_TOKEN: "adm-gath", MEMBER_TOKEN: "mem-gath", PROBE_TOKEN: "prb-gath", VERSION: "test" },
 });
 
@@ -179,9 +183,15 @@ console.log("\n--- replay carries the past, and says that it did ---");
      (`mem-gath`) and passed, because the exemption was the CALLER'S to claim. BOB #33 ruled that `replay` is the
      SERVER'S word (INVESTIGATIVE-SESSION.md §11 item 5), and the plane now deletes a caller's flag unless the call
      arrives under the ADMIN class with no session — the one class `migrate.mjs` uses. The old assertion was wrong
-     about WHO may replay and right about WHAT a replay does, so the CREDENTIAL is what moves and nothing else. */
-  t("replayed BY THE ROOT OF TRUST, it lands — the exemption survives for the one class the migration uses",
-    (await postAs("adm-gath", "promote", mk({ replay: true }))).result.ok, true);
+     about WHO may replay and right about WHAT a replay does, so the CREDENTIAL is what moves and nothing else.
+     CORRECTED AGAIN 2026-09-24 by D-512, never exempted: the root of trust's flag was itself still the caller's word
+     (D-511's stated residue). BOB #33's step (2) honours `replay` only over a drive-provenance capture the plane
+     verifies — the shape `migrate.mjs` sends — so the replay now carries one; a bare flag is refused
+     REPLAY_UNVERIFIED (C-66.6), which `d512-replay-verified.test.mjs` drives. */
+  t("replayed BY THE ROOT OF TRUST, over provenance the plane verifies, it lands — the exemption survives for the "
+    + "one class the migration uses, and only where the record's past is SHOWN",
+    (await postAs("adm-gath", "promote", await withReplayProof(mf, "token=adm-gath", mk({ replay: true }))))
+      ?.result?.ok ?? null, true);
   /* Read defensively rather than destructured: before D-511 a failure of the arm above left `result` null and the
      next line died on a TypeError, which goes through NO assertion at all and ends the module while its tally reads
      clean (WORKER.md). A missing manifest now FAILS the arm below by name. */

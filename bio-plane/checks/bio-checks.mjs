@@ -13727,6 +13727,26 @@ export const SURFACE_CHECKS = {
       + 'once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the '
       + 'value the current version carries and save the revision again.',
   },
+  /* D-512 (INVESTIGATIVE-SESSION.md §11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", BOB #33's
+     STEP (2)): `replay` exempts a promotion from every shape fence `promote` has, because a replay re-states the
+     record's own past verbatim. D-511 (step 1) removed the flag from every caller but the ADMIN class with no
+     session; this is the end state. A promotion of ANY type and ANY revision that asserts a replay names its
+     drive-provenance capture, and `op=promote` verifies it against what the record HOLDS — the capture registered
+     by this promotion, its bytes read back and hashed, and one preserved promotion record naming this bundle and
+     listing this revision's `bundle.md` SHA-256 — never against the request's own claim (CLAUDE.md §5). Measured
+     before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
+     with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
+     BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
+     promotion, because the one honest sender (`migrate.mjs`) carries the past verbatim and an ordinary creation is
+     rewritten on the way in. */
+  REPLAY_UNVERIFIED: {
+    check: 'C-66.6',
+    where: 'src/index.mjs fetch > is-promote-replay-verified',
+    translation: 'This save says it is a replay of the record\'s own history, and the plane could not check that '
+      + 'against the history it holds: the replay must name the provenance file for this document, already '
+      + 'uploaded, whose records list this document and exactly this version of it. A replay is excused from '
+      + 'the rules a new save must meet only when that check succeeds. Nothing was saved.',
+  },
 };
 
 /* REC-140 / C-58 — WHAT `op=ratify` MAY PUBLISH AT ALL (BIO_Publication_v0_1.md §3 rule 2,

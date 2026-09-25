@@ -36,6 +36,7 @@
  * and §0's census is what sees a literal reappear at any site. The monitor tick needs a fetch and is not driven.
  * ========================================================================= */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -93,6 +94,7 @@ const planeAt = ({ name, persist = null }) => {
 };
 const retire = async (mf) => { await mf.dispose(); live.splice(live.indexOf(mf), 1); };
 const door = (mf) => ({
+  mf,   /* D-512: `create`'s replay arm uploads its drive-provenance capture through this plane */
   POST: async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
     { method: "POST", body: JSON.stringify(body ?? {}) })).json()),
   GET: async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json()),
@@ -151,14 +153,19 @@ const projectMd = (title, groupLine) => ["---", "object_type: project", "schema:
   "---", "", "## Thesis Summary", "", "A project.", "", "## Open Questions", "", "## Ruled Out", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 let snapSeq = 0;
-/* A creation through the control plane. `metaGroup` undefined sends NO meta group key at all. */
-const create = (D, tok, { id, text, type, state, metaGroup, replay } = {}) => D.POST(`op=promote&token=${tok}`, {
-  ...(id === undefined ? {} : { bundleId: id }), base: null,
-  snapKey: `20260921T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: type, ...(metaGroup === undefined ? {} : { group: metaGroup }), title: `t ${id ?? "new"}`,
-          current_state: state, created: NOW, last_updated: LATER },
-  files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }],
-  register: [], ...(replay ? { replay: true } : {}) });
+/* A creation through the control plane. `metaGroup` undefined sends NO meta group key at all. A `replay` carries
+   the drive-provenance capture the plane verifies (D-512, `replay-proof.mjs`): since BOB #33's step (2) a bare flag
+   is refused REPLAY_UNVERIFIED (C-66.6), and the replay the record honours is the one that SHOWS its past. */
+const create = async (D, tok, { id, text, type, state, metaGroup, replay } = {}) => {
+  const pkg = {
+    ...(id === undefined ? {} : { bundleId: id }), base: null,
+    snapKey: `20260921T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
+    meta: { object_type: type, ...(metaGroup === undefined ? {} : { group: metaGroup }), title: `t ${id ?? "new"}`,
+            current_state: state, created: NOW, last_updated: LATER },
+    files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }],
+    register: [], ...(replay ? { replay: true } : {}) };
+  return D.POST(`op=promote&token=${tok}`, replay ? await withReplayProof(D.mf, `token=${tok}`, pkg) : pkg);
+};
 const fileOf = async (D, id) => {
   const r = await D.GET(`op=file&token=${ADM}&id=${E(id)}&path=bundle.md`);
   return r && typeof r.text === "string" ? r.text : (typeof r === "string" ? r : r?.content ?? null);

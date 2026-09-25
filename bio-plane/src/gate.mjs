@@ -139,6 +139,9 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    admits `null` for a bar axis nobody set (Publication §3 rule 14), so a one-axis bar 1.28.0 refused now
    signs; rule 17 moves the stamp for a changed check. The d470 census row names it in `changed`. If
    another branch takes 1.29.0 first, CONDUCT takes the next number at the union. */
+/* 1.29.0 (D-512, 2026-09-24, branch land/worker/D-512): C-66.6 REPLAY_UNVERIFIED joined SURFACE_CHECKS — `op=promote`
+   honours `replay` only over a drive-provenance capture it verifies (BOB #33's step (2)). MINOR and additive: one check
+   arrives, none moves and none leaves. CONDUCT reconciles the number at integration if another branch takes 1.29.0. */
 export const CATALOG_VERSION = "1.29.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

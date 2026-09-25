@@ -379,6 +379,9 @@ const CATALOG_CENSUS = {
      number, re-reads count and digest from this suite's print on the merged tree, and CARRIES
      `changed: ["C-41.12"]` onto that entry.** */
               changed: ["C-41.12"] },
+  /* D-512 (2026-09-24, branch land/worker/D-512): 1.28.0 -> 1.29.0, MINOR — one check ADDED, none changed or removed:
+     C-66.6 `REPLAY_UNVERIFIED` in SURFACE_CHECKS. Count and digest are THIS SUITE'S OWN PRINT on the item's tree over
+     origin/main 9f8b69e6, never arithmetic on 461. CONDUCT re-reads it at the union if another branch adds rows. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -507,6 +510,7 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* CORRECTED by D-549: 1.28.0 -> 1.29.0 — C-68.5 joined the catalogue, and the old literal names one that no longer runs. */
 /* CORRECTED by D-450 (2026-09-25), never exempted: C-41.12 changed what it admits, so the catalogue
    under the stamp is no longer 1.28.0's and the stamp moves with it (rule 17). */
+/* CORRECTED AGAIN by D-512 (2026-09-24), never exempted: C-66.6 moved the catalogue, so the stamp moved with it. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather
