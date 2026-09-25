@@ -26,6 +26,7 @@
  * its OWN check and leaves its five neighbours green proves the six are six.
  *
  * Run it:  node test/suggest.control.mjs
+ *          node test/suggest.control.mjs --arm 7   one arm ALONE, by its label (D-630); repeatable
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -43,6 +44,10 @@ const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFi
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
 
 let armsRun = 0, armsWrong = 0;
+/* D-630: `--arm <label>` runs only the named arm(s), so one arm's failure is read with no neighbour armed
+   before it. A label that names no arm is REFUSED at the foot, never a silent zero-arm green. */
+const ONLY = process.argv.flatMap((a, i, v) => (a === "--arm" && v[i + 1] ? [v[i + 1]] : []));
+const labelOf = (title) => (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1];
 
 /* The suite's own report, parsed from its `N pass, M fail` line. A suite whose
    count cannot be read is reported as UNKNOWN rather than as zero: an unreadable
@@ -77,7 +82,8 @@ function restoreAll() {
 
 function arm(title, edits, mustFail, mustNotFail = []) {
   /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
-  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find: from, put: to })));
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: labelOf(title), file: F[k], find: from, put: to })));
+  if (ONLY.length && !ONLY.includes(labelOf(title))) return;
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -178,7 +184,10 @@ arm("(7) F10 — THE IDEMPOTENCE KEY. This is the arm the plan names: neuter the
   + "and a verbatim resubmit stops being a structural no-op. The second submission is EVALUATED again, "
   + "`repeats` never moves, and a retry loop is then caught only by the budget — which the design says "
   + "is the BACKSTOP and not the mechanism.",
-  [["store", `    if (prior) {`, `    if (false && prior) {`]],
+  /* D-630: re-anchored on the refusal-lookup branch AND the comment that opens it — `    if (prior) {` alone
+     matches twice since D-536 (the readings-history backfill), so this arm refused to arm. */
+  [["store", `    if (prior) {\n      /* THE COUNTER IS THE ONE THING THAT MOVES`,
+             `    if (false && prior) {\n      /* THE COUNTER IS THE ONE THING THAT MOVES`]],
   ["the first submission is EVALUATED and refused", "and the RETRY IS COUNTED"],
   ["CHECK 1: a leg naming a document", "CHECK 5:", "CHECK 6:"]);
 
@@ -494,6 +503,10 @@ arm("(D-235f) OVER-REACH, AND IT MUST FAIL THE OTHER WAY — make the shared rea
    "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
    "D-235 OVER-STRICTNESS", "CHECK 1: a leg naming a document"]);
 
+if (ONLY.length && armsRun !== ONLY.length) {
+  console.log(`\n** --arm ${ONLY.join(", ")} named ${ONLY.length} arm(s) and ${armsRun} ran: a label names no arm`);
+  process.exit(1);
+}
 console.log(`\n=================================================================`);
 console.log(`arms run: ${armsRun} · arms that did NOT behave as declared: ${armsWrong}`);
 console.log(`every arm restored; every file verified by sha256 AND by content`);

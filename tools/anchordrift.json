@@ -379,14 +379,6 @@
   },
   {
    "driver": "bio-plane/test/suggest.control.mjs",
-   "arm": "7",
-   "anchor": "    if (prior) {",
-   "row": "D-630",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197: D-536 added a second `    if (prior) {` site"
-  },
-  {
-   "driver": "bio-plane/test/suggest.control.mjs",
    "arm": "D-235f",
    "anchor": "      bundleId, row.name, Store.BASIS_VERSION_LE",
    "row": "D-235",
