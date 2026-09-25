@@ -831,7 +831,8 @@ scope: read the suite through the same `stripComments` M0-143 uses before the ch
 accepts-when: the driver's verdict equals `gates.mjs --explain`'s for fleetbundles. NEGATIVE CONTROL: add a `docs/` comment to the suite and the old whole-read line disagrees, the new one does not.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### UI-75 · queued — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two** … (whole text: the cut archive)
+### UI-75 · running — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two** … (whole text: the cut archive)
+status: running — SCHEDULER #21 02:35Z spawns WORKER UI-75 (depth 2)
 order: 2 of 2, after REC-161; with UI-74, whichever lands second reuses the first's rendering (BOB #22, 2026-09-21)
 milestone: M9
 interface: I3 consumer (REC-161's IC).
@@ -842,7 +843,8 @@ added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 note: 2026-09-23 by SCHEDULER #17 (CONDUCT #17's 22:00Z finding (1), verified at c17-batch5): REC-161's `partitionindependence` op exists on c17-batch5 and `app.html` calls it nowhere; `elicFalsifier` is a pure string builder. The same commit re-grades `8.partition-independence` to BUILT and drops its `none` probe. Suite `civicos-ui/test/elicitation.test.mjs`; NEGATIVE CONTROL: stub the fetch to return `shared:[]`, and the correlated-fixture arm fails by name.
 
-### UI-78 · queued — **THE PUBLIC HEADER CANNOT SHOW A GROUP'S DISPLAY NAME OR VERIFIED DOMAIN, AND MEMBERS CANNOT SEE A DOMAIN CLAIM'S VERDICT.** … (whole text: the cut archive)
+### UI-78 · running — **THE PUBLIC HEADER CANNOT SHOW A GROUP'S DISPLAY NAME OR VERIFIED DOMAIN, AND MEMBERS CANNOT SEE A DOMAIN CLAIM'S VERDICT.** … (whole text: the cut archive)
+status: running — SCHEDULER #21 02:35Z spawns WORKER UI-78 (depth 2)
 order: directly after REC-164, which it consumes (BOB #24: *"UI (M7), after 2"*) (SCHEDULER #9, 2026-09-21)
 milestone: M7
 interface: I3 consumer (REC-164's IC).
