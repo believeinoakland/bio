@@ -955,7 +955,8 @@ scope: a pure reader that loads every `*.control.mjs` driver's arm table, dry-ap
 accepts-when: the reader runs in every profile and names each drifted or UNREADABLE driver (moves: drifts found a worker round late). NEGATIVE CONTROL: reword one anchored line in a fixture copy and the arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:25Z).
 
-### M0-196 · queued — **`bio-plane/scripts/pensweep.mjs`'s walk cannot resolve `fileURLToPath(new URL("..", import.meta.url))` as a tree read, so every copy-source control driver that reads its tree that way reads UNCLASSIFIED; batch28 raised the ceiling 15 -> 18 by name for D-526's, D-547's and D-548's drivers.** Found by CONDUCT #21 at batch28's integration (04:06Z). — owner M0.
+### M0-196 · running — **`bio-plane/scripts/pensweep.mjs`'s walk cannot resolve `fileURLToPath(new URL("..", import.meta.url))` as a tree read, so every copy-source control driver that reads its tree that way reads UNCLASSIFIED; batch28 raised the ceiling 15 -> 18 by name for D-526's, D-547's and D-548's drivers.** Found by CONDUCT #21 at batch28's integration (04:06Z). — owner M0.
+status: running — SCHEDULER #22 06:01Z spawns WORKER M0-196 (depth 2)
 order: after M0-142, with the gate-instrument rows behind the product rows: a ceiling raised by name is loud, not false, and every new driver of that shape raises it again (SCHEDULER #22, 2026-09-25)
 milestone: M0
 interface: none.
