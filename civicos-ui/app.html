@@ -1516,7 +1516,8 @@ async function boot(){
   if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
      && !actionRouteFromHash() && !aiSessionRouteFromHash()
      && !versionReviewRouteFromHash() && !stanceRouteFromHash()
-     && !acceptCeremonyRouteFromHash() && !draftRouteFromHash()) go("queue", true);
+     && !acceptCeremonyRouteFromHash() && !draftRouteFromHash()
+     && !themeRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -1530,6 +1531,8 @@ const RAIL = [
   {id:"search",   icon:"i-search",   label:"Find evidence"},
   {id:"subjects", icon:"i-focus",    label:"Subjects"},
   {id:"progressions",icon:"i-monitor",label:"Progressions"},
+  /* UI-76: themes, a member's declared lens (framework §8.4). */
+  {id:"themes",   icon:"i-focus",    label:"Themes"},
   {id:"inquiries",icon:"i-focus",    label:"Questions"},
   /* P-52, UI-19. The IMPACTING verb had no entry in the rail at all: an action
      could only be reached by knowing its id. `op=list` and `op=search` have
@@ -1591,7 +1594,7 @@ function navLabel(p){
   if(p.type==="bundle") return "the document";
   if(p.type==="inquiry") return "the question";
   if(p.type==="action") return "the action";
-  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",themes:"Themes",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -1647,7 +1650,7 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",themes:"Themes",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","inquiries","actions","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
@@ -1684,6 +1687,7 @@ async function go(screen, fromNav){
        actions route kept; UI-21 deleted renderFiltered, so the route now goes
        through the finder scope the same way inquiries/monitoring do. */
     actions: ()=>renderFinder({ scope:"actions" }),
+    themes: thmRenderList,   /* UI-76 */
     review: renderReview, members: renderMembers, add: renderAdd, bundle: null
   };
   if(R[screen]) await R[screen]();
@@ -2367,6 +2371,16 @@ const SURFACES = {
      suite asserts there is EXACTLY ONE surface of this kind, so a second AI
      session surface FAILS THE BUILD. That single assertion is what "designed
      once" means when it is enforced instead of documented. */
+  /* UI-76 · THEMES (framework §8.4, D-162). `acts` is EMPTY because none of the four theme ops is in the
+     plane's act catalogue — `affordances.mjs` NON_ACTS names them — so they are this surface's READS and
+     writes, each reached from the page (the review-copy surface's reason). */
+  themes: {
+    routes: ["screen:themes", "hash:theme"],
+    purpose: "Themes: an idea a member declares in their own name with its test, the sentence a document or a passage passes or fails. Every theme shows whose lens it is. A member places a document or a passage in it, or confirms a proposal standing there; a proposal is a hunch, shown apart, and is never membership. A theme gathers material and is never the basis of a claim.",
+    levels: ["meaning", "documents", "content"],
+    acts: [],
+    reads: ["themeread", "themedeclare", "themeplace"],
+  },
   "ai-session": {
     kind: "ai-session",
     consumers: ["assistant", "investigative-session"],
@@ -24911,6 +24925,291 @@ function rvsPaint(){
   el.innerHTML = rvsHtml();
 }
 /*__REVIEW_COPY_END__*/
+
+/*__THEMES_START__*/
+/* ============================================================
+   UI-76 · THEMES — a connection through an IDEA, declared by a member, visibly theirs.
+
+   DESIGN: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.4 (Bob, 2026-09-21, D-162), fences 1–3,
+   with DEC-69 (inform once, at the act). The plane half is D-162's (IC-241, amended 2026-09-24 by BOB #32):
+   `op=themedeclare`, `op=themeplace`, `op=themepropose`, `op=themeread`. Nothing below asks the plane for
+   anything it does not publish, and this surface sends no proposal: it reads hunches and a member places.
+
+     FENCE 1 — WHOSE LENS. Every theme this surface renders, in the list and on its page, names its
+       declarer. The name is the one `op=themeread` PROJECTED for this reader: a handle for a member who
+       does not administer, and the member id and cover beside it for one who does (Membership v2 §3, the
+       amendment to IC-241). The page never asks which kind of reader it has; it renders the keys the
+       answer carries. A handle the record does not hold is SAID, never guessed.
+     FENCE 2 — THE TEST. The test is shown with the theme, every time, because it is what any member
+       checks a placement against. The declare form sends what the member wrote and nothing else: the
+       plane refuses a theme without its test, and that refusal is rendered in the plane's words.
+     FENCE 3 — A HUNCH IS NEVER MEMBERSHIP. `members[]` and `hunches[]` arrive APART and are rendered
+       apart, under different headings; every hunch carries `THM_HUNCH_LABEL`, and a hunch's target is
+       never written inside the members section. Confirming one is `op=themeplace` on the same target, the
+       member's own act; leaving one is doing nothing, and nothing here asks them to.
+
+   Nothing is prefilled (DEC-69): the declare form, the place form and the search open empty. Every
+   refusal is the plane's (`refusalWords` reads its canned `translation`, DEC-49); this block keys on no
+   refusal code.
+
+   WHAT THIS SURFACE DOES NOT DO, stated so it is not assumed: the document page offers no "place in a
+   theme" entry — a member places from the theme's page by naming a document or a passage. That is the
+   smallest surface the row asks for and the document page is other items' ground.
+   ============================================================ */
+let THM = null;
+let THM_HASH_LOCK = false;
+const THM_UNREACHED = "This page could not reach the record just now, so nothing is shown. Nothing about the themes is implied by that.";
+/* THE HUNCH LABEL — the one sentence every proposed placement carries, and the property the row's liar
+   arm is about: a proposal that renders without it could be read as membership. */
+const THM_HUNCH_LABEL = "A hunch: proposed, and not a member of this theme until a member checks it against the test and places it.";
+
+function thmIsAnswer(e){ return !!(e && typeof e === "object" && ("reason" in e || "detail" in e || "error" in e || "translation" in e)); }
+function thmRefusalHtml(r){
+  return '<div class="intent-ref" data-thm-refusal><div class="intent-ref-why">'
+    + esc(refusalWords(r) || "The record refused this and said nothing further.") + '</div></div>';
+}
+function thmMayAct(){ return canContribute(); }
+/* THE ASK, stated on the wire (`bound-sweep.test.mjs` WALK 2): `op=themeread` is capped unconditionally, so
+   every read names its own limit, and what a member reads is the bound the RECORD answered with — never
+   this constant (ARM E). */
+const THM_ASK_LIMIT = 200;
+/* THE RECORD'S BOUND, over the set the plane bounded: the list bounds THEMES; one theme bounds its members
+   and its hunches, each with its own `*_truncated` under one `limit`. Called by the function that READS the
+   answer (`bound-sweep.test.mjs` ARM G), so the envelope is never dropped. Its own sentence rather than a
+   fourth caller of `meaningBoundHtml`, whose three units are the meaning layer's three reads (ARM H6). Where
+   the record states no bound the page says so and puts no number of its own there. */
+function thmBoundHtml(ans, which){
+  const a = ans && typeof ans === "object" ? ans : {};
+  const bound = Number(a.limit);
+  const what = which === "themes" ? "the themes" : "this theme's " + which;
+  if(!(Number.isFinite(bound) && bound > 0))
+    return 'The record did not say what bound it applied to ' + what + ', so this page cannot tell you whether all of them are here.';
+  const cut = (which === "themes" ? a.truncated : a[which + "_truncated"]) === true;
+  return 'The record read at most ' + esc(bound) + ' of ' + what + '.'
+    + (cut ? ' <b>The record says that answer was CUT</b>: it holds more than it read, so some can be missing from this list.' : '');
+}
+
+/* WHO, as the plane projected it for this reader. `prefix` is `declared_by`, `placed_by` or `proposed_by`.
+   A machine stamp arrives in `<prefix>` with a null handle for every reader; a member arrives as a handle,
+   with the member id and the cover beside it only when the reader administers. */
+function thmWhoHtml(o, prefix){
+  if(!o || typeof o !== "object") return '<span data-thm-who="none">nobody the record names</span>';
+  const handle = o[prefix + "_handle"], id = o[prefix], cover = o[prefix + "_cover"];
+  if(typeof handle === "string" && handle){
+    return '<span data-thm-who="' + esc(prefix) + '"><b>' + esc(handle) + '</b>'
+      + (typeof cover === "string" && cover ? ' (' + esc(cover) + (id ? ', <span class="mono">' + esc(id) + '</span>' : '') + ')' : '')
+      + '</span>';
+  }
+  if(typeof id === "string" && /^class:/.test(id))
+    return '<span data-thm-who="' + esc(prefix) + '">an automated credential, <span class="mono">' + esc(id) + '</span></span>';
+  if(typeof id === "string" && id)
+    return '<span data-thm-who="' + esc(prefix) + '">a member whose handle the record does not hold, <span class="mono">' + esc(id) + '</span></span>';
+  return '<span data-thm-who="' + esc(prefix) + '">a member whose handle the record does not hold</span>';
+}
+function thmTargetHtml(p){
+  const t = p && p.target, doc = p && p.document;
+  const link = (id) => '<a class="mono" onclick="openBundle(\'' + esc(id) + '\')">' + esc(id) + '</a>';
+  if(p && p.target_kind === "content")
+    return 'A passage, <span class="mono">' + esc(t) + '</span>, of ' + (doc ? link(doc) : 'a document');
+  return 'The document ' + (t ? link(t) : '');
+}
+
+/* ---------------- THE LIST, AND THE ACT OF DECLARING ---------------- */
+async function thmRenderList(){
+  THM = { mode:"list", q:"", list:null, refusal:null, err:null, busy:true,
+          form:{ name:"", test:"" }, declareRefusal:null, declared:null };
+  thmSetHash("");
+  await thmLoadList();
+}
+async function thmLoadList(){
+  if(!THM || THM.mode !== "list") return;
+  THM.busy = true; thmPaint();
+  const params = THM.q.trim() ? { q: THM.q.trim() } : {};
+  let ans = null;
+  try{ ans = await recR("themeread", { ...params, limit: String(THM_ASK_LIMIT) }); THM.refusal = null; THM.err = null; }
+  catch(e){ ans = null; if(thmIsAnswer(e)) THM.refusal = e; else THM.err = THM_UNREACHED; }
+  if(ans && ans.ok === false){ THM.refusal = ans; ans = null; }
+  THM.list = ans;
+  THM.bound = ans ? thmBoundHtml(ans, "themes") : "";
+  THM.busy = false; thmPaint();
+}
+function thmField(k, v){ if(THM) THM[k] = String(v == null ? "" : v); }
+function thmFormField(k, v){ if(THM && THM.form) THM.form[k] = String(v == null ? "" : v); }
+async function thmSearch(){ if(THM && THM.mode === "list") await thmLoadList(); }
+async function thmDeclare(){
+  if(!THM || THM.mode !== "list" || THM.busy) return;
+  THM.declareRefusal = null;
+  let r;
+  try{ r = await recPostR("themedeclare", { name: THM.form.name, test: THM.form.test }); }
+  catch(e){ r = thmIsAnswer(e) ? e : { detail: THM_UNREACHED }; }
+  if(r && r.ok === true && r.theme_id){
+    await thmOpen(r.theme_id);
+    if(THM) { THM.declared = r; thmPaint(); }
+    return;
+  }
+  THM.declareRefusal = r || {}; thmPaint();
+}
+function thmListHtml(){
+  const L = THM.list;
+  let body;
+  if(THM.busy && !L) body = '<div class="empty">Reading the themes.</div>';
+  else if(THM.err) body = '<div class="q-gap" data-thm-unreached>' + esc(THM.err) + '</div>';
+  else if(THM.refusal) body = thmRefusalHtml(THM.refusal);
+  else {
+    const rows = (L && Array.isArray(L.themes)) ? L.themes : [];
+    body = rows.length ? rows.map(t =>
+        '<div class="card" data-thm-theme="' + esc(t.theme_id) + '">'
+        + '<div class="kv"><a onclick="thmOpen(\'' + esc(t.theme_id) + '\')"><b>' + esc(t.name) + '</b></a></div>'
+        + '<p class="subj-note" data-thm-test>Its test: ' + esc(t.test) + '</p>'
+        + '<p class="subj-note" data-thm-declarer>Declared by ' + thmWhoHtml(t, "declared_by") + ' at <span class="mono">' + esc(t.at) + '</span>.</p>'
+        + '</div>').join("")
+      : '<div class="empty">' + (L && L.q ? 'No theme&rsquo;s name or test contains that phrase.' : 'No theme has been declared yet.') + '</div>';
+    if(THM.bound) body += '<p class="subj-note" data-thm-bound>' + THM.bound + '</p>';
+  }
+  const f = THM.form;
+  const declare = thmMayAct()
+    ? '<h2 class="sec">Declare a theme</h2>'
+      + '<p class="subj-note" data-thm-fence>A theme is an idea you use to gather material, declared in your name: every reading of it shows your handle. Its test is one sentence a document or a passage passes or fails, so any member can check a placement against it. A theme is never the basis of a claim.</p>'
+      + '<div class="intent-box" data-thm-declare>'
+      + '<div class="kv"><span class="k">The idea, in a few words</span></div>'
+      + '<input class="txt" id="thm-name" value="' + esc(f.name) + '" onchange="thmFormField(\'name\', this.value)">'
+      + '<div class="kv"><span class="k">Its test</span></div>'
+      + '<textarea class="txt" id="thm-test" rows="3" onchange="thmFormField(\'test\', this.value)">' + esc(f.test) + '</textarea>'
+      + (THM.declareRefusal ? thmRefusalHtml(THM.declareRefusal) : '')
+      + '<button class="btn" onclick="thmDeclare()">Declare the theme</button></div>'
+    /* A refusal is rendered even where the form is not: a credential that reached the act anyway is told
+       the plane's words, never nothing. */
+    : (THM.declareRefusal ? thmRefusalHtml(THM.declareRefusal) : '');
+  return '<h1 class="rec">Themes</h1>'
+    + '<div class="intent-box" data-thm-search><input class="txt" id="thm-q" value="' + esc(THM.q) + '" onchange="thmField(\'q\', this.value)">'
+    + '<button class="btn ghost" onclick="thmSearch()">Search the themes</button></div>'
+    + body + declare;
+}
+
+/* ---------------- ONE THEME: ITS TEST, ITS DECLARER, ITS MEMBERS AND ITS HUNCHES APART ---------------- */
+async function thmOpen(themeId){
+  const id = String(themeId == null ? "" : themeId).trim();
+  if(!id) return;
+  THM = { mode:"theme", id, theme:null, refusal:null, err:null, busy:true,
+          place:{ target:"", note:"" }, placeRefusal:null, placed:null, declared:null };
+  thmSetHash("#theme/" + id);
+  await thmLoad();
+}
+async function thmLoad(){
+  if(!THM || THM.mode !== "theme") return;
+  THM.busy = true; thmPaint();
+  let ans = null;
+  try{ ans = await recR("themeread", { id: THM.id, limit: String(THM_ASK_LIMIT) }); THM.refusal = null; THM.err = null; }
+  catch(e){ ans = null; if(thmIsAnswer(e)) THM.refusal = e; else THM.err = THM_UNREACHED; }
+  if(ans && ans.ok === false){ THM.refusal = ans; ans = null; }
+  THM.theme = ans;
+  THM.bound = ans ? { members: thmBoundHtml(ans, "members"), hunches: thmBoundHtml(ans, "hunches") } : null;
+  THM.busy = false; thmPaint();
+}
+function thmPlaceField(k, v){ if(THM && THM.place) THM.place[k] = String(v == null ? "" : v); }
+/* PLACING and CONFIRMING are one act, `op=themeplace`: on a standing hunch the plane confirms it and keeps
+   who proposed it. `target` comes from the form, or from the hunch the member chose to confirm. */
+async function thmPlace(target){
+  if(!THM || THM.mode !== "theme" || THM.busy) return;
+  const confirming = typeof target === "string";
+  const body = { theme: THM.id, target: confirming ? target : THM.place.target };
+  if(!confirming && THM.place.note.trim()) body.note = THM.place.note;
+  THM.placeRefusal = null; THM.placed = null;
+  let r;
+  try{ r = await recPostR("themeplace", body); }
+  catch(e){ r = thmIsAnswer(e) ? e : { detail: THM_UNREACHED }; }
+  if(r && r.ok === true){
+    if(!confirming) THM.place = { target:"", note:"" };
+    await thmLoad();
+    THM.placed = r; thmPaint();
+    return;
+  }
+  THM.placeRefusal = r || {}; thmPaint();
+}
+function thmMemberHtml(p){
+  return '<div class="card" data-thm-member="' + esc(p.target) + '">'
+    + '<div class="kv">' + thmTargetHtml(p) + '</div>'
+    + '<p class="subj-note">Placed by ' + thmWhoHtml(p, "placed_by") + ' at <span class="mono">' + esc(p.placed_at) + '</span>, on their judgement that it passes the test.'
+    + (p.proposed_at ? ' First proposed by ' + thmWhoHtml(p, "proposed_by") + ' at <span class="mono">' + esc(p.proposed_at) + '</span>.' : '')
+    + '</p>'
+    + (p.note ? '<div class="prose"><p>' + esc(p.note) + '</p></div>' : '')
+    + '</div>';
+}
+function thmHunchHtml(p){
+  return '<div class="card" data-thm-hunch="' + esc(p.target) + '">'
+    + '<p class="subj-note" data-thm-hunch-label>' + esc(THM_HUNCH_LABEL) + '</p>'
+    + '<div class="kv">' + thmTargetHtml(p) + '</div>'
+    + '<p class="subj-note">Proposed by ' + thmWhoHtml(p, "proposed_by") + ' at <span class="mono">' + esc(p.proposed_at) + '</span>.</p>'
+    + (p.proposal_note ? '<div class="prose"><p>' + esc(p.proposal_note) + '</p></div>' : '')
+    + (thmMayAct() ? '<button class="btn ghost" onclick="thmPlace(\'' + esc(p.target) + '\')">It passes the test: place it</button>' : '')
+    + '</div>';
+}
+function thmThemeHtml(){
+  const crumb = '<p class="crumb"><a onclick="go(\'themes\')">Themes</a> &rsaquo; <span class="mono">' + esc(THM.id) + '</span></p>';
+  if(THM.busy && !THM.theme) return crumb + '<div class="empty">Reading the theme.</div>';
+  if(THM.err) return crumb + '<div class="q-gap" data-thm-unreached>' + esc(THM.err) + '</div>';
+  if(!THM.theme) return crumb + thmRefusalHtml(THM.refusal);
+  const T = THM.theme;
+  const members = Array.isArray(T.members) ? T.members : [];
+  const hunches = Array.isArray(T.hunches) ? T.hunches : [];
+  const said = (r) => (r && typeof r.says === "string" && r.says) ? '<p class="subj-note" data-thm-said>' + esc(r.says) + '</p>' : '';
+  const place = thmMayAct()
+    ? '<h2 class="sec">Place something in this theme</h2>'
+      + '<div class="intent-box" data-thm-place>'
+      + '<div class="kv"><span class="k">A document&rsquo;s id, or a passage&rsquo;s content id</span></div>'
+      + '<input class="txt" id="thm-target" value="' + esc(THM.place.target) + '" onchange="thmPlaceField(\'target\', this.value)">'
+      + '<div class="kv"><span class="k">A note (optional)</span></div>'
+      + '<textarea class="txt" id="thm-note" rows="2" onchange="thmPlaceField(\'note\', this.value)">' + esc(THM.place.note) + '</textarea>'
+      + '<button class="btn" onclick="thmPlace()">Place it in this theme</button></div>'
+    : '';
+  return crumb
+    + '<h1 class="rec" data-thm-name>' + esc(T.name) + '</h1>'
+    + '<p class="subj-note" data-thm-declarer>Declared by ' + thmWhoHtml(T, "declared_by") + ' at <span class="mono">' + esc(T.at) + '</span>.</p>'
+    + '<h2 class="sec">Its test</h2>'
+    + '<div class="card" data-thm-test><div class="prose"><p>' + esc(T.test) + '</p></div></div>'
+    + said(THM.declared)
+    + said(T)
+    + (THM.placed ? said(THM.placed) : '')
+    + (THM.placeRefusal ? thmRefusalHtml(THM.placeRefusal) : '')
+    + '<h2 class="sec">Members</h2>'
+    + '<div data-thm-members>' + (members.length ? members.map(thmMemberHtml).join("") : '<div class="empty">Nothing you can see has been placed in this theme.</div>')
+    + (THM.bound ? '<p class="subj-note" data-thm-bound>' + THM.bound.members + '</p>' : '') + '</div>'
+    + '<h2 class="sec">Hunches</h2>'
+    + '<div data-thm-hunches>' + (hunches.length ? hunches.map(thmHunchHtml).join("") : '<div class="empty">Nothing you can see is proposed for this theme.</div>')
+    + (THM.bound ? '<p class="subj-note" data-thm-bound>' + THM.bound.hunches + '</p>' : '') + '</div>'
+    + place;
+}
+
+function thmHtml(){
+  if(!THM) return "";
+  return THM.mode === "theme" ? thmThemeHtml() : thmListHtml();
+}
+function thmPaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = thmHtml();
+}
+function thmSetHash(h){
+  THM_HASH_LOCK = true;
+  try{
+    if(h) location.hash = h;
+    else if(/^#theme\//.test(String(location.hash || ""))) history.replaceState(null, "", location.pathname + location.search);
+  }catch(_){}
+  THM_HASH_LOCK = false;
+}
+/* `#theme/<THEME-…>` is a real address, asked inside `boot()`'s router chain and nowhere at the top
+   level — POST-authentication, classified by `preauth-vocabulary.test.mjs` WALK 2. */
+function themeRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#theme\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  if(THM && THM.mode === "theme" && THM.id === m[1]) return true;
+  thmOpen(m[1]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!THM_HASH_LOCK) themeRouteFromHash(); }); }catch(_){}
+/*__THEMES_END__*/
 
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}

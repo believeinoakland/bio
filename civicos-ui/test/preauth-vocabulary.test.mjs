@@ -587,12 +587,18 @@ ok("WALK 2 REACH: it matches exactly three published ADDRESS SHAPES — found ["
    (`acceptCeremonyRouteFromHash`) and UI-68 (`draftRouteFromHash`) each classified an eighth router from the
    same base, so each side's eight was right on its own tree and the union carries both, each classified
    post-auth by its own pins below. */
-ok("WALK 2 REACH: the script declares exactly the nine routers this walk has classified — found ["
-   + ROUTE_FNS.join(", ") + "] (a tenth must be classified as pre-auth or not before this passes)",
-   ROUTE_FNS.length === 9
+/* CORRECTED A SIXTH TIME 2026-09-25 BY UI-76, nine -> TEN, and the old assertion was RIGHT to fail:
+   `themeRouteFromHash` arrived with the theme surface (framework §8.4) and this arm stopped it arriving
+   UNCLASSIFIED. It is POST-AUTHENTICATION: asked inside `boot()`'s router chain and NOWHERE at the top level,
+   so `#theme/<THEME-…>` resolves for nobody holding nothing. `op=themeread` is admin/member/probe and the two
+   writes it hosts (`themedeclare`, `themeplace`) are admin/member session ops, so it adds no member-facing
+   pre-auth vocabulary. The two pins below check both halves for THIS router as well. */
+ok("WALK 2 REACH: the script declares exactly the ten routers this walk has classified — found ["
+   + ROUTE_FNS.join(", ") + "] (an eleventh must be classified as pre-auth or not before this passes)",
+   ROUTE_FNS.length === 10
    && ["acceptCeremonyRouteFromHash","actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
        "publishedRouteFromHash","routeFromHash","stanceRouteFromHash",
-       "versionReviewRouteFromHash", "draftRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
+       "versionReviewRouteFromHash", "draftRouteFromHash", "themeRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
 {
   /* The running-session router is asked in boot()'s chain ... */
   const BOOTCHAIN = /if\(!publishedRouteFromHash\(\)[\s\S]{0,400}?\)\s*go\("queue"/.exec(SCRIPT);
@@ -647,6 +653,14 @@ ok("WALK 2 REACH: the script declares exactly the nine routers this walk has cla
      SCRIPT.indexOf("/*__REVIEW_COPY_END__*/") > 0 && RTAIL.length > 100);
   ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #draft/<id> resolves for nobody holding nothing",
      !RTAIL.includes("draftRouteFromHash()"));
+  /* UI-76's router, the same two halves; the slice starts at the END of the themes block. */
+  ok("WALK 2 CLASSIFICATION: themeRouteFromHash is asked INSIDE boot(), which is what makes it post-authentication",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("themeRouteFromHash()"));
+  const TTAIL = SCRIPT.slice(SCRIPT.indexOf("/*__THEMES_END__*/"));
+  ok("WALK 2 REACH: the themes block's END marker was found — a slice that missed it would make the pin below pass over nothing",
+     SCRIPT.indexOf("/*__THEMES_END__*/") > 0 && TTAIL.length > 100);
+  ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #theme/<THEME-…> resolves for nobody holding nothing",
+     !TTAIL.includes("themeRouteFromHash()"));
 }
 ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outside boot()",
    /\n\s*if\(\/\^#\(published[\s\S]{0,80}publishedRouteFromHash\(\);?\n?\}catch/.test(SCRIPT)
