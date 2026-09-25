@@ -532,6 +532,10 @@
    {
     "driver": "bio-plane/test/leadlist.control.mjs",
     "branch": "land/worker/D-681 (c22-batch30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "civicos-ui/test/content-crop-surface.control.mjs",
+    "branch": "land/worker/UI-120 (c22-batch30 union; written before the M0-197 convention)"
    }
   ]
  }
