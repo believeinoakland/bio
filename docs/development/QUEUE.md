@@ -843,8 +843,8 @@ added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 note: 2026-09-23 by SCHEDULER #17 (CONDUCT #17's 22:00Z finding (1), verified at c17-batch5): REC-161's `partitionindependence` op exists on c17-batch5 and `app.html` calls it nowhere; `elicFalsifier` is a pure string builder. The same commit re-grades `8.partition-independence` to BUILT and drops its `none` probe. Suite `civicos-ui/test/elicitation.test.mjs`; NEGATIVE CONTROL: stub the fetch to return `shared:[]`, and the correlated-fixture arm fails by name.
 
-### UI-78 · running — **THE PUBLIC HEADER CANNOT SHOW A GROUP'S DISPLAY NAME OR VERIFIED DOMAIN, AND MEMBERS CANNOT SEE A DOMAIN CLAIM'S VERDICT.** … (whole text: the cut archive)
-status: running — SCHEDULER #21 02:35Z spawns WORKER UI-78 (depth 2)
+### UI-78 · integrated — **THE PUBLIC HEADER CANNOT SHOW A GROUP'S DISPLAY NAME OR VERIFIED DOMAIN, AND MEMBERS CANNOT SEE A DOMAIN CLAIM'S VERDICT.** … (whole text: the cut archive)
+status: integrated — SCHEDULER #22 03:32Z: tip facb3d0e, GATE 74/74 GREEN FULLREUSE (6290 assertions), tree 4980aa1a; 13.group-identity PARTIAL on the setup page alone (D-596)
 order: directly after REC-164, which it consumes (BOB #24: *"UI (M7), after 2"*) (SCHEDULER #9, 2026-09-21)
 milestone: M7
 interface: I3 consumer (REC-164's IC).
@@ -1026,6 +1026,16 @@ depends-on: FW-20 (`integrated` on c18-batch8; M-121 lists the walk).
 scope: take the tier-3 walk documents M-121 names as agendas or minutes that read generic; establish whether the member transcribes one page per invocation and the plane keeps only the first; name the fix, or show the documents are generic.
 accepts-when: the named fix (then placed as its own row) or the refutation, recorded with date and instrument. NEGATIVE CONTROL: a two-page scanned fixture whose second page alone carries the agenda heading reads generic before the fix, or the refutation shows it read whole.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-596 · queued — **THE SETUP PAGE SERVED AT `/` READS THE GROUP'S SLUG ALONE (`index.mjs` `publicInstanceGroup` -> `setup.mjs` `groupLine`), so it shows neither the display name nor the verified domain, while `store.mjs` `groupNameSet`'s answer tells the administrator "every public surface shows it beside the slug".** Found by UI-78's worker (03:28Z). The construct's last NOT BUILT trace. — owner RECORD.
+order: after D-561, with the public-surface corrections ahead of features: an answer claiming a surface shows what it does not is the record claiming more than it supports (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
+milestone: M8
+interface: I3 consumer (op=groupidentity's public projection); the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md`, the group identity section REC-164 built (UI-78 cites it), with UI-78's rendering rule: a display name as "name · slug", never alone; a domain only with its verified date.
+depends-on: REC-164 (BUILT).
+scope: `publicInstanceGroup` reads the Store's `groupidentitypublic` projection; `groupLine` renders "name · slug", and a domain only with its verified date. Re-grade construct-status 13.group-identity.
+accepts-when: against the real plane the setup page shows the display name beside the slug and a verified domain with its date, and an unverified claim not at all (moves: the setup page reading the slug alone). NEGATIVE CONTROL: render the domain without its verified date and the setup arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by UI-78's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
