@@ -33,6 +33,16 @@ scope: refuse a non-replay revision whose document's `group` differs from the he
 accepts-when: a revision restating a different group is refused by name and nothing is written; the same group respelt, and a revision stating none, still land (moves: a row and its head bytes disagreeing on group). NEGATIVE CONTROL: drop the refusal and the regroup arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-692's worker).
 
+### D-719 · queued — **THE BUNDLE VIEW'S HISTORY LIST (src/setup.mjs, #b-history) SORTS ENTRIES BY SNAP KEY, so a member reads a bundle's history in an order other than the one it was written in, since D-700 made write order the record's.** Found by D-700's worker. — owner UI.
+order: after D-718, the same write-order field; a surface showing an order the record does not hold (SCHEDULER #24, 2026-09-25)
+milestone: M7
+interface: none — reads D-700's additive `seq`.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, write order, as D-700 amended it).
+depends-on: D-700 (the `seq` field; stack on land/worker/D-700 until it lands).
+scope: #b-history sorts by seq when every entry carries one, else by snap key as today; the page states which order it shows.
+accepts-when: a bundle whose keys run against write order lists its history in write order (moves: a history shown out of write order). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-700's worker).
+
 ### D-723 · queued — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
 order: directly behind D-710, which it completes: a correction to just-landed work outranks new work, and "less narrative" binds us first (SCHEDULER #24, 2026-09-25)
 milestone: M2
@@ -1100,14 +1110,4 @@ design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
 depends-on: D-484.
 scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plane/src` per region row, failing on any outside its claimed span.
 accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-161 · queued — **NO SWEEP FINDS A CONSTRUCT CLAIM THAT DESCRIBES A CAPPED READ WITHOUT SAYING IT IS CAPPED (D-498's class): D-498's heuristic (op = the lowercased method name, `store.mjs` only) left 17 of 27 capped methods UNCLASSIFIED and cannot see caps applied in `index.mjs`.** Found by D-498's worker. — owner M0 (RECORD reviews the claims it names).
-order: low in the M0 group: a sweep for further instances of a closed defect (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:13Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a claim states its bound).
-depends-on: D-498.
-scope: walk the OPS table's dispatch (not method names) to every capped read, then list each construct claim describing it without its cap; each hit is placed as a row.
-accepts-when: the sweep classifies all 27 capped methods and names every uncapped claim. NEGATIVE CONTROL: strip "at most" from D-498's claim and the sweep names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

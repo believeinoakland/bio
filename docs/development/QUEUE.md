@@ -601,8 +601,8 @@ scope: order by rowid (write order) in every reader that orders by `created`, OR
 accepts-when: an amendment carrying a backdated writer date reads AFTER the move it follows in op=export and the gate facts (moves: caller-steered order). NEGATIVE CONTROL: order by `created` again and the backdated arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker).
 
-### D-641 · running — **107 REFUSAL CODES A MEMBER CAN RECEIVE HAVE NO CANNED TRANSLATION: D-542's R5/R6 walk brought them into reach (reach 488->595) and they are the whole reachGap rise 39->146 — e.g. relationdeclare NO_ENDS / SELF_RELATION, queuemute NO_KINDS, progressiondefine NO_STAGES; the publishedbytes codes overlap D-561.** Listed by check-refusal-codes' `IN REACH ONLY BY OP` line. Found by D-542's worker (minted on land/worker/D-542). — owner RECORD (REC-64's sweep).
-status: running — SCHEDULER #23 09:20Z: spawned, stacked on land/worker/D-542 @ fac514e0
+### D-641 · integrated — **107 REFUSAL CODES A MEMBER CAN RECEIVE HAVE NO CANNED TRANSLATION: D-542's R5/R6 walk brought them into reach (reach 488->595) and they are the whole reachGap rise 39->146 — e.g. relationdeclare NO_ENDS / SELF_RELATION, queuemute NO_KINDS, progressiondefine NO_STAGES; the publishedbytes codes overlap D-561.** Listed by check-refusal-codes' `IN REACH ONLY BY OP` line. Found by D-542's worker (minted on land/worker/D-542). — owner RECORD (REC-64's sweep).
+status: integrated — SCHEDULER #24 11:43Z: tip 93741fbf (on D-542 fac514e0, carries D-562), GATE 386/386 GREEN FULLREUSE (22570 assertions), tree 605e2f7d; reachGap 146->39: 103 translated (C-100 REACH_BY_OP_CHECKS), 4 NOT_ON_THE_WIRE; 38 multi-site codes one mint each; acquire no-body split to FETCH_NO_BODY (non-additive); CATALOG 1.30.0->1.31.0; floors re-read at union; D-561 partly discharged (NOT_FOUND, NOT_PUBLISHED remain)
 order: after D-628 — a member told a bare code instead of words is DEC-49's own defect and product, ahead of the process rows (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 additive — translations only; the integrator classifies.
@@ -778,7 +778,7 @@ accepts-when: a 250-character law and a law on another kind are refused by name 
 added: 2026-09-25 · SCHEDULER #23 (id minted by UI-119's worker).
 
 ### D-700 · integrated — **THE GATE'S C-20.1 AUDIT STILL WALKS A BUNDLE'S `_history/manifest.json` IN SNAP-KEY ORDER, not write order: readImage sorts by key and bio-checks.mjs sorts entries by key, so the gate's "prior" can differ from the plane's since D-674 ordered every plane reader by rowid.** State Rules §6 already said "sent to SCHEDULER" (REC-182) and no plan row existed. Found by D-674's worker (minted on land/worker/D-674). — owner RECORD, CHECKS.
-status: integrated — SCHEDULER #24 11:31Z: tip 50116ded (on D-674 96a7802f), GATE 80/80 GREEN (6498 assertions) per the worker session summary, its full report still in flight; the gate C-20.1 audit walks write order as the plane does; additive seq; merge notes for D-546/D-615/D-673 in its report; minted D-718, D-719 (to place on receipt)
+status: integrated — SCHEDULER #24 11:43Z: report received: tip 50116ded (on D-674 96a7802f), GATE 80/80 GREEN FULLREUSE over full run 385/387 on 80c0ce1b (owed-controls fixed; gateresults passed alone), tree 61ef327f; readImage writes seq (I1 additive), historyWriteOrder, C-20.1 walks write order; union with D-546/D-615/D-673 keeps every State Rules Status sentence; minted D-718 (spawned), D-719 (placed)
 order: spawned directly after D-674, which it completes (the plane and its gate read one order) (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I1/I3 — the image carries write order; the integrator classifies.
@@ -997,6 +997,17 @@ depends-on: none (stacked on land/worker/D-692 @ 332c594e, integrated, on D-628 
 scope: refuse each of the three by a named DEC-49 code before the transaction, as C-86.8 does for unstated fields. STATE, do not decide: a null files entry, or a bundle.md whose text is a number, is refused GOVERNING_LAWS_REWRITTEN, which names the wrong cause (diagnosis undetermined; measure and report it).
 accepts-when: each of the three answers its named code and no op=promote answer carries a stack (moves: three raw NOT NULL errors). NEGATIVE CONTROL: drop one refusal and its arm reads the raw error, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-628's worker).
+
+### D-718 · running — **C-17.2's classifyDivergence (bio-checks.mjs) STILL SORTS _history/manifest.json BY SNAP KEY, so its anchor and intervening set can be the wrong ones when keys run against write order — the audit D-700 corrected for C-20.1, one check over.** Found by D-700's worker. — owner CHECKS.
+order: spawned directly, stacked on D-700: an audit that names the wrong anchor misstates the record, and it completes just-landed work (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:43Z: spawned, stacked on land/worker/D-700 @ 50116ded
+milestone: M7
+interface: none unless a finding's anchor changes on the wire (the integrator classifies).
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, write order, as D-700 amended it).
+depends-on: none (stacked on land/worker/D-700 @ 50116ded, integrated, on D-674 @ 96a7802f).
+scope: classifyDivergence walks historyWriteOrder(hist.entries).entries (D-700's export), falling back to snap-key order with its INFO finding as C-20.1 does; reproduce first with a history whose keys run against write order.
+accepts-when: a divergence whose anchor was written before a later-keyed edit names the write-order anchor and intervening set (moves: a wrong anchor). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-700's worker).
 
 ### D-632 · queued — **`aicredential.control` arms 3 and 5: ANCHOR DRIFT — arm 3 matches 0; arm 5 matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-631, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
