@@ -43824,15 +43824,15 @@ export class Store extends DurableObject {
                + "or a link filed before chrome was recorded, is not seen here; direct captures only" };
   }
 
-  /** D-702: THE CHROME JUDGE FOR LINKS (BOB #35, 2026-09-25 09:30Z; LINK-FIDELITY.md �"Chrome: rendering and
+  /** D-702: THE CHROME JUDGE FOR LINKS (BOB #35, 2026-09-25 09:30Z; LINK-FIDELITY.md §"Chrome: rendering and
    *  connection are different problems"). Site chrome is what RECURS across the site's pages in a chrome region;
    *  containment alone is what every observation's links already are. So, over the observations given (the
    *  viewer's, D-701), a contained address reads:
-   *    site           two or more DISTINCT pages carried it: it recurs, and a loss of it is a navigation change;
-   *    page_content   one page carried it, and another page was observed while it was known carried (the carrying
+   *    site          — two or more DISTINCT pages carried it: it recurs, and a loss of it is a navigation change;
+   *    page_content  — one page carried it, and another page was observed while it was known carried (the carrying
    *                    observations' span, first to last) without it: it does not recur where it could have, so
    *                    it is that page's own, a content link;
-   *    undetermined   one page carried it and no other page was observed in that span, which is always the case
+   *    undetermined  — one page carried it and no other page was observed in that span, which is always the case
    *                    when one page of the host is held: recurrence was not measurable, and that is stated.
    *  Pages, never captures: the same page captured twice is one page, and its links recurring there says nothing
    *  about the site. Returns a memoised lookup, so each address is judged once. */

@@ -71575,15 +71575,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       note: (seq.length < 2 ? "fewer than two captures of this host carried navigation: nothing to compare yet" : "a link is LOST when the host's navigation carried it in one capture and not in the next") + "; chrome is CONTAINMENT (a link inside <nav>, <header>, <footer>, <aside> or a landmark role) AND RECURRENCE (two or more distinct pages of the host carried it), a classification with its basis, not a proof; a contained link another page lacked while it was carried is page content, never a loss; where recurrence cannot be measured (one page of the host held, or no other page observed while the link was carried) it reads chrome undetermined, never a loss; recurrence is weighed over the observations in this answer only" + (found.length > cap ? ", which are CUT at the limit, so a link recurring only in older ones is not seen to" : "") + "; a capture with no chrome at all is not an observation, so a navigation that lost EVERY link, or a link filed before chrome was recorded, is not seen here; direct captures only"
     };
   }
-  /** D-702: THE CHROME JUDGE FOR LINKS (BOB #35, 2026-09-25 09:30Z; LINK-FIDELITY.md �"Chrome: rendering and
+  /** D-702: THE CHROME JUDGE FOR LINKS (BOB #35, 2026-09-25 09:30Z; LINK-FIDELITY.md §"Chrome: rendering and
    *  connection are different problems"). Site chrome is what RECURS across the site's pages in a chrome region;
    *  containment alone is what every observation's links already are. So, over the observations given (the
    *  viewer's, D-701), a contained address reads:
-   *    site           two or more DISTINCT pages carried it: it recurs, and a loss of it is a navigation change;
-   *    page_content   one page carried it, and another page was observed while it was known carried (the carrying
+   *    site          — two or more DISTINCT pages carried it: it recurs, and a loss of it is a navigation change;
+   *    page_content  — one page carried it, and another page was observed while it was known carried (the carrying
    *                    observations' span, first to last) without it: it does not recur where it could have, so
    *                    it is that page's own, a content link;
-   *    undetermined   one page carried it and no other page was observed in that span, which is always the case
+   *    undetermined  — one page carried it and no other page was observed in that span, which is always the case
    *                    when one page of the host is held: recurrence was not measurable, and that is stated.
    *  Pages, never captures: the same page captured twice is one page, and its links recurring there says nothing
    *  about the site. Returns a memoised lookup, so each address is judged once. */

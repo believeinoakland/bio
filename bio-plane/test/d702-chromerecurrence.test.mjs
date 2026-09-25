@@ -26,7 +26,8 @@
  *        captures carry it so that recurrence counted by CAPTURE rather than by PAGE would read it as site chrome.
  *
  * NEGATIVE CONTROL: (run 2026-09-25, D-702 worker) four arms on bio-plane/src/store.mjs's `#chromeJudge`, each
- * ALONE, restored by cp from a per-arm pristine copy and verified by sha256 (97bce9f1...) AND cmp, 3,494,349 bytes;
+ * ALONE, restored by cp from a per-arm pristine copy and verified by sha256 (c909ee30...) AND cmp, 3,494,356 bytes (re-run on the final source; a first run on
+ * 97bce9f1..., whose new comment carried two mis-encoded bytes hygiene refused, failed the same assertions by the same names);
  * this suite, d340-sitechrome and d701-linkgate run under every arm. BASELINE 17/0, 40/0, 31/0.
  * (a) CONTAINMENT ALONE (every contained link reads site chrome, D-340's judgement) -> this suite 8 pass 9 fail, by
  * name, among them "a varying page-local sidebar reports no lost chrome link", "every change names the sidebar links
