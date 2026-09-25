@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-404's NEGATIVE CONTROL DRIVER — six arms plus an opening and closing baseline — over
+/* D-404's NEGATIVE CONTROL DRIVER — seven arms (A3 withdrawn) plus an opening and closing baseline — over
  * `tools/rowsubstrate.mjs` and the suite that drives it.
  *
  *   node bio-plane/test/rowsubstrate.control.mjs        (from the repo root)
@@ -120,6 +120,12 @@ const ARMS = [
     from: "    if (!cited.length || !syms.length) {",
     to:   "    if (!cited.length) {",
     mustBreak: "a row with no machine-readable symbol is UNJUDGED" },
+
+  { id: "A7", title: "D-541 — the token capture restored to DIGITS AND DOTS ONLY, so `§6A` reads as "
+                   + "`§6`, the section before the one cited",
+    from: '|§\\s*(?:"[^"]*"|(\\d+(?:[A-Za-z](?![A-Za-z0-9]))?(?:\\.\\d+(?:[A-Za-z](?![A-Za-z0-9]))?)*))/g;',
+    to:   '|§\\s*(?:"[^"]*"|(\\d+(?:\\.\\d+)*))/g;',
+    mustBreak: "`§6A` reads as §6A, never as the §6 before it" },
 ];
 
 for (const a of ARMS) {
