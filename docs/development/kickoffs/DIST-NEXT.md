@@ -46,6 +46,12 @@ Everything through 0.79.0 SHIPPED (its pointer landed at `5f116f33`). The next c
 DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the trains carry. **Tooling change at the cut — D-560** (`land/worker/D-560` @ `fc35dbf0`, not on main at 06:27Z 09-25; CONDUCT lands it):
 `release-assemble` now checks every asset and refuses ONCE, `REFUSED [NO_ARTIFACT]: N of M assets …`, naming the fix
 `node tools/bundles.mjs` from the repo root (it no longer says `npm run build` per dir). Signing and payload unchanged.
+**Batch29 (`5e8a65a8..95fe7bc7`, CONDUCT #22 09:23Z 09-25) carries DISCLOSURE/AUTHORITY closings** — each is a live arm at the
+next deploy, discriminated by a wire code absent from 0.79.0 (lesson 18): **REC-196** (C-70.1: an existence read on 24 read ops no
+longer reveals a hidden project to a non-participant), **D-134 / D-610** (custodial acts' `by` and `members.status_by`
+server-stamped on every write), **D-561** (anonymous publishedbytes/publishedcase get translated codes, no false NOT_FOUND).
+D-606 and D-320 are ON MAIN too (batch29). **D-419** (batch30) adds pdf-worker `POST /crop` — pdf-worker moves with that cut.
+`newgroup/src/release.mjs` embeds the signed release source (and its textchain) — it moves only at a cut (DIST's).
 **Live checks owed at that deploy:**
 - **D-606 — per-page OCR capped at 24 member invocations per acquire** (`f04460ab`), resting on Cloudflare's stated 32 Worker
   invocations per request — THEIR claim; Miniflare does not enforce it (M-175). Measure on the deployed runtime: one scratch acquire
@@ -53,11 +59,12 @@ DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the
 - **D-320 — the deployed OCR member's CPU and memory, unmeasured (M-163)** (`46b43c35`): transcribe
   `pdf-worker/test/fixtures/scan-dct-page.pdf` through the deployed ocr-worker in scratch; record CPU ms and memory from the
   deployed runtime (`wrangler tail` or the analytics API), date and instrument in an M entry.
-- **D-605 — the setup page's key form** (worker report 05:57Z 2026-09-25; `land/worker/D-605` @ `8dcf0f2b`, stacked on D-596, NOT on
-  main at writing — CONDUCT's train). Shipped 0.79.0 and newgroup's embed post the whole key line, so registering a signing key
+- **D-605 — the setup page's key form** (worker report 05:57Z 2026-09-25; `land/worker/D-605` @ `8dcf0f2b`, stacked on D-596, ON MAIN since batch29 `95fe7bc7`, with D-596). Shipped 0.79.0 and newgroup's embed post the whole key line, so registering a signing key
   from the setup page reads BAD_KEY; fixed only by a cut from a main carrying D-605. Confirm it is an ancestor at the cut. Its live
   arm is UNDETERMINED: the setup page acts on the REAL record (it cannot name scratch), so verify by the bundle carrying
-  `signerAddBody`, not by a live registration.
+  `signerAddBody` PLUS `op=signeradd store=scratch` sent the body shape the page now builds (a whole ssh-ed25519 line's key
+  token and label). CONDUCT #22 asked for a "live scratch check of the setup page": `setup.mjs` names no store (measured on
+  `95fe7bc7`), so the PAGE itself cannot be driven in scratch — the op-level arm is the scratch form of it.
 - **DIST-14 — the CSV 20 MiB bound, BLOCKED on this deploy** (its worker's report 04:21Z 2026-09-25; verified by DIST #7:
   `bio-plane/src/csv.mjs` on main, absent at 0.79.0's cut `dd324152`). After the plane serves: in `store=scratch`, read a
   synthetic CSV just OVER 20 MiB (record the memory outcome and the time) and one just UNDER as the negative control, `bio`'s
@@ -76,7 +83,7 @@ DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the
 
 ## DIST's rows
 
-- **DIST-8 · BUILT (NARROWED), `land/dist/DIST-8` @ `8d3e3be9`** (prose gate GREEN 33/33 · 1920; handed to CONDUCT #21 for the
+- **DIST-8 · LANDED (NARROWED)** — `8d3e3be9` an ancestor of main `95fe7bc7` (c22 batch29, verified 09:25Z 09-25). Was `land/dist/DIST-8` @ `8d3e3be9` (prose gate GREEN 33/33 · 1920; handed to CONDUCT #21 for the
   train, 02:0xZ 2026-09-25). First sweep DONE LIVE 01:40Z: control refused (400, `expected: bio`), then `op=purge store=scratch
   confirm=scratch` scope ALL — scratch 0 on every counter (bundles 17→0, aiRuns 11→0, …), `bio` stats byte-identical (M-159).
   The sweep is now DIST.md gate step 7b. RESIDUE: 14 scratch MEMBERS — no op deletes a member; stated in M-159, not swept.
