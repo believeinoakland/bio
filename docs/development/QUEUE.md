@@ -1046,9 +1046,9 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-723 · running — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
+### D-723 · integrated — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
+status: integrated — CONDUCT #23 12:40Z: worker report — tip fe2b9a6d (on D-710 f34c4c9f), GATE 388/388 GREEN FULLREUSE (21995 assertions); shared page chain_kind mixed; rides IC-365 (D-686) meaning; rides batch30 after D-710
 order: directly behind D-710, which it completes: a correction to just-landed work outranks new work, and "less narrative" binds us first (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 11:55Z: spawned, stacked on land/worker/D-710 @ f34c4c9f
 milestone: M2
 interface: I3 — a shared page's content.chain_kind reads `mixed`; the integrator classifies.
 design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14 (chain_kind, as D-686 and D-710 write it), with BOB #36's 11:05Z ruling.
