@@ -1354,7 +1354,11 @@ t("REACH: the OPAQUE roster is a CEILING too — an op that SCANS ROWS, is DISPA
      its answer publishes `occurrences` with `limit` and `truncated`, but every success return is built by the act's
      local `answer` closure, which this walk does not read, and its other returns are refusals it excludes by design —
      so it lands here: a WRITE path scanning rows for its own logic, the residual's own class. Pinned by name below. */
-  OPAQUE.length <= 10, true);
+  /* MOVED 10 -> 11 ON 2026-09-25 (D-546), new plane work stated as such: `op=statemovecensus` scans every bundle's
+     manifest and history (its counts are whole by BOB #34's ruling; its listing is capped by `limit`) and answers ONE
+     census object whose `listed` this walk does not read as a published collection. A read-only admin/probe audit,
+     `registeraudit`'s shape exactly, which is already in this residual. Pinned by name below. */
+  OPAQUE.length <= 11, true);
 t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so it fails if the op "
 + "is ever returned to the state this item found it in",
   OPAQUE.filter((e) => e.startsWith("airunlog->")), []);
@@ -1381,7 +1385,9 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
            "projectfork->forkProject", "projectionplan->projectionPlan",
            "projectowneradd->projectOwnerAdd",
            "registeraudit->registerAudit", "select->selectionCreate",
-           "selectionrelease->selectionRelease", "taskdrain->taskDrain",
+           "selectionrelease->selectionRelease",
+           /* ADDED 2026-09-25 (D-546): the state-move census, an admin/probe audit; the ceiling above says why. */
+           "statemovecensus->stateMoveCensus", "taskdrain->taskDrain",
            /* ADDED 2026-08-08 (REC-67) — the SECOND member that is not a write
               path, and it arrives the same way PL-15's did: it was on the BARE
               roster on the strength of a `String(threadedBy).slice(0, 200)` the

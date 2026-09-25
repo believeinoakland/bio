@@ -947,7 +947,13 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    deliberately and stated at the method: its three verdict totals are counted over EVERY affected bundle,
    because a total cut at N is the partial count the op exists to replace; only the LISTING is paged
    (CHANGED_FROM_AUDIT_LIMIT 200/1000). Admin and probe only. The figure is this arm's own output (`26 methods`). */
-const CLASS_MEASURED_2026_08_08 = 26;
+/* MOVED 26 -> 27, 2026-09-25 by D-546 — an ARRIVAL, and a real one: `stateMoveCensus` (op=statemovecensus) reads every
+   bundle UNBOUNDED and, per bundle, its manifest rows, its `bundle.md` history snapshots and its head. The class's shape,
+   taken deliberately and stated at the method: its counts are WHOLE over every recorded move, because BOB #34's ruling
+   is that the history is COUNTED and the finding never smaller than the count; only the LISTING is capped (`limit`,
+   50/500). Per-bundle reads rather than three whole-table scans, so a store's history bodies are never all in the
+   Durable Object's memory at once. Admin and probe only. The figure is this arm's own output (`27 methods`). */
+const CLASS_MEASURED_2026_08_08 = 27;
 console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
           + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
@@ -972,7 +978,9 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
               "proposals->proposalsFeed",
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
-              "selectionrelease->selectionRelease"]);
+              "selectionrelease->selectionRelease",
+              /* D-546, 2026-09-25: `statemovecensus->stateMoveCensus` is dispatched — the arrival above. */
+              "statemovecensus->stateMoveCensus"]);
 
 
 /* ====================== M0-40 · THE SPELLING THE CLASSIFIER READS AMPLIFICATION OFF,
@@ -1172,6 +1180,8 @@ const CLASS_ROSTER_2026_09_18 = [
   "changedFromAudit", "documentsNamingEntity", "exportManifest", "proposalsFeed",
   "publishedCase", "publishedRegistryFor", "reevaluations", "selectionCreate", "selectionRelease",
   "selectionResolve",
+  /* D-546, 2026-09-25: `stateMoveCensus`, the arrival the CLASS ratchet above names. */
+  "stateMoveCensus",
 ];
 t("M0-40: the class roster is pinned BY NAME beside the ceiling and the floor, so a departure "
 + "names itself instead of reading `34 of 35`. Every movement comment above had to name its "
@@ -1205,7 +1215,9 @@ t("M0-40 OVER-STRICTNESS: a BOUNDED row source written inline in a for-header is
 t("M0-40 OVER-STRICTNESS, the other direction: a member whose BODY carries the amplification is "
 + "HOIST-STABLE and must not be called fragile — otherwise the roster would name every inline row "
 + "source and say nothing. These four are measured, not chosen",
-  HOIST.stable, ["documentsNamingEntity", "proposalsFeed", "publishedCase", "selectionRelease"]);
+  /* D-546, 2026-09-25: `stateMoveCensus` joins — its per-bundle reads sit in the loop BODY, so hoisting the bundle scan
+     would not remove its amplification; measured by this arm, not chosen. */
+  HOIST.stable, ["documentsNamingEntity", "proposalsFeed", "publishedCase", "selectionRelease", "stateMoveCensus"]);
 
 /* ================================================== THE CENSUS, GRADED (REC-99 · D-365).
  *
@@ -1390,7 +1402,10 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    declared roster, and a page that stopped short would publish a decided finding as undecided — the defect
    this item closes. It is a per-key read (the `#groupIdentityHistory` / `projectVisibility` argument above),
    called once per assembled instance, and it does NOT join the amplification class (26 is unchanged). */
-const SCANNING_MEASURED_2026_09_15 = 118;
+/* 118 -> 119, 2026-09-25 by D-546, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (`119 methods scanning UNBOUNDED`):
+   ONE ARRIVAL, `stateMoveCensus`, NO DEPARTURE — the amplification-class arrival named at the CLASS ratchet above (26 ->
+   27), counted over every recorded move by BOB #34's ruling. */
+const SCANNING_MEASURED_2026_09_15 = 119;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
