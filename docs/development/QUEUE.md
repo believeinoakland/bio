@@ -1055,7 +1055,7 @@ accepts-when: a D-635 appended page reads `mixed` and a text-layer-only or OCR-o
 added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
 
 ### D-636 · integrated — **`d266scope.control` arm 2: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — SCHEDULER #24 12:18Z: tip 54490e02 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6547 assertions), tree 24720b6b; d266scope arm 2 re-anchored on proposalsFeed disp lookup (1 match here and on main), allowance deleted, arm alone fails by name; --arm <id> added
+status: integrated — CONDUCT #23 12:28Z: worker report — tip 54490e02 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6547 assertions); d266scope.control arm 2 re-anchored, allowance removed; test-only, no IC; rides batch30
 order: after D-634, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
