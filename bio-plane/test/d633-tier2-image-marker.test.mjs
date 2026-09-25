@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: two arms and a baseline in `test/nc-d633.mjs`, run with `node test/nc-d633.mjs [arm]` from `bio-plane/`. Each arm edits `src/textchain.mjs` ALONE and declares, before it runs, what MUST fail and what MUST NOT; each restore is verified by sha256 AND content against a per-arm pristine copy in `controlPen("d633")`. (a) `baseline`: nothing armed, MUST be green. (b) `nocarry`: THE ROW'S DECLARED CONTROL. `mergeTier2Text` stops carrying the base page's `image_content_*` markers, so the TIER-2-WINS arms read no marker and THE ROUTE asks the OCR member for nothing, by name, while TIER 1 KEEPS, NO DUPLICATE and TIER 2'S OWN hold. (c) `carryall`: the carry takes EVERY base marker instead of the image-content ones, so TIER 2'S OWN, AWARD UNMOVED and the whole-list NO DUPLICATE fail (tier 1's `no_tounicode` rides onto a page tier 2 decoded) while the carried marker still routes. RESULTS: D-633's commit message. */
+/* NEGATIVE CONTROL: three arms and a baseline in `test/nc-d633.mjs`, run with `node test/nc-d633.mjs [arm]` from `bio-plane/`. Each arm edits `src/textchain.mjs` ALONE and declares, before it runs, what MUST fail and what MUST NOT; each restore is verified by sha256 AND content against a per-arm pristine copy in `controlPen("d633")`. (a) `baseline`: nothing armed, MUST be green. (b) `nocarry`: THE ROW'S DECLARED CONTROL. `mergeTier2Text` stops carrying the base page's `image_content_*` markers, so the TIER-2-WINS arms read no marker and THE ROUTE asks the OCR member for nothing, by name, while TIER 1 KEEPS, NO DUPLICATE and TIER 2'S OWN hold. (c) `carryall`: the carry takes EVERY base marker instead of the image-content ones, so TIER 2'S OWN, AWARD UNMOVED and the whole-list NO DUPLICATE fail (tier 1's `no_tounicode` rides onto a page tier 2 decoded) while the carried marker still routes. (d) `noregrade`: BOB #35's control (2026-09-25 08:05Z), the carry keeps tier 1's grade, so REGRADE 5, 21, 22, 30, the shown-glyph count and REGRADE 30 THROUGH THE OP fail by name while REGRADE 4 and the route hold. RESULTS: D-633's commit message. */
 /* D-633 — WHEN TIER 2 WINS A PAGE, THE PAGE KEEPS WHAT TIER 1 SAID ABOUT ITS IMAGES.
  *
  * D-627 (BOB #35, 2026-09-25 05:50Z) gave a page an image fills while its text is a folio the marker
@@ -98,6 +98,44 @@ t("AWARD UNMOVED: the carried markers add 0 undetermined characters",
 }
 
 /* ===================================================================== *
+ * 1b. THE RE-GRADE (BOB #35, 2026-09-25 08:05Z). The share carries over; the
+ *     glyph count is the WINNING tier's, graded by D-627's thresholds.
+ * ===================================================================== */
+console.log("\n--- 1b. the carried marker is re-graded against tier 2's text ---");
+{
+  const chars = (n) => "ABCDEFGHIJKLMNOPQRSTUVWXYZ".repeat(2).slice(0, n);
+  const SIZES = [4, 5, 21, 22, 30];
+  const rbase = { document: "", pages: SIZES.map((_, page) => ({ page, text: "",
+    undetermined: [{ ...FOLIO0, page }, { ...UNREAD, page }] })) };
+  rbase.pages.push({ page: 5, text: "", undetermined: [{ ...FOLIO0, page: 5 }, { ...UNREAD, page: 5 }] });
+  rbase.undetermined = rbase.pages.flatMap((p) => p.undetermined);
+  const rt2 = { pages: [...SIZES.map((n, page) => ({ page, text: chars(n), undetermined: [] })),
+    /* page 5: 3 decoded glyphs and 2 codes tier 2 could not map (fewer than tier 1's 3, so tier 2 wins) — 5 glyphs
+       the page SHOWS, D-627's measure */
+    { page: 5, text: "123", undetermined: [{ page: 5, reason: "no_tounicode", font: "Z", codes: "<0a0b>", count: 2 }] }] };
+  const rm = mergeTier2Text(rbase, rt2);
+  const img = (n) => {
+    const p = rm.text.pages.find((x) => x.page === n);
+    const mk = p.undetermined.find((x) => x.reason && x.reason.startsWith("image_content_"));
+    return mk ? [mk.reason, mk.image_share, mk.glyphs] : null;
+  };
+  t("the re-grade fixture: tier 2 wins all six pages", rm.replaced, [0, 1, 2, 3, 4, 5]);
+  t("REGRADE 4: tier 2 decodes 4 glyphs, so the marker stays unread, share carried, glyphs tier 2's",
+    img(0), ["image_content_unread", 0.5672, 4]);
+  t("REGRADE 5: tier 2 decodes 5 glyphs, so the marker reads undetermined (the page is no longer routed)",
+    img(1), ["image_content_undetermined", 0.5672, 5]);
+  t("REGRADE 21: 21 glyphs reads undetermined", img(2), ["image_content_undetermined", 0.5672, 21]);
+  t("REGRADE 22: 22 glyphs is a text page, so the marker is dropped", img(3), null);
+  t("REGRADE 30: tier 2 decodes 30 glyphs on a routed page, so the marker is dropped, never left saying unread",
+    img(4), null);
+  t("REGRADE COUNTS WHAT THE PAGE SHOWS: 3 decoded glyphs plus 2 unmapped codes is 5, read undetermined",
+    img(5), ["image_content_undetermined", 0.5672, 5]);
+  t("REGRADE 30: the dropped marker leaves the document list too, and the count agrees",
+    [rm.text.undetermined.filter((x) => x.page === 4 && x.reason.startsWith("image_content_")).length,
+     rm.text.counts.undetermined === rm.text.undetermined.length], [0, true]);
+}
+
+/* ===================================================================== *
  * 2. THE ROUTE, through the op. Tier 2 ANSWERS and wins every page; the OCR
  *    member is still asked about all nine.
  * ===================================================================== */
@@ -107,6 +145,11 @@ t("the committed extract is the one D-627's PROVENANCE.md names, by sha256",
   sha256(REAL), "481099369d7ae92dcfdbd965be654cc236a9cb152bb9a560b851eebcc109ad34");
 const tier1 = await extractPdfStructure(REAL);
 const FOLIOS = ["633", "634", "645", "646", "647", "648", "649", "650", "651"];
+/* What the tier-2 stub decodes per page: the folio on pages 0-7, and on page 8 a 30-glyph line, the re-grade's
+   case through the op (BOB #35's control): tier 2 wins that page holding text, not a folio. */
+const T2_TEXTS = [...FOLIOS.slice(0, 8), "Special Revenue Fund Summary 65123"];
+t("the stub's page-8 line is 30 glyphs, the case BOB #35 named",
+  [...T2_TEXTS[8]].filter((c) => !/\s/u.test(c)).length, 30);
 t("the extract's nine pages each carry image_content_unread and 3 undecoded folio codes at tier 1 (D-627's reading)",
   tier1.text.pages.map((p) => [reasons(p).includes("image_content_unread"),
                                p.undetermined.filter((x) => x.reason === "no_tounicode").reduce((n, x) => n + x.count, 0)]),
@@ -116,8 +159,8 @@ const SHA = { real: sha256(REAL) };
 let PDF_ASKED = [], OCR_ASKED = [];
 const tier2Answer = (sha) => {
   if (sha !== SHA.real) return null;
-  const pages = FOLIOS.map((text, page) => ({ page, text, undetermined: [] }));
-  const document = FOLIOS.join("\n");
+  const pages = T2_TEXTS.map((text, page) => ({ page, text, undetermined: [] }));
+  const document = T2_TEXTS.join("\n");
   return { ok: true, tier: 2, notes: [], links: [], structure: {},
            text: { document, pages, undetermined: [], counts: { chars: document.length, undetermined: 0 } } };
 };
@@ -170,8 +213,13 @@ try {
                                              authority: "Finance Department" }) })).json();
   t("THE ROUTE: tier 2 was asked and answered for the extract (the arm this row needs)",
     PDF_ASKED.filter((b) => b && b.capture_sha === SHA.real).length, 1);
-  t("THE ROUTE: with tier 2 winning every page, INFO-2026-0301's nine pages are still sent to the OCR member",
-    (OCR_ASKED.find((b) => b && b.capture_sha === SHA.real) || {}).pages ?? null, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  const sent = (OCR_ASKED.find((b) => b && b.capture_sha === SHA.real) || {}).pages ?? null;
+  t("THE ROUTE: with tier 2 winning every page, the eight whose folio it decoded are still sent to the OCR member",
+    sent && sent.filter((p) => p < 8), [0, 1, 2, 3, 4, 5, 6, 7]);
+  t("REGRADE 30 THROUGH THE OP: page 8, where tier 2 decodes 30 glyphs, is not sent to OCR as an unread image",
+    /* `sent` is null when the member is asked about no page, which also means page 8 was not sent. The first
+       spelling (`sent && sent.includes(8)`) read that null as a failure; the nocarry arm showed it (W29). */
+    (sent || []).includes(8), false);
   /* What the OCR member's answer then does is D-635's (the tier-3 merge refuses a page whose folio decoded), not
      this row's; it is printed so the report can say what the record holds, and asserted only as far as the
      acquire answering. */

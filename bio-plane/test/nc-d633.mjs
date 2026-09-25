@@ -13,6 +13,8 @@
  *   nocarry  — THE ROW'S DECLARED CONTROL: `mergeTier2Text` takes tier 2's markers alone on a page tier 2 wins,
  *              as before D-633. The tier-2-wins arms read no marker and the OCR member is asked about nothing, by
  *              name, while the page tier 1 keeps, tier 2's own markers and the award hold.
+ *   noregrade — BOB #35's control (2026-09-25 08:05Z): the carry keeps tier 1's grade, so a tier-2 page of 30
+ *              glyphs still reads `unread` and is routed; every REGRADE arm but 4 fails by name.
  *   carryall — the carry takes EVERY base marker, not only the image-content ones: tier 1's `no_tounicode` rides
  *              onto a page tier 2 decoded, so TIER 2'S OWN, AWARD UNMOVED and NO DUPLICATE's whole-list arm fail
  *              while the carried marker and the route hold.
@@ -63,7 +65,11 @@ const AWARD = "AWARD UNMOVED";
 const ASKED_T2 = "THE ROUTE: tier 2 was asked and answered";
 const ROUTE = "THE ROUTE: with tier 2 winning every page";
 
-const CARRY_FILTER = "u && IMAGE_CONTENT_REASONS.includes(u.reason) && !own.some((o) => o && o.reason === u.reason));";
+const CARRY_SITE = "undetermined: images.length ? [...own, ...images] : own,";
+const REGRADE = ".map((u) => regradeImageMark(u, t2Glyphs)).filter(Boolean);";
+const RG = ["REGRADE 5:", "REGRADE 21:", "REGRADE 22:", "REGRADE 30: tier 2 decodes 30", "REGRADE COUNTS WHAT THE PAGE SHOWS",
+            "REGRADE 30: the dropped marker", "REGRADE 30 THROUGH THE OP"];
+const RG4 = "REGRADE 4:";
 const ARMS = {
   baseline: {
     files: [], why: "nothing armed — the row that tells two arms broken from two arms working",
@@ -72,19 +78,35 @@ const ARMS = {
   nocarry: {
     files: [TEXTCHAIN],
     why: "drop the carry: a page tier 2 wins reads no image marker and routes nowhere, by name",
-    mustFail: [WINS_UNREAD, WINS_UNDET, OWN_ONLY, DOC_LIST, ROUTE],
-    mustNotFail: [WINS_TEXT, OWN_PLAIN, KEEPS, NO_DOUBLE, AWARD, ASKED_T2],
+    /* REGRADE 4 and the shown-glyph page lose their marker too (nothing is carried); REGRADE 22/30 and the op's
+       page 8 hold, since a dropped marker and no marker read alike. */
+    mustFail: [WINS_UNREAD, WINS_UNDET, OWN_ONLY, DOC_LIST, ROUTE, RG4, "REGRADE 5:", "REGRADE 21:", "REGRADE COUNTS WHAT THE PAGE SHOWS"],
+    /* "REGRADE 30 THROUGH THE OP" was held open and failed on the first run: the assertion read a null `sent`
+       (no page asked) as a failure. The ASSERTION was corrected, not this declaration (W29). */
+    mustNotFail: [WINS_TEXT, OWN_PLAIN, KEEPS, NO_DOUBLE, AWARD, ASKED_T2, "REGRADE 22:", "REGRADE 30 THROUGH THE OP"],
     patch: () => arm(TEXTCHAIN, "undetermined: images.length ? [...own, ...images] : own,", "undetermined: own,"),
   },
   carryall: {
     files: [TEXTCHAIN],
+    /* RESPELLED with the re-grade: the first spelling widened the carry FILTER, so tier 1's decode markers also
+       went through `regradeImageMark` and came out as image markers, moving two variables. This spelling appends
+       them unchanged beside the carry, which moves one. */
     why: "carry every base marker: tier 1's decode markers ride onto a page tier 2 decoded",
     /* NO_DOUBLE is declared to fail since the first run (2026-09-25) showed it: that assertion compares page 0's
        WHOLE marker list, so tier 1's `no_tounicode` riding on is seen there too. The first declaration held it
        open, and was wrong about the assertion, not the code (W29). */
-    mustFail: [OWN_ONLY, AWARD, NO_DOUBLE],
-    mustNotFail: [WINS_UNREAD, WINS_UNDET, WINS_TEXT, KEEPS, DOC_LIST, ROUTE],
-    patch: () => arm(TEXTCHAIN, CARRY_FILTER, "u && !own.some((o) => o && o.reason === u.reason));"),
+    mustFail: [OWN_ONLY, OWN_PLAIN, AWARD, NO_DOUBLE],
+    mustNotFail: [WINS_UNREAD, WINS_UNDET, WINS_TEXT, KEEPS, DOC_LIST, ROUTE, ...RG, RG4],
+    patch: () => arm(TEXTCHAIN, CARRY_SITE, "undetermined: [...own, ...images, ...(b.undetermined || []).filter((u) => u && !IMAGE_CONTENT_REASONS.includes(u.reason))],"),
+  },
+  noregrade: {
+    files: [TEXTCHAIN],
+    why: "BOB #35's control: the carry keeps tier 1's grade, so a page tier 2 reads 30 glyphs on still says unread",
+    /* RG4 fails too: the un-re-graded carry keeps tier 1's glyphs (3) where tier 2's page shows 4. The first
+       declaration held it open; the declaration was wrong, not the code (W29). */
+    mustFail: [...RG, RG4],
+    mustNotFail: [WINS_UNREAD, WINS_UNDET, KEEPS, NO_DOUBLE, AWARD, ROUTE],
+    patch: () => arm(TEXTCHAIN, REGRADE, ";"),
   },
 };
 
