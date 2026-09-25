@@ -43,16 +43,6 @@ scope: (1) publication copies a parted capture part by part and re-verifies each
 accepts-when: a parted capture ratifies AND publishes, byte-verified; one missing a part is refused naming it (moves: PLANE_HELD_IN_PARTS on sound bytes). NEGATIVE CONTROL: drop the part-copy from publication and the publish arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-533's worker).
 
-### D-567 · queued — **A MONITORING TICK ON A CLIENT-RENDERED SOURCE COMPARES A FRESH SHELL WITH THE RENDERED BASELINE: `op=monitor` re-fetches the SERVED document and no tick can render, so a render:true bundle would read `modified` on every tick for a change nobody made.** Found by D-522's worker by reading the code (not driven). BOB #34 RULED (b) 2026-09-25 00:25Z (drained to `BOB-INBOX-drained.md`; cite until folded): compare shell with the pair's `shell.sha256`; every tick states the CONTENT UNDETERMINED, "not watched: this source renders its content in the browser". Rendering per tick (a) is NOT designed and NOT rowed. — owner CAPTURE.
-order: after D-556, with the corrections: a record saying a page changed when nothing did is the D-472 cry-wolf class (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
-milestone: M3
-interface: I3 — the monitor tick's verdict on a render:true bundle; the integrator classifies.
-design: `docs/development/CLIENT-RENDERED.md` "RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep", with BOB #34's 00:25Z ruling, folded beside it by this row.
-depends-on: D-490.
-scope: for a render:true bundle the tick compares the served shell with the pair's `shell.sha256`, never `capture.sha256`: a match reads "frame unchanged", a difference `modified` (frame); both state the content UNDETERMINED in those words.
-accepts-when: a render:true bundle ticks "frame unchanged; content undetermined" on an unchanged shell and `modified` (frame) on a changed one (moves: a shell compared with the rendered digest). NEGATIVE CONTROL: point the tick at `capture.sha256` and the unchanged-shell arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (id minted by D-522's worker).
-
 ### D-540 · queued — **`#statementAcknowledgements`' `unbound` COUNT INCLUDES THE STATEMENT WRITER'S OWN READING (measured 3 where the honest count is 2), so the record claims one more unbound second reading than exists.** Found by REC-213's worker (via CONDUCT #20 22:11Z): REC-212's residue — REC-212 excluded the publisher in the NOT clause, and the writer was left in. — owner RECORD.
 order: after D-543, with the corrections to just-landed work: a count that overclaims second readings (CLAUDE.md §2) (SCHEDULER #20, 2026-09-24)
 milestone: M10
@@ -233,6 +223,16 @@ depends-on: M0-170.
 scope: replace each list with `moduleClosure({ repo, roots: [<tool>], dynamic: false })` as M0-170 did; state the sweep's reach (literal-name copies only).
 accepts-when: an import added to coord.mjs or status.mjs leaves both suites green (moves: three hand lists). NEGATIVE CONTROL: restore one list, add an import, and that suite fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by M0-170's worker).
+
+### D-564 · queued — **SEVEN MORE SUITES END AT THEIR FIRST FIXTURE FAILURE ("FIXTURE ABORTED": dispose and exit), so one broken fixture hides every later section: casesearched, casesign, d150-statement-acknowledgement, d507-statement-ack-translation, rec212-statement-writer, reviewcopy, reviewcopy-inband.** Found by D-548's worker (00:33Z); 3 of 351 suites carry a `block()` recorder. — owner RECORD (the suites).
+order: after D-566, with the process rows behind the product rows: it hides later failures for a round but no gate result is false (D-548's precedent) (SCHEDULER #21, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a suite measures every arm it declares).
+depends-on: D-548.
+scope: adopt `block()` and the per-section tally, -1 for a section that died, a section never reported a FAIL by name, as D-548 did; state the matcher's reach (the literal "FIXTURE ABORTED" only).
+accepts-when: in each suite, one section's fixture broken leaves every other section reporting its tally (moves: 7 suites ending at the first failure). NEGATIVE CONTROL: break one fixture per suite and the others still report; disarm the recorder and the foot is missing, by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-548's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
@@ -1219,4 +1219,14 @@ design: `docs/development/VERIFICATION.md` (the construct record is checked agai
 depends-on: none.
 scope: file the I2 IC for `tier`; correct §16's table and front matter; add a construct-5 claim in `construct-status.json` probing `export function mergeTier2Text(` in `textchain.mjs`.
 accepts-when: `node tools/status.mjs 5` reads the per-page rule BUILT by its probe, and I2 documents `tier`. NEGATIVE CONTROL: rename the probed function, and the status check fails naming the claim.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-458 · queued — **C-77 EXISTS AND NOTHING RUNS IT OVER A RECORD: Membership §11 item 9's live recheck of project-name uniqueness has a check (D-50) and no op hands the store's project bundles to `checkProjectNameUniqueness`.** — owner RECORD.
+order: after D-457, with the record-hygiene rows (SCHEDULER #17, 2026-09-23; D-50's worker via CONDUCT #18 23:55Z)
+milestone: M7
+interface: I3 additive — one admin/probe read; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.1) and §11 item 9.
+depends-on: D-50 (`integrated` on c18-batch8).
+scope: a read-only op running C-77 over the instance's project bundles and naming each collision.
+accepts-when: two projects with one name are named; a clean record reads none; counters unchanged. NEGATIVE CONTROL: feed the check one bundle, and the collision arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).

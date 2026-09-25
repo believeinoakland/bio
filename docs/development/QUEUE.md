@@ -545,8 +545,8 @@ scope: FIRST read the corpus (bio and scratch registers) for revisions that alre
 accepts-when: a revision that retypes an existing bundle is refused by its named code and the bundle's type is unchanged (the measured failure it moves: projectedType written with no comparison). NEGATIVE CONTROL: drop the comparison and the retype arm lands the new type, failing by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
 
-### D-548 · running — **`bio-plane/test/d84-case-manifest.test.mjs` HAS NO `block()` RECORDER, so one fixture failure ends the run and every later section goes unmeasured.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD (the suite).
-status: running — SCHEDULER #21 23:52Z spawns WORKER D-548 (depth 2)
+### D-548 · integrated — **`bio-plane/test/d84-case-manifest.test.mjs` HAS NO `block()` RECORDER, so one fixture failure ends the run and every later section goes unmeasured.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD (the suite).
+status: integrated — SCHEDULER #21 00:34Z: tip 281a96eb, GATE 83/83 GREEN (TARGETED); D-564 placed
 order: after D-542, with the process rows behind the product rows: a suite that stops at its first failure hides later ones for a round, but no gate result is false (SCHEDULER #21, 2026-09-24)
 milestone: M0
 interface: none.
@@ -686,6 +686,16 @@ depends-on: none.
 scope: drive the final tick's fetch the way the stray arm is driven (a stubbed fetch or governor under the test's control), so the verdict does not depend on load.
 accepts-when: the section passes with the fetch artificially delayed past the tick, and alone (moves: 2 arms red under concurrent gates). NEGATIVE CONTROL: restore the real fetch under an artificial delay and those 2 arms fail by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
+
+### D-567 · queued — **A MONITORING TICK ON A CLIENT-RENDERED SOURCE COMPARES A FRESH SHELL WITH THE RENDERED BASELINE: `op=monitor` re-fetches the SERVED document and no tick can render, so a render:true bundle would read `modified` on every tick for a change nobody made.** Found by D-522's worker by reading the code (not driven). BOB #34 RULED (b) 2026-09-25 00:25Z (drained to `BOB-INBOX-drained.md`; cite until folded): compare shell with the pair's `shell.sha256`; every tick states the CONTENT UNDETERMINED, "not watched: this source renders its content in the browser". Rendering per tick (a) is NOT designed and NOT rowed. — owner CAPTURE.
+order: after D-556, with the corrections: a record saying a page changed when nothing did is the D-472 cry-wolf class (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M3
+interface: I3 — the monitor tick's verdict on a render:true bundle; the integrator classifies.
+design: `docs/development/CLIENT-RENDERED.md` "RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep", with BOB #34's 00:25Z ruling, folded beside it by this row.
+depends-on: D-490.
+scope: for a render:true bundle the tick compares the served shell with the pair's `shell.sha256`, never `capture.sha256`: a match reads "frame unchanged", a difference `modified` (frame); both state the content UNDETERMINED in those words.
+accepts-when: a render:true bundle ticks "frame unchanged; content undetermined" on an unchanged shell and `modified` (frame) on a changed one (moves: a shell compared with the rendered digest). NEGATIVE CONTROL: point the tick at `capture.sha256` and the unchanged-shell arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-522's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
