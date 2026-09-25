@@ -1,0 +1,439 @@
+/* UI-121 — THE PUBLISHED CASE PAGE STATES WHICH DRAFT THE CASE WAS PREPARED IN, AND HOW ITS CASE WAS BOUND.
+ *
+ * DESIGN: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 — REC-217's link (BOB #33, 2026-09-24 19:14Z:
+ * `op=publish` names the draft it publishes, and the case document states the link in words) and D-680's
+ * `draft_case` (BOB #35, 2026-09-25 07:35Z and its ruling (a) on D-680's gap: the signed document states that
+ * the case was DERIVED AT PUBLICATION, NAMED AND CONFIRMED, or a new case asked at publication, named by the
+ * draft, or a new case asked by the draft). The PLANE half is D-680's and is NOT changed by this item.
+ *
+ * THE MEASURED GAP THIS MOVES: `op=publishedcase` serves `completeness.draft` — the draft, who named it, when,
+ * and `case`, how the case was bound — committed from the signed bytes, and no page rendered any of it. A signed
+ * statement no surface shows (the row's own `moves:`).
+ *
+ * WHAT THIS ITEM DOES NOT BUILD, stated: UI-121's scope also named the publish act sending `draft=` and the
+ * refusals C-44.4 / C-44.6 rendered in their DEC-49 words. No surface calls `op=publish` (the S8 publication
+ * entry's header, DEC-33), so neither has a site; routed to BOB #35 on 2026-09-25, not built here. Every
+ * publication below is therefore made through the control plane by the suite, as the operator's route does.
+ *
+ * ================= HOW A LIAR WOULD MAKE THIS SUITE GREEN =================
+ *  (a) THE ROW'S OWN: drop `draft_case` from the page — show the link and not how the case was bound. Every
+ *      live section asserts the binding sentence by its own words. NEGATIVE CONTROL arm (A).
+ *  (b) A SURFACE THAT WRITES THE SENTENCE ITSELF. Each expected phrase is written out HERE, in the plane's
+ *      words as D-680's suite pins them, and the page must carry the signed document's own line VERBATIM —
+ *      compared against `op=casedocument`'s `text` read here as a stranger, which is the signed bytes (the page
+ *      reads it through the same op; `op=publishedcase` does not carry the text). Arm (C) paraphrases it.
+ *  (c) A PAGE THAT CALLS THE ABSENCE OF A RECORD A BINDING. Section 6 renders a stated link whose `case` is
+ *      null (a document signed before D-680) and asserts it is stated as the absence, not as any of the five.
+ *  (d) AN ACT WITH NO CALL SITE (`CIVICOS_UI_STATE.md` v50/v45/v76). Sections 1-5 render through `pubOpen`,
+ *      the page's own entry point, over a REAL `op=publishedcase` answer fetched by the page itself, holding NO
+ *      credential. Arm (B) removes the call.
+ *
+ * WHY IT IS REAL: the plane is `bio-plane/src/index.mjs` under miniflare. Every case is drafted, published with
+ * `draft=`, SIGNED and ratified through the control plane, and the page reads it back as a stranger. All FIVE
+ * bindings the plane can state are driven live.
+ *
+ * WHAT IT CANNOT SEE, STATED RATHER THAN SMOOTHED:
+ *  - A LINK WITH `case` NULL CANNOT BE DRIVEN LIVE: `op=publish` writes `draft_case` on every link since D-680,
+ *    so only a document signed between REC-217 and D-680 carries none. Section 6 renders it from an answer built
+ *    here and says so.
+ *  - THE "UNQUOTED" STATE (a stated `case` whose sentence is not in the served text) is not reachable through
+ *    the plane either — `op=casedocument`'s text is the signed bytes the key was committed from; only a failed
+ *    read would reach it. Section 6 renders it
+ *    from a built answer, as the guard it is.
+ *  - It asserts the page carries the plane's sentence, not that the plane's sentence is right: that is
+ *    `bio-plane/test/rec217-draft-binding.test.mjs` block 8's.
+ *  - The page does not check the text it quotes against a doc sha: `op=publishedcase` serves none (D-712 — the
+ *    same missing key makes the page's "case document signed" line read "not signed yet" for every stranger).
+ *
+ * NEGATIVE CONTROL: `node civicos-ui/test/draft-binding.control.mjs` from the repo root — each arm ALONE, each
+ * anchor matched EXACTLY ONCE, restored from a uniquely-named per-arm pristine copy and verified by sha256 AND
+ * `cmp`, the pen a `mkdtemp` outside the worktree. Five arms and a baseline: (A) the row's own — `draft_case`
+ * dropped from the page; (B) the block with no call site; (C) the plane's sentence paraphrased; (D) the signed
+ * text never read; (E) over-strictness, the heading and lede re-worded.
+ * RUN 2026-09-25 by the UI-121 worker against `civicos-ui/app.html` 35ebc2544bff7baf… (1,638,056 B), IDENTICAL by
+ * sha256 AND `cmp` after every arm; driver exit 0, 6/6 AS DECLARED: BASELINE GREEN 38/0 · (A) RED 31/7 — the five
+ * "HOW THE CASE WAS BOUND" rows plus section 6's "unquoted" and "found twice" rows (a stated binding read as never
+ * stated), sparing every link row · (B) RED 28/10 · (C) RED 33/5 · (D) RED 28/10 · (E) GREEN 38/0.
+ */
+import "../../bio-plane/test/stdio.mjs";
+import fs from "fs";
+import vm from "vm";
+import { createRequire } from "module";
+import { pathToFileURL } from "url";
+import { webcrypto, createHash } from "crypto";
+import { execFileSync, spawnSync } from "child_process";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { appScript } from "./extract.mjs";
+import { until, budgetAssert } from "../../bio-plane/test/budget.mjs";
+import { makePublishingProject, allLoadBearing } from "../../bio-plane/test/publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "../../bio-plane/test/adoptable-reading.mjs";
+import { withSurfacingRun } from "../../bio-plane/test/surfacing-run.mjs";
+
+let pass = 0, fail = 0;
+const ok = (label, cond, detail) => {
+  if (cond) { console.log(`  PASS  ${label}`); pass++; }
+  else { console.log(`  FAIL  ${label}${detail ? `\n         ${detail}` : ""}`); fail++; }
+};
+
+/* Every case here is signed: `completeness.draft` is committed to the published projection only by
+   `op=caseratify` over a real signature. Without ssh-keygen the suite SKIPS WHOLE and says so. */
+if (spawnSync("ssh-keygen", ["-Q"]).error) {
+  console.log("  SKIP  entire suite — ssh-keygen is not on PATH, and every case here is signed and ratified");
+  console.log("draft-binding.test.mjs: SKIPPED — ssh-keygen not on PATH");
+  process.exit(0);
+}
+
+let mf = null;
+const finish = async (code) => {
+  console.log(`\ndraft-binding.test.mjs: ${pass} pass, ${fail} fail`);
+  if (mf) await mf.dispose();
+  process.exit(code ?? (fail ? 1 : 0));
+};
+const sha = (v) => createHash("sha256").update(v).digest("hex");
+
+const req = createRequire(new URL("../../bio-plane/package.json", import.meta.url));
+let Miniflare;
+try { ({ Miniflare } = await import(pathToFileURL(req.resolve("miniflare")).href)); }
+catch (e) {
+  console.error("draft-binding: the real plane could not be started — miniflare is not installed. Run `npm ci` in bio-plane/.");
+  process.exit(1);
+}
+const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
+mf = withSurfacingRun(new Miniflare({
+  modules: true, modulesRoot: "/", scriptPath: IDX.pathname,
+  script: fs.readFileSync(IDX, "utf8"),
+  modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+  durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],
+  bindings: { INSTANCE_NAME: "ui121-instance", ADMIN_TOKEN: "adm-ui121", MEMBER_TOKEN: "mem-ui121",
+              PROBE_TOKEN: "prb-ui121", DAEMON_TOKEN: "dmn-ui121", VERSION: "test",
+              GOVERNOR_APPETITE_PER_MIN: "600000" },
+}));
+const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
+const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
+const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
+  { method: "POST", body: JSON.stringify(body ?? {}) })).json());
+const must = async (what, r) => {
+  if (!r || r.ok === false) { ok(`FIXTURE: ${what}`, false, JSON.stringify(r).slice(0, 600)); await finish(1); }
+  return r;
+};
+
+/* ============================================================
+   0. THE GROUND — an owner who publishes and signs, and findings to publish
+   ============================================================ */
+const dir = mkdtempSync(join(tmpdir(), "ui121-"));
+const mkKey = (who) => {
+  execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", who, "-f", join(dir, who), "-q"]);
+  return readFileSync(join(dir, `${who}.pub`), "utf8").trim().split(/\s+/)[1];
+};
+/* THE BYTES A MEMBER SIGNS, written out rather than imported from `src/sshsig.mjs`. */
+const signCase = (who, caseId, edition, docSha) => {
+  const f = join(dir, `stmt-${Math.random().toString(36).slice(2)}`);
+  writeFileSync(f, `bio-ratify-case ${caseId} ${edition} ${docSha}\n`);
+  execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(dir, who), "-n", "bio-ratify", f],
+    { stdio: ["ignore", "ignore", "ignore"] });
+  return readFileSync(f + ".sig", "utf8");
+};
+const enrol = async (memberId, role, capabilities) => {
+  const add = await must(`memberadd ${memberId}`, await POST("op=memberadd&token=adm-ui121",
+    { memberId, cover: `cover for ${memberId}`, role, capabilities }));
+  await must(`enroll ${memberId}`, await POST("op=enroll",
+    { invite: add.invite, handle: memberId, password: `${memberId}-passphrase-121` }));
+  const lg = await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-passphrase-121` });
+  if (!lg?.token) { ok(`FIXTURE: login ${memberId}`, false, JSON.stringify(lg)); await finish(1); }
+  return lg.token;
+};
+await enrol("nadia", "admin", ["contribute", "publish", "create_projects"]);
+await enrol("omar", "admin", ["contribute"]);
+const IRIS = await enrol("iris", "member", ["contribute", "publish"]);
+await must("signeradd iris", await POST("op=signeradd&token=adm-ui121",
+  { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
+const PROJ = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-ui121", owner: "iris",
+  name: "PROJ-2026-1210-draft-binding", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+
+const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
+let snapSeq = 0;
+const promote = async (id, text, objectType, state) => await POST("op=promote&token=adm-ui121", {
+  bundleId: id, base: null,
+  snapKey: `20260925T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
+  meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+          current_state: state, created: NOW, last_updated: LATER },
+  files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+  register: [],
+});
+const INFO = "INFO-2026-1210-memo";
+const infoMd = ["---", `id: ${INFO}`, "object_type: information", "schema: information@1",
+  `title: "Info ${INFO}"`, "current_state: collected", "prior_state: null",
+  `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "produced_by:", "  mode: agent", "  capability_tier: high",
+  "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+  "visuals: []", "criticality: supporting",
+  "source:", '  locator: "https://oaklandca.opengov.com/transfer-memo"',
+  '  authority: "Oakland OpenGov portal"', '  retrieved: "2026-07-01"',
+  "monitoring:", "  enabled: false", "  frequency: none",
+  "---", "", "## Summary", "", "A captured document.", "",
+  "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+const inquiryMd = (id, question) => ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
+  `title: "${question}"`, "current_state: open", "prior_state: null",
+  `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "produced_by:", "  mode: agent", "  capability_tier: high", "group: believe-in-oakland",
+  "references:", `  - target: ${INFO}`, "    rel: cites", "    status: confirmed",
+  "state_history: []", "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+  "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
+  "recheck_triggers:", "  - text: Revisit after the next budget cycle",
+  "    description: The adopted budget may restate the transfer basis.",
+  "basis:", `  - target: ${INFO}`, "    role: supports", "    grade: D",
+  "    grade_axis: connection", "    grade_source: testimony",
+  "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
+  "## What Would Falsify This", "", "## Session Log", "",
+  `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
+  "## Review Notes", ""].join("\n");
+await must("promote the memo", await promote(INFO, infoMd, "information", "collected"));
+let reads = 0;
+const conclude = async (id) => {
+  reads++;
+  await must(`conclude ${id} (${reads})`, await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(id)}`
+    + `&conclusion=${encodeURIComponent(`The answer to ${id} is on the memo (read ${reads}).`)}`
+    + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${id} (read ${reads}).`)}`
+    + adoptedVersionParam()));
+};
+const finding = async (tag, question) => {
+  const id = `INQ-2026-1210-${tag}`;
+  await must(`promote ${id}`, await promote(id, withAdoptableReading(inquiryMd(id, question)), "inquiry", "open"));
+  await conclude(id);
+  return id;
+};
+/* THE ROUTE DEC-12 BUILT TO A FURTHER EDITION: reopened and concluded again, so the finding's bytes move. */
+const reconclude = async (id) => {
+  await must(`reopen ${id}`, await GET(`op=reopen&token=${IRIS}&target=${encodeURIComponent(id)}`
+    + `&reason=${encodeURIComponent(`UI-121 re-read ${reads + 1}: the memo has to be read again`)}`));
+  await conclude(id);
+};
+const caseArgs = (target, tag, over = {}) => ({
+  project: PROJ, targets: [target], roles: allLoadBearing({ targets: [target] }),
+  scope: `Whether the transfer was authorised (${tag}).`,
+  statement: `This case covers the FY2024 transfer only (${tag}); the FY2023 memo is out of it.`,
+  excluded: [{ target: null, description: `the FY2023 memo (${tag})`, reason: "a records request is outstanding" }],
+  subjectPosition: "sought_and_answered",
+  subjectJustification: `We put the claims to the City Administrator (${tag}).`,
+  biasAcknowledgement: `This group holds that transfers should be adopted in public (${tag}).`,
+  ...over,
+});
+const draftOf = async (target, tag, over = {}) =>
+  (await must(`casedraft ${tag}`, await POST(`op=casedraft&token=${IRIS}`, caseArgs(target, tag, over)))).draftId;
+/* PUBLISH AND SIGN — iris owns the project and holds the only key. Returns [caseId, edition]. */
+const publishAndRatify = async (target, tag, extra = {}) => {
+  const p = await must(`publish ${tag}`, await POST(`op=publish&token=${IRIS}`, { ...caseArgs(target, tag), ...extra }));
+  const d = p.caseDocument;
+  if (!d || !d.doc_sha) { ok(`FIXTURE: publish ${tag} returned no case document`, false, JSON.stringify(p).slice(0, 400)); await finish(1); }
+  await must(`caseratify ${tag}`, await POST(`op=caseratify&token=${IRIS}`,
+    { caseId: d.case_id, edition: d.edition, expectedSha: d.doc_sha,
+      sig: signCase("iris", d.case_id, d.edition, d.doc_sha) }));
+  return [d.case_id, d.edition, p];
+};
+
+/* ============================================================
+   THE PAGE — the member application, driven as a STRANGER holding nothing
+   ============================================================ */
+const APP = appScript();
+function page() {
+  const els = new Map();
+  function el() {
+    const e = { classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } }, style: {}, dataset: {},
+      value: "", _html: "", textContent: "", scrollTop: 0, disabled: false, addEventListener() {},
+      querySelector: () => el(), querySelectorAll: () => [], insertAdjacentHTML() {}, focus() {}, click() {}, remove() {},
+      setAttribute() {}, onclick: null };
+    Object.defineProperty(e, "innerHTML", { get() { return e._html; }, set(v) { e._html = v; } });
+    return e;
+  }
+  const $$ = (s) => { if (!els.has(s)) els.set(s, el()); return els.get(s); };
+  let HASH = "";
+  const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,
+    Uint8Array, Uint16Array, Map, Set, TextEncoder, TextDecoder, crypto: webcrypto, Blob: class {}, IntersectionObserver: undefined,
+    setInterval: () => 1, clearInterval() {}, setTimeout: (fn) => { fn(); return 1; }, clearTimeout() {},
+    requestAnimationFrame: (fn) => fn(), matchMedia: () => ({ matches: false }),
+    document: { querySelector: $$, querySelectorAll: () => [], addEventListener() {}, documentElement: { setAttribute() {} },
+      getElementById: () => el(), hidden: false, createElement: () => el(), body: { appendChild() {} } },
+    location: { protocol: "https:", href: "https://civicos.example/", get hash() { return HASH; }, set hash(v) { HASH = v; } },
+    history: { pushState() {}, back() {}, replaceState() {} },
+    localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    window: { addEventListener() {}, open: () => null },
+    fetch: async (u, opts) => mf.dispatchFetch(new URL(u, "http://x").toString(), opts) };
+  ctx.globalThis = ctx; vm.createContext(ctx);
+  vm.runInContext(APP + `;globalThis.__U = { PLANE, pubOpen, pubDraftLinkHtml };`, ctx);
+  const U = ctx.__U;
+  U.PLANE.base = "http://x";
+  return { U, html: (sel) => $$(sel)._html };
+}
+const WAIT_MS = 8000;
+const tb = (label, got, want) => ok(label, JSON.stringify(got) === JSON.stringify(want), JSON.stringify(got));
+const drawn = async (name, pred) => {
+  const w = await until(() => { try { return !!pred(); } catch (_) { return false; } }, WAIT_MS);
+  if (!budgetAssert(tb, name, w, WAIT_MS, "every later assertion of this suite, each reading a page this wait did not see drawn"))
+    await finish();
+};
+const unesc = (s) => String(s).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+const strip = (h) => unesc(String(h).replace(/<[^>]*>/g, " ")).replace(/&middot;/g, "·").replace(/&mdash;/g, "—")
+  .replace(/&rsquo;/g, "’").replace(/\s+/g, " ").trim();
+const flat = (s) => String(s).replace(/\s+/g, " ").trim();
+/* A machine code that reached the page — the matcher `statement-writer.test.mjs` uses, on purpose. */
+const shouty = (t) => [...String(t).matchAll(/\b([A-Z][A-Z0-9_]{2,})\b/g)].map((m) => m[1]).filter((c) => c.includes("_"));
+/* The five `draft_case` tokens, as they reach the page — any one rendered as TEXT is a machine word. */
+const TOKENS = ["derived_at_publication", "named_and_confirmed", "new_case_asked_at_publication",
+                "named_by_draft", "new_case_asked_by_draft"];
+const tokensIn = (t) => TOKENS.filter((k) => t.includes(k));
+/* THE DRAFT BLOCK OF THE PAGE, from the heading before its link to the end of page 2 — anchored on the block's
+   data attribute and not its heading's words, so a re-worded heading is not a failure (control arm (E)): a row reading the whole page would be
+   satisfied by the same words anywhere else on it. */
+const block = (html) => {
+  const k = html.indexOf("data-pub-draft-link=");
+  if (k < 0) return "";
+  const i = Math.max(0, html.lastIndexOf("<h2", k));
+  const j = html.indexOf("</section>", i);
+  return html.slice(i, j < 0 ? undefined : j);
+};
+/* OPEN A PUBLISHED CASE AS A STRANGER and return what the page drew, with the plane's own answer beside it. */
+const openCase = async (caseId, edition, what) => {
+  const P = page();
+  await P.U.pubOpen(caseId, edition);
+  await drawn(`${what}: the published case page is drawn for a caller holding nothing`,
+              () => /data-pub-writer=/.test(P.html("#pub-body")));
+  const html = P.html("#pub-body");
+  const wire = await GET(`op=publishedcase&id=${encodeURIComponent(caseId)}&edition=${edition}`);
+  const b = block(html);
+  /* THE SIGNED BYTES, read here as a stranger through the same op the page reads — no token. */
+  const doc = await GET(`op=casedocument&case=${encodeURIComponent(caseId)}&edition=${edition}`);
+  return { html, t: strip(html), b, bt: strip(b), cm: (wire && wire.completeness) || null, wire, doc,
+           signed: (doc && doc.ratified === true && doc.text) || "" };
+};
+/* THE LINE OF THE SIGNED TEXT a phrase stands in — found HERE by the phrase the plane's own suite pins, never
+   by the page's function, so the page and this suite cannot agree for free. */
+const signedLine = (signed, phrase) => String(signed).split("\n").find((l) => l.includes(phrase)) || null;
+/* The one assertion every live binding makes, row-labelled by the binding. */
+const bindingRows = async (label, caseId, edition, draftId, token, phrase) => {
+  const { html, t, b, bt, cm, signed } = await openCase(caseId, edition, label);
+  ok(`LIVE, THROUGH THE OP (${label}): the plane serves the link and its binding off the signed bytes to a caller `
+   + `with no credential — draft ${draftId}, named by iris, case "${token}"`,
+     cm && cm.draft && cm.draft.draft_id === draftId && cm.draft.named_by === "iris" && cm.draft.case === token,
+     JSON.stringify(cm && cm.draft));
+  const line = signedLine(signed, phrase);
+  ok(`FIXTURE (${label}): the signed text carries the plane's sentence for "${token}"`, !!line, signed.slice(-600));
+  ok(`HOW THE CASE WAS BOUND, IN THE PLANE'S WORDS (${label}): the page states it, quoting the signed line verbatim`,
+     !!line && /data-pub-draft-case="/.test(b) && new RegExp(`data-pub-draft-case="${token}"`).test(b)
+     && bt.includes(flat(line)) && bt.includes(phrase), bt.slice(0, 700));
+  const link = signedLine(signed, `Readings given on draft ${draftId}, which iris named as this case's draft at publication`);
+  ok(`THE LINK, IN THE PLANE'S WORDS (${label}): which draft, named by whom at publication, quoted from the signed text`,
+     !!link && /data-pub-draft-link="quoted"/.test(b) && bt.includes(flat(link)), bt.slice(0, 400));
+  ok(`NO MACHINE VOCABULARY (${label}): no code and no draft_case token reaches the page as text`,
+     shouty(t).length === 0 && tokensIn(t).length === 0, JSON.stringify([shouty(t), tokensIn(t)]));
+  return { html, bt };
+};
+
+console.log("\n--- UI-121: the published case page states which draft it was prepared in, and how its case was bound ---");
+
+/* ============================================================
+   1. DERIVED AT PUBLICATION — a draft naming no case, published naming none
+   ============================================================ */
+console.log("\n--- 1. derived at publication ---");
+const Q_D = await finding("derived", "Was the transfer authorised?");
+const D1 = await draftOf(Q_D, "derived");
+const [C_D, E1] = await publishAndRatify(Q_D, "derived", { draft: D1 });
+await bindingRows("derived at publication", C_D, E1, D1, "derived_at_publication",
+  `Draft ${D1} named no case and left its case to publication: this case was DERIVED AT PUBLICATION`);
+
+/* ============================================================
+   2. NAMED AND CONFIRMED — a further edition, the publisher naming the case derivation yields
+   ============================================================ */
+console.log("\n--- 2. named and confirmed ---");
+await reconclude(Q_D);
+const D2 = await draftOf(Q_D, "confirmed");
+const [C_D2, E2] = await publishAndRatify(Q_D, "confirmed", { draft: D2, caseId: C_D });
+ok("FIXTURE: the confirmed draft published edition 2 of the derived case", C_D2 === C_D && E2 === 2, JSON.stringify([C_D2, E2]));
+await bindingRows("named and confirmed", C_D, 2, D2, "named_and_confirmed",
+  `iris named this case at publication, and it IS the case publication derives for the draft's findings: NAMED AND CONFIRMED`);
+
+/* ============================================================
+   3. A NEW CASE ASKED AT PUBLICATION — a derivation draft, the publisher asking newCase
+   ============================================================ */
+console.log("\n--- 3. a new case asked at publication ---");
+const D3 = await draftOf(Q_D, "asked");
+const [C_A, E3] = await publishAndRatify(Q_D, "asked", { draft: D3, newCase: true });
+ok("FIXTURE: the publisher's newCase ask minted a new case", C_A !== C_D && E3 === 1, JSON.stringify([C_A, E3]));
+await bindingRows("new case asked at publication", C_A, 1, D3, "new_case_asked_at_publication",
+  `Draft ${D3} named no case and left its case to publication; iris asked for a NEW case at publication`);
+
+/* ============================================================
+   4. NAMED BY THE DRAFT — and the edition before it, published with no draft, shows no draft block
+   ============================================================ */
+console.log("\n--- 4. named by the draft, and no draft named at all ---");
+const Q_N = await finding("named", "Was notice given?");
+const [C_N] = await publishAndRatify(Q_N, "named-e1");
+await reconclude(Q_N);
+const D4 = await draftOf(Q_N, "named", { caseId: C_N });
+await publishAndRatify(Q_N, "named", { draft: D4, caseId: C_N });
+await bindingRows("named by the draft", C_N, 2, D4, "named_by_draft",
+  `Draft ${D4} named this case itself, and this edition is the one it was prepared for.`);
+{
+  const { html, cm } = await openCase(C_N, 1, "no draft named");
+  ok("NO LINK, NO BLOCK: edition 1 was published without draft=, the plane serves no draft, and the page renders "
+   + "no draft block and invents no binding for it",
+     cm && !("draft" in cm) && !/data-pub-draft-/.test(html) && block(html) === "",
+     JSON.stringify({ draft: cm && cm.draft, block: block(html).slice(0, 200) }));
+}
+
+/* ============================================================
+   5. A NEW CASE ASKED BY THE DRAFT
+   ============================================================ */
+console.log("\n--- 5. a new case asked by the draft ---");
+const Q_B = await finding("bydraft", "Was the auditor told?");
+const D5 = await draftOf(Q_B, "bydraft", { newCase: true });
+const [C_B] = await publishAndRatify(Q_B, "bydraft", { draft: D5 });
+await bindingRows("new case asked by the draft", C_B, 1, D5, "new_case_asked_by_draft",
+  `Draft ${D5} asked for a new case itself, and this case was minted for it at`);
+
+/* ============================================================
+   6. THE STATES THE PLANE CANNOT PRODUCE NOW — rendered from answers built here, and said so
+   ============================================================ */
+console.log("\n--- 6. a link signed before its binding was stated, and a stated binding the text does not carry ---");
+{
+  const P = page();
+  const base = { caseId: "CASE-2026-1210-built", edition: 1,
+    completeness: { statement: "s", author: "iris", at: NOW, excluded: "[]",
+                    draft: { draft_id: "DRAFT-built", named_by: "iris", named_at: NOW, case: null } },
+    text: ("---\n---\n\nReadings given on draft DRAFT-built, which iris named as this case's draft at publication on "
+                      + NOW + ", are readings of this case.\n") };
+  const unstated = P.U.pubDraftLinkHtml(base, base.text);
+  const sU = strip(unstated);
+  console.log(`    case null -> ${sU.slice(0, 240)}`);
+  ok("A LINK SIGNED BEFORE ITS BINDING WAS STATED is the ABSENCE of a record: the link is quoted, and how the case "
+   + "was settled is stated as not recorded — never as derived, confirmed or asked",
+     /data-pub-draft-case="unstated"/.test(unstated) && /data-pub-draft-link="quoted"/.test(unstated)
+     && /say nothing about how this draft’s case was settled/.test(sU)
+     && !/DERIVED AT PUBLICATION|NAMED AND CONFIRMED|asked for a/.test(sU), sU);
+  const unquoted = P.U.pubDraftLinkHtml({ ...base,
+    completeness: { ...base.completeness, draft: { ...base.completeness.draft, case: "derived_at_publication" } } }, base.text);
+  const sQ = strip(unquoted);
+  ok("A STATED BINDING WHOSE SENTENCE IS NOT IN THE SERVED TEXT is said to be so, and no sentence is written in its "
+   + "place — the token is not rendered as text either",
+     /data-pub-draft-case="unquoted"/.test(unquoted) && /none is written here in its place/.test(sQ)
+     && !/DERIVED AT PUBLICATION/.test(sQ) && tokensIn(sQ).length === 0, sQ);
+  const twice = P.U.pubDraftLinkHtml({ ...base,
+    completeness: { ...base.completeness, draft: { ...base.completeness.draft, case: "derived_at_publication" } } },
+    base.text + "\nDraft DRAFT-built named no case (one).\nDraft DRAFT-built named no case (two).\n");
+  ok("A SENTENCE FOUND TWICE IS NOT QUOTED: two lines opening with the draft's id are ambiguous, and neither is "
+   + "picked", /data-pub-draft-case="unquoted"/.test(twice) && !/\(one\)|\(two\)/.test(strip(twice)), strip(twice));
+  ok("NOT A CASE, NO BLOCK: bytes that are no case's member, a completeness with no link, and no completeness at "
+   + "all render nothing",
+     P.U.pubDraftLinkHtml({ ...base, caseId: null }, base.text) === ""
+     && P.U.pubDraftLinkHtml({ ...base, completeness: { ...base.completeness, draft: undefined } }, base.text) === ""
+     && P.U.pubDraftLinkHtml({ caseId: "CASE-x", edition: 1, completeness: null }) === "");
+}
+
+await finish();

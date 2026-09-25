@@ -2066,8 +2066,17 @@ if(S("case-address-at-load") && !HID("case-verify")){
         error reads as the record NOT REACHED, never as a refusal. The old pin was right about `apiQ` and about the
         discipline; its set predates the second write. `statement-ack.test.mjs` drives both halves through the real
         plane, and asserts on the WIRE that the acknowledgement carried the secret and no token. */
-     && APIQ_CALLERS.length === 8
-     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
+     /* CORRECTED 2026-09-25 (UI-121), never exempted: NINE callers. The published case page reads a RATIFIED edition's
+        signed text through this seam (`pubOpen`, `op=casedocument`, only where `op=publishedcase` states a draft link)
+        so that `pubDraftLinkHtml` can QUOTE the signed sentences rather than compose one (BIO_Publication §3 rule 13).
+        It keeps its OWN error path as this sweep requires, and it is a SHAPE test: ONLY an answer with `ok` not false,
+        `ratified: true` and a string `text` is quoted from; everything else — an `ok:false` this non-throwing seam
+        returns included, and a thrown transport error — leaves nothing to quote, and the block SAYS the signed text
+        does not carry the sentence rather than writing one. `draft-binding.test.mjs` drives it against the real plane
+        and its control arm (D) removes the read. The old pin was right about `apiQ` and the discipline; its set
+        predates the ninth read. */
+     && APIQ_CALLERS.length === 9
+     && APIQ_CALLERS.join(",") === "casedocument,instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the

@@ -50,6 +50,47 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, UI-121 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/UI-121`, stacked on `land/worker/D-680` @ `0d17eb0e` (integrated, not on `main`), in the commit that
+carries this entry; the version number is PROVISIONAL — UI-117 and UI-118 run concurrently from `main`, and CONDUCT
+renumbers at integration. SURFACE: **the published case page states which draft the case was prepared in, and how
+its case was bound.**
+
+**WHAT IT CLOSES: a signed statement no surface showed.** Since REC-217 the signed case document states the link a
+publisher makes by naming the draft at `op=publish` (`draft=`), and since D-680 it states how the case that draft
+binds to was settled — derived at publication, named and confirmed, a new case asked at publication, named by the
+draft, or a new case asked by the draft (`completeness.draft.case`). `op=publishedcase` served both; no page
+rendered either.
+
+**WHAT LANDED**, in `app.html`: `pubDraftLinkHtml` on page 2 after the acknowledgements, and one extra read in
+`pubOpen`. The block QUOTES the signed document's own two sentences — the link, and how the case was bound — and
+composes no sentence per value (render the record's own words or render nothing, `v72`–`v74`). `op=publishedcase`
+does not carry the document's text, so `pubOpen` reads it through `op=casedocument`, which serves a RATIFIED
+edition's text to anybody, only where the answer states a link; the `published-case` surface's `reads` gains
+`casedocument`. Three states where a link is stated: the sentence quoted; `case` null, stated as the absence of a
+record; and a stated case whose sentence is not in the text served (or is there twice), said so, with nothing written
+in its place. A case published without `draft=` shows no block.
+
+**WHAT IT DID NOT BUILD, and why.** UI-121's row also named the publish act sending `draft=` (nothing preselected)
+and C-44.4 / C-44.6 rendered in their DEC-49 words. **No surface calls `op=publish`**: the S8 publication entry says
+so in its header, on DEC-33 (the ceremony, UI-17, is asleep until its re-entry condition). Building either would wire
+a fifth of that ceremony. Routed to BOB #35 (2026-09-25) with a recommendation to keep DEC-33 and row the two parts
+behind UI-17's re-entry; not built here.
+
+**A DEFECT FOUND AND NOT FIXED HERE: D-712.** The published case page's "The case document · signed by …" line reads
+`c.document`, which `op=publishedcase` never serves (`publishedCase()` builds `state.document` through
+`#caseEditionState` and does not return it). So for EVERY stranger, a signed and ratified case document is described
+as *"This case edition's own document has not been signed yet"* — measured in this item's harness (`data-casedoc="none"`
+on five cases each signed through `op=caseratify`). `publishedcase.test.mjs`'s fixture carries a `document` key the
+live op does not, which is why nothing caught it. Minted and sent to SCHEDULER; the fix is one key on the plane
+(`document: state.document`) or the page reading `op=casedocument` as this item now does for its own block.
+
+**EVIDENCE.** `civicos-ui/test/draft-binding.test.mjs` 38/0, all five bindings published with `draft=`, signed and
+read back as a stranger against the real plane under miniflare. Its control, `draft-binding.control.mjs`, 6/6 AS
+DECLARED: (A) `draft_case` dropped from the page RED 31/7 naming the five "HOW THE CASE WAS BOUND" rows, (B) no call
+site RED 28/10, (C) the sentence paraphrased RED 33/5, (D) the signed text never read RED 28/10, (E) over-strictness
+GREEN 38/0; `app.html` identical by sha256 and `cmp` after every arm.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it

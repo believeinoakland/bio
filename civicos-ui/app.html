@@ -2298,7 +2298,7 @@ const SURFACES = {
     purpose: "One published case at one edition, with the plane's own account of why it carries no single case-level strength and of what its index does and does not resolve.",
     levels: ["meaning", "documents"],
     acts: [],
-    reads: ["publishedcase", "publishedmanifest"],
+    reads: ["publishedcase", "publishedmanifest", "casedocument"],
   },
 
   /* UI-42 · the readings of one question's evidence, reviewed by rotating
@@ -20323,6 +20323,71 @@ function pubStatementAcksHtml(c){
           + 'held more at the moment it was authored. What is above is what was signed.</p>'
         : '');
 }
+/* UI-121 / BIO_Publication_v0_1.md §3 rule 13 (REC-217; D-680 as BOB #35 ruled it, 2026-09-25) — WHICH
+   DRAFT THIS CASE WAS PREPARED IN, AND HOW ITS CASE WAS BOUND.
+
+   THE MEASURED GAP THIS MOVES. Since REC-217 the signed case document states a LINK when its publisher named
+   the draft at `op=publish` (`draft=`): which draft, named by whom and when. Since D-680 it also states HOW the
+   case that draft binds to was settled — `completeness.draft.case`, one of five: derived at publication, named
+   and confirmed, a new case asked at publication, named by the draft, a new case asked by the draft. Both are
+   signed and `op=publishedcase` serves both, and no page showed either: a signed statement no surface shows.
+
+   IN THE PLANE'S WORDS, AND ONLY THOSE. The key is a token; the SENTENCE that states it is in the signed
+   document's own prose, which `op=casedocument` serves for a ratified edition to anybody — the bytes the
+   attestor signed (`pubOpen` reads it; `op=publishedcase` does not carry the text). So this block QUOTES that
+   sentence: the one line of the signed text that opens with the draft's own id, found
+   exactly once or not rendered. It composes no sentence per token. Five sentences written here would be this
+   surface restating doctrine the plane already signed, and the first edit to either would make them disagree
+   in front of a stranger (DEC-8; `CIVICOS_UI_STATE.md` v72-v74: render the record's own words or render
+   nothing). The link sentence is quoted the same way.
+
+   THREE STATES, NOT ONE, where a link is stated: the sentence quoted; `case` null — a document signed before
+   the record stated how the draft's case was settled, the ABSENCE of a record and not a record that it was
+   derived or named; and a stated case whose sentence is not in the text served with it, which says so and
+   writes nothing in its place. No link stated renders NOTHING: a case published without `draft=`, or signed
+   before the link existed, carries no draft to name, and the acknowledgements block above already carries what
+   the document says about readings it could not bind.
+
+   NOT HERE, AND WHY (UI-121's other two parts): no surface calls `op=publish` — the S8 publication entry above
+   says so and why (DEC-33) — so nothing here sends `draft=`, and the publish refusals C-44.4 and C-44.6 have no
+   site to render at. Routed to BOB #35 on 2026-09-25 rather than built as a fifth of a sleeping ceremony. */
+function pubDraftLine(text, prefix){
+  const hits = String(text || "").split("\n").map((l) => l.trim()).filter((l) => l.startsWith(prefix));
+  return hits.length === 1 ? hits[0] : null;
+}
+function pubSignedText(c){
+  const s = typeof PUB !== "undefined" ? PUB.signed : null;
+  return s && s.caseId === pubCaseId(c) && s.edition === Number(c && c.edition) ? s.text : "";
+}
+function pubDraftLinkHtml(c, signedText){
+  if(!pubCaseId(c) || !(c && c.completeness)) return "";
+  const dl = c.completeness.draft;
+  if(!dl || typeof dl !== "object" || typeof dl.draft_id !== "string" || !dl.draft_id.trim()) return "";
+  const id = dl.draft_id.trim();
+  const text = typeof signedText === "string" ? signedText : "";
+  const link = pubDraftLine(text, `Readings given on draft ${id},`);
+  const how = pubDraftLine(text, `Draft ${id} `);
+  const token = (typeof dl.case === "string" && dl.case.trim()) ? dl.case.trim() : null;
+  const state = !token ? "unstated" : (how ? token : "unquoted");
+  const linked = link
+    ? esc(link)
+    : "The published record names draft <span class=\"mono\">" + esc(id) + "</span> as the draft this case was "
+      + "prepared in" + (dl.named_by ? ", named by " + esc(String(dl.named_by)) : "")
+      + (dl.named_at ? " on <span class=\"mono\">" + esc(String(dl.named_at)) + "</span>" : "")
+      + ". The signed text served with it does not carry the sentence stating that link, and none is written here in its place.";
+  const bound = state === "unstated"
+    ? "These published bytes say nothing about how this draft&rsquo;s case was settled: they were signed before "
+      + "the record stated it. That is the absence of a record, and not a record that the case was derived or named."
+    : state === "unquoted"
+      ? "The published record states how this draft&rsquo;s case was settled, but the sentence saying so is not in "
+        + "the signed text served with it, and none is written here in its place."
+      : esc(how);
+  return '<h2>The draft this case was prepared in</h2>'
+    + '<p class="subj-note">Stated by the member who published the case, at the act of publishing it, and signed '
+    + 'into the case document. Quoted from the signed text, not re-worded here.</p>'
+    + '<div class="pub-excl" data-pub-draft-link="' + (link ? "quoted" : "unquoted") + '" data-draft="' + esc(id) + '">' + linked + '</div>'
+    + '<div class="pub-excl" data-pub-draft-case="' + esc(state) + '">' + bound + '</div>';
+}
 function pubPage(c, floors, f, inner){
   const at = f ? ` data-page="finding" data-findingsec="${esc(String(f.bundle_id))}"` : ` data-page="case" data-caselevel="1"`;
   return `<section class="pub-page"${at}>${dec34Header(c, floors, f)}${inner}</section>`;
@@ -21163,6 +21228,18 @@ async function pubOpen(id, edition, fromNav){
     }
     PUB.data = c;
     PUB.edition = Number(c.edition);
+    /* UI-121: THE SIGNED TEXT, read only where the answer states a draft link — the one block that quotes it
+       (`pubDraftLinkHtml`). `op=publishedcase` does not serve the case document's text; `op=casedocument`
+       serves a RATIFIED edition's to anybody (an unsigned one answers as absent), so a stranger reads the very
+       bytes the attestor signed. A failed read leaves nothing to quote, and the block says so. */
+    PUB.signed = null;
+    if(pubCaseId(c) && c.completeness && c.completeness.draft){
+      try{
+        const d = await apiQ("casedocument", { case: pubCaseId(c), edition: String(c.edition) });
+        if(d && d.ok !== false && d.ratified === true && typeof d.text === "string")
+          PUB.signed = { caseId: pubCaseId(c), edition: Number(c.edition), text: d.text };
+      }catch(_){ PUB.signed = null; }
+    }
     await pubPaint();
   }catch(e){ $("#pub-body").innerHTML = errPane(e); }
 }
@@ -21327,7 +21404,8 @@ function pubCaseHtml(c, floors){
      <div class="pub-excl">${esc((c.completeness && c.completeness.statement) || (pubCaseId(c) ? "The published bytes carry no completeness statement for this case." : "These bytes are not a member of any published case and carry no case completeness assertion."))}</div>
      ${pubStatementWriterHtml(c)}
      <p class="subj-note">Position on putting this case to its subject: ${esc((c.completeness && c.completeness.subject_position) || "not stated")}. ${esc((c.completeness && c.completeness.subject_justification) || "")}</p>
-     ${pubStatementAcksHtml(c)}`);
+     ${pubStatementAcksHtml(c)}
+     ${pubDraftLinkHtml(c, pubSignedText(c))}`);
 
   /* THE FINDINGS, each in its own pages. */
   const fp = findings.map((f, i) => pubFindingPages(c, f, i, roster.length, floors)).join("");

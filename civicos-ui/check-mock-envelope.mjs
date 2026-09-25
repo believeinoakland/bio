@@ -213,6 +213,12 @@ const FLAT_OPS = new Map(Object.entries({
      FOUR suites drive it against the real plane the moment the workspace does, and each of the four
      read as a mock of the wrong shape against a missing line rather than against a wrong answer. */
   casedrafts:     'index.mjs op==="casedrafts" — reviewAnswer\'s json({ ok: true, ...r }, 200) over the DO\'s result',
+  /* UI-121. `op=casedocument` has its own handler in index.mjs (`if (op === "casedocument")`), which opens the
+     Durable Object's answer itself (`const r = out.result`) and FLATTENS it — `json({ ok: true, ...r, … })`,
+     the literal verdict first and the statement to sign printed beside it; its refusal half is
+     `json({ ok: false, ...r }, 404)`. This line arrives with the op's first UI call site (UI-121's published
+     case page, which quotes the signed text), and `draft-binding.test.mjs` drives it against the real plane. */
+  casedocument:   'index.mjs op==="casedocument" — json({ ok: true, ...r, … }) over out.result',
 }));
 const wireShapeOf = op => FLAT_OPS.has(op) ? "flat" : "wrapped";
 
