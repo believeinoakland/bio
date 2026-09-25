@@ -106,3 +106,4 @@ IC-345	2026-09-25T06:43:32.554Z	CONDUCT#22	D-573: last_change.undetermined_withi
 IC-346	2026-09-25T06:43:37.777Z	CONDUCT#22	D-191: op=capture subresources.part_fetch_spread (c22-batch29)
 IC-347	2026-09-25T06:43:42.913Z	CONDUCT#22	D-523: op=capturerequests render_deferral, state expired, queue kind render-deferred (c22-batch29)
 IC-348	2026-09-25T06:43:47.921Z	CONDUCT#22	D-610: members.status_by written on every transition (c22-batch29)
+IC-349	2026-09-25T06:43:52.886Z	CONDUCT#22	D-473: .odt evidentiary digest determined over relabelled list ids (c22-batch29)
