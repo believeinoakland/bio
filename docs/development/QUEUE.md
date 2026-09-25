@@ -678,8 +678,8 @@ scope: add `"` and `'` to the class; an over-strictness arm reading a quoted col
 accepts-when: a quoted column is read. NEGATIVE CONTROL: drop the quotes from the class and that arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### D-588 · running — **`civicos-ui/test/member-respect.test.mjs` ARM 3b MATCHES THE DEC-68 DILIGENCE STEM "unread" AS A RAW SUBSTRING OF app.html's CODE, so the plane's own state codes `chain_unread` and `newer_capture_unread` in a comparison fail the suite as a "rendered diligence phrase".** Found by UI-96's worker (01:41Z), who worked around it by branching on `newer`. — owner UI (the suite).
-status: running — SCHEDULER #21 01:43Z spawns WORKER D-588 (depth 2)
+### D-588 · integrated — **`civicos-ui/test/member-respect.test.mjs` ARM 3b MATCHES THE DEC-68 DILIGENCE STEM "unread" AS A RAW SUBSTRING OF app.html's CODE, so the plane's own state codes `chain_unread` and `newer_capture_unread` in a comparison fail the suite as a "rendered diligence phrase".** Found by UI-96's worker (01:41Z), who worked around it by branching on `newer`. — owner UI (the suite).
+status: integrated — SCHEDULER #21 02:16Z: tip 58c341e4 (on 964da679), GATE 72/72 GREEN; member-respect 503->506; test-only
 order: after D-564, with the process rows behind the product rows: an over-strict instrument that bends correct code around it, no false green (SCHEDULER #21, 2026-09-25)
 milestone: M0
 interface: none.
@@ -787,6 +787,16 @@ depends-on: M0-176.
 scope: rewrite the four citations as prose ("the MEASUREMENTS ledger"), the correction M0-165 made to calibration.test.mjs's `measured_by` labels one level down. Extend `statepaths.test.mjs`'s pin of this property from the TEST side to `bio-plane/src/` and `bio-plane/checks/`, so a by-name citation there cannot return (M0-176's worker). CAUTION: one is a DEC-49 refusal translation, so check its governed region, `regionLines`, and every refusal-wire pin that quotes the sentence.
 accepts-when: a MEASUREMENTS-only diff no longer selects `calibration.test.mjs` and selects 37 units (the measured failure it moves: 39, M0-176's unmet accepts-when). NEGATIVE CONTROL: restore one citation by name and the selection re-admits the importing suites, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by M0-176's worker).
+
+### D-589 · queued — **A DEC-49 REGION INSIDE `aiRunOpen` IS JUDGED TWICE AND FAILS: its catalogue rows keep a WHOLE-FUNCTION `where`, so a new governed region inside the function is read both by the region and by every whole-function row.** Found by REC-207's worker (F2, via CONDUCT #20 01:48Z). REC-71's class. — owner RECORD (the catalogue rows), M0.
+order: after D-574, with the DEC-49 instrument rows behind the product rows: it blocks the next governed edit to aiRunOpen with a false red, and no gate result is false today (SCHEDULER #21, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard), with REC-71's narrowing of whole-function rows into regions.
+depends-on: none.
+scope: narrow every aiRunOpen catalogue row's `where` into its own DEC-49 region, as REC-71 did for its function; move the guard's floors to the printed figures.
+accepts-when: a new region added inside aiRunOpen is judged once and passes (moves: a double judgement). NEGATIVE CONTROL: restore one whole-function `where` and the planted region's arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

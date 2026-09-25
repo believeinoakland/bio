@@ -316,16 +316,6 @@ scope: widen `MULTI_SITE_FILES` to every `bio-plane/src` file, excluding by stat
 accepts-when: arm G reads every src mint site and names the codes above (moves: two files walked of the plane's many). NEGATIVE CONTROL: plant a second site of a single-site code in textchain.mjs and arm G fails naming it.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-550's worker).
 
-### D-589 · queued — **A DEC-49 REGION INSIDE `aiRunOpen` IS JUDGED TWICE AND FAILS: its catalogue rows keep a WHOLE-FUNCTION `where`, so a new governed region inside the function is read both by the region and by every whole-function row.** Found by REC-207's worker (F2, via CONDUCT #20 01:48Z). REC-71's class. — owner RECORD (the catalogue rows), M0.
-order: after D-574, with the DEC-49 instrument rows behind the product rows: it blocks the next governed edit to aiRunOpen with a false red, and no gate result is false today (SCHEDULER #21, 2026-09-25)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard), with REC-71's narrowing of whole-function rows into regions.
-depends-on: none.
-scope: narrow every aiRunOpen catalogue row's `where` into its own DEC-49 region, as REC-71 did for its function; move the guard's floors to the printed figures.
-accepts-when: a new region added inside aiRunOpen is judged once and passes (moves: a double judgement). NEGATIVE CONTROL: restore one whole-function `where` and the planted region's arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
-
 ### D-560 · queued — **`tools/release-assemble.mjs` (~140) STILL NAMES THE ONE-BUNDLE COMMAND: its NO_ARTIFACT detail says "Run `npm run build` in <dir>/", and the assembler dies on the FIRST missing artifact, so a releaser fixes one bundle at a time.** M0-188's sibling site (found by M0-188's worker, via CONDUCT #20 23:45Z). — owner DIST (the path), M0.
 order: after D-548, with the process rows behind the product rows: it costs a release round, not a gate round, and no release is cut until the plan's current scope is done (BOB #34 22:30Z) (SCHEDULER #21, 2026-09-24)
 milestone: M0
@@ -1232,3 +1222,13 @@ depends-on: none.
 scope: consolidate each multi-site code behind one helper, one code per slice, starting with `NO_SUCH_BUNDLE` (15 sites); re-read the partition each slice.
 accepts-when: the sliced code reads single-site and the F4 count falls by one. NEGATIVE CONTROL: restore one inline literal, and arm F fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-344 · queued — **THE CONTROL REGISTER CANNOT SEE A QUALIFIED `NEGATIVE CONTROL` DECLARATION: `control-register.mjs` `markerPositions` counts the phrase only when a separator follows it directly, so `NEGATIVE CONTROL (…)` (over sixty suites) and `NEGATIVE CONTROL, …` (three in `corpuscheck.test.mjs`) are invisible, and `register-grammar.test.mjs` C5e works around the blind spot rather than fixing it.** — owner M0 (VERIFICATION).
+order: after D-272: the register every suite's control is counted by under-reads, so coverage is claimed on less than it reads (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` §"The negative-control register".
+depends-on: none.
+scope: `markerPositions` admits one parenthesised or comma qualifier before a separator on the same line; a bare phrase with no separator still does not count; C5e corrected in the same change.
+accepts-when: `corpuscheck.test.mjs` reads five declarations and C5e's workaround falls, in `register-grammar.test.mjs`. NEGATIVE CONTROL: restore the strict separator check, and the "a qualified marker is a declaration" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
