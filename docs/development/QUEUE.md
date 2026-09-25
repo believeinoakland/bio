@@ -731,7 +731,8 @@ scope: enumerate at the code every code the two ops mint to an anonymous caller 
 accepts-when: each of the enumerated codes reaches a stranger with its translation, driven through the op (moves: five untranslated public codes). NEGATIVE CONTROL: strip one translation and that code's arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-549's worker).
 
-### D-557 · queued — **THE DECODE CENSUS NEVER CLASSIFIES TIER-3 TEXT, AND ITS READER LABEL SAYS IT DOES: `fw20-decode-census.mjs` labels the reader from the acquire reading's `text_tier` but judges the PLAIN `op=pdfstructure` text, which stops at tier 2, so 34 of 38 documents labelled "plane (text tier 3)" were judged on EMPTY text while their OCR text exists (M-152).** Found by D-536's worker. — owner CONTENT-PDF (the instrument).
+### D-557 · running — **THE DECODE CENSUS NEVER CLASSIFIES TIER-3 TEXT, AND ITS READER LABEL SAYS IT DOES: `fw20-decode-census.mjs` labels the reader from the acquire reading's `text_tier` but judges the PLAIN `op=pdfstructure` text, which stops at tier 2, so 34 of 38 documents labelled "plane (text tier 3)" were judged on EMPTY text while their OCR text exists (M-152).** Found by D-536's worker. — owner CONTENT-PDF (the instrument).
+status: running — SCHEDULER #22 04:36Z spawns WORKER D-557 (depth 2)
 order: after D-561, with the corrections: M-143's "38 tier 3" states a reading that never reached `judge`, so the record claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M2
 interface: none.
