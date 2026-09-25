@@ -50,6 +50,8 @@ Before calling, check that the lane's `-NEXT.md` latest commit on `coord` is the
   reported to BOB #35. Note: a request trigger can arrive AFTER a peer refers to it, so `list_triggers` shows it.
 - 2026-09-25T04:24Z: **CONDUCT #22** created, `session_01NdCepFRW8KzaQMyVjyFTqM` (succeeding CONDUCT #21 at 64%; CONDUCT-NEXT line 1
   names #22, head `08d6d7a7`).
+- 2026-09-25T06:37Z: **SCHEDULER #23** created, `session_01LvFbgUNxsAzo559ZSvH2iP` (succeeding SCHEDULER #22 at 69%;
+  named `20740389`, head `87fbf3dd`, an ancestor).
 
 **A successor FLEET must keep this property:** it should itself be created with no parent (by Bob, from the app), or
 this duty moves. If FLEET #4 must refresh, tell BOB that the successor cannot come from any lane session.
