@@ -9758,6 +9758,16 @@ var AI_RUN_CHECKS = {
     where: "src/airun.mjs checkObservation, called from store.mjs #observe",
     translation: "That observation says the thing is there without saying what was found. A record that something is present has to point at what it found \u2014 the captured document, the passage, the entity \u2014 or nobody can check it later, and a claim of coverage that cannot be checked is worse than no claim at all."
   },
+  /* D-668 (2026-09-25) JUDGED C-22.10's second arm and SPLIT it. REC-100 kept the referent faults under
+     C-22.10 so as not to put two conditions behind one C-number; the translation above is untrue of them —
+     such a row DID say what it found, by naming an observation, and the one it named does not back it.
+     A second code with its OWN C-number is DEC-49's answer (one code, one condition, D-484), not the
+     two-conditions-one-number shape REC-100 avoided. `referent_fault` still names which of the four. */
+  OBS_PRESENT_REFERENT_UNBACKED: {
+    check: "C-22.17",
+    where: "src/airun.mjs checkObservation, called from store.mjs #observe",
+    translation: "That observation says the thing is there and points at an earlier observation as its evidence, but the one it points at does not back it \u2014 it is missing, came later, belongs to a different run, or did not itself find anything. A record that something is present has to rest on something that does."
+  },
   /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
        DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
        the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
@@ -12108,7 +12118,10 @@ var TEXT_CHAIN_CHECKS = {
   TEXT_CHAIN_STEP_UNNAMED: {
     check: "C-35.5",
     where: "src/textchain.mjs checkChain > is-text-chain-shape",
-    translation: "This says a machine read the text but not which machine. Two readers of the same scan disagree, and knowing which one produced a line is what lets anybody check it later."
+    /* D-668 REWORDED IT: it has two sites, an ocr/ai step with no engine and a `convert` step missing its
+       producer OR its format, and "not which machine" was untrue of a conversion that named its producer and
+       left out the format. It now names both halves; a `typed` step missing its MEMBER is C-35.15. */
+    translation: "This says a machine produced the text but does not say fully what did it \u2014 which machine, or, for a document the site converted before anyone read it, what it was converted into. Two readers of the same scan disagree, and knowing exactly what produced a line is what lets anybody check it later."
   },
   /* RULE 2, and the translation carries the distinction the rule turns on,
      because the member who trips this will believe they improved the text —
@@ -12181,6 +12194,29 @@ var TEXT_CHAIN_CHECKS = {
     check: "C-35.14",
     where: "src/textchain.mjs checkChain > is-text-chain-shape",
     translation: `This says how faithful a member's own typing of the page is. Nobody grades their own transcription: what a member typed stays "not yet determined" until a different member checks it against the page and says it matches.`
+  },
+  /* D-668 (2026-09-25) — THREE CONDITIONS THAT BORROWED ANOTHER ROW'S WORDS. Each answered a code whose
+     translation was untrue of it — a member told something false about their own input, the over-claim
+     CLAUDE.md §2 ranks worst (DEC-49, one code one condition, as D-484 settled it). */
+  /* A `typed` step (REC-87) that names no member: it answered C-35.5's "a machine read the text". */
+  TEXT_CHAIN_TYPED_UNNAMED: {
+    check: "C-35.15",
+    where: "src/textchain.mjs checkChain > is-text-chain-shape",
+    translation: "This says a member typed the text but not which member. What a person types is theirs to stand behind, and it can only be raised by a different member checking it against the page \u2014 which nobody can arrange while the typist is unnamed."
+  },
+  /* An attestation naming no member: it answered C-35.10's "The credential that asked here is an
+     automated one", which says nothing true of a request that named nobody at all. */
+  TEXT_ATTEST_UNATTRIBUTED: {
+    check: "C-35.16",
+    where: "src/textchain.mjs checkAttestation > is-text-attestation",
+    translation: "This attestation does not say who made it. Attesting is a person saying they compared the text against the image of the page and it matches; with no name on it, nobody has said that."
+  },
+  /* An attestation with no date: it answered C-35.11's "has to say how much of the document you checked",
+     which the member may well have said. */
+  TEXT_ATTEST_UNDATED: {
+    check: "C-35.17",
+    where: "src/textchain.mjs checkAttestation > is-text-attestation",
+    translation: "An attestation has to carry the day it was made. A check is something a person did at a particular time, and a later reader needs to know when somebody looked."
   }
 };
 var CALIBRATION_CHECKS = {
@@ -12223,6 +12259,26 @@ var CALIBRATION_CHECKS = {
     check: "C-42.7",
     where: "src/store.mjs calibrationRecord > is-calibration-regrade",
     translation: "A new measurement cannot re-grade the documents already read by that engine, and that holds even when the new measurement is WORSE. What the record does instead is name exactly which transcriptions were graded under the old measurement, so a person can look at them and decide. Grades in this record are things people put their name to."
+  },
+  /* D-668 (2026-09-25) — THREE CONDITIONS THAT BORROWED ANOTHER ROW'S WORDS (DEC-49, one code one
+     condition, D-484). A calibration naming no one who ran it answered C-42.4's "Nothing here was actually
+     measured" though its probe, inputs and scores were all there. */
+  CAL_UNATTRIBUTED: {
+    check: "C-42.8",
+    where: "src/calibration.mjs checkCalibration > is-calibration-shape",
+    translation: "This measurement does not say who ran it. A measurement is something somebody did, and a later reader who doubts the figure needs to know whose it is to ask for it to be run again."
+  },
+  /* REGISTERING a subject (op=calibrationsubject) measures nothing and asks no version; it answered C-42.2
+     and C-42.4, written for a measurement. */
+  CAL_SUBJECT_UNNAMED: {
+    check: "C-42.9",
+    where: "src/store.mjs calibrationSubjectRegister > is-calibration-subject",
+    translation: "To put an engine on the calibration schedule you have to say which engine. Registering it measures nothing yet \u2014 it only says what will be checked, and so it has to name it."
+  },
+  CAL_SUBJECT_NO_PROBE: {
+    check: "C-42.10",
+    where: "src/store.mjs calibrationSubjectRegister > is-calibration-subject",
+    translation: "To put an engine on the calibration schedule you have to say which probe will check it. Registering measures nothing yet, but a schedule with no stated way of measuring is a promise nobody could keep, or tell was kept."
   }
 };
 var ADMISSION_CHECKS = {
@@ -25614,6 +25670,11 @@ function checkChain(chain2) {
       );
     const mustName = STEP_KINDS[step.step].names || [];
     const unnamed = mustName.filter((f2) => !(typeof step[f2] === "string" && step[f2].trim()));
+    if (unnamed.includes("member"))
+      return refusal2(
+        "TEXT_CHAIN_TYPED_UNNAMED",
+        `the ${step.step} step names no member. A transcription a person typed is theirs to stand behind, and what raises it is a DIFFERENT member's attestation (C-52) \u2014 which nobody can arrange, or refuse to the typist, when the typist is not named`
+      );
     if (unnamed.length)
       return refusal2(
         "TEXT_CHAIN_STEP_UNNAMED",
@@ -25848,11 +25909,11 @@ function checkAttestation(att) {
     );
   if (!(typeof a.member === "string" && a.member.trim()))
     return refusal2(
-      "TEXT_ATTEST_MACHINE",
+      "TEXT_ATTEST_UNATTRIBUTED",
       `an attestation names no member. Nobody said this, and unattributed is not the same as attested`
     );
   if (!(typeof a.at === "string" && a.at.trim()))
-    return refusal2("TEXT_ATTEST_EXTENT", `an attestation carries the date it was made`);
+    return refusal2("TEXT_ATTEST_UNDATED", `an attestation carries the date it was made`);
   const e = a.extent;
   if (!e || typeof e !== "object" || !Object.prototype.hasOwnProperty.call(EXTENT_KINDS, e.kind))
     return refusal2(
@@ -31222,7 +31283,7 @@ function checkObservation(entry, conditionKinds, referent = null) {
     const fault = observationReferentFault(e, referent);
     if (fault)
       return refusal3(
-        "OBS_PRESENT_NO_REFERENT",
+        "OBS_PRESENT_REFERENT_UNBACKED",
         `this row's referent is observation '${e.result_ref == null ? "(absent)" : String(e.result_ref)}' and it does not back the row: ${OBSERVATION_REFERENT_FAULTS[fault]} (OBSERVATION-LOG-DESIGN.md section 3, the rollup ruling)`,
         { referent_fault: fault }
       );
@@ -31472,7 +31533,7 @@ function checkCalibration(cal) {
   }
   if (!(typeof c.measured_by === "string" && c.measured_by.trim()))
     return refusal4(
-      "CAL_NO_PROBE",
+      "CAL_UNATTRIBUTED",
       `a calibration names what ran the probe. An unattributed measurement is one nobody can re-run`
     );
   return null;
@@ -53441,15 +53502,15 @@ ${words}`;
     if (!engine)
       return {
         ok: false,
-        reason: "CAL_UNNAMED",
-        ...this.#calCheckRow("CAL_UNNAMED"),
+        reason: "CAL_SUBJECT_UNNAMED",
+        ...this.#calCheckRow("CAL_SUBJECT_UNNAMED"),
         detail: `registering a calibration subject names the engine to be probed`
       };
     if (!probeId)
       return {
         ok: false,
-        reason: "CAL_NO_PROBE",
-        ...this.#calCheckRow("CAL_NO_PROBE"),
+        reason: "CAL_SUBJECT_NO_PROBE",
+        ...this.#calCheckRow("CAL_SUBJECT_NO_PROBE"),
         detail: `registering a calibration subject names the PROBE that will measure it. A subject with no probe is a promise to measure something by some means nobody stated, which is the shape a measurement never takes here`
       };
     const enabled = pkg.enabled === false ? 0 : 1;

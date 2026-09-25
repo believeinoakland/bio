@@ -292,13 +292,17 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
      declared at the open states a positive allowance; an absent or zero `allowed` was opened at 0, which reads as no
      ceiling, §14b item 6, BOB #30), a fact about the run's budget, so the family holds SIXTEEN.
      `rec177-allowance.test.mjs` drives it through op=airunopen. */
-  t("ARM D1: the C-22 family is SIXTEEN C-numbers — IS-6's six, SK-1's skill-version condition, "
+  /* CORRECTED A NINTH TIME 2026-09-25 BY D-668, on the same terms: C-22.17 (`OBS_PRESENT_REFERENT_UNBACKED` — a PRESENT
+     whose `observation` referent does not back it). It answered C-22.10, "says the thing is there without saying what
+     was found", which is untrue of a row that NAMED an observation (DEC-49, one code one condition, D-484), so the
+     family holds SEVENTEEN. `observation-log.test.mjs` section K drives it through op=airuntick. */
+  t("ARM D1: the C-22 family is SEVENTEEN C-numbers — IS-6's six, SK-1's skill-version condition, "
     + "PL-18's project-membership gate, REC-93's two for the folded observation log, REC-153's "
-    + "context-kind check, REC-152's principal, REC-169's two budget figures, REC-172's unknown bound "
-    + "and REC-177's unstated allowance",
+    + "context-kind check, REC-152's principal, REC-169's two budget figures, REC-172's unknown bound, "
+    + "REC-177's unstated allowance and D-668's unbacked referent",
     codes.map((c) => AI_RUN_CHECKS[c].check).sort(),
-    ["C-22.1", "C-22.10", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16", "C-22.2", "C-22.3", "C-22.4",
-     "C-22.5", "C-22.6", "C-22.7", "C-22.8", "C-22.9"]);
+    ["C-22.1", "C-22.10", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16", "C-22.17", "C-22.2", "C-22.3",
+     "C-22.4", "C-22.5", "C-22.6", "C-22.7", "C-22.8", "C-22.9"]);
   t("ARM D2: every code carries a CANNED TRANSLATION — an untranslated code must not exist to be sent",
     codes.filter((c) => typeof AI_RUN_CHECKS[c].translation !== "string"
                      || AI_RUN_CHECKS[c].translation.length < 40), []);

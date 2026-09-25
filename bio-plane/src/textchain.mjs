@@ -447,6 +447,14 @@ export function checkChain(chain) {
        `STEP_KINDS`, so the rule follows the kind rather than a spelling. */
     const mustName = STEP_KINDS[step.step].names || [];
     const unnamed = mustName.filter((f) => !(typeof step[f] === "string" && step[f].trim()));
+    /* D-668 — THE MISSING FIELD DECIDES THE CODE, not the word naming the kind. A `member`
+       left unnamed is a PERSON left unnamed (`typed`, REC-87), and C-35.5's "a machine read
+       the text but not which machine" was false of it (DEC-49, one code one condition, D-484). */
+    if (unnamed.includes("member"))
+      return refusal("TEXT_CHAIN_TYPED_UNNAMED",
+        `the ${step.step} step names no member. A transcription a person typed is theirs to stand `
+        + `behind, and what raises it is a DIFFERENT member's attestation (C-52) — which nobody can `
+        + `arrange, or refuse to the typist, when the typist is not named`);
     if (unnamed.length)
       return refusal("TEXT_CHAIN_STEP_UNNAMED",
         `the ${step.step} step does not name its ${unnamed.join(" or ")}. Who performed a `
@@ -956,11 +964,14 @@ export function checkAttestation(att) {
       `'${String(a.member)}' is a machine credential. Attesting is a person saying they checked this `
       + `text against the image — an act with a name behind it. A machine cannot perform it, and `
       + `recording one would put a claim on the record that nobody holds`);
+  /* D-668 — a MISSING member and a missing DATE are their own conditions. They answered
+     TEXT_ATTEST_MACHINE ("the credential is an automated one") and TEXT_ATTEST_EXTENT ("say how
+     much you checked"), and neither sentence is true of them (DEC-49, D-484). */
   if (!(typeof a.member === "string" && a.member.trim()))
-    return refusal("TEXT_ATTEST_MACHINE",
+    return refusal("TEXT_ATTEST_UNATTRIBUTED",
       `an attestation names no member. Nobody said this, and unattributed is not the same as attested`);
   if (!(typeof a.at === "string" && a.at.trim()))
-    return refusal("TEXT_ATTEST_EXTENT", `an attestation carries the date it was made`);
+    return refusal("TEXT_ATTEST_UNDATED", `an attestation carries the date it was made`);
   const e = a.extent;
   if (!e || typeof e !== "object" || !Object.prototype.hasOwnProperty.call(EXTENT_KINDS, e.kind))
     return refusal("TEXT_ATTEST_EXTENT",

@@ -2110,8 +2110,12 @@ export function checkObservation(entry, conditionKinds, referent = null) {
       + `which is the WARC lesson this refusal carries`);
   if (resultKind === "observation") {
     const fault = observationReferentFault(e, referent);
+    /* D-668 JUDGED C-22.10 AT THIS SITE, and it is false here: this row DID say what it found —
+       it names an observation — and the one it names does not back it. REC-100 kept one code so
+       as not to put two conditions behind one C-number; a second code with its OWN C-number is
+       what DEC-49 asks for (one code, one condition, D-484). `referent_fault` rides unchanged. */
     if (fault)
-      return refusal("OBS_PRESENT_NO_REFERENT",
+      return refusal("OBS_PRESENT_REFERENT_UNBACKED",
         `this row's referent is observation '${e.result_ref == null ? "(absent)" : String(e.result_ref)}' `
         + `and it does not back the row: ${OBSERVATION_REFERENT_FAULTS[fault]} `
         + `(OBSERVATION-LOG-DESIGN.md section 3, the rollup ruling)`,

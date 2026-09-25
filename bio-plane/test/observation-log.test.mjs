@@ -1695,7 +1695,11 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
   const nothing    = await tick(KA, 104300, [obsRef("observation:k-x4", "seq-seven")]);
   await openRun(KX, 104400);
   const otherRun   = await tick(KX, 104500, [obsRef("observation:k-x5", String(n0 + 1))]);
-  const C = ["OBS_PRESENT_NO_REFERENT", "C-22.10"];
+  /* CORRECTED 2026-09-25 by D-668, never exempted: these four were refused as OBS_PRESENT_NO_REFERENT (C-22.10),
+     whose translation — "says the thing is there without saying what was found" — is untrue of a row that NAMES
+     an observation which does not back it (DEC-49, one code one condition, D-484). Each fault now answers C-22.17,
+     and K2g below holds that the no-referent condition still answers C-22.10. */
+  const C = ["OBS_PRESENT_REFERENT_UNBACKED", "C-22.17"];
   t("K2: a referent naming a row that is NOT PRESENT is refused BY NAME",
     refusedAs(notPresent), [[...C, "not_present"]]);
   t("K2b: a LATER seq is refused BY NAME — the row's OWN seq (a self-reference) and one far past the end",
@@ -1708,6 +1712,12 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
   + "later without an arm here fails this line",
     ["not_present", "not_earlier", "unresolved", "other_authority"].sort(),
     Object.keys(OBSERVATION_REFERENT_FAULTS).sort());
+  t("K2g: D-668 — the translation a member reads for an unbacked referent is C-22.17's, not C-22.10's "
+  + "`without saying what was found`",
+    [AI_RUN_CHECKS.OBS_PRESENT_REFERENT_UNBACKED?.check,
+     /without saying what was found/.test(AI_RUN_CHECKS.OBS_PRESENT_REFERENT_UNBACKED?.translation ?? "x without saying what was found"),
+     /does not back it/.test(AI_RUN_CHECKS.OBS_PRESENT_REFERENT_UNBACKED?.translation ?? "")],
+    ["C-22.17", false, true]);
   t("K2f: none of the refused entries was appended — a refusal that still wrote the row is a label",
     [notPresent?.appended, selfRef?.appended, farLater?.appended, nothing?.appended, otherRun?.appended],
     [0, 0, 0, 0, 0]);

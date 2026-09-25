@@ -213,8 +213,16 @@ t("a LETTER on a typed step is refused BY NAME (C-35.14) — nobody grades their
   [codeOf(lettered), lettered && lettered.check,
    lettered && lettered.translation === TEXT_CHAIN_CHECKS.TEXT_CHAIN_LETTER_ON_PERSON.translation],
   ["TEXT_CHAIN_LETTER_ON_PERSON", "C-35.14", true]);
-t("a typed step naming nobody is refused as unnamed (C-35.5)",
-  codeOf(checkChain([{ step: "typed" }])), "TEXT_CHAIN_STEP_UNNAMED");
+/* CORRECTED 2026-09-25 by D-668, never exempted: this asserted TEXT_CHAIN_STEP_UNNAMED (C-35.5), whose translation
+   says "a machine read the text but not which machine" — untrue of a step a PERSON typed (DEC-49, one code one
+   condition, D-484). It answers its own row, C-35.15, whose words name a member. */
+{
+  const nobody = checkChain([{ step: "typed" }]);
+  t("a typed step naming nobody is refused as unnamed — by C-35.15, a MEMBER unnamed, not a machine",
+    [codeOf(nobody), nobody && nobody.check, /member/.test(nobody?.translation ?? ""),
+     /machine/.test(nobody?.translation ?? "")],
+    ["TEXT_CHAIN_TYPED_UNNAMED", "C-35.15", true, false]);
+}
 t("describeChain names who typed", describeChain(one), "a member typed the text (ruth)");
 t("typing is not an extraction tier: tiersEvidenced skips it and classifies it",
   tiersEvidenced(one), { tiers: [], unclassified: [] });

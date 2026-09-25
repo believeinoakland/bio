@@ -209,8 +209,10 @@ export function checkCalibration(cal) {
         + `all say an engine changed, and none of them says what it now scores. The record stores the `
         + `probe, its inputs and its scores precisely so a later reader can disagree with the letter`);
   }
+  /* D-668 — its own code: a calibration whose probe, inputs and scores are all present WAS
+     measured, and C-42.4's "Nothing here was actually measured" was false of it (DEC-49, D-484). */
   if (!(typeof c.measured_by === "string" && c.measured_by.trim()))
-    return refusal("CAL_NO_PROBE",
+    return refusal("CAL_UNATTRIBUTED",
       `a calibration names what ran the probe. An unattributed measurement is one nobody can re-run`);
   /* END DEC-49 REGION is-calibration-shape */
   return null;

@@ -104,8 +104,11 @@ t("NO PROBE INPUTS -> refused: two runs over different corpora are two measureme
   checkCalibration(cal({ probe_inputs: {} }))?.code, "CAL_NO_PROBE");
 t("NO SCORES -> refused: the letter is stored so a later reader can DISAGREE with it",
   checkCalibration(cal({ scores: null }))?.code, "CAL_NO_PROBE");
-t("an unattributed measurement is refused too", checkCalibration(cal({ measured_by: "" }))?.code,
-  "CAL_NO_PROBE");
+/* CORRECTED 2026-09-25 by D-668, never exempted: this asserted CAL_NO_PROBE, whose translation opens "Nothing
+   here was actually measured" — untrue of a calibration whose probe, inputs and scores are all present and only
+   the one who ran it is unnamed (DEC-49, one code one condition, D-484). It has its own row, C-42.8. */
+t("an unattributed measurement is refused too — by its OWN code, not the no-probe row",
+  checkCalibration(cal({ measured_by: "" }))?.code, "CAL_UNATTRIBUTED");
 t("a cap outside BASIS_GRADES is refused — a calibration invents no scale of its own",
   checkCalibration(cal({ cap: "excellent" }))?.code, "CAL_SHAPE");
 /* THE ONE THAT LOOKS LIKE A GAP AND IS NOT. */
@@ -219,7 +222,10 @@ t("the cadence sentence is composed FROM the constant and cannot drift from it",
 
 console.log("\n--- DEC-49: EVERY REFUSAL CARRIES A CODE AND A CANNED TRANSLATION ---");
 const CODES_USED = ["CAL_SHAPE", "CAL_UNNAMED", "CAL_UNDATED", "CAL_NO_PROBE",
-                    "CAL_SIGNAL_SHAPE", "CAL_SIGNAL_CLAIMS_MEASUREMENT", "CAL_CANNOT_REGRADE"];
+                    "CAL_SIGNAL_SHAPE", "CAL_SIGNAL_CLAIMS_MEASUREMENT", "CAL_CANNOT_REGRADE",
+                    /* CORRECTED 2026-09-25 by D-668, never exempted: three conditions that answered a row written
+                       for another (C-42.4 / C-42.2) now answer their own. */
+                    "CAL_UNATTRIBUTED", "CAL_SUBJECT_UNNAMED", "CAL_SUBJECT_NO_PROBE"];
 t("every code the construct can mint has a row", CODES_USED.filter((c) => !CALIBRATION_CHECKS[c]), []);
 t("the family is exactly those codes — no orphan rows",
   Object.keys(CALIBRATION_CHECKS).sort(), [...CODES_USED].sort());
@@ -239,6 +245,7 @@ const CHECK_ARMS = [
   ["C-42.4", () => checkCalibration(cal({ probe_id: "" }))],
   ["C-42.5", () => checkSignal({ engine: "" })],
   ["C-42.6", () => checkSignal({ engine: "pdfjs", source: "a blog", cap: "A" })],
+  ["C-42.8", () => checkCalibration(cal({ measured_by: "   " }))],
 ];
 for (const [number, drive] of CHECK_ARMS) {
   const r = drive();
@@ -326,14 +333,33 @@ t("a never-probed subject is due IMMEDIATELY — the Tier-2 pdf.js case exactly"
 t("the surface reports the DECLARED cadence, the same constant the consumer uses",
   reg.cadence_ms, CALIBRATION_CADENCE_MS);
 const regBad = await post("op=calibrationsubject&token=mem-cal", { engine: "pdfjs" });
-t("a subject with no PROBE named is refused — a promise to measure by unstated means",
-  regBad.reason, "CAL_NO_PROBE");
+/* CORRECTED 2026-09-25 by D-668, never exempted: this asserted CAL_NO_PROBE, whose translation ("Nothing here
+   was actually measured ... Run the probe and record what it scored") was written for a MEASUREMENT and is
+   untrue of registering, which measures nothing (DEC-49, one code one condition, D-484). The CODE and the
+   WORDS are both read off the op's answer, so routing it back fails here by name. */
+t("a subject with no PROBE named is refused — a promise to measure by unstated means — by its OWN row",
+  [regBad.reason, regBad.check, /calibration schedule/.test(regBad.translation ?? ""),
+   /Nothing here was actually measured/.test(regBad.translation ?? "")],
+  ["CAL_SUBJECT_NO_PROBE", "C-42.10", true, false]);
+const regNoEngine = await post("op=calibrationsubject&token=mem-cal", { probe_id: "cpdf13-fidelity-v1" });
+t("D-668: a subject naming no ENGINE answers its own row, not C-42.2's `which engine and which VERSION`",
+  [regNoEngine.reason, regNoEngine.check, /version/i.test(regNoEngine.translation ?? "")],
+  ["CAL_SUBJECT_UNNAMED", "C-42.9", false]);
 
 console.log("\n--- THROUGH THE OP: A CALIBRATION IS A MEASUREMENT, NEVER A CLAIM ---");
 const noProbe = await post("op=calibrate&token=mem-cal",
   { engine: "pdfjs", version: "4.2.67", at: "2026-09-01T00:00:00Z", cap: "C",
     measured_by: "the vendor's release notes say it got better" });
 t("op=calibrate REFUSES a calibration with no probe run behind it", noProbe.reason, "CAL_NO_PROBE");
+/* D-668 — THROUGH THE OP: the store composes `measured_by: ""` when the body omits it, so a probe run that
+   names nobody reaches `checkCalibration` here and answers C-42.8, not "Nothing here was actually measured". */
+{
+  const { measured_by, ...unattributed } = cal();
+  const r = await post("op=calibrate&token=mem-cal", unattributed);
+  t("D-668: op=calibrate with a probe run and nobody named answers CAL_UNATTRIBUTED with C-42.8's words",
+    [r.reason, r.check, /Nothing here was actually measured/.test(r.translation ?? "")],
+    ["CAL_UNATTRIBUTED", "C-42.8", false]);
+}
 t("and the refusal carries the C-number and the canned translation a member reads",
   [noProbe.check, typeof noProbe.translation === "string" && noProbe.translation.length > 40],
   ["C-42.4", true]);
@@ -477,7 +503,11 @@ t("C-42.7 is carried by the refusal the store produced",
 /* THE REACH ARM, now that every row has been driven somewhere. */
 t("REACH: every row in C-42 was DRIVEN by an arm above, none skipped",
   CODES_USED.filter((c) => !CHECK_ARMS.some(([n]) => n === CALIBRATION_CHECKS[c].check)
-                        && c !== "CAL_CANNOT_REGRADE"), []);
+                        && c !== "CAL_CANNOT_REGRADE"
+                        /* D-668: the register codes are the STORE's, driven through op=calibrationsubject above,
+                           and counted only if the op's answer carried them and their C-numbers. */
+                        && !(c === regBad.reason && regBad.check === CALIBRATION_CHECKS[c].check)
+                        && !(c === regNoEngine.reason && regNoEngine.check === CALIBRATION_CHECKS[c].check)), []);
 t("and CAL_CANNOT_REGRADE was driven through the OP, not asserted at the store",
   sawRegradeRefusal.reason, "CAL_CANNOT_REGRADE");
 

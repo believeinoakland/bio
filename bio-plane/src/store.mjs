@@ -24107,14 +24107,22 @@ export class Store extends DurableObject {
     const now = Number.isFinite(pkg.nowMs) ? pkg.nowMs : Date.now();
     const engine = typeof pkg.engine === "string" ? pkg.engine.trim() : "";
     const probeId = typeof pkg.probe_id === "string" ? pkg.probe_id.trim() : "";
+    /* DEC-49 REGION is-calibration-subject
+       D-668 — REGISTERING HAS ITS OWN CODES. These answered CAL_UNNAMED and CAL_NO_PROBE, whose
+       translations were written for a MEASUREMENT ("Nothing here was actually measured ... Run
+       the probe and record what it scored"; "which engine, and which version"): untrue of an act
+       that measures nothing and asks no version (DEC-49, one code one condition, D-484). */
     if (!engine)
-      return { ok: false, reason: "CAL_UNNAMED", ...this.#calCheckRow("CAL_UNNAMED"),
+      return { ok: false, reason: "CAL_SUBJECT_UNNAMED",
+               ...this.#calCheckRow("CAL_SUBJECT_UNNAMED"),
                detail: `registering a calibration subject names the engine to be probed` };
     if (!probeId)
-      return { ok: false, reason: "CAL_NO_PROBE", ...this.#calCheckRow("CAL_NO_PROBE"),
+      return { ok: false, reason: "CAL_SUBJECT_NO_PROBE",
+               ...this.#calCheckRow("CAL_SUBJECT_NO_PROBE"),
                detail: `registering a calibration subject names the PROBE that will measure it. `
                      + `A subject with no probe is a promise to measure something by some means `
                      + `nobody stated, which is the shape a measurement never takes here` };
+    /* END DEC-49 REGION is-calibration-subject */
     const enabled = pkg.enabled === false ? 0 : 1;
     this.sql.exec(
       `INSERT INTO calibration_subjects (engine,version,probe_id,registered_at,last_probe_ms,enabled)

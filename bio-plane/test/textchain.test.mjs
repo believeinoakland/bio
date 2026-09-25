@@ -50,6 +50,33 @@
  * did before — so every arm above is that claim's assertion, and none of them
  * was changed to accommodate the new ones.
  */
+/* NEGATIVE CONTROL: (D-668, declared and RUN 2026-09-25, cloud WORKER D-668, worktree /home/user/wt-D668 on
+   land/worker/D-574 @ 06494735 + this item, uncommitted; pristine src/calibration.mjs 25,282 B sha256 06974c84c398,
+   src/airun.mjs 170,159 B 701935ea8911, src/textchain.mjs 89,459 B c820a0a7ae83). THE ROW'S CONTROL: route a split
+   condition BACK to its old code, each arm ALONE, one literal edit, and read DEC-49's guard
+   (`civicos-ui/check-refusal-codes.mjs`) and the suite that drives the condition. Every restore verified by sha256
+   AND cmp against a per-arm pristine copy (size guarded > 20,000 B). The driver lived in the session scratchpad;
+   each arm is the one edit named, so any reader re-runs it by hand.
+     baseline — guard exit 0; calibration 113/0, observation-log 132/0, textchain 220/0.
+     A1 calibration.mjs `refusal("CAL_UNATTRIBUTED",` -> `"CAL_NO_PROBE"`. DECLARED: arm G fails NAMING CAL_NO_PROBE;
+        calibration fails its unattributed arms and not its register arms. ACTUAL, AS DECLARED: guard exit 1, `arm G:
+        CALIBRATION_CHECKS.CAL_NO_PROBE is now minted at 2 literal sites` + ceiling 60 > 59; calibration 110/3 — the
+        unattributed arm, C-42.8's reach arm, the op=calibrate arm.
+     A2 airun.mjs `refusal("OBS_PRESENT_REFERENT_UNBACKED",` -> `"OBS_PRESENT_NO_REFERENT"`. DECLARED: arm G fails
+        NAMING OBS_PRESENT_NO_REFERENT; observation-log K2 K2b K2c K2d, not K2e K2f K2g. ACTUAL, AS DECLARED: guard exit
+        1 naming it at 2 sites + ceiling 60 > 59; observation-log 128/4, exactly K2 K2b K2c K2d.
+     A3 textchain.mjs `refusal("TEXT_ATTEST_UNDATED",` -> `"TEXT_ATTEST_EXTENT"`. DECLARED: this suite fails its C-35.17
+        arms; arm G predicted NOT to — TEXT_ATTEST_EXTENT is a declared CLOSURE. ACTUAL, AS PREDICTED, AND IT IS A
+        FINDING, NOT A PASS: textchain 217/3 (the D-668 undated arm, C-35.17's reach arm, the op=attesttext arm), and
+        the guard exit 0 — arm G holds no closure's SITE COUNT, and nothing fails a row whose code no site mints any
+        more. Minted D-705; this suite is today the only thing that catches it.
+     A4 OVER-STRICTNESS, the same site spelled with single quotes. DECLARED: must pass. ACTUAL: textchain 220/0, the
+        guard exit 1 on arm C's floors (codesChecked 495 < 496, refusalsJudged 484 < 485) — its matcher reads a
+        double-quoted code only, and it fails CLOSED, on a floor, not by name. A spelling blind spot, stated, not
+        minted: the plane spells every code with double quotes.
+     A5 OVER-STRICTNESS, the same site broken across three lines. DECLARED: must pass. ACTUAL: textchain 220/0; the
+        guard's ONE failure is regionLines 4277 vs 4275, the designed bound-0 rule for any edit inside a region —
+        codesChecked and refusalsJudged unmoved, so the refusal was READ. */
 /* NEGATIVE CONTROL: RUN IT WITH `node test/nc-cpdf10.mjs` — the driver is committed beside this suite, it arms each arm ALONE with the others held open, it declares before each what MUST and MUST NOT fail, and it verifies every restore by sha256 AND by byte comparison against a per-arm pristine copy with the byte count printed and a minimum guarded. SIX ARMS, ALL RUN 2026-08-08 against a BASELINE row of 148/0/foot-reached: (a) `appendStep`'s monotone comparison -> `if (false)` = 3 fail. (b) `undeterminedRegion` keeps the text = 2 fail. (c) `checkConfidence`'s basis test -> `if (false)` = 5 fail. (d) `checkAttestation`'s `isMachineIdentity` arm -> `if (false)` = 8 fail. (e) `extentCovers` returns TRUE for an unknown extent kind = 1 fail. (f) `pdfstructure.mjs` stops naming the image-only page -> `if (false)` = 27 fail (every Tier-3 arm, which is the state this item found the plane in). Each restored byte-identical, sha256 verified, 0 surprises on the final run. **AND THE FIRST RUN OF ARM (f) FOUND A DEFECT IN THIS SUITE RATHER THAN IN ITS SUBJECT**: it reported `pass=-1 fail=-1 foot=false` — a TypeError on `text_source[1].engine` ENDED THE MODULE through no assertion at all. That is fixed by the null-tolerant `steps`/`step` readers below, and it is the reason the driver reports a missing tally as -1 and reads the FOOT line rather than trusting a count. **D-252 ADDED FIVE ARMS (g,h,i,j,k), ALL RUN 2026-08-09 against a BASELINE row of 191/0/foot-reached, ELEVEN ARMS TOTAL, 0 SURPRISES, every restore sha256-MATCH and cmp-IDENTICAL with byte counts printed:** (g) the merge goes back to WHOLESALE (`i2text = built.text`, the defect itself) = 11 fail, and THE HEADLINE FAILS FIRST — the text-layer page's own references are gone, which is D-252 driven rather than described. (h) the per-page eligibility test collapses to `if (!target)` = 4 fail (the over-reaching member now overwrites a good page). (i) `derivationCap` stops letting an unmeasured PART make the document undetermined = 3 fail — the doctrine pin, and the arm that drives the null-resolved-into-a-letter. (j) `mergedChain` stops SCOPING its steps = 8 fail. (k) an UNREADABLE extent reads as "all of it" = 1 fail. **AND ONE FINDING ABOUT THE DESIGN RATHER THAN THE ARMS, recorded because it is what the controls actually established: the merge's two conditions — the page is MARKED, and the page has NO TEXT — are individually redundant for every input Tier 1 can produce, because Tier 1 emits `no_text_layer` only for a page whose text is empty, so marked and empty are the same set. Arming either one alone therefore fails NOTHING and the second is unfalsifiable through the op. They are armed TOGETHER as (h) for that reason. The redundancy is deliberate defence in depth (condition 1 is a producer's claim about its output; condition 2 is a fact about the text in hand, and only the second still holds if a future tier's marker vocabulary means something else) and is stated here rather than dressed up as two arms that pass for free.** **RE-RUN 2026-09-24 BY D-514 AGAINST A BASELINE OF 210/0/foot-reached: 11 arms, SURPRISES 0, every restore sha256-MATCH and cmp-IDENTICAL — and the run FOUND TWO DEFECTS IN THE DRIVER ITSELF, both repaired in that landing and both recorded in `nc-cpdf10.mjs` at their sites rather than only here. (1) ARM (g) — the headline arm, the one that proves the page-wise merge is load-bearing — HAD NOT ARMED SINCE CPDF-19: its anchor carried the indentation of the read-time copy of the `mergeTier3Text` call that CPDF-19 added, and `src/index.mjs` carries one copy at a shallower depth, so the literal match found it zero times. Repaired, it fails at 11 — the same figure this line has recorded for it since 2026-08-09, which is what says the arm is back to what it was and not merely armed at something. (2) THE DRIVER EXITED 0 WHATEVER IT FOUND: it counted and printed every surprise, including that DID-NOT-ARM, and then returned success, so anything reading the exit status — a gate, a script, a worker in a hurry — was told the control was clean while the log said otherwise. It now exits on the count it prints. D-514's own arms for `mergeTier2Text`'s base judgment live in `tier2-wire.test.mjs` section 8 and `nc-rec102.mjs` A5-A7, not here.** */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -507,7 +534,13 @@ const codesUsed = ["TEXT_CHAIN_COLLAPSED", "TEXT_CHAIN_EMPTY", "TEXT_CHAIN_STEP_
      step kind whose letter is NEVER written on the step (`typed` — a person's
      typing, raised only by a SECOND member's attestation). The totality
      assertion below caught this list going stale on the first run. */
-  "TEXT_CHAIN_LETTER_ON_PERSON"];
+  "TEXT_CHAIN_LETTER_ON_PERSON",
+  /* CORRECTED 2026-09-25 by D-668, never exempted: three conditions that answered ANOTHER row's code, whose
+     translation was untrue of them (DEC-49, one code one condition, D-484), now answer their own — a `typed`
+     step naming no member (was C-35.5, "a machine read the text"), an attestation naming no member (was
+     C-35.10, "the credential is an automated one") and one with no date (was C-35.11, "say how much you
+     checked"). The totality assertion below is what holds this list to the module. */
+  "TEXT_CHAIN_TYPED_UNNAMED", "TEXT_ATTEST_UNATTRIBUTED", "TEXT_ATTEST_UNDATED"];
 t("every code this module can mint has a row", codesUsed.filter((c) => !TEXT_CHAIN_CHECKS[c]), []);
 t("every row carries a C-number", Object.values(TEXT_CHAIN_CHECKS).filter((r) => !/^C-35\.\d+$/.test(r.check)).length, 0);
 t("every row carries a member-facing translation",
@@ -548,7 +581,26 @@ const CHECK_ARMS = [
   /* REC-87 / IC-127. A MEMBER's typing claiming a letter — the typist grading
      their own work, one altitude below C-52.9's refusal of the same thing. */
   ["C-35.14", () => checkChain([{ step: "typed", member: "ruth", text_sha256: "0".repeat(64), cap: "A" }])],
+  /* D-668. Each of the three below answered another row's code until 2026-09-25 (the list above says which). */
+  ["C-35.15", () => checkChain([{ step: "typed", text_sha256: "0".repeat(64) }])],
+  ["C-35.16", () => checkAttestation({ at: NOW, extent: { kind: "document" } })],
+  ["C-35.17", () => checkAttestation({ member: "bob", extent: { kind: "document" } })],
 ];
+/* D-668 — EACH SPLIT CONDITION ANSWERS ITS OWN CODE, AND THE OLD CODE IS NO LONGER TOLD IT. The arms above
+   read the C-number; these read the CODE, on the condition and on its old neighbour, so routing any of the
+   three back to its old code fails here by name as well as in arm G. */
+t("D-668: a `typed` step naming no member answers TEXT_CHAIN_TYPED_UNNAMED, not C-35.5's machine sentence",
+  checkChain([{ step: "typed", member: "  ", text_sha256: "0".repeat(64) }])?.code, "TEXT_CHAIN_TYPED_UNNAMED");
+t("D-668: and an ocr step naming no engine still answers TEXT_CHAIN_STEP_UNNAMED",
+  checkChain([{ step: "ocr", cap: "C" }])?.code, "TEXT_CHAIN_STEP_UNNAMED");
+t("D-668: an attestation naming no member answers TEXT_ATTEST_UNATTRIBUTED, not the machine-credential row",
+  checkAttestation({ member: "", at: NOW, extent: { kind: "document" } })?.code, "TEXT_ATTEST_UNATTRIBUTED");
+t("D-668: and a MACHINE member still answers TEXT_ATTEST_MACHINE",
+  checkAttestation({ member: "token:member", at: NOW, extent: { kind: "document" } })?.code, "TEXT_ATTEST_MACHINE");
+t("D-668: an attestation with no date answers TEXT_ATTEST_UNDATED, not the extent row",
+  checkAttestation({ member: "bob", at: "   ", extent: { kind: "document" } })?.code, "TEXT_ATTEST_UNDATED");
+t("D-668: and an attestation with no extent still answers TEXT_ATTEST_EXTENT",
+  checkAttestation({ member: "bob", at: NOW, extent: null })?.code, "TEXT_ATTEST_EXTENT");
 for (const [number, drive] of CHECK_ARMS) {
   const r = drive();
   t(`${number} is carried by the refusal the code path produced, not read off the table`,
@@ -781,6 +833,14 @@ t("an UNSCOPED attestation is refused rather than read as covering everything",
 const badRegion = await api(`op=attesttext&token=${bobSession}`,
   attestBody({ kind: "region", source: { kind: "pdf-page", page: 0 } }, "bob"));
 t("a region extent with no rect is refused", badRegion.result?.code, "TEXT_ATTEST_EXTENT");
+/* D-668 — THROUGH THE OP. The store stamps a date only when the body omits one (`pkg.at || now`), so a blank
+   date a caller SENDS reaches `checkAttestation`; it answered TEXT_ATTEST_EXTENT ("say how much of the document
+   you checked") over an attestation that said exactly that. It answers its own row now. */
+const undated = await api(`op=attesttext&token=${bobSession}`, { method: "POST",
+  body: JSON.stringify({ captureSha: ocr.capture.sha256, member: "bob", at: "   ", extent: { kind: "document" } }) });
+t("D-668: a blank date THROUGH op=attesttext answers TEXT_ATTEST_UNDATED with C-35.17's own words",
+  [undated.result?.code, undated.result?.check, /day it was made/.test(undated.result?.translation ?? "")],
+  ["TEXT_ATTEST_UNDATED", "C-35.17", true]);
 const noReading = await api(`op=attesttext&token=${bobSession}`, { method: "POST",
   body: JSON.stringify({ captureSha: "0".repeat(64), member: "bob", at: NOW, extent: { kind: "document" } }) });
 t("attesting to a document nobody has read is refused", noReading.result?.reason, "NO_READING");
