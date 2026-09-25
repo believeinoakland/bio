@@ -56,16 +56,6 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
-### D-615 · queued — **`op=promote` STILL PROJECTS `bundles.created` AND `last_updated` FROM THE ENVELOPE, though the document states both (CORE_FIELDS): D-563's class, the last two fields.** Found by D-563's worker (05:47Z). — owner RECORD.
-order: after D-546, the same promote function one worker at a time: the envelope is a label, the document states what it is (SCHEDULER #22, 2026-09-25)
-milestone: M7
-interface: I3 — the projection's two dates; the integrator classifies.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, with C-2.5 and D-510/D-563's derivation.
-depends-on: D-546 (same promote function; SCHEDULER #22).
-scope: derive created and last_updated from the document as D-563 derives title and state; take a read-only census of live drifts FIRST (as M-172 did) before refusing a contradicting envelope; envelope as fallback only where the bytes state none.
-accepts-when: the projection shows the document's dates, and a contradicting envelope is refused by name or recorded per the census (moves: envelope dates over the document's). NEGATIVE CONTROL: project the envelope's dates again and the date arm fails by name.
-added: 2026-09-25 · SCHEDULER #22 (id minted by D-563's worker).
-
 ### D-628 · queued — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
 order: after D-615 — the same promote function as D-546, D-578 and D-615: one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M7
@@ -86,6 +76,16 @@ scope: C-4.2 passes an undeclared in-bytes edge with D-546's sentence only when 
 accepts-when: the corroborated twin passes with the sentence and the uncorroborated one fails (moves: no reading for an in-bytes undeclared edge). NEGATIVE CONTROL: a fixture carrying a backdated undeclared edge with no record corroboration must fail C-4.2 by name, and the corroborated twin must pass with the sentence.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker; placed on BOB #35's 08:00Z ruling).
 
+### D-674 · queued — **`manifest.created` IS THE WRITER'S `meta.last_updated`, NOT THE PLANE'S CLOCK: D-546's suite landed an amendment dated BEFORE the move preceding it, so every reader ordering by REC-182's `created` (op=export's promotions, the gate facts) can be steered out of write order by the caller.** Found by D-546's worker (minted on land/worker/D-546). — owner RECORD.
+order: after D-673, with the promote corrections — a caller-supplied date that orders the record is a provenance hop a caller can invent (CLAUDE.md §5) (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — the order op=export states for promotions; the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.7 (write order is the record's order), with REC-182's `created`.
+depends-on: none (on main today; D-546's census, integrated, pairs by write order already).
+scope: order by rowid (write order) in every reader that orders by `created`, OR stamp the plane's clock into manifest.created and keep the writer's date beside it named as the writer's; list each reader by name.
+accepts-when: an amendment carrying a backdated writer date reads AFTER the move it follows in op=export and the gate facts (moves: caller-steered order). NEGATIVE CONTROL: order by `created` again and the backdated arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker).
+
 ### D-641 · queued — **107 REFUSAL CODES A MEMBER CAN RECEIVE HAVE NO CANNED TRANSLATION: D-542's R5/R6 walk brought them into reach (reach 488->595) and they are the whole reachGap rise 39->146 — e.g. relationdeclare NO_ENDS / SELF_RELATION, queuemute NO_KINDS, progressiondefine NO_STAGES; the publishedbytes codes overlap D-561.** Listed by check-refusal-codes' `IN REACH ONLY BY OP` line. Found by D-542's worker (minted on land/worker/D-542). — owner RECORD (REC-64's sweep).
 order: after D-628 — a member told a bare code instead of words is DEC-49's own defect and product, ahead of the process rows (SCHEDULER #23, 2026-09-25)
 milestone: M7
@@ -105,6 +105,16 @@ depends-on: D-574 (integrated, land/worker/D-574 @ 06494735 — arm G walks the 
 scope: give each of the five conditions its own code, catalogue row and translation; judge OBS_PRESENT_NO_REFERENT at its site and split it if false; remove each from MULTI_SITE_CANDIDATES and lower CEILING.multiSiteCodes in the same landing.
 accepts-when: each of the five conditions answers its own code whose words are true of it, through the op (moves: five false translations). NEGATIVE CONTROL: route one condition back to its old code and arm G fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-574's worker).
+
+### D-688 · queued — **`LIFECYCLE_TEXT_UNWRITABLE` (D-147, C-94.11) IS TWO CONDITIONS UNDER ONE CODE: C-94.11's sentence about exemptions and citation is FALSE for the token-field case (e.g. stage=Appeal), so a member is told something untrue.** Found at batch29's union figures pass (CONDUCT #22); the union declares it in arm G's MULTI_SITE_CANDIDATES and raises CEILING.multiSiteCodes 59->60 for it. — owner RECORD.
+order: after D-668, with the one-code-one-condition rows (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 — a new named code for the token-field case; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one code, one condition), with `docs/development/VERIFICATION.md` (arm G).
+depends-on: D-147 (integrated, rides batch29).
+scope: split the token-field case into its own code, catalogue row and translation; remove LIFECYCLE_TEXT_UNWRITABLE from MULTI_SITE_CANDIDATES and lower CEILING.multiSiteCodes back to 59. Optionally judge the five QUOTE_* candidates (same has()/refusal() shape the union judged CLOSED for D-147's nine) and lower the ceiling for each closed.
+accepts-when: stage=Appeal answers its own code whose words are true of it, through the op (moves: a false sentence). NEGATIVE CONTROL: route the token-field case back to C-94.11 and arm G fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch29 finding).
 
 ### D-667 · queued — **ELEVEN MORE SUITES CAN ABORT A FIXTURE WITHOUT REPORTING WHICH SECTIONS NEVER RAN: four print "FIXTURE ABORTED" (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding) and seven reach `process.exit` through a bail/abort/die const (case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question, d442-publish-writes-nothing, rec170-manifest-pair).** D-548 and D-564 fixed eight; this is the sweep's remainder. Found by D-564's worker (minted on land/worker/D-564). — owner M0 (the suites).
 order: after D-628, behind the head's product corrections: a process row that cuts false-green risk in the gate, placed near the head but never above product (CLAUDE.md §2, Bob 2026-09-22; SCHEDULER #23, 2026-09-25)
@@ -485,6 +495,16 @@ depends-on: UI-106 (integrated, land/worker/UI-106; rides batch30).
 scope: the review-copy form round-trips a both-valued draft unchanged, renders both values and the one line, and offers "keep the existing case" / "keep the new case" as saves that clear the other field; nothing prefilled.
 accepts-when: a both-valued draft loads, shows both, and a save without an owner's choice keeps both (moves: the form drops `newCase` silently). NEGATIVE CONTROL: restore the silent drop, and the arm that round-trips a both-valued draft fails by name, reading `newCase` gone.
 added: 2026-09-25 · SCHEDULER #23 (BOB #35's inbox entry of 06:45Z).
+
+### UI-118 · queued — **THE EXPORTED REVIEW COPY OMITS THE DATE TIE: when op=reviewcopy's `last_change.undetermined_within` is non-empty, UI-69's exported page carries `inband` but not `last_change`, so its Date line states a single last change the record cannot settle.** An owed UI act from D-573's report (via CONDUCT #22, batch29 union). — owner UI.
+order: after UI-117, with the review-copy surface rows (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 consumer.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 (the review copy's in-band quartet), with D-573's `last_change.undetermined_within`.
+depends-on: UI-69, D-573 (both integrated, ride batch29).
+scope: the export renders the tie statement beside its Date line in the plane's words whenever undetermined_within is non-empty; nothing when empty.
+accepts-when: an exported copy of a draft with a tie shows the statement by its Date line (moves: a single date beside a tie). NEGATIVE CONTROL: drop last_change from the export and the tie arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, CONDUCT #22's relay of D-573).
 
 ### REC-226 · queued — **AN OWNER'S `projectinvite` OF A MEMBER WHOSE REQUEST TO JOIN IS OPEN LEAVES THE REQUEST OPEN, so the record holds a stale request the owner has in fact answered.** BOB #35 RULED 04:30Z on REC-150's gap (a), CHANGING the provisional: the invite CLOSES the request as `granted`, by the inviting owner, at that act. — owner RECORD.
 order: after D-586, with the membership corrections: a request the owner answered still reading open is the record claiming less than happened (SCHEDULER #22, 2026-09-25)
@@ -1063,33 +1083,3 @@ depends-on: D-484.
 scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plane/src` per region row, failing on any outside its claimed span.
 accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-161 · queued — **NO SWEEP FINDS A CONSTRUCT CLAIM THAT DESCRIBES A CAPPED READ WITHOUT SAYING IT IS CAPPED (D-498's class): D-498's heuristic (op = the lowercased method name, `store.mjs` only) left 17 of 27 capped methods UNCLASSIFIED and cannot see caps applied in `index.mjs`.** Found by D-498's worker. — owner M0 (RECORD reviews the claims it names).
-order: low in the M0 group: a sweep for further instances of a closed defect (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:13Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a claim states its bound).
-depends-on: D-498.
-scope: walk the OPS table's dispatch (not method names) to every capped read, then list each construct claim describing it without its cap; each hit is placed as a row.
-accepts-when: the sweep classifies all 27 capped methods and names every uncapped claim. NEGATIVE CONTROL: strip "at most" from D-498's claim and the sweep names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-175 · queued — **`tools/train.mjs` READS A FLAG AS A VALUE: `--trailer --full` takes `--full` as the trailer's text, and `--branch` does the same.** Found by M0-159's worker (optional, cosmetic). — owner M0.
-order: after M0-161, behind the product rows: cosmetic, no effect on gate time, gate verdicts or product (Bob's 17:41Z rule, via BOB #33: tracked and built, placed after product; SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:46Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument refuses what it cannot read, never silently takes it).
-depends-on: M0-159.
-scope: `--branch` and `--trailer` refuse a value starting with `--` by name, with an escape for a literal one.
-accepts-when: `--trailer --full` is refused by name, and the escaped form is taken literally. NEGATIVE CONTROL: drop the check and the refusal arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### M0-177 · queued — **A SUITE CAN NAME A `docs/` BASENAME ONLY IN A SLASH-FREE STRING, which the gate reads as a reader edge (M0-165: "MEASUREMENTS" alone is a quoted token); the worker's sweep lists 40 candidates, none confirmed.** Found by M0-165's worker. — owner M0.
-order: after M0-175, behind the product rows: a sweep of candidates after M0-176 narrows the door (Bob's 17:41Z rule; SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:02Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
-depends-on: M0-176.
-scope: an estate-wide arm failing a suite that names a docs basename only in a slash-free string with no other edge; confirm or clear each of the 40.
-accepts-when: the arm passes with each candidate fixed or stated legitimate. NEGATIVE CONTROL: plant a bare "MEASUREMENTS" label in one suite and the arm names it.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).

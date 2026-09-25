@@ -756,8 +756,8 @@ scope: a revision that states no type takes the head's `cur.object_type` (the on
 accepts-when: a typeless revision lands carrying the head's type and says so; no op=promote answer carries a stack (moves: a raw NOT NULL error). NEGATIVE CONTROL: drop the carry-forward and the typeless-revision arm reads the raw error, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-547's worker).
 
-### D-546 · running — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
-status: running — SCHEDULER #23 06:55Z: spawned, stacked on land/worker/D-578 @ 700a432d
+### D-546 · integrated — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
+status: integrated — SCHEDULER #23 08:25Z: tip b690552a (stacked on D-578 700a432d), GATE 81/81 GREEN FULLREUSE (6674 assertions; 378 reused, first run 384/388 with four instruments corrected by name), tree 10a972c9; C-86.6 STATE_MOVE_UNDECLARED on promote, new admin op statemovecensus; M-179; construct 3.state-edge; CATALOG 1.33.0 (506); minted D-673, D-674
 order: after D-547, with the promote corrections: a disallowed move lands in the record (CLAUDE.md §2); BOB #34 ruled it product order (SCHEDULER #21, 2026-09-24)
 milestone: M7
 interface: I3 — refusal codes on op=promote for types other than bias; the integrator classifies.
@@ -1317,6 +1317,17 @@ depends-on: none (stacked on land/worker/D-627 @ 056d3092, integrated, itself on
 scope: over M-178's 49 classified pages MEASURE one signal (image pixel dimensions against the page's text area, or glyph density outside the painted rects) and set the routing rule where the classes separate; if none separates, routing stays off and the measurement says so. If D-627 did not carry the per-image `image_unread` marker (rect and area share, above D-420's size floor), build it here.
 accepts-when: the signal's separation is recorded with date and instrument, and either a routing rule routes the chart-under-title pages or the record states none separates (moves: the class unrouted with no measurement). NEGATIVE CONTROL: invert the rule and the chart arm routes nowhere, by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 06:25Z).
+
+### D-615 · running — **`op=promote` STILL PROJECTS `bundles.created` AND `last_updated` FROM THE ENVELOPE, though the document states both (CORE_FIELDS): D-563's class, the last two fields.** Found by D-563's worker (05:47Z). — owner RECORD.
+status: running — SCHEDULER #23 08:25Z: spawned, stacked on land/worker/D-546 @ b690552a
+order: after D-546, the same promote function one worker at a time: the envelope is a label, the document states what it is (SCHEDULER #22, 2026-09-25)
+milestone: M7
+interface: I3 — the projection's two dates; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, with C-2.5 and D-510/D-563's derivation.
+depends-on: none (stacked on land/worker/D-546 @ b690552a, integrated, itself on D-578 @ 700a432d on D-563 — same promote function).
+scope: derive created and last_updated from the document as D-563 derives title and state; take a read-only census of live drifts FIRST (as M-172 did) before refusing a contradicting envelope; envelope as fallback only where the bytes state none.
+accepts-when: the projection shows the document's dates, and a contradicting envelope is refused by name or recorded per the census (moves: envelope dates over the document's). NEGATIVE CONTROL: project the envelope's dates again and the date arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-563's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
