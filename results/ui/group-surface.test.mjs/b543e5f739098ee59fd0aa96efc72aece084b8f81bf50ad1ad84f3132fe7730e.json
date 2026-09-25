@@ -1,0 +1,16 @@
+{
+ "unit": "ui:group-surface.test.mjs",
+ "inputHash": "b543e5f739098ee59fd0aa96efc72aece084b8f81bf50ad1ad84f3132fe7730e",
+ "verdict": "PASS",
+ "run": "0945915fcd2159d57998081985f7f248bae7e006.1790329893964.2286.json",
+ "tree": "0945915fcd2159d57998081985f7f248bae7e006",
+ "head": "c55e4419079315da53648bc8d98295484b76a36f",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 80,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f4f90be4-196e-560b-ba70-5c051336224f",
+ "at": "2026-09-25T09:51:33.977Z"
+}
