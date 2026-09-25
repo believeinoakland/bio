@@ -130,3 +130,4 @@ D-601	2026-09-25T02:55:56.207Z	land/worker/REC-196
 D-602	2026-09-25T03:15:19.717Z	land/worker/REC-150	
 D-603	2026-09-25T03:23:45.572Z	land/worker/D-191	
 D-604	2026-09-25T03:35:01.687Z	WORKER REC-147	M-162: the 26-pair synthetic contradiction corpus no longer discriminates a model judgement (0/17, 9/9 on every run); fix: a real-document labelled corpus with hard negatives
+D-605	2026-09-25T03:35:06.836Z	land/worker/D-134	
