@@ -20,7 +20,9 @@
  * D-667 (2026-09-25, WORKER D-667 (SCHEDULER #23)) — the sweep's remainder: eleven more suites join the table
  * (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding,
  * case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question,
- * d442-publish-writes-nothing, rec170-manifest-pair), eighteen in all, each with the same three arms. A suite whose foot
+ * d442-publish-writes-nothing, rec170-manifest-pair), eighteen in all, each with the same three arms.
+ * RUN 2026-09-25 on land/worker/D-667 @ dc55ae9e (whole driver, eighteen suites): 54 arms, every one AS DECLARED,
+ * every real suite hashed unchanged before and after; exit 0. A suite whose foot
  * reads `<name>.test.mjs:` rather than `<name>:` is matched as it prints (the foot pattern takes either); no foot's
  * wording was changed to suit the driver.
  * THE MATCHER'S BLIND SPOT, stated: the sweep that found these twenty-six suites (D-548's, D-564's, D-667's) matched
