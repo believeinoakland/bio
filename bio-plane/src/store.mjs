@@ -46591,6 +46591,32 @@ export class Store extends DurableObject {
     }).sort();
   }
 
+  /** D-451 (INVESTIGATIVE-SESSION.md §11 item 5, RULE 1'S TARGET, BOB #28) — THE QUESTIONS A PROJECT RUN'S
+   *  READINGS MAY LAND ON, published by `aiRunRead` so a member (FL-11's `runContextTarget`) can NAME one.
+   *
+   *  `#runContextProjects` read the other way round: every question `#citesInto` says this project
+   *  CONFIRMED-cites (the one live-cites predicate, and the very expression `op=suggest`'s context check (d)
+   *  asks, so a SEVERED edge is not a question the run may land on). Not `#refEdgeSevered` directly: the
+   *  severance rule has one definition and a PINNED caller set (`severedhomes.test.mjs`), and a seventh reader
+   *  is the drift D-267 removed. Kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
+   *  `SUGGEST_NOT_AN_INQUIRY` shape test) that THIS viewer can see (`#inSight`, the predicate its viewer gate
+   *  asks). A question the viewer cannot see is omitted and not counted (§7.9: a count would say it exists).
+   *  So the set published is exactly the set `suggestVersion`'s context check (d) admits for this caller, and
+   *  never a second answer to it. Sorted, so the read is stable. */
+  #runContextQuestions(projectId, viewer) {
+    const id = projectId == null ? "" : String(projectId);
+    if (!id) return [];
+    const out = [];
+    for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id=? AND kind='cites'`, id)) {
+      const q = String(r.target_id);
+      if (normalizeType(OBJECT_TYPES[q.split("-")[0]]) !== "inquiry") continue;
+      if (!this.#citesInto(q).confirmed.includes(id)) continue;
+      if (!this.#inSight(q, viewer)) continue;
+      out.push(q);
+    }
+    return out.sort();
+  }
+
   /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
    *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
    *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
@@ -47637,7 +47663,13 @@ export class Store extends DurableObject {
       created: row.created,
       updated: row.updated,
       expires: row.expires,
-      context: { type: row.context_type, id: row.context_id },
+      /* D-451: a run over a PROJECT also publishes `questions` — the questions it confirmed-cites that this
+         viewer can see (`#runContextQuestions`), the set `op=suggest` admits as its target. A run over a
+         question publishes none: its context id IS its one question. */
+      context: row.context_type === "project"
+        ? { type: row.context_type, id: row.context_id,
+            questions: this.#runContextQuestions(row.context_id, viewer) }
+        : { type: row.context_type, id: row.context_id },
       /* §14a: the record names WHICH LEVEL of the cascade was used, BESIDE the
          plane-credential principal — two principals, never one, and never a
          token value. `ref` is the operator's own label for the account. */

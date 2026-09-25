@@ -1397,6 +1397,12 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    for — read in CHUNKS under D-36's variable ceiling (one grouped count per chunk of targets, one content
    read per chunk of ids), never one read per leg. It is not in the amplification CLASS; the class roster
    pinned by name above is unmoved. */
+/* 117 -> 118, 2026-09-25 by D-451, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (118) and diffed by name against the
+   117 above. ONE ARRIVAL, NO DEPARTURE: `#runContextQuestions` — the `cites` rows out of ONE project,
+   `WHERE bundle_id=?`, a per-key read (a project's own citations, a roster), published by `op=airun` as a project
+   run's `context.questions`. Not a lost LIMIT on a read that had one. It asks `#citesInto` and `#inSight` per
+   cited question, helper calls this walk does not see as `#rows(` (the declared helper blind spot `eachImage`'s note
+   records); the amplification CLASS is unmoved. */
 const SCANNING_MEASURED_2026_09_15 = 118;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "

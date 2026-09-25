@@ -8,9 +8,10 @@
  * to the foot: **H1-H10** are FL-3's own arms (H10 is the over-strictness arm);
  * **F1-F4** are FL-8's, on the launch gate's vocabulary; **G1-G5** are D-323 and
  * D-324's, on a gate-refused run's STATUS; **T1-T2** are FL-11's and FL-12's (2026-09-23), on the run's
- * target and the capture request's `address`; **D1-D2** are D-452's (2026-09-24), on a dropped candidate
- * dropping ONE candidate and not the pass. 25 announcements, driven — MEASURED 2026-09-24 (the 21 this
- * line carried before D-452 did not count SK-8's E1/E2).
+ * target and the capture request's `address`; **T3** is D-451's (2026-09-25), on a project run's published
+ * questions; **D1-D2** are D-452's (2026-09-24), on a dropped candidate
+ * dropping ONE candidate and not the pass. 26 announcements, driven — MEASURED 2026-09-25 by D-451 (25 `arm()`
+ * calls and H10; 25 before T3; the 21 this line carried before D-452 did not count SK-8's E1/E2).
  *
  * TALLY DECLARED HERE 2026-09-14 (M0-29, D-343), AND THE OLD SENTENCE IS KEPT
  * RATHER THAN CORRECTED, BECAUSE IT WAS NEVER WRONG. The only arm count this
@@ -870,8 +871,14 @@ arm({
     + "level-empty suggestions — each BY NAME, refused by the mock's SUGGEST_NO_TARGET / CAPTURE_REQUEST_NOT_AN_INQUIRY. "
     + "Every older arm that asserts a suggestion LANDS fails with them (B4, B8, B9, fanout's parent-writes arms): the "
     + "strict mock now sees the pre-FL-11 member everywhere it suggests, which is the point",
+  /* CORRECTED 2026-09-25 by D-451, never exempted: this declared FT2 MUST-NOT because "a project run never had a
+     target" — the defect D-451 fixes. A project run citing ONE question is now seeded from the plane's published
+     `context.questions`, so dropping the seeding fails FT2, FT2d and FT2g with the rest; FT2b/FT2c/FT2e/FT2f (no
+     call names the project, the cited reading lands, several and none stay UNDETERMINED) must still hold. */
   mustNot: "FT0 (the mock refuses on its own, driven directly), FT1d/FT1e (a reading aimed outside is still refused "
-    + "and still not compared), FT2 (a project run never had a target) and the fanout suite's FL-12a (the mock alone)",
+    + "and still not compared), FT2b/FT2c/FT2e/FT2f (a project run never names the project, and several or no "
+    + "published questions leave it UNDETERMINED) and the fanout suite's FL-12a (the mock alone). FT2, FT2d and FT2g "
+    + "FAIL with the declared arms since D-451: a project run citing one question is seeded too",
   file: DRIVER,
   find: `    target: seeded.target, targetBasis: seeded.basis,`,
   replace: `    targetBasis: seeded.basis,`,
@@ -880,7 +887,7 @@ arm({
     const rf = runFanout();
     const failedAsDeclared = [/^FT1 \(FL-11\)/, /^FT1b /, /^FT1c /, /^FT3 /, /^FT4 \(FL-12/, /FOUR level-empty suggestions/]
       .every((re) => anyFailed(rh, re)) && anyFailed(rf, /^FL-12b /);
-    const held = !anyFailed(rh, /^FT0|^FT1d |^FT1e |^FT2/) && !anyFailed(rf, /^FL-12a/);
+    const held = !anyFailed(rh, /^FT0|^FT1d |^FT1e |^FT2b |^FT2c |^FT2e |^FT2f /) && !anyFailed(rf, /^FL-12a/);
     return {
       observed: `harness ${rh.pass}/${rh.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by `
         + `name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
@@ -917,6 +924,28 @@ arm({
 /* ============================================================================
  * SECTION D — D-452 (2026-09-24). A DROPPED CANDIDATE DROPS ONE CANDIDATE, NOT THE PASS.
  * ========================================================================== */
+
+arm({
+  id: "T3", subject: "D-451 — THE PROJECT'S QUESTIONS IGNORED: a project run is UNDETERMINED whatever the plane publishes",
+  what: "`runContextTarget` never reads `context.questions` — the member as FL-11 left it, before the plane published "
+    + "the set (`src/harness.mjs`)",
+  mustFail: "harness FT2 (the one cited question is the target), FT2d (its level-empty candidate is FILED, nothing "
+    + "refused SUGGEST_NO_TARGET), FT2g (dedup compared against it) and FT2e (the stated count of several) — each BY NAME",
+  mustNot: "FT2b/FT2c (no call names the project; a reading naming its own cited question lands), FT2f (a plane "
+    + "publishing no set, UNDETERMINED either way), FT0*, and every run over a QUESTION (FT1*)",
+  file: HARNESS,
+  find: `    if (!Array.isArray(ctx.questions))\n`,
+  replace: `    if (true)\n`,
+  run() {
+    const r = runHarness();
+    const failedAsDeclared = [/^FT2 \(D-451\)/, /^FT2d /, /^FT2g /, /^FT2e /].every((re) => anyFailed(r, re));
+    const held = !anyFailed(r, /^FT2b |^FT2c |^FT2f |^FT0|^FT1/);
+    return {
+      observed: `harness ${r.pass}/${r.fail} FAIL · the declared arms failed by name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
+      asDeclared: r.ran && failedAsDeclared && held,
+    };
+  },
+});
 
 arm({
   id: "D1", subject: "D-452 — THE DEFECT RESTORED: a drop at `adjust` ends the pass",
@@ -960,8 +989,9 @@ arm({
   what: "`adjust` puts the refused submission at the END of the queue whether or not it changed — so the rest of "
     + "the pass is written, AND the dropped bytes are sent again",
   mustFail: "harness `D-452: the DROPPED candidate was sent ONCE and never landed` and `D-452: nothing was resent "
-    + "verbatim` BY NAME (PL-3's `repeats` climbs), with B5's called-ONCE arm; COUPLED, and declared: FT1d, FT2d "
-    + "and FT3, each of which drives a refusal",
+    + "verbatim` BY NAME (PL-3's `repeats` climbs), with B5's called-ONCE arm; COUPLED, and declared: FT1d, FT2e "
+    + "and FT3, each of which drives a refusal (FT2e since D-451, 2026-09-25: FT2d no longer drives one — a project "
+    + "run citing one question now FILES its level-empty candidate)",
   mustNot: "`D-452: the rest of the pass is written` — which is exactly why that arm alone could not tell the fix from "
     + "the liar, and the sent-once/never-landed arm exists — and B4's adjusted landing, B6's four level-empty "
     + "suggestions, FT0*, FT1/FT1b/FT1c",

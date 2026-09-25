@@ -58,6 +58,7 @@
    (T1) FL-11 — THE SEEDING DROPPED. `state.target` no longer seeded from the run's context -> FT1, FT1b, FT1c, FT3 (C-27.1 fires before the principal gate, the plane's order), FT4 and B6's four level-empty suggestions must FAIL BY NAME, with fanout FL-12b; FT0 (the mock driven directly), FT1d/FT1e, FT2 and fanout FL-12a must HOLD.
    (T2) FL-12 — THE LOCATOR SENT AS `url` AGAIN -> FT4 (the ADDRESS arm), FT4b, FT4c and fanout FL-12b must FAIL BY NAME; FT0d/FT0e, fanout FL-12a and every FL-11 arm must HOLD.
    T1 AND T2 RUN 2026-09-23 BY THE FL-11+FL-12 WORKER, each armed ALONE on `src/index.mjs`, restores verified sha256 + cmp; baseline harness 246/0, fanout 184/0. T2 AS DECLARED first run: harness 243/3, fanout 183/1. **T1 CAME BACK NOT AS DECLARED FIRST, AND IT WAS THE DECLARATION:** it named FT3 and fanout FL-12b as MUST-NOT, and both failed — a target-less suggestion is refused C-27.1 before the principal gate is asked (the plane's own order), and a request's target defaults to the run's, so both are COUPLED to the seeding. Corrected and re-run: harness 226/20, fanout 177/7, AS DECLARED. The twenty include every older arm asserting a suggestion LANDS (B4, B8, B9) — the strict mock now sees the pre-FL-11 member wherever it suggests, which the permissive mock never could. H4's patch moved with `target` joining NOT_JUDGEABLE and was re-run: 241/4, AS DECLARED.
+   (T3) D-451 — THE PROJECT'S QUESTIONS IGNORED: `runContextTarget` never reads `context.questions` (`src/harness.mjs`) -> FT2, FT2d, FT2g and FT2e must FAIL BY NAME; FT2b/FT2c/FT2f, FT0* and FT1* must HOLD. RUN 2026-09-25 BY WORKER D-451 (cloud), armed ALONE, restore verified sha256 + cmp: clean harness 258/0 (255 before the item); T3 -> 254/4 AS DECLARED. T1 CORRECTED IN THE SAME LANDING, never exempted: it declared FT2 MUST-NOT ("a project run never had a target", the defect D-451 fixes); re-run -> harness 233/25, fanout 177/7 AS DECLARED, with FT2/FT2d/FT2g now failing and FT2b/c/e/f holding. D2 re-run with FT2e as its coupled refusal arm -> 248/10 AS DECLARED.
    (D1) D-452 — THE DEFECT RESTORED: `adjust` with nothing adjusted and a non-empty queue routes back to `next-pass` -> B5b's `D-452: the rest of the pass is written` must FAIL BY NAME, with the sent-exactly-once, drop-went-to-submit and counts-what-it-wrote D-452 arms, A3's `with candidates queued behind it goes on to submit the REST` and fanout B6b's legal-candidate-LANDED arm (its level-empty candidate sits behind a drop, and that assertion pinned the loss until D-452 corrected it); `D-452: the DROPPED candidate was sent ONCE and never landed`, `D-452: nothing was resent verbatim`, B4, B5, B6, A3's NOTHING-behind-it arm and every FT arm must HOLD.
    (D2) D-452 — THE LIAR'S FIX: the dropped candidate RE-QUEUED behind the rest (`src/index.mjs` `adjust`) -> `D-452: the DROPPED candidate was sent ONCE and never landed`, `D-452: nothing was resent verbatim` and B5's called-ONCE arm must FAIL BY NAME, COUPLED FT1d/FT2d/FT3 (each drives a refusal) declared; `D-452: the rest of the pass is written` must HOLD — the reason the sent-once arm exists.
    D1 AND D2 RUN 2026-09-24 BY THE D-452 WORKER on land/conduct/c18-batch8 @ b0962be0, each armed ALONE, restores verified sha256 + cmp; baseline harness 255/0 with the fix. D1 AS DECLARED first run: harness 250/5; re-run with fanout B6b added to its declaration: harness 250/5 · fanout 183/1, AS DECLARED. T1 and T2 re-run over the new arms, AS DECLARED: T1 harness 233/22 · fanout 177/7, T2 252/3 · 183/1. fanout.control 9/10 and wire-vocabulary.control clean over the corrected fanout B6b; fanout F9's one miss is the same pre-existing coverage exit. **D2 CAME BACK NOT AS DECLARED FIRST, AND IT WAS THE ARM:** re-queued at the HEAD it is a verbatim-retry loop that starves the queue, so the rest-of-pass arm failed too (243/12) — not the liar the row names. Re-armed at the TAIL: 246/9, AS DECLARED. H3 re-run under the fix (its drop arm now reads A3's NOTHING-behind-it assertion, the old one having asserted the defect): 251/4, AS DECLARED. The whole driver, 25 arms: 24 AS DECLARED; H10's harness and member suites 0 FAIL, its `coverage --strict` exit 1 PRE-EXISTING at b0962be0 (C-73.2..C-73.5 never named), not this item's.
@@ -585,7 +586,13 @@ const STATUS_BY_BOUND = ${JSON.stringify(STATUS_BY_BOUND)};
 const MUTATING = new Set(["purge","promote","airunopen","airuntick","airunclose","suggest","capturerequest"]);
 /* FL-11: THE RUN'S CONTEXT, ONE EXPRESSION — what \`op=airun\` publishes and what \`op=suggest\` bounds by are
    the same object, so the mock cannot publish one context and judge against another. */
-const runCtx = (CFG) => ({ type: CFG.contextType || "inquiry", id: CFG.target || "INQ-1" });
+/* D-451: and a run over a PROJECT publishes \`questions\` — the questions it confirmed-cites that the caller can see,
+   the plane's \`#runContextQuestions\`, here the mock's \`cites\` (every one visible). \`CFG.noQuestions\` is a
+   plane that predates D-451 and publishes no set; \`CFG.questions\` publishes a set other than \`cites\`. */
+const runCtx = (CFG) => (CFG.contextType || "inquiry") === "project"
+  ? (CFG.noQuestions ? { type: "project", id: CFG.target || "INQ-1" }
+                     : { type: "project", id: CFG.target || "INQ-1", questions: CFG.questions || CFG.cites || [] })
+  : { type: CFG.contextType || "inquiry", id: CFG.target || "INQ-1" };
 const canon = (v) => {
   if (v === null || typeof v !== "object") return JSON.stringify(v ?? null);
   if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
@@ -1422,32 +1429,68 @@ console.log("\n--- FT1 · FL-11: a run over a QUESTION seeds its target, and its
   await mf.dispose();
 }
 
-console.log("\n--- FT2 · FL-11: a run over a PROJECT never lands on the project id ---");
-{
-  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "PROJ-FL11", contextType: "project",
-                     cites: ["INQ-CITED"] });
+console.log("\n--- FT2 · FL-11 / D-451: a run over a PROJECT never lands on the project id ---");
+/* CORRECTED 2026-09-25 by D-451, never exempted. FT2 and FT2d asserted that a project run citing ONE question
+   has an UNDETERMINED target and that its level-empty candidate is refused SUGGEST_NO_TARGET. That was the
+   defect D-451 names, pinned as behaviour: the run read published only `{ type, id }`, so the member could
+   not name the project's question. The plane now publishes `context.questions` (`#runContextQuestions`), and
+   a project run citing exactly one question seeds it as the target, so its level-empty candidate LANDS. The
+   UNDETERMINED arms move to the cases where it is still true: several questions (FT2e) and a plane that
+   publishes no set (FT2f). What FT2 was for — never the project id — is kept (FT2b). */
+const projectRun = async (cfg, candidates) => {
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "PROJ-FL11", contextType: "project", ...cfg });
   const out = await (await runOp(mf, {
     ...base,
     judgements: [
       { targets: [] },
       { reports: [{ level: "internet", state: "LOOKED_ABSENT", observed_at: "log:4" }] },
-      { candidates: [{ kind: "basis-version", name: "cited", target: "INQ-CITED",
-                       description: "a reading of a question the project confirmed-cites" }] },
+      { candidates },
       {},
     ],
   })).json();
   const st = await mockState(mf);
-  t("FT2 (FL-11): a project run's target is UNDETERMINED and STATED — never the project id",
-    [out.target && "id" in out.target ? out.target.id : "(absent)", /^UNDETERMINED/.test(out.target?.basis ?? "")],
-    [null, true]);
+  await mf.dispose();
+  return { out, st };
+};
+{
+  const { out, st } = await projectRun({ cites: ["INQ-CITED"] },
+    [{ kind: "basis-version", name: "cited", target: "INQ-CITED",
+       description: "a reading of a question the project confirmed-cites" }]);
+  t("FT2 (D-451): a project run citing ONE question seeds THAT question as its target, and says why — never "
+    + "the project id",
+    [out.target?.id ?? null, out.target?.basis ?? null],
+    ["INQ-CITED", "the one question the run's project confirmed-cites"]);
   t("FT2b (FL-11): no call this run made named the project as a suggestion's target",
     st.log.filter((l) => l.op === "suggest" && l.body?.target === "PROJ-FL11").length, 0);
   t("FT2c (FL-11): a reading aimed at a question the project confirmed-cites LANDS",
-    st.suggested.map((x) => `${x.name}@${x.target}`), ["cited@INQ-CITED"]);
-  t("FT2d (FL-11): the table-made level-empty candidate, which has no question to land on, is refused by the "
-    + "PLANE's words (SUGGEST_NO_TARGET) rather than invented a target",
-    (out.refusals || []).filter((r) => r.at === "suggest").map((r) => r.code), ["SUGGEST_NO_TARGET"]);
-  await mf.dispose();
+    st.suggested.filter((x) => x.name === "cited").map((x) => `${x.name}@${x.target}`), ["cited@INQ-CITED"]);
+  t("FT2d (D-451): the table-made level-empty candidate is FILED on the project's one question, and nothing "
+    + "was refused SUGGEST_NO_TARGET",
+    [st.suggested.filter((x) => x.name === "level-empty-internet").map((x) => x.target),
+     (out.refusals || []).filter((r) => r.at === "suggest").map((r) => r.code)],
+    [["INQ-CITED"], []]);
+  t("FT2g (D-451): dedup compared against the project's one question, never an empty id",
+    st.bvIds, ["INQ-CITED"]);
+}
+{
+  const { out, st } = await projectRun({ cites: ["INQ-CITED-A", "INQ-CITED-B"] },
+    [{ kind: "basis-version", name: "cited", target: "INQ-CITED-B",
+       description: "a reading naming one of the project's two questions" }]);
+  t("FT2e (D-451): a project run citing SEVERAL questions does not pick one — its target is UNDETERMINED, "
+    + "the count stated, and the level-empty candidate is refused by the PLANE's words while the candidate "
+    + "naming its own question LANDS",
+    [out.target?.id ?? null, /^UNDETERMINED: .* 2 questions/.test(out.target?.basis ?? ""),
+     (out.refusals || []).filter((r) => r.at === "suggest").map((r) => r.code),
+     st.suggested.map((x) => `${x.name}@${x.target}`)],
+    [null, true, ["SUGGEST_NO_TARGET"], ["cited@INQ-CITED-B"]]);
+}
+{
+  const { out } = await projectRun({ cites: ["INQ-CITED"], noQuestions: true }, []);
+  t("FT2f (D-451): a plane that publishes NO question set leaves a project run's target UNDETERMINED and "
+    + "STATED — the member never derives the set itself",
+    [out.target?.id ?? null, /^UNDETERMINED: .*does not publish that set/.test(out.target?.basis ?? ""),
+     (out.refusals || []).filter((r) => r.at === "suggest").map((r) => r.code)],
+    [null, true, ["SUGGEST_NO_TARGET"]]);
 }
 
 console.log("\n--- FT3 · FL-11: the principal gate reaches the suggestion, through the op ---");
