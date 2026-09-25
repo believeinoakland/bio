@@ -1,0 +1,16 @@
+{
+ "unit": "plane:walkfloor.test.mjs",
+ "inputHash": "d5afdce686f950f67b4e05f7a0b32985c5a1dd1e4f93c7218b75579994595410",
+ "verdict": "PASS",
+ "run": "f944bd62f8aad2c1bedc928428e989ace3858495.1790311636257.15619.json",
+ "tree": "f944bd62f8aad2c1bedc928428e989ace3858495",
+ "head": "81f3b69004d5368c804386bb7a09099235a1e01e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1060,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4c02e668-e1ac-52ce-afa2-2badc2e67486",
+ "at": "2026-09-25T04:47:16.272Z"
+}
