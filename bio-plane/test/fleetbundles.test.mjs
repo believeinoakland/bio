@@ -173,12 +173,16 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
   /* CPDF-10: `ocr-worker` reaches into TWO other trees — CPDF-12's renderer in
      `pdf-worker/src/` and the plane sources behind it — so a change in either
      stales this member's artifact, exactly as it does `pdf-worker`'s. Asserted
-     rather than described, on IC-68 finding 3's precedent one member over. */
+     rather than described, on IC-68 finding 3's precedent one member over.
+     CORRECTED BY D-320 (2026-09-25), not exempted: the renderer gained its
+     baseline JPEG decoder, `pdf-worker/src/dctdecode.mjs`, so the member now
+     reaches FIVE cross-tree sources; the list as written would have let that
+     fifth one go unhashed-by-assertion. */
   const ocr = manifests.get("ocr-worker");
   t("ocr-worker's build reaches into the RENDERER's tree and the PLANE's, and the manifest hashes all of them",
     (ocr?.inputs || []).map((i) => i.path).filter((p) => p.startsWith("../")).sort(),
     ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/subresources.mjs",
-     "../pdf-worker/src/pagepixels.mjs"]);
+     "../pdf-worker/src/dctdecode.mjs", "../pdf-worker/src/pagepixels.mjs"]);
   t("and it vendors NOTHING — its engine is a committed upload part, not an npm install, so its byte arm can never skip",
     (ocr?.vendoredInputs || []).length, 0);
 }

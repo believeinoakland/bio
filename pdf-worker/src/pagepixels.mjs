@@ -43,12 +43,18 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT IT DECODES, AND WHAT IT REFUSES
  * ─────────────────────────────────────────────────────────────────────────────
- *   DCTDecode        -> PASS-THROUGH. The stream bytes ARE a JPEG file. Nothing
- *                       is decoded, re-encoded or resampled: the bytes handed to
- *                       the OCR engine are the bytes the publisher's scanner
+ *   DCTDecode        -> PASS-THROUGH by default. The stream bytes ARE a JPEG
+ *                       file. Nothing is decoded, re-encoded or resampled: the
+ *                       bytes handed on are the bytes the publisher's scanner
  *                       wrote, which is also the strongest provenance position
  *                       available (no transform of ours sits between the record
  *                       and the pixels a reader checks a claim against).
+ *                    -> DECODED HERE when the caller asks (`decodeDct`, D-320):
+ *                       a baseline decoder (`dctdecode.mjs`) bit-exact with
+ *                       libjpeg, the page's /Rotate applied, to an 8-bit PNG with
+ *                       a `pixels_sha256` an independent decoder reproduces. The
+ *                       OCR member asks, because no engine in the isolate reads a
+ *                       JPEG; progressive and arithmetic-coded files are REFUSED.
  *   CCITTFaxDecode   -> DECODED HERE, G4 (K<0) and G3 2D/1D, to a 1-bit-per-pixel
  *                       PNG. This is the only real decoder in the file and it is
  *                       the one that can lie plausibly, which is why the probe
@@ -67,6 +73,7 @@
  */
 
 import { PdfDoc, pageShowsText } from "../../bio-plane/src/pdfstructure.mjs";
+import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
 
@@ -87,6 +94,7 @@ export const REFUSALS = {
   UNSUPPORTED_SAMPLES: "the image's sample layout has no decoder here",
   TRUNCATED_IMAGE_DATA: "the decoded image is short of its declared height",
   DECODE_FAILED: "the decoder could not read the image data",
+  UNSUPPORTED_JPEG_PROCESS: "the JPEG is not baseline (progressive, arithmetic-coded, lossless, hierarchical or not 8-bit); only baseline is decoded here",
 };
 
 const refuse = (reason, detail = {}) => {
@@ -369,6 +377,7 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
     },
     page_marks: { hasTextOps: a.hasTextOps, hasVectorOps: a.hasVectorOps },
     ...(out.ccitt ? { ccitt: out.ccitt } : {}),
+    ...(out.dct ? { dct: out.dct } : {}),
     /* THE DIGEST OF THE PICTURE, NOT OF THE FILE — and this field exists because
      * the cross-runtime arm of the probe found the file digest to be RUNTIME-
      * DEPENDENT. `CompressionStream("deflate")` is a platform service, and
@@ -396,7 +405,8 @@ export async function decodeImage(doc, im, opts) {
     return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
   }
 
-  /* DCTDecode: the stream IS a JPEG. Hand the publisher's own bytes on. */
+  /* DCTDecode: the stream IS a JPEG. Hand the publisher's own bytes on — or,
+   * when the caller asked for pixels it can read, decode them (D-320). */
   if (last === "DCTDecode" || last === "DCT") {
     if (filters.length > 1) return refuse("UNSUPPORTED_FILTER", { filters, note: "DCT behind another filter" });
     const raw = doc.streamRawBytes(im.obj);
@@ -404,13 +414,15 @@ export async function decodeImage(doc, im, opts) {
     if (!(raw[0] === 0xff && raw[1] === 0xd8)) {
       return refuse("DECODE_FAILED", { filters, note: "DCT stream does not start with SOI" });
     }
+    if (opts.decodeDct) return decodeDct(doc, im, raw, opts.rotate || 0);
     /* NOT ROTATED, AND THAT IS THE POINT OF THE ROUTE. Rotating a JPEG means
      * decoding and re-encoding it, which throws away the one property this
      * route has — that the bytes in the record are the publisher's own, with no
      * transform of ours between the record and the pixels a reader checks a
      * claim against. So a rotated page comes back `upright:false` with its
      * `rotate_deg` STATED, and a consumer that needs it upright must say so
-     * rather than be handed a sideways page that reads like a good one. */
+     * rather than be handed a sideways page that reads like a good one — and
+     * since D-320 it can: `decodeDct` takes the `decoded-dct` route above. */
     return { ok: true, route: "passthrough-dct", mediaType: "image/jpeg", bytes: raw,
              upright: (opts.rotate || 0) === 0 };
   }
@@ -498,17 +510,63 @@ export async function decodeImage(doc, im, opts) {
                bytes: await encodePng1(rot.packed, rot.width, rot.height) };
     }
     if (bpc === 8) {
-      /* 8-bit rotation is not built. A grey/RGB raster is 8x the bytes of the
-       * bilevel case and this class is 0 of the image-only pages the corpus
-       * measured, so it is NAMED rather than pre-built. */
+      /* 8-bit rotation, BUILT BY D-320 (it was named and not built while this
+       * class was 0 of the measured image-only pages; the decoded-DCT route needs
+       * the same quarter turn, so it now exists for both). A sample lands on a
+       * sample, exactly as a bit does in `rotateBilevel`. */
+      const rot = rotate8(data.subarray(0, need), im.width, im.height, comps, opts.rotate || 0);
       return { ok: true, route: comps === 3 ? "raw-samples-rgb8" : "raw-samples-grey8",
-               mediaType: "image/png", upright: (opts.rotate || 0) === 0,
-               bytes: await encodePng8(data.subarray(0, need), im.width, im.height, comps) };
+               mediaType: "image/png", upright: true, width: rot.width, height: rot.height,
+               pixelsSha256: await sha256Hex(rot.samples),
+               bytes: await encodePng8(rot.samples, rot.width, rot.height, comps) };
     }
     return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, comps, filters });
   }
 
   return refuse("UNSUPPORTED_FILTER", { filters });
+}
+
+/* ── DCT, decoded (D-320) ─────────────────────────────────────────────────────
+ * The JPEG's own evidence decides the picture; the PDF's dictionary may only
+ * AGREE with it. Where the two disagree — a component count the colour space
+ * contradicts, a /Decode array, a /ColorTransform the file's markers overrule —
+ * the page is REFUSED, because an independent decoder fed these bytes would
+ * produce a different picture from the one the PDF means, and `pixels_sha256`
+ * would then certify something nobody can check. */
+const DCT_TO_REFUSAL = {
+  UNSUPPORTED_PROCESS: "UNSUPPORTED_JPEG_PROCESS",
+  UNSUPPORTED_PRECISION: "UNSUPPORTED_JPEG_PROCESS",
+  UNSUPPORTED_COMPONENTS: "UNSUPPORTED_SAMPLES",
+  COMPONENT_MISMATCH: "UNSUPPORTED_SAMPLES",
+  UNSUPPORTED_SAMPLING: "UNSUPPORTED_SAMPLES",
+  COLOR_TRANSFORM_CONFLICT: "UNSUPPORTED_SAMPLES",
+  UNSUPPORTED_ROTATION: "UNSUPPORTED_SAMPLES",
+  TRUNCATED: "TRUNCATED_IMAGE_DATA",
+  NOT_A_JPEG: "DECODE_FAILED",
+  CORRUPT_DATA: "DECODE_FAILED",
+  UNSUPPORTED_FRAME: "DECODE_FAILED",
+};
+
+async function decodeDct(doc, im, raw, rotate) {
+  const filters = im.filters;
+  const dict = im.obj.dict;
+  if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a DCT image is not applied here" });
+  const cs = im.colorSpace;
+  const expectComps = cs === "DeviceGray" ? 1 : cs === "DeviceRGB" ? 3 : cs === "DeviceCMYK" ? 4 : null;
+  const p = decodeParms(doc, dict, filters.length - 1);
+  const colorTransform = p ? numOf(doc, p.ColorTransform) : null;
+  let out;
+  try {
+    out = decodeBaselineJpeg(raw, { rotate, expectComps, colorTransform });
+  } catch (e) {
+    if (!(e instanceof DctRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+    return refuse(DCT_TO_REFUSAL[e.code] || "DECODE_FAILED", { filters, jpeg: e.code, ...e.detail });
+  }
+  const bytes = await encodePng8(out.samples, out.width, out.height, out.comps);
+  return { ok: true, route: "decoded-dct", mediaType: "image/png", bytes,
+           width: out.width, height: out.height, upright: true,
+           pixelsSha256: await sha256Hex(out.samples),
+           dct: { ...out.source, comps: out.comps, stream_bytes: raw.length } };
 }
 
 /* ── CCITT Group 3/4 ──────────────────────────────────────────────────────────
@@ -764,6 +822,27 @@ function setBit(packed, rowBytes, x, y, v) {
   if (v) packed[i] |= m; else packed[i] &= ~m;
 }
 
+/** Rotate interleaved 8-bit samples (`comps` per pixel) CLOCKWISE by 90/180/
+ *  270 — `rotateBilevel`'s mapping, a sample landing on a sample. D-320. */
+export function rotate8(samples, width, height, comps, deg) {
+  const d = ((deg % 360) + 360) % 360;
+  if (d === 0) return { samples, width, height };
+  if (d !== 90 && d !== 180 && d !== 270) throw new Error(`unsupported rotation ${deg}`);
+  const [w2, h2] = d === 180 ? [width, height] : [height, width];
+  const out = new Uint8Array(samples.length);
+  for (let Y = 0; Y < h2; Y++) {
+    for (let X = 0; X < w2; X++) {
+      let sx, sy;
+      if (d === 90) { sx = Y; sy = height - 1 - X; }
+      else if (d === 180) { sx = width - 1 - X; sy = height - 1 - Y; }
+      else { sx = width - 1 - Y; sy = X; }
+      const o = (Y * w2 + X) * comps, i = (sy * width + sx) * comps;
+      for (let c = 0; c < comps; c++) out[o + c] = samples[i + c];
+    }
+  }
+  return { samples: out, width: w2, height: h2 };
+}
+
 /** Rotate a packed 1-bit image CLOCKWISE by 90/180/270. Exact and lossless: a
  *  bit lands on a bit. Returns { packed, width, height }. */
 export function rotateBilevel(packed, width, height, deg) {
@@ -832,11 +911,14 @@ function chunk(type, data) {
 }
 
 async function buildPng(raw, width, height, bitDepth, colorType) {
+  return buildPngFromIdat(await deflateZlib(raw), width, height, bitDepth, colorType);
+}
+
+function buildPngFromIdat(idat, width, height, bitDepth, colorType) {
   const ihdr = new Uint8Array(13);
   const dv = new DataView(ihdr.buffer);
   dv.setUint32(0, width); dv.setUint32(4, height);
   ihdr[8] = bitDepth; ihdr[9] = colorType;
-  const idat = await deflateZlib(raw);
   const parts = [
     new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     chunk("IHDR", ihdr), chunk("IDAT", idat), chunk("IEND", new Uint8Array(0)),
@@ -888,12 +970,33 @@ export function normalisePacked(packed, width, height) {
   return out;
 }
 
+/* An 8-bit page is 8x (grey) or 24x (RGB) the bytes of a bilevel one — a
+ * 3300x2550 RGB scan is 25.2 MB of samples — so the filtered raster is fed to
+ * the compressor in BANDS rather than built whole beside the samples, which
+ * would be a second 25 MB copy in a 128 MB isolate (D-320). */
 async function encodePng8(samples, width, height, comps) {
   const rowBytes = width * comps;
-  const raw = new Uint8Array((rowBytes + 1) * height);
-  for (let y = 0; y < height; y++) {
-    raw[y * (rowBytes + 1)] = 0;
-    raw.set(samples.subarray(y * rowBytes, (y + 1) * rowBytes), y * (rowBytes + 1) + 1);
+  const band = Math.max(1, Math.floor((1 << 20) / (rowBytes + 1)));
+  const cs = new CompressionStream("deflate");
+  const w = cs.writable.getWriter();
+  const reading = (async () => {
+    const chunks = [];
+    const rd = cs.readable.getReader();
+    for (;;) { const { done, value } = await rd.read(); if (done) break; chunks.push(value); }
+    return chunks;
+  })();
+  for (let y0 = 0; y0 < height; y0 += band) {
+    const n = Math.min(band, height - y0);
+    const raw = new Uint8Array((rowBytes + 1) * n);
+    for (let k = 0; k < n; k++) {
+      raw.set(samples.subarray((y0 + k) * rowBytes, (y0 + k + 1) * rowBytes), k * (rowBytes + 1) + 1);
+    }
+    await w.write(raw);
   }
-  return buildPng(raw, width, height, 8, comps === 3 ? 2 : 0);
+  await w.close();
+  const chunks = await reading;
+  const idat = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
+  let o = 0;
+  for (const c of chunks) { idat.set(c, o); o += c.length; }
+  return buildPngFromIdat(idat, width, height, 8, comps === 3 ? 2 : 0);
 }
