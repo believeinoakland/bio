@@ -3821,6 +3821,28 @@ CREATE INDEX IF NOT EXISTS statement_acknowledgements_statement
   ON statement_acknowledgements(project_id, statement_sha, edition);
 -- =========================================================================
 
+-- MK-7 / MEMBER-KNOWLEDGE-DESIGN.md section 4.2-4.6: THE ATTRIBUTION ACT. One row per
+-- (case edition, observation): the level the observation's AUTHOR chose for what that edition's
+-- published case document shows of them. Written only by op=attribute, taken by the author and by
+-- nobody else, never prefilled (no row is "unchosen", and a case document cannot be ratified
+-- while any observation it reaches is unchosen). A later edition INHERITS the latest earlier
+-- edition's row until the author acts again (section 4.3). chosen_by is the server-stamped author.
+-- There is deliberately NO column that could hold an off-the-record source's identity: that
+-- anonymity is a structural absence (section 4), and hygiene would see a column added here.
+-- bundle_id is the OBSERVATION, so the rows ride the purge TABLES list in both arms (D-113): an
+-- attribution outliving its observation would attach to whatever bundle was next allocated its id.
+CREATE TABLE IF NOT EXISTS observation_attributions (
+  case_id    TEXT NOT NULL,
+  edition    INTEGER NOT NULL,
+  bundle_id  TEXT NOT NULL,     -- the observation (an authored INFO bundle)
+  level      TEXT NOT NULL CHECK (level IN ('group','project','cover','name')),
+  chosen_by  TEXT NOT NULL,     -- the observation's author, stamped from the signed-in session
+  chosen_at  TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
+-- =========================================================================
+
 -- REC-164: THE PUBLISHING GROUP'S DISPLAY NAME AND ITS DOMAIN (BIO_Publication_v0_1.md
 -- section 7 points 2 and 3). Two durable values, each with a dated history: a value is
 -- the LATEST row for its field, and no statement updates or deletes a row, so every

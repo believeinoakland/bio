@@ -1285,6 +1285,10 @@ const OPS = {
   /* BOB #14's ruling (2026-09-18): the AUTHOR shares a lead to a project, an
      authored dated act — `lead`'s class cut and reason. */
   leadshare:           { classes: ["admin", "member"],             mutating: true  },
+  /* MK-7 — THE ATTRIBUTION ACT (MEMBER-KNOWLEDGE-DESIGN.md §4.2–§4.6): an observation's AUTHOR chooses
+     what one case edition publishes of who said it. A person's decision about their own words, in their
+     own name — `testify`'s class cut and reason; the store refuses a machine stamp BY NAME (C-92.1). */
+  attribute:           { classes: ["admin", "member"],             mutating: true  },
   leadread:            { classes: ["admin", "member", "probe"],    mutating: false },
   /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
      DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
@@ -2077,6 +2081,9 @@ const SESSION_OPS = {
                    /* MK-4: THE LEAD and a look recorded against it — a person's word
                       in their own name, `transcribe`'s route and reason. */
                    "lead", "leadlook", "leadshare",
+                   /* MK-7: THE ATTRIBUTION ACT — the author's own choice about their own words, `testify`'s
+                      route and reason. */
+                   "attribute",
                    /* D-162: THE THEME — declaring, placing and proposing, each a session
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
@@ -2122,6 +2129,9 @@ const SESSION_OPS = {
                    "transcribe", "transcriptionattest",
                    "testify",
                    "lead", "leadlook", "leadshare",
+                   /* MK-7: THE ATTRIBUTION ACT — the author's own choice about their own words, `testify`'s
+                      route and reason. */
+                   "attribute",
                    /* D-162: THE THEME — declaring, placing and proposing, each a session
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
@@ -2243,6 +2253,9 @@ const NEEDS = {
   lead:                "contribute",
   leadlook:            "contribute",
   leadshare:           "contribute",
+  /* MK-7: NO FIFTH CAPABILITY TOKEN. §4.2: the act needs no `publish` capability — it is a decision about
+     the member's own words, not about the case — so it rides `contribute`, the token that recorded them. */
+  attribute:           "contribute",
   /* D-162: declaring a theme, placing in one and proposing a placement all write the working
      record's lens layer, `lead`'s capability. */
   themedeclare:        "contribute",
@@ -3983,6 +3996,14 @@ const machineFenceRow = (code) => {
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`machineFenceRow: ${code} has no MACHINE_FENCE_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* MK-7: C-92's rows, the attribution gate's canned sentences, on `testimonyFenceRow`'s shape. */
+const attributionRow = (code) => {
+  const row = CHECK_CATALOGUE.ATTRIBUTION_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`attributionRow: ${code} has no ATTRIBUTION_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row.check, translation: row.translation };
 };
 
@@ -10154,21 +10175,56 @@ export default {
       const facts = factsOut.result;
       if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
 
-      /* DEC-49 REGION is-testimony-publish-case — MK-1 (A) / C-53.12. A case whose
-         findings rest, at any depth, on a member's authored observation does not
-         cross until MK-3's attribution-honouring projection lifts this; lifting it
-         is MK-3's act. MEASURED before it existed (`test/mk1-publish-probe.mjs`,
-         path 3): such a case RATIFIED. Refused before the signature is weighed, so
-         the answer is the same whoever signed. */
-      if (facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)
+      /* DEC-49 REGION is-testimony-publish-case — MK-1 (A) / C-53.12, NARROWED BY MK-7. A case whose
+         findings rest, at any depth, on an observation that still NAMES ITS AUTHOR in its own files (written
+         before MK-6) does not cross: MEMBER-KNOWLEDGE-DESIGN.md §4.1 keeps those fenced, because the level
+         lives outside the bundle and cannot hide a name the bundle itself prints. MEASURED before MK-1 built
+         it (`test/mk1-publish-probe.mjs`, path 3): such a case RATIFIED. Every other observation is judged by
+         the attribution gate below. Refused before the signature is weighed. */
+      const attr = facts.attribution || { reached: [], legacy: [], stated: [], current: [] };
+      if (attr.legacy.length)
         return json({ ok: false, reason: "TESTIMONY_CASE_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_CASE_UNPUBLISHABLE"),
-          caseId: facts.doc.case_id, edition: facts.doc.edition, rests_on: facts.testimony.via,
-          detail: `a finding in ${facts.doc.case_id} rests on a member's authored observation `
-                + `(${[...facts.testimony.via.map((v) => `${v.finding} -> ${v.observation}`), ...facts.testimony.self].slice(0, 5).join(", ")}); `
-                + `what a published case shows of an observation is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), `
-                + `and this build cannot yet honour it (MK-3)`,
+          caseId: facts.doc.case_id, edition: facts.doc.edition, observations: attr.legacy.slice(0, 50),
+          detail: `a finding in ${facts.doc.case_id} rests on an observation written before §4.1 that still names `
+                + `its author in its own files (${attr.legacy.slice(0, 5).join(", ")}); publishing it would publish `
+                + `that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
           store: storeName, tokenClass: cls }, 409);
       /* END DEC-49 REGION is-testimony-publish-case */
+      /* DEC-49 REGION is-attribution-gate — MK-7 / C-92.10, C-92.11 (MEMBER-KNOWLEDGE-DESIGN.md §4.4). THE
+         LIFT OF MK-1's C-53.12, as MK-7's own act: a case reaching a member's observation crosses once, and
+         only once, every observation it reaches carries its author's chosen level in the bytes being signed.
+         (1) UNCHOSEN, named per observation: publishing one at ANY level would be the default §4 forbids.
+             PROVISIONAL (§4.4's narrow veto, carried to Bob): a member stops the use of their own words and
+             nothing else; the owner's recourse is an edition without the finding resting on it.
+         (2) STALE: the document's statements are compared with what the authors' acts give NOW. The act
+             re-authors the unsigned document when it lands, so this refuses only bytes that drifted from the
+             acts by another route — never a level the author did not choose. Refused before the signature
+             is weighed, so the answer is the same whoever signed. */
+      const unchosen = attr.current.filter((r) => !r.level);
+      if (unchosen.length)
+        return json({ ok: false, reason: "ATTRIBUTION_UNCHOSEN", ...attributionRow("ATTRIBUTION_UNCHOSEN"),
+          caseId: facts.doc.case_id, edition: facts.doc.edition,
+          unchosen: unchosen.slice(0, 50).map((r) => ({ observation: r.observation, why: r.why })),
+          detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} this edition reaches `
+                + `${unchosen.length === 1 ? "has" : "have"} no level chosen by ${unchosen.length === 1 ? "its" : "their"} `
+                + `author: ${unchosen.slice(0, 5).map((r) => r.observation).join(", ")} (MEMBER-KNOWLEDGE-DESIGN.md §4.4). `
+                + `Each author chooses with op=attribute; nothing is filled in for them`,
+          store: storeName, tokenClass: cls }, 409);
+      {
+        const statedOf = new Map(attr.stated.map((r) => [r.observation, r]));
+        const drift = attr.current.filter((r) => {
+          const st = statedOf.get(r.observation);
+          return !st || st.level !== r.level || (st.shown ?? null) !== (r.shown ?? null);
+        });
+        if (drift.length || attr.stated.length !== attr.current.length)
+          return json({ ok: false, reason: "ATTRIBUTION_STATEMENT_STALE", ...attributionRow("ATTRIBUTION_STATEMENT_STALE"),
+            caseId: facts.doc.case_id, edition: facts.doc.edition,
+            observations: (drift.length ? drift : attr.current).slice(0, 50).map((r) => r.observation),
+            detail: `the case document's attribution statements do not match what the observations' authors chose `
+                  + `for this edition; re-prepare it (op=publish) and sign the new bytes`,
+            store: storeName, tokenClass: cls }, 409);
+      }
+      /* END DEC-49 REGION is-attribution-gate */
 
       if (facts.doc.doc_sha !== body.expectedSha)
         return json({ ok: false, reason: "CASE_RATIFY_STALE",
@@ -10392,29 +10448,40 @@ export default {
                 + `never directly (BIO_Publication_v0_1.md §3 rule 2; D-429). Nothing was published.`,
           store: storeName, tokenClass: cls }, 409);
       /* END DEC-49 REGION is-ratify-project-bundle */
-      /* DEC-49 REGION is-testimony-publish-bundle — MK-1 (A) / C-53.10, C-53.11.
-         MEASURED before it existed (`test/mk1-publish-probe.mjs`): op=ratify on an
-         observation whose bytes were in the working bucket PUBLISHED its words,
-         its provenance document and the observer's handle; a finding resting on
-         one ratified. What a published case shows of an observation is the
-         attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), which this
-         build cannot yet honour — so neither crosses until MK-3's projection
-         lifts this, and lifting it is MK-3's act. Below the scope check and the
-         machine fence, before the signature is weighed. */
-      if (facts.testimony && facts.testimony.self.length)
+      /* DEC-49 REGION is-testimony-publish-bundle — MK-1 (A) / C-53.10, C-53.11, NARROWED BY MK-7.
+         MEASURED before MK-1 built it (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes
+         were in the working bucket PUBLISHED its words, its provenance document and the observer's handle.
+         Since MK-6 an observation's files name nobody (§4.1), so what stays fenced here is an observation
+         written BEFORE that, which still names its author in its own files, and a finding resting on one:
+         no level can hide a name the bundle prints. Below the scope check and the machine fence, before the
+         signature is weighed. */
+      const legacy = Array.isArray(facts.testimonyLegacy) ? facts.testimonyLegacy : [];
+      if (facts.testimony && facts.testimony.self.length && legacy.includes(body.bundleId))
         return json({ ok: false, reason: "TESTIMONY_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_UNPUBLISHABLE"),
           bundleId: body.bundleId,
-          detail: `${body.bundleId} is a member's authored observation; what a published case shows of it is the `
-                + `attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), and this build cannot yet honour it (MK-3)`,
+          detail: `${body.bundleId} is a member's observation written before §4.1, and its own files still name its `
+                + `author; publishing it would publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
           store: storeName, tokenClass: cls }, 409);
-      if (facts.testimony && facts.testimony.via.length)
+      if (facts.testimony && facts.testimony.via.some((v) => legacy.includes(v.observation)))
         return json({ ok: false, reason: "TESTIMONY_CITED_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_CITED_UNPUBLISHABLE"),
-          bundleId: body.bundleId, rests_on: facts.testimony.via,
-          detail: `${body.bundleId} rests on a member's authored observation `
-                + `(${facts.testimony.via.slice(0, 5).map((v) => v.observation).join(", ")}); what a published case `
-                + `shows of it is the attesting member's choice, and this build cannot yet honour it (MK-3)`,
+          bundleId: body.bundleId, rests_on: facts.testimony.via.filter((v) => legacy.includes(v.observation)),
+          detail: `${body.bundleId} rests on an observation written before §4.1 whose own files still name its author `
+                + `(${facts.testimony.via.filter((v) => legacy.includes(v.observation)).slice(0, 5).map((v) => v.observation).join(", ")})`,
           store: storeName, tokenClass: cls }, 409);
       /* END DEC-49 REGION is-testimony-publish-bundle */
+      /* DEC-49 REGION is-attribution-ratify — MK-7 / C-92.12. THE LIFT OF C-53.10 for an observation in
+         §4.1's form: its own bytes cross only as a ratified case's evidence (D-431 (b), in the committer) AND
+         only once a RATIFIED case document states the level its author chose for it (§4.3). D-431 alone would
+         let them cross beside no statement of whose they are. A finding resting on one needs nothing more
+         here: it crosses only as a member of a ratified case (D-431 (a)), and op=caseratify refused that case
+         until every observation it reaches was chosen (C-92.10). */
+      if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)
+        return json({ ok: false, reason: "ATTRIBUTION_UNSTATED", ...attributionRow("ATTRIBUTION_UNSTATED"),
+          bundleId: body.bundleId,
+          detail: `no ratified case document states an attribution for ${body.bundleId}; sign the case edition that `
+                + `uses it (op=caseratify) first, and its author's chosen level is published with it`,
+          store: storeName, tokenClass: cls }, 409);
+      /* END DEC-49 REGION is-attribution-ratify */
       if (facts.row.bundle_sha !== body.expectedSha)
         return json({ ok: false, reason: "RATIFY_STALE",
                       detail: "the bundle has changed since it was reviewed; read it again and re-sign",
@@ -11440,6 +11507,11 @@ export default {
       inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "leadshare")
       inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* MK-7 — WHO CHOSE THE ATTRIBUTION, stamped on `testify`'s rule: the store compares it with the
+       observation's registered author, so a caller-supplied chooser would be a way to choose for somebody
+       else. A machine credential stamps `class:<cls>`, refused BY NAME (C-92.1). Never the principal. */
+    if (op === "attribute")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* D-162 / IC-241 — WHO DECLARED THE THEME, WHO PLACED IN IT, WHO PROPOSED, stamped on
        `lead`'s rule one stamp up (§8.4 fence 1: declared under the member's own name, never a
        caller's field). A machine credential stamps `class:<cls>`, which the store refuses BY NAME

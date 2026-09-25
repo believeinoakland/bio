@@ -3828,6 +3828,28 @@ CREATE INDEX IF NOT EXISTS statement_acknowledgements_statement
   ON statement_acknowledgements(project_id, statement_sha, edition);
 -- =========================================================================
 
+-- MK-7 / MEMBER-KNOWLEDGE-DESIGN.md section 4.2-4.6: THE ATTRIBUTION ACT. One row per
+-- (case edition, observation): the level the observation's AUTHOR chose for what that edition's
+-- published case document shows of them. Written only by op=attribute, taken by the author and by
+-- nobody else, never prefilled (no row is "unchosen", and a case document cannot be ratified
+-- while any observation it reaches is unchosen). A later edition INHERITS the latest earlier
+-- edition's row until the author acts again (section 4.3). chosen_by is the server-stamped author.
+-- There is deliberately NO column that could hold an off-the-record source's identity: that
+-- anonymity is a structural absence (section 4), and hygiene would see a column added here.
+-- bundle_id is the OBSERVATION, so the rows ride the purge TABLES list in both arms (D-113): an
+-- attribution outliving its observation would attach to whatever bundle was next allocated its id.
+CREATE TABLE IF NOT EXISTS observation_attributions (
+  case_id    TEXT NOT NULL,
+  edition    INTEGER NOT NULL,
+  bundle_id  TEXT NOT NULL,     -- the observation (an authored INFO bundle)
+  level      TEXT NOT NULL CHECK (level IN ('group','project','cover','name')),
+  chosen_by  TEXT NOT NULL,     -- the observation's author, stamped from the signed-in session
+  chosen_at  TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
+-- =========================================================================
+
 -- REC-164: THE PUBLISHING GROUP'S DISPLAY NAME AND ITS DOMAIN (BIO_Publication_v0_1.md
 -- section 7 points 2 and 3). Two durable values, each with a dated history: a value is
 -- the LATEST row for its field, and no statement updates or deletes a row, so every
@@ -4339,6 +4361,7 @@ __export(bio_checks_exports, {
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_CHECKS: () => AI_RUN_CHECKS,
   ANN_ID_RE: () => ANN_ID_RE,
+  ATTRIBUTION_CHECKS: () => ATTRIBUTION_CHECKS,
   BASIS_GRADES: () => BASIS_GRADES,
   BASIS_ROLES: () => BASIS_ROLES,
   BASIS_VERSION_CHECKS: () => BASIS_VERSION_CHECKS,
@@ -13125,6 +13148,73 @@ var TRANSCRIBE_CHECKS = {
     translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
+var ATTRIBUTION_CHECKS = {
+  ATTRIBUTION_NOT_A_MEMBER: {
+    check: "C-92.1",
+    where: "src/store.mjs attributeObservation > is-attribute-act",
+    translation: "How a member's observation is attributed is that member's own choice. The credential that asked is an automated one, and it cannot make that choice for anybody. Sign in and choose it yourself."
+  },
+  ATTRIBUTION_NO_LEVEL: {
+    check: "C-92.2",
+    where: "src/store.mjs attributeObservation > is-attribute-act",
+    translation: "No level was chosen. Choose what a published case shows of who said your observation: the group, the project, the cover the group knows you by, or your handle. Nothing is filled in for you."
+  },
+  ATTRIBUTION_LEVEL_UNKNOWN: {
+    check: "C-92.3",
+    where: "src/store.mjs attributeObservation > is-attribute-act",
+    translation: "That is not one of the four levels. Choose group, project, cover or name."
+  },
+  ATTRIBUTION_NOT_AN_OBSERVATION: {
+    check: "C-92.4",
+    where: "src/store.mjs attributeObservation > is-attribute-author",
+    translation: "That document is not a member's firsthand observation in this record, so there is no author whose choice this is. Attribution is chosen for observations only."
+  },
+  ATTRIBUTION_NOT_THE_AUTHOR: {
+    check: "C-92.5",
+    where: "src/store.mjs attributeObservation > is-attribute-author",
+    translation: "Another member recorded that observation. Only the member who said it chooses how a published case shows who said it \u2014 not a project owner, not an administrator, and not a default."
+  },
+  ATTRIBUTION_AUTHOR_NOT_ACTIVE: {
+    check: "C-92.6",
+    where: "src/store.mjs attributeObservation > is-attribute-author",
+    translation: "That observation's author is not an active member, and nobody chooses for them. The observation stays in the record and can be used where its author already chose, and nowhere new."
+  },
+  ATTRIBUTION_NOT_REACHED: {
+    check: "C-92.7",
+    where: "src/store.mjs attributeObservation > is-attribute-edition",
+    translation: "No prepared case edition by that name rests on your observation. You choose an attribution for an edition that uses your words, once its case document has been prepared."
+  },
+  ATTRIBUTION_EDITION_RATIFIED: {
+    check: "C-92.8",
+    where: "src/store.mjs attributeObservation > is-attribute-edition",
+    translation: "That edition is already signed, and a signed edition does not change. Your choice can apply to the next edition, which keeps your last choice until you change it."
+  },
+  /* PROVISIONAL (§4.6, carried to Bob): `name` publishes the member's HANDLE, because the record holds no
+     legal name and must not start to. */
+  ATTRIBUTION_NAME_NO_HANDLE: {
+    check: "C-92.9",
+    where: "src/store.mjs attributeObservation > is-attribute-edition",
+    translation: "Choosing your name publishes the handle you appear under in this record, and you have none. Choose another level, or set a handle first."
+  },
+  /* PROVISIONAL (§4.4, carried to Bob): THE NARROW VETO. An edition reaching an unchosen observation is not
+     signed, so each member has a veto over the use of their own words and over nothing else: the owner's
+     recourse is an edition without the finding that rests on it. */
+  ATTRIBUTION_UNCHOSEN: {
+    check: "C-92.10",
+    where: "src/index.mjs fetch > is-attribution-gate",
+    translation: "This case edition uses a member's firsthand observation whose author has not yet chosen how it is attributed, so it cannot be signed. Publishing it at any level would be choosing for them. Ask the author to choose, or prepare the edition without the finding that rests on it."
+  },
+  ATTRIBUTION_STATEMENT_STALE: {
+    check: "C-92.11",
+    where: "src/index.mjs fetch > is-attribution-gate",
+    translation: "This case document states an attribution for an observation that its author's choices no longer give. Prepare the case document again so it states what the authors chose, then sign that."
+  },
+  ATTRIBUTION_UNSTATED: {
+    check: "C-92.12",
+    where: "src/index.mjs fetch > is-attribution-ratify",
+    translation: "This observation's words are published only beside a signed case that states whose they are, and no signed case does yet. Sign the case document that uses it first."
+  }
+};
 var TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: "C-53.1",
@@ -13184,23 +13274,29 @@ var TESTIMONY_CHECKS = {
      in the working bucket PUBLISHED its words, its provenance document and the
      observer's handle; a finding resting on one, and a case over that finding,
      ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
-     of a member's observation at the attesting member's chosen level, and that
-     is MK-3's — so until MK-3's projection honours it, nothing carrying an
-     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
+     of a member's observation at the attesting member's chosen level.
+     LIFTED BY MK-7 AS ITS OWN ACT, AND NARROWED RATHER THAN DELETED: the three
+     codes now refuse only an observation that still NAMES ITS AUTHOR in its own
+     files — one written before MK-6 (§4.1: "Authored bundles written before the
+     change carry the member id and STAY FENCED") — and what rests on one. No
+     level can hide a name the bundle itself prints, because the level lives
+     outside the bundle. Every other observation crosses under C-92. The old
+     sentences said the record could not YET honour the choice; since MK-7 it
+     can, so they would now be false, and they are corrected, not kept. */
   TESTIMONY_UNPUBLISHABLE: {
     check: "C-53.10",
     where: "src/index.mjs fetch > is-testimony-publish-bundle",
-    translation: "This document is a member's own firsthand observation, and it cannot be published yet. What a published case shows of an observation \u2014 the group, the project, the member's cover or their name \u2014 is the observing member's choice, and the record cannot yet honour that choice in what it publishes. Until it can, publishing the observation would publish its author."
+    translation: "This document is a member's own firsthand observation, recorded before the record stopped writing its author's name into the observation's own files. Publishing it would publish that name whatever level its author chose, so it is not published. Its author can record it again as a new observation, which names nobody in its files."
   },
   TESTIMONY_CITED_UNPUBLISHABLE: {
     check: "C-53.11",
     where: "src/index.mjs fetch > is-testimony-publish-bundle",
-    translation: "This finding rests, directly or through another finding, on a member's own firsthand observation, and it cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice. Publish the finding without that observation in its basis, or wait until attribution is supported."
+    translation: "This finding rests, directly or through another finding, on a member's firsthand observation recorded before the record stopped writing its author's name into the observation's own files, so it is not published. Rest the finding on a newer observation of the same thing, or publish it without that observation in its basis."
   },
   TESTIMONY_CASE_UNPUBLISHABLE: {
     check: "C-53.12",
     where: "src/index.mjs fetch > is-testimony-publish-case",
-    translation: "A finding in this case rests, directly or through another finding, on a member's own firsthand observation, so the case cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice."
+    translation: "A finding in this case rests, directly or through another finding, on a member's firsthand observation recorded before the record stopped writing its author's name into the observation's own files, so the case is not published: that name would be published whatever level its author chose. Rest the finding on a newer observation, or leave it out of this edition."
   },
   /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
      `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
@@ -38468,7 +38564,18 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       /* D-84: the lens in force, computed above and stated in the signed bytes. */
       manifest,
       /* D-150 / §3 rule 11: the acknowledgements, read above and signed in. */
-      acks
+      acks,
+      /* MK-7 / §4.3: each observation this edition reaches, at the level its author chose (inherited from an
+         earlier edition where they chose then), or UNCHOSEN — which op=caseratify refuses by name (§4.4). */
+      attributions: this.#attributionStatements(
+        theCase,
+        edition,
+        proj,
+        [...new Set((() => {
+          const r = this.testimonyReach(members);
+          return [...r.self, ...r.via.map((v) => v.observation)];
+        })())]
+      )
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -38662,7 +38769,12 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     manifest = null,
     /* D-150 / §3 rule 11: `#statementAcknowledgements`' answer — the
        acknowledgements of THIS statement by anybody but its author. */
-    acks = { statementSha: null, truncated: false, rows: [] }
+    acks = { statementSha: null, truncated: false, rows: [] },
+    /* MK-7 / MEMBER-KNOWLEDGE-DESIGN.md §4.3: `#attributionStatements`' rows, one per
+       observation this edition reaches, computed by the caller (this method is pure
+       and static). EMPTY writes neither run, so a case reaching no observation is
+       authored byte for byte as before. */
+    attributions = []
   }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
     const lens = manifest && manifest.in_force === true ? manifest : {
@@ -38836,6 +38948,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           `    population: ${g.population}`
         ]);
       }),
+      /* MK-7 / §4.3 — EACH REACHED OBSERVATION'S LEVEL, AS THIS EDITION'S STATEMENT, derived from its
+         author's act and never from the publisher's input. An array of flat objects, `case_roles`' shape. */
+      ...attributions.length ? _Store.#attributionFrontmatterLines(attributions) : [],
       "required_strength:",
       `  declared: ${bar.declared}`,
       `  source: ${bar.source}`,
@@ -38880,6 +38995,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       "",
       roster.every((m) => (concOf.get(m) || {}).relationship === "project") ? `Every conclusion this case records is ${project}'s own.` : "AT LEAST ONE MEMBER ENTERED THIS CASE ON A CONCLUSION THAT IS NOT THIS PROJECT'S OWN. That is disclosed rather than smoothed: a conclusion written in a question's own bytes names no project, so the relationship that drew it cannot be established and it is read as the no-project relationship's. A reader weighing this case should know which findings this project concluded for itself and which it took as the record already answered.",
       "",
+      /* MK-7 — IN THE BODY AND IN PROSE, for this method's own reason: a member reviews and signs the BODY. */
+      ...attributions.length ? _Store.#attributionBodyLines(attributions) : [],
       "## What This Excludes",
       "",
       statement,
@@ -39218,6 +39335,10 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         const cf = (parseFrontmatter(doc.text).data || {}).case_findings;
         return (Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim());
       })()),
+      /* MK-7 / §4.4: the attribution this document states for each observation it reaches, beside what the
+         authors' acts say now and which reached observations still name their author (§4.1) — the facts
+         op=caseratify's attribution gate judges, read off the same bytes the signature would publish. */
+      attribution: this.attributionFacts(doc),
       /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): each roster member's `basis` AT THE BYTES
          THIS DOCUMENT PINS, for the C-2.8 arms that followed the frozen pair into the case document
          (the testimony row, the per-ground rows). Read at the PIN and never at the working version:
@@ -40018,6 +40139,23 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       comments_truncated: commentsTruncated,
       list_limit: cap,
       statement_acknowledgements: statementAcks,
+      /* MK-7 / MEMBER-KNOWLEDGE-DESIGN.md §4.2: EVERY OBSERVATION THIS EDITION WOULD REACH, at any depth, with
+         its state — chosen or not — and never the level itself: what a case shows of an observation's author is
+         the author's to state, in the case document, and a draft reader needs only to know whether the edition
+         can be signed. Unchosen is what op=caseratify refuses (§4.4). A draft naming no case has no identity a
+         level can be keyed to (a case id is minted only by publication), so each is unchosen and says why. */
+      observations: (() => {
+        const seen = findings.filter((f2) => f2.present).map((f2) => f2.target);
+        const r = this.testimonyReach(seen);
+        return [.../* @__PURE__ */ new Set([...r.self, ...r.via.map((v) => v.observation)])].map((obs) => {
+          const act = ident.caseId ? this.#attributionInForce(ident.caseId, ident.edition, obs) : null;
+          return {
+            observation: obs,
+            chosen: !!act,
+            stated: act ? `its author has chosen a level for ${ident.caseId} edition ${ident.edition}` : ident.caseId ? `its author has chosen no level for ${ident.caseId} edition ${ident.edition}; the edition cannot be signed until they do (op=attribute)` : "this draft names no case yet, so no level can be chosen; its author chooses one (op=attribute) once op=publish has prepared the case document"
+          };
+        });
+      })(),
       updated_by: d.updated_by,
       updated_at: d.updated_at,
       /* REC-200 / §6A.3 point 1 as BOB #32 ruled it: WHEN THIS COPY LAST CHANGED, and who changed it —
@@ -48647,6 +48785,311 @@ ${words}`;
     return {
       self: rows.filter((r) => r.depth === 0).map((r) => r.root),
       via: rows.filter((r) => r.depth > 0).map((r) => ({ finding: r.root, observation: r.observation }))
+    };
+  }
+  /** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST.
+   *  `group` is the floor every level shares (§4.3): every published case is the group's. `name`
+   *  publishes the member's HANDLE — §4.6's reading of "to the member by name", which is a PROVISIONAL
+   *  carried to Bob (the record holds no legal name and must not start to). The member id is never
+   *  published at any level. */
+  static ATTRIBUTION_LEVELS = ["group", "project", "cover", "name"];
+  /** MK-7 / §4.1's discriminator — WHICH OF THESE OBSERVATIONS STILL NAME THEIR AUTHOR IN THEIR OWN FILES.
+   *  An observation written before MK-6 carries the member in `data/provenance.json` and the Session Log,
+   *  and §4.1 keeps it FENCED: the level lives outside the bundle, so no level can hide a name the bundle
+   *  itself prints. Asked STRUCTURALLY of the fields MK-6 moved — every provenance document's `author`, every
+   *  chain hop's `who`, every `| Authored |` Session Log line — each must be `Store.observerRef(<id>)`. A file
+   *  that cannot be read or parsed is NOT in reference form: undetermined is fenced, never let through. */
+  observationsNamingAuthor(ids) {
+    const out = [];
+    for (const id of [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x))].slice(0, 200)) {
+      const ref = _Store.observerRef(id);
+      const prov = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, id);
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+      let form = false;
+      try {
+        const docs = JSON.parse(String(prov && prov.content || "")).documents;
+        const authored = String(md && md.content || "").split("\n").filter((l) => /^### Session \S+ \| Authored \| /.test(l));
+        form = Array.isArray(docs) && docs.length > 0 && authored.length > 0 && docs.every((d) => d && d.author === ref && (Array.isArray(d.provenance_chain) ? d.provenance_chain : []).every((h) => h && h.who === ref)) && authored.every((l) => l.endsWith(`| Authored | ${ref}`));
+      } catch {
+        form = false;
+      }
+      if (!form) out.push(id);
+    }
+    return out;
+  }
+  /** MK-7 / §4.3 — THE LEVEL IN FORCE FOR ONE OBSERVATION AT ONE CASE EDITION: the author's act at this
+   *  edition, or else the latest earlier edition's (a later edition INHERITS the prior choice until the
+   *  author changes it). Earlier editions of a case are ratified ones — an edition number is only spent
+   *  by ratification — so an inherited level is one a published edition already carried. None is none:
+   *  nothing is ever prefilled. */
+  #attributionInForce(caseId, edition, observation) {
+    return this.#one(
+      `SELECT level, edition, chosen_by, chosen_at FROM observation_attributions
+                       WHERE case_id=? AND bundle_id=? AND edition<=? ORDER BY edition DESC LIMIT 1`,
+      caseId,
+      observation,
+      edition
+    ) || null;
+  }
+  /** MK-7 — EVERY OBSERVATION ONE CASE DOCUMENT REACHES, at any depth, in first-reached order (§4.3: one
+   *  level per observation per edition however many findings reach it, a `via` observation included). */
+  #observationsReachedBy(docText) {
+    const cf = (parseFrontmatter(String(docText || "")).data || {}).case_findings;
+    const reach = this.testimonyReach((Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim()));
+    return [.../* @__PURE__ */ new Set([...reach.self, ...reach.via.map((v) => v.observation)])];
+  }
+  /** MK-7 / §4.3, §4.6 — THE EDITION'S ATTRIBUTION STATEMENTS, DERIVED FROM THE ACTS AND NEVER FROM THE
+   *  OWNER'S INPUT. One row per reached observation: the level in force and what that level PUBLISHES —
+   *  `group` the producing group (null when this store records none, stated in the prose), `project` the
+   *  publishing project, `cover` the administrator's cover for the author, `name` the author's handle. The
+   *  author's member id is never a value here. A level whose published value cannot be produced (a `name`
+   *  whose author has since lost their handle) is UNCHOSEN with its reason: publishing it at any other value
+   *  would be the default §4 forbids. */
+  #attributionStatements(caseId, edition, project, observations) {
+    return observations.map((obs) => {
+      const act = this.#attributionInForce(caseId, edition, obs);
+      if (!act) return {
+        observation: obs,
+        level: null,
+        shown: null,
+        chosen_at_edition: null,
+        why: "its author has chosen no level for this edition or any earlier one"
+      };
+      const g = this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
+      const m = g ? this.#one(`SELECT cover, handle FROM members WHERE member_id=?`, g.author) : null;
+      const shown = act.level === "group" ? this.#producingGroup() : act.level === "project" ? project : act.level === "cover" ? m && m.cover ? m.cover : null : act.level === "name" ? m && m.handle ? m.handle : null : null;
+      if (shown === null && act.level !== "group")
+        return {
+          observation: obs,
+          level: null,
+          shown: null,
+          chosen_at_edition: null,
+          why: `its author chose '${act.level}' at edition ${act.edition}, and the record holds no ${act.level === "name" ? "handle" : act.level} for them to publish under it`
+        };
+      return { observation: obs, level: act.level, shown, chosen_at_edition: Number(act.edition), why: null };
+    });
+  }
+  /* MK-7 — THE TWO RENDERINGS OF THE STATEMENTS, ONE SPELLING EACH: written by `#caseDocumentText` when
+     op=publish authors a document reaching an observation, and spliced by `#reauthorAttributions` when the
+     author's act lands on one authored and unsigned — `#ackFrontmatterLines`' arrangement. The frontmatter
+     run starts at `observation_attributions:` and ends at the next top-level key; the prose starts at
+     `Store.ATTRIBUTION_PROSE_HEAD` and ends before the next `## ` heading. A document reaching NO observation
+     carries neither, so every other case document's bytes are exactly what they were. */
+  static ATTRIBUTION_PROSE_HEAD = "## Whose Words These Are";
+  static #attributionFrontmatterLines(rows) {
+    return [
+      "observation_attributions:",
+      ...rows.flatMap((r) => [
+        `  - observation: ${r.observation}`,
+        `    level: ${r.level ?? "null"}`,
+        `    shown: ${r.shown == null ? "null" : `"${_Store.#fmSafe(r.shown)}"`}`,
+        `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`
+      ])
+    ];
+  }
+  static #attributionBodyLines(rows) {
+    const said = {
+      group: "the group that publishes this case",
+      project: "the project that produced it",
+      cover: "the cover the group knows its author by",
+      name: "the name its author chose to appear under"
+    };
+    return [
+      _Store.ATTRIBUTION_PROSE_HEAD,
+      "",
+      `This case rests, directly or through another finding, on ${rows.length} firsthand observation${rows.length === 1 ? "" : "s"} recorded by a member of this group. What it shows of who SAID each one is that member's own choice, made for this edition and never filled in for them (MEMBER-KNOWLEDGE-DESIGN.md \xA74). An observation names no person in its own bytes; the words below are the whole of the attribution.`,
+      "",
+      ...rows.map((r) => !r.level ? `- **${r.observation}** \u2014 NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author chooses one, or the finding resting on it leaves the case.` : `- **${r.observation}** \u2014 attributed to ${said[r.level]}${r.shown == null ? " (this record names no producing group, so none is printed)" : `: ${r.shown}`} \u2014 level \`${r.level}\`, chosen at edition ${r.chosen_at_edition}.`),
+      ""
+    ];
+  }
+  /** MK-7 — RE-AUTHOR ONE UNSIGNED CASE DOCUMENT'S ATTRIBUTION RUNS FROM THE ACTS, on
+   *  `#reauthorAcknowledgements`' rule: only the two runs change, only while `sig_armored IS NULL` and only
+   *  over the hash read, so the new hash is what the owner signs and a signature over the old bytes is
+   *  refused CASE_RATIFY_STALE. A document carrying no run (it reached no observation when authored) is left
+   *  as it is and says so. */
+  #reauthorAttributions(doc) {
+    const lines = doc.text.split("\n");
+    const f0 = lines.indexOf("observation_attributions:");
+    let f1 = f0 + 1;
+    while (f0 >= 0 && f1 < lines.length && lines[f1].startsWith("  ")) f1++;
+    const b0 = lines.indexOf(_Store.ATTRIBUTION_PROSE_HEAD);
+    let b1 = b0 + 1;
+    while (b0 >= 0 && b1 < lines.length && !lines[b1].startsWith("## ")) b1++;
+    if (f0 < 0 || b0 < 0 || b1 >= lines.length)
+      return {
+        case_id: doc.case_id,
+        edition: doc.edition,
+        reauthored: false,
+        why: "this case document carries no attribution statements to re-author"
+      };
+    const fm = parseFrontmatter(doc.text).data || {};
+    const rows = this.#attributionStatements(
+      doc.case_id,
+      Number(doc.edition),
+      String(fm.case_project ?? "").trim(),
+      this.#observationsReachedBy(doc.text)
+    );
+    const text = [
+      ...lines.slice(0, f0),
+      ..._Store.#attributionFrontmatterLines(rows),
+      ...lines.slice(f1, b0),
+      ..._Store.#attributionBodyLines(rows),
+      ...lines.slice(b1)
+    ].join("\n");
+    if (text === doc.text) return { case_id: doc.case_id, edition: doc.edition, reauthored: false, doc_sha: doc.doc_sha };
+    const docSha = createSha256().update(new TextEncoder().encode(text)).hex();
+    this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
+                   AND sig_armored IS NULL`, docSha, text, doc.case_id, doc.edition, doc.doc_sha);
+    const now = this.#one(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=?`, doc.case_id, doc.edition);
+    return {
+      case_id: doc.case_id,
+      edition: doc.edition,
+      reauthored: !!now && now.doc_sha === docSha,
+      doc_sha: now ? now.doc_sha : null,
+      read: `op=casedocument&case=${doc.case_id}&edition=${doc.edition}`
+    };
+  }
+  /** MK-7 — WHAT op=caseratify NEEDS TO JUDGE ONE CASE DOCUMENT'S ATTRIBUTION (§4.4): every observation it
+   *  reaches, those still naming their author in their own bytes (§4.1, fenced), what the signed-for-review
+   *  bytes STATE, and what the acts say NOW. The gate compares the last two, so a document can never carry a
+   *  level the author did not choose. */
+  attributionFacts(doc) {
+    const fm = parseFrontmatter(String(doc && doc.text || "")).data || {};
+    const reached = this.#observationsReachedBy(doc && doc.text);
+    const stated = (Array.isArray(fm.observation_attributions) ? fm.observation_attributions : []).map((r) => ({
+      observation: String(r && r.observation != null ? r.observation : ""),
+      level: r && typeof r.level === "string" && r.level !== "null" ? r.level : null,
+      shown: r && r.shown != null && r.shown !== "null" ? String(r.shown) : null
+    }));
+    const current = this.#attributionStatements(doc.case_id, Number(doc.edition), String(fm.case_project ?? "").trim(), reached);
+    return { reached, legacy: this.observationsNamingAuthor(reached), stated, current };
+  }
+  /** MK-7 — DOES ANY RATIFIED CASE DOCUMENT STATE A CHOSEN LEVEL FOR THIS OBSERVATION? op=ratify asks it before
+   *  an observation's own bytes cross as a case's evidence: the words are published only beside a signed
+   *  statement of whose they are. Bounded; the text match is the index, the parse the authority. */
+  attributionStatedFor(observation) {
+    const id = String(observation ?? "");
+    if (!id) return false;
+    const docs = this.#rows(`SELECT text FROM case_documents WHERE ratified_at IS NOT NULL
+                              AND instr(text, ?) > 0 ORDER BY case_id, edition LIMIT 50`, `  - observation: ${id}`);
+    return docs.some((d) => {
+      const rows = (parseFrontmatter(d.text).data || {}).observation_attributions;
+      return Array.isArray(rows) && rows.some((r) => r && String(r.observation) === id && _Store.ATTRIBUTION_LEVELS.includes(r.level));
+    });
+  }
+  /** MK-7 / IC — op=attribute: THE ATTRIBUTION ACT (MEMBER-KNOWLEDGE-DESIGN.md §4.2–§4.6, MK-3's
+   *  replacement (ii)). The observation's AUTHOR, and only they, chooses what one case edition publishes
+   *  of who said it: `group | project | cover | name`, per (case edition, observation). It lands at the
+   *  edition's PREPARED AND UNSIGNED case document — the door `op=statementack` binds at, for REC-194's
+   *  reason: a case id is minted only by publication, so a draft of a new case has no identity to key a
+   *  level to — and re-authors that document's attribution runs, so the level is in the bytes its owner
+   *  signs. No `publish` capability is needed: it is a decision about the member's own words, not about
+   *  the case. `by` is the control plane's stamp and nothing else. */
+  attributeObservation({ caseId = null, edition = null, observation = null, level = null, by = null } = {}) {
+    const refusal7 = (code, detail, extra) => {
+      const row = ATTRIBUTION_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const who = typeof by === "string" ? by.trim() : "";
+    if (!who || isMachineIdentity(who))
+      return refusal7(
+        "ATTRIBUTION_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential, and how a member's words are attributed is that member's own choice` : `this call carries nobody; the plane stamps who chose from the credential`
+      );
+    const lv = typeof level === "string" ? level.trim() : "";
+    if (!lv)
+      return refusal7(
+        "ATTRIBUTION_NO_LEVEL",
+        `no level was chosen. There is no default (MEMBER-KNOWLEDGE-DESIGN.md \xA74): choose one of ${_Store.ATTRIBUTION_LEVELS.join(", ")}`,
+        { allowed: _Store.ATTRIBUTION_LEVELS }
+      );
+    if (!_Store.ATTRIBUTION_LEVELS.includes(lv))
+      return refusal7(
+        "ATTRIBUTION_LEVEL_UNKNOWN",
+        `'${lv.slice(0, 40)}' is not a level; choose one of ${_Store.ATTRIBUTION_LEVELS.join(", ")}`,
+        { allowed: _Store.ATTRIBUTION_LEVELS }
+      );
+    const obs = typeof observation === "string" ? observation.trim() : "";
+    const reg = obs ? this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs) : null;
+    if (!reg)
+      return refusal7(
+        "ATTRIBUTION_NOT_AN_OBSERVATION",
+        `${obs ? obs.slice(0, 80) : "(none named)"} is not a member's firsthand observation in this record, so it has no author to choose how it is attributed`,
+        { observation: obs || null }
+      );
+    if (reg.author !== who)
+      return refusal7(
+        "ATTRIBUTION_NOT_THE_AUTHOR",
+        `${obs} was recorded by another member. Only an observation's author chooses how a case shows who said it: not a project owner, not an administrator, and not a default (\xA74.2)`,
+        { observation: obs }
+      );
+    const me = this.#one(`SELECT status, handle FROM members WHERE member_id=?`, who);
+    if (!me || me.status !== "active")
+      return refusal7(
+        "ATTRIBUTION_AUTHOR_NOT_ACTIVE",
+        `the author of ${obs} is not an active member, and nobody takes this act for them (\xA74.5)`,
+        { observation: obs }
+      );
+    const cid = typeof caseId === "string" ? caseId.trim() : "";
+    const ed = Number(edition);
+    const doc = cid && Number.isInteger(ed) && ed >= 1 ? this.#one(`SELECT case_id, edition, doc_sha, text, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, cid, ed) : null;
+    const reaches = !!doc && this.#observationsReachedBy(doc.text).includes(obs);
+    if (!reaches)
+      return refusal7(
+        "ATTRIBUTION_NOT_REACHED",
+        `no prepared case edition ${cid ? `${cid.slice(0, 60)} edition ${Number.isInteger(ed) ? ed : "(none)"}` : "(none named)"} rests on ${obs}. An attribution is chosen for an edition that uses the observation, once op=publish has prepared its case document`,
+        { observation: obs, caseId: cid || null, edition: Number.isInteger(ed) ? ed : null }
+      );
+    if (doc.sig_armored)
+      return refusal7(
+        "ATTRIBUTION_EDITION_RATIFIED",
+        `${cid} edition ${ed} is already signed, and a signed edition answers forever; your choice applies to the next edition, which inherits it until you change it (\xA74.3)`,
+        { observation: obs, caseId: cid, edition: ed }
+      );
+    if (lv === "name" && !(me.handle && String(me.handle).trim()))
+      return refusal7(
+        "ATTRIBUTION_NAME_NO_HANDLE",
+        `'name' publishes the handle you appear under in this record, and you have none (\xA74.6). Choose another level, or set a handle first`,
+        { observation: obs }
+      );
+    const prior = this.#attributionInForce(cid, ed, obs);
+    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const same = !!(prior && Number(prior.edition) === ed && prior.level === lv);
+    if (!same)
+      this.sql.exec(
+        `INSERT INTO observation_attributions (case_id, edition, bundle_id, level, chosen_by, chosen_at)
+                     VALUES (?,?,?,?,?,?) ON CONFLICT(case_id, edition, bundle_id) DO UPDATE SET
+                       level=excluded.level, chosen_by=excluded.chosen_by, chosen_at=excluded.chosen_at`,
+        cid,
+        ed,
+        obs,
+        lv,
+        who,
+        when
+      );
+    const reauthored = this.#reauthorAttributions(doc);
+    const fm = parseFrontmatter(doc.text).data || {};
+    const stmt = this.#attributionStatements(cid, ed, String(fm.case_project ?? "").trim(), [obs])[0];
+    return {
+      ok: true,
+      existed: same,
+      observation: obs,
+      caseId: cid,
+      edition: ed,
+      level: lv,
+      shown: stmt.shown,
+      previous: prior ? { level: prior.level, edition: Number(prior.edition) } : null,
+      case_document: reauthored,
+      stated: `edition ${ed} of ${cid} now states ${obs} at level '${lv}'. The case document was re-authored; its owner signs the new bytes. A later edition inherits this choice until you change it.`
     };
   }
   /** When the member says they observed it: a calendar date or a UTC instant,
@@ -59770,6 +60213,11 @@ ${words}`;
          outliving its project would admit whoever is next allocated that id to a
          member's lead. Whole-store: the leads themselves go in the arm below. */
       "lead_shares",
+      /* MK-7 / D-113: an ATTRIBUTION is keyed on the OBSERVATION it governs. Per-bundle: a
+         level outliving its observation would be inherited by whatever bundle was next
+         allocated that id — a member's choice attached to somebody else's words. A ratified
+         case document keeps the level it published in its own signed bytes. */
+      "observation_attributions",
       /* D-162 / D-113: a THEME PLACEMENT, keyed on the DOCUMENT it places (a
          passage's placement carries its document too). Per-bundle: a placement
          outliving its document would say a file nobody holds belongs to a lens,
@@ -63238,6 +63686,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       /* MK-1 (A): whether this bundle IS, or RESTS ON, a member's authored
          observation — the publication fence's one fact (C-53.10/.11). */
       testimony: this.testimonyReach([bundleId]),
+      /* MK-7: which of the observations this bundle is or rests on still name their author in their own
+         files (§4.1 keeps those fenced), and — for an observation — whether a RATIFIED case document states a
+         chosen level for it, which its words may not cross without. */
+      testimonyLegacy: (() => {
+        const t = this.testimonyReach([bundleId]);
+        return this.observationsNamingAuthor([...t.self, ...t.via.map((v) => v.observation)]);
+      })(),
+      attributionStated: this.attributionStatedFor(bundleId),
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`,
@@ -76247,6 +76703,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           identity: url.searchParams.get("identity")
         }),
+        /* MK-7: THE ATTRIBUTION ACT. WHO CHOSE comes from the QUERY STRING, where the control plane stamped
+           it over anything the caller sent; nothing in the body can name the chooser. */
+        attribute: () => this.attributeObservation({
+          caseId: body ? body.caseId : null,
+          edition: body ? body.edition : null,
+          observation: body ? body.observation : null,
+          level: body ? body.level : null,
+          by: url.searchParams.get("by")
+        }),
         leadshare: () => this.leadShare({
           lead: body && body.lead || url.searchParams.get("lead"),
           project: body && body.project || url.searchParams.get("project"),
@@ -78150,6 +78615,10 @@ var OPS = {
   /* BOB #14's ruling (2026-09-18): the AUTHOR shares a lead to a project, an
      authored dated act — `lead`'s class cut and reason. */
   leadshare: { classes: ["admin", "member"], mutating: true },
+  /* MK-7 — THE ATTRIBUTION ACT (MEMBER-KNOWLEDGE-DESIGN.md §4.2–§4.6): an observation's AUTHOR chooses
+     what one case edition publishes of who said it. A person's decision about their own words, in their
+     own name — `testify`'s class cut and reason; the store refuses a machine stamp BY NAME (C-92.1). */
+  attribute: { classes: ["admin", "member"], mutating: true },
   leadread: { classes: ["admin", "member", "probe"], mutating: false },
   /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
      DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
@@ -78679,6 +79148,9 @@ var SESSION_OPS = {
     "lead",
     "leadlook",
     "leadshare",
+    /* MK-7: THE ATTRIBUTION ACT — the author's own choice about their own words, `testify`'s
+       route and reason. */
+    "attribute",
     /* D-162: THE THEME — declaring, placing and proposing, each a session
        op for `lead`'s reason (a person's act in their own name); the
        store refuses a machine declarer or placer by name. */
@@ -78760,6 +79232,9 @@ var SESSION_OPS = {
     "lead",
     "leadlook",
     "leadshare",
+    /* MK-7: THE ATTRIBUTION ACT — the author's own choice about their own words, `testify`'s
+       route and reason. */
+    "attribute",
     /* D-162: THE THEME — declaring, placing and proposing, each a session
        op for `lead`'s reason (a person's act in their own name); the
        store refuses a machine declarer or placer by name. */
@@ -78884,6 +79359,9 @@ var NEEDS = {
   lead: "contribute",
   leadlook: "contribute",
   leadshare: "contribute",
+  /* MK-7: NO FIFTH CAPABILITY TOKEN. §4.2: the act needs no `publish` capability — it is a decision about
+     the member's own words, not about the case — so it rides `contribute`, the token that recorded them. */
+  attribute: "contribute",
   /* D-162: declaring a theme, placing in one and proposing a placement all write the working
      record's lens layer, `lead`'s capability. */
   themedeclare: "contribute",
@@ -79955,6 +80433,12 @@ var machineFenceRow = (code) => {
   const row = MACHINE_FENCE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`machineFenceRow: ${code} has no MACHINE_FENCE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+var attributionRow = (code) => {
+  const row = ATTRIBUTION_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`attributionRow: ${code} has no ATTRIBUTION_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row.check, translation: row.translation };
 };
 var identityFenceRow = (code) => {
@@ -83800,18 +84284,51 @@ var index_default = {
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
-      if (facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)
+      const attr2 = facts.attribution || { reached: [], legacy: [], stated: [], current: [] };
+      if (attr2.legacy.length)
         return json({
           ok: false,
           reason: "TESTIMONY_CASE_UNPUBLISHABLE",
           ...testimonyFenceRow("TESTIMONY_CASE_UNPUBLISHABLE"),
           caseId: facts.doc.case_id,
           edition: facts.doc.edition,
-          rests_on: facts.testimony.via,
-          detail: `a finding in ${facts.doc.case_id} rests on a member's authored observation (${[...facts.testimony.via.map((v) => `${v.finding} -> ${v.observation}`), ...facts.testimony.self].slice(0, 5).join(", ")}); what a published case shows of an observation is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md \xA74), and this build cannot yet honour it (MK-3)`,
+          observations: attr2.legacy.slice(0, 50),
+          detail: `a finding in ${facts.doc.case_id} rests on an observation written before \xA74.1 that still names its author in its own files (${attr2.legacy.slice(0, 5).join(", ")}); publishing it would publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md \xA74.1)`,
           store: storeName,
           tokenClass: cls
         }, 409);
+      const unchosen = attr2.current.filter((r2) => !r2.level);
+      if (unchosen.length)
+        return json({
+          ok: false,
+          reason: "ATTRIBUTION_UNCHOSEN",
+          ...attributionRow("ATTRIBUTION_UNCHOSEN"),
+          caseId: facts.doc.case_id,
+          edition: facts.doc.edition,
+          unchosen: unchosen.slice(0, 50).map((r2) => ({ observation: r2.observation, why: r2.why })),
+          detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} this edition reaches ${unchosen.length === 1 ? "has" : "have"} no level chosen by ${unchosen.length === 1 ? "its" : "their"} author: ${unchosen.slice(0, 5).map((r2) => r2.observation).join(", ")} (MEMBER-KNOWLEDGE-DESIGN.md \xA74.4). Each author chooses with op=attribute; nothing is filled in for them`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
+      {
+        const statedOf = new Map(attr2.stated.map((r2) => [r2.observation, r2]));
+        const drift = attr2.current.filter((r2) => {
+          const st = statedOf.get(r2.observation);
+          return !st || st.level !== r2.level || (st.shown ?? null) !== (r2.shown ?? null);
+        });
+        if (drift.length || attr2.stated.length !== attr2.current.length)
+          return json({
+            ok: false,
+            reason: "ATTRIBUTION_STATEMENT_STALE",
+            ...attributionRow("ATTRIBUTION_STATEMENT_STALE"),
+            caseId: facts.doc.case_id,
+            edition: facts.doc.edition,
+            observations: (drift.length ? drift : attr2.current).slice(0, 50).map((r2) => r2.observation),
+            detail: `the case document's attribution statements do not match what the observations' authors chose for this edition; re-prepare it (op=publish) and sign the new bytes`,
+            store: storeName,
+            tokenClass: cls
+          }, 409);
+      }
       if (facts.doc.doc_sha !== body2.expectedSha)
         return json({
           ok: false,
@@ -83955,24 +84472,35 @@ var index_default = {
           store: storeName,
           tokenClass: cls
         }, 409);
-      if (facts.testimony && facts.testimony.self.length)
+      const legacy = Array.isArray(facts.testimonyLegacy) ? facts.testimonyLegacy : [];
+      if (facts.testimony && facts.testimony.self.length && legacy.includes(body2.bundleId))
         return json({
           ok: false,
           reason: "TESTIMONY_UNPUBLISHABLE",
           ...testimonyFenceRow("TESTIMONY_UNPUBLISHABLE"),
           bundleId: body2.bundleId,
-          detail: `${body2.bundleId} is a member's authored observation; what a published case shows of it is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md \xA74), and this build cannot yet honour it (MK-3)`,
+          detail: `${body2.bundleId} is a member's observation written before \xA74.1, and its own files still name its author; publishing it would publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md \xA74.1)`,
           store: storeName,
           tokenClass: cls
         }, 409);
-      if (facts.testimony && facts.testimony.via.length)
+      if (facts.testimony && facts.testimony.via.some((v) => legacy.includes(v.observation)))
         return json({
           ok: false,
           reason: "TESTIMONY_CITED_UNPUBLISHABLE",
           ...testimonyFenceRow("TESTIMONY_CITED_UNPUBLISHABLE"),
           bundleId: body2.bundleId,
-          rests_on: facts.testimony.via,
-          detail: `${body2.bundleId} rests on a member's authored observation (${facts.testimony.via.slice(0, 5).map((v) => v.observation).join(", ")}); what a published case shows of it is the attesting member's choice, and this build cannot yet honour it (MK-3)`,
+          rests_on: facts.testimony.via.filter((v) => legacy.includes(v.observation)),
+          detail: `${body2.bundleId} rests on an observation written before \xA74.1 whose own files still name its author (${facts.testimony.via.filter((v) => legacy.includes(v.observation)).slice(0, 5).map((v) => v.observation).join(", ")})`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
+      if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)
+        return json({
+          ok: false,
+          reason: "ATTRIBUTION_UNSTATED",
+          ...attributionRow("ATTRIBUTION_UNSTATED"),
+          bundleId: body2.bundleId,
+          detail: `no ratified case document states an attribution for ${body2.bundleId}; sign the case edition that uses it (op=caseratify) first, and its author's chosen level is published with it`,
           store: storeName,
           tokenClass: cls
         }, 409);
@@ -84427,6 +84955,8 @@ var index_default = {
       inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "leadshare")
       inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "attribute")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "themedeclare")
       inner.searchParams.set("declarer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "themeplace")

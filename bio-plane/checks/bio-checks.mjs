@@ -13062,9 +13062,12 @@ export const TRANSCRIBE_CHECKS = {
  *   is-testify-bytes     whether the canonical bytes (header + words) are already
  *                        registered — reachable only by pre-registering them
  *   is-testimony-publish-bundle / is-testimony-publish-case (src/index.mjs)
- *                        THE PUBLICATION FENCE (C-53.10–.12): an observation, a
- *                        finding resting on one, or a case over such a finding
- *                        does not cross until MK-3's attribution does
+ *                        THE PUBLICATION FENCE (C-53.10–.12), NARROWED BY MK-7:
+ *                        it stands only over an observation that still names
+ *                        its author in its own files (written before MK-6,
+ *                        §4.1), a finding resting on one, or a case over such a
+ *                        finding. Every other observation crosses under MK-7's
+ *                        attribution (ATTRIBUTION_CHECKS, C-92)
  *   is-testimony-fence  THE REFUSALS THE ITEM EXISTS FOR, at op=promote — the one
  *                        write path — so no route but op=testify can set the flag,
  *                        and no revision can quietly change what it says: an
@@ -13079,8 +13082,115 @@ export const TRANSCRIBE_CHECKS = {
  *
  * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's
  * and lives in C-2.8 (`checkTestimonyLeg`, IC-142), not in this family; the
- * attribution level on the case act (§4) is MK-3's.
+ * attribution level on the case act (§4) is MK-7's, in ATTRIBUTION_CHECKS (C-92).
  * ===================================================================== */
+/* =====================================================================
+ * C-92 — THE ATTRIBUTION ACT AND ITS GATE (MK-7; MEMBER-KNOWLEDGE-DESIGN.md
+ * §4.2–§4.6, BOB #19, 2026-09-21). C-92 minted with `node tools/mintid.mjs C`.
+ *
+ * A member's firsthand observation is published only beside a statement of
+ * WHO SAID IT, at the level its author chose for that case edition — group,
+ * project, cover or name — and that choice is the author's alone, never
+ * prefilled. ITS OWN FAMILY because its subject is the author's control over
+ * their own words, where C-53 is the observation's integrity as a record.
+ *
+ *   is-attribute-act      who is choosing (a signed-in member, stamped), and
+ *                         that a level was chosen at all, from the four
+ *   is-attribute-author   that the chooser is the observation's author, and
+ *                         an active member (§4.2, §4.5)
+ *   is-attribute-edition  that the edition is a prepared, unsigned one that
+ *                         reaches the observation, and that `name` has a
+ *                         handle to publish (§4.6)
+ *   is-attribution-gate (src/index.mjs)
+ *                         op=caseratify refuses an edition while any
+ *                         observation it reaches is unchosen, naming each, or
+ *                         while its bytes state a level the acts no longer do
+ *                         (§4.4); op=ratify refuses an observation's own bytes
+ *                         until a ratified case document states its level
+ *
+ * PROVISIONAL, carried to Bob: §4.4's narrow veto (C-92.10 is that veto) and
+ * §4.6's reading of `name` as the member's handle (C-92.9).
+ * ===================================================================== */
+export const ATTRIBUTION_CHECKS = {
+  ATTRIBUTION_NOT_A_MEMBER: {
+    check: 'C-92.1',
+    where: 'src/store.mjs attributeObservation > is-attribute-act',
+    translation: 'How a member\'s observation is attributed is that member\'s own choice. The credential '
+      + 'that asked is an automated one, and it cannot make that choice for anybody. Sign in and choose it yourself.',
+  },
+  ATTRIBUTION_NO_LEVEL: {
+    check: 'C-92.2',
+    where: 'src/store.mjs attributeObservation > is-attribute-act',
+    translation: 'No level was chosen. Choose what a published case shows of who said your observation: '
+      + 'the group, the project, the cover the group knows you by, or your handle. Nothing is filled in for you.',
+  },
+  ATTRIBUTION_LEVEL_UNKNOWN: {
+    check: 'C-92.3',
+    where: 'src/store.mjs attributeObservation > is-attribute-act',
+    translation: 'That is not one of the four levels. Choose group, project, cover or name.',
+  },
+  ATTRIBUTION_NOT_AN_OBSERVATION: {
+    check: 'C-92.4',
+    where: 'src/store.mjs attributeObservation > is-attribute-author',
+    translation: 'That document is not a member\'s firsthand observation in this record, so there is no '
+      + 'author whose choice this is. Attribution is chosen for observations only.',
+  },
+  ATTRIBUTION_NOT_THE_AUTHOR: {
+    check: 'C-92.5',
+    where: 'src/store.mjs attributeObservation > is-attribute-author',
+    translation: 'Another member recorded that observation. Only the member who said it chooses how a '
+      + 'published case shows who said it — not a project owner, not an administrator, and not a default.',
+  },
+  ATTRIBUTION_AUTHOR_NOT_ACTIVE: {
+    check: 'C-92.6',
+    where: 'src/store.mjs attributeObservation > is-attribute-author',
+    translation: 'That observation\'s author is not an active member, and nobody chooses for them. The '
+      + 'observation stays in the record and can be used where its author already chose, and nowhere new.',
+  },
+  ATTRIBUTION_NOT_REACHED: {
+    check: 'C-92.7',
+    where: 'src/store.mjs attributeObservation > is-attribute-edition',
+    translation: 'No prepared case edition by that name rests on your observation. You choose an attribution '
+      + 'for an edition that uses your words, once its case document has been prepared.',
+  },
+  ATTRIBUTION_EDITION_RATIFIED: {
+    check: 'C-92.8',
+    where: 'src/store.mjs attributeObservation > is-attribute-edition',
+    translation: 'That edition is already signed, and a signed edition does not change. Your choice can '
+      + 'apply to the next edition, which keeps your last choice until you change it.',
+  },
+  /* PROVISIONAL (§4.6, carried to Bob): `name` publishes the member's HANDLE, because the record holds no
+     legal name and must not start to. */
+  ATTRIBUTION_NAME_NO_HANDLE: {
+    check: 'C-92.9',
+    where: 'src/store.mjs attributeObservation > is-attribute-edition',
+    translation: 'Choosing your name publishes the handle you appear under in this record, and you have none. '
+      + 'Choose another level, or set a handle first.',
+  },
+  /* PROVISIONAL (§4.4, carried to Bob): THE NARROW VETO. An edition reaching an unchosen observation is not
+     signed, so each member has a veto over the use of their own words and over nothing else: the owner's
+     recourse is an edition without the finding that rests on it. */
+  ATTRIBUTION_UNCHOSEN: {
+    check: 'C-92.10',
+    where: 'src/index.mjs fetch > is-attribution-gate',
+    translation: 'This case edition uses a member\'s firsthand observation whose author has not yet chosen how '
+      + 'it is attributed, so it cannot be signed. Publishing it at any level would be choosing for them. Ask '
+      + 'the author to choose, or prepare the edition without the finding that rests on it.',
+  },
+  ATTRIBUTION_STATEMENT_STALE: {
+    check: 'C-92.11',
+    where: 'src/index.mjs fetch > is-attribution-gate',
+    translation: 'This case document states an attribution for an observation that its author\'s choices no '
+      + 'longer give. Prepare the case document again so it states what the authors chose, then sign that.',
+  },
+  ATTRIBUTION_UNSTATED: {
+    check: 'C-92.12',
+    where: 'src/index.mjs fetch > is-attribution-ratify',
+    translation: 'This observation\'s words are published only beside a signed case that states whose they '
+      + 'are, and no signed case does yet. Sign the case document that uses it first.',
+  },
+};
+
 export const TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: 'C-53.1',
@@ -13159,31 +13269,38 @@ export const TESTIMONY_CHECKS = {
      in the working bucket PUBLISHED its words, its provenance document and the
      observer's handle; a finding resting on one, and a case over that finding,
      ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
-     of a member's observation at the attesting member's chosen level, and that
-     is MK-3's — so until MK-3's projection honours it, nothing carrying an
-     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
+     of a member's observation at the attesting member's chosen level.
+     LIFTED BY MK-7 AS ITS OWN ACT, AND NARROWED RATHER THAN DELETED: the three
+     codes now refuse only an observation that still NAMES ITS AUTHOR in its own
+     files — one written before MK-6 (§4.1: "Authored bundles written before the
+     change carry the member id and STAY FENCED") — and what rests on one. No
+     level can hide a name the bundle itself prints, because the level lives
+     outside the bundle. Every other observation crosses under C-92. The old
+     sentences said the record could not YET honour the choice; since MK-7 it
+     can, so they would now be false, and they are corrected, not kept. */
   TESTIMONY_UNPUBLISHABLE: {
     check: 'C-53.10',
     where: 'src/index.mjs fetch > is-testimony-publish-bundle',
-    translation: 'This document is a member\'s own firsthand observation, and it cannot be published yet. '
-      + 'What a published case shows of an observation — the group, the project, the member\'s cover or '
-      + 'their name — is the observing member\'s choice, and the record cannot yet honour that choice in '
-      + 'what it publishes. Until it can, publishing the observation would publish its author.',
+    translation: 'This document is a member\'s own firsthand observation, recorded before the record stopped '
+      + 'writing its author\'s name into the observation\'s own files. Publishing it would publish that name '
+      + 'whatever level its author chose, so it is not published. Its author can record it again as a new '
+      + 'observation, which names nobody in its files.',
   },
   TESTIMONY_CITED_UNPUBLISHABLE: {
     check: 'C-53.11',
     where: 'src/index.mjs fetch > is-testimony-publish-bundle',
-    translation: 'This finding rests, directly or through another finding, on a member\'s own firsthand '
-      + 'observation, and it cannot be published yet. How a published case attributes an observation is '
-      + 'the observing member\'s choice, and the record cannot yet honour that choice. Publish the finding '
-      + 'without that observation in its basis, or wait until attribution is supported.',
+    translation: 'This finding rests, directly or through another finding, on a member\'s firsthand '
+      + 'observation recorded before the record stopped writing its author\'s name into the observation\'s '
+      + 'own files, so it is not published. Rest the finding on a newer observation of the same thing, or '
+      + 'publish it without that observation in its basis.',
   },
   TESTIMONY_CASE_UNPUBLISHABLE: {
     check: 'C-53.12',
     where: 'src/index.mjs fetch > is-testimony-publish-case',
-    translation: 'A finding in this case rests, directly or through another finding, on a member\'s own '
-      + 'firsthand observation, so the case cannot be published yet. How a published case attributes an '
-      + 'observation is the observing member\'s choice, and the record cannot yet honour that choice.',
+    translation: 'A finding in this case rests, directly or through another finding, on a member\'s '
+      + 'firsthand observation recorded before the record stopped writing its author\'s name into the '
+      + 'observation\'s own files, so the case is not published: that name would be published whatever '
+      + 'level its author chose. Rest the finding on a newer observation, or leave it out of this edition.',
   },
   /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
      `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
