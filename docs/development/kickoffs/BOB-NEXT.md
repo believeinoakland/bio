@@ -1,52 +1,29 @@
-# BOB — resume here. Written by BOB #33 (session_01BkXH3dLHH2wx8eUA4k5p73), 2026-09-24 ~22:00Z, at REFRESH (75% context, Bob's reading); successor: **BOB #34**
+# BOB — resume here. Written by BOB #34 (session_015xYmWbudjCX7rFPF1bDJd3), 2026-09-25 ~02:55Z, at REFRESH (69%); successor: **BOB #35**
 
-Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, then this. Every line is a POINTER, measured at the time it names. BOB #32's
-long handoff is in coord's history (this file at 7c232533 and before) — look things up there, do not re-read it.
+Read `CLAUDE.md`, `kickoffs/BOB.md` (it now carries THE SESSION TREE and D-398's corrected third condition) and `BIO_System_Design.md`, then this. Every line here is a POINTER, measured at the time it names.
 
-## 0. BOB'S STANDING DIRECTIONS (2026-09-24) — these govern everything
-- **Priorities: BIO development PRODUCTIVITY first, process correctness second.** Report done and decided, in plain words, never tactical state.
-- **16 worker sessions WORKING at all times** (DIST excluded). Bob notices every dip; do not explain a shortfall without acting on it in the same turn.
-- **Batch everything.** BOB's own doc edits go on ONE branch, gated once, carried by the NEXT ORDINARY train. Never ask for an early train, never a
-  branch or a gate per change. Communicate instructions to lanes by message; the kickoff edit rides the next train.
-- **Trains** leave on the ~2-hour cadence carrying everything finished; CONDUCT runs them. No release until Bob types the ask in DIST's session.
-- **Every process improvement is TRACKED as a plan row**; only ORDER changes: a process row goes ahead of product only if it appreciably helps
-  development productivity (gate time, a false/flaky gate, a blocker) or product quality.
-- **Worker sessions are archived once their work is on main** (CONDUCT, as part of landing each train).
-- **Plan page** https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX is rebuilt after EVERY train landing, showing ONLY rows not completed-and-merged.
-  Builder = the artifact's own files (`Artifact read` path=builder/run.sh.txt, build.py.txt, template.html.txt, prose.json, slots.py.txt): fetch them into a
-  scratch dir, fix run.sh's P= path, run `run.sh "<note>"` after SCHEDULER has archived the train's rows; missing.json lists rows needing plain-words
-  prose (a subagent drafts; read it whole); merge into prose.json; republish to the same URL WITH builder/prose.json.
-- **Every ruling goes into the BOB INBOX on coord in the same act as its message** (21:55Z) — a ruling sent only by message cannot be found.
-- **Context gauge:** `get_session`'s used_tokens overstates after compaction; confirm with Bob's figure before calling a refresh.
-- The daily routine quota does not allow timers faster than ~20 min.
+## 0. BOB'S STANDING DIRECTIONS (still in force)
+- **Productivity first, until the build plan in its CURRENT SCOPE is complete** (Bob, 2026-09-24 22:30Z). **RELEASES ARE HELD:** no cut unless Bob types the ask in DIST's session.
+- 16 workers WORKING at all times. Batch everything; trains leave on a ~2 h cadence, never early. Report done and decided, in plain words. Every ruling goes into the BOB INBOX in the same act as its message.
+- **Bob's version doctrine** (2026-09-25 00:40Z, verbatim in the inbox and in Framework §18.1 via land/bob/batch-0925a): a reference stays pinned to its version; the member is notified only when the update affects the referenced part (graded); ADOPT or KEEP is the member's choice. Rows: REC-220 (done), REC-221, REC-222, REC-223, UI-111, plus D-579's three rows (a: the case pin rides REC-219's /4).
+- Bob is working elsewhere on a UX critique. He installed 0.79.0 through https://newgroup.believeinoakland.workers.dev and opens the 0.79.0 `app.html` from raw GitHub at commit 5f116f33. The hosted civicos.believeinoakland.workers.dev app matches NEITHER 0.79.0 nor main. If he asks, a lane can load sample content into his instance.
 
-## 1. HOW THE LANES RUN NOW (changed today — verify the kickoffs once land/bob/batch-0924e lands)
-- **DISPATCH IS SCHEDULER's (RULED 21:05Z):** each wake it flips a `running` row to `integrated` ONLY when its worker REPORTED finished or its branch is
-  pushed with a recorded GREEN (an idle/REVIEW_READY bucket is NOT finished — gates run in the background), replenishes, and SPAWNS every queued row
-  itself (`create_session`, title `WORKER <ID> (SCHEDULER #19)`, model claude-opus-5). CONDUCT keeps verification, integration, trains, archiving and
-  answering workers; it may flip a finished row it hears of; never holds a flip or spawn for a train.
-- **WHY the count kept dipping below 16** (the answer Bob demanded): CONDUCT did both trains (30-60 min) and dispatch, every refill took 3 handoffs
-  between lanes that act only when woken, and finished rows kept reading `running`. Plus: the app shows gating workers as idle, so its "active"
-  count under-reads real work by several.
-- CACHE_ROWS is 20 on main (the list feeding 16 workers plus spares). DIST works its own rows in its own session.
-- **BOB's timers:** a 20-min SLOT PROBE (send_later; its text is self-contained: step 1 UNCONDITIONALLY triggers SCHEDULER to count WORKING sessions and
-  spawn to 16; step 2 runs slots.py on a list_sessions listing and sends CONDUCT the BLOCKED/stale ones; step 3 train overdue → CONDUCT, train landed →
-  plan page) and an hourly dead-man routine. BOB #33's ids: probe trig_01Btm4715cpr2c13tEwpKXW3 (22:08Z), dead-man trig_01JT1CaEqRBrWPeEnJkHaFDx —
-  **the successor deletes both from its own list_triggers and arms its own.**
+## 1. THE SESSION TREE (ruled 23:35Z; in the kickoffs since batch27)
+The ROOT lane (no parent) creates EVERY lane session. That is FLEET #4 today (session_01YB9VgJtjiXwQ5vtx4fLvRB, origin desktop_app). Lanes create their own workers; workers create nothing. Depth: root 0, lanes 1, workers 2 (the platform refuses triggers at depth 8). **BOB #35 is created BY FLEET**, at depth 1. When FLEET itself needs a successor, Bob starts `GOD #1` in the app (the prompt is in this session's transcript: "only creates lane sessions"), and GOD creates FLEET #5. Tell Bob at that moment.
+Lanes now: SCHEDULER #21 session_01EW169eb7SVoxFrivnk6P1f · CONDUCT #21 session_01Np8wnAdDnRwswmAokZzNoY · DIST #7 session_01FQcUMZ2f34zhHzBkMEEdQ6 · FLEET #4 session_01YB9VgJtjiXwQ5vtx4fLvRB.
+SCHEDULER #20's leftover workers sit at depth 8 and cannot report: read them by summary and branch. REC-214 and REC-217 read BLOCKED for that reason only.
 
-## 2. STATE AT ~22:00Z
-- Lanes: CONDUCT #20 session_011PzZW1FSobMne4cYeAYWfU · SCHEDULER #19 session_01KJoJnoXN6d5CyZsiw8KTKa · DIST #6 session_01Vi1XTVwxcBBMStifuBasLZ ·
-  FLEET #4 session_01YB9VgJtjiXwQ5vtx4fLvRB. SCHEDULER #18 and BOB #32 archived.
-- Main 1a7f0bcc (train 24c, landed ~20:13Z). The train of c20-batch25 (18 worker rows + DIST-11/13) left 21:20Z and was STILL GATING at 21:54Z — confirm it
-  landed, then rebuild the plan page. Batch26 is filling (UI-101, UI-102, M0-181, REC-199, D-514, D-478, UI-99; REC-200 on its green) for ~23:20Z.
-- 20 workers working at 21:52Z (SCHEDULER's count, gating included).
-- **OWED BY BOB:** land/bob/batch-0924e (kickoffs SCHEDULER.md + CONDUCT.md: the dispatch split and the flip signal) — BOB #33 gated it at ~22:00Z and
-  pushed it if green; if it is on origin, tell CONDUCT it rides the next ordinary train; if not, redo the two kickoff edits on your first batch branch.
-  **The `tools/slots.mjs` row** (inbox 21:05Z, corrected) must port slots.py WITHOUT treating REVIEW_READY as finished.
+## 2. TIMERS (BOB's own; the successor deletes these from its OWN list_triggers and arms its own)
+- 20-min SLOT PROBE chain (send_later; the latest arms at about 03:12Z). Its text is self-contained: trigger SCHEDULER to fill to 16 (COMPLETED is not active); run slots.py; rebuild the plan page when a train lands; self context check.
+- Hourly dead-man: trig_01CzyhckfLJPvwZED9zBhh1k (cron 58 * * * *).
 
-## 3. RULED TODAY BY BOB #33 (all recorded in the BOB INBOX on coord; `decided.mjs` finds them once drained)
-Doorbell folded into Intake Doctrine §2a (landed); D-505 replay is the server's word (D-511/D-512); pens vs scratch; D-507 six sentences (+ C-82.6/.7
-generalised); D-500 watermark stays seconds, band reads undetermined; REC-194 draft= at publish binds readings; REC-212's three determinations (folded);
-review copy withholds+counts the writer's ack (REC-213); render throttle (D-520); D-491 hold→undetermined + queue kind (D-523); per-subresource digest,
-no puppeteer (D-529); registeraudit parted captures sound when all parts verified (D-533); risk-tier revision act, append-only with reason (REC-214,
-UI-104, REC-215); reading provenance (D-536); REC-216 superseded (propose stays NON_ACTS; UI-105 shows only); FW-23 `reading.dialect`.
+## 3. PLAN PAGE https://claude.ai/artifact/M5hUaNBgeM292h4D6odXbX
+Last built after batch27 (main 964da679), 175 rows. The builder is in the artifact's builder/ (run.sh.txt, build.py.txt, template.html.txt, prose.json, slots.py.txt; the successor must fetch these with Artifact read, since BOB #34's scratchpad dies with it). Fix run.sh's P= path; run after SCHEDULER archives a train's rows; draft prose for missing.json with a subagent and read it WHOLE ("You ruled" only for Bob's own rulings; fix the others); republish to the same URL WITH builder/prose.json. slots.py was corrected so that REVIEW_READY is not finished.
+
+## 4. IN FLIGHT at ~02:55Z
+- Main 964da679 (batch27 landed 01:12Z). **batch28** (land/conduct/c21-batch28, about 45 branches, 12 I3 MAJOR ICs) was blocked on reading budgets. BOB pushed land/bob/budget-0925b @ 1b218a32 (the map budget goes 48 → 52 KiB, a RULING; VERIFICATION.md cut 5 B). CONDUCT #21 merges it and trains. land/bob/batch-0925a @ 0bb6df96 (Framework §18.1 doctrine, §8.3 APN amendment, CLAUDE.md §5 line) rides batch28.
+- M0-194 (WORKER.md cut to one-line rules) is running. BOB sent it four rules to include (literal refusals; construct-status edited textually; a measurement that gates nothing; a load-independent verdict). If it lands without them, SCHEDULER rows the rest.
+- Weekly usage reads `allowed_warning` (resets 2026-09-29 18:00Z). Record it, do not throttle (Bob 2026-09-23).
+
+## 5. RULED TONIGHT BY BOB #34 (all in the BOB INBOX on coord; decided.mjs finds them once drained)
+D-398 condition 3 is judged by content, and the successor archives in its first turn · D-463 (confined credential; name scratch anyway) · D-553 (c) retired by state · D-546 (the edge fence governs moves from now on; history is counted, never rewritten) · D-556 (a parted capture ratifies once publication copies the parts) · D-567 (the monitor compares shell with shell; content undetermined) · D-570 (render settles on a quiet window with N measured) · D-572 (the level observation names its question) · D-573 (a same-second tie is stated) · bias_manifest /4 (REC-219) · D-579 (capture pins; the case pin rides /4) · REC-186 gaps (the committed-owner floor) · REC-155 confirmed, and D-587 `measured_by` names the instrument · REC-191's readings confirmed · the §8.3 APN clause amended on M-157 · the scratch members stay (stated) · the session tree · two rules on how rulings reach readers (the kickoff edit goes in the same act, and spawn prompts carry it until it lands).
