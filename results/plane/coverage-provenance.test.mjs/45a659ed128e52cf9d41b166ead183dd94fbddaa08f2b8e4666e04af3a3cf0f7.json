@@ -1,0 +1,16 @@
+{
+ "unit": "plane:coverage-provenance.test.mjs",
+ "inputHash": "45a659ed128e52cf9d41b166ead183dd94fbddaa08f2b8e4666e04af3a3cf0f7",
+ "verdict": "PASS",
+ "run": "3e7ba71ffd819e7624fbe00fbaf5f7079d656343.1790297838919.8248.json",
+ "tree": "3e7ba71ffd819e7624fbe00fbaf5f7079d656343",
+ "head": "3f1e0fef164d2b8e81d33cf1304fb89f8df4d742",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1004,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "23a9ec45-46bd-5b6e-9e46-0329ac9ffff0",
+ "at": "2026-09-25T00:57:18.936Z"
+}
