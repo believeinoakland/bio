@@ -1000,8 +1000,8 @@ scope: `kind` in each version of the answer. Extend `bio-plane/test/suggest.test
 accepts-when: a version with a kind reads the same kind from both ops. NEGATIVE CONTROL: drop the key, and the cross-op arm fails on `kind`.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
-### D-191 · running — **A CAPTURE ASSEMBLED FROM REUSED PARTS DOES NOT STATE ITS TEMPORAL SPREAD: `subresources.mjs` records each part's `reused_from_fetched_at`, and nothing computes the earliest and latest fetch instants of the composite.** — owner CAPTURE.
-status: running — SCHEDULER #22 03:20Z spawns WORKER D-191 (depth 2)
+### D-191 · integrated — **A CAPTURE ASSEMBLED FROM REUSED PARTS DOES NOT STATE ITS TEMPORAL SPREAD: `subresources.mjs` records each part's `reused_from_fetched_at`, and nothing computes the earliest and latest fetch instants of the composite.** — owner CAPTURE.
+status: integrated — SCHEDULER #22 03:58Z: tip 9351b715, GATE 366/366 GREEN FULLREUSE (21075 assertions), tree d6a77c3f; part_fetch_spread per clock (I5 additive); 2.reuse-spread BUILT; minted D-603
 order: after D-235, with the product rows before the M0 group: the record holds the instants and does not say what they add up to (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
 milestone: M2
 interface: I5 additive — the manifest's spread; the integrator mints and classifies the IC.
@@ -1089,7 +1089,8 @@ scope: search the bytes already held for a page where tier 2 decodes fewer glyph
 accepts-when: a real page's award keeps tier 1 by glyph count, or the search is recorded empty. NEGATIVE CONTROL: award by raw length and the real-page arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### FW-24 · queued — **THE WHOLE-CORPUS DOCUMENT-TYPE CENSUS IS NOW TAKEABLE AND NOT TAKEN: Legistar answered during FW-22, so the census can run over the whole corpus (`M032_HALVES=bucket`) instead of the sampled halves.** FW-22's worker (finding 3, via CONDUCT #20 21:21Z). — owner FRAMEWORK.
+### FW-24 · running — **THE WHOLE-CORPUS DOCUMENT-TYPE CENSUS IS NOW TAKEABLE AND NOT TAKEN: Legistar answered during FW-22, so the census can run over the whole corpus (`M032_HALVES=bucket`) instead of the sampled halves.** FW-22's worker (finding 3, via CONDUCT #20 21:21Z). — owner FRAMEWORK.
+status: running — SCHEDULER #22 03:58Z spawns WORKER FW-24 (depth 2)
 order: after D-515, with the measurements: EXTRACTION-BREADTH §2's rule that a count comes before any reader (SCHEDULER #19, 2026-09-24)
 milestone: M2
 interface: none — a measurement.

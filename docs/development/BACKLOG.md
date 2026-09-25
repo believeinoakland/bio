@@ -193,6 +193,16 @@ scope: release an expired plain row as D-523 released a render row (state `expir
 accepts-when: a plain request past `expires` is not fetched and reads expired; the producers state their bound (moves: a lapsed ask fetched; unbounded walks). NEGATIVE CONTROL: skip the expiry test for plain rows and the lapsed-ask arm fetches, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-523's worker).
 
+### D-603 · queued — **EVERY SUBRESOURCE RECORD IN A CAPTURE MANIFEST CARRIES `fetched_at` FROM THE LOOP STEM, INCLUDING RECORDS NEVER FETCHED: a reused part (`fetched_this_capture: false`, whose real fetch instant is `reused_from_fetched_at`) and every policy-skipped, DEFERRED, CAP_REACHED, BUDGET_EXHAUSTED or refused reference, so the record claims a fetch at an instant nothing was fetched.** Found by D-191's worker (03:56Z). — owner CAPTURE.
+order: after D-581, with the capture corrections ahead of features: a manifest stating a fetch that never happened is the record claiming more than it supports (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I5 — a manifest field narrowed; the integrator classifies (consumers checked by the finder: civicos-ui reads only reused_from_fetched_at; partFetchSpread reads fetched_at only for fetched parts).
+design: `docs/development/CAPTURE-SCALING.md` §"Checking that a reused asset is still the same", with D-191's per-clock spread.
+depends-on: D-191 (land/worker/D-191 @ 9351b715; the spread that reads fetched_at).
+scope: keep `fetched_at` only on records whose request was ISSUED; stamp the others under a name that claims no fetch (`considered_at`) or drop it. Extend `bio-plane/test/subresources.test.mjs`.
+accepts-when: a reused part and a policy-skipped reference carry no fetched_at (moves: every unfetched record claiming a fetch). NEGATIVE CONTROL: restore the stem's fetched_at and that arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-191's worker).
+
 ### D-568 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
 order: after D-573, with the review-copy corrections: an edition stated for a case the record has not chosen claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M10
@@ -1182,13 +1192,3 @@ depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch
 scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
 accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).
-
-### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push`** … (whole text: the cut archive)
-order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree … (whole text: the cut archive)
-depends-on: none — D-293 is on `main`.
-accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
