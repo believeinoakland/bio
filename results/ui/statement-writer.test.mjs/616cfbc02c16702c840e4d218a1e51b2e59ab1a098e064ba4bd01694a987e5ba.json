@@ -1,0 +1,16 @@
+{
+ "unit": "ui:statement-writer.test.mjs",
+ "inputHash": "616cfbc02c16702c840e4d218a1e51b2e59ab1a098e064ba4bd01694a987e5ba",
+ "verdict": "PASS",
+ "run": "006c16c7663598534e65c6f7e2f9efe3d18179ae.1790303613873.1754.json",
+ "tree": "006c16c7663598534e65c6f7e2f9efe3d18179ae",
+ "head": "1f37e895c054fefba05cfa342b1d9b392e6edcdb",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 87,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "161dc926-5071-5af8-86d5-61eb193cae4d",
+ "at": "2026-09-25T02:33:33.888Z"
+}
