@@ -130,38 +130,6 @@
    "why": "bio-plane/src/store.mjs: matches 0 times — queued"
   },
   {
-   "driver": "bio-plane/test/nc-mk4.mjs",
-   "arm": "machinewide",
-   "anchor": "    if (gate.scope === \"DENY\" || gate.member == ",
-   "row": "D-645",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/nc-mk4.mjs",
-   "arm": "aiscope",
-   "anchor": "        : cls === \"ai\" ? aiCred.principal\n      ",
-   "row": "D-645",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/index.mjs: matches 3 times where the arm edits ONE site — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/nc-mk4.mjs",
-   "arm": "noshare",
-   "anchor": "    if (gate.member === row.author) return true;",
-   "row": "D-645",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/nc-mk4.mjs",
-   "arm": "sharewide",
-   "anchor": "        WHERE s.lead_id = ? AND pp.member_id = ?",
-   "row": "D-645",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/nc-rec113.mjs",
    "arm": "blind",
    "anchor": "  const named = resultRef != null && String(resu",

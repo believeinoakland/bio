@@ -18,6 +18,15 @@
  *
  * The pristine copies live in `$MK4_PEN` (default /tmp/conduct4-mk4/pen), a
  * directory only this item uses — not the shared scratchpad, and not the tree.
+ *
+ * RE-ANCHORED AND RE-RUN 2026-09-25 (D-645), each arm ALONE, every restore byte-identical by sha256 and content
+ * (store.mjs 3,471,769 B, index.mjs 887,726 B): M0-197's anchor-drift reader found machinewide, noshare and
+ * sharewide matching 0 times (REC-129 folded the JS gate into `#leadReach`'s one SQL predicate) and aiscope
+ * matching 3 (REC-132's identity stamps repeat its tail), so none of the four armed and `lead.test.mjs`'s
+ * NEGATIVE CONTROL line was a claim about 2026-09-18. Re-anchored on unique spans (1 match on this tree and on
+ * origin/main @ 95fe7bc7): baseline 69/0; machinewide 63/6 (adds the internet frontier's member-token arm to
+ * 09-18's five); aiscope 67/2 (armed at 1+1 — viewer AND identity stamp); noshare 66/3; sharewide 68/1 —
+ * each AS DECLARED, failing its MUST FAIL arms by name.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -137,8 +146,12 @@ const ARMS = {
     mustFail: ["NO EXISTENCE LEAK: the member TOKEN", "NO EXISTENCE LEAK: an ORGANISATION-scoped ai key",
                "AFTER the share, the member TOKEN"],
     mustPass: "the member-scoped arms — ruth's own key still reads, sam's still does not",
-    patch: () => arm([[STORE, "    if (gate.scope === \"DENY\" || gate.member == null) return false;",
-                              "    if (gate.scope === \"DENY\") return false;\n    if (gate.member == null) return true;"]]),
+    /* RE-ANCHORED 2026-09-25 (D-645): the JS gate this arm quoted (`gate.scope === "DENY" || gate.member ==
+       null`) is gone — REC-129 made the ruling ONE SQL predicate, `#leadReach`, and a credential with no
+       member now reaches nothing because `who == null` returns null there. The arm widens THAT: a
+       non-DENY viewer with no member (a `class:*` credential) reaches every lead; DENY still reaches none. */
+    patch: () => arm([[STORE, "    if (who == null) return null;\n    return {\n      sql: `(l.author = ? OR EXISTS",
+                              "    if (who == null) return viewerPredicate(typeof identity === \"string\" && identity !== \"\" ? identity : viewer).scope === \"DENY\" ? null : { sql: \"1 = 1\", args: [] };\n    return {\n      sql: `(l.author = ? OR EXISTS"]]),
   },
   aiscope: {
     files: [INDEX],
@@ -147,16 +160,23 @@ const ARMS = {
     mustFail: ["OVER-STRICTNESS: ruth's member-scoped ai key reads ruth's lead",
                "and sam's member-scoped ai key reaches it too"],
     mustPass: "every refused-viewer arm — refusing more cannot leak",
-    patch: () => arm([[INDEX, "        : cls === \"ai\" ? aiCred.principal\n        : `${MACHINE_CLASS_PREFIX}${cls}`);",
-                              "        : cls === \"ai\" ? \"class:ai\"\n        : `${MACHINE_CLASS_PREFIX}${cls}`);"]]),
+    /* RE-ANCHORED 2026-09-25 (D-645): the quoted tail now matches THREE stamps, so the arm patched none.
+       REC-132 added the POSITIONAL stamp beside the viewer, and `#leadReach` asks the identity, not the
+       viewer — so "every ai key reads as class:ai" is both stamps of the gated-read block, each anchored
+       on its own `set(...)` head. */
+    patch: () => arm([[INDEX, "      inner.searchParams.set(\"viewer\",\n        viaSession ? sessViewer\n        : cls === \"ai\" ? aiCred.principal\n",
+                              "      inner.searchParams.set(\"viewer\",\n        viaSession ? sessViewer\n        : cls === \"ai\" ? \"class:ai\"\n"],
+                      [INDEX, "      if (IDENTITY_READS.includes(op)) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity\n        : cls === \"ai\" ? aiCred.principal\n",
+                              "      if (IDENTITY_READS.includes(op)) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity\n        : cls === \"ai\" ? \"class:ai\"\n"]]),
   },
   noshare: {
     files: [STORE],
     why: "the share reaches nobody: a joined participant of the project it was shared to cannot read it",
     mustFail: ["AFTER the share, sam (joined to P1) reads the lead"],
     mustPass: "every refusal arm",
-    patch: () => arm([[STORE, "    if (gate.member === row.author) return true;\n    return !!this.#one(",
-                              "    if (gate.member === row.author) return true;\n    return false && !!this.#one("]]),
+    /* RE-ANCHORED 2026-09-25 (D-645): the share arm is now the EXISTS in `#leadReach`'s one predicate. */
+    patch: () => arm([[STORE, "      sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s",
+                              "      sql: `(l.author = ? OR 0 = 1 AND EXISTS (SELECT 1 AS x FROM lead_shares s"]]),
   },
   sharewide: {
     files: [STORE],
@@ -164,8 +184,9 @@ const ARMS = {
        + "widened into a member's words",
     mustFail: ["AFTER the share, vera (invited, not joined) still answers EXACTLY"],
     mustPass: "otto, the tokens and the org key — they hold no position at all",
-    patch: () => arm([[STORE, "        WHERE s.lead_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving') LIMIT 1`,",
-                              "        WHERE s.lead_id = ? AND pp.member_id = ? LIMIT 1`,"]]),
+    /* RE-ANCHORED 2026-09-25 (D-645): the participant-state filter now lives in `#leadReach`'s predicate. */
+    patch: () => arm([[STORE, "             WHERE s.lead_id = l.lead_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))`,",
+                              "             WHERE s.lead_id = l.lead_id AND pp.member_id = ?))`,"]]),
   },
   shareauthor: {
     files: [STORE],
