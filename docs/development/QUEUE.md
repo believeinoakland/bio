@@ -29,127 +29,6 @@ BOB appends a designed item, a correction or an order change here, with its inte
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 16 in all (`CACHE_ROWS`, sized to CONDUCT's capacity plus spare: Bob, 2026-09-23, `WORK-PIPELINE.md`). **At most 10 worker sessions are live at once** (Bob, 2026-09-24 ~03:08Z, via BOB #32; until 05:00Z, then 6, and no new spawn from 06:00Z): a `running` row whose worker has FINISHED and awaits integration holds no session, so the cache keeps a few `queued` rows behind the live ten and no slot waits. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
 
-### FW-23 · integrated — **CSV HAS NO FORMAT-REGISTRY ENTRY, so the corpus's CSV files are held and never read.** BOB #32 DESIGNED it (2026-09-24 02:30Z): delimiter and encoding found by signature and RECORDED on the reading, undetermined when they cannot be told; one sheet; row 1 is row 1, a header being a reading, never assumed; cells addressed sheet-cell/sheet-range, 1-based; the capture's grade. Legacy `.xls` (50 keys) stays waiting under OFFICE-FORMATS's legacy ruling. — owner FRAMEWORK.
-status: integrated — integrated — flipped 2026-09-24 ~22:40Z by SCHEDULER #20 on CONDUCT #20's verification (22:37Z): eaeeb3e0 rebased onto 1a7f0bcc, 355/355 · 20462 GREEN; nc-fw23 4 arms AS DECLARED; rides c20-batch27; CONDUCT resolves IC-283 (I2) there. Findings 2 and 3 are REC-218 and DIST-14.
-order: behind D-66, per BOB #32's ruling (SCHEDULER #18, 2026-09-24)
-milestone: M2
-interface: I2 additive — a `csv` format entry.
-design: `docs/development/OFFICE-FORMATS.md` "CSV — DESIGNED 2026-09-24 by BOB #32" (folded at 16fe1e7f), on "The architectural answer: a FORMAT axis".
-depends-on: D-66.
-scope: the `csv` entry and its reader on the format axis; extend the office-format suites.
-accepts-when: a CSV reads as addressed cells with delimiter and encoding recorded. NEGATIVE CONTROL: guess a delimiter where none is determined and the undetermined arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs FW`).
-
-### D-463 · integrated — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
-status: integrated — VERIFIED by CONDUCT #20 22:09Z: 96d2dd60, full battery 355/355 · 20446, nc-d463 8/8 AS DECLARED; rides c20-batch27.
-order: after D-462, the last of the namespace guards (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
-milestone: M0 (a guard)
-interface: I3/I5 — a per-credential confinement; the integrator mints and classifies the IC.
-design: `docs/development/VERIFICATION.md` (CLAUDE.md §5, D-325's residue).
-depends-on: D-456, D-461.
-scope: a credential may be minted confined to `scratch`; every call it makes resolves to scratch whatever it names, and a `store=bio` from it is refused by name.
-accepts-when: a confined credential writing without `store=` lands in scratch, and `bio`'s counters are unchanged. NEGATIVE CONTROL: drop the confinement, and that arm moves `bio` and fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### M0-187 · integrated — **`surfacing-run.mjs` CANNOT SUPPLY A SURFACING RUN FOR A SECOND DEPLOY TOKEN IN ONE STORE: `openRun` creates its fixture project BY TITLE, so the second token is refused NAME_TAKEN, the wrapper's `.catch(() => null)` swallows it, and the suite reads SURFACE_NO_RUN with the real cause unnamed.** Found by D-511's worker (F1). — owner RECORD (the shared test helper).
-status: integrated — integrated — flipped 2026-09-24 ~22:20Z by SCHEDULER #20 on CONDUCT #20's verification (22:15Z): land/worker/M0-187 @ 3ef3c6b9, whole battery 355/355 · 20403, control 7 arms AS DECLARED re-run after its rebase; rides c20-batch27.
-order: after M0-181, AHEAD of the product rows: a fixture that hides the cause of a red costs a diagnosis round in every suite that imports it (Bob's 17:41Z rule) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:47Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a refusal is reported by name, never swallowed).
-depends-on: none.
-scope: make the fixture project's title unique per (token, store), and let the wrapper rethrow any refusal that is not the expected one.
-accepts-when: two deploy tokens in one store each get a surfacing run (the measured failure it moves: NAME_TAKEN read as SURFACE_NO_RUN). NEGATIVE CONTROL: restore the shared title and the second-token arm fails naming NAME_TAKEN.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### M0-182 · integrated — **7 CONTROL-DRIVER PENS INSIDE THE WORKTREE ARE NOT GITIGNORED (.m0110-harness, .m0109-harness, .m037-harness, .m0100-harness, .m0107-harness, .vf1-control-pristine, .m0111-harness), so the tree is DIRTY while those controls run and a gate on it records nothing; and nothing grades the pen class.** Found by D-492's worker (F2) and M0-179's sweep. RESTATED 2026-09-24 ~22:28Z by SCHEDULER #20 to BOB #33's ruling of 17:12Z (BOB-INBOX-drained.md, the M0-155 finding-5 entry): *a control driver's PEN is not a session's SCRATCH … in-worktree, gitignored, item-named pens STAND*. The earlier text called the in-worktree pen itself the violation; that was wrong (CONDUCT #20 22:25Z, who has corrected the worker). — owner M0.
-status: integrated — integrated — flipped ~23:06Z by SCHEDULER #20 on CONDUCT #20's verification (23:00Z): 413e894d, 98/98 · 7392 RECORDED GREEN; nc-m0182 5/5 AS DECLARED; class (a) only (an unignored pen), as BOB #33's ruling leaves; rides c20-batch27. RESIDUE: 16 of 74 moved drivers' controls re-run, the rest rest on the static sweep. Findings: D-537, D-559.
-order: after M0-188, AHEAD of the product rows (moved 2026-09-24 20:25Z by SCHEDULER #19): an unignored pen dirties the tree during a control, so a gate records nothing (Bob's 17:41Z rule; M0-179's sweep via CONDUCT #20)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a control breaks only the thing), with BOB #33's pen ruling of 17:12Z (M0-155 finding 5; M0-172).
-depends-on: none.
-scope: the three defects the ruling leaves, and only those: (1) a pen NOT listed in `.gitignore` (the 7 above) is listed; (2) a pen that is not item-named is renamed to its item; (3) a pen left behind on a clean run is removed by its driver (M0-172's class). A sweep suite shaped like `budget-sweep.test.mjs` grades every `nc-*.mjs` harness and `*.control.mjs` driver as GITIGNORED-ITEM-NAMED, TEMP or MEMORY against a floor, and names each that is none of these. Moving an in-worktree, gitignored, item-named pen out of the worktree is NOT this row's act.
-accepts-when: the sweep names 0 unignored and 0 un-item-named pens (the measured failure it moves: 7 unignored pens dirtying the tree during a control). NEGATIVE CONTROL: remove one pen's `.gitignore` line and the sweep names it.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`); restated by SCHEDULER #20.
-
-### D-513 · integrated — **`op=knock`'s TOO_LARGE (two sites) and EMPTY STILL REACH A KNOCKER UNTRANSLATED at the door D-508 catalogued, and `d278-codeless-refusals.test.mjs`'s header calls them "coded already" (true of `reason`, false of the translation).** Found by D-508's worker. — owner RECORD.
-status: integrated — integrated — flipped ~23:03Z by SCHEDULER #20 on CONDUCT #20's verification (22:59Z): fe786466, whole battery unreused 354/354 · 20400; nc-d513 4/4 AS DECLARED (one declaration corrected from its first run); rides c20-batch27; CONDUCT classifies IC-286 MAJOR (the reason token moves on the PUBLIC op=knock). Findings placed as D-549 and D-550.
-order: after D-510, with the product corrections: refusals a member cannot read at a public door, D-507's and D-508's class (SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:47Z)
-milestone: M2
-interface: I3 additive — three catalogued codes; the catalogue version moves; the integrator classifies.
-design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, following D-484's single-site shape.
-depends-on: D-508.
-scope: consolidate each code behind one governed helper (arm F reads them F4 multi-site), then rows in KNOCK_CHECKS; correct the d278 header clause; restate the Roles doc's D-484 F4 figure from this landing's census print (it records "102 -> 100" on its own tree; main read 102 before D-508).
-accepts-when: each of the three arrives with its translation, and arm F reads each single-site. NEGATIVE CONTROL: return one code outside the helper and arm F names it multi-site (a behavioural arm cannot see it: `dec49Decorate` translates from the catalogue alone).
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### D-516 · integrated — **INSIDE THE ONE-SECOND BAND THE OBSERVATION-LOG READERS PICK A CLASS THEY CANNOT TELL: a subject entering 1-2 s before a level's first row reads `never_looked` or `purged` depending on where the clock second fell (D-500's arm M3).** BOB #33 RULED 2026-09-24 17:58Z (drained to `BOB-INBOX-drained.md`; cite until folded): `observation_log.at` STAYS whole-second; within the band the reader states undetermined. — owner RECORD.
-status: integrated — integrated — flipped ~23:01Z by SCHEDULER #20 on CONDUCT #20's verification (22:58Z): e5775cb9 merged with 9f8b69e6, FULL 360/360 · 20680 RECORDED GREEN; collapse control failed 5 more arms than declared (none that must not), each explained on the suite's line; rides c20-batch27; CONDUCT resolves IC-288 there. No new row.
-order: after D-514, with the corrections to just-landed work: the record choosing between two claims it cannot tell apart (CLAUDE.md §2) (BOB #33, 17:58Z; SCHEDULER #19, 2026-09-24)
-milestone: M8
-interface: I3 additive — a published state on a new path; the integrator classifies.
-design: `docs/development/OBSERVATION-LOG-DESIGN.md` §6 "The readers", with BOB #33's ruling of 17:58Z, which this row FOLDS into §6 beside D-500's named ceiling in the same landing.
-depends-on: D-500.
-scope: `enteredAfterFirstRow` returns three ways (after, before, within the band); within it the content axis reads `CONTENT_AXIS_UNDETERMINED`, its `why` naming the stored watermark's one-second precision; no column change, no migration.
-accepts-when: arm M3's band pair reads undetermined in both readers, and pairs outside the band are unmoved (the measured failure this moves: M3's pair flipping class on the clock second). NEGATIVE CONTROL: collapse the band into a two-way comparison and the band arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (BOB #33 inbox 17:58Z; `node tools/mintid.mjs D`).
-
-### D-517 · integrated — **ONE READER, TWO WORD-GAP RULES: tier 1's TJ word gap is a hand-picked -100 (0.1 em) while D-502 set the run gap at a measured 0.25 em, a 2.5x disagreement inside one reader.** Found by D-502's worker (M-141). — owner CONTENT-PDF.
-status: integrated — integrated — flipped ~22:44Z by SCHEDULER #20 on CONDUCT #20's verification (22:41Z): 99065b61 on 9f8b69e6, FULL 360/360 · 20696 RECORDED GREEN; a substitute three-arm control is on the suite's NEGATIVE CONTROL line (M-145 measured -100 = 0.1 em exactly, confirming D-481). Rides c20-batch27. The declined downward unification is in M-145 with its reversal price; not rowed (no measured failure).
-order: after D-516, with the extraction corrections: two rules of one reader disagreeing on what a word gap is (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:04Z)
-milestone: M2
-interface: none.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with D-502's measured threshold (M-141).
-depends-on: D-502.
-scope: measure the TJ displacement distribution over M-141's corpus; re-set the constant from it, or unify the two rules; record the measurement with date and instrument.
-accepts-when: the TJ threshold is the measured one, and M-133's agenda glue stays at 5 or below with no word lost (the measured failure it moves: the unmeasured 0.1 em constant). NEGATIVE CONTROL: restore -100 and the measured-threshold arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### REC-213 · integrated — **`op=reviewcopy`'s LIVE STATEMENT LIST CAN SHOW THE WRITER'S OWN ACKNOWLEDGEMENT AMONG THE SECOND READERS, while the case document now withholds it: a row by its own writer is not a second reading (rule 11), so listing it overclaims.** REC-212's worker (F2). BOB #33 RULED YES, 2026-09-24 19:06Z (cite until folded): withheld AND COUNTED, with the count and its reason ("by the statement's writer") stated beside the list, as the case document does; §6A's "show everything recorded" holds, since nothing recorded is hidden. — owner RECORD.
-status: integrated — integrated — flipped 2026-09-24 ~22:20Z by SCHEDULER #20: WORKER REC-213 (session_01JJwYaKs8chrSDYbEwxuZ3W) COMPLETED and reported to CONDUCT #20 (D-540, D-541 minted and routed); land/worker/REC-213 @ 3e7ac340 pushed. CONDUCT merges only on its green; its floors are the branch's, re-read on the union.
-order: after D-517, with the corrections to just-landed work: a review copy claiming a second reading that is not one (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:57Z and BOB #33 19:06Z)
-milestone: M10
-interface: I3 — the review copy's list narrows and gains the count; the integrator classifies.
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A with BOB #33's ruling of 19:06Z, which this row FOLDS into §6A in the same landing.
-depends-on: REC-212.
-scope: pass the draft's `statement_by` as `writer` at reviewCopy's one `#statementAcknowledgements` call; state the withheld count and its reason beside the list.
-accepts-when: a writer's own row is absent from the review copy's list and counted beside it (the measured failure it moves: the writer's row listed among second readers). NEGATIVE CONTROL: drop the `writer` argument and the list names the writer, failing by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
-
-### M0-176 · integrated — **`gates.mjs` §2's DOC-FACING DOOR IS NOT PATH-GRANULAR: every doc-facing unit takes ANY `docs/` change, so `calibration.test.mjs` (which genuinely reads `kickoffs/SCHEDULER.md`) still runs on a MEASUREMENTS-only diff after M0-165 removed its false reader edge.** Found by M0-165's worker (M0-165 NARROWED to this). — owner M0.
-status: integrated — integrated — RECORDED GREEN (worker's report to SCHEDULER #20, 22:39Z): land/worker/M0-176 @ 17f90f31, class FULL 360/360 suites green · 20682 assertions, `gates: RECORDED GREEN for tree 519dd211 (class FULLREUSE)`, exit 0 read unpiped; coverage --strict floors unmoved; control G23-G25 55/0 AS DECLARED (G24's empty-diff declaration corrected at its site). NARROWED, not done: its accepts-when waits on D-535 (placed after M0-193). FINDING 2, stated and NOT a row (no fix diagnosed; SCHEDULER #20's decision): this row's headline premise is wrong. `calibration.test.mjs` reads `docs/development/SCHEDULER.md` (line 542), NOT `kickoffs/SCHEDULER.md`. The kickoff edge exists only through gates.mjs §2b's basename probe, which cannot tell two files sharing a basename apart. Tightening it risks false greens, so it waits until someone measures over-selection on this estate.
-order: after M0-170, AHEAD of the product rows by Bob's 17:41Z rule: every `docs/` diff runs doc-facing units it does not touch (gate time) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:02Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
-depends-on: M0-165.
-scope: a doc-facing unit takes only the `docs/` paths it, or a tool it runs, names; this changes selection estate-wide, so print each unit's before/after on a MEASUREMENTS-only and a kickoff-only diff.
-accepts-when: a MEASUREMENTS-only diff no longer selects calibration, and a kickoff diff still does. NEGATIVE CONTROL: restore the whole-`docs/` door and calibration is selected again, by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### UI-103 · integrated — **THE PUBLISHED CASE PAGE NAMES THE PUBLISHER AS THE STATEMENT'S WRITER: `app.html` ~20591 (page 2) renders "Written by ${c.completeness.author}", while REC-212 split the two acts (`statement_by` wrote it, `author` published it).** The delegation RECORD (REC-212) → UI is on coord `CLAIMS.md`. — owner UI.
-status: integrated — integrated — flipped 2026-09-24 ~22:28Z by SCHEDULER #20 on CONDUCT #20's verification (22:25Z): 5e6fe8a2, 297/297 · 17419 FULL, then 69/69 on its comment commit; UI harness 73/73; control 7/7 AS DECLARED; rides c20-batch27; it discharged the REC-212 → UI delegation itself.
-order: after UI-102, with the surfaces owed to landed plane rows: a surface that attributes an act to the wrong member (SCHEDULER #19, 2026-09-24; REC-212's worker via CONDUCT #20 18:57Z)
-milestone: M10
-interface: I3 consumer (REC-212's IC).
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (two acts, two names), with UI-89's three-state render as the precedent.
-depends-on: REC-212.
-scope: read `statement_by` for who wrote the statement and `author` for who published it; render the three states (list / [] / null) through `completeness.statement_by_stated`.
-accepts-when: a case whose statement one member wrote and another published names each for its act, against a real-plane suite (the measured failure it moves: the publisher named as writer). NEGATIVE CONTROL: render `author` as the writer again and the two-acts arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
-
-### UI-97 · integrated — **A MEMBER CANNOT UNDO A MUTE FROM THE APP: `op=queuemute` takes `unmute:true` for `{item}` and for `{case, kinds}`, and no client sends it.** Found by UI-86's worker. — owner UI.
-status: integrated — worker reported finished 21:55Z: land/worker/UI-97 @ 412e917c, gate GREEN; for CONDUCT to verify and integrate (SCHEDULER #19 dispatch).
-order: after UI-86's row, the same queue control: a member door the plane already opens (SCHEDULER #17, 2026-09-24; via CONDUCT #19)
-milestone: M8
-interface: I3 consumer.
-design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class".
-depends-on: UI-86.
-scope: in `queueMuteReportHtml`, a per-muted-item "Let this reach me again" sending `{item, unmute:true}`, and a per-case "Unmute" sending `{case, kinds, unmute:true}`; register the repeated control in `member-respect` SETS. Extend `civicos-ui/test/notifications.test.mjs`.
-accepts-when: a muted item unmuted from the report reaches the member again. NEGATIVE CONTROL: omit `unmute:true`, and the round-trip arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
-
 ### REC-207 · running — **NOTHING SETTLES A BIAS-DEBT OBLIGATION BUT THE LENS MOVING BACK: a re-run under the current lens is not recognised, and `op=taskresolve` addresses tasks, not runs.** BOB #32's ruling of 2026-09-23 23:42Z (cite until folded into Declared Bias "Bias debt, and HUNCH DEBT" and NOTIFICATIONS): *BOTH acts settle it, each RECORDED, never cleared silently — (1) a re-run under the CURRENT lens discharges the debt of the run it re-runs, closed with the discharging run's id and lens pins (any other lens discharges nothing); (2) a member's resolve with a REQUIRED stated reason, authored, attributed, dated, append-only, riding the task-resolve path or its equivalent.* — owner RECORD.
 status: running — SPAWNED 2026-09-24 ~21:30Z by SCHEDULER #19 (dispatch, BOB #33 21:10Z) as a SEPARATE CLOUD SESSION titled WORKER REC-207 (SCHEDULER #19), base origin/main 1a7f0bcc0. Falsify rather than believe: a live worker holds the branch land/worker/REC-207; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH and that session, and never conclude queued from the absence alone.
 order: behind D-86's train, as ruled; with the M4 bias rows (SCHEDULER #17, 2026-09-23)
@@ -172,28 +51,6 @@ scope: promote checks each bias-set transition against the declared STATES edges
 accepts-when: `adopted` → `proposed` is refused by name; every declared edge still passes. NEGATIVE CONTROL: drop the edge check, and the backwards arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### REC-210 · integrated — **ADOPTING A PROPOSED BIAS REVISION DOES NOT SAY SO: REC-187 re-pins the adoption to the adopted sha, but an adoption that pins a proposed, not-yet-accepted revision reads like any other.** BOB #32's ruling of 2026-09-24 00:42Z (relayed by CONDUCT #19; cite until folded into Declared Bias): *adopting a PROPOSED revision is a REPLACEMENT; the adoption must SAY it pins a proposed revision, and `op=biasadopt`'s answer and the adoption's read state that marker.* — owner RECORD.
-status: integrated — integrated — flipped ~22:59Z by SCHEDULER #20 on CONDUCT #20's verification (22:57Z): 5cd28164 merged with 9f8b69e6, 360/360 · 20678 RECORDED GREEN; control A/B/C AS DECLARED; rides c20-batch27; CONDUCT mints its IC (I3 additive). Its case-document finding (the frozen bias_manifest has no pins_proposed field) went to BOB #34 for a /4 ruling; not rowed until ruled.
-order: after D-468, with the bias rows (SCHEDULER #17, 2026-09-24; REC-187's worker F1)
-milestone: M4
-interface: I3 additive — a marker on the adoption's answer and read; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption", with BOB #32's ruling of 2026-09-24 00:42Z (relayed by CONDUCT #19; cite until folded into Declared Bias).
-depends-on: REC-187 (`integrated` on c19-batch9).
-scope: record and publish the marker when the adopted revision is still proposed; the re-pin itself is built.
-accepts-when: adopting a proposed revision answers and reads the marker; adopting an accepted one does not. NEGATIVE CONTROL: drop the marker, and the proposed-adoption arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
-
-### UI-94 · integrated — **THE QUEUE CANNOT FORWARD A SELECTION: D-126 lets the plane take the set, and the member picker is per item.** — owner UI.
-status: integrated — integrated — flipped 2026-09-24 ~22:20Z by SCHEDULER #20: WORKER UI-94 (session_0112MpTkDhs8e6RixvACKbTy) reported COMPLETE (queueSetOpsFor, 7 arms verified, 3 flags to CONDUCT #20); land/worker/UI-94 @ a3b8509c pushed. CONDUCT merges only on its green.
-order: after D-176 (SCHEDULER #17, 2026-09-23; D-126's worker via CONDUCT #18 23:47Z)
-milestone: M8
-interface: I3 consumer (IC-235).
-design: `docs/development/NOTIFICATIONS.md` (its Incomplete section names it), with D-126's per-item weight.
-depends-on: D-126 (`integrated` on c17-batch7).
-scope: a bulk forward over the queue's selection, sent as the set.
-accepts-when: a selection of three forwards in one act. NEGATIVE CONTROL: loop per item, and the one-act arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
-
 ### REC-205 · integrated — **A PROJECT-SCOPED FINDING CANNOT JOIN A QUEUE SELECTION: its act names a project per item, so D-126's set has no way to carry one.** — owner RECORD, then UI.
 status: integrated — CONDUCT #20 verified 23:45Z, tip 535294c7, for c20-batch28; UI half is UI-110
 order: after UI-94 (SCHEDULER #17, 2026-09-23; D-126's worker)
@@ -204,39 +61,6 @@ depends-on: D-126 (`integrated` on c17-batch7).
 scope: the set act admits project-scoped items, each resolved against its own project.
 accepts-when: a selection mixing a project-scoped finding and a condition is handled in one act. NEGATIVE CONTROL: drop the per-item project, and the mixed-selection arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
-
-### D-527 · integrated — **A REOPENED PROPOSAL'S EARLIER DECISION REACHES NO PAGE: `op=proposals` publishes `prior_disposition` (proposalsFeed, REC-184) but no surface reads that op (UI-14 retired it for `op=queue`), and `op=queue`'s FINDING items carry `subject.definition_version` but not `prior_disposition`, so a member meeting the reopened question is shown one nobody has answered.** Found by UI-99's worker (id minted by it; stated in Framework §8.2's As-built paragraph). — owner RECORD, then UI.
-status: integrated — integrated — flipped 2026-09-24 ~22:37Z by SCHEDULER #20 on CONDUCT #20's verification (22:34Z): d72e0a2b, full 354/354 · 20388; control (A) 55/3 AS DECLARED by name, (B) over-strictness 58/0; rides c20-batch27; CONDUCT mints and classifies its IC (I3 additive). Its UI follow-on is UI-109.
-order: after UI-106, with the corrections: the record holding a decision the one op a surface reads does not carry (SCHEDULER #19, 2026-09-24; UI-99's worker 21:45Z)
-milestone: M4
-interface: I3 additive — `prior_disposition` on the queue's FINDING item; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 "The declared flow, and its revisions" (a reopened proposal carries the earlier decision as `prior_disposition`).
-depends-on: REC-184.
-scope: `op=queue`'s FINDING item publishes the proposal's `prior_disposition` (the object proposalsFeed already builds; no new derivation or table); a UI follow-on renders it and is rowed once this lands.
-accepts-when: a revision-reopened finding on `op=queue` carries its prior disposition with state, reason, author, instant and `definition_version` (the measured failure it moves: the field absent from every surface-read op). NEGATIVE CONTROL: drop the field from the queue item and the reopened-item arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (placed; `D-527` minted by UI-99's worker).
-
-### D-444 · integrated — **THE PROJECT OFFERS `reinstate` THAT THE STORE WILL REFUSE: the reinstate affordance's PROJECT arm keys on the count `cites_out.severed`, so a project whose only severed edges point at RETIRED items is offered the act, and REC-183's `#edgeTransition` refuses it RETIRED_NOT_CITABLE.** The worker states it at `affordances.mjs` beside the rule (*"The PROJECT arm is not narrowed"*). — owner RECORD.
-status: integrated — integrated — flipped 2026-09-24 ~22:40Z by SCHEDULER #20 on WORKER D-444's own report (22:34Z): land/worker/D-444 @ 92ac43b5 (verified by ls-remote), gate GREEN 354/354 · 20393; affordances.test.mjs §0 pins the retired-target spelling count at two. Its finding D-553 is placed after UI-107. CONDUCT merges only on its own verification.
-order: after UI-86: a correction to just-landed work (REC-183), an affordance that promises an act the record refuses; directly ahead of the census rows (SCHEDULER #17, 2026-09-23, REC-183's worker via CONDUCT #17, 22:09Z; verified at land/worker/REC-183 @ 27905f5d)
-milestone: M8
-interface: I3 additive — one new fact in `affordanceFacts`; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1 (a retired item is not citable; BOB #30), with the affordance contract that an offered act is one the store accepts.
-depends-on: REC-183 (finished, awaiting integration).
-scope: `affordanceFacts` gains a fact counting severed out-edges whose target is NOT retired (e.g. `cites_out.severed_reinstatable`), read by the same predicate `#edgeTransition` runs; the PROJECT arm keys on it. Extend `bio-plane/test/affordances.test.mjs`.
-accepts-when: a project whose only severed edge targets a retired item is not offered reinstate; one with a severed edge to a live item is, and the store accepts it. How a liar passes it: dropping reinstate from projects entirely, so the live-target arm must be offered. NEGATIVE CONTROL: key the arm back on `cites_out.severed`, and the retired-only arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`; placed directly as a plan row, never a DEBT row — BOB #31, 2026-09-23 22:09Z).
-
-### D-445 · integrated — **D-443's CAP ON `publishedCaseRegistryFor` IS PINNED BY SHAPE ONLY: it binds one `json_each` value, and `frontier-chunk.test.mjs` D443-7 asserts that structurally; its own header says it was never driven past 100 ids.** D-443 is NARROWED to this one trace, not closed. — owner RECORD.
-status: integrated — integrated — flipped 2026-09-24 ~22:31Z by SCHEDULER #20 on CONDUCT #20's verification (22:28Z): 330dc978, 75/75 · 6138 GREEN, control 10/10 AS DECLARED incl. the casereg arm; rides c20-batch27; its accepts-when is met, so D-443's NARROWED trace closes when it lands. D-551 (minted by this worker: move every gitignored in-worktree pen to mkdtemp) is NOT PLACED, by SCHEDULER #20's decision: it contradicts BOB #33's 17:12Z ruling (in-worktree, gitignored, item-named pens STAND), and its narrow classes (an unignored, un-item-named or left-behind pen) are M0-182's and M0-172's ground.
-order: after D-444: a correction to just-landed work (D-443), a guarantee the suite does not yet exercise (SCHEDULER #17, 2026-09-23; D-443's worker via CONDUCT #18 22:27Z (4), verified at c17-batch7 @ f32fe714)
-milestone: M0 (a behavioural arm over M4 code)
-interface: none — a behavioural arm.
-design: `docs/development/VERIFICATION.md` (test through the op), with D-36's bound on bound variables.
-depends-on: D-443 (`integrated` on c17-batch6).
-scope: arm D443-7b seeds 120 ratified published cases pinning one finding sha and gates that finding through the op that reaches `gateFacts`. In `bio-plane/test/frontier-chunk.test.mjs`.
-accepts-when: D443-7b is green through the op. NEGATIVE CONTROL: the existing `casereg` arm of `frontier-chunk.control.mjs` fails D443-7b by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### D-448 · integrated — **ELEVEN REVIEW-COPY REFUSAL CODES REACH A MEMBER WITH NO CANNED TRANSLATION: UI-68's surface now shows `REVIEW_NOT_PROJECT_OWNER`, `REVIEW_NO_PROJECT`, `REVIEW_DRAFT_CHANGES_PROJECT`, `REVIEW_NO_SUCH_CASE`, `REVIEW_DRAFT_TOO_LARGE`, `REVIEW_NO_RECIPIENT`, `REVIEW_NO_SECRET`, `REVIEW_NO_GRANT`, `REVIEW_NO_COMMENT_TEXT`, `REVIEW_UNKNOWN_ACT` and `NO_REVIEW_COPY`, and none has a DEC-49 row.** — owner RECORD.
 status: integrated — SCHEDULER #21 23:45Z: tip 5eadd905; first gate RED then fixed, NO recorded GREEN; D-542 placed from it
@@ -260,28 +84,6 @@ scope: replace the nine sentences with "Run `node tools/bundles.mjs`, which rebu
 accepts-when: no staleness finding names `npm run build` (the measured failure it moves: nine sites naming the one-bundle command). NEGATIVE CONTROL: restore one site's old sentence and the fleetbundles quoted-remedy arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
 
-### M0-191 · integrated — **NOTHING READS THE SLOTS: a `running` row whose worker FINISHED, went BLOCKED or has no session holds a slot until a lane happens to look, and a `queued` row waits with nobody spawning it.** BOB #33 21:05Z (supersedes his 18:30Z and 18:33Z entries): measured 7+ of 16 workers idle at 21:03Z. — owner M0.
-status: integrated — integrated — flipped ~23:06Z by SCHEDULER #20 on its worker's finish (session COMPLETED 22:51Z, 'slots audit passed') with land/worker/M0-191 @ ff3c7b9c pushed; NO gate line is stated anywhere, so it has NO recorded GREEN and CONDUCT merges only after verifying one.
-order: at the head of the backlog, AHEAD of product (BOB #33 21:05Z: *now placed AHEAD of product: it cost 7+ of 16 workers*); SCHEDULER #20 dispatches by a scratch script until it lands (SCHEDULER #20, 2026-09-24)
-milestone: M0
-interface: none (a lane tool).
-design: `docs/development/VERIFICATION.md` (an instrument states what it reads, never infers it), with `docs/development/WORK-PIPELINE.md` §1's cache states beside it, and BOB #33's ruling of 21:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #20).
-depends-on: none.
-scope: `tools/slots.mjs` reads a saved `list_sessions` listing on stdin (the cloud's `{ccr:{data}}` shape and the bare array) plus coord's QUEUE.md; matches `WORKER <ID> (` titles EXACTLY; prints FLIP (bucket COMPLETED with a pushed `land/worker/<ID>`), ANSWER (BLOCKED), RESPAWN-OR-READ (no session), SPAWN (queued, no worker) and the WORKING count (WORKING + REVIEW_READY, since gating reads REVIEW_READY); exit 1 when anything is owed. Port of BOB's `builder/slots.py`. Correction since the ruling (BOB #33 21:17Z): REVIEW_READY is NOT finished, and COMPLETED is a candidate the lane confirms by the worker's report, never a flip by itself.
-accepts-when: on the 21:03Z listing it names D-476, D-518, UI-93, REC-199, REC-200, UI-102 and D-519 as FLIP candidates, UI-99 as ANSWER and D-516 as SPAWN (the measured failure it moves: 7+ idle slots nobody named). NEGATIVE CONTROL: match titles loosely and a `WORKER D-49` session satisfies D-492, failing by name.
-added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
-
-### D-544 · integrated — **`13.statement-ack` PINS `CATALOG_VERSION`, so EVERY catalogue bump turns four gate checks red for a claim that says nothing about the version: construct-status's probe `export const CATALOG_VERSION = "1.28.0"` in `bio-plane/src/gate.mjs` (measured on main 9f8b69e6).** Found by D-463's worker: its bump made the probe MISS, and `status.mjs --check`, `status.test.mjs`'s zero-drift arm, plancheck's CONSTRUCT STATUS arm and `strandedwork`'s two plancheck-exit arms all followed — one cause, four failures. — owner M0.
-status: integrated — integrated — flipped ~23:06Z by SCHEDULER #20 on its worker's finish (session summary 22:51Z: gate 87/87 suites green) with land/worker/D-544 @ 32ec64b8 pushed (BOB #34 22:59Z: do not wait for reports). CONDUCT verifies before merging. Finding: D-558.
-order: after M0-191, AHEAD of product: it costs a diagnosis round in the gate of every row that moves the catalogue (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24; D-463's worker)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a probe pins what its claim asserts), with `docs/architecture/CORPUS-STANDARD.md` (construct-status is checked against the code at every push).
-depends-on: none.
-scope: drop the `CATALOG_VERSION` probe from `13.statement-ack`; its C-82.6 and C-82.7 probes already pin what it asserts. Sweep construct-status for any other claim probing a version constant and state each.
-accepts-when: a catalogue bump leaves `status.mjs --check` at 0 drift (the measured failure it moves: 1 drift and four red checks on D-463's bump). NEGATIVE CONTROL: restore the version probe, bump the constant, and the zero-drift arm fails by name.
-added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
-
 ### D-512 · integrated — **`replay` IS HONOURED WITHOUT SERVER VERIFICATION: the end state BOB #33 ruled is that a replayed promotion of any type or revision names its drive-provenance capture, whose held bytes' preserved promotion record lists this bundle and this revision's `bundle.md` SHA-256.** — owner RECORD.
 status: integrated — SCHEDULER #21 23:52Z: tip c8246cb1, idle since 23:23; NO recorded N/N GREEN
 order: after D-511, which it builds on (BOB #33, 17:05Z: *the end state, a build that depends on (1)*; SCHEDULER #18)
@@ -292,17 +94,6 @@ depends-on: D-511.
 scope: generalise `migrationReplayOf` to every replayed promotion; keep D-511's class test as a second condition.
 accepts-when: a replay whose capture does not list the bundle and SHA-256 is refused by name; a verified one is admitted. NEGATIVE CONTROL: skip the verification and the unverified arm is admitted, failing by name. AND INVERT §8 arm (δ), which D-511 pinned as the gap (admin-class replay still caller-asserted; via CONDUCT #20 19:47Z).
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:05Z; `node tools/mintid.mjs D`).
-
-### M0-192 · integrated — **`d470-catalog-census.control.mjs` QUOTES `CATALOG_VERSION` AS A LITERAL NEEDLE, so every catalogue bump silently disarms its arm (d), MOVE THE VERSION: line 67 holds `'export const CATALOG_VERSION = "1.28.0";'`, hand-moved at c20-batch25 after it sat at 1.24.0 through four bumps (it would have thrown NOT ARMED).** Found by CONDUCT #20 (22:09Z). — owner M0.
-status: integrated — integrated — flipped ~23:06Z by SCHEDULER #20 on its worker's finish (session summary 22:51Z: control reads CATALOG_VERSION from gate.mjs, 73/73 suites green, acceptance met) with land/worker/M0-192 @ e5aa15f3 pushed. CONDUCT verifies before merging. Finding: D-558.
-order: after D-544, AHEAD of product: a control disarmed by an unrelated bump is a false gate result, and it recurs on every catalogue move (Bob's 17:41Z rule). Not merged with D-544: a different file and a different fix (SCHEDULER #20, 2026-09-24)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` "The negative-control register" (a control breaks only the thing, and must arm on the tree it runs on).
-depends-on: none.
-scope: read the needle from `bio-plane/src/gate.mjs`'s own `CATALOG_VERSION` line at run time, never a literal; sweep the other `*.control.mjs` for a quoted version constant and state each.
-accepts-when: with the constant bumped to a new value, arm (d) still arms and fails as designed (the measured failure it moves: NOT ARMED after a bump). NEGATIVE CONTROL: restore the literal needle, bump the constant, and the control reports NOT ARMED by name.
-added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
 ### D-528 · integrated — **THE QUEUE TELLS EACH NAMED RECIPIENT OF A BIAS-DEBT OBLIGATION "This is not addressed to anybody": `app.html` `queueAssigneeHtml` reads `assignee == null` and never `recipients`, so the surface states something it can see is false.** Found by UI-93's worker (id minted by it). The DELEGATION RECORD (D-86) → UI on coord `CLAIMS.md` is dischargeable by this row. — owner UI.
 status: integrated — SCHEDULER #21 23:45Z: tip 85eb32dc; idle since 22:55 'verifying control driver placement', NO recorded GREEN
@@ -447,8 +238,8 @@ scope: give `src/cdx.mjs` `archiveHop` a `document_address` key as `driveHop` ha
 accepts-when: an archive-sourced baseline is found by op=monitor and two unchanged ticks read `unchanged` (the measured failure it moves: "no captured baseline" on every tick). NEGATIVE CONTROL: drop the hop key and the archive-baseline arm reads no baseline, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-525 · running — **A PRE-CAP-8 DRIVE BASELINE IS A CAPTURE OF GOOGLE'S SHELL, so its monitor reads `modified` on every tick permanently, and nothing lists which bundles carry one.** Found by D-472's worker (F3). — owner CAPTURE.
-status: running — running — spawned 23:07Z 2026-09-24 by SCHEDULER #20 as WORKER D-525 (SCHEDULER #20), base 9f8b69e6. Falsify: with no live worker, read land/worker/D-525 and the session; never conclude queued from absence.
+### D-525 · integrated — **A PRE-CAP-8 DRIVE BASELINE IS A CAPTURE OF GOOGLE'S SHELL, so its monitor reads `modified` on every tick permanently, and nothing lists which bundles carry one.** Found by D-472's worker (F3). — owner CAPTURE.
+status: integrated — SCHEDULER #21 01:50Z: tip 9f11da8c (CONDUCT #21 01:47Z composing batch28 with it)
 order: after D-524, the same monitor path; low: the fix is a re-acquire (SCHEDULER #19, 2026-09-24; via CONDUCT #20 20:14Z)
 milestone: M3
 interface: none unless a read is added (the integrator classifies).
@@ -908,6 +699,16 @@ depends-on: none.
 scope: both predicates test for a text-SHOWING operator (the renderer's own TEXT_OPS: Tj, TJ, ', "), ideally one shared predicate; re-read CAFR-2002 and record the moved counts.
 accepts-when: an inherited-font page with an empty BT…ET reads no_text_layer at tier 1 and is admitted by the OCR member (moves: 161 pages read as 0 characters of text). NEGATIVE CONTROL: count a bare BT as text again and both arms fail by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-504's worker).
+
+### D-540 · queued — **`#statementAcknowledgements`' `unbound` COUNT INCLUDES THE STATEMENT WRITER'S OWN READING (measured 3 where the honest count is 2), so the record claims one more unbound second reading than exists.** Found by REC-213's worker (via CONDUCT #20 22:11Z): REC-212's residue — REC-212 excluded the publisher in the NOT clause, and the writer was left in. — owner RECORD.
+order: after D-543, with the corrections to just-landed work: a count that overclaims second readings (CLAUDE.md §2) (SCHEDULER #20, 2026-09-24)
+milestone: M10
+interface: I3 — the `unbound` count narrows and a separately stated key appears; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 and §6A.4.
+depends-on: REC-213.
+scope: exclude the statement's writer in the `unbound` count's NOT clause, as REC-212 did for the publisher; count rows whose writer is undetermined under a separately stated key, never folded into either.
+accepts-when: a case with a writer's own reading and two second readings reads `unbound` 2 and states the writer-undetermined count apart (the measured failure it moves: 3 read where 2 is true). NEGATIVE CONTROL: drop the writer exclusion and the count reads 3, failing by name.
+added: 2026-09-24 · SCHEDULER #20 (id minted by REC-213's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
