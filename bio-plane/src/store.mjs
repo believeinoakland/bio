@@ -1307,7 +1307,10 @@ export class Store extends DurableObject {
          `op=signeradd` or `op=signerset` last set it, or `class:<cls>` for the operator's bearer.
          NULLABLE AND NEVER BACK-FILLED, D-85's reasoning: a row changed before this column existed
          recorded no actor, and there is no value a backfill could reach for that would not be
-         invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
+         invented. NULL reads back as `not recorded`, stated, through `#statusBy`.
+         D-610 (BOB #35, 2026-09-25): EVERY writer of `members.status` writes it, naming the actor whose act
+         caused THAT transition -- `memberAdd` the inviter or proposer, `adminEndorse` and `adminRemove` the
+         administrator whose vote completed the act, `enroll` the enrolling member. */
       ["members", "status_by", "TEXT"],
       ["signers", "status_by", "TEXT"],
       /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
@@ -36637,8 +36640,10 @@ export class Store extends DurableObject {
        appears exactly once, here, as it does for any other invitation. */
     const invite = Store.#rand(16);
     const hash = await Store.#sha256(invite);
-    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, updated=? WHERE member_id=?`,
-      hash, now, memberId);
+    /* D-610 (BOB #35, 2026-09-25): the transition is the act of the administrator whose vote COMPLETED
+       the consensus, so `status_by` names `by` — not the proposer the row carried from `memberAdd`. */
+    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, status_by=?, updated=? WHERE member_id=?`,
+      hash, by, now, memberId);
     return { ok: true, memberId, invite, endorsedBy: have.sort() };
   }
 
@@ -36688,9 +36693,11 @@ export class Store extends DurableObject {
 
     /* Carried. Revocation is immediate and takes sessions and signing keys with
        it, exactly as an ordinary revocation does. */
-    this.sql.exec(`UPDATE members SET status='revoked', updated=? WHERE member_id=?`, now, memberId);
+    /* D-610 (BOB #35, 2026-09-25): the removal is recorded under the administrator whose vote CARRIED
+       it, and the cascade onto the member's keys names the same actor, as `memberSet`'s does (REC-159). */
+    this.sql.exec(`UPDATE members SET status='revoked', status_by=?, updated=? WHERE member_id=?`, by, now, memberId);
     this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-    this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
+    this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by, memberId);
     return { ok: true, memberId, removed: true, ...math,
              deciders: votes.map((v) => v.voter).sort(), reasons: votes.map((v) => v.reason).filter(Boolean),
              alsoDo: "removing an administrator in the application is half of an ejection. The other half is "
@@ -36766,9 +36773,9 @@ export class Store extends DurableObject {
        that ejects the honest ones. */
     if (wantAdmin && admins.length >= 2) {
       this.sql.exec(
-        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
-         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?)`,
-        memberId, label, JSON.stringify(caps), expertise ?? null, now, now);
+        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated,status_by)
+         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?,?)`,
+        memberId, label, JSON.stringify(caps), expertise ?? null, now, now, by || null);
       /* REC-156: `by` is the control plane's STAMP, relayed from the query by the
          dispatch and never taken from the caller's body — so this row is the
          PROPOSER'S own endorsement. The founder's session is stamped `admin`; a
@@ -36787,10 +36794,10 @@ export class Store extends DurableObject {
     const invite = Store.#rand(16);
     const hash = await Store.#sha256(invite);
     this.sql.exec(
-      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
-       VALUES (?,?,NULL,?,?,?,?,?,?,?)`,
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated,status_by)
+       VALUES (?,?,NULL,?,?,?,?,?,?,?,?)`,
       memberId, label, wantAdmin ? "admin" : "member", "invited", hash,
-      JSON.stringify(caps), expertise ?? null, now, now);
+      JSON.stringify(caps), expertise ?? null, now, now, by || null);
     /* The plaintext invite appears exactly once, here, for handing to the
        person. It is never readable again. */
     return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps };
@@ -36863,8 +36870,10 @@ export class Store extends DurableObject {
        would teach a caller to try. Section 6: already attached, not editable.
        The invite hash is cleared, so the burner URL resolves to nothing
        afterwards and a leaked or archived link is inert. */
-    this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, updated=? WHERE member_id=?`,
-      h, new Date().toISOString(), m.member_id);
+    /* D-610 (BOB #35, 2026-09-25): enrolment is the MEMBER'S own act, so `status_by` names them and no
+       longer carries the inviter's stamp onto a status the inviter did not set. */
+    this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, updated=? WHERE member_id=?`,
+      h, m.member_id, new Date().toISOString(), m.member_id);
     return { ok: true, memberId: m.member_id, handle: h };
   }
 

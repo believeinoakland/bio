@@ -646,8 +646,15 @@ for (const op of CUST4) {
 
 /* 9g. `not recorded`, STATED. A member whose status no stamped act has set reads it, and so does a key
    registered with no plane in front of the store — the route that stamps nothing. */
-t("9g a member row no custodial act has touched reads `status_by: not recorded` rather than a guess",
-  (await rowOf("cai"))?.status_by, "not recorded");
+/* CORRECTED 2026-09-25 (D-610), NEVER EXEMPTED: this arm read CAI's row, "which no custodial act has
+   touched", and expected `not recorded`. That was true only because enrolment wrote no `status_by` —
+   BOB #35 ruled that every writer of `members.status` names the actor whose act caused the transition,
+   and cai's `active` is cai's own enrolment, so the row now reads `cai` (graded in statusby.test.mjs).
+   The stated absence still exists, and is driven where it honestly arises: an invitation issued at the
+   store with NO stamp, the route with no plane in front of it. */
+await DO("scratch", "memberadd", { memberId: "rec159nostamp", cover: "added with no stamp", role: "member" });
+t("9g a member row whose status no stamped act has set reads `status_by: not recorded` rather than a guess",
+  (await rowOf("rec159nostamp"))?.status_by, "not recorded");
 await DO("scratch", "signeradd", { keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIrec159nostamp", memberId: "cai", by: "ruth" });
 t("9g a key registered at the store with NO stamp reads `not recorded` — the body's `by` is never taken",
   (await keyRow("AAAAC3NzaC1lZDI1NTE5AAAAIrec159nostamp"))?.status_by, "not recorded");

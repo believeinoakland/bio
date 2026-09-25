@@ -32620,7 +32620,10 @@ var Store = class _Store extends DurableObject {
          `op=signeradd` or `op=signerset` last set it, or `class:<cls>` for the operator's bearer.
          NULLABLE AND NEVER BACK-FILLED, D-85's reasoning: a row changed before this column existed
          recorded no actor, and there is no value a backfill could reach for that would not be
-         invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
+         invented. NULL reads back as `not recorded`, stated, through `#statusBy`.
+         D-610 (BOB #35, 2026-09-25): EVERY writer of `members.status` writes it, naming the actor whose act
+         caused THAT transition -- `memberAdd` the inviter or proposer, `adminEndorse` and `adminRemove` the
+         administrator whose vote completed the act, `enroll` the enrolling member. */
       ["members", "status_by", "TEXT"],
       ["signers", "status_by", "TEXT"],
       /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
@@ -65014,8 +65017,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const invite = _Store.#rand(16);
     const hash = await _Store.#sha256(invite);
     this.sql.exec(
-      `UPDATE members SET status='invited', invite_hash=?, updated=? WHERE member_id=?`,
+      `UPDATE members SET status='invited', invite_hash=?, status_by=?, updated=? WHERE member_id=?`,
       hash,
+      by,
       now,
       memberId
     );
@@ -65070,9 +65074,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         ...math,
         deciders: votes.map((v) => v.voter).sort()
       };
-    this.sql.exec(`UPDATE members SET status='revoked', updated=? WHERE member_id=?`, now, memberId);
+    this.sql.exec(`UPDATE members SET status='revoked', status_by=?, updated=? WHERE member_id=?`, by, now, memberId);
     this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-    this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
+    this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by, memberId);
     return {
       ok: true,
       memberId,
@@ -65133,14 +65137,15 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const now = (/* @__PURE__ */ new Date()).toISOString();
     if (wantAdmin && admins.length >= 2) {
       this.sql.exec(
-        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
-         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?)`,
+        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated,status_by)
+         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?,?)`,
         memberId,
         label,
         JSON.stringify(caps),
         expertise ?? null,
         now,
-        now
+        now,
+        by || null
       );
       if (by && admins.includes(by))
         this.sql.exec(
@@ -65163,8 +65168,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const invite = _Store.#rand(16);
     const hash = await _Store.#sha256(invite);
     this.sql.exec(
-      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
-       VALUES (?,?,NULL,?,?,?,?,?,?,?)`,
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated,status_by)
+       VALUES (?,?,NULL,?,?,?,?,?,?,?,?)`,
       memberId,
       label,
       wantAdmin ? "admin" : "member",
@@ -65173,7 +65178,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       JSON.stringify(caps),
       expertise ?? null,
       now,
-      now
+      now,
+      by || null
     );
     return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps };
   }
@@ -65234,8 +65240,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
     await this.setPassword({ role: `member:${m.member_id}`, password });
     this.sql.exec(
-      `UPDATE members SET status='active', handle=?, invite_hash=NULL, updated=? WHERE member_id=?`,
+      `UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, updated=? WHERE member_id=?`,
       h,
+      m.member_id,
       (/* @__PURE__ */ new Date()).toISOString(),
       m.member_id
     );
