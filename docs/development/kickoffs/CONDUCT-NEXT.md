@@ -87,3 +87,4 @@ wording on land/bob/claude-namespace (rides batch30).
 - D-706 write half: CONDUCT #22 decided it stays row D-722 stacked on D-706 (told SCHEDULER #24).
 - D-708 656b0817 (on D-618; statementack listed sentence for the caseId+newCase pair; I3 text; reviewcopy.control arms aa-ad). Rides C2 after D-618.
 - UI-118 14d8ae9e (from main; export shows the last_change tie; merge by hand with UI-117 on the export functions and review-copy.control arm (M); fix d573-lastchange-tie.test.mjs stale "no surface exports" comment). Rides C2.
+- HOLD (BOB #36 11:22Z, doctrine): UI-121 6ceb9b9b must NOT reach main without D-712 (running, stacked on UI-121): without it the public case page tells strangers a signed case "has not been signed yet". Merge UI-121 into batch30 ONLY together with a GREEN D-712; otherwise leave UI-121 out.
