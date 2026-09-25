@@ -1156,8 +1156,8 @@ scope: distinguish `occurrence` absent from `occurrence` present and empty in th
 accepts-when: a fixture string read at two places, one unplaced, is chosen at its unplaced occurrence and the portion grade answers from it. NEGATIVE CONTROL: restore the `|| null` collapse and the unplaced-choice arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (from SCHEDULER #22's hand-over; fix named by UI-112's worker).
 
-### D-629 · running — **THE STORE ANSWERS ANY THROWN ERROR WITH ITS STACK: `Store.fetch`'s catch (store.mjs, the outermost handler) returns `String(e.stack)` to the caller for ANY throw on ANY op, and `index.mjs` has the same shape — so file paths, line numbers and constraint text reach a caller, and a constraint error reads as a stack instead of a refusal.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
-status: running — SCHEDULER #23 07:21Z: spawned
+### D-629 · integrated — **THE STORE ANSWERS ANY THROWN ERROR WITH ITS STACK: `Store.fetch`'s catch (store.mjs, the outermost handler) returns `String(e.stack)` to the caller for ANY throw on ANY op, and `index.mjs` has the same shape — so file paths, line numbers and constraint text reach a caller, and a constraint error reads as a stack instead of a refusal.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
+status: integrated — SCHEDULER #23 09:30Z: tip 5e202b33 on 5e8a65a8, GATE 386/386 GREEN (21887 assertions), tree 128b3612; Store.fetch's catch -> STORE_INTERNAL_ERROR (C-69.2) with correlation, no stack; index.mjs gains an outermost catch -> PLANE_INTERNAL_ERROR (C-69.3); IC-354 PROPOSED (I3, MAJOR-shaped) for CONDUCT; CATALOG 1.30.0->1.31.0;  ->  re-anchors; minted D-679
 order: near the head — a disclosure defect outranks features (SCHEDULER.md loop step 3), behind D-625 only because that corrects just-landed work (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — every op's unhandled-error answer becomes a named internal-error code with no stack; the integrator classifies (BREAKING-shaped for any caller reading the text).
@@ -1471,6 +1471,16 @@ depends-on: none (stacked on land/worker/D-574 @ 06494735, integrated — arm G 
 scope: give each of the five conditions its own code, catalogue row and translation; judge OBS_PRESENT_NO_REFERENT at its site and split it if false; remove each from MULTI_SITE_CANDIDATES and lower CEILING.multiSiteCodes in the same landing.
 accepts-when: each of the five conditions answers its own code whose words are true of it, through the op (moves: five false translations). NEGATIVE CONTROL: route one condition back to its old code and arm G fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-574's worker).
+
+### D-679 · running — **THREE PUBLIC OPS ANSWER A STORE FAILURE AT HTTP 200: index.mjs's op=invitelook, enroll and login read the store's answer as `json(await r.json(), 200)` and never read `ok`, so an anonymous caller is told success-status for a failure (since D-629 it at least carries a named code, not a stack).** REC-52's class. Found by D-629's worker (minted on land/worker/D-629). — owner RECORD.
+order: spawned directly after D-629, which it completes: the public door must not say 200 for a failure (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — the three public ops' failure status; the integrator classifies.
+design: `docs/architecture/BIO_System_Design.md` §2 (trustworthiness of the record), with REC-52's doAnswer / storeSilent pattern as built.
+depends-on: none (stacked on land/worker/D-629 @ 5e202b33, integrated).
+scope: open the three through doAnswer and answer storeSilent (502) on a non-answer, or relay the store's status; sweep every other public route for the same read.
+accepts-when: a forced store failure on each of the three answers a non-200 status with its named code (moves: HTTP 200 on failure). NEGATIVE CONTROL: restore the bare json(..., 200) on one and its arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-629's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
