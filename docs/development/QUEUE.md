@@ -1142,8 +1142,8 @@ scope: the member route and a read-only plane op returning the crop for a cited 
 accepts-when: a cited image extent returns its crop through the op. NEGATIVE CONTROL: route to the whole page, and the crop-dimensions arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-625 · running — **AN UNPLACED OCCURRENCE OF A STRING READ AT SEVERAL PLACES CAN NEVER BE CHOSEN: the choose act reads an empty `occurrence=` as NONE NAMED (`String(args.occurrence).trim() || null`), so the empty key an unplaced read carries is unreachable, and the member is refused C-74.4 for a place the plane itself listed.** Found by UI-112's worker (D-625 minted on land/worker/UI-112). — owner RECORD.
-status: running — SCHEDULER #23 07:17Z: spawned
+### D-625 · integrated — **AN UNPLACED OCCURRENCE OF A STRING READ AT SEVERAL PLACES CAN NEVER BE CHOSEN: the choose act reads an empty `occurrence=` as NONE NAMED (`String(args.occurrence).trim() || null`), so the empty key an unplaced read carries is unreachable, and the member is refused C-74.4 for a place the plane itself listed.** Found by UI-112's worker (D-625 minted on land/worker/UI-112). — owner RECORD.
+status: integrated — SCHEDULER #23 08:40Z: tip a42ba046 on 5e8a65a8, GATE 385/385 GREEN FULLREUSE (21875 assertions), tree d274e079; ABSENT vs PRESENT-EMPTY occurrence kept apart at the op line and the act; empty on a single-placed-read ref now C-74.3; I3 IC the integrator's; UI-112 union rewrites its D-625 sentences (text in the report); regionLines +1; minted D-676, D-677
 order: head of the backlog — a correction to just-landed work (D-454 done, UI-112 integrated) outranks new work (SCHEDULER #23, 2026-09-25; verified at the code on origin/main store.mjs, the `named` line of the connection-choose act)
 milestone: M4
 interface: I3 — the choose act treats a PRESENT-but-empty `occurrence=` as the empty key; an ABSENT one is still none named. The integrator mints and classifies the IC.
@@ -1350,6 +1350,17 @@ depends-on: none (stacked on land/worker/REC-201 @ 45ce0bc5, integrated — it a
 scope: refuse by name an `ai` credential stating `law` or creating a `cpra_request`; offer the propose-then-adopt path as REC-195 does for the list; a pre-fence machine-created row reads machine-stated from its recorded author class, unchanged.
 accepts-when: an `ai` credential's cpra_request is refused by name and a member adopts its proposal (moves: a machine stating the law). NEGATIVE CONTROL: an `ai` credential creating a cpra_request is refused by name, and the pre-fence machine row reads machine-stated — lift the fence and the first arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 08:25Z ruling).
+
+### D-682 · running — **NO LEAD OP PUBLISHES WHAT A LOOK'S STATE MEANS: D-194's surface mirrors OBSERVATION_STATES in app.html (LEAD_STATE_WORDS, guarded against airun.mjs), and `partial`'s plane sentence carries a maintainer's parenthetical that is not member text.** Found by D-194's worker (minted on land/worker/D-194). — owner RECORD.
+status: running — SCHEDULER #23 08:40Z: spawned, stacked on land/worker/D-194 @ 45437e4d
+order: head of the backlog after D-671, with D-681 (running): the same surface's second plane gap (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3 additive — a `vocabulary` block on op=leadread and op=frontier level=internet; the integrator classifies.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5, with op=airunlog's `vocabulary` as the precedent shape.
+depends-on: none (stacked on land/worker/D-194 @ 45437e4d, integrated — the surface deletes its mirror in the same landing; D-681 runs on the same base).
+scope: op=leadread and frontier level=internet carry `vocabulary: { states: <the five>, outcomes: LEAD_LOOK_OUTCOMES }` with member-safe wording for `partial`; the surface reads it and deletes LEAD_STATE_WORDS.
+accepts-when: the surface renders every state from the plane's vocabulary with no client mirror (moves: a mirrored vocabulary). NEGATIVE CONTROL: drop `vocabulary` from the op and the surface's state arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-194's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

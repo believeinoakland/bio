@@ -56,15 +56,25 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
-### D-682 · queued — **NO LEAD OP PUBLISHES WHAT A LOOK'S STATE MEANS: D-194's surface mirrors OBSERVATION_STATES in app.html (LEAD_STATE_WORDS, guarded against airun.mjs), and `partial`'s plane sentence carries a maintainer's parenthetical that is not member text.** Found by D-194's worker (minted on land/worker/D-194). — owner RECORD.
-order: head of the backlog after D-671, with D-681 (running): the same surface's second plane gap (SCHEDULER #23, 2026-09-25)
+### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
+order: at the backlog head after D-682 — a correction joining two just-landed rows (D-625, UI-112) (SCHEDULER #23, 2026-09-25)
 milestone: M4
-interface: I3 additive — a `vocabulary` block on op=leadread and op=frontier level=internet; the integrator classifies.
-design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5, with op=airunlog's `vocabulary` as the precedent shape.
-depends-on: D-194 (integrated, land/worker/D-194 @ 45437e4d — the surface deletes its mirror in the same landing).
-scope: op=leadread and frontier level=internet carry `vocabulary: { states: <the five>, outcomes: LEAD_LOOK_OUTCOMES }` with member-safe wording for `partial`; the surface reads it and deletes LEAD_STATE_WORDS.
-accepts-when: the surface renders every state from the plane's vocabulary with no client mirror (moves: a mirrored vocabulary). NEGATIVE CONTROL: drop `vocabulary` from the op and the surface's state arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-194's worker).
+interface: I3 consumer.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair; UI-112's and D-625's sentences).
+depends-on: D-625 (integrated, a42ba046), UI-112 (integrated, bfd57de2) — both ride batch30; build on main after it.
+scope: offer the unplaced occurrence as its own choice and send `occurrence` whenever the attribute is PRESENT, including ''; correct UI-112's comment and the §14.5 / construct 6.on-point-ui sentences D-625's union names.
+accepts-when: a member chooses the unplaced occurrence of a many-place string from the page and op=connectionchoose records '' (moves: an accepted choice the surface cannot make). NEGATIVE CONTROL: restore the truthy test and the unplaced-choice arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
+
+### D-677 · queued — **THE CONTENT FRAMEWORK'S STATUS BULLET FOR D-454 IS SPLICED MID-SENTENCE INTO D-517's: "that figure is CONFIRMED [D-454's bullet] as its valley's midpoint", so both statements read garbled in the front matter.** Found by D-625's worker (minted on land/worker/D-625). — owner RECORD (docs).
+order: after D-676, a docs-only correction to the same document; it may ride any Framework landing (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: none.
+design: `docs/architecture/CORPUS-STANDARD.md` (front matter states what a document contains), for `docs/architecture/BIO_Content_Framework_v0_10.md`'s front matter.
+depends-on: none.
+scope: move D-454's bullet after D-517's sentence ends; no other text changes.
+accepts-when: both bullets read whole in the front matter; corpuscheck 0 fail (moves: a spliced sentence). NEGATIVE CONTROL: none meaningful for prose; state so.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
 
 ### UI-119 · queued — **NO SURFACE LETS A MEMBER STATE A RECORDS REQUEST'S `law`: REC-201 added the `records_request` kind and its `law` field, and neither app.html's action intake nor setup.mjs's page offers it, so every request filed there reads law UNDETERMINED — honest, and thin.** From REC-201's worker's report. — owner UI.
 order: after D-689 — the member's statement surface, after the fence that keeps a machine from making it (SCHEDULER #23, 2026-09-25)
@@ -1072,14 +1082,4 @@ design: `docs/development/VERIFICATION.md` (an instrument reads the forms the le
 depends-on: none.
 scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
 accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-149 · queued — **A PUBLISHED `limit` HAS ONE GUARD: only `bounds.test` checks it; `meaning-bounds` grades the row source, not whether an op in the BOUNDED roster publishes its bound.** Found by D-479's worker. — owner M0.
-order: after M0-142, the same suite (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the negative-control register).
-depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
-scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
-accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
