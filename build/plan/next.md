@@ -16,6 +16,9 @@
 **signatures**
 - N7 · 2026-09-25 · BOB #37 ruled: the signing page's source (`tools/sign-release.html`) and its generator (`bio-plane/scripts/embed-signpage.mjs`) move into `signatures`, which serves the page, so the module's own tests can check that the page it serves is the current render. `modules.json` gains the two paths when the files move.
 
+**pdf-reader**, **pdf-worker**
+- N9 · 2026-09-25 · `pdf-worker` reads `pdf-reader`'s private fields (`PdfDoc.objects`, `._pageOrder`, an image placement's `_stream` and `_ctm`), so a rename breaks it with no error at import. `pdf-reader` provides what `pdf-worker` needs as named services, and `pdf-worker` uses only those. Applied by `pdf-reader`'s job, with `pdf-worker`'s job in the same layer.
+
 ## Later layers
 
 - N8 · 2026-09-25 · **promotion**: BOB #37 ruled that check C-18.8 (release-signature primitives, a second hand-written SSHSIG verifier in `bio-checks.mjs`, kept only for the Apps Script gate, which `gate.mjs` records as decommissioned) moves to `promotion`, which checks release records in bundles, and verifies through `signatures` instead. The duplicate verifier is retired.
