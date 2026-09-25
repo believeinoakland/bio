@@ -80,3 +80,4 @@ IC-319	2026-09-25T02:50:45.769Z	land/worker/MK-7
 IC-320	2026-09-25T02:56:09.504Z	land/worker/REC-150	
 IC-321	2026-09-25T06:41:15.633Z	CONDUCT#22	REC-186: op=projectleave refuses the only owner LAST_OWNER_CANNOT_LEAVE (c22-batch29)
 IC-322	2026-09-25T06:41:31.561Z	CONDUCT#22	REC-162: SESSION_ROLE_CANNOT_REACH_OP carries session+reachedBy where it carried role (c22-batch29)
+IC-323	2026-09-25T06:41:36.689Z	CONDUCT#22	REC-196: reads naming a discoverable project's own id answer C-70.1 at EXISTENCE (c22-batch29)
