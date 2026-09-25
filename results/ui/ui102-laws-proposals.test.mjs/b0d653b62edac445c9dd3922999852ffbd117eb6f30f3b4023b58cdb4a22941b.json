@@ -1,0 +1,16 @@
+{
+ "unit": "ui:ui102-laws-proposals.test.mjs",
+ "inputHash": "b0d653b62edac445c9dd3922999852ffbd117eb6f30f3b4023b58cdb4a22941b",
+ "verdict": "PASS",
+ "run": "9f199aa84cb0512cae4a6c2631215c6ed9480806.1790300282869.1852.json",
+ "tree": "9f199aa84cb0512cae4a6c2631215c6ed9480806",
+ "head": "f004ba0ffbf94be5d189e0161955bde887a74c4a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 80,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f0cfd3b5-cc8e-57db-abdc-0cbe8c328954",
+ "at": "2026-09-25T01:38:02.882Z"
+}
