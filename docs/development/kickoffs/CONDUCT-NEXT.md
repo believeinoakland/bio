@@ -85,3 +85,4 @@ wording on land/bob/claude-namespace (rides batch30).
 ## 7. LATE ARRIVALS (after the handoff was written; READY, GATE GREEN on their branches)
 - UI-117 88d67095 (from 95fe7bc7; review-copy form surfaces caseId+newCase; FLOOR.r4Suites 43 — re-read; CIVICOS_UI_STATE v130 provisional). Rides C2.
 - D-706 write half: CONDUCT #22 decided it stays row D-722 stacked on D-706 (told SCHEDULER #24).
+- D-708 656b0817 (on D-618; statementack listed sentence for the caseId+newCase pair; I3 text; reviewcopy.control arms aa-ad). Rides C2 after D-618.
