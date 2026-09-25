@@ -1091,7 +1091,7 @@ accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, a
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-639 · integrated — **`fence-e2e.control` arm (3): ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — SCHEDULER #24 12:50Z: tip 80a66f56 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6564 assertions), tree 20e44f52; fence-e2e arm 3 re-anchored on the two-line member-reach return (D-632 choice, 1 match here and on main), allowance deleted, arm alone fails its subject by name
+status: integrated — CONDUCT #23 12:45Z: worker report — tip 80a66f56 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6564 assertions); fence-e2e.control arm 3 re-anchored, allowance removed; test-only, no IC; rides batch30
 order: after D-638, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
