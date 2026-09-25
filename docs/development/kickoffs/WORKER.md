@@ -2,8 +2,8 @@
 
 One rule per line, each naming its ruling. **The receipts and the reasoning are in
 `docs/archive/WORKER-kickoff-2026-09-24.md`, verbatim, under the same headings** (M0-194, BOB #34 2026-09-24 22:50Z);
-`node tools/decided.mjs "<id>"` finds them. `id undetermined` means the old text named no ruling for that rule: the
-rule stands, its receipt is in the archive, and nobody has minted it an id. Every line carries a tag `W<n>`; the map
+`node tools/decided.mjs "<id>"` finds them. `id undetermined`: the old text named no ruling for that rule; the rule
+stands, and its receipt is in the archive. Every line carries a tag `W<n>`; the map
 from the old text's rules to these tags is `measurements/M-147.md`, checked by `node tools/rulemap.mjs`.
 
 - **W1** · A spawn brief is the ITEM and nothing else; the practices live here (id undetermined — Bob caught the hand-carried brief four times).
@@ -43,6 +43,8 @@ from the old text's rules to these tags is `measurements/M-147.md`, checked by `
 - **W23** · A vendor's documentation is a CLAIM, labelled as theirs (id undetermined; `CLAUDE.md` §5).
 - **W24** · An equality or outcome that costs nothing to produce is not evidence (id undetermined; `CLAUDE.md` §5).
 - **W25** · A corpus figure moves while a battery runs on the same checkout: take instrument figures on a quiet tree (id undetermined).
+- **W82** · A measurement that gates nothing is not an instrument: a figure you add must fail a gate when it moves the wrong way, or be labelled report-only (D-550).
+- **W83** · A verdict must not depend on load: a suite that passes alone and fails under a concurrent battery is a defect in the suite, fixed by controlling what it waits on, never by retrying (D-571).
 
 ## Negative controls
 
@@ -107,6 +109,7 @@ from the old text's rules to these tags is `measurements/M-147.md`, checked by `
 - **W65** · Touched a bundled source → `node tools/bundles.mjs` rebuilds every stale bundle, BEFORE the battery; a comment-only change may move one (M0-178; REC-110, REC-119).
 - **W66** · Edited a governed design doc → move its Status `as of` to today, `node tools/corpuscheck.mjs` to 0 fail (M0-141).
 - **W67** · Built or removed something → `construct-status.json` in the same commit, probes on CODE naming a symbol that matches exactly once; `status.mjs --check` to 0 drift (M0-155, M0-160).
+- **W84** · Edit `construct-status.json` TEXTUALLY, never round-tripped through a JSON serialiser (D-468 rewrote 4,486 lines unseen).
 - **W68** · `cd bio-plane && npm run test:battery` — the WHOLE battery, green (id undetermined).
 - **W69** · `node scripts/coverage.mjs --strict` — directly, `$?` read unpiped, exit 0 (id undetermined).
 - **W70** · `node civicos-ui/test/run.mjs` from the REPO ROOT, exit 0, even if you think you did not touch the UI (id undetermined).
