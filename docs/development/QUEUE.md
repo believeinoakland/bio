@@ -999,9 +999,9 @@ scope: refuse each of the three by a named DEC-49 code before the transaction, a
 accepts-when: each of the three answers its named code and no op=promote answer carries a stack (moves: three raw NOT NULL errors). NEGATIVE CONTROL: drop one refusal and its arm reads the raw error, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-628's worker).
 
-### D-718 · running — **C-17.2's classifyDivergence (bio-checks.mjs) STILL SORTS _history/manifest.json BY SNAP KEY, so its anchor and intervening set can be the wrong ones when keys run against write order — the audit D-700 corrected for C-20.1, one check over.** Found by D-700's worker. — owner CHECKS.
+### D-718 · integrated — **C-17.2's classifyDivergence (bio-checks.mjs) STILL SORTS _history/manifest.json BY SNAP KEY, so its anchor and intervening set can be the wrong ones when keys run against write order — the audit D-700 corrected for C-20.1, one check over.** Found by D-700's worker. — owner CHECKS.
+status: integrated — CONDUCT #23 12:29Z: worker report — tip 689cd6d1 (on D-700 50116ded), GATE 388/388 GREEN (21917 assertions); C-17.2 walks write order; no IC (DIST: release/newgroup bundles carry old classifier until next cut); rides batch30 after D-700
 order: spawned directly, stacked on D-700: an audit that names the wrong anchor misstates the record, and it completes just-landed work (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 11:43Z: spawned, stacked on land/worker/D-700 @ 50116ded
 milestone: M7
 interface: none unless a finding's anchor changes on the wire (the integrator classifies).
 design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, write order, as D-700 amended it).
