@@ -89,3 +89,4 @@ wording on land/bob/claude-namespace (rides batch30).
 - UI-118 14d8ae9e (from main; export shows the last_change tie; merge by hand with UI-117 on the export functions and review-copy.control arm (M); fix d573-lastchange-tie.test.mjs stale "no surface exports" comment). Rides C2.
 - HOLD (BOB #36 11:22Z, doctrine): UI-121 6ceb9b9b must NOT reach main without D-712 (running, stacked on UI-121): without it the public case page tells strangers a signed case "has not been signed yet". Merge UI-121 into batch30 ONLY together with a GREEN D-712; otherwise leave UI-121 out.
 - M0-139 03935461 (from 95fe7bc7; tests only: current.control/current.test; NARROWED on arm 8b -> D-727). Rides C2.
+- D-706 6dd3e530 (on D-701; DISCLOSURE read half: op=linkproject answer through the viewer; I3 classify). Rides C2 right after D-340 then D-701; name it in the disclosure list to DIST. Write half = D-722 (row, stacked) — it must invert d706 suite's "WRITE HALF, measured not ruled" arm.
