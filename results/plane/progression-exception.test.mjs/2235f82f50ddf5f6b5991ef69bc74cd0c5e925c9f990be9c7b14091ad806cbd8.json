@@ -1,0 +1,16 @@
+{
+ "unit": "plane:progression-exception.test.mjs",
+ "inputHash": "2235f82f50ddf5f6b5991ef69bc74cd0c5e925c9f990be9c7b14091ad806cbd8",
+ "verdict": "PASS",
+ "run": "0354e69841e8b8a83fd17e0511ec98ab4e30003e.1790327187245.7253.json",
+ "tree": "0354e69841e8b8a83fd17e0511ec98ab4e30003e",
+ "head": "e9392ac88ffb6aeb6b5f86a180a7983b4a71bf44",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "59d53b7f-a76d-5601-a215-12596a78b72a",
+ "at": "2026-09-25T09:06:27.256Z"
+}
