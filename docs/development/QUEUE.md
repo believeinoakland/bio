@@ -931,7 +931,8 @@ accepts-when: a grant leaves the requester `invited` and NOT `joined`; a lapsed 
 added: 2026-09-19 · SCHEDULER (same entry, item 2).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-598 · queued — **C-21.2's INHERITANCE RULE READS EVERY PUBLISHED BUNDLE AS A PUBLISHED CASE, EVIDENCE INCLUDED: a document or observation published as a case's EVIDENCE (D-431(b)) forces every later citation of it to be `grade_source: inherited`, though it carries no frozen strength and is not a published finding.** Found by MK-7's worker (02:47Z). — owner RECORD.
+### D-598 · running — **C-21.2's INHERITANCE RULE READS EVERY PUBLISHED BUNDLE AS A PUBLISHED CASE, EVIDENCE INCLUDED: a document or observation published as a case's EVIDENCE (D-431(b)) forces every later citation of it to be `grade_source: inherited`, though it carries no frozen strength and is not a published finding.** Found by MK-7's worker (02:47Z). — owner RECORD.
+status: running — SCHEDULER #22 03:14Z spawns WORKER D-598 (depth 2)
 order: after D-597, with the case-citation rows: a later finding refused its own grade on evidence is the record claiming less than it can support and a leg ungradeable for no reason; BOB #34 03:00Z: *"C-21.2's inheritance rule applies to published INQUIRIES only"* (SCHEDULER #22, 2026-09-25)
 milestone: M10
 interface: I3 — a narrower C-21.2 refusal; the integrator classifies.
@@ -971,7 +972,8 @@ accepts-when: the harness declares, tests and places against the real plane, the
 added: 2026-09-21 · SCHEDULER #9 (BOB #23's inbox entry, item 2, drained this commit; `node tools/mintid.mjs UI`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-235 · queued — **`op=basisversions` DOES NOT PUBLISH A VERSION'S `kind`: `basisVersions` selects every column of `inquiry_basis_versions`, `kind` among them, and the answer carries no `kind` key, so the same version reads a kind from `op=suggest` and none from here.** — owner RECORD.
+### D-235 · running — **`op=basisversions` DOES NOT PUBLISH A VERSION'S `kind`: `basisVersions` selects every column of `inquiry_basis_versions`, `kind` among them, and the answer carries no `kind` key, so the same version reads a kind from `op=suggest` and none from here.** — owner RECORD.
+status: running — SCHEDULER #22 03:14Z spawns WORKER D-235 (depth 2)
 order: after D-241 (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M3
 interface: I3 additive — one field; the integrator mints and classifies the IC.
