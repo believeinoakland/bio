@@ -1,0 +1,16 @@
+{
+ "unit": "ui:ai-session-context.test.mjs",
+ "inputHash": "f717b2cc349b9244491e92bd998aac66e13f6d2bacf8b60ec0381865a08f9233",
+ "verdict": "PASS",
+ "run": "37636a8ef931ce84f58b75542b59715e6158998e.1790327841293.29374.json",
+ "tree": "37636a8ef931ce84f58b75542b59715e6158998e",
+ "head": "0d17eb0eafad7967c49514b9874a40f0c819a185",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 86,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f3723645-261a-5ea2-9a1e-e28cb1d9bef3",
+ "at": "2026-09-25T09:17:21.316Z"
+}
