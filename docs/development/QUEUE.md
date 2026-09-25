@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 13:02Z · BOB #36 · BOB CONFIRMS (Bob, ~13:00Z): "no new job spawns until we get all these jobs merged." The no-spawn rule holds UNTIL every current job is merged: batch30 and batch31 landed, every running worker's branch integrated and trained, and no finished branch left unmerged. Bob lifts it; nobody infers it lifted.** It covers ANY new session by ANY lane: SCHEDULER's workers, and CONDUCT's integration sessions too. This corrects BOB #36's 12:52Z note to CONDUCT that helpers were "yours to judge". CONDUCT's in-session subagents that do the merging itself are not new jobs and are allowed. Rows keep being minted and placed; none is spawned.
 
 
 
