@@ -143,16 +143,6 @@ scope: keep `fetched_at` only on records whose request was ISSUED; stamp the oth
 accepts-when: a reused part and a policy-skipped reference carry no fetched_at (moves: every unfetched record claiming a fetch). NEGATIVE CONTROL: restore the stem's fetched_at and that arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-191's worker).
 
-### D-568 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
-order: after D-573, with the review-copy corrections: an edition stated for a case the record has not chosen claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
-milestone: M10
-interface: I3 — `edition` reads null on the wire for a derived draft; the integrator classifies.
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4 (the review copy), with BOB #32's 2026-09-23 23:08Z newCase ruling.
-depends-on: D-538.
-scope: keep the internal (case_id NULL, edition 1) key that grants and statement acknowledgements bind to, and answer `edition: null` (undetermined) on the wire for a derived draft in all four answers.
-accepts-when: DD answers `edition: null` in all four while its grant and acknowledgements still bind (moves: edition 1 stated for a derived case). NEGATIVE CONTROL: answer the internal edition again and the DD edition arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (id minted by D-538's worker).
-
 ### UI-108 · queued — **THE PROGRESSION PAGE SHOWS A DISMISSED FINDING AS AN OPEN QUESTION: `progPaintInstance()` renders `inst.findings` verbatim and cannot say a member decided it.** The surface half of D-552. — owner UI.
 order: directly after D-552, which it consumes (SCHEDULER #20, 2026-09-24)
 milestone: M4
@@ -1202,3 +1192,13 @@ depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `node tools/coord.mjs read docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
+order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
+accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

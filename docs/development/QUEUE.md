@@ -659,8 +659,8 @@ scope: commit one real scanned-agenda page image to the OCR fixtures; drive the 
 accepts-when: a real page's OCR yields a `reading_refs` hit. NEGATIVE CONTROL: switch the recogniser off, and the join reads empty by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-610 · running — **THREE WRITERS CHANGE `members.status` WITHOUT `status_by` (measured at 964da679: the re-invitation ~34957, the revocation ~35008 and the enrolment ~35183 in `store.mjs`), so a row `memberset` stamped reads a later status under the WRONG actor: a live false attribution.** Measured by BOB #35 on D-134's question (04:00Z). — owner RECORD.
-status: running — SCHEDULER #22 04:08Z spawns WORKER D-610 (depth 2)
+### D-610 · integrated — **THREE WRITERS CHANGE `members.status` WITHOUT `status_by` (measured at 964da679: the re-invitation ~34957, the revocation ~35008 and the enrolment ~35183 in `store.mjs`), so a row `memberset` stamped reads a later status under the WRONG actor: a live false attribution.** Measured by BOB #35 on D-134's question (04:00Z). — owner RECORD.
+status: integrated — SCHEDULER #22 04:53Z: tip 733659be, GATE 386/386 GREEN FULLREUSE (21887 assertions), tree 2cd8a884; all 7 members.status writers stamp status_by (5 were not); I5; union with D-134 on memberadd's two INSERTs and with batch-0925c on Membership v2's Status line
 order: after D-586, with the authority and attribution corrections ahead of features: a status stated under an actor who did not cause it is the record claiming more than it supports (CLAUDE.md §2); BOB #35: *"(c) is a DEFECT"* (SCHEDULER #22, 2026-09-25)
 milestone: M8
 interface: I5 — `status_by` now written on every transition; the integrator classifies.
@@ -788,6 +788,16 @@ depends-on: none.
 scope: emit that clause only when layerPages is non-empty.
 accepts-when: a wholly scanned document's note carries no kept-text clause, and a mixed one still does (moves: a stated text layer that never existed). NEGATIVE CONTROL: emit the clause unconditionally and the wholly-scanned arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
+
+### D-568 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
+order: after D-573, with the review-copy corrections: an edition stated for a case the record has not chosen claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M10
+interface: I3 — `edition` reads null on the wire for a derived draft; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4 (the review copy), with BOB #32's 2026-09-23 23:08Z newCase ruling.
+depends-on: D-538.
+scope: keep the internal (case_id NULL, edition 1) key that grants and statement acknowledgements bind to, and answer `edition: null` (undetermined) on the wire for a derived draft in all four answers.
+accepts-when: DD answers `edition: null` in all four while its grant and acknowledgements still bind (moves: edition 1 stated for a derived case). NEGATIVE CONTROL: answer the internal edition again and the DD edition arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-538's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
