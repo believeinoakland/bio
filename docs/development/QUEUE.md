@@ -644,8 +644,8 @@ scope: drop the edition predicate from the count's case_id IS NULL arm, as D-680
 accepts-when: a no-case draft's reading counts UNDETERMINED on a further edition (moves: the reading dropped from the count). NEGATIVE CONTROL: restore `edition=?` on that arm and the further-edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-680's worker).
 
-### D-701 · running — **op=links AND D-340's navchanges DISCLOSE GATED CAPTURES: both name capture shas and page addresses to any member with no viewer stamp, so a member outside a gated bundle's project learns that the bundle exists and what it holds.** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): FILTER BY THE VIEWER, not intended — every row passes the viewer predicate BEFORE grouping or counting, and no count includes a row the viewer cannot see (the lead rule, MEMBER-KNOWLEDGE-DESIGN §5). Raised by D-340's worker. — owner RECORD.
-status: running — SCHEDULER #23 09:45Z: spawned, stacked on land/worker/D-340 @ fdf6c8c9
+### D-701 · integrated — **op=links AND D-340's navchanges DISCLOSE GATED CAPTURES: both name capture shas and page addresses to any member with no viewer stamp, so a member outside a gated bundle's project learns that the bundle exists and what it holds.** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): FILTER BY THE VIEWER, not intended — every row passes the viewer predicate BEFORE grouping or counting, and no count includes a row the viewer cannot see (the lead rule, MEMBER-KNOWLEDGE-DESIGN §5). Raised by D-340's worker. — owner RECORD.
+status: integrated — SCHEDULER #23 11:10Z: tip 414439d2 (on D-340 fdf6c8c9), GATE 80/80 GREEN FULLREUSE (6513 assertions; 379 reused), tree 108a2ffa; #captureGate via #bundleGate; links and navchanges filter by the viewer before counting; gate-reads UNGATED->GATED; D-340 may now ride with it; minted D-706 (linkproject)
 order: HEAD of the backlog — a disclosure defect outranks every feature (SCHEDULER.md loop step 3) (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — both ops' answers filtered by the viewer; the integrator classifies.
@@ -803,6 +803,16 @@ depends-on: none (stacked on land/worker/D-618 @ dc4c41f9, integrated, on main 9
 scope: pass draftNewCase to `#caseIdentitySentence` at that call (or branch the pair to a sentence saying no case document can list it until one instruction is withdrawn); sweep the other callers D-618 read and state any left alone (publish's draft-mismatch detail is D-626/D-680's region).
 accepts-when: for a both-identity draft the acknowledgement's listed sentence names no edition and no listing (moves: an edition stated for an unchosen case). NEGATIVE CONTROL: drop newCase from the call and the pair arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-618's worker).
+
+### D-706 · running — **op=linkproject DISCLOSES AND WRITES ACROSS THE VIEWER FENCE: it resolves any capture sha with NO viewer, so a member of no project received a hidden target's capture sha and the hidden project's id (`edges[].to`, `target_capture`, `source_bundle`) and wrote a links_to ref INTO the hidden project.** Measured by D-701's worker (minted on land/worker/D-701). — owner RECORD.
+order: spawned directly — a disclosure defect outranks every feature; it completes D-701's viewer fence (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — linkproject's answer filtered by the viewer; the integrator classifies.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (a caller who cannot see receives exactly the answer a nonexistent row would give), with BOB #35's 09:30Z viewer-filter ruling as D-701 built it.
+depends-on: none (stacked on land/worker/D-701 @ 414439d2, integrated, on D-340 @ fdf6c8c9).
+scope: DISCLOSURE HALF ONLY: stamp the viewer; refuse a hidden source capture as the record's not-held answer; keep invisible targets out of the answer and its counts (projected, skipped_*, unresolved). THE WRITE HALF (may an outsider's act write an edge to or from a bundle they cannot see) is with BOB #36 — do not decide it; state it.
+accepts-when: a member of no project calling op=linkproject on a shared or hidden capture sees no hidden sha, project id or count (moves: disclosure). NEGATIVE CONTROL: drop the viewer stamp and the outsider arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-701's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
