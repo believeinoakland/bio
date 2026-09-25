@@ -1275,6 +1275,17 @@ scope: in `textchain.mjs`, carry the base page's `image_content_*` markers onto 
 accepts-when: a page carrying `image_content_unread` that tier 2 wins keeps the marker and still routes to OCR through op=acquire (moves: the marker dropped at the tier-2 merge). NEGATIVE CONTROL: drop the carry and the tier-2-wins arm fails by name, reading no marker.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-627's worker).
 
+### D-670 · running — **A `pdf-page` RECT CARRIES NO COORDINATE SPACE IN THE CONTENT GRAMMAR: OCR anchors are image pixels (the ocr member's §2) while content extents and image placements are default user space (IC-203); `#posFields` passes `space` through and `legExtent` / `canonicalExtent` / `extentCovers` drop or ignore it — so an OCR region's pixel rect proposed through `op=extractpropose` is addressed as user space, refused C-45.1 when off the page since D-374 and passed BY ACCIDENT when it fits.** Attestation regions cannot be bounded either. Found by D-374's worker (minted on land/worker/D-374). — owner CONTENT-PDF, RECORD.
+status: running — SCHEDULER #23 07:45Z: spawned, stacked on land/worker/D-374 @ c7703c3d
+order: near the head, after D-633 — the record claiming a region it does not address is the over-claim CLAUDE.md §2 ranks worst, and it corrects just-landed D-374 (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: I3/I5 — the pdf-page arm gains `space`; a non-user space refused by name (or converted); the integrator mints and classifies.
+design: `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §6 (the pdf-page rect and its bound, D-374), with IC-203's user-space convention.
+depends-on: none (stacked on land/worker/D-374 @ c7703c3d, integrated).
+scope: add `space` to the pdf-page arm; the checker refuses by name any space other than user space, OR converts image-px with the image dims, /Rotate and the MediaBox (state which, and why); `extentCovers` answers false across spaces; existing extents without `space` read as user space, stated.
+accepts-when: an OCR pixel rect proposed through op=extractpropose is refused or converted by name, never admitted as user space (moves: a pixel rect addressed as points). NEGATIVE CONTROL: drop `space` at `#posFields` and the pixel-rect arm admits it, failing by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
+
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
 milestone: M0

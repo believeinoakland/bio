@@ -46,16 +46,6 @@ scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): con
 | **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
 | FLEET | FL-6 | the Claude-account cascade at runtime | **D-260 (the plane's caller does not exist), PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling**; FL-6's member half LANDED at `f5ed2bfa` (2026-09-12) and DS-3's config half at `2de6f25f` — DIST #3 and FLEET #3, verified by SCHEDULER #4 |
 
-### D-670 · queued — **A `pdf-page` RECT CARRIES NO COORDINATE SPACE IN THE CONTENT GRAMMAR: OCR anchors are image pixels (the ocr member's §2) while content extents and image placements are default user space (IC-203); `#posFields` passes `space` through and `legExtent` / `canonicalExtent` / `extentCovers` drop or ignore it — so an OCR region's pixel rect proposed through `op=extractpropose` is addressed as user space, refused C-45.1 when off the page since D-374 and passed BY ACCIDENT when it fits.** Attestation regions cannot be bounded either. Found by D-374's worker (minted on land/worker/D-374). — owner CONTENT-PDF, RECORD.
-order: near the head, after D-633 — the record claiming a region it does not address is the over-claim CLAUDE.md §2 ranks worst, and it corrects just-landed D-374 (SCHEDULER #23, 2026-09-25)
-milestone: M2
-interface: I3/I5 — the pdf-page arm gains `space`; a non-user space refused by name (or converted); the integrator mints and classifies.
-design: `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §6 (the pdf-page rect and its bound, D-374), with IC-203's user-space convention.
-depends-on: D-374 (integrated, land/worker/D-374 @ c7703c3d).
-scope: add `space` to the pdf-page arm; the checker refuses by name any space other than user space, OR converts image-px with the image dims, /Rotate and the MediaBox (state which, and why); `extentCovers` answers false across spaces; existing extents without `space` read as user space, stated.
-accepts-when: an OCR pixel rect proposed through op=extractpropose is refused or converted by name, never admitted as user space (moves: a pixel rect addressed as points). NEGATIVE CONTROL: drop `space` at `#posFields` and the pixel-rect arm admits it, failing by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
-
 ### D-671 · queued — **`pdf-worker/src/pagepixels.mjs` READS `/Rotate` FROM THE LEAF PAGE ONLY, though `/Rotate` is inheritable: a page inheriting `/Rotate 270` from `/Pages` renders un-turned — CPDF-12's 8.67%-character failure.** Found by D-374's worker (minted on land/worker/D-374). — owner CONTENT-PDF.
 order: after D-670, with the PDF corrections at the head; after D-320, which moves the same line (SCHEDULER #23, 2026-09-25)
 milestone: M2
@@ -1153,3 +1143,13 @@ depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): wh
 accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The … (whole text: the cut archive)
+order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget … (whole text: the cut archive)
+depends-on: none. Sequence after M0-81.
+accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
