@@ -9,8 +9,13 @@
  * What this suite holds, THROUGH THE OPS (`op=acquire` files each page and its links exactly as a real
  * capture does; `op=navchanges` is the per-host read):
  *
- *   1. two captures of DIFFERENT pages of one host, the second's <nav> missing a link the first's carried
- *      -> the read names THAT link as lost, between those two captures, and says the pages differ;
+ *   1. three captures of DIFFERENT pages of one host, the third's <nav> missing a link the first two carried
+ *      -> the read names THAT link as lost, between the last capture carrying it and the first lacking it, and
+ *      says the pages differ. CORRECTED by D-702 (BOB #35, 2026-09-25 09:30Z): this was TWO pages, the first
+ *      carrying the link and the second not, which asserted a loss on containment alone. One page carrying a
+ *      link is not evidence it RECURS across the site, so that fixture's link is not site chrome by the ruling,
+ *      and the old assertion encoded the very judgement D-702 corrects; a middle page carrying the same nav makes
+ *      the link recur, which is what a loss now needs (d702-chromerecurrence.test.mjs holds the other verdicts);
  *   2. the classification is recorded with its BASIS on the link (`<nav>`, `role=navigation`), never as
  *      a deletion: op=links still lists every link;
  *   3. over-strictness: a BODY link that disappears is content, not chrome, and is NOT named; a nav link
@@ -52,6 +57,7 @@ const t = (label, got, want) => {
 const HOST = "www.oaklandca.gov";
 const A_URL = `https://${HOST}/departments.html`;
 const B_URL = `https://${HOST}/news.html`;
+const C_URL = `https://${HOST}/services.html`;
 const N = (p) => normalizeAddress(`https://${HOST}${p}`);
 
 /* The first capture: the nav carries Public Works, Parks and About; a landmark div carries Contact; the
@@ -63,7 +69,10 @@ const PAGE_A = `<!doctype html><html><head><title>Departments</title></head><bod
 <article id="main"><h1>Departments</h1><a href="/story/old.html">An old story</a>
 <footer><a href="/people/author.html">The author</a></footer></article>
 </body></html>`;
-/* The second capture, of ANOTHER page of the same host: Public Works is gone from the nav; About is the
+/* D-702: the middle capture, a THIRD page carrying the same navigation as the first, so Public Works RECURS. */
+const PAGE_C = PAGE_A.replace("<title>Departments</title>", "<title>Services</title>")
+  .replace(/<article id="main">[\s\S]*<\/article>/, '<main id="main"><h1>Services</h1></main>');
+/* The last capture, of ANOTHER page of the same host: Public Works is gone from the nav; About is the
    same address written absolutely; the body's story link is gone (content, not chrome). */
 const PAGE_B = `<!doctype html><html><head><title>News</title></head><body>
 <nav><a href="/dept/parks.html">Parks</a> <a href="https://${HOST}/about.html">About</a> <a href="#main">Skip</a></nav>
@@ -91,6 +100,7 @@ const mf = new Miniflare({
     const u = new URL(request.url);
     if (u.hostname !== HOST) return new Response("off-limits", { status: 500 });
     if (u.pathname === "/departments.html") return new Response(PAGE_A, { headers: { "content-type": "text/html" } });
+    if (u.pathname === "/services.html") return new Response(PAGE_C, { headers: { "content-type": "text/html" } });
     if (u.pathname === "/news.html") return new Response(PAGE_B, { headers: { "content-type": "text/html" } });
     return new Response("nope", { status: 404 });
   },
@@ -107,16 +117,20 @@ t("and says there is nothing to compare yet", /fewer than two captures/.test(non
 const noHost = await api("op=navchanges&token=mem-d340");
 t("a call naming no host is refused by name", noHost.reason, "REQUIRED_ARGUMENT_MISSING");
 
-console.log("\n--- two captures of one host, one second apart ---");
+console.log("\n--- three captures of one host, one second apart ---");
 const a = await acquire(A_URL);
 t("the first page is acquired", a.ok, true);
 const SHA_A = a.document && a.document.capture && a.document.capture.sha256;
 /* Retrieval stamps are whole seconds; the second capture must be observed LATER, not at the same instant. */
 await new Promise((r) => setTimeout(r, 1100));
+const c = await acquire(C_URL);
+t("the middle page is acquired", c.ok, true);
+const SHA_C = c.document && c.document.capture && c.document.capture.sha256;
+await new Promise((r) => setTimeout(r, 1100));
 const b = await acquire(B_URL);
 t("the second page is acquired", b.ok, true);
 const SHA_B = b.document && b.document.capture && b.document.capture.sha256;
-t("two different captures", !!SHA_A && !!SHA_B && SHA_A !== SHA_B, true);
+t("three different captures", !!SHA_A && !!SHA_B && !!SHA_C && new Set([SHA_A, SHA_B, SHA_C]).size === 3, true);
 
 console.log("\n--- the classification is recorded on the link with its basis, and nothing is dropped ---");
 const ns = await mf.getDurableObjectNamespace("STORE");
@@ -130,13 +144,14 @@ console.log("\n--- THE READ: the host's navigation lost Public Works between the
 const nc = await api(`op=navchanges&token=mem-d340&host=${HOST}`);
 console.log(`  (observations ${nc.observations}; records ${JSON.stringify((nc.records || []).map((r) => r.links.length))}; lost ${JSON.stringify((nc.lost || []).map((l) => l.address_norm))})`);
 t("op=navchanges answers", nc.ok, true);
-t("two observations of the host's navigation", nc.observations, 2);
-t("in capture order", (nc.sequence || []).map((o) => o.source_capture), [SHA_A, SHA_B]);
-t("two distinct navigations, one chrome record each", (nc.records || []).length, 2);
+t("three observations of the host's navigation", nc.observations, 3);
+t("in capture order", (nc.sequence || []).map((o) => o.source_capture), [SHA_A, SHA_C, SHA_B]);
+t("two distinct navigations, one chrome record each (the first two pages carried one)", (nc.records || []).length, 2);
 const lost = (nc.lost || []).map((l) => l.address_norm);
 t("the read names the link the host's nav lost", lost.includes(N("/dept/public-works.html")), true);
 const pw = (nc.lost || []).find((l) => l.address_norm === N("/dept/public-works.html")) || {};
-t("naming the capture that last carried it", pw.last_carried && pw.last_carried.source_capture, SHA_A);
+t("naming the capture that last carried it", pw.last_carried && pw.last_carried.source_capture, SHA_C);
+t("and the two pages it recurred on", pw.recurred_on, [normalizeAddress(A_URL), normalizeAddress(C_URL)].sort());
 t("and the capture it was first missing from", pw.first_missing && pw.first_missing.source_capture, SHA_B);
 t("and saying the two were DIFFERENT pages of the host", pw.same_page, false);
 t("not seen again since", pw.seen_again_at, null);
@@ -154,15 +169,15 @@ t("exactly one link lost", lost.length, 1);
 
 console.log("\n--- REGENERABLE: a rescan answers the same ---");
 const re = await store(`/derivesitechrome?host=${HOST}`);
-t("the rescan read both captures of the host", re.captures, 2);
+t("the rescan read all three captures of the host", re.captures, 3);
 const nc2 = await api(`op=navchanges&token=mem-d340&host=${HOST}`);
 t("and the read after it is identical", JSON.stringify({ ...nc2, at: null }), JSON.stringify({ ...nc, at: null }));
 const p1 = await store(`/derivesitechrome?host=${HOST}&limit=1`);
 t("a PAGED rescan says more remain, and names where to resume", [p1.captures, p1.truncated, typeof p1.next], [1, true, "string"]);
 t("and says the host's chrome is partial until then", /PARTIAL/.test(p1.partial || ""), true);
-const p2 = await store(`/derivesitechrome?host=${HOST}&limit=1&after=${p1.next}`);
-t("the next page finishes it", [p2.captures, p2.truncated, p2.next], [1, false, null]);
-t("the two pages derived both captures, once each", [...p1.derived, ...p2.derived].sort(), [SHA_A, SHA_B].sort());
+const p2 = await store(`/derivesitechrome?host=${HOST}&limit=2&after=${p1.next}`);
+t("the next page finishes it", [p2.captures, p2.truncated, p2.next], [2, false, null]);
+t("the two pages derived all three captures, once each", [...p1.derived, ...p2.derived].sort(), [SHA_A, SHA_B, SHA_C].sort());
 const nc3 = await api(`op=navchanges&token=mem-d340&host=${HOST}`);
 t("and the read after the paged rescan is identical too", JSON.stringify(nc3), JSON.stringify(nc));
 

@@ -1,13 +1,13 @@
 # Link fidelity: the partitions, the cascade, and the connections between captures
 
-**Status** · DRAFT, not ratified (its own words), written 2026-07-28 and REORDERED 2026-07-30 when Bob ruled monitoring across the interval the PRIMARY contemporaneity route and identical-byte bracketing an opportunistic bonus; the sections marked RATIFIED are settled. Mixed state, measured against `bio-plane/src` at plane 0.58.0. Steps 1-4 of the order of work are [BUILT]: the `links` table with its two keys (`schema.mjs:391-415`), append-only `link_verdicts` (`:421-432`), read-time resolution reached through `op=links` and answered by `Store#resolveLinks` (`store.mjs:25106`), `links_to` in `REL_VOCAB` (`bio-checks.mjs:1380`) projected by `projectLinks` (`store.mjs:25195`), and the four wrappers with no live `href` surviving in a companion (`subresources.mjs:666-676`), which the viewer resolves. Steps 5-8 are [DESIGNED-not-built]: no cross-bundle duplicate sweep exists anywhere, there is no `objective` object type (`OBJECT_TYPES` is information / inquiry / project / action / bias), nothing plants a cascade candidate, and nothing re-verdicts a link when its target lands. The volatile-region digest this document specifies is [BUILT] in `docprofile` and only partly adopted by the plane (D-60). D-57 (2026-09-23, IC-194): the read-time resolution states a SELF-REFERENCE basis for a link whose target is the source's own capture and a ONE-CAPTURE basis where one capture sits on both sides of the retrieval, per §The three-valued verdict; neither is a fourth verdict. D-340 (2026-09-25): §Chrome's `site_chrome` is [BUILT] as two derived tables, `site_chrome` (one row per distinct navigation of a host) and `site_chrome_refs` (one per direct capture of the host that carried chrome), fed by a `chrome` classification with its basis on every `links` row and read per host through `op=navchanges`; recurrence is not yet weighed. as of 2026-09-25.
+**Status** · DRAFT, not ratified (its own words), written 2026-07-28 and REORDERED 2026-07-30 when Bob ruled monitoring across the interval the PRIMARY contemporaneity route and identical-byte bracketing an opportunistic bonus; the sections marked RATIFIED are settled. Mixed state, measured against `bio-plane/src` at plane 0.58.0. Steps 1-4 of the order of work are [BUILT]: the `links` table with its two keys (`schema.mjs:391-415`), append-only `link_verdicts` (`:421-432`), read-time resolution reached through `op=links` and answered by `Store#resolveLinks` (`store.mjs:25106`), `links_to` in `REL_VOCAB` (`bio-checks.mjs:1380`) projected by `projectLinks` (`store.mjs:25195`), and the four wrappers with no live `href` surviving in a companion (`subresources.mjs:666-676`), which the viewer resolves. Steps 5-8 are [DESIGNED-not-built]: no cross-bundle duplicate sweep exists anywhere, there is no `objective` object type (`OBJECT_TYPES` is information / inquiry / project / action / bias), nothing plants a cascade candidate, and nothing re-verdicts a link when its target lands. The volatile-region digest this document specifies is [BUILT] in `docprofile` and only partly adopted by the plane (D-60). D-57 (2026-09-23, IC-194): the read-time resolution states a SELF-REFERENCE basis for a link whose target is the source's own capture and a ONE-CAPTURE basis where one capture sits on both sides of the retrieval, per §The three-valued verdict; neither is a fourth verdict. D-340 (2026-09-25): §Chrome's `site_chrome` is [BUILT] as two derived tables, `site_chrome` (one row per distinct navigation of a host) and `site_chrome_refs` (one per direct capture of the host that carried chrome), fed by a `chrome` classification with its basis on every `links` row and read per host through `op=navchanges`. D-702 (2026-09-25, BOB #35 09:30Z): that read judges chrome for links by containment AND recurrence (§Chrome, "Chrome for links is containment AND recurrence"). as of 2026-09-25.
 
 **Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It is the citation-and-connection half of capture: it owns the link partitions, the three-valued contemporaneity verdict, the chrome question and the cascade design. It depends on `AUTHORITY-AND-TRUST.md` for transitive trust; `ARCHIVE-FALLBACK.md` supplies its PRIMARY contemporaneity route produced by a third party; `CAPTURE-SCALING.md` owns the asset-recurrence machinery its chrome section reaches for. Its cascade half is the largest unbuilt design CAPTURE owns, and D-163/D-164 (an edge that points INSIDE a document) sit one construct over in `BIO_Content_Framework_v0_10.md` Part II.
 
 **Incomplete sections** ·
 - §The work, in order — steps 5 to 8 are [DESIGNED-not-built]. Step 5's cross-bundle duplicate check does not exist in any form: `checkRegisterIntegrity` buckets within ONE bundle's provenance register, and no store-wide sweep was ever written (measured 2026-08-06, recorded as D-220's correction to D-60). Step 6's `objective` object type does not exist. Step 7 has no planter. Step 8 has neither the reverse re-verdict nor a member-promotion op from an observed `links_to` to a member-asserted `cites`.
 - §Cascade capture PLANTS — the whole cascade design and its five subsections are [DESIGNED-not-built]: the gathering-request fields, the version-pinned objective object, the generation and per-domain bounds, and the store-level idempotence that keeps C-18.3's ring-once rule true once cascade exists. Nothing in `bio-plane/src` plants, and the word "cascade" there refers to the credential cascade and the publication cascade, which are unrelated.
-- §Chrome — BUILT by D-340 (2026-09-25) on CONTAINMENT alone: a link in `<nav>`/`<header>`/`<footer>`/`<aside>` or a landmark role is filed with `chrome = 1` and its `chrome_basis`, `site_chrome` / `site_chrome_refs` are derived per HOST (regenerable by the store's `derivesitechrome` scan, cleared by purge), and `op=navchanges` names each link a host's navigation carried in one capture and not the next. Still [DESIGNED-not-built]: the RECURRENCE half of chrome detection for links (the asset-level `siteChrome` ratio exists; nothing weighs a link's recurrence across a host's pages), so a sidebar that differs page to page reads as a loss, marked `same_page: false`; the observed_at-per-record shape is split into a record plus dated references; archive captures are not observations; a capture carrying no chrome is not one either, so a navigation that lost every link is invisible; no UI surface.
+- §Chrome — BUILT by D-340 (2026-09-25) on CONTAINMENT alone: a link in `<nav>`/`<header>`/`<footer>`/`<aside>` or a landmark role is filed with `chrome = 1` and its `chrome_basis`, `site_chrome` / `site_chrome_refs` are derived per HOST (regenerable by the store's `derivesitechrome` scan, cleared by purge), and `op=navchanges` names each link a host's navigation carried in one capture and not the next. D-702 (2026-09-25) built the RECURRENCE half at the read: `op=navchanges` names a loss only for a link two or more pages of the host carried, reads a varying sidebar's links as page content and a one-page host's as chrome undetermined; recurrence is weighed over the observations in the answer, not stored on `links` (whose `chrome` stays the containment classification with its basis). Still [DESIGNED-not-built]: the observed_at-per-record shape is split into a record plus dated references; archive captures are not observations; a capture carrying no chrome is not one either, so a navigation that lost every link is invisible; no UI surface.
 - §Volatile regions — the module is not at `civicos-ui/volatile.mjs`; that path never existed (D-60's own correction). It is `docprofile`'s `digests` / `compare`, and the plane has adopted it only in `op=acquire`'s write path and in audit's INTRA-bundle duplicate arm. Monitoring and `resolveLinks`' bracket arm still compare raw hashes, so on the ASP.NET pages this section measures, the bracket arm still cannot fire.
 - §Open questions — both are still open, and the first is answered in FACT rather than by design: no cross-bundle check exists anywhere to weigh against store-level idempotence, and the second asks about an object type nothing has built.
 
@@ -420,6 +420,30 @@ plus recurrence of the same address across multiple captures of the same host.
 It is a classification recorded on the link, never a deletion, because a chrome
 link is still something the page carried.
 
+**Chrome for links is containment AND recurrence** (BOB #35, 2026-09-25 09:30Z;
+built by D-702). Site chrome is what RECURS across the site's pages in a chrome
+region. Containment alone is not enough: a section's own sidebar sits in an
+`<aside>` and differs page to page, and judged by containment it read as the
+site's navigation losing links every time two sections were captured in turn.
+A page-local sidebar is page content, and its links are content links. So a
+contained link that one observation of a host carried and the next did not is
+judged three ways, over the observations the viewer may see:
+
+- **lost** when two or more DISTINCT PAGES of the host carried it: it recurs,
+  so its absence is a change in the site's navigation. Pages, not captures: the
+  same page captured twice says nothing about the site.
+- **page content** when only one page carried it and another page of the host
+  was observed, while the link was known to be carried, without it: it did not
+  recur where it could have. Never a loss.
+- **chrome undetermined** otherwise, which always includes a host of which one
+  page is held: recurrence cannot be measured, and the answer says so with its
+  reason. Never a loss marked `same_page: false`.
+
+The per-link `chrome` classification stays what it was, containment with its
+basis; recurrence is a property of the host's observations and is weighed when
+they are read, over the observations in that answer (a read cut at its limit
+says that a link recurring only in older ones is not seen to).
+
 ### Where each lives
 
 Observed links live in `data/links.json`, a bundle data file, not in
@@ -681,6 +705,12 @@ predicate BEFORE grouping or counting, and no count includes a row the viewer ca
 give). A capture's visibility is its `register` bundle's; a capture filed in no bundle names none and stays
 visible. The consequence for the verdict is deliberate and follows from the ruling: a target whose only capture
 is hidden resolves `offsite` for that viewer, and the bracket is sought among the captures that viewer can see.
+
+2026-09-25 (BOB #35, 09:30Z, item 2 of the same answer; built by D-702). **Chrome for links is containment AND
+recurrence**, folded into §Chrome above: a varying page-local sidebar is page content, never a lost chrome link, and
+where recurrence cannot be measured the link reads chrome undetermined. Because recurrence is weighed over what the
+viewer may see (D-701), a viewer who can see only one page carrying a link reads it undetermined where a viewer who
+sees two reads it lost: each answer is the one a record holding only that viewer's captures gives.
 
 ## Open questions
 - Whether C-18.3 should be widened to a cross-bundle check, or whether

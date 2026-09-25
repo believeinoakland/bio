@@ -43731,9 +43731,15 @@ export class Store extends DurableObject {
    *  LOST, named with the two captures it was lost between. Per HOST, not per
    *  page: the site's navigation is a property of the site, so two captures of
    *  different pages of one host are two observations of ONE navigation. When
-   *  the two pages differ the answer says so (`same_page: false`), because a
-   *  section's own sidebar can differ page to page, and which of the two a
-   *  difference is stays UNDETERMINED here rather than being decided.
+   *  the two pages differ the answer says so (`same_page: false`).
+   *
+   *  D-702 (BOB #35, 2026-09-25 09:30Z): CHROME FOR LINKS IS CONTAINMENT AND RECURRENCE. Containment is what
+   *  the derivation records; a link is SITE chrome only when it also RECURS across the host's pages, so the
+   *  judge is here, over the observations the viewer may see. A contained link a departing observation carried
+   *  and the next did not is: LOST when two or more distinct pages of the host carried it (`#chromeJudge`);
+   *  PAGE CONTENT when another page of the host was observed while the link was known carried and did not
+   *  carry it (a section's own sidebar: a content link, never a loss); and chrome UNDETERMINED otherwise, which
+   *  includes every link of a host of which only one page is held, because there recurrence cannot be measured.
    *
    *  D-701 (BOB #35, 2026-09-25 09:30Z): THROUGH THE VIEWER, BEFORE ANYTHING IS ORDERED, CUT OR COUNTED. An
    *  observation names a capture sha and the page it was captured at, which for a capture filed in a project the
@@ -43768,8 +43774,10 @@ export class Store extends DurableObject {
     const linksOf = new Map(records.map((r) => [r.fingerprint, r.links]));
     const obs = (o) => ({ source_capture: o.source_capture, page: o.page, first_observed: o.first_observed,
                           last_observed: o.last_observed, fingerprint: o.fingerprint });
+    const judge = this.#chromeJudge(seq, linksOf);
     const changes = [];
     const lost = [];
+    const undetermined = [];
     for (let i = 1; i < seq.length; i++) {
       const a = seq[i - 1], b = seq[i];
       if (a.fingerprint === b.fingerprint) continue;
@@ -43777,8 +43785,17 @@ export class Store extends DurableObject {
       const gone = [...A].filter((x) => !B.has(x)).sort();
       const came = [...B].filter((x) => !A.has(x)).sort();
       const samePage = a.page === b.page;
-      changes.push({ from: obs(a), to: obs(b), lost: gone, gained: came, same_page: samePage });
+      const byVerdict = (v) => gone.filter((x) => judge(x).chrome === v);
+      const lostHere = byVerdict("site");
+      changes.push({ from: obs(a), to: obs(b), lost: lostHere, gained: came, same_page: samePage,
+                     page_content: byVerdict("page_content"), chrome_undetermined: byVerdict("undetermined") });
       for (const address_norm of gone) {
+        const verdict = judge(address_norm);
+        if (verdict.chrome === "undetermined") {
+          undetermined.push({ address_norm, last_carried: obs(a), first_missing: obs(b), same_page: samePage,
+                              chrome: "undetermined", reason: verdict.reason });
+        }
+        if (verdict.chrome !== "site") continue;
         /* Seen again AFTER it went missing: identical bytes re-captured later
            widen an earlier observation's interval rather than adding a row, so
            the return shows as a later `last_observed` carrying the link. */
@@ -43786,18 +43803,67 @@ export class Store extends DurableObject {
                                       && (linksOf.get(o.fingerprint) || []).includes(address_norm))
                          .map((o) => o.last_observed).sort().pop() || null;
         lost.push({ address_norm, last_carried: obs(a), first_missing: obs(b), same_page: samePage,
-                    seen_again_at: again });
+                    seen_again_at: again, recurred_on: verdict.pages });
       }
     }
     return { host: h, observations: seq.length, limit: cap, truncated: found.length > cap,
-             records, sequence: seq.map((o) => ({ ...obs(o), basis: o.basis })), changes, lost,
+             records, sequence: seq.map((o) => ({ ...obs(o), basis: o.basis })), changes, lost, undetermined,
+             pages: new Set(seq.map((o) => o.page)).size,
              note: (seq.length < 2
                ? "fewer than two captures of this host carried navigation: nothing to compare yet"
                : "a link is LOST when the host's navigation carried it in one capture and not in the next")
-               + "; chrome here is CONTAINMENT (a link inside <nav>, <header>, <footer>, <aside> or a landmark role), "
-               + "a classification with its basis, not a proof; recurrence across pages is not yet weighed; "
+               + "; chrome is CONTAINMENT (a link inside <nav>, <header>, <footer>, <aside> or a landmark role) AND "
+               + "RECURRENCE (two or more distinct pages of the host carried it), a classification with its basis, not "
+               + "a proof; a contained link another page lacked while it was carried is page content, never a loss; "
+               + "where recurrence cannot be measured (one page of the host held, or no other page observed while the "
+               + "link was carried) it reads chrome undetermined, never a loss; recurrence is weighed over the "
+               + "observations in this answer only"
+               + (found.length > cap ? ", which are CUT at the limit, so a link recurring only in older ones is not seen to" : "")
+               + "; "
                + "a capture with no chrome at all is not an observation, so a navigation that lost EVERY link, "
                + "or a link filed before chrome was recorded, is not seen here; direct captures only" };
+  }
+
+  /** D-702: THE CHROME JUDGE FOR LINKS (BOB #35, 2026-09-25 09:30Z; LINK-FIDELITY.md §"Chrome: rendering and
+   *  connection are different problems"). Site chrome is what RECURS across the site's pages in a chrome region;
+   *  containment alone is what every observation's links already are. So, over the observations given (the
+   *  viewer's, D-701), a contained address reads:
+   *    site           two or more DISTINCT pages carried it: it recurs, and a loss of it is a navigation change;
+   *    page_content   one page carried it, and another page was observed while it was known carried (the carrying
+   *                    observations' span, first to last) without it: it does not recur where it could have, so
+   *                    it is that page's own, a content link;
+   *    undetermined   one page carried it and no other page was observed in that span, which is always the case
+   *                    when one page of the host is held: recurrence was not measurable, and that is stated.
+   *  Pages, never captures: the same page captured twice is one page, and its links recurring there says nothing
+   *  about the site. Returns a memoised lookup, so each address is judged once. */
+  #chromeJudge(seq, linksOf) {
+    const carriers = new Map();
+    for (const o of seq) for (const x of (linksOf.get(o.fingerprint) || [])) {
+      if (!carriers.has(x)) carriers.set(x, []);
+      carriers.get(x).push(o);
+    }
+    const memo = new Map();
+    return (address) => {
+      if (memo.has(address)) return memo.get(address);
+      const by = carriers.get(address) || [];
+      const pages = [...new Set(by.map((o) => o.page))].sort();
+      let v;
+      if (pages.length >= 2) v = { chrome: "site", pages };
+      else {
+        const from = by.map((o) => o.first_observed).sort()[0] || "";
+        const to = by.map((o) => o.last_observed).sort().pop() || "";
+        const witness = seq.find((o) => !pages.includes(o.page) && o.first_observed <= to && o.last_observed >= from
+                                      && !(linksOf.get(o.fingerprint) || []).includes(address));
+        v = witness
+          ? { chrome: "page_content", pages, witness: witness.page }
+          : { chrome: "undetermined", pages,
+              reason: new Set(seq.map((o) => o.page)).size < 2
+                ? "one page of this host is held, so whether this link recurs across the site cannot be measured"
+                : "no other page of this host was observed while this link was carried, so its recurrence was not measured" };
+      }
+      memo.set(address, v);
+      return v;
+    };
   }
 
   /** Everything that points AT an address. The reverse index, which is the

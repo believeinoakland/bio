@@ -203,9 +203,15 @@ console.log("\n--- op=navchanges: the host's navigation, as the viewer may see i
   t("the owner sees the same", (owner.sequence || []).map((o) => o.source_capture), [S1, SX, S2]);
   t("an outsider's sequence holds only what they may see", (out.sequence || []).map((o) => o.source_capture), [S1, S2]);
   t("and the observation count is theirs", out.observations, 2);
-  t("B is still lost, between the two captures the outsider can see",
-    (out.lost || []).map((l) => [l.address_norm, l.last_carried?.source_capture, l.first_missing?.source_capture]),
-    [[N("/dept/b.html"), S1, S2]]);
+  /* CORRECTED by D-702 (BOB #35, 2026-09-25 09:30Z: chrome for links is containment AND recurrence). This read
+     "B is still lost" for the outsider, but of the pages the outsider may see only /shared1.html carried B, so B
+     does not recur for them and its loss cannot be judged: the old assertion rested on containment alone. The
+     outsider's answer is now the one a record holding no secret capture gives, which is D-701's own standard. */
+  t("the machine credential sees B lost: two pages carried it", (admin.lost || []).map((l) => l.address_norm), [N("/dept/b.html")]);
+  t("for the outsider B is chrome UNDETERMINED between the two captures they can see, never a loss",
+    [(out.lost || []).length,
+     (out.undetermined || []).map((l) => [l.address_norm, l.last_carried?.source_capture, l.first_missing?.source_capture])],
+    [0, [[N("/dept/b.html"), S1, S2]]]);
   const rec = (a) => (a.records || []).find((r) => (r.links || []).includes(N("/dept/b.html"))) || {};
   t("the shared navigation's record counts both captures for the machine credential", rec(admin).captures, 2);
   t("and ONE for the outsider: no count moves with a row they cannot see", rec(out).captures, 1);
