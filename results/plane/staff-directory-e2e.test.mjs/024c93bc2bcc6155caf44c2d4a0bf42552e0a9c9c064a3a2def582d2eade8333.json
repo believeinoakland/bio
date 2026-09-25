@@ -1,0 +1,16 @@
+{
+ "unit": "plane:staff-directory-e2e.test.mjs",
+ "inputHash": "024c93bc2bcc6155caf44c2d4a0bf42552e0a9c9c064a3a2def582d2eade8333",
+ "verdict": "PASS",
+ "run": "b3eccf28182488e93c9c95683b3d429e5bf3e53d.1790340648626.1616.json",
+ "tree": "b3eccf28182488e93c9c95683b3d429e5bf3e53d",
+ "head": "04737d741f0726a00df099220c3eb3d39246f70a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 149,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f5358525-4b19-5c2a-81e0-40a6da408501",
+ "at": "2026-09-25T12:50:48.638Z"
+}
