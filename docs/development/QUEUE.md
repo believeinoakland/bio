@@ -1032,8 +1032,8 @@ scope: the NO_ARTIFACT sentence names `node tools/bundles.mjs`, and the assemble
 accepts-when: with two artifacts missing, one run names both and the one command (the measured failure it moves: one-at-a-time, the wrong command). NEGATIVE CONTROL: restore the old sentence and the arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by M0-188's worker).
 
-### D-566 · running — **THREE MORE HAND-KEPT TOOL COPY LISTS SURVIVE M0-170: `bio-plane/test/gates.test.mjs` ~924 (`["coord.mjs", "statepaths.mjs"]`) and `bio-plane/test/status.test.mjs` ~343 and ~565 (`["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"]`, status.mjs's closure), so a new import in the subject breaks its fixture with a false red.** Found by M0-170's worker (F2, 00:14Z). — owner M0.
-status: running — SCHEDULER #22 06:21Z spawns WORKER D-566 (depth 2)
+### D-566 · integrated — **THREE MORE HAND-KEPT TOOL COPY LISTS SURVIVE M0-170: `bio-plane/test/gates.test.mjs` ~924 (`["coord.mjs", "statepaths.mjs"]`) and `bio-plane/test/status.test.mjs` ~343 and ~565 (`["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"]`, status.mjs's closure), so a new import in the subject breaks its fixture with a false red.** Found by M0-170's worker (F2, 00:14Z). — owner M0.
+status: integrated — SCHEDULER #23 07:24Z (relayed by CONDUCT #22): tip 25d51c4f on 5e8a65a8, GATE 75/75 GREEN TARGETED (5834 assertions); test-only: seven hand module lists derived via moduleClosure; rides batch30
 order: after D-560 (D-569 is running), with the process rows: a false red costs a gate round only when the subject gains an import (M0-170's precedent, Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-25)
 milestone: M0
 interface: none.
@@ -1164,7 +1164,8 @@ scope: both outermost catches answer a named internal-error code and a correlati
 accepts-when: a forced throw on a public op and on a member op answers the named code with no stack, path or line text (moves: String(e.stack) to the caller). NEGATIVE CONTROL: return the stack again and the no-stack arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
 
-### REC-206 · queued — **AN AGENDA ITEM'S MEMBERSHIP IN A FILE EXISTS ONLY AS RECT CO-LOCATION AN INSTRUMENT INFERS: tier-1 text units carry no position and a LinkRecord carries no anchor text.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *DESIGN IT — I2 gains position on tier-1 text units (page and rect) and anchor text plus a rect on LinkRecord; membership is DERIVED from containment, labelled machine work and graded inferred, never presented as the publisher's link.* — owner CONTENT-PDF, then RECORD.
+### REC-206 · running — **AN AGENDA ITEM'S MEMBERSHIP IN A FILE EXISTS ONLY AS RECT CO-LOCATION AN INSTRUMENT INFERS: tier-1 text units carry no position and a LinkRecord carries no anchor text.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *DESIGN IT — I2 gains position on tier-1 text units (page and rect) and anchor text plus a rect on LinkRecord; membership is DERIVED from containment, labelled machine work and graded inferred, never presented as the publisher's link.* — owner CONTENT-PDF, then RECORD.
+status: running — SCHEDULER #23 07:24Z: spawned
 order: with the M2 extraction rows, after D-246; I2 PROVISIONAL, RECORD after PDF, as ruled (SCHEDULER #17, 2026-09-23, LED-7 S17-4; CPDF-3's worker)
 milestone: M2
 interface: I2 PROVISIONAL — positions and anchors; I3 — the derived membership; the integrator mints and classifies the ICs.
