@@ -22,7 +22,8 @@
 | `id`, `old_state`, `milestone`, `old_owner`, `headline` | the item as the old plan held it; the full text is in the frozen `.txt` copies |
 | `first_pass_class` | an automatic guess from the files the row names: `product` 66, `machinery` (tests and tooling only) 73, `both` 14, `unclear` 63. **A guess, never a verdict.** |
 | `built_branch`, `branch_tip` | where built but unmerged work for the row sits (112 rows); every such tip is also reachable from the snapshot branch |
-| `verdict`, `target_module_or_reason` | empty until step T5 fills them |
+| `verdict`, `target_module_or_reason` | filled by T5: `carry`/`fold` name a module of `build/modules.json`; `drop` states why |
+| `t5_note` | T5's note: where built work sits (`judge at extraction`), and every BOB override with its reason |
 
 ## 3. The steps
 
@@ -66,6 +67,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-25 · T4 · Bob ruled the six calls (no size limit, only a watched metric; UI is a placeholder worked on elsewhere; the checks are carried into modules, never dropped); BOB proposed layer 7 Understanding (intent, reevaluation) from Content Framework §12, in answer to Bob's question · `build/layers.md` · next: Bob rules on Understanding, then modules.json is renumbered and T4 closes
 - 2026-09-25 · T4 · an interactive view of the draft (nine layers with Understanding shown as proposed; tap a module for its uses and users; the code share of the legacy files, 76% of 158,185 lines) was published for Bob as a private artifact · https://claude.ai/artifact/CJ4jg9m9rDBeJdd84irrnX · —
 - 2026-09-25 · T4 · DONE: Bob approved the Understanding layer (layer 7: intent, reevaluation), so 9 layers and 52 modules; Discovery (an AI assistant looking for what is working and what is not) recorded as his candidate beyond MVP, not in the module list; the view added to the record at his request, generated from `modules.json` · `build/layers.md`, `build/modules.json`, `build/layers-view.html` · next: T5
+- 2026-09-25 · T5 · DONE: all 216 rows triaged, 107 carry (70 with built work to judge at extraction), 1 fold, 108 drop (old test battery and tooling, UI placeholder rows). Nine read-only workers read every row's full text in parallel; BOB #37 checked every carry target and made 11 overrides, each recorded in `t5_note`: 6 carries moved off `legacy-checks` to the module that will own the check, 3 refusal-code translation rows dropped as UI, D-742 carried as live data, D-592 moved to inquiry. The carries spread over 28 modules, led by publication 15, promotion 14, capture 11 · `docs/development/transition/old-plan/index.csv` · next: T6
 
 ## 5. Challenges identified
 
@@ -77,6 +79,6 @@ Each: what it is, and how the plan handles it.
 - **C4 · The monoliths.** `store.mjs` is 54,618 lines, `app.html` 26,489 and `index.mjs` 13,438: 75% of the product source in three files. Extraction (mechanics §12) is the core of the transition, and its cost is unknown until T9's metrics exist.
 - **C5 · Source-anchored tests.** Much of the old test suite locates code by its exact text, so it breaks on any move. It will not survive extraction and is not carried forward. Each module's new requirement-named tests replace it (P7).
 - **C6 · The weekly token budget.** Tokens are scarce. Every step above fits in one or two sessions and is committed as it goes. No step starts that cannot finish. Usage is measured from T9 (P14).
-- **C7 · The live instance.** biosmoke7 runs release 0.79.0. Releases stay held until the new process produces one. The disclosure fixes that are built but not released (REC-196, D-706 and D-722, D-480) are rows for T5 to **carry**.
+- **C7 · The live instance.** biosmoke7 runs release 0.79.0. Releases stay held until the new process produces one. The disclosure fixes D-706 and D-722 are built but not merged; T5 carried both against `connections`. **Corrected by T5:** REC-196 and D-480 are not open rows. They are on `main` (batch 29 on 2026-09-25 and batch 24 on 2026-09-24) and wait only for the next release.
 - **C8 · Stale pointers to removed documents.** Two code comments still cite `BIO_Membership_Architecture_v1.md` (`bio-plane/src/schema.mjs` near the memberships table, `bio-plane/test/membership.test.mjs` header). Only a module job changes product code (P7), so they are not edited now: the membership module's extraction job repoints them to v2, and T5 carries it as an entry.
 - **C9 · A fourth monolith.** `bio-plane/checks/bio-checks.mjs` is 16,591 lines: the whole check catalogue, imported by modules in every layer. T4 registers it as the legacy module `legacy-checks`, first in the order; each extracted module takes its own checks as its invariants. Its size adds to C4.
