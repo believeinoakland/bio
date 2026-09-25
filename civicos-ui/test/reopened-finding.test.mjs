@@ -36,7 +36,7 @@
  *   is invisible to `mention`'s derivation.)
  *
  * NEGATIVE CONTROL: RUN 2026-09-25 by UI-109 against `civicos-ui/app.html`
- * `d10c06ef66af9c3ffad1e17eaad99112be1bcb891a44c3ab23169f18a3a1d576` (1,621,459 bytes), driven by
+ * `4496bd0cc5042e2f0b9c7547da31441e61ae3a784c80bf66db46670969e16f65` (1,621,458 bytes), driven by
  * `node civicos-ui/test/reopened-finding.control.mjs`, each arm ALONE by one anchored replacement asserted
  * to match exactly once, restored from a per-arm pristine copy verified by sha256 AND `cmp` — **4/4 AS
  * DECLARED**. BASELINE GREEN 26 asserted / 0 failed.

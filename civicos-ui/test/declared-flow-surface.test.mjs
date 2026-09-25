@@ -90,7 +90,7 @@
  *       words upper-cased and marked up with `<em>` instead of `<b>`. DECLARED GREEN -> GREEN 38 / 0,
  *       because every sentence assertion here runs over what a member READS (tags stripped, entities
  *       opened, case-insensitive) and never over the markup.
- * RE-RUN 2026-09-25 by UI-109 against app.html `d10c06ef66af…` (1,621,459 B), after UI-109 put a second
+ * RE-RUN 2026-09-25 by UI-109 against app.html `4496bd0cc504…` (1,621,458 B), after UI-109 put a second
  * `not recorded` on the queue (the reopened FINDING item's `prior_disposition`): FIRST 3/4 — arm (A) RED 1 of
  * 38 and NOT naming THE ROW'S SECOND HALF, because arm 5 read the whole queue and the item's words kept it
  * green. Arm 5 was CORRECTED to read the set-aside row itself (comment at the site); then 4/4 AS DECLARED,
