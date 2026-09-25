@@ -66,8 +66,9 @@ PLANE: every refusal the surface can receive now carries a canned translation �
 `adminRemove`'s target case is split to TARGET_NOT_AN_ADMIN, because `dec49Decorate` puts a family row's sentence on
 EVERY refusal carrying its code. SUITES: `civicos-ui/test/custodial-acts.test.mjs` (both administrators' sessions
 perform all four against the real plane, attributed; the member's renders none; each refusal in its words) and
-`bio-plane/test/d134-custodial-refusals.test.mjs` (each C-96 check named at the op). WHAT IS NOT SAID: an ordinary
-invitation records no inviter — the row reads `not recorded`, and BOB has the question. Controls and figures:
+`bio-plane/test/d134-custodial-refusals.test.mjs` (each C-96 check named at the op). WHO INVITED: BOB #35 ruled it its
+own fact while this item ran, and it landed here — `members.invited_by`, written by every `memberadd` path, and each
+roster row says "invited by <who>", or "not recorded" where the plane says so. Controls and figures:
 `measurements/D-134.md`.
 
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on

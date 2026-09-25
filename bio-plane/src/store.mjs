@@ -1229,6 +1229,12 @@ export class Store extends DurableObject {
          invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
       ["members", "status_by", "TEXT"],
       ["signers", "status_by", "TEXT"],
+      /* D-134 (Membership v2 §4.9, RULED 2026-09-25 by BOB #35): WHO INVITED a member -- the SERVER's stamp
+         of whoever `op=memberadd` ran for, on every path (an invitation, the second administrator, a 4.7
+         proposal), or `class:<cls>` for the operator's bearer. Its own column because `status_by` names only
+         the LATEST transition and enrolment overwrites it. NULLABLE AND NEVER BACK-FILLED, D-85's reasoning:
+         a member invited before this column existed recorded no inviter. NULL reads `not recorded`. */
+      ["members", "invited_by", "TEXT"],
       /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
          disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
          column existed recorded no version, and the one value a backfill could reach for is the
@@ -35110,11 +35116,13 @@ export class Store extends DurableObject {
        needs the consensus of all existing administrators: without that, a
        captured administrator recruits confederates and manufactures the majority
        that ejects the honest ones. */
+    /* D-134 (BOB #35): the stamped actor is the INVITER, on every path. */
+    const inviter = by || null;
     if (wantAdmin && admins.length >= 2) {
       this.sql.exec(
-        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
-         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?)`,
-        memberId, label, JSON.stringify(caps), expertise ?? null, now, now);
+        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated,invited_by)
+         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?,?)`,
+        memberId, label, JSON.stringify(caps), expertise ?? null, now, now, inviter);
       /* REC-156: `by` is the control plane's STAMP, relayed from the query by the
          dispatch and never taken from the caller's body — so this row is the
          PROPOSER'S own endorsement. The founder's session is stamped `admin`; a
@@ -35135,13 +35143,14 @@ export class Store extends DurableObject {
     const invite = Store.#rand(16);
     const hash = await Store.#sha256(invite);
     this.sql.exec(
-      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
-       VALUES (?,?,NULL,?,?,?,?,?,?,?)`,
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated,invited_by)
+       VALUES (?,?,NULL,?,?,?,?,?,?,?,?)`,
       memberId, label, wantAdmin ? "admin" : "member", "invited", hash,
-      JSON.stringify(caps), expertise ?? null, now, now);
+      JSON.stringify(caps), expertise ?? null, now, now, inviter);
     /* The plaintext invite appears exactly once, here, for handing to the
        person. It is never readable again. */
-    return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps };
+    return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps,
+             invited_by: Store.#statusBy(inviter) };
   }
 
   /* An invitation is a BURNER: the token in the URL is the whole credential, and
@@ -35253,10 +35262,11 @@ export class Store extends DurableObject {
        pairing rather than leaking it. */
     const pairs = administer === true || administer === "1";
     return { members: this.#rows(
-      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, capabilities, created, updated,
+      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, invited_by, capabilities, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
        FROM members ORDER BY member_id`).map((r) => ({ ...r, capabilities: this.#capsOf(r),
          status_by: Store.#statusBy(r.status_by),   /* REC-159: who set the status, or `not recorded` */
+         invited_by: Store.#statusBy(r.invited_by), /* D-134 (BOB #35): who invited them, or `not recorded` */
          /* D-51: served from `member_expertise`, not from the dead column on
             this row. Two places answering the same question, one of them never
             updated, is the shape that produces a roster nobody can trust. */

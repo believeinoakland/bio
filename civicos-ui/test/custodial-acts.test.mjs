@@ -9,18 +9,17 @@
  * WHAT IT PROVES (the row's accepts-when):
  *   1. THE FOUNDER'S session and an ENROLLED ADMINISTRATOR'S session each perform all four through the
  *      surface's dialogs, and the record names THAT session as the actor: `status_by` on the member row
- *      (memberset) and on the key row (signeradd, signerset), and — for memberadd — the proposer's own
- *      endorsement on a §4.7 proposal (`have`). An ORDINARY invitation records no inviter at all; that is
- *      asserted as what the record holds (`not recorded`), never papered over — see UNDETERMINED below.
+ *      (memberset) and on the key row (signeradd, signerset), and — for memberadd — `invited_by` on every
+ *      path (BOB #35, 2026-09-25) plus the proposer's own endorsement on a §4.7 proposal (`have`).
  *   2. A MEMBER'S session renders NONE of the four, read from the rendered markup (the liar the row names
  *      renders every act and lets the plane refuse, so the member arm reads the DOM, not the plane), and
  *      the entry point does nothing for it.
  *   3. EVERY refusal the surface can receive arrives with its canned DEC-49 translation — compared against
  *      the IMPORTED catalogue row, never a hand copy — and is what the dialog renders.
  *
- * UNDETERMINED, STATED: `op=memberadd`'s ordinary invitation writes no actor anywhere in the record
- * (`members.status_by` stays NULL; the plane's answer carries no `by`). Whether it should is BOB's
- * (routed by this item); this suite pins what is true today so a change is seen.
+ * CORRECTED 2026-09-25, in this item: this paragraph said an ordinary invitation recorded no inviter and
+ * pinned it as UNDETERMINED. BOB #35 ruled (b) — `members.invited_by`, written by memberadd on every path —
+ * and it landed in this same item, so the arm now asserts the inviter and a null renders `not recorded`.
  *
  * WHAT IT CANNOT SEE: a live plane; the browser's real DOM (a stub records innerHTML); NOT_AN_ADMIN
  * reaching THE SURFACE — the controls exist only for a session `op=whoami` says administers, so the
@@ -112,7 +111,7 @@ function loadApp(mf){
     fetch:bridge };
   ctx.globalThis = ctx; vm.createContext(ctx);
   vm.runInContext(appScript() + ";globalThis.__U = {PLANE, recR, renderMembers, openCustodialAct, doCustodialAct,"
-    + " custodialChoose, custodian, actRefusalHtml };", ctx);
+    + " custodialChoose, custodian, actRefusalHtml, memberInviterHtml };", ctx);
   const html = (s) => { const e = els.get(s); return e ? String(e._html || "") : ""; };
   const fill = (s, props) => Object.assign($$(s), props);
   return { U: ctx.__U, SENT, html, fill, els };
@@ -199,8 +198,9 @@ await F.U.renderMembers();
   ok("FOUNDER memberadd: the body the surface sent names nobody as the actor — `by` is the plane's stamp",
      !("by" in (F.SENT.find(s => s.op === "memberadd").body || {})) && !("by" in F.SENT.find(s => s.op === "memberadd").params));
   const ruthRow = await row("ruth");
-  ok(`FOOTING UNDETERMINED (stated, not rounded off): an ordinary invitation records no inviter — ruth's row reads status_by '${ruthRow && ruthRow.status_by}'`,
-     ruthRow && ruthRow.status_by === "not recorded");
+  /* BOB #35 (2026-09-25): who INVITED is its own fact, `members.invited_by`, written on every memberadd path. */
+  ok(`FOUNDER memberadd: the record names the founder as ruth's inviter (invited_by '${ruthRow && ruthRow.invited_by}', answer '${r.out && r.out.invited_by}')`,
+     ruthRow && ruthRow.invited_by === "admin" && r.out.invited_by === "admin");
   var RUTH = await enrol(r.out.invite, "ruth");
 }
 /* memberadd — a proposal beyond the second: the record names its proposer's own endorsement (§4.7). */
@@ -272,6 +272,12 @@ ok(`ADMINISTRATOR: op=whoami says member:ruth's session administers (${JSON.stri
     "#ca-id": { value: "uma" }, "#ca-cover": { value: "the organiser" }, "#ca-role-member": { checked: true } });
   ok(`ADMINISTRATOR memberadd (member): an invitation issued from ruth's own session (${JSON.stringify(r2.out && { role: r2.out.role })})`,
      r2.out && typeof r2.out.invite === "string" && r2.out.role === "member");
+  const uma = await row("uma"), tess = await row("tess");
+  ok(`ADMINISTRATOR memberadd: the record names ruth as the inviter on both paths (uma '${uma && uma.invited_by}', proposal tess '${tess && tess.invited_by}')`,
+     uma && uma.invited_by === "ruth" && tess && tess.invited_by === "ruth");
+  await R.U.renderMembers();
+  ok("ADMINISTRATOR RENDER: the roster says who invited a member, in the record's words",
+     /invited by ruth/.test(R.html("#mm")) && /invited by admin/.test(R.html("#mm")));
 }
 {
   const r = await perform(R, "memberset", "olive", "active");
@@ -392,6 +398,14 @@ const renders = (r, code, row) => {
   const g = await W.post("adminremove", { memberId: "ruth", reason: "no" }, OLIVE);
   ok(`SPLIT: a member's session voting on an administrator's removal still answers NOT_AN_ADMIN, C-96.1 (${g && g.reason})`,
      g && g.reason === "NOT_AN_ADMIN" && g.check === CUSTODIAL_CHECKS.NOT_AN_ADMIN.check);
+}
+/* invited_by's three renderings: a name, `not recorded` for null, nothing for a plane that does not send it. */
+{
+  const A = loadApp(mf);
+  ok("RENDER invited_by: a name, `not recorded` for null, and nothing for an older plane's row without the field",
+     /invited by ruth/.test(A.U.memberInviterHtml({ invited_by: "ruth" }))
+     && /invited by not recorded/.test(A.U.memberInviterHtml({ invited_by: null }))
+     && A.U.memberInviterHtml({ status: "active" }) === "");
 }
 /* The rows are real and distinct: an arm that matched an empty or shared sentence would prove nothing. */
 {

@@ -2,8 +2,12 @@
    green. (b) THE BAD_KEY ROW'S TRANSLATION DELETED from `CUSTODIAL_CHECKS` (the row kept, `translation` removed):
    the control plane's `dec49Decorate` and the store both lose the sentence, so the `C-96.8` arm MUST FAIL by name
    and no other C-96 arm may move. (c) `adminRemove`'s target case put back to `reason: "NOT_AN_ADMIN"`: the
-   `C-96.9` arm MUST FAIL by name and the `C-96.1` caller arms MUST stay green. Each arm restored from a per-arm
-   pristine copy, verified by sha256 AND cmp. RESULTS: recorded in measurements/D-134.md.
+   `C-96.9` arm MUST FAIL by name and the `C-96.1` caller arms MUST stay green. (d) `memberAdd`'s ordinary-path
+   INSERT writes NULL for `invited_by`: the two invited_by arms MUST FAIL by name, every C-96 arm stays green. Each arm restored from a per-arm
+   pristine copy, verified by sha256 AND cmp. RESULTS 2026-09-25: (a) 14/0 at the time, 16/0 with the invited_by arms ·
+   (b) FIRST RUN GREEN 14/0 — the grade compared `undefined === undefined`; the grade was corrected to require the
+   sentence, and the re-run read 13/1, `C-96.8` by name · (c) 13/1, `C-96.9` by name, C-96.1 green · (d) 14/2, both
+   invited_by arms by name. Every restore sha256- and cmp-verified. Table: measurements/D-134.md.
  * =========================================================================
  * d134-custodial-refusals.test.mjs — D-134. §4.9's CUSTODIAL ACTS SAY THEIR REFUSALS IN WORDS.
  *
@@ -110,6 +114,18 @@ try {
     await post("adminremove", { memberId: "olive", reason: "not one" }, F), "TARGET_NOT_AN_ADMIN", "C-96.9");
   grade("a member's session voting on an administrator's removal",
     await post("adminremove", { memberId: "ruth", reason: "no" }, O), "NOT_AN_ADMIN", "C-96.1");
+
+  console.log("\n--- BOB #35 (2026-09-25): who INVITED a member is recorded, on every memberadd path ---");
+  {
+    const list = rP(await (await mf.dispatchFetch(`http://x/api/?op=memberlist&token=${F}`)).json()).members;
+    const of = (id) => (list.find((m) => m.member_id === id) || {}).invited_by;
+    t("invited_by: the founder's session invited ruth, ruth's session invited olive and proposed sam",
+      [of("ruth"), of("olive"), of("sam")], ["admin", "ruth", "ruth"]);
+    const bearer = await post("memberadd", { memberId: "bea", cover: "by the operator", role: "member" }, ADM);
+    const list2 = rP(await (await mf.dispatchFetch(`http://x/api/?op=memberlist&token=${F}`)).json()).members;
+    t("invited_by: the operator's bearer is recorded as the CREDENTIAL, never a person",
+      [bearer.invited_by, (list2.find((m) => m.member_id === "bea") || {}).invited_by], ["class:admin", "class:admin"]);
+  }
 
   /* The rows themselves: nine, each named here, each distinct. A suite naming a check the catalogue does
      not hold, or a catalogue row this suite never names, both read below. */

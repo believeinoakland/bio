@@ -14202,6 +14202,13 @@ function governanceHtml(adminArith, rosterAdminRows){
    browser, a cross-project participation view that REC-25 had just made the
    plane's to decide. The DELEGATION proposing an `owns` projection on
    op=memberlist is therefore withdrawn as unnecessary: nothing consumes it. */
+/* D-134 (BOB #35, 2026-09-25): WHO INVITED this member, as the record holds it — `op=memberlist`'s own
+   `invited_by`, which reads `not recorded` for anyone invited before the plane kept it. Rendered in the
+   plane's words and never inferred; an older plane that does not send the field gets no line at all. */
+function memberInviterHtml(m){
+  if(!m || !Object.prototype.hasOwnProperty.call(m, "invited_by")) return "";
+  return `<div class="mm-cover">invited by ${esc(m.invited_by == null ? "not recorded" : String(m.invited_by))}</div>`;
+}
 function rosterRow(m, acts){
   const handle = m.handle || m.member_id || m.member || m.id || "";
   const cover  = m.cover || m.name || "";
@@ -14209,7 +14216,7 @@ function rosterRow(m, acts){
   return `<tr>
     <td class="ttl">${esc(handle)}${cover?`<div class="mm-cover">${esc(cover)}</div>`:""}</td>
     <td>${memberRoleBadge(m)}${pending}</td>
-    <td>${memberStatusBadge(m)}</td>
+    <td>${memberStatusBadge(m)}${memberInviterHtml(m)}</td>
     <td>${memberCapsHtml(m)}</td>${acts ? `
     <td>${memberActHtml(m)}</td>` : ""}
   </tr>`;
