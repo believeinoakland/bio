@@ -1,0 +1,16 @@
+{
+ "unit": "ui:act-ballot.test.mjs",
+ "inputHash": "7ac2a8a553055fd03b6dd23761972e22147a8f2c9d227fda53c92455460e884a",
+ "verdict": "PASS",
+ "run": "2ab2efc0711381e6fa59b9d89264e30b816907d1.1790317094275.17937.json",
+ "tree": "2ab2efc0711381e6fa59b9d89264e30b816907d1",
+ "head": "b9a132425cb615744e9b304350e5c9bef4b6c7ad",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 4,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "566d4c0d-43c5-560b-bcb6-932e18efd505",
+ "at": "2026-09-25T06:18:14.286Z"
+}
