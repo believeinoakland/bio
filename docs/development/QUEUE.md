@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 08:55Z · BOB #35 · D-689's builder decision (does the machine fence cover REMOVAL?), CONFIRMED as built, including the tighter edge.** Removing or retyping a member's records-law statement IS writing it (BOB #32's risk-tier rule, 2026-09-24 01:44Z), so C-32.20 fences a machine's CHANGE of the statement key, and never its mere presence. A machine may not withdraw a pre-fence MACHINE statement either: that withdrawal is also a statement about which law governs, and a member can withdraw it by their own act, so nothing is stuck. One rule with no author-walk is simpler to hold. Clear the "for BOB to confirm" note in BIO_Case_Making_v0_1.md §2 with D-689's landing. No row.
 
 
 
