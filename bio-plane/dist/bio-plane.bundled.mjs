@@ -71040,8 +71040,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   /** D-451 (INVESTIGATIVE-SESSION.md §11 item 5, RULE 1'S TARGET, BOB #28) — THE QUESTIONS A PROJECT RUN'S
    *  READINGS MAY LAND ON, published by `aiRunRead` so a member (FL-11's `runContextTarget`) can NAME one.
    *
-   *  `#runContextProjects` read the other way round: every question `#citesInto` says this project
-   *  CONFIRMED-cites (the one live-cites predicate, so a SEVERED edge is not a question the run may land on),
+   *  `#runContextProjects` read the other way round: every question this project CONFIRMED-cites — a `cites` row
+   *  out of the project whose edge `#refEdgeSevered` does not confirm severed, the ONE severance confirmation
+   *  `#citesInto` partitions by, asked of the same edge (so a SEVERED edge is not a question the run may land on,
+   *  and the answer is `#citesInto(q).confirmed.includes(project)` without re-reading every OTHER citer of q) —
    *  kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
    *  `SUGGEST_NOT_AN_INQUIRY` shape test) that THIS viewer can see (`#inSight`, the predicate its viewer gate
    *  asks). A question the viewer cannot see is omitted and not counted (§7.9: a count would say it exists).
@@ -71054,7 +71056,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id=? AND kind='cites'`, id)) {
       const q = String(r.target_id);
       if (normalizeType(OBJECT_TYPES[q.split("-")[0]]) !== "inquiry") continue;
-      if (!this.#citesInto(q).confirmed.includes(id)) continue;
+      if (this.#refEdgeSevered(id, q, "cites")) continue;
       if (!this.#inSight(q, viewer)) continue;
       out.push(q);
     }
