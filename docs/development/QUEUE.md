@@ -1080,7 +1080,7 @@ accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, a
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-638 · integrated — **`dec65-strength-reach.control` arm a2: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — SCHEDULER #24 12:54Z: tip 238517e1 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6536 assertions), tree 7583b9e6; dec65-strength-reach arm a2 re-anchored on the new #strengthWalk signature (1 match here and on main), allowance deleted, arm ARMS and is as declared (must-not-fail); minted D-736
+status: integrated — CONDUCT #23 12:47Z: worker report — tip 238517e1 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6536 assertions); dec65-strength-reach.control arm a2 re-anchored, allowance removed; test-only, no IC; minted D-736 (arm 3 declaration stale); rides batch30
 order: after D-637, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
