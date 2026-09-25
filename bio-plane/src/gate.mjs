@@ -115,7 +115,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
-export const CATALOG_VERSION = "1.29.0";
+export const CATALOG_VERSION = "1.30.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -148,6 +148,12 @@ export const CATALOG_VERSION = "1.29.0";
    so ONE VERSION NAMES ONE CATALOGUE (A4) makes the number at the union CONDUCT's to take once, from
    the d470 suite's print on the merged tree — this branch's figure is this branch's catalogue. */
 /* 1.29.0 AT THE UNION ALSO CARRIES D-513 (CONDUCT #20, c20-batch27): D-513 took 1.26.0 over its own base; the union's ONE new number for this batch is 1.29.0, holding D-463's and D-513's checks together, its census read from the d470 suite's print. */
+/* 1.30.0 (D-134, 2026-09-25, branch land/worker/D-134): the new CUSTODIAL_CHECKS family, C-96.1-.9 —
+   §4.9's custodial acts' refusals given canned translations, and `adminRemove`'s target case split to
+   TARGET_NOT_AN_ADMIN — so the catalogue moved 466 -> 475 and the stamp moves with it. NINE ARRIVALS, NO
+   DEPARTURES, so the bump is MINOR on this constant's own rule (Publication §3 rule 17). Figures are the
+   d470 suite's own print on this tree over origin/main 964da679. If another branch also took 1.30.0, the
+   union takes the next number once — ONE VERSION NAMES ONE CATALOGUE. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
