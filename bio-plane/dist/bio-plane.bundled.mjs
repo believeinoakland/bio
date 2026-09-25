@@ -83383,14 +83383,16 @@ var index_default = {
           register: addCap ? [{ sha256: monCap.sha256, path: monCap.file, encoding: "binary", bytes: monCap.bytes }] : []
         }) }));
       };
-      let promoted = await promoteWith(lookAfterPromote);
-      if (lookAfterPromote && promoted.answered && promoted.result && promoted.result.ok === false) {
-        const r = promoted.result;
-        monCap.why = `the promotion filing them was refused (${r.reason || r.code || "no reason given"}${r.detail ? `: ${String(r.detail).slice(0, 160)}` : ""})`;
-        promoted = await promoteWith(false);
-      } else if (lookAfterPromote && promoted.answered && promoted.result?.ok) monCap.registered = true;
-      if (lookAfterPromote && !promoted.answered)
-        monCap.why = "the store did not answer the promotion that would have filed them";
+      const first = await promoteWith(lookAfterPromote);
+      let promoted = first;
+      if (lookAfterPromote) {
+        if (!first.answered) monCap.why = "the store did not answer the promotion that would have filed them";
+        else if (first.result && first.result.ok === false) {
+          const r = first.result;
+          monCap.why = `the promotion filing them was refused (${r.reason || r.code || "no reason given"}${r.detail ? `: ${String(r.detail).slice(0, 160)}` : ""})`;
+          promoted = await promoteWith(false);
+        } else if (first.result?.ok) monCap.registered = true;
+      }
       if (lookAfterPromote) {
         observation = await monitorLook(monCap.registered ? { ...lookArgs, captured: {
           sha256: monCap.sha256,

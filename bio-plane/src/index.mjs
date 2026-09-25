@@ -9892,19 +9892,25 @@ export default {
           register: addCap ? [{ sha256: monCap.sha256, path: monCap.file, encoding: "binary", bytes: monCap.bytes }] : [],
         }) }));
       };
-      let promoted = await promoteWith(lookAfterPromote);
-      /* D-455: a promotion REFUSED with the capture in it is retried once without it, so the tick
-         is still recorded; the refusal is kept as the reason the bytes were not filed. The one
-         refusal this is for is D-179's (C-53.13): those bytes are already another bundle's
-         capture, and one capture has one home. */
-      if (lookAfterPromote && promoted.answered && promoted.result && promoted.result.ok === false) {
-        const r = promoted.result;
-        monCap.why = `the promotion filing them was refused (${r.reason || r.code || "no reason given"}`
-          + `${r.detail ? `: ${String(r.detail).slice(0, 160)}` : ""})`;
-        promoted = await promoteWith(false);
-      } else if (lookAfterPromote && promoted.answered && promoted.result?.ok) monCap.registered = true;
-      if (lookAfterPromote && !promoted.answered)
-        monCap.why = "the store did not answer the promotion that would have filed them";
+      /* D-455: the FIRST attempt is its own name, and `promoted` is only ever the attempt that stands.
+         The handler tests whether the STANDING attempt was answered in one place, REC-52's guard below,
+         so plane-envelope's D-240 (c) — which strips that guard and expects the answer's computed
+         verdict to read unguarded — still sees it; a second spelling of that test would hide it. */
+      const first = await promoteWith(lookAfterPromote);
+      let promoted = first;
+      if (lookAfterPromote) {
+        if (!first.answered) monCap.why = "the store did not answer the promotion that would have filed them";
+        /* A promotion REFUSED with the capture in it is retried once without it, so the tick is still
+           recorded; the refusal is kept as the reason the bytes were not filed. The one refusal this is
+           for is D-179's (C-53.13): those bytes are already another bundle's capture, and one capture
+           has one home. */
+        else if (first.result && first.result.ok === false) {
+          const r = first.result;
+          monCap.why = `the promotion filing them was refused (${r.reason || r.code || "no reason given"}`
+            + `${r.detail ? `: ${String(r.detail).slice(0, 160)}` : ""})`;
+          promoted = await promoteWith(false);
+        } else if (first.result?.ok) monCap.registered = true;
+      }
       if (lookAfterPromote) {
         observation = await monitorLook(monCap.registered
           ? { ...lookArgs, captured: { sha256: monCap.sha256, retrieved: monCap.retrieved,
