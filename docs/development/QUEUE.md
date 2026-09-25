@@ -646,7 +646,7 @@ accepts-when: MEASUREMENTS carries the whole-corpus counts with their instrument
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs FW`).
 
 ### D-321 · running — **NO REAL IMAGE-ONLY PAGE IN THE CORPUS CARRIES AGENDA-SHAPED TEXT, SO THE `reading_refs` JOIN OVER REAL OCR IS PROVED ONLY ON SYNTHETIC INK (`ocr-member-e2e.test.mjs`).** — owner CONTENT-PDF.
-status: running — SCHEDULER #22 04:03Z spawns WORKER D-321 (depth 2)
+status: running — SCHEDULER #22 05:08Z: NARROWED, not met: land/worker/D-321 @ 3d7ad5a4 (385/385 GREEN) records M-170 (0 agenda-shaped image-only pages among 117,950 git blobs; the one scan is a resolution) and a census probe; that branch may ride the train. Re-spawned to search the instance's tier-3 captures read-only (the first worker's read was refused by its session policy)
 order: after D-320; the page must come from bytes already held (the cloud proxy refuses Legistar) (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M2
 interface: none — a fixture and an arm.
