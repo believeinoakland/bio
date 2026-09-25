@@ -3831,7 +3831,7 @@ function dec49Attach(o) {
    because there is none to make. It does NOT echo the Durable Object's
    `error`: that field WAS a raw stack trace (`String(e && e.stack || e)`) until
    D-629 replaced it with a named code and a correlation id, and every op below that can reach this refusal — verify, publishedcase,
-   publishedbytes, publishedmanifest, bootstrap — is reachable with NO
+   publishedbytes, publishedmanifest, bootstrap, and since D-679 claim, login, invitelook and enroll — is reachable with NO
    credential of any kind. An anonymous stack trace is a disclosure, and a
    diagnostic a stranger cannot act on is not worth one. */
 const STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
@@ -5849,27 +5849,40 @@ const PLANE = {
           return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_MISMATCH", ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
             error: "bootstrap credential does not match" }, 403);
         /* END DEC-49 REGION is-bootstrap-claim */
-        const r = await stub.fetch(new Request(`http://do/claim?fp=${fp}`, {
-          method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) }));
-        return json(await r.json(), 200);
+        /* D-679: the four credential-free doors below (claim, login, invitelook, enroll) used to answer
+           `json(await r.json(), 200)` — the store's envelope relayed at HTTP 200 WITHOUT READING `ok`, so a store
+           that failed told an anonymous caller "success" in the status line. They now open it through `doAnswer`
+           like every other public op (REC-52) and a non-answer is `storeSilent` (502, STORE_DID_NOT_ANSWER) —
+           chosen over relaying the store's status because a silence on the public door then reads ONE way on all
+           seventeen public ops, the store's `correlation` stays with the operator's log (D-629), and a 400 from the
+           store would tell the caller its request was bad when the plane built it. An ANSWER, including a refusal
+           the store RETURNED inside `ok: true` (a wrong password, an unknown invitation), is re-wrapped byte-for-byte
+           in the envelope `Store.fetch` answers: `{ ok: true, result }`. */
+        const out = await doAnswer(stub.fetch(new Request(`http://do/claim?fp=${fp}`, {
+          method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) })));
+        if (!out.answered) return storeSilent("claim");
+        return json({ ok: true, result: out.result }, 200);
       }
       if (op === "login") {
         const body = await req.json().catch(() => ({}));
-        const r = await stub.fetch(new Request("http://do/login", {
-          method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) }));
-        return json(await r.json(), 200);
+        const out = await doAnswer(stub.fetch(new Request("http://do/login", {
+          method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) })));
+        if (!out.answered) return storeSilent("login");
+        return json({ ok: true, result: out.result }, 200);
       }
       if (op === "invitelook") {
         const body = await req.json().catch(() => ({}));
-        const r = await invStub.fetch(new Request("http://do/invitelook", {
-          method: "POST", body: JSON.stringify(body) }));
-        return json(await r.json(), 200);
+        const out = await doAnswer(invStub.fetch(new Request("http://do/invitelook", {
+          method: "POST", body: JSON.stringify(body) })));
+        if (!out.answered) return storeSilent("invitelook");
+        return json({ ok: true, result: out.result }, 200);
       }
       if (op === "enroll") {
         const body = await req.json().catch(() => ({}));
-        const r = await invStub.fetch(new Request("http://do/enroll", {
-          method: "POST", body: JSON.stringify(body) }));
-        return json(await r.json(), 200);
+        const out = await doAnswer(invStub.fetch(new Request("http://do/enroll", {
+          method: "POST", body: JSON.stringify(body) })));
+        if (!out.answered) return storeSilent("enroll");
+        return json({ ok: true, result: out.result }, 200);
       }
       /* 7a. Anyone, no token, no session. The DO consults only the
          published projection. */

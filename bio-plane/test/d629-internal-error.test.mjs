@@ -11,6 +11,9 @@
  *   RESULTS — every arm RAN 2026-09-25 (WORKER D-629, worktree of land/worker/D-629 over origin/main 5e8a65a8): all four AS
  *   DECLARED — baseline 17/0, store-stack-back 11/6 (M1 M2 U1 U2 L1 L3), plane-catch-removed 13/4 (P1 P2 L2 L3),
  *   over-strict 17/0; real sources untouched by hash.
+ *   RE-RUN 2026-09-25 (WORKER D-679) after D-679 moved the public door to `storeSilent` and corrected U1 and L3 (see
+ *   their comments): baseline 17/0, store-stack-back 13/4 (M1 M2 L1 L3 — U1/U2 undeclared there now, because a stack in
+ *   the store's envelope no longer reaches the public door at all), plane-catch-removed 13/4, over-strict 17/0.
  * =========================================================================
  * D-629 — THE STORE ANSWERED ANY THROWN ERROR WITH ITS STACK.
  *
@@ -154,10 +157,15 @@ try {
     [m.status, facts(m.j)], [500, rowFacts("STORE_INTERNAL_ERROR")]);
   t("M2: and its body carries no stack, path, line or SQLite text", tellsIn(m.text), []);
 
-  /* PUBLIC OP, STORE THROWS: `invitelook` takes no credential and relays the store's envelope as it stands. */
+  /* PUBLIC OP, STORE THROWS: `invitelook` takes no credential.
+     CORRECTED 2026-09-25 (D-679), NOT EXEMPTED: this arm asserted the STORE's envelope relayed to the anonymous
+     caller — which was the route D-629 found, pinned as if it were the design. That relay was at HTTP 200 (the
+     status went unasserted here), so it told the caller "success" for a failure; D-679 opens the op through
+     `doAnswer` and answers the public door's one silence, as op=verify below always has. The no-stack arm (U2) is
+     unchanged, and the store's correlation stays in the operator's log (L1 reads the member throw's). */
   const u = await call("op=invitelook", { post: { invite: "a".repeat(16) } });
-  t("U1: an ANONYMOUS op=invitelook whose store throws answers STORE_INTERNAL_ERROR with its row",
-    facts(u.j), rowFacts("STORE_INTERNAL_ERROR"));
+  t("U1: an ANONYMOUS op=invitelook whose store throws answers 502 STORE_DID_NOT_ANSWER naming the op (D-679)",
+    [u.status, u.j?.ok, u.j?.reason, u.j?.op], [502, false, "STORE_DID_NOT_ANSWER", "invitelook"]);
   t("U2: and its body carries no stack, path, line or SQLite text", tellsIn(u.text), []);
   /* A public op the control plane opens through `doAnswer`: it was already silent (REC-52), and must stay so. */
   const v = await call(`op=verify&sha256=${"0".repeat(64)}`);
@@ -189,8 +197,12 @@ try {
   const pLine = logLine(String(p1.j?.correlation || "(no correlation)"));
   t("L2: the plane throw's correlation id is in the server-side log WITH the stack",
     [pLine.includes("PLANE_INTERNAL_ERROR"), pLine.includes(INJECTED), /\.mjs/.test(pLine)], [true, true, true]);
-  t("L3: four throws, four distinct correlation ids", new Set([m.j?.correlation, u.j?.correlation, p1.j?.correlation,
-                                                    p2.j?.correlation]).size, 4);
+  /* CORRECTED 2026-09-25 (D-679): this counted `u`'s id too, and a Set counts `undefined` as a member, so an answer
+     carrying NO id made the fourth "distinct id" for free. `u` no longer carries one (U1), and each id is now asserted
+     to BE one. */
+  const ids = [m.j?.correlation, p1.j?.correlation, p2.j?.correlation];
+  t("L3: three throws that answer a code, three distinct correlation ids, each an id",
+    [new Set(ids).size, ids.every((x) => UUID.test(String(x || "")))], [3, true]);
 
   /* NAMED REFUSALS DO NOT MOVE: they are returned, never thrown, and never pass the new catch. */
   const NOT_AN_OP = ["nosuch", "opd629"].join("");   /* built apart, d278's way: op-claims reads `op=<name>` in prose */

@@ -35,11 +35,13 @@ const STORE_LOG = "  console.error(JSON.stringify({ event: answer.reason, correl
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
 
-  /* THE ROW'S CONTROL — THE STACK RETURNED: the store's catch as it stood on origin/main before D-629. The member and
-     public no-stack arms fail, and so do the log arms, because the stack is answered instead of logged. */
+  /* THE ROW'S CONTROL — THE STACK RETURNED: the store's catch as it stood on origin/main before D-629. The member
+     no-stack arms fail, and so do the log arms, because the stack is answered instead of logged.
+     CORRECTED 2026-09-25 (D-679): U1 and U2 no longer fail here, and that is D-679's effect, not a blind arm — the
+     public op now answers `storeSilent` whatever the store's envelope holds, so a stack in it cannot reach that door. */
   "store-stack-back": {
     patches: [["store.mjs", STORE_CATCH, "      return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 });"]],
-    mustFail: ["M1:", "M2:", "U1:", "U2:", "L1:", "L3:"],
+    mustFail: ["M1:", "M2:", "L1:", "L3:"],
   },
 
   /* THE CONTROL PLANE'S CATCH REMOVED: a throw in `PLANE.fetch` reaches the runtime uncaught again. */
