@@ -176,6 +176,16 @@ scope: every driver's declared-vs-actual step requires each needle to match exac
 accepts-when: a needle naming no printed label fails its driver by name across the estate (moves: 178 drivers whose needles are unchecked). NEGATIVE CONTROL: restore nc-rec118's stale needle and the helper fails naming it.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-648's worker).
 
+### D-733 · queued — **NO BATTERY SUITE WRITES A ROSTER ROW WITH A NULL PIN (published_case_members.version_sha), so caseflip.control arm f stays green in caseflip, publishedcase, caseobject and casepin, and arm e in publishedcase and caseobject — arm e's label claims those suites hold the legacy fallback, which is FALSE (and it names `#caseOfSha`; the method is `#casesOfSha`).** Found by D-634's worker (a D-733 note at arm e's site). — owner M0.
+order: with the control-trust rows after D-740: a label claiming coverage the suites do not hold is a record claiming more than it supports (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — test-only.
+design: `docs/development/VERIFICATION.md` (a negative control must be able to fail; admitted for M0 by name).
+depends-on: D-634 (caseflip.control's re-anchored arms; stack on land/worker/D-634 until it lands).
+scope: add a fixture to caseflip.test.mjs or casepin.test.mjs writing a pre-CASE-3 roster row with version_sha NULL (one member at the case's edition) and assert (1) the edition stays complete and serves that member at the case's edition, (2) #casesOfSha resolves the member's case through its legacy path; correct arm e's label and arm f's recorded result.
+accepts-when: arms e and f each go RED by name on the new fixture (moves: two arms green on a fixture that never exercises them). NEGATIVE CONTROL: the arms themselves, recorded at their sites.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-634's worker).
+
 ### D-653 · queued — **`nc-rec97` arm overstrict: ANCHOR DRIFT — matches 2, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-652, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -1062,13 +1072,3 @@ depends-on: M0-140.
 scope: `mintid`'s allocation site for `D` is the plan-row heading in QUEUE, BACKLOG and their archives; the legacy table rows count toward the floor only; the duplicate check grades EACH shape within itself.
 accepts-when: two `### D-n ·` headings are refused; the 17 cross-shape pairs pass; the floor reads 508 on coord f3ca0ad8. NEGATIVE CONTROL: collapse the two patterns into one, and the arm counting 120 false duplicates fails by name.
 added: 2026-09-24 · SCHEDULER #19 (BOB #33 inbox 17:35Z; `node tools/mintid.mjs M0`).
-
-### M0-184 · queued — **`VERIFICATION.md` IS 24,569 B AGAINST ITS 24,576 B BUDGET (readbudget's CUT set), so it cannot absorb a new rule: M0-166's section cannot land.** Found by M0-173's worker (C). — owner M0.
-order: directly before M0-166, which it unblocks (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the reading budget), with `docs/archive/` as the home for finished provenance.
-depends-on: none.
-scope: move the D-263 PROVENANCE block (~2.4 KB, marked at both ends) to `docs/archive/`, and move `bio-plane/test/register-grammar.test.mjs`'s pin to the archived copy in the same landing. ALSO (M0-169's design gap, via CONDUCT #20 19:37Z): one sentence in "The battery runs every suite"'s Incomplete sections — a fixture's carry-list is DERIVED, once (`moduleclosure.mjs`, `gatedeps.mjs`). ALSO (BOB #35 03:25Z, M0-147's gap): beside M0-169's sentence, the instant-independence rule verbatim from the drained entry ("A suite's verdict must not depend on the instant it starts ... never a flake."). ALSO (BOB #35 04:25Z): D-485's R4 arm, written from D-485's report in the DEC-49 section, in as few lines as state it.
-accepts-when: VERIFICATION.md reads ≥ 2 KB under budget and register-grammar stays green (the measured failure it moves: 7 B of headroom). NEGATIVE CONTROL: point the pin back at VERIFICATION.md and register-grammar fails by name. And `grep -c "instant it starts" docs/development/VERIFICATION.md` reads 1. And DEC-49's section names R4.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
