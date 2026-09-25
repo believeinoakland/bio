@@ -143,3 +143,4 @@ D-614	2026-09-25T04:46:32.627Z	land/worker/D-607
 D-615	2026-09-25T04:48:39.462Z	WORKER D-563	D-563 follow-on: promote projects bundles.created/last_updated from the envelope while the document states both (CORE_FIELDS)
 D-616	2026-09-25T04:49:20.575Z	WORKER D-606	tier-3 tail past the per-request OCR budget is never read on a later request: the re-read restarts from tier 1
 D-617	2026-09-25T04:57:40.953Z	HEAD	
+D-618	2026-09-25T04:58:51.460Z	land/worker/D-568	
