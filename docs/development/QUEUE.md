@@ -953,8 +953,8 @@ scope: on the action page, beside UI-90's governing-laws list, the revise act (t
 accepts-when: against a real-plane suite a member revises a tier with a reason and the history renders "revised from … to …: <reason>"; the act cannot submit without a reason (the measured failure it moves: no surface for the act). NEGATIVE CONTROL: submit without a reason and the required-reason arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
-### REC-215 · running — **NO MACHINE PROPOSAL OF A RISK TIER EXISTS, LABELLED AND APART FROM THE MEMBER'S VALUE.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), item 3: `actionriskpropose` (not yet an op), REC-195's shape. — owner RECORD.
-status: running — SCHEDULER #22 05:49Z spawns WORKER REC-215 (depth 2)
+### REC-215 · integrated — **NO MACHINE PROPOSAL OF A RISK TIER EXISTS, LABELLED AND APART FROM THE MEMBER'S VALUE.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), item 3: `actionriskpropose` (not yet an op), REC-195's shape. — owner RECORD.
+status: integrated — SCHEDULER #22 06:50Z: tip 788649dc, GATE 386/386 GREEN FULLREUSE (21913 assertions), tree d359ded7; the risk proposal act (NON_ACTS, never writes the tier), C-90.6; CATALOG 1.30.0->1.31.0 (503); construct 8.risk-tier-proposal BUILT; rides batch30
 order: after UI-104 (BOB #33: after (1), the proposal half last) (SCHEDULER #19, 2026-09-24)
 milestone: M7
 interface: I3 additive — a proposal read labelled machine work; the integrator classifies.
@@ -1108,7 +1108,8 @@ scope: persist `counts.chars` on the reading at `op=acquire`; add the LOOKED_ABS
 accepts-when: a scan read to zero characters writes LOOKED_ABSENT. NEGATIVE CONTROL: drop the count, and that arm reads PRESENT and fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-374 · queued — **A `pdf-page` EXTENT'S `rect` IS BOUNDED BY NOTHING: `checkContentExtent` asks only for four finite numbers, while `pagepixels.mjs` already computes each page's MediaBox and the plane never receives it.** — owner CONTENT-PDF, CAPTURE, RECORD.
+### D-374 · running — **A `pdf-page` EXTENT'S `rect` IS BOUNDED BY NOTHING: `checkContentExtent` asks only for four finite numbers, while `pagepixels.mjs` already computes each page's MediaBox and the plane never receives it.** — owner CONTENT-PDF, CAPTURE, RECORD.
+status: running — SCHEDULER #22 06:50Z spawns WORKER D-374 (depth 2)
 order: after D-375: content minted on a region the page does not have (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M4
 interface: I5/I6 — per-page `{w,h}` on the reading (nullable); the integrator mints and classifies the IC.

@@ -244,6 +244,16 @@ scope: beside the export's Date line, draw last_change.stated's tie sentence ver
 accepts-when: an exported copy whose pick ties a whole-second act carries the plane's tie sentence beside its date, and an untied one carries none (moves: a tied date exported as ordered). NEGATIVE CONTROL: drop the sentence and the tied-export arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs UI`; D-573's finding).
 
+### UI-116 · queued — **NO SURFACE SHOWS A MACHINE'S RISK-TIER PROPOSAL BESIDE THE MEMBER'S TIER: REC-215 built the plane half (op=projection's action block carries risk_tier_proposals, labelled), and the action page shows only the member's tier and history (UI-104).** The surface half of REC-215. — owner UI.
+order: after UI-115, with the surface halves of landed record rows (BOB #33's risk-tier ruling: plane, then UI) (SCHEDULER #22, 2026-09-25)
+milestone: M7
+interface: none (I3 consumer of REC-215's projection block).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (only a member's authored act sets a tier), with UI-102's shape for the governing-laws proposal (shown beside, no adopt control).
+depends-on: REC-215, UI-104.
+scope: on the action page beside UI-104's tier block, render each proposal as the plane labels it (machine work, its basis, its proposer), with NO adopt control; the member's own revise act stays the only way to set a tier; the plane's truncation stated.
+accepts-when: against the real plane a proposal renders labelled beside the tier, and no control on the page sets the tier from it (moves: no surface for the proposal). NEGATIVE CONTROL: add an adopt control and the no-adopt arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs UI`; REC-215's worker's note).
+
 ### D-624 · queued — **THE SINGLE-ITEM DEFER/DISMISS DIALOG (`doProposalDispose` via `openProposalAct`) STILL SENDS `{key, to, reason}` FOR A PROJECT-SCOPED FINDING AND IS REFUSED NO_PROJECT_SCOPE: D-266's DELEGATION RECORD -> UI (2026-08-10), open since 2026-09-16 with no plan row.** Found by UI-110's worker (06:19Z). — owner UI.
 order: after UI-115, with the surface halves of landed rows: the one-item act fails for every project-scoped finding (SCHEDULER #22, 2026-09-25)
 milestone: M8
@@ -1181,13 +1191,3 @@ depends-on: none — M0-119 is on `main`.
 scope: `write()` adds its automatic rebalance only when an intent changes a plan file's membership or size: `insert`, `row`, `refill`, `archive`, or an `append`, `line` or `replace` whose file is `QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`; a `status` word, a claim, a handoff or a DELEGATION does not. The explicit `rebalance` intent is unchanged; `coord.test.mjs` gains the arms.
 accepts-when: a write of only a `CLAIMS.md` append or a `-NEXT.md` replace leaves both plan files byte-identical even when the backlog is over budget; an `insert` over budget still moves the tail. NEGATIVE CONTROL: rebalance on every write again, and the claim-only arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (BOB #29's ruling in WORK-PIPELINE §2; `node tools/mintid.mjs M0`).
-
-### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two … (whole text: the cut archive)
-order: behind the product rows, first of the ledger tooling (Bob, 2026-09-22: *process is overhead*; SCHEDULER #12): AMBIGUITY STATED, not the record over-claiming — the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), and LED-7 folds around the two rows (SCHEDULER #2 + BOB #17, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullet "The legacy residue" … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `find` returns BOTH rows for a collided id and SAYS it collided; `mintid --audit` still reads 0 breaks; every existing citation of the four still resolves. How a liar passes … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (batch 4; found by CONDUCT #7; no-renumber ruling by BOB #17).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «LED-8» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
