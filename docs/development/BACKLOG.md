@@ -133,6 +133,16 @@ scope: in op=acquire, when the detected format's registry entry has a `text()` s
 accepts-when: a `text/csv` capture's reading units are the sheet's cells with the dialect recorded, and a latin-1 byte never becomes U+FFFD in them (moves: the intake decode for csv). NEGATIVE CONTROL: route text/csv back to the intake decode and the cell-units arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by REC-218's worker).
 
+### D-591 · queued — **Tier 1 inflate (pdfstructure.mjs, DecompressionStream "deflate") refuses a Flate stream with bytes after the zlib end ("Trailing junk"), and the page then reads 0 chars with NO page marker: CAFR-2002 has 163 of 199 pages read empty that are in fact undecoded.** Found by D-585's worker (M-160). — owner CONTENT-PDF.
+order: after D-593, with the reader corrections: an undecoded page that reads as empty claims more than the record holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M2
+interface: I1 — the per-page reading of a Flate PDF with trailing bytes changes; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
+depends-on: D-585.
+scope: (1) Tier 1 inflate tolerates bytes after the compressed stream's end (keep the decoded output, record the trailing count); (2) a page whose content stream Tier 1 could not decode carries a page marker so it cannot read as empty.
+accepts-when: CAFR-2002's pages read with text where their streams decode, and no page reads 0 chars without a marker (measured into a measurements/ file). NEGATIVE CONTROL: restore the strict inflate and the trailing-bytes arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-585's worker).
+
 ### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
 order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
 milestone: M6
@@ -1202,13 +1212,3 @@ depends-on: none.
 scope: promote arm F's identifier resolution to a seventh matcher in the union; re-read the six `FLOOR` figures from one printed green run in the same turn; translate the recovered codes under DEC-49 (`STORE_DID_NOT_ANSWER` among them). Suite `civicos-ui/test/refusal-codes.test.mjs`, driver `refusal-codes.control.mjs`.
 accepts-when: both recovered codes are in the union and the floors carry no slack. NEGATIVE CONTROL: remove the seventh matcher, and a named floor arm fails.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; D-272's DEBT row of 2026-08-09, verified at the code on `02603e88`; keeps its `D-` id).
-
-### D-273 · queued — **NINETY-THREE-PLUS REFUSAL CODES ARE WRITTEN INLINE AT SEVERAL SITES (`check-refusal-codes.mjs` F4 MULTI-SITE, last partition 103), SO NONE CAN TAKE ONE DEC-49 ROW.** — owner RECORD, with UI.
-order: after D-272, the same census (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0 (the guard's shape)
-interface: none
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard), following REC-79's single-helper shape for `NOT_CAPABLE` (`admission-gate.test.mjs`).
-depends-on: none.
-scope: consolidate each multi-site code behind one helper, one code per slice, starting with `NO_SUCH_BUNDLE` (15 sites); re-read the partition each slice.
-accepts-when: the sliced code reads single-site and the F4 count falls by one. NEGATIVE CONTROL: restore one inline literal, and arm F fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
