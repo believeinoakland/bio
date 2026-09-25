@@ -45,6 +45,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { compile, PROVENANCE_COLS } from "../src/query.mjs";
 import { SCHEMA } from "../src/schema.mjs";
+import { chainKindFor } from "../src/textchain.mjs";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -133,7 +134,9 @@ const SHIPPING = new Set(indexDdl.map(([n]) => n));
 for (const [name, , ddl] of indexDdl) if (!CANDIDATES.some(([, d]) => d === ddl)) db.exec(ddl);
 
 const insB = db.prepare(`INSERT INTO bundles (fts_id, bundle_id, object_type, current_state, last_updated) VALUES (?,?,?,?,?)`);
-const insC = db.prepare(`INSERT INTO content (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,page_count,minted_by,at,stale) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
+/* D-686: `chain_kind` is a PLAIN column the minter writes, so the probe writes it as `mintContent` does --
+   through `chainKindFor` -- or every `content:<step>` arm would measure a column holding only NULL. */
+const insC = db.prepare(`INSERT INTO content (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,page_count,minted_by,at,stale,chain_kind) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 const insL = db.prepare(`INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,grade_source,content_id) VALUES (?,?,?,?,?,?)`);
 const insV = db.prepare(`INSERT INTO inquiry_basis_version_legs (bundle_id,version,ord,target_id,content_id) VALUES (?,?,?,?,?)`);
 
@@ -161,10 +164,11 @@ for (let i = 0; i < N_BUNDLES; i++) {
     /* The chain is stored EXACTLY as `mintContent` stores it: JSON.stringify of
        the chain array. A probe that stored a bare step string would measure a
        predicate the plane never runs. */
+    const chain = [{ step: "layer" }, { step }];
     insC.run(cid, "sha" + i, id, kind, "{}", "ref " + r,
-      JSON.stringify([{ step: "layer" }, { step }]),
+      JSON.stringify(chain),
       capNullHere ? null : "ABCD"[n % 4], isDoc ? null : 20, minted,
-      new Date(Date.UTC(2026, 0, 1)).toISOString(), stale);
+      new Date(Date.UTC(2026, 0, 1)).toISOString(), stale, chainKindFor(chain));
     cRows++;
     if (stale) staleRows++;
     if (minted.startsWith("class:")) machineRows++;

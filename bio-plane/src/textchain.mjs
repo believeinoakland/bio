@@ -829,6 +829,41 @@ export function terminalStep(chain) {
   return checkChain(chain) ? null : chain[chain.length - 1].step;
 }
 
+/** D-686 (BOB #35, 2026-09-25 09:05Z) — HOW WAS THIS UNIT READ? The kind of the LAST DERIVATION STEP
+ *  COVERING the unit's page, and the ONE computation of `content.chain_kind` and `capture_text.chain_kind`:
+ *  every writer and the migration call this and nothing else.
+ *
+ *  Until D-686 `content.chain_kind` was the WHOLE chain's last step, so every unit of a mixed document
+ *  read `ocr` — a text-layer page of a document OCR also touched was labelled as OCR'd. The extraction
+ *  method is one of a content unit's two intrinsic facts (Part II §14.2), so it is asked of the unit.
+ *
+ *  `target` is `derivationCap`'s: `{ page }` asks about one page; `null` asks about the document, which
+ *  every step covers, so it answers the chain's last derivation step — the DOCUMENT-level fact
+ *  `capture_text.chain_kind` carries, "the last step of this document's chain, not how any given page was
+ *  read" (whatever extent that step carries). Walked from the END, so on a page two parts share (D-635) the
+ *  part appended last answers. Asked about a page, a step whose extent this module cannot read, met before
+ *  a covering one, could be covering it, so the answer is UNDETERMINED (null), stated, as `derivationCap` answers it; so is a page no step covers
+ *  and a chain holding a step of no known kind. A VERIFICATION step is not how the text was produced and is never the answer. */
+export function chainKindFor(chain, target = null) {
+  /* STRUCTURAL, NOT `checkChain`. The kind needs only each step's KIND and EXTENT, and a stored chain
+     written before a later field rule (an `ocr` step minted before an engine was required) is a chain
+     whose kind this record still knows: REC-104's column read it, and a recompute that answered null
+     for it would erase a fact the record held. A step of a kind this module does not know is refused
+     as undetermined, as `checkChain` would refuse it. */
+  if (!Array.isArray(chain) || !chain.length
+      || !chain.every((s) => s && typeof s === "object" && Object.hasOwn(STEP_KINDS, s.step))) return null;
+  const page = target && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const step = chain[i];
+    if (STEP_KINDS[step.step].role !== "derivation") continue;
+    if (page == null) return step.step;
+    const ext = extentOf(step);
+    if (ext === "unreadable") return null;
+    if (ext === "all" || ext.includes(page)) return step.step;
+  }
+  return null;
+}
+
 /** A one-line human sentence for the whole chain. Composed FROM the chain, so
  *  it cannot describe a chain other than the one it was given — the drift that
  *  a hand-written summary beside a structured field always eventually has. */
