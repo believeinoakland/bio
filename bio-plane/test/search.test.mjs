@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) index the empty string instead of the bundle's text in promote's FTS write (store.mjs: `...FTS_COLUMNS.map(() => "")`), so the text index diverges from the corpus it is derived from -> 19 assertions fail (op=searchindexcheck disagrees, and no body/title term is found) then the suite throws on the empty hit set; restored, 164 pass.
-   (b) D-228/REC-68, run 2026-08-08: restore the quote-stripping defect in query.mjs's tokenizer (drop `&& src[i] !== '"'` from the BARE reader's terminator set) -> 170 pass, 12 FAIL, and this suite is where the two failure modes SEPARATE. MATCHED NOTHING, which fails honestly: `state:"collected"` 0 against 1, `type:"problem"` [] against one row, `monitored:"true"` 0, `annotations:">0"` 0, `fm:monitoring.frequency="monthly"` 0, `schema:"problem@1"` []. MATCHED THE WRONG THING, which does not: `title:"Fund general"` returned 1 for a phrase that is in NO title (the column filter bound to the first word only and the second was matched over every column), and `title:"billing Water"` returned 1 with the words reversed. AND THE SHARPEST: `-state:"collected"` returned 3 against 2 — a selector matching nothing, under NEGATION, returns THE WHOLE CORPUS, so an honest empty answer becomes a confident complete one. Restored, verified by sha256 AND `cmp`. */
+   (b) D-228/REC-68, run 2026-08-08: restore the quote-stripping defect in query.mjs's tokenizer (drop `&& src[i] !== '"'` from the BARE reader's terminator set) -> 170 pass, 12 FAIL, and this suite is where the two failure modes SEPARATE. MATCHED NOTHING, which fails honestly: `state:"collected"` 0 against 1, `type:"problem"` [] against one row, `monitored:"true"` 0, `annotations:">0"` 0, `fm:monitoring.frequency="monthly"` 0, `schema:"problem@1"` []. MATCHED THE WRONG THING, which does not: `title:"Fund general"` returned 1 for a phrase that is in NO title (the column filter bound to the first word only and the second was matched over every column), and `title:"billing Water"` returned 1 with the words reversed. AND THE SHARPEST: `-state:"collected"` returned 3 against 2 — a selector matching nothing, under NEGATION, returns THE WHOLE CORPUS, so an honest empty answer becomes a confident complete one. Restored, verified by sha256 AND `cmp`.
+   (c) REC-204, run 2026-09-25, Phase 4 (the envelope as content). Pristine src/index.mjs sha256 9b90c9c2…aaf92b, 896,766 B, copied aside under an item-named file; every restore verified by sha256 AND `cmp` against it. BASELINE: 201 pass, 0 fail. ARM `noenvelope` — DECLARED: drop the envelope arm (`const env = envelopeUnitsFor(...)` -> `const env = []` in `textUnitsFor`); the tracked-change-author search MUST return 0 by name and every envelope assertion MUST fail, while the body-only search, the no-merge assertion and both catalog refusals (`cited_as` crossed in either direction) MUST stay green — they are the body and the checker, not the projection. ACTUAL: `passage:"Marbury" -> 0 row(s)`, 15 FAIL, 186 pass, suite reached its foot; the four held-open assertions green. ITS FIRST TWO RUNS FOUND THREE DEFECTS IN THIS PHASE'S OWN INSTRUMENT and they were fixed, not smoothed: the reading-order assertion PASSED over an emptied envelope (`Math.min()` of nothing is Infinity), the `content_id` assertion PASSED on `undefined === undefined`, and an unguarded `JSON.parse` killed the suite before its foot. ARM `nolabel` — DECLARED: write the unit's text without its `ENVELOPE —` prefix; the SNIPPET assertion ALONE must fail (extent kind and `ref` still say envelope — three labels, and each is its own defence). ACTUAL: exactly that one, 200 pass. Restored; 201 pass, 0 fail. */
 /* Retrieval end to end, S-10 steps 2 to 4.
  *
  * Negative-control detail: index the empty string instead of the bundle's text in promote's FTS write (store.mjs: `...FTS_COLUMNS.map(() => "")`), so the text index diverges from the corpus it is derived from -> 19 assertions fail (op=searchindexcheck disagrees, and no body/title term is found) then the suite throws on the empty hit set; restored, 164 pass.
@@ -57,6 +58,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { deflateRawSync } from "node:zlib";
 /* textOf lives in query.mjs, not in the store, so the text derivation is
    importable and assertable in plain node exactly like the compiler is. The
    store maintains the index; the module derives what goes in it. */
@@ -696,6 +698,262 @@ const door = new Miniflare({
   t("and the divergence checker answers at the door", chk.result.ok, true);
 }
 await door.dispose();
+
+/* ------------------------------------------------------------------ *
+ * Phase 4 (REC-204): THE ENVELOPE AS CONTENT (OFFICE-FORMATS.md "THE
+ * ENVELOPE AS CONTENT"; DEC-5). A DOCX carrying a tracked insertion, a
+ * tracked deletion, a comment and core properties, and a PPTX carrying a
+ * slide's speaker notes, are ACQUIRED through `op=acquire` for real and
+ * promoted with the acquire document, and the passage arm is asked for
+ * each envelope item BY WHAT IT SAYS — the tracked change's author's name,
+ * the speaker notes' words. Every hit must say ENVELOPE, in its extent
+ * kind, its `ref` and its snippet, and must never be the body.
+ *
+ * The fixtures are built by an assembler that imports NOTHING from the
+ * container readers (capture-text-index.test.mjs's discipline): a fixture
+ * that inherited a reader's defect would agree with it for free.
+ *
+ * WHAT THIS PHASE CANNOT SEE: the envelope of an OpenDocument or a
+ * workbook (the projection's part table is exercised for docx and pptx
+ * only); the producers' other envelope kinds (formula, hidden-*), which
+ * the design leaves out and the projection states it leaves out; a leg
+ * CITING an envelope item, which needs leg grammar fields no leg carries
+ * yet — the content row is minted here through `op=contentmint`'s extent
+ * door instead.
+ * ------------------------------------------------------------------ */
+console.log("\n--- REC-204: an office document's envelope is content, searchable and LABELLED ---");
+function crc32(buf) {
+  let c = 0xffffffff;
+  for (let i = 0; i < buf.length; i++) {
+    c ^= buf[i];
+    for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1;
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+const u16 = (n) => Buffer.from([n & 0xff, (n >> 8) & 0xff]);
+const u32 = (n) => Buffer.from([n & 0xff, (n >>> 8) & 0xff, (n >>> 16) & 0xff, (n >>> 24) & 0xff]);
+function zip(files) {
+  const locals = [], centrals = [];
+  let offset = 0;
+  for (const f of files) {
+    const nameB = Buffer.from(f.name, "utf-8"), data = Buffer.from(f.data, "utf-8");
+    const comp = deflateRawSync(data), crc = crc32(data);
+    const local = Buffer.concat([u32(0x04034b50), u16(20), u16(0x0800), u16(8), u16(0), u16(0x21),
+      u32(crc), u32(comp.length), u32(data.length), u16(nameB.length), u16(0), nameB, comp]);
+    centrals.push(Buffer.concat([u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(8), u16(0), u16(0x21),
+      u32(crc), u32(comp.length), u32(data.length), u16(nameB.length), u16(0), u16(0), u16(0), u16(0),
+      u32(0), u32(offset), nameB]));
+    locals.push(local); offset += local.length;
+  }
+  const cd = Buffer.concat(centrals);
+  return new Uint8Array(Buffer.concat([...locals, cd, Buffer.concat([u32(0x06054b50), u16(0), u16(0),
+    u16(files.length), u16(files.length), u32(cd.length), u32(offset), u16(0)])]));
+}
+/* The names are the ENVELOPE'S and appear nowhere in any body or bundle.md —
+   which is what makes a hit on them a statement about the envelope. */
+const TC_AUTHOR = "Quillon Marbury", DEL_AUTHOR = "Ottoline Vasquez-Brandt";
+const COMMENTER = "Perpetua Okonkwo", CREATOR = "Hollis Fenwright", MODIFIER = "Seraphina Dunleavy";
+const INSERTED = "subject to a second reading", REMOVED = "without further notice";
+const COMMENT_TEXT = "Legal has not cleared this paragraph";
+const NOTES_TERM = "zephyrine", NOTES = `Do not mention the ${NOTES_TERM} settlement figure aloud.`;
+const BODY_TERM = "gallimaufry";
+const DOCX_CT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const PPTX_CT = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+const WNS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+const CT_HEAD = `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>`;
+const RELS = (inner) => `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${inner}</Relationships>`;
+const REL = (id, type, target) => `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/${type}" Target="${target}"/>`;
+const CORE = `<?xml version="1.0"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"><dc:title>Midcycle memo</dc:title><dc:creator>${CREATOR}</dc:creator><cp:lastModifiedBy>${MODIFIER}</cp:lastModifiedBy><cp:revision>7</cp:revision></cp:coreProperties>`;
+const ENV_DOCX = zip([
+  { name: "[Content_Types].xml", data: CT_HEAD + `<Override PartName="/word/document.xml" ContentType="${DOCX_CT}.main+xml"/></Types>` },
+  { name: "_rels/.rels", data: RELS(REL("rId1", "officeDocument", "word/document.xml")) },
+  { name: "docProps/core.xml", data: CORE },
+  { name: "word/document.xml", data: `<?xml version="1.0" encoding="UTF-8"?><w:document ${WNS}><w:body>`
+      + `<w:p><w:r><w:t>The ${BODY_TERM} reserve is appropriated</w:t></w:r>`
+      + `<w:ins w:id="1" w:author="${TC_AUTHOR}" w:date="2026-05-01T10:00:00Z"><w:r><w:t> ${INSERTED}</w:t></w:r></w:ins></w:p>`
+      + `<w:p><w:commentRangeStart w:id="0"/><w:r><w:t>Payments cease</w:t></w:r>`
+      + `<w:del w:id="2" w:author="${DEL_AUTHOR}" w:date="2026-05-02T11:00:00Z"><w:r><w:delText> ${REMOVED}</w:delText></w:r></w:del>`
+      + `<w:commentRangeEnd w:id="0"/><w:r><w:commentReference w:id="0"/></w:r></w:p>`
+      + `</w:body></w:document>` },
+  { name: "word/comments.xml", data: `<?xml version="1.0"?><w:comments ${WNS}><w:comment w:id="0" w:author="${COMMENTER}" w:date="2026-05-03T09:00:00Z" w:initials="PO"><w:p><w:r><w:t>${COMMENT_TEXT}</w:t></w:r></w:p></w:comment></w:comments>` },
+  { name: "word/_rels/document.xml.rels", data: RELS("") },
+]);
+const PNS = 'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+const spOf = (txt) => `<p:sp><p:txBody><a:p><a:r><a:t>${txt}</a:t></a:r></a:p></p:txBody></p:sp>`;
+const ENV_PPTX = zip([
+  { name: "[Content_Types].xml", data: CT_HEAD + `<Override PartName="/ppt/presentation.xml" ContentType="${PPTX_CT}.main+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/><Override PartName="/ppt/notesSlides/notesSlide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml"/></Types>` },
+  { name: "_rels/.rels", data: RELS(REL("rId1", "officeDocument", "ppt/presentation.xml")) },
+  { name: "ppt/presentation.xml", data: `<?xml version="1.0"?><p:presentation ${PNS}><p:sldIdLst><p:sldId id="256" r:id="rId2"/></p:sldIdLst></p:presentation>` },
+  { name: "ppt/_rels/presentation.xml.rels", data: RELS(REL("rId2", "slide", "slides/slide1.xml")) },
+  { name: "ppt/slides/slide1.xml", data: `<?xml version="1.0"?><p:sld ${PNS}><p:cSld><p:spTree>${spOf("SETTLEMENT UPDATE")}</p:spTree></p:cSld></p:sld>` },
+  { name: "ppt/slides/_rels/slide1.xml.rels", data: RELS(REL("rId1", "notesSlide", "../notesSlides/notesSlide1.xml")) },
+  { name: "ppt/notesSlides/notesSlide1.xml", data: `<?xml version="1.0"?><p:notes ${PNS}><p:cSld><p:spTree>${spOf(NOTES)}</p:spTree></p:cSld></p:notes>` },
+]);
+const env4 = new Miniflare({
+  modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+  durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],
+  bindings: { VERSION: "search-test", ADMIN_TOKEN: "adm-rec204", MEMBER_TOKEN: "mem-rec204",
+              PROBE_TOKEN: "prb-rec204", GOVERNOR_APPETITE_PER_MIN: "600000",
+              GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
+  outboundService(request) {
+    const u = new URL(request.url);
+    const bin = (b, ct) => new Response(b, { headers: { "content-type": ct } });
+    if (u.pathname === "/memo.docx") return bin(ENV_DOCX, DOCX_CT);
+    if (u.pathname === "/deck.pptx") return bin(ENV_PPTX, PPTX_CT);
+    return new Response("unscripted", { status: 500 });
+  },
+});
+{
+  const unwrap = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+  const MEM = "mem-rec204";
+  const get4 = async (op, qs = "") => unwrap(await (await env4.dispatchFetch(
+    `http://x/api/?op=${op}&token=${MEM}&${qs}`)).json());
+  const post4 = async (op, body) => unwrap(await (await env4.dispatchFetch(
+    `http://x/api/?op=${op}&token=${MEM}`, { method: "POST", body: JSON.stringify(body) })).json());
+  const acquire4 = async (path) => (await (await env4.dispatchFetch(`http://x/api/?op=acquire&token=${MEM}`,
+    { method: "POST", body: JSON.stringify({ locator: "https://www.oaklandca.gov" + path,
+                                             authority: "City of Oakland" }) })).json()).document;
+  const NOW4 = "2026-09-25T00:00:00Z";
+  const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema: information@1",
+    `title: "Info ${id}"`, "current_state: collected", "prior_state: null",
+    `created: "${NOW4}"`, `last_updated: "${NOW4}"`,
+    "produced_by:", "  mode: assisted", "  capability_tier: session",
+    "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+    "visuals: []", "criticality: supporting", "source_status: unchanged",
+    "source:", "  locator: in hand", "  authority: synthetic", `  retrieved: ${NOW4}`,
+    "monitoring:", "  enabled: false", "  frequency: none",
+    "---", "", "## Summary", "", "A captured document.", "",
+    "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  let snap = 0;
+  const promote4 = async (id, document) => {
+    const text = infoMd(id), prov = JSON.stringify({ documents: [document] });
+    const r = await post4("promote", {
+      bundleId: id, base: null,
+      snapKey: `20260925T${String(100000 + (++snap)).slice(-6)}Z_${sha(String(snap)).slice(0, 8)}`,
+      /* CORRECTED 2026-09-25 at the c22-batch30 union (D-563, C-86.3, which landed beside REC-204), never
+         exempted: the label `Bundle ${id}` contradicted the document's own title (`Info ${id}`) and is now
+         refused ENVELOPE_TITLE_DISAGREES; the request names no title, so the record goes by the document's. */
+      meta: { object_type: "information", group: "believe-in-oakland",
+              current_state: "collected", created: NOW4, last_updated: NOW4 },
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+              { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+      register: [{ sha256: document.capture.sha256, path: document.file || "data/doc.bin",
+                   encoding: "binary", bytes: document.capture.bytes || 10 }] });
+    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
+    return r;
+  };
+  const passage = async (term) => get4("meaningrows",
+    `rows=passage&q=${encodeURIComponent(`passage:${JSON.stringify(term)}`)}`);
+
+  const memo = await acquire4("/memo.docx");
+  const deck = await acquire4("/deck.pptx");
+  const envUnits = (d) => (d?.text_units || []).filter((u) => u.extent?.kind === "envelope");
+  /* THE FIXTURE IS NOT EMPTY, printed and floored: a totality assertion over
+     an empty envelope passes for free (W34). */
+  console.log(`  corpus: memo.docx ${memo?.text_units?.length ?? -1} unit(s), ${envUnits(memo).length} envelope; `
+            + `deck.pptx ${deck?.text_units?.length ?? -1} unit(s), ${envUnits(deck).length} envelope`);
+  t("REC-204: op=acquire projects the DOCX envelope — 2 tracked changes, 1 comment, 4 core properties "
+  + "(title, creator, lastModifiedBy, revision), each ONE unit of kind `envelope`",
+    envUnits(memo).map((u) => u.extent.item + (u.extent.name ? `:${u.extent.name}` : "")).sort(),
+    ["comment", "core-property:creator", "core-property:lastModifiedBy", "core-property:revision",
+     "core-property:title", "tracked-change", "tracked-change"]);
+  t("...and the deck's speaker notes, ONE envelope unit anchored at the slide, beside the slide's own unit",
+    [envUnits(deck).map((u) => [u.extent.item, u.extent.at?.kind, u.extent.at?.slide]),
+     (deck?.text_units || []).filter((u) => u.extent?.kind === "slide-shape").length],
+    [[["speaker-note", "slide-shape", 1]], 1]);
+  /* NON-EMPTY FIRST: `Math.min()` of nothing is Infinity, which is "after"
+     everything — the negative control caught this assertion passing over an
+     envelope the arm had emptied. */
+  t("the envelope comes AFTER the body in reading order, so a bound drops it before a paragraph",
+    envUnits(memo).length > 0 && Math.min(...envUnits(memo).map((u) => u.seq))
+      > Math.max(...(memo?.text_units || []).filter((u) => u.extent?.kind === "doc-para").map((u) => u.seq)), true);
+  t("the speaker notes are NOT folded into the slide's unit (DEC-5: never merged)",
+    (deck?.text_units || []).filter((u) => u.extent?.kind === "slide-shape")
+      .some((u) => u.text.includes(NOTES_TERM)), false);
+
+  await promote4("INFO-2026-0204-memo", memo);
+  await promote4("INFO-2026-0204-deck", deck);
+
+  /* THE ACCEPTANCE. A passage search for the tracked change's AUTHOR, by name. */
+  const byAuthor = await passage("Marbury");
+  const hit = byAuthor?.rows?.[0] || {};
+  console.log(`  passage:"Marbury" -> ${byAuthor?.count ?? -1} row(s): ${JSON.stringify(hit.ref ?? null)} | ${JSON.stringify(hit.snippet ?? null)}`);
+  t("REC-204 ACCEPTS: a passage search finds the tracked-change AUTHOR by name — exactly one unit",
+    [byAuthor?.ok, byAuthor?.count], [true, 1]);
+  t("...LABELLED as envelope in its extent kind, and the extent names the item's kind",
+    [hit.extent_kind, typeof hit.extent === "string" ? JSON.parse(hit.extent).item : null,
+     typeof hit.extent === "string" ? JSON.parse(hit.extent).cited_as : null],
+    ["envelope", "tracked-change", "envelope"]);
+  t("...in its `ref`, the record's own sentence, which opens with the word envelope",
+    /^envelope: a tracked change at ¶1$/.test(String(hit.ref)), true);
+  t("...and in its SNIPPET, so the one line a member reads beside the hit says it is not the body",
+    /ENVELOPE/.test(String(hit.snippet)) && String(hit.snippet).includes("[Marbury]"), true);
+  /* ASKED BY IDENTITY, NOT BY SNIPPET: the snippet is a window centred on the
+     matched words and cuts the author off a long line, so the first draft of
+     this assertion (author inside the removed-wording snippet) was wrong about
+     the instrument, not the product. The same UNIT must answer both names. */
+  const removed = await passage(REMOVED), deleter = await passage("Ottoline");
+  t("the removed wording is searchable, and its author finds the SAME unit — a deletion is evidence (DEC-5)",
+    [removed?.rows?.map((r) => [r.extent_kind, r.ref]), deleter?.rows?.[0]?.extent === removed?.rows?.[0]?.extent],
+    [[["envelope", "envelope: a tracked change at ¶2"]], true]);
+  t("a COMMENTER is found by name, labelled envelope, anchored at the paragraph the comment marks",
+    (await passage("Okonkwo"))?.rows?.map((r) => [r.extent_kind, r.ref]), [["envelope", "envelope: a comment at ¶2"]]);
+  t("the core properties are found by name, each labelled with the property it is",
+    (await passage("Fenwright"))?.rows?.map((r) => [r.extent_kind, r.ref]),
+    [["envelope", "envelope: a core property 'creator'"]]);
+
+  /* THE ACCEPTANCE'S SECOND HALF: speaker-note text. */
+  const byNotes = await passage(NOTES_TERM);
+  console.log(`  passage:"${NOTES_TERM}" -> ${byNotes?.count ?? -1} row(s): ${JSON.stringify(byNotes?.rows?.[0]?.ref ?? null)}`);
+  t("REC-204 ACCEPTS: a passage search finds SPEAKER-NOTE text, one unit, labelled as envelope",
+    [byNotes?.count, byNotes?.rows?.[0]?.extent_kind, byNotes?.rows?.[0]?.ref],
+    [1, "envelope", "envelope: a slide's speaker notes at slide 1"]);
+
+  /* OVER-STRICTNESS: the body is still the body. The inserted words are in the
+     served document's text AND in the envelope's record of who inserted them,
+     so a search for them returns BOTH, each under its own kind — never one
+     collapsed into the other. */
+  t("the BODY is untouched: a body-only term returns the paragraph, as doc-para, and no envelope unit",
+    (await passage(BODY_TERM))?.rows?.map((r) => r.extent_kind), ["doc-para"]);
+  t("inserted words are the body's AND the envelope's, and the two hits stay two kinds",
+    ((await passage(INSERTED))?.rows || []).map((r) => r.extent_kind).sort(), ["doc-para", "envelope"]);
+
+  /* THE GRADE AND `cited_as`. The hit is an ADDRESS; minting it gives a content
+     row that carries the capture's chain and cap — the same a body paragraph of
+     the same capture carries — and `cited_as: envelope`. */
+  /* Guarded, so an arm that empties the index fails the assertions below BY
+     NAME instead of killing the suite before its foot (W30). */
+  let extent = { kind: "envelope" };
+  try { if (typeof hit.extent === "string") extent = JSON.parse(hit.extent); } catch { /* stays the stub */ }
+  const mint = await post4("contentmint", { bundleId: "INFO-2026-0204-memo", extent });
+  const para = await post4("contentmint", { bundleId: "INFO-2026-0204-memo",
+                                            extent: { kind: "doc-para", para: 0 } });
+  console.log(`  contentmint(envelope) -> ${JSON.stringify({ ok: mint?.ok, cited_as: mint?.cited_as, cap: mint?.derivation_cap, reason: mint?.reason ?? null, detail: mint?.detail ?? null }).slice(0, 400)}`);
+  t("an envelope hit mints a content row whose `cited_as` is `envelope`, never `text`",
+    [mint?.ok, mint?.extent_kind, mint?.cited_as], [true, "envelope", "envelope"]);
+  t("...carrying the CAPTURE's grade: the same chain and derivation cap as a body paragraph of it",
+    /* The chain must be NON-EMPTY for the equality to mean anything: two null
+       chains agree on nothing (W24). The cap is null on BOTH — a docx layer
+       read carries no measured letter — and that null is the capture's own. */
+    [JSON.stringify(mint?.chain), mint?.derivation_cap, Array.isArray(mint?.chain) && mint.chain.length > 0],
+    [JSON.stringify(para?.chain), para?.derivation_cap, true]);
+  t("...and the passage row now names it, so the hit IS the row's identity (section 4.5)",
+    /* A 64-hex id on BOTH sides: under the negative control both were
+       `undefined`, and two absences agreed for free (W24). */
+    [/^[0-9a-f]{64}$/.test(String(mint?.content_id)),
+     (await passage("Marbury"))?.rows?.[0]?.content_id === mint?.content_id], [true, true]);
+  const asBody = await post4("contentmint", { bundleId: "INFO-2026-0204-memo", extent: { ...extent, cited_as: "text" } });
+  t("an envelope item cited as the BODY (`cited_as: text`) is refused by name, never admitted",
+    [asBody?.ok, asBody?.code ?? asBody?.reason], [false, "CONTENT_EXTENT_UNREADABLE"]);
+  const bodyAsEnv = await post4("contentmint", { bundleId: "INFO-2026-0204-memo",
+                                                 extent: { kind: "doc-para", para: 0, cited_as: "envelope" } });
+  t("...and a body paragraph cited AS the envelope is refused the same way",
+    [bodyAsEnv?.ok, bodyAsEnv?.code ?? bodyAsEnv?.reason], [false, "CONTENT_EXTENT_UNREADABLE"]);
+}
+await env4.dispose();
 
 console.log(`\nsearch: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

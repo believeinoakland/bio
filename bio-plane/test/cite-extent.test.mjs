@@ -212,8 +212,13 @@ console.log(`  corpus: ${DOCS.length} captured documents (3-page sets, chain cap
    same act in `fw19-extent-arms.test.mjs`, which is where the act's widened
    `EXTENT_PARAMS` is asserted — so between the two suites the act reaches every
    landed kind, and this floor says how many there are. */
+/* CORRECTED BY REC-204, NOT EXEMPTED: `=== 8` was exact until the NINTH kind,
+   `envelope`, landed (OFFICE-FORMATS.md "THE ENVELOPE AS CONTENT"). It is not
+   an arm of this act — a leg carries no envelope fields yet — and is driven
+   through `op=contentmint` and the passage arm in `search.test.mjs` Phase 4;
+   the floor still says how many kinds the grammar lands. */
 ok_("the fixture is non-empty and reaches every landed extent kind",
-  DOCS.length >= 7 && Object.values(CONTENT_EXTENT_KINDS).filter((v) => v.landed).length === 8,
+  DOCS.length >= 7 && Object.values(CONTENT_EXTENT_KINDS).filter((v) => v.landed).length === 9,
   `docs=${DOCS.length} landed kinds=${Object.values(CONTENT_EXTENT_KINDS).filter((v) => v.landed).length}`);
 t("the ground holds no content rows yet — nothing has cited anything", (await get("stats")).content, 0);
 

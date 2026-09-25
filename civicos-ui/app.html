@@ -1942,10 +1942,11 @@ const STRENGTH_STATE_WORD = { graded: "graded", unrated: "UNRATED", undetermined
    rendering below: `legReferentHtml` reads the plane's own `ref` sentence and
    asks this table only for a NOUN. IC-1's union is the shape, so REC-85's three
    arms arrive as three rows here and nothing else in this file moves. */
-/* FW-19 (IC-125) added the last three, as the paragraph above predicted: three
-   rows below and nothing else in this file moved. */
+/* FW-19 (IC-125) added three, as the paragraph above predicted: three
+   rows below and nothing else in this file moved. REC-204 added `envelope` the
+   same way. */
 const CONTENT_EXTENT_KINDS = ["document", "pdf-page", "sheet-cell", "slide-shape", "doc-para",
-                              "sheet-range", "doc-table", "image"];
+                              "sheet-range", "doc-table", "image", "envelope"];
 /* The member's word for each — a NOUN PHRASE naming the part, never a sentence
    about it. The sentence is the plane's (`ref`, and `says` when a row is stale)
    and is rendered VERBATIM: DEC-49, and D-164's own lesson that the record's
@@ -1959,6 +1960,9 @@ const EXTENT_KIND_WORD = {
   "sheet-range": "a range of cells in a spreadsheet",
   "doc-table":   "a table in a document",
   "image":       "an image in a document",
+  /* REC-204: the envelope, named AS the envelope wherever a passage is shown,
+     so a reviewer's comment is never read as the document's body. */
+  "envelope":    "the document's envelope, not its body",
 };
 /* UI-16 · THE PROJECT READINESS LADDER. `workproduct_state` is the project
    extension's own field (C-2.9 names the four legal values; C-9.1 is what makes

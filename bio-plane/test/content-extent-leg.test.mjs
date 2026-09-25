@@ -226,10 +226,13 @@ console.log(`  corpus: 2 captured documents (page sets 3 and 2) + 1 inquiry targ
    "five" over a roster of eight is the stale-true statement this suite's own
    correction note warns about — and `nc-rec84.mjs`'s `unlanded` declaration was
    corrected to the new label in the same commit. */
-t("the grammar names eight kinds and ALL EIGHT are now LANDED (REC-82 two, REC-85 three, FW-19 three)",
+/* CORRECTED BY REC-204, on the same rule again: the ninth kind, `envelope`,
+   landed. `nc-rec84.mjs`'s `unlanded` declaration quotes this label and was
+   corrected with it. */
+t("the grammar names nine kinds and ALL NINE are now LANDED (REC-82 two, REC-85 three, FW-19 three, REC-204 one)",
   [Object.keys(CONTENT_EXTENT_KINDS).length,
    Object.entries(CONTENT_EXTENT_KINDS).filter(([, v]) => v.landed).map(([k]) => k).sort()],
-  [8, ["doc-para", "doc-table", "document", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]]);
+  [9, ["doc-para", "doc-table", "document", "envelope", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]]);
 
 /* ===================== 1. THE FRONTMATTER GRAMMAR ======================= */
 

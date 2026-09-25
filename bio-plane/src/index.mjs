@@ -74,7 +74,12 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             governed helpers of op=publishedbytes and op=publishedcase. */
          PUBLISHED_READ_CHECKS,
          /* D-374: the one reader of a structure op's per-page boxes, shared with the checker. */
-         pageBoxesOf } from "../checks/bio-checks.mjs";
+         pageBoxesOf,
+         /* REC-204: the envelope's item kinds, so the projection below writes
+            only the words the checker admits. */
+         ENVELOPE_ITEM_KINDS } from "../checks/bio-checks.mjs";
+/* REC-204: the part a core property's bytes sit in, the container reader's own constant. */
+import { CORE_PROPERTIES_PART } from "./ooxml.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
@@ -5537,7 +5542,7 @@ function withKeptPages(text, kept, seed) {
    re-extraction (D-319) derives a capture's indexable units by the SAME rule and
    the SAME wire budget as the acquire path. The assignments below are to this
    function's locals; the caller copies them. */
-function textUnitsFor(i2text) {
+function textUnitsFor(i2text, evidentiary = null) {
   let textUnits = null, textUnitsOverBound = 0;
   /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 -- THE INDEXABLE
    * UNITS OF THIS CAPTURE'S TEXT, taken off the I2 shape at the one
@@ -5597,7 +5602,12 @@ function textUnitsFor(i2text) {
    * emits one text string per slide today. A shape is not a passage,
    * exactly as a cell is not one.
    *
-   * SPEAKER NOTES ARE NOT INDEXED, AND THAT IS STATED RATHER THAN
+   * CORRECTED IN PLACE BY REC-204, NOT DELETED: SPEAKER NOTES ARE
+   * INDEXED NOW, AS ENVELOPE ITEMS (`envelopeUnitsFor` below), and the
+   * paragraph that follows was TRUE until then and is kept because its
+   * reasoning is why the fix took the shape it did — a notes unit could
+   * not be a slide unit, so it became a unit of a different KIND.
+   * It read: SPEAKER NOTES ARE NOT INDEXED, AND THAT IS STATED RATHER THAN
    * LEFT TO BE NOTICED. `pptxText` emits `speakerNotes[]` per slide
    * and DEC-5 requires them "DISTINGUISHABLE from slide text
    * EVERYWHERE shown, cited or indexed, never merged" -- so they
@@ -5646,7 +5656,7 @@ function textUnitsFor(i2text) {
        numbering and are what every other reference into these
        containers is written against. A re-count would silently
        disagree the first time a producer skipped one. */
-    const units =
+    let units =
         Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
           (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
       : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
@@ -5663,6 +5673,22 @@ function textUnitsFor(i2text) {
               ? u : null)), "sheet-range",
           (u) => ({ sheet: u.range.sheet, range: u.range.range }))
       : null;
+    /* REC-204 — THE ENVELOPE, AFTER THE BODY IN READING ORDER. Its `seq`
+       continues past the producer's whole unit list, so a capture indexed
+       to a bound is a prefix that keeps the BODY and loses envelope items
+       first — the body is what the document says, and a partial index that
+       kept a reviewer's comment and dropped a paragraph would have the order
+       of importance backwards. A workbook's envelope items follow its body
+       too: CORRECTED IN PLACE at the c22-batch30 union (D-672 x REC-204) —
+       this read "A workbook has no body arm and its envelope items are
+       indexed anyway: they are addressable, its cells are not", true on
+       REC-204's base and false since D-672 gave a workbook one
+       `sheet-range` unit per sheet. So `sheets` counts toward the body's
+       length, and a workbook's envelope `seq` starts past its sheets. */
+    const bodyLen = [i2text.pages, i2text.paragraphs, i2text.slides, i2text.sheets]
+      .reduce((n, l) => (Array.isArray(l) ? Math.max(n, l.length) : n), 0);
+    const env = envelopeUnitsFor(evidentiary, i2text, bodyLen);
+    if (env.length) units = [...(units || []), ...env];
     /* AN EMPTY LIST IS NULL AND NEVER A ZERO, which is CAP-12's rule
        twelve lines up applied to this key. A container whose entry
        returned `pages: []` because it was over the size bound has not
@@ -5740,6 +5766,122 @@ function textUnitsFor(i2text) {
   return { textUnits, textUnitsOverBound };
 }
 /*__REC91_TEXT_UNITS_END__*/
+
+/* REC-204 — THE ENVELOPE AS CONTENT (OFFICE-FORMATS.md "THE ENVELOPE AS
+ * CONTENT", D-124's 2026-07-31 row; DEC-5: surface it all). The office entries'
+ * `structure()` emits the evidentiary envelope — tracked changes with their
+ * author, date and wording, comments, core properties, speaker notes — and until
+ * this function nothing projected, indexed or searched any of it. Each item
+ * becomes ONE unit of the ninth extent kind, `envelope`, addressed by its part,
+ * its anchor and its item kind, beside the body's units and never inside them.
+ *
+ * LABELLED IN THE TEXT AS WELL AS IN THE ADDRESS, and that is the point rather
+ * than decoration. The index's snippet is taken from the unit's TEXT, so a hit
+ * whose text were the bare comment would show a reviewer's words in the
+ * position a member reads the document's own; the text opens `ENVELOPE —` and
+ * names the item's kind, so every surface that shows the snippet shows the
+ * label with it. The names in it (authors, commenters, `lastModifiedBy`) are
+ * the document's own bytes under DEC-5, and they are written only where the
+ * producer read them: an absent author is SAID to be absent, never invented.
+ *
+ * WHAT IS NOT PROJECTED, stated here so its absence is never read as none:
+ * the producers' other envelope kinds — `formula`, `hidden-sheet`,
+ * `hidden-rows`, `hidden-cols`, `hidden-slide` — are not among the design's
+ * four item kinds (a flag carries no words of its own, and a formula's text
+ * is the cell's, which has no unit arm). An item whose own words are empty
+ * (a blank speaker note, a property the file leaves unset) is not a passage
+ * and is not emitted, the body's no-glyph rule. The envelope's own
+ * `undetermined` (an unreadable comments part) is the producer's statement
+ * and is not restated here.
+ *
+ * THE PART is where the item's bytes sit: the producer's own `part` when it
+ * carries one (a notes slide), otherwise the part the container's format puts
+ * that kind in. A container this table does not know yields no unit — never a
+ * guessed part. D-346 adds OpenDocument's `meta.xml` core properties; they
+ * arrive through the same `core-properties` item and the `meta.xml` row
+ * below is where they join. */
+const ENVELOPE_PARTS = {
+  docx: { "tracked-change": "word/document.xml", comment: "word/comments.xml",
+          "core-properties": CORE_PROPERTIES_PART },
+  pptx: { "core-properties": CORE_PROPERTIES_PART },
+  xlsx: { "core-properties": CORE_PROPERTIES_PART },
+  odt:  { "tracked-change": "content.xml", comment: "content.xml", "core-properties": "meta.xml" },
+  ods:  { "core-properties": "meta.xml" },
+  odp:  { "speaker-notes": "content.xml", "core-properties": "meta.xml" },
+};
+/* The producers' plural kind -> the extent's singular item (ENVELOPE_ITEM_KINDS). */
+const ENVELOPE_ITEM_OF = { "tracked-change": "tracked-change", comment: "comment",
+                           "core-properties": "core-property", "speaker-notes": "speaker-note" };
+/* The core-properties fields, in the producers' own names, each ONE item.
+   `revisionNumber` is NOT one: it is `revision` parsed to an integer by the
+   reader, the same fact twice, and two items for one property would be two
+   hits for one word the publisher's software wrote once. */
+const CORE_PROPERTY_FIELDS = ["creator", "lastModifiedBy", "title", "created", "modified", "revision"];
+function envelopeUnitsFor(evidentiary, i2text, seqFrom) {
+  const items = evidentiary && typeof evidentiary === "object" && Array.isArray(evidentiary.items)
+    ? evidentiary.items : [];
+  if (!items.length) return [];
+  const container = typeof evidentiary.container === "string" ? evidentiary.container
+    : (i2text && typeof i2text.container === "string" ? i2text.container : null);
+  const parts = ENVELOPE_PARTS[container] || null;
+  const str = (v) => (typeof v === "string" && glyphCount(v) > 0 ? v : null);
+  const anchorOf = (src) => (src && typeof src === "object"
+      && ((src.kind === "doc-para" && Number.isInteger(src.para))
+          || (src.kind === "slide-shape" && Number.isInteger(src.slide)))
+    ? (src.kind === "doc-para"
+        ? { kind: "doc-para", para: src.para, ...(Number.isInteger(src.run) ? { run: src.run } : {}) }
+        : { kind: "slide-shape", slide: src.slide, ...(Number.isInteger(src.shape) ? { shape: src.shape } : {}) })
+    : null);
+  const byAuthor = (a) => (str(a) ? `by ${a}` : "by an author the document does not name");
+  const dated = (d) => (str(d) ? `, dated ${d}` : ", undated in the document");
+  const out = [], ordinals = new Map();
+  const push = (item, part, at, name, body) => {
+    const key = JSON.stringify([item, part, at, name]);
+    const n = ordinals.get(key) ?? 0;
+    ordinals.set(key, n + 1);
+    out.push({ extent: { kind: "envelope", item, part, at, ...(name ? { name } : {}), n },
+               seq: seqFrom + out.length, text: `ENVELOPE \u2014 ${body}` });
+  };
+  for (const it of items) {
+    if (!it || typeof it !== "object") continue;
+    const item = ENVELOPE_ITEM_OF[it.kind];
+    if (!item || !Object.prototype.hasOwnProperty.call(ENVELOPE_ITEM_KINDS, item)) continue;
+    const part = str(it.part) || (parts && parts[it.kind]) || null;
+    if (!part) continue;
+    const at = anchorOf(it.source);
+    if (item === "core-property") {
+      for (const f of CORE_PROPERTY_FIELDS) {
+        const v = it[f];
+        const val = typeof v === "number" && Number.isFinite(v) ? String(v) : str(v);
+        if (val) push(item, part, null, f, `core property ${f}: ${val}`);
+      }
+      continue;
+    }
+    if (item === "tracked-change") {
+      const words = it.change === "deletion" ? str(it.superseded) : str(it.text);
+      if (!words && !str(it.author)) continue;
+      const change = str(it.change) || "change of an undetermined kind";
+      push(item, part, at, null, `tracked change (${change}) ${byAuthor(it.author)}${dated(it.date)}`
+        + (words ? `. ${it.change === "deletion" ? "Removed wording" : "Wording"}: ${words}` : ". It carries no wording"));
+      continue;
+    }
+    if (item === "comment") {
+      const words = str(it.text);
+      if (!words && !str(it.author)) continue;
+      push(item, part, at, null, `comment ${byAuthor(it.author)}`
+        + (str(it.initials) ? ` (${it.initials})` : "") + `${dated(it.date)}`
+        + (words ? `: ${words}` : ". It carries no wording"));
+      continue;
+    }
+    if (item === "speaker-note") {
+      const words = str(it.text);
+      if (!words) continue;
+      const where = Number.isInteger(it.slide) ? `slide ${it.slide}` : "a slide the deck does not place";
+      push(item, part, at, null, `speaker notes, ${where}: ${words}`);
+    }
+  }
+  return out;
+}
 
 /* CPDF-19: MOVED VERBATIM from `op=acquire` (its explanation stays at the acquire site). */
 const readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
@@ -9645,7 +9787,7 @@ export default {
             if (entry && (typeof entry.text === "function" || typeof entry.structure === "function")) {
               const wobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
               const wbytes = wobj ? new Uint8Array(await wobj.arrayBuffer()) : null;
-              let i2text = null;
+              let i2text = null, evidentiary = null;
               if (wbytes && typeof entry.text === "function") {
                 /* The office shape: text() takes parts (or bytes — the entries
                    accept both) and returns the I2 text shape, including the
@@ -9653,6 +9795,19 @@ export default {
                 const parts = typeof entry.parts === "function" ? await entry.parts(wbytes) : wbytes;
                 const tt = await entry.text(parts);
                 if (tt && tt.ok !== false) { i2text = tt; wiredTier = 1; }
+                /* REC-204: the evidentiary envelope is structure()'s, never
+                   text()'s, and until this line the acquire path never asked
+                   for it — so tracked changes, comments and core properties
+                   were extracted by the entry and projected nowhere. Asked
+                   over the SAME parts, and a failure here costs the envelope
+                   and never the text: the body was read either way. */
+                if (i2text && typeof entry.structure === "function") {
+                  try {
+                    const st = await entry.structure(parts);
+                    if (st && st.ok !== false && st.evidentiary && typeof st.evidentiary === "object")
+                      evidentiary = st.evidentiary;
+                  } catch { evidentiary = null; }
+                }
               } else if (wbytes && typeof entry.structure === "function") {
                 /* The PDF shape: Tier-1 text rides structure()'s own I2 object
                    (pdfstructure.mjs's do-not-fork rule). */
@@ -10042,7 +10197,7 @@ export default {
                 };
               }
               /* REC-91's units, by `textUnitsFor` (CPDF-19: one rule for both paths). */
-              { const u = textUnitsFor(i2text); textUnits = u.textUnits; textUnitsOverBound = u.textUnitsOverBound; }
+              { const u = textUnitsFor(i2text, evidentiary); textUnits = u.textUnits; textUnitsOverBound = u.textUnitsOverBound; }
               if (i2text) wired = readText(decodeView(i2text), { headers: profHeaders,
                 locator: documentAddress, content_type: ct || null, at: retrieved });
               /* D-536: the reader was handed `i2text` — digested as such on the reading's provenance. */

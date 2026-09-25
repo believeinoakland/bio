@@ -427,8 +427,10 @@ eq("every arm of IC-1's union is landed as of REC-85 - none refused as unlanded 
    `doc-table` and the `image` reference (EXTRACTION-BREADTH §3.2). The assertion's
    point — the landed set IS the whole union, nothing named and unevaluable — is
    unchanged; the roster moved. */
+/* CORRECTED BY REC-204, on the same rule: the NINTH kind, `envelope` (an item of
+   an office document's envelope, never its body), landed; the roster moves. */
 eq("the landed set is IC-1's whole union", landed,
-  ["doc-para", "doc-table", "document", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]);
+  ["doc-para", "doc-table", "document", "envelope", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]);
 ok("the surface carries a member-facing noun for every LANDED arm, so REC-85's landing needed no edit here",
   landed.every((k) => typeof U.EXTENT_KIND_WORD[k] === "string" && U.EXTENT_KIND_WORD[k].length > 0));
 eq("the surface's kind set IS the catalog's, which check-semantics.mjs guards in both directions",

@@ -20842,7 +20842,19 @@ export class Store extends DurableObject {
       state = "LOOKED_INDETERMINATE";
       bound = armReason || "this container has no indexing unit arm";
       detail = `text was extracted and this record cannot address a passage of it: ${bound}. `
-             + "That is not an absence of text and must not be read as one";
+             + "That is not an absence of text and must not be read as one"
+             /* REC-204: a container with no BODY unit arm can still have its
+                ENVELOPE items indexed, and saying nothing of them here would read
+                as the capture holding no searchable unit at all. CORRECTED at the
+                c22-batch30 union (D-672 x REC-204): REC-204's base named the
+                workbook here; workbooks are armed since D-672 (one sheet-range
+                unit per sheet), so this clause now speaks only for the containers
+                still unarmed (an HTML page, and any container outside
+                CAPTURE_TEXT_UNIT_CONTAINERS). */
+             + (r.written > 0
+               ? `. ${r.written} unit(s) of its ENVELOPE are indexed (core properties, comments, `
+                 + "tracked changes or speaker notes), labelled as envelope and never as its body"
+               : "");
     } else if (r.over_bound > 0) {
       state = "partial";
       /* REC-111 -- THE SENTENCE NAMES THE UNIT BOUND AND THE BYTE BOUND, AND IT
