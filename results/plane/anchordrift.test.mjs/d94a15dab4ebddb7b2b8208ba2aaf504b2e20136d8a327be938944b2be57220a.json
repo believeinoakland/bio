@@ -1,0 +1,16 @@
+{
+ "unit": "plane:anchordrift.test.mjs",
+ "inputHash": "d94a15dab4ebddb7b2b8208ba2aaf504b2e20136d8a327be938944b2be57220a",
+ "verdict": "PASS",
+ "run": "388a3d877ae0171e565cd4b6576d016f3e97c826.1790322251640.26931.json",
+ "tree": "388a3d877ae0171e565cd4b6576d016f3e97c826",
+ "head": "118183099ba9dec4f0c737e955f8663b422935f3",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1133,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "7a08b0ea-fad2-5f27-809b-90dce7eb64ac",
+ "at": "2026-09-25T07:44:11.662Z"
+}
