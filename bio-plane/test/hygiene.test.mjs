@@ -437,8 +437,11 @@ console.log("\n--- the served page template is intact ---");
      other four are injected — a surface that wrote its own copy of a catalogue table
      would drift from it. AND THE ARM NOW PRINTS ITS COUNT: it failed reading `want
      true / got false`, naming neither the figure nor the ceiling, so a reader had to
-     go to the source to learn what had moved. */
-  t(`interpolations are few and deliberate (${interps} of 6)`, interps <= 6, true);
+     go to the source to learn what had moved.
+     6 -> 7, 2026-09-25 (UI-119), from the figure this arm PRINTED ("7 of 6"): the setup page's new kind chooser
+     injects ACTION_KINDS, the catalogue's own list, for the same reason — a page offering kinds it spelled
+     itself would drift from the kinds C-2.10 accepts. */
+  t(`interpolations are few and deliberate (${interps} of 7)`, interps <= 7, true);
 
   /* The strongest check available without a browser: the module loads, and the
      script it serves parses as JavaScript. */

@@ -3386,6 +3386,14 @@ function mdFor(id, type, state, title, body, now, hasDoc, src, act){
     const a = act || {};
     const cp = a.counterparty || null;
     fm.push("action_kind: " + (a.kind || "other"), riskTierLine(a.risk_tier));
+    /* UI-119 (REC-201; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*): THE LAW
+       A records_request IS MADE UNDER, AS ITS MEMBER WROTE IT, or NO LINE AT ALL. Written only on that kind —
+       C-2.10 judges a `law` on any other kind a law no read shows, and a member who typed one and then chose
+       another kind has not stated it of THIS ask. An empty field writes nothing, which the plane reads as its
+       own UNDETERMINED (recordsLawOf); no citation is supplied here and no length is judged here — the
+       catalogue's bound is the plane's to apply, in its own words. */
+    const lawText = a.kind === "records_request" ? String(a.law || "").trim() : "";
+    if(lawText) fm.push("law: " + JSON.stringify(lawText));
     /* THE STATE THE MEMBER CHOSE IS WRITTEN EVEN WHEN THE FIELD BESIDE IT IS
        EMPTY, and that is deliberate rather than sloppy: a member who answered
        "not determined yet" and wrote no basis has made a choice and left a
@@ -19671,7 +19679,7 @@ function addActReset(){
   /* `tier` starts at the record's undetermined and at NO number (UI-85, D-182):
      nobody has assessed an action that has not been written yet, so the chooser
      opens on the one answer that claims nothing. */
-  ADD_ACT = { kind:"", cp:"", cpName:"", cpBasis:"", basis:[], clock:[], tier:"undetermined",
+  ADD_ACT = { kind:"", cp:"", cpName:"", cpBasis:"", basis:[], clock:[], tier:"undetermined", law:"",
               clockText:"", clockDesc:"", clockDate:"", clockBasis:"" };
 }
 /* The kinds this surface can COMPLETE. A kind whose entry requirements this
@@ -19751,6 +19759,7 @@ function addActionPaneHtml(){
 
     <h2 class="sec" style="margin-top:26px">What kind of ask this is</h2>
     ${kindPick}
+    ${addActLawHtml()}
 
     <h2 class="sec" style="margin-top:26px">Whether this is safe to file</h2>
     <p class="lede" style="margin-top:0">This is a member's judgement about the legal exposure of sending it.
@@ -19780,6 +19789,21 @@ function addActionPaneHtml(){
     </div>
   </div>`;
 }
+/* UI-119 (REC-201; BIO_Case_Making_v0_1.md §2): THE LAW A RECORDS REQUEST IS MADE UNDER, asked only when the
+   member chose that kind — the one kind whose `law` field the record reads. A free-text citation, EMPTY and with
+   no example law in it (DEC-69): which law governs the agency asked is the member's statement, and a placeholder
+   naming one would be this surface suggesting it. Left empty, nothing is written and the plane reads its own
+   undetermined. No machine-proposed law is shown beside it: none exists on the plane this was built against, and
+   the fence that would let a machine only PROPOSE one is D-689's. */
+function addActLawHtml(){
+  if(!ADD_ACT || ADD_ACT.kind !== "records_request") return "";
+  return `<div id="ac-law-box" style="margin:14px 0 0">
+      <label class="fld" for="ac-law">The law this request is made under</label>
+      <p class="lede" style="margin-top:0">Name it by citation, as you would write it. Leave it empty if the
+        group has not settled it; the record will then say that no law is stated.</p>
+      <input class="txt" id="ac-law" style="max-width:520px" value="${esc(ADD_ACT.law)}" oninput="addActSync()">
+    </div>`;
+}
 function addActPick(which){
   if(!ADD_ACT) addActReset();
   ADD_ACT.cp = which;
@@ -19798,9 +19822,15 @@ function addActTier(k){
 }
 function addActSync(){
   if(!ADD_ACT) addActReset();
+  const was = ADD_ACT.kind;
   ADD_ACT.kind    = (($("#ac-kind")||{}).value || "").trim();
   ADD_ACT.cpName  = (($("#ac-name")||{}).value || "").trim();
   ADD_ACT.cpBasis = (($("#ac-basis")||{}).value || "").trim();
+  /* UI-119: the law field is read only while it is ON THE PAGE — the kind was records_request before this
+     change as well as after it, so the pane drew it; a field read before it is drawn is some other form's.
+     Choosing records_request, or leaving it, redraws the pane so the control appears or goes with its kind. */
+  if(was === "records_request" && ADD_ACT.kind === "records_request") ADD_ACT.law = (($("#ac-law")||{}).value || "");
+  if((was === "records_request") !== (ADD_ACT.kind === "records_request")) return addActRepaint();
   addValidate();
 }
 function addActBasisAdd(){
@@ -19832,6 +19862,7 @@ function addActRepaint(){
   if(cp) addActPick(cp);
   const n = $("#ac-name"); if(n) n.value = ADD_ACT.cpName;
   const b = $("#ac-basis"); if(b) b.value = ADD_ACT.cpBasis;
+  const l = $("#ac-law"); if(l && ADD_ACT.kind === "records_request") l.value = ADD_ACT.law;
   addValidate();
 }
 
@@ -20177,7 +20208,7 @@ async function addGo(){
          cannot be supplied from somewhere else on the way through. */
       {
         ...(type === "action" && ADD_ACT
-          ? { kind: ADD_ACT.kind, risk_tier: ADD_ACT.tier,
+          ? { kind: ADD_ACT.kind, risk_tier: ADD_ACT.tier, law: ADD_ACT.law,
               counterparty: ADD_ACT.cp === "named" ? { state:"named", name: ADD_ACT.cpName }
                           : ADD_ACT.cp === "undetermined" ? { state:"undetermined", basis: ADD_ACT.cpBasis }
                           : null,

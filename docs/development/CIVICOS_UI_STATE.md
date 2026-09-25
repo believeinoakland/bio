@@ -385,6 +385,29 @@ minted, not fixed here (plane paths): **D-626**, two plane sentences of D-538's 
 canned translation still says *"Leave the name off and the draft is a new case"*, and `PUBLISH_DRAFT_NOT_THIS_CASE`
 builds its identity sentence without the draft's `newCase`.
 
+v120, 2026-09-25 session, thread UI, UI-119 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/UI-119`, stacked on `land/worker/REC-201` @ `45ce0bc5` (integrated, not on `main`), in the commit that
+carries this entry; the version number is PROVISIONAL — CONDUCT renumbers at integration. SURFACES: **the app's
+action intake and the plane's setup page let a member state the law a records request is made under.**
+
+**WHAT IT CLOSES.** REC-201 gave the record a `records_request` kind and a `law` field read verbatim onto
+`op=projection`'s action block, and no surface wrote one: every records request filed read its law UNDETERMINED,
+and the setup page could not file the kind at all — it wrote every action as `other`. Now the app draws a `law`
+field when the member chooses `records_request` (EMPTY, no placeholder naming a law — DEC-69) and writes it on
+that kind only; the setup page gains a kind chooser over the catalogue's own list and the same field, and renders
+a refusal in the plane's words instead of `Refused: <CODE>`. Driven through a real plane by
+`civicos-ui/test/ui119-records-law.test.mjs` (37 assertions), its control 7 of 7 AS DECLARED.
+
+**WHAT IT MEASURED AND DID NOT FIX.** C-2.10's `law` arm refuses nothing at the act: `op=promote` lands a 250-character
+law, and the catalogue reports it only in the audit sweep (D-695, RECORD's). So the row's *"C-2.10 renders in its
+DEC-49 words"* has nothing to render yet; the suite pins the landing so D-695's fix turns it red. The action page
+shows `action.law` only inside governing_laws' undetermined sentence, which a stated list replaces (D-696). A
+machine-proposed law is not shown because nothing on this base stores one (D-689).
+
+*[c23-batch30 union, 2026-09-25 (CONDUCT #23): D-695 and D-689 are merged beside this entry — `op=promote` now refuses
+C-2.10's `law` arm at the act (RECORDS_LAW_REFUSED, C-73.6), so the suite's §5 arm that pinned the landing is CORRECTED to
+assert that refusal in the plane's own words; a machine stating `law` is refused C-32.20. D-696 stands as measured.]*
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it

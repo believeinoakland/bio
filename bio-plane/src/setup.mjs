@@ -16,7 +16,7 @@
  * when the page is served — see `setupPage` below.
  */
 
-import { STATES, HEADINGS, deriveInquiryTitle, RISK_TIERS, riskTierState } from "../checks/bio-checks.mjs";
+import { STATES, HEADINGS, deriveInquiryTitle, RISK_TIERS, riskTierState, ACTION_KINDS } from "../checks/bio-checks.mjs";
 
 /* The intake form obeys the check catalog's own tables rather than a copy of
    them. Injected at module load, so a catalog change moves the UI with it and
@@ -34,6 +34,9 @@ const HEADINGS_JSON = JSON.stringify(HEADINGS);
    riskTierState travels with the map because the page must not decide for itself WHICH keys a member may
    author: the settable tiers are exactly the values the plane reads back as themselves. */
 const RISK_TIERS_JSON = JSON.stringify(RISK_TIERS);
+/* UI-119: the action kinds, injected from the catalogue's own list for D-483's reason one line up — the page
+   offers exactly the kinds the plane accepts and spells none of its own. */
+const ACTION_KINDS_JSON = JSON.stringify(ACTION_KINDS);
 
 /* REC-163 / IC-174 — WHOSE RECORD THIS IS, STATED ON THE PAGE AND READ FROM THE RECORD.
  *
@@ -362,6 +365,24 @@ ${GROUP_LINE_UNREAD}
         <textarea id="n-cp-basis" rows="4"></textarea>
       </div>
       <p class="hint">This action will not be sent while this is undetermined.</p>
+    </div>
+    <!-- UI-119 (REC-201; BIO_Case_Making_v0_1.md section 2, A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS
+         IT): WHAT KIND OF ASK THIS IS, and for a records request THE LAW IT IS MADE UNDER. This page wrote every
+         action as the catalogue's "other" because it had no kind control, so a records request could not be
+         filed here at all, let alone name its law. The kinds are rendered from the injected catalogue list; the
+         container is empty in the source on purpose. NOTHING IS PRESELECTED (DEC-69), and the law field is
+         shown only for records_request - the one kind whose law the record reads - EMPTY, with no example law
+         in it: which law governs the agency asked is the member's statement, and a placeholder naming one would
+         be this page suggesting it. Left empty, nothing is written and the plane reads its own undetermined. -->
+    <div class="card" id="n-kind-card">
+      <label for="n-kind"><b>What kind of ask is this?</b></label>
+      <select id="n-kind"></select>
+      <div id="n-law-box" hidden style="margin-top:10px">
+        <label for="n-law">The law this request is made under</label>
+        <input id="n-law" spellcheck="false">
+        <p class="hint">Name it by citation, as you would write it. Leave it empty if the group has not
+        settled it; the record will then say that no law is stated.</p>
+      </div>
     </div>
     <!-- D-483 / D-182 (BIO_Case_Making_v0_1.md section 2, RULED by BOB #21): THE RISK TIER, ASKED
          RATHER THAN ASSUMED. This page wrote risk_tier: undetermined because it had no control to
@@ -924,7 +945,15 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
        (injected above), so what is written here is what the plane will read back. */
     const tier = riskTierState(act && act.risk_tier !== null && act.risk_tier !== undefined
       ? act.risk_tier : undefined);
-    fm.push("action_kind: other","risk_tier: " + (tier === null ? "undetermined" : tier));
+    /* UI-119: the kind the member chose from the catalogue's list, or "other" when this writer is called with
+       no choice at all (the conformance suites drive it that way, and the save handler below never does: it
+       asks for a kind). The law is written only on records_request and only when the member wrote one - C-2.10
+       reads a law on any other kind as a law no read shows - and never trimmed to fit or judged for length
+       here: that bound is the catalogue's to apply, in its own words. */
+    const kind = act && ACTION_KINDS.indexOf(act.kind) >= 0 ? act.kind : "other";
+    fm.push("action_kind: " + kind,"risk_tier: " + (tier === null ? "undetermined" : tier));
+    const lawText = kind === "records_request" && act && typeof act.law === "string" ? act.law.trim() : "";
+    if (lawText) fm.push("law: " + JSON.stringify(lawText));
     const cp = act && act.counterparty;
     /* The state the member chose is written even when the field beside it is
        empty: a member who answered "not determined yet" and wrote nothing has
@@ -970,6 +999,18 @@ async function docFiles(text, doc, textSha){
     files.push({ path: a.file, blobSha: a.sha256, sha256: a.sha256, bytes: a.bytes });
   return files;
 }
+/* UI-119 (DEC-49): A REFUSAL IN THE PLANE'S OWN WORDS. This page printed "Refused: " and the CODE, the machine
+   word DEC-49 keeps away from members, and threw the plane's sentence away. Now: the canned translation, else
+   the detail, else each finding's detail (the shape ACTION_BASIS_REFUSED and its kin carry, C-2.10's among
+   them) - and the code only when the plane said nothing else. No sentence here is about the record. */
+function refusedWhy(r){
+  const x = r || {};
+  if (typeof x.translation === "string" && x.translation) return x.translation;
+  if (typeof x.detail === "string" && x.detail) return x.detail;
+  const fs = Array.isArray(x.findings) ? x.findings.map((f)=> f && (f.detail || f.message)).filter(Boolean) : [];
+  if (fs.length) return fs.join(" ");
+  return "Refused: " + (x.reason || x.error || "unknown") + ". Nothing was written.";
+}
 function acquireWhy(a){
   const why = a.reason || a.error || "unknown";
   if (why === "BAD_LOCATOR") return "That address cannot be fetched. It must be an https address on a public site: not a plain http address, not an address on this machine, and not one carrying a username or password.";
@@ -1002,6 +1043,22 @@ const deriveInquiryTitle = ${deriveInquiryTitle.toString()};
    assessment. If the catalogue ever grows a fourth tier this control grows with it; if it grew one the
    plane would refuse, this control would not offer it. */
 const RISK_TIERS = ${RISK_TIERS_JSON};
+/* UI-119: the kinds this page can COMPLETE, from the catalogue's list. request_for_comment is left out for
+   the app's reason: DEC-13 requires it to name the inquiries it disclosed, and this page authors no basis
+   legs, so offering it would be offering a refusal. */
+const ACTION_KINDS = ${ACTION_KINDS_JSON};
+const OFFERED_KINDS = ACTION_KINDS.filter((k)=> k !== "request_for_comment");
+const renderKinds = ()=>{
+  const sel = $("#n-kind");
+  if (sel) sel.innerHTML = '<option value="">Choose one...</option>'
+    + OFFERED_KINDS.map((k)=> '<option value="' + escH(k) + '">' + escH(k.replace(/_/g, " ")) + '</option>').join("");
+};
+renderKinds();
+/* The law field belongs to a records_request and to nothing else: shown for that kind, hidden otherwise. */
+const syncKind = ()=>{
+  const box = $("#n-law-box");
+  if (box) box.hidden = !($("#n-kind") && $("#n-kind").value === "records_request");
+};
 const riskTierState = ${riskTierState.toString()};
 const SETTABLE_TIERS = Object.keys(RISK_TIERS).filter((k)=> riskTierState(Number(k)) === Number(k));
 /* The words are the vocabulary's, escaped because they are rendered as markup and nothing else about
@@ -1036,6 +1093,7 @@ const syncNewForm = ()=>{
   if ($("#n-act")) $("#n-act").hidden = t !== "action";
   if ($("#n-src")) $("#n-src").hidden = t === "action";
   syncCounterparty();
+  syncKind();
 };
 /* The pair reveals exactly one field, and only after the member has answered.
    Neither is shown by default, because a visible empty field is a suggestion. */
@@ -1048,6 +1106,7 @@ const syncCounterparty = ()=>{
 if ($("#n-cp-named")) $("#n-cp-named").addEventListener("change", syncCounterparty);
 if ($("#n-cp-undet")) $("#n-cp-undet").addEventListener("change", syncCounterparty);
 $("#n-type").addEventListener("change", syncNewForm);
+if ($("#n-kind")) $("#n-kind").addEventListener("change", syncKind);
 $("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; syncNewForm(); show("#s-new"); });
 $("#n-save").addEventListener("click", async ()=>{
   const e = $("#n-err"); e.textContent = "";
@@ -1075,8 +1134,13 @@ $("#n-save").addEventListener("click", async ()=>{
     /* D-483: the tier goes with the counterparty because both are the member's answers and neither is
        this form's. No refusal beside it: a member who assessed nothing has answered honestly, and a gate
        that stopped them here would press them into stating the one value nobody assessed. */
+    /* UI-119: the kind is asked, as the app's intake asks it; the law travels only with records_request and
+       is sent as written - an empty one is the member not stating it, which the record reads undetermined. */
+    const kind = $("#n-kind") ? $("#n-kind").value : "";
+    if (!kind) { e.textContent = "Say what kind of ask this is."; return; }
     act = { counterparty: named ? { state:"named", name:nm } : { state:"undetermined", basis:bs },
-            risk_tier: chosenRiskTier() };
+            risk_tier: chosenRiskTier(), kind,
+            law: kind === "records_request" && $("#n-law") ? $("#n-law").value : "" };
   }
   $("#n-save").disabled = true;
   try {
@@ -1124,7 +1188,7 @@ $("#n-save").addEventListener("click", async ()=>{
                        ...(doc.attestations || []).map((a) => ({
                          sha256: a.sha256, path: a.file, encoding: "binary", bytes: a.bytes }))] : [],
     });
-    if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+    if (!r.result || !r.result.ok) { e.textContent = refusedWhy(r.result || r); return; }
     if (minted) id = r.result.bundleId;
     $("#n-title").value = ""; $("#n-body").value = "";
     if ($("#n-loc")) { $("#n-loc").value = ""; $("#n-auth").value = ""; }
