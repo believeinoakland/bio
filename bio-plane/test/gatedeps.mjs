@@ -32,8 +32,8 @@
  *   - the DYNAMIC mode itself, which is right for `gates.mjs` — its lexer and its results module are
  *     LOAD-TIME dependencies reached exactly that way — and would OVER-derive for a module whose
  *     `await import("./x.mjs")` is a lazy branch. That is why the mode is a stated argument rather
- *     than the helper's default, and why the hand lists in `pushguard.test.mjs` and
- *     `retirable.test.mjs` need the STATIC mode instead (M0-170).
+ *     than the helper's default, and why the fixtures in `pushguard.test.mjs`,
+ *     `pushguard-check.test.mjs` and `retirable.test.mjs` read the STATIC mode instead (M0-170).
  *   - `unresolved: "skip"`, M0-154's behaviour, preserved deliberately at this call rather than
  *     tightened by the fold: this walk runs the SUBJECT's matcher over source in which the lexer
  *     keeps strings, so a specifier-shaped string that names no file is a false match and not a

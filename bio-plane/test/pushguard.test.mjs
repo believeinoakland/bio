@@ -47,6 +47,13 @@
  *   8, 17, 7, 6, 4, 1, 3. ARM (2) FOUND A DEFECT IN THIS SUITE BEFORE THOSE FIGURES, the third time at this spot:
  *   with no hook installed, NEVER DOWNGRADE's bare `readFileSync` THREW and the suite ended with no tally; it now
  *   reads through `existsSync` and fails by name.
+ * NEGATIVE CONTROL (M0-170, RUN 2026-09-24 — scratchRepo's carried modules DERIVED), driven by the M0-170 worker's scratchpad driver: a probe module `m0170probe.mjs` created beside the subject and `import "./m0170probe.mjs";` added to it, each arm ALONE, every touched file restored by sha256 AND `cmp` (all MATCH), probe removed.
+ *   Baseline 77 / 0. (A1) the import in `tools/statepaths.mjs` -> 77 / 0, AS DECLARED (derived, carried). (A5, over-strictness)
+ *   the same import inside a COMMENT, its file absent -> 77 / 0. (B1) A1's import with the OLD hand list restored -> 76 / 1,
+ *   exactly "the fixture's index exists on disk and is NOT in the commit". (A2b) the import in `tools/pushguard.mjs` itself
+ *   -> 69 / 8, first "OVER-STRICTNESS — a clean tree pushes cleanly from a previously-unguarded worktree": NOT a fixture
+ *   failure but D-406's section enforcing the guard's rule that it stay SELF-CONTAINED (its common-dir copy is one file) —
+ *   declared "green" on the first run, which was the ARM's error; recorded, not smoothed.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
@@ -59,6 +66,7 @@ import { install, hooksDir, shim, refsNotHead, corpusDirty,
          installCopy, commonDir, COPY_NAME,
          HOOK_MARKER, CORPUS_PATHS } from "../../tools/pushguard.mjs";
 import * as guard from "../../tools/pushguard.mjs";
+import { moduleClosure } from "./moduleclosure.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
@@ -96,16 +104,21 @@ function scratchRepo(name, { withIndex = false } = {}) {
   const root = join(SANDBOX, name);
   mkdirSync(join(root, "tools"), { recursive: true });
   mkdirSync(join(root, "docs"), { recursive: true });
-  cpSync(join(REPO, "tools/pushguard.mjs"), join(root, "tools/pushguard.mjs"));
+  /* CORRECTED 2026-09-24 by M0-170: this fixture kept a HAND LIST of the modules it carried, and the list was
+     corrected twice after the fact (M0-110, when `decided.mjs` began importing `coord.mjs`; M0-121, when `coord.mjs`
+     began importing `statepaths.mjs`) — each time only AFTER a new import had left the carried copy unable to load, so
+     the index was never produced and the fixture measured a broken import rather than the rule. The list was right on
+     the day and wrong the day after, which is the D-93/D-113 defect in a fixture. What is carried is now DERIVED:
+     `moduleClosure`'s STATIC mode (M0-169) walks each root's relative imports, so an import added to any of them
+     arrives here on its own. Static, not dynamic: `coord.mjs` has lazy `await import()` branches the fixture never
+     runs, and the dynamic walk over-derives them (measured by M0-154). `tools/decided.mjs` is a ROOT, named here,
+     because no import reaches it — the guard's retired arm SPAWNED it, and the index is regenerated through `regen`. */
+  const roots = withIndex ? ["tools/pushguard.mjs", "tools/decided.mjs"] : ["tools/pushguard.mjs"];
+  for (const rel of moduleClosure({ repo: REPO, roots, dynamic: false })) {
+    mkdirSync(dirname(join(root, rel)), { recursive: true });
+    cpSync(join(REPO, rel), join(root, rel));
+  }
   if (withIndex) {
-    cpSync(join(REPO, "tools/decided.mjs"), join(root, "tools/decided.mjs"));
-    /* CORRECTED 2026-09-22 by M0-110: `decided.mjs` now imports `coord.mjs` (the corpus is read through the coord
-       layer), so a copy carried alone could not load and the index was never produced — the fixture measured a
-       broken import, not the rule. What it imports is carried with it. */
-    cpSync(join(REPO, "tools/coord.mjs"), join(root, "tools/coord.mjs"));
-    /* CORRECTED 2026-09-23 by M0-121: `coord.mjs` now imports the state-path predicate from `statepaths.mjs` (a module
-       that walks nothing), so the carried copy could not load without it — the same broken-import fixture as above. */
-    cpSync(join(REPO, "tools/statepaths.mjs"), join(root, "tools/statepaths.mjs"));
     cpSync(join(REPO, ".gitignore"), join(root, ".gitignore"));
   }
   writeFileSync(join(root, "docs/seed.md"), "# seed\n\nDEC-1 was RULED on 2026-09-17 to exist.\n");
