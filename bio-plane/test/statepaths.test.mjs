@@ -185,7 +185,17 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    above were right on their own trees; the union selects 42, so the two slots of slack are closed rather than kept. The
    cause of the fall is NOT attributed here (undetermined: main moved 167 files since 9f8b69e6); a later landing that
    adds a unit reads its own print. A CEILING IS NOT A RATCHET: left at the printed figure. */
-const UNITS_CEILING = 42;
+/* MOVED 42 -> 43 by D-312 (2026-09-25), READ from this suite's print on the D-312 tree over origin/main 5e8a65a8
+   (`43 unit(s) of 470 selected · 31 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`). The one is D-312's own
+   `plane:memoryshare.test.mjs`, selected "walks docs/development/": it really does walk that directory's live design
+   documents for "of 128 MB", and it EXCLUDES the ledger and `measurements/` by a regex the gate's lexer blanks, so a
+   ledger-only change cannot move its verdict. That makes this ONE false selection, stated rather than hidden. The
+   only way to avoid it would be for the gate to read an exclusion, and the gate does not. A CEILING IS NOT A RATCHET:
+   left at the printed figure. CONTROL RE-RUN after the move (`statepaths.control.mjs`, 24 pass / 2 fail): arms a, c
+   and d AS DECLARED at 43, every restore byte-identical. **Arm b DID NOT ARM**: its `COORD_BLOCK` anchor no longer
+   matches `tools/coord.mjs`, whose import and re-export now also carry `RETIRED_FILES, isRetiredPath`. That is
+   pre-existing (coord.mjs is untouched here), and it is minted D-621 rather than smoothed. */
+const UNITS_CEILING = 43;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

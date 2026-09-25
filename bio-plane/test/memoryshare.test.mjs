@@ -97,8 +97,11 @@ const ls = execFileSync("git", ["ls-files", "-z", "--",
   "docs/architecture", "docs/development"], { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
   .split("\0").filter(Boolean)
   .filter((p) => /\.(mjs|js|md)$/.test(p))
-  /* THE DATED RECORDS ARE NOT WALKED, on purpose (header): an entry is corrected by a newer one. */
-  .filter((p) => p !== "docs/development/MEASUREMENTS.md" && !p.startsWith("docs/development/measurements/"))
+  /* THE DATED RECORDS ARE NOT WALKED, on purpose (header): an entry is corrected by a newer one. Written as a
+     REGEX, not a path string: `gates.mjs` keeps strings (a path IS a string, D-301), so a string naming the ledger
+     here read as a READ of it and put this suite in every ledger-only change's plan — a change that cannot move
+     this verdict, because the ledger is exactly what is excluded (statepaths' 42-unit arm caught it). */
+  .filter((p) => !/^docs\/development\/(?:MEASUREMENTS\.md$|measurements\/)/.test(p))
   .filter((p) => !/\/dist\//.test(p) || /\.bundled\.mjs$/.test(p))
   .filter((p) => p !== SELF);   // this file quotes the class to define it; it would find itself
 
@@ -115,6 +118,9 @@ console.log("--- 1 · no live site reads memory as a share of 128 MB ---");
   }
   console.log(`  corpus: ${ls.length} files, ${bytes} chars (floor: 500 files)`);
   t("the walk reached a real corpus", ls.length >= 500 && bytes > 5_000_000, true);
+  t("the dated records are NOT inside the walk (header)",
+    ls.filter((p) => /^docs\/development\/(?:MEASUREMENTS\.md$|measurements\/)/.test(p)), []);
+  t("...while the live contract is", ls.includes("docs/development/INTERFACES.md"), true);
   t("the row's four named sites are inside the walk",
     ["agent-worker/src/index.mjs", "bio-plane/test/fl1-cpu-probe.mjs", "docs/development/INTERFACES.md",
      "pdf-worker/src/pagepixels.mjs"].every((p) => ls.includes(p)), true);
@@ -131,7 +137,7 @@ console.log("\n--- 2 · every spelling of the class is caught ---");
 {
   const FIRES = [
     `const BOUND_SOURCE = "FL-1 memory curve (120.4 MB P99 of 128 MB at 200 turns)";`,
-    ` * in a 128 MB isolate (MEASUREMENTS.md: 120.4 MB of 128 while CPU sat at 2.5%`,
+    ` * in a 128 MB isolate (FL-1: 120.4 MB of 128 while CPU sat at 2.5%`,
     `memoryUsageBytesP99 = 120.4 MB against a 128 MB isolate`,
     `const pct = mem / (128 * 1024 * 1024);`,
     `const pct = (mem / 128) * 100;`,
