@@ -37,7 +37,9 @@ const ROUTE = "             overwritten rather than believed. */\n          call
   + "        capturerequestdrain:";
 const STAMP = "    if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))\n"
   + "      inner.searchParams.set(\"principal\",\n        viaSession ? sessIdentity\n";
-const LIST = "const RUN_PRODUCTION_ACTIONS = [\"suggest\", \"extractpropose\", \"capturerequest\"];\n";
+/* CORRECTED at c22-batch29 (merge of REC-147), never exempted: REC-147 added `contradictionpropose` to the list, so
+   the old anchor occurred 0 times and the no-stamp arm DID NOT ARM. The arm still removes exactly `capturerequest`. */
+const LIST = "const RUN_PRODUCTION_ACTIONS = [\"suggest\", \"extractpropose\", \"capturerequest\", \"contradictionpropose\"];\n";
 
 /* Every refusal of ANOTHER principal, and every arm that rests on one. */
 const OTHER_PRINCIPAL = ["ARM R1 ", "ARM R2 ", "ARM R3:", "ARM R4:", "ARM R5:", "ARM R6 ", "ARM S3 ", "ARM U2 ",
@@ -73,7 +75,7 @@ const ARMS = {
      no stamp nothing OVERWRITES the `principal` cora forged into her query — it reaches the store and is believed.
      The stamp is a SET, not just a supply, and this arm is what shows it. (And `ARM S2:` was a mis-spelled marker.) */
   "no-stamp": {
-    patches: [["index.mjs", LIST, "const RUN_PRODUCTION_ACTIONS = [\"suggest\", \"extractpropose\"];\n"]],
+    patches: [["index.mjs", LIST, "const RUN_PRODUCTION_ACTIONS = [\"suggest\", \"extractpropose\", \"contradictionpropose\"];\n"]],
     mustFail: ["ARM L1 ", "ARM L2 ", "ARM L3 ", "ARM L4 ", "ARM S1 ", "ARM S2 ", "ARM F1 ", "ARM F2 ", "ARM F3 ",
                "ARM F4 ", "ARM I0 "],
   },
