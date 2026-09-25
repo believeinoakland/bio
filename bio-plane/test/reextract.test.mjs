@@ -259,9 +259,22 @@ const graded = (b) => ({ code: b?.code, check: b?.check, translation: b?.transla
    lowered by as many hashes to EXACTLY the literal it replaces (c5d019ae…61ad8), so D-665's markers are the
    whole difference and CPDF-19's default path is still untouched. The layer document paints no image and is
    unchanged. The new literal is the printout on D-665's tree. */
+/* RE-TAKEN 2026-09-25 by D-374, AS THIS COMMENT PRESCRIBES — a later item moved the plain read ON
+   PURPOSE: `op=pdfstructure` now serves `pageBoxes` (each page's MediaBox, the bound a `pdf-page` rect
+   is checked against). PROVED rather than assumed before re-pinning: the new plain answer with ONLY its
+   `,\n "pageBoxes": …` member cut from the RAW TEXT hashes to EXACTLY the two literals it replaces
+   (scan c5d019ae…61ad8, layer 2a04e765…d64b1), so D-374's key is the whole difference and CPDF-19's
+   default path is still untouched. The new literals are the printout on D-374's tree. */
+/* RE-TAKEN 2026-09-25 by CONDUCT #22 at the c22-batch30 union of D-665 and D-374, AS THIS COMMENT PRESCRIBES —
+   both notes above moved the plain read on purpose, each on its own base. PROVED by name on the merged tree before
+   re-pinning: the merged scan answer with ONLY `pageBoxes` removed hashes to D-665's literal (88497d1a…f4ba), and
+   with the `image_unread` markers also removed to D-536's (c5d019ae…61ad8) — the assertion below keeps that; the
+   merged layer answer equals D-374's literal (d167a73e…4abb) byte for byte, so D-374's own proof for it (without
+   `pageBoxes` it is 2a04e765…d64b1) holds unchanged; D-665 did not move the layer document.
+   The new literals are the printout on the merged tree. */
 const PRE_ITEM_DIGEST = {
-  scan: "88497d1a949a6152f1fe0b5a4afb7b19be15cbb90624d647b907a787d07ff4ba",
-  layer: "2a04e765d906eeabe38cb143d8dd1dd92a4a8aa4cafc178ffe4ea7f33bdd64b1",
+  scan: "1e4cbd3831b83aa9ffa74db37c0cc7aad90b4a35a4791fe805d3d200a16f2d8d",
+  layer: "d167a73e91f333b56e84f968c01da4a5ebe76e1711e1f0c44cf9ba0362d65abb",
 };
 
 try {
@@ -304,6 +317,11 @@ console.log("\n--- 1 · WITHOUT THE FLAG: byte-identical to the pre-item read, a
      as many, re-serialised as `json()` does, hashes to the literal D-536 pinned. */
   {
     const o = JSON.parse(plainScan.text);
+    /* c22-batch30: D-374's `pageBoxes` key is the other whole difference (its RE-TAKEN note above), so it is
+       taken out too before comparing with D-536's answer. */
+    delete o.pageBoxes;
+    t("  and D-374's `pageBoxes` is the whole difference from D-665's answer: without it the scan is D-665's literal",
+      sha(JSON.stringify(o, null, 1)), "88497d1a949a6152f1fe0b5a4afb7b19be15cbb90624d647b907a787d07ff4ba");
     const keep = (arr) => (Array.isArray(arr) ? arr.filter((m) => !(m && m.reason === "image_unread")) : arr);
     const had = o.text.undetermined.length;
     o.text.pages = o.text.pages.map((pg) => ({ ...pg, undetermined: keep(pg.undetermined) }));

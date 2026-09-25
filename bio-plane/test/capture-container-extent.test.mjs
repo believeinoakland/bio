@@ -1087,6 +1087,13 @@ t("D-536: both readings carry their provenance", [!!html.reading.provenance, !!p
 const htmlReadingSansD536 = { ...html.reading };
 delete htmlReadingSansD536.provenance;
 delete pdfReadingSansNew.provenance;
+/* CORRECTED 2026-09-25 by D-374 on D-536's rule above, never re-pinned: a PDF reading now carries
+   `page_boxes` (each page's MediaBox), removed here BY NAME before the digest; the HTML reading
+   carries no such key (its wire never ran a structure read). Presence asserted so the removal cannot
+   hide an absence. */
+t("D-374: the PDF reading carries its page boxes, and the HTML reading none",
+  ["page_boxes" in pdfdoc.reading, "page_boxes" in html.reading], [true, false]);
+delete pdfReadingSansNew.page_boxes;
 t("an HTML capture's whole reading is BYTE-IDENTICAL to CAP-9's landing (pristine digest pin)",
   normDigest(htmlReadingSansD536), PRISTINE.html);
 t("and a PDF capture's is too, once the ONE key this item adds is removed — nothing else "

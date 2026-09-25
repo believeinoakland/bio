@@ -1,12 +1,15 @@
 # D-164 design space — the content object and the extent-carrying edge
 
-**Status** · A design-space study, 2026-09-15, by session BOB: the fixed constraints, three options for the content object and the extent-carrying edge, doctrine (Bob's) separated from mechanism (the architect's), and a dependency sketch of the build. Options and constraints, NOT a decision; the author's lean (option (c), the hybrid) is recorded as a lean. Complete as a study at `origin/main` `51d128a`; §5 brings the doctrine items to Bob in the shape he rules on and §6 records the mechanism decided provisionally by BOB #10 under his standing delegation (option (c), the hybrid). **D-164, the gap this study served, CLOSED 2026-09-22 (BOB #26)**: the primitive is BUILT (`node tools/status.mjs 4`) and Bob's reopening condition is met (`BIO_Content_Framework_v0_10.md` §18), so this study is now the design record behind it; §1.2's DEC-4 constraint is READ at the leg as a cap, never a refusal (Framework §14.4, D-152). as of 2026-09-22.
+**Status** · A design-space study, 2026-09-15, by session BOB: the fixed constraints, three options for the content object and the extent-carrying edge, doctrine (Bob's) separated from mechanism (the architect's), and a dependency sketch of the build. Options and constraints, NOT a decision; the author's lean (option (c), the hybrid) is recorded as a lean. Complete as a study at `origin/main` `51d128a`; §5 brings the doctrine items to Bob in the shape he rules on and §6 records the mechanism decided provisionally by BOB #10 under his standing delegation (option (c), the hybrid). **D-164, the gap this study served, CLOSED 2026-09-22 (BOB #26)**: the primitive is BUILT (`node tools/status.mjs 4`) and Bob's reopening condition is met (`BIO_Content_Framework_v0_10.md` §18), so this study is now the design record behind it; §1.2's DEC-4 constraint is READ at the leg as a cap, never a refusal (Framework §14.4, D-152). §6 gains the `pdf-page` rect's bound (D-374, 2026-09-25). as of 2026-09-25.
 
 **Place in the system** · A level-2 design serving `BIO_Content_Framework_v0_10.md` Part II §18, piece 1 (D-164), and through it construct 4 of `BIO_System_Design.md` §3. It touches interfaces I5 and I3 (RECORD's) and I2 (FRAMEWORK's, dormant), and its §3 doctrine list is what goes to Bob before any mechanism is chosen.
 
 **Incomplete sections** ·
 - §5 — all eight items answered by Bob on 2026-09-14 (5.5 as direction confirmed against the record rather than a ruling); the mechanism (§6) is updated to them and the IC on I5/I3 follows.
 - §4 and §6 — the mechanism was decided as option (c), contracted as IC-83 (I5) and IC-84 (I3) and BUILT by REC-82 to REC-85 (`node tools/status.mjs 4`); the two sections are the design as decided and are not rewritten to the as-built, so a builder reads the IC and the code for the shape that landed (corrected 2026-09-22 by BOB #26; this bullet said the IC was still to be written).
+- §6 — the `pdf-page` arm's rect bound (D-374) is recorded there as built; the coordinate space of a
+  rect is not part of the extent grammar, so an attestation region and an OCR anchor are not bounded
+  (D-670).
 
 **Contents**
 - [1. The fixed constraints](#1-the-fixed-constraints)
@@ -342,3 +345,20 @@ transcription is a member-facing act to build (5.2); machine-minted rows are leg
 (5.6, designed in Program B). Nothing in the mechanism waits on Bob any longer. **What waits on his review of Part
 II:** the understanding the mechanism rests on, in his stated order — so the IC on I5 and I3
 is written the day he confirms it, not before.
+
+**The `pdf-page` rect's bound (D-374, 2026-09-25).** The arm's rect was bounded by nothing:
+`checkContentExtent` asked only for four finite numbers, so `[0, 0, 999999, 999999]` minted on a US
+Letter page. It is now bounded by **its page's MediaBox**, which the structure op reads per page (up
+the page tree, origin kept) and `op=acquire` persists on the reading as `page_boxes`; a rect reaching
+outside it is refused **C-45.1 by name**, the family's existing code for an address outside the
+container's extent. **Which box, and why:** a rect is in default user space (IC-203), whose page is the
+MediaBox; the CropBox is only what a viewer shows, and content cropped out of view is still in the file
+and may be what a member cites, so bounding by it would be tighter than the rule. **/Rotate** is carried
+and never applied to the bound, because user space is unrotated (D-320 turns the page at render); the
+refusal names the rotation so a member measuring off a turned view can see why. The comparison is
+containment to 0.001 pt, the step the structure op rounds a placement to. **Where the record holds no
+box** — a PDF acquired before D-374, or a page whose MediaBox the file does not state — the rect is
+admitted and the absence stated as `undetermined {level: page_box, why}`, never refused and never given
+a guessed page size. Clip-and-state was the alternative and was not taken: a clipped rect is a region
+the member did not choose. **Not bounded here:** a text attestation's region and an OCR anchor, whose
+rects carry no stated coordinate space in this grammar (OCR anchors are image pixels) — D-670.

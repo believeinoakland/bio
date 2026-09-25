@@ -491,7 +491,7 @@ import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
    inside the construct that exists to close it. */
 import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
          describeExtent, contentIdFor, legContentId, contentCitedAs,
-         mintUndetermined } from "../checks/bio-checks.mjs";
+         mintUndetermined, pdfPageBoxUndetermined } from "../checks/bio-checks.mjs";
 /* REC-97 / IC-90: THE LEG GRAMMAR ITSELF, imported so `op=cite` can route the
    leg it is about to write through the SAME function `checkInquiryBasis` runs
    at C-2.8 and `basisVersionFindings` runs at C-25.10 — REC-84's ONE checker.
@@ -21348,6 +21348,12 @@ export class Store extends DurableObject {
     Object.assign(container, this.#containerKindOf(reading, captureFormat, held));
     return { chain: this.#chainOfReading(reading),
              pageCount: this.#pageSetForCapture(captureSha, reading),
+             /* D-374: each page's MediaBox as the acquire wire persisted it, off the
+                SAME parsed reading (CAP-9's one-read rule). Handed on as stored —
+                absent, null or `{boxes, of_page}` — and read by the checker's one
+                reader (`pageBoxesOf`); a box the record does not hold is admitted
+                and stated there, never supplied here. */
+             pageBoxes: reading && typeof reading === "object" ? reading.page_boxes ?? null : null,
              container };
   }
 
@@ -41291,7 +41297,11 @@ export class Store extends DurableObject {
     const has = (v) => Array.isArray(v) && v.length > 0;
     switch (extent.kind) {
       case "pdf-page":
-        return Number.isInteger(ctx.pageCount) ? null : "the record holds no page set for the newer capture";
+        /* D-374: a rect is bounded by its page's box too, so a pass is evidence
+           about the rect only where that box was held. */
+        if (!Number.isInteger(ctx.pageCount)) return "the record holds no page set for the newer capture";
+        return pdfPageBoxUndetermined(extent, ctx)
+          ? "the record holds no box for that page of the newer capture, so its rect was not bounded" : null;
       case "doc-para":
         return Number.isInteger(c.paragraphs) ? null : "the record holds no paragraph count for the newer capture";
       case "sheet-cell": case "sheet-range":
