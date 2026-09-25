@@ -20132,8 +20132,16 @@ released: 2026-09-24 — pushed `land/worker/UI-99` @ `38af046d475407f8035a78d35
 
 ## DELEGATION 2026-09-24 RECORD (WORKER REC-199) -> UI — **THE REVIEW COPY NOW SAYS `newCase` BACK, AND `rvcFormFromCopy` STILL DOES NOT READ IT**
 
-**open as of 2026-09-24** — the plane half landed on `land/worker/REC-199`; no surface reads the field, so the loss
-this row exists to close is still reachable through the member UI.
+**DISCHARGED 2026-09-25 by UI-106** (a WORKER of SCHEDULER #22, branch `land/worker/UI-106` @ `5b994a672`, stacked on
+`land/worker/D-568` @ `d5da99bb`) — **the act as this block names it.** `rvcFormFromCopy` sets `f.caseMode = "new"`
+from `c.case.newCase` beside the existing `case_id` branch, which keeps precedence, and the comment above it that
+said the answer carries no such field is CORRECTED in place. The surface's own round trip is now driven:
+`civicos-ui/test/review-copy-newcase.test.mjs` opens a new-case draft, presses Edit, changes the scope and saves
+through the page's own controls against the real plane, and asserts the one `op=casedraft` body carries
+`newCase: true` and the plane still holds it; a derived draft round-trips WITHOUT gaining it. Negative control:
+the read dropped fails "ROUND TRIP KEEPS newCase" by name (6/6 arms AS DECLARED). D-619 rode the same landing.
+RAISED 2026-09-24 at REC-199's landing; the `open as of` wording is retired rather than left beside the discharge,
+as REC-212 -> UI's block did.
 
 REC-199 (IC-285, BOB #32's ruling of 2026-09-23 23:08Z) makes `op=reviewcopy`'s `case` block carry a boolean
 `newCase` beside `case_id`, `edition` and `identity`. `civicos-ui/app.html`'s `rvcFormFromCopy` — the read-back that
