@@ -1,0 +1,16 @@
+{
+ "unit": "plane:skillsequencing.test.mjs",
+ "inputHash": "5412c9fb4a6e8bbbb5795ba9276bb0ed48794d6b35c77fb92d523271ee69ae7f",
+ "verdict": "PASS",
+ "run": "85b052c5b84a4908aef01499023d40577766b96b.1790329989238.29559.json",
+ "tree": "85b052c5b84a4908aef01499023d40577766b96b",
+ "head": "1d63537656328d356c2ebf930bb7cd21a7078592",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1064,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4aff75bf-bf14-5d15-901e-3991fd61998f",
+ "at": "2026-09-25T09:53:09.260Z"
+}
