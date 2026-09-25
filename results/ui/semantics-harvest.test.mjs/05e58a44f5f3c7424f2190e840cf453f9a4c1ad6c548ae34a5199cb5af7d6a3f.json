@@ -1,0 +1,16 @@
+{
+ "unit": "ui:semantics-harvest.test.mjs",
+ "inputHash": "05e58a44f5f3c7424f2190e840cf453f9a4c1ad6c548ae34a5199cb5af7d6a3f",
+ "verdict": "PASS",
+ "run": "40bbe02b198ab528648c26c7143b9557e650063c.1790314843352.23601.json",
+ "tree": "40bbe02b198ab528648c26c7143b9557e650063c",
+ "head": "f212f023fe13bd95cd088ac4d756277126ab57e8",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1042,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "6b922f29-537c-5da6-b609-d188345b36f9",
+ "at": "2026-09-25T05:40:43.364Z"
+}
