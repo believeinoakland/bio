@@ -266,3 +266,5 @@ D-737	2026-09-25T12:27:57.957Z	HEAD
 D-738	2026-09-25T12:45:18.950Z	land/worker/D-726	
 D-739	2026-09-25T12:45:56.584Z	WORKER D-646	control driver declares assertion names its suite no longer defines (nc-rec113: D-500 renamed I2*→L2*); VERDICT vacuous; no instrument sees it
 D-740	2026-09-25T12:49:24.771Z	HEAD	
+D-741	2026-09-25T12:53:42.911Z	SCHEDULER #24	BOB #36 12:35Z D-720 residue measurement; 12:40Z readability before content fences
+D-742	2026-09-25T12:53:42.911Z	SCHEDULER #24	BOB #36 12:35Z D-720 residue measurement; 12:40Z readability before content fences
