@@ -1,8 +1,8 @@
 # DIST — resume here. Updated 2026-09-24 23:40Z by DIST #7 (`session_01FQcUMZ2f34zhHzBkMEEdQ6`, cloud), successor of DIST #6 (`session_01Vi1XTVwxcBBMStifuBasLZ`, archived at this write). Standing: THE RELEASE IS HELD (Bob, 22:30Z via BOB #34) — cut nothing unless Bob types the ask in DIST's own session.
 
 **DIST #7's measured state, 23:40Z on origin/main `9f8b69e6`:** every DIST branch is an ancestor of main EXCEPT
-`land/dist/DIST-7` @ `c1cc9d90` (1 commit ahead, merges clean into `9f8b69e6` by `git merge-tree`). **DIST-7 RIDES THE NEXT
-TRAIN** — handed to CONDUCT #20 by DIST #7, re-handed to CONDUCT #21 (`session_01Np8wnAdDnRwswmAokZzNoY`) 2026-09-25. DIST-11 (`41322908`), DIST-13 (`82b5bf71`) and cut-0.79.0 (`d2ca15b0`) are ON MAIN
+`land/dist/DIST-7` @ `c1cc9d90` (1 commit ahead, merges clean into `9f8b69e6` by `git merge-tree`). **DIST-7 LANDED** (verified 04:10Z 2026-09-25: `c1cc9d90` an ancestor of origin/main, train c21-batch28; the row's `integrated` is now true). Was: RIDES THE NEXT
+TRAIN — handed to CONDUCT #20 by DIST #7, re-handed to CONDUCT #21 (`session_01Np8wnAdDnRwswmAokZzNoY`) 2026-09-25. DIST-11 (`41322908`), DIST-13 (`82b5bf71`) and cut-0.79.0 (`d2ca15b0`) are ON MAIN
 (c20-batch25). **Record defect:** BACKLOG's DIST-7 row reads `integrated` while `c1cc9d90` is on no main — sent to SCHEDULER #20.
 The "newgroup/dist REBUILD OWED" item below is SUPERSEDED: main's bundle carries `instanceAiBinding` (4) and DIST-13's guard now enforces freshness.
 
@@ -44,6 +44,11 @@ REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `s
 
 Everything through 0.79.0 SHIPPED (its pointer landed at `5f116f33`). The next cut adds DIST-11 (the BROWSER binding) and
 DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the trains carry. **Live checks owed at that deploy:**
+- **D-512 — an AUTHORITY closing, on main since `5e8a65a8` (c21-batch28; CONDUCT #21's 2b notice 04:06Z 2026-09-25).** An admin-class
+  caller could assert `replay` on op=promote and skip the fences; now a replay is honoured only over a drive-provenance capture
+  the plane verifies, else `REPLAY_UNVERIFIED` (C-66.6, IC-300 MAJOR). Under CUT NOW this would force a cut; CUT NOW is SUSPENDED
+  by Bob's hold, so it waits for his ask. Live arm: in `store=scratch`, a `replay` promote over an unverified capture answers
+  `REPLAY_UNVERIFIED` (a code absent from 0.79.0's bundle — lesson 18's discriminating arm), `bio` witnessed.
 - **D-475** (read-only, public): `GET /?store=scratch` shows scratch's slug or the "no group recorded" words; `GET /?store=nonsense`
   returns 400 NAMESPACE_UNKNOWN.
 - **D-490, the FIRST live render ever:** deploy WITH BROWSER, run ONE `op=acquire` `render: true` in `store=scratch` with the `bio`
