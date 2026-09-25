@@ -224,6 +224,16 @@ scope: beside the export's Date line, draw last_change.stated's tie sentence ver
 accepts-when: an exported copy whose pick ties a whole-second act carries the plane's tie sentence beside its date, and an untied one carries none (moves: a tied date exported as ordered). NEGATIVE CONTROL: drop the sentence and the tied-export arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs UI`; D-573's finding).
 
+### D-624 · queued — **THE SINGLE-ITEM DEFER/DISMISS DIALOG (`doProposalDispose` via `openProposalAct`) STILL SENDS `{key, to, reason}` FOR A PROJECT-SCOPED FINDING AND IS REFUSED NO_PROJECT_SCOPE: D-266's DELEGATION RECORD -> UI (2026-08-10), open since 2026-09-16 with no plan row.** Found by UI-110's worker (06:19Z). — owner UI.
+order: after UI-115, with the surface halves of landed rows: the one-item act fails for every project-scoped finding (SCHEDULER #22, 2026-09-25)
+milestone: M8
+interface: none (consumes REC-205's per-item project).
+design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class", with D-266's NO_PROJECT_SCOPE.
+depends-on: UI-110 (land/worker/UI-110 @ ba126d29; queueHomeFor and the picker); D-623 (the refusal's words).
+scope: the dialog reads disposition.scope/projects, sends {project, finding}, reuses queueHomeFor and the ask-never-default picker; discharge D-266's DELEGATION block.
+accepts-when: against the real plane a single project-scoped finding is deferred or dismissed through the dialog; a two-home finding is not sent until the member names one (moves: NO_PROJECT_SCOPE on every project-scoped dialog act). NEGATIVE CONTROL: send {key,to,reason} again and the dialog arm reads NO_PROJECT_SCOPE, failing by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by UI-110's worker).
+
 ### D-609 · queued — **A MEMBER CAN PLACE A DOCUMENT OR PASSAGE IN A THEME ONLY FROM THE THEME'S PAGE, BY TYPING ITS BUNDLE ID OR CONTENT ID: the document page and the passage row offer no "place in a theme" entry.** Found by UI-76's worker (04:05Z). — owner UI.
 order: after UI-113, with the surface halves of landed rows: the act exists and is reachable only by an id a member must copy by hand (SCHEDULER #22, 2026-09-25)
 milestone: M8
@@ -1191,13 +1201,3 @@ depends-on: none — M0-110 is done.
 scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
 accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).
-
-### M0-128 · queued — **`coord.mjs write` REBALANCES THE BACKLOG AFTER EVERY WRITE, A CLAIM OR A STATUS WORD INCLUDED, WHERE BOB #29 RULED THAT ONLY A WRITE CHANGING THE PLAN'S MEMBERSHIP OR SIZE MAY.** `write()` (`tools/coord.mjs`, re-read on `619dfa65`) runs `applyIntent(dir, { op: "rebalance", auto: true })` whenever its `rebalance` option is true, which is the default, whatever the intents; `WORK-PIPELINE.md` §2 names this *"the correction owed (M0)"*. Harmless today (a rebalance conserves every row verbatim), so it breaks M0-110's partition of writers only in principle: a lane's claim can move a plan row it never read. — owner M0.
-order: with the ledger tooling, directly after M0-120 and before LED-8: a ruled correction to a landed tool, but WORK-PIPELINE §2 itself says a stray rebalance is harmless, so it neither cuts gate time nor unblocks product and sits behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #15, 2026-09-23; BOB #29's ruling of the same day)
-milestone: M0
-interface: none
-design: `docs/development/WORK-PIPELINE.md` §2, *"WHICH WRITES REBALANCE — RULED 2026-09-23 by BOB #29"*, with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-119 is on `main`.
-scope: `write()` adds its automatic rebalance only when an intent changes a plan file's membership or size: `insert`, `row`, `refill`, `archive`, or an `append`, `line` or `replace` whose file is `QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`; a `status` word, a claim, a handoff or a DELEGATION does not. The explicit `rebalance` intent is unchanged; `coord.test.mjs` gains the arms.
-accepts-when: a write of only a `CLAIMS.md` append or a `-NEXT.md` replace leaves both plan files byte-identical even when the backlog is over budget; an `insert` over budget still moves the tail. NEGATIVE CONTROL: rebalance on every write again, and the claim-only arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (BOB #29's ruling in WORK-PIPELINE §2; `node tools/mintid.mjs M0`).

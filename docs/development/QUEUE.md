@@ -888,8 +888,8 @@ scope: word the no-case branch "a draft that named no case", never "a new case".
 accepts-when: a dead derived-draft grant never reads "a new case" (moves: a surface sentence claiming a new case). NEGATIVE CONTROL: restore "a new case" and the derived-grant arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
 
-### UI-110 · running — **NO MEMBER CAN SELECT A PROJECT-SCOPED FINDING INTO A QUEUE SET: `civicos-ui/app.html`'s `queueSetOpFor` (~14393 on main 9f8b69e6; UI-94 renames it `queueSetOpsFor`) returns null for scope=project, though REC-205 makes the plane carry each item's project.** The DELEGATION RECORD (REC-205) → UI on coord `CLAIMS.md` (06b86e6d). — owner UI.
-status: running — SCHEDULER #22 05:26Z spawns WORKER UI-110 (depth 2)
+### UI-110 · integrated — **NO MEMBER CAN SELECT A PROJECT-SCOPED FINDING INTO A QUEUE SET: `civicos-ui/app.html`'s `queueSetOpFor` (~14393 on main 9f8b69e6; UI-94 renames it `queueSetOpsFor`) returns null for scope=project, though REC-205 makes the plane carry each item's project.** The DELEGATION RECORD (REC-205) → UI on coord `CLAIMS.md` (06b86e6d). — owner UI.
+status: integrated — SCHEDULER #22 06:23Z: tip ba126d29, GATE 112/112 GREEN FULLREUSE (8318 assertions), tree 5a7aacb9; project-scoped findings join queue sets, ask-never-default for several homes; REC-205's DELEGATION discharged; peritem.test ~313 comment stale (RECORD); minted D-623, D-624
 order: after UI-106, the surface half of REC-205, in product order behind its plane half (SCHEDULER #21, 2026-09-24; via CONDUCT #20 23:45Z)
 milestone: M8
 interface: none (reads REC-205's I3 set act).
@@ -898,6 +898,17 @@ depends-on: REC-205, UI-94.
 scope: the set act sends each project-scoped item's own project; where an item has several homes the surface asks the member and NEVER defaults one (D-266); the plane's NO_PROJECT_SCOPE reaches the member in its DEC-49 words.
 accepts-when: a project-scoped finding joins a selection and the set act carries its project; an item with two homes is not sent until the member names one (the measured failure it moves: null for scope=project). NEGATIVE CONTROL: return null again and the selection arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
+
+### D-623 · running — **`op=proposedispose` MINTS NO_PROJECT_SCOPE AT TWO SITES (store.mjs proposeDispose: the scoped-without-project refusal and the IC-60 key bridge) WITH NO DEC-49 CODE OR TRANSLATION, so a member meets the plane's raw detail and UI-110's clause "NO_PROJECT_SCOPE reaches the member in its DEC-49 words" cannot be met.** Found by UI-110's worker (06:19Z). — owner RECORD.
+status: running — SCHEDULER #22 06:23Z spawns WORKER D-623 (depth 2)
+order: at the head, with the DEC-49 translation rows: a member-facing refusal with no canned words (SCHEDULER #22, 2026-09-25)
+milestone: M8
+interface: I3 additive — a catalogued code and translation; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one governed helper, one region, one condition).
+depends-on: none.
+scope: a row in a DEC-49 family (e.g. ACT_SHAPE_CHECKS) with a canned translation, built literally at both sites inside DEC-49 regions; census and reach floors move to their printed figures.
+accepts-when: a project-scoped dispose without a project answers NO_PROJECT_SCOPE with its translation at both sites, driven through the op (moves: 2 untranslated member-facing sites). NEGATIVE CONTROL: strip the translation and each site's arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by UI-110's worker).
 
 ### D-576 · integrated — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
 status: integrated — SCHEDULER #22 06:00Z: tip ae998dd8, GATE 102/102 GREEN FULLREUSE (7565 assertions), tree 7dfa9679; the connect receipt states a cut derivation; CIVICOS_UI_STATE v120 provisional
