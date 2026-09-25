@@ -1188,8 +1188,8 @@ scope: derive `site_chrome` per host by scan, add it to `purge`, and a read nami
 accepts-when: two captures of one host whose nav lost a link make the read name that link. NEGATIVE CONTROL: derive per page instead of per host, and the arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-177 · running — **THE CAPTURE GRADE BELOW THE CEILING IS STILL AUTHORED: `store.mjs` says *"there is no per-document capture grade anywhere in this schema"*; `#legEarnedCapture` applies REC-88/105's CEILING, not a measured value, so a member-authored grade under it stands unmeasured.** — owner CAPTURE, then RECORD.
-status: running — SCHEDULER #23 07:30Z: spawned
+### D-177 · integrated — **THE CAPTURE GRADE BELOW THE CEILING IS STILL AUTHORED: `store.mjs` says *"there is no per-document capture grade anywhere in this schema"*; `#legEarnedCapture` applies REC-88/105's CEILING, not a measured value, so a member-authored grade under it stands unmeasured.** — owner CAPTURE, then RECORD.
+status: integrated — SCHEDULER #23 09:10Z: tip 406ab5c1 on 5e8a65a8, GATE 385/385 GREEN (21876 assertions), tree a843d823; earned per-capture grade from captured_locators.via for direct captures read by #capturedAt (all four readers); archive-only stays undetermined — BOB's 07:55Z ruling rides D-693; construct 2.capture-grade PARTIAL; I3/I5 for the integrator
 order: after D-191 (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
 milestone: M9
 interface: I3/I5 — a derived per-capture grade read by the strength walk; the integrator mints and classifies the ICs.
@@ -1416,6 +1416,16 @@ depends-on: none (stacked on land/worker/REC-201 @ 45ce0bc5, integrated; D-689 r
 scope: a `law` control on app.html's action intake and setup.mjs's page when the kind is records_request, nothing prefilled (DEC-69); the plane's refusal (C-2.10) renders in its DEC-49 words; a machine-proposed law (D-689) is shown as proposed, adopted only by the member's act.
 accepts-when: a member files a records_request naming a law and op=projection reads it verbatim (moves: law always undetermined from the surface). NEGATIVE CONTROL: drop the control's value from the act and the stated-law arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, REC-201's report).
+
+### D-693 · running — **AN ARCHIVE-ONLY CAPTURE'S GRADE READS UNDETERMINED (CAPTURE_GRADE_VIA_UNRULED) THOUGH IT IS RULED: BOB #35 RULED 2026-09-25 07:55Z from doctrine on record (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded) — a capture whose only source is an archive replay (via archive.org) EARNS C as a MEASURED value, the same shape as the direct case, strictly below a direct capture; a capture with NO recorded via stays undetermined, named.** D-177's remainder: its worker could not take the edit and shipped the archive case undetermined. — owner RECORD.
+order: spawned directly after D-177, which it completes (SCHEDULER #23, 2026-09-25)
+milestone: M9
+interface: I5 read semantics — an archive-only capture's leg reads at C; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.2, with ARCHIVE-FALLBACK.md's two-hop GRADE-C chain and AUTHORITY-AND-TRUST's transitive trust as BOB #35 applied them 07:55Z.
+depends-on: none (stacked on land/worker/D-177 @ 406ab5c1, integrated).
+scope: derive the archive letter in store.mjs from BASIS_GRADES, one rank below EARNED_CAPTURE_CEILING (UNREACHABLE_CAPTURE_GRADE's pattern), pinned in the suite to C and to op=acquire's stamped archive letter; captureBound(chain, thatLetter) is the measured letter for an archive-only capture; keep CAPTURE_GRADE_VIA_UNRULED for a via no ruling names; flip suite 9d and nc-d177 arm (b); move the construct probe; fold both 07:55Z rulings into §14.2 and clear its "routed to BOB" bullet.
+accepts-when: a leg on an archive-only capture reads C as measured, and a no-via capture reads undetermined by name (moves: a ruled case read undetermined). NEGATIVE CONTROL: return the archive via to CAPTURE_GRADE_VIA_UNRULED and 9d fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, D-177's report).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
