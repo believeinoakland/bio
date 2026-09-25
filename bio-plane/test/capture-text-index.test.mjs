@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: D-685 (a unit over the acquire wire's budget is carried as its capped prefix, marked truncated), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, THREE NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (`src/index.mjs` 893,432 B sha256 cdf667478865…; `src/store.mjs` 3,473,715 B sha256 03139705cbdb…). Baseline 78/0. Declared before arming: (n) `d685whole` — THE ROW'S CONTROL: charge and carry the WHOLE unit again (the pre-D-685 wire); MUST fail Z1, Z2, Z3, Z4, Z4b, Z5 and MUST NOT move Z5b or Z6 → 72/6, exactly those six BY NAME, as declared. (o) `d685storeflag` — the writer ignores the wire's `truncated: true`; MUST fail Z2 and Z4b alone (the prefix arrives AT the cap, so the writer's own comparison calls it whole) → 76/2, as declared. (p) `d685flagall` — OVER-STRICTNESS: mark every carried unit truncated, cut or not; MUST fail Z5, Z5b, Z6 → 75/3, as declared. Zero undeclared failures on any arm. The fourteen earlier arms re-run on this tree, every one AS DECLARED; their new failures in §Z are each the arm's own subject reaching the new section and are recorded, not smoothed: `noobs` adds Z3/Z5b (the axis reads), `overstrict` Z2/Z3/Z4b (a 64 B capture bound), `d672storeset` Z3/Z5b (no sheet arm in the store's set), `nowire` and `d672nosheets` Z1–Z6 (no units at all). Those last two first THREW at Z6 (`bookDoc.text_units.some` over an absent list) — a finding about the suite, fixed with `?.` so the arm fails Z6 BY NAME instead: `nowire` 53/25, `d672nosheets` 61/17. The BEFORE reading (the HEAD sources swapped in) is M-184: 71/7. */
 /* NEGATIVE CONTROL: D-684 (a text/csv capture read as text at intake reaches its format entry), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, THREE NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (`src/index.mjs` 892,191 B sha256 da5f850111be…, re-run after the D-70 comment rewording). Baseline 70/0. Declared before arming: (k) `d684shortcircuit` — THE ROW'S CONTROL: skip D-684's block so the content-type reader's branch short-circuits again (the pre-D-684 tree); MUST fail Y1 and Y3 and MUST NOT move Y2 (the profile reading is the same either way) or Y4 → 68/2, exactly Y1 and Y3 BY NAME, as declared. (l) `d684certain` — OVER-STRICTNESS: admit the entry only on a CERTAIN detection, which a csv never has (no magic bytes; `likely` by construction); MUST fail Y1 and Y3 → 68/2, as declared. (m) `d684overreach` — SCOPE: write `text_container` for any detected format before the `text()` guard; MUST fail Y4 alone (an HTML reading claiming a container the wire never read) → 69/1, as declared. Zero undeclared failures on any arm. */
 /* NEGATIVE CONTROL: D-672 (the workbook's sheet unit), run 2026-09-25 through `node test/nc-rec91.mjs` from `bio-plane/`, THREE NEW ARMS beside REC-91's seven, every arm ALONE, every restore byte-identical by sha256 AND content (`src/index.mjs` 889,784 B sha256 d62623fb8d0c…; `src/store.mjs` 3,472,630 B sha256 764a2df0f8b1…). Declared before arming: (h) `d672nosheets` — THE ROW'S CONTROL: drop the `sheets[]` arm from `textUnitsFor`; MUST fail B3, B3b, C1, C3c, X1 (the workbook passage search returns 0 rows), X2, X2b and MUST NOT move the document, deck or no-arm arms → 59/7, exactly those seven BY NAME, as declared. (i) `d672storeset` — revert the store's container set to its pre-D-672 five; MUST fail C3c, X2b, X3 and MUST NOT move B3, C1 or X1 — the units are emitted, WRITTEN and FOUND while the observation says the container has no unit arm, the record contradicting itself → 63/3, as declared. (j) `d672strict` — OVER-STRICTNESS: admit a sheet only when its grid bound is stated, dropping the .ods sheet (bound NULL by format, used range measured); MUST fail X2, X2b and MUST NOT move the .xlsx arms → 64/2, as declared. REC-91's arms re-run on this tree: baseline 66/0; `nowire` had NOT ARMED since CPDF-19 moved its anchor line from sixteen spaces of indent to four (matched 0×, a control that could never fail) — re-anchored, now 51/15, 8/8 declared; `armsopen` 64/2 (C3b and X3, X3 newly declared because it reads the set this arm replaces); `noobs` 51/15, `overstrict` 49/17, `replace` 58/8, `nopurge` and `nodelete` -1 (THREW, declared) — every arm AS DECLARED. `d672nosheets` IS the pre-D-672 wire, so it is the before-the-fix reading. */
 /* NEGATIVE CONTROL: D-531 (§W), run 2026-09-25, each arm ALONE with the other site held fixed, restored by `cp` from a uniquely-named pristine copy and verified by sha256 AND `cmp` (`index.mjs` 838,838 B sha256 38590bd40c69…; `store.mjs` 3,329,535 B sha256 bdfbfedbab26…). Declared before arming: (a) `index` — restore `u.text.length` in `index.mjs`'s `arm`; MUST fail W1 and W1b and MUST NOT move W2/W3, because the store's own filter still refuses the blank units → 58/2, W1 and W1b BY NAME, as declared. (b) `store` — restore `u.text.length` in `#writeCaptureText`'s ordering filter; MUST fail W2 and W3 and MUST NOT move W1/W1b → 58/2, W2 and W3 BY NAME, as declared. (c) `overstrict` — `glyphCount(u.text) > 1` at the `arm` site; MUST fail W1b (the one-glyph `§` paragraph dropped) → 58/2, W1b BY NAME and W1 WITH it, which was not declared and is correct: W1 asserts the exact surviving para list, so it sees the same drop. Before the fix, both sites pristine: 56/4 (W1, W1b, W2, W3) — M-154. */
@@ -238,6 +239,44 @@ const ONLY_IN_CSV = "Measure KK bond draw";
 const CSV_BODY = `Line,Item\r\n1,${ONLY_IN_CSV}\r\n2,Library hours\r\n`;
 const HTML_BODY = "<!doctype html><html><head><title>Agenda</title></head><body><p>Item 1: Measure KK</p></body></html>";
 
+/* D-685: WORKBOOKS WHOSE SHEETS ARE OVER THE WIRE'S BUDGET. A sheet is ONE unit (D-672), so its text is
+   the sheet's whole stream — and the acquire wire's budget loop (`textUnitsFor`) charged that WHOLE text
+   against its 524,288 B, dropping any sheet it did not fit, although the store keeps only the first
+   `CAPTURE_TEXT_UNIT_CAP` (131,072) characters of a unit anyway. Each row is one cell of `ROW_W`
+   characters, so a sheet's text is `rows × (ROW_W + 1) − 1` bytes (the producer joins rows with a newline)
+   — ASCII, so characters and bytes agree and the arithmetic below is exact. The OPEN term sits in the
+   sheet's first row, inside any prefix; the CLOSE term in its last row, past the per-unit cap. */
+const ROW_W = 1000;
+const bigSheet = (n, open, close) => sheetXml(Array.from({ length: n }, (_, i) =>
+  [`${i === 0 ? open : i === n - 1 ? close : ""} `
+    .padEnd(ROW_W, String.fromCharCode(97 + (i % 26)))]));  /* the SPACE ends the term's last token */
+const xlsxOf = (sheets) => zip([
+  { name: "[Content_Types].xml", data: `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="${XLSX_MAIN_CT}"/></Types>` },
+  { name: "_rels/.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+  { name: "xl/workbook.xml", data: `<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>`
+      + sheets.map((s, i) => `<sheet name="${s.name}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join("")
+      + `</sheets></workbook>` },
+  { name: "xl/_rels/workbook.xml.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+      + sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join("")
+      + `</Relationships>` },
+  ...sheets.map((s, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`, data: s.xml })),
+]);
+/* (1) ONE sheet over the WHOLE budget: 600 rows, 600,599 B. (2) A sheet over what REMAINS: 300 + 300 rows,
+   the second arriving with 224,087 B left of the budget. (3) THE RESIDUE: four sheets each over the cap —
+   even their capped prefixes (131,072 B + 128 B of envelope each) do not all fit 524,288 B, so the fourth
+   is still dropped; a small fifth after it still fits. */
+const HUGE_OPEN = "Measure ZZ ledger opening line", HUGE_CLOSE = "Measure ZZ ledger closing line";
+const REST_OPEN = "Measure YY appendix opening line", REST_CLOSE = "Measure YY appendix closing line";
+const FOURTH_OPEN = "Measure XX fourth sheet opening line", FIFTH_TERM = "Measure XX small fifth sheet";
+const XLSX_HUGE = xlsxOf([{ name: "Ledger", xml: bigSheet(600, HUGE_OPEN, HUGE_CLOSE) }]);
+const XLSX_REST = xlsxOf([{ name: "First", xml: bigSheet(300, "first", "first") },
+                          { name: "Appendix", xml: bigSheet(300, REST_OPEN, REST_CLOSE) }]);
+const XLSX_FOUR = xlsxOf([{ name: "S1", xml: bigSheet(200, "s1", "s1") },
+                          { name: "S2", xml: bigSheet(200, "s2", "s2") },
+                          { name: "S3", xml: bigSheet(200, "s3", "s3") },
+                          { name: "S4", xml: bigSheet(200, FOURTH_OPEN, "s4") },
+                          { name: "S5", xml: sheetXml([[FIFTH_TERM]]) }]);
+
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -256,6 +295,9 @@ const mf = new Miniflare({
     if (u.pathname === "/blank-paras.docx") return bin(DOCX_WS, DOCX_CT);
     if (u.pathname === "/levies.csv") return bin(CSV_BODY, "text/csv");
     if (u.pathname === "/agenda.html") return bin(HTML_BODY, "text/html");
+    if (u.pathname === "/huge-sheet.xlsx") return bin(XLSX_HUGE, XLSX_CT);
+    if (u.pathname === "/rest-sheet.xlsx") return bin(XLSX_REST, XLSX_CT);
+    if (u.pathname === "/four-sheets.xlsx") return bin(XLSX_FOUR, XLSX_CT);
     return new Response("unscripted", { status: 500 });
   },
 });
@@ -1183,6 +1225,82 @@ console.log("\n--- Y · D-684: a text/csv capture read as profile text is still 
     [htmlDoc?.profile?.format?.format, "text_units" in (htmlDoc || {}),
      "text_container" in (htmlDoc?.reading || {})],
     ["html", false, false]);
+}
+
+/* ========================================================================= *
+ *  Z · D-685 — A UNIT OVER THE WIRE'S BUDGET IS CARRIED AS ITS CAPPED PREFIX
+ * ========================================================================= */
+/* THE ROW'S ACCEPTANCE, THROUGH `op=acquire`, `op=promote` and `passage:`. Until D-685 the wire charged a
+   unit's WHOLE text against its budget and DROPPED a unit that did not fit — though the store would have
+   kept only its first 131,072 characters — so one sheet over 512 KiB left its workbook with NO searchable
+   unit at all. The wire now cuts a unit to the store's per-unit cap, charges what it carries, and marks the
+   cut `truncated: true`; the store honours the flag, because the prefix it receives is no longer over its
+   own cap and its own comparison would call the unit whole. Z5 is what is STILL dropped: a unit whose
+   capped prefix does not fit what remains. The literal 131,072 is `CAPTURE_TEXT_UNIT_CAP`, written here
+   and not read out of the source, so a moved cap moves this suite. */
+console.log("\n--- Z · D-685: a unit over the acquire wire's budget is carried as its capped prefix, marked truncated ---");
+{
+  const CAP = 131072;
+  const hugeDoc = (await acquire("/huge-sheet.xlsx")).document;
+  const hu = hugeDoc?.text_units || [];
+  console.log(`  corpus: huge-sheet.xlsx — 1 sheet of ${600 * (ROW_W + 1) - 1} B of text; rest-sheet.xlsx — 2 sheets `
+            + `of ${300 * (ROW_W + 1) - 1} B; four-sheets.xlsx — 4 sheets of ${200 * (ROW_W + 1) - 1} B and 1 of `
+            + `${FIFTH_TERM.length} B. Wire carried: ${JSON.stringify([hu.map((u) => [u.extent.sheet, u.text.length, u.truncated === true]),
+               hugeDoc?.text_units_over_bound ?? 0])}`);
+  t("Z1: ONE sheet over the whole 524,288 B budget is CARRIED as its first 131,072 characters, marked "
+  + "`truncated: true`, and nothing is counted dropped (moves: a unit silently dropped)",
+    [hugeDoc?.profile?.format?.format, hu.length, hu[0]?.extent, hu[0]?.text.length, hu[0]?.truncated,
+     hu[0]?.text.startsWith(HUGE_OPEN), hugeDoc?.text_units_over_bound ?? 0],
+    ["xlsx", 1, { kind: "sheet-range", sheet: "Ledger", range: "A1:A600" }, CAP, true, true, 0]);
+  await promote("INFO-2026-9310-huge", { document: hugeDoc });
+  const ax = await axisOf(hugeDoc.capture.sha256);
+  const open = (await passageRows(HUGE_OPEN))?.rows || [];
+  const close = (await passageRows(HUGE_CLOSE))?.rows || [];
+  console.log(`  passage:"${HUGE_OPEN}" -> ${JSON.stringify(open.map((r) => [r.ref, r.truncated]))}; `
+            + `passage:"${HUGE_CLOSE}" -> ${close.length} row(s)`);
+  t("Z2: PROMOTED, search FINDS the prefix — the sheet's first row, in its one unit, and the row SAYS it "
+  + "is truncated (the store honours the wire's flag: the text it receives is exactly at its cap, so its "
+  + "own comparison would have called it whole)",
+    open.map((r) => [r.capture_sha, r.extent_kind, r.ref, r.truncated]),
+    [[hugeDoc.capture.sha256, "sheet-range", "Ledger!A1:A600", 1]]);
+  t("Z3: and search does NOT find the sheet's last row, which is past the cap — the prefix is a prefix, and "
+  + "the capture reads indexed with every offered unit written",
+    [close.length, ax.indexed], [0, FULL]);
+
+  const restDoc = (await acquire("/rest-sheet.xlsx")).document;
+  const ru = restDoc?.text_units || [];
+  t("Z4: a sheet over what REMAINS of the budget (the second of two 300,299 B sheets) is carried as its "
+  + "capped prefix too, and both are marked",
+    [ru.map((u) => [u.extent.sheet, u.text.length, u.truncated]), ru[1]?.text.startsWith(REST_OPEN),
+     restDoc?.text_units_over_bound ?? 0],
+    [[["First", CAP, true], ["Appendix", CAP, true]], true, 0]);
+  await promote("INFO-2026-9310-rest", { document: restDoc });
+  t("Z4b: and the second sheet's first row is FOUND through `passage:`, marked truncated",
+    ((await passageRows(REST_OPEN))?.rows || []).map((r) => [r.ref, r.truncated]),
+    [["Appendix!A1:A300", 1]]);
+
+  /* THE RESIDUE, STATED BY MEASUREMENT. A capped unit costs 131,072 + 128 = 131,200 B; three cost 393,600 and
+     leave 130,688, which a fourth capped unit does not fit. So S4 is DROPPED, COUNTED, and the capture reads
+     PARTIAL — and the small S5 after it still fits, because the loop skips a unit and goes on. */
+  const fourDoc = (await acquire("/four-sheets.xlsx")).document;
+  const fu = fourDoc?.text_units || [];
+  t("Z5: WHAT IS STILL DROPPED — when even the capped prefixes exceed the budget the fourth 200,199 B sheet "
+  + "does not fit the 130,688 B left and is dropped AND COUNTED; the small fifth still fits",
+    [fu.map((u) => [u.extent.sheet, u.text.length, u.truncated === true]), fourDoc?.text_units_over_bound],
+    [[["S1", CAP, true], ["S2", CAP, true], ["S3", CAP, true], ["S5", FIFTH_TERM.length, false]], 1]);
+  await promote("INFO-2026-9310-four", { document: fourDoc });
+  const ax4 = await axisOf(fourDoc.capture.sha256);
+  t("Z5b: promoted, the capture reads PARTIAL, the dropped sheet's text is NOT found and the fifth's is",
+    [ax4.indexed, ((await passageRows(FOURTH_OPEN))?.rows || []).length,
+     ((await passageRows(FIFTH_TERM))?.rows || []).map((r) => [r.ref, r.truncated])],
+    [PARTIAL, 0, [["S5!A1:A1", 0]]]);
+  const s5 = fu.find((u) => u.extent.sheet === "S5");   /* by NAME: its position moves with what was dropped */
+  /* OVER-STRICTNESS: a unit UNDER the cap is carried whole and carries NO flag — the wire marks only what
+     it cut, so an ordinary document's units are unchanged byte for byte. */
+  t("Z6: a unit under the cap is carried WHOLE and unmarked — the workbook of section B and the fifth sheet "
+  + "carry no `truncated` key at all",
+    [bookDoc.text_units?.some((u) => "truncated" in u), "truncated" in (s5 || {}), s5?.text === FIFTH_TERM],
+    [false, false, true]);
 }
 
 /* THE STORE'S HALF, READ OUT OF THE SOURCE. The writer never reads the kind, so

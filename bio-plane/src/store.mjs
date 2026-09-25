@@ -764,7 +764,10 @@ const TASK_KINDS = ["authority-undetermined"];
  * a 524,288 B budget. It bites on exactly one thing: a caller-authored
  * provenance document of many tiny units, which is the case section 4.3 named
  * and the case nothing stated. */
-const CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
+/* D-685: EXPORTED, because the acquire wire (`textUnitsFor`, `index.mjs`) now cuts a unit to this cap
+   BEFORE charging its budget — the wire and the writer must cut at ONE number, or the wire would carry
+   (and pay for) text this writer throws away, or cut short of what it would keep. */
+export const CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
@@ -19975,7 +19978,8 @@ export class Store extends DurableObject {
       .filter((u) => u && typeof u === "object" && typeof u.text === "string"
                      && glyphCount(u.text) > 0)
       .map((u, i) => ({ extent: u.extent, text: u.text,
-                        seq: Number.isInteger(u.seq) ? u.seq : i }))
+                        seq: Number.isInteger(u.seq) ? u.seq : i,
+                        wireCut: u.truncated === true }))
       .sort((a, b) => a.seq - b.seq);
 
     let bytes = 0, written = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
@@ -20017,13 +20021,21 @@ export class Store extends DurableObject {
       if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND
           || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; continue; }
       bytes += size;
-      if (capped.length < full.length) truncatedUnits++;
+      /* D-685 -- A UNIT THE WIRE ALREADY CUT IS A TRUNCATED UNIT, AND THIS WRITER CANNOT SEE THAT FOR
+         ITSELF. The acquire wire now carries a unit over the cap as its first `CAPTURE_TEXT_UNIT_CAP`
+         characters marked `truncated: true` (it used to drop it whole), so the text arriving here is AT
+         the cap and the comparison below would call it whole -- the record saying it holds a passage
+         entire where it holds a prefix. So the flag is honoured, OR'd with this writer's own cut. It is
+         a flag a caller's authored `provenance.json` can set too, and that is safe in the one direction
+         it can move: a caller can make a unit read LESS complete than it is, never more. */
+      const cut = capped.length < full.length || u.wireCut;
+      if (cut) truncatedUnits++;
       this.sql.exec(
         `INSERT INTO capture_text
            (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind)
          VALUES (?,?,?,?,?,?,?,?,?)`,
         captureSha, bundleId, kind, extent, describeExtent(u.extent), u.seq,
-        capped, capped.length < full.length ? 1 : 0, chainKind);
+        capped, cut ? 1 : 0, chainKind);
       written++;
     }
     return { written, bytes, truncated: truncatedUnits, over_bound: overBound,

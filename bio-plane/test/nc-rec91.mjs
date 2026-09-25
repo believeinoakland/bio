@@ -422,6 +422,49 @@ const ARMS = {
       "        if (pentry && typeof pentry.text === \"function\") {",
       "        if (pentry) reading.text_container = pfmt;   /* ARMED */\n        if (pentry && typeof pentry.text === \"function\") {"),
   },
+
+  /* D-685's ROW CONTROL: charge the WHOLE unit again and carry it uncut — the wire exactly as it was.
+     A sheet over the budget is dropped whole, so its prefix is neither carried nor found. */
+  d685whole: {
+    files: [INDEX], suite: SUBJECT,
+    why: "charge and carry the unit's whole text, the pre-D-685 wire: a unit over what remains of "
+       + "the budget is dropped whole rather than carried as its capped prefix",
+    mustFail: ["Z1: ONE sheet over the whole", "Z2: PROMOTED, search FINDS the prefix",
+               "Z3: and search does NOT find", "Z4: a sheet over what REMAINS",
+               "Z4b: and the second sheet's first row", "Z5: WHAT IS STILL DROPPED"],
+    mustPass: "`Z5b` (the dropped sheet is unfound and S5 found either way) and `Z6` (an under-cap "
+            + "unit was never marked), and every earlier arm",
+    patch: () => arm(INDEX,
+      "      const cut = u.text.length > CAPTURE_TEXT_UNIT_CAP;",
+      "      const cut = false /* ARMED */ && u.text.length > CAPTURE_TEXT_UNIT_CAP;"),
+  },
+
+  /* D-685's STORE HALF: the wire carries the prefix and marks it, and the writer ignores the mark.
+     The prefix is AT the cap, so the writer's own comparison calls it whole: indexed and FOUND, but
+     the row says truncated = 0 — the record holding a prefix and claiming the passage entire. */
+  d685storeflag: {
+    files: [STORE], suite: SUBJECT,
+    why: "the writer ignores the wire's `truncated: true`, so a prefix cut at the cap reads whole",
+    mustFail: ["Z2: PROMOTED, search FINDS the prefix", "Z4b: and the second sheet's first row"],
+    mustPass: "`Z1`, `Z3`, `Z4`, `Z5`, `Z5b`, `Z6` — the wire is untouched, and every earlier arm",
+    patch: () => arm(STORE,
+      "      const cut = capped.length < full.length || u.wireCut;",
+      "      const cut = capped.length < full.length /* ARMED */;"),
+  },
+
+  /* D-685's OVER-STRICTNESS DIRECTION: mark EVERY carried unit truncated, the "safe-looking" way to be
+     sure no cut goes unsaid. It is not safe: an ordinary unit carried whole would read as a prefix, so a
+     member would distrust a passage the record holds entire. */
+  d685flagall: {
+    files: [INDEX], suite: SUBJECT,
+    why: "mark every carried unit `truncated: true`, cut or not",
+    mustFail: ["Z5: WHAT IS STILL DROPPED", "Z5b: promoted, the capture reads PARTIAL",
+               "Z6: a unit under the cap is carried WHOLE"],
+    mustPass: "`Z1`-`Z4b` (a cut unit is marked either way)",
+    patch: () => arm(INDEX,
+      "      budget -= size; kept.push(cut ? { ...u, text, truncated: true } : u);",
+      "      budget -= size; kept.push({ ...u, text, truncated: true } /* ARMED */);"),
+  },
 };
 
 const want = process.argv[2];

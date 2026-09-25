@@ -49369,7 +49369,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const ordered = list.filter((u) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0).map((u, i) => ({
       extent: u.extent,
       text: u.text,
-      seq: Number.isInteger(u.seq) ? u.seq : i
+      seq: Number.isInteger(u.seq) ? u.seq : i,
+      wireCut: u.truncated === true
     })).sort((a, b) => a.seq - b.seq);
     let bytes = 0, written = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
     const seen = /* @__PURE__ */ new Set();
@@ -49393,7 +49394,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         continue;
       }
       bytes += size;
-      if (capped.length < full.length) truncatedUnits++;
+      const cut = capped.length < full.length || u.wireCut;
+      if (cut) truncatedUnits++;
       this.sql.exec(
         `INSERT INTO capture_text
            (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind)
@@ -49405,7 +49407,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         describeExtent(u.extent),
         u.seq,
         capped,
-        capped.length < full.length ? 1 : 0,
+        cut ? 1 : 0,
         chainKind
       );
       written++;
@@ -82964,13 +82966,15 @@ function textUnitsFor(i2text) {
     ) : null;
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
     for (const u of units || []) {
-      const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      const cut = u.text.length > CAPTURE_TEXT_UNIT_CAP;
+      const text = cut ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
+      const size = new TextEncoder().encode(text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size > budget) {
         dropped++;
         continue;
       }
       budget -= size;
-      kept.push(u);
+      kept.push(cut ? { ...u, text, truncated: true } : u);
     }
     textUnits = kept.length ? kept : null;
     textUnitsOverBound = dropped;

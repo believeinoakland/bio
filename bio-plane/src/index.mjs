@@ -310,7 +310,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
 }
 import { cpuProbe } from "./cpu.mjs";
 import { readingProvenance } from "./readingprov.mjs";
-import { Store, stampInstant } from "./store.mjs";
+import { Store, stampInstant, CAPTURE_TEXT_UNIT_CAP } from "./store.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -5218,9 +5218,22 @@ function textUnitsFor(i2text) {
          CPU window at ~3,900 units at that corpus's mean unit size.
          Two independent limits agreeing is not evidence of either —
          it is a coincidence worth noticing and not resting on. */
-      const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      /* D-685 -- A UNIT IS CHARGED WHAT IT CARRIES, AND IT CARRIES NO MORE THAN THE STORE KEEPS.
+         This charged the unit's WHOLE text and dropped the unit when that did not fit, though
+         `#writeCaptureText` keeps only its first `CAPTURE_TEXT_UNIT_CAP` characters -- so one sheet
+         over 512 KiB (a sheet is ONE unit, D-672) left its workbook with NO searchable unit, and a
+         300 KB sheet spent 300 KB of budget on text the store then discarded (M-184). The unit is
+         cut HERE, at the store's own number and in its own unit (characters, `slice`), so the prefix
+         the store receives is the prefix it would have kept; it is charged the prefix's UTF-8 bytes;
+         and the cut is SAID, `truncated: true`, because the store cannot see a cut made before it.
+         WHAT IS STILL DROPPED: a unit whose capped prefix plus envelope exceeds what remains -- at
+         most three full-cap units fit (3 x 131,200 B leaves 130,688), so a fourth is dropped and
+         counted, and the capture reads `partial`. */
+      const cut = u.text.length > CAPTURE_TEXT_UNIT_CAP;
+      const text = cut ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
+      const size = new TextEncoder().encode(text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size > budget) { dropped++; continue; }
-      budget -= size; kept.push(u);
+      budget -= size; kept.push(cut ? { ...u, text, truncated: true } : u);
     }
     textUnits = kept.length ? kept : null;
     textUnitsOverBound = dropped;
