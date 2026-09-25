@@ -4219,16 +4219,18 @@ export class Store extends DurableObject {
      apart from a member rewriting the analysis without inventing a second
      record of the same fact.
 
-     "Latest" is `created DESC, rowid DESC` (D-171), the order REC-32's
+     "Latest" is `rowid DESC`, the store's own write order (D-674), the order REC-32's
      #conditionsCaptureUnattended reads, and the two sites agree on purpose.
-     `created` is the DOCUMENT's time (promote stores the document's last_updated, D-615), so two
-     revisions can tie on it; `snap_key` is an opaque caller-chosen string whose
-     lexical order is not a clock, so a `snap_key DESC` tiebreak named the WRONG
-     writer whenever the later write carried the smaller key. `rowid` is the
-     store's own write order. */
+     `created` is the DOCUMENT's own date (promote stores the document's last_updated, D-615 —
+     the writer's statement in the bytes, not the wall clock), so two revisions can tie on it
+     (D-171) and a caller can date a revision BEFORE the one it follows (D-674): ordered by it,
+     an authored amendment backdated under a mechanical revision read "mechanical". `snap_key`
+     is an opaque caller-chosen string whose lexical order is not a clock either, so a
+     `snap_key DESC` tiebreak named the WRONG writer whenever the later write carried the
+     smaller key. `rowid` is the store's own write order. */
   #revisionKind(bundleId) {
     const m = this.#one(
-      `SELECT writer, operation FROM manifest WHERE bundle_id=? ORDER BY created DESC, rowid DESC LIMIT 1`, bundleId);
+      `SELECT writer, operation FROM manifest WHERE bundle_id=? ORDER BY rowid DESC LIMIT 1`, bundleId);
     if (!m) return { class: "unknown" };
     return m.writer === "mechanical"
       ? { class: "mechanical", operation: m.operation || null }
@@ -30159,14 +30161,18 @@ export class Store extends DurableObject {
    *  condition here, because it is a property of the manifest and not of a
    *  reader.
    *
-   *  ORDERING. `created` is the DOCUMENT's own time (promote records
-   *  the document's last_updated (D-615), never the wall clock — C-12.1 depends on that). The
-   *  tiebreak is `rowid DESC`, the store's own write order, because `snap_key`
-   *  is an opaque caller-chosen string and its lexical order is not a clock: two
-   *  snapshots stamped at the same instant would otherwise be ordered by a hash.
-   *  #revisionKind reads the latest manifest entry by this SAME order since
-   *  D-171 (it tiebroke on `snap_key DESC` until then, and named the wrong
-   *  writer on a tie); the two sites agree on purpose. */
+   *  ORDERING. The SEQUENCE is write order, `rowid` (D-674). `created` is the
+   *  DOCUMENT's own date (promote records the document's last_updated, D-615 —
+   *  the writer's statement in the bytes, never the wall clock; C-12.1 depends on
+   *  that), so it can tie (D-171) and a caller can date a revision before the one
+   *  it follows: ordered by it, a person who came back with an earlier date still
+   *  read as walked away from, and a second person who backdated under the first
+   *  was named as the one who started. It is reported in the basis as each
+   *  writer's date, never used to order. `snap_key` is an opaque caller-chosen
+   *  string and its lexical order is not a clock either: two snapshots stamped at
+   *  the same instant would otherwise be ordered by a hash. #revisionKind reads
+   *  the latest manifest entry by this SAME order (it tiebroke on `snap_key DESC`
+   *  until D-171, and named the wrong writer on a tie); the two sites agree on purpose. */
   #conditionsCaptureUnattended(viewer, now, identity = null) {
     const out = [];
     const machine = `${Store.QUEUE_MACHINE_AUTHOR_PREFIX}*`;
@@ -30178,13 +30184,13 @@ export class Store extends DurableObject {
       machine, ...seen.args)) {
       const latest = this.#one(
         `SELECT snap_key, kind, base, author, created, writer, operation FROM manifest
-          WHERE bundle_id=? ORDER BY created DESC, rowid DESC LIMIT 1`, b.bundle_id);
+          WHERE bundle_id=? ORDER BY rowid DESC LIMIT 1`, b.bundle_id);
       if (!latest || !String(latest.author || "").startsWith(Store.QUEUE_MACHINE_AUTHOR_PREFIX))
         continue;                       // a person wrote last: the member came back
       const started = this.#one(
         `SELECT snap_key, author, created FROM manifest
           WHERE bundle_id=? AND author IS NOT NULL AND author <> '' AND NOT (author GLOB ?)
-          ORDER BY created, rowid LIMIT 1`, b.bundle_id, machine);
+          ORDER BY rowid LIMIT 1`, b.bundle_id, machine);
       if (!started) continue;           // never a person's document: nobody walked away
       const createdMs = Date.parse(latest.created);
       const title = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, b.bundle_id);
@@ -38166,11 +38172,11 @@ export class Store extends DurableObject {
            re-derive the chain rather than believe it. `history` holds the
            snapshotted FILES; `manifest` holds the promotion records that link
            them, which is what a chain check actually walks. */
-        /* REC-182: `created` is the document's own time and two promotions can tie on it; a tie is
-           broken by `rowid`, the store's write order (D-171's precedent), never by the scan. */
+        /* D-674: in WRITE order, `rowid`. `created` is the WRITER's date: it can tie (REC-182) and a caller
+           can date a promotion before the one it follows, so it is published on each row and orders nothing. */
         promotions: this.#rows(
           `SELECT snap_key, kind, base, author, created, writer, operation
-           FROM manifest WHERE bundle_id=? ORDER BY created, rowid`, b.bundle_id),
+           FROM manifest WHERE bundle_id=? ORDER BY rowid`, b.bundle_id),
         snapshots: this.#rows(
           `SELECT snap_key, path, sha256, created FROM history WHERE bundle_id=? ORDER BY snap_key, path`,
           b.bundle_id),
@@ -39238,8 +39244,8 @@ export class Store extends DurableObject {
       return { ok: false, reason: "ABSENT", bundleId };
     return {
       ok: true, row,
-      /* REC-182: on a `created` tie the prior promotion is the one WRITTEN first (`rowid`, D-171). */
-      manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created, rowid`, bundleId),
+      /* D-674: the prior promotion is the one WRITTEN before (`rowid`), never the one the writer DATED before. */
+      manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY rowid`, bundleId),
       history: this.#rows(`SELECT snap_key, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`, bundleId),
       registers: this.#rows(`SELECT capture_sha, path, bytes FROM register WHERE bundle_id=?`, bundleId),
       /* MK-1 (A): whether this bundle IS, or RESTS ON, a member's authored

@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: RUN 2026-09-23 (REC-182 worker) by `node test/rec-182-created-tie.control.mjs`, each arm ALONE, restored from a per-arm pristine copy and verified by sha256 AND byte compare (src/store.mjs 2,903,292 B sha256 aabc6f1a0980…); baseline 7 pass / 0 fail.
    (export) `exportManifest`'s promotions `ORDER BY created, rowid` -> `ORDER BY created`. DECLARED: §1 fails; §2, §3 hold. RESULT 6/1, AS DECLARED — "§1 op=export returns the promotions tied on created in WRITE order, on every one of five reads".
-   (gate) `gateFacts`' manifest `ORDER BY created, rowid` -> `ORDER BY created`. DECLARED: §2 fails; §1, §3 hold. RESULT 6/1, AS DECLARED — "§2 the gate's facts return the manifest tied on created in WRITE order, on every one of five reads". */
+   (gate) `gateFacts`' manifest `ORDER BY created, rowid` -> `ORDER BY created`. DECLARED: §2 fails; §1, §3 hold. RESULT 6/1, AS DECLARED — "§2 the gate's facts return the manifest tied on created in WRITE order, on every one of five reads".
+   RE-RUN 2026-09-25 (D-674 worker) after D-674 moved both sites to `ORDER BY rowid` and the control's anchors with them (its CORRECTED note): baseline 7/0; (export) 6/1 and (gate) 6/1, both AS DECLARED, the same assertions by name. */
 /* =========================================================================
  * REC-182 — ON A `created` TIE, A MANIFEST READ RETURNS WRITE ORDER.
  * State Rules & Consistency v1.5 §6, I-20 (*relative to the immediately prior
