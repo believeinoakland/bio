@@ -16,7 +16,9 @@
    (c) fundbare RED 41/1, "a fund code alone never counts — not even on a caller's reading" · (d) formjoin RED 39/3,
    exactly the two cross-form arms and "it says no crosswalk is captured" · (e) overstrict GREEN 42/0. idspaces.mjs
    restored after each arm to sha256 0cb6b2a508d6… (16,309 B), cmp-identical to its per-arm pristine copy. ALL FIVE
-   AS DECLARED. One INSTRUMENT correction before the run, recorded at its arm: the APN "never RETIRED by absence"
+   AS DECLARED. RE-RUN 2026-09-25 after the BOUND section was added (45 assertions): baseline 45/0 · independence
+   44/1 · fundbare 44/1 · formjoin 42/3 · overstrict 45/0, the same assertions failing by name, every restore
+   IDENTICAL at 0cb6b2a508d6…. One INSTRUMENT correction before the run, recorded at its arm: the APN "never RETIRED by absence"
    assertion first matched words and caught the answer's own "retired before the lineage".
  * =========================================================================
  * rec203-idspaces.test.mjs — REC-203. THE RECOGNISERS AND THE COUNTING RULE OF
