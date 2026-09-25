@@ -1560,7 +1560,7 @@ async function boot(){
      && !actionRouteFromHash() && !aiSessionRouteFromHash()
      && !versionReviewRouteFromHash() && !stanceRouteFromHash()
      && !acceptCeremonyRouteFromHash() && !draftRouteFromHash()
-     && !themeRouteFromHash()) go("queue", true);
+     && !themeRouteFromHash() && !leadRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -1582,6 +1582,9 @@ const RAIL = [
      always returned actions; nothing here asks the plane for anything new. */
   {id:"actions",  icon:"i-external", label:"Actions"},
   {id:"projects", icon:"i-projects", label:"Projects"},
+  /* D-194: a member's LEADS (MEMBER-KNOWLEDGE-DESIGN.md §5) — the plane half was built and
+     nothing here reached it. */
+  {id:"leads",    icon:"i-focus",    label:"Leads"},
   {id:"review",   icon:"i-review",   label:"Review"},
   /* THE MONITORING ENTRY WAS DELETED HERE ON 2026-08-05 BY UI-21, and the ROUTE
      KEY IS KEPT (see the router) so an existing link still lands somewhere true.
@@ -1637,7 +1640,7 @@ function navLabel(p){
   if(p.type==="bundle") return "the document";
   if(p.type==="inquiry") return "the question";
   if(p.type==="action") return "the action";
-  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",themes:"Themes",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",themes:"Themes",inquiries:"Questions",actions:"Actions",projects:"Projects",leads:"Leads",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -1693,7 +1696,7 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",themes:"Themes",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",themes:"Themes",inquiries:"Questions",actions:"Actions",projects:"Projects",leads:"Leads",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","inquiries","actions","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
@@ -1731,7 +1734,9 @@ async function go(screen, fromNav){
        through the finder scope the same way inquiries/monitoring do. */
     actions: ()=>renderFinder({ scope:"actions" }),
     themes: thmRenderList,   /* UI-76 */
-    review: renderReview, members: renderMembers, add: renderAdd, bundle: null
+    review: renderReview, members: renderMembers, add: renderAdd,
+    /* D-194: the lead surface (`renderLeads`, in the LEADS block). */
+    leads: renderLeads, bundle: null
   };
   if(R[screen]) await R[screen]();
 }
@@ -2361,6 +2366,21 @@ const SURFACES = {
     levels: ["meaning", "documents"],
     acts: [],
     reads: ["casedraft", "reviewcopy", "reviewgrant", "reviewrevoke", "reviewcomment", "statementack"],
+  },
+  /* D-194 · A MEMBER'S LEAD (MEMBER-KNOWLEDGE-DESIGN.md §5). `acts` is EMPTY for the
+     review copy's reason: none of the four lead ops is in the plane's act catalogue — a
+     lead is not a bundle and nothing on it is a move of one — so they are this surface's
+     READS and writes, each reached from the page. The list is the internet level of
+     `op=frontier`, which is the plane's list of the leads a viewer may read. */
+  lead: {
+    routes: ["screen:leads", "hash:leads", "hash:lead"],
+    purpose: "What a member was told or has reason to believe, and where it might be found, written down before anyone has looked: somewhere to look and never evidence. The member records each time they follow it and what came of it, including that they looked and it was not there, and the lead stays theirs alone until they share it to a project they have joined.",
+    /* NOT "internet", though a look is recorded at the observation log's internet level:
+       in this registry "internet" means reaching the open internet through the capture
+       path (ARM L6), and this surface fetches nothing — the member looks, and says so. */
+    levels: [],
+    acts: [],
+    reads: ["lead", "leadlook", "leadread", "leadshare", "frontier"],
   },
   "published-case": {
     routes: ["hash:case"],
@@ -26698,6 +26718,281 @@ function themeRouteFromHash(){
 }
 try{ window.addEventListener("hashchange", ()=>{ if(!THM_HASH_LOCK) themeRouteFromHash(); }); }catch(_){}
 /*__THEMES_END__*/
+
+/*__LEADS_START__*/
+/* ============================================================
+   D-194 · A MEMBER'S LEAD — the same knowledge, before the search.
+
+   DESIGN: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5. The plane half is
+   MK-4's (IC-135, IC-136) and REC-129's (IC-143); nothing below asks the plane
+   for anything it did not already publish.
+
+     WRITE  — `op=lead`: the member's words and, if they have one, where to look.
+              The author is the plane's stamp, never a field here. Nothing is
+              prefilled (DEC-69), and nothing is refused here that the plane
+              would take: an empty lead goes to the plane, which says why not.
+     LOOK   — `op=leadlook`: the member records that they followed it and what
+              came of it. No outcome is preselected: which one is the member's
+              finding, and a default would be a finding nobody made.
+     READ   — `op=leadread`: the lead, its looks and where it is shared.
+     LIST   — `op=frontier&level=internet`: the plane's list of the leads THIS
+              viewer may read, the latest look at each and each nobody has
+              followed. There is no list op of the lead's own (D-681): the
+              frontier keeps the latest look per SUBJECT, the lead's words.
+     SHARE  — `op=leadshare`: the author's own act, to one project. Nothing on
+              this surface shares a lead as a side effect of anything else.
+
+   A lead is never evidence, and a lead the viewer may not read is answered by
+   the plane exactly as one that does not exist; its refusal is rendered in its
+   own words (DEC-49), through `refusalWords`, and never re-worded here. */
+
+/* WHAT A LOOK'S STATE MEANS, MIRRORED FROM THE PLANE'S OWN VOCABULARY
+   (`OBSERVATION_STATES` in `bio-plane/src/airun.mjs`), whose wording this copies
+   and does not improve. It is a MIRROR only because no lead op publishes it
+   (D-682); `lead-surface.test.mjs` imports the
+   plane's table and fails if a key here is missing there or a sentence here is
+   not the plane's own sentence. `partial`'s sentence stops where the plane's
+   continues into a measurement note meant for its maintainers. */
+const LEAD_STATE_WORDS = {
+  NEVER_LOOKED:         "nobody looked at this level for this subject",
+  LOOKED_ABSENT:        "we looked and it is positively not there",
+  LOOKED_INDETERMINATE: "we looked and could not tell",
+  PRESENT:              "we looked and it is there",
+  partial:              "we looked and got part of it",
+};
+/* The outcomes a look may RECORD, in the plane's order (`Store.LEAD_LOOK_OUTCOMES`);
+   NEVER_LOOKED is what the record says of a lead with no look, never a choice. */
+const LEAD_LOOK_CHOICES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
+const LEAD_UNREACHED = "This page could not reach the record just now, so nothing is shown. Nothing about any lead is implied by that.";
+
+let LDS = null;              /* the surface's state */
+let LD_HASH_LOCK = false;
+
+function ldIsAnswer(e){ return !!(e && typeof e === "object" && ("reason" in e || "detail" in e || "error" in e || "translation" in e)); }
+function ldRefusalHtml(r){
+  return '<div class="intent-ref" data-lead-refusal><div class="intent-ref-why">'
+    + esc(refusalWords(r) || "The record refused this and said nothing further.") + '</div></div>';
+}
+function ldStateHtml(st){
+  const s = String(st || "");
+  const words = LEAD_STATE_WORDS[s];
+  return '<span class="lead-state" data-lead-state="' + esc(s) + '">'
+    + esc(words || "the record gave a state this page has no words for") + '</span>';
+}
+/* WHAT THIS SURFACE ASKS FOR, and never what it tells a member: the sentence under each list
+   states the bound the RECORD published (`limit`, `truncated`), read off the answer where it
+   is read, so a hand-typed figure cannot reach a member (bound-sweep WALK 2, ARM E, ARM G).
+   Not through `meaningBoundHtml`: that composer is the meaning layer's, fenced to its three
+   units by ARM H6, and a lead is not meaning. */
+const LEAD_ASK_LIMIT = 200;
+function ldBoundSentence(limit, truncated, what){
+  const bound = Number(limit);
+  if(!(Number.isFinite(bound) && bound > 0))
+    return "The record did not say what bound it applied to " + what + ", so this page cannot tell you whether all of them are here.";
+  return "The record answered " + what + " at a bound of " + bound + "."
+    + (truncated === true ? " The record says that answer was cut: it holds more than it returned here." : "");
+}
+function ldSetHash(h){
+  LD_HASH_LOCK = true;
+  try{ location.hash = h; }catch(_){}
+  LD_HASH_LOCK = false;
+}
+function ldField(k, v){ if(LDS) LDS[k] = String(v == null ? "" : v); }
+
+/* ---------------- THE LIST, AND WRITING A LEAD ---------------- */
+async function renderLeads(){
+  LDS = { mode:"list", list:null, err:null, words:"", locator:"", writeRefusal:null, busy:true };
+  ldSetHash("#leads");
+  await ldListLoad();
+}
+async function ldListLoad(){
+  if(!LDS || LDS.mode !== "list") return;
+  LDS.busy = true; ldPaint();
+  try{
+    const r = await recR("frontier", { level: "internet", limit: String(LEAD_ASK_LIMIT) });
+    LDS.list = r; LDS.bound = ldBoundSentence(r && r.limit, r && r.truncated, "the leads you may read, followed and not followed each"); LDS.err = null;
+  }
+  catch(e){ LDS.list = null; LDS.bound = ""; LDS.err = ldIsAnswer(e) ? e : { detail: LEAD_UNREACHED }; }
+  LDS.busy = false;
+  ldPaint();
+}
+async function ldWrite(){
+  if(!LDS || LDS.mode !== "list" || LDS.writing) return;
+  LDS.writing = true; LDS.writeRefusal = null; ldPaint();
+  const body = { words: LDS.words || "" };
+  if(LDS.locator) body.locator = LDS.locator;
+  let r;
+  try{ r = await recPostR("lead", body); }
+  catch(e){ r = ldIsAnswer(e) ? e : { detail: LEAD_UNREACHED }; }
+  LDS.writing = false;
+  if(r && r.ok === true && r.lead_id){
+    await ldOpen(r.lead_id);
+    if(LDS) { LDS.written = r; ldPaint(); }
+    return;
+  }
+  LDS.writeRefusal = r || {}; ldPaint();
+}
+function ldRowHtml(lead, words, state, at){
+  return '<div class="card" data-lead-row="' + esc(lead) + '" onclick="ldOpen(\'' + esc(lead) + '\')">'
+    + '<div class="kv"><span class="mono">' + esc(lead) + '</span></div>'
+    + '<div class="prose"><p>' + esc(words) + '</p></div>'
+    + '<div class="subj-note">' + ldStateHtml(state) + (at ? ' &middot; <span class="mono">' + esc(at) + '</span>' : '') + '</div></div>';
+}
+function ldListHtml(){
+  const head = '<div class="trow"><h1 class="rec">Leads</h1></div>'
+    + '<p class="subj-note">A lead is something you were told or have reason to believe, and where it might be found. '
+    + 'It is somewhere to look and never evidence: nothing in a case can rest on it. Only you can read a lead you write, '
+    + 'until you share it to a project you have joined.</p>';
+  const form = '<div class="intent-box" data-lead-write><div class="kv"><span class="k">What you were told, or suspect</span></div>'
+    + '<textarea class="txt" id="lead-words" rows="3" onchange="ldField(\'words\', this.value)">' + esc(LDS.words || "") + '</textarea>'
+    + '<div class="kv"><span class="k">Where to look, if you know (optional)</span></div>'
+    + '<input class="txt" id="lead-locator" value="' + esc(LDS.locator || "") + '" onchange="ldField(\'locator\', this.value)">'
+    + (LDS.writeRefusal ? ldRefusalHtml(LDS.writeRefusal) : '')
+    + '<button class="btn" id="lead-write" onclick="ldWrite()">Record the lead</button></div>';
+  if(LDS.busy && !LDS.list) return head + form + '<div class="empty">Reading your leads.</div>';
+  if(LDS.err) return head + form + ldRefusalHtml(LDS.err);
+  const f = LDS.list || {};
+  const looked = Array.isArray(f.looked) ? f.looked : [];
+  const never = Array.isArray(f.never_looked) ? f.never_looked : [];
+  const rows = looked.map(r => ldRowHtml(r.lead, r.subject, r.state, r.at)).join("")
+    + never.map(r => ldRowHtml(r.lead, r.subject, "NEVER_LOOKED", r.at)).join("");
+  const none = (!looked.length && !never.length)
+    ? '<div class="empty" data-lead-empty>' + esc((f.empty && f.empty.says) || "There is no lead here you may read.") + '</div>' : '';
+  return head + form + '<h2 class="sec">The leads you may read</h2>' + rows + none
+    + '<p class="subj-note" data-lead-bound>' + esc(LDS.bound || '') + '</p>';
+}
+
+/* ---------------- ONE LEAD: ITS LOOKS, RECORDING ONE, SHARING IT ---------------- */
+async function ldOpen(leadId){
+  const id = String(leadId == null ? "" : leadId).trim();
+  if(!id) return;
+  LDS = { mode:"one", id, read:null, refusal:null, err:null, busy:true, written:null,
+          lookState:"", lookDetail:"", lookKind:"", lookRef:"", lookRefusal:null, looked:null,
+          project:"", shareRefusal:null, shared:null };
+  ldSetHash("#lead/" + id);
+  await ldLoad();
+}
+async function ldLoad(){
+  if(!LDS || LDS.mode !== "one") return;
+  LDS.busy = true; ldPaint();
+  try{
+    const r = await recR("leadread", { id: LDS.id, limit: String(LEAD_ASK_LIMIT) });
+    if(r && r.ok === true){ LDS.read = r; LDS.bound = ldBoundSentence(r.limit, r.truncated, "this lead's looks"); LDS.refusal = null; }
+    else { LDS.read = null; LDS.bound = ""; LDS.refusal = r || {}; }
+    LDS.err = null;
+  }catch(e){ LDS.read = null; if(ldIsAnswer(e)) LDS.refusal = e; else LDS.err = LEAD_UNREACHED; }
+  LDS.busy = false;
+  ldPaint();
+}
+async function ldLook(){
+  if(!LDS || LDS.mode !== "one" || !LDS.read) return;
+  LDS.lookRefusal = null; LDS.looked = null;
+  const body = { lead: LDS.id, state: LDS.lookState || "" };
+  if(LDS.lookDetail) body.detail = LDS.lookDetail;
+  if(LDS.lookKind) body.resultKind = LDS.lookKind;
+  if(LDS.lookRef) body.resultRef = LDS.lookRef;
+  let r;
+  try{ r = await recPostR("leadlook", body); }
+  catch(e){ r = ldIsAnswer(e) ? e : { detail: LEAD_UNREACHED }; }
+  if(r && r.ok === true){ LDS.looked = r; LDS.lookState = ""; LDS.lookDetail = ""; LDS.lookKind = ""; LDS.lookRef = ""; }
+  else LDS.lookRefusal = r || {};
+  await ldLoad();
+}
+async function ldShare(){
+  if(!LDS || LDS.mode !== "one" || !LDS.read) return;
+  LDS.shareRefusal = null; LDS.shared = null;
+  let r;
+  try{ r = await recPostR("leadshare", { lead: LDS.id, project: LDS.project || "" }); }
+  catch(e){ r = ldIsAnswer(e) ? e : { detail: LEAD_UNREACHED }; }
+  if(r && r.ok === true){ LDS.shared = r; LDS.project = ""; }
+  else LDS.shareRefusal = r || {};
+  await ldLoad();
+}
+function ldLooksHtml(l){
+  const looks = Array.isArray(l.looks) ? l.looks : [];
+  const rows = looks.map(k => '<div class="card" data-lead-look="' + esc(k.seq) + '">'
+    + '<div class="kv">' + ldStateHtml(k.state) + '</div>'
+    + '<div class="subj-note">Recorded by <span class="mono">' + esc(k.looked_by) + '</span> at <span class="mono">' + esc(k.at) + '</span>'
+    + (k.result_kind ? ', and it found the ' + esc(k.result_kind) + ' <span class="mono">' + esc(k.result_ref) + '</span>' : '') + '.</div>'
+    + (k.detail ? '<div class="prose"><p>' + esc(k.detail) + '</p></div>' : '') + '</div>').join("");
+  return '<h2 class="sec">Who followed it, and what came of it</h2>'
+    + '<p class="subj-note" data-lead-says>' + esc(l.says || "") + '</p>'
+    + rows
+    + '<p class="subj-note" data-lead-bound>' + esc(LDS.bound || '') + '</p>';
+}
+function ldLookFormHtml(){
+  const radios = LEAD_LOOK_CHOICES.map(st => '<label><input type="radio" name="lead-look-state" value="' + esc(st) + '" '
+    + (LDS.lookState === st ? 'checked ' : '') + 'onchange="ldField(\'lookState\', \'' + esc(st) + '\')"> '
+    + esc(LEAD_STATE_WORDS[st]) + '</label><br>').join("");
+  const kinds = [["capture", "a document already in the record, by its capture fingerprint"],
+                 ["content", "a passage already in the record, by its id"]]
+    .map(([k, label]) => '<label><input type="radio" name="lead-look-kind" value="' + k + '" '
+      + (LDS.lookKind === k ? 'checked ' : '') + 'onchange="ldField(\'lookKind\', \'' + k + '\')"> ' + label + '</label><br>').join("");
+  return '<div class="intent-box" data-lead-look-box><div class="kv"><span class="k">Record that you followed it</span></div>'
+    + '<p class="subj-note">What did you find?</p>' + radios
+    + '<div class="kv"><span class="k">What you did and saw (optional)</span></div>'
+    + '<textarea class="txt" id="lead-look-detail" rows="2" onchange="ldField(\'lookDetail\', this.value)">' + esc(LDS.lookDetail || "") + '</textarea>'
+    + '<div class="kv"><span class="k">If what you found is already in the record (optional)</span></div>' + kinds
+    + '<input class="txt" id="lead-look-ref" value="' + esc(LDS.lookRef || "") + '" onchange="ldField(\'lookRef\', this.value)">'
+    + (LDS.lookRefusal ? ldRefusalHtml(LDS.lookRefusal) : '')
+    + '<button class="btn" id="lead-look" onclick="ldLook()">Record the look</button></div>';
+}
+function ldShareHtml(l){
+  const shares = Array.isArray(l.shared_to) ? l.shared_to : [];
+  const rows = shares.map(s => '<div class="card" data-lead-share="' + esc(s.project) + '"><span class="mono">' + esc(s.project)
+    + '</span> &middot; shared by <span class="mono">' + esc(s.shared_by) + '</span> at <span class="mono">' + esc(s.at) + '</span></div>').join("");
+  return '<h2 class="sec">Who else can read it</h2>'
+    + (rows || '<div class="empty" data-lead-unshared>It is shared to no project you can see. Only its author can read it, and the joined members of a project it is shared to.</div>')
+    + (l.shared_to_truncated ? '<p class="subj-note">Only the first ' + esc(l.limit) + ' are shown; the record holds more.</p>' : '')
+    + '<div class="intent-box" data-lead-share-box><div class="kv"><span class="k">Share it to a project you have joined, by the project&rsquo;s id</span></div>'
+    + '<p class="subj-note">Its joined members will be able to read it and record their own looks. Sharing cannot be undone from here.</p>'
+    + '<input class="txt" id="lead-share-project" value="' + esc(LDS.project || "") + '" onchange="ldField(\'project\', this.value)">'
+    + (LDS.shareRefusal ? ldRefusalHtml(LDS.shareRefusal) : '')
+    + '<button class="btn ghost" id="lead-share" onclick="ldShare()">Share this lead</button></div>';
+}
+function ldOneHtml(){
+  const head = '<div class="trow"><h1 class="rec">A lead</h1></div><p class="lede mono">' + esc(LDS.id) + '</p>'
+    + '<button class="btn ghost" onclick="renderLeads()">All your leads</button>';
+  if(LDS.busy && !LDS.read) return head + '<div class="empty">Reading the lead.</div>';
+  if(LDS.err) return head + '<div class="q-gap" data-lead-unreached>' + esc(LDS.err) + '</div>';
+  if(LDS.refusal) return head + ldRefusalHtml(LDS.refusal);
+  const l = LDS.read || {};
+  const said = (r) => r && r.says ? '<div class="intent-box"><p class="subj-note">' + esc(r.says) + '</p></div>' : '';
+  return head + said(LDS.written) + said(LDS.looked) + said(LDS.shared)
+    + '<div class="card"><div class="prose"><p>' + esc(l.words) + '</p></div>'
+    + (l.locator ? '<div class="kv"><span class="k">Where to look</span> ' + esc(l.locator) + '</div>' : '')
+    + '<div class="subj-note">Written by <span class="mono">' + esc(l.author) + '</span> at <span class="mono">' + esc(l.at) + '</span>. '
+    + 'Where it stands: ' + ldStateHtml(l.state) + '.</div>'
+    + '<p class="subj-note">A lead is somewhere to look. It is never evidence: nothing in a case can rest on it.</p></div>'
+    + ldLooksHtml(l) + ldLookFormHtml() + ldShareHtml(l);
+}
+function ldHtml(){
+  if(!LDS) return "";
+  return LDS.mode === "one" ? ldOneHtml() : ldListHtml();
+}
+function ldPaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = ldHtml();
+}
+/* `#leads` and `#lead/<id>` are real addresses, asked inside `boot()`'s router
+   chain and nowhere at the top level — POST-authentication, classified by
+   `preauth-vocabulary.test.mjs` WALK 2. */
+function leadRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  if(/^#leads$/.test(h)){
+    if(!(LDS && LDS.mode === "list")) renderLeads();
+    return true;
+  }
+  const m = /^#lead\/(LEAD-[A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  if(LDS && LDS.mode === "one" && LDS.id === m[1]) return true;
+  ldOpen(m[1]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!LD_HASH_LOCK) leadRouteFromHash(); }); }catch(_){}
+/*__LEADS_END__*/
 
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}

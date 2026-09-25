@@ -593,12 +593,27 @@ ok("WALK 2 REACH: it matches exactly three published ADDRESS SHAPES — found ["
    so `#theme/<THEME-…>` resolves for nobody holding nothing. `op=themeread` is admin/member/probe and the two
    writes it hosts (`themedeclare`, `themeplace`) are admin/member session ops, so it adds no member-facing
    pre-auth vocabulary. The two pins below check both halves for THIS router as well. */
-ok("WALK 2 REACH: the script declares exactly the ten routers this walk has classified — found ["
-   + ROUTE_FNS.join(", ") + "] (an eleventh must be classified as pre-auth or not before this passes)",
-   ROUTE_FNS.length === 10
+/* CORRECTED A SIXTH TIME 2026-09-25 BY D-194, nine -> TEN, and the old assertion was RIGHT to fail:
+   `leadRouteFromHash` arrived with the lead surface (MEMBER-KNOWLEDGE-DESIGN.md §5) and this arm stopped it
+   arriving UNCLASSIFIED.
+
+     `leadRouteFromHash` is POST-AUTHENTICATION. It is asked inside `boot()`'s router chain and NOWHERE at the
+     top level, so `#leads` and `#lead/<LEAD-…>` resolve for nobody holding nothing. Its ops (`lead`,
+     `leadlook`, `leadshare` admin/member; `leadread`, `frontier` admin/member/probe) have no uncredentialed
+     arm, and a lead is answered to anyone outside its reach exactly as one that does not exist — so it adds no
+     member-facing pre-auth vocabulary.
+
+   The two pins below check both halves for THIS router as well. */
+/* CORRECTED A SEVENTH TIME 2026-09-25 BY CONDUCT #22 at D-194's merge onto c22-batch30, ten -> ELEVEN: UI-76
+   (`themeRouteFromHash`) and D-194 (`leadRouteFromHash`) each classified a tenth router from the same base, so
+   each side's ten was right on its own tree and the union carries both, each classified post-auth by its own
+   pins below. The count is the union's, read from this walk's own ROUTE_FNS on the merged app.html. */
+ok("WALK 2 REACH: the script declares exactly the eleven routers this walk has classified — found ["
+   + ROUTE_FNS.join(", ") + "] (a twelfth must be classified as pre-auth or not before this passes)",
+   ROUTE_FNS.length === 11
    && ["acceptCeremonyRouteFromHash","actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
        "publishedRouteFromHash","routeFromHash","stanceRouteFromHash",
-       "versionReviewRouteFromHash", "draftRouteFromHash", "themeRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
+       "versionReviewRouteFromHash", "draftRouteFromHash", "themeRouteFromHash", "leadRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
 {
   /* The running-session router is asked in boot()'s chain ... */
   const BOOTCHAIN = /if\(!publishedRouteFromHash\(\)[\s\S]{0,400}?\)\s*go\("queue"/.exec(SCRIPT);
@@ -661,6 +676,14 @@ ok("WALK 2 REACH: the script declares exactly the ten routers this walk has clas
      SCRIPT.indexOf("/*__THEMES_END__*/") > 0 && TTAIL.length > 100);
   ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #theme/<THEME-…> resolves for nobody holding nothing",
      !TTAIL.includes("themeRouteFromHash()"));
+  /* D-194's router, the same two halves; the slice starts at the END of the leads block. */
+  ok("WALK 2 CLASSIFICATION: leadRouteFromHash is asked INSIDE boot(), which is what makes it post-authentication",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("leadRouteFromHash()"));
+  const LTAIL = SCRIPT.slice(SCRIPT.indexOf("/*__LEADS_END__*/"));
+  ok("WALK 2 REACH: the leads block's END marker was found — a slice that missed it would make the pin below pass over nothing",
+     SCRIPT.indexOf("/*__LEADS_END__*/") > 0 && LTAIL.length > 100);
+  ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #lead/<id> resolves for nobody holding nothing",
+     !LTAIL.includes("leadRouteFromHash()"));
 }
 ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outside boot()",
    /\n\s*if\(\/\^#\(published[\s\S]{0,80}publishedRouteFromHash\(\);?\n?\}catch/.test(SCRIPT)

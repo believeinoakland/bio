@@ -744,6 +744,10 @@ const CHOOSERS = {
   "openCustodialAct":      "D-134: the role radios and capability ticks composing ONE op=memberadd invitation; nothing is decided until the one act",
   /* UI-70 (Membership v2 §7.14, DEC-69). */
   "visibilityChoiceHtml":  "UI-70: two radios choosing the ONE setting (discoverable or hidden) a project's creation, its fork or its owner's act sends; neither is preselected and the act carries the one chosen",
+  /* D-194 (MEMBER-KNOWLEDGE-DESIGN.md §5). ONE decision by the act's own shape: `op=leadlook` records ONE
+     look at ONE lead with ONE outcome, so the four outcome radios choose the single state and the two
+     referent radios the single kind of what that one look found. There is no set of leads here to act over. */
+  "ldLookFormHtml":        "D-194: radios choosing the ONE outcome, and the ONE kind of referent, of one look at one lead (op=leadlook takes one state)",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is
