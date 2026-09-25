@@ -174,6 +174,11 @@ const projectMd = (id, { title, cites = [] } = {}) => ["---",
   "required_strength:", "  capture: B", "  connection: C",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 
+/* CORRECTED 2026-09-25 at c22-batch29 (D-563, C-86.3), never exempted: every envelope below carried
+   `title: Bundle <id>` while the bytes state their own `title:`, and since D-563 the plane derives the title from
+   the document and refuses an envelope that contradicts it (ENVELOPE_TITLE_DISAGREES). The envelope now carries the
+   title the bytes state, falling back to the old label only where they state none. No assertion reads a title. */
+const statedTitle = (text, fallback) => { const m = /^title: "(.*)"$/m.exec(text); return m ? m[1] : fallback; };
 let snapSeq = 0;
 const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
   bundleId: id, base: null,
@@ -181,7 +186,7 @@ const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland", title: statedTitle(text, `Bundle ${id}`),
           current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
           created: NOW, last_updated: LATER } });
 const mustPromote = async (id, text, type) => {
@@ -198,7 +203,7 @@ const createProject = async (name, text) => {
   const r = await POST(`op=promote&token=${RUTH}`, {
     base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+    meta: { object_type: "project", group: "believe-in-oakland", title: statedTitle(text, `Bundle ${name}`),
             current_state: "forming", created: NOW, last_updated: LATER } });
   if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 800)}`);
   return r.bundleId;
@@ -225,7 +230,7 @@ const RDOC = "INFO-2026-5000-filed";
     files: [{ path: "bundle.md", text: rmd, bytes: rmd.length, sha256: sha(rmd) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
     register: [],
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${RDOC}`,
+    meta: { object_type: "information", group: "believe-in-oakland", title: statedTitle(rmd, `Bundle ${RDOC}`),
             current_state: "collected", created: NOW, last_updated: LATER } });
   if (!r.ok) throw new Error(`promote ${RDOC}: ${JSON.stringify(r).slice(0, 800)}`);
 }
