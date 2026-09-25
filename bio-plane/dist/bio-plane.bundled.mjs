@@ -30670,6 +30670,16 @@ var CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp"]);
 var SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+function stampInstant(precision, when = Date.now()) {
+  const iso2 = new Date(when).toISOString();
+  if (precision === "millisecond") return iso2;
+  if (precision === "second") return iso2.replace(/\.\d+Z$/, "Z");
+  throw new Error(`stampInstant: precision is "second" or "millisecond", never ${JSON.stringify(precision)}`);
+}
+function instantOrder(a, b) {
+  const x = typeof a === "string" && a ? Date.parse(a) : NaN, y = typeof b === "string" && b ? Date.parse(b) : NaN;
+  return x - y;
+}
 var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 var taskSlug = (subject) => {
   const s = String(subject || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/g, "");
@@ -33763,7 +33773,7 @@ var Store = class _Store extends DurableObject {
         drift: sel.drift,
         detail: `${verb} requires an edge currently in ${from.map((s) => `'${s}'`).join(" or ")}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.`
       };
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const changes = /* @__PURE__ */ new Map();
     for (const id of sel.members) {
       const prev = String(current.get(id).note ?? "");
@@ -33996,7 +34006,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
           detail: "live basis legs still rest on these questions. Dismissing one abandons it, and a claim resting on an abandoned question would go on reading at a strength nobody will ever re-examine \u2014 the downstream consequence retire already refuses on. Withdraw those legs first (sever the citation with a reason), or DEFER instead: deferring is reversible and raises the re-evaluation obligation on every dependent rather than stranding it."
         };
     }
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const disposed = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -34646,7 +34656,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
         detail: _Store.RETIRE_CITED_DETAIL
       };
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const retired = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -34856,7 +34866,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
         offenders: entry.sort((a, b) => a.id < b.id ? -1 : 1),
         detail: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route for every document in the register (C-18.9). Releasing these as they stand would mint bundles the catalog immediately rejects."
       };
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const released = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -35219,7 +35229,7 @@ Mitigation: ${mit}
     if (adopted.leg_count < 1 || !pid && legs.length < 1)
       return actNoBasis("a conclusion rests on something. An open inquiry may hold a claim with no legs at all \u2014 a standing objective the group means to pursue \u2014 but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first.", { target });
     if (pid) {
-      const when2 = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+      const when2 = stampInstant("second");
       const priorRec = this.#conclusionRecordOf(pid, target, viewer);
       const prior = priorRec.history.length ? priorRec.history[priorRec.history.length - 1] : null;
       const w = this.#setProjectConclusion(projRow, target, {
@@ -35262,7 +35272,7 @@ Mitigation: ${mit}
         weight: "single"
       };
     }
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const withHistory = _Store.#appendStateHistory(text, {
       timestamp: when,
       from_state: b.current_state,
@@ -35976,7 +35986,7 @@ Claim: ${f2.claim}
         stance: rec.stance ? rec.stance.state : "none",
         detail: !rec.stance ? `${pid} has never concluded ${target}, so there is no conclusion to withdraw.` : rec.stance.act === "withdrawn" ? `${pid}'s latest act on ${target} was already a withdrawal (${rec.stance.at || "undated"}), so it stands on no conclusion to withdraw. Its history is unchanged.` : `${pid}'s latest entry on ${target} is one this plane cannot read, so what it stands on is undetermined and a withdrawal would be withdrawing a guess.`
       };
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const w = this.#setProjectConclusion(projRow, target, {
       act: "withdrawn",
       version: rec.stance.version,
@@ -36144,7 +36154,7 @@ Claim: ${f2.claim}
         to,
         detail: `a resolution describes how an action ENDED; supplying one on a move to ${to} would record an outcome the action has not reached.`
       };
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     const withHistory = _Store.#appendStateHistory(text, {
       timestamp: when,
       from_state: b.current_state,
@@ -36398,7 +36408,7 @@ Reason: ${why}
         detail: "this action has no readable bundle.md, so nothing can be appended to it"
       };
     const fm = parseFrontmatter(liveMd.content).data || {};
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     const ledgerNow = Array.isArray(fm.correspondence) ? fm.correspondence : [];
     const ord = ledgerNow.length;
     const entryFm = {
@@ -36552,7 +36562,7 @@ Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who
       };
     const fm = parseFrontmatter(liveMd.content).data || {};
     const before = governingLawsOf(fm);
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     let text = _Store.#replaceGoverningLaws(liveMd.content, entries);
     if (!text)
       return {
@@ -36781,7 +36791,7 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
         object_type: b.object_type,
         detail: "governing laws belong to an action: they are the laws its request is made under."
       };
-    const at = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second", this.#nowMs(null));
     this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
     entries.forEach((e, i) => this.sql.exec(
       `INSERT INTO action_law_proposals (bundle_id, proposed_by, ord, level, citation, proposed_at)
@@ -36871,7 +36881,7 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
     const refs = Array.isArray(fm.references) ? fm.references : [];
     if (refs.some((r) => r && typeof r === "object" && r.rel === "responds_to" && r.target === actionId))
       return { bundle_id: doc.bundle_id, already: true };
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     let text = _Store.#spliceReferences(
       doc.content,
       [{ rel: "responds_to", target: actionId, status: "confirmed", note: "" }]
@@ -37258,7 +37268,7 @@ Changes: responds_to edge added to ${actionId}.
         object_type: fm.object_type ?? b.object_type,
         detail: "this is not a legal move in the catalog's state table for this document's own vocabulary. An inquiry reopens from deferred, dismissed or published; a legacy focus/problem document has no `open` state at all until its frontmatter is modernized."
       };
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const withHistory = _Store.#appendStateHistory(text, {
       timestamp: when,
       from_state: b.current_state,
@@ -37808,7 +37818,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
             detail: `${LABEL[k]} is byte-identical to edition ${priorCase.edition}'s. ${WHY[k] || `A completeness claim carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition.`}`
           };
     }
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const written = [];
     const frozen = /* @__PURE__ */ new Map();
     for (const p of prepared) {
@@ -39042,7 +39052,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         reason: "REVIEW_DRAFT_TOO_LARGE",
         detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
       };
-    const when = (/* @__PURE__ */ new Date()).toISOString();
+    const when = stampInstant("millisecond");
     const priorStatement = existing ? _Store.#fmSafe(JSON.parse(existing.params).statement ?? "") : "";
     const nextStatement = _Store.#fmSafe(params.statement ?? "");
     const statementBy = !nextStatement ? null : existing && nextStatement === priorStatement && existing.statement_by ? existing.statement_by : a.who;
@@ -39213,7 +39223,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         reason: "REVIEW_NO_SECRET",
         detail: "the read secret's fingerprint is set by the control plane and was absent."
       };
-    const when = (/* @__PURE__ */ new Date()).toISOString();
+    const when = stampInstant("millisecond");
     const ident = this.#draftIdentity(d);
     const id = this.#mintOpaqueId(
       "RVG",
@@ -39254,7 +39264,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (!g || !this.#isProjectOwner(g.project_id, a.who)) return _Store.#notReviewOwner("revoke");
     if (g.revoked_at)
       return { ok: true, existed: true, grantId: g.grant_id, revokedBy: g.revoked_by, revokedAt: g.revoked_at };
-    const when = (/* @__PURE__ */ new Date()).toISOString();
+    const when = stampInstant("millisecond");
     this.sql.exec(
       `UPDATE review_grants SET revoked_by=?, revoked_at=? WHERE grant_id=? AND revoked_at IS NULL`,
       a.who,
@@ -39284,12 +39294,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
        Any of the three can move the hash without moving this date. Naming them is the honest scope of the
        rule, and closing them would take a dated fact the answer does not hold.
   
-       TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant:
-       a draft edit, a comment and a grant are stamped `new Date().toISOString()` (with milliseconds), and an
-       acknowledgement is stamped with the milliseconds cut off (`acknowledgeStatement`). Sorted as STRINGS
-       those two spellings rank WRONG inside one second — `…:00Z` sorts after `…:00.123Z`, because `Z` is
-       above `.` — so candidates are ranked by `Date.parse`, and anything unparseable is not ranked at all
-       rather than sorted as zero. Equal instants keep the FIRST candidate in the order above (edit, comment,
+       TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant,
+       `…:00Z` and `…:00.123Z`, and sorted as STRINGS they rank WRONG inside one second — `…:00Z` sorts after
+       `…:00.123Z`, because `Z` is above `.` — so candidates are ranked by `instantOrder` (D-543), and anything
+       unparseable is not ranked at all rather than sorted as zero. Since D-543 every act these bytes carry
+       is stamped `stampInstant("millisecond")` — the acknowledgement was the one cut to the second, which
+       dated an acknowledgement made in the same second as the act before it EARLIER than that act — but an
+       acknowledgement recorded before D-543 keeps its whole-second stamp, so the two spellings still meet
+       here and the instant compare is load-bearing, not tidiness. Equal instants keep the FIRST candidate in the order above (edit, comment,
        grant, acknowledgement), which is the order the answer itself presents them in.
   
        THE AUTHOR DOES NOT MOVE WITH IT, and that is a decision rather than an oversight: BOB #32 ruled on the
@@ -39322,7 +39334,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         "statement acknowledgement"
       );
     let last = null;
-    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;
+    for (const c of cand) if (!last || instantOrder(c.at, last.at) > 0) last = c;
     const act = !last ? "UNDETERMINED: these bytes carry no dated act at all" : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft" : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
     return {
       at: last ? last.at : null,
@@ -39515,7 +39527,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         reason: "REVIEW_NO_COMMENT_TEXT",
         detail: `a comment says something: at least one character and at most ${_Store.REVIEW_TEXT_MAX}.`
       };
-    const when = (/* @__PURE__ */ new Date()).toISOString();
+    const when = stampInstant("millisecond");
     this.sql.exec(
       `INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at) VALUES (?,?,?,?,?,?)`,
       d.draft_id,
@@ -39705,7 +39717,7 @@ case_project: ${project}
       kind,
       by
     );
-    const when = same ? same.at : (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = same ? same.at : stampInstant("millisecond");
     if (!same)
       this.sql.exec(
         `INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
@@ -40650,7 +40662,7 @@ case_project: ${project}
         detail: `every leg gets a home. ${orphans.length} leg(s) were apportioned to no child` + (cutting.length ? `, and ${cutting.length} of them CUT AGAINST this inquiry` : "") + ". Division RE-HOMES material and only severance REMOVES it, which is why dividing cannot do severance's work at a discount (R4): apportion them, or sever them with a reason, which is the act that takes material out of a question."
       };
     }
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     if (!this.#producingGroup() && !(typeof fm.group === "string" && fm.group.trim()))
       return this.#groupUndetermined(
         "inquirydivide",
@@ -41160,7 +41172,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
       }
       asked.push({ label, ords: [...ords].sort((x, y) => x - y), statement: stmt });
     }
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const ordsOf = (label) => standingLabel.reduce((a, g, i) => g === label ? [...a, i] : a, []);
     const same = (a, c) => a.length === c.length && a.every((v, i) => v === c[i]);
     const rowsOut = asked.map((a) => {
@@ -42067,7 +42079,7 @@ ${lines.join("\n")}
           detail: "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite."
         };
     }
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     if (!sel.members.length)
       return {
         ok: false,
@@ -43330,7 +43342,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       );
     const q = (s) => `"${_Store.#fmSafe(String(s ?? ""))}"`;
     const val = (v) => typeof v === "number" && Number.isFinite(v) ? String(v) : typeof v === "boolean" ? String(v) : Array.isArray(v) && v.every((n) => typeof n === "number" && Number.isFinite(n)) ? `[${v.join(", ")}]` : q(v);
-    const nowIso = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const nowIso = stampInstant("second");
     const vr = src.vrow;
     const vRow = [
       `  - name: ${q(nameWritten)}`,
@@ -44108,7 +44120,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const tsrFile = tsr ? str(tsr.token_file) : null;
     const tsrNote = tsrAuth && tsrFile ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address` : "";
     const stamp = (from) => ({
-      at: at || (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z"),
+      at: at || stampInstant("second"),
       by: "op=provenancechain (REC-54)",
       basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
       from
@@ -44194,7 +44206,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
     if (!docs)
       return { ok: false, reason: "NO_DOCUMENTS", detail: 'data/provenance.json must be {"documents": [...]}' };
-    const at = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second");
     const instanceName = this.env && this.env.INSTANCE_NAME || "unnamed";
     const report = [], refused = [];
     let changed = 0;
@@ -44491,7 +44503,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       documents.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
     }
     const finding = registerState !== "readable" || undetermined > 0 ? "LOOKED_INDETERMINATE" : "PRESENT";
-    const at = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second");
     const docsJson = JSON.stringify(documents);
     const prev = this.#latestRouteMark(bundleId);
     const same = prev && prev.finding === finding && prev.register_state === registerState && prev.undetermined === undetermined && prev.documents_n === docs.length && prev.documents === docsJson;
@@ -46520,7 +46532,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       this.#flagCasesOnRevision(
         bundleId,
         base ?? null,
-        (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z")
+        stampInstant("second")
       );
       return {
         ok: true,
@@ -48241,7 +48253,7 @@ ${words}`;
       );
     const text = typeof words === "string" ? words : "";
     const bytes = new TextEncoder().encode(text);
-    const recorded = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const recorded = stampInstant("second");
     const obs = typeof observedAt === "string" ? observedAt.trim() : "";
     const obsMs = _Store.#observedMs(obs);
     if (!text.trim())
@@ -48902,7 +48914,7 @@ ${words}`;
         pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}` : `pass project=<PROJ-\u2026>: the project to share this lead to`,
         { lead: L.lead_id, project: pid || null }
       );
-    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     this.sql.exec(
       `INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
       L.lead_id,
@@ -48947,7 +48959,7 @@ ${words}`;
         `${bytes(typed)} B of words${where ? ` and ${bytes(where)} B of locator` : ""}, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
         { limit: CAPTURE_TEXT_UNIT_CAP }
       );
-    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     const leadId = `LEAD-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${_Store.#rand(6)}`;
     this.sql.exec(
       `INSERT INTO leads (lead_id, author, words, locator, at) VALUES (?, ?, ?, ?, ?)`,
@@ -49319,7 +49331,7 @@ ${words}`;
         `${bytes(idea)} B of name and ${bytes(criterion)} B of test, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
         { limit: CAPTURE_TEXT_UNIT_CAP }
       );
-    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     const themeId = `THEME-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${_Store.#rand(6)}`;
     this.sql.exec(
       `INSERT INTO themes (theme_id, declared_by, name, test, at) VALUES (?, ?, ?, ?, ?)`,
@@ -49355,7 +49367,7 @@ ${words}`;
     const T = src.row;
     const tgt = this.#themeTarget(target, note, viewer);
     if (!tgt.ok) return tgt;
-    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     const before = this.#one(
       `SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
       T.theme_id,
@@ -49416,7 +49428,7 @@ ${words}`;
     const T = src.row;
     const tgt = this.#themeTarget(target, note, viewer);
     if (!tgt.ok) return tgt;
-    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     const before = this.#one(
       `SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
       T.theme_id,
@@ -55088,7 +55100,7 @@ ${words}`;
    *  about a capture rather than about a document. */
   #conditionsPartialCapture(viewer, now, identity = null) {
     const out = [];
-    const nowIso = new Date(now).toISOString().split(".")[0] + "Z";
+    const nowIso = stampInstant("second", now);
     const redact = this.#bundleRedactor(viewer);
     for (const r of this.#rows(
       `SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`,
@@ -63085,7 +63097,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     }
     const complete = roster.length > 0 && awaiting.length === 0;
     if (complete && !c.ratified_at) {
-      const at = findings.reduce((mx, x) => x.ratified_at > mx ? x.ratified_at : mx, findings[0].ratified_at);
+      const at = findings.reduce((mx, x) => instantOrder(x.ratified_at, mx) > 0 ? x.ratified_at : mx, findings[0].ratified_at);
       this.sql.exec(`UPDATE published_cases SET ratified_at=? WHERE case_id=? AND edition=?`, at, caseId, ed);
       c.ratified_at = at;
     }
@@ -64300,7 +64312,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  run that will die first and a mean would hide it. */
   recordRuntimeObservation({ metric, ms, detail = null, at = null }) {
     if (!metric || typeof ms !== "number" || !Number.isFinite(ms)) return { recorded: false };
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const cur = [...this.sql.exec(`SELECT * FROM runtime_observations WHERE metric = ?`, metric)][0] || null;
     if (!cur) {
       this.sql.exec(
@@ -64388,7 +64400,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
   renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
     const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
@@ -64441,7 +64453,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
    *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
   renderSpend({ ms, releaseMs = 0, at = null }) {
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
     const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
@@ -64489,7 +64501,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     };
   }
   recordCpuProbeStep({ step, elapsedMs, iterations, at = null }) {
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     this.sql.exec(
       `INSERT INTO cpu_probe (step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?)
        ON CONFLICT(step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
@@ -66773,7 +66785,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           { target, version: vname, project: projectId }
         );
     }
-    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const hidden = act === "hide" ? !(a.hidden === false || a.hidden === "false" || a.hidden === "0") : row.hidden === true;
     const receipt = {
       ok: true,
@@ -67138,7 +67150,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       refused_state_reason: args.state_reason ?? null,
       refused_at: args.at ?? null
     });
-    const nowIso = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const nowIso = stampInstant("second");
     const prior = this.#one(
       `SELECT * FROM suggest_refusals WHERE target=? AND base_sha=? AND submission=?`,
       target,
@@ -68458,7 +68470,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ...extra || {}
       };
     };
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who || isMachineIdentity(who))
@@ -68514,7 +68526,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ...extra || {}
       };
     };
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const id = String(tokenId ?? "").trim();
     if (!who || isMachineIdentity(who))
       return refusal7(
@@ -68633,7 +68645,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  bytes and do not change; a second filing is a re-run, not new information. */
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] }) {
     if (!sourceCapture) return { recorded: 0 };
-    const now = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = stampInstant("second");
     this.sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
     let n = 0;
     for (const l of links) {
@@ -68852,7 +68864,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   /** Append a verdict. Never an update: a verdict that changed is a fact about
    *  the record, and the current answer is simply the newest row. */
   recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     this.sql.exec(
       `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
@@ -68880,7 +68892,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  that walks away costs one row until its hour is up. */
   saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 36e5, at = null }) {
     const now = at ? new Date(at) : /* @__PURE__ */ new Date();
-    const iso2 = (d) => d.toISOString().split(".")[0] + "Z";
+    const iso2 = (d) => stampInstant("second", d);
     this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso2(now));
     if (!session || !state) return { session: null, saved: false };
     const cur = [...this.sql.exec(`SELECT ticks FROM capture_sessions WHERE session = ?`, session)][0];
@@ -68912,7 +68924,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   }
   loadCaptureSession({ session, at = null }) {
     const now = at ? new Date(at) : /* @__PURE__ */ new Date();
-    const iso2 = now.toISOString().split(".")[0] + "Z";
+    const iso2 = stampInstant("second", now);
     this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso2);
     const r = [...this.sql.exec(`SELECT * FROM capture_sessions WHERE session = ?`, session)][0] || null;
     if (!r) return {
@@ -69067,7 +69079,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   static AI_RUNS_LIMIT_DEFAULT = 200;
   static AI_RUNS_LIMIT_MAX = 1e3;
   static #aiIso(ms) {
-    return new Date(ms).toISOString().split(".")[0] + "Z";
+    return stampInstant("second", ms);
   }
   /* ==================================================================== *
    * REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE.
@@ -69152,7 +69164,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     };
     const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));
     if (bad) return bad;
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     this.sql.exec(
       `INSERT INTO observation_log
          (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
@@ -72733,7 +72745,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  having to go looking. */
   recordSiteAssets({ host, primarySha, observations = [], at = null }) {
     if (!host || !primarySha) return { host: null, recorded: 0 };
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     let added = 0, changedCount = 0;
     const changed = [];
     const fromObs = (o) => typeof o.reused_from === "string" && /^[0-9a-f]{64}$/.test(o.reused_from) ? o.reused_from : null;
@@ -72931,7 +72943,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       why: outcome === "unchanged" || outcome === "changed" ? "no captured baseline, so the look has no capture to refer to and is not recorded" : `no observation is recorded for the outcome '${String(outcome)}'`
     };
     const cls = actorClass === "member" || actorClass === "machine" ? actorClass : "plane";
-    const now = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = stampInstant("second");
     const bad = this.#observe({
       actorClass: cls,
       actor: cls === "plane" ? null : actor,
@@ -72958,7 +72970,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  network traffic (VERIFICATION.md), so it does the fetching and hashing and
    *  hands the store the verdicts to commit; the store invents none of them. */
   recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     let recorded = 0;
     const refusals = [];
     for (const v of verdicts) {
@@ -73094,7 +73106,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  never refused, which is NOT evidence about where the ceiling is and only
    *  advances the counter toward the next probe. */
   recordCaptureLimit({ runtime = "subrequests", observed = null, at = null }) {
-    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const cur = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
     if (observed == null) {
       if (cur) this.sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
@@ -73146,7 +73158,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
     const text = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
-    const now = at && ISO_INSTANT.test(at) ? at : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
     const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
     if (existing) {
       const armedAt2 = await this.#armDrain();
@@ -73257,7 +73269,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  exists, and inventing a refers_to would be worse than being patient. */
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 50)));
-    const at = now && ISO_INSTANT.test(now) ? now : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const queued = this.#rows(`SELECT * FROM task_queue ORDER BY enqueued, capture_sha LIMIT ?`, cap);
     const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
     for (const q of queued) {
@@ -73529,7 +73541,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const target = this.#one(`SELECT member_id FROM members WHERE member_id=? AND status='active'`, to);
     if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
     if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
-    const at = now && ISO_INSTANT.test(now) ? now : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "forwarded", actor });
     task.assignee = target.member_id;
@@ -73577,7 +73589,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
     const fenced = this.#refuseNotYours(row, actor, "resolve");
     if (fenced) return fenced;
-    const at = now && ISO_INSTANT.test(now) ? now : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "resolved", actor });
     task.status = "resolved";
@@ -73904,7 +73916,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       } };
     this.#tickRunning.add("archive-monitor");
     try {
-      const nowIso = Number.isFinite(now) ? new Date(now).toISOString().split(".")[0] + "Z" : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+      const nowIso = Number.isFinite(now) ? stampInstant("second", now) : stampInstant("second");
       const rows = this.#rows(
         `SELECT address_norm FROM source_reachability
         WHERE consecutive_failures >= ? ORDER BY first_failure_since LIMIT ?`,
@@ -73985,7 +73997,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
        ON CONFLICT(consumer) DO UPDATE SET epoch=excluded.epoch, opened_at=excluded.opened_at`,
       consumer,
       epoch,
-      new Date(epoch).toISOString().split(".")[0] + "Z"
+      stampInstant("second", epoch)
     );
     this.sql.exec(`DELETE FROM monitor_fired WHERE consumer=? AND epoch<>?`, consumer, epoch);
     return epoch;
@@ -74010,7 +74022,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       consumer,
       subject,
       epoch,
-      (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z"
+      stampInstant("second")
     );
     return true;
   }
@@ -74116,7 +74128,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       } };
     this.#tickRunning.add("monitor-cadence");
     try {
-      const at = Number.isFinite(now) ? new Date(now).toISOString().split(".")[0] + "Z" : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+      const at = Number.isFinite(now) ? stampInstant("second", now) : stampInstant("second");
       const plan = this.#monitorCadencePlan(now);
       const epoch = this.#openTickEpoch("monitor-cadence", now, _Store.MONITOR_CADENCE_MS.hourly);
       const ticked = [], skipped = [], failed = [];
@@ -74212,7 +74224,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
       return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at && ISO_INSTANT.test(at) ? at : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
     const st = Number.isInteger(status) ? status : null;
     this.sql.exec(
       `INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?)
@@ -74277,7 +74289,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         basis: "no attempt on this address has ever been recorded"
       };
     }
-    const at = now && ISO_INSTANT.test(now) ? now : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const TH = this.#thresholds();
     const byCount = row.consecutive_failures >= TH.failures;
     const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
@@ -74416,7 +74428,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     }
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
     const fm = md && typeof md.content === "string" ? parseFrontmatter(md.content).data || {} : {};
-    const now = at ? String(at) : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const now = at ? String(at) : stampInstant("second");
     this.sql.exec(
       `INSERT OR REPLACE INTO bias_adoptions
          (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256)
@@ -81136,7 +81148,7 @@ var index_default = {
           reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0 ? structure.pages : Number.isInteger(stored.page_count) ? stored.page_count : null;
           reading.container_extent = Object.prototype.hasOwnProperty.call(stored, "container_extent") ? stored.container_extent : null;
           reading.reextracted = {
-            at: (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z",
+            at: stampInstant("second"),
             by: reAuthor,
             engine: t3.engine ? t3.engine.engine : null,
             version: t3.engine ? t3.engine.version : null,
@@ -81327,7 +81339,7 @@ var index_default = {
           detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address"
         }, 400);
       const authorityAsserted = typeof body2?.authority === "string" && body2.authority.trim() ? body2.authority.trim() : null;
-      const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+      const retrieved = stampInstant("second");
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
       const renderAsked = Object.prototype.hasOwnProperty.call(body2 || {}, "render") && body2.render !== false;
       let renderer = null;
@@ -82524,7 +82536,7 @@ var index_default = {
       const attempts = [];
       let token = null, tokenSha = null, service = null;
       for (const endpoint of TSA_ENDPOINTS) {
-        const attempted = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+        const attempted = stampInstant("second");
         try {
           const { der } = timestampRequest(sha);
           const res2 = await fetch(endpoint, {
@@ -82561,7 +82573,7 @@ var index_default = {
       }
       let archive = null;
       if (body2.archive === true) {
-        const attempted = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+        const attempted = stampInstant("second");
         const locator = typeof body2.locator === "string" ? body2.locator : "";
         if (!isPublicHttpsLocator(locator)) {
           attempts.push({
@@ -82705,7 +82717,7 @@ var index_default = {
         baselineProfile = match && match.profile && typeof match.profile === "object" ? match.profile : null;
       } catch {
       }
-      const checked = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+      const checked = stampInstant("second");
       let status = null, note = null, seen = null, compared = null, comparedBasis = null;
       let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
       const monitorLook = (o) => monitorRecordLook(stub0, {

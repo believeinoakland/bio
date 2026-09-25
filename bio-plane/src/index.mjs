@@ -306,7 +306,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
   return { res };
 }
 import { cpuProbe } from "./cpu.mjs";
-import { Store } from "./store.mjs";
+import { Store, stampInstant } from "./store.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -7136,7 +7136,7 @@ export default {
              keys on, so an ordinary revision of the bundle cannot silently put the
              acquire-time reading back. */
           reading.reextracted = {
-            at: new Date().toISOString().split(".")[0] + "Z", by: reAuthor,
+            at: stampInstant("second"), by: reAuthor,
             engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
             calibration: t3.engine ? t3.engine.calibration ?? null : null,
             pages: t3.filled, via: "op=pdfstructure&ocr=1",
@@ -7423,7 +7423,7 @@ export default {
       const authorityAsserted = typeof body?.authority === "string" && body.authority.trim()
         ? body.authority.trim() : null;
 
-      const retrieved = new Date().toISOString().split(".")[0] + "Z";
+      const retrieved = stampInstant("second");
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
       /* D-64 — THE RENDER ARM, ADMISSION (CLIENT-RENDERED.md; BOB #31, BOB #32).
        *
@@ -9339,7 +9339,7 @@ export default {
       const attempts = [];
       let token = null, tokenSha = null, service = null;
       for (const endpoint of TSA_ENDPOINTS) {
-        const attempted = new Date().toISOString().split(".")[0] + "Z";
+        const attempted = stampInstant("second");
         try {
           const { der } = timestampRequest(sha);
           const res = await fetch(endpoint, {
@@ -9372,7 +9372,7 @@ export default {
          is a tactical judgement rather than a default. */
       let archive = null;
       if (body.archive === true) {
-        const attempted = new Date().toISOString().split(".")[0] + "Z";
+        const attempted = stampInstant("second");
         const locator = typeof body.locator === "string" ? body.locator : "";
         if (!isPublicHttpsLocator(locator)) {
           attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
@@ -9542,7 +9542,7 @@ export default {
         baselineProfile = (match && match.profile && typeof match.profile === "object") ? match.profile : null;
       } catch { /* C-14.3 reports unparsable JSON; monitoring just has no baseline */ }
 
-      const checked = new Date().toISOString().split(".")[0] + "Z";
+      const checked = stampInstant("second");
       let status = null, note = null, seen = null, compared = null, comparedBasis = null;
       /* D-65 — what `assess` said, the type the fetched document reads as, and the look. */
       let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;

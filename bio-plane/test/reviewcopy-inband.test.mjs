@@ -547,10 +547,14 @@ console.log("\n--- 7. REC-200: the date is the copy's LAST CHANGE, act by act, o
   + "date is the copy's last change, never the moment of the read",
     [r3b.sha === r3.sha, r3b.date === r3.date], [true, true]);
 
-  /* AN ACKNOWLEDGEMENT'S STAMP IS CUT TO THE SECOND (`acknowledgeStatement`), and every other act here is
-     stamped with milliseconds. So an acknowledgement made in the SAME SECOND as the act before it is DATED
-     EARLIER than it, and the copy's last change is honestly still that earlier act — a fact about the
-     record's two spellings, not a flake to paper over. The wait for the clock to cross into the next second
+  /* CORRECTED 2026-09-25 (D-543), NOT EXEMPTED: this comment said an acknowledgement's stamp is CUT TO THE
+     SECOND while every other act here carries milliseconds, so one made in the same second as the act before
+     it was dated EARLIER than that act. That was the record's two spellings, and D-543 removed it at the
+     source: `acknowledgeStatement` now stamps `stampInstant("millisecond")` like the other three acts
+     (`d543-instant-precision.test.mjs` block 3), and `#reviewLastChange` ranks by `instantOrder` for the
+     whole-second rows recorded before it (block 2 there). The wait is KEPT: it still guarantees the
+     acknowledgement is strictly later than the comment, and without it two acts inside one millisecond
+     would tie and the tie keeps the comment, as it should. The wait for the clock to cross into the next second
      is M0-107's `until` with its result read by `budgetAssert`, never a hand-rolled deadline: an expiry
      measured nothing, so it reads NOT MEASURED and the acknowledgement arms below are SKIPPED rather than
      failing as though the plane were wrong. */
