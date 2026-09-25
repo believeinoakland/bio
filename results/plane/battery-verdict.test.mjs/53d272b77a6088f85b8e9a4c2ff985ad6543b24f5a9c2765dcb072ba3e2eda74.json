@@ -1,0 +1,16 @@
+{
+ "unit": "plane:battery-verdict.test.mjs",
+ "inputHash": "53d272b77a6088f85b8e9a4c2ff985ad6543b24f5a9c2765dcb072ba3e2eda74",
+ "verdict": "PASS",
+ "run": "875810ee47d9cd62dfeb9b57d8f4011fd446ef3d.1790328371221.10168.json",
+ "tree": "875810ee47d9cd62dfeb9b57d8f4011fd446ef3d",
+ "head": "b660b678e7ec053add53d2318226fd0014f27c4d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 996,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "1059eb74-003c-5522-811c-47140b7f753c",
+ "at": "2026-09-25T09:26:11.232Z"
+}
