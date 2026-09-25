@@ -218,30 +218,6 @@
    "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/nc-rec82.mjs",
-   "arm": "oob",
-   "anchor": "if (Number.isInteger(ctx.pageCount) && ctx.pageC",
-   "row": "D-650",
-   "since": "2026-09-25",
-   "why": "bio-plane/checks/bio-checks.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/nc-rec82.mjs",
-   "arm": "nochain",
-   "anchor": "if (e.kind !== 'document' && !(Array.isArray(ctx",
-   "row": "D-650",
-   "since": "2026-09-25",
-   "why": "bio-plane/checks/bio-checks.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/nc-rec82.mjs",
-   "arm": "overstrict",
-   "anchor": "if (e.kind !== 'document' && !(Array.isArray(ctx",
-   "row": "D-650",
-   "since": "2026-09-25",
-   "why": "bio-plane/checks/bio-checks.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/nc-rec91.mjs",
    "arm": "nowire",
    "anchor": "                textUnits = kept.length ? kept :",

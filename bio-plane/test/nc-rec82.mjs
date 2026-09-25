@@ -85,8 +85,12 @@ const ARMS = {
     why: "neuter the page-set comparison, so an extent outside the capture's page set is accepted",
     mustFail: ["an extent outside the capture's page set is REFUSED BY NAME"],
     mustPass: "every other refusal",
+    /* RE-ANCHORED 2026-09-25 (D-650): REC-84 gated the page-set arm on `ctx.known !== false` and split it
+       over two lines, so the one-line anchor matched 0 times and this arm never armed. The image arm (FW-19)
+       repeats the comparison at a deeper indent; the eight-space continuation is what keeps this anchor on
+       the pdf-page site alone. */
     patch: () => arm(CHECKS,
-      "if (Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)",
+      "if (ctx.known !== false\n        && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)",
       "if (false)"),
   },
   nochain: {
@@ -94,9 +98,11 @@ const ARMS = {
     why: "neuter the chain requirement, so an address into text nobody produced is accepted",
     mustFail: ["an extent with no extraction chain is REFUSED"],
     mustPass: "every other refusal, and the over-strictness arm",
+    /* RE-ANCHORED 2026-09-25 (D-650): REC-84 and FW-19 put `ctx.known !== false && citedAs !== 'bytes'` in
+       front of the chain test and split it over two lines; the old one-line anchor matched 0 times. */
     patch: () => arm(CHECKS,
-      `if (e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))`,
-      `if (false)`),
+      "if (ctx.known !== false && citedAs !== 'bytes'\n      && e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))",
+      "if (false)"),
   },
   dom: {
     files: [CHECKS],
@@ -151,9 +157,11 @@ const ARMS = {
     why: "THE OVER-STRICTNESS DIRECTION — require a chain for a `document` extent too, so a whole-document leg on an unread capture is refused. A fence tighter than its rule is not a safer fence",
     mustFail: ["a whole-document leg on an UNREAD capture mints — the row is a referent, not a claim"],
     mustPass: "every refusal above — the arm must break correct work and nothing else",
+    /* RE-ANCHORED 2026-09-25 (D-650) on the nochain arm's span. Only the `document` exemption is dropped:
+       the REC-84 and `bytes` gates stay, so the arm moves the one variable it names. */
     patch: () => arm(CHECKS,
-      `if (e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))`,
-      `if (!(Array.isArray(ctx.chain) && ctx.chain.length))`),
+      "if (ctx.known !== false && citedAs !== 'bytes'\n      && e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))",
+      "if (ctx.known !== false && citedAs !== 'bytes'\n      && !(Array.isArray(ctx.chain) && ctx.chain.length))"),
   },
 };
 
