@@ -110,3 +110,4 @@ IC-349	2026-09-25T06:43:52.886Z	CONDUCT#22	D-473: .odt evidentiary digest determ
 IC-350	2026-09-25T06:43:57.959Z	CONDUCT#22	REC-218: reading.dialect and the I7 dialect slot (c22-batch29)
 IC-351	2026-09-25T06:44:03.069Z	CONDUCT#22	D-608: tier 1 reads Form XObject text; form_text_unread, form_stream_undecodable markers (c22-batch29)
 IC-352	2026-09-25T06:44:08.151Z	CONDUCT#22	D-585: pageShowsText: no_text_layer on a page that shows no text (c22-batch29)
+IC-353	2026-09-25T06:44:13.179Z	CONDUCT#22	D-320: OCR member decodes baseline DCT (route decoded-dct); non-baseline refused UNSUPPORTED_JPEG_PROCESS (c22-batch29)
