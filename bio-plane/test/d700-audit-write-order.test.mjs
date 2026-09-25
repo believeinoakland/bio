@@ -1,9 +1,9 @@
 /* NEGATIVE CONTROL: RUN 2026-09-25 (D-700 worker) by `node test/d700-audit-write-order.control.mjs`, each arm ALONE, restored from a per-arm pristine copy in the item's pen (controlPen, outside the worktree) and verified by sha256 AND byte compare (src/store.mjs 3,472,328 B sha256 42648025fa25…, checks/bio-checks.mjs 1,007,663 B sha256 88961a078371…); baseline 15 pass / 0 fail. REPRODUCED FIRST on land/worker/D-674 96a7802f (the defect): 7 pass / 8 fail — §1 both, §2 both, §3's seq, §4's two says-so, §5's sparse.
-   (key) THE ROW'S CONTROL: C-20.1's walk sorted by snap key again. DECLARED §1, §2, §5 fail. RESULT 10/5 AS DECLARED — "§1 the catalogue finds the overreaching tick…", "§2 the catalogue does not blame…", "§5 seq as sparse integers…".
-   (image) readImage stops writing seq. DECLARED §1, §2, §3, §5. RESULT 8/7 AS DECLARED.
-   (silent) the key-order fallback stops saying so. DECLARED §4. RESULT 13/2 AS DECLARED — "§4 an image without seq is audited in snap-key order and C-20.1 says so (info)".
-   (spelling) OVER-STRICTNESS: readImage's `ORDER BY rowid` as `ORDER BY _rowid_`. DECLARED nothing. RESULT 15/0 AS DECLARED.
-   (compare) OVER-STRICTNESS: the seq comparator as a three-way compare. DECLARED nothing. RESULT 15/0 AS DECLARED. */
+   (key) THE ROW'S CONTROL: C-20.1's walk by `seq` -> sorted by snap key again. DECLARED §1, §2, §5 fail. RESULT 10/5 AS DECLARED — "§1 the catalogue finds the overreaching tick…", "§2 the catalogue does not blame…", "§5 seq as sparse integers…".
+   (image) readImage's `seq: ++seq` -> dropped. DECLARED §1, §2, §3, §5. RESULT 8/7 AS DECLARED.
+   (silent) the key-order fallback's info finding -> never pushed. DECLARED §4. RESULT 13/2 AS DECLARED — "§4 an image without seq is audited in snap-key order and C-20.1 says so (info)".
+   (spelling) OVER-STRICTNESS: readImage's `ORDER BY rowid` -> `ORDER BY _rowid_`. DECLARED nothing. RESULT 15/0 AS DECLARED.
+   (compare) OVER-STRICTNESS: the seq comparator `a.seq - b.seq` -> a three-way compare. DECLARED nothing. RESULT 15/0 AS DECLARED. */
 /* =========================================================================
  * D-700 — THE GATE'S C-20.1 AUDIT WALKS WRITE ORDER, AS THE PLANE DOES.
  * State Rules & Consistency v1.5 §6, I-20 as D-674 amended it: "the
