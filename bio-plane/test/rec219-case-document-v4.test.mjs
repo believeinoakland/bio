@@ -163,9 +163,13 @@ const infoMd = (id) => ["---",
   "monitoring:", "  enabled: false", "  frequency: none",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-const inquiryMd = (id, cites) => ["---",
+/* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: REC-219 was cut before D-563, whose C-86.4 refuses
+   an envelope state the held document contradicts. `ground` promotes this finding under `concluded` while the bytes
+   said `open`, so the projection read `concluded` only by taking the request's word; the document now SAYS the state
+   it is filed under (D-563's own correction of the same shape in its fixtures). */
+const inquiryMd = (id, cites, state = "open") => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
-  `title: "What does ${id} rest on?"`, "current_state: open", "prior_state: null",
+  `title: "What does ${id} rest on?"`, `current_state: ${state}`, "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland",
@@ -207,7 +211,8 @@ const promote = async (tok, id, text, type, state, register = []) => {
   const r = await POST(`op=promote&token=${tok}`, {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260923T${String(210000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: this item was cut before D-563, whose C-86.3 refuses an envelope title the held document contradicts; the envelope title `Bundle <id>` is dropped as D-563 dropped it in its own fixtures, and promote derives it from the document. */
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register });
   if (!r || r.ok === false || !r.bundleSha) bail(`promote ${id} -> ${state}`, r);
@@ -222,7 +227,7 @@ const reg = (s) => [{ sha256: s, path: `data/${s.slice(0, 4)}.pdf`, encoding: "b
 const ground = async (tag) => {
   const info = `INFO-2026-2190-${tag}`, lead = `INQ-2026-2190-${tag}`;
   await promote("adm-r219", info, infoMd(info), "information", "collected", reg(sha(`r219-${tag}`)));
-  await promote("adm-r219", lead, inquiryMd(lead, info), "inquiry", "concluded");
+  await promote("adm-r219", lead, inquiryMd(lead, info, "concluded"), "inquiry", "concluded");
   return lead;
 };
 const publishAndSign = async (lead, n) => {

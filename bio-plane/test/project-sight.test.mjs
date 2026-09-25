@@ -857,7 +857,10 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
        (3) answer positionally to everybody — 11f demands the owner's real answer from every read;
        (4) cover the reads somebody thought of — 11g sweeps every gated read op into the store's two tables. */
   const TITLE_D = "Discoverable roads project 9196";
-  const { bundleId: _n, ...c } = pkg(NEVER, projectMd(null, [LEDGER]), "project", "forming", null, `rec196-${++seq}`);
+  /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: REC-196's fixture named D only in the ENVELOPE,
+     over a document titled "Hidden project 9138". Since D-563 promote takes the document's title, so D collided with
+     the hidden project's name (NAME_TAKEN). The document now carries TITLE_D itself, and the envelope agrees. */
+  const { bundleId: _n, ...c } = pkg(NEVER, projectMd(null, [LEDGER], undefined, TITLE_D), "project", "forming", null, `rec196-${++seq}`);
   const D = must("mint D", await POST(`op=promote&token=${ADM}`, { ...c, meta: { ...c.meta, title: TITLE_D } })).bundleId;
   must("iris owns D", await DO("projectclaimowner", { projectId: D, memberId: "iris" }));
   /* The setting is iris's OWNER's act, taken through the store's INTERNAL door (a viewer never sent is not asked,
