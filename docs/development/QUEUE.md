@@ -513,8 +513,8 @@ accepts-when: the harness cannot submit a create or fork without the choice, and
 added: 2026-09-19 · SCHEDULER (same entry, item 3).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-70» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-134 · running — **NO SURFACE PERFORMS §4.9's CUSTODIAL ACTS: `memberadd`, `memberset`, `signeradd` and `signerset` have ZERO call sites in** … (whole text: the cut archive)
-status: running — SCHEDULER #22 03:12Z spawns WORKER D-134 (depth 2)
+### D-134 · integrated — **NO SURFACE PERFORMS §4.9's CUSTODIAL ACTS: `memberadd`, `memberset`, `signeradd` and `signerset` have ZERO call sites in** … (whole text: the cut archive)
+status: integrated — SCHEDULER #22 05:18Z: tip 26a3c0df, GATE 367/367 GREEN (21081 assertions), tree 6ebbd5ef; custodial surface + C-96.1-9 + members.invited_by (BOB #35 (b)); CATALOG 1.30.0 (a sixth claimant); M-171; minted D-605
 order: with the M8 features after D-126, a surface over built ops; BOB #17 ordered it behind D-136's fence (*"a member surface over an act whose voter the caller can name is a SECOND path to a forgeable vote"*), which is built, and BOB #18 discharged BOB's half; it rests on REC-159's session reach (SCHEDULER #13, 2026-09-22, LED-7 batch S13-1)
 milestone: M8
 interface: I3 consumer (the four ops, reachable from an enrolled administrator's session once REC-159 lands).
@@ -808,6 +808,27 @@ depends-on: D-552.
 scope: on the progression page, render each finding's disposition as the plane states it (who, when, the reason, and whether the decision still applies to the current definition_version), in the plane's words; the finding stays listed.
 accepts-when: against a real-plane suite a dismissed finding renders its decision beside it (the measured failure it moves: an answered question shown as open). NEGATIVE CONTROL: render `inst.findings` without the view and the decided-finding arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
+
+### D-605 · queued — **REGISTERING A SIGNING KEY FROM THE SETUP PAGE IS ALWAYS REFUSED BAD_KEY: `bio-plane/src/setup.mjs`'s key form posts the WHOLE `ssh-ed25519 AAAA… label` line as keyB64, and `Store#signerAdd`'s `/^AAAA[A-Za-z0-9+/=]+$/` can never match it.** Found by D-134's worker (05:15Z), by reading describeKey and the regex; D-134's suite shows a whole line refused. — owner DIST (the plane's setup page).
+order: after D-586, with the corrections to acts a group needs: a setup act that can never succeed blocks a new group's first signer (SCHEDULER #22, 2026-09-25)
+milestone: M8
+interface: none on the wire (the page's request is corrected; signeradd is unchanged).
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (signeradd), with the setup page as D-596 leaves it.
+depends-on: none.
+scope: the setup page sends the line's SECOND token as keyB64 and the rest (the label) as comment, as D-134's surface does; one arm that submits a real `ssh-ed25519` line through the served page and reaches signeradd.
+accepts-when: a whole public-key line pasted into the setup page registers the key (moves: every setup-page registration refused BAD_KEY). NEGATIVE CONTROL: post the whole line again and the arm reads BAD_KEY, failing by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-134's worker).
+
+### UI-106 · queued — **THE REVIEW-COPY SURFACE LOSES `newCase` AND WILL SHOW THE CORRECTED IDENTITY SENTENCE UNREAD: `app.html`'s `rvcFormFromCopy` does not read `case.newCase` (DELEGATION RECORD (WORKER REC-199) -> UI on coord CLAIMS.md), and UI-92's draft list draws `#caseIdentitySentence`, which D-538 changes.** — owner UI.
+status: queued — D-538 (01:04Z): civicos-ui preauth-vocabulary.test.mjs ~941 and review-copy.test.mjs ~479 mock the OLD identity sentence for a copy with no newCase; correct both mocks to the plane's new wording
+order: after D-539, the surface half of the review-copy corrections (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:43Z)
+milestone: M10
+interface: I3 consumer (REC-199's IC-285 and D-538's IC).
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling.
+depends-on: D-538, UI-92.
+scope: `rvcFormFromCopy` reads `case.newCase` so a read-then-write keeps it; the draft list re-reads the plane's identity sentence as stated; discharge REC-199's DELEGATION block.
+accepts-when: against a real-plane suite a round trip through the form keeps `newCase`, and draft DD shows the derivation sentence (the measured failure it moves: `newCase` lost at the surface). NEGATIVE CONTROL: drop the read and the round-trip arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
