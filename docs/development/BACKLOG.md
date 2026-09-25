@@ -153,16 +153,6 @@ scope: keep `fetched_at` only on records whose request was ISSUED; stamp the oth
 accepts-when: a reused part and a policy-skipped reference carry no fetched_at (moves: every unfetched record claiming a fetch). NEGATIVE CONTROL: restore the stem's fetched_at and that arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-191's worker).
 
-### UI-110 · queued — **NO MEMBER CAN SELECT A PROJECT-SCOPED FINDING INTO A QUEUE SET: `civicos-ui/app.html`'s `queueSetOpFor` (~14393 on main 9f8b69e6; UI-94 renames it `queueSetOpsFor`) returns null for scope=project, though REC-205 makes the plane carry each item's project.** The DELEGATION RECORD (REC-205) → UI on coord `CLAIMS.md` (06b86e6d). — owner UI.
-order: after UI-106, the surface half of REC-205, in product order behind its plane half (SCHEDULER #21, 2026-09-24; via CONDUCT #20 23:45Z)
-milestone: M8
-interface: none (reads REC-205's I3 set act).
-design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class", with D-266's NO_PROJECT_SCOPE.
-depends-on: REC-205, UI-94.
-scope: the set act sends each project-scoped item's own project; where an item has several homes the surface asks the member and NEVER defaults one (D-266); the plane's NO_PROJECT_SCOPE reaches the member in its DEC-49 words.
-accepts-when: a project-scoped finding joins a selection and the set act carries its project; an item with two homes is not sent until the member names one (the measured failure it moves: null for scope=project). NEGATIVE CONTROL: return null again and the selection arm fails by name.
-added: 2026-09-24 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
-
 ### UI-113 · queued — **NO SURFACE RENDERS A PUBLISHED CASE'S FROZEN `bias_manifest` BLOCK AT ALL (0 hits in civicos-ui), so REC-219's pending-adoption statement reaches no page.** Found by REC-219's worker (02:38Z). — owner UI.
 order: after UI-110, with the surface halves of landed record rows (SCHEDULER #21, 2026-09-25)
 milestone: M10
@@ -1191,3 +1181,23 @@ depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `node tools/coord.mjs read docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
+order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
+accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own … (whole text: the cut archive)
+order: behind the product rows, first of the reading-budget rows (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: an over-budget kickoff costs every RECORD spawn context, not gate time, and blocks no product; SCHEDULER #12); not a defect in the product, cheap and mechanical (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` with CLAUDE.md §1's reading budget — *a file is either READ WHOLE … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

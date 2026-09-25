@@ -28,8 +28,8 @@ BOB appends a designed item, a correction or an order change here, with its inte
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 16 in all (`CACHE_ROWS`, sized to CONDUCT's capacity plus spare: Bob, 2026-09-23, `WORK-PIPELINE.md`). **At most 10 worker sessions are live at once** (Bob, 2026-09-24 ~03:08Z, via BOB #32; until 05:00Z, then 6, and no new spawn from 06:00Z): a `running` row whose worker has FINISHED and awaits integration holds no session, so the cache keeps a few `queued` rows behind the live ten and no slot waits. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
 
-### D-521 · running — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
-status: running — SCHEDULER #22 04:12Z re-spawns WORKER D-521 on main 5e8a65a8 (REC-217 landed, widened op=statementack's read)
+### D-521 · integrated — **IC-246's STATEMENT_ACK_DOCUMENTS_OVER_BOUND (C-82.1) IS UNREACHABLE BY CONSTRUCTION: after REC-194 its read names (case_id, edition), `case_documents`' primary key, so at most one row returns and the bound can never fire.** Found by REC-194's worker (F1). — owner RECORD.
+status: integrated — SCHEDULER #22 05:25Z: tip land/worker/D-521b @ b75f4bc4 (NOT the stale land/worker/D-521 31501f1b), GATE 385/385 GREEN FULLREUSE (21870 assertions), tree ce8cda76; NARROWED: after REC-217 the read returns at most TWO (not one), bound 8 still unreachable, so C-82.1 + its region retired; read = two keyed #one reads merged per document; wire removal of case_documents_limit/_truncated (I3); CATALOG 1.30.0->1.31.0
 order: after REC-213, with the corrections to just-landed work: a catalogued refusal that cannot occur is a claim the record makes about itself (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
 milestone: M10
 interface: I3 — a catalogued code retired; the catalogue version moves; the integrator classifies.
@@ -830,6 +830,16 @@ depends-on: D-538, UI-92.
 scope: `rvcFormFromCopy` reads `case.newCase` so a read-then-write keeps it; the draft list re-reads the plane's identity sentence as stated; discharge REC-199's DELEGATION block.
 accepts-when: against a real-plane suite a round trip through the form keeps `newCase`, and draft DD shows the derivation sentence (the measured failure it moves: `newCase` lost at the surface). NEGATIVE CONTROL: drop the read and the round-trip arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs UI`).
+
+### UI-110 · queued — **NO MEMBER CAN SELECT A PROJECT-SCOPED FINDING INTO A QUEUE SET: `civicos-ui/app.html`'s `queueSetOpFor` (~14393 on main 9f8b69e6; UI-94 renames it `queueSetOpsFor`) returns null for scope=project, though REC-205 makes the plane carry each item's project.** The DELEGATION RECORD (REC-205) → UI on coord `CLAIMS.md` (06b86e6d). — owner UI.
+order: after UI-106, the surface half of REC-205, in product order behind its plane half (SCHEDULER #21, 2026-09-24; via CONDUCT #20 23:45Z)
+milestone: M8
+interface: none (reads REC-205's I3 set act).
+design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class", with D-266's NO_PROJECT_SCOPE.
+depends-on: REC-205, UI-94.
+scope: the set act sends each project-scoped item's own project; where an item has several homes the surface asks the member and NEVER defaults one (D-266); the plane's NO_PROJECT_SCOPE reaches the member in its DEC-49 words.
+accepts-when: a project-scoped finding joins a selection and the set act carries its project; an item with two homes is not sent until the member names one (the measured failure it moves: null for scope=project). NEGATIVE CONTROL: return null again and the selection arm fails by name.
+added: 2026-09-24 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
