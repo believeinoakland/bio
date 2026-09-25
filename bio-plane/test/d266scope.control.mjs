@@ -23,7 +23,7 @@
  * AND AN ARM THAT COMES BACK GREEN WHEN RED WAS PREDICTED IS A FINDING ABOUT THE ARM,
  * recorded rather than smoothed.
  *
- * Run it:  cd bio-plane && node test/d266scope.control.mjs
+ * Run it:  cd bio-plane && node test/d266scope.control.mjs [--arm <id>]
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -100,7 +100,11 @@ function restoreAll(armId) {
   }
 }
 
+/* D-636: `--arm <id>` runs that arm ALONE (the baseline still runs first). */
+const ONLY = process.argv.includes("--arm") ? process.argv[process.argv.indexOf("--arm") + 1] : null;
+
 function arm(id, title, edits, mustFail, mustNotFail = [], expectGreen = false) {
+  if (!ANCHOR_DRY && ONLY != null && id !== ONLY) return;
   if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: id, file: F[k], find, put })));   /* M0-197: read, never armed */
   armsRun++;
   console.log(`\n=== (${id}) ${title}`);
@@ -206,8 +210,15 @@ arm("2", "SCOPE THE SHARED-RECORD KIND PER-PROJECT — both halves, because the 
   + "right thing. MUST NOT FAIL: the fires-for-B arm and the other-team's-item arm — the "
   + "stance-scoped half is untouched, and that is what proves the two behaviours are independent "
   + "rather than one switch with two labels.",
-  [["store", `      disposed.set(d.progression_key + "::" + d.stage_key, d);`,
-              `      disposed.set(d.progression_key + "::" + d.stage_key + "::never-matches", d);`],
+  /* D-636: RE-ANCHORED. The first half quoted `disposed.set(d.progression_key + "::" + d.stage_key, d)`,
+     which REC-184 (aa91352049) rewrote into `recorded.set(...)` plus a `disposed` map filtered on
+     `applies` — so the half matched 0 times and the arm never armed. It now breaks the ageing where
+     proposalsFeed READS it, the one `disp` lookup, and leaves `recorded` (hence `prior_disposition`)
+     alone: the arm moves the (progression, stage) keying of the ageing and nothing else.
+     NEGATIVE CONTROL (D-636, 2026-09-25, `--arm 2` alone): d266scope 34 pass 4 fail, current 63 pass 2 fail,
+     `ONE ACT CLEARED IT UNDER EVERY CASE` and the instance-scope arm among them; as declared. */
+  [["store", `      const disp = (sk) => disposed.has(inst.progression_key + "::" + sk);`,
+              `      const disp = (sk) => disposed.has(inst.progression_key + "::" + sk + "::never-matches");`],
    ["store", `    if (pk && sk)
       return { available: true, op: "proposedispose", scope: "instance", keyed_on: KEYED_ON,`,
               `    if (false && pk && sk)

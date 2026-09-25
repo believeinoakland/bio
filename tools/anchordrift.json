@@ -50,14 +50,6 @@
    "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — queued"
   },
   {
-   "driver": "bio-plane/test/d266scope.control.mjs",
-   "arm": "2",
-   "anchor": "      disposed.set(d.progression_key + \"::\" + d.",
-   "row": "D-636",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/d85-surface-run.control.mjs",
    "arm": "no-lens-at-open",
    "anchor": "        JSON.stringify(state == null ? {} : stat",
