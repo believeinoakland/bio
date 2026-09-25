@@ -50,6 +50,21 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, UI-112 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-112` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
+PROVISIONAL — CONDUCT renumbers at integration if a concurrent UI worker took it. SURFACE: **the document page's
+on-point chooser (UI-91) offers PLACES, not strings.** D-454 made `op=connectionchoose` refuse C-74.4 where a string
+read at several places is named alone, and `docChooseOnPoint` sent no occurrence, so the chooser offered, in the
+common case, an act the plane refuses — and for a subject named by ONE string on three pages it drew no chooser at
+all (it needed two strings). Now `docMentionPlaces` reads each mention's places through `op=readingref` (a member who
+could act only), the offer is one button per place, the act carries `occurrence=` (the place's human form, which the
+plane accepts where it names one occurrence), and a refusal that lists `occurrences` by key — C-74.4 in its canned
+words — is followed by one offer per listed key. A choice the plane states AMBIGUOUS renders its `why` verbatim,
+marked `data-ambiguous`. Nothing is preselected. Suite `civicos-ui/test/onpoint-occurrence.test.mjs` (real plane,
+27/0) and its control driver (five arms, every one as declared). NOT BUILT, stated: an unplaced occurrence cannot
+be chosen (D-625, the plane's act); the id/sha arm's `on_point` carries no position, so no place of a many-place
+string is marked current after a choice.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
