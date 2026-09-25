@@ -56,16 +56,6 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
-### D-672 · queued — **A WORKBOOK'S SHEET-RANGE UNITS EXIST AND NOTHING INDEXES THEM: `textUnitsFor` (index.mjs) yields nothing for `sheets[]`, and the store says so ("nothing yet writes a workbook's sheet-range units into the index"); CONTENT-SEARCH-DESIGN §4.1's Incomplete bullet still says the index "waits on the sheet-range arm", which has existed since FW-19.** Found by D-415's worker (minted on land/worker/D-415). — owner RECORD.
-order: after D-680 — it makes D-415's just-emitted units findable, on a unit §4.1 already designs (SCHEDULER #23, 2026-09-25)
-milestone: M4
-interface: I3/I5 — the index admits sheet-range units; the integrator mints and classifies.
-design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.1 (*a sheet's unit is a sheet-range*).
-depends-on: D-415 (integrated, land/worker/D-415 @ 48245247 — for the named units; the whole-sheet unit rests only on FW-19, done).
-scope: `textUnitsFor` recognises `sheets[]` by shape and emits one unit per sheet keyed by its `range` extent; the store's unit arm admits sheet-range; §4.1's Incomplete bullet corrected. Indexing the NAMED units (per-cell text subsets) is NOT designed — state it, do not build it.
-accepts-when: a passage search over a captured workbook finds a cell's text in one unit labelled sheet-range (moves: workbook text unsearchable). NEGATIVE CONTROL: drop the sheets[] arm and the workbook search arm returns 0 rows, failing by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-415's worker).
-
 ### D-635 · queued — **A PAGE ROUTED TO OCR WHOSE FOLIO DECODED LOSES ITS DERIVATION-PART PLACEMENT: BOB #35 RULED 06:25Z APPEND — the page keeps its layer text, the transcription is appended, and the page is listed in BOTH derivation parts, because D-252's guarantee that layer text is never lost outranks the parts' partition.** Minted by D-627's worker (its full finding rides its report). — owner CONTENT-PDF.
 order: directly after D-627, which creates the routed-with-folio pages it concerns (SCHEDULER #22, 2026-09-25)
 milestone: M2
@@ -1153,3 +1143,13 @@ depends-on: none. Sequence after M0-81.
 accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-120 · queued — **`mintid --audit --base` DIFFS `main` ONLY, SO AN ID ALLOCATED ON `coord` IS INVISIBLE TO THE INTEGRATION-SIDE CHECK.** `audit()` (`tools/mintid.mjs`) reads `git diff <base>...HEAD`; since M0-110's cutover every DEBT row, plan heading and ledger archive — the allocation sites — lands on `coord`. Found by M0-110's worker (CONDUCT #14). — owner M0.
+order: first of the ledger tooling, before LED-8: an id collision check blind to where ids are now minted is the costs-nothing green, latent until two lanes mint the same id on `coord`; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-110's finding)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §1 (the state moves to `coord`; every reader follows it), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — M0-110 is done.
+scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
+accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).

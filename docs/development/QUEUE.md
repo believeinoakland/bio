@@ -803,8 +803,8 @@ scope: tier3Extend re-asks the member for each page in `deferred`, one invocatio
 accepts-when: the committed two-page fixture (bio-plane/test/fixtures/d460/) reads meeting_agenda through the op (moves: 174 of 190 pages untranscribed). NEGATIVE CONTROL: stop reading `deferred` and the fixture reads generic, 1/1 unread, by name (scripts/d460-perpage-ocr.mjs).
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
 
-### D-616 · running — **PAGES PAST THE PER-REQUEST OCR BUDGET ARE NEVER READ ON A LATER REQUEST: D-606 caps each acquire at 24 member invocations (M-175), and the re-read (op=pdfstructure&ocr=1) starts from tier-1 text, so it asks for the SAME first pages again; a 58-page scan leaves 34 pages unread for good.** Found by D-606's worker (06:06Z). Affects every scan over 24 image-only pages. — owner CONTENT-PDF.
-status: running — SCHEDULER #22 06:18Z spawns WORKER D-616 (depth 2), stacked on land/worker/D-606 @ f04460ab
+### D-616 · integrated — **PAGES PAST THE PER-REQUEST OCR BUDGET ARE NEVER READ ON A LATER REQUEST: D-606 caps each acquire at 24 member invocations (M-175), and the re-read (op=pdfstructure&ocr=1) starts from tier-1 text, so it asks for the SAME first pages again; a 58-page scan leaves 34 pages unread for good.** Found by D-606's worker (06:06Z). Affects every scan over 24 image-only pages. — owner CONTENT-PDF.
+status: integrated — SCHEDULER #23 08:10Z: tip 849c1a09 (stacked on D-606 f04460ab), GATE 80/80 GREEN FULLREUSE (6554 assertions; full run 386/387, its superseded red corrected), tree 7d773b0f; the tail re-read asks only untranscribed pages (<=24), two scoped tier-3 parts on a changed build; union points and IC with CONDUCT
 order: at the head of the reader corrections, directly after D-606 which it completes: most of a long scan unread with no path to read it (SCHEDULER #22, 2026-09-25)
 milestone: M2
 interface: I6 — a re-read advances through the unread tail; the integrator classifies.
@@ -1287,6 +1287,17 @@ depends-on: none (stacked on land/worker/D-374 @ c7703c3d, integrated).
 scope: add `space` to the pdf-page arm; the checker refuses by name any space other than user space, OR converts image-px with the image dims, /Rotate and the MediaBox (state which, and why); `extentCovers` answers false across spaces; existing extents without `space` read as user space, stated.
 accepts-when: an OCR pixel rect proposed through op=extractpropose is refused or converted by name, never admitted as user space (moves: a pixel rect addressed as points). NEGATIVE CONTROL: drop `space` at `#posFields` and the pixel-rect arm admits it, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
+
+### D-672 · running — **A WORKBOOK'S SHEET-RANGE UNITS EXIST AND NOTHING INDEXES THEM: `textUnitsFor` (index.mjs) yields nothing for `sheets[]`, and the store says so ("nothing yet writes a workbook's sheet-range units into the index"); CONTENT-SEARCH-DESIGN §4.1's Incomplete bullet still says the index "waits on the sheet-range arm", which has existed since FW-19.** Found by D-415's worker (minted on land/worker/D-415). — owner RECORD.
+status: running — SCHEDULER #23 08:10Z: spawned, stacked on land/worker/D-415 @ 48245247 (D-671 waits: two parents, D-374 and D-320)
+order: after D-680 — it makes D-415's just-emitted units findable, on a unit §4.1 already designs (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3/I5 — the index admits sheet-range units; the integrator mints and classifies.
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.1 (*a sheet's unit is a sheet-range*).
+depends-on: none (stacked on land/worker/D-415 @ 48245247, integrated — for the named units; the whole-sheet unit rests only on FW-19, done).
+scope: `textUnitsFor` recognises `sheets[]` by shape and emits one unit per sheet keyed by its `range` extent; the store's unit arm admits sheet-range; §4.1's Incomplete bullet corrected. Indexing the NAMED units (per-cell text subsets) is NOT designed — state it, do not build it.
+accepts-when: a passage search over a captured workbook finds a cell's text in one unit labelled sheet-range (moves: workbook text unsearchable). NEGATIVE CONTROL: drop the sheets[] arm and the workbook search arm returns 0 rows, failing by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-415's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
