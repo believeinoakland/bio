@@ -835,8 +835,8 @@ scope: a link is chrome when contained in a chrome region AND recurring across t
 accepts-when: a varying page-local sidebar reports no lost chrome link, and a one-page host reads undetermined (moves: a sidebar read as lost chrome). NEGATIVE CONTROL: judge by containment alone and the sidebar arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
 
-### D-685 · running — **THE ACQUIRE WIRE'S BUDGET LOOP DROPS A WHOLE UNIT whose text plus envelope exceeds the remaining budget (524,288 B), instead of carrying its per-unit-capped prefix (the store caps a unit at 128 KiB with truncated=1) — so a large sheet (M-20: 72.6 MB over 1,056 sheets) silently loses units from search.** Diagnosed at the code, not measured. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
-status: running — SCHEDULER #23 11:20Z: spawned, stacked on land/worker/D-684 @ 9f6112d3
+### D-685 · integrated — **THE ACQUIRE WIRE'S BUDGET LOOP DROPS A WHOLE UNIT whose text plus envelope exceeds the remaining budget (524,288 B), instead of carrying its per-unit-capped prefix (the store caps a unit at 128 KiB with truncated=1) — so a large sheet (M-20: 72.6 MB over 1,056 sheets) silently loses units from search.** Diagnosed at the code, not measured. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
+status: integrated — SCHEDULER #24 12:40Z: tip 3094f19b (on D-684 9f6112d3), GATE 385/385 GREEN FULLREUSE (21895 assertions; excludes 3 untallied), tree d242c4c8; the acquire wire carries a capped prefix (truncated:true, additive I3) instead of dropping the unit; cap moved to bio-checks.mjs; a unit whose capped prefix does not fit the budget is still dropped and counted (stated in §4.1); M-184
 order: after D-684, the same acquire path, one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3 — a truncated unit carried where one was dropped; the integrator classifies.
@@ -1176,6 +1176,17 @@ depends-on: none (stacked on land/worker/D-719 @ 8ab99e48, integrated, on D-700 
 scope: order both lists by the image's _history/manifest.json seq when every entry carries a distinct integer one (historyOrder/historyWriteOrder's predicate), else by key, and state which order is shown, as D-719 did for #b-history.
 accepts-when: a bundle whose keys run against write order lists both its promotions and its kept revisions in write order, and the page says so (moves: a history shown out of write order). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-719's worker).
+
+### D-724 · running — **A PARTIAL CAPTURE INDEX SKIPS AN OVER-BOUND UNIT SILENTLY: both budget loops (index.mjs textUnitsFor, store.mjs #writeCaptureText) `continue` past it and write later units that fit, but only a COUNT is kept, so a search miss in sheet 4 cannot say sheet 4 was NEVER INDEXED rather than holding no match; CONTENT-SEARCH-DESIGN §4.3 calls the index a prefix.** Measured by D-685's worker (M-184, Z5). BOB #36 RULED 2026-09-25 11:20Z, option (b) (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+order: behind D-685, the same budget loops, one worker at a time; saying WHICH absence is true is first-class (CLAUDE.md §2), so it leads D-694 (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 12:40Z: spawned, stacked on land/worker/D-685 @ 3094f19b
+milestone: M4
+interface: I3 — additive skipped unit keys on the read that carries `partial`; the integrator classifies.
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.3, with BOB #36's 11:20Z ruling.
+depends-on: none (stacked on land/worker/D-685 @ 3094f19b, integrated, on D-684 @ 9f6112d3).
+scope: (1) correct §4.3 and the #writeCaptureText docblock to "every unit that fit, in reading order, with gaps"; (2) a `partial` capture records the unit keys it SKIPPED, from both loops, and the read that reports a capture's indexing state serves them as "not indexed: over the bound". Option (a), break at the first over-bound unit, is REJECTED.
+accepts-when: Z5's workbook reads S5 indexed and names S4 skipped over the bound; a capture under the bound names none (moves: a silent gap). NEGATIVE CONTROL: drop the skipped-key write and the Z5 arm fails naming S4.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-685's worker; BOB #36 inbox).
 
 ### D-645 · queued — **`nc-mk4` arms machinewide/noshare/sharewide, aiscope: ANCHOR DRIFT — three match 0; aiscope matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-644, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)

@@ -105,16 +105,6 @@ scope: offer the unplaced occurrence as its own choice and send `occurrence` whe
 accepts-when: a member chooses the unplaced occurrence of a many-place string from the page and op=connectionchoose records '' (moves: an accepted choice the surface cannot make). NEGATIVE CONTROL: restore the truthy test and the unplaced-choice arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
 
-### D-724 · queued — **A PARTIAL CAPTURE INDEX SKIPS AN OVER-BOUND UNIT SILENTLY: both budget loops (index.mjs textUnitsFor, store.mjs #writeCaptureText) `continue` past it and write later units that fit, but only a COUNT is kept, so a search miss in sheet 4 cannot say sheet 4 was NEVER INDEXED rather than holding no match; CONTENT-SEARCH-DESIGN §4.3 calls the index a prefix.** Measured by D-685's worker (M-184, Z5). BOB #36 RULED 2026-09-25 11:20Z, option (b) (drained by SCHEDULER #24; cite until folded). — owner RECORD.
-order: behind D-685, the same budget loops, one worker at a time; saying WHICH absence is true is first-class (CLAUDE.md §2), so it leads D-694 (SCHEDULER #24, 2026-09-25)
-milestone: M4
-interface: I3 — additive skipped unit keys on the read that carries `partial`; the integrator classifies.
-design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.3, with BOB #36's 11:20Z ruling.
-depends-on: D-685 (same loops; stack on land/worker/D-685 once integrated).
-scope: (1) correct §4.3 and the #writeCaptureText docblock to "every unit that fit, in reading order, with gaps"; (2) a `partial` capture records the unit keys it SKIPPED, from both loops, and the read that reports a capture's indexing state serves them as "not indexed: over the bound". Option (a), break at the first over-bound unit, is REJECTED.
-accepts-when: Z5's workbook reads S5 indexed and names S4 skipped over the bound; a capture under the bound names none (moves: a silent gap). NEGATIVE CONTROL: drop the skipped-key write and the Z5 arm fails naming S4.
-added: 2026-09-25 · SCHEDULER #24 (id minted by D-685's worker; BOB #36 inbox).
-
 ### D-694 · queued — **A CSV CAPTURED THROUGH THE PROFILE-BRANCH PATH HOLDS NO SHEET LIST: that path carries no `container_extent`, so a sheet-range or sheet-cell citation naming a sheet the CSV lacks is SKIPPED as undetermined instead of refused, and a version notice reads "no sheet list" (measured: the key is absent on the acquired document).** Found by D-684's worker (minted on land/worker/D-684). — owner RECORD.
 order: after D-685, the same acquire assembly, one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -1141,3 +1131,23 @@ depends-on: none.
 scope: add the two items to the header's CANNOT SEE list.
 accepts-when: the header names both. NEGATIVE CONTROL: a grep arm over the header fails by name if either is missing.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
+
+### D-342 · queued — **A CLAIMS.md RELEASE HAS FOUR SPELLINGS AND NO TOOL READS ANY OF THEM: a `### RELEASED` heading, a `released:` line at the file end, a dated release, and the one grammar.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *the one release grammar is a `released: <date> …` line INSIDE the claim's block; the three historical forms are read as released and brought to it; the planning-hygiene pin is a row.* — owner M0.
+order: with the M0 instrument rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a pin over a ledger), for `docs/development/PARALLELISM.md` §"Claiming an area" (BOB folds the grammar), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded).
+depends-on: none.
+scope: bring the three historical forms to the grammar; a `planning-hygiene` arm pins it.
+accepts-when: every released block carries the in-block line. NEGATIVE CONTROL: plant a `### RELEASED` heading, and the pin fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
+
+### D-459 · queued — **`case-opened.test.mjs` IS UNCLASSIFIED IN THE COVERAGE REGISTER, AND WAS BEFORE D-241.** — owner M0.
+order: with the M0 instrument rows, after D-342 (SCHEDULER #17, 2026-09-23; D-241's worker via CONDUCT #18 00:15Z)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (the negative-control register).
+depends-on: none.
+scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
+accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
