@@ -1,0 +1,16 @@
+{
+ "unit": "plane:action-loop.test.mjs",
+ "inputHash": "724205bf82eb0bf4b5da6592355bc712517016be7754fe6b4f74d9299c120960",
+ "verdict": "PASS",
+ "run": "4dea97219b31d6f8edc8877d8c622f9c65fa7b3a.1790320099593.18862.json",
+ "tree": "4dea97219b31d6f8edc8877d8c622f9c65fa7b3a",
+ "head": "b10621be1b635e6564fc00aa479d6deb8239a90a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 189,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "406cf862-5f28-5cb3-bfc7-4e905373ecf1",
+ "at": "2026-09-25T07:08:19.609Z"
+}

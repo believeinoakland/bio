@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d150-statement-acknowledgement.test.mjs",
+ "inputHash": "2957b2ec51136e17298d91eed66b2e90269f09b73e536fb95f38eabc2c84be6e",
+ "verdict": "PASS",
+ "run": "4dea97219b31d6f8edc8877d8c622f9c65fa7b3a.1790320099593.18862.json",
+ "tree": "4dea97219b31d6f8edc8877d8c622f9c65fa7b3a",
+ "head": "b10621be1b635e6564fc00aa479d6deb8239a90a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 160,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "406cf862-5f28-5cb3-bfc7-4e905373ecf1",
+ "at": "2026-09-25T07:08:19.610Z"
+}
