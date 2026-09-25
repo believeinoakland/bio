@@ -163,9 +163,8 @@ const ARMS = {
                "a leg stating a WEAKER letter than the ceiling keeps its own"],
     mustPass: [HEADLINE, ARCHIVE_HEADLINE, "an archive-only document's capture grade is MEASURED", UNRULED_NAMED,
                "and the member's weaker letter on it STANDS"],
-    also: { suite: "./rec114-leg-earned.test.mjs", foot: /(\d+) pass, (\d+) fail/,
-            mustFail: ["`grade_why` STATES the letter is the author's under the ceiling"],
-            mustPass: ["BOTH DERIVED FIELDS ARE PRESENT ON EVERY LEG ROW"] },
+    /* No `also:` suite here, deliberately: a second value for `suite:` makes pensweep.mjs read the spawn path
+       as UNCLASSIFIED (its definitions disagree). The declared control is 9g in this suite. */
   },
   j: {
     what: "THE READ GOES SILENT — the entry still states the route unrecorded, but `#capturedAt` returns "
