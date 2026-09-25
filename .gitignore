@@ -337,3 +337,6 @@ bio-plane/.nc-d470/
 # would silently cover a pen nobody declared. The driver removes it on a clean run; this line is what
 # keeps a FAILED restore's pristine copies of `src/store.mjs` and `checks/bio-checks.mjs` out of a commit.
 bio-plane/.nc-d507/
+# REC-220's pen (`bio-plane/test/nc-rec220.mjs`), named for its item on the rule stated at
+# `.rec84-control-pristine/`: an interrupted arm must not leave a copy of `store.mjs` where a walk enrols it.
+.rec220-control-pristine/
