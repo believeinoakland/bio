@@ -1,6 +1,6 @@
 # The process mechanics
 
-**Status** · PROPOSED 2026-09-25 by BOB #36, second draft after Bob's first review, awaiting his approval. This document describes HOW the approved principles (`PROCESS-DESIGN.md`, P1–P16) are carried out. Each mechanism cites the principle it serves (P16). Where it and the principles disagree, the principles win. It belongs in the process repository, beside the principles (P2).
+**Status** · APPROVED by Bob 2026-09-25 (second draft, written by BOB #36). This document describes HOW the approved principles (`PROCESS-DESIGN.md`, P1–P16) are carried out. Each mechanism cites the principle it serves (P16). Where it and the principles disagree, the principles win. It belongs in the process repository, beside the principles (P2).
 
 ## 1. Where things live (P2, P5)
 
@@ -133,4 +133,4 @@ A release runs the full regression, then follows the distribution process (a sep
 2. **The monoliths.** `store.mjs`, `index.mjs` and `app.html` are each registered as a temporary **legacy module**. An entry to extract a target module from a legacy module is applied by that target module's job, which is the one exception to ownership: it may remove the moved code from the legacy file. Extraction runs bottom-up, a layer at a time. A legacy module is retired when it is empty.
 3. **Tests.** Each extracted module's job writes its requirement-named tests at its interface. Source-anchored tests are retired with the legacy code they anchor on.
 4. **The old plan.** BOB rewrites each of the 225 open rows that affects the product as an entry against a target module, and drops the rest.
-5. **Batch30 is Bob's call:** land it once (one full test run) before extraction starts, or leave it in the snapshot branch and rebuild what matters through the new process.
+5. **Batch30 is NOT landed** (Bob, 2026-09-25: no tokens for it). It stays reachable in `snapshot/pre-refactor-2026-09-25`, with all the old process's unmerged work. **Its value is judged by the requirements, not in advance:** a target module's extraction job reads the legacy and snapshot code for its module, keeps what meets its requirements, and discards the rest. The old process's own tooling is not carried forward.
