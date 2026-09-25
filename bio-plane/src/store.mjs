@@ -17840,6 +17840,38 @@ export class Store extends DurableObject {
       }
       /* END DEC-49 REGION is-promote-retypes-bundle */
 
+      /* ===== D-692 (`BIO_Case_Making_v0_1.md` §2, C-2.5 and D-615's derivation; State Rules v1.5 §4.7 as D-673 ruled it:
+         a writer's timestamp never buys an earlier reading; C-86.9) — A REVISION DOES NOT REDATE ITS CREATION.
+         `bundles.created` is written by the creation alone (the ON CONFLICT arm below keeps it), and nothing compared a
+         revision's derived `created` with the head's: a revision whose bytes restated a DIFFERENT `created` landed and
+         the row kept the creation's, so the row and the head bytes disagreed (measured through op=promote on
+         land/worker/D-628 db3b94a0: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row
+         still said 2026-07-24). Moving the row instead would let any writer backdate a creation — the reading D-673
+         refuses a writer's timestamp — so the revision is REFUSED by name (SCHEDULER #23's decision on the row), after
+         the compare-and-swap and before the first write, as C-86.2 is. Asked of the DERIVED `created` (the document's,
+         the envelope's only where the bytes state none), through D-615's `sameInstant`, so a respelling of the head's
+         instant is no redating and a revision stating none anywhere — which D-628 carried the head's into — is never
+         this refusal's question. REPLAY IS EXEMPT for D-510's reason, as for C-86.2; a replayed revision still leaves
+         the row's `created` as the creation wrote it. A head ALREADY disagreeing with its bytes is not rewritten
+         (M-181: 0 of 31 in `bio`). ===== */
+      const sameInstant = (a, b) => {
+        const x = Date.parse(String(a).trim()), y = Date.parse(String(b).trim());
+        return Number.isFinite(x) && Number.isFinite(y) ? x === y : String(a).trim() === String(b).trim();
+      };
+      /* DEC-49 REGION is-promote-redates-creation */
+      if (cur && promotedCreated !== undefined && !sameInstant(promotedCreated, cur.created) && !pkg.replay) {
+        const rdRow = PROMOTED_TYPE_CHECKS.REVISION_REDATES_CREATION;
+        return { ok: false, reason: "REVISION_REDATES_CREATION", code: "REVISION_REDATES_CREATION",
+                 check: rdRow.check, translation: rdRow.translation,
+                 head_created: String(cur.created).slice(0, 80), revision_created: String(promotedCreated).slice(0, 80),
+                 detail: `${String(bundleId).slice(0, 80)} was created '${String(cur.created).slice(0, 40)}' and this `
+                       + `revision says '${String(promotedCreated).slice(0, 40)}'. A revision changes what a document `
+                       + `says, never when it was made. Send it again with the document's created as the record holds `
+                       + `it, or with none. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promote-redates-creation */
+      /* ===== END D-692 ===== */
+
       /* REC-181: A TRANSITION INTO `retired` ASKS RETIRE'S OWN QUESTION, here and before any
          write (asked first, so a refusal writes nothing; REC-180's rollback is the net under it). `op=retire`
          refuses `CITED` while a live edge cites the item; `promote` is the write path it runs
@@ -18090,11 +18122,8 @@ export class Store extends DurableObject {
       /* END DEC-49 REGION is-promoted-state-disagrees */
       /* D-615 — D-563's two halves for the two dates. Two statements AGREE when both parse to the same instant (a
          respelling of one instant — `…:00Z` against `…:00.000Z` — is not a contradiction), else when their trimmed text
-         is equal; only a contradiction between two statements is refused. */
-      const sameInstant = (a, b) => {
-        const x = Date.parse(String(a).trim()), y = Date.parse(String(b).trim());
-        return Number.isFinite(x) && Number.isFinite(y) ? x === y : String(a).trim() === String(b).trim();
-      };
+         is equal; only a contradiction between two statements is refused. (`sameInstant` is defined above D-692's
+         fence, which asks it first.) */
       const dateContradiction = envelopeCreated !== null && documentCreated !== null
           && !sameInstant(envelopeCreated, documentCreated) ? ["created", documentCreated, envelopeCreated]
         : envelopeLastUpdated !== null && documentLastUpdated !== null

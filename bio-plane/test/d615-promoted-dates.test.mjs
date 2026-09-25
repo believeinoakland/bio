@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED AND RUN BY `test/d615-promoted-dates.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs. Re-run from `bio-plane/`: `node test/d615-promoted-dates.control.mjs [arm]`. Each anchor asserted to occur EXACTLY ONCE; the real sources hashed before and after. RESULTS, RUN 2026-09-25 by D-615's worker on land/worker/D-546 b690552a + D-615 (real `src/store.mjs` 3,498,790 B sha256 550b5376..., UNCHANGED before and after): 7/7 AS DECLARED, exit 0. (a) baseline -> 16/0 · (b) projection-envelope — THE ROW'S OWN ARM, the bundles row written from `meta.created`/`meta.last_updated` again -> 7/7, failing BY NAME at section 1's UNLABELLED "projection shows the document's created and last_updated", the respelling arm and section 2's UNLABELLED revision; RECORDED, NOT SMOOTHED: with the envelope's dates projected, an unlabelled creation meets the NOT NULL `bundles.created` (D-628's raw error), so section 4's origin project throws before its foot and the manifest arms fail downstream of a creation that never landed · (c) manifest-envelope, both manifest rows dated by `meta.last_updated` again -> 14/2 at the creation's and the revision's manifest arms · (d) no-refusal, C-86.7 disarmed -> 9/7 at every MISLABELLED arm and "…and nothing landed" / "…and nothing was written" · (e) exact-compare — OVER-STRICTNESS, a respelling of one instant treated as a contradiction -> 15/1 at the respelling arm · (f) fork-unstamped, the fork's bytes keep the origin's `created` -> 13/3: the fork is REFUSED ENVELOPE_DATES_DISAGREE (its own label contradicts its bytes) · (g) spelling — the derivation written another way -> 16/0. BASELINE ON THE UNFIXED SOURCES (b690552a via D615_SRC): 4 pass / 10 fail — both mislabelled dates LANDED, the projection showed the envelope's dates, and the fork section threw at the origin's NOT NULL `created` (that suite's envelope-less creation). */
+/* NEGATIVE CONTROL: DECLARED AND RUN BY `test/d615-promoted-dates.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs. Re-run from `bio-plane/`: `node test/d615-promoted-dates.control.mjs [arm]`. Each anchor asserted to occur EXACTLY ONCE; the real sources hashed before and after. RESULTS, RUN 2026-09-25 by D-615's worker on land/worker/D-546 b690552a + D-615 (real `src/store.mjs` 3,498,790 B sha256 550b5376..., UNCHANGED before and after): 7/7 AS DECLARED, exit 0. (a) baseline -> 16/0 · (b) projection-envelope — THE ROW'S OWN ARM, the bundles row written from `meta.created`/`meta.last_updated` again -> 7/7, failing BY NAME at section 1's UNLABELLED "projection shows the document's created and last_updated", the respelling arm and section 2's UNLABELLED revision; RECORDED, NOT SMOOTHED: with the envelope's dates projected, an unlabelled creation meets the NOT NULL `bundles.created` (D-628's raw error), so section 4's origin project throws before its foot and the manifest arms fail downstream of a creation that never landed · (c) manifest-envelope, both manifest rows dated by `meta.last_updated` again -> 14/2 at the creation's and the revision's manifest arms · (d) no-refusal, C-86.7 disarmed -> 9/7 at every MISLABELLED arm and "…and nothing landed" / "…and nothing was written" · (e) exact-compare — OVER-STRICTNESS, a respelling of one instant treated as a contradiction -> 15/1 at the respelling arm · (f) fork-unstamped, the fork's bytes keep the origin's `created` -> 13/3: the fork is REFUSED ENVELOPE_DATES_DISAGREE (its own label contradicts its bytes) · (g) spelling — the derivation written another way -> 16/0. BASELINE ON THE UNFIXED SOURCES (b690552a via D615_SRC): 4 pass / 10 fail — both mislabelled dates LANDED, the projection showed the envelope's dates, and the fork section threw at the origin's NOT NULL `created` (that suite's envelope-less creation). D-692 (2026-09-25, WORKER D-692 on land/worker/D-692 over land/worker/D-628 db3b94a0; real `src/store.mjs` 3,505,189 B sha256 54321813..., UNCHANGED before and after): 11/11 AS DECLARED, exit 0 — the seven arms above re-run over section 5 (baseline 26/0; projection-envelope 7/7; manifest-envelope 23/3, now also at section 5's `NOTHING WAS WRITTEN` manifest read; no-refusal 19/7; exact-compare 24/2, now also at section 5's respelled revision, since C-86.9 asks the same `sameInstant`; fork-unstamped 23/3; spelling 26/0), and four of D-692's: (h) no-redate-refusal — THE ROW'S ARM, C-86.9 disarmed -> 20/6, failing BY NAME at BACKDATED, the translation/both-dates arm, the detail, NOTHING WAS WRITTEN, FORWARD-DATED and LABEL-ONLY, every other arm green · (i) redate-any-statement — OVER-STRICTNESS, a fence tighter than its rule (any `created` stated in a revision's bytes refused) -> 21/5, at the respelled revision and at section 2's revisions · (j) redate-no-replay-exemption -> 25/1, only the REPLAY arm · (k) redate-spelling -> 26/0. UNFIXED SOURCES (db3b94a0): section 5 failed 7 of its 10 arms — the backdated revision LANDED and the row kept 2026-07-24 while the head bytes said 2020-01-01, and the arms after it met CAS_STALE (each is now based on the head as it reads). */
 /* D-615 — `op=promote` TAKES A BUNDLE'S `created` AND `last_updated` FROM THE DOCUMENT, NOT THE ENVELOPE.
  * `docs/architecture/BIO_Case_Making_v0_1.md` §2, with C-2.5 and D-510/D-563's derivation: the document states what it
  * is, and the envelope is a label. D-563 derived the title and the state; this item derives the last two CORE_FIELDS,
@@ -15,9 +15,10 @@
  * and is not read back here. D-674 (the manifest's `created` is the writer's own `last_updated`, so a writer can steer
  * REC-182's order) is NOT this item's and is not changed by it: the writer authors the document too. A promotion whose
  * document and envelope BOTH state no date meets the NOT NULL column (D-628), not this item.
- * A REVISION whose bytes restate `created` lands and the row keeps the creation's (D-692, minted by this item, not
- * fixed here): section 2 revises `last_updated` alone.
+ * A REVISION whose bytes restate `created` landed and the row kept the creation's (D-692, minted by this item): CLOSED
+ * by D-692, section 5 — refused REVISION_REDATES_CREATION (C-86.9). Section 2 revises `last_updated` alone.
  */
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies (D-692 §5) */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -29,6 +30,7 @@ import { join } from "node:path";
 /* The control driver points this at an armed copy of the sources. */
 const SRC_DIR = process.env.D615_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
+const { PROMOTED_TYPE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));   /* D-692 §5 */
 const ADM = "adm-d615", MTOK = "mem-d615";
 
 let pass = 0, fail = 0;
@@ -175,6 +177,64 @@ console.log("\n--- 4. op=projectfork: the fork's bytes say it was created now, a
   t("the fork's document states its OWN creation, not the origin's", [docCreated !== null, docCreated !== DOC_CREATED],
     [true, true]);
   t("…and the projection's created is the one the fork's document states", row?.[0], docCreated);
+}
+
+/* ======================================================== 5. D-692: a revision may not redate its creation */
+/* D-692 (State Rules v1.5 §4.7, D-673: a writer's timestamp never buys an earlier reading). `bundles.created` is written
+   by the creation alone — the ON CONFLICT arm keeps it — so a revision whose bytes restate a DIFFERENT `created` LANDED
+   and left the row and the head bytes disagreeing (measured on land/worker/D-628 db3b94a0: a creation dated 2026-07-24
+   revised to bytes saying 2020-01-01 landed, and the row still said 2026-07-24). Moving the row instead would let any
+   writer backdate a creation, so the revision is refused by name: REVISION_REDATES_CREATION (C-86.9). */
+console.log("\n--- 5. a revision restating a DIFFERENT created is refused by name; one restating the same lands ---");
+{
+  const R = "INFO-2026-0692-redated";
+  must("fixture R", await promote(RUTH, { id: R, text: infoMd(R), env: {} }));
+  const headR = (await listed(R))?.bundle_sha;
+  t("FIXTURE: the creation is held with the document's created (the corpus this section measures is non-empty)",
+    [typeof headR, (await dates(R))?.[0]], ["string", DOC_CREATED]);
+  const BACKDATE = "2020-01-01T00:00:00Z";
+  const bd = await promote(RUTH, { id: R, base: headR, text: infoMd(R, { created: BACKDATE, updated: DOC_REVISED }), env: {} });
+  t("BACKDATED: a revision whose bytes restate created 2020-01-01 over a 2026-07-24 creation is REFUSED REVISION_REDATES_CREATION (C-86.9)",
+    [reasonOf(bd), bd?.code, bd?.check], ["REVISION_REDATES_CREATION", "REVISION_REDATES_CREATION", "C-86.9"]);
+  t("…and the refusal carries the catalogue's canned translation and SAYS BOTH DATES",
+    [bd?.translation === PROMOTED_TYPE_CHECKS.REVISION_REDATES_CREATION?.translation && typeof bd?.translation === "string",
+     bd?.head_created, bd?.revision_created], [true, DOC_CREATED, BACKDATE]);
+  t("…and its detail says nothing was written", /Nothing was written\./.test(bd?.detail ?? ""), true);
+  t("…and NOTHING WAS WRITTEN: the head, the row's dates and the manifest are unchanged",
+    [(await listed(R))?.bundle_sha, await dates(R), await manifestCreated(R)], [headR, [DOC_CREATED, DOC_UPDATED], [DOC_UPDATED]]);
+  const fd = await promote(RUTH, { id: R, base: (await listed(R))?.bundle_sha, text: infoMd(R, { created: "2027-01-01T00:00:00Z", updated: DOC_REVISED }), env: {} });
+  t("FORWARD-DATED: a LATER created is refused by the same name (a creation's date is not the revision's to move either way)",
+    reasonOf(fd), "REVISION_REDATES_CREATION");
+  /* Each later arm is based on the head AS IT NOW READS, so in the control's `no-refusal` arm (where the backdating
+     above lands) it measures its own question and not CAS_STALE. */
+  /* The envelope is the fallback where the bytes state none (D-615): a label redating the creation is the same claim. */
+  const ev = await promote(RUTH, { id: R, base: (await listed(R))?.bundle_sha, text: infoMd(R, { created: null, updated: DOC_REVISED }),
+                                   env: { created: BACKDATE } });
+  t("LABEL-ONLY: bytes stating no created under a meta.created of 2020-01-01 are refused by the same name",
+    reasonOf(ev), "REVISION_REDATES_CREATION");
+  /* OVER-STRICTNESS: the same instant, in another spelling, is no redating. */
+  const same = await promote(RUTH, { id: R, base: (await listed(R))?.bundle_sha,
+    text: infoMd(R, { created: "2026-07-24T00:00:00.000Z", updated: DOC_REVISED }), env: {} });
+  t("OVER-STRICTNESS: a revision restating the SAME created (respelled) LANDS, and the row keeps the creation's",
+    [reasonOf(same), await dates(R)], ["LANDED", [DOC_CREATED, DOC_REVISED]]);
+  /* A revision stating no created anywhere carries the head's (D-628) and is never this refusal's question. */
+  const none = await promote(RUTH, { id: R, base: (await listed(R))?.bundle_sha,
+    text: infoMd(R, { created: null, updated: "2026-07-28T00:00:00Z" }), env: {} });
+  t("OVER-STRICTNESS: a revision stating no created anywhere LANDS, carrying the head's",
+    [reasonOf(none), none?.fields_carried?.fields?.created ?? null], ["LANDED", DOC_CREATED]);
+  /* REPLAY IS EXEMPT (D-510's reason, as for C-86.2): the record's own history must stay holdable verbatim. The row
+     keeps the creation's `created`, as for every revision; the exemption is caller-asserted over a proof (D-511/D-512). */
+  const P = "INFO-2026-0692-replayed";
+  const rpk = async (base, text) => {
+    const pkg = { bundleId: P, base, snapKey: `20260724T06${String(++seq).padStart(4, "0")}Z_d692`, author: "x",
+      meta: { object_type: "information" }, replay: true,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [] };
+    return POST(`op=promote&token=${ADM}`, await withReplayProof(mf, `token=${ADM}`, pkg));
+  };
+  must("fixture P (replayed creation)", await rpk(null, infoMd(P)));
+  const rp = await rpk((await listed(P))?.bundle_sha, infoMd(P, { created: BACKDATE, updated: DOC_REVISED }));
+  t("REPLAY: a REPLAYED revision restating a different created is not refused by this fence",
+    [reasonOf(rp) === "REVISION_REDATES_CREATION", reasonOf(rp)], [false, "LANDED"]);
 }
 
 } catch (e) {

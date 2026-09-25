@@ -15446,6 +15446,19 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'it stops and tells you both. Nothing was written. Send it again with the request giving the document\'s dates, '
       + 'or giving none, or change the document first.',
   },
+  /* D-692 (2026-09-25; State Rules v1.5 §4.7, D-673: a writer's timestamp never buys an earlier reading) — C-86.2's rule
+   * one field over: C-86.7 compares the two statements in ONE request; this compares the request's `created` with the
+   * RECORD's. `bundles.created` is written by the creation alone, so a revision restating a different one landed and the
+   * row and the head bytes disagreed; moving the row would let any writer backdate a creation. Two spellings of one
+   * instant agree; a revision stating none carries the head's (C-86.8's carry). Replay is exempt, as for C-86.2. */
+  REVISION_REDATES_CREATION: {
+    check: 'C-86.9',
+    where: 'src/store.mjs promote > is-promote-redates-creation',
+    translation: 'This change says the item was made at a different time than the record holds. A change can alter what '
+      + 'a document says, but not when it was made: the record orders its history by that date, and letting a later '
+      + 'change move it would let anyone backdate something. Nothing was written. Send it again with the date the '
+      + 'record holds, or with none.',
+  },
   /* D-578 (2026-09-25) — the THIRD way, and the only one where neither statement exists: a CREATION whose document and
    * envelope both state no type. `bundles.object_type` is NOT NULL, so it was refused by a raw constraint error
    * carrying a stack; a revision in the same position keeps its head's type (stated on the answer), because the head

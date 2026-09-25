@@ -27,6 +27,15 @@ const S = "src/store.mjs";
 /* Held in every arm but the one that moves it: a correctly labelled creation lands with the document's dates. */
 const LABELLED_ALL = ["LABELLED truly: LANDS with the document's dates"];
 
+/* D-692 (C-86.9): the fence's one line, and §5's arms by what they watch. */
+const REDATE = "      if (cur && promotedCreated !== undefined && !sameInstant(promotedCreated, cur.created) && !pkg.replay) {";
+const REDATE_REFUSED = ["BACKDATED: a revision whose bytes restate created 2020-01-01",
+                        "the refusal carries the catalogue's canned translation and SAYS BOTH DATES",
+                        "its detail says nothing was written", "NOTHING WAS WRITTEN: the head, the row's dates",
+                        "FORWARD-DATED: a LATER created is refused", "LABEL-ONLY: bytes stating no created"];
+const REDATE_LANDS = ["FIXTURE: the creation is held", "a revision restating the SAME created (respelled) LANDS",
+                      "a revision stating no created anywhere LANDS", "REPLAY: a REPLAYED revision"];
+
 const ARMS = {
   baseline: { patches: [], mustFail: [], mustPass: LABELLED_ALL },
 
@@ -61,8 +70,11 @@ const ARMS = {
   "exact-compare": {
     patches: [[S, "return Number.isFinite(x) && Number.isFinite(y) ? x === y : String(a).trim() === String(b).trim();",
                   "return a === b;"]],
-    mustFail: ["OVER-STRICTNESS: a label RESPELLING the document's instants LANDS"],
-    mustPass: [...LABELLED_ALL, "MISLABELLED created: refused ENVELOPE_DATES_DISAGREE"] },
+    /* D-692: `sameInstant` is now asked by C-86.9 too, so §5's respelled revision must fail with it. */
+    mustFail: ["OVER-STRICTNESS: a label RESPELLING the document's instants LANDS",
+               "OVER-STRICTNESS: a revision restating the SAME created (respelled) LANDS"],
+    mustPass: [...LABELLED_ALL, "MISLABELLED created: refused ENVELOPE_DATES_DISAGREE",
+               "BACKDATED: a revision whose bytes restate created 2020-01-01"] },
 
   /* The fork's bytes keep the origin's `created` again (its envelope's `when` now contradicts them). */
   "fork-unstamped": {
@@ -70,6 +82,33 @@ const ARMS = {
                   "    text = Store.#setScalar(text, \"last_updated\", `\"${when}\"`);\n    const entry = `### Session ${when} | forked from"]],
     mustFail: ["the fork LANDS", "the fork's document states its OWN creation"],
     mustPass: [...LABELLED_ALL] },
+
+  /* D-692 — THE ROW'S CONTROL: drop C-86.9, which is what `promote` did before D-692. The backdated revision LANDS and
+     the row keeps the creation's `created` while the head bytes say 2020-01-01, so every §5 refusal arm fails by name;
+     the fixture, the respelled and the unstated revisions, the replay and every D-615 arm stay green. */
+  "no-redate-refusal": {
+    patches: [[S, REDATE, "      if (false && cur && promotedCreated !== undefined && !sameInstant(promotedCreated, cur.created) && !pkg.replay) {"]],
+    mustFail: [...REDATE_REFUSED],
+    mustPass: [...LABELLED_ALL, ...REDATE_LANDS, "MISLABELLED created: refused ENVELOPE_DATES_DISAGREE"] },
+
+  /* D-692 OVER-STRICTNESS: a fence tighter than its rule — any revision whose bytes merely STATE `created` is refused,
+     so the respelled restatement fails and nothing else may. */
+  "redate-any-statement": {
+    patches: [[S, REDATE, "      if (cur && documentCreated !== null && !pkg.replay) {"]],
+    mustFail: ["OVER-STRICTNESS: a revision restating the SAME created (respelled) LANDS"],
+    mustPass: [...LABELLED_ALL, ...REDATE_REFUSED.filter((l) => !l.startsWith("LABEL-ONLY")),
+               "a revision stating no created anywhere LANDS", "REPLAY: a REPLAYED revision"] },
+
+  /* D-692: the replay exemption removed — only the replayed arm may fail. */
+  "redate-no-replay-exemption": {
+    patches: [[S, REDATE, "      if (cur && promotedCreated !== undefined && !sameInstant(promotedCreated, cur.created)) {"]],
+    mustFail: ["REPLAY: a REPLAYED revision"],
+    mustPass: [...LABELLED_ALL, ...REDATE_REFUSED, ...REDATE_LANDS.filter((l) => !l.startsWith("REPLAY"))] },
+
+  /* D-692 OVER-STRICTNESS: the same rule in a spelling this item did not write — all green. */
+  "redate-spelling": {
+    patches: [[S, REDATE, "      if (cur != null && typeof promotedCreated === \"string\" && pkg.replay !== true && !sameInstant(cur.created, promotedCreated)) {"]],
+    mustFail: [], mustPass: [...LABELLED_ALL, ...REDATE_REFUSED, ...REDATE_LANDS] },
 
   /* The derivation in a spelling this item did not write. Coupled to behaviour, all green. */
   /* CORRECTED by D-628 (2026-09-25): the anchor quoted D-615's line, which D-628 rewrote (`let`, and the envelope's

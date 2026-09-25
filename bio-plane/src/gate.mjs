@@ -146,7 +146,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.35.0";
+export const CATALOG_VERSION = "1.36.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -222,6 +222,11 @@ export const CATALOG_VERSION = "1.35.0";
    last_updated is refused by name). MINOR; 507 -> 508, count and digest from the d470 suite's print on this tree. If
    another branch in the batch also moves the version, CONDUCT takes the next number at the union and re-reads the print
    on the merged tree. */
+/* 1.36.0 (D-692, 2026-09-25, branch land/worker/D-692, stacked on land/worker/D-628): ONE ARRIVAL, NO DEPARTURES, NONE
+   CHANGED — C-86.9 REVISION_REDATES_CREATION in PROMOTED_TYPE_CHECKS (a non-replay revision restating a different
+   `created` is refused by name). MINOR; 508 -> 509, count and digest from the d470 suite's print on this tree. If another
+   branch in the batch also moves the version, CONDUCT takes the next number at the union and re-reads the print on the
+   merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
