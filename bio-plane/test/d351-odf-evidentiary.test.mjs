@@ -28,8 +28,10 @@
  * THE SPLIT (the row's own alternative: "state it, or split .odt out"). `.odt`'s
  * content.xml differs on every export (M-123: random xml:id on text:list, measured
  * on 2 documents, which M-123 said this build must re-measure). It was NOT
- * re-measured, so `.odt` is UNDETERMINED here with the reason stated, never
- * normalised on an unmeasured rule. `.odp` has no measurement at all.
+ * re-measured here, so `.odt` was UNDETERMINED at D-351's landing. D-473 measured
+ * it (M-167) and landed the relabelling; §4's .odt arms are CORRECTED for it, and
+ * control arm (3) below describes the file as D-351 left it. `.odp` stays
+ * UNDETERMINED.
  *
  * WHAT THIS SUITE CANNOT SEE: Google. Every byte here is written by this file; the
  * claim that real Google `.ods` exports hold content.xml byte-stable is M-123's
@@ -333,15 +335,22 @@ console.log("\n--- 4. what is NOT claimed, and says why ---");
   t("an .ods whose content.xml references a package member: UNDETERMINED", dg(I).determined, false);
   t("its evidentiary digest is absent, never invented", dg(I).evidentiary, null);
   t("the basis names the member content.xml cannot speak for", /Pictures\/chart\.png/.test(dg(I).basis || ""), true);
+  /* CORRECTED 2026-09-25 BY D-473, never exempted: these arms asserted `.odt`
+     UNDETERMINED because the xml:id normalisation M-123 proposed was unmeasured.
+     D-473 measured it (M-167) and landed it, so the same two exports — which
+     differ only by M-123's random xml:id — now carry ONE determined digest and
+     C-18.3 folds them. The old assertion was right about its day and wrong now;
+     `.odt`'s own arms, and its negative control, live in d473-odt-evidentiary. */
   const D = [await acquire(A.doc), await acquire(A.doc)];
   t("the fixture served two distinct .odt exports", new Set(D.map((d) => d && d.capture.sha256)).size, 2);
-  t(".odt: UNDETERMINED — the split the row allows, not a normalisation on an unmeasured rule",
-    D.map((d) => dg(d).determined), [false, false]);
-  t(".odt: no digest invented", D.map((d) => dg(d).evidentiary), [null, null]);
-  t(".odt: the basis says why, citing the measurement that stands unrepeated",
-    /xml:id/.test(dg(D[0]).basis || "") && /M-123/.test(dg(D[0]).basis || ""), true);
-  t(".odt: C-18.3 therefore does not fold them — an absent digest is never equal",
-    (await checksOf((await promote(D, A.doc)).id)).some((x) => x.check === "C-18.3"), false);
+  t(".odt: DETERMINED since D-473 — the list-id relabelling is measured (M-167)",
+    D.map((d) => dg(d).determined), [true, true]);
+  t(".odt: one digest across the two exports, non-null",
+    [D.filter((d) => HEX64.test(dg(d).evidentiary || "")).length, new Set(D.map((d) => dg(d).evidentiary)).size], [2, 1]);
+  t(".odt: the basis names the normalisation and its measurement",
+    /xml:id/.test(dg(D[0]).basis || "") && /M-167/.test(dg(D[0]).basis || ""), true);
+  t(".odt: C-18.3 therefore folds them",
+    (await checksOf((await promote(D, A.doc)).id)).some((x) => x.check === "C-18.3"), true);
 }
 
 /* ====================================================================== 5 */
