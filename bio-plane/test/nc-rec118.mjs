@@ -129,7 +129,7 @@ const ARMS = {
                "it mints NO grade letter",
                "it asks the registry ONCE",
                "it does NOT reach for `strengthOf`",
-               "ALL THREE READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS",
+               "ALL FOUR READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS",
                "AN OBLIGATION NEEDING NO CAP IS BYTE-IDENTICAL",
                "...and the clean obligation's two halves agree too",
                "`grade_why` is NULL rather than a filler",
@@ -143,10 +143,16 @@ const ARMS = {
         + "note that 'THE TWO HALVES OF ONE ANSWER NOW AGREE' still PASSES under it, because "
         + "capping alone produces the agreement. Without this arm a fix that silently replaced a "
         + "member's authored letter would satisfy this item's headline acceptance.",
-    find: "                 target_edition: l.target_edition ?? null,\n"
+    /* D-648: RE-ANCHORED. REC-160 (DEC-70) put a `status` line and its comment
+       between `target_edition` and `grade_authored`, so the old three-line anchor
+       matched 0 times and this arm NEVER ARMED — found by M0-197's anchor-drift
+       reader. It now anchors on the `status` line plus the two fields it drops
+       (unique in store.mjs), and KEEPS `status`: breaking REC-160's field too
+       would move a second variable. */
+    find: "                 status: l.status === \"severed\" ? \"severed\" : \"confirmed\",\n"
         + "                 grade_authored: l.grade ?? null,\n"
         + "                 grade_why: res ? res.why : null };",
-    with: "                 target_edition: l.target_edition ?? null };",
+    with: "                 status: l.status === \"severed\" ? \"severed\" : \"confirmed\" };",
     mustFail: ["op=reevaluations PUBLISHES THE EARNED LETTER",
                "and `grade_why` NAMES THE TARGET",
                "the authored letter and the strength block GENUINELY DISAGREE",
@@ -163,7 +169,7 @@ const ARMS = {
                "...and that is NOT FREE",
                "the op's resolver EXISTS and calls `Store.#capturedAt`",
                "it asks the registry ONCE",
-               "ALL THREE READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS"],
+               "ALL FOUR READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS"],
   },
   c: {
     what: "THE AXIS IGNORED — the capture ceiling applied to every leg carrying a letter. The "
@@ -175,7 +181,7 @@ const ARMS = {
     with: "    const bounded = (l) => !!l && l.grade != null",
     mustFail: ["A CONNECTION-AXIS LEG IN THE SAME OBLIGATION IS UNTOUCHED",
                "...and that is NOT FREE",
-               "ALL THREE READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS"],
+               "ALL FOUR READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS"],
     mustPass: [...HELD_OPEN_ALWAYS,
                "op=reevaluations PUBLISHES THE EARNED LETTER",
                "and `grade_why` NAMES THE TARGET",
@@ -194,6 +200,9 @@ const ARMS = {
         + "instead of a `.map` with an object literal. Correct work in a spelling this item did not "
         + "anticipate MUST PASS. An arm that fails here would mean the suite is asserting the "
         + "IMPLEMENTATION rather than the answer.",
+    /* D-648: RE-ANCHORED for the same REC-160 `status` line (and its comment),
+       which left the old anchor matching 0 times. The rewrite carries `status`
+       too, so it stays the SAME rule in another spelling. */
     find: "      o.legs = (o.legs ?? []).map((l) => {\n"
         + "        const res = bounded(l) ? Store.#capturedAt(l.grade, cap[l.target_id], l.target_id) : null;\n"
         + "        return { ord: l.ord, role: l.role || null,\n"
@@ -201,6 +210,9 @@ const ARMS = {
         + "                 grade_axis: l.grade_axis ?? null,\n"
         + "                 grade_source: l.grade_source ?? null,\n"
         + "                 target_edition: l.target_edition ?? null,\n"
+        + "                 /* REC-160 / DEC-70: `severed` only on a positive recorded\n"
+        + "                    withdrawal; anything else reads `confirmed`. */\n"
+        + "                 status: l.status === \"severed\" ? \"severed\" : \"confirmed\",\n"
         + "                 grade_authored: l.grade ?? null,\n"
         + "                 grade_why: res ? res.why : null };\n"
         + "      });",
@@ -212,6 +224,7 @@ const ARMS = {
         + "                      grade_axis: l.grade_axis ?? null,\n"
         + "                      grade_source: l.grade_source ?? null,\n"
         + "                      target_edition: l.target_edition ?? null,\n"
+        + "                      status: l.status === \"severed\" ? \"severed\" : \"confirmed\",\n"
         + "                      grade_authored: l.grade ?? null,\n"
         + "                      grade_why: res ? res.why : null };\n"
         + "        out.push(row);\n"
@@ -223,7 +236,7 @@ const ARMS = {
                "THE TWO HALVES OF ONE ANSWER NOW AGREE ABOUT THE SAME LEG",
                "BOTH DERIVED FIELDS ARE PRESENT",
                "the member's authored B SURVIVES",
-               "ALL THREE READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS",
+               "ALL FOUR READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS",
                "A CONNECTION-AXIS LEG IN THE SAME OBLIGATION IS UNTOUCHED",
                "AN OBLIGATION NEEDING NO CAP IS BYTE-IDENTICAL"],
   },
@@ -240,6 +253,9 @@ const runSuite = () => {
   return { pass: tail ? Number(tail[1]) : -1, fail: tail ? Number(tail[2]) : -1,
            exit: r.status,
            failed: [...out.matchAll(/^ {2}FAIL {2}(.*)$/gm)].map((m) => m[1]),
+           /* EVERY assertion label, passing or failing, so a declared needle
+              that names NO assertion is caught (D-648, below). */
+           labels: [...out.matchAll(/^ {2}(?:PASS|FAIL) {2}(.*)$/gm)].map((m) => m[1]),
            /* THE FIGURES, NOT ONLY THE LABEL, so the driver can SHOW that the
               headline names both letters and the op rather than asserting it. */
            detail: [...out.matchAll(/^ {2}FAIL {2}(.*)\n\s+want (.*)\n\s+got {2}(.*)$/gm)]
@@ -308,9 +324,18 @@ if (ARM === "none") {
 const hit = (needle) => res.failed.some((f) => f.includes(needle));
 const missedFail = spec.mustFail.filter((n) => !hit(n));
 const brokeHeldOpen = spec.mustPass.filter((n) => hit(n));
+/* D-648: A NEEDLE THAT NAMES NO ASSERTION IS VACUOUS BOTH WAYS — held open it
+   can never "break", declared to fail it can never be met. The suite renamed
+   "ALL THREE READERS" to "ALL FOUR READERS" and this driver's needle named
+   nothing: arms a, b and d held open an assertion that no longer existed, and
+   arm c reported NOT AS DECLARED while biting exactly as intended. Each needle
+   must match EXACTLY ONE label the suite printed. */
+const deadNeedles = [...spec.mustFail, ...spec.mustPass]
+  .filter((n) => res.labels.filter((l) => l.includes(n)).length !== 1);
 console.log("\n  DECLARED vs ACTUAL");
+console.log(`    needles naming no ONE assertion: ${deadNeedles.length ? deadNeedles.join(" | ") : "(none)"}`);
 console.log(`    must FAIL, and did NOT: ${missedFail.length ? missedFail.join(" | ") : "(none)"}`);
 console.log(`    must PASS, and BROKE:   ${brokeHeldOpen.length ? brokeHeldOpen.join(" | ") : "(none)"}`);
-const verdict = !missedFail.length && !brokeHeldOpen.length && res.reachedFoot;
+const verdict = !missedFail.length && !brokeHeldOpen.length && !deadNeedles.length && res.reachedFoot;
 console.log(`    VERDICT: ${verdict ? "AS DECLARED" : "*** NOT AS DECLARED — this is a finding about the ARM, record it, do not smooth it ***"}`);
 process.exit(verdict ? 0 : 7);
