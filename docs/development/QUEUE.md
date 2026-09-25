@@ -1256,8 +1256,8 @@ scope: offer "take this up" and "set aside" at the inquiry grain wherever the co
 accepts-when: a member takes up and sets aside a finding at the inquiry grain, and no declared `options_grain` gap remains. NEGATIVE CONTROL: withhold the inquiry-grain option, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-680 · running — **A DERIVATION DRAFT (no `caseId`, no `newCase`) IS REFUSED `PUBLISH_DRAFT_NOT_THIS_CASE` ON AN EXISTING CASE'S FURTHER EDITION: publishCase's is-publish-draft-this-case region passes it only when `predicted === 1`, refusing the very deferral D-538 names.** BOB #35 RULED 2026-09-25 07:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; the whole ruling there, cite until folded): it binds to the case publication derives, any edition; a named case binds only if it IS the derived one, else refused by name with both. Found by D-626's worker. — owner RECORD.
-status: running — SCHEDULER #23 07:55Z: spawned, stacked on land/worker/D-626 @ 2a5d4ed8
+### D-680 · integrated — **A DERIVATION DRAFT (no `caseId`, no `newCase`) IS REFUSED `PUBLISH_DRAFT_NOT_THIS_CASE` ON AN EXISTING CASE'S FURTHER EDITION: publishCase's is-publish-draft-this-case region passes it only when `predicted === 1`, refusing the very deferral D-538 names.** BOB #35 RULED 2026-09-25 07:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; the whole ruling there, cite until folded): it binds to the case publication derives, any edition; a named case binds only if it IS the derived one, else refused by name with both. Found by D-626's worker. — owner RECORD.
+status: integrated — SCHEDULER #23 09:35Z: tip 0d17eb0e (on D-626 2a5d4ed8), GATE 385/385 GREEN FULLREUSE on code tree 4b4e30c7, docs fold 307/307 GREEN on tree 37636a8e; derivation draft binds on any edition; C-44.6 PUBLISH_DRAFT_CASE_NOT_DERIVED; signed completeness.draft_case; CATALOG 1.30.0->1.31.0 (changed C-44.4, C-87.6); regionLines 4253->4264 (re-read at union); minted D-683
 order: with the corrections at the head of the backlog, after D-671 — it corrects just-landed D-626's region (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 — a derivation draft admitted on a further edition; a new named refusal for a named case that differs from the derived one; the signed document's case-provenance statement; the integrator mints and classifies.
@@ -1482,6 +1482,16 @@ depends-on: none (stacked on land/worker/D-629 @ 5e202b33, integrated).
 scope: open the three through doAnswer and answer storeSilent (502) on a non-answer, or relay the store's status; sweep every other public route for the same read.
 accepts-when: a forced store failure on each of the three answers a non-200 status with its named code (moves: HTTP 200 on failure). NEGATIVE CONTROL: restore the bare json(..., 200) on one and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-629's worker).
+
+### D-683 · running — **A READING OF A NO-CASE DRAFT IS NOT COUNTED UNDETERMINED ON A FURTHER EDITION PUBLISHED WITHOUT draft=: `#statementAcknowledgements`' unbound COUNT query asks `edition=?`, but such readings are recorded at edition 1 (D-568), so the count drops them.** Established from the code, not driven. Found by D-680's worker (minted on land/worker/D-680). — owner RECORD.
+order: spawned directly after D-680, the same edition filter D-680 removed from the link arm (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 — the unbound count on a further edition; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 and §6A.4 (as D-680 folded BOB #35's 07:35Z ruling).
+depends-on: none (stacked on land/worker/D-680 @ 0d17eb0e, integrated, on D-626).
+scope: drop the edition predicate from the count's case_id IS NULL arm, as D-680 did for the link arm; drive it first through the op (a further edition published without draft=).
+accepts-when: a no-case draft's reading counts UNDETERMINED on a further edition (moves: the reading dropped from the count). NEGATIVE CONTROL: restore `edition=?` on that arm and the further-edition arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-680's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
