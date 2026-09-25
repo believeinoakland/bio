@@ -770,6 +770,29 @@ const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp
    collapse that distinction by accident. */
 const SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+/* D-543 — THE STAMPING HELPER, AND IT NAMES ITS PRECISION AT EVERY CALL. The record spells an instant
+   two ways: `…:00Z` (whole seconds — the convention `ISO_TS_RE` holds a document's own bytes to, about
+   twenty gate checks) and `…:00.123Z` (milliseconds, `toISOString()`'s own spelling, which a row
+   stamped for ordering keeps). Neither is wrong; what was wrong is that the precision was carried by a
+   regex or a `split` at each site, in two spellings nobody named, so a site's precision could be learned
+   only by reading it. `stampInstant("second" | "millisecond", when)` says it; any other word throws.
+   `observation_log.at` stays whole-second by BOB #33's ruling (D-516), and it is a "second" call here
+   like any other, not an exception to the helper.
+   AND TWO SPELLINGS MUST NEVER BE COMPARED AS STRINGS: `Z` sorts above `.`, so `…:00Z` ranks AFTER
+   `…:00.123Z` though it names the earlier instant (read as `.000`). `instantOrder` compares INSTANTS —
+   negative, zero or positive like a comparator, and NaN when either side is not an instant, so a
+   `> 0` / `< 0` test is false for an unreadable stamp rather than ranking it as zero. Where a
+   comparison crosses act kinds, it goes through this. */
+export function stampInstant(precision, when = Date.now()) {
+  const iso = new Date(when).toISOString();
+  if (precision === "millisecond") return iso;
+  if (precision === "second") return iso.replace(/\.\d+Z$/, "Z");
+  throw new Error(`stampInstant: precision is "second" or "millisecond", never ${JSON.stringify(precision)}`);
+}
+export function instantOrder(a, b) {
+  const x = typeof a === "string" && a ? Date.parse(a) : NaN, y = typeof b === "string" && b ? Date.parse(b) : NaN;
+  return x - y;
+}
 /* Single line, length-capped, control characters stripped. Newlines go first
    because a multi-line subject is how a plausible-looking instruction gets
    room to look like a message rather than a label. */
@@ -4407,7 +4430,7 @@ export class Store extends DurableObject {
                      + `These targets are not, so the whole call is refused: a batch that moved only the `
                      + `eligible members would be a state change the operator did not ask for.` };
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     /* The reason is APPENDED to the note, never substituted. The note is the
        only prose an edge carries, and the reason it was cited is as much a part
        of the record as the reason it stopped being relied on. Bounded, with the
@@ -4641,7 +4664,7 @@ export class Store extends DurableObject {
                        + "dependent rather than stranding it." };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const disposed = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -5301,7 +5324,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "CITED", offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
                detail: Store.RETIRE_CITED_DETAIL };
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const retired = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -5498,7 +5521,7 @@ export class Store extends DurableObject {
                      + "bundles the catalog immediately rejects." };
     /* END DEC-49 REGION is-release-entry */
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const released = [];
     for (const id of sel.members) {
       const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -5908,7 +5931,7 @@ export class Store extends DurableObject {
        ELSE. The shared inquiry's bytes, its state and every other project's
        stance are left exactly where they were (§7.1 item 3: told, never moved). */
     if (pid) {
-      const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+      const when = stampInstant("second");
       /* REC-136: `prior` is the entry this one FOLLOWS in the history (a
          conclusion or a withdrawal) — nothing is replaced any more. */
       const priorRec = this.#conclusionRecordOf(pid, target, viewer);
@@ -5933,7 +5956,7 @@ export class Store extends DurableObject {
                author: who, at: when, weight: "single" };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const withHistory = Store.#appendStateHistory(text, {
       timestamp: when, from_state: b.current_state, to_state: "concluded",
       blurb: concl, author: who });
@@ -6592,7 +6615,7 @@ export class Store extends DurableObject {
                  : `${pid}'s latest entry on ${target} is one this plane cannot read, so what it stands on is `
                    + "undetermined and a withdrawal would be withdrawing a guess." };
     /* END DEC-49 REGION is-withdraw-stance */
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const w = this.#setProjectConclusion(projRow, target, {
       act: "withdrawn", version: rec.stance.version, withdrawsAt: rec.stance.at, reason: why, who, when });
     if (!w.ok) return { ...w, target, project: pid };
@@ -6728,7 +6751,7 @@ export class Store extends DurableObject {
                      + `${to} would record an outcome the action has not reached.` };
     /* END DEC-49 REGION is-move-resolution */
 
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     const withHistory = Store.#appendStateHistory(text, {
       timestamp: when, from_state: b.current_state, to_state: to, blurb: why, author: who });
     if (!withHistory)
@@ -6922,7 +6945,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_DOCUMENT", target,
                detail: "this action has no readable bundle.md, so nothing can be appended to it" };
     const fm = parseFrontmatter(liveMd.content).data || {};
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     const ledgerNow = Array.isArray(fm.correspondence) ? fm.correspondence : [];
     const ord = ledgerNow.length;
     const entryFm = {
@@ -7059,7 +7082,7 @@ export class Store extends DurableObject {
                detail: "this action has no readable bundle.md, so its governing laws cannot be set" };
     const fm = parseFrontmatter(liveMd.content).data || {};
     const before = governingLawsOf(fm);
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     let text = Store.#replaceGoverningLaws(liveMd.content, entries);
     if (!text)
       return { ok: false, reason: "UNSPLICEABLE_GOVERNING_LAWS", target,
@@ -7230,7 +7253,7 @@ export class Store extends DurableObject {
     if (normalizeType(b.object_type) !== "action")
       return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
                detail: "governing laws belong to an action: they are the laws its request is made under." };
-    const at = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second", this.#nowMs(null));
     /* REPLACE THIS PROPOSER'S OWN ROWS AND NOBODY ELSE'S. Keyed on both columns, never on the bundle alone. */
     this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
     entries.forEach((e, i) => this.sql.exec(
@@ -7317,7 +7340,7 @@ export class Store extends DurableObject {
     const refs = Array.isArray(fm.references) ? fm.references : [];
     if (refs.some((r) => r && typeof r === "object" && r.rel === "responds_to" && r.target === actionId))
       return { bundle_id: doc.bundle_id, already: true };
-    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second", this.#nowMs(null));
     let text = Store.#spliceReferences(doc.content,
       [{ rel: "responds_to", target: actionId, status: "confirmed", note: "" }]);
     if (!text) return null;
@@ -7682,7 +7705,7 @@ export class Store extends DurableObject {
                      + "focus/problem "
                      + "document has no `open` state at all until its frontmatter is modernized." };
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const withHistory = Store.#appendStateHistory(text, {
       timestamp: when, from_state: b.current_state, to_state: "open",
       blurb: why, author: who });
@@ -8692,7 +8715,7 @@ export class Store extends DurableObject {
                           + `of this edition.`}` };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const written = [];
     /* ===== D-442 / BIO_Publication_v0_1.md §3 rule 12 (BOB #28, 2026-09-22):
        PUBLISHING WRITES NOTHING ON A MEMBER FINDING. ===========================
@@ -10093,7 +10116,7 @@ export class Store extends DurableObject {
     if (json.length > 64 * 1024)
       return { ok: false, reason: "REVIEW_DRAFT_TOO_LARGE",
                detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept." };
-    const when = new Date().toISOString();
+    const when = stampInstant("millisecond");
     /* REC-193 / §3 rule 13 (BOB #32, 2026-09-23) — THE STATEMENT'S AUTHOR IS THE MEMBER WHO WROTE ITS
        CURRENT BYTES, AND THE SERVER SAYS WHO THAT IS. Stamped here, at the write, from the session the act
        runs as (`a.who`); no caller-supplied field reaches it. An edit that leaves the statement text alone
@@ -10246,7 +10269,7 @@ export class Store extends DurableObject {
     if (!/^[0-9a-f]{64}$/.test(s))
       return { ok: false, reason: "REVIEW_NO_SECRET",
                detail: "the read secret's fingerprint is set by the control plane and was absent." };
-    const when = new Date().toISOString();
+    const when = stampInstant("millisecond");
     const ident = this.#draftIdentity(d);
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7) — a grant is its project owner's alone. */
     const id = this.#mintOpaqueId("RVG", when.slice(0, 4), "",
@@ -10275,7 +10298,7 @@ export class Store extends DurableObject {
     if (!g || !this.#isProjectOwner(g.project_id, a.who)) return Store.#notReviewOwner("revoke");
     if (g.revoked_at)
       return { ok: true, existed: true, grantId: g.grant_id, revokedBy: g.revoked_by, revokedAt: g.revoked_at };
-    const when = new Date().toISOString();
+    const when = stampInstant("millisecond");
     this.sql.exec(`UPDATE review_grants SET revoked_by=?, revoked_at=? WHERE grant_id=? AND revoked_at IS NULL`,
                   a.who, when, g.grant_id);
     return { ok: true, existed: false, grantId: g.grant_id, revokedBy: a.who, revokedAt: when };
@@ -10302,12 +10325,14 @@ export class Store extends DurableObject {
      Any of the three can move the hash without moving this date. Naming them is the honest scope of the
      rule, and closing them would take a dated fact the answer does not hold.
 
-     TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant:
-     a draft edit, a comment and a grant are stamped `new Date().toISOString()` (with milliseconds), and an
-     acknowledgement is stamped with the milliseconds cut off (`acknowledgeStatement`). Sorted as STRINGS
-     those two spellings rank WRONG inside one second — `…:00Z` sorts after `…:00.123Z`, because `Z` is
-     above `.` — so candidates are ranked by `Date.parse`, and anything unparseable is not ranked at all
-     rather than sorted as zero. Equal instants keep the FIRST candidate in the order above (edit, comment,
+     TIES AND SHAPES, AND WHY THIS IS NOT A STRING COMPARE. The record holds TWO SPELLINGS of an instant,
+     `…:00Z` and `…:00.123Z`, and sorted as STRINGS they rank WRONG inside one second — `…:00Z` sorts after
+     `…:00.123Z`, because `Z` is above `.` — so candidates are ranked by `instantOrder` (D-543), and anything
+     unparseable is not ranked at all rather than sorted as zero. Since D-543 every act these bytes carry
+     is stamped `stampInstant("millisecond")` — the acknowledgement was the one cut to the second, which
+     dated an acknowledgement made in the same second as the act before it EARLIER than that act — but an
+     acknowledgement recorded before D-543 keeps its whole-second stamp, so the two spellings still meet
+     here and the instant compare is load-bearing, not tidiness. Equal instants keep the FIRST candidate in the order above (edit, comment,
      grant, acknowledgement), which is the order the answer itself presents them in.
 
      THE AUTHOR DOES NOT MOVE WITH IT, and that is a decision rather than an oversight: BOB #32 ruled on the
@@ -10332,7 +10357,7 @@ export class Store extends DurableObject {
       add(a.at, a.kind === "recipient" ? a.recipient : a.by,
           a.kind === "recipient" ? "recipient" : "member", "statement acknowledgement");
     let last = null;
-    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;
+    for (const c of cand) if (!last || instantOrder(c.at, last.at) > 0) last = c;
     const act = !last ? "UNDETERMINED: these bytes carry no dated act at all"
       : `the newest dated act these bytes carry is ${last.kind === "edit" ? "an edit of the draft"
           : `a ${last.kind}`} by ${last.by ?? "somebody this record does not name"}`;
@@ -10546,7 +10571,7 @@ export class Store extends DurableObject {
     if (!body || body.length > Store.REVIEW_TEXT_MAX)
       return { ok: false, reason: "REVIEW_NO_COMMENT_TEXT",
                detail: `a comment says something: at least one character and at most ${Store.REVIEW_TEXT_MAX}.` };
-    const when = new Date().toISOString();
+    const when = stampInstant("millisecond");
     this.sql.exec(`INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at) VALUES (?,?,?,?,?,?)`,
                   d.draft_id, kind, author, grantId, body, when);
     const row = this.#one(`SELECT last_insert_rowid() AS id`);
@@ -10818,7 +10843,7 @@ export class Store extends DurableObject {
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
                               AND acknowledger_kind=? AND acknowledger=?`,
                            project, statementSha, ident.caseId ?? null, ident.edition, kind, by);
-    const when = same ? same.at : new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = same ? same.at : stampInstant("millisecond");
     if (!same)
       this.sql.exec(`INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
                      acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -11823,7 +11848,7 @@ export class Store extends DurableObject {
                      + "a reason, which is the act that takes material out of a question." };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     /* D-436: THE CHILDREN ARE CREATIONS, written AFTER the parent's revision — so whether each can name its producing
        group is asked HERE, before anything moves, and never discovered by a child refused after the parent is
        already divided. A child's bytes are derived from the parent's and carry its `group:` line; `promote` stamps
@@ -12347,7 +12372,7 @@ export class Store extends DurableObject {
     }
 
     /* ------------------------------------------- the stamp, and what carries */
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const ordsOf = (label) => standingLabel.reduce((a, g, i) => (g === label ? [...a, i] : a), []);
     const same = (a, c) => a.length === c.length && a.every((v, i) => v === c[i]);
     const rowsOut = asked.map((a) => {
@@ -13375,7 +13400,7 @@ export class Store extends DurableObject {
                        + "names no part means the whole document, which is always a legal thing to cite." };
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
 
     /* Nothing to do is a SUCCESS that writes nothing. Citing has to be safely
        retryable, because drift is reported rather than fatal and an operator
@@ -14617,7 +14642,7 @@ export class Store extends DurableObject {
       : typeof v === "boolean" ? String(v)
       : Array.isArray(v) && v.every((n) => typeof n === "number" && Number.isFinite(n)) ? `[${v.join(", ")}]`
       : q(v);
-    const nowIso = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const nowIso = stampInstant("second");
     const vr = src.vrow;
     const vRow = [`  - name: ${q(nameWritten)}`,
                   `    description: ${q(description)}`,
@@ -15387,7 +15412,7 @@ export class Store extends DurableObject {
       ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address`
       : "";
     const stamp = (from) => ({
-      at: at || new Date().toISOString().replace(/\.\d+Z$/, "Z"),
+      at: at || stampInstant("second"),
       by: "op=provenancechain (REC-54)",
       basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
       from,
@@ -15479,7 +15504,7 @@ export class Store extends DurableObject {
     if (!docs)
       return { ok: false, reason: "NO_DOCUMENTS", detail: 'data/provenance.json must be {"documents": [...]}' };
 
-    const at = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second");
     const instanceName = (this.env && this.env.INSTANCE_NAME) || "unnamed";
     const report = [], refused = [];
     let changed = 0;
@@ -15771,7 +15796,7 @@ export class Store extends DurableObject {
        established is one where the reader cannot tell which half. */
     const finding = (registerState !== "readable" || undetermined > 0)
       ? "LOOKED_INDETERMINATE" : "PRESENT";
-    const at = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const at = stampInstant("second");
     const docsJson = JSON.stringify(documents);
 
     const prev = this.#latestRouteMark(bundleId);
@@ -18631,7 +18656,7 @@ export class Store extends DurableObject {
          a pure INSERT — it refuses nothing and can fail no promotion, because a
          member revising their own finding is never the act to refuse. */
       this.#flagCasesOnRevision(bundleId, base ?? null,
-        new Date().toISOString().replace(/\.\d+Z$/, "Z"));
+        stampInstant("second"));
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner,
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
@@ -20621,7 +20646,7 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-testify-act */
     const text = typeof words === "string" ? words : "";
     const bytes = new TextEncoder().encode(text);
-    const recorded = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const recorded = stampInstant("second");
     const obs = typeof observedAt === "string" ? observedAt.trim() : "";
     const obsMs = Store.#observedMs(obs);
     /* DEC-49 REGION is-testify-words */
@@ -21222,7 +21247,7 @@ export class Store extends DurableObject {
             : `pass project=<PROJ-…>: the project to share this lead to`,
         { lead: L.lead_id, project: pid || null });
     /* END DEC-49 REGION is-lead-share */
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     this.sql.exec(`INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
                   L.lead_id, pid, who, at);
     const r = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
@@ -21256,7 +21281,7 @@ export class Store extends DurableObject {
         + `${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather `
         + `than cut`, { limit: CAPTURE_TEXT_UNIT_CAP });
     /* END DEC-49 REGION is-lead-act */
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     /* `LEAD-YYYY-MMDD-hex`: the bundle-id SHAPE with a prefix `BUNDLE_ID_RE` does
        not admit, so the id reads as a record id to a person and as nothing
        citable to every leg grammar. */
@@ -21564,7 +21589,7 @@ export class Store extends DurableObject {
         + `one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
         { limit: CAPTURE_TEXT_UNIT_CAP });
     /* END DEC-49 REGION is-theme-declare */
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     /* `THEME-YYYY-MMDD-hex`: the lead's shape under its own prefix, which
        `BUNDLE_ID_RE` does not admit and `ENTITY_KINDS` does not name — so it
        reads as a record id to a person and as nothing citable to every leg. */
@@ -21596,7 +21621,7 @@ export class Store extends DurableObject {
     const T = src.row;
     const tgt = this.#themeTarget(target, note, viewer);
     if (!tgt.ok) return tgt;
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     const before = this.#one(`SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
                              T.theme_id, tgt.target);
     if (!before)
@@ -21642,7 +21667,7 @@ export class Store extends DurableObject {
     const T = src.row;
     const tgt = this.#themeTarget(target, note, viewer);
     if (!tgt.ok) return tgt;
-    const at = new Date().toISOString().split(".")[0] + "Z";
+    const at = stampInstant("second");
     /* WHETHER ANYTHING STANDS THERE is read BEFORE the write, `themePlace`'s way — never inferred
        from the row afterwards, which cannot tell a fresh hunch from the same proposer's second
        proposal inside one second. */
@@ -27303,7 +27328,7 @@ export class Store extends DurableObject {
    *  about a capture rather than about a document. */
   #conditionsPartialCapture(viewer, now, identity = null) {
     const out = [];
-    const nowIso = new Date(now).toISOString().split(".")[0] + "Z";
+    const nowIso = stampInstant("second", now);
     const redact = this.#bundleRedactor(viewer);
     for (const r of this.#rows(
       `SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, nowIso)) {
@@ -36371,7 +36396,7 @@ export class Store extends DurableObject {
        ratified. Stamped once and never re-stamped: a re-ratification of the
        same bytes is a retry, not a revision. */
     if (complete && !c.ratified_at) {
-      const at = findings.reduce((mx, x) => (x.ratified_at > mx ? x.ratified_at : mx), findings[0].ratified_at);
+      const at = findings.reduce((mx, x) => (instantOrder(x.ratified_at, mx) > 0 ? x.ratified_at : mx), findings[0].ratified_at);
       this.sql.exec(`UPDATE published_cases SET ratified_at=? WHERE case_id=? AND edition=?`, at, caseId, ed);
       c.ratified_at = at;
     }
@@ -37734,7 +37759,7 @@ export class Store extends DurableObject {
    *  run that will die first and a mean would hide it. */
   recordRuntimeObservation({ metric, ms, detail = null, at = null }) {
     if (!metric || typeof ms !== "number" || !Number.isFinite(ms)) return { recorded: false };
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const cur = [...this.sql.exec(`SELECT * FROM runtime_observations WHERE metric = ?`, metric)][0] || null;
     if (!cur) {
       this.sql.exec(
@@ -37810,7 +37835,7 @@ export class Store extends DurableObject {
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
   renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
     /* CEILED, never floored: a reservation rounded DOWN is a reservation short of the cost it
@@ -37855,7 +37880,7 @@ export class Store extends DurableObject {
    *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
    *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
   renderSpend({ ms, releaseMs = 0, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
     const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
@@ -37898,7 +37923,7 @@ export class Store extends DurableObject {
   }
 
   recordCpuProbeStep({ step, elapsedMs, iterations, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     this.sql.exec(
       `INSERT INTO cpu_probe (step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?)
        ON CONFLICT(step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
@@ -40342,7 +40367,7 @@ export class Store extends DurableObject {
           { target, version: vname, project: projectId });
     }
 
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const when = stampInstant("second");
     const hidden = act === "hide"
       ? !(a.hidden === false || a.hidden === "false" || a.hidden === "0")
       : (row.hidden === true);
@@ -40741,7 +40766,7 @@ export class Store extends DurableObject {
       refused_state_by: args.state_by ?? null, refused_state_at: args.state_at ?? null,
       refused_state_reason: args.state_reason ?? null, refused_at: args.at ?? null,
     });
-    const nowIso = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const nowIso = stampInstant("second");
     const prior = this.#one(
       `SELECT * FROM suggest_refusals WHERE target=? AND base_sha=? AND submission=?`,
       target, b.bundle_sha, submission);
@@ -42395,7 +42420,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: code, code, check: row.check,
                translation: row.translation, detail, ...(extra || {}) };
     };
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
 
@@ -42470,7 +42495,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: code, code, check: row.check,
                translation: row.translation, detail, ...(extra || {}) };
     };
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const id = String(tokenId ?? "").trim();
 
     /* DEC-49 REGION is-ai-credential-revoke
@@ -42580,7 +42605,7 @@ export class Store extends DurableObject {
    *  bytes and do not change; a second filing is a re-run, not new information. */
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] }) {
     if (!sourceCapture) return { recorded: 0 };
-    const now = new Date().toISOString().split(".")[0] + "Z";
+    const now = stampInstant("second");
     this.sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
     let n = 0;
     for (const l of links) {
@@ -42789,7 +42814,7 @@ export class Store extends DurableObject {
   /** Append a verdict. Never an update: a verdict that changed is a fact about
    *  the record, and the current answer is simply the newest row. */
   recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     this.sql.exec(
       `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
@@ -42809,7 +42834,7 @@ export class Store extends DurableObject {
    *  that walks away costs one row until its hour is up. */
   saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 3600000, at = null }) {
     const now = at ? new Date(at) : new Date();
-    const iso = (d) => d.toISOString().split(".")[0] + "Z";
+    const iso = (d) => stampInstant("second", d);
     this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
     if (!session || !state) return { session: null, saved: false };
     const cur = [...this.sql.exec(`SELECT ticks FROM capture_sessions WHERE session = ?`, session)][0];
@@ -42827,7 +42852,7 @@ export class Store extends DurableObject {
 
   loadCaptureSession({ session, at = null }) {
     const now = at ? new Date(at) : new Date();
-    const iso = now.toISOString().split(".")[0] + "Z";
+    const iso = stampInstant("second", now);
     this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso);
     const r = [...this.sql.exec(`SELECT * FROM capture_sessions WHERE session = ?`, session)][0] || null;
     if (!r) return { session, found: false,
@@ -42973,7 +42998,7 @@ export class Store extends DurableObject {
   static AI_RUNS_LIMIT_DEFAULT = 200;
   static AI_RUNS_LIMIT_MAX = 1000;
 
-  static #aiIso(ms) { return new Date(ms).toISOString().split(".")[0] + "Z"; }
+  static #aiIso(ms) { return stampInstant("second", ms); }
 
   /* ==================================================================== *
    * REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE.
@@ -43040,7 +43065,7 @@ export class Store extends DurableObject {
     };
     const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));
     if (bad) return bad;
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     /* `seq` is assigned by SQLite as the rowid, which is store-wide and
        monotonic — §3's requirement. It is not reused, because nothing deletes a
        row: the only DELETE is the whole-store purge, after which the table is
@@ -47152,7 +47177,7 @@ export class Store extends DurableObject {
    *  having to go looking. */
   recordSiteAssets({ host, primarySha, observations = [], at = null }) {
     if (!host || !primarySha) return { host: null, recorded: 0 };
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     let added = 0, changedCount = 0;
     const changed = [];
     /* CAP-14: the capture a REUSED observation names as its source is the one the
@@ -47313,7 +47338,7 @@ export class Store extends DurableObject {
                          ? "no captured baseline, so the look has no capture to refer to and is not recorded"
                          : `no observation is recorded for the outcome '${String(outcome)}'` };
     const cls = actorClass === "member" || actorClass === "machine" ? actorClass : "plane";
-    const now = new Date().toISOString().split(".")[0] + "Z";
+    const now = stampInstant("second");
     const bad = this.#observe({
       actorClass: cls, actor: cls === "plane" ? null : actor,
       authorityKind: "sweep", authority: String(bundleId),
@@ -47333,7 +47358,7 @@ export class Store extends DurableObject {
    *  network traffic (VERIFICATION.md), so it does the fetching and hashing and
    *  hands the store the verdicts to commit; the store invents none of them. */
   recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     let recorded = 0;
     const refusals = [];
     for (const v of verdicts) {
@@ -47462,7 +47487,7 @@ export class Store extends DurableObject {
    *  never refused, which is NOT evidence about where the ceiling is and only
    *  advances the counter toward the next probe. */
   recordCaptureLimit({ runtime = "subrequests", observed = null, at = null }) {
-    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const now = at || stampInstant("second");
     const cur = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
     if (observed == null) {
       if (cur) this.sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
@@ -47518,7 +47543,7 @@ export class Store extends DurableObject {
        rendered as quoted data by anything that shows it. */
     const text = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
-    const now = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
+    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
     const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
     if (existing) {
       /* Still in the queue, so the consumer still owes it a drain: (re-)arm the
@@ -47627,7 +47652,7 @@ export class Store extends DurableObject {
    *  exists, and inventing a refers_to would be worse than being patient. */
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 50)));
-    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const queued = this.#rows(`SELECT * FROM task_queue ORDER BY enqueued, capture_sha LIMIT ?`, cap);
     const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
     for (const q of queued) {
@@ -47886,7 +47911,7 @@ export class Store extends DurableObject {
     const target = this.#one(`SELECT member_id FROM members WHERE member_id=? AND status='active'`, to);
     if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
     if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
-    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "forwarded", actor });
     task.assignee = target.member_id;
@@ -47932,7 +47957,7 @@ export class Store extends DurableObject {
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
     const fenced = this.#refuseNotYours(row, actor, "resolve");
     if (fenced) return fenced;
-    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "resolved", actor });
     task.status = "resolved";
@@ -48252,8 +48277,8 @@ export class Store extends DurableObject {
     this.#tickRunning.add("archive-monitor");
     try {
     const nowIso = Number.isFinite(now)
-      ? new Date(now).toISOString().split(".")[0] + "Z"
-      : new Date().toISOString().split(".")[0] + "Z";
+      ? stampInstant("second", now)
+      : stampInstant("second");
     const rows = this.#rows(
       `SELECT address_norm FROM source_reachability
         WHERE consecutive_failures >= ? ORDER BY first_failure_since LIMIT ?`,
@@ -48366,7 +48391,7 @@ export class Store extends DurableObject {
     this.sql.exec(
       `INSERT INTO monitor_tick_epoch (consumer, epoch, opened_at) VALUES (?, ?, ?)
        ON CONFLICT(consumer) DO UPDATE SET epoch=excluded.epoch, opened_at=excluded.opened_at`,
-      consumer, epoch, new Date(epoch).toISOString().split(".")[0] + "Z");
+      consumer, epoch, stampInstant("second", epoch));
     /* Any fired rows left from an older epoch are spent: the key only has to hold
        WITHIN one tick, and a fired-set that accumulated across ticks would stop a
        document ever being checked twice. */
@@ -48388,7 +48413,7 @@ export class Store extends DurableObject {
                   consumer, subject, epoch)) return false;
     this.sql.exec(
       `INSERT INTO monitor_fired (consumer, subject, epoch, fired_at) VALUES (?, ?, ?, ?)`,
-      consumer, subject, epoch, new Date().toISOString().split(".")[0] + "Z");
+      consumer, subject, epoch, stampInstant("second"));
     return true;
   }
 
@@ -48499,8 +48524,8 @@ export class Store extends DurableObject {
     this.#tickRunning.add("monitor-cadence");
     try {
     const at = Number.isFinite(now)
-      ? new Date(now).toISOString().split(".")[0] + "Z"
-      : new Date().toISOString().split(".")[0] + "Z";
+      ? stampInstant("second", now)
+      : stampInstant("second");
     const plan = this.#monitorCadencePlan(now);
     /* An open cadence tick is a retry only within the SHORTEST cadence this
        plane schedules at: past that, a document is genuinely due again and the
@@ -48593,7 +48618,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
       return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
+    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
     const st = Number.isInteger(status) ? status : null;
     this.sql.exec(
       `INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?)
@@ -48650,7 +48675,7 @@ export class Store extends DurableObject {
                governed_refusals: 0, fallback_eligible: false,
                basis: "no attempt on this address has ever been recorded" };
     }
-    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
     const TH = this.#thresholds();
     const byCount = row.consecutive_failures >= TH.failures;
     /* Staleness runs from the FIRST failure in the current run, not from the
@@ -48811,7 +48836,7 @@ export class Store extends DurableObject {
        provenance nobody has. */
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
     const fm = md && typeof md.content === "string" ? (parseFrontmatter(md.content).data || {}) : {};
-    const now = at ? String(at) : new Date().toISOString().split(".")[0] + "Z";
+    const now = at ? String(at) : stampInstant("second");
     this.sql.exec(
       `INSERT OR REPLACE INTO bias_adoptions
          (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256)

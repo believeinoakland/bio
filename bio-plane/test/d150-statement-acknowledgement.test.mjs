@@ -340,12 +340,17 @@ t("a member of ANOTHER project (sol) cannot even see the draft, and is answered 
   (await ack(`draft=${D1}&token=${SOL}`))?.reason, "NO_REVIEW_COPY");
 
 const A1 = await ack(`draft=${D1}&token=${ELLA}`);
+/* CORRECTED 2026-09-25 (D-543), NOT EXEMPTED: the date was pinned to WHOLE SECONDS, the one act on a review
+   copy stamped that way while its edit, comments and grants carry milliseconds — so an acknowledgement made
+   in the same second as a comment was dated EARLIER than it, and a string compare ranked it LATER. The
+   acknowledgement is now stamped `stampInstant("millisecond")` like the copy's other acts; what this arm
+   asserts, a real dated instant, is unchanged. */
 t("A JOINED PARTICIPANT ACKNOWLEDGES — attributed to her, dated, of THIS statement's hash (computed here), at "
 + "the draft's case identity (no case id, edition 1 — a draft naming no case, whose case publication derives; "
 + "the label read \"a new case\", which D-538 corrected: the draft sets no `newCase`)",
   [A1?.ok, A1?.existed, A1?.acknowledgement?.kind, A1?.acknowledgement?.by,
    A1?.acknowledgement?.statement_sha === sha(STMT), A1?.acknowledgement?.case_id, A1?.acknowledgement?.edition,
-   /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(A1?.acknowledgement?.at || "")],
+   /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(A1?.acknowledgement?.at || "")],
   [true, false, "participant", "ella", true, null, 1, true]);
 t("and again is the SAME act, not a second one",
   [(await ack(`draft=${D1}&token=${ELLA}`))?.existed], [true]);
