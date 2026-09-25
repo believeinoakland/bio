@@ -32,7 +32,7 @@ import {
   parseHtmlRefs, srcsetUrls, classifyRef, renderCompanion, captureSubresources,
   placeholderFor, PLACEHOLDER_MISSING, SUBRESOURCE_CAP, CSS_MAX_DEPTH,
   readLinkWrapper, LINK_TYPES, originOf, fetchPolicy, priorityOf, normalizeAddress, reuseDecision,
-  normalizeCitation, fragmentOf,
+  normalizeCitation, fragmentOf, partFetchSpread,
 } from "../src/subresources.mjs";
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
 import { cpuProbe, makeMeter } from "../src/cpu.mjs";
@@ -1447,6 +1447,113 @@ console.log("\n--- the plane identifies itself legibly to the source ---");
     (src.match(/"user-agent":\s*userAgent\(env,/g) || []).length === (src.match(/"user-agent":/g) || []).length
       && (src.match(/"user-agent":/g) || []).length > 0, true);
   t("and no bare token survives", /"user-agent":\s*"bio-/.test(src), false);
+}
+
+console.log("\n--- D-191: a composite states the temporal spread of its parts, per clock ---");
+{
+  /* CAPTURE-SCALING.md §Checking that a reused asset is still the same, §Re-fetch at
+     ratification is mandatory: a capture assembled from reused parts is the page as
+     the source served it across a SPAN, and the manifest says when its parts were
+     fetched. Two clocks, never compared as one (D-580's class): `capture` is this
+     capture's own `fetched_at`; `record` is a reused part's `reused_from_fetched_at`,
+     the Store's `site_assets.last_fetched`. Driven through op=acquire, and the
+     stored manifest is read back through op=capture.
+     NEGATIVE CONTROL: ARM 1, the row's own control — the spread dropped from the manifest (subresources.mjs
+     `part_fetch_spread: partFetchSpread(records)` removed) -> "D-191 A1 a composite whose parts were fetched at two
+     instants states BOTH" FAILS by name, with A2, A3, A5, B1, B2, C1 (350 pass / 7 fail). ARM 2, the two clocks
+     conflated (every part read on the capture clock's `fetched_at`) -> A1-A4, B1, B2, D1, D2 fail (349/8). ARM 3, latest
+     collapsed to earliest -> A1, C1, D2 fail (354/3). ARM 4, the composite-wide instants ordered ACROSS the two clocks
+     -> B2 fails alone (356/1). OVER-STRICTNESS ARM, min/max by reduce in place of a sort -> 357/357. The first runs of ARM 1 and ARM 2
+     ended the module on a TypeError with no tally; the reads were guarded to fail by name.
+     BASELINE, subresources.mjs at origin/main 964da679 -> no tally (the suite imports `partFetchSpread`, which does not
+     exist). Each arm alone, restored by cp from a per-arm pristine copy, verified by sha256 and cmp -> 357/357.
+     RUN 2026-09-25 D-191 worker. */
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  const stub = ns.get(ns.idFromName("bio"));
+  const call = async (path, body) => (await stub.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+  const get = async (s) => {
+    const r = await mf.dispatchFetch(`http://x/api/?op=capture&token=mem-sub&sha256=${s}`);
+    return r.status === 200 ? Buffer.from(await r.arrayBuffer()) : null;
+  };
+  const H = "www.oaklandca.gov", O = "https://www.oaklandca.gov";
+  const iso = (ms) => new Date(ms).toISOString().split(".")[0] + "Z";
+  const T_A = iso(Date.now() - 2 * 3600e3), T_B = iso(Date.now() - 3600e3);
+  const CSS_A = ".a { color: red }", CSS_B = ".b { color: blue }", CSS_C = ".c { color: green }";
+  BODIES.set("/d191/a.css", [CSS_A, "text/css"]);
+  BODIES.set("/d191/b.css", [CSS_B, "text/css"]);
+  BODIES.set("/d191/c.css", [CSS_C, "text/css"]);
+  /* Two assets the record saw served at two different instants, each on two
+     distinct pages so the reuse floor is met (CAP-13 counts page addresses). */
+  let i = 0;
+  for (const [path, body, at] of [["/d191/a.css", CSS_A, T_A], ["/d191/b.css", CSS_B, T_B]])
+    for (const pg of ["/d191/p1.html", "/d191/p2.html"]) {
+      const prim = ("e" + (++i)).padEnd(64, "0");
+      await call("/recordcapturedlocator", { address: O + pg, addressNorm: normalizeAddress(O + pg), captureSha: prim, retrieved: at });
+      await call("/recordsiteassets", { host: H, primarySha: prim, at,
+        observations: [{ address: O + path, address_norm: normalizeAddress(O + path), sha256: sha(enc(body)),
+                         content_type: "text/css", bytes: body.length, kind: "stylesheet" }] });
+    }
+  const pageOf = (...css) => `<html><head>${css.map((c) => `<link rel="stylesheet" href="${c}">`).join("")}</head><body><p>d191</p></body></html>`;
+  BODIES.set("/d191/both.html", [pageOf("/d191/a.css", "/d191/b.css"), "text/html"]);
+  BODIES.set("/d191/mixed.html", [pageOf("/d191/a.css", "/d191/c.css"), "text/html"]);
+
+  const both = await acquire({ locator: O + "/d191/both.html", authority: "City", subresources: true });
+  const reusedBoth = (both.subresources || []).filter((r) => r.ok && r.fetched_this_capture === false).length;
+  t("D-191 A0 the fixture is a composite of two REUSED parts (floored, not an empty corpus)", reusedBoth, 2);
+  const sp = both.snapshot && both.snapshot.part_fetch_spread;
+  t("D-191 A1 a composite whose parts were fetched at two instants states BOTH, earliest and latest",
+    sp && [sp.earliest, sp.latest], [T_A, T_B]);
+  t("D-191 A2 and names the one clock they are on, the record's", sp && [sp.state, sp.clock], ["one_clock", "record"]);
+  t("D-191 A3 the per-clock entry says what instant it read and whose clock stamped it",
+    sp && sp.clocks.record && [sp.clocks.record.instant, /Store's clock/.test(sp.clocks.record.clock), sp.clocks.record.parts],
+    ["reused_from_fetched_at", true, 2]);
+  t("D-191 A4 a reused part's instant is the fetch that served it, never the reuse's own stamp",
+    !!sp?.clocks?.capture, false);
+  const man = JSON.parse((await get(both.snapshot.manifest_sha256)).toString("utf8"));
+  t("D-191 A5 the stored manifest, read back through op=capture, carries the same spread",
+    [!!sp, JSON.stringify(man.part_fetch_spread) === JSON.stringify(sp)], [true, true]);
+
+  const mixed = await acquire({ locator: O + "/d191/mixed.html", authority: "City", subresources: true });
+  const mp = mixed.snapshot && mixed.snapshot.part_fetch_spread;
+  const fetchedC = (mixed.subresources || []).find((r) => /\/d191\/c\.css$/.test(r.url));
+  t("D-191 B0 one part reused and one fetched by this capture",
+    (mixed.subresources || []).filter((r) => r.ok).map((r) => r.fetched_this_capture).sort(), [false, true]);
+  t("D-191 B1 a composite on TWO clocks states each clock's spread",
+    [mp?.clocks?.record?.earliest, mp?.clocks?.capture?.earliest],
+    [T_A, fetchedC && fetchedC.fetched_at]);
+  t("D-191 B2 and never orders one clock against the other: the composite-wide instants are null, and it says why",
+    mp && [mp.state, mp.clock, mp.earliest, mp.latest], ["two_clocks_not_compared", null, null, null]);
+
+  /* The capture clock alone, at two instants: a fake clock advancing an hour per
+     stamp, so the parts this capture fetched were fetched at different instants. */
+  let tick = Date.parse("2026-09-25T00:00:00Z");
+  const two = await captureSubresources({
+    html: pageOf("/d191/a.css", "/d191/c.css"), base: O + "/d191/x.html",
+    primarySha: "f".repeat(64), primaryFile: "snapshots/x.html",
+    now: () => new Date((tick += 3600e3)),
+    fetchOne: async (u) => ({ ok: true, status: 200, bytes: enc("." + u.length + "{}"), contentType: "text/css" }),
+    put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
+  });
+  const cp = two.manifest.part_fetch_spread;
+  t("D-191 C1 parts this capture fetched at two instants state both, on the capture clock",
+    [cp?.state, cp?.clock, cp?.clocks?.capture?.parts, cp?.earliest !== cp?.latest,
+     cp?.earliest, cp?.latest], ["one_clock", "capture", 2, true, "2026-09-25T01:00:00Z", "2026-09-25T02:00:00Z"]);
+
+  /* The pure reading: what is a part, what is undetermined, and an instant
+     written in another ISO spelling is ordered by its value, not its text. */
+  const u = partFetchSpread([
+    { ok: true, fetched_this_capture: false, reused_from_fetched_at: "2026-09-24T10:00:00.500Z" },
+    { ok: true, fetched_this_capture: false, reused_from_fetched_at: "2026-09-24T09:00:00Z" },
+    { ok: true, fetched_this_capture: false, reused_from_fetched_at: null },
+    { ok: false, reason: "SOURCE_REFUSED", fetched_at: "2020-01-01T00:00:00Z" },
+  ]);
+  t("D-191 D1 a part with no instant is UNDETERMINED, never placed; a record holding no bytes is not a part",
+    [u.parts, u.undetermined, u.clocks.record?.parts, !!u.clocks.capture], [3, 1, 2, false]);
+  t("D-191 D2 instants are ordered by value, whatever their ISO spelling",
+    [u.earliest, u.latest], ["2026-09-24T09:00:00Z", "2026-09-24T10:00:00.500Z"]);
+  t("D-191 D3 nothing held is stated as no instants, not as a spread",
+    [partFetchSpread([]).state, partFetchSpread([]).earliest], ["no_instants", null]);
 }
 
 console.log(`\nsubresources: ${pass} pass, ${fail} fail`);
