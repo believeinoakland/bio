@@ -166,8 +166,8 @@ deckLength, undetermined, counts:{chars, notesChars, undetermined}}`; `images` i
   `null` on both branches that did not read the body.
 - **R27** Over the guard, or with no readable `<office:presentation>` body, `document` is
   `null`, `slides` and `speakerNotes` are `[]`, `deckLength` is `null`, and `undetermined`
-  carries the guard marker verbatim, or one marker naming the reason with `sheet`/`cell`-style
-  fields replaced by nothing (just `reason`, `part`, `why`).
+  carries the guard marker verbatim, or (with no guard) a single `{reason:"main_part_unreadable",
+  part:"content.xml", why}` marker — the same shape R13 states for `.odt`.
 
 **Shared envelope facts, across all three `structure()`s and `text()`s:**
 - **R28** Every successful `structure()` call states, in `evidentiary.undetermined`, that
@@ -197,8 +197,8 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
 - **R32** Detects with R1's CERTAIN branch only (a content-type-only "likely" match never
   qualifies); with no flavour detected certainly, returns `{determined:false, flavour:null,
   basis}` naming why.
-- **R33** A flavour with no entry in the measured-stable table — today `.odp`, until a census
-  target is measured (Status: measured for `.odt` and `.ods` only) — returns
+- **R33** A flavour with no entry in the measured-stable table — today `.odp` only, since no
+  census target has been measured for it, while `.odt` and `.ods` are both measured — returns
   `{determined:false, flavour, basis}` naming that, without reading the container further.
 - **R34** Refuses (`determined:false`, `flavour` set, `basis` naming the specific reason) when
   the central directory cannot be read, when `content.xml`'s declared uncompressed size is
