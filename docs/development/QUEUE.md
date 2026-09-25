@@ -953,7 +953,7 @@ accepts-when: both bullets read whole in the front matter; corpuscheck 0 fail (m
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
 
 ### D-630 · running — **`suggest.control` arm 7: ANCHOR DRIFT — `    if (prior) {` matches 2 since D-536, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: running — SCHEDULER #24 11:27Z: spawned from main 95fe7bc7
+status: running — SCHEDULER #24 11:28Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there; corrects the 11:27Z note, which said main)
 order: after D-667, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
