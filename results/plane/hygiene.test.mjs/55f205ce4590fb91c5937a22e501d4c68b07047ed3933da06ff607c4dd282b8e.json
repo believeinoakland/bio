@@ -1,0 +1,16 @@
+{
+ "unit": "plane:hygiene.test.mjs",
+ "inputHash": "55f205ce4590fb91c5937a22e501d4c68b07047ed3933da06ff607c4dd282b8e",
+ "verdict": "PASS",
+ "run": "43e655fad209f3d77894effbd9886ea5cf14b666.1790310021502.6029.json",
+ "tree": "43e655fad209f3d77894effbd9886ea5cf14b666",
+ "head": "6bc01cc3a6e5c46d9ddfc338c5b2d00ac7aed89d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1401,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e7b4222e-d38b-5f1d-9c2c-95c3e44d43f6",
+ "at": "2026-09-25T04:20:21.516Z"
+}
