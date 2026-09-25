@@ -426,8 +426,8 @@ accepts-when: an exported copy carries the quartet on every page byte-equal to t
 added: 2026-09-19 · SCHEDULER (same entry, item 8).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-147 · running — **A RECORDS REQUEST IS ONE ROUND TRIP: `awaiting_response` HIDES THE FEE ESTIMATE, THE WAIVER DECISION, A PARTIAL PRODUCTION AND** … (whole text: the cut archive)
-status: running — SCHEDULER #21 02:44Z spawns WORKER D-147 (depth 2)
+### D-147 · integrated — **A RECORDS REQUEST IS ONE ROUND TRIP: `awaiting_response` HIDES THE FEE ESTIMATE, THE WAIVER DECISION, A PARTIAL PRODUCTION AND** … (whole text: the cut archive)
+status: integrated — SCHEDULER #22 04:16Z (relayed by CONDUCT #21): tip cad047f4, GATE 367/367 GREEN FULLREUSE, tree 97c5e3cd; records-request lifecycle, C-94.1-11, three governed regions in actionCorrespond
 order: directly after D-149, on D-148's entry grammar, which it extends (BOB #27: *"depends-on D-148"*), the M10 action path (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 2)
 milestone: M10
 interface: I3 and I5 — correspondence entry kinds, a closed outcome vocabulary and a stated due date; the … (whole text: the cut archive)
@@ -678,7 +678,8 @@ scope: the census row may declare `changed: [C-n.m, …]`, counted in the versio
 accepts-when: a check's body edited with no census row fails by name, and one declared in `changed:` under a new version passes (moves: behaviour-only changes invisible to the version). NEGATIVE CONTROL: edit a check's body without a census row, and the new arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:00Z).
 
-### D-563 · queued — **`op=promote` TAKES A BUNDLE'S TITLE AND STATE FROM THE ENVELOPE, NOT THE DOCUMENT: it projects `bundles.title`, `current_state`, `prior_state`, `created` and `last_updated` from the envelope, and 7.1's name scan, 7.11's owner test and REC-181's retirement arm read `meta.title` / `meta.current_state`; MEASURED: a second project whose bytes name a TAKEN title LANDED when `meta.title` named another, and the projection shows the envelope's title over the bytes'.** D-526's class one field over; found by D-526's worker (00:48Z). — owner RECORD.
+### D-563 · running — **`op=promote` TAKES A BUNDLE'S TITLE AND STATE FROM THE ENVELOPE, NOT THE DOCUMENT: it projects `bundles.title`, `current_state`, `prior_state`, `created` and `last_updated` from the envelope, and 7.1's name scan, 7.11's owner test and REC-181's retirement arm read `meta.title` / `meta.current_state`; MEASURED: a second project whose bytes name a TAKEN title LANDED when `meta.title` named another, and the projection shows the envelope's title over the bytes'.** D-526's class one field over; found by D-526's worker (00:48Z). — owner RECORD.
+status: running — SCHEDULER #22 04:16Z spawns WORKER D-563 (depth 2)
 order: at the head of the backlog with the promote corrections: a name fence and an owner test a caller can steer with a label are authority defects, which outrank features (SCHEDULER #21, 2026-09-25)
 milestone: M7
 interface: I3 — refusals on op=promote for a contradicting envelope; the integrator classifies.
