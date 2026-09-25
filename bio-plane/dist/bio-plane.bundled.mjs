@@ -16225,10 +16225,39 @@ async function runGate({
   const errors = findings.filter((f2) => f2.severity === "error").map((f2) => ({ check: f2.check, detail: f2.message, ...f2.repairs ? { repairs: f2.repairs } : {} }));
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
+    if (!probe.present && probe.parts) {
+      const { named, missing, disagree, unverified, why } = probe.parts;
+      const sum = (named || []).reduce((n, p) => n + p.bytes, 0);
+      const label = (ps) => ps.map((p) => p.file || p.sha256).join(", ");
+      if (why)
+        errors.push({
+          check: "PLANE_PART_UNVERIFIED",
+          detail: `registered capture is held in parts, and ${why}, so no part could be verified`,
+          where: { path: r.path, sha256: r.capture_sha }
+        });
+      else if (missing.length)
+        errors.push({
+          check: "PLANE_PART_MISSING",
+          detail: `registered capture is held in parts, and ${missing.length} of the ${named.length} parts the record names are not in the working bucket: ${label(missing)}`,
+          where: { path: r.path, sha256: r.capture_sha, missing_parts: missing }
+        });
+      else if (disagree.length || unverified.length || typeof r.bytes === "number" && sum !== r.bytes)
+        errors.push({
+          check: "PLANE_PART_UNVERIFIED",
+          detail: disagree.length ? `registered capture is held in parts, and the stored size or digest of ${disagree.length} disagrees with the record: ${label(disagree)}` : unverified.length ? `registered capture is held in parts, all present, but the digest of ${unverified.length} could not be verified: ${label(unverified)}` : `registered capture is held in parts, and the parts the record names sum to ${sum} bytes where the register says ${r.bytes}`,
+          where: {
+            path: r.path,
+            sha256: r.capture_sha,
+            ...disagree.length ? { disagreeing_parts: disagree } : {},
+            ...unverified.length ? { unverified_parts: unverified } : {}
+          }
+        });
+      continue;
+    }
     if (!probe.present && probe.heldInParts)
       errors.push({
         check: "PLANE_HELD_IN_PARTS",
-        detail: `registered capture is held only in parts: this plane's acquisition receipt names the whole hash, and the working bucket stores the document as its parts, each under its own hash. Publication copies a capture by the hash its register row names, so register the parts rather than the whole`,
+        detail: `registered capture is held only in parts: this plane's acquisition receipt names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the bundle's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole`,
         where: { path: r.path, sha256: r.capture_sha }
       });
     else if (!probe.present)
@@ -63529,13 +63558,20 @@ ${words}`;
    *  rather than calling its bytes absent. One bounded read on the
    *  `captured_locators_sha` index, and like `registered` it names no bundle.
    */
-  registerHolds({ sha = null } = {}) {
+  /*  D-556 (BOB #34, 2026-09-25 00:00Z) - AND, when the caller names the BUNDLE whose row it is gating, the
+   *  PARTS that bundle's record names for the hash (`#partsNamedFor`, D-533's reader, not a second one). The
+   *  ratify gate asks it on a whole-hash miss: a row held in parts is admitted when every part the record names
+   *  is present and verifies, and publication copies exactly those parts. The bundle's own register document is
+   *  read, so it names nothing the ratifier has not already been handed in the image. */
+  registerHolds({ sha = null, bundle = null } = {}) {
     const s = typeof sha === "string" && sha.trim() ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
     if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
+    const b = typeof bundle === "string" && bundle.trim() ? bundle.trim() : null;
     return {
       ok: true,
       sha: s,
       asked: true,
+      ...b ? { parts: this.#partsNamedFor(b, s) } : {},
       registered: !!this.#one(
         `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
         WHERE r.capture_sha = ? LIMIT 1`,
@@ -77924,7 +77960,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         /* D-476: does the register hold these whole-document bytes, read-only and naming no
            bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
            is never stored under its own hash for R2 to be asked about. */
-        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256") }),
+        registerholds: () => this.registerHolds({
+          sha: url.searchParams.get("sha256"),
+          bundle: url.searchParams.get("bundle")
+        }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
@@ -82483,12 +82522,12 @@ var StoreSilent = class extends Error {
 };
 var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 var PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
-async function partsHeld(bucket, storeName, parts) {
+async function partsHeld(bucket, keyOf, parts) {
   const missing = [], disagree = [], unverified = [];
   const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   for (const p of parts) {
     const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
-    const h = await bucket.head(captureKey(storeName, p.sha256));
+    const h = await bucket.head(keyOf(p.sha256));
     if (!h) {
       missing.push(name);
       continue;
@@ -82499,7 +82538,7 @@ async function partsHeld(bucket, storeName, parts) {
     }
     let digest = h.checksums?.sha256 ? hex2(h.checksums.sha256) : null;
     if (!digest && h.size <= PART_VERIFY_READ_MAX) {
-      const o = await bucket.get(captureKey(storeName, p.sha256));
+      const o = await bucket.get(keyOf(p.sha256));
       if (o) digest = hex2(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
     }
     if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
@@ -83927,7 +83966,7 @@ var index_default = {
           unbacked.push({ ...row, why: "no bytes in the working bucket" });
           continue;
         }
-        const v = await partsHeld(env.CAPTURES, storeName, named.parts);
+        const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
         const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
         if (v.missing.length)
           unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names are not in the working bucket`, missing_parts: v.missing });
@@ -86578,6 +86617,7 @@ var index_default = {
       const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${ratViewer}`));
       if (!listOut.answered) return storeSilent("ratify/list");
       const known = new Set((listOut.result || []).map((b) => b.bundle_id));
+      const partedRows = /* @__PURE__ */ new Map();
       const gate = await runGate({
         bundleId: body2.bundleId,
         image,
@@ -86605,8 +86645,15 @@ var index_default = {
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
           if (h) return { present: true, bytes: h.size };
           const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
-            `http://x/registerholds?sha256=${encodeURIComponent(sha)}`
+            `http://x/registerholds?sha256=${encodeURIComponent(sha)}&bundle=${encodeURIComponent(body2.bundleId)}`
           ));
+          const named = hOut.answered && hOut.result ? hOut.result.parts : null;
+          if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
+          if (named?.state === "named") {
+            const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
+            if (!v.missing.length && !v.disagree.length && !v.unverified.length) partedRows.set(sha, named.parts);
+            return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
+          }
           const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
           return { present: false, bytes: 0, ...inParts ? { heldInParts: true } : {} };
         }
@@ -86633,7 +86680,7 @@ var index_default = {
             bytes: new TextEncoder().encode(v).length,
             text: v
           });
-        } else {
+        } else if (!partedRows.has(v.blobSha)) {
           shas.push({
             sha256: v.blobSha,
             path: path2,
@@ -86641,6 +86688,15 @@ var index_default = {
             bytes: registerBytes.has(path2) ? registerBytes.get(path2) : null
           });
         }
+      }
+      const partShaSet = /* @__PURE__ */ new Set();
+      for (const [whole, parts] of partedRows) {
+        const at = (facts.registers || []).find((r) => r.capture_sha === whole)?.path || whole;
+        parts.forEach((p, i) => {
+          partShaSet.add(p.sha256);
+          if (!shas.some((s) => s.sha256 === p.sha256))
+            shas.push({ sha256: p.sha256, path: p.file || `${at}.part${i + 1}`, kind: "capture_part", bytes: p.bytes });
+        });
       }
       const ratifiedFm = typeof image["bundle.md"] === "string" ? parseFrontmatter(image["bundle.md"]).data || {} : {};
       const isCase = normalizeType(ratifiedFm.object_type) === "inquiry" && isCaseMemberBytes(ratifiedFm);
@@ -86708,18 +86764,38 @@ var index_default = {
             present++;
             continue;
           }
-          if (s.kind === "capture") {
+          if (s.kind === "capture" || s.kind === "capture_part") {
             const obj = await env.CAPTURES.get(`${storeName}/captures/${s.sha256}`);
             if (!obj) {
               r2state = "INCOMPLETE: capture vanished between gate and copy";
               continue;
             }
-            await env.PUBLISHED.put(key, obj.body);
+            if (!partShaSet.has(s.sha256)) await env.PUBLISHED.put(key, obj.body);
+            else try {
+              await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 });
+            } catch {
+              continue;
+            }
           } else {
             await env.PUBLISHED.put(key, new TextEncoder().encode(s.text));
           }
           copied++;
         }
+      }
+      const partShas = [...new Map([...partedRows.values()].flat().map((p) => [p.sha256, p])).values()];
+      let partsPublished = null;
+      if (partShas.length && r2state !== "not configured") {
+        const v = await partsHeld(env.PUBLISHED, (s) => `${storeName}/published/${s}`, partShas);
+        const bad = [...v.missing, ...v.disagree, ...v.unverified];
+        partsPublished = {
+          parts: partShas.length,
+          verified: partShas.length - bad.length,
+          ...v.missing.length ? { missing_parts: v.missing } : {},
+          ...v.disagree.length ? { disagreeing_parts: v.disagree } : {},
+          ...v.unverified.length ? { unverified_parts: v.unverified } : {}
+        };
+        if (bad.length)
+          r2state = `INCOMPLETE: ${bad.length} of ${partShas.length} parts did not verify in the published bucket: ${bad.map((p) => p.file || p.sha256).join(", ")}`;
       }
       let container = null;
       if (pub.case && pub.case.complete && !pub.case.manifest_sha)
@@ -86899,7 +86975,13 @@ var index_default = {
         /* REC-128: who DELIVERED this request (a retry that `existed`
            wrote nothing; the record keeps its first deliverer). */
         deliveredBy: delivererOf(deliveredBy),
-        published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
+        published: {
+          shas: shas.length,
+          copied,
+          alreadyPresent: present,
+          r2: r2state,
+          ...partsPublished ? { parts: partsPublished } : {}
+        },
         ...reuseReport ? { reuse: reuseReport } : {},
         store: storeName,
         tokenClass: cls

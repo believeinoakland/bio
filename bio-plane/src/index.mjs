@@ -4357,19 +4357,22 @@ const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
    acquire part; a larger one is left UNVERIFIED and said so, never passed. Three lists, each naming the part:
    `missing`, `disagree` (size or digest), `unverified`.
    SEAM: D-530 heads the same parted captures for `op=attest`; if it factors a shared "held, whole or in parts"
-   helper, the two are ONE rule and belong in one place (REC-35: identical copies diverge silently). */
+   helper, the two are ONE rule and belong in one place (REC-35: identical copies diverge silently).
+   D-556 (BOB #34, 2026-09-25 00:00Z): THREE READERS, ONE RULE. The ratify gate asks it of a whole-hash register row
+   held in parts before admitting it, and publication asks it again of the PUBLISHED bucket after copying the parts
+   across, so `keyOf` names the bucket's key for a part's hash rather than this function assuming the working one. */
 const PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
-async function partsHeld(bucket, storeName, parts) {
+async function partsHeld(bucket, keyOf, parts) {
   const missing = [], disagree = [], unverified = [];
   const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   for (const p of parts) {
     const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
-    const h = await bucket.head(captureKey(storeName, p.sha256));
+    const h = await bucket.head(keyOf(p.sha256));
     if (!h) { missing.push(name); continue; }
     if (h.size !== p.bytes) { disagree.push({ ...name, stored_bytes: h.size }); continue; }
     let digest = h.checksums?.sha256 ? hex(h.checksums.sha256) : null;
     if (!digest && h.size <= PART_VERIFY_READ_MAX) {
-      const o = await bucket.get(captureKey(storeName, p.sha256));
+      const o = await bucket.get(keyOf(p.sha256));
       if (o) digest = hex(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
     }
     if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
@@ -6925,7 +6928,7 @@ export default {
            UNDETERMINED, counted outside `sound`, never inside it. */
         if (named?.state === "unreadable") { undetermined.push({ ...row, why: named.why }); continue; }
         if (named?.state !== "named") { unbacked.push({ ...row, why: "no bytes in the working bucket" }); continue; }
-        const v = await partsHeld(env.CAPTURES, storeName, named.parts);
+        const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
         const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
         if (v.missing.length)
           unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names `
@@ -10769,6 +10772,9 @@ export default {
       const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${ratViewer}`));
       if (!listOut.answered) return storeSilent("ratify/list");
       const known = new Set((listOut.result || []).map((b) => b.bundle_id));
+      /* D-556: the parts of each whole-hash row the gate admitted as HELD IN PARTS, as the record names them,
+         keyed by the whole hash. Publication copies exactly these, part by part. */
+      const partedRows = new Map();
       const gate = await runGate({
         bundleId: body.bundleId, image, knownIds: known,
         registers: facts.registers,
@@ -10800,8 +10806,18 @@ export default {
              refuses the row, because the publish step copies a capture by its whole hash,
              but with a finding that is true. The register is not asked: it is the row
              being checked. */
+          /* D-556 (BOB #34, 2026-09-25 00:00Z): and the parts THIS bundle's record names for the hash. When it
+             names them, each is headed and its digest verified by D-533's `partsHeld`, and the gate admits the
+             row only when all are present and verify; the verdict is the gate's. */
           const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
-            `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+            `http://x/registerholds?sha256=${encodeURIComponent(sha)}&bundle=${encodeURIComponent(body.bundleId)}`));
+          const named = hOut.answered && hOut.result ? hOut.result.parts : null;
+          if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
+          if (named?.state === "named") {
+            const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
+            if (!v.missing.length && !v.disagree.length && !v.unverified.length) partedRows.set(sha, named.parts);
+            return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
+          }
           const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
           return { present: false, bytes: 0, ...(inParts ? { heldInParts: true } : {}) };
         },
@@ -10826,10 +10842,24 @@ export default {
             .map((x) => x.toString(16).padStart(2, "0")).join("");
           shas.push({ sha256: sha, path, kind: path === "bundle.md" ? "bundle" : "file",
                       bytes: new TextEncoder().encode(v).length, text: v });
-        } else {
+        } else if (!partedRows.has(v.blobSha)) {
           shas.push({ sha256: v.blobSha, path, kind: "capture",
                       bytes: registerBytes.has(path) ? registerBytes.get(path) : null });
         }
+      }
+      /* D-556 (BOB #34, 2026-09-25 00:00Z): a capture the gate admitted as HELD IN PARTS is published AS its
+         parts, each under its own hash, because no object exists under the whole's. A part the image already
+         carries as a file of its own (C-18.1's filing) is published once, under that path; any other part the
+         record names joins the list. The whole's identity and its parts travel in the bundle's own
+         data/provenance.json, published beside them, so a reader can reassemble it. */
+      const partShaSet = new Set();
+      for (const [whole, parts] of partedRows) {
+        const at = (facts.registers || []).find((r) => r.capture_sha === whole)?.path || whole;
+        parts.forEach((p, i) => {
+          partShaSet.add(p.sha256);
+          if (!shas.some((s) => s.sha256 === p.sha256))
+            shas.push({ sha256: p.sha256, path: p.file || `${at}.part${i + 1}`, kind: "capture_part", bytes: p.bytes });
+        });
       }
 
       /* REC-14 / DEC-12: the EDITION, the frozen pair, the declared bar and the
@@ -11016,15 +11046,35 @@ export default {
         for (const s of shas) {
           const key = `${storeName}/published/${s.sha256}`;
           if (await env.PUBLISHED.head(key)) { present++; continue; }
-          if (s.kind === "capture") {
+          if (s.kind === "capture" || s.kind === "capture_part") {
             const obj = await env.CAPTURES.get(`${storeName}/captures/${s.sha256}`);
             if (!obj) { r2state = "INCOMPLETE: capture vanished between gate and copy"; continue; }
-            await env.PUBLISHED.put(key, obj.body);
+            if (!partShaSet.has(s.sha256)) await env.PUBLISHED.put(key, obj.body);
+            /* D-556: a part is put with its digest, so R2 refuses bytes that do not hash to it; a refused put
+               leaves the part absent, and the re-verification below names it. */
+            else try { await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 }); } catch { continue; }
           } else {
             await env.PUBLISHED.put(key, new TextEncoder().encode(s.text));
           }
           copied++;
         }
+      }
+      /* D-556 (BOB #34, 2026-09-25 00:00Z): EVERY PART, RE-VERIFIED AT THE DESTINATION. A part copied or found
+         already present is headed in the published bucket and its digest checked by the same `partsHeld` the
+         gate ran on the working one; a part that is not there, or whose digest fails or cannot be checked, is
+         NAMED in the answer and the copy is INCOMPLETE, never reported ok. */
+      const partShas = [...new Map([...partedRows.values()].flat().map((p) => [p.sha256, p])).values()];
+      let partsPublished = null;
+      if (partShas.length && r2state !== "not configured") {
+        const v = await partsHeld(env.PUBLISHED, (s) => `${storeName}/published/${s}`, partShas);
+        const bad = [...v.missing, ...v.disagree, ...v.unverified];
+        partsPublished = { parts: partShas.length, verified: partShas.length - bad.length,
+                           ...(v.missing.length ? { missing_parts: v.missing } : {}),
+                           ...(v.disagree.length ? { disagreeing_parts: v.disagree } : {}),
+                           ...(v.unverified.length ? { unverified_parts: v.unverified } : {}) };
+        if (bad.length)
+          r2state = `INCOMPLETE: ${bad.length} of ${partShas.length} parts did not verify in the published `
+                  + `bucket: ${bad.map((p) => p.file || p.sha256).join(", ")}`;
       }
 
       /* REC-44 / DEC-34: THE CASE CONTAINER, assembled the moment the LAST
@@ -11229,7 +11279,8 @@ export default {
                     /* REC-128: who DELIVERED this request (a retry that `existed`
                        wrote nothing; the record keeps its first deliverer). */
                     deliveredBy: delivererOf(deliveredBy),
-                    published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
+                    published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state,
+                                 ...(partsPublished ? { parts: partsPublished } : {}) },
                     ...(reuseReport ? { reuse: reuseReport } : {}),
                     store: storeName, tokenClass: cls }, 200);
     }

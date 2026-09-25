@@ -194,7 +194,11 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const rw = await ratify(WHOLE, pw.result.bundleSha);
   const fw = planeFindings(rw);
   console.log(`  READING  whole-hash row: ok=${rw.ok} reason=${rw.reason} plane findings=${JSON.stringify(fw.map((f) => f.check))}`);
-  t("a whole-hash row held in parts is still refused — publication copies by the whole hash",
+  /* CORRECTED 2026-09-25 (D-556, BOB #34 00:00Z), never exempted: the LABEL's reason was D-530's and is no longer
+     true — publication now copies a parted capture part by part, and the gate admits a whole-hash row whose parts
+     the record names and verifies (`d556partedpublish.test.mjs`). This bundle files no data/provenance.json, so
+     the record names NO parts for the hash, and that is why it is still refused. The assertion is unchanged. */
+  t("a whole-hash row held in parts whose parts the record does not name is still refused",
     [rw.ok, rw.reason], [false, "GATE_REFUSED"]);
   t("and the gate says it is HELD IN PARTS, never that the bytes are absent",
     fw.map((f) => f.check), ["PLANE_HELD_IN_PARTS"]);

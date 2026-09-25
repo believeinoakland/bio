@@ -35046,11 +35046,17 @@ export class Store extends DurableObject {
    *  rather than calling its bytes absent. One bounded read on the
    *  `captured_locators_sha` index, and like `registered` it names no bundle.
    */
-  registerHolds({ sha = null } = {}) {
+  /*  D-556 (BOB #34, 2026-09-25 00:00Z) - AND, when the caller names the BUNDLE whose row it is gating, the
+   *  PARTS that bundle's record names for the hash (`#partsNamedFor`, D-533's reader, not a second one). The
+   *  ratify gate asks it on a whole-hash miss: a row held in parts is admitted when every part the record names
+   *  is present and verifies, and publication copies exactly those parts. The bundle's own register document is
+   *  read, so it names nothing the ratifier has not already been handed in the image. */
+  registerHolds({ sha = null, bundle = null } = {}) {
     const s = typeof sha === "string" && sha.trim()
       ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
     if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
-    return { ok: true, sha: s, asked: true, registered: !!this.#one(
+    const b = typeof bundle === "string" && bundle.trim() ? bundle.trim() : null;
+    return { ok: true, sha: s, asked: true, ...(b ? { parts: this.#partsNamedFor(b, s) } : {}), registered: !!this.#one(
       `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
         WHERE r.capture_sha = ? LIMIT 1`, s),
       acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s) };
@@ -50785,7 +50791,8 @@ export class Store extends DurableObject {
         /* D-476: does the register hold these whole-document bytes, read-only and naming no
            bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
            is never stored under its own hash for R2 to be asked about. */
-        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256") }),
+        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256"),
+                                                  bundle: url.searchParams.get("bundle") }),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
            caller's own parameters there; an invisible bundle answers null,
