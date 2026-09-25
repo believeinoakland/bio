@@ -43,6 +43,16 @@ scope: `aiReachesAsMember` returns false for ops fenced to sessions, expressed a
 accepts-when: a machine-attest arm minting each of the five is refused by name, and a member op still mints (moves: a mint that records the impossible). NEGATIVE CONTROL: drop the session-fence test and the five arms mint, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by REC-162's worker).
 
+### D-613 · queued — **`op=publishedbytes` WITH format=zip ANSWERS `DUPLICATE_PATH` AT HTTP 413: every `serialiseContainer` refusal is sent as 413, so a stranger is told a request is too large when it names a path twice.** Found by D-561's worker (04:43Z). — owner RECORD.
+order: after D-586 (D-605 moved to the cache), with the public-door corrections: a status that states the wrong reason misleads a stranger on the public door (SCHEDULER #22, 2026-09-25)
+milestone: M10
+interface: I3 — an HTTP status on one public refusal; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the public door).
+depends-on: D-561 (the public codes' translations; land/worker/D-561 when pushed).
+scope: status by code in the serialiseContainer refusal path: 409 for DUPLICATE_PATH, 413 only for CONTAINER_TOO_LARGE; grep the path for any other code it returns and give each its own status.
+accepts-when: a zip request naming a path twice answers 409 DUPLICATE_PATH, and an over-large one 413 (moves: a duplicate path reported as too large). NEGATIVE CONTROL: send 413 for every refusal again and the duplicate arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-561's worker).
+
 ### REC-226 · queued — **AN OWNER'S `projectinvite` OF A MEMBER WHOSE REQUEST TO JOIN IS OPEN LEAVES THE REQUEST OPEN, so the record holds a stale request the owner has in fact answered.** BOB #35 RULED 04:30Z on REC-150's gap (a), CHANGING the provisional: the invite CLOSES the request as `granted`, by the inviting owner, at that act. — owner RECORD.
 order: after D-586, with the membership corrections: a request the owner answered still reading open is the record claiming less than happened (SCHEDULER #22, 2026-09-25)
 milestone: M8
@@ -1181,13 +1191,3 @@ depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `node tools/coord.mjs read docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session** … (whole text: the cut archive)
-order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
-depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
-accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-412» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
