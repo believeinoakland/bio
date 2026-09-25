@@ -569,7 +569,8 @@ scope: a `law` control on app.html's action intake and setup.mjs's page when the
 accepts-when: a member files a records_request naming a law and op=projection reads it verbatim (moves: law always undetermined from the surface). NEGATIVE CONTROL: drop the control's value from the act and the stated-law arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, REC-201's report).
 
-### D-693 · running — **AN ARCHIVE-ONLY CAPTURE'S GRADE READS UNDETERMINED (CAPTURE_GRADE_VIA_UNRULED) THOUGH IT IS RULED: BOB #35 RULED 2026-09-25 07:55Z from doctrine on record (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded) — a capture whose only source is an archive replay (via archive.org) EARNS C as a MEASURED value, the same shape as the direct case, strictly below a direct capture; a capture with NO recorded via stays undetermined, named.** D-177's remainder: its worker could not take the edit and shipped the archive case undetermined. — owner RECORD.
+### D-693 · integrated — **AN ARCHIVE-ONLY CAPTURE'S GRADE READS UNDETERMINED (CAPTURE_GRADE_VIA_UNRULED) THOUGH IT IS RULED: BOB #35 RULED 2026-09-25 07:55Z from doctrine on record (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded) — a capture whose only source is an archive replay (via archive.org) EARNS C as a MEASURED value, the same shape as the direct case, strictly below a direct capture; a capture with NO recorded via stays undetermined, named.** D-177's remainder: its worker could not take the edit and shipped the archive case undetermined. — owner RECORD.
+status: integrated — SCHEDULER #23 10:15Z: tip c55e4419 (on D-177 406ab5c1), GATE 385/385 GREEN FULLREUSE (21883 assertions), tree 0945915f; ARCHIVE_CAPTURE_GRADE derived (C); archive-only earns C as measured; fetch carries archive/unrecorded/earned_via/whole; §14.2 fetch-path table, BOB 07:55Z folded; construct 2.capture-grade BUILT; minted D-698; no-locator naming question to BOB
 order: spawned directly after D-177, which it completes (SCHEDULER #23, 2026-09-25)
 milestone: M9
 interface: I5 read semantics — an archive-only capture's leg reads at C; the integrator classifies.
@@ -708,6 +709,16 @@ depends-on: none (UI-106 done, on main 95fe7bc7 via batch29).
 scope: the review-copy form round-trips a both-valued draft unchanged, renders both values and the one line, and offers "keep the existing case" / "keep the new case" as saves that clear the other field; nothing prefilled.
 accepts-when: a both-valued draft loads, shows both, and a save without an owner's choice keeps both (moves: the form drops `newCase` silently). NEGATIVE CONTROL: restore the silent drop, and the arm that round-trips a both-valued draft fails by name, reading `newCase` gone.
 added: 2026-09-25 · SCHEDULER #23 (BOB #35's inbox entry of 06:45Z).
+
+### D-698 · running — **op=acquire STILL TYPES ITS ARCHIVE GRADE LETTER (index.mjs: `grade: via === "archive.org" ? "C" : EARNED_CAPTURE_CEILING`) — a second copy of a RULED value (D-693's ARCHIVE_CAPTURE_GRADE), pinned equal only by suite 9d; and acquire.test.mjs asserts the arm is "a TYPED letter, OPEN BY DECISION", which is now false.** Found by D-693's worker (minted on land/worker/D-693). — owner RECORD.
+order: spawned directly after D-693, which it completes (one ruled value, one definition) (SCHEDULER #23, 2026-09-25)
+milestone: M9
+interface: none (the same letter, one source).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.2 (the fetch-path table D-693 added), with BOB #35's 07:55Z ruling.
+depends-on: none (stacked on land/worker/D-693 @ c55e4419, integrated, on D-177 @ 406ab5c1).
+scope: export ARCHIVE_CAPTURE_GRADE from checks/bio-checks.mjs beside UNREACHABLE_CAPTURE_GRADE; import it in store.mjs and index.mjs; correct acquire.test.mjs's assertion with a comment saying why (never exempt).
+accepts-when: the acquire stamp and the grade reader read one exported constant (moves: a typed duplicate of a ruled value). NEGATIVE CONTROL: change the exported letter and both the acquire stamp arm and 9d move together, failing by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-693's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
