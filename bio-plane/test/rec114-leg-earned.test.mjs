@@ -344,7 +344,7 @@ console.log("\n--- 4. THE MEMBER'S ACT IS NOT ERASED, AND THE UNCAPPED CONTROL I
      document has no recorded fetch route, and a null reason cannot be told from
      "the route was measured". Nothing is capped still (the letter stands); the
      reason now states the letter is the author's, under the ceiling, unmeasured. */
-  const AUTHORED_UNDER_CEILING = /^this leg is read at the B its author gave, under the ceiling of B: no fetch route is recorded for .* not a measured one\.$/;
+  const AUTHORED_UNDER_CEILING = /^this leg is read here at its author's own B, not over B: the record does not say where .* came from, so that grade has not been checked\.$/;
   t("publisher-typed text earns its letter, so the authored letter STANDS and `grade` equals `grade_authored`",
     clean ? { grade: clean.grade, authored: clean.grade_authored, why: AUTHORED_UNDER_CEILING.test(clean.grade_why ?? "") } : null,
     { grade: "B", authored: "B", why: true });

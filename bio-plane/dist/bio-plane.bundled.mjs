@@ -61232,11 +61232,11 @@ ${words}`;
     if (_Store.#GRADE_RANK[stated] <= _Store.#GRADE_RANK[earned.grade])
       return unrecorded ? {
         grade: stated,
-        why: `this leg is read at the ${stated} its author gave, under the ceiling of ${earned.grade}: no fetch route is recorded for ${targetId}, so that letter is the author's account and not a measured one.`
+        why: `this leg is read here at its author's own ${stated}, not over ${earned.grade}: the record does not say where ${targetId} came from, so that grade has not been checked.`
       } : null;
     return {
       grade: earned.grade,
-      why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg is read at ${earned.grade} here and not at the ${stated} it carries. ` + `${earned.why ?? ""}${unrecorded ? ` No fetch route is recorded for ${targetId}, so the letter it is read at is the ceiling, not a measured one.` : ""}`.trimEnd()
+      why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg is read at ${earned.grade} here and not at the ${stated} it carries. ` + `${earned.why ?? ""}${unrecorded ? ` The record does not say where ${targetId} came from, so that grade has not been checked.` : ""}`.trimEnd()
     };
   }
   /* REC-105 / D-373 · THE WALK'S WHOLE TARGET SET, COLLECTED ONCE SO THE

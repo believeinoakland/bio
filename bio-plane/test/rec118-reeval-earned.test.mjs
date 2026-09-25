@@ -428,7 +428,7 @@ console.log("\n--- 6. OVER-STRICTNESS — NOTHING IS CAPPED THAT MUST NOT BE ---
      document has no recorded fetch route, and a null reason cannot be told from
      "the route was measured". Nothing is capped still (the letter stands); the
      reason now states the letter is the author's, under the ceiling, unmeasured. */
-  const AUTHORED_UNDER_CEILING = /^this leg is read at the B its author gave, under the ceiling of B: no fetch route is recorded for .* not a measured one\.$/;
+  const AUTHORED_UNDER_CEILING = /^this leg is read here at its author's own B, not over B: the record does not say where .* came from, so that grade has not been checked\.$/;
   t("AN OBLIGATION NEEDING NO CAP IS BYTE-IDENTICAL BUT FOR THE ADDED FIELDS — publisher-typed text earns its letter and keeps it",
     cleanLeg ? { grade: cleanLeg.grade, authored: cleanLeg.grade_authored, why: AUTHORED_UNDER_CEILING.test(cleanLeg.grade_why ?? "") }
              : null,
