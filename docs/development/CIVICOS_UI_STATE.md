@@ -119,6 +119,25 @@ own fact while this item ran, and it landed here — `members.invited_by`, writt
 roster row says "invited by <who>", or "not recorded" where the plane says so. Controls and figures:
 `measurements/M-171.md`.
 
+v120, 2026-09-25 session, thread UI, UI-108 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-108` (base `origin/main` @ `5e8a65a8`, which carries D-552), in the commit that carries this entry; the
+version number is PROVISIONAL — concurrent UI branches (UI-69, UI-75, UI-76, UI-78) may take it first, and CONDUCT
+renumbers at integration. SURFACE: **the progression page no longer shows a dismissed finding as an open question.**
+`progPaintInstance()` painted `inst.findings` as bare `detail` lines, so a finding a member had already decided read
+exactly like one nobody had looked at, while `op=instance` (D-552, IC-290) published the decision on it. Each finding
+now keeps its place and carries its decision BESIDE it (`progFindingDecisionHtml`): the state, the decider and the
+instant as the record holds them, the member's reason verbatim, and which version of the declared flow it judged and
+whether it still stands — through the queue's own `disposedFlowVersionHtml`, so the two pages give one account of one
+decision. An undecided finding says so; a plane that publishes no `disposition` key is NOT called undecided (not known,
+said). The record's `open_finding_count` is stated beside `finding_count`. **And a second defect in the same function,
+fixed because the row's scope names refusals:** a refused or failed `op=instance` read was swallowed into `null`, after
+which every stage said "nothing on the record" — a read that never happened, painted as an empty chain. A refusal now
+renders the plane's canned translation (DEC-49, `intentRefusalHtml`) and its code, and the stages say they were not
+read. Suite `civicos-ui/test/progression-decided-finding.test.mjs` (27/0, the real plane in miniflare, a signed-in
+member); control `progression-decided-finding.control.mjs` 4/4 AS DECLARED. **Not fixed here, minted D-617:** the
+DOCUMENT page's `docInstanceHtml` paints `op=captureprogressions`' findings, which carry the same `disposition`, just
+as bare — same class, another block.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it

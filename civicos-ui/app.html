@@ -17503,10 +17503,64 @@ async function progLoad(){
   PROG.entity = ents[0];
   await progPaintInstance();
 }
+/* UI-108: A FINDING A MEMBER HAS DECIDED SAYS SO, BESIDE ITSELF (framework §12 "age rather than
+   vanish", D-79; the plane half is D-552, IC-290). `op=instance` publishes on every finding the
+   member's decision about its (progression, stage) — `disposition`, or null where nobody decided —
+   and until this item this page painted `findings[]` bare, so a question a member had already
+   answered read as an open one: the record holding a decision and the page saying nothing of it.
+   THE FINDING STAYS LISTED. A decision ages a finding and never erases it, so it is rendered
+   BESIDE the finding it judged, never instead of it. Every word about the decision is the record's
+   — its state, its author, its instant, the member's reason verbatim, and which version of the
+   declared flow it judged and whether it still stands, through the queue's own sentence
+   (`disposedFlowVersionHtml`) so the two pages cannot drift into two accounts of one decision.
+   A field the record did not send is SAID to be missing, never filled; and a finding on a plane
+   that publishes no `disposition` key at all is not called undecided — whether anyone decided it
+   is then not known, and the page says that (CLAUDE.md §4: undetermined is first-class). */
+function progFindingDecisionHtml(f){
+  if(!f || !Object.prototype.hasOwnProperty.call(f, "disposition"))
+    return `<div class="q-gap">The record did not say whether a member has decided this finding, so nothing is claimed about that here.</div>`;
+  const d = f.disposition;
+  if(d === null)
+    return `<div class="subj-note">No member has decided this finding: it is an open question on the record.</div>`;
+  if(!d || typeof d !== "object")
+    return `<div class="q-gap">The record sent something about a decision on this finding that this page cannot read, so nothing is claimed about it here.</div>`;
+  const state = String(d.state || "").trim();
+  const who   = String(d.decided_by || "").trim();
+  const at    = String(d.at || "").trim();
+  const why   = String(d.reason || "").trim();
+  const gaps = [];
+  if(!state) gaps.push("what it was set aside as");
+  if(!who)   gaps.push("who decided");
+  if(!at)    gaps.push("when");
+  if(!why)   gaps.push("their reason");
+  return `<div class="q-notice" data-decided-finding="${esc(String(f.stage_key || ""))}">`
+    + `<b>A member decided this finding: set aside${state ? " as " + esc(state) : ""}`
+    + `${who ? " by " + esc(who) : ""}${at ? " on " + esc(at) : ""}.</b>`
+    + ` It stays listed here, because a decision ages a finding and never erases it.`
+    + (why ? ` <span class="q-notice-why">Their reason, as the record recorded it: ${esc(why)}</span>` : "")
+    + (gaps.length ? ` <span class="q-gap">The record did not say ${esc(gaps.join(", "))}, and none of it is invented here.</span>` : "")
+    + ` ${disposedFlowVersionHtml(d)}`
+    + `</div>`;
+}
+/* UI-108: how many of the listed findings a standing decision answers, in the record's own count
+   (`open_finding_count`, D-552), beside `finding_count`. Absent -> nothing is counted here. */
+function progFindingCountHtml(inst){
+  if(!inst || typeof inst.finding_count !== "number" || typeof inst.open_finding_count !== "number") return "";
+  const all = inst.finding_count, open = inst.open_finding_count;
+  if(!all) return "";
+  return `<div class="subj-note">The record lists ${esc(String(all))} ${all===1?"finding":"findings"} on this chain; `
+    + `${esc(String(open))} ${open===1?"is":"are"} still open, and ${esc(String(all-open))} `
+    + `${(all-open)===1?"is":"are"} answered by a member&rsquo;s decision that still stands.</div>`;
+}
 async function progPaintInstance(){
   const out = $("#pg-inst"); if(!out) return;
-  let inst = null, docs = [];
-  try{ inst = await recR("instance", { key: PROG.def.progression_key, id: PROG.entity.entity_id }); }catch(_){ inst = null; }
+  let inst = null, docs = [], instRefusal = null, instNoAnswer = false;
+  /* UI-108: a REFUSED read is the plane's to word (DEC-49), and one that got no answer is not an empty
+     chain: both were painted as "nothing on the record" at every stage, which claims a read that
+     never happened. A control-plane refusal throws flat; a store refusal arrives as `ok:false`. */
+  try{ inst = await recR("instance", { key: PROG.def.progression_key, id: PROG.entity.entity_id }); }
+  catch(e){ inst = null; if(e && typeof e === "object" && e.ok === false) instRefusal = e; else instNoAnswer = true; }
+  if(inst && inst.ok === false){ instRefusal = inst; inst = null; }
   /* UI-48: THE ENVELOPE WAS DROPPED AT THE CALL — `(await recR(...)).documents`
      discards `limit` and `truncated` before anything downstream could read them,
      so no renderer on this screen COULD have stated the bound. The whole answer
@@ -17525,13 +17579,20 @@ async function progPaintInstance(){
       <h2>${esc(PROG.def.label)} &mdash; ${esc(PROG.entity.label)}</h2>${gradeLine}</div>`
     + stages.map(s=>{
         const st = s.present ? `${s.document_count||s.documents.length} on the record`
-          : (s.discharged ? "missing, and lawfully so" : "nothing on the record");
+          : (s.discharged ? "missing, and lawfully so"
+            : ((instRefusal || instNoAnswer) ? "not read: the record did not answer for this chain" : "nothing on the record"));
         return `<div class="subj-doc"><div class="top"><span><b>${esc(s.label||s.stage_key)}</b> &mdash; ${esc(st)}</span>
           ${s.present && s.grade ? subjGradeBadge(s.grade, s.grade==="A"||s.grade==="B", s.grade==="C") : ""}</div>
           ${(s.exceptions||[]).map(x=>`<div class="subj-just">Skipped lawfully: ${esc(x.reason)}</div><div class="subj-cite">Cited: ${esc(x.citation)}</div>`).join("")}</div>`;
       }).join("")
+    + (instRefusal ? intentRefusalHtml(instRefusal)   /* UI-108: the plane's canned translation (DEC-49), never re-worded */
+      : instNoAnswer ? `<div class="q-gap">The record did not answer for this chain, so nothing is said here about what is on it or what is missing from it.</div>`
+      : "")
+    + progFindingCountHtml(inst)
     + ((inst && inst.findings || []).map(f=>
-        `<div class="subj-doc"><div class="top"><span>${esc(f.detail || f.finding || "a stage the record expected is missing")}</span></div></div>`).join(""))
+        `<div class="subj-doc" data-finding-stage="${esc(String(f.stage_key || ""))}"><div class="top"><span>${esc(f.detail || f.finding || "a stage the record expected is missing")}</span></div>`
+        + progFindingDecisionHtml(f)                    /* UI-108: the member's decision, beside the finding it judged */
+        + `</div>`).join(""))
     + progVersionsHtml(PROG.def)                      /* UI-99: the declared flow's versions and their basis */
     + (canIntentWrite() ? progThreadHtml(stages, docs, concernsAns) : "");
   if(canIntentWrite()){
