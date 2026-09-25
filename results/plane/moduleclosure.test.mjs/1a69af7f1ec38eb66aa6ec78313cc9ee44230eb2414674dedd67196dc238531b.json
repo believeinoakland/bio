@@ -1,0 +1,16 @@
+{
+ "unit": "plane:moduleclosure.test.mjs",
+ "inputHash": "1a69af7f1ec38eb66aa6ec78313cc9ee44230eb2414674dedd67196dc238531b",
+ "verdict": "PASS",
+ "run": "daa923418b32e03480c104a3842214e7fdb5c268.1790307586395.1420.json",
+ "tree": "daa923418b32e03480c104a3842214e7fdb5c268",
+ "head": "d2740c0888ccb2b195b4983f4c97d13f840a9c4b",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1384,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c976d8b4-615d-5aae-99a2-0fe3320ffa7b",
+ "at": "2026-09-25T03:39:46.409Z"
+}
