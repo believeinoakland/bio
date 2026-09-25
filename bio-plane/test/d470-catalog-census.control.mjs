@@ -118,7 +118,12 @@ const printedSource = () => {
 };
 const CENSUS_HEAD = "const CATALOG_CENSUS = {\n";
 const A5_PIN = `["plane-gate/1.0 (bio-checks ${CURRENT_VERSION})", "${CURRENT_VERSION}"]`;
-const BODY_EDIT = () => edit(CATALOG, EMIT_C151, EMIT_C151.replace("f('C-15.1', 'error',", "f('C-15.1', 'warning',"));
+/* The edited lines are written OUT, never derived with a string replace: the M0-25 anchor witness reads a
+   `.replace(` argument in a driver as an arm anchor, and 'error' occurs in the catalogue many times. */
+const EMIT_C151_WARNING = "    findings.push(f('C-15.1', 'warning', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
+const EMIT_C151_COMMENTED = "    // M0-195 arm (i): a comment on its own line\n"
+  + "    findings.push( /* M0-195 arm (i):\n       a block comment across lines */ f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound'])); // and a trailing one";
+const BODY_EDIT = () => edit(CATALOG, EMIT_C151, EMIT_C151_WARNING);
 const except = (...xs) => ALL.filter((x) => !xs.includes(x));
 
 const ARMS = {
@@ -166,8 +171,7 @@ const ARMS = {
        },
        mustFail: [], mustNotFail: ALL, expectGreen: true },
   i: { files: [CATALOG], label: "(I) OVER-STRICTNESS — COMMENT-ONLY edits to the real catalogue: a line comment above C-15.1, a trailing one, a block across lines",
-       apply: () => edit(CATALOG, EMIT_C151, "    // M0-195 arm (i): a comment on its own line\n"
-         + EMIT_C151.replace("findings.push(", "findings.push( /* M0-195 arm (i):\n       a block comment across lines */ ") + " // and a trailing one"),
+       apply: () => edit(CATALOG, EMIT_C151, EMIT_C151_COMMENTED),
        mustFail: [], mustNotFail: ALL, expectGreen: true },
   j: { files: [CATALOG, SUITE], label: "(J) A CODE EDIT DECLARED `behaviour: \"unchanged\"` under the same version — `void 0;` before C-15.1, the print's digest declared",
        apply: () => {
