@@ -1,0 +1,16 @@
+{
+ "unit": "ui:bound-sweep.test.mjs",
+ "inputHash": "241a0bdcd894a033ebc829ad7f539288f96b0f7e2369438b09fe7c202203f278",
+ "verdict": "PASS",
+ "run": "ac4975a1e0fcdc3cbe615fb8af6eb638d42ac788.1790298668326.26039.json",
+ "tree": "ac4975a1e0fcdc3cbe615fb8af6eb638d42ac788",
+ "head": "a31988a21c8a75084c03c8c126fe06682db15a8e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1360,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "20cf0516-62b6-5dd9-98c7-126687654bfa",
+ "at": "2026-09-25T01:11:08.342Z"
+}
