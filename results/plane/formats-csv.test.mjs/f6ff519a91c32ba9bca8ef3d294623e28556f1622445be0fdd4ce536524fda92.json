@@ -1,0 +1,16 @@
+{
+ "unit": "plane:formats-csv.test.mjs",
+ "inputHash": "f6ff519a91c32ba9bca8ef3d294623e28556f1622445be0fdd4ce536524fda92",
+ "verdict": "PASS",
+ "run": "ae3fe67343678350632b530fea1e971eed216983.1790312711347.3787.json",
+ "tree": "ae3fe67343678350632b530fea1e971eed216983",
+ "head": "e9a8ca03adf2f18f0d89de825617581701f16bdf",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 140,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d70db3ea-7581-5ea6-9b04-c07f7cfa1733",
+ "at": "2026-09-25T05:05:11.359Z"
+}
