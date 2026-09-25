@@ -101,8 +101,10 @@ const SUBREQ    = { name: "fl1-subreq",    mode: "subreq",
 
 /* ── THE CURVE SET (`--curve`). Added after the first full pass, because the
  * platform reported something this item did not set out to look for:
- * memoryUsageBytesP50 was 9.8 MB at 25 turns and 51.2 MB at 100, against a
- * 128 MB isolate — while CPU at 100 turns was still under 1% of the 30 s ceiling.
+ * memoryUsageBytesP50 was 9.8 MB at 25 turns and 51.2 MB at 100 — while CPU at
+ * 100 turns was still under 1% of the 30 s ceiling. (D-312: that metric is NOT a
+ * share of the 128 MB isolate — CPDF-15 measured it at 132–240 MB on invocations the
+ * platform marks `success` — so it located no wall; `--memwalk` below walks to one.)
  * So the ceiling that decides FL-3 may be MEMORY rather than CPU, and where it
  * bites is worth finding the way every other ceiling in this file was found: BY
  * BEING REFUSED. A killed invocation reports nothing about itself (the isolate
@@ -118,6 +120,43 @@ const CURVE = [
         + "memory ceiling. If the runtime kills it, THAT is the measurement." },
 ];
 if (process.argv.includes("--curve")) { ARMS.length = 0; ARMS.push(...CURVE); }
+
+/* ── THE MEMORY WALK SET (`--memwalk`), D-312, 2026-09-25. The curve above was read
+ * with 128 MB as its denominator (120.4 MB P99 at 200 turns), and a shipped bound
+ * (agent-worker's DEFAULT_MAX_TURNS_PER_SEGMENT) was sized on that reading. CPDF-15
+ * then measured `memoryUsageBytes` at 132–240 MB on invocations the platform marks
+ * `success`, with the kill at 278.7 MB reported — so the metric is NOT a share of any
+ * 128 MB budget, and the curve never located a wall. This set locates it the way
+ * every other ceiling here was located: BY WALKING UP UNTIL REFUSED. The arms deploy
+ * with the DEFAULT limits (`defaultLimits`), because agent-worker's wrangler.jsonc sets
+ * none, and it is the ceiling THAT member meets that sizes its bound. The unit that
+ * transfers between corpora is TRANSCRIPT BYTES (INTERFACES.md §"The memory bound, and
+ * how it is expressed": a workload size), and the arm reports it. Each arm is invoked a
+ * DIFFERENT number of times so the count stays a handle inside overlapping windows. */
+const MEMWALK = [
+  { name: "fl1-m400",  mode: "agent", cfg: { turns: 400,  delayMs: 10 }, times: 5, defaultLimits: true,
+    sig: { subPer: 400,  wallMs: null }, asks: "walk: 400 turns" },
+  { name: "fl1-m800",  mode: "agent", cfg: { turns: 800,  delayMs: 10 }, times: 4, defaultLimits: true,
+    sig: { subPer: 800,  wallMs: null }, asks: "walk: 800 turns" },
+  { name: "fl1-m1600", mode: "agent", cfg: { turns: 1600, delayMs: 10 }, times: 3, defaultLimits: true,
+    sig: { subPer: 1600, wallMs: null }, asks: "walk: 1600 turns" },
+  { name: "fl1-m3200", mode: "agent", cfg: { turns: 3200, delayMs: 10 }, times: 2, defaultLimits: true,
+    sig: { subPer: 3200, wallMs: null }, asks: "walk: 3200 turns — expected past a ceiling. "
+        + "WHICH ceiling refuses it (memory, CPU or subrequests) is the measurement." },
+];
+/* `--memwalk=1200,1400` walks the named points instead, with NO responder delay. MEASURED
+ * 2026-09-25 and it forced this form: from THIS container the client saw a 502 at 30.5 s on
+ * the 1,600- and 3,200-turn arms while the platform marked those invocations `success` — the
+ * cut was on the client's route (source undetermined), not a platform ceiling. So a point is
+ * OBSERVED only if its wall time stays under 30 s, and the delay is spent there for nothing. */
+const walkArg = process.argv.find((a) => a.startsWith("--memwalk="));
+if (walkArg) {
+  const pts = walkArg.slice("--memwalk=".length).split(",").map(Number).filter((n) => n > 0);
+  MEMWALK.length = 0;
+  pts.forEach((n, i) => MEMWALK.push({ name: `fl1-w${n}`, mode: "agent", cfg: { turns: n, delayMs: 0 },
+    times: pts.length + 1 - i, defaultLimits: true, sig: { subPer: n, wallMs: null }, asks: `walk: ${n} turns` }));
+}
+if (process.argv.some((a) => a === "--memwalk" || a.startsWith("--memwalk="))) { ARMS.length = 0; ARMS.push(...MEMWALK); }
 
 const ALL_NAMES = [RESPONDER, PLANCHECK, ...ARMS.map((a) => a.name), CONTROL.name, SUBREQ.name];
 for (const n of ALL_NAMES) {
@@ -229,8 +268,16 @@ export default { async fetch(request, env) {
     for (let i = 0; i < cfg.turns; i++) {
       const body = JSON.stringify({ model: "probe", messages });
       sentBytes += body.length;
-      const r = await env.RESP.fetch("https://r.invalid/?delay=" + cfg.delayMs + "&i=" + i,
-        { method: "POST", body, headers: { "content-type": "application/json" } });
+      /* A refusal BY THE RUNTIME (a subrequest ceiling) is a measurement, not a crash:
+       * say at which turn, and what the runtime named it. */
+      let r;
+      try {
+        r = await env.RESP.fetch("https://r.invalid/?delay=" + cfg.delayMs + "&i=" + i,
+          { method: "POST", body, headers: { "content-type": "application/json" } });
+      } catch (e) {
+        return json({ mode, aborted_at_turn: i, reason: "REFUSED_BY_RUNTIME", error: e && e.name,
+          said: String(e && e.message).slice(0, 160), transcript_bytes: body.length, sent_bytes: sentBytes }, 200);
+      }
       const text = await r.text();
       /* If the responder is not serving JSON the arm must SAY so, not throw an
        * opaque 500 — on the first pass exactly that made four arms look like a
@@ -392,6 +439,8 @@ const Q_DO = `query($a:String!,$from:Date!,$to:Date!){
  * refused class. Two namespaces give a baseline and a loaded point. */
 async function readDbBytes(env) {
   if (!env.BIO_INSTANCE || !env.BIO_ADMIN_TOKEN) return { unavailable: "no BIO_INSTANCE / BIO_ADMIN_TOKEN" };
+  /* D-312: the memory walk reads NO record — its corpus is swept from scratch, and it asks nothing of D-190. */
+  if (process.argv.some((a) => a.startsWith("--memwalk"))) return { skipped: "--memwalk reads no record" };
   const out = {};
   for (const store of ["bio", "scratch"]) {
     try {
@@ -483,8 +532,12 @@ try {
     /* Ask for the maximum documented CPU limit. If the platform refuses the value,
      * record WHAT IT SAID and fall back to the default — the refusal is itself a
      * measurement of where the ceiling can be set on this account. */
-    let up = await api("PUT", `/workers/scripts/${a.name}`, { body: form(subjectSrc, meta({ cpu_ms: 300000 })) });
-    if (!up.success) {
+    let up = a.defaultLimits
+      ? await api("PUT", `/workers/scripts/${a.name}`, { body: form(subjectSrc, meta(null)) })
+      : await api("PUT", `/workers/scripts/${a.name}`, { body: form(subjectSrc, meta({ cpu_ms: 300000 })) });
+    if (a.defaultLimits) {
+      findings.cpu_limit_requested[a.name] = { cpu_ms: null, accepted: false, default_by_design: true };
+    } else if (!up.success) {
       findings.cpu_limit_requested[a.name] = { cpu_ms: 300000, accepted: false, service_said: up.errors };
       up = await api("PUT", `/workers/scripts/${a.name}`, { body: form(subjectSrc, meta(null)) });
     } else {
@@ -494,7 +547,8 @@ try {
     deployed.add(a.name);
     await enableSubdomain(a.name, true);
     console.log(`  ${a.name} (${a.mode}) up` +
-      (findings.cpu_limit_requested[a.name].accepted ? " [cpu_ms=300000 accepted]" : " [cpu_ms limit REFUSED, default]"));
+      (a.defaultLimits ? " [DEFAULT limits, by design]"
+        : findings.cpu_limit_requested[a.name].accepted ? " [cpu_ms=300000 accepted]" : " [cpu_ms limit REFUSED, default]"));
   }
 
   const urlOf = (n) => `https://${n}.${zone}.workers.dev/`;

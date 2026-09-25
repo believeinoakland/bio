@@ -67,9 +67,11 @@
  * PNG is written by hand (CRC32 + `CompressionStream("deflate")`, which is zlib-
  * wrapped and therefore exactly what an IDAT holds). Bilevel pages are written
  * at bit depth 1: a 3300x2550 bilevel page is ~1.05 MB packed against the 33.6 MB
- * an RGBA frame of the same page would cost, and memory is the binding constraint
- * in a 128 MB isolate (MEASUREMENTS.md: 120.4 MB of 128 while CPU sat at 2.5% of
- * its ceiling). Not making the RGBA frame is the whole reason this fits.
+ * an RGBA frame of the same page would cost, and memory is the binding constraint,
+ * stated as a WORKLOAD SIZE and never as a share of 128 MB (D-312; INTERFACES.md
+ * §"The memory bound, and how it is expressed"): CPDF-15 measured an RGBA frame of
+ * 61.3 MB completing and one of 75.7 MB KILLED (`exceededMemory`). Not making the
+ * RGBA frame is the whole reason this fits.
  */
 
 import { PdfDoc, pageShowsText } from "../../bio-plane/src/pdfstructure.mjs";

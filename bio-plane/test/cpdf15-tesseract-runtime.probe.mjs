@@ -14,8 +14,9 @@
  * back), so the account is on Workers PAID and the 10 ms Free CPU ceiling that
  * ruled tesseract out is gone. That entry then states, in so many words, what it
  * does NOT establish: "that tesseract actually FITS the CPU envelope in workerd,
- * or that memory holds (a 3300x2550 RGBA frame is 33.6 MB against a 128 MB
- * isolate)". D-245 records the same gap from the other side — CPDF-12 produced
+ * or that memory holds (a 3300x2550 RGBA frame is 33.6 MB …)" — its comparison
+ * with the 128 MB isolate is withdrawn by D-312, and this probe answers the
+ * question as a FRAME SIZE instead. D-245 records the same gap from the other side — CPDF-12 produced
  * no Worker CPU figure and no isolate memory figure, because the renderer was
  * the gate and the engine's own cost was never taken. This probe takes them.
  *
@@ -53,11 +54,11 @@
  *      INIT (engine created, model loaded, no image). The recognition-only figure
  *      is then ARITHMETIC over three measured arms and is labelled as arithmetic.
  *
- *  (B) MEMORY AGAINST THE 128 MB CEILING. The platform's own
+ *  (B) MEMORY, AS A WORKLOAD SIZE (D-312: never a share of 128 MB). The platform's own
  *      `memoryUsageBytesP50/P99` per arm, plus an OFF-LADDER MEMORY WALK that
  *      finds the ceiling the way this project finds every ceiling: BY BEING
  *      REFUSED. The same page is sent at 1.5x and 2.0x its own pixel dimensions
- *      (RGBA frames of 75.7 MB and 134.6 MB against a 128 MB isolate). NOTE, and
+ *      (RGBA frames of 75.7 MB and 134.6 MB). NOTE, and
  *      it is a property of CPDF-11's ladder rather than a choice here: every rung
  *      is resized BACK to the page's own dimensions, so the ladder degrades
  *      LEGIBILITY and not SIZE — the memory figure is per FRAME, and the walk is
@@ -1040,7 +1041,7 @@ if (WALK) {
     const r = toRaw(PAGE, `walk-${s}`, s);
     walkRaw[s] = r;
     await runArm(`walk-${s}x`, `OFF-LADDER MEMORY WALK: the page at ${s}x its own dimensions ` +
-      `(${r.w}x${r.h}, RGBA frame ${(r.w * r.h * 4 / 1e6).toFixed(1)} MB against a 128 MB isolate)`,
+      `(${r.w}x${r.h}, RGBA frame ${(r.w * r.h * 4 / 1e6).toFixed(1)} MB)`,
       Array.from({ length: 2 }, () => ({ qs: qsFor(r, "ocr"), body: rawBody(r) })));
   }
 }
@@ -1173,7 +1174,7 @@ console.log(`\n  AGAINST THE CEILINGS: the default Workers CPU limit is 30,000 m
 console.log(`  script asked for ${CPU_LIMIT_ASK.toLocaleString()} (${LIMITS.accepted ? "ACCEPTED, echoed " + JSON.stringify(LIMITS.echoed) : "REFUSED: " + JSON.stringify(LIMITS.service_said)});`);
 console.log(`  the Free plan's ceiling, which DEC-42 bought Paid to escape, is 10 ms.`);
 
-console.log(`\n=== (B) MEMORY AGAINST THE 128 MB ISOLATE ===`);
+console.log(`\n=== (B) MEMORY, AS A WORKLOAD SIZE: the frame that completes and the frame that is killed ===`);
 console.log(`  Every ladder rung is resized BACK to the page's own dimensions by CPDF-11's recipe, so the`);
 console.log(`  ladder moves LEGIBILITY and not SIZE: one frame size, ${(anchorRaw.w * anchorRaw.h * 4 / 1e6).toFixed(1)} MB of RGBA, across R0..C1.`);
 for (const a of ARMS) {
