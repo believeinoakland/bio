@@ -1264,7 +1264,7 @@ accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, a
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-650 · integrated — **`nc-rec82` arms oob/nochain/overstrict: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — CONDUCT #23 13:19Z: worker report — tip a57fa715 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6569 assertions); nc-rec82 arms oob,nochain,overstrict re-anchored, allowances removed; test-only, no IC; rides batch31 (nc-rec82 arm carry stays D-752)
+status: integrated — SCHEDULER #24 13:19Z: tip a57fa715 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6569 assertions), tree cd72759f; nc-rec82 oob, nochain, overstrict re-anchored on the two-line spans (1 match each here and on main), three allowances deleted, each arm alone fails by name; overstrict now moves one variable
 order: after D-649, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
