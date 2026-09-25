@@ -755,7 +755,8 @@ scope: extend the extent test to A (byte-identical at the extent), B (same text,
 accepts-when: each grade is produced by a fixture pair and named on the wire (moves: no grade). NEGATIVE CONTROL: collapse C into B and the C arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
 
-### UI-88 · queued — **THE ACCEPT CEREMONY FETCHES THE STRENGTH PAIR BEFORE THE MEMBER AFFIRMS, AND HIDES IT: `app.html` `acerOriginsRead` reads `op=versionstrength` and drops the pair client-side.** Once REC-192 lands it switches to the independence-only read. — owner UI.
+### UI-88 · running — **THE ACCEPT CEREMONY FETCHES THE STRENGTH PAIR BEFORE THE MEMBER AFFIRMS, AND HIDES IT: `app.html` `acerOriginsRead` reads `op=versionstrength` and drops the pair client-side.** Once REC-192 lands it switches to the independence-only read. — owner UI.
+status: running — SCHEDULER #21 01:09Z spawns WORKER UI-88 (depth 2)
 order: directly after REC-192, which it consumes (SCHEDULER #17, 2026-09-23; BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded))
 milestone: M9
 interface: I3 consumer (REC-192's IC).
