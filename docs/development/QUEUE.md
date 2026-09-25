@@ -810,8 +810,8 @@ scope: read the year off the plane's first minted id in each suite, not the suit
 accepts-when: both suites pass under a clock pinned 1 ms before New Year UTC. NEGATIVE CONTROL: restore the clock read under that pin and the id arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
-### M0-148 · queued — **THE R3-FED WALK KEYS ON LITERALS, so a code fed through a derived const (UI-84's REQUIRED_ARGUMENT_MISSING) is invisible and the walk undercounts by one.** Found by UI-84's worker. — owner M0.
-status: queued — SCHEDULER #21 02:41Z: RELEASED (D-485 integrated at a23fe7ee; build over its ARM H)
+### M0-148 · running — **THE R3-FED WALK KEYS ON LITERALS, so a code fed through a derived const (UI-84's REQUIRED_ARGUMENT_MISSING) is invisible and the walk undercounts by one.** Found by UI-84's worker. — owner M0.
+status: running — SCHEDULER #21 02:43Z spawns WORKER M0-148 (depth 2) over D-485's ARM H
 order: low in the M0 group: an undercount of one, stated (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:26Z)
 milestone: M0
 interface: none.
