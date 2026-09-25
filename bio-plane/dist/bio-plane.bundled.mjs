@@ -82654,10 +82654,11 @@ function mergeTier3Text(base, ocr, eligible) {
   if (regions.length) text.regions = regions;
   return { ok: true, text, filled, refused, unanswered, wholesale: false };
 }
-function tier3Note(m, memberNote) {
+function tier3Note(m, memberNote, layerPages) {
   const say = [];
+  const kept = Array.isArray(layerPages) ? layerPages.length : 0;
   if (!m.wholesale && m.filled.length)
-    say.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into this document's own text; the ${m.filled.length === 1 ? "page" : "pages"} that already had text kept it`);
+    say.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into this document's own text` + (kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : ""));
   if (m.unanswered.length)
     say.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay honestly unread`);
   if (m.refused.length)
@@ -82731,7 +82732,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
               if (m.filled.length) wiredTier = 3;
               filled = m.filled;
               unanswered = m.unanswered || [];
-              ocrNote = tier3Note(m, built.note);
+              ocrNote = tier3Note(m, built.note, layerPages);
             }
           } else ocrNote = built.why;
         }

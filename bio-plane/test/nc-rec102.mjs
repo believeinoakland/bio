@@ -67,6 +67,19 @@
  *       has two halves and a landing that shipped one would pass the other's arm
  *       completely. It must fail in the ROUTING set only.
  *
+ *   A8  D-607: THE KEPT-TEXT CLAUSE EMITTED UNCONDITIONALLY — `tier3Note` saying
+ *       "the pages that already had text kept it" whenever a page was filled,
+ *       the defect exactly.                                         MUST FAIL
+ *       THE ROW'S OWN DECLARED CONTROL. In D-607's ABSENT set by name (the wholly
+ *       scanned document and D-514's whitespace document), and in no other set.
+ *
+ *   A9  D-607: THE CALLER STOPS PASSING THE KEPT PAGES — the clause silenced for
+ *       every document.                                             MUST FAIL
+ *       In D-607's PRESENT set only (the mixed documents). Without it the ABSENT
+ *       set would pass for a fix that deleted the clause outright.
+ *
+ *   A10 OVER-STRICTNESS for D-607 — the condition written `kept > 0`. MUST PASS
+ *
  * ─────────────────────────────────────────────────────────────────────────────
  * A1 AND A3 DID NOT ARM BETWEEN REC-102's LANDING AND 2026-09-24 — FOUND AND
  * REPAIRED BY D-514, AND RECORDED HERE RATHER THAN QUIETLY FIXED.
@@ -176,6 +189,12 @@ const OVERSTRICT = /byte-for-byte the shape|REC-98's scoped two-part chain|did N
    the first and A7 in the second, and neither may stray into the other. */
 const D514_LAYER = /in NO layer part|names page 0|four spaces are not text/;
 const D514_ROUTE = /CONSULTED the tier-2 member for it/;
+/* D-607's TWO NAMED SETS, 2026-09-25: the note's kept-text clause ABSENT where
+   no page kept text, and PRESENT where one did. Kept apart for the same reason:
+   an arm that removes the clause everywhere and one that says it everywhere are
+   different defects, and each must land in its own set. */
+const D607_NONE  = /carries NO kept-text clause|had no text to keep/;
+const D607_MIXED = /a mixed document still says it|`tier3only` kept one/;
 
 function arm({ name, declared, subject = "wire", edits, mustName, mustNotName }) {
   const s = SUBJECTS[subject];
@@ -323,6 +342,44 @@ arm({
 `  const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
   if (!(c.undetermined > glyphs)) return false;`,
 `  if (!(c.undetermined > c.chars)) return false;   /* NC A7: the D-514 defect — whitespace routed as decoded text */`,
+  ]],
+});
+
+/* ── A8 · D-607: THE KEPT-TEXT CLAUSE EMITTED UNCONDITIONALLY ─────────────── */
+/* THE ROW'S OWN DECLARED CONTROL: the pre-item behaviour, the clause said
+   whenever a page was filled. The wholly scanned document and D-514's
+   whitespace document then record a text layer that never existed. MUST FAIL in
+   D-607's ABSENT set by name, and stray into no other — the mixed documents say
+   the clause either way. */
+arm({
+  name: "A8", declared: "FAIL", mustName: D607_NONE,
+  mustNotName: new RegExp(`${D372.source}|${OVERSTRICT.source}|${D514_LAYER.source}|${D514_ROUTE.source}|${D607_MIXED.source}`),
+  edits: [[
+`           + (kept ? \`; the \${kept === 1 ? "page" : "pages"} that already had text kept it\` : ""));`,
+`           + \`; the \${kept === 1 ? "page" : "pages"} that already had text kept it\`);   /* NC A8: the D-607 defect */`,
+  ]],
+});
+
+/* ── A9 · D-607: THE CALLER STOPS PASSING THE KEPT PAGES ──────────────────── */
+/* The other direction: the clause silenced everywhere, so a MIXED document stops
+   saying its text pages kept their text. MUST FAIL in D-607's PRESENT set, and
+   must not stray into the ABSENT set — which passes for free under this arm, and
+   is exactly why the present set exists. */
+arm({
+  name: "A9", declared: "FAIL", mustName: D607_MIXED,
+  mustNotName: new RegExp(`${D372.source}|${OVERSTRICT.source}|${D514_LAYER.source}|${D514_ROUTE.source}|${D607_NONE.source}`),
+  edits: [[
+`ocrNote = tier3Note(m, built.note, layerPages);`,
+`ocrNote = tier3Note(m, built.note);   /* NC A9: the kept pages not passed */`,
+  ]],
+});
+
+/* ── A10 · OVER-STRICTNESS for D-607: the same condition, spelled differently ─ */
+arm({
+  name: "A10", declared: "PASS",
+  edits: [[
+`           + (kept ? \`; the`,
+`           + (kept > 0 ? \`; the`,
   ]],
 });
 
