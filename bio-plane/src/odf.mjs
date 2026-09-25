@@ -1453,7 +1453,8 @@ export const odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
  * WHAT IT IS, so anyone can recompute it from the artifact with two stock
  * tools: the sha256 of the `content.xml` member's INFLATED bytes, exactly
  * as `readPart` proves them whole (length and CRC-32 against the central
- * directory). No byte of content.xml is rewritten. Outside content.xml the
+ * directory). For `.ods` no byte of content.xml is rewritten; for `.odt` the
+ * list ids Google mints per export are relabelled (D-473, below). Outside content.xml the
  * package's other members are discounted, and each discount is a region
  * judgment §5 licenses: `meta.xml` (generation timestamps, the producer's
  * stamp — mechanical), `settings.xml` (view state — mechanical), the ZIP
@@ -1478,16 +1479,22 @@ export const odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
  *   .ods  content.xml byte-identical across exports: 3 of 3 (MEASUREMENTS.md
  *         2026-09-14 §4) and 18 of 18 over 3 census targets (M-123). No
  *         normalisation is needed and none is applied.
- *   .odt  content.xml differs on EVERY export. M-123 found the class on 2
- *         documents — a random `xml:id` on `<text:list>` — and said this build
- *         must re-measure it before relying on it. It was NOT re-measured here,
- *         so no `.odt` digest is claimed: a normalisation resting on 2 documents
- *         is a careless rule until it is measured, and a careless rule hides a
- *         real change. UNDETERMINED, with the reason stated.
- *   .odp  NO measurement at all (M-123: the census holds no Slides target).
- *         UNDETERMINED.
+ *   .odt  content.xml differs raw on exports carrying a list: M-123 found the
+ *         class on 2 documents — a random `xml:id` on `<text:list>`. D-473
+ *         RE-MEASURED it (M-167, a fresh population of public government Docs,
+ *         two rounds apart in time): the only difference in every list-bearing
+ *         pair is `text:list@xml:id`, and content.xml relabelled by
+ *         `odtNormalisedContentXml` is byte-stable on every pair the digest can
+ *         reach. The one other class M-167 saw (`draw:frame@draw:name`,
+ *         `imageN` permuted per export) occurs only where content.xml references
+ *         a `Pictures/` member, which the member rule below already refuses.
+ *   .odp  content.xml raw byte-stable on every pair M-167 read, but every deck
+ *         in that population references a package member, and the census holds
+ *         no Slides target (M-123). UNDETERMINED until a census target is
+ *         measured (M-167 names it).
  * Widening this is one entry in `ODF_EVIDENTIARY_MEASURED` plus the
- * measurement it cites — and, for `.odt`, the normalisation it measured. */
+ * measurement it cites, and any normalisation that measurement licensed
+ * (`ODF_EVIDENTIARY_NORMALISE`, below). */
 export const ODF_EVIDENTIARY_VERSION = 1;
 /** The flavours this module's rows define, READ OFF the rows so the control
  *  plane can ask "is this an OpenDocument format?" without learning the names
@@ -1495,10 +1502,10 @@ export const ODF_EVIDENTIARY_VERSION = 1;
 export const ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 export const ODF_EVIDENTIARY_MEASURED = Object.freeze({
   ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
+  odt: "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
 });
 const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
-  odt: "the .odt content.xml differs on every Google export (MEASUREMENTS.md 2026-09-14 §4; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
-  odp: "no .odp export has been measured for content.xml stability (M-123: the census holds no Slides target), so no evidentiary digest is claimed for .odp",
+  odp: "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp",
 });
 
 /** Package members that content.xml REFERENCES by `href`, among the members
@@ -1525,7 +1532,7 @@ function referencedMembers(contentXml, container) {
 }
 
 /* D-473 — THE `.odt` NORMALISATION: RELABEL THE LIST IDS GOOGLE MINTS PER EXPORT.
- * M-123 found, and D-473's measurement re-measured over a fresh population,
+ * M-123 found, and D-473's measurement (M-167) re-measured over a fresh population,
  * that Google writes a fresh random `xml:id` on every `<text:list>` at every
  * export (`list888038964` → `list3685929024`). An `xml:id` is an identifier
  * and says nothing a reader sees; what it CAN carry is a relationship — a list

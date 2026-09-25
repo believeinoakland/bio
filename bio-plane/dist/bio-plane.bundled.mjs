@@ -20180,11 +20180,11 @@ var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
 var ODF_EVIDENTIARY_VERSION = 1;
 var ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 var ODF_EVIDENTIARY_MEASURED = Object.freeze({
-  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)"
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)",
+  odt: "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents"
 });
 var ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
-  odt: "the .odt content.xml differs on every Google export (MEASUREMENTS.md 2026-09-14 \xA74; M-123 found random xml:id values on text:list, on 2 documents); the normalisation that would discount them is not measured by this build, so no evidentiary digest is claimed for .odt",
-  odp: "no .odp export has been measured for content.xml stability (M-123: the census holds no Slides target), so no evidentiary digest is claimed for .odp"
+  odp: "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp"
 });
 function referencedMembers(contentXml, container) {
   const names = container.entries.map((e) => normalizePartName(e.name));
@@ -20203,6 +20203,34 @@ function referencedMembers(contentXml, container) {
   }
   return [...hit];
 }
+var LIST_ID_RE = /(<text:list\b[^>]*?\sxml:id\s*=\s*)("([^"]*)"|'([^']*)')/g;
+var CONTINUE_RE = /(\stext:continue-list\s*=\s*)("([^"]*)"|'([^']*)')/g;
+var UTF8_STRICT = new TextDecoder("utf-8", { fatal: true });
+function odtNormalisedContentXml(bytes) {
+  let xml;
+  try {
+    xml = UTF8_STRICT.decode(bytes);
+  } catch {
+    return null;
+  }
+  const label = /* @__PURE__ */ new Map();
+  let out = xml.replace(LIST_ID_RE, (m, head, q, dq, sq) => {
+    const id = dq ?? sq;
+    if (!label.has(id)) label.set(id, `L${label.size + 1}`);
+    return `${head}"${label.get(id)}"`;
+  });
+  out = out.replace(CONTINUE_RE, (m, head, q, dq, sq) => {
+    const id = dq ?? sq;
+    return label.has(id) ? `${head}"${label.get(id)}"` : m;
+  });
+  return new TextEncoder().encode(out);
+}
+var ODF_EVIDENTIARY_NORMALISE = Object.freeze({
+  odt: {
+    name: "odt-list-ids v1 (xml:id on text:list relabelled in document order, text:continue-list rewritten to match)",
+    apply: odtNormalisedContentXml
+  }
+});
 async function odfEvidentiaryDigest(bytes, sha256Hex6) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
   const no2 = (flavour2, basis) => ({ determined: false, flavour: flavour2, evidentiary: null, basis });
@@ -20228,12 +20256,15 @@ async function odfEvidentiaryDigest(bytes, sha256Hex6) {
   const refs = referencedMembers(UTF85.decode(read.bytes), container);
   if (refs.length)
     return no2(flavour, `content.xml references ${refs.length} package member(s) whose bytes it does not hold (${refs.slice(0, 3).join(", ")}${refs.length > 3 ? ", \u2026" : ""}); a digest of content.xml cannot speak for them, so none is claimed`);
+  const norm = ODF_EVIDENTIARY_NORMALISE[flavour];
+  const digested = norm ? norm.apply(read.bytes) : read.bytes;
+  if (!digested) return no2(flavour, "content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken");
   return {
     determined: true,
     flavour,
     over: CONTENT_PART,
-    evidentiary: await sha256Hex6(read.bytes),
-    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified), odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
+    evidentiary: await sha256Hex6(digested),
+    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
   };
 }
 
