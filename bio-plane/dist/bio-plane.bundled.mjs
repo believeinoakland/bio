@@ -44864,34 +44864,38 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  WHAT THIS SWEEP CAN AND CANNOT SEE, stated because the sentence is
    *  load-bearing: it sees bundles by the PROJECTED `source_locator` column
    *  (`projectionOf`), so a bundle whose projection was never written is not
-   *  walked, and it sees a register only when `data/provenance.json` is held
+   *  walked; it walks ONE PAGE (`limit`, then `after: cursor`), and its counts are that page's, and it sees a register only when `data/provenance.json` is held
    *  INLINE (a register spilled to R2 is named in `unreadable`, never scored).
    *  A Drive address that is not a document (folder, file, published, unknown)
    *  is COUNTED in `not_documents` by shape — CAP-8 refuses to watch those, so
    *  they carry no shell baseline this remedy could fix. */
-  driveShells({ viewer = null } = {}) {
+  static DRIVE_SHELLS_LIMIT_DEFAULT = 200;
+  static DRIVE_SHELLS_LIMIT_MAX = 1e3;
+  /* A baseline sha's retrieval rows are one per (address, via) it was seen at — a handful. Bounded so the
+     per-row read cannot amplify; a sha that reaches the bound is judged on what was read and SAYS it was cut. */
+  static DRIVE_SHELLS_RETRIEVALS_MAX = 50;
+  driveShells({ viewer = null, limit = null, after = null } = {}) {
     const gate = viewerPredicate(viewer);
-    const rows = this.#rows(
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(_Store.DRIVE_SHELLS_LIMIT_MAX, Math.floor(asked)) : _Store.DRIVE_SHELLS_LIMIT_DEFAULT;
+    const where = [`b.source_locator LIKE '%google.com/%'`, `(${gate.sql})`, ...after ? [`b.bundle_id > ?`] : []];
+    const raw = this.#rows(
       `SELECT b.bundle_id AS id, b.source_locator AS locator, b.monitor_enabled AS monitored
-         FROM bundles b WHERE b.source_locator IS NOT NULL AND (${gate.sql}) ORDER BY b.bundle_id`,
-      ...gate.args
+         FROM bundles b WHERE ${where.join(" AND ")} ORDER BY b.bundle_id LIMIT ?`,
+      ...gate.args,
+      ...after ? [after] : [],
+      cap + 1
     );
-    const out = {
-      swept: rows.length,
-      drive: 0,
-      shells: [],
-      export: [],
-      undetermined: [],
-      no_baseline: [],
-      unreadable: [],
-      not_documents: {}
-    };
+    const truncated = raw.length > cap;
+    const rows = truncated ? raw.slice(0, cap) : raw;
+    const shells = [], exported = [], undetermined = [], noBaseline = [], unreadable = [], notDocuments = {};
+    let driveLinked = 0;
     for (const r of rows) {
       const drive = readDriveAddress(r.locator);
       if (!drive) continue;
-      out.drive++;
+      driveLinked++;
       if (!drive.harvestable) {
-        out.not_documents[drive.shape] = (out.not_documents[drive.shape] || 0) + 1;
+        notDocuments[drive.shape] = (notDocuments[drive.shape] || 0) + 1;
         continue;
       }
       const f2 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
@@ -44910,22 +44914,28 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           reg = null;
         }
       } else if (f2) {
-        out.unreadable.push({ ...base, reason: "the register is not held inline" });
+        unreadable.push({ ...base, reason: "the register is not held inline" });
         continue;
       }
       if (f2 && !reg) {
-        out.unreadable.push({ ...base, reason: "the register is not parsable JSON" });
+        unreadable.push({ ...base, reason: "the register is not parsable JSON" });
         continue;
       }
       const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
       const row = driveBaselineRow(docs, drive, r.locator);
       const sha = row && row.capture && typeof row.capture.sha256 === "string" ? row.capture.sha256 : null;
       const retrievals = sha ? this.#rows(
-        `SELECT address, via, retrieval_locator FROM captured_locators WHERE capture_sha=?`,
-        sha
+        `SELECT address, via, retrieval_locator FROM captured_locators WHERE capture_sha=?
+           ORDER BY address_norm, via LIMIT ?`,
+        sha,
+        _Store.DRIVE_SHELLS_RETRIEVALS_MAX
       ) : [];
       const c = classifyDriveBaseline({ drive, locator: r.locator, rows: docs, retrievals });
-      const entry = { ...base, ...c };
+      const entry = {
+        ...base,
+        ...c,
+        ...retrievals.length === _Store.DRIVE_SHELLS_RETRIEVALS_MAX ? { retrievals_truncated: true } : {}
+      };
       if (c.verdict === "shell")
         entry.reacquire = {
           op: "acquire",
@@ -44934,19 +44944,29 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           files: "a NEW capture of the export, under the document address, beside the shell's; nothing is overwritten",
           then: "append the answer's `document` to data/provenance.json \u2014 op=monitor prefers the row naming the export address"
         };
-      ({ shell: out.shells, export: out.export, undetermined: out.undetermined, no_baseline: out.no_baseline })[c.verdict].push(entry);
+      ({ shell: shells, export: exported, undetermined, no_baseline: noBaseline })[c.verdict].push(entry);
     }
     return {
       ok: true,
       generated: (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z",
-      ...out,
+      swept: rows.length,
+      limit: cap,
+      truncated,
+      cursor: truncated ? rows[rows.length - 1].id : null,
+      drive: driveLinked,
+      shells,
+      export: exported,
+      undetermined,
+      no_baseline: noBaseline,
+      unreadable,
+      not_documents: notDocuments,
       counts: {
-        drive: out.drive,
-        shells: out.shells.length,
-        export: out.export.length,
-        undetermined: out.undetermined.length,
-        no_baseline: out.no_baseline.length,
-        unreadable: out.unreadable.length
+        drive: driveLinked,
+        shells: shells.length,
+        export: exported.length,
+        undetermined: undetermined.length,
+        no_baseline: noBaseline.length,
+        unreadable: unreadable.length
       }
     };
   }
@@ -75024,7 +75044,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         }),
         index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
         /* D-525: the Drive shell sweep, under the same D-15 stamp as the index. */
-        driveshells: () => this.driveShells({ viewer: url.searchParams.get("viewer") }),
+        driveshells: () => this.driveShells({
+          viewer: url.searchParams.get("viewer"),
+          limit: url.searchParams.get("limit"),
+          after: url.searchParams.get("after") || null
+        }),
         /* REC-25: the gated backlink read — reverse edges into a bundle,
            filtered by the viewer's position (7.9). */
         backlinks: () => this.backlinks({
