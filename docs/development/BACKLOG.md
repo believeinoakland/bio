@@ -23,6 +23,29 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
+order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a driver cleans up after a clean run), with BOB #33's ruling of 17:12Z (cite until folded).
+depends-on: M0-155.
+scope: (1) status.control.mjs removes `.status-harness/` on a clean run; (2) `.gitignore`'s pen preamble says pens are a driver's mechanism, gitignored and item-named, distinct from session scratch; (3) WORKER.md's scratch bullet adds "a control driver's declared, gitignored pen is not scratch".
+accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup and the pen-gone arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
+scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): control drivers writing `${file}.pristine-<arm>` beside the source, an UNDECLARED pen BOB's ruling does not stand — battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor, and every `nc-*.mjs` harness (D-499 fixed nc-d64). Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`.
+
+## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
+
+`docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
+
+| who | row | what | blocked on |
+| --- | --- | --- | --- |
+| RECORD | PL-16 | the published case (IS-8, M10) — **RESHAPED BY DEC-72, not merely blocked.** Its finding-side stamping and its NO-case-level-bar assumption are both overtaken; `CASE-AS-PRODUCTION.md` and the CASE-1..CASE-6 rows are the live decomposition | **Bob** (DEC-33's ceremony deferral) **AND now DEC-72's redesign.** Read the design doc before touching it — supersession is never silent, so the row keeps its id and names what overtook it |
+| **DIST** | DS-1 | D-115 — the installer installs the FLEET | **DONE 2026-09-19 — THIS TABLE WAS THE RECORD THAT WAS WRONG, corrected here with the reason (DIST-5's own act).** Landed at `8decf468` ("D-297: the installer installs the FLEET — verified, templated, degrading per member, on install AND update"). DIST #2 confirmed at its touch; VERIFIED INDEPENDENTLY BY SCHEDULER #2 AT THE CODE, not from either row: `8decf468` is an ancestor of `origin/main`, and `newgroup/src/index.mjs` carries a section headed "the fleet (IC-82/D-297)" and names `fleet` **27 times** — D-297's own opening measurement was that this file mentioned it **zero** times, which is the evidence from D-297 itself that DIST-5's accepts-when demanded |
+| **DIST** | DS-2 | D-116 — version authority spans the fleet | **DONE 2026-09-19**, landed at `da3d4f17` ("DS-2: the version authority spans the fleet — and five of six sites disagreed with it"). VERIFIED BY SCHEDULER #2 AT THE CODE: ancestor of `origin/main`; `bio-plane/scripts/resolve-version.mjs` CONSUMES FLEET's own `discoverMembers` rather than re-implementing it, so the set checked cannot drift from the set built, and takes `bio-plane/package.json` as THE authority; `tools/release-assemble.mjs` refuses `VERSION_SKEW` and `VERSION_DISAGREES`; `resolveversion.test.mjs` arms BEHIND (ARM 2) and AHEAD (ARM 3) — the direction a one-sided check misses |
+| **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
+| FLEET | FL-6 | the Claude-account cascade at runtime | **D-260 (the plane's caller does not exist), PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling**; FL-6's member half LANDED at `f5ed2bfa` (2026-09-12) and DS-3's config half at `2de6f25f` — DIST #3 and FLEET #3, verified by SCHEDULER #4 |
+
 ### D-633 · queued — **WHEN TIER 2 WINS A PAGE, `mergeTier2Text` REPLACES ITS MARKERS, SO D-627's `image_content_unread` IS LOST AND THE PAGE ROUTES NOWHERE.** Reproduced through op=acquire with an answering tier-2 stub (the held INFO-2026-0301 does not escalate, so D-627's own pages are routed today). Found by D-627's worker (minted on land/worker/D-627). — owner CONTENT-PDF.
 order: head of the backlog, before D-635 — a correction to just-landed work (D-627 integrated) outranks new work, and D-635 builds on the same routed pages (SCHEDULER #23, 2026-09-25)
 milestone: M2
@@ -52,16 +75,6 @@ depends-on: D-374 (integrated, c7703c3d — exports `pdfPageBox`); D-320 (integr
 scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBox(doc, pageMap).rotate`; no second reader.
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
-
-### D-680 · queued — **A DERIVATION DRAFT (no `caseId`, no `newCase`) IS REFUSED `PUBLISH_DRAFT_NOT_THIS_CASE` ON AN EXISTING CASE'S FURTHER EDITION: publishCase's is-publish-draft-this-case region passes it only when `predicted === 1`, refusing the very deferral D-538 names.** BOB #35 RULED 2026-09-25 07:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; the whole ruling there, cite until folded): it binds to the case publication derives, any edition; a named case binds only if it IS the derived one, else refused by name with both. Found by D-626's worker. — owner RECORD.
-order: with the corrections at the head of the backlog, after D-671 — it corrects just-landed D-626's region (SCHEDULER #23, 2026-09-25)
-milestone: M10
-interface: I3 — a derivation draft admitted on a further edition; a new named refusal for a named case that differs from the derived one; the signed document's case-provenance statement; the integrator mints and classifies.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 and §6A.4, with BOB #35's 07:35Z ruling, folded into §3 rule 13 by this row.
-depends-on: D-626 (integrated, land/worker/D-626 @ 2a5d4ed8 — build on it; its reworded refusal text then says what this row makes true).
-scope: in is-publish-draft-this-case, a draft with neither caseId nor newCase passes when the act's case equals the derived case; a named case differing from the derived one is refused by name with both; the signed document carries derived-at-publication or named-and-confirmed.
-accepts-when: a derivation draft publishes as a further edition of the derived case, and a mismatched named case is refused with both cases (moves: `predicted !== 1` refusing a further edition). NEGATIVE CONTROL: restore `predicted !== 1` for the derivation arm and rec217-draft-binding's new further-edition arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, on BOB #35's 07:35Z ruling).
 
 ### D-672 · queued — **A WORKBOOK'S SHEET-RANGE UNITS EXIST AND NOTHING INDEXES THEM: `textUnitsFor` (index.mjs) yields nothing for `sheets[]`, and the store says so ("nothing yet writes a workbook's sheet-range units into the index"); CONTENT-SEARCH-DESIGN §4.1's Incomplete bullet still says the index "waits on the sheet-range arm", which has existed since FW-19.** Found by D-415's worker (minted on land/worker/D-415). — owner RECORD.
 order: after D-680 — it makes D-415's just-emitted units findable, on a unit §4.1 already designs (SCHEDULER #23, 2026-09-25)
@@ -122,6 +135,16 @@ depends-on: D-542 (integrated, land/worker/D-542 @ fac514e0; the reach walk that
 scope: for each of the 107, a DEC-49 row with its translation, OR show at the code that it never leaves on the wire and narrow the walk at that op; lower CEILING.reachGap in the same commit to the measured remainder. Batches of about 20 per commit are fine; the row closes when the gap is 39 or below and each exception is stated.
 accepts-when: reachGap reads the measured remainder and every in-reach code carries words or a stated not-on-the-wire reason (moves: reachGap 146). NEGATIVE CONTROL: strip one new translation and the guard names that code.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-542's worker, relayed by CONDUCT #22).
+
+### D-668 · queued — **FIVE REFUSAL CODES TELL A MEMBER SOMETHING FALSE AT ONE OF THEIR SITES (DEC-49's one-code-one-condition rule, D-484): `calibrationSubjectRegister` refuses REGISTERING a subject with CAL_NO_PROBE / CAL_UNNAMED (written for a calibration MEASUREMENT); `checkAttestation` answers a missing DATE with TEXT_ATTEST_EXTENT ("say how much you checked") and a missing member with TEXT_ATTEST_MACHINE ("the credential is an automated one"); a `typed` step with no member gets TEXT_CHAIN_STEP_UNNAMED ("a machine read the text").** OBS_PRESENT_NO_REFERENT (airun.mjs) is UNDETERMINED: judge it. Found by D-574's worker (minted on land/worker/D-574). — owner RECORD (text-chain, calibration, airun paths), M0 for the ceiling.
+order: after D-641, with the DEC-49 translation rows — a false sentence to a member is the over-claim CLAUDE.md §2 ranks worst (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — new named codes; an IC if a surface builds on them; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one code, one condition), with `docs/development/VERIFICATION.md` (the DEC-49 guard, arm G).
+depends-on: D-574 (integrated, land/worker/D-574 @ 06494735 — arm G walks the files these sites are in).
+scope: give each of the five conditions its own code, catalogue row and translation; judge OBS_PRESENT_NO_REFERENT at its site and split it if false; remove each from MULTI_SITE_CANDIDATES and lower CEILING.multiSiteCodes in the same landing.
+accepts-when: each of the five conditions answers its own code whose words are true of it, through the op (moves: five false translations). NEGATIVE CONTROL: route one condition back to its old code and arm G fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-574's worker).
 
 ### D-667 · queued — **ELEVEN MORE SUITES CAN ABORT A FIXTURE WITHOUT REPORTING WHICH SECTIONS NEVER RAN: four print "FIXTURE ABORTED" (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding) and seven reach `process.exit` through a bail/abort/die const (case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question, d442-publish-writes-nothing, rec170-manifest-pair).** D-548 and D-564 fixed eight; this is the sweep's remainder. Found by D-564's worker (minted on land/worker/D-564). — owner M0 (the suites).
 order: after D-628, behind the head's product corrections: a process row that cuts false-green risk in the gate, placed near the head but never above product (CLAUDE.md §2, Bob 2026-09-22; SCHEDULER #23, 2026-09-25)
@@ -1130,33 +1153,3 @@ depends-on: none.
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
-order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
-depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
-accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The … (whole text: the cut archive)
-order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget … (whole text: the cut archive)
-depends-on: none. Sequence after M0-81.
-accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
-added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-120 · queued — **`mintid --audit --base` DIFFS `main` ONLY, SO AN ID ALLOCATED ON `coord` IS INVISIBLE TO THE INTEGRATION-SIDE CHECK.** `audit()` (`tools/mintid.mjs`) reads `git diff <base>...HEAD`; since M0-110's cutover every DEBT row, plan heading and ledger archive — the allocation sites — lands on `coord`. Found by M0-110's worker (CONDUCT #14). — owner M0.
-order: first of the ledger tooling, before LED-8: an id collision check blind to where ids are now minted is the costs-nothing green, latent until two lanes mint the same id on `coord`; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-110's finding)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §1 (the state moves to `coord`; every reader follows it), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-110 is done.
-scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
-accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).
