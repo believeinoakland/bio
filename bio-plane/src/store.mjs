@@ -29084,6 +29084,15 @@ export class Store extends DurableObject {
       mute: {
         personal: true,
         cases: [...mutes.keys()].sort(),
+        /* D-534: the kinds each of those cases mutes, case id -> sorted kinds.
+           `cases` alone named the case and the kinds nowhere, so a case mute
+           holding nothing back today (no live item of those kinds, so nothing
+           on `suppressed`) could be neither named nor undone — the case form's
+           unmute takes the kinds. A map BESIDE `cases` rather than objects IN
+           it, because every reader of `cases` holds it as a list of ids (the
+           queue-state suites and civicos-ui); this adds and moves nothing. */
+        case_kinds: Object.fromEntries([...mutes.keys()].sort()
+          .map((c) => [c, [...mutes.get(c)].sort()])),
         /* D-125: every item id this member muted, whether or not it is live
            now — a muted host that is not held today is still muted for them. */
         items: [...itemMutes].sort(),

@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RUN 2026-09-23 by the D-125 worker, `node test/d125-findingmute.control.mjs` (deliberately NOT a `.test.mjs` — it edits real sources); BASELINE 37 pass 0 fail; each arm ALONE, every restore verified by sha256, by content and by `cmp` against a per-arm pristine. (a) THE ROW'S ARM — the row says "key the item mute by case alone"; the item form holds no case, so the faithful arm takes the MEMBER out of the key: `#queueItemMutes` reads `WHERE ?<>''` (every member's rows) -> 33 pass 4 FAIL, as declared: "B-FEED: ben's feed STILL carries F…", "while ben's feed still carries it" (D-170's held host), and two consequences of the same leak ("F keeps the act… on ben's copy", "a NEW kind… still reaches cara" — ann's item mute reached cara); ann's own ACCEPTS arm, op=proposals and the no-disposition arm stayed GREEN, which is why only a second member can see this defect. (b) ADMIT OBLIGATION into PERSONALLY_MUTABLE_CLASSES -> 31 pass 6 FAIL, as declared: the by-KIND and by-ITEM OBLIGATION refusals, the read-side fence, "the obligation is still on ann's feed", and the two tallies it moved; every FINDING arm GREEN. (c) stop asking `tasks` to name an opaque id -> 36 pass 1 FAIL, as declared: "by ITEM: the task's own id is refused the same way — named OBLIGATION, not merely unknown" (it answered UNKNOWN_KIND); by-KIND GREEN. Restored; src/store.mjs and src/queuestate.mjs sha256-verified against a pre-run manifest. */
+/* NEGATIVE CONTROL: RUN 2026-09-23 by the D-125 worker, `node test/d125-findingmute.control.mjs` (deliberately NOT a `.test.mjs` — it edits real sources); BASELINE 37 pass 0 fail; each arm ALONE, every restore verified by sha256, by content and by `cmp` against a per-arm pristine. (a) THE ROW'S ARM — the row says "key the item mute by case alone"; the item form holds no case, so the faithful arm takes the MEMBER out of the key: `#queueItemMutes` reads `WHERE ?<>''` (every member's rows) -> 33 pass 4 FAIL, as declared: "B-FEED: ben's feed STILL carries F…", "while ben's feed still carries it" (D-170's held host), and two consequences of the same leak ("F keeps the act… on ben's copy", "a NEW kind… still reaches cara" — ann's item mute reached cara); ann's own ACCEPTS arm, op=proposals and the no-disposition arm stayed GREEN, which is why only a second member can see this defect. (b) ADMIT OBLIGATION into PERSONALLY_MUTABLE_CLASSES -> 31 pass 6 FAIL, as declared: the by-KIND and by-ITEM OBLIGATION refusals, the read-side fence, "the obligation is still on ann's feed", and the two tallies it moved; every FINDING arm GREEN. (c) stop asking `tasks` to name an opaque id -> 36 pass 1 FAIL, as declared: "by ITEM: the task's own id is refused the same way — named OBLIGATION, not merely unknown" (it answered UNKNOWN_KIND); by-KIND GREEN. Restored; src/store.mjs and src/queuestate.mjs sha256-verified against a pre-run manifest. D-534, RUN 2026-09-25 by its worker, by hand (store.mjs copied aside, each arm ALONE, restored and verified by sha256 2f67557e… and cmp, 3350787 bytes); BASELINE 42 pass 0 fail. (d) THE ROW'S ARM — publish the case ids alone again (delete `case_kinds` from op=queue's mute block) -> 38 pass 4 FAIL, as declared: "ACCEPTS: a kind holding nothing back today is still nameable", "a member with no case mute publishes an empty map", "UNDOABLE from what op=queue published alone", "read back: the case leaves `cases` and `case_kinds`"; every D-125/D-170 arm GREEN. Its FIRST run found the INSTRUMENT wrong: the undo indexed the missing map, a TypeError ended the module at 21 pass 3 fail and the rest never ran; the read is now guarded so each arm fails by name. (e) OVER-STRICTNESS — the same map built by a loop over `mutes` instead of Object.fromEntries -> 42 pass 0 fail, as declared. */
 /* D-125 — A MEMBER MAY MUTE A FINDING FOR THEMSELVES (DEC-10's (b) and (c)), RULED
  * 2026-09-22 by BOB #26, and D-170's widening (BOB #29, 2026-09-23): the ITEM form
  * reaches an UNGROUPED CONDITION. Design: `docs/development/NOTIFICATIONS.md`
@@ -19,7 +19,11 @@
  *      OBLIGATION) in BOTH forms — by kind, and by the task's own id;
  *   4. D-170: A's item mute of a `governor-holding-host` item puts it in A's
  *      `suppressed` while B's feed still carries it and nothing is written; a
- *      case-less per-KIND condition mute is still refused (NO_CASE).
+ *      case-less per-KIND condition mute is still refused (NO_CASE);
+ *   5. D-534: op=queue's mute block publishes each muted case's KINDS
+ *      (`case_kinds`, case id -> kinds, beside the unchanged `cases`), so a
+ *      case mute holding nothing back today is named and undone from what
+ *      the feed published alone.
  *
  * WHAT THIS CANNOT SEE. It does not drive a surface: the UI does not yet offer
  * the item form or a finding kind (civicos-ui is UI's ground). It does not
@@ -257,6 +261,27 @@ t("while a NEW kind on the same case still reaches cara (the kickoff's missing_p
   ids(caraAfter).includes(F_KICK), true);
 t("and ben, who muted nothing, still holds the overdue contract",
   ids(await queueOf(ben, AFTER_MS)).includes(F_CONTRACT), true);
+
+/* ============== D-534: the case mute's KINDS are published ================ */
+console.log("\n--- D-534: a case mute holding nothing back today still names its kinds ---");
+/* BEFORE the deadline no item on INQ is overdue_successor, so cara's mute
+   suppresses nothing: `suppressed` cannot name its kinds, and until D-534 the
+   mute block published `cases` as ids and the kinds nowhere. */
+const caraNow = await queueOf(cara);
+t("fixture: before the deadline cara's case mute is holding NOTHING back (no case-scoped suppression)",
+  [caraNow.mute.suppressed.filter((s) => s.scope === "case").length, caraNow.mute.cases], [0, [INQ]]);
+t("ACCEPTS: a kind holding nothing back today is still nameable — `case_kinds` names it under its case",
+  caraNow.mute.case_kinds, { [INQ]: ["overdue_successor"] });
+t("a member with no case mute publishes an empty map beside an empty `cases` (the same shape, never absent)",
+  [benQ.mute.cases, benQ.mute.case_kinds], [[], {}]);
+const undo = await POST(`op=queuemute&token=${cara}`,
+  { case: INQ, kinds: (caraNow.mute.case_kinds || {})[INQ] ?? [], unmute: true });
+/* guarded so a missing map fails the arms below BY NAME rather than ending the module (its control found that) */
+t("and it is UNDOABLE from what op=queue published alone: the case form's unmute over those kinds removes them",
+  [undo.ok, undo.removed, undo.muted_kinds], [true, ["overdue_successor"], []]);
+const caraUndone = await queueOf(cara, AFTER_MS);
+t("read back: the case leaves `cases` and `case_kinds`, and the overdue contract reaches cara again",
+  [caraUndone.mute.cases, caraUndone.mute.case_kinds, ids(caraUndone).includes(F_CONTRACT)], [[], {}, true]);
 
 console.log("\n--- DEC-10's escalation: a mute of the stage's OLD kind does not hold it once it is overdue ---");
 const mE = await muteKinds(ben, INQ, ["missing_predecessor"]);
