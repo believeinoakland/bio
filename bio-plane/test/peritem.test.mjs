@@ -111,7 +111,7 @@ try {
       subject: "https://www.oaklandca.gov/documents/agenda.pdf", at: AT });
     await doPost("promote", {
       bundleId: bundle, base: null, snapKey: `20260923T120000Z_peritem_${n}`, author: "consumer",
-      meta: { object_type: "information", group: "believe-in-oakland", title: "Per-item fixture",
+      meta: { object_type: "information", group: "believe-in-oakland",
               current_state: "collected", created: AT, last_updated: AT },
       files: [{ path: "bundle.md", text: "---\nid: " + bundle + "\n---\n", bytes: 10 }],
       register: [{ sha256: sha, path: "snapshots/agenda.pdf", encoding: "binary", bytes: 10 }],
@@ -371,7 +371,7 @@ try {
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha9(text) }],
     register: type === "information"
       ? [{ path: "snapshots/doc.bin", sha256: sha9(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${title || id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW9, last_updated: LATER9 } }));
   const must9 = async (what, r) => {

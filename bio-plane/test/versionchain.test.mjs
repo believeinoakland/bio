@@ -433,7 +433,9 @@ const projectMd = (id) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object
 const promote = async (id, text, type, register = [], tok = "mem-pl10") => await post("promote", {
   ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${id ?? "project"}-new`, author: "pl10",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+     state, and is now refused; a project document here states no title, so the label stays its only name. */
+  meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
           current_state: type === "project" ? "forming" : "collected",
           created: NOW, last_updated: LATER },
   register,

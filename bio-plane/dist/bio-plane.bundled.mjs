@@ -14619,6 +14619,21 @@ var PROMOTED_TYPE_CHECKS = {
     check: "C-86.2",
     where: "src/store.mjs promote > is-promote-retypes-bundle",
     translation: "This change would turn something the record already holds into a different kind of thing, an item of information into an action, say. A change can alter what a document says, but not what it is, because what it is decides which rules protect it. Nothing was written. To record it as the other kind, create a new one of that kind and link the two."
+  },
+  /* D-563 (2026-09-25) — C-86.1's rule one field over, twice: the document states what it is CALLED and where it STANDS,
+   * and a request whose label contradicts either is refused rather than obeyed. The name is what 7.1 holds unique and
+   * the state decides who may move the item (7.11) and what may cite it (REC-181), so a label a caller can steer was
+   * an authority over both. Only a contradiction between two statements: a label stating nothing takes the document's
+   * word. Replay is exempt, as for C-86.1. */
+  ENVELOPE_TITLE_DISAGREES: {
+    check: "C-86.3",
+    where: "src/store.mjs promote > is-promoted-title-disagrees",
+    translation: "The document being filed gives itself one name, and the request that carried it gives another. The record goes by the document, and names are held unique across the instance, so rather than file it under a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request naming the document's title, or naming none, or change the document first."
+  },
+  ENVELOPE_STATE_DISAGREES: {
+    check: "C-86.4",
+    where: "src/store.mjs promote > is-promoted-state-disagrees",
+    translation: "The document being filed says where it stands, and the request that carried it says something different. Where a thing stands decides who may move it and what may cite it, and the record goes by the document, so it stops and tells you both. Nothing was written. Send it again with the request saying what the document says, or saying nothing about it, or change the document first."
   }
 };
 var RISK_TIER_REVISION_CHECKS = {
@@ -46348,6 +46363,16 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  release()'s precedent: a register half-reconstructed is a record where the
    *  reader cannot tell which documents were established and which were skipped.
    */
+  /* D-563: an internal relabel's fallback — each row value is sent only when the carried `bundle.md` states no such
+     key, so the plane never labels its own write against the document it is carrying. */
+  static #rowUnlessStated(files, row) {
+    const md = files.find((f2) => f2 && f2.path === "bundle.md");
+    const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+    const out = {};
+    for (const [k, v] of Object.entries(row))
+      if (!(fm && typeof fm === "object" && Object.prototype.hasOwnProperty.call(fm, k))) out[k] = v;
+    return out;
+  }
   provenanceChainRebuild({ bundleId = "", apply = false, author = null, viewer = null } = {}) {
     const who2 = String(author ?? "").trim();
     if (!who2)
@@ -46458,12 +46483,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         bytes: bytes.length,
         sha256: createSha256().update(bytes).hex()
       }, ...carried],
+      /* D-563: the row's title and state are sent ONLY where the held document states none. `promote` now derives
+         them from the document and refuses a label that contradicts it; relabelling from the ROW would refuse this
+         correction on every bundle whose row an envelope once wrote apart from its bytes — M-172 counted 11 in `bio`
+         (row `prior_state` null, document `collected`). Where the document states them the projection takes the
+         document's value, which is the value the bundle's own bytes have always carried. */
       meta: {
         object_type: seen.object_type,
         group: seen.group_id,
-        title: seen.title,
-        current_state: seen.current_state,
-        prior_state: seen.prior_state ?? null,
+        ..._Store.#rowUnlessStated(carried, {
+          title: seen.title,
+          current_state: seen.current_state,
+          prior_state: seen.prior_state ?? null
+        }),
         created: seen.created,
         last_updated: seen.last_updated,
         criticality: seen.criticality ?? null
@@ -47672,6 +47704,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const documentType = sentFm && typeof sentFm === "object" ? typeStated(sentFm.object_type) : null;
     const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
     const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : void 0);
+    const envelopeMeta = meta && typeof meta === "object" ? meta : null;
+    const fmHas = (o, k) => !!o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
+    const textStated = (v) => typeof v === "string" && v.trim() !== "" ? v : null;
+    const documentTitle = sentFm && typeof sentFm === "object" ? textStated(sentFm.title) : null;
+    const documentQuestionTitle = documentType === "inquiry" && typeof sentMd?.text === "string" ? deriveInquiryTitle(inquiryQuestionOf(sentMd.text)) : null;
+    const envelopeTitle = envelopeMeta ? textStated(envelopeMeta.title) : null;
+    let promotedTitle = documentTitle ?? (envelopeMeta ? envelopeMeta.title : void 0);
+    const documentState = sentFm && typeof sentFm === "object" ? textStated(sentFm.current_state) : null;
+    const envelopeState = envelopeMeta ? textStated(envelopeMeta.current_state) : null;
+    const promotedState = documentState ?? (envelopeMeta ? envelopeMeta.current_state : void 0);
+    const promotedPriorState = fmHas(sentFm, "prior_state") ? sentFm.prior_state ?? null : envelopeMeta ? envelopeMeta.prior_state ?? null : null;
+    const promotedClosedReason = fmHas(sentFm, "closed_reason") ? sentFm.closed_reason ?? null : envelopeMeta ? envelopeMeta.closed_reason : void 0;
     const idSupplied = bundleId !== void 0 && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object" && (promotedType === "project" || typeof bundleId === "string" && /^PROJ-/.test(bundleId));
     const refusal7 = (code, detail) => {
@@ -47767,7 +47811,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     } : null;
     const act = () => {
       if (creatingProject) {
-        bundleId = this.#mintProjectId(meta.title);
+        bundleId = this.#mintProjectId(promotedTitle);
         if (!bundleId) return {
           ok: false,
           reason: "MINT_EXHAUSTED",
@@ -47820,12 +47864,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
         return _Store.#promoteAbsent();
-      if (cur && (meta.title === void 0 || meta.title === null || meta.title === "")) {
+      if (cur && (promotedTitle === void 0 || promotedTitle === null || promotedTitle === "")) {
         const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
-        if (prev && prev.title) meta.title = prev.title;
+        if (prev && prev.title) promotedTitle = prev.title;
       }
       if (promotedType === "project") {
-        const key = _Store.projectNameKey(meta.title);
+        const key = _Store.projectNameKey(promotedTitle);
         if (!key)
           return {
             ok: false,
@@ -47844,8 +47888,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           };
       }
       if (cur && cur.object_type === "project") {
-        const to = meta.current_state, from = cur.current_state;
-        const deactivating = from !== "closed" && to === "closed" && meta.closed_reason === "abandoned";
+        const to = promotedState, from = cur.current_state;
+        const deactivating = from !== "closed" && to === "closed" && promotedClosedReason === "abandoned";
         const reactivating = from === "closed" && to === "investigating";
         if (deactivating || reactivating) {
           const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
@@ -47875,7 +47919,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           detail: `${String(bundleId).slice(0, 80)} is '${normalizeType(cur.object_type)}' and this revision says '${String(promotedType).slice(0, 40)}'. A revision changes what a document says, never what kind of thing it is. Nothing was written.`
         };
       }
-      if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired") && (cur ? cur.object_type : promotedType) === "information") {
+      if (promotedState === "retired" && (!cur || cur.current_state !== "retired") && (cur ? cur.object_type : promotedType) === "information") {
         const citedBy = this.#retirementCitedBy(bundleId);
         if (citedBy.length)
           return {
@@ -47967,6 +48011,47 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           document_type: documentType,
           envelope_type: envelopeType,
           detail: `the document being promoted says object_type '${String(docFmW.object_type).slice(0, 40)}' and this request's meta says '${String(meta.object_type).slice(0, 40)}'. The record goes by the document, and it will not file one kind of thing as another: what a document IS decides which columns, projections and reads it gets. Send it again with the meta naming the type the document names, or change the document first. Nothing was written.`
+        };
+      }
+      const sameText = (a, b) => String(a).trim().replace(/\s+/g, " ") === String(b).trim().replace(/\s+/g, " ");
+      if (envelopeTitle !== null && (documentTitle !== null || documentQuestionTitle !== null) && !(documentTitle !== null && sameText(envelopeTitle, documentTitle)) && !(documentQuestionTitle !== null && sameText(envelopeTitle, documentQuestionTitle)) && !pkg.replay) {
+        const ttRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TITLE_DISAGREES;
+        return {
+          ok: false,
+          reason: "ENVELOPE_TITLE_DISAGREES",
+          code: "ENVELOPE_TITLE_DISAGREES",
+          check: ttRow.check,
+          translation: ttRow.translation,
+          document_title: String(documentTitle ?? documentQuestionTitle).slice(0, 200),
+          envelope_title: String(envelopeTitle).slice(0, 200),
+          detail: `the document being promoted is titled '${String(documentTitle ?? documentQuestionTitle).slice(0, 80)}' and this request's meta says '${String(envelopeTitle).slice(0, 80)}'. The record goes by the document, and a name is what 7.1 holds unique, so it will not file one under the other. Send it again with the meta naming the document's title, or with no title in the meta, or change the document first. Nothing was written.`
+        };
+      }
+      const stateContradiction = (() => {
+        if (!envelopeMeta) return null;
+        if (envelopeState !== null && documentState !== null && !sameText(envelopeState, documentState))
+          return ["current_state", documentState, envelopeState];
+        for (const k of ["prior_state", "closed_reason"]) {
+          if (!fmHas(sentFm, k) || envelopeMeta[k] === void 0) continue;
+          const d = sentFm[k] ?? null, e = envelopeMeta[k] ?? null;
+          if (d === null && e === null) continue;
+          if (d === null || e === null || !sameText(d, e)) return [k, d, e];
+        }
+        return null;
+      })();
+      if (stateContradiction && !pkg.replay) {
+        const stRow = PROMOTED_TYPE_CHECKS.ENVELOPE_STATE_DISAGREES;
+        const [field, said, asked] = stateContradiction;
+        return {
+          ok: false,
+          reason: "ENVELOPE_STATE_DISAGREES",
+          code: "ENVELOPE_STATE_DISAGREES",
+          check: stRow.check,
+          translation: stRow.translation,
+          field,
+          document_value: said === null ? null : String(said).slice(0, 80),
+          envelope_value: asked === null ? null : String(asked).slice(0, 80),
+          detail: `the document being promoted says ${field} '${said === null ? "null" : String(said).slice(0, 40)}' and this request's meta says '${asked === null ? "null" : String(asked).slice(0, 40)}'. The record goes by the document: where a thing stands decides who may move it and what may cite it. Send it again with the meta naming what the document says, or leave it out of the meta, or change the document first. Nothing was written.`
         };
       }
       const isInquiry = promotedType === "inquiry";
@@ -48314,7 +48399,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       const biasSpelling = promotedType === "bias" ? promotedType : cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null;
       if (cur && biasSpelling) {
-        const from = cur.current_state, to = meta.current_state;
+        const from = cur.current_state, to = promotedState;
         const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
         if (to !== from && !legalFrom.includes(to))
           return {
@@ -48442,7 +48527,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       const newSha = files.find((f2) => f2.path === "bundle.md")?.sha256;
       const projectedType = promotedType;
       const mdForTitle = files.find((x) => x.path === "bundle.md");
-      const projectedTitle = projectedType === "inquiry" ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? meta.title : meta.title;
+      const projectedTitle = projectedType === "inquiry" ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? promotedTitle : promotedTitle;
       this.sql.exec(
         `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
          VALUES (?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
@@ -48459,8 +48544,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         projectedType,
         cur ? cur.group_id : createdGroup,
         projectedTitle,
-        meta.current_state,
-        meta.prior_state ?? null,
+        promotedState,
+        promotedPriorState,
         meta.created,
         meta.last_updated,
         meta.criticality ?? null,
@@ -48710,7 +48795,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             r.locked,
             r.nullifies
           );
-        if (meta.current_state === "adopted" && newSha) {
+        if (promotedState === "adopted" && newSha) {
           const pfm = docFmW || {};
           const str = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
           this.sql.exec(

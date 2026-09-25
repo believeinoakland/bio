@@ -16167,6 +16167,27 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'is, because what it is decides which rules protect it. Nothing was written. To record it as the other '
       + 'kind, create a new one of that kind and link the two.',
   },
+  /* D-563 (2026-09-25) — C-86.1's rule one field over, twice: the document states what it is CALLED and where it STANDS,
+   * and a request whose label contradicts either is refused rather than obeyed. The name is what 7.1 holds unique and
+   * the state decides who may move the item (7.11) and what may cite it (REC-181), so a label a caller can steer was
+   * an authority over both. Only a contradiction between two statements: a label stating nothing takes the document's
+   * word. Replay is exempt, as for C-86.1. */
+  ENVELOPE_TITLE_DISAGREES: {
+    check: 'C-86.3',
+    where: 'src/store.mjs promote > is-promoted-title-disagrees',
+    translation: 'The document being filed gives itself one name, and the request that carried it gives another. '
+      + 'The record goes by the document, and names are held unique across the instance, so rather than file it under '
+      + 'a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request '
+      + 'naming the document\'s title, or naming none, or change the document first.',
+  },
+  ENVELOPE_STATE_DISAGREES: {
+    check: 'C-86.4',
+    where: 'src/store.mjs promote > is-promoted-state-disagrees',
+    translation: 'The document being filed says where it stands, and the request that carried it says something '
+      + 'different. Where a thing stands decides who may move it and what may cite it, and the record goes by the '
+      + 'document, so it stops and tells you both. Nothing was written. Send it again with the request saying what '
+      + 'the document says, or saying nothing about it, or change the document first.',
+  },
 };
 
 /* REC-214 / C-90 — A MEMBER REVISES AN ACTION'S RISK TIER BY AN AUTHORED, APPEND-ONLY ACT (BOB #33, 2026-09-24,

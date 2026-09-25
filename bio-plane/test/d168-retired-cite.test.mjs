@@ -134,7 +134,7 @@ const promoteAs = async (tok, id, text, type, state, base = null) => POST(`op=pr
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information" && base === null
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id ?? "new"}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: LATER } });
 const listed = async (id) => ((await GET(`op=list&token=${ADM}&limit=1000`)) || {}).bundles?.find((b) => b.bundle_id === id) ?? null;
 /* Walk an information bundle along its own machine's edges, never create it in a state nothing reached. */
@@ -162,7 +162,7 @@ const mkProject = async (name) => {
   const r = must(`promote ${name}`, await POST(`op=promote&token=${ADM}`, { base: null,
     snapKey: `d168-${String(++snapSeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${name}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: NOW, last_updated: LATER } }));
   must(`claim ${name}`, await DO("projectclaimowner", { projectId: r.bundleId, memberId: "iris" }));
   return r.bundleId;

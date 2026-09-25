@@ -193,7 +193,7 @@ async function d443() {
     }
     return POST(`op=promote&token=${RUTH}`, { bundleId: id, base: null,
       snapKey: `20260923T${String(400000 + (++seq)).slice(-6)}Z_${sha(`d443-${seq}`).slice(0, 8)}`,
-      meta: { object_type: type, group: "believe-in-oakland", title: `D-443 ${id}`,
+      meta: { object_type: type, group: "believe-in-oakland",
               current_state: type === "inquiry" ? "open" : "collected", created: W, last_updated: W },
       files });
   };
@@ -410,7 +410,7 @@ async function d443b() {
   const put = async (id, text, type, state, register = []) => POST(`op=promote&token=${VERA}`, {
     bundleId: id, base: null,
     snapKey: `20260923T${String(600000 + (++s445)).slice(-6)}Z_${sha(`d445-${s445}`).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `D-445 ${id}`, current_state: state,
+    meta: { object_type: type, group: "believe-in-oakland", current_state: state,
             created: V, last_updated: V },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register });
   /* A REGISTERED CAPTURE on the document, because C-2.8 refuses a capture grade over a document whose
@@ -501,7 +501,7 @@ try {
              + "current_state: collected\n---\n\n# D-390 fixture\n";
   const r = await POST(`op=promote&token=${ADM}`, {
     bundleId: "INF-2026-0923-d390", base: null, snapKey: "20260923T090000Z_d3900000",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "D-390 fixture",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],

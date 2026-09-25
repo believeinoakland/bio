@@ -177,7 +177,7 @@ const buildBundle = async (id, seed, parts) => {
   const md = mkMd(id);
   const pkg = {
     bundleId: id, base: null, snapKey: `2026072${seed}T100000Z_${id.slice(-8)}`, author: "claude",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "Reuse target",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
@@ -311,7 +311,7 @@ console.log("\n=== a bundle that reused nothing ratifies exactly as before (no r
   const md = mkMd(id);
   const c = await POST("op=promote&token=mem-rr", {
     bundleId: id, base: null, snapKey: "20260724T160000Z_norereuse", author: "claude",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "Reuse target",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
             { path: "snapshots/evidence.bin", blobSha: capSha, bytes: capBytes.length, sha256: capSha }],

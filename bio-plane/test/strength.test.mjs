@@ -174,7 +174,7 @@ const infoMd = (id) => ["---",
 const promoteOn = (c) => (id, text, type, base = null) => c("/promote", {
   bundleId: id, base, snapKey: `${id}-${base ? sha(base).slice(0, 8) : "new"}`, author: "suite",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : "collected",
           created: NOW, last_updated: LATER },
   /* REC-18, 2026-08-04: an INFORMATION bundle REGISTERS a capture. A

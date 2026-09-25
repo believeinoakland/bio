@@ -170,7 +170,7 @@ const infoMd = (id) => ["---",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const create = (mf, id, text) => post(mf, `op=promote&token=${ADM}`, {
   bundleId: id, base: null, snapKey: `20260922T101631Z_${sha(id).slice(0, 8)}`,
-  meta: { object_type: "information", title: `t ${id}`, current_state: "collected", created: NOW, last_updated: LATER },
+  meta: { object_type: "information", current_state: "collected", created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }], register: [] });
 const fileOf = async (mf, id) => {
   const r = await get(mf, `op=file&token=${ADM}&id=${E(id)}&path=bundle.md`);

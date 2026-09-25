@@ -226,7 +226,10 @@ const legLines = (legs) => legs.length
   : [];
 const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [], legs = [] } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
-  `title: "${question}"`, "current_state: open", "prior_state: null",
+  /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: these findings were CONCLUDED BY LABEL — the bytes said
+     `open` and the request said `concluded`, and the projection took the request's word. The record now takes the
+     document's, so the document states the state the fixture needs. */
+  `title: "${question}"`, "current_state: concluded", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", ...refLines(refs), "state_history: []",
@@ -257,8 +260,10 @@ const promote = async (id, text, type, { register = [], reading = null } = {}) =
   return rP(await POST("op=promote&token=adm-r96", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260917T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
-            current_state: type === "inquiry" ? "concluded" : "collected",
+    /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+       state, and is now refused; a project document here states no title, so the label stays its only name. */
+    meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
+            current_state: type === "inquiry" ? "concluded" : "collected",   /* the documents' own states (D-563) */
             created: NOW, last_updated: LATER },
     files, register }));
 };

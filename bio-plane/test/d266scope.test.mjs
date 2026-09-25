@@ -231,7 +231,7 @@ const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
           created: NOW, last_updated: LATER } });
 const mustPromote = async (id, text, type) => {
@@ -248,7 +248,7 @@ const createProject = async (name, text) => {
   const r = await POST(`op=promote&token=${RUTH}`, {
     base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: NOW, last_updated: LATER } });
   if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 800)}`);
   return r.bundleId;
@@ -275,7 +275,7 @@ const RDOC = "INFO-2026-5000-filed";
     files: [{ path: "bundle.md", text: rmd, bytes: rmd.length, sha256: sha(rmd) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
     register: [],
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${RDOC}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER } });
   if (!r.ok) throw new Error(`promote ${RDOC}: ${JSON.stringify(r).slice(0, 800)}`);
 }

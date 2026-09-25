@@ -149,7 +149,7 @@ const promote = async (id, text, type, { register = [], reading = null } = {}) =
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260916T${String(500000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : "collected",
             created: NOW, last_updated: LATER },
     files, register });
@@ -278,7 +278,7 @@ console.log("\n--- 3. THE CACHE CHANGES WHERE THE REGISTRY BOUNDS IT (the equali
   const refused = await post("promote", {
     bundleId: INQ_MOVE, base: HEAD.get(INQ_MOVE),
     snapKey: `20260916T${String(500000 + (++snapSeq)).slice(-6)}Z_${sha("stuck").slice(0, 8)}`,
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${INQ_MOVE}`,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: "2026-09-16T02:00:00Z" },
     files: [{ path: "bundle.md", text: inquiryMd(INQ_MOVE, { subject: ORD, refs: [DOC_MOVE],
               legs: [{ target: DOC_MOVE, grade: "B", axis: "capture", source: "capture" }],

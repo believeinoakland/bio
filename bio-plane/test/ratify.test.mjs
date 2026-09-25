@@ -143,7 +143,7 @@ const pkg = (n, base, snap) => {
   const md = mkMd(n);
   return {
     bundleId: ID, base, snapKey: snap, author: "claude",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "Ratify target",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
@@ -286,7 +286,7 @@ const badMd = mkMd(1, "INFO-2026-0000-wrong-id").replace("references: []",
    "    status: confirmed", '    note: ""'].join("\n"));
 const badPkg = {
   bundleId: BAD, base: null, snapKey: "20260724T130000Z_dddd4444", author: "claude",
-  meta: { object_type: "information", group: "believe-in-oakland", title: "Ratify target",
+  meta: { object_type: "information", group: "believe-in-oakland",
           current_state: "collected", created: NOW, last_updated: NOW },
   files: [{ path: "bundle.md", text: badMd, bytes: badMd.length, sha256: sha(badMd) }],
   /* The dangling edge lives in the frontmatter above, which is now its only

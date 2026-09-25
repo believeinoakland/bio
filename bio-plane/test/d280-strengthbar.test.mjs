@@ -261,7 +261,7 @@ const promote = async (id, text, type, state, register = []) => {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "d280-suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 900)}`);
   return r;
@@ -276,7 +276,7 @@ const createProject = async (name, refs, bar = null) => {
   const r = await POST(`op=promote&token=${MACHINE}`, {
     base: null, snapKey: `${name}-new`, author: "d280-suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: NOW, last_updated: NOW } });
   if (!r || r.ok === false || typeof r.bundleId !== "string")
     throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 900)}`);
@@ -606,7 +606,7 @@ console.log("\n--- 5. #routeTask: an obligation is not addressed to the owner of
     const r = await POST(`op=promote&token=${MACHINE}`, {
       bundleId: id, base: made.sha, snapKey: `${name}-refs`, author: "d280-suite",
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-      meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+      meta: { object_type: "project", group: "believe-in-oakland",
               current_state: "forming", created: NOW, last_updated: NOW } });
     if (!r || r.ok === false) throw new Error(`revise ${name}: ${JSON.stringify(r).slice(0, 900)}`);
   };

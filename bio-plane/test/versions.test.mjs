@@ -308,7 +308,9 @@ const promote = async (id, text, type, base = null, tok = RUTH) => POST(`op=prom
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
     : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+     state, and is now refused; a project document here states no title, so the label stays its only name. */
+  meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
           current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
           created: NOW, last_updated: LATER } });
 /* THE CAS. op=promote returns `bundleSha`, and a revision must carry the

@@ -161,7 +161,7 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
     const md = mkMd(id);
     return POST("op=promote&token=mem-530", {
       bundleId: id, base: null, snapKey: snap, author: "claude",
-      meta: { object_type: "information", group: "believe-in-oakland", title: `Parted ${id}`,
+      meta: { object_type: "information", group: "believe-in-oakland",
               current_state: "collected", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...files], register });
   };
@@ -234,7 +234,7 @@ console.log("\n--- attest: a registered whole hash the plane never received ---"
     bundleId: ID, base: null, snapKey: "20260924T100002Z_d530cccc",
     files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md), sha256: sha(md) }],
     register: [{ path: "snapshots/own.bin", sha256: OWN_SHA, encoding: "binary", bytes: OWN.length }],
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${ID}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: "2026-09-24T00:00:00Z", last_updated: "2026-09-24T00:00:00Z" } });
   t("the whole hash is registered", pr.result?.ok ?? pr.ok, true);
   const r = await attest(OWN_SHA);

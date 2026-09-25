@@ -209,7 +209,7 @@ const promote = async (tok, id, text, type, base = null) => {
     register: type === "information"
       ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
       : [],
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW, last_updated: LATER } });
   if (!r.result?.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
@@ -529,7 +529,7 @@ console.log("\n--- 8. REC-105 / D-373: the capture axis is resolved through `ear
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
               { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
       register: [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }],
-      meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${id}`,
+      meta: { object_type: "information", group: "believe-in-oakland",
               current_state: "collected", created: NOW, last_updated: LATER } });
     if (!r.result?.ok) throw new Error(`provPromote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
     HEAD.set(id, r.result.bundleSha);

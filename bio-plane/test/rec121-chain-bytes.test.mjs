@@ -105,7 +105,7 @@ const promoteDoc = async (id, { chain, pageCount }) => {
   const r = await post("promote", {
     bundleId: id, base: null,
     snapKey: `20260918T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],

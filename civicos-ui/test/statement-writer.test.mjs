@@ -194,7 +194,9 @@ let snapSeq = 0;
 const promote = async (id, text, objectType, state) => await POST("op=promote&token=adm-ui103", {
   bundleId: id, base: null,
   snapKey: `20260924T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+     state, and is now refused; a project document here states no title, so the label stays its only name. */
+  meta: { object_type: objectType, group: "believe-in-oakland", ...(objectType === "project" ? { title: `t ${id}` } : {}),
           current_state: state, created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],

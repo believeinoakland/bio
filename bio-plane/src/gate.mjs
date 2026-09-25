@@ -248,6 +248,10 @@ export const CATALOG_VERSION = "1.30.0";
    DEPARTURES, so the bump is MINOR on this constant's own rule (Publication §3 rule 17). Figures are the
    d470 suite's own print on this tree over origin/main 964da679. If another branch also took 1.30.0, the
    union takes the next number once — ONE VERSION NAMES ONE CATALOGUE. */
+/* D-563 side, kept as history — took 1.31.0 (D-563, 2026-09-25, branch land/worker/D-563): TWO ARRIVALS, NO DEPARTURES, NONE CHANGED — C-86.3
+   ENVELOPE_TITLE_DISAGREES and C-86.4 ENVELOPE_STATE_DISAGREES in PROMOTED_TYPE_CHECKS. MINOR; 502 -> 504, count and
+   digest from the d470 suite's print on this tree. If another branch in the batch also moves the version, CONDUCT takes
+   the next number at the union and re-reads the print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

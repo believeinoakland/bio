@@ -284,7 +284,7 @@ const promote = async (id, text, type, tok = RUTH, meta = {}, extraFiles = [], r
     snapKey: `${id ?? meta.title ?? "project"}-${String(++snapKeySeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extraFiles],
     register,
-    meta: { object_type: type, group: GROUP, title: `Bundle ${id}`,
+    meta: { object_type: type, group: GROUP,
             current_state: type === "inquiry" ? "open" : type === "project" ? "active" : "collected",
             created: NOW, last_updated: LATER, ...meta } });
 const mustPromote = async (...a) => {
@@ -294,7 +294,9 @@ const mustPromote = async (...a) => {
 };
 /* A project CREATION under `tok`: no id sent, the MINTED id read from the answer (REC-141). */
 const mintProject = async (name, tok = RUTH) => {
-  const r = await mustPromote(null, projectMd(null, name), "project", tok, { title: `Bundle ${name}` });
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: the label `Bundle ${name}` contradicted the document's
+     `Project ${name}` and is now refused; the label names none, and the project is named by its document. */
+  const r = await mustPromote(null, projectMd(null, name), "project", tok, {});
   if (typeof r.bundleId !== "string") throw new Error(`promote project ${name}: no minted id ${JSON.stringify(r).slice(0, 600)}`);
   return r.bundleId;
 };
@@ -730,7 +732,9 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
     const r = await POST(`op=promote&token=${RUTH}`, { bundleId: INQ, base: await liveSha(),
       snapKey: `2026080${seq}T12000${seq}Z_${String(seq).repeat(8)}`,
       files: [{ path: "bundle.md", text: next, bytes: next.length, sha256: sha(next) }, ...carried],
-      meta: { object_type: "inquiry", group: GROUP, title: `Bundle ${INQ}`, current_state: "published",
+      /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: the label said `published` over bytes whose state is their
+         own; it is now refused, so the label names no state and the record takes the bytes'. */
+      meta: { object_type: "inquiry", group: GROUP,
               created: NOW, last_updated: LATER } });
     if (!r.ok) throw new Error(`revise to edition ${n}: ${JSON.stringify(r).slice(0, 400)}`);
     return r;

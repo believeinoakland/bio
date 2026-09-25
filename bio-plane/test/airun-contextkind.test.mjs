@@ -109,7 +109,9 @@ const create = async (tok, id, type, title) => {
   const r = parse(await RAW(`op=promote&token=${tok}`, {
     ...(type === "project" ? {} : { bundleId: id }), base: null,
     snapKey: `20260701T0000${String(++seq).padStart(2, "0")}Z_rec153`,
-    meta: { object_type: type, group: "believe-in-oakland", title,
+    /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: an inquiry's document carries its own title and question,
+       so the caller's label contradicted it and is now refused; the other documents here state none or the same one. */
+    meta: { object_type: type, group: "believe-in-oakland", ...(type === "inquiry" ? {} : { title }),
             current_state: type === "project" ? "forming" : type === "information" ? "collected" : "open",
             created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));

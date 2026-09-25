@@ -427,7 +427,7 @@ const promote = async (id, md, type, state, extraFiles = [], tok = "mem-rec19") 
   /* CORRECTED 2026-09-18 (REC-141, IC-158): id null creates with NO bundleId (a project's id is minted). */
   const r = rP(await POST(`op=promote&token=${tok}`, {
     ...(id ? { bundleId: id } : {}), base: null, snapKey: "20260701T000000Z_aaaa1111", author: "seed",
-    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...extraFiles],
     register: [],
@@ -1235,7 +1235,7 @@ const badBasisMd = actnMd(BADACT).replace("  name: City Clerk\n---",
   `  name: City Clerk\naction_basis:\n  - target: ${A}\n    kind: __not_a_basis_kind__\n---`);
 const badBasis = rP(await POST(`op=promote&token=mem-rec19`, {
   bundleId: BADACT, base: null, snapKey: "20260701T000000Z_aaaa1111", author: "seed",
-  meta: { object_type: "action", group: "believe-in-oakland", title: `t ${BADACT}`,
+  meta: { object_type: "action", group: "believe-in-oakland",
           current_state: "planned", created: NOW, last_updated: NOW },
   files: [{ path: "bundle.md", text: badBasisMd, bytes: badBasisMd.length, sha256: sha(badBasisMd) }],
   register: [],

@@ -526,7 +526,7 @@ console.log("\n--- D-476: a re-fetched multi-part capture never claims the bytes
     files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md),
               sha256: createHash("sha256").update(md, "utf8").digest("hex") }],
     register: [{ path: "snapshots/huge.bin", sha256: HUGE_SHA, encoding: "binary", bytes: HUGE.length }],
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${ID}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW } });
   t("the whole document's bytes are registered under a bundle that exists", promoted.ok, true);
 

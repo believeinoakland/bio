@@ -150,7 +150,7 @@ const promote = async (id, text, type, { reading = null, register = [], name = i
   return post("promote", {
     ...(id != null ? { bundleId: id } : {}), base: null,
     snapKey: `20260914T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${name}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW, last_updated: LATER },
     files, register });

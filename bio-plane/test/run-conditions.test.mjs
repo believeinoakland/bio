@@ -691,7 +691,7 @@ let PROJECT = null;
 const promote = async (id, text, type, state) => await POST("promote", {
   ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${id ?? "project"}-new`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: NOW },
 });
 const inquiryMd = ["---", `id: ${INQUIRY}`, "---", "", "## Question", "",

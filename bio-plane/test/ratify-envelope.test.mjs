@@ -283,7 +283,7 @@ const build = async (id, { refs = [], seed = 7, reuse = [], n = 1 } = {}) => {
   const md = mkMd(id, refs, n);
   const c = await POST("op=promote&token=mem-rec53", {
     bundleId: id, base: null, snapKey: `2026072${seed}T10000${n}Z_${id.slice(-8)}`, author: "claude",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "Envelope target",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },

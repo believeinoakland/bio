@@ -95,7 +95,9 @@ const informationMd = (id) => ["---",
   "---", "", "## Summary", "", "A note.", "", "## Session Log", ""].join("\n");
 const pkg = (id, md, type, state) => ({
   bundleId: id, base: null, snapKey: `20260924T1700${String(++seq).padStart(2, "0")}Z_m0187aa`,
-  meta: { object_type: type, group: "believe-in-oakland", title: `title for ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: the label `title for ${id}` contradicted the question's
+     own `title:` and is now refused; the project's document states no title, so the label stays its only name. */
+  meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `title for ${id}` } : {}),
           current_state: state, created: NOW, last_updated: NOW },
   files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md), sha256: sha(md) }],
   register: [],
@@ -192,6 +194,7 @@ console.log("\n--- ARM 7 (OVER-STRICTNESS): what the fixture must NOT touch ---"
     "M0-187 arm 7a: a project the MEMBER token opens a run of its own over.", "", "## Session Log", ""].join("\n");
   const proj = await RAW(`op=promote&token=${E(MEM)}&store=bio`, {
     base: null, snapKey: "20260924T170099Z_m0187a7",
+    /* D-563: restored — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", title: "M0-187 arm 7a project", current_state: "forming",
             group: "believe-in-oakland", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: pmd, bytes: Buffer.byteLength(pmd), sha256: sha(pmd) }], register: [] });

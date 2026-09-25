@@ -180,7 +180,7 @@ const inquiryMd = ["---",
     bundleId: INQ, base: null, snapKey: `${INQ}-000001`,
     files: [{ path: "bundle.md", text: inquiryMd, bytes: inquiryMd.length, sha256: sha(inquiryMd) }],
     register: [],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${INQ}`,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: LATER } });
   if (!p.ok) throw new Error(`promote: ${JSON.stringify(p).slice(0, 600)}`);
 }

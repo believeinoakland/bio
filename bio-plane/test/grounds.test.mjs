@@ -252,8 +252,10 @@ const promote = async (id, text, type, base = null, tok = CAROL) => POST(`op=pro
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
     : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
-          current_state: type === "inquiry" ? "open" : "collected",
+  /* CORRECTED 2026-09-25 (D-563, C-86.3/C-86.4), never exempted: the label named a title and (for a project) a state
+     the documents do not state — `Bundle ${id}`, `collected` over `forming` — and both are now refused. */
+  meta: { object_type: type, group: "believe-in-oakland",
+          current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
           created: NOW, last_updated: LATER } });
 const mustPromote = async (...a) => {
   const r = await promote(...a);

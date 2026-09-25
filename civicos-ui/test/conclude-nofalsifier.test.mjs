@@ -236,7 +236,7 @@ const inquiryMd = (id, question) => ["---",
 const promote = async (id, md, type, state) => {
   const r = rP(await POST("op=promote&token=mem-ui64", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "seed",
-    meta: { object_type: type, title: `t ${id}`,
+    meta: { object_type: type,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [],

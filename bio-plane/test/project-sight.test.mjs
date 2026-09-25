@@ -141,13 +141,16 @@ const inquiryMd = (id, basis) => ["---", `id: ${id}`, "object_type: inquiry", "s
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 /* CORRECTED 2026-09-18 (REC-141, IC-158): `id` null builds a CREATION's bytes, which carry no `id:` line —
    the plane mints the project's id and writes it (C-59.2 refuses bytes already carrying one). */
-const projectMd = (id, cites = [], summary = "A project.") => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
-  `title: "Hidden project 9138"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+/* D-563: `title` is the project's NAME, stated in its document — 7.1 scans the document's title, not a label. */
+const projectMd = (id, cites = [], summary = "A project.", title = "Hidden project 9138") => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
+  `title: "${title}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
                    : ["references: []"]),
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", summary, "",
   "## Session Log", ""].join("\n");
-const meta = (id, type, state) => ({ object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+/* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: the label `Bundle ${id}` contradicted every document's own
+   title and is now refused; the label names none, and each bundle is titled by its document. */
+const meta = (id, type, state) => ({ object_type: type, group: "believe-in-oakland",
   current_state: state, created: NOW, last_updated: LATER });
 const pkg = (id, text, type, state, base, snapKey) => ({ bundleId: id, base, snapKey,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
@@ -247,7 +250,7 @@ t("the id names nothing yet (so the first read IS the never-minted answer)", awa
 /* CORRECTED 2026-09-19 (REC-141): created with NO id; the plane mints it, and P becomes the minted id. */
 {
   const { bundleId: _chosen, ...create } = pkg(P, projectMd(null, [LEDGER]), "project", "forming", null, `${P}-${++seq}`);
-  const minted = must("mint the project", await POST(`op=promote&token=${ADM}`, { ...create, meta: { ...create.meta, title: "Hidden project 9138" } }));
+  const minted = must("mint the project", await POST(`op=promote&token=${ADM}`, create));
   t("the plane minted an id of the canonical shape, and it is not the never-minted one read above",
     [/^PROJ-\d{4}-\d{4}-hidden-project-9138$/.test(String(minted.bundleId)), minted.bundleId !== NEVER], [true, true]);
   P = minted.bundleId;
@@ -464,14 +467,17 @@ console.log("\n--- 8. D-464: creating and revising a project vera cannot see mov
   console.log(`  corpus: ${READS.length} count reads by vera; op=stats answers ${keys.length} keys (bundles ${s0.bundles}, indexed ${s0.indexed})`);
   t("the counts are live: vera's op=stats is an answer of counts (floor: 40 keys, and she already sees documents)",
     [keys.length >= 40, s0.bundles > 0, s0.indexed > 0], [true, true, true]);
-  const { bundleId: _none, ...create } = pkg(NEVER, projectMd(null, [LEDGER]), "project", "forming", null, `d464-${++seq}`);
-  const q = must("a second hidden project is minted", await POST(`op=promote&token=${ADM}`,
-    { ...create, meta: { ...create.meta, title: "Hidden project 9464" } })).bundleId;
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: its name `Hidden project 9464` rode on the LABEL over a
+     document titled `Hidden project 9138`; 7.1 now scans the document's title, so the name is written there. */
+  const { bundleId: _none, ...create } = pkg(NEVER,
+    projectMd(null, [LEDGER], undefined, "Hidden project 9464"),
+    "project", "forming", null, `d464-${++seq}`);
+  const q = must("a second hidden project is minted", await POST(`op=promote&token=${ADM}`, create)).bundleId;
   must("iris owns it", await DO("projectclaimowner", { projectId: q, memberId: "iris" }));
   must("iris invites olga", await DO(`projectinvite?projectId=${q}&handle=olga&by=iris&viewer=admin`, {}));
   const qBase = await shaOf(q);
   must("and it is revised, citing a second document",
-    await promoteAs(ADM, q, projectMd(q, [LEDGER, MINUTES], "A revision."), "project", "forming", qBase));
+    await promoteAs(ADM, q, projectMd(q, [LEDGER, MINUTES], "A revision.", "Hidden project 9464"), "project", "forming", qBase));
   t("the hidden revision LANDED (its sha moved)", (await shaOf(q)) !== qBase, true);
   /* And iris, who owns it, SELECTS it: `op=selectionlist`'s `bytes` summed every owner's selection rows. */
   must("iris selects the hidden project", await POST(`op=select&token=${IRIS}&kind=enumerated`, { ids: [q] }));
@@ -697,8 +703,11 @@ console.log("\n--- 10. D-480: a hidden project's CITATIONS take no slot in vera'
   const QQ = "INQ-2026-9480-zz-shared";        /* sorts AFTER every filler: the question that is crowded out */
   must("vera's own shared question", await promoteAs(ADM, QQ, inquiryMd(QQ, LEDGER), "inquiry", "open"));
   const mintProject = async (title, cites) => {
-    const { bundleId: _n, ...c } = pkg(NEVER, projectMd(null, cites), "project", "forming", null, `d480-${++seq}`);
-    return must(`mint ${title}`, await POST(`op=promote&token=${ADM}`, { ...c, meta: { ...c.meta, title } })).bundleId;
+    /* D-563: the name goes in the DOCUMENT — 7.1 now scans the document's title, and a label naming each project
+       apart over one shared document title would be refused (C-86.3) or collide (NAME_TAKEN). */
+    const md = projectMd(null, cites, undefined, title);
+    const { bundleId: _n, ...c } = pkg(NEVER, md, "project", "forming", null, `d480-${++seq}`);
+    return must(`mint ${title}`, await POST(`op=promote&token=${ADM}`, c)).bundleId;
   };
   /* TWO projects vera PARTICIPATES IN (she owns them), so the divergence below is hers to read. */
   const VA = await mintProject("Vera oversight 9480", [QQ]);
@@ -787,8 +796,9 @@ console.log("\n--- 10. D-480: a hidden project's CITATIONS take no slot in vera'
      — the divergence then vanishes and every bound below reads `-1` over a feed with no item in it. The act, not a
      hand-authored row, puts it back, which is also the product's own order (`op=versioncurrent`). */
   const reviseVis = async (extra) => {
-    for (const [pid, nm] of [[VA, "VA"], [VB, "VB"]])
-      must(`revise ${nm}`, await promoteAs(ADM, pid, projectMd(pid, [QQ, ...cFill, ...extra]), "project", "forming", await shaOf(pid)));
+    /* D-563: each revision states its project's own name — the document's title is the name 7.1 holds unique. */
+    for (const [pid, nm, title] of [[VA, "VA", "Vera oversight 9480"], [VB, "VB", "Vera budget 9480"]])
+      must(`revise ${nm}`, await promoteAs(ADM, pid, projectMd(pid, [QQ, ...cFill, ...extra], undefined, title), "project", "forming", await shaOf(pid)));
     must("VA stands on the reading again",
          await POST(`op=versioncurrent&token=${VERA}&target=${E(QQ)}&version=v1&project=${E(VA)}`, {}));
   };

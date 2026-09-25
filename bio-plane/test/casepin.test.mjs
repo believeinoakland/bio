@@ -239,7 +239,7 @@ let snapSeq = 0;
 const promote = async (id, md, type, state = "open", extra = {}) => rP(await POST(`op=promote&token=${VERA}`, {
   bundleId: id, base: extra.base ?? null,
   snapKey: `20260810T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
   register: extra.register || [],

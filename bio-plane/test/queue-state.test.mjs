@@ -184,7 +184,7 @@ const promote = async (id, text, type, state, tok = MACHINE, register = [], base
     ...(id === null ? {} : { bundleId: id }), base, snapKey: `${id ?? "PROJ-sewer-fund"}-${sha(text).slice(0, 8)}`, author: "rec21-suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id ?? "Sewer Fund"}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   return r;
@@ -249,7 +249,7 @@ const awardSha = sha("rec21-award");
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
     register: [],
-    meta: { object_type: "information", group: "believe-in-oakland", title: "Award resolution",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote ${AWARD_DOC}: ${JSON.stringify(r)}`);
 }

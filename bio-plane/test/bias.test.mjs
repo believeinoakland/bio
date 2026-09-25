@@ -657,7 +657,7 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 const promote = async (id, text, type, state, base = null, tok) => await post("promote", {
   ...(id ? { bundleId: id } : {}), base, snapKey: `${id ?? type}-${base ? `rev-${String(base).slice(0, 16)}` : "new"}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: LATER },
 }, tok);
 /* THE CAS BASE FOR A REVISION, taken from the WRITE'S OWN ANSWER.
