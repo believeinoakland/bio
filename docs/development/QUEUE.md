@@ -481,8 +481,8 @@ scope: derive created and last_updated from the document as D-563 derives title 
 accepts-when: the projection shows the document's dates, and a contradicting envelope is refused by name or recorded per the census (moves: envelope dates over the document's). NEGATIVE CONTROL: project the envelope's dates again and the date arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-563's worker).
 
-### D-681 · running — **NO LEAD OP LISTS A MEMBER'S LEADS: D-194's surface lists from op=frontier&level=internet, whose `looked` keeps the latest look per SUBJECT (the lead's words; `#frontierInternet`), so a lead whose words equal another readable lead looked at later appears in neither `looked` nor `never_looked` — it vanishes from the member's list.** Found by D-194's worker (minted on land/worker/D-194). — owner RECORD.
-status: running — SCHEDULER #23 08:30Z: spawned, stacked on land/worker/D-194 @ 45437e4d
+### D-681 · integrated — **NO LEAD OP LISTS A MEMBER'S LEADS: D-194's surface lists from op=frontier&level=internet, whose `looked` keeps the latest look per SUBJECT (the lead's words; `#frontierInternet`), so a lead whose words equal another readable lead looked at later appears in neither `looked` nor `never_looked` — it vanishes from the member's list.** Found by D-194's worker (minted on land/worker/D-194). — owner RECORD.
+status: integrated — SCHEDULER #23 10:10Z: tip ae80ca25 (on D-194 45437e4d), GATE 386/386 GREEN FULLREUSE (21893 assertions), tree 8078757b; a new bounded lead-list read (one row per lead, viewer-fenced), surface swapped to it; construct 9.ui back to ABSENT (no UI frontier caller); census 223->224; coverage floors re-read at union; I3 additive IC the integrator s
 order: head of the backlog after D-671 — a correction to just-landed D-194: the list claims to be the member's leads and drops one (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3 — a new leads read or a regrouped frontier; the integrator mints and classifies.
@@ -696,6 +696,17 @@ depends-on: none (D-568 done, on main 95fe7bc7 via batch29).
 scope: #statedEdition answers null when caseId and newCase are both set, in the same five answers D-568 covers.
 accepts-when: a case-naming newCase draft answers edition null in all five (moves: an edition beside an undetermined case). NEGATIVE CONTROL: answer the named case's next edition again and the ambiguous-pair arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
+
+### UI-117 · running — **A DRAFT HOLDING BOTH `caseId` AND `newCase` IS NOT SURFACED ON THE REVIEW-COPY FORM: BOB #35 RULED 2026-09-25 06:45Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded) — SURFACE it, never refuse to load, never drop `newCase` silently.** The form loads such a draft and shows BOTH values exactly as stored, with one plain line: this draft names an existing case AND a new one, and cannot be published until an owner keeps one (the plane refuses the pair, CASE_IDENTITY_AMBIGUOUS). Keeping one is the owner's own act — a save that clears the other field — offered with neither preselected (DEC-69). Found as UI-106's form gap. — owner UI.
+status: running — SCHEDULER #23 10:10Z: spawned from main 95fe7bc7 (D-618, the plane half, runs beside it)
+order: after D-618 — the same both-identity pair, its plane half first (BOB #35's placement, 06:45Z; SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: none expected (UI only; reads what the draft already carries).
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #35's 06:45Z ruling, folded into §6A.4 by this row.
+depends-on: none (UI-106 done, on main 95fe7bc7 via batch29).
+scope: the review-copy form round-trips a both-valued draft unchanged, renders both values and the one line, and offers "keep the existing case" / "keep the new case" as saves that clear the other field; nothing prefilled.
+accepts-when: a both-valued draft loads, shows both, and a save without an owner's choice keeps both (moves: the form drops `newCase` silently). NEGATIVE CONTROL: restore the silent drop, and the arm that round-trips a both-valued draft fails by name, reading `newCase` gone.
+added: 2026-09-25 · SCHEDULER #23 (BOB #35's inbox entry of 06:45Z).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
