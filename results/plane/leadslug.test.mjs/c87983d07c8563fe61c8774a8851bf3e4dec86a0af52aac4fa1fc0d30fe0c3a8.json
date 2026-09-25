@@ -1,0 +1,16 @@
+{
+ "unit": "plane:leadslug.test.mjs",
+ "inputHash": "c87983d07c8563fe61c8774a8851bf3e4dec86a0af52aac4fa1fc0d30fe0c3a8",
+ "verdict": "PASS",
+ "run": "52b4a42c03721b301e92ed503aeaff7b5741efcd.1790308782199.21370.json",
+ "tree": "52b4a42c03721b301e92ed503aeaff7b5741efcd",
+ "head": "d2597e6305266877f68adebd8f7d8e93bdf6d143",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "55f05340-834c-58c7-9581-33765e1d529c",
+ "at": "2026-09-25T03:59:42.208Z"
+}
