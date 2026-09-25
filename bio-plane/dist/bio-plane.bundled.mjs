@@ -11556,10 +11556,24 @@ var ACT_SHAPE_CHECKS = {
        at a governed site, for as long as the row has existed. They are the two rows
        immediately below. Nothing about the span changed; the instrument started
        seeing it.
+  
+       **D-589 (2026-09-25) NARROWED ALL THREE INTO REGIONS, AND THE PARAGRAPH TWO
+       ABOVE IS NOW HISTORY, NOT RULE.** The whole-function `where` stopped being
+       honest the moment a SECOND family's refusal was written inside `aiRunOpen`:
+       REC-207's first draft put its re-run refusals in a narrowed region there and
+       the guard failed them by name, because the region was judged once by its own
+       rows and again by this whole-function site, where their codes are not rows.
+       So each of these three rows now names the region around its one refusal
+       (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
+       judges a claimed region a second time from an enclosing whole-function
+       `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
+       the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
+       seed — each minted and governed at its own site) are not read at this
+       function while no whole-function row names it.
        --------------------------------------------------------------------------- */
   AI_RUN_CAPABILITY_UNAVAILABLE: {
     check: "C-33.29",
-    where: "src/store.mjs aiRunOpen, reached from op=airunopen",
+    where: "src/store.mjs aiRunOpen > is-airun-open-capability, reached from op=airunopen",
     translation: "Nothing was run, because this instance could not find an account to run it under. That is a fact about our setup and not an answer about your question: no searching happened, so nothing here should be read as having looked and found nothing."
   },
   /* ---------------------------------------------------------------------------
@@ -11574,12 +11588,12 @@ var ACT_SHAPE_CHECKS = {
        --------------------------------------------------------------------------- */
   AI_RUN_NO_CONTEXT: {
     check: "C-33.30",
-    where: "src/store.mjs aiRunOpen, reached from op=airunopen",
+    where: "src/store.mjs aiRunOpen > is-airun-open-context, reached from op=airunopen",
     translation: "Nothing was run, because the request did not say what the run is for or what it belongs to. A run has to sit inside a question or a project so that the people working on that question can see it happened; one belonging to nothing would be invisible to everybody."
   },
   AI_RUN_ALREADY_OPEN: {
     check: "C-33.31",
-    where: "src/store.mjs aiRunOpen, reached from op=airunopen",
+    where: "src/store.mjs aiRunOpen > is-airun-open-already, reached from op=airunopen",
     translation: "Nothing was run, because a run with this name is already on record here. The record keeps what each run did under its own name, so starting a second one under a name already in use would write two different histories into one place. Give this one a name of its own."
   },
   /* ---------------------------------------------------------------------------

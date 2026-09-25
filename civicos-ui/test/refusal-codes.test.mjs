@@ -1499,6 +1499,103 @@ withTree({ fixtureSrc: SUCCESS_LATE }, tree => {
      r.out.split("\n").filter(l => /^FAIL: /.test(l)).length], [true, 1]);
 });
 
+/* ============================================================
+   ARM 12 — A REGION NESTED IN A WHOLE-FUNCTION SITE IS JUDGED ONCE (D-589).
+
+   REC-207's first draft wrote its re-run refusals inside a narrowed region in
+   `aiRunOpen`, whose three rows then named the WHOLE function — and the guard
+   failed all three by name: the region was judged by its own rows and again by
+   the whole-function site, where their codes are not rows. The innermost claim
+   governs now (`nestedRegionsIn`). THE FIXTURE: `checkFixture` keeps its two
+   whole-function rows and gains a region with a code only ITS row holds.
+   ============================================================ */
+const NESTED_SRC = `
+export function checkFixture(input = {}) {
+  if (!input.address) return { ok: false, code: "FIXTURE_NO_ADDRESS", detail: "no address" };
+  /* DEC-49 REGION fixture-nested
+     a second family's refusal, written inside a function another row names whole. */
+  if (input.rerun === input.run) {
+    return { ok: false, code: "FIXTURE_NESTED", detail: "the run names itself as the earlier run it repeats" };
+  }
+  /* END DEC-49 REGION fixture-nested */
+  if (!/^[0-9a-f]{64}$/.test(String(input.at || ""))) {
+    return { ok: false, code: "FIXTURE_BAD_ANCHOR", detail: String(input.at) };
+  }
+  return null;
+}
+export function checkSecond(rows = {}) {
+  if (!rows.arm) return { ok: false, code: "FIXTURE_TWO_NO_ARM", detail: "no arm" };
+  return null;
+}
+`;
+const NESTED_ROWS = Object.assign(REGION_ROWS(FN_WHERE), {
+  FIXTURE_NESTED: { check: "C-90.3", where: "src/fixture.mjs checkFixture > fixture-nested",
+    translation: "Nothing was run, because this run was told it repeats itself, and a repeat has to name "
+      + "some earlier piece of work rather than the one being asked for now." },
+});
+/* The floors are the figures the guard PRINTED over this tree (its `ratchet:` lines), never derived here. */
+const nestedTree = (over = {}) => Object.assign({
+  fixtureSrc: NESTED_SRC, rows: NESTED_ROWS,
+  floor: { families: 1, rows: 4, census: 8, reach: 8, governedSites: 3, surfaceTables: 1, bodyLines: 6,
+           vocabularies: 2, vocabularyTerms: 4, regions: 1, regionLines: 5, codesChecked: 4,
+           outcomeReturns: 4, refusalsJudged: 4, untranslated: 0 },
+}, over);
+const NO_EXCLUSION = g => g.replace("const nested = nestedRegionsIn(src, fnBody, site, claimedRegions);",
+  "const nested = { body: fnBody, lines: 0, names: [] };");
+const failLines = out => out.split("\n").filter(l => /^FAIL: /.test(l));
+
+console.log("\n--- ARM 12 · a claimed region INSIDE a whole-function site is judged ONCE, by its own rows — GREEN ---");
+withTree(nestedTree(), tree => {
+  const r = runGuard(tree);
+  if (r.exit !== 0) console.log(r.out.split("\n").filter(l => /FAIL|ratchet:/.test(l)).join("\n"));
+  t("ARM 12: exits 0 — the nested region's code is judged against ITS row and not against the function's", r.exit, 0);
+  t("ARM 12: the whole-function site says it EXCLUDED the region, by name",
+    /arm C: NESTED — 1 whole-function site\(s\)[^\n]*checkFixture − fixture-nested/.test(r.out), true);
+  t("ARM 12: and the region is still READ as a site of its own (judged once, not zero times)",
+    /checkFixture > fixture-nested \d+L \(1 judged, 1 code\(s\) checked\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 12b · the SAME tree with the exclusion removed FAILS — the double judgement, which is D-589 ---");
+withTree(nestedTree({ mutateGuard: NO_EXCLUSION }), tree => {
+  const r = runGuard(tree);
+  t("ARM 12b: exits 1", r.exit, 1);
+  t("ARM 12b: naming the nested code as NOT a row AT THE WHOLE-FUNCTION SITE — the second judgement",
+    /\(in checkFixture\) refuses with code FIXTURE_NESTED, which is NOT a row/.test(r.out), true);
+});
+
+console.log("\n--- ARM 12c · a CODELESS refusal inside the nested region FAILS exactly ONCE, at the region ---");
+withTree(nestedTree({
+  fixtureSrc: NESTED_SRC.replace(`  if (input.rerun === input.run) {`,
+    `  if (input.broken) return { ok: false, detail: "a refusal nobody gave a code" };\n  if (input.rerun === input.run) {`),
+}), tree => {
+  const r = runGuard(tree);
+  const codeless = failLines(r.out).filter(l => /CODELESS REFUSAL/.test(l));
+  t("ARM 12c: exits 1", r.exit, 1);
+  t("ARM 12c: ONE codeless failure, and it names the REGION — the exclusion did not blind the teeth",
+    [codeless.length, codeless.every(l => /\(in checkFixture > fixture-nested\)/.test(l))], [1, true]);
+});
+
+console.log("\n--- ARM 12d · OVER-STRICTNESS: the markers spelled as JSDoc blocks are excluded all the same — GREEN ---");
+withTree(nestedTree({
+  fixtureSrc: NESTED_SRC
+    .replace("  /* DEC-49 REGION fixture-nested\n", "  /**\n   * DEC-49 REGION fixture-nested\n")
+    .replace("  /* END DEC-49 REGION fixture-nested */", "  /** END DEC-49 REGION fixture-nested\n   */"),
+}), tree => {
+  const r = runGuard(tree);
+  if (r.exit !== 0) console.log(r.out.split("\n").filter(l => /FAIL|ratchet:/.test(l)).join("\n"));
+  t("ARM 12d: exits 0", r.exit, 0);
+  t("ARM 12d: and still names the excluded region", /checkFixture − fixture-nested/.test(r.out), true);
+});
+
+console.log("\n--- ARM 12e · an UNCLAIMED marker is NOT excluded — nothing governs it, so the function still judges it ---");
+withTree(nestedTree({ rows: REGION_ROWS(FN_WHERE), floor: undefined }), tree => {
+  const r = runGuard(tree);
+  t("ARM 12e: exits 1", r.exit, 1);
+  t("ARM 12e: the whole-function site judges the refusal inside the orphan marker, AND the orphan is named",
+    [/\(in checkFixture\) refuses with code FIXTURE_NESTED, which is NOT a row/.test(r.out),
+     /NO row's `where` claims: src[\\/]fixture\.mjs::fixture-nested/.test(r.out)], [true, true]);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -1539,5 +1636,8 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `its measured value (11a) and the same landing with its floors moved passes (11b); a ratchet key with no stated `
   + `bound (11c), with no recorded figure (11d), a bound for a key no table holds (11e) and a bound with no reason (11f) `
   + `each fail by name; the one exempt key says why on every run (11g); ceiling slack fails too (11h); and a non-zero `
-  + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j)`);
+  + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j). AND SINCE D-589 `
+  + `a claimed region nested in a whole-function site is judged ONCE, by its own rows (12), the same tree fails by name `
+  + `with the exclusion removed (12b), a codeless refusal inside it fails once, at the region (12c), JSDoc-spelled `
+  + `markers are excluded all the same (12d), and an UNCLAIMED marker is not excluded (12e)`);
 if (bad) process.exit(1);

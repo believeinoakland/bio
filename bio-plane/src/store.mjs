@@ -45225,6 +45225,10 @@ export class Store extends DurableObject {
        its canned translation are read from the catalogue at the moment of
        refusal, on REC-64's precedent three guards down; the `note` is kept
        unchanged beside it because it is the OPERATOR's sentence. */
+    /* DEC-49 REGION is-airun-open-context — C-33.30. The request names no run id or no
+       context for it to sit in: asked before anything is looked up. D-589 narrowed C-33.29..31 from a
+       whole-function `where` into one region each (REC-71's rule: a row names the smallest span), so a
+       refusal written elsewhere in this function is judged by ITS OWN row and not by these three. */
     if (!run || !contextType || !contextId)
       return { run: run || null, started: false,
                code: "AI_RUN_NO_CONTEXT",
@@ -45232,6 +45236,7 @@ export class Store extends DurableObject {
                translation: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
                note: "a run needs an id and the context it runs in (an inquiry or a project): "
                    + "a run nothing is in the context of has nowhere to be visible" };
+    /* END DEC-49 REGION is-airun-open-context */
     /* PL-18 / DEC-63 — THE GATE, AND IT RUNS BEFORE THE RUN'S OWN SHAPE IS
        JUDGED. Placed here, immediately after the context is known and before
        the principals and the skill version, on purpose: whether this account
@@ -45308,6 +45313,8 @@ export class Store extends DurableObject {
        want to distinguish *no account resolved at any level* from *the plane
        credential is missing*. Those are two conditions and would be two codes;
        one code is stated here rather than two invented ahead of the producer. */
+    /* DEC-49 REGION is-airun-open-capability — C-33.29. No account to run under: the
+       two principals are not both named. See REC-64's note above for why one code and not two. */
     if (!principalPlane || !principalClaude)
       return { run, started: false,
                code: "AI_RUN_CAPABILITY_UNAVAILABLE",
@@ -45316,6 +45323,7 @@ export class Store extends DurableObject {
                note: "a run names TWO principals — the plane credential acting and WHICH LEVEL of the "
                    + "Claude-account cascade pays (member, then project, then instance). They are "
                    + "different principals and an act must say both (DEC-27(b), DEC-55.4)" };
+    /* END DEC-49 REGION is-airun-open-capability */
     /* SK-1 — THE THIRD CONDITION, AND IT IS REFUSED WHERE THE PRINCIPALS ARE.
        §11 records what a run was FORMED under, and the skill version is one of
        the three. The decision and the two failure shapes are on
@@ -45364,12 +45372,15 @@ export class Store extends DurableObject {
        found here. It is a real member-facing condition (an id that is already in
        use), and it was answering with a bare sentence a surface could only
        render verbatim or blank. */
+    /* DEC-49 REGION is-airun-open-already — C-33.31. The run id is already on record.
+       Asked AFTER the lens is computed and immediately before the insert, with no await between them. */
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
       return { run, started: false,
                code: "AI_RUN_ALREADY_OPEN",
                check: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.check,
                translation: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
                note: "a run with this id already exists" };
+    /* END DEC-49 REGION is-airun-open-already */
 
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : Store.AI_RUN_LEASE_MS;
     this.ctx.storage.transactionSync(() => {
