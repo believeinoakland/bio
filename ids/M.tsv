@@ -37,3 +37,4 @@ M-159	2026-09-25T01:46:26.246Z	DIST #7	DIST-8: first sweep of gone sessions' scr
 M-160	2026-09-25T01:51:30.679Z	WORKER D-585	D-585: CAFR-2002 re-read, text-showing predicate moved counts
 M-161	2026-09-25T02:20:37.118Z	land/worker/D-535	
 M-162	2026-09-25T02:44:33.424Z	WORKER REC-147	REC-147: contradiction judgement + candidate table
+M-163	2026-09-25T03:43:17.672Z	WORKER D-320	D-320 DCT decoder: fidelity vs Pillow, wall time, memory arithmetic
