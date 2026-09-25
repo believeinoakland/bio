@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec195-laws-proposal.test.mjs",
+ "inputHash": "e3e585e1cebadf3c1cb9649381b84006b1e4481980e7db7df9c5980ea2728d7a",
+ "verdict": "PASS",
+ "run": "71d393fd2dd42cc114b089ddcead43534d14b883.1790342652251.3916.json",
+ "tree": "71d393fd2dd42cc114b089ddcead43534d14b883",
+ "head": "07a19650ad4adb794cc3a37a046d1a74cf9da3df",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 145,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "043aaed9-7f33-50e3-8589-71d72a6c057c",
+ "at": "2026-09-25T13:24:12.270Z"
+}
