@@ -91,3 +91,6 @@ filter-branch (it strips the SSH signatures and re-shas every worker commit).
   BRANCH (worker re-asked) — confirm the tip before merging. D-598's CATALOG bump waits on M0-195 (census `changed:` mechanism). CATALOG
   1.30.0 is also claimed by REC-219, REC-203 and MK-7 (and D-147): the union takes ONE next number (1.31.0) from the d470 print.
 - D-515 24546c6b (M-166 measurement + comment-only test lines; no IC; D-608 minted)
+- REC-150 1d02811f (Membership §7.14 step 2: project join requests, 4 new ops, C-95.1..9, table project_join_requests, IC-320 PROPOSED;
+  census moves; shares store/affordances/construct 1.discoverable/Membership §7.14 with REC-196 and REC-186 — compose; D-602 fixed inside;
+  FLEET coverage floor `arms: 86` measures 90 on pristine main — slack reported, re-read). Relayed to SCHEDULER #22 by #21.
