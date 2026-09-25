@@ -316,6 +316,11 @@ export const CATALOG_VERSION = "1.31.0";
 /* D-419 side, kept as history — took 1.31.0 on its own base; the union's 1.31.0 (c22-batch30) names a different catalogue. (D-419, 2026-09-25, branch land/worker/D-419): a NEW family, C-99 CONTENT_CROP_CHECKS — the five refusals
    of op=contentcrop (C-99.1..5). Five arrive, none moves and none leaves, so MINOR; count and digest are the d470
    suite's print on this item's tree. IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS IS NOT THE UNION'S. */
+/* D-628 side, kept as history — took 1.35.0 (D-628, 2026-09-25, branch land/worker/D-628, stacked on land/worker/D-615): ONE ARRIVAL, NO DEPARTURES, NONE
+   CHANGED — C-86.8 PROMOTED_FIELD_UNSTATED in PROMOTED_TYPE_CHECKS (a creation stating no current_state, created or
+   last_updated is refused by name). MINOR; 507 -> 508, count and digest from the d470 suite's print on this tree. If
+   another branch in the batch also moves the version, CONDUCT takes the next number at the union and re-reads the print
+   on the merged tree.  (c23-batch30, 2026-09-25: D-628 said 1.35.0; number to re-read at the figures pass.) */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

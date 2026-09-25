@@ -16933,6 +16933,19 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'names a type. What it is decides which rules protect it, so the record will not guess. Nothing was written. '
       + 'Say in the document what kind of thing it is, and send it again.',
   },
+  /* D-628 (2026-09-25) — C-86.5's rule for the three other NOT NULL columns a promotion writes from what it states:
+   * where the item stands (`current_state`) and when it was made and last changed (`created`, `last_updated`). A
+   * CREATION stating one nowhere was refused by a raw constraint error carrying a stack; a revision in the same
+   * position keeps the head's value (stated on the answer as `fields_carried`). A creation has no head, so nothing may
+   * be defaulted: a date or a state the writer did not state is not one the record can vouch for. */
+  PROMOTED_FIELD_UNSTATED: {
+    check: 'C-86.8',
+    where: 'src/store.mjs promote > is-promote-field-unstated',
+    translation: 'This is a new item and it does not say where it stands, or when it was made or last changed: neither '
+      + 'the document nor the request gives it. The record keeps its history in the order those dates give and decides '
+      + 'what may be done with a thing by where it stands, so it will not guess. Nothing was written. Say it in the '
+      + 'document, and send it again.',
+  },
   /* D-546 (2026-09-25; BOB #34, 2026-09-24 23:55Z; State Rules v1.5 §4, "Moves are fenced from now on") — D-468's
    * fence, LIFTED TO EVERY TYPE WITH A HEAD. `op=promote` asked a state-edge table for a bias set alone, so every other
    * machine could be moved along an edge its table does not declare (a verified item back to `collected`, a closed

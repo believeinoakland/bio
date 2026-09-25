@@ -40,14 +40,19 @@ const ARMS = {
      NOT NULL error; the creation arms and every over-strictness arm must stay green. */
   "no-carry": {
     patches: [[CARRY, "      if (false && cur && promotedType === undefined) {"]],
-    mustFail: [...ROW, "carries a raw error with a stack"],
+    /* RE-DECLARED 2026-09-25 at the c23-batch30 union (CONDUCT #23), never exempted: the stack arm leaves mustFail here
+       and in no-creation-refusal. D-629 (C-69.3 STORE_INTERNAL_ERROR, merged at c22-batch30 beside D-578) answers a store
+       that THREW with a named code and no stack, so the raw NOT NULL error these arms re-expose reaches the caller as
+       STORE_INTERNAL_ERROR and "no answer carries a raw error with a stack" stays green under them; every named ROW /
+       CREATE arm still fails as declared (the union's run: 14/4 each). The stack arm is asserted in NEITHER list here. */
+    mustFail: [...ROW],
     mustPass: [...CREATE, ...OVER, "NOTHING is held"] },
 
   /* The creation half: drop the named refusal, and a typeless creation reads the raw error again (and a blank-typed
      one still reaches the INSERT with no type, so it too throws). Nothing lands either way (REC-180's rollback). */
   "no-creation-refusal": {
     patches: [[REFUSE, "      if (false && !cur && promotedType === undefined) {"]],
-    mustFail: [...CREATE, "carries a raw error with a stack"],
+    mustFail: [...CREATE],  /* the stack arm: see no-carry (D-629) */
     mustPass: [...ROW, ...OVER, "NOTHING is held"] },
 
   /* SILENT CARRY: the type is carried and the answer does not say so. Only the arms that read `type_carried` fail. */

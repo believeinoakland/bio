@@ -71,7 +71,12 @@ const HEAD = (id, type, schema, state = "planned") => [
 /* A conformant action with no projection blocks; `type: null` writes NO object_type line at all. */
 const actionMd = (id, plan = "Ask for the transfer ledger.", type = "action") => [
   ...HEAD(id, type, "action@1"),
-  "action_kind: cpra_request", "risk_tier: undetermined",
+  /* CORRECTED 2026-09-25 at the c23-batch30 union (CONDUCT #23), never exempted, as D-689 corrected six suites of the
+     same shape: this fixture (D-578 (merged at c22-batch30, before D-689)) created a `cpra_request` through an operator bearer token — a machine
+     identity — and C-32.20 (D-689, merged beside it) now refuses a machine stating the law a records request is made
+     under (BOB #35: only a member's act states it). The kind is not this suite's subject, so the fixture is the
+     law-neutral `records_request` stating no law, which a machine may create. */
+  "action_kind: records_request", "risk_tier: undetermined",
   "counterparty:", "  state: named", "  name: City Clerk",
   "---", "",
   "## Plan", "", plan, "",

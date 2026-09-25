@@ -18386,7 +18386,10 @@ export class Store extends DurableObject {
     let promotedTitle = documentTitle ?? (envelopeMeta ? envelopeMeta.title : undefined);
     const documentState = sentFm && typeof sentFm === "object" ? textStated(sentFm.current_state) : null;
     const envelopeState = envelopeMeta ? textStated(envelopeMeta.current_state) : null;
-    const promotedState = documentState ?? (envelopeMeta ? envelopeMeta.current_state : undefined);
+    /* D-628: `let`, and the envelope's fallback is `envelopeState` — the same `textStated` question the document's side
+       asks (D-578's shape for the type) — so a blank or non-string `meta.current_state` is no statement, never a state of
+       '' or 7 written into the record; a revision stating none anywhere takes the head's (below, once `cur` is read). */
+    let promotedState = documentState ?? envelopeState ?? undefined;
     const promotedPriorState = fmHas(sentFm, "prior_state") ? (sentFm.prior_state ?? null)
       : (envelopeMeta ? envelopeMeta.prior_state ?? null : null);
     const promotedClosedReason = fmHas(sentFm, "closed_reason") ? (sentFm.closed_reason ?? null)
@@ -18403,8 +18406,9 @@ export class Store extends DurableObject {
     const documentLastUpdated = sentFm && typeof sentFm === "object" ? textStated(sentFm.last_updated) : null;
     const envelopeCreated = envelopeMeta ? textStated(envelopeMeta.created) : null;
     const envelopeLastUpdated = envelopeMeta ? textStated(envelopeMeta.last_updated) : null;
-    const promotedCreated = documentCreated ?? (envelopeMeta ? envelopeMeta.created : undefined);
-    const promotedLastUpdated = documentLastUpdated ?? (envelopeMeta ? envelopeMeta.last_updated : undefined);
+    /* D-628: `let`, and the envelope's fallback asks `textStated` as the document's side does, for D-578's reason. */
+    let promotedCreated = documentCreated ?? envelopeCreated ?? undefined;
+    let promotedLastUpdated = documentLastUpdated ?? envelopeLastUpdated ?? undefined;
     /* ===== END D-615 derivation ===== */
     const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object"
@@ -18602,7 +18606,7 @@ export class Store extends DurableObject {
       /* D-436: the producing group written into a created document's bytes — after the mint, so a new project's
          document is written once for its id and once for its group, and hashed from what is finally held. */
       if (groupStamp) files = Store.#stampGroup(files, groupStamp);
-      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
+      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id, created, last_updated FROM bundles WHERE bundle_id=?`, bundleId);   /* D-628: the two dates, for the carry */
 
       /* REC-138 / D-426: a REVISION of a bundle the actor cannot see answers exactly as a revision of
          one that does not exist — one answer, `#promoteAbsent`, from both branches. Only project
@@ -18703,6 +18707,39 @@ export class Store extends DurableObject {
       }
       /* END DEC-49 REGION is-promote-type-unstated */
       /* ===== END D-578 ===== */
+
+      /* ===== D-628 (`BIO_State_Rules_Consistency_v1_5.md` §3.1 and §4; D-578's carry-or-refuse shape, C-86.5; C-86.8) — THE
+         SAME FOR WHERE IT STANDS AND WHEN IT WAS MADE AND LAST CHANGED. `bundles.current_state`, `created` and
+         `last_updated` are NOT NULL, and a promotion whose document and envelope both state none of one left the derived
+         value undefined: the INSERT below threw "NOT NULL constraint failed: bundles.<field>" and the caller met a raw
+         error with a store.mjs stack (measured through op=promote on land/worker/D-615 8b3ab6ae, for a creation AND a
+         revision of each, and for a `meta` sent as a string over a document missing one). A `meta` that is not an object
+         states nothing (D-563's `envelopeMeta`), so the document decides and this carry-or-refuse answers the rest. A
+         REVISION takes the head's value for each field it states nowhere — a state carried is no move, so §4's edge fence
+         (C-86.6) has nothing to ask — and the answer SAYS which (`fields_carried`). A CREATION has no head, so a field it
+         states nowhere is refused by name before the first write, never defaulted — a wall-clock date or an initial
+         state the writer did not state is a claim the record cannot support. ===== */
+      const carriedFields = {};
+      if (cur) {
+        if (promotedState === undefined) promotedState = carriedFields.current_state = cur.current_state;
+        if (promotedCreated === undefined) promotedCreated = carriedFields.created = cur.created;
+        if (promotedLastUpdated === undefined) promotedLastUpdated = carriedFields.last_updated = cur.last_updated;
+      }
+      /* DEC-49 REGION is-promote-field-unstated */
+      if (!cur) {
+        const unstated = [["current_state", promotedState], ["created", promotedCreated],
+                          ["last_updated", promotedLastUpdated]].filter(([, v]) => v === undefined).map(([k]) => k);
+        if (unstated.length) {
+          const fuRow = PROMOTED_TYPE_CHECKS.PROMOTED_FIELD_UNSTATED;
+          return { ok: false, reason: "PROMOTED_FIELD_UNSTATED", code: "PROMOTED_FIELD_UNSTATED",
+                   check: fuRow.check, translation: fuRow.translation, fields: unstated,
+                   detail: `neither the document being promoted nor this request's meta states ${unstated.join(", ")}, `
+                         + `and ${String(bundleId).slice(0, 80)} is new, so the record holds nothing to carry. State `
+                         + `${unstated.length > 1 ? "them" : "it"} in the document. Nothing was written.` };
+        }
+      }
+      /* END DEC-49 REGION is-promote-field-unstated */
+      /* ===== END D-628 ===== */
 
       /* 7.1: a project's name is unique across the instance.
        *
@@ -20600,6 +20637,11 @@ export class Store extends DurableObject {
            caller who stated one gains a key, and none who did not is left to think it did. */
         ...(typeCarried ? { type_carried: { object_type: typeCarried, from: "head",
           says: "neither the document nor the request stated a type, so this revision keeps the type the record "
+              + "already held for it" } } : {}),
+        /* D-628: present ONLY on a revision that stated one of current_state, created or last_updated nowhere, naming
+           each value it carried from the head — D-578's `type_carried` for the three fields beside it. */
+        ...(Object.keys(carriedFields).length ? { fields_carried: { fields: carriedFields, from: "head",
+          says: "neither the document nor the request stated these, so this revision keeps the values the record "
               + "already held for it" } } : {}),
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */

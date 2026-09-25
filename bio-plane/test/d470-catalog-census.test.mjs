@@ -609,6 +609,12 @@ const CATALOG_CENSUS = {
      (it no longer answers a stage/follows/outcome/due_by that is not one token) — for the union's own `changed`.
      "1.32.0": { count: 570, digest: "d5f4e2dd0c69093ebcceb096a8a218ab27b879b590c0f0cf1105793ab9634cc0",
                  changed: ["C-94.11"], source: "1aabe731ea2c9e1d32b0021c7eff89de82cbe926ea0bddb5652eaf1bfd2130b5" }, */
+  /* D-628 side, kept as history (branch row DROPPED at c23-batch30 — ours holds "1.31.0" for the union catalogue;
+     CONDUCT takes the union's number once and re-reads count and digest from this suite's print; its branch also
+     carried D-578's, D-546's and D-615's rows, already kept above as their history):
+     1.35.0 (D-628, 2026-09-25, WORKER D-628, branch land/worker/D-628 stacked on land/worker/D-615 8b3ab6ae): ONE ARRIVAL,
+     NO DEPARTURES, NONE CHANGED — C-86.8 PROMOTED_FIELD_UNSTATED. 507 -> 508 by this suite's print on the item's tree.
+     "1.35.0": { count: 508, digest: "1f4066611742427ca673d8ecb9b3ef4b4e41b202c319615d0c1cadd0ac608d88" }, */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -854,6 +860,9 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    CONDUCT moves this literal with the constant once. */
 /* D-670 side, kept as history — its A5 pin read 1.31.0 on its own branch (ONE ARRIVAL, NO DEPARTURES — C-45.13 CONTENT_EXTENT_NOT_USER_SPACE in CONTENT_EXTENT_CHECKS, 502 -> 503); ours is
    kept at c23-batch30 and CONDUCT moves this literal with the constant once. */
+/* D-628 side, kept as history — its A5 pin read 1.35.0 on its own branch (C-86.8, one arrival; its branch also carried
+   D-563/D-578/D-546/D-615's CORRECTED notes, already kept above as those branches' history); ours is kept at
+   c23-batch30 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under
