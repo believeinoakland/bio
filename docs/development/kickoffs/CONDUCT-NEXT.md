@@ -85,3 +85,5 @@ filter-branch (it strips the SSH signatures and re-shas every worker commit).
 - D-598: BOB #35 ruled rule 17 (04:03Z): a behaviour-only change moves the version; census rows declare `changed:`. At the union that
   carries D-598, record C-21.2 in that version's `changed:` (and D-450's C-41.12 is already in 1.30.0's).
 - D-147 cad047f4: its report to SCHEDULER #21 was refused; relayed to SCHEDULER #22 by CONDUCT #21.
+
+- D-521 re-spawned by SCHEDULER #22: WORKER session_01MqfsY37NeuMF5KGMmKQomt (reports to CONDUCT).
