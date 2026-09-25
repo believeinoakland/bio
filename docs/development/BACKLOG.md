@@ -214,16 +214,6 @@ scope: the NO_ARTIFACT sentence names `node tools/bundles.mjs`, and the assemble
 accepts-when: with two artifacts missing, one run names both and the one command (the measured failure it moves: one-at-a-time, the wrong command). NEGATIVE CONTROL: restore the old sentence and the arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by M0-188's worker).
 
-### D-569 · queued — **`tools/plancheck.mjs` §1's UNPUSHED ARM (~133) SAYS "a failure on main and a note anywhere else" AND CALLS `fail()` ON EVERY BRANCH, so a worker's required "plancheck 0 fail" cannot be met on a pushed `land/` branch.** Found by D-559's worker (00:10Z; D-541's and M0-188's workers read the same 1 fail). — owner M0.
-order: after D-560, with the process rows behind the product rows: every worker meets it, but its own text already says it is expected there, so no round is lost (Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-25)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a gate's grade matches what its own text says it means).
-depends-on: none.
-scope: grade the arm `fail` only when the branch is main, or when HEAD is not on `origin/<branch>`; a `note` otherwise; its suite asserts both grades.
-accepts-when: on a pushed worker branch plancheck reads 0 fail with an UNPUSHED note, and on main ahead of origin it still fails (moves: 1 fail on every pushed land/ branch). NEGATIVE CONTROL: grade it fail on every branch again and the worker-branch arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (id minted by D-559's worker).
-
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
@@ -245,56 +235,6 @@ added: 2026-09-25 · SCHEDULER #21 (id minted by D-559's worker).
 | **DIST** | DS-1 | D-115 — the installer installs the FLEET | **DONE 2026-09-19 — THIS TABLE WAS THE RECORD THAT WAS WRONG, corrected here with the reason (DIST-5's own act).** Landed at `8decf468` ("D-297: the installer installs the FLEET — verified, templated, degrading per member, on install AND update"). DIST #2 confirmed at its touch; VERIFIED INDEPENDENTLY BY SCHEDULER #2 AT THE CODE, not from either row: `8decf468` is an ancestor of `origin/main`, and `newgroup/src/index.mjs` carries a section headed "the fleet (IC-82/D-297)" and names `fleet` **27 times** — D-297's own opening measurement was that this file mentioned it **zero** times, which is the evidence from D-297 itself that DIST-5's accepts-when demanded |
 | **DIST** | DS-2 | D-116 — version authority spans the fleet | **DONE 2026-09-19**, landed at `da3d4f17` ("DS-2: the version authority spans the fleet — and five of six sites disagreed with it"). VERIFIED BY SCHEDULER #2 AT THE CODE: ancestor of `origin/main`; `bio-plane/scripts/resolve-version.mjs` CONSUMES FLEET's own `discoverMembers` rather than re-implementing it, so the set checked cannot drift from the set built, and takes `bio-plane/package.json` as THE authority; `tools/release-assemble.mjs` refuses `VERSION_SKEW` and `VERSION_DISAGREES`; `resolveversion.test.mjs` arms BEHIND (ARM 2) and AHEAD (ARM 3) — the direction a one-sided check misses |
 | **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
-
-### D-523 · queued — **A RENDER REFUSED FOR A C-83 REASON OTHER THAN THE ALLOWANCE IS HELD SILENTLY: D-491 holds it under the plane's code until the request row's `expires`, and no member is told a render waits, or why.** BOB #33 RULED 2026-09-24 19:54Z (cite until folded): KEEP the hold, bounded by `expires`; at expiry the render is RECORDED UNDETERMINED with its C-83 reason and released, never dropped silently; and an op=queue condition kind shows a deferred render and its reason in DEC-49 words. — owner CAPTURE.
-order: after D-522, in normal product order with D-64's render rows (BOB #33, 19:54Z; SCHEDULER #19, 2026-09-24)
-milestone: M3
-interface: I3 additive — a new op=queue condition kind; the integrator classifies.
-design: `docs/development/CLIENT-RENDERED.md` "RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep", with BOB #33's ruling of 19:54Z, which this row FOLDS into CLIENT-RENDERED in the same landing; `docs/development/NOTIFICATIONS.md` for the condition kind.
-depends-on: D-491.
-scope: at `expires`, record the held render undetermined with its C-83 reason and release it (stated at the site); mint the op=queue condition kind carrying the reason's DEC-49 translation.
-accepts-when: a refused non-allowance render shows in op=queue with its reason while held, and reads undetermined after expiry (the measured failure it moves: a hold no member can see, ending in nothing recorded). NEGATIVE CONTROL: let expiry delete the row and the undetermined arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### D-529 · queued — **A RENDERED CAPTURE RECORDS EACH SUBRESOURCE IT LOADED WITHOUT THAT SUBRESOURCE'S DIGEST, so the record of what ran cannot be verified independently.** BOB #33 RULED 2026-09-24 21:05Z (cite until folded): a per-subresource digest IS owed. A hop attests these bytes, this URL, this time (construct 2), and BOB #31 ruled every third-party script a render runs is recorded. Gap recorded in CLIENT-RENDERED's Incomplete sections by D-490. — owner CAPTURE.
-order: after D-523, in normal product order with D-64's render rows (BOB #33, 21:05Z; SCHEDULER #19, 2026-09-24)
-milestone: M2
-interface: I5/I3 additive — a digest per recorded subresource; the integrator classifies.
-design: `docs/development/CLIENT-RENDERED.md` "RULED 2026-09-23 by BOB #31: third-party scripts run, and every one is recorded", with BOB #33's ruling of 21:05Z, which this row FOLDS into CLIENT-RENDERED, closing its Incomplete line, in the same landing.
-depends-on: D-490.
-scope: each recorded subresource carries its SHA-256; one the render loaded whose bytes were not kept reads digest UNDETERMINED with its reason.
-accepts-when: a rendered capture's subresources each verify by digest, and an unkept one reads undetermined with its reason (the measured failure it moves: subresources recorded with no digest). NEGATIVE CONTROL: drop the digest and the verify arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
-
-### D-450 · queued — **A PROJECT WHOSE BAR DECLARES ONE AXIS CAN PUBLISH AND CAN NEVER BE SIGNED: `publishCase` admits it (*an unset axis gates nothing*), `#caseDocumentText` freezes the unset axis as null, and C-41.12 (`checkCaseDocument`'s `required_strength` arm) demands both axes A–D when the bar is declared, so `op=ratify` answers GATE_REFUSED.** Found by REC-148's worker; reported, not re-measured by SCHEDULER. — owner RECORD.
-order: after D-448: a correction to just-landed work (REC-148) that strands a publishable case unsigned (SCHEDULER #17, 2026-09-23; via CONDUCT #18 22:48Z (3a))
-milestone: M10
-interface: none — a check's admitted values.
-design: `docs/architecture/BIO_Publication_v0_1.md` §"the bar" (DEC-72) and §3 rule 12, with BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *C-41.12 ADMITS null for an unset axis; the pair stays a pair — both keys present, an unset axis null, stated in words "no bar set on the <axis> axis"; `op=strengthbar` keeps accepting a one-axis bar* (refusing it would pressure an invention, CLAUDE.md §4).
-depends-on: REC-148 (`integrated` on c17-batch7).
-scope: C-41.12 admits null for an unset axis; the case document states the unset axis in words, never defaults and never omits the key. Extend `bio-plane/test/caseproduction.test.mjs`.
-accepts-when: a one-axis bar publishes, ratifies, and its document reads "no bar set on the <axis> axis" with the key present and null. NEGATIVE CONTROL: restore the both-axes demand, and the one-axis ratify arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-451 · queued — **A PROJECT RUN HAS NO TARGET A MEMBER CAN NAME: `op=airun` publishes only the run's context `{type, id}`, so FL-11's `runContextTarget` cannot seed a project run, and its level-empty candidates are refused SUGGEST_NO_TARGET.** — owner RECORD, then FLEET (one line).
-order: after D-450: a correction to just-landed work (FL-11), the run's suggestions lost for every project run (SCHEDULER #17, 2026-09-23; FL-11/12's worker via CONDUCT #18 22:51Z)
-milestone: M9
-interface: I3 additive — `aiRunRead` publishes a project run's questions; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 (the RUN is an object) and §9 (what a SUGGESTION is).
-depends-on: FL-11 (`integrated` on c17-batch7).
-scope: for a project run, `aiRunRead` publishes the questions the project confirmed-cites (the set `#runContextProjects` uses); `runContextTarget` takes a single one or leaves several to the candidate. Extend `agent-worker/test/agent-worker.test.mjs` and the airun suite.
-accepts-when: a project run citing one question seeds it as the target, and its level-empty candidates are filed. NEGATIVE CONTROL: drop the questions from the read, and the project-run arm reads SUGGEST_NO_TARGET by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-454 · queued — **ONE STRING READ ON SEVERAL PAGES IS ONE MENTION: `reading_refs` holds a single position per (capture_sha, ref), so a member choosing a connection's on-point mention (REC-122) cannot choose between that string's occurrences.** — owner CAPTURE / FRAMEWORK (the reading tables).
-order: after D-452: a correction that REC-122's act exposes; the choice it built is only as fine as the positions it can name (SCHEDULER #17, 2026-09-23; REC-122's worker via CONDUCT #18 23:08Z)
-milestone: M4
-interface: I5 — `reading_refs` keyed by (capture_sha, ref, position); I3 — a resolution carries its occurrence. The integrator mints and classifies the ICs.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair) and §8 (the reading positions a connection rests on).
-depends-on: REC-122 (`integrated` on c17-batch7).
-scope: re-key `reading_refs` by position with a migration that keeps every existing row; each resolution names its occurrence; the connection's mentions list every occurrence.
-accepts-when: a ref read on three pages yields three mentions, each choosable. NEGATIVE CONTROL: restore the two-column key, and the three-occurrences arm reads one by name. Extend the reading suite (`bio-plane/test/reading-position*.test.mjs`).
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### UI-91 · queued — **A MEMBER CAN CHOOSE A CONNECTION'S ON-POINT MENTION ON THE PLANE, AND NO SURFACE OFFERS IT: REC-122's `connectionchoose` (IC-232, C-74) has no page; construct 6.on-point-ui is ABSENT.** The DELEGATION RECORD (REC-122) -> UI of 2026-09-23 is on coord `CLAIMS.md`. — owner UI.
 order: after D-454, the member half of REC-122 (SCHEDULER #17, 2026-09-23; REC-122's worker via CONDUCT #18 23:08Z)
@@ -1200,3 +1140,83 @@ depends-on: none.
 scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
 accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
+order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (test through the op).
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
+accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-467 · queued — **`nc-m038.mjs` ARM (15) DOES NOT ARM ON `main`: its anchor no longer occurs, so the arm cannot fail.** Found by REC-187's worker (F2). — owner M0.
+order: with the M0 control rows, after D-466 (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a control that cannot fail refutes nothing).
+depends-on: none.
+scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)` closure.
+accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
+order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a census states what it reads).
+depends-on: none.
+scope: add both to `UI_HELPERS` in `tools/status.mjs`.
+accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-474 · queued — **`machine-fences.control.mjs` STILL DECLARES FIGURES FOR 12 OR 13 FENCES, AND THERE ARE NOW 14 (REC-189 added MACHINE_CANNOT_SET_RISK_TIER); the driver is REC-73's and is not in the battery.** — owner RECORD.
+order: with the M0 control rows, after D-471 (SCHEDULER #17, 2026-09-24; REC-189's worker F3 via CONDUCT #19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (a control declares what it measures).
+depends-on: REC-189 (finished; rides the train after c19-batch9).
+scope: re-run the driver and move its declared figures to 14 fences.
+accepts-when: `node bio-plane/test/machine-fences.control.mjs` reports every arm as declared at 14. NEGATIVE CONTROL: the driver's own arms, recorded on its `NEGATIVE CONTROL:` line.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-477 · queued — **`existed`-STYLE ANSWERS COMPUTED FROM THE DURABLE OBJECT'S SQLITE (`INSERT OR IGNORE` then `changes()`) IN `store.mjs` WERE NEVER SWEPT FOR D-469's CLASS: an answer read after the write that decides it.** — owner RECORD.
+order: with the M0 sweeps, after D-474: D-469's class may recur where no suite looks (SCHEDULER #17, 2026-09-24; D-469's worker via CONDUCT #19)
+milestone: M0 (a class sweep)
+interface: none unless a site is wrong.
+design: `docs/development/VERIFICATION.md` (a class is swept, not one site).
+depends-on: none.
+scope: enumerate every `existed`/`created`/`new` answer in `store.mjs` derived after its own write; for each, show it is read before the write or fix it; name each site in the sweep's verdict list.
+accepts-when: the verdict list names every site with its evidence, and any wrong site is fixed with a first-call arm. NEGATIVE CONTROL: for a fixed site, move the read after the write again, and its first-call arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-457 · queued — **CPDF-20's PER-PAGE TIER IS SHIPPED AND UNRECORDED: `mergeTier2Text` has emitted `text.pages[].tier` since `1240af81` with no IC on I2, and Framework §16's closing table and front matter still list "a per-page rule for tier-2 replacement" ABSENT, though it is built and was watched live (D-283, M-120).** — owner CONTENT-PDF.
+order: with the M0 record-hygiene rows, after D-441: a record that says less than is built (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
+milestone: M0 (the record of what is built)
+interface: I2 additive MINOR — filed by CONTENT-PDF, resolved by CONDUCT.
+design: `docs/development/VERIFICATION.md` (the construct record is checked against the code), for `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
+depends-on: none.
+scope: file the I2 IC for `tier`; correct §16's table and front matter; add a construct-5 claim in `construct-status.json` probing `export function mergeTier2Text(` in `textchain.mjs`.
+accepts-when: `node tools/status.mjs 5` reads the per-page rule BUILT by its probe, and I2 documents `tier`. NEGATIVE CONTROL: rename the probed function, and the status check fails naming the claim.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-458 · queued — **C-77 EXISTS AND NOTHING RUNS IT OVER A RECORD: Membership §11 item 9's live recheck of project-name uniqueness has a check (D-50) and no op hands the store's project bundles to `checkProjectNameUniqueness`.** — owner RECORD.
+order: after D-457, with the record-hygiene rows (SCHEDULER #17, 2026-09-23; D-50's worker via CONDUCT #18 23:55Z)
+milestone: M7
+interface: I3 additive — one admin/probe read; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.1) and §11 item 9.
+depends-on: D-50 (`integrated` on c18-batch8).
+scope: a read-only op running C-77 over the instance's project bundles and naming each collision.
+accepts-when: two projects with one name are named; a clean record reads none; counters unchanged. NEGATIVE CONTROL: feed the check one bundle, and the collision arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### REC-208 · queued — **TWO PROJECT TITLES A MEMBER CANNOT TELL APART ON SCREEN CAN BE TWO NAMES: the project-name key does not fold Unicode-equivalent forms (NFC and NFD), so a lookalike project could claim a name that is taken.** BOB #32's ruling of 2026-09-23 23:44Z (cite until folded into Membership §7.1): *Unicode-equivalent titles are ONE name; the key normalises to NFC before §7.1's existing comparison; existing titles stay as written, and a pair that collides after normalising is STATED by the census, never renamed.* — owner RECORD.
+order: after D-458, the same name check (SCHEDULER #17, 2026-09-23; D-50's worker)
+milestone: M7
+interface: I3 — the name refusal widens; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.1), with BOB #32's ruling of 2026-09-23 23:44Z (cite until folded into Membership §7.1).
+depends-on: D-50 (`integrated` on c18-batch8).
+scope: NFC normalisation in the name key at the write and in C-77; D-458's census states any post-normalisation pair.
+accepts-when: an NFD title equivalent to a taken NFC title is refused by name; existing titles read byte-unchanged. NEGATIVE CONTROL: drop the normalisation, and the NFD-lookalike arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
