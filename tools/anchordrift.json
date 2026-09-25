@@ -82,14 +82,6 @@
    "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/m025-anchor-witness.control.mjs",
-   "arm": "T1",
-   "anchor": "/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms",
-   "row": "D-640",
-   "since": "2026-09-25",
-   "why": "bio-plane/test/casesign.control.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/nc-cap12.mjs",
    "arm": "dropslides",
    "anchor": "                    slides: sl ? slideExtents(sl",

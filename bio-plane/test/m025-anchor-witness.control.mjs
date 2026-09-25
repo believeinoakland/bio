@@ -294,11 +294,9 @@ arm({
 const AICRED_DRIVER = join(ROOT, "bio-plane/test/aicredential.control.mjs");
 const DECAY_MOD = join(ROOT, "bio-plane/scripts/armdecay.mjs");
 const CASEPIN_DRIVER = join(ROOT, "bio-plane/test/casepin.control.mjs");
-const CASESIGN_DRIVER = join(ROOT, "bio-plane/test/casesign.control.mjs");
 const STORE_SRC = join(ROOT, "bio-plane/src/store.mjs");
 const CENSUS = join(ROOT, "bio-plane/test/m025-arm-census.mjs");
-Object.assign(MIN_BYTES, { [AICRED_DRIVER]: 5_000, [DECAY_MOD]: 5_000, [CASEPIN_DRIVER]: 5_000,
-                           [CASESIGN_DRIVER]: 5_000, [STORE_SRC]: 500_000 });
+Object.assign(MIN_BYTES, { [AICRED_DRIVER]: 5_000, [DECAY_MOD]: 5_000, [CASEPIN_DRIVER]: 5_000, [STORE_SRC]: 500_000 });
 
 /* Run a driver for ONE arm and hand back what it printed. Captured to a FILE,
    never a pipe (D-282), and a run that produced no recognisable foot reports
@@ -471,19 +469,25 @@ armOn({
 
 armOn({
   id: "T1", subject: "TALLY DECAY — a declared arm count moved while every anchor stayed perfectly live",
-  what: "`casesign.control.mjs`'s head declaration is decayed from five arms to four. NOT ONE ANCHOR MOVES, "
+  what: "`casepin.control.mjs`'s head declaration is decayed from six arms to five. NOT ONE ANCHOR MOVES, "
       + "which is the whole point of the row: this is invisible to the witness, to a re-anchoring pass, and "
       + "to the driver's own run — it announces nothing until something holds the declaration against the run",
-  mustFail: "the census, by name — `TALLY NOT AS DECLARED` naming casesign with both numbers — and its exit "
+  mustFail: "the census, by name — `TALLY NOT AS DECLARED` naming casepin with both numbers — and its exit "
          + "status, because a figure nobody can falsify trains every session to trust it",
   mustNot: "the driver itself (it arms and runs exactly as before — the anchors are untouched), and the census "
          + "must not report a STALE ARM, since nothing about this arm is an anchor",
-  edits: [[CASESIGN_DRIVER,
-    `/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in`,
-    `/* CASE-5b's NEGATIVE CONTROL DRIVER — four arms plus a baseline, re-runnable in`]],
-  run: () => runProcess(CENSUS, ["--only", "casesign.control.mjs"], "T1"),
+  /* RE-ANCHORED 2026-09-25 (D-640): this arm decayed `casesign.control.mjs`'s head, whose line REC-130 reworded
+     on 2026-09-18 ("... plus a baseline, and REC-130's four"), so the anchor matched 0 times and the arm never
+     armed. Casesign cannot carry the arm again as it reads now: its head declares five and its run announces ten,
+     so the census already reports it NOT AS DECLARED UNARMED, and an arm whose failure the pristine tree also
+     produces controls nothing. Casepin is the subject whose declaration T2 PROVES honest (six plus a baseline,
+     seven announced), so T1 and T2 now differ by exactly this one edit. */
+  edits: [[CASEPIN_DRIVER,
+    `/* CASE-3's NEGATIVE CONTROL DRIVER — six arms plus a baseline, re-runnable in`,
+    `/* CASE-3's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in`]],
+  run: () => runProcess(CENSUS, ["--only", "casepin.control.mjs"], "T1"),
   expect: (r) => {
-    const named = /casesign\.control\.mjs[\s\S]{0,200}?DECLARES 4 plus a baseline[\s\S]{0,80}?ANNOUNCED 6/.test(r.out);
+    const named = /casepin\.control\.mjs[\s\S]{0,200}?DECLARES 5 plus a baseline[\s\S]{0,80}?ANNOUNCED 7/.test(r.out);
     console.log(`    census named it with both numbers: ${named} · reported a STALE ARM as well: ${/drivers with a STALE arm : [1-9]/.test(r.out)}`);
     return r.code !== 0 && /TALLY NOT AS DECLARED/.test(r.out) && named
       && /drivers with a STALE arm : 0/.test(r.out) && /tally NOT AS DECLARED : 1/.test(r.out);
@@ -519,7 +523,7 @@ console.log(`byte count printed and a per-file minimum guarded.`);
   const dirty = spawnSync("git", ["status", "--porcelain", "--untracked-files=no"], { cwd: ROOT, encoding: "utf8" });
   const lines = (dirty.stdout || "").trim().split("\n").filter(Boolean);
   const touched = [WITNESS, AGENT_SRC, FANOUT_SRC, QUERY_SRC,
-                   AICRED_DRIVER, DECAY_MOD, CASEPIN_DRIVER, CASESIGN_DRIVER, STORE_SRC]
+                   AICRED_DRIVER, DECAY_MOD, CASEPIN_DRIVER, STORE_SRC]
     .map((p) => p.slice(ROOT.length));
   const stillDirty = lines.filter((l) => touched.some((p) => l.includes(p)));
   console.log(`tree: ${stillDirty.length ? `*** STILL MODIFIED: ${stillDirty.join(", ")}` : "every file this driver touched is back to its committed bytes"}`);
