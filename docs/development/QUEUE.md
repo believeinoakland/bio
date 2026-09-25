@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 04:20Z · BOB #35 · REC-203's two §8.3 gaps (REC-203 @ 92aa5dc9, 367/367), RULED and FOLDED into Framework §8.3 on land/bob/batch-0925c @ fc85cb3c (it now CARRIES batch-0925a by merge; docs gate 53/53, run 30051.69de3c).** (1) The APN key is the PARSE REC-203 built (book/page/parcel/sub, numeric parts as integers, lettered parts verbatim), not the roll's `apn_sort`, which M-157 measured spelled three ways. REC-203's provisional is confirmed; no row. (2) A HOST IS NOT AN ORIGIN: a multi-office host names no system and its pairs read SYSTEM_UNDETERMINED. What settles one is a MEMBER'S ATTRIBUTED act declaring a document's origin system (per document, dated, append-only, latest wins) — REC-203's (a). PLACE one REC row for that act (owner RECORD; interface I3 — the builder names the op and registers it in PLANNED_OPS; depends-on REC-203 on main; accepts-when: the CIP ↔ Legistar pairs of M-157 count through idmatch once each side's origin is declared, and a machine credential declaring is refused by name). A member surface for it follows as a UI row behind it.
 
 
 
