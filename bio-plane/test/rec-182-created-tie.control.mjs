@@ -7,9 +7,9 @@
  *   node test/rec-182-created-tie.control.mjs            baseline, then each arm ALONE
  *
  * ARMS, each DECLARED before it runs:
- *   export  `exportManifest`'s promotions read drops `, rowid` (the defect at site 1).
+ *   export  `exportManifest`'s promotions read orders by `created` alone (the defect at site 1).
  *           MUST FAIL: §1. MUST HOLD: §2, §3.
- *   gate    `gateFacts`' manifest read drops `, rowid` (the defect at site 2).
+ *   gate    `gateFacts`' manifest read orders by `created` alone (the defect at site 2).
  *           MUST FAIL: §2. MUST HOLD: §1, §3.
  *
  * Every restore is verified by sha256 AND by a byte compare against a uniquely named per-arm
@@ -28,16 +28,20 @@ const STORE = join(PLANE, "src/store.mjs");
 const SUITE = join(HERE, "rec-182-created-tie.test.mjs");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
-const EXPORT_SITE = "FROM manifest WHERE bundle_id=? ORDER BY created, rowid`, b.bundle_id),";
-const GATE_SITE = "FROM manifest WHERE bundle_id=? ORDER BY created, rowid`, bundleId),";
+/* CORRECTED 2026-09-25 (D-674): both sites read `ORDER BY rowid` now — write order alone, because `created` is
+   the writer's date and a caller can backdate it — so the anchors were `ORDER BY created, rowid` and would match
+   nothing (an arm that never arms). The arm is unchanged in kind: it puts the read back on `created` with NO
+   write-order tiebreak, which is REC-182's defect. D-674's own arms are in `d674-write-order.control.mjs`. */
+const EXPORT_SITE = "FROM manifest WHERE bundle_id=? ORDER BY rowid`, b.bundle_id),";
+const GATE_SITE = "FROM manifest WHERE bundle_id=? ORDER BY rowid`, bundleId),";
 const ARMS = {
   export: {
-    from: EXPORT_SITE, to: EXPORT_SITE.replace("ORDER BY created, rowid", "ORDER BY created"),
+    from: EXPORT_SITE, to: EXPORT_SITE.replace("ORDER BY rowid", "ORDER BY created"),
     mustFail: ["§1 op=export returns"],
     mustHold: ["§2 the gate's facts", "§3 I-20 says"],
   },
   gate: {
-    from: GATE_SITE, to: GATE_SITE.replace("ORDER BY created, rowid", "ORDER BY created"),
+    from: GATE_SITE, to: GATE_SITE.replace("ORDER BY rowid", "ORDER BY created"),
     mustFail: ["§2 the gate's facts"],
     mustHold: ["§1 op=export returns", "§3 I-20 says"],
   },
