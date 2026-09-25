@@ -1,0 +1,16 @@
+{
+ "unit": "plane:audit-inheritance.test.mjs",
+ "inputHash": "be7b9d183428843db7a56ea4c8b00f09f177bb3764c3406a534986c00cec35cc",
+ "verdict": "PASS",
+ "run": "93d5257872c44e449a0d40e1d2c287a3712d82c6.1790324222111.18113.json",
+ "tree": "93d5257872c44e449a0d40e1d2c287a3712d82c6",
+ "head": "45437e4de916679145949a2b8fdba09270654138",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 145,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "72216fe4-6366-5dc1-a21a-57013ce6a073",
+ "at": "2026-09-25T08:17:02.126Z"
+}
