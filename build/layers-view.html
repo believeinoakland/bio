@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0}</style></head><body>
+<title>BIO Build Layers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6;
+  --chip:#E9EEF3; --chip-ink:#233042;
+  --accent:#1D6A86; --uses:#1D6A86; --uses-bg:#D7EAF1;
+  --users:#8A5A12; --users-bg:#F5E6C8;
+  --legacy:#9A4B2E; --legacy-bg:#F6E4DC;
+  --prop:#5B45A8; --prop-bg:#E7E2F6;
+  --dim:.28;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542;
+  --chip:#222C38; --chip-ink:#D6DEE8; --accent:#5FB3CF; --uses:#6CC0DC; --uses-bg:#16394A;
+  --users:#E0B060; --users-bg:#43341A; --legacy:#E08F6E; --legacy-bg:#402419; --prop:#A895F0; --prop-bg:#2C2550;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542;
+  --chip:#222C38; --chip-ink:#D6DEE8; --accent:#5FB3CF; --uses:#6CC0DC; --uses-bg:#16394A;
+  --users:#E0B060; --users-bg:#43341A; --legacy:#E08F6E; --legacy-bg:#402419; --prop:#A895F0; --prop-bg:#2C2550;
+}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:grid;gap:28px}
+h1{font:600 30px/1.15 "Source Serif 4",Georgia,serif;margin:0;text-wrap:balance}
+h2{font:600 20px/1.2 "Source Serif 4",Georgia,serif;margin:0 0 6px;text-wrap:balance}
+.lede{color:var(--muted);max-width:68ch;margin:6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:26px;height:14px;border-radius:4px;background:var(--chip);border:1px solid var(--rule)}
+.sw.ext{background:repeating-linear-gradient(135deg,var(--chip) 0 4px,transparent 4px 7px)}
+.sw.leg{background:var(--legacy-bg);border:1.5px dashed var(--legacy)}
+.sw.prop{background:var(--prop-bg);border:1.5px dashed var(--prop)}
+.sw.u{background:var(--uses-bg);border:1.5px solid var(--uses)}
+.sw.b{background:var(--users-bg);border:1.5px solid var(--users)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:1fr}}
+.stack{display:grid;gap:6px}
+.flow{font:500 12px "IBM Plex Mono",monospace;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;display:flex;justify-content:space-between}
+.layer{display:grid;grid-template-columns:210px minmax(0,1fr);gap:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 14px}
+.layer.proposed{border:1.5px dashed var(--prop);background:linear-gradient(0deg,var(--prop-bg),var(--prop-bg)) padding-box;background:color-mix(in srgb,var(--prop-bg) 55%,var(--panel))}
+@media (max-width:560px){.layer{grid-template-columns:1fr;gap:8px}}
+.lh{display:grid;gap:2px;align-content:start}
+.ln{font:500 12px "IBM Plex Mono",monospace;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.lt{font-weight:600;font-size:15px}
+.lc{font-size:12.5px;color:var(--muted);line-height:1.4}
+.tag{font:500 11px "IBM Plex Mono",monospace;color:var(--prop);letter-spacing:.06em;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.chip{font:500 12.5px "IBM Plex Mono",monospace;color:var(--chip-ink);background:var(--chip);border:1.5px solid transparent;border-radius:6px;padding:4px 8px;cursor:pointer;transition:opacity .15s,background .15s}
+.chip.ext{background:repeating-linear-gradient(135deg,var(--chip) 0 5px,color-mix(in srgb,var(--chip) 40%,transparent) 5px 9px)}
+.chip.leg{background:var(--legacy-bg);border:1.5px dashed var(--legacy);color:var(--legacy)}
+.chip.prop{background:var(--prop-bg);border:1.5px dashed var(--prop);color:var(--prop)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sel .chip{opacity:var(--dim)}
+.sel .chip.on{opacity:1;background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sel .chip.u{opacity:1;background:var(--uses-bg);border:1.5px solid var(--uses);color:var(--uses)}
+.sel .chip.b{opacity:1;background:var(--users-bg);border:1.5px solid var(--users);color:var(--users)}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:16px;display:grid;gap:12px}
+@media (max-width:860px){.side{position:static}}
+.side .id{font:500 17px "IBM Plex Mono",monospace;word-break:break-word}
+.kv{display:grid;gap:3px}
+.k{font:500 11px "IBM Plex Mono",monospace;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.v{font-size:13.5px}
+.v.list{font:12.5px/1.6 "IBM Plex Mono",monospace}
+.hint{color:var(--muted);font-size:13.5px;margin:0}
+button.clear{justify-self:start;font:500 12px "IBM Plex Sans",sans-serif;background:none;border:1px solid var(--rule);color:var(--muted);border-radius:6px;padding:4px 10px;cursor:pointer}
+.mono{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:16px 16px 18px;display:grid;gap:12px}
+.bar{display:flex;height:34px;border-radius:6px;overflow:hidden;border:1px solid var(--rule)}
+.bar div{height:100%}
+.bl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 16px;font-size:13px}
+.bl span{display:flex;gap:8px;align-items:baseline}
+.dot{width:10px;height:10px;border-radius:2px;flex:none;transform:translateY(1px)}
+.num{font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+.foot{color:var(--muted);font-size:12.5px;max-width:80ch}
+@media (prefers-reduced-motion:reduce){.chip{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>BIO Build Layers</h1>
+    <p class="lede">The approved architecture for building BIO, lowest layer at the bottom. A module may use only modules below it, or earlier in its own layer. Tap any module to see what it uses and what uses it.</p>
+  </header>
+
+  <div class="legend" aria-label="Legend">
+    <span><i class="sw"></i>its own file today</span>
+    <span><i class="sw ext"></i>still inside a legacy file, to be extracted</span>
+    <span><i class="sw leg"></i>legacy file, retired when empty</span>
+    <span><i class="sw prop"></i>candidate beyond MVP, not in the module list</span>
+    <span><i class="sw u"></i>used by the selection</span>
+    <span><i class="sw b"></i>uses the selection</span>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="flow"><span>higher layers use lower ones</span><span>top: built last</span></div>
+      <div class="stack" id="stack"></div>
+      <div class="flow" style="margin-top:6px"><span>foundations: built first</span><span>nothing here touches the record</span></div>
+    </div>
+    <aside class="side" id="side" aria-live="polite"></aside>
+  </div>
+
+  <section class="mono">
+    <div>
+      <h2>Where the code is today</h2>
+      <p class="hint" id="monoh"></p>
+    </div>
+    <div class="bar" id="bar" role="img"></div>
+    <div class="bl" id="bl"></div>
+  </section>
+
+  <p class="foot">Source: <code>build/layers.md</code> and <code>build/modules.json</code> on branch <code>land/bob/process-design</code>, 2026-09-25, approved by Bob the same day. Line counts were measured from the repository the same day, counting source files and not tests or build output. Layer 7, Understanding, comes from Content Framework §12 and was approved by Bob on 2026-09-25. Discovery is his candidate for after MVP and is not in the module list.</p>
+</div>
+
+<script>
+const MODS = [{"id":"legacy-checks","l":1,"g":true,"f":null,"u":[],"n":16591},{"id":"runtime-limits","l":1,"g":false,"f":null,"u":[],"n":268},{"id":"signatures","l":1,"g":false,"f":null,"u":[],"n":541},{"id":"id-spaces","l":1,"g":false,"f":null,"u":[],"n":261},{"id":"subresources","l":1,"g":false,"f":null,"u":["runtime-limits"],"n":1284},{"id":"ooxml","l":1,"g":false,"f":null,"u":[],"n":947},{"id":"office-readers","l":1,"g":false,"f":null,"u":["subresources","ooxml"],"n":3026},{"id":"odf-reader","l":1,"g":false,"f":null,"u":["subresources","ooxml","office-readers"],"n":1623},{"id":"pdf-reader","l":1,"g":false,"f":null,"u":["subresources"],"n":2505},{"id":"format-registry","l":1,"g":false,"f":null,"u":["office-readers","odf-reader","pdf-reader"],"n":294},{"id":"text-chain","l":1,"g":false,"f":null,"u":["legacy-checks"],"n":1544},{"id":"docprofile","l":1,"g":false,"f":null,"u":[],"n":3658},{"id":"pdf-worker","l":1,"g":false,"f":null,"u":["pdf-reader"],"n":1965},{"id":"ocr-worker","l":1,"g":false,"f":null,"u":["pdf-worker"],"n":854},{"id":"record-core","l":2,"g":false,"f":"legacy-store","u":["legacy-checks","id-spaces"],"n":0},{"id":"membership","l":2,"g":false,"f":"legacy-store","u":["legacy-checks","signatures","record-core"],"n":0},{"id":"promotion","l":2,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership"],"n":412},{"id":"host-governor","l":3,"g":false,"f":"legacy-store","u":["record-core"],"n":0},{"id":"provenance","l":3,"g":false,"f":"legacy-store","u":["legacy-checks","signatures","record-core","membership"],"n":0},{"id":"capture-sources","l":3,"g":false,"f":null,"u":["subresources","runtime-limits"],"n":1674},{"id":"capture","l":3,"g":false,"f":"legacy-store","u":["legacy-checks","subresources","format-registry","docprofile","record-core","membership","host-governor","provenance","capture-sources"],"n":0},{"id":"extraction","l":4,"g":false,"f":"legacy-store","u":["legacy-checks","text-chain","format-registry","docprofile","pdf-worker","ocr-worker","record-core","membership","capture"],"n":994},{"id":"content","l":4,"g":false,"f":"legacy-store","u":["legacy-checks","id-spaces","record-core","membership","provenance","capture","extraction"],"n":0},{"id":"entities","l":5,"g":false,"f":"legacy-store","u":["legacy-checks","id-spaces","record-core","content"],"n":0},{"id":"connections","l":5,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","content","entities"],"n":0},{"id":"progressions","l":5,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","capture","content","entities","connections"],"n":0},{"id":"bias","l":5,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership","entities"],"n":0},{"id":"observation-log","l":5,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership","content","entities"],"n":0},{"id":"query-language","l":5,"g":false,"f":null,"u":["text-chain"],"n":2665},{"id":"retrieval","l":5,"g":false,"f":"legacy-store","u":["record-core","capture","extraction","content","entities","connections","progressions","observation-log","query-language"],"n":0},{"id":"inquiry","l":6,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership","content","connections","bias","retrieval"],"n":0},{"id":"basis-versions","l":6,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership","content","inquiry"],"n":0},{"id":"strength","l":6,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","provenance","content","connections","bias","inquiry","basis-versions"],"n":0},{"id":"contradiction","l":6,"g":false,"f":"legacy-store","u":["record-core","content","inquiry"],"n":83},{"id":"review","l":6,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership","inquiry","basis-versions","strength"],"n":0},{"id":"actions","l":6,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership","content","inquiry","strength"],"n":0},{"id":"skills","l":6,"g":false,"f":null,"u":[],"n":1627},{"id":"ai-runs","l":6,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership","capture","content","retrieval","inquiry","basis-versions","contradiction","skills"],"n":2551},{"id":"agent-worker","l":6,"g":false,"f":null,"u":[],"n":2780},{"id":"intent","l":7,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","membership","content","progressions","inquiry","ai-runs"],"n":0},{"id":"reevaluation","l":7,"g":false,"f":"legacy-store","u":["legacy-checks","record-core","content","connections","inquiry","basis-versions","strength"],"n":0},{"id":"publication","l":8,"g":false,"f":"legacy-store","u":["legacy-checks","ooxml","signatures","record-core","membership","provenance","content","bias","inquiry","strength","review","intent","reevaluation"],"n":318},{"id":"monitoring","l":8,"g":false,"f":"legacy-store","u":["record-core","membership","capture","extraction","content","intent","reevaluation"],"n":0},{"id":"scheduler","l":8,"g":false,"f":"legacy-store","u":["record-core","host-governor","capture","extraction","retrieval","strength","ai-runs","monitoring","intent","reevaluation"],"n":0},{"id":"legacy-store","l":8,"g":true,"f":null,"u":["*earlier"],"n":58905},{"id":"affordances","l":9,"g":false,"f":"legacy-store","u":["membership","inquiry","review","publication","legacy-store"],"n":2311},{"id":"queue","l":9,"g":false,"f":"legacy-store","u":["membership","inquiry","review","legacy-store"],"n":354},{"id":"instance-setup","l":9,"g":false,"f":null,"u":["legacy-checks","runtime-limits"],"n":1671},{"id":"control-plane","l":9,"g":false,"f":"legacy-index","u":["membership","legacy-store"],"n":0},{"id":"legacy-index","l":9,"g":true,"f":null,"u":["*earlier"],"n":13438},{"id":"legacy-ui","l":9,"g":true,"f":null,"u":["legacy-checks"],"n":31536},{"id":"installer","l":9,"g":false,"f":null,"u":["signatures","runtime-limits"],"n":1505}];
+const LAYERS = [
+  [1,"Foundations","Constructs 5 and shared libraries","Format readers, recognisers, signatures, the PDF and OCR workers. No access to the record."],
+  [2,"Record and authority","Constructs 3 and 1","Storage, the member and the fence, the one write path that checks every bundle."],
+  [3,"Intake and provenance","Construct 2","Material enters only with provenance. A hop attests bytes, URL and time."],
+  [4,"Content","Constructs 4 and 5","Readings made from captured bytes; content minted over them."],
+  [5,"Meaning, bias and retrieval","Constructs 6, 7 and 9","Everything derived over content, with its grade; the four-level search."],
+  [6,"Inquiry and the assistant","Constructs 8 and 11","Inquiries, findings, basis versions, strength; the AI finds and checks, never concludes."],
+  [7,"Understanding","Content Framework §12","Aspirations, goals and objectives with computed progress; which findings still stand when their basis changes."],
+  [8,"Publication and operations","Constructs 13, 10 and 14","What the group stands behind leaves one way; the instance keeps itself current."],
+  [9,"Interface and distribution","Constructs 12 and 15","The ops, the member surfaces and the installer."]
+];
+const FROM = {"legacy-store":"store.mjs","legacy-index":"index.mjs","legacy-checks":"bio-checks.mjs"};
+const byId = Object.fromEntries(MODS.map(m=>[m.id,m]));
+const order = MODS.map(m=>m.id);
+const usesOf = m => m.u.includes("*earlier") ? order.slice(0,order.indexOf(m.id)).filter(i=>!byId[i].p) : m.u;
+const usersOf = id => MODS.filter(m=>m.id!==id && usesOf(m).includes(id)).map(m=>m.id);
+const fmt = n => n.toLocaleString("en-US");
+
+const stack = document.getElementById("stack");
+for (const [n,name,cons,contract] of [...LAYERS].reverse()){
+  const mods = MODS.filter(m=>m.l===n);
+  const prop = mods.length && mods.every(m=>m.p);
+  const row = document.createElement("div");
+  row.className = "layer"+(prop?" proposed":"");
+  row.innerHTML = `<div class="lh"><span class="ln">Layer ${n}</span><span class="lt">${name}</span>${prop?'<span class="tag">proposed</span>':''}<span class="lc">${contract}</span></div><div class="chips"></div>`;
+  const box = row.querySelector(".chips");
+  for (const m of mods){
+    const b = document.createElement("button");
+    b.type="button"; b.className="chip"+(m.g?" leg":m.p?" prop":m.f?" ext":"");
+    b.textContent=m.id; b.dataset.id=m.id;
+    b.addEventListener("click",()=>select(m.id));
+    box.append(b);
+  }
+  if (n===7){ const g=document.createElement("span"); g.className="chip prop"; g.style.cursor="default"; g.title="Bob's candidate, 2026-09-25: an AI assistant that searches documents, content, meaning and inquiry results for what is working and what is not. Not in the module list."; g.textContent="discovery · beyond MVP"; box.append(g); }
+  stack.append(row);
+}
+
+const side = document.getElementById("side");
+function status(m){
+  if (m.p) return "Proposed. Not built: aspiration and goal do not exist in the code yet.";
+  if (m.g) return `Legacy file, ${fmt(m.n)} lines. Modules are extracted from it layer by layer; it is retired when empty.`;
+  if (m.id==="intent") return "Mostly not built. The objective lives on the project inside store.mjs today; aspiration and goal do not exist yet.";
+  if (m.f) return `Inside ${FROM[m.f]||m.f} today. Its own job extracts it.`;
+  return `Its own file today, ${fmt(m.n)} lines.`;
+}
+function list(ids){ return ids.length ? ids.join("<br>") : '<span style="color:var(--muted)">none</span>'; }
+function idle(){
+  side.innerHTML = `<div class="k">Nothing selected</div><p class="hint">Tap a module. What it uses lights up in blue and sits below it. What uses it lights up in amber and sits above it. No line ever points upward: that is the rule that keeps the build acyclic.</p>
+  <div class="kv"><span class="k">Counts</span><span class="v">${MODS.length} modules in ${LAYERS.length} layers. ${MODS.filter(m=>m.f).length} still to be extracted, ${MODS.filter(m=>m.g).length} legacy.</span></div>`;
+}
+function select(id){
+  const m = byId[id]; if(!m) return;
+  const u = usesOf(m), b = usersOf(id);
+  document.body.classList.add("sel");
+  for (const c of document.querySelectorAll(".chip")){
+    c.classList.toggle("on", c.dataset.id===id);
+    c.classList.toggle("u", u.includes(c.dataset.id));
+    c.classList.toggle("b", b.includes(c.dataset.id));
+  }
+  const L = LAYERS.find(x=>x[0]===m.l);
+  side.innerHTML = `<div class="id">${m.id}</div>
+   <div class="kv"><span class="k">Layer ${m.l}</span><span class="v">${L[1]}</span></div>
+   <div class="kv"><span class="k">Status</span><span class="v">${status(m)}</span></div>
+   <div class="kv"><span class="k">Uses (${m.u.includes("*earlier")?"everything earlier":u.length})</span><span class="v list">${m.u.includes("*earlier")?"every module before it in the order":list(u)}</span></div>
+   <div class="kv"><span class="k">Used by (${b.length})</span><span class="v list">${list(b)}</span></div>
+   <button type="button" class="clear" id="clr">Clear selection</button>`;
+  document.getElementById("clr").addEventListener("click",clear);
+}
+function clear(){ document.body.classList.remove("sel"); document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on","u","b")); idle(); }
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") clear(); });
+idle();
+
+const segs = [
+  ["store.mjs + schema.mjs", byId["legacy-store"].n, "var(--legacy)"],
+  ["civicos-ui (placeholder UI)", byId["legacy-ui"].n, "color-mix(in srgb,var(--legacy) 70%,var(--bg))"],
+  ["bio-checks.mjs", byId["legacy-checks"].n, "color-mix(in srgb,var(--legacy) 50%,var(--bg))"],
+  ["index.mjs", byId["legacy-index"].n, "color-mix(in srgb,var(--legacy) 32%,var(--bg))"],
+  ["all 46 other modules", MODS.filter(m=>!m.g).reduce((a,m)=>a+m.n,0), "var(--accent)"]
+];
+const total = segs.reduce((a,s)=>a+s[1],0);
+const legacy = total - segs[4][1];
+document.getElementById("monoh").textContent = `${Math.round(100*legacy/total)}% of the ${fmt(total)} lines of product code sit in four legacy files. The extraction work is moving that share into the modules above.`;
+const bar = document.getElementById("bar"), bl = document.getElementById("bl");
+bar.setAttribute("aria-label", segs.map(s=>`${s[0]} ${fmt(s[1])} lines`).join(", "));
+for (const [name,n,col] of segs){
+  const d = document.createElement("div"); d.style.width=(100*n/total)+"%"; d.style.background=col; d.title=`${name}: ${fmt(n)} lines`; bar.append(d);
+  const s = document.createElement("span"); s.innerHTML=`<i class="dot" style="background:${col}"></i><span>${name}</span><span class="num">${fmt(n)} · ${Math.round(100*n/total)}%</span>`; bl.append(s);
+}
+</script>
+
+</body></html>

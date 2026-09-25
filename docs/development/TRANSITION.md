@@ -65,6 +65,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-25 · T4 · architecture drafted by BOB #37: 8 layers, 50 modules in total order (4 legacy: checks, store, index, ui), every `bio-plane/src` file owned once, every declared use earlier in the order; six calls for Bob · `build/layers.md`, `build/modules.json` · next: Bob approves
 - 2026-09-25 · T4 · Bob ruled the six calls (no size limit, only a watched metric; UI is a placeholder worked on elsewhere; the checks are carried into modules, never dropped); BOB proposed layer 7 Understanding (intent, reevaluation) from Content Framework §12, in answer to Bob's question · `build/layers.md` · next: Bob rules on Understanding, then modules.json is renumbered and T4 closes
 - 2026-09-25 · T4 · an interactive view of the draft (nine layers with Understanding shown as proposed; tap a module for its uses and users; the code share of the legacy files, 76% of 158,185 lines) was published for Bob as a private artifact · https://claude.ai/artifact/CJ4jg9m9rDBeJdd84irrnX · —
+- 2026-09-25 · T4 · DONE: Bob approved the Understanding layer (layer 7: intent, reevaluation), so 9 layers and 52 modules; Discovery (an AI assistant looking for what is working and what is not) recorded as his candidate beyond MVP, not in the module list; the view added to the record at his request, generated from `modules.json` · `build/layers.md`, `build/modules.json`, `build/layers-view.html` · next: T5
 
 ## 5. Challenges identified
 

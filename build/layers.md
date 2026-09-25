@@ -1,6 +1,6 @@
 # The layers
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (TRANSITION.md T4). Bob ruled on its six calls the same day (below). One question is still open: whether to add the Understanding layer. The modules, in their total order, are in `modules.json`. Sources: the construct map (`BIO_System_Design.md` §3–§4) and the code as it stands (imports measured 2026-09-25). Each layer's modules may use modules earlier in the order only (P4).
+**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T4), as drafted by BOB #37 the same day with his rulings (below), including the Understanding layer. A view of it is `layers-view.html`, beside this file. The modules, in their total order, are in `modules.json`. Sources: the construct map (`BIO_System_Design.md` §3–§4) and the code as it stands (imports measured 2026-09-25). Each layer's modules may use modules earlier in the order only (P4).
 
 | layer | name | constructs (System Design §3) | contract | modules |
 | --- | --- | --- | --- | --- |
@@ -10,8 +10,9 @@
 | 4 | Content | 4, 5 | Readings are made from captured bytes; content is the reference to a part of a document, minted over them. | extraction, content |
 | 5 | Meaning, bias and retrieval | 6, 7, 9 | Everything derived over content, with its grade; the four-level search, which says at which level absence was found. | entities, connections, progressions, bias, observation-log, query-language, retrieval |
 | 6 | Inquiry and the assistant | 8, 11 | The inquiry and its legs, findings, basis versions and strength; the AI finds, pursues, extracts and checks, and never attests or concludes. | inquiry, basis-versions, strength, contradiction, review, actions, skills, ai-runs, agent-worker |
-| 7 | Publication and operations | 13, 10, 14 | What the group stands behind leaves one way; the instance keeps itself current unattended. | publication, monitoring, scheduler, legacy-store |
-| 8 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, queue, instance-setup, control-plane, legacy-index, legacy-ui, installer |
+| 7 | Understanding | Content Framework §12, and 8 | What the investigation below has established: the group's intent, with progress computed against the record, and which findings still stand when their basis changes. | intent, reevaluation |
+| 8 | Publication and operations | 13, 10, 14 | What the group stands behind leaves one way; the instance keeps itself current unattended. | publication, monitoring, scheduler, legacy-store |
+| 9 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, queue, instance-setup, control-plane, legacy-index, legacy-ui, installer |
 
 ## The legacy modules (PROCESS-MECHANICS §12)
 
@@ -35,21 +36,18 @@ A module marked `from` in `modules.json` is extracted from that legacy module by
 
 **The checks are carried, never dropped (Bob: "very important to keep").** Every check in `bio-checks.mjs` moves, at extraction, into exactly one module, as an invariant with its own requirement id and test. `legacy-checks` is retired only when it is empty. A check is removed only by a recorded ruling.
 
-## Proposed: layer 7, Understanding (Bob's question, 2026-09-25)
+## Layer 7, Understanding (Bob, 2026-09-25)
 
-Bob asked whether a layer between investigation and publication belongs in the architecture, and whether anything done there would serve publishing, monitoring and scheduling. The canon already rules its content: `BIO_Content_Framework_v0_10.md` §12, *Intent: goals, objectives, aspirations, and the discovery loop* (RULED by Bob, 2026-07-30).
+Bob asked whether a layer between investigation and publication belongs in the architecture. BOB proposed it from `BIO_Content_Framework_v0_10.md` §12 (*Intent: goals, objectives, aspirations, and the discovery loop*, RULED by Bob 2026-07-30), and Bob approved it the same day. A layer is named for what it provides; this one provides the group's understanding.
 
-| proposed module | what it does | source |
+| module | what it does | source |
 | --- | --- | --- |
-| intent | Holds aspirations, goals and objectives. An objective has a satisfaction condition, so its progress is computed from the record and never reported, and its gaps are the work list. Unasked-for findings arrive as proposals, and a member adopts them, turns them into a focus or a problem, or defers them with a recorded reason (the discovery loop). | §12. Aspiration and goal are not built (no code mentions them); the objective lives on the project. |
-| reevaluation | When something a finding rests on changes (a new version of a passage, a weaker derivation, a changed grade), it says which findings are affected, and how. | `reevaluations`, `versionNotice` and `changedFromAudit` in `store.mjs`, which the draft had left inside layer 6 |
+| intent | Holds aspirations, goals and objectives. An objective has a satisfaction condition, so its progress is computed from the record and never reported, and its gaps are the work list. Unasked-for findings arrive as proposals, and a member adopts them, turns them into a focus or a problem, or defers them with a recorded reason (the discovery loop). | §12. Aspiration and goal are not built; the objective lives on the project today. |
+| reevaluation | When something a finding rests on changes (a new version of a passage, a weaker derivation, a changed grade), it says which findings are affected, and how. | `reevaluations`, `versionNotice` and `changedFromAudit` in `store.mjs` |
 
-What the layers above would get from it:
-- **Monitoring** watches what the group's objectives and findings rest on, rather than sweeps chosen by hand.
-- **Scheduling** orders work by the priority that aspirations set and by the gaps that objectives leave.
-- **Publication** knows which findings still stand after reevaluation, and which findings run against a goal (Invariant 7).
+What the layer above gets from it: monitoring watches what objectives and findings rest on; scheduling orders work by the priority aspirations set and the gaps objectives leave; publication knows which findings still stand, and which run against a goal (Invariant 7). The assistant works an objective when intent hands it one, so `ai-runs` does not depend on `intent`.
 
-It fits the order: it uses the inquiry and the assistant below it, and nothing below uses it. The assistant works an objective when intent hands it one, so `ai-runs` does not depend on `intent`. **Recommendation: add it.** Layers 7 and 8 become 8 and 9.
+**Beyond MVP: Discovery (Bob's candidate, 2026-09-25, not in the module list).** An AI assistant that searches documents, content, meaning and the results of inquiries for an understanding of what is working and what is not. It would sit in this layer. It enters `modules.json` only when Bob adds it.
 
 ## Paths that are not product
 
