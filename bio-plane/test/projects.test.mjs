@@ -17,6 +17,7 @@
  * evidence would fracture the record and stop a member on one project seeing
  * what another has already gathered. Only the group's THINKING is scoped.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -28,8 +29,8 @@ const SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 let pass = 0, fail = 0;
 const t = (l, g, w) => {
-  const ok = JSON.stringify(g) === JSON.stringify(w);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${l}${ok ? "" : `\n         want ${JSON.stringify(w)}\n         got  ${JSON.stringify(g)}`}`);
+  const ok = statedJSON(g) === statedJSON(w);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${l}${ok ? "" : `\n         want ${statedJSON(w)}\n         got  ${statedJSON(g)}`}`);
   ok ? pass++ : fail++;
 };
 const mf = new Miniflare({

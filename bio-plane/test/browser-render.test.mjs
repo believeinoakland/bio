@@ -48,6 +48,7 @@
  *     driven in `rendered-capture.test.mjs`. Block A asserts the pair ARRIVES from a
  *     browser binding; what the record then makes of it is asserted there.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";               /* D-186 */
 import { Miniflare } from "miniflare";
@@ -256,8 +257,8 @@ const harnessWith = (mode = "ok") => new Miniflare({ workers: [
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const row = (code) => ({ code, check: RENDER_CAPTURE_CHECKS[code].check, translation: RENDER_CAPTURE_CHECKS[code].translation });

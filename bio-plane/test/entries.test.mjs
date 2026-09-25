@@ -54,6 +54,7 @@
  *        (a stale exclusion cannot outlive its import); a missing root THROWS; `const IMPORT_RE` renamed in
  *        a scratch copy of `tools/gates.mjs` THROWS naming the line. All three as declared.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from "node:fs";
@@ -91,8 +92,8 @@ const missingFrom = (dir) => GATE_DEPS.filter((p) => {
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const SECTIONS = 7;

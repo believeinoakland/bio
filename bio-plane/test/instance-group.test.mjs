@@ -35,6 +35,7 @@
  * decision in `promote` (W1–W5 drive it from five callers), every revision keeps the group its creation wrote (W6),
  * and §0's census is what sees a literal reappear at any site. The monitor tick needs a fetch and is not driven.
  * ========================================================================= */
+import { statedJSON } from "./stated.mjs";
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -57,8 +58,8 @@ const IDX = join(SRC_DIR, "index.mjs");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

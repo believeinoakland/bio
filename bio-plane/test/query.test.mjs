@@ -30,14 +30,15 @@
  *   - A member's words never reach SQL or an FTS5 expression as syntax. Terms
  *     are bound as arguments and quoted as FTS5 string literals.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { compile, viewerPredicate, GATE_MARK, FIELDS, SORTABLE, MEANING } from "../src/query.mjs";
 import { readFileSync } from "node:fs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const M = "class:member";

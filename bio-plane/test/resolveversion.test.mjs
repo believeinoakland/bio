@@ -20,6 +20,7 @@
  * SOMETHING — an agreeing tree is NOT reported as skewed, without which every
  * arm above would pass on a resolver that simply always refused.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
@@ -29,10 +30,10 @@ import { resolveVersion, versionSites } from "../scripts/resolve-version.mjs";
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   ok ? pass++ : fail++;
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}`);
-  if (!ok) console.log(`        got ${JSON.stringify(got)} want ${JSON.stringify(want)}`);
+  if (!ok) console.log(`        got ${statedJSON(got)} want ${statedJSON(want)}`);
 };
 
 console.log("\n--- resolve-version: one version across the plane and every member ---");

@@ -46,6 +46,7 @@
  *   Baseline 49 / 0. (A2) the import in `tools/pushguard.mjs` -> 49 / 0, AS DECLARED. (B2) the same import with the OLD
  *   copy of the guard alone restored -> 42 / 7, first "NO CHECK: the push lands and the guard SAYS there is none".
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, cpSync, rmSync } from "node:fs";
@@ -62,8 +63,8 @@ const WORKFLOW = join(REPO, ".github/workflows/gates.yml");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const SECTIONS = 5;

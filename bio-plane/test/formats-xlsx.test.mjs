@@ -28,6 +28,7 @@
 /* NEGATIVE CONTROL: (1) collapse <f> into <v> — in src/formats-xlsx.mjs's formula-item emit, replace `formula: c.f` with `formula: c.v` -> the suite fails NAMING the formula/value distinction. RE-RUN 2026-08-03 against the conformed `evidentiary` envelope: 3 of 75 failed ("the formula is held BESIDE its cached value — TWO named fields, both present", "never collapsed: the formula is not the value", "the hidden sheet's cross-sheet formula is held too"); restored -> 75 pass 0 fail. (2) strip the hidden flag — in src/formats-xlsx.mjs's sheets mapping, replace `hidden: state === "visible" ? false : state` with `hidden: false` -> the suite fails on the hidden flag everywhere it is surfaced. RE-RUN 2026-08-03 against the conformed shape: 6 of 75 failed ("Reconciliation is FLAGGED hidden", "sheets carried with hidden flags", "the hidden SHEET is a first-class finding (source null — workbook-scoped, stated)", "and enumerates its kinds", "per-sheet units, hidden flags carried", "the hidden SHEET is still flagged (workbook.xml is not a text part)"); restored -> 75 pass 0 fail. */
 
 /* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { deflateRawSync } from "node:zlib";
 import { createHash } from "node:crypto";
@@ -38,8 +39,8 @@ import { MEASURED_OOXML_TEXT_BOUND_BYTES } from "../src/ooxml.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

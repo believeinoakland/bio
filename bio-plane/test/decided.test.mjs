@@ -64,6 +64,7 @@
  *   failed 5, 7, 1, 1, 1, 1, 1 and 1 assertions, and arms 1-15 still fail at their named assertions after this landing.
  */
 
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { spawnSync } from "node:child_process";
@@ -82,8 +83,8 @@ const TOOL = join(ROOT, "tools/decided.mjs");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want).slice(0, 600)}\n         got  ${JSON.stringify(got).slice(0, 600)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want).slice(0, 600)}\n         got  ${statedJSON(got).slice(0, 600)}`}`);
   ok ? pass++ : fail++;
 };
 const SECTIONS = 9;

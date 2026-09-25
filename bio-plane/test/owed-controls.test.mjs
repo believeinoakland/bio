@@ -52,6 +52,7 @@
  * evidence an arm RAN is the measured figure in the owner's own declaration, and
  * what is mechanised here is that the declaration is still there to be read.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync, readFileSync, existsSync } from "node:fs";
@@ -98,9 +99,9 @@ const { files: REAL, outside: REAL_OUTSIDE } = instrumentDeps("coverage.mjs");
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   ok ? pass++ : fail++;
-  if (!ok) console.log(`FAIL: ${name}\n  got:  ${JSON.stringify(got)}\n  want: ${JSON.stringify(want)}`);
+  if (!ok) console.log(`FAIL: ${name}\n  got:  ${statedJSON(got)}\n  want: ${statedJSON(want)}`);
 };
 
 /* ==================================================================== PART A

@@ -36,6 +36,7 @@
  * "nothing they let through can LAND" — the second half was FALSE for an envelope stating NO type, which D-510's
  * refusal does not reach: D-526 measured five promotions landing that way (see that suite's header).
  */
+import { statedJSON } from "./stated.mjs";
 import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -52,8 +53,8 @@ const { PROMOTED_TYPE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

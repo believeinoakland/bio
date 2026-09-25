@@ -69,6 +69,7 @@
  *   (4) OVER-STRICTNESS: a correctly coded-and-translated refusal phrased
  *       unlike anything REC-64 wrote — VF-2's Spanish-row standard — must PASS.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import fs from "fs";
 import path from "path";
@@ -84,9 +85,9 @@ const REPO = path.join(HERE, "..", "..");            // bio-plane/test -> repo r
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   if (ok) { pass++; console.log(`  PASS  ${name}`); }
-  else { fail++; console.log(`  FAIL  ${name}\n          got  ${JSON.stringify(got)}\n          want ${JSON.stringify(want)}`); }
+  else { fail++; console.log(`  FAIL  ${name}\n          got  ${statedJSON(got)}\n          want ${statedJSON(want)}`); }
 };
 
 /* THE PREFIX IS BUILT, not written whole, for `skillpack.mjs`'s own reason: a

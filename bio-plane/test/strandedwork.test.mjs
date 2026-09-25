@@ -109,6 +109,7 @@
  *   and verify the restore by sha256 rather than by the absence of a complaint.
  */
 
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard its own output */
 import "./sandbox.mjs";
 import { mkdtempSync, writeFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
@@ -123,8 +124,8 @@ const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

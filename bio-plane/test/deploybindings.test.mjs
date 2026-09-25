@@ -46,6 +46,7 @@
  * UNDETERMINED, never a match". Restored, 36/36 green. Over-strictness arm:
  * cpu_ms beside subrequests is carried, not refused.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { readFileSync } from "node:fs";
@@ -54,10 +55,10 @@ import { stripJsonc } from "../../tools/jsonc.mjs";
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   ok ? pass++ : fail++;
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}`);
-  if (!ok) console.log(`        got ${JSON.stringify(got)} want ${JSON.stringify(want)}`);
+  if (!ok) console.log(`        got ${statedJSON(got)} want ${statedJSON(want)}`);
 };
 const refusal = (fn) => { try { fn(); return "no refusal"; } catch (e) { return String(e.message).match(/REFUSED \[([A-Z_]+)\]/)?.[1] ?? "unrecognised: " + e.message; } };
 /* A should-succeed derivation observed safely: a refusal comes back as a value

@@ -23,6 +23,7 @@
  * agent-initiated scope widening is refused because the surface does not exist.
  * Arm (f) fails the moment somebody adds one.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { readFileSync } from "node:fs";
@@ -36,10 +37,10 @@ import {
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   ok ? pass++ : fail++;
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}`);
-  if (!ok) console.log(`        got ${JSON.stringify(got)} want ${JSON.stringify(want)}`);
+  if (!ok) console.log(`        got ${statedJSON(got)} want ${statedJSON(want)}`);
 };
 
 console.log("\n--- claude cascade: the instance level, and the fence around it ---");

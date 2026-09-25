@@ -86,6 +86,7 @@
  *   (ii)  R18's `mustNotBreak` PASSED on a fragment that could no longer match any label, because the labels were
  *         reworded by (i). A stale `mustBreak` fails loudly; a stale `mustNotBreak` passes silently. The fragments are
  *         now the labels' stable middles. */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync } from "node:fs";
@@ -118,8 +119,8 @@ const missingFrom = (dir) => GATE_DEPS.filter((p) => {
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const SECTIONS = 11;

@@ -20,6 +20,7 @@
  * FAILS; (3) a site's check removed in `owed-controls.test.mjs` (its A13 budgetAssert renamed away) -> the
  * real-estate arm "no suite site in the gate is UNCHECKED" FAILS, naming owed-controls.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
@@ -34,9 +35,9 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   if (ok) { pass++; console.log(`  PASS  ${name}`); }
-  else { fail++; console.log(`  FAIL  ${name}\n          got  ${JSON.stringify(got)}\n          want ${JSON.stringify(want)}`); }
+  else { fail++; console.log(`  FAIL  ${name}\n          got  ${statedJSON(got)}\n          want ${statedJSON(want)}`); }
 };
 
 /* ============== 1. THE REAL ESTATE ============== */

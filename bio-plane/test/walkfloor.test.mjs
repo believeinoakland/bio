@@ -115,6 +115,7 @@
    run — the baseline arm went red at `walkfloor.test.mjs imports test/sandbox.mjs`,
    which is the estate catching a real mistake in the very item that adds a
    detector, and is recorded rather than quietly fixed. */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
@@ -139,9 +140,9 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}`
-    + (ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`));
+    + (ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`));
   ok ? pass++ : fail++;
 };
 

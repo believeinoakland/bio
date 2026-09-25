@@ -49,6 +49,7 @@
  * withdrawn release (whose own bytes must brick it, the reproduction), rolled back to
  * 0.58.0 as DIST rolled biosmoke7 back, then upgraded to this plane.
  */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -64,8 +65,8 @@ const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${String(JSON.stringify(got)).slice(0, 1500)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${String(statedJSON(got)).slice(0, 1500)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");

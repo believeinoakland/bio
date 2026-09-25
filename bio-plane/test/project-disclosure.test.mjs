@@ -37,6 +37,7 @@
  *       [REC-145, 2026-09-19: that "liar" is now the RULING, as Bob amended DEC-63. The liar REC-145's row
  *       names instead is (d): drop the gate for EVERY context — §3's project-context arm catches it.]
  * ========================================================================= */
+import { statedJSON } from "./stated.mjs";
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -53,8 +54,8 @@ const SHOW = process.env.PROJECT_DISCLOSURE_SHOW === "1";   /* print the raw ans
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

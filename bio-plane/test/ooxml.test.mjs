@@ -46,6 +46,7 @@
    WHAT ARM (3) FOUND ABOUT THE SUITE, recorded rather than smoothed: a bare `ODF_FLAVOURS.every(...)` stayed GREEN over the emptied table, because `[].every()` is true. It now asserts the row COUNT beside the predicate, and the arm was RE-RUN after that correction — which is why this line reads 37 and not the 36 the first arming measured. Two further greens under the arm are correct and not vacuous — `content.xml ROUND-TRIPS` exercises `readPart`, which the table does not touch, and `determined, not undetermined` is true of the `format:"zip"` fall-through, which is why it is paired with a `format` assertion that does fail.
    OVER-STRICTNESS, measured outside the suite because it compares against a tree this session never touched: `discriminate()`'s FULL result objects for 15 pre-existing cases (the three OOXML fixtures, plain zip, renamed zip, declared-main-part-absent, vsdx, the caller-supplied table, the stored-member package, truncated CD, non-zip bytes, empty zip) captured from a pristine `git worktree add` of origin/main and from this tree: byte-identical, sha256 fdeb3b977f8adeec5db3eb92240ac1ca5cdcf6762aa0448212339a9905aac50d both sides. */
 
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import {
   MEASURED_OOXML_TEXT_BOUND_BYTES, declaredTextBytes, sizeGuard, crc32 as modCrc32,
@@ -60,8 +61,8 @@ import { deflateRawSync } from "node:zlib";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 

@@ -39,6 +39,7 @@
    (A) THE ROW'S OWN CONTROL — DROP THE FIELD FROM THE QUEUE ITEM: `prior_disposition: p.prior_disposition` removed from the FINDING item `op=queue` mints, so the object `proposalsFeed` builds rides only on `op=proposals` again -> **55/3**, and the three that fail are the three D-527 arms BY NAME: the reopened item's own arm, the totality arm against `op=proposals`, and the `present and null` arm. MUST NOT FAIL and did not: every REC-184, REC-211 and D-266 arm, including "the member's own feed agrees", which reads the `disposed` BLOCK and passes with the item carrying nothing — that green is the measurement that the block beside the item is not the item, and the reason the new arms name `items[]`.
    (B) OVER-STRICTNESS — the same object published in a spelling this item does not use (spread through a conditional, `...(p.prior_disposition === undefined ? {} : { prior_disposition: p.prior_disposition })`), correct work -> **58/0**, nothing fails: the arms ask for the FACT on the item, not for this item's line.
    NOT ARMED, BECAUSE IT IS ALREADY ASSERTED GREEN: the ORDER of these two checks against the identity checks above them. `badKey` ("procurement::nosuchstage", naming NO version) is refused BAD_STAGE rather than NO_DEFINITION_VERSION, which is D-128's rule one op over — a bad stage is still heard first — measured by an arm that was here before this item and passes unchanged. */
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -57,8 +58,8 @@ const mf = new Miniflare({
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  const ok = statedJSON(got) === statedJSON(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`}`);
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");

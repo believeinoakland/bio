@@ -100,6 +100,7 @@
  * would be exactly the overclaim this project treats as worse than a gap.
  */
 
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -147,9 +148,9 @@ const WHOLE_TREE_IS_THE_SUBJECT =
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}`
-    + (ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`));
+    + (ok ? "" : `\n         want ${statedJSON(want)}\n         got  ${statedJSON(got)}`));
   ok ? pass++ : fail++;
 };
 

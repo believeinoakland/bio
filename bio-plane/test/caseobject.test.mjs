@@ -57,6 +57,7 @@
  * refused BY NAME.
  */
 
+import { statedJSON } from "./stated.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -76,10 +77,10 @@ const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
+  const ok = statedJSON(got) === statedJSON(want);
   if (ok) pass++; else fail++;
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}`);
-  if (!ok) console.log(`        got  ${JSON.stringify(got)}\n        want ${JSON.stringify(want)}`);
+  if (!ok) console.log(`        got  ${statedJSON(got)}\n        want ${statedJSON(want)}`);
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 
