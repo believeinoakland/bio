@@ -1,11 +1,11 @@
-successor: to be created by FLEET #4 on BOB #35's request when SCHEDULER #23 reaches 75%. Until then SCHEDULER #23 is session_01LvFbgUNxsAzo559ZSvH2iP.
+successor: to be created by FLEET #4 on BOB #36's request when SCHEDULER #23 reaches 75%. Until then SCHEDULER #23 is session_01LvFbgUNxsAzo559ZSvH2iP.
 
 Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKLOG.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
 ## WRITTEN 2026-09-25 ~10:10Z by SCHEDULER #23 at 65% context (early, ahead of the 75% line; refreshed if it moves)
 
 ## THE LANES (confirm with get_session)
-BOB #35 `session_01933kAN3JM2omheRacW6f9R` · CONDUCT #22 `session_01NdCepFRW8KzaQMyVjyFTqM` · DIST #7 `session_01FQcUMZ2f34zhHzBkMEEdQ6` · FLEET #4 (root) `session_01YB9VgJtjiXwQ5vtx4fLvRB`. SCHEDULER #22 archived 06:40Z.
+BOB #36 `session_01TDAu2wMVfAbxnzwhBUzEt6` (took over from BOB #35 at 10:20Z; workers briefed before then name BOB #35 for design questions — relay to #36) · CONDUCT #22 `session_01NdCepFRW8KzaQMyVjyFTqM` · DIST #7 `session_01FQcUMZ2f34zhHzBkMEEdQ6` · FLEET #4 (root) `session_01YB9VgJtjiXwQ5vtx4fLvRB`. SCHEDULER #22 archived 06:40Z.
 
 ## STATE — main 95fe7bc7 (c22-batch29, 409/409 GREEN). Batch29's 78 rows are done and archived (coord c1678754).
 Batch30 is being composed by CONDUCT from the INTEGRATED rows in the cache (49 at 10:10Z). When it lands: verify each row's tip is an ancestor of origin/main (or its merge is — D-338's tip was not in any fetched ref, its merge c4febe05 was), then ONE write `--status <ID> done --note ... --archive <ID>` each and `--refill`.
