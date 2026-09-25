@@ -1,0 +1,16 @@
+{
+ "unit": "ui:agent-surfaced-inquiry.test.mjs",
+ "inputHash": "e7a75cb3f12da5fbc1b1b776eac2d3823d4b73b10f4df38b60248fc7f9971ce4",
+ "verdict": "PASS",
+ "run": "1d68249489e0fafc2b0bbf7700939dc4c3bc5d10.1790333468526.12810.json",
+ "tree": "1d68249489e0fafc2b0bbf7700939dc4c3bc5d10",
+ "head": "6ceb9b9b2e86d587aaf0c6215885b217a5f745a8",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 83,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "0b713711-43c0-538f-a4b3-f44d90f0fb7e",
+ "at": "2026-09-25T10:51:08.542Z"
+}
