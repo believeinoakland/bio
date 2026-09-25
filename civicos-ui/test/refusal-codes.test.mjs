@@ -268,6 +268,31 @@
  *        corpus (29 -> 30), so the guard was red on the untouched tree.
  *   Every restore verified by hash and content, and (z) re-ran green at reach 455.
  *   After: exactly (c), (e), (r2), (r6) fail, the four this header records above.
+ *
+ *   M0-148's, ADDED AND RUN 2026-09-25 (branch land/worker/M0-148, over land/worker/D-485
+ *   @ a23fe7ee) — the R3-fed walk FOLLOWS a binding to its value and reads suites with
+ *   COMMENTS BLANKED. Declared before arming, each ALONE.
+ *   THIS SUITE, the guard broken on disk and restored by sha256 + cmp (01daedaa…, 689,389 B):
+ *     comment blanking removed (`const src = raw;`) -> exit 1 at EXACTLY ARM 13d and 13e,
+ *     135 assertions, 2 FAILED; the binding pass disarmed (`if (false)` where a resolved
+ *     import becomes a carrier) -> exit 1 at EXACTLY 13a (x2), 13b and 13f, 4 FAILED —
+ *     13c stays green because it IS that break, and 13g because a throw is named either way.
+ *     **ITS FIRST SPELLING DID NOT ARM AND IS RECORDED:** breaking `h.codes.get(exported)`
+ *     removed the anchor ARM 13c's own mutation needs, so the suite died at 13c's
+ *     did-not-arm throw with NO TALLY — loud, but it moved two variables; re-armed elsewhere.
+ *   THE REAL TREE (`refusal-codes.control.mjs`):
+ *   (w1) THE ROW'S CONTROL — the guard's resolution of an imported binding broken inline.
+ *        RUN: exit 1, `FAIL: REQUIRED_ARGUMENT_MISSING is PINNED as fed to a surface through
+ *        a binding (M0-148), and NO suite …` beside r3Fed 76 < 77 — the arm names the code.
+ *   (w2) ADMINS_FIRST quoted only in queue-peritem's header comment. RUN: GREEN, reach 457.
+ *   (w3) OVER-STRICTNESS — preauth-vocabulary's VERIFY_REFUSAL_WIRE renamed at all eight
+ *        occurrences. RUN: GREEN, followed through the new name. **ITS FIRST RUN WAS RED
+ *        AGAINST A GREEN DECLARATION AND THE ARM WAS WRONG**: it renamed six (a line count),
+ *        the first six include two comments, and the live use kept the old name.
+ *   AND ARM (f) ABOVE WAS FOUND DEPENDING ON THE DEFECT: its "mock" plant was a COMMENT,
+ *   armed only by the over-count, and against the corrected walk came back exit 1 without
+ *   its ratchet line. CORRECTED to plant code; RUN: as declared.
+ *   After: exactly (c), (e), (r2), (r6) fail — unchanged.
  * ============================================================================
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
@@ -505,6 +530,11 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
      arm names one). Same did-not-arm rule as every mutation: a guard without the list throws. */
   guard = mutated("r4Owed", guard, g => g.replace(/const R4_OWED = new Map\(\[[\s\S]*?\n\]\);/,
     `const R4_OWED = new Map(${JSON.stringify(Object.entries(over.r4Owed || {}))});`));
+  /* M0-148: the pin names a REAL code (REQUIRED_ARGUMENT_MISSING) a fixture's plane does not
+     mint, so the real pin would fail every fixture. The fixture states its own, empty unless an
+     arm names one; a guard without the pin throws (the did-not-arm rule). */
+  guard = mutated("r3Pin", guard, g => g.replace(/const R3_FOLLOWED_PIN = \[[^\]]*\];/,
+    `const R3_FOLLOWED_PIN = ${JSON.stringify(over.r3Pin || [])};`));
   guard = guard.replace(/const CEILING = \{[\s\S]*?\n\};/, `const CEILING = ${JSON.stringify(Object.assign(
     /* `inheritedVerdicts: 0` (REC-79) is STATED rather than omitted: an absent
        ceiling compares `n > undefined` -> false and never fails, so leaving it
@@ -1660,6 +1690,74 @@ withTree({
     [r.exit, /REAL-PLANE REACH — 0 real-plane UI suite/.test(r.out)], [0, true]);
 });
 
+/* ---- ARM 13 · M0-148: THE R3-FED WALK FOLLOWS A BINDING, AND DOES NOT READ COMMENTS ----
+   The helper DERIVES its code (a `join`, never the literal), as plane-refusal-wire.mjs derives
+   C-61.1's from index.mjs — so the literal walk cannot see it, and only following can. */
+const WIRE = `export const CODE = ["PART", "FETCH", "FAILED"].join("_");\n`
+  + `export const wire = () => ({ ok: false, reason: CODE });\n`;
+const FOLLOW_TREE = (extra = {}) => Object.assign({
+  suites: { "wire.mjs": WIRE,
+    "follow.test.mjs": `import { wire } from "./wire.mjs";\nconst mock = async () => wire();\n` },
+  floor: { r3Fed: 2 }, r3Pin: ["PART_FETCH_FAILED"],
+}, extra);
+
+console.log("\n--- ARM 13a · a code FED through an imported binding is in R3, and PRINTED with its binding ---");
+withTree(FOLLOW_TREE(), tree => {
+  const r = runGuard(tree);
+  t("ARM 13a: exits 0 with r3Fed 2 (the literal suite's PART_TOO_LARGE and the followed PART_FETCH_FAILED)",
+    [r.exit, /ratchet:\s+r3Fed\s+floor\s+2 · measured\s+2/.test(r.out)], [0, true]);
+  t("ARM 13a: the FOLLOWED line names the code, the suite and the binding",
+    /FOLLOWED PART_FETCH_FAILED — follow\.test\.mjs \(wire <- \.\/wire\.mjs#wire\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 13b · a code fed ONLY through a binding and NOT pinned FAILS, naming it ---");
+withTree(FOLLOW_TREE({ r3Pin: [] }), tree => {
+  const r = runGuard(tree);
+  t("ARM 13b: exits 1 naming PART_FETCH_FAILED as unpinned, and nothing else",
+    [r.exit, /PART_FETCH_FAILED is fed to a surface ONLY through a binding/.test(r.out), armFails(r.out).length], [1, true, 1]);
+});
+
+console.log("\n--- ARM 13c · THE ROW'S CONTROL: the binding's resolution broken, and the arm NAMES the missed code ---");
+withTree(FOLLOW_TREE({ mutateGuard: g => g.replace("const codes = h.codes.get(exported);", "const codes = null;") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 13c: exits 1 with the PIN naming PART_FETCH_FAILED — not only r3Fed one lower",
+    [r.exit, /PART_FETCH_FAILED is PINNED as fed to a surface through a binding \(M0-148\), and NO suite/.test(r.out),
+     /R3's FED half is 1 code\(s\)/.test(r.out)], [1, true, true]);
+});
+
+console.log("\n--- ARM 13d · a code named ONLY in a COMMENT is not fed (UI-100's F1) — GREEN at r3Fed 1 ---");
+withTree({ suite: `// the plane could also answer "PART_FETCH_FAILED" here\n/* or "PART_PLATFORM_LIMIT" */\n`
+  + `const r = { reason: "PART_TOO_LARGE" };\n` }, tree => {
+  const r = runGuard(tree);
+  t("ARM 13d: exits 0 and measures r3Fed 1 — before M0-148 the two comment codes read FED (3, slack 2, RED)",
+    [r.exit, /ratchet:\s+r3Fed\s+floor\s+1 · measured\s+1/.test(r.out)], [0, true]);
+});
+
+console.log("\n--- ARM 13e · an `ok(` in a COMMENT no longer opens an expectation span over a real mock ---");
+withTree({ suite: `/* the old shape: ok( never closed in prose */\nconst r = { reason: "PART_TOO_LARGE" };\n`
+  + `const mock = { reason: "PART_FETCH_FAILED" };\n`, floor: { r3Fed: 2 } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 13e: exits 0 with BOTH mock codes FED (preauth-vocabulary's NOT_CONCLUDED and NO_REVIEW_COPY, in miniature)",
+    [r.exit, /fixture\.test\.mjs — FED 2 \[PART_FETCH_FAILED, PART_TOO_LARGE\]/.test(r.out)], [0, true]);
+});
+
+console.log("\n--- ARM 13f · OVER-STRICTNESS: a binding read only INSIDE an expectation is OBSERVED, not fed ---");
+withTree({ suites: { "wire.mjs": WIRE,
+  "obs.test.mjs": `import { CODE } from "./wire.mjs";\nok("the plane said it", got.reason === CODE);\n` } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 13f: exits 0 at r3Fed 1, the followed code OBSERVED and not in reach's fed half",
+    [r.exit, /obs\.test\.mjs — FED 0 · OBSERVED 1 \[PART_FETCH_FAILED\]/.test(r.out)], [0, true]);
+});
+
+console.log("\n--- ARM 13g · a helper that THROWS at import is NAMED as unresolved, never silently scored zero ---");
+withTree({ suites: { "wire.mjs": `export const CODE = (() => { throw new Error("derivation came back empty"); })();\n`,
+  "throws.test.mjs": `import { CODE } from "./wire.mjs";\nconst mock = { reason: CODE };\n` } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 13g: exits 0 (the floor did not count it) and the UNRESOLVED line names the binding and the throw",
+    [r.exit, /UNRESOLVED binding\(s\)[^\n]*throws\.test\.mjs: CODE \(\.\/wire\.mjs: THREW at import: derivation came back empty\)/.test(r.out)],
+    [0, true]);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -1700,5 +1798,9 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `its measured value (11a) and the same landing with its floors moved passes (11b); a ratchet key with no stated `
   + `bound (11c), with no recorded figure (11d), a bound for a key no table holds (11e) and a bound with no reason (11f) `
   + `each fail by name; the one exempt key says why on every run (11g); ceiling slack fails too (11h); and a non-zero `
-  + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j)`);
+  + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j). AND SINCE `
+  + `M0-148 the R3-fed walk FOLLOWS a binding to a helper's evaluated value (13a), a code reached only that way `
+  + `must be PINNED by name (13b) so a broken resolution NAMES the code it lost (13c), a code named only in a `
+  + `comment is not fed (13d), a comment's \`ok(\` no longer swallows a real mock (13e), a binding read only inside `
+  + `an expectation is observed and not fed (13f), and a helper that throws is named rather than scored zero (13g)`);
 if (bad) process.exit(1);
