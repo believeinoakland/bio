@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: D-531 (§W), run 2026-09-25, each arm ALONE with the other site held fixed, restored by `cp` from a uniquely-named pristine copy and verified by sha256 AND `cmp` (`index.mjs` 838,838 B sha256 38590bd40c69…; `store.mjs` 3,329,535 B sha256 bdfbfedbab26…). Declared before arming: (a) `index` — restore `u.text.length` in `index.mjs`'s `arm`; MUST fail W1 and W1b and MUST NOT move W2/W3, because the store's own filter still refuses the blank units → 58/2, W1 and W1b BY NAME, as declared. (b) `store` — restore `u.text.length` in `#writeCaptureText`'s ordering filter; MUST fail W2 and W3 and MUST NOT move W1/W1b → 58/2, W2 and W3 BY NAME, as declared. (c) `overstrict` — `glyphCount(u.text) > 1` at the `arm` site; MUST fail W1b (the one-glyph `§` paragraph dropped) → 58/2, W1b BY NAME and W1 WITH it, which was not declared and is correct: W1 asserts the exact surviving para list, so it sees the same drop. Before the fix, both sites pristine: 56/4 (W1, W1b, W2, W3) — M-154. */
 /* NEGATIVE CONTROL: SIX arms and a baseline live in `test/nc-rec91.mjs` and are re-run in one step with `node test/nc-rec91.mjs [arm]` from `bio-plane/`. Each arm EDITS A REAL SOURCE, is armed ALONE with every other defence held open, and is restored from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by content (`cmp`) with a byte count printed and a minimum guarded — never `git checkout --`, which restores to HEAD and has twice discarded a session's own uncommitted work. Declared before arming, and every one RUN; results are in this item's report and in CLAIMS.md's release line. (a) `baseline` — nothing armed; MUST be green, the row that distinguishes six-arms-broken from six-arms-working. (b) `nopurge` — drop `"capture_text"` from `purge`'s TABLES array; MUST fail the purge arms BY NAME in BOTH directions (the per-bundle arm and the whole-store arm) and MUST fail `hygiene.test.mjs`'s D-113 census, which is the check that would have caught it at the moment the mistake was made. (c) `nodelete` — in `#writeCaptureText` remove the leading `DELETE FROM capture_text WHERE capture_sha=?`; MUST fail the CHAIN-MOVE arm by name — the superseded text is still indexed, which is a search answering out of an engine that did not produce it — and MUST NOT move any first-promote arm, because on a first promotion there is nothing to delete and the defect is invisible. (d) `replace` — change that same plain `INSERT` to `INSERT OR REPLACE` and drop the delete with it; MUST fail the chain-move arm AND the stats-parity arm (`textIndexed` exceeds `textUnits`), because SQLite does not fire delete triggers for REPLACE conflict resolution and the superseded row's index entry is ORPHANED — this is the arm that proves the measured hazard is real in the product and not only in a probe. (e) `noobs` — neuter `#observeIndexed` to return without appending; MUST fail every content-axis arm and MUST NOT move the row-count arms, which separates the OBSERVATION from the WRITE. (f) `armsopen` — treat every container as having a unit arm (`CAPTURE_TEXT_UNIT_CONTAINERS` becomes a Set that answers true); MUST fail the WORKBOOK arm alone, because a workbook would then be recorded as extracted-and-indexed-nothing rather than as having no unit arm — the false-absence direction this item's whole vocabulary exists to refuse. (g) `overstrict` — THE OVER-STRICTNESS DIRECTION, and it is armed against the BOUND rather than against the writer: drop the per-capture bound to 64 B so an ordinary document goes `partial`; MUST fail the FULL arms and MUST NOT fail the partial arm or any refusal, because a bound tighter than its rule is not a safer bound — it makes the record say it holds less than it does, and a member reading `partial` would re-extract a document that was already whole. */
 /* RESULTS: see this item's report and the CLAIMS.md release line. */
 /* RESULTS, REC-111's arms RE-RUN 2026-09-16 on the final tree, each ALONE, every restore byte-identical by sha256 AND by content (`store.mjs` 2,242,874 B sha256 e03a95882562… four times; `index.mjs` 586,300 B sha256 b90c31c4f2ad…): baseline 55/0 green · nounitbound 51/4 · sentencebytesonly 54/1 · gtnotge 52/3 · tighten 50/5 · pinoff 54/1 — ALL SIX AS DECLARED, every declared failure present and ZERO UNDECLARED failures, which this harness CHECKS rather than describes afterwards. ONE RESULT CAME BACK DIFFERENT FROM ITS DECLARATION AND IS RECORDED RATHER THAN SMOOTHED: `tighten` was declared with EIGHT failures and returned FIVE, and the three surprising greens (`G5`, `G6b`, `G7`) are a finding about the SUITE — they read `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` out of the product, so both sides of each assertion move with it and they are blind to its VALUE by construction. That is not fixed by hand-copying the constant, which agrees for free; it is why `G1`, `G2`, `G6` and `G8` carry independent figures (the wire's derived ceiling, M-20's literals, and two real documents by name), and all four went red. The declaration is corrected to what the arm does. AND THE REGISTER DOES NOT COUNT THIS DECLARATION, which is stated rather than worked around: `control-register.mjs`'s `readControl` records "the fullest single statement, never the sum", so this suite's tally stays REC-91's seven arms and `REGISTER_FLOOR` did not move (arms 1109/1109 · classified 199/199 · corpus 200/200, exit 0 — unchanged from the baseline). The instrument was not touched. */
@@ -124,6 +125,23 @@ const DOCX = zip([
   { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>` },
 ]);
 
+/* ===== D-531 — A DOCUMENT WITH WHITESPACE-ONLY PARAGRAPHS ================
+ * Two paragraphs hold characters and NO GLYPH: one of ASCII whitespace, one of
+ * a no-break space and an em space, which `String.prototype.length` counts and
+ * no reader can search. Beside them, the OVER-STRICTNESS half: a paragraph of
+ * ONE glyph (`§`) and a paragraph with whitespace AROUND its words must still
+ * be emitted, the second VERBATIM — the fix is "no glyph", never "trim". */
+const WS_PARAS = ["CITY OF OAKLAND", " \t  ", "\u00a0\u2003", "§", "  The marmoreal clause stands.  "];
+const WS_KEPT = [0, 3, 4];
+const DOCX_WS = zip([
+  { name: "[Content_Types].xml", data: `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="${DOCX_CT}.main+xml"/></Types>` },
+  { name: "_rels/.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>` },
+  { name: "word/document.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document ${W}><w:body>`
+      + WS_PARAS.map((p) => `<w:p><w:r><w:t xml:space="preserve">${p}</w:t></w:r></w:p>`).join("")
+      + `</w:body></w:document>` },
+  { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>` },
+]);
+
 /* ===== THE DECK — A KNOWN SLIDE COUNT ===================================
  * TWO shapes per slide, on purpose. Bob's ruling of 2026-09-15 is that a
  * deck's unit is the SLIDE and not the shape, so a two-shape slide must produce
@@ -197,6 +215,7 @@ const mf = new Miniflare({
     if (u.pathname === "/report.docx") return bin(DOCX, DOCX_CT);
     if (u.pathname === "/deck.pptx") return bin(PPTX, PPTX_CT);
     if (u.pathname === "/budget.xlsx") return bin(XLSX, XLSX_CT);
+    if (u.pathname === "/blank-paras.docx") return bin(DOCX_WS, DOCX_CT);
     return new Response("unscripted", { status: 500 });
   },
 });
@@ -943,6 +962,61 @@ export default { async fetch(req, env) { return env.P.get(env.P.idFromName("a"))
   t("F3: and FTS5's own integrity-check passes afterwards — a plain `DELETE ... WHERE rowid` on an "
   + "external-content table answers SQLITE_CORRUPT_VTAB, which is why the trigger exists",
     r.integrity, "ok");
+}
+
+/* ========================================================================= *
+ *  W · D-531 — A UNIT WITH NO GLYPH IS NEITHER EMITTED NOR INDEXED
+ * ========================================================================= */
+console.log("\n--- W · D-531: a whitespace-only unit is not content, at BOTH emission sites ---");
+
+/* THE RULE IS SPELLED HERE, NOT IMPORTED: a suite that shares its subject's
+   helper has stopped being able to disagree with it (`textchain.mjs`'s own note
+   on `glyphCount`). Non-whitespace code points, D-501's unit. */
+const glyphsOf = (x) => [...x].filter((ch) => !/\s/u.test(ch)).length;
+t("W0: the fixture holds what it claims — two paragraphs with characters and NO glyph, and three "
++ "with at least one; a fixture without blank units would make every arm below pass for free",
+  [WS_PARAS.filter((x) => x.length > 0 && glyphsOf(x) === 0).length,
+   WS_PARAS.map((x, i) => (glyphsOf(x) > 0 ? i : -1)).filter((i) => i >= 0)],
+  [2, WS_KEPT]);
+
+/* SITE 1, `index.mjs`'s `arm` — driven through `op=acquire` on a real DOCX. */
+const wsDoc = (await acquire("/blank-paras.docx")).document;
+t("W1: ACQUIRE emits no unit for a whitespace-only paragraph — the two blank paragraphs are absent "
++ "and the producer's own para index of the survivors is kept, not renumbered (`index.mjs`'s `arm`)",
+  [wsDoc?.profile?.format?.format, wsDoc?.text_units?.map((u) => u.extent.para),
+   wsDoc?.text_units?.map((u) => u.seq)],
+  ["docx", WS_KEPT, WS_KEPT]);
+t("W1b: THE OVER-STRICTNESS HALF — a one-glyph paragraph is still a unit, and a paragraph with "
++ "whitespace around its words is carried VERBATIM: the rule is \"no glyph\", never \"trim\"",
+  wsDoc?.text_units?.map((u) => u.text), WS_KEPT.map((i) => WS_PARAS[i]));
+
+/* SITE 2, `store.mjs`'s `#writeCaptureText` — driven through `op=promote` with an
+   AUTHORED provenance document, because that is the writer's real input and a
+   caller can put a blank unit there whatever acquire does. */
+{
+  const before = await get("stats", "", "adm-rec91");
+  const sh = sha("D-531: a capture offering one real page and two blank ones");
+  const pages = ["the layer read this page as a quorum call", "  \n\t  ", "\u3000\u00a0"];
+  await promote("INFO-2026-9310-blankpages", { document: {
+    ...pdfDocOf(pages, "layer"), capture: { sha256: sh, encoding: "binary", bytes: 4096 } } });
+  const after = await get("stats", "", "adm-rec91");
+  const ax = await axisOf(sh);
+  t("W2: PROMOTE indexes only the page with a glyph — two whitespace-only units offered in the "
+  + "authored provenance are NOT written, and the capture reads full over the ONE real unit",
+    [after.textUnits - before.textUnits, after.textIndexOk, ax.indexed], [1, true, FULL]);
+}
+{
+  const before = await get("stats", "", "adm-rec91");
+  const sh = sha("D-531: a capture every one of whose units is blank");
+  await promote("INFO-2026-9310-allblank", { document: {
+    ...pdfDocOf([" ", "\n\n", "\t\u2003"], "layer"),
+    capture: { sha256: sh, encoding: "binary", bytes: 4096 } } });
+  const after = await get("stats", "", "adm-rec91");
+  const ax = await axisOf(sh);
+  t("W3: a capture whose EVERY unit is blank indexes nothing and does NOT read full — the record "
+  + "saying it holds a searchable passage of a document where it holds only whitespace is the "
+  + "claim-more-than-it-holds class CLAUDE.md §2 ranks above a missing feature",
+    [after.textUnits - before.textUnits, ax.indexed], [0, NONE]);
 }
 
 /* WHAT THIS SUITE CANNOT SEE, NAMED RATHER THAN SCORED ZERO.

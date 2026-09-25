@@ -4762,10 +4762,19 @@ function textUnitsFor(i2text) {
    * and they are indexed as NOTHING rather than as empty, which is
    * why section 4.4's `scope` tally exists. Text below the OCR floor
    * never reaches here at all: it is discarded rather than carried
-   * beside a flag (Part II section 16, chain rule 4). */
+   * beside a flag (Part II section 16, chain rule 4).
+   *
+   * "NO TEXT" MEANS NO GLYPH (D-531). This read `u.text.length`, so a
+   * page, paragraph or slide of pure whitespace was emitted as a unit
+   * and indexed as content -- the record claiming a passage where it
+   * holds none. Whether a unit holds text is D-514's glyph question,
+   * asked through the one counter every such reader shares. The seq
+   * is still the producer's array position, so a skipped unit leaves
+   * a gap rather than renumbering the survivors. */
   if (i2text) {
     const arm = (list, kind, fields) => (Array.isArray(list) ? list : [])
-      .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && u.text.length
+      .map((u, i) => (u && typeof u === "object" && typeof u.text === "string"
+                      && glyphCount(u.text) > 0
         ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null))
       .filter(Boolean);
     /* The index each producer ALREADY assigns is carried, never
