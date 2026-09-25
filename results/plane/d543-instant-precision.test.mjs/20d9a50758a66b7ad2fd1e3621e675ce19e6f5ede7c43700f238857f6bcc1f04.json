@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d543-instant-precision.test.mjs",
+ "inputHash": "20d9a50758a66b7ad2fd1e3621e675ce19e6f5ede7c43700f238857f6bcc1f04",
+ "verdict": "PASS",
+ "run": "64e66f0adb61e6938652b48caeafde9a6ff9ae4a.1790336021095.2670.json",
+ "tree": "64e66f0adb61e6938652b48caeafde9a6ff9ae4a",
+ "head": "332c594e721c6f72688b04b48242e0c7c5cf7766",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 138,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "08d6b581-0660-51aa-a4e6-1a482f6b93eb",
+ "at": "2026-09-25T11:33:41.107Z"
+}

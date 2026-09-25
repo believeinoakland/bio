@@ -1,0 +1,16 @@
+{
+ "unit": "plane:setup-honesty.test.mjs",
+ "inputHash": "c1a9f6c539ec5be06018c2ba790dfcace65fca5a556771cf5c1c0a76e3e3eb14",
+ "verdict": "PASS",
+ "run": "64e66f0adb61e6938652b48caeafde9a6ff9ae4a.1790336021095.2670.json",
+ "tree": "64e66f0adb61e6938652b48caeafde9a6ff9ae4a",
+ "head": "332c594e721c6f72688b04b48242e0c7c5cf7766",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "08d6b581-0660-51aa-a4e6-1a482f6b93eb",
+ "at": "2026-09-25T11:33:41.107Z"
+}
