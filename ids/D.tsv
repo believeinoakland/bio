@@ -245,3 +245,4 @@ D-716	2026-09-25T10:13:50.246Z	SCHEDULER-23	capturerequests.test fails 2 under p
 D-717	2026-09-25T10:21:50.130Z	land/worker/D-695	
 D-718	2026-09-25T10:29:35.185Z	WORKER D-700	C-17.2 classifyDivergence walks _history/manifest.json in snap-key order; D-700 gave the image seq (write order) and historyWriteOrder; the ladder's intervening set should walk it
 D-719	2026-09-25T10:29:39.219Z	WORKER D-700	setup.mjs bundle view lists _history entries sorted by snap key, not write order (seq since D-700)
+D-720	2026-09-25T10:41:52.028Z	WORKER D-708	pair draft (caseId+newCase) statementack records the reading at the named case's next-edition key; that case's document ('*' match) lists it though which case the draft becomes is UNDETERMINED
