@@ -139,7 +139,7 @@ try {
   const pr = await POST(`op=promote&token=${RUTH}`, {
     bundleId: INQ, base: null, snapKey: `${INQ}-d260`,
     files: [{ path: "bundle.md", text: inquiryMd, bytes: inquiryMd.length, sha256: sha(inquiryMd) }],
-    register: [], meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${INQ}`,
+    register: [], meta: { object_type: "inquiry", group: "believe-in-oakland",
                           current_state: "open", created: NOW, last_updated: NOW } });
   if (!pr.ok) throw new Error(`promote: ${JSON.stringify(pr).slice(0, 300)}`);
 

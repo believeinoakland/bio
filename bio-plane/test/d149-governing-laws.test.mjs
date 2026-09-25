@@ -122,7 +122,7 @@ const promote = async (tok, id, text, base = null) =>
     bundleId: id, base, snapKey: `${id}-${base ? "rev" : "new"}-${String(++snapKeySeq).padStart(4, "0")}`,
     files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }],
     register: [],
-    meta: { object_type: "action", group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: "action", group: "believe-in-oakland",
             current_state: "planned", created: NOW, last_updated: LATER },
   }));
 const headOf = async (id) => rP(await GET(`op=projection&token=${NADIA}&id=${encodeURIComponent(id)}`))?.bundle_sha;

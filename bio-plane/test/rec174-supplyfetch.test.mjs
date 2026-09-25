@@ -92,7 +92,9 @@ const boot = async () => {
   /* `readings` maps a capture sha to the entity list its reading carries; a sha absent from it is promoted with NO
      reading, so no content- or meaning-level row is written for it — the subject the missing lists supply. */
   const promote = async (id, type, shas, readings = {}) => {
-    const text = `---\nobject_type: ${type}\ngroup: believe-in-oakland\ntitle: ${id}\ncurrent_state: collected\n---\n\n# ${id}\n`;
+    /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: a project's bytes said `collected` (information's word) under a
+       `forming` label, and the projection took the label; the record now takes the bytes, so they state `forming`. */
+    const text = `---\nobject_type: ${type}\ngroup: believe-in-oakland\ntitle: ${id}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\n---\n\n# ${id}\n`;
     const docs = shas.filter((s) => s in readings).map((s) => ({
       capture: { sha256: s, encoding: "binary", bytes: 10 }, reading: readingOf(readings[s]) }));
     const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];

@@ -101,7 +101,7 @@ const md = ["---",
 console.log("\n--- FIXTURE: one readable question, one member ---");
 t("FIXTURE: the question is promoted", (await POST(`op=promote&${RUTH}`, {
   bundleId: Q, base: null, snapKey: "20260923T160000Z_ec177aa1",
-  meta: { object_type: "inquiry", group: "believe-in-oakland", title: `title for ${Q}`,
+  meta: { object_type: "inquiry", group: "believe-in-oakland",
           current_state: "open", created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }))?.ok, true);
 

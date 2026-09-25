@@ -234,7 +234,7 @@ let SIGNED_SHA = null;
       snapKey: `${id}-${String(++snapKeySeq).padStart(6, "0")}`,
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extraFiles],
       register,
-      meta: { object_type: type, group: GROUP, title: `Bundle ${id}`,
+      meta: { object_type: type, group: GROUP,
               current_state: type === "inquiry" ? "open" : "collected",
               created: NOW, last_updated: LATER } });
   const mustPromote = async (...a) => {

@@ -83,7 +83,7 @@ export async function restOnARatifiedCase({ post, get, doPost, sha, promoteToken
   const promote = async (id, text, objectType, state, label = id) => okOrThrow(`promote ${label}`, await post(`op=promote&token=${promoteToken}${store}`, {
     ...(id === null ? {} : { bundleId: id }), base: null,
     snapKey: `20260701T${String(700000 + (++seq))}Z_${sha(label).slice(0, 8)}`,
-    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${label}`,
+    meta: { object_type: objectType, group: "believe-in-oakland",
             current_state: state, created: at, last_updated: at },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [] }));
   /* CORRECTED 2026-09-19 at D-431's integration (CONDUCT #6), where this new fixture met REC-141 (IC-158): a

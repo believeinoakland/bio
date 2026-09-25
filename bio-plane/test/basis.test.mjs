@@ -124,7 +124,7 @@ const infoMd = (id) => ["---",
 const promote = (id, text, type, base = null) => call("/promote", {
   bundleId: id, base, snapKey: `${id}-${base ? "rev" : "new"}`, author: "suite",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : "collected",
           created: NOW, last_updated: LATER },
 });
@@ -292,7 +292,7 @@ console.log("\n--- 6. the document stays authoritative: payload basis refused, p
     bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
     basis: [{ target: DOC, role: "supports" }],
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: "x",
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: LATER },
   });
   t("basis in the promote payload is refused outright (D-21: no second place to state it)",

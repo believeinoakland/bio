@@ -174,7 +174,7 @@ const promote = async (id, text, type, { base = null, register = [], reading = n
   return post("promote", {
     ...(id != null ? { bundleId: id } : {}), base,
     snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${name}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state || (type === "inquiry" ? "open" : type === "project" ? "forming" : "collected"),
             created: NOW, last_updated: LATER },
     files, register });
@@ -409,7 +409,7 @@ t("C-6.3 holds by construction: every leg's target is in references[] too, so th
   docLegsNow.every((l) => refsNow.some((r) => r.target === l.target)), true);
 const basisInPayload = await post("promote", {
   bundleId: MAIN, base: (await get("projection", `id=${MAIN}`)).bundle_sha, snapKey: "20260804T999999Z_dead",
-  meta: { object_type: "inquiry", group: "believe-in-oakland", title: "x", current_state: "open",
+  meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
           created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text: "x", bytes: 1, sha256: sha("x") }],
   basis: [{ target: DOC_A, role: "supports" }] });

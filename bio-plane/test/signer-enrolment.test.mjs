@@ -295,7 +295,7 @@ const promoteTarget = async (id, snap) => {
   const md = mkMd(id);
   const r = await POST("op=promote&token=mem-d158", {
     bundleId: id, base: null, snapKey: snap, author: "claude",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "D-158 target",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] });
   if (!r || !r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 400)}`);

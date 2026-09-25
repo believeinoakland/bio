@@ -161,7 +161,7 @@ const promote = async (D, id, text, objectType, state, tok = ADM) => {
   const r = await D.POST(`op=promote&token=${tok}`, {
     bundleId: id, base: null,
     snapKey: `20260921T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+    meta: { object_type: objectType, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [],
@@ -240,7 +240,7 @@ const task = async (D, k) => {
   const md = `---\nid: ${id}\n---\n`;
   const r = await D.POST(`op=promote&token=${ADM}`, {
     bundleId: id, base: null, snapKey: `20260921T2${String(10000 + (++snapSeq)).slice(-5)}Z_task`, author: "ruth",
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Filed ${k}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [{ sha256: cap, path: `snapshots/d432-${k}.pdf`, encoding: "binary", bytes: 10 }] });

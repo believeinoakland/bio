@@ -238,7 +238,7 @@ const doc = async (type, tok, key, label, ref = null) => {
   const r = await post("promote", {
     ...(minted ? {} : { bundleId: tag }), base: null, snapKey: `${tag}-new`, author: "r36", files,
     register: [{ sha256: capture, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
-    meta: { object_type: type, group: "believe-in-oakland", title: tag,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "project" ? "forming" : "collected",
             created: NOW, last_updated: NOW } }, tok);
   if (r?.ok === false) throw new Error(`promote ${tag}: ${JSON.stringify(r)}`);
@@ -600,7 +600,7 @@ t("and the read does not spell its own grouping: the ONE builder is what both ca
 console.log("\n--- fail-closed: no viewer stamp reaches the store = no candidates, never all of them ---");
 await dcall("/promote", {
   bundleId: "INFO-2026-0099-direct", base: null, snapKey: "direct-1", author: "r36",
-  meta: { object_type: "information", group: "believe-in-oakland", title: "direct",
+  meta: { object_type: "information", group: "believe-in-oakland",
           current_state: "collected", created: NOW, last_updated: NOW },
   /* REC-175 (2026-09-23): CORRECTED, not exempted. This fixture sent a digest that is NOT the SHA-256 of the text beside it (sha("x") and sha("y"): digests of OTHER strings), and the old op=promote stored it as given — a false digest in the fixture's own record. promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so the file sends no digest and the plane computes it from the bytes; nothing this suite asserts reads the old value. */
   files: [{ path: "bundle.md", text: bundleMd("INFO-2026-0099-direct", "information"),
@@ -713,7 +713,7 @@ const bcall = async (p, body) => (await (await bmf.dispatchFetch("http://x" + p,
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
     register: [{ sha256: capture, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
-    meta: { object_type: "information", group: "believe-in-oakland", title: id,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW } });
   if ((r.result || r)?.ok === false) throw new Error(`REC-77 promote: ${JSON.stringify(r)}`);
 }

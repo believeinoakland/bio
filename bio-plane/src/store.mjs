@@ -15966,6 +15966,17 @@ export class Store extends DurableObject {
    *  release()'s precedent: a register half-reconstructed is a record where the
    *  reader cannot tell which documents were established and which were skipped.
    */
+  /* D-563: an internal relabel's fallback — each row value is sent only when the carried `bundle.md` states no such
+     key, so the plane never labels its own write against the document it is carrying. */
+  static #rowUnlessStated(files, row) {
+    const md = files.find((f) => f && f.path === "bundle.md");
+    const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+    const out = {};
+    for (const [k, v] of Object.entries(row))
+      if (!(fm && typeof fm === "object" && Object.prototype.hasOwnProperty.call(fm, k))) out[k] = v;
+    return out;
+  }
+
   provenanceChainRebuild({ bundleId = "", apply = false, author = null, viewer = null } = {}) {
     const who = String(author ?? "").trim();
     if (!who)
@@ -16063,8 +16074,14 @@ export class Store extends DurableObject {
       author: who,
       files: [{ path: "data/provenance.json", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: seen.object_type, group: seen.group_id, title: seen.title,
-              current_state: seen.current_state, prior_state: seen.prior_state ?? null,
+      /* D-563: the row's title and state are sent ONLY where the held document states none. `promote` now derives
+         them from the document and refuses a label that contradicts it; relabelling from the ROW would refuse this
+         correction on every bundle whose row an envelope once wrote apart from its bytes — M-172 counted 11 in `bio`
+         (row `prior_state` null, document `collected`). Where the document states them the projection takes the
+         document's value, which is the value the bundle's own bytes have always carried. */
+      meta: { object_type: seen.object_type, group: seen.group_id,
+              ...Store.#rowUnlessStated(carried, { title: seen.title, current_state: seen.current_state,
+                                                   prior_state: seen.prior_state ?? null }),
               created: seen.created, last_updated: seen.last_updated,
               criticality: seen.criticality ?? null },
     });
@@ -17346,6 +17363,38 @@ export class Store extends DurableObject {
     const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
     const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);
     /* ===== END D-526 derivation ===== */
+    /* ===== D-563 (`BIO_Case_Making_v0_1.md` §2; C-2.5 and D-510's derivation, C-86.3, C-86.4) — THE DOCUMENT ALSO
+       STATES WHAT IT IS CALLED AND WHERE IT STANDS, AND THE ENVELOPE IS A LABEL FOR THOSE TOO. D-510/D-526 derived the
+       TYPE from the bytes; the title and the state were still the CALLER'S: `bundles.title`, `current_state` and
+       `prior_state` were projected from `meta`, and 7.1's name scan, 7.11's owner test and REC-181's retirement arm
+       asked `meta.title` / `meta.current_state` / `meta.closed_reason`. MEASURED by D-526's worker: a second project
+       whose bytes name a TAKEN title LANDED when `meta.title` named another, and the projection showed the envelope's
+       title over the bytes'. So each is derived ONCE, here, from the bytes the caller sent (REC-141's mint and D-436's
+       stamp rewrite `id:` and `group:` only), and every fence and the projection read the derived value. The envelope
+       is the FALLBACK where the document states nothing, exactly as `promotedType` takes it — a blob-held or
+       title-less bundle.md is byte-identical to what these lines did before. `prior_state` and `closed_reason` are
+       STATED when the document carries the key (a `null` is a statement); an envelope contradicting any of them is
+       refused by name below (`is-promoted-title-disagrees`, `is-promoted-state-disagrees`), after every fence, so
+       which fence a caller meets never depends on the label. ===== */
+    const envelopeMeta = meta && typeof meta === "object" ? meta : null;
+    const fmHas = (o, k) => !!o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
+    const textStated = (v) => (typeof v === "string" && v.trim() !== "" ? v : null);
+    const documentTitle = sentFm && typeof sentFm === "object" ? textStated(sentFm.title) : null;
+    /* C-16: an inquiry's title is a rendering of its `## Question`; an envelope naming THAT title agrees with the
+       document as much as one naming `title:` does, because it is the title the projection writes. */
+    const documentQuestionTitle = documentType === "inquiry" && typeof sentMd?.text === "string"
+      ? deriveInquiryTitle(inquiryQuestionOf(sentMd.text)) : null;
+    const envelopeTitle = envelopeMeta ? textStated(envelopeMeta.title) : null;
+    /* `let`: a revision stating no title anywhere carries the held one forward (below, once `cur` is read). */
+    let promotedTitle = documentTitle ?? (envelopeMeta ? envelopeMeta.title : undefined);
+    const documentState = sentFm && typeof sentFm === "object" ? textStated(sentFm.current_state) : null;
+    const envelopeState = envelopeMeta ? textStated(envelopeMeta.current_state) : null;
+    const promotedState = documentState ?? (envelopeMeta ? envelopeMeta.current_state : undefined);
+    const promotedPriorState = fmHas(sentFm, "prior_state") ? (sentFm.prior_state ?? null)
+      : (envelopeMeta ? envelopeMeta.prior_state ?? null : null);
+    const promotedClosedReason = fmHas(sentFm, "closed_reason") ? (sentFm.closed_reason ?? null)
+      : (envelopeMeta ? envelopeMeta.closed_reason : undefined);
+    /* ===== END D-563 derivation ===== */
     const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object"
       && (promotedType === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
@@ -17490,7 +17539,7 @@ export class Store extends DurableObject {
          the bundle's head and the answer carry — the caller's own sha of an id-less document is never
          registered. Inside the transaction, so the sequence step and the write are one act. */
       if (creatingProject) {
-        bundleId = this.#mintProjectId(meta.title);
+        bundleId = this.#mintProjectId(promotedTitle);
         if (!bundleId) return { ok: false, reason: "MINT_EXHAUSTED",
                                 detail: "the plane could not find a free project id in the current sequence" };
         const lines = projectMd.text.split("\n");
@@ -17572,9 +17621,10 @@ export class Store extends DurableObject {
        *
        * Carrying forward is correct in general: an update that does not mention
        * the title is not a request to remove it. */
-      if (cur && (meta.title === undefined || meta.title === null || meta.title === "")) {
+      /* D-563: carried into the DERIVED title, which the document and the envelope both left unstated. */
+      if (cur && (promotedTitle === undefined || promotedTitle === null || promotedTitle === "")) {
         const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
-        if (prev && prev.title) meta.title = prev.title;
+        if (prev && prev.title) promotedTitle = prev.title;
       }
 
       /* 7.1: a project's name is unique across the instance.
@@ -17605,7 +17655,7 @@ export class Store extends DurableObject {
        * against projects promoted before the column existed. Projects are few
        * relative to Information and this runs only for them. */
       if (promotedType === "project") {
-        const key = Store.projectNameKey(meta.title);
+        const key = Store.projectNameKey(promotedTitle);   /* D-563: the DOCUMENT's name */
         if (!key)
           return { ok: false, reason: "NO_TITLE",
                    detail: "a project needs a name, and it must be unique across this instance" };
@@ -17647,8 +17697,9 @@ export class Store extends DurableObject {
        * group has stopped pursuing something is a statement by its members about
        * their own intent, and no automation holds that. */
       if (cur && cur.object_type === "project") {
-        const to = meta.current_state, from = cur.current_state;
-        const deactivating = from !== "closed" && to === "closed" && meta.closed_reason === "abandoned";
+        /* D-563: the state and the reason the DOCUMENT states, not the label on the request. */
+        const to = promotedState, from = cur.current_state;
+        const deactivating = from !== "closed" && to === "closed" && promotedClosedReason === "abandoned";
         const reactivating = from === "closed" && to === "investigating";
         if (deactivating || reactivating) {
           const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
@@ -17712,7 +17763,7 @@ export class Store extends DurableObject {
          state without the question (State Rules v1.5 §4.1, BOB #30). The same predicate, the same
          code and the same offenders' shape. Only a move INTO retired: an edit of an item ALREADY
          retired changes no state, and a leg that predates this rule stays untouched (D-168 §3). */
-      if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired")
+      if (promotedState === "retired" && (!cur || cur.current_state !== "retired")   /* D-563: the document's state */
           && (cur ? cur.object_type : promotedType) === "information") {
         const citedBy = this.#retirementCitedBy(bundleId);
         if (citedBy.length)
@@ -17904,6 +17955,55 @@ export class Store extends DurableObject {
                        + `the document names, or change the document first. Nothing was written.` };
       }
       /* END DEC-49 REGION is-promoted-type-disagrees */
+      /* D-563 — the same two halves as D-510's, for the title and the state: the DERIVATION above is not exempt for a
+         replay, and the REFUSAL is, for D-510's reason. Only a contradiction between two STATEMENTS is refused: an
+         envelope stating nothing takes the document's word, and a document stating nothing takes the envelope's.
+         Compared with runs of whitespace collapsed and ends trimmed, so a respacing is not a contradiction; case is
+         kept, because a different word is a different title. */
+      const sameText = (a, b) => String(a).trim().replace(/\s+/g, " ") === String(b).trim().replace(/\s+/g, " ");
+      /* DEC-49 REGION is-promoted-title-disagrees */
+      if (envelopeTitle !== null && (documentTitle !== null || documentQuestionTitle !== null)
+          && !(documentTitle !== null && sameText(envelopeTitle, documentTitle))
+          && !(documentQuestionTitle !== null && sameText(envelopeTitle, documentQuestionTitle)) && !pkg.replay) {
+        const ttRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TITLE_DISAGREES;
+        return { ok: false, reason: "ENVELOPE_TITLE_DISAGREES", code: "ENVELOPE_TITLE_DISAGREES",
+                 check: ttRow.check, translation: ttRow.translation,
+                 document_title: String(documentTitle ?? documentQuestionTitle).slice(0, 200),
+                 envelope_title: String(envelopeTitle).slice(0, 200),
+                 detail: `the document being promoted is titled '${String(documentTitle ?? documentQuestionTitle).slice(0, 80)}' `
+                       + `and this request's meta says '${String(envelopeTitle).slice(0, 80)}'. The record goes by the `
+                       + `document, and a name is what 7.1 holds unique, so it will not file one under the other. Send it `
+                       + `again with the meta naming the document's title, or with no title in the meta, or change the `
+                       + `document first. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promoted-title-disagrees */
+      const stateContradiction = (() => {
+        if (!envelopeMeta) return null;
+        if (envelopeState !== null && documentState !== null && !sameText(envelopeState, documentState))
+          return ["current_state", documentState, envelopeState];
+        for (const k of ["prior_state", "closed_reason"]) {
+          if (!fmHas(sentFm, k) || envelopeMeta[k] === undefined) continue;
+          const d = sentFm[k] ?? null, e = envelopeMeta[k] ?? null;
+          if (d === null && e === null) continue;
+          if (d === null || e === null || !sameText(d, e)) return [k, d, e];
+        }
+        return null;
+      })();
+      /* DEC-49 REGION is-promoted-state-disagrees */
+      if (stateContradiction && !pkg.replay) {
+        const stRow = PROMOTED_TYPE_CHECKS.ENVELOPE_STATE_DISAGREES;
+        const [field, said, asked] = stateContradiction;
+        return { ok: false, reason: "ENVELOPE_STATE_DISAGREES", code: "ENVELOPE_STATE_DISAGREES",
+                 check: stRow.check, translation: stRow.translation, field,
+                 document_value: said === null ? null : String(said).slice(0, 80),
+                 envelope_value: asked === null ? null : String(asked).slice(0, 80),
+                 detail: `the document being promoted says ${field} '${said === null ? "null" : String(said).slice(0, 40)}' `
+                       + `and this request's meta says '${asked === null ? "null" : String(asked).slice(0, 40)}'. The record `
+                       + `goes by the document: where a thing stands decides who may move it and what may cite it. Send `
+                       + `it again with the meta naming what the document says, or leave it out of the meta, or change `
+                       + `the document first. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promoted-state-disagrees */
       /* `promotedType` (D-526, derived at the top of `promote`) is the one value every projection below reads. The
          envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
          the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
@@ -18441,7 +18541,9 @@ export class Store extends DurableObject {
       const biasSpelling = promotedType === "bias" ? promotedType
                          : (cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null);
       if (cur && biasSpelling) {
-        const from = cur.current_state, to = meta.current_state;
+        /* D-563: the state the projection below WRITES — asking the label here while the row takes the bytes
+           would let an envelope saying `adopted` walk an adopted set back to `proposed`. */
+        const from = cur.current_state, to = promotedState;
         const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
         /* BUILT AS A LITERAL rather than through `#biasRefuse`, and the DEC-49 guard is why: a verdict
            INHERITED THROUGH A SPREAD is one the guard's outcome walk cannot resolve until run time, so
@@ -18640,8 +18742,8 @@ export class Store extends DurableObject {
          authored under the old contract). */
       const mdForTitle = files.find((x) => x.path === "bundle.md");
       const projectedTitle = (projectedType === "inquiry"
-        ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? meta.title
-        : meta.title);
+        ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? promotedTitle
+        : promotedTitle);   /* D-563: the document's title (the envelope's only where the bytes state none) */
 
       this.sql.exec(
         `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
@@ -18655,7 +18757,7 @@ export class Store extends DurableObject {
         /* D-436: a revision keeps the group its creation wrote (the ON CONFLICT arm never touches group_id, and
            NOT NULL is checked before it, so the value handed in must be real); a creation writes the one decided
            above, before the transaction. `meta.group` is read nowhere but that decision. */
-        bundleId, projectedType, cur ? cur.group_id : createdGroup, projectedTitle, meta.current_state, meta.prior_state ?? null,
+        bundleId, projectedType, cur ? cur.group_id : createdGroup, projectedTitle, promotedState, promotedPriorState,
         meta.created, meta.last_updated, meta.criticality ?? null, newSha, bundleId);
 
       /* D-497: the SIGHT INDEX follows the bundle row that decides whether this is a project at all. ONE call
@@ -19024,7 +19126,7 @@ export class Store extends DurableObject {
            source fields are copied from THE SAME BYTES, for the same reason — the pin is one revision,
            never a sha from one and a provenance from another. The authored act (`author`, `at`) is
            op=biasadopt's and is not rewritten: a promotion is attributed in the manifest table. */
-        if (meta.current_state === "adopted" && newSha) {
+        if (promotedState === "adopted" && newSha) {   /* D-563: the state the row above was written with */
           const pfm = docFmW || {};
           const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
           this.sql.exec(

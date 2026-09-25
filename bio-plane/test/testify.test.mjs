@@ -126,7 +126,7 @@ const promoteDoc = async (id, { base = null, docs, register = [], extra = {}, bu
   const prov = JSON.stringify({ documents: docs });
   return post("promote", {
     bundleId: id, base, snapKey: snapKey(),
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Info ${id}`,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: files ?? [fileOf("bundle.md", text), fileOf("data/provenance.json", prov)],
     register, ...extra }, tok);
@@ -328,7 +328,7 @@ const reviseObs = async (mutate, { register = [] } = {}) => {
                  fileOf(tx.file, head0[tx.file])];
   return post("promote", {
     bundleId: OBS, base: OBS_BASE, snapKey: snapKey(),
-    meta: { object_type: "information", group: "believe-in-oakland", title: "revised",
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: tx.recorded_at, last_updated: tx.recorded_at },
     files, register }, RUTH);
 };
@@ -343,7 +343,7 @@ t("an AUTHORED bundle whose revision stops saying authored is REFUSED (C-53.9)",
   refusedAs(drop, "TESTIMONY_AUTHORED_DROPPED"), want("TESTIMONY_AUTHORED_DROPPED"));
 const gone = await post("promote", {
   bundleId: OBS, base: OBS_BASE, snapKey: snapKey(),
-  meta: { object_type: "information", group: "believe-in-oakland", title: "revised",
+  meta: { object_type: "information", group: "believe-in-oakland",
           current_state: "collected", created: tx.recorded_at, last_updated: tx.recorded_at },
   files: [fileOf("bundle.md", head0["bundle.md"]), fileOf(tx.file, head0[tx.file])] }, RUTH);
 t("…and one whose revision drops data/provenance.json altogether (C-53.9)",
@@ -380,7 +380,7 @@ const qMd = (id, legs = []) => ["---", `id: ${id}`, "object_type: inquiry", "sch
   "## What Would Falsify This", "", "## Session Log", "", `### Session ${NOW} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 const promoteQ = (id, legs) => post("promote", { bundleId: id, base: null, snapKey: snapKey(),
-  meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
+  meta: { object_type: "inquiry", group: "believe-in-oakland",
           current_state: "open", created: NOW, last_updated: NOW },
   files: [fileOf("bundle.md", qMd(id, legs))] }, RUTH);
 const Q = "INQ-2026-5301-q";
@@ -521,7 +521,7 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const makeFinding = async (id, target, grade = true) => {
     const md = withAdoptableReading(legMd(id, target, grade));
     const p = await post("promote", { bundleId: id, base: null, snapKey: snapKey(),
-      meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
+      meta: { object_type: "inquiry", group: "believe-in-oakland",
               current_state: "open", created: NOW, last_updated: NOW },
       files: [fileOf("bundle.md", md)] }, RUTH);
     const c = await get("conclude", `target=${id}&conclusion=${encodeURIComponent("It was stamped first.")}`

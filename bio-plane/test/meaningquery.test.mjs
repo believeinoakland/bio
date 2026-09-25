@@ -534,7 +534,7 @@ const infoMd = (id, prose = "A captured document about the sewer fund.") => ["--
 const promote = async (id, text, type, extraFiles = []) => rP(await post("promote", {
   bundleId: id, base: null, snapKey: `${id}-new`, author: "pl8",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extraFiles],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
   register: [],
 }));

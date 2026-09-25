@@ -148,7 +148,7 @@ const mustPromote = async (id, text, type, state, label = id) => {
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: type === "information"
       ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${label}`), encoding: "binary", bytes: 10 }] : [],
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${label}`, current_state: state,
+    meta: { object_type: type, group: "believe-in-oakland", current_state: state,
             created: NOW, last_updated: LATER } });
   if (!r.ok) throw new Error(`promote ${label}: ${JSON.stringify(r).slice(0, 800)}`);
   return r;

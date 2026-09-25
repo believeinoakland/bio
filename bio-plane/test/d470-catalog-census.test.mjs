@@ -401,6 +401,12 @@ const CATALOG_CENSUS = {
      Count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.30.0": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f",
               changed: ["C-41.12"] },
+  /* 1.31.0 (D-563, 2026-09-25, WORKER D-563, branch land/worker/D-563): TWO ARRIVALS, NO DEPARTURES, NONE CHANGED —
+     C-86.3 ENVELOPE_TITLE_DISAGREES and C-86.4 ENVELOPE_STATE_DISAGREES. 502 -> 504, count AND digest from THIS SUITE'S
+     OWN PRINT on the item's tree over origin/main 5e8a65a8; no `changed` field, because no existing check's rule moved
+     (M0-195's grammar: `changed` names a CHANGED check, and this entry has none). IF ANOTHER BRANCH IN THE SAME BATCH
+     ALSO MOVES THE VERSION, THIS ROW IS NOT THE UNION'S. */
+  "1.31.0": { count: 504, digest: "0837d14bb242d7b5589152a2053642b701712145d469910fd6f15432640008e2" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -506,8 +512,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 /* CORRECTED at c21-batch28 (CONDUCT #21): 1.29.0 -> 1.30.0, the union's one number for this batch's rows. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
+/* CORRECTED by D-563 (2026-09-25): 1.30.0 -> 1.31.0 — C-86.3 and C-86.4 joined the catalogue, so 1.30.0 names the old one. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under

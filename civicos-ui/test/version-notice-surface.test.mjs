@@ -132,7 +132,7 @@ const mustPromote = async (id, text, type, { captures = [] } = {}) => {
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260925T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, title: `Bundle ${id}`,
+    meta: { object_type: type,
             current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
     files,
     register: captures.map((c) => ({ sha256: c.sha, path: `documents/${c.sha.slice(0, 8)}.pdf`,

@@ -214,7 +214,7 @@ const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
   snapKey: `${id}-${String(++snapKeySeq).padStart(6, "0")}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : "collected",
           created: NOW, last_updated: LATER } });
 

@@ -159,7 +159,9 @@ Changes: created.
 const mkOn = (c) => (id, text, type, title) => c("/promote", {
   bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-  meta: { object_type: type, group: "believe-in-oakland", title: title ?? `Bundle ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+     state, and is now refused; a project document here states no title, so the label stays its only name. */
+  meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: title ?? `Bundle ${id}` } : {}),
           current_state: type === "inquiry" ? "open" : "surfaced",
           created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" },
 });
@@ -215,7 +217,11 @@ console.log("\n--- 2. C-16: the title is DERIVED from the question, never separa
   /* A legacy document has no ## Question; its authored title is document
      truth and is honoured, never re-derived from nothing. */
   const legacy = "PROB-2026-0703-title";
-  await mk(legacy, focusMd(legacy, { type: "problem", schema: "problem@1" }), "problem", "The authored legacy title");
+  /* CORRECTED 2026-09-25 (D-563), never exempted: the "authored title" was the request's LABEL, over bytes titled
+     `Focus ${legacy}` — the assertion credited the document with a title only the envelope carried. The title is now
+     authored where this comment says it lives, in the document, and the label names none. */
+  await mk(legacy, focusMd(legacy, { type: "problem", schema: "problem@1" })
+    .replace(`title: "Focus ${legacy}"`, `title: "The authored legacy title"`), "problem");
   t("a legacy document keeps its authored title", (await projOf(legacy)).title, "The authored legacy title");
 }
 

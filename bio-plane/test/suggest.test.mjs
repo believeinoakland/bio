@@ -255,7 +255,7 @@ const promote = async (id, text, type, base = null, register = [], state = null)
      frontmatter said `retired` and whose row said `collected`, so D-168's
      fixture silently armed nothing. Caught by the fixture's own arm, which is
      why that arm asserts the state rather than trusting the promote. */
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: state ?? (type === "inquiry" ? "open" : "collected"),
           created: NOW, last_updated: LATER } });
 const mustPromote = async (...a) => {
@@ -1647,7 +1647,7 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
       snapKey: `${RINQ}-replay`,
       files: [{ path: "bundle.md", text: withUnlabelledLeg,
                 bytes: withUnlabelledLeg.length, sha256: sha(withUnlabelledLeg) }],
-      meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${RINQ}`,
+      meta: { object_type: "inquiry", group: "believe-in-oakland",
               current_state: "open", created: NOW, last_updated: LATER } }));
     const held = ((await GET(`op=basisversions&token=${RUTH}&id=${RINQ}&limit=10`)).versions ?? [])[0];
     t("D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE, DRIVEN END TO END: a "

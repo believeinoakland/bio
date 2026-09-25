@@ -108,7 +108,7 @@ const bundle = (id, extra = {}) => {
   const md = inquiryMd(id);
   return { bundleId: id, base: null,
     snapKey: `20260923T1400${String(++seq).padStart(2, "0")}Z_ec169aa1`,
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: `title for ${id}`,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [], ...extra };

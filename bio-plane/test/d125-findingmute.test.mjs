@@ -113,7 +113,7 @@ const promote = async (id, text, type, state, register = [], extra = []) => {
     bundleId: id, base: null, snapKey: `${id}-${sha(text).slice(0, 8)}`, author: "d125-suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extra],
     register,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   return r;

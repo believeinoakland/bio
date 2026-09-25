@@ -14594,6 +14594,21 @@ var PROMOTED_TYPE_CHECKS = {
     check: "C-86.2",
     where: "src/store.mjs promote > is-promote-retypes-bundle",
     translation: "This change would turn something the record already holds into a different kind of thing, an item of information into an action, say. A change can alter what a document says, but not what it is, because what it is decides which rules protect it. Nothing was written. To record it as the other kind, create a new one of that kind and link the two."
+  },
+  /* D-563 (2026-09-25) — C-86.1's rule one field over, twice: the document states what it is CALLED and where it STANDS,
+   * and a request whose label contradicts either is refused rather than obeyed. The name is what 7.1 holds unique and
+   * the state decides who may move the item (7.11) and what may cite it (REC-181), so a label a caller can steer was
+   * an authority over both. Only a contradiction between two statements: a label stating nothing takes the document's
+   * word. Replay is exempt, as for C-86.1. */
+  ENVELOPE_TITLE_DISAGREES: {
+    check: "C-86.3",
+    where: "src/store.mjs promote > is-promoted-title-disagrees",
+    translation: "The document being filed gives itself one name, and the request that carried it gives another. The record goes by the document, and names are held unique across the instance, so rather than file it under a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request naming the document's title, or naming none, or change the document first."
+  },
+  ENVELOPE_STATE_DISAGREES: {
+    check: "C-86.4",
+    where: "src/store.mjs promote > is-promoted-state-disagrees",
+    translation: "The document being filed says where it stands, and the request that carried it says something different. Where a thing stands decides who may move it and what may cite it, and the record goes by the document, so it stops and tells you both. Nothing was written. Send it again with the request saying what the document says, or saying nothing about it, or change the document first."
   }
 };
 var RISK_TIER_REVISION_CHECKS = {
@@ -16155,7 +16170,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.30.0";
+var CATALOG_VERSION = "1.31.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -46142,6 +46157,16 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  release()'s precedent: a register half-reconstructed is a record where the
    *  reader cannot tell which documents were established and which were skipped.
    */
+  /* D-563: an internal relabel's fallback — each row value is sent only when the carried `bundle.md` states no such
+     key, so the plane never labels its own write against the document it is carrying. */
+  static #rowUnlessStated(files, row) {
+    const md = files.find((f2) => f2 && f2.path === "bundle.md");
+    const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+    const out = {};
+    for (const [k, v] of Object.entries(row))
+      if (!(fm && typeof fm === "object" && Object.prototype.hasOwnProperty.call(fm, k))) out[k] = v;
+    return out;
+  }
   provenanceChainRebuild({ bundleId = "", apply = false, author = null, viewer = null } = {}) {
     const who2 = String(author ?? "").trim();
     if (!who2)
@@ -46252,12 +46277,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         bytes: bytes.length,
         sha256: createSha256().update(bytes).hex()
       }, ...carried],
+      /* D-563: the row's title and state are sent ONLY where the held document states none. `promote` now derives
+         them from the document and refuses a label that contradicts it; relabelling from the ROW would refuse this
+         correction on every bundle whose row an envelope once wrote apart from its bytes — M-172 counted 11 in `bio`
+         (row `prior_state` null, document `collected`). Where the document states them the projection takes the
+         document's value, which is the value the bundle's own bytes have always carried. */
       meta: {
         object_type: seen.object_type,
         group: seen.group_id,
-        title: seen.title,
-        current_state: seen.current_state,
-        prior_state: seen.prior_state ?? null,
+        ..._Store.#rowUnlessStated(carried, {
+          title: seen.title,
+          current_state: seen.current_state,
+          prior_state: seen.prior_state ?? null
+        }),
         created: seen.created,
         last_updated: seen.last_updated,
         criticality: seen.criticality ?? null
@@ -47466,6 +47498,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const documentType = sentFm && typeof sentFm === "object" ? typeStated(sentFm.object_type) : null;
     const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
     const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : void 0);
+    const envelopeMeta = meta && typeof meta === "object" ? meta : null;
+    const fmHas = (o, k) => !!o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
+    const textStated = (v) => typeof v === "string" && v.trim() !== "" ? v : null;
+    const documentTitle = sentFm && typeof sentFm === "object" ? textStated(sentFm.title) : null;
+    const documentQuestionTitle = documentType === "inquiry" && typeof sentMd?.text === "string" ? deriveInquiryTitle(inquiryQuestionOf(sentMd.text)) : null;
+    const envelopeTitle = envelopeMeta ? textStated(envelopeMeta.title) : null;
+    let promotedTitle = documentTitle ?? (envelopeMeta ? envelopeMeta.title : void 0);
+    const documentState = sentFm && typeof sentFm === "object" ? textStated(sentFm.current_state) : null;
+    const envelopeState = envelopeMeta ? textStated(envelopeMeta.current_state) : null;
+    const promotedState = documentState ?? (envelopeMeta ? envelopeMeta.current_state : void 0);
+    const promotedPriorState = fmHas(sentFm, "prior_state") ? sentFm.prior_state ?? null : envelopeMeta ? envelopeMeta.prior_state ?? null : null;
+    const promotedClosedReason = fmHas(sentFm, "closed_reason") ? sentFm.closed_reason ?? null : envelopeMeta ? envelopeMeta.closed_reason : void 0;
     const idSupplied = bundleId !== void 0 && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object" && (promotedType === "project" || typeof bundleId === "string" && /^PROJ-/.test(bundleId));
     const refusal7 = (code, detail) => {
@@ -47540,7 +47584,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     } : null;
     const act = () => {
       if (creatingProject) {
-        bundleId = this.#mintProjectId(meta.title);
+        bundleId = this.#mintProjectId(promotedTitle);
         if (!bundleId) return {
           ok: false,
           reason: "MINT_EXHAUSTED",
@@ -47593,12 +47637,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
         return _Store.#promoteAbsent();
-      if (cur && (meta.title === void 0 || meta.title === null || meta.title === "")) {
+      if (cur && (promotedTitle === void 0 || promotedTitle === null || promotedTitle === "")) {
         const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
-        if (prev && prev.title) meta.title = prev.title;
+        if (prev && prev.title) promotedTitle = prev.title;
       }
       if (promotedType === "project") {
-        const key = _Store.projectNameKey(meta.title);
+        const key = _Store.projectNameKey(promotedTitle);
         if (!key)
           return {
             ok: false,
@@ -47617,8 +47661,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           };
       }
       if (cur && cur.object_type === "project") {
-        const to = meta.current_state, from = cur.current_state;
-        const deactivating = from !== "closed" && to === "closed" && meta.closed_reason === "abandoned";
+        const to = promotedState, from = cur.current_state;
+        const deactivating = from !== "closed" && to === "closed" && promotedClosedReason === "abandoned";
         const reactivating = from === "closed" && to === "investigating";
         if (deactivating || reactivating) {
           const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
@@ -47648,7 +47692,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           detail: `${String(bundleId).slice(0, 80)} is '${normalizeType(cur.object_type)}' and this revision says '${String(promotedType).slice(0, 40)}'. A revision changes what a document says, never what kind of thing it is. Nothing was written.`
         };
       }
-      if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired") && (cur ? cur.object_type : promotedType) === "information") {
+      if (promotedState === "retired" && (!cur || cur.current_state !== "retired") && (cur ? cur.object_type : promotedType) === "information") {
         const citedBy = this.#retirementCitedBy(bundleId);
         if (citedBy.length)
           return {
@@ -47740,6 +47784,47 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           document_type: documentType,
           envelope_type: envelopeType,
           detail: `the document being promoted says object_type '${String(docFmW.object_type).slice(0, 40)}' and this request's meta says '${String(meta.object_type).slice(0, 40)}'. The record goes by the document, and it will not file one kind of thing as another: what a document IS decides which columns, projections and reads it gets. Send it again with the meta naming the type the document names, or change the document first. Nothing was written.`
+        };
+      }
+      const sameText = (a, b) => String(a).trim().replace(/\s+/g, " ") === String(b).trim().replace(/\s+/g, " ");
+      if (envelopeTitle !== null && (documentTitle !== null || documentQuestionTitle !== null) && !(documentTitle !== null && sameText(envelopeTitle, documentTitle)) && !(documentQuestionTitle !== null && sameText(envelopeTitle, documentQuestionTitle)) && !pkg.replay) {
+        const ttRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TITLE_DISAGREES;
+        return {
+          ok: false,
+          reason: "ENVELOPE_TITLE_DISAGREES",
+          code: "ENVELOPE_TITLE_DISAGREES",
+          check: ttRow.check,
+          translation: ttRow.translation,
+          document_title: String(documentTitle ?? documentQuestionTitle).slice(0, 200),
+          envelope_title: String(envelopeTitle).slice(0, 200),
+          detail: `the document being promoted is titled '${String(documentTitle ?? documentQuestionTitle).slice(0, 80)}' and this request's meta says '${String(envelopeTitle).slice(0, 80)}'. The record goes by the document, and a name is what 7.1 holds unique, so it will not file one under the other. Send it again with the meta naming the document's title, or with no title in the meta, or change the document first. Nothing was written.`
+        };
+      }
+      const stateContradiction = (() => {
+        if (!envelopeMeta) return null;
+        if (envelopeState !== null && documentState !== null && !sameText(envelopeState, documentState))
+          return ["current_state", documentState, envelopeState];
+        for (const k of ["prior_state", "closed_reason"]) {
+          if (!fmHas(sentFm, k) || envelopeMeta[k] === void 0) continue;
+          const d = sentFm[k] ?? null, e = envelopeMeta[k] ?? null;
+          if (d === null && e === null) continue;
+          if (d === null || e === null || !sameText(d, e)) return [k, d, e];
+        }
+        return null;
+      })();
+      if (stateContradiction && !pkg.replay) {
+        const stRow = PROMOTED_TYPE_CHECKS.ENVELOPE_STATE_DISAGREES;
+        const [field, said, asked] = stateContradiction;
+        return {
+          ok: false,
+          reason: "ENVELOPE_STATE_DISAGREES",
+          code: "ENVELOPE_STATE_DISAGREES",
+          check: stRow.check,
+          translation: stRow.translation,
+          field,
+          document_value: said === null ? null : String(said).slice(0, 80),
+          envelope_value: asked === null ? null : String(asked).slice(0, 80),
+          detail: `the document being promoted says ${field} '${said === null ? "null" : String(said).slice(0, 40)}' and this request's meta says '${asked === null ? "null" : String(asked).slice(0, 40)}'. The record goes by the document: where a thing stands decides who may move it and what may cite it. Send it again with the meta naming what the document says, or leave it out of the meta, or change the document first. Nothing was written.`
         };
       }
       const isInquiry = promotedType === "inquiry";
@@ -48087,7 +48172,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       const biasSpelling = promotedType === "bias" ? promotedType : cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null;
       if (cur && biasSpelling) {
-        const from = cur.current_state, to = meta.current_state;
+        const from = cur.current_state, to = promotedState;
         const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
         if (to !== from && !legalFrom.includes(to))
           return {
@@ -48215,7 +48300,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       const newSha = files.find((f2) => f2.path === "bundle.md")?.sha256;
       const projectedType = promotedType;
       const mdForTitle = files.find((x) => x.path === "bundle.md");
-      const projectedTitle = projectedType === "inquiry" ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? meta.title : meta.title;
+      const projectedTitle = projectedType === "inquiry" ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? promotedTitle : promotedTitle;
       this.sql.exec(
         `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
          VALUES (?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
@@ -48232,8 +48317,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         projectedType,
         cur ? cur.group_id : createdGroup,
         projectedTitle,
-        meta.current_state,
-        meta.prior_state ?? null,
+        promotedState,
+        promotedPriorState,
         meta.created,
         meta.last_updated,
         meta.criticality ?? null,
@@ -48470,7 +48555,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             r.locked,
             r.nullifies
           );
-        if (meta.current_state === "adopted" && newSha) {
+        if (promotedState === "adopted" && newSha) {
           const pfm = docFmW || {};
           const str = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
           this.sql.exec(

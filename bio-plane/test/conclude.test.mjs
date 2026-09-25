@@ -211,7 +211,7 @@ const infoMd = (id) => ["---",
 const promote = async (id, md, type, state, tok = "mem-rec13") => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "seed",
-    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [],

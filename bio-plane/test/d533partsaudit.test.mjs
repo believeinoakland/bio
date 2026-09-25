@@ -79,7 +79,7 @@ const file = async (id, doc, { provenance } = {}) => POST(`op=promote&token=${AD
           inline("data/provenance.json", provenance ?? JSON.stringify({ documents: [doc] })),
           ...doc.parts.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }))],
   register: [{ path: doc.file, sha256: doc.capture.sha256, encoding: "binary", bytes: doc.capture.bytes }],
-  meta: { object_type: "information", group: "believe-in-oakland", title: id, current_state: "collected",
+  meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
           created: NOW, last_updated: NOW } });
 const acquire = async (path) => POST(`op=acquire&token=${MEM}`, { locator: `https://www.oaklandca.gov${path}`, authority: "City Auditor" });
 
@@ -184,13 +184,13 @@ console.log("\n--- §6 the rows the audit always classified by the whole key are
   t("a whole-key capture is filed", (await POST(`op=promote&token=${ADM}`, { bundleId: "INFO-2026-0538-whole", base: null,
     snapKey: "20260924T000002Z_whole", files: [inline("bundle.md", md)],
     register: [{ path: "migration/drive-provenance.json", sha256: sha(CAP), encoding: "utf8", bytes: CAP.length }],
-    meta: { object_type: "information", group: "believe-in-oakland", title: "w", current_state: "collected",
+    meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
             created: NOW, last_updated: NOW } })).ok, true);
   const md2 = mdFor("INFO-2026-0539-ghost");
   t("and a register row with no bytes anywhere and no parts named", (await POST(`op=promote&token=${ADM}`, {
     bundleId: "INFO-2026-0539-ghost", base: null, snapKey: "20260924T000003Z_ghost", files: [inline("bundle.md", md2)],
     register: [{ path: "captures/ghost.bin", sha256: sha("nowhere"), encoding: "binary", bytes: 7 }],
-    meta: { object_type: "information", group: "believe-in-oakland", title: "g", current_state: "collected",
+    meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
             created: NOW, last_updated: NOW } })).ok, true);
   const a6 = await audit();
   t("the whole-key capture is CAPTURED, as before", a6.captured, 1);

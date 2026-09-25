@@ -702,7 +702,7 @@ for (let i = 1; i <= 3; i++) {
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r57", files,
     register: [{ sha256: capture, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
-    meta: { object_type: "information", group: "believe-in-oakland", title: id,
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   CAPS.push(capture);
@@ -824,7 +824,7 @@ const biasMd57 = (state) => [
     const r = await POST("op=promote&token=mem-r57", {
       bundleId: BIAS_ID, base, snapKey: `${BIAS_ID}-${base ? "rev" : "new"}`, author: "r57",
       files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
-      meta: { object_type: "bias", group: "believe-in-oakland", title: BIAS_ID,
+      meta: { object_type: "bias", group: "believe-in-oakland",
               current_state: state, created: NOW, last_updated: NOW } });
     if (r?.ok === false) throw new Error(`promote ${BIAS_ID} ${state}: ${JSON.stringify(r)}`);
     return r.bundleSha;
@@ -890,7 +890,7 @@ for (const q of ["INQ-2026-0807-bounds-runs", "INQ-2026-0807-bounds-runs-elsewhe
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: q, base: null, snapKey: `${q}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: q, current_state: "open",
+    meta: { object_type: "inquiry", group: "believe-in-oakland", current_state: "open",
             created: NOW, last_updated: NOW } });
   if (r?.ok !== true) throw new Error(`REC-153 fixture promote ${q}: ${JSON.stringify(r).slice(0, 600)}`);
 }
@@ -1006,7 +1006,7 @@ const PL1_INQ = "INQ-2026-0807-bounds-pl1";
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: PL1_INQ, base: null, snapKey: `${PL1_INQ}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: PL1_INQ,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`PL-1 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
 }
@@ -1031,7 +1031,7 @@ const D394_INQ = "INQ-2026-0807-bounds-d394";
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: D394_INQ, base: null, snapKey: `${D394_INQ}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "inquiry", group: "believe-in-oakland", title: D394_INQ,
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
             current_state: "open", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`D-394 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
 }
@@ -1650,7 +1650,7 @@ for (const [id, n] of [[QT_BIG, QT_MAX + 1], [QT_ONE, 1]]) {
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "action", group: "believe-in-oakland", title: id, current_state: "active",
+    meta: { object_type: "action", group: "believe-in-oakland", current_state: "active",
             created: NOW, last_updated: NOW } });
   if (r?.ok !== true) throw new Error(`D-148 fixture promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
 }

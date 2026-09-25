@@ -184,7 +184,7 @@ const promote = async (id, text, type, state, tok = MACHINE, register = [], base
     ...(id === null ? {} : { bundleId: id }), base, snapKey: `${id ?? "PROJ-sewer-fund"}-${sha(text).slice(0, 8)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id ?? "Sewer Fund"}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: updated } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   return r;

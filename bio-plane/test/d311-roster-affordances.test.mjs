@@ -106,7 +106,7 @@ const mkProject = async (name) => {
   return must(`promote ${name}`, await POST(`op=promote&token=${ADM}`, {
     base: null, snapKey: `d311-${++snapSeq}-${sha(name).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: name, current_state: "forming",
+    meta: { object_type: "project", group: "believe-in-oakland", current_state: "forming",
             created: NOW, last_updated: LATER } })).bundleId;
 };
 const PA = await mkProject("D-311 project A");
@@ -255,7 +255,7 @@ const promote = async (id, text, type, state) => must(`promote ${id}`, await POS
   bundleId: id, base: null, snapKey: `d311-${++snapSeq}-${sha(id).slice(0, 6)}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information" ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`, current_state: state, created: NOW, last_updated: LATER } }));
+  meta: { object_type: type, group: "believe-in-oakland", current_state: state, created: NOW, last_updated: LATER } }));
 const INFO = "INFO-2026-9311-ledger", INQ = "INQ-2026-9311-transfer", ACTN = "ACTN-2026-9311-request";
 await promote(INFO, infoMd(INFO), "information", "collected");
 await promote(INQ, inquiryMd(INQ, INFO), "inquiry", "open");

@@ -202,7 +202,7 @@ const infoMd = (id) => ["---",
 const promote = async (id, md, type, state, tok = "mem-rec31", { proof = false, ...extra } = {}) => {
   let pkg = {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "seed",
-    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [], ...extra,
@@ -571,13 +571,13 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
       "## Open Questions", "", "## Ruled Out", "", "## Session Log", "", "## Review Notes", ""].join("\n");
     const mk = async (id, md, type, state) => rP(await P2(`op=promote&token=mem-x`, {
       bundleId: id, base: null, snapKey: `${id}-new`, author: "seed",
-      meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+      meta: { object_type: type, group: "believe-in-oakland",
               current_state: state, created: NOW, last_updated: LATER },
       files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));
     const mkProj = async (name, md, type) => {
       const r = rP(await P2(`op=promote&token=mem-x`, {
         base: null, snapKey: `${name}-new`, author: "seed",
-        meta: { object_type: type, group: "believe-in-oakland", title: `t ${name}`,
+        meta: { object_type: type, group: "believe-in-oakland",
                 current_state: "forming", created: NOW, last_updated: LATER },
         files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));
       if (typeof r?.bundleId !== "string") throw new Error(`mkProj ${name}: ${JSON.stringify(r)}`);

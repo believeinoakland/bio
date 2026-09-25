@@ -141,7 +141,7 @@ Changes: created.
 const mk = (id, text, type) => call("/promote", {
   bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-  meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "problem" ? "surfaced" : type === "inquiry" ? "open" : "collected",
           created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" } });
 
@@ -397,7 +397,7 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
     await call("/promote", { bundleId: id, base: (await call(`/projection?id=${id}&viewer=class:member`)).bundle_sha,
       snapKey: `${id}-verify`, author: "suite",
       files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
-      meta: { object_type: "information", group: "believe-in-oakland", title: `Info ${id}`,
+      meta: { object_type: "information", group: "believe-in-oakland",
               current_state: "verified", created: "2026-07-01T00:00:00Z",
               last_updated: "2026-07-03T00:00:00Z" } });
   }
@@ -419,6 +419,7 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
   const pdoc = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\nreferences:\n  - rel: cites\n    target: ${infoIds[0]}\n    status: confirmed\n    note: ""\n---\n\n## Summary\n\nX.\n`;
   const created = await call("/promote", { base: null, snapKey: "PROJ-cites-new", author: "suite",
     files: [{ path: "bundle.md", text: pdoc, bytes: pdoc.length, sha256: sha(pdoc) }],
+    /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", group: "believe-in-oakland", title: "Citing Project",
             current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
   const proj = created.bundleId;

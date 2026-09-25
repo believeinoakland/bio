@@ -188,7 +188,7 @@ const promote = async (id, text, objectType, state, label = id) => {
   const r = await POST(`op=promote&token=${ADM}`, {
     ...(id === null ? {} : { bundleId: id }), base: null,
     snapKey: `20260918T${String(900000 + (++snapSeq)).slice(-6)}Z_${sha(String(label)).slice(0, 8)}`,
-    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${label}`,
+    meta: { object_type: objectType, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [] });
@@ -263,7 +263,9 @@ console.log("\n--- 0. a caller who cannot SEE the project is answered as for a b
    read's OWN id with one placeholder — the only thing the two differ in by construction (`project-disclosure`'s
    precedent for a run id); every other byte must match. */
 const YEAR = new Date().toISOString().slice(0, 4);
-const NEVER_ID = `PROJ-${YEAR}-0000-t-proj-2026-9490-hidden`;
+/* CORRECTED 2026-09-25 (D-563), never exempted: the slug is minted from the DOCUMENT's title (`Project PROJ-…`), no
+   longer from the request's label (`t PROJ-…`) — the mint reads the one derived title every fence reads. */
+const NEVER_ID = `PROJ-${YEAR}-0000-project-proj-2026-9490-hidden`;
 const bodyFor = (id) => ({ bundleId: id, expectedSha: "0".repeat(64), sig: "not-a-signature" });
 const idless = (body, id) => body.split(id).join("<PROJECT-ID>");
 /* The never-minted answer, taken BEFORE the project exists, with the same body but its own id. */
@@ -271,7 +273,7 @@ const NEVER = await rawOf(`op=ratify&token=${VIC}`, bodyFor(NEVER_ID));
 const HIDDEN = (await promote(null, projectFixtureMd(null, { created: NOW, updated: NOW, name: "PROJ-2026-9490-hidden" }),
   "project", "investigating", "PROJ-2026-9490-hidden")).bundleId;
 t("the plane minted an id of the canonical shape, not the never-minted one read above",
-  [/^PROJ-\d{4}-\d{4}-t-proj-2026-9490-hidden$/.test(String(HIDDEN)), HIDDEN !== NEVER_ID], [true, true]);
+  [/^PROJ-\d{4}-\d{4}-project-proj-2026-9490-hidden$/.test(String(HIDDEN)), HIDDEN !== NEVER_ID], [true, true]);
 must(`projectclaimowner ${HIDDEN}`, await DO("projectclaimowner", { projectId: HIDDEN, memberId: "iris" }));
 {
   const hidden = await rawOf(`op=ratify&token=${VIC}`, bodyFor(HIDDEN));

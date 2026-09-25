@@ -155,7 +155,7 @@ const promote = async (id, text, type, tok = RUTH, extraMeta = {}) => POST(`op=p
   snapKey: `${id}-${String(++snapKeySeq).padStart(6, "0")}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "inquiry" ? "open" : "collected",
           created: NOW, last_updated: LATER, ...extraMeta } });
 
@@ -179,7 +179,7 @@ let PRJ;
     base: null, snapKey: `ruths-own-${String(++snapKeySeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: "Ruth's own project",
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER } });
   if (!a.ok) throw new Error(`promote ruths-own project: ${JSON.stringify(a).slice(0, 600)}`);
   PRJ = a.bundleId;
@@ -565,7 +565,7 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
       "", "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
     return { bundleId: id, base: null, snapKey: `${id}-000001`, register: [],
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-      meta: { object_type: "action", group: "believe-in-oakland", title: `Action ${id}`, current_state: "planned",
+      meta: { object_type: "action", group: "believe-in-oakland", current_state: "planned",
               created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } };
   };
   const ACTS = {

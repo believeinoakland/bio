@@ -126,7 +126,7 @@ let snapSeq = 0;
 const promote = async (id, text, objectType, state) => rP(await POST(`op=promote&token=${ADM}`, {
   bundleId: id, base: null,
   snapKey: `20260919T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+  meta: { object_type: objectType, group: "believe-in-oakland",
           current_state: state, created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" },
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],
@@ -244,7 +244,7 @@ console.log("\n--- 2. each gated prefix, minted three times in a row through its
     const md = `---\nid: ${id}\n---\n`;
     const r = rP(await POST(`op=promote&token=${ADM}`, {
       bundleId: id, base: null, snapKey: `20260919T20000${i}Z_task`, author: "ruth",
-      meta: { object_type: "information", group: "believe-in-oakland", title: `Filed ${i}`,
+      meta: { object_type: "information", group: "believe-in-oakland",
               current_state: "collected", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
       register: [{ sha256: cap, path: `snapshots/doc${i}.pdf`, encoding: "binary", bytes: 10 }] }));

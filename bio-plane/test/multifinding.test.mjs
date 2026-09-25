@@ -238,7 +238,9 @@ const infoMd = (id) => ["---",
 let snapSeq = 0;
 const promote = async (id, md, type, state, base = null, extra = {}) => rP(await POST(`op=promote&token=${WREN}`, {
   bundleId: id, base, snapKey: `20260804T${String(300000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-  meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+     state, and is now refused; a project document here states no title, so the label stays its only name. */
+  meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `t ${id}` } : {}),
           current_state: state, created: NOW, last_updated: LATER },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...(extra.files || [])],
   register: extra.register || [],
@@ -790,7 +792,10 @@ console.log("\n--- 2b. a member cannot assert the case, and the one divergence t
     `bias_acknowledgement: "${BACK1}"`,
     `case_findings: [${FIND_A}, ${FIND_B}, ${FIND_C}]`,
   ]);
-  await mustPromote(FIND_C, lie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
+  /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: these re-promotions labelled the state `published` over bytes
+     that say `concluded` (CASE-4 took `published` out of the machine); the label is now refused, so it names none and
+     the record takes the state the bytes state — what the projection wrote from them all along is now what it writes. */
+  await mustPromote(FIND_C, lie, "inquiry", undefined, (await listRow(FIND_C)).bundle_sha);
   const rl = await ratify(FIND_C);
   t("(a) a member that writes a case into its OWN bytes is refused BY THE GATE, and the refusal names EVERY key it found rather than the first",
     [rl.reason,
@@ -834,7 +839,7 @@ console.log("\n--- 2b. a member cannot assert the case, and the one divergence t
      corrupting it, and the case goes on naming the version it froze. */
   const clean = swap(cMd, "completeness", blockOf(publishedMd, "completeness"))
     .replace(/^completeness_excluded:.*(?:\n[ -].*)*/m, blockOf(publishedMd, "completeness_excluded"));
-  await mustPromote(FIND_C, clean, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
+  await mustPromote(FIND_C, clean, "inquiry", undefined, (await listRow(FIND_C)).bundle_sha);
   const edited = await anonCase(`id=${own.caseId}`);
   t("(c) a member that edits its own bytes LEAVES its case rather than corrupting it — the case goes on naming the version it FROZE, and the member reads as AWAITING",
     [edited.findings.map((f) => f.bundle_id), edited.awaiting, edited.complete], [[], [FIND_C], false]);
@@ -846,7 +851,7 @@ console.log("\n--- 2b. a member cannot assert the case, and the one divergence t
      which is what re-matches the pin, and that equality is worth its own
      assertion: it is the property that makes the pin a statement about BYTES
      rather than about an act. */
-  await mustPromote(FIND_C, cMd, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
+  await mustPromote(FIND_C, cMd, "inquiry", undefined, (await listRow(FIND_C)).bundle_sha);
   /* MEASURED AGAINST THE WORKING SHA AND THE ROSTER'S PIN DIRECTLY, rather than
      against what the case SERVES — because FIND_C has never been ratified in
      this suite, so it has no published row to serve either way, and an arm that
@@ -990,7 +995,7 @@ console.log("\n--- 3. C-21.1: the completeness assertion is authored PER CASE PE
     const lie = goodB.replace(/^(---\n)/, `$1bias_acknowledgement: "${OTHER}"\n`);
     t("(fixture) and the lie really differs ONLY in the acknowledgement",
       [lie !== goodB, lie.replace(/^bias_acknowledgement: .*\n/m, "") === goodB], [true, true]);
-    await mustPromote(FIND_B, lie, "inquiry", "published", (await listRow(FIND_B)).bundle_sha);
+    await mustPromote(FIND_B, lie, "inquiry", undefined, (await listRow(FIND_B)).bundle_sha);
     const bad = await ratify(FIND_B);
     t("REC-47, ISOLATED: a rostered member that states the CASE's lens in its OWN bytes is refused BY THE GATE, naming the key",
       [bad.reason,
@@ -1002,7 +1007,7 @@ console.log("\n--- 3. C-21.1: the completeness assertion is authored PER CASE PE
         (bad.findings || []).find((x) => /bias_acknowledgement/.test(x.detail))?.detail ?? ""), true);
     /* Put the honest bytes back and let the edition complete, so everything
        below reads a real, whole case rather than the wreckage of an attack. */
-    await mustPromote(FIND_B, goodB, "inquiry", "published", (await listRow(FIND_B)).bundle_sha);
+    await mustPromote(FIND_B, goodB, "inquiry", undefined, (await listRow(FIND_B)).bundle_sha);
   }
 
   await ratify(FIND_B);

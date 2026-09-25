@@ -147,7 +147,9 @@ const promote = async (id, text, type, state) => POST(`op=promote&token=${RUTH}`
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
+     state, and is now refused; a project document here states no title, so the label stays its only name. */
+  meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
           current_state: state, created: NOW, last_updated: LATER } });
 const mustPromote = async (id, text, type, state) => {
   const r = await promote(id, text, type, state);
@@ -163,6 +165,7 @@ const createProject = async (name) => {
   const r = await POST(`op=promote&token=${RUTH}`, {
     base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
             current_state: "forming", created: NOW, last_updated: LATER } });
   if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 700)}`);

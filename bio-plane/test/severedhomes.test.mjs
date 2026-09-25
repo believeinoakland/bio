@@ -194,7 +194,7 @@ const promote = async (id, text, type, state, register = []) => {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "d267-suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 900)}`);
   return r;
@@ -211,7 +211,7 @@ const mintProject = async (name, refs) => {
     base: null, snapKey: `${name}-new`, author: "d267-suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${name}`,
+    meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote project ${name}: ${JSON.stringify(r).slice(0, 900)}`);
   if (typeof r.bundleId !== "string" || !/^PROJ-/.test(r.bundleId))

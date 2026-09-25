@@ -89,7 +89,9 @@ const projectMd = (id, title, cites = [], summary = "A project.") => ["---", ...
                    : ["references: []"]),
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", summary, "",
   "## Session Log", ""].join("\n");
-const meta = (id, type, state, title) => ({ object_type: type, group: "believe-in-oakland", title: title ?? `Bundle ${id}`,
+/* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: the default label `Bundle ${id}` contradicted every document's
+   own title and is now refused; only a title the caller names (a project's, which its document states) is sent. */
+const meta = (id, type, state, title) => ({ object_type: type, group: "believe-in-oakland", ...(title !== undefined ? { title } : {}),
   current_state: state, created: NOW, last_updated: LATER });
 const pkg = (id, text, type, state, base, snapKey, title) => ({ bundleId: id, base, snapKey,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
