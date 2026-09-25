@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-722 · queued — **op=linkproject's WRITE HALF: it resolves a second time WITHOUT the viewer, so an outsider's act writes an edge into a project they cannot see (measured by D-706's worker: a hidden-plus-visible address writes the HIDDEN edge, leaving op=links' tally one short; the edge sits unattributed).** BOB #36 FINAL RULING 2026-09-25 11:15Z, (A)+(C) (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded; supersedes 10:50Z/10:58Z part 3). — owner RECORD.
-order: directly behind D-706, whose disclosure half it completes; a write across the viewer fence is a disclosure defect and outranks every feature (SCHEDULER #24, 2026-09-25)
-milestone: M7
-interface: I3 — linkproject writes only the edges its answer names; bundle= naming a hidden bundle answers NO_SUCH_BUNDLE; the integrator classifies.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7.9 (REC-138 "not its existence" at the ACTS; REC-134's joined test), with BOB #36's 11:15Z ruling.
-depends-on: D-706 (same op; stack on land/worker/D-706 once integrated).
-scope: (A) resolve ONCE through the viewer's #captureGate and write exactly the edges the answer names; remove the unfiltered second resolution. (C) bundle= naming a bundle the caller cannot see answers NO_SUCH_BUNDLE. (1) a hidden source answers not-held and writes nothing; (2) the JOINED test (as cite) applies where the source bundle is a project's. Fold into LINK-FIDELITY.md and add linkproject to §7.9's REC-134 act list; option B is NOT rowed.
-accepts-when: an outsider's arms leave the hidden project's refs byte-identical (witness before and after); a hidden-plus-visible address writes the VISIBLE edge and op=links' tally equals linkproject's counts; a member who sees both ends still writes the hidden target's edge (moves: an outsider's write into a hidden project). NEGATIVE CONTROL: restore the unfiltered write resolution and the outsider arm fails by name.
-added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
-
 ### D-723 · queued — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
 order: directly behind D-710, which it completes: a correction to just-landed work outranks new work, and "less narrative" binds us first (SCHEDULER #24, 2026-09-25)
 milestone: M2
@@ -1100,4 +1090,24 @@ design: `docs/development/VERIFICATION.md` (an instrument reads the forms the le
 depends-on: none.
 scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
 accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-149 · queued — **A PUBLISHED `limit` HAS ONE GUARD: only `bounds.test` checks it; `meaning-bounds` grades the row source, not whether an op in the BOUNDED roster publishes its bound.** Found by D-479's worker. — owner M0.
+order: after M0-142, the same suite (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative-control register).
+depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
+scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
+accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-150 · queued — **AN OP LEAVING THE BARE ROSTER INTO THE UNJUDGED BUCKET IS INVISIBLE TO THE FLOOR, which counts only what it still sees: `op=caseratify` was lost that way on `main`, found only by c20-batch11fix's RETURN-DELEGATE rule.** — owner M0.
+order: after M0-149, the same suite; the class behind a silent loss (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
+depends-on: land/conduct/c20-batch11fix on `main`.
+scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
+accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

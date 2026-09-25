@@ -810,7 +810,8 @@ scope: pass draftNewCase to `#caseIdentitySentence` at that call (or branch the 
 accepts-when: for a both-identity draft the acknowledgement's listed sentence names no edition and no listing (moves: an edition stated for an unchosen case). NEGATIVE CONTROL: drop newCase from the call and the pair arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-618's worker).
 
-### D-706 · running — **op=linkproject DISCLOSES AND WRITES ACROSS THE VIEWER FENCE: it resolves any capture sha with NO viewer, so a member of no project received a hidden target's capture sha and the hidden project's id (`edges[].to`, `target_capture`, `source_bundle`) and wrote a links_to ref INTO the hidden project.** Measured by D-701's worker (minted on land/worker/D-701). — owner RECORD.
+### D-706 · integrated — **op=linkproject DISCLOSES AND WRITES ACROSS THE VIEWER FENCE: it resolves any capture sha with NO viewer, so a member of no project received a hidden target's capture sha and the hidden project's id (`edges[].to`, `target_capture`, `source_bundle`) and wrote a links_to ref INTO the hidden project.** Measured by D-701's worker (minted on land/worker/D-701). — owner RECORD.
+status: integrated — SCHEDULER #24 11:34Z: tip 6dd3e530 (on D-701 414439d2), GATE 388/388 GREEN FULLREUSE (21964 assertions; excludes 3 untallied), tree 8740f7bc; DISCLOSURE HALF: linkViewer stamped on linkproject, hidden source answers not-held and writes nothing, hidden targets out of the answer and its counts; d706-linkproject.test 20/0, NEGATIVE CONTROL 4 arms as declared; the WRITE HALF is D-722 (stacked)
 order: spawned directly — a disclosure defect outranks every feature; it completes D-701's viewer fence (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — linkproject's answer filtered by the viewer; the integrator classifies.
@@ -952,6 +953,17 @@ depends-on: none (stacked on land/worker/D-708 @ 656b0817, integrated, on D-618 
 scope: op=statementack on a pair draft writes case_id NULL, bound to the draft (as a derived draft's reading is); #statementAcknowledgements' '*' draft match never lists a NULL-case row under a case identity; REC-217's publish draft= binds it. Rejected: refusing the ack; treating C1 as chosen. Fold into §3 rule 13. Reproduce through op=statementack first.
 accepts-when: an ack on a C1-plus-newCase draft is NOT listed in C1's document at its next edition, even when that edition is authored from another draft or the case door with a byte-identical statement; after a publish naming that draft it IS listed in the case that publish produced (moves: a reading listed under a case nobody chose). NEGATIVE CONTROL: restore the C1 key and the not-listed arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-708's worker; BOB #36 inbox).
+
+### D-722 · running — **op=linkproject's WRITE HALF: it resolves a second time WITHOUT the viewer, so an outsider's act writes an edge into a project they cannot see (measured by D-706's worker: a hidden-plus-visible address writes the HIDDEN edge, leaving op=links' tally one short; the edge sits unattributed).** BOB #36 FINAL RULING 2026-09-25 11:15Z, (A)+(C) (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded; supersedes 10:50Z/10:58Z part 3). — owner RECORD.
+order: directly behind D-706, whose disclosure half it completes; a write across the viewer fence is a disclosure defect and outranks every feature (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:34Z: spawned, stacked on land/worker/D-706 @ 6dd3e530; INVERT d706-linkproject.test's 'WRITE HALF, measured not ruled' arm (it pins today's write), never add beside it
+milestone: M7
+interface: I3 — linkproject writes only the edges its answer names; bundle= naming a hidden bundle answers NO_SUCH_BUNDLE; the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7.9 (REC-138 "not its existence" at the ACTS; REC-134's joined test), with BOB #36's 11:15Z ruling.
+depends-on: none (stacked on land/worker/D-706 @ 6dd3e530, integrated, on D-701 @ 414439d2).
+scope: (A) resolve ONCE through the viewer's #captureGate and write exactly the edges the answer names; remove the unfiltered second resolution. (C) bundle= naming a bundle the caller cannot see answers NO_SUCH_BUNDLE. (1) a hidden source answers not-held and writes nothing; (2) the JOINED test (as cite) applies where the source bundle is a project's. Fold into LINK-FIDELITY.md and add linkproject to §7.9's REC-134 act list; option B is NOT rowed.
+accepts-when: an outsider's arms leave the hidden project's refs byte-identical (witness before and after); a hidden-plus-visible address writes the VISIBLE edge and op=links' tally equals linkproject's counts; a member who sees both ends still writes the hidden target's edge (moves: an outsider's write into a hidden project). NEGATIVE CONTROL: restore the unfiltered write resolution and the outsider arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
 
 ### D-677 · queued — **THE CONTENT FRAMEWORK'S STATUS BULLET FOR D-454 IS SPLICED MID-SENTENCE INTO D-517's: "that figure is CONFIRMED [D-454's bullet] as its valley's midpoint", so both statements read garbled in the front matter.** Found by D-625's worker (minted on land/worker/D-625). — owner RECORD (docs).
 order: after D-676, a docs-only correction to the same document; it may ride any Framework landing (SCHEDULER #23, 2026-09-25)
