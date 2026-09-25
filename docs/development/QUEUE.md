@@ -765,8 +765,8 @@ scope: (1) MEASURE the corpus first: per type, the count of recorded moves whose
 accepts-when: an undeclared move on a non-bias type is refused by name, a stored undeclared move reads with the dated sentence and is unchanged, and the measurement states the per-type counts (moves: promote asks no table but bias). NEGATIVE CONTROL: drop the fence for one type and its undeclared-move arm lands, failing by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
 
-### D-608 · running — **TIER 1's TEXT WALK (`pdfstructure.mjs` `extractPageText`) INTERPRETS NO `Do`, so text inside Form XObjects goes unread and no page marker says so: the page reads as fully decoded while missing text.** MEASURED (M-166): ACFR FY2023-24 (biosmoke7 INFO-2026-0103) p38 tier 1 80 glyphs, tier 2 546, 34 of 40 text-show ops inside forms; all 9 held pages where tier 2 reads 10% or more beyond an unflagged tier 1 carry Form XObject text. Found by D-515's worker (04:14Z). — owner CONTENT-PDF.
-status: running — SCHEDULER #22 04:38Z spawns WORKER D-608 (depth 2)
+### D-608 · integrated — **TIER 1's TEXT WALK (`pdfstructure.mjs` `extractPageText`) INTERPRETS NO `Do`, so text inside Form XObjects goes unread and no page marker says so: the page reads as fully decoded while missing text.** MEASURED (M-166): ACFR FY2023-24 (biosmoke7 INFO-2026-0103) p38 tier 1 80 glyphs, tier 2 546, 34 of 40 text-show ops inside forms; all 9 held pages where tier 2 reads 10% or more beyond an unflagged tier 1 carry Form XObject text. Found by D-515's worker (04:14Z). — owner CONTENT-PDF.
+status: integrated — SCHEDULER #22 05:52Z: tip ffcc300b, GATE 386/386 GREEN (21884 assertions), tree e08ee68f; tier 1 descends Form XObjects; p38 80->546 glyphs; M-174: 9/9 fixed or flagged, 826 of 1,455 now exact, 605 flagged, 0 fell; near-merge with D-585 in extractPageText; a routing question with BOB #35
 order: after D-591, with the reader corrections: a page stated as read while its text is unread claims more than the record holds (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
 milestone: M2
 interface: I6 if a page's tier or grade changes on the wire (the integrator classifies).
@@ -930,6 +930,16 @@ scope: a proposal of a tier with its basis, stored apart from the member's value
 accepts-when: a proposal reads labelled machine work and the tier is unchanged until a member acts (the measured failure it moves: no proposal read). NEGATIVE CONTROL: let the proposal write the tier and the "the tier is the member's" arm fails by name.
 context: REC-216's audit (F1-F4, SCHEDULER #19's worker) and BOB #33's 21:55Z ruling: every `*propose` op is NON_ACTS in `bio-plane/src/affordances.mjs` (REC-195's reasoning) and a member states the value with their own act; so this proposal is a machine READ, never a member act in ACTS, and its surface SHOWS it beside the member's tier with no adopt control, as UI-102 (a2d974aa) does for the governing-laws proposal.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
+
+### M0-197 · queued — **NO INSTRUMENT SEES A NEGATIVE-CONTROL ARM WHOSE PATCH ANCHOR HAS DRIFTED: four in one hour (D-535's statepaths arm b, D-600's nc-cap12 dropslides, D-601's default-discoverable, D-235's suggest.control arms) had not armed for days, each found only by a worker running its driver.** BOB #35 RULED 04:25Z: a standalone M0 instrument, not M0-188's family. — owner M0.
+order: at the head of the process rows, before M0-142: it cuts gate time, since a drifted control today costs a worker round to find (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative control: break the subject, watch the suite fail at a NAMED assertion), with BOB #35's 04:25Z ruling.
+depends-on: none.
+scope: a pure reader that loads every `*.control.mjs` driver's arm table, dry-applies each arm's anchor by COUNTING matches (never editing), and fails naming driver and arm when an anchor matches 0 times, or more than once where the arm edits one site; it runs in EVERY gate profile; a driver whose arms cannot be loaded as data is named UNREADABLE, never skipped. D-600's arm is its first expected failure.
+accepts-when: the reader runs in every profile and names each drifted or UNREADABLE driver (moves: drifts found a worker round late). NEGATIVE CONTROL: reword one anchored line in a fixture copy and the arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:25Z).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

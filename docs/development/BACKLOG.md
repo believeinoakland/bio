@@ -327,16 +327,6 @@ scope: where the member meets a reference, and in the queue, show "a newer versi
 accepts-when: an AFFECTED reference shows the notice and both acts, an A-graded one shows nothing (moves: no surface). NEGATIVE CONTROL: render for A and the silence arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
 
-### M0-197 · queued — **NO INSTRUMENT SEES A NEGATIVE-CONTROL ARM WHOSE PATCH ANCHOR HAS DRIFTED: four in one hour (D-535's statepaths arm b, D-600's nc-cap12 dropslides, D-601's default-discoverable, D-235's suggest.control arms) had not armed for days, each found only by a worker running its driver.** BOB #35 RULED 04:25Z: a standalone M0 instrument, not M0-188's family. — owner M0.
-order: at the head of the process rows, before M0-142: it cuts gate time, since a drifted control today costs a worker round to find (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the negative control: break the subject, watch the suite fail at a NAMED assertion), with BOB #35's 04:25Z ruling.
-depends-on: none.
-scope: a pure reader that loads every `*.control.mjs` driver's arm table, dry-applies each arm's anchor by COUNTING matches (never editing), and fails naming driver and arm when an anchor matches 0 times, or more than once where the arm edits one site; it runs in EVERY gate profile; a driver whose arms cannot be loaded as data is named UNREADABLE, never skipped. D-600's arm is its first expected failure.
-accepts-when: the reader runs in every profile and names each drifted or UNREADABLE driver (moves: drifts found a worker round late). NEGATIVE CONTROL: reword one anchored line in a fixture copy and the arm fails by name.
-added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:25Z).
-
 ### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
 order: (held behind c20-batch11fix, SCHEDULER #18 03:47Z) after D-484, with the rows that cut gate time: an over-strict instrument fails correct work (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
 milestone: M0
@@ -1200,3 +1190,13 @@ depends-on: none.
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
+order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
+depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
+accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
