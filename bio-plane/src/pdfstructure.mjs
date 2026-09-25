@@ -2270,6 +2270,141 @@ async function extractImages(doc, pageOrder) {
 }
 
 /* ------------------------------------------------------------------ *
+ * D-627 — A PAGE WHOSE CONTENT IS A PAINTED IMAGE, WHILE ITS TEXT IS A FOLIO
+ * ------------------------------------------------------------------ *
+ *
+ * BOB #35, 2026-09-25 05:50Z: TWO FACTS, TWO MARKERS. D-608 made tier 1 read
+ * text inside Form XObjects, so a page that paints an image of a table and
+ * draws its three-digit folio through a form now BEARS text, and it rightly
+ * carries no `no_text_layer`. A false absence is worse than a missing pass. But
+ * that page's CONTENT is still unread: a folio does not read a page an image
+ * fills. So this marker says the second fact, and `needsTier3` routes it to OCR
+ * exactly as it routes a no-text page. OCR output stays machine-read and never
+ * raises a grade (DEC-4).
+ *
+ * THE TWO FIGURES, both carried on the marker:
+ *   - `image_share`: the share of the page's visible area (CropBox inside
+ *     MediaBox, inherited) that the page's painted images cover. It is the UNION
+ *     of their rectangles (CPDF-18's `images`, which D-420 stores as
+ *     `container_extent.images`), each clipped to the page. Overlaps count once,
+ *     and so does an image placed partly off the page.
+ *   - `glyphs`: the text the page SHOWS. That is its decoded non-whitespace code
+ *     points (`glyphCount`'s unit in `textchain.mjs`, counted here so this
+ *     module does not import the checks into the pdf-worker's bundle), plus the
+ *     `count` of its undetermined markers: characters it shows but tier 1 could
+ *     not decode. A folio in an Arial with no /ToUnicode is 3 either way.
+ *
+ * THE THRESHOLDS ARE MEASURED (M-178), NOT GUESSED. The FY23-25 budget book and
+ * M-174's other two documents hold 1,788 pages. Every page there that paints an
+ * image and shows at most a folio (1 to 4 glyphs) is an image of content: a
+ * table, a certificate, a screenshot, an organisation chart. There are 17 such
+ * pages, and their image shares run from 0.1897 to 0.6542. Every other page that
+ * paints an image shows at least 22 glyphs. So:
+ *   - glyphs <= IMAGE_CONTENT_MAX_GLYPHS (4, the most glyphs on any measured
+ *     image-only page), and
+ *   - image_share >= IMAGE_CONTENT_MIN_SHARE (0.18, the least share on any
+ *     measured image-only page, 0.1897, truncated so the measured page does not
+ *     sit on the edge)
+ *   reads `image_content_unread`.
+ *
+ * THE GAPS READ UNDETERMINED, NEVER FORCED EITHER WAY. No measured page falls in
+ * two places: glyphs 5 to 21 (IMAGE_CONTENT_TEXT_GLYPHS is 22, the fewest glyphs
+ * on any measured page that is not image-only), or a share under 0.18 on a
+ * folio-only page. A page in either gap, or one whose page box cannot be read,
+ * carries `image_content_undetermined` with its figures. It is NOT routed:
+ * routing it would force it to the image side.
+ *
+ * WHAT THIS CANNOT SEE, stated (M-178): a chart painted as an image under a text
+ * TITLE (22 to about 380 glyphs) has the same two figures as a photo page with
+ * captions. It reads no marker. The two figures cannot tell those apart, and
+ * that is a design gap, not a threshold to tune. With `images` NULL (a walk that
+ * did not finish, or an encrypted file) no share can be measured and nothing is
+ * said. A page already marked `no_text_layer` is left alone: it is routed.
+ * Two consequences downstream are minted, not built here (M-178): when tier 2
+ * wins a page, its merge replaces the page's markers and this one goes with
+ * them (D-633); and the tier-3 merge will not fill a routed page whose folio
+ * DECODED, because it holds a glyph (D-635). */
+export const IMAGE_CONTENT_MAX_GLYPHS = 4;
+export const IMAGE_CONTENT_MIN_SHARE = 0.18;
+export const IMAGE_CONTENT_TEXT_GLYPHS = 22;
+
+/** A page's visible box, [x0,y0,x1,y1]: CropBox inside MediaBox, each inherited
+ *  through /Parent. NULL when there is no readable MediaBox. */
+function pageBox(doc, pageMap) {
+  const read = (key) => {
+    let p = pageMap, d = 0;
+    while (p && d++ < 32) {
+      const a = doc.resolve(p[key]);
+      if (a && a.t === "arr" && a.items.length === 4) {
+        const v = a.items.map((x) => doc.resolve(x));
+        if (v.every((x) => typeof x === "number" && Number.isFinite(x)))
+          return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+        return null;
+      }
+      p = doc.dictOf(p.Parent);
+    }
+    return null;
+  };
+  const mb = read("MediaBox");
+  if (!mb) return null;
+  const cb = read("CropBox");
+  return cb ? clipRect(cb, mb) : mb;
+}
+
+const clipRect = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
+const rectArea = (r) => Math.max(0, r[2] - r[0]) * Math.max(0, r[3] - r[1]);
+
+/** The area the union of axis-aligned rectangles covers, each counted once. */
+function unionArea(rects) {
+  const rs = rects.filter((r) => rectArea(r) > 0);
+  const xs = [...new Set(rs.flatMap((r) => [r[0], r[2]]))].sort((a, b) => a - b);
+  let total = 0;
+  for (let i = 0; i + 1 < xs.length; i++) {
+    const x0 = xs[i], x1 = xs[i + 1];
+    const spans = rs.filter((r) => r[0] <= x0 && r[2] >= x1).map((r) => [r[1], r[3]]).sort((a, b) => a[0] - b[0]);
+    let covered = 0, lo = null, hi = null;
+    for (const [a, b] of spans) {
+      if (lo === null || a > hi) { if (lo !== null) covered += hi - lo; lo = a; hi = b; }
+      else hi = Math.max(hi, b);
+    }
+    if (lo !== null) covered += hi - lo;
+    total += covered * (x1 - x0);
+  }
+  return total;
+}
+
+/** Add D-627's markers to tier 1's text, in place. `images` is CPDF-18's list. */
+function markImageContent(doc, pageOrder, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const marks = Array.isArray(pg.undetermined) ? pg.undetermined : [];
+    if (marks.some((m) => m && m.reason === "no_text_layer")) continue;
+    let decoded = 0;
+    for (const ch of typeof pg.text === "string" ? pg.text : "") if (!/\s/u.test(ch)) decoded++;
+    const glyphs = decoded + marks.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0);
+    if (glyphs >= IMAGE_CONTENT_TEXT_GLYPHS) continue;
+    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[pg.page] });
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const share = box && rectArea(box) > 0
+      ? Math.round(unionArea(painted.map((im) => clipRect(im.rect, box))) / rectArea(box) * 10000) / 10000
+      : null;
+    const unread = share !== null && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
+    if (share === 0) continue;
+    const marker = { page: pg.page, reason: unread ? "image_content_unread" : "image_content_undetermined",
+                     font: null, codes: "", count: 0, image_share: share, glyphs };
+    pg.undetermined = [...marks, marker];
+    added++;
+  }
+  if (!added) return;
+  text.undetermined = [...text.pages.flatMap((p) => p.undetermined || []),
+                       ...(text.undetermined || []).filter((m) => m && !Number.isInteger(m.page))];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
+
+/* ------------------------------------------------------------------ *
  * The public entry point
  * ------------------------------------------------------------------ */
 
@@ -2383,6 +2518,8 @@ export async function extractPdfStructure(bytes) {
      image list riding there would vanish on exactly the documents Tier 2
      reads. NULL with `imagesWhy` when not walked; an empty list is a zero. */
   const imgs = await extractImages(doc, pageOrder);
+  /* D-627: a page an image fills while its text is a folio says so (see above). */
+  if (imgs.images) markImageContent(doc, pageOrder, text, imgs.images);
 
   return {
     ok: true,
