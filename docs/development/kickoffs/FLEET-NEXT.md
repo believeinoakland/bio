@@ -44,6 +44,10 @@ Before calling, check that the lane's `-NEXT.md` latest commit on `coord` is the
   @ `59daa98d`, which by then had two later appends, to `5d69a078`. It was an ancestor, so the file had only grown, and I told BOB). If the named
   commit is NOT an ancestor of the file's head, stop and ask BOB before creating.
 - 2026-09-25T02:58Z: **BOB #35** created, `session_01933kAN3JM2omheRacW6f9R` (succeeding BOB #34; BOB-NEXT @ `50738505`, exact).
+- 2026-09-25T03:02Z: **SCHEDULER #22** created, `session_01RwrbKgduD6buQwTmKJodT3` (succeeding SCHEDULER #21; SCHEDULER-NEXT named
+  `a4409a58`, head `f2a98f49`, an ancestor). The request was a pending trigger into this session, read early with
+  `list_triggers` when BOB #35 said it stood. It was then deleted so it could not create a duplicate, and the id was
+  reported to BOB #35. Note: a request trigger can arrive AFTER a peer refers to it, so `list_triggers` shows it.
 
 **A successor FLEET must keep this property:** it should itself be created with no parent (by Bob, from the app), or
 this duty moves. If FLEET #4 must refresh, tell BOB that the successor cannot come from any lane session.
