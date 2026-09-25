@@ -1,0 +1,16 @@
+{
+ "unit": "ui:queue-allclear-limit.test.mjs",
+ "inputHash": "89f48ac8cc46dcfe541635a6a12e59f332b30462d833c6ecbf8a039f3f59808d",
+ "verdict": "PASS",
+ "run": "4bc597a361e0497974f13147fa619f1e33f19c5f.1790295290688.1739.json",
+ "tree": "4bc597a361e0497974f13147fa619f1e33f19c5f",
+ "head": "c7877f152a6f0a879ef02fa9f34cfbcadadac0c1",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 287,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "249652bf-ec70-518e-8a74-c2f8c18a4c8b",
+ "at": "2026-09-25T00:14:50.704Z"
+}
