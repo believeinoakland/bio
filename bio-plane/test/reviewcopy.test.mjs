@@ -240,7 +240,28 @@
    block 11's four arms before the promote counted in the total but not in its -1 tally, and section 12 AFTER it
    6/0. AS DECLARED; the restore of this file read sha256 MATCH.
    (u) THE RECORDER DISARMED (`block()` rethrows) over (t)'s fixture — declared: NO foot and no section tally, exit 1,
-   so a driver cannot read an early end as a finished run -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after). */
+   so a driver cannot read an early end as a finished run -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after).
+
+   D-618 (a draft that names a case AND asks for a new one states no edition; §6A.4 with BOB #32's ruling and D-568's
+   `#statedEdition`) ADDED BLOCK 14 and THREE ARMS. DECLARED 2026-09-25 BEFORE ARMING:
+
+   (x) THE NAMED CASE'S NEXT EDITION ANSWERED AGAIN — `#statedEdition`'s early return for the pair removed, the plane
+   before D-618. MUST FAIL, by name: "D-618 ACCEPTS-WHEN: DRAFT DB'S EDITION IS UNDETERMINED". MUST NOT FAIL: block
+   14's fixture, "AND ITS KEY STILL BINDS", the names-C1-only arm, or any D-568 arm (a derived draft is untouched).
+
+   (y) THE GRANT ROW READ PAST `#statedEdition` AGAIN — a grant bound to a case states its stored edition whether live
+   or not, as before D-618. MUST FAIL "D-618 ACCEPTS-WHEN" (the grant row's value alone). MUST NOT FAIL the others.
+
+   (z) OVER-STRICTNESS — the rule as one exclusive-or (an edition exactly when one of the two instructions is given).
+   MUST PASS, every arm.
+
+   MEASURED 2026-09-25 by WORKER D-618 (cloud, SCHEDULER #23) with `node test/reviewcopy.control.mjs`, all TWENTY-SIX
+   arms ALONE in one driver run, the pen in the session scratchpad via `BIO_NC_PEN`, 26 of 26 restores of
+   `src/store.mjs` (3,654,209 B, sha256 fd32b991…) sha256 MATCH, content IDENTICAL, size ok: (0) BASELINE -> **102
+   pass, 0 fail**. (x) -> **101 pass, 1 fail**: "D-618 ACCEPTS-WHEN: DRAFT DB'S EDITION IS UNDETERMINED", by name.
+   AS DECLARED. (y) -> **101 pass, 1 fail**: the same arm, by name. AS DECLARED. (z) -> **102 pass, 0 fail**. AS
+   DECLARED. Arms c, r and v each fail MORE than before, all in block 14 and in the arm's own direction (c 6, r 4,
+   v 5; the driver's foot names them); every other arm's failure count unchanged. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -1335,9 +1356,65 @@ await block("13", async () => {
     [C1, true, c1?.case?.edition]);
 });
 
+/* =========================================================================== 14
+ * D-618 (`BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z and D-568's
+ * `#statedEdition`): A DRAFT THAT NAMES A CASE AND ALSO ASKS FOR A NEW ONE STATES NO EDITION.
+ *
+ * THE MEASURED FAILURE IT MOVES is block 12's draft DB read once more: D-538 made its sentence say that
+ * publication refuses the pair together and its case stays UNDETERMINED, and D-568 nulled the edition only
+ * for a draft naming NO case — so DB still answered C1's next edition beside that sentence, an edition for a
+ * case the record has not chosen. The owner's grant row read the stored edition straight off `review_grants`
+ * for any grant bound to a case, past `#statedEdition`, so it is read here too. The internal (C1, next) key
+ * is KEPT: DB's grant is live and its recipient reads the copy.
+ *   DB — names C1 AND sets `newCase` -> `edition: null` in casedraft, casedrafts, reviewcopy, reviewgrant,
+ *        the owner's grant row and both statement acknowledgements;
+ *   D1 — names C1 only               -> C1's next edition, a number, on its copy AND its live grant's row
+ *        (an arm that nulled every live grant's row fails here).
+ * ========================================================================= */
+console.log("\n--- 14. D-618: a draft naming a case and asking for a new one states no edition ---");
+await block("14", async () => {
+  const DBr = await draft(IRIS, withRoles({ ...args(14), targets: [LEAD], caseId: C1, newCase: true }));
+  if (!DBr?.ok) bail("casedraft DB (block 14)", DBr);
+  const gB = await grant(IRIS, { draft: DBr.draftId, recipient: "D-618 reader, ambiguous case" });
+  const g1 = await grant(IRIS, { draft: D1, recipient: "D-618 reader, named case" });
+  for (const [n, r] of [["DB", gB], ["D1", g1]]) if (!r?.ok || !r.secret) bail(`reviewgrant ${n} (block 14)`, r);
+  const ackP = rP(await POST(`op=statementack&draft=${DBr.draftId}&token=${ELLA}`, {}));
+  if (!ackP?.ok) bail("statementack DB (block 14)", ackP);
+  const ackR = rP(await POST(`op=statementack&draft=${DBr.draftId}&secret=${encodeURIComponent(gB.secret)}`, {}));
+  const copy = async (id) => rP(await GET(`op=reviewcopy&draft=${id}&token=${IRIS}`));
+  const [cB, c1] = [await copy(DBr.draftId), await copy(D1)];
+  const list = rP(await GET(`op=casedrafts&token=${IRIS}&project=${encodeURIComponent(PROJ)}`));
+  const row = (id) => (list?.drafts || []).find((d) => d.draft_id === id)?.case;
+  const gRow = (c, g) => (c?.grants || []).find((x) => x.grant_id === g.grantId);
+  const rRead = parsed(await recipientRead(gB.secret));
+  /* A STATED null, never an absent key — block 13's `stated`, for block 13's measured reason. */
+  const stated = (o, k) => (o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : "ABSENT");
+
+  t("D-618: THE FIXTURE IS THE MEASURED FAILURE — DB names C1, its gates refuse the pair CASE_IDENTITY_AMBIGUOUS, "
+  + "its sentence says its case is UNDETERMINED, and every row this block reads is present",
+    [DBr.caseId, cB?.gates, cB?.missing?.[0]?.reason, /undetermined/i.test(cB?.case?.identity ?? ""),
+     list?.truncated, !!row(DBr.draftId) && !!gRow(cB, gB) && !!gRow(c1, g1)],
+    [C1, "refused", "CASE_IDENTITY_AMBIGUOUS", true, false, true]);
+  t("D-618 ACCEPTS-WHEN: DRAFT DB'S EDITION IS UNDETERMINED — `edition: null` in op=casedraft, op=casedrafts, "
+  + "op=reviewcopy and op=reviewgrant, on the owner's grant row and on both statement acknowledgements",
+    [stated(DBr, "edition"), stated(row(DBr.draftId), "edition"), stated(cB?.case, "edition"), stated(gB, "edition"),
+     stated(gRow(cB, gB), "edition"), stated(ackP?.acknowledgement, "edition"),
+     stated(ackR?.acknowledgement, "edition")],
+    [null, null, null, null, null, null, null]);
+  t("D-618: AND ITS KEY STILL BINDS — DB's grant is LIVE and its recipient reads DB's copy with no credential",
+    [gRow(cB, gB)?.live, rRead?.draft, rRead?.reader, ackR?.ok], [true, DBr.draftId, "recipient", true]);
+  t("D-618: A DRAFT NAMING C1 ONLY IS UNCHANGED — C1's next edition, a number, in its copy, its reviewgrant answer "
+  + "and its LIVE grant's row",
+    [Number.isInteger(c1?.case?.edition) && c1.case.edition >= 2, g1.edition, gRow(c1, g1)?.live,
+     gRow(c1, g1)?.edition],
+    [true, c1?.case?.edition, true, c1?.case?.edition]);
+});
+
 /* D-564: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
    rather than read as clean — the foot counts the sections it expected against the ones that reported. */
-const EXPECTED = ["0 (setup)", "0 (corpus)", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"];
+/* c23-batch30 (2026-09-25): D-618's block 14 joins the expected sections — it was written before D-564's recorder
+   (a bare `{ … }` block over `bail()`), and runs inside `block("14")` at the union like every other section. */
+const EXPECTED = ["0 (setup)", "0 (corpus)", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"];
 console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
 for (const n of EXPECTED) {
   const r = TALLY.find((x) => x.name === n);

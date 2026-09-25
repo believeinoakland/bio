@@ -42974,8 +42974,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
      over findings a published case already serves that is C1's NEXT edition, not edition 1 (reviewcopy.test.mjs
      block 12, draft DD). Which edition it becomes is UNDETERMINED until then, so the answer says `null`, never a
      number. A draft naming a case keeps that case's next edition; one asking for a new case keeps 1, which is
-     true of it. `newCase` is read for truthiness, as `publishCase` reads it. */
+     true of it. `newCase` is read for truthiness, as `publishCase` reads it.
+     D-618 (same section and ruling): A DRAFT THAT NAMES A CASE AND ALSO ASKS FOR A NEW ONE states null too. Its
+     sentence says publication refuses the pair together (CASE_IDENTITY_AMBIGUOUS) and which case it is stays
+     UNDETERMINED until one instruction is withdrawn, so the named case's next edition beside it claimed an edition
+     for a case the record has not chosen. The internal key is untouched: grants and readings still bind at it. */
   static #statedEdition(ident, newCase) {
+    if (ident.caseId && newCase) return null;
     return ident.caseId || newCase ? ident.edition : null;
   }
   /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
@@ -43430,7 +43435,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         return {
           ...g,
           live,
-          edition: g.case_id ? g.edition : live ? _Store.#statedEdition(ident, !!params.newCase) : null
+          edition: live ? _Store.#statedEdition(ident, !!params.newCase) : g.case_id ? g.edition : null
         };
       });
       grantPart = { grants, grants_truncated: grantRows.length > cap };

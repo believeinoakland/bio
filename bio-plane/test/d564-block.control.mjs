@@ -20,6 +20,9 @@
  * later arms had moved (rec212 section 5, casesign section 7, reviewcopy's new section 13); those three baselines were
  * re-declared from the union's print, and the three suites' nine arms re-ran AS DECLARED; the other twelve arms were
  * AS DECLARED on the first run.
+ * RE-RUN 2026-09-25 at the c23-batch30 union (reviewcopy only): baseline and fixture NOT AS DECLARED on the first run,
+ * each for D-618's new section 14 (4/0) alone; reviewcopy's baseline re-declared from the union's print and its three
+ * arms re-ran AS DECLARED.
  */
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, symlinkSync, readdirSync, openSync, closeSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -87,7 +90,10 @@ const SUITES = {
             "5": [6, 0], "6": [6, 0], "7": [13, 0], "8": [7, 0], "9": [14, 0], "10": [5, 0], "11": [5, 0], "12": [6, 0],
             /* ADDED 2026-09-25 at the c22-batch30 union: D-568's block 13 (on main, after this driver's base) now runs
                inside block() too; 5/0, measured by this driver's baseline on the union. */
-            "13": [5, 0] },
+            "13": [5, 0],
+            /* ADDED 2026-09-25 at the c23-batch30 union: D-618's block 14 runs inside block() at the union; 4/0,
+               measured by this driver's baseline on the union (the old base, which lacked it, read it as an extra). */
+            "14": [4, 0] },
     fixture: ['answered?`, INFO), "inquiry", "open")', 'answered?`, INFO), "nosuchtype", "open")'],
     died: { "11": "(fixture) promote INQ-2026-1260-later-lb (after the trip)" } },
 };

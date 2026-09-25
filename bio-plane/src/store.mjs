@@ -11033,8 +11033,13 @@ export class Store extends DurableObject {
      over findings a published case already serves that is C1's NEXT edition, not edition 1 (reviewcopy.test.mjs
      block 12, draft DD). Which edition it becomes is UNDETERMINED until then, so the answer says `null`, never a
      number. A draft naming a case keeps that case's next edition; one asking for a new case keeps 1, which is
-     true of it. `newCase` is read for truthiness, as `publishCase` reads it. */
+     true of it. `newCase` is read for truthiness, as `publishCase` reads it.
+     D-618 (same section and ruling): A DRAFT THAT NAMES A CASE AND ALSO ASKS FOR A NEW ONE states null too. Its
+     sentence says publication refuses the pair together (CASE_IDENTITY_AMBIGUOUS) and which case it is stays
+     UNDETERMINED until one instruction is withdrawn, so the named case's next edition beside it claimed an edition
+     for a case the record has not chosen. The internal key is untouched: grants and readings still bind at it. */
   static #statedEdition(ident, newCase) {
+    if (ident.caseId && newCase) return null;
     return ident.caseId || newCase ? ident.edition : null;
   }
 
@@ -11479,11 +11484,14 @@ export class Store extends DurableObject {
       /* D-568: LIVENESS is decided at the stored key, and the row's `edition` is STATED only where the record holds
          one. A grant bound to no case was given at (NULL, 1) for a draft that was either new or DERIVED, and the row
          does not record which: a LIVE one reads the draft's own stated edition (it binds what the draft is now), a
-         dead one reads null — UNDETERMINED, never the minted-case edition it may never have been. */
+         dead one reads null — UNDETERMINED, never the minted-case edition it may never have been. D-618: a LIVE grant
+         reads the draft's stated edition whether or not it names a case, so a draft that names one and also asks
+         for a new one reads null here as in every other answer; for any other live grant the key equality above
+         makes the two the same number. A dead grant bound to a case keeps the edition its row holds. */
       const grants = grantRows.slice(0, cap).map((g) => {
         const live = !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition;
         return { ...g, live,
-                 edition: g.case_id ? g.edition : live ? Store.#statedEdition(ident, !!params.newCase) : null };
+                 edition: live ? Store.#statedEdition(ident, !!params.newCase) : g.case_id ? g.edition : null };
       });
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
