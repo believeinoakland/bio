@@ -33881,6 +33881,20 @@ export class Store extends DurableObject {
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT" };
     if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state };
+    /* REC-186 (BOB #31's ruling of 2026-09-23 21:37Z on Membership v2 §7.6 and §7.10): THE PROJECT'S ONLY
+       OWNER DOES NOT ASK TO LEAVE. An owner's request can be honoured only by the 7.10 removal (7.7 refuses
+       an owner, `OWNER`), and 7.10's floor refuses that removal at one owner, so a request from the last owner
+       would record a departure the record can never carry out — an overclaim. The floor is asked through the
+       SAME arithmetic `projectOwnerRemove`'s LAST_OWNER runs (`Store.ownerMath` over `#owners`), so the two
+       cannot disagree about who is last; a co-owner's request is recorded as before. Nothing is written. */
+    /* DEC-49 REGION is-leave-owner-floor — REC-186/C-33.47. */
+    const floor = p.owner ? Store.ownerMath(this.#owners(projectId).length) : null;
+    if (floor && !floor.possible)
+      return { ok: false, reason: "LAST_OWNER_CANNOT_LEAVE", owners: floor.owners,
+               detail: "you are this project's only owner, and one owner is the floor, so a request to leave "
+                     + "could never be carried out. Transfer ownership first: add another owner (7.10), then ask "
+                     + "to leave; or deactivate the project (7.11)." };
+    /* END DEC-49 REGION is-leave-owner-floor */
     const c = comment === null ? null : String(comment).slice(0, 280);
     this.sql.exec(`UPDATE project_participants SET state='leaving', comment=?, updated=? WHERE project_id=? AND member_id=?`,
       c, new Date().toISOString(), projectId, by);

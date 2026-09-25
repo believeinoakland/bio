@@ -317,6 +317,10 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 1.29.0 (REC-186, 2026-09-25, branch land/worker/REC-186): C-33.47 LAST_OWNER_CANNOT_LEAVE joined ACT_SHAPE_CHECKS
+     (BOB #31's ruling: op=projectleave refuses a project's only owner). 461 -> 462, THIS SUITE'S PRINT on this tree.
+     SEVERAL BRANCHES TAKE 1.29.0 FOR OTHER ROWS: the union re-reads its own figure and keeps one row. */
+  "1.29.0": { count: 462, digest: "679731bf482feb496fa2c6fdd0443fc6d503cf8375b52cb6cf98142fd361d73a" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -415,7 +419,7 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

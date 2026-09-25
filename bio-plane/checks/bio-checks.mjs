@@ -10460,6 +10460,16 @@ export const ACT_SHAPE_CHECKS = {
       + 'named beside this message, the earlier one still reads back in full, and nothing was '
       + 'recorded.',
   },
+  /* REC-186 (BOB #31, 2026-09-23 21:37Z): the last owner's request to leave. C-33.47, not the next
+     free number on main, because REC-205 and REC-207's unmerged branches already hold C-33.44..46 in
+     this family; the integrator renumbers if the union needs it. */
+  LAST_OWNER_CANNOT_LEAVE: {
+    check: 'C-33.47',
+    where: 'src/store.mjs projectLeave > is-leave-owner-floor',
+    translation: 'You are the only owner of this project, and a project always keeps at least one '
+      + 'owner, so a request to leave it is one nobody could ever carry out. Add another owner first, '
+      + 'then ask to leave — or stand the project down. Nothing was recorded.',
+  },
 };
 
 /* =========================================================================

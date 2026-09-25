@@ -19,8 +19,10 @@
  *       store; only the publication stops consulting it).
  *   (3) OVER-STRICTNESS — `projectjoin` narrowed to `state === "invited"`, the tidy-looking fence
  *       ("join is the invitee's") that is tighter than `projectJoin`'s rule. DECLARED: MUST FAIL
- *       "THE AGREEMENT — projectjoin" (a joined or leaving participant's join SUCCEEDS and is no
- *       longer offered); MUST NOT FAIL "CROSS-PROJECT".
+ *       "THE AGREEMENT — projectjoin" (a leaving participant's join SUCCEEDS — it withdraws the
+ *       request — and is no longer offered); MUST NOT FAIL "CROSS-PROJECT". CORRECTED by REC-186
+ *       (BOB #31, 2026-09-23 21:37Z): this said "a joined or leaving participant's", but a joined
+ *       participant's join changes nothing and is no longer offered by rule; the anchor moved with it.
  *   (4) THE MAP WIDENED — `retire` added to MACHINE_REFUSALS, a code the store never answers a
  *       machine. DECLARED: MUST FAIL "THE MACHINE MAP IS THE STORE'S" (both-directions, the
  *       invented entry named); MUST NOT FAIL "CROSS-PROJECT".
@@ -117,7 +119,7 @@ arm("2", "THE MACHINE RULE DROPPED — deriveActs no longer consults MACHINE_REF
     mustNotFail: ["CROSS-PROJECT", "THE MACHINE MAP IS THE STORE'S"] });
 
 arm("3", "OVER-STRICTNESS — projectjoin narrowed to the invitee alone",
-  [["affordances", `applies: (f, ty) => ty === "project" && typeof f.roster?.state === "string" },`,
+  [["affordances", `applies: (f, ty) => ty === "project" && typeof f.roster?.state === "string" && f.roster.state !== "joined" },`,
                    `applies: (f, ty) => ty === "project" && f.roster?.state === "invited" },`]],
   { mustFail: ["THE AGREEMENT — projectjoin"], mustNotFail: ["CROSS-PROJECT"] });
 

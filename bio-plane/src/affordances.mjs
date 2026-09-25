@@ -1707,8 +1707,10 @@ export const ACTS = [
      the roster acts themselves receive — and each predicate below is its own act's refusal
      stated as a condition, never D-310's "owner of SOME project":
        projectinvite      NOT_THE_OWNER            (`projectInvite`)   -> owner of THIS project
-       projectjoin        NOT_INVITED              (`projectJoin`)     -> any participation row
-       projectleave       NOT_A_PARTICIPANT/NOT_JOINED (`projectLeave`) -> state `joined`
+       projectjoin        NOT_INVITED              (`projectJoin`)     -> a participation row, not
+                          `joined` (REC-186: a joined caller's join changes nothing)
+       projectleave       NOT_A_PARTICIPANT/NOT_JOINED, LAST_OWNER_CANNOT_LEAVE (`projectLeave`)
+                          -> state `joined`, and not the only owner (REC-186)
        projectremove      NOT_THE_OWNER            (`projectRemove`)   -> owner of THIS project
        projectowneradd    NOT_THE_OWNER            (`projectOwnerAdd`) -> owner of THIS project
        projectownerremove NOT_THE_OWNER, LAST_OWNER (`projectOwnerRemove`) -> owner, and the
@@ -1718,9 +1720,14 @@ export const ACTS = [
      REVERSED v1.4, and the store has refused a non-owner since. D-311's own row and D-310's
      argument both said "an ADMINISTRATOR's" — the v1.4 reading; each predicate here is derived
      from the refusal its op RAISES, which is what caught it.
-     `projectjoin` IS OFFERED TO EVERY PARTICIPANT, joined ones included: `projectJoin` refuses only
-     a caller with no participation row, and a joined participant's join SUCCEEDS (a leaving one's
-     withdraws the request, 7.6). Withholding it there would be a fence tighter than its rule.
+     `projectjoin` IS OFFERED TO A PARTICIPANT WHO IS NOT JOINED — invited, or leaving (whose join
+     withdraws the request, 7.6). CORRECTED by REC-186 on BOB #31's ruling of 2026-09-23 21:37Z: this
+     read "offered to every participant, joined ones included … withholding it there would be a fence
+     tighter than its rule". `projectJoin` stays idempotent and a joined caller's join still SUCCEEDS,
+     but it changes nothing, and an offer that does nothing is an overclaim (DEC-8) — the store is not
+     narrowed, only the offer. `projectleave` likewise is not offered to the project's ONLY owner:
+     `projectLeave` refuses LAST_OWNER_CANNOT_LEAVE through `Store.ownerMath` over `#owners`, the same
+     arithmetic `f.roster.owner_floor_clear` already states, so the offer reads that fact.
      WHAT THESE DO NOT SAY is what turns on a PARAMETER — the handle named, its status, the reason,
      the 7.10 votes still owed (CONSENSUS_REQUIRED, VOTES_SHORT) — the release precedent: the
      record permits the move, not that this caller's parameters will pass.
@@ -1732,9 +1739,10 @@ export const ACTS = [
   { id: "projectinvite", label: "Invite a member to this project", weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true },
   { id: "projectjoin", label: "Join this project", weight: "single", types: ["project"],
-    applies: (f, ty) => ty === "project" && typeof f.roster?.state === "string" },
+    applies: (f, ty) => ty === "project" && typeof f.roster?.state === "string" && f.roster.state !== "joined" },
   { id: "projectleave", label: "Ask to leave this project", weight: "single", types: ["project"],
-    applies: (f, ty) => ty === "project" && f.roster?.state === "joined" },
+    applies: (f, ty) => ty === "project" && f.roster?.state === "joined"
+                     && (f.roster?.owner !== true || f.roster?.owner_floor_clear === true) },
   { id: "projectremove", label: "Remove a participant", weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true },
   { id: "projectowneradd", label: "Add an owner", weight: "single", types: ["project"],
