@@ -836,7 +836,7 @@ accepts-when: a varying page-local sidebar reports no lost chrome link, and a on
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
 
 ### D-685 · integrated — **THE ACQUIRE WIRE'S BUDGET LOOP DROPS A WHOLE UNIT whose text plus envelope exceeds the remaining budget (524,288 B), instead of carrying its per-unit-capped prefix (the store caps a unit at 128 KiB with truncated=1) — so a large sheet (M-20: 72.6 MB over 1,056 sheets) silently loses units from search.** Diagnosed at the code, not measured. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
-status: integrated — SCHEDULER #24 12:40Z: tip 3094f19b (on D-684 9f6112d3), GATE 385/385 GREEN FULLREUSE (21895 assertions; excludes 3 untallied), tree d242c4c8; the acquire wire carries a capped prefix (truncated:true, additive I3) instead of dropping the unit; cap moved to bio-checks.mjs; a unit whose capped prefix does not fit the budget is still dropped and counted (stated in §4.1); M-184
+status: integrated — CONDUCT #23 12:34Z: worker report — tip 3094f19b (on D-684 9f6112d3), GATE 385/385 GREEN FULLREUSE (21895 assertions); truncated units carried; I3 additive text_units[].truncated; M-184, D-724 minted; rides batch30 after D-684
 order: after D-684, the same acquire path, one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3 — a truncated unit carried where one was dropped; the integrator classifies.
