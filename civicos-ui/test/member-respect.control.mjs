@@ -28,6 +28,9 @@
  *   (3) BULK ONLY, NO SINGLE PATH. The per-kind mute UI-55 added is removed,
  *       leaving the whole-set control alone — the state this surface was in before
  *       this item. The amendment's arm must fail.
+ *   (4) D-588: the stem "unread" planted as PROSE in markup — ARM 3b must fail.
+ *   (5) D-588's OVER-STRICTNESS ARM: the snake_case state codes UI-96 met, compared
+ *       in a branch, must leave the sweep GREEN (before D-588 it went red).
  */
 import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
@@ -76,14 +79,17 @@ function arm(name, patch, mustSay){
     console.log(`  ${r.out.includes(s) ? "names" : "!! DOES NOT NAME"}: ${JSON.stringify(s.slice(0, 90))}`);
 }
 
-console.log("member-respect.control — three arms, each armed ALONE, every restore verified by hash AND by content.");
+console.log("member-respect.control — every arm armed ALONE, every restore verified by hash AND by content.");
 console.log(`pristine app.html sha256 ${PRISTINE_SHA.slice(0,16)}… (${PRISTINE.length} bytes)`);
 
 /* ---- BASELINE: the clean tree must be GREEN, or every arm below is meaningless. */
 {
   const r = run();
   console.log(`\nBASELINE  exit ${r.exit} · ${(r.out.match(/member-respect: (\d+) pass, (\d+) fail/) || ["(no tally)"])[0]}`);
-  if(r.exit !== 0) throw new Error("the clean tree is already RED — arm nothing until that is understood");
+  /* D-588: the on-disk pristine copy is written BEFORE this check, so a RED baseline
+     used to throw past the unlink at the foot and leave `app.html.ui55-pristine` in the
+     worktree — measured when D-588's suite-level control armed the SUITE. */
+  if(r.exit !== 0){ fs.unlinkSync(SAFE); throw new Error("the clean tree is already RED — arm nothing until that is understood"); }
 }
 
 /* ---- ARM 1 · a re-confirmation planted on a REVERSIBLE act. ---- */
@@ -122,6 +128,34 @@ arm("2c · DEC-49's guard removed from disk is not patchable here, so the SURFAC
 arm("3 · the set of decisions offered in BULK ONLY (per-kind mute removed)",
   (s) => s.replace(/const each = kinds\.length > 1[\s\S]*?: "";/, 'const each = "";'),
   ["ARM 4d", "data-mute1"]);
+
+/* ---- ARM 4 · D-588: DEC-68's PROSE STILL FAILS. The word "unread" planted in text
+        a member is shown must turn ARM 3b red naming the stem. ---- */
+arm("4 · D-588: the diligence stem \"unread\" rendered as PROSE in markup",
+  (s) => s.replace(
+    "async function doCite(){",
+    'async function doCite(){\n  const _d588 = `<span class="hint">3 unread passages</span>`;'),
+  ["ARM 3b", '"unread" is rendered']);
+
+/* ---- ARM 5 · D-588's OVER-STRICTNESS ARM, ON THE REAL FILE: the plane's snake_case
+        state codes compared in a branch — UI-96's shape — must leave the sweep GREEN.
+        Before D-588 this arm read RED, which is the defect. ---- */
+{
+  armed++;
+  const patched = PRISTINE.replace(
+    "async function doCite(){",
+    'async function doCite(){\n  if(String(window._d588) === "chain_unread" || String(window._d588) === "newer_capture_unread") void 0;');
+  if(patched === PRISTINE) throw new Error("ARM 5: the patch changed NOTHING");
+  fs.writeFileSync(APP, patched);
+  const r = run();
+  restore();
+  const green = r.exit === 0;
+  if(green) correct++;
+  const tally = (r.out.match(/member-respect: (\d+) pass, (\d+) fail/) || [])[0] || "(no tally)";
+  console.log(`\n${green ? "CONTROL OK  " : "CONTROL BAD "} 5 · D-588 over-strictness: snake_case state codes \`chain_unread\` / \`newer_capture_unread\` in a comparison stay GREEN`);
+  console.log(`  exit ${r.exit} · ${tally}`);
+  if(!green) console.log("  !! THE SWEEP READ AN IDENTIFIER AS A RENDERED DILIGENCE PHRASE — D-588's defect.");
+}
 
 /* ---- THE OVER-STRICTNESS ARM'S OTHER HALF, AND IT IS AN EQUALITY RATHER THAN AN
         ABSENCE. Arms 2a–2c prove the sweep NOTICES a strip. This proves it does not

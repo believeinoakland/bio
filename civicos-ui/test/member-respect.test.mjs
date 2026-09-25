@@ -8,6 +8,13 @@
  * -> ARM P2; drop the fence pre-check in `openAttestDialog` -> ARM P2; delete the
  * per-kind mute (`data-mute1`) -> ARM 4d. The over-strictness half is the CLEAN run
  * staying green with all three protected publications asserted PRESENT by name.
+ * D-588, RUN 2026-09-25: the driver now arms EIGHT, 8 of 8 correct, exit 0 —
+ * arm 4 plants prose "unread" in markup -> ARM 3b RED naming the stem; arm 5
+ * compares `chain_unread` / `newer_capture_unread` in a branch -> GREEN (506/0).
+ * SUITE-LEVEL ARM, by hand: restore ARM 3b's raw substring match (proseHits pushes
+ * every hit) -> RED 504 pass 2 fail at ARM 3b0 "the snake_case state codes
+ * `chain_unread` / `newer_capture_unread` ... are IDENTIFIERS" (got 4, want 0);
+ * restored, sha256 20362bb4… identical by cmp.
  *
  * ============================================================================
  * THE RULING, AND WHY THIS FILE IS NOT A GREP
@@ -532,12 +539,56 @@ const DILIGENCE_FAMILY = [
   "how many times you", "how often you", "you approved", "your approval rate",
 ];
 console.log(`  DILIGENCE FAMILY (a FLOOR, printed): ${DILIGENCE_FAMILY.join(" · ")}`);
+/* ARM 3b READS PROSE, NOT IDENTIFIERS — D-588, 2026-09-25, correcting this arm's
+   first build. It matched each stem as a RAW SUBSTRING of `code`, and `code` keeps
+   every identifier and every string literal, including the ones that never reach a
+   member. So the plane's own state codes `chain_unread` and `newer_capture_unread`,
+   compared in a branch, failed the suite as a "rendered diligence phrase" — and
+   UI-96 had to bend correct code (branching on `newer`) around the instrument. The
+   old assertion was wrong because a snake_case or camelCase token is a CODE, not a
+   sentence a member reads; DEC-68 is about what a member is TOLD. The cut: a hit
+   counts only when the token run of identifier characters `[A-Za-z0-9_$]` around it
+   is NOT identifier-shaped — it carries no `_`, no `$` and no lower-to-upper hump.
+   Prose words carry none of the three, so "unread", "Unread" and "UNREAD" in text
+   still fail, in the script and in the shell alike.
+   WHAT THIS CANNOT SEE: an identifier spelled as a bare lowercase word (`unread` as
+   a variable name) still reads as prose here — over-strict, never a false green —
+   and a stem that is a PREFIX of a longer prose word ("unreadable") still matches,
+   as it did before; whether that word is a diligence phrase is DEC-68's call, not
+   this instrument's. */
+const IDENT_CH = /[A-Za-z0-9_$]/;
+function proseHits(text, stem){
+  const esc = stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
+  const out = [];
+  for(const m of text.matchAll(new RegExp(esc, "gi"))){
+    let a = m.index, b = m.index + m[0].length;
+    while(a > 0 && IDENT_CH.test(text[a-1])) a--;
+    while(b < text.length && IDENT_CH.test(text[b])) b++;
+    const left = text.slice(a, m.index + m[0].search(/\s|$/));
+    const lastWs = m[0].search(/\S+$/);
+    const right = text.slice(m.index + lastWs, b);
+    const isIdent = (t) => /[_$]/.test(t) || /[a-z][A-Z]/.test(t);
+    if(!isIdent(left) && !isIdent(right)) out.push(m.index);
+  }
+  return out;
+}
+/* 3b0 — THE INSTRUMENT'S OWN OVER-STRICTNESS ARM AND ITS PROSE HALF, over a fixed
+   probe so neither depends on what app.html happens to hold today. The snake_case
+   codes are the two UI-96 met; each must PASS by name, and prose must still FAIL. */
 {
-  const low = code.toLowerCase(), shellLow = SHELL.toLowerCase();
+  const probe = 'if(v.state === "chain_unread" || v.state === "newer_capture_unread") n = unreadCount + isUnread;';
+  eq(proseHits(probe, "unread").length, 0,
+     "ARM 3b0: the snake_case state codes `chain_unread` / `newer_capture_unread` and the camelCase `unreadCount` / `isUnread` in a comparison are IDENTIFIERS, not a diligence phrase — an instrument that reads them as prose bends correct code around itself (D-588)");
+  eq(proseHits('el.innerHTML = `<b>3 unread passages</b>`; x = "Unread."; y = "UNREAD";', "unread").length, 3,
+     "ARM 3b0: prose \"unread\" reaching markup still FAILS in every case — the fix narrowed what counts as prose, not what is banned");
+  eq(proseHits("You have reviewed_all and you  Have Reviewed it", "you have reviewed").length, 1,
+     "ARM 3b0: a multi-word stem is matched across any whitespace and case, and refused only when an END word is joined into an identifier");
+}
+{
   for(const stem of DILIGENCE_FAMILY){
-    const i = low.indexOf(stem);
-    ok(i < 0, `ARM 3b: the diligence phrase "${stem}" is rendered at line ${i<0?"-":lineOf(i)} — DEC-68 withdrew the premise: no other member act is graded on diligence and this one is not either`);
-    ok(!shellLow.includes(stem), `ARM 3b: the diligence phrase "${stem}" is in app.html's static shell`);
+    const hs = proseHits(code, stem);
+    ok(hs.length === 0, `ARM 3b: the diligence phrase "${stem}" is rendered at line ${hs.length?hs.map(lineOf).join(", "):"-"} — DEC-68 withdrew the premise: no other member act is graded on diligence and this one is not either`);
+    ok(proseHits(SHELL, stem).length === 0, `ARM 3b: the diligence phrase "${stem}" is in app.html's static shell`);
   }
   /* AND THE COUNTS THAT DO EXIST ARE NOT THIS. `rvCount` says "3 documents
      selected" and `queueMuteReportHtml` says how many items a member's own mute is
