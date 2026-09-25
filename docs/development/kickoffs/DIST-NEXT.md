@@ -43,7 +43,10 @@ REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `s
 ## What the NEXT release owes (re-read `git log 5f116f33..origin/main` at the cut — never this list)
 
 Everything through 0.79.0 SHIPPED (its pointer landed at `5f116f33`). The next cut adds DIST-11 (the BROWSER binding) and
-DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the trains carry. **Live checks owed at that deploy:**
+DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the trains carry. **Tooling change at the cut — D-560** (`land/worker/D-560` @ `fc35dbf0`, not on main at 06:27Z 09-25; CONDUCT lands it):
+`release-assemble` now checks every asset and refuses ONCE, `REFUSED [NO_ARTIFACT]: N of M assets …`, naming the fix
+`node tools/bundles.mjs` from the repo root (it no longer says `npm run build` per dir). Signing and payload unchanged.
+**Live checks owed at that deploy:**
 - **D-606 — per-page OCR capped at 24 member invocations per acquire** (`f04460ab`), resting on Cloudflare's stated 32 Worker
   invocations per request — THEIR claim; Miniflare does not enforce it (M-175). Measure on the deployed runtime: one scratch acquire
   that fans out past 24 pages, record invocations used and whether the cap or the vendor limit answered (SCHEDULER #22, 06:22Z 09-25).
