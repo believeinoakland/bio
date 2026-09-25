@@ -1,9 +1,10 @@
-/* REC-126's NEGATIVE CONTROL DRIVER — twenty-three arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
+/* REC-126's NEGATIVE CONTROL DRIVER — twenty-six arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
  * REC-133's, §6A.2's authority, (i)-(k) REC-198's, the list of a project's drafts, (l)-(n) REC-199's,
  * the copy saying `newCase` back, (o)-(q) D-539's, the copy saying an absent finding's `role` back,
  * (r)-(s) D-538's, the identity sentence reading `newCase` — its (o)-(p) on its branch, renamed at
  * c21-batch28 by CONDUCT #21 because D-539 holds (o)-(q)), (t)-(w) D-568's, a derived draft's edition stated
- * as UNDETERMINED while its internal key still binds, re-runnable in one step:
+ * as UNDETERMINED while its internal key still binds, (x)-(z) D-618's, a draft naming a case and asking for a new
+ * one stating no edition, re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -240,6 +241,26 @@ const ARMS = {
        apply: () => edit(STORE,
          "    return ident.caseId || newCase ? ident.edition : null;",
          "    if (!ident.caseId && !newCase) return null;\n    return ident.edition;") },
+
+  /* D-618 — a draft naming a case AND asking for a new one states no edition. Declarations in the suite's header,
+     made before arming. */
+  x: { files: [STORE],
+       label: "(x) THE NAMED CASE'S NEXT EDITION ANSWERED AGAIN: the pair's early return removed — the plane exactly "
+            + "as it stood before D-618, C1's next edition beside an UNDETERMINED case",
+       apply: () => edit(STORE, "    if (ident.caseId && newCase) return null;\n", "") },
+
+  y: { files: [STORE],
+       label: "(y) THE GRANT ROW READ PAST `#statedEdition` AGAIN: a grant bound to a case states its stored edition, "
+            + "live or not — the owner's grant row as it stood before D-618",
+       apply: () => edit(STORE,
+         "edition: live ? Store.#statedEdition(ident, !!params.newCase) : g.case_id ? g.edition : null };",
+         "edition: g.case_id ? g.edition : live ? Store.#statedEdition(ident, !!params.newCase) : null };") },
+
+  z: { files: [STORE],
+       label: "(z) OVER-STRICTNESS: the rule as one exclusive-or, a spelling this suite did not write — must PASS",
+       apply: () => edit(STORE,
+         "    if (ident.caseId && newCase) return null;\n    return ident.caseId || newCase ? ident.edition : null;",
+         "    return !ident.caseId === !newCase ? null : ident.edition;") },
 };
 
 const want = process.argv[2];
@@ -396,4 +417,19 @@ console.log(`\npen removed: ${PEN}`);
    c moved 2 -> 4: its gates-must-pass grant is dead on DD, whose gates refuse — block 13's two ACCEPTS-WHEN arms.
    A FIRST RUN read v 96/2 with ACCEPTS-WHEN GREEN: `t` compares by JSON, where an absent key reads as `null`, so
    the refused reading passed as a stated null. The arm now reads each key through `stated`; this is the re-run.
+
+   RE-MEASURED 2026-09-25 by WORKER D-618 (cloud, SCHEDULER #23), all TWENTY-SIX arms, pen in the session scratchpad
+   via `BIO_NC_PEN`, 26 of 26 restores of a 3,654,209-byte `store.mjs` (sha256 fd32b991…) sha256 MATCH / content
+   IDENTICAL / size ok:
+     baseline  102/0
+     a 97/5   b 101/1  d 100/2  e 100/2  f 101/1  g 94/8   h 101/1  i 96/6   j 99/3   k 102/0  l 99/3
+     m 100/2  n 102/0  o 100/2  p 102/0  q 100/2  s 102/0  t 99/3   u 101/1  w 102/0 — failure counts unchanged
+     x 101/1  the named case's next edition answered again — "D-618 ACCEPTS-WHEN", by name
+     y 101/1  the grant row read past `#statedEdition` again — "D-618 ACCEPTS-WHEN", by name (the grant row alone)
+     z 102/0  the exclusive-or spelling passes
+   Three older arms MOVED, each by block 14 landing in the arm's own declared direction:
+     c 4 -> 6  its gates-must-pass grant is dead on DB, whose gates refuse the pair: D-618 ACCEPTS-WHEN and BINDS
+     r 3 -> 4  the sentence ignoring `newCase` loses DB's UNDETERMINED: block 14's fixture arm
+     v 3 -> 5  the stated edition used as the key kills DB's grant (null never equals the stored edition): D-618
+               ACCEPTS-WHEN and BINDS — the same fact D-568's (v) measured for DD, now for the pair
 */
