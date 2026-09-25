@@ -210,14 +210,6 @@
    "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/nc-rec64.mjs",
-   "arm": "1",
-   "anchor": "    if (!concl)\n      return { ok: false, reason",
-   "row": "D-649",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/nc-rec82.mjs",
    "arm": "oob",
    "anchor": "if (Number.isInteger(ctx.pageCount) && ctx.pageC",

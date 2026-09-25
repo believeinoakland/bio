@@ -22,6 +22,12 @@
  * rather than smoothed. A surprising green is a finding about the arm.
  *
  *     node bio-plane/test/nc-rec64.mjs
+ *
+ * NEGATIVE CONTROL: D-649 (2026-09-25, on land/worker/M0-197 @ 11818309) — arm 1 had drifted (REC-124 reworded
+ * `if (!concl)` to `if (!concl && !pid)`; 0 matches, never armed); re-anchored, it arms and the guard exits 1
+ * NAMING NC_REC64_UNTRANSLATED at store.mjs:<line> in conclude, region is-conclude-answer. Arm 3 read a real
+ * census-floor failure (725 < 729) as ABSENT through a pattern D-257's rewording broke (D-758, fixed here). Run
+ * whole: 4/4 arms as declared, exit 0, every restore sha256+cmp; the anchor-drift reader reads all 4 anchors LIVE.
  */
 import fs from "fs";
 import path from "path";
@@ -128,10 +134,12 @@ arm({
   + "  because an untranslated code FAILS THE HARNESS rather than reaching a member. If this arm\n"
   + "  comes back green, the ruling is unsafe and the whole item is decoration.",
   file: "store",
+  /* D-649: re-anchored. REC-124 reworded the subject line to `if (!concl && !pid)`, so the old anchor
+     `if (!concl)` matched 0 times and this arm never armed (M0-197's anchor-drift reader found it). */
   mutate: (src) => src.replace(
-    '    if (!concl)\n      return { ok: false, reason: "NO_CONCLUSION",',
+    '    if (!concl && !pid)\n      return { ok: false, reason: "NO_CONCLUSION",',
     '    if (concl === "nc-rec64") return { ok: false, reason: "NC_REC64_UNTRANSLATED" };\n'
-  + '    if (!concl)\n      return { ok: false, reason: "NO_CONCLUSION",'),
+  + '    if (!concl && !pid)\n      return { ok: false, reason: "NO_CONCLUSION",'),
   expect: () => {
     const g = runGuard();
     const names = /NC_REC64_UNTRANSLATED/.test(g.out) && /store\.mjs:\d+/.test(g.out)
@@ -187,8 +195,12 @@ arm({
     "  'M2 reason:<expr>':  src => {\n    const out = new Set(); return out; /* nc-rec64 arm 3 */"),
   expect: () => {
     const g = runGuard();
-    const floorFail = /the plane census is \d+ refusal codes, floor is \d+/.test(g.out)
-                   || /the reach is \d+ codes, floor is \d+/.test(g.out);
+    /* D-758: D-257 reworded both floor failures to name the commit at HEAD between the figure and its floor
+       ("the plane census is 725 refusal codes that are in the commit at HEAD (725 over the working tree), floor
+       is 729"), so the old `codes, floor is` pattern matched neither and this arm read a real FLOOR failure as
+       ABSENT. Each pattern now spans the inserted clause on the one line. */
+    const floorFail = /the plane census is \d+ refusal codes[^\n]*?, floor is \d+/.test(g.out)
+                   || /the reach is \d+ codes[^\n]*?, floor is \d+/.test(g.out);
     const printsCorpus = /walk: M2 reason:<expr>\s+\d+ codes/.test(g.out)
                       && /UNION \(the census\)\s+\d+ codes/.test(g.out);
     const m2 = /walk: M2 reason:<expr>\s+(\d+) codes/.exec(g.out);
@@ -196,7 +208,7 @@ arm({
     return { ok: g.exit !== 0 && floorFail && printsCorpus,
              summary: `guard exit ${g.exit}; FLOOR failure ${floorFail ? "present" : "ABSENT"}; `
                     + `corpus printed ${printsCorpus ? "yes" : "NO"} — M2 yielded ${m2 ? m2[1] : "?"} `
-                    + `(was 304), union ${union ? union[1] : "?"} (was 406)` };
+                    + `(was 304 at REC-64), union ${union ? union[1] : "?"} (was 406 at REC-64)` };
   },
 });
 
