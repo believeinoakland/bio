@@ -4523,6 +4523,7 @@ __export(bio_checks_exports, {
   SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS,
   STATES: () => STATES,
+  STATE_MOVE_FENCED_SINCE: () => STATE_MOVE_FENCED_SINCE,
   STRENGTH_STATES: () => STRENGTH_STATES,
   SUBJECT_POSITIONS: () => SUBJECT_POSITIONS,
   SUFFICIENCY_CLAIM_STATES: () => SUFFICIENCY_CLAIM_STATES,
@@ -4624,6 +4625,8 @@ __export(bio_checks_exports, {
   sha256HexSync: () => sha256HexSync,
   signerKeysAt: () => signerKeysAt,
   sshsigSignedBlob: () => sshsigSignedBlob,
+  stateMoveFencedSince: () => stateMoveFencedSince,
+  stateMoveOutsideRules: () => stateMoveOutsideRules,
   sufficiencyClaimState: () => sufficiencyClaimState,
   supersedesEdgeFindings: () => supersedesEdgeFindings,
   themeLegFindings: () => themeLegFindings,
@@ -4951,9 +4954,13 @@ var STATES = {
      reads this table through `vocabFor` and refuses any move it does not declare
      (BIAS_ILLEGAL_TRANSITION, C-26.12). A revision that leaves a set where it
      stands is not a move and is not asked: that is how an adopted set is amended
-     (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption"). This fence is
-     THIS machine's alone — `promote` still asks no edge table for any other
-     object_type. */
+     (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption"). CORRECTED by
+     D-546 (2026-09-25): this said the fence was THIS machine's alone and that
+     `promote` asked no edge table for any other object_type, which was true on
+     the day. BOB #34 (2026-09-24 23:55Z) lifted it to every type with a head:
+     `promote`'s `is-promote-state-edge` region asks every OTHER machine in this
+     table the same question (STATE_MOVE_UNDECLARED, C-86.6), and a bias set
+     keeps its own code here. */
   bias: {
     legal: ["draft", "proposed", "adopted", "retired"],
     edges: {
@@ -14618,8 +14625,22 @@ var PROMOTED_TYPE_CHECKS = {
     check: "C-86.5",
     where: "src/store.mjs promote > is-promote-type-unstated",
     translation: "This is a new item and nothing says what kind of thing it is: neither the document nor the request names a type. What it is decides which rules protect it, so the record will not guess. Nothing was written. Say in the document what kind of thing it is, and send it again."
+  },
+  /* D-546 (2026-09-25; BOB #34, 2026-09-24 23:55Z; State Rules v1.5 §4, "Moves are fenced from now on") — D-468's
+   * fence, LIFTED TO EVERY TYPE WITH A HEAD. `op=promote` asked a state-edge table for a bias set alone, so every other
+   * machine could be moved along an edge its table does not declare (a verified item back to `collected`, a closed
+   * project straight to `matured`, a resolved action reopened). The table is `STATES`, read for the NORMALISED type,
+   * so a state a machine keeps only for READING old records (`focus`'s `elevated`, `inquiry`'s legacy `published`) is
+   * named by no edge and no promotion reaches it. A bias set keeps its own code, C-26.12, and its own translation. */
+  STATE_MOVE_UNDECLARED: {
+    check: "C-86.6",
+    where: "src/store.mjs promote > is-promote-state-edge",
+    translation: "That is not a move this item can make from where it stands. Each kind of thing has a set of moves its rules allow, and this one is not among them, so nothing was written. Move it by a step the rules allow, or leave it where it stands and record what changed."
   }
 };
+var STATE_MOVE_FENCED_SINCE = { bias: "2026-09-24", "*": "2026-09-25" };
+var stateMoveFencedSince = (t) => STATE_MOVE_FENCED_SINCE[normalizeType(t)] ?? STATE_MOVE_FENCED_SINCE["*"];
+var stateMoveOutsideRules = (fence, date) => typeof date === "string" && date.slice(0, 10) < fence ? `made by a path the current rules do not allow (before ${fence})` : `made by a path the current rules do not allow (dated ${typeof date === "string" ? date : "undetermined"}, not before the fence of ${fence}: which plane accepted it is not recorded)`;
 var RISK_TIER_REVISION_CHECKS = {
   RISK_TIER_REWRITTEN: {
     check: "C-90.1",
@@ -16179,7 +16200,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.32.0";
+var CATALOG_VERSION = "1.33.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -48212,6 +48233,26 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             detail: `${bundleId} stands at '${from}' and this promotion names '${to === void 0 || to === null ? "no state" : to}'. A bias set at '${from}' moves to ${legalFrom.length ? legalFrom.join(" or ") : "no other state"}${legalFrom.length ? "" : " \u2014 it is terminal"}, and a revision that leaves it where it stands is how an adopted set is amended. The table is the catalogue's and this path holds no copy of it. Nothing was written.`
           };
       }
+      if (cur && promotedState !== void 0 && promotedState !== null && promotedState !== cur.current_state) {
+        const machines = [.../* @__PURE__ */ new Set([normalizeType(cur.object_type), promotedType])].filter((t) => typeof t === "string" && t !== "bias" && vocabFor(STATES, t));
+        for (const mt of machines) {
+          const mEdges = vocabFor(STATES, mt).edges;
+          const legalFrom = Object.prototype.hasOwnProperty.call(mEdges, cur.current_state) ? mEdges[cur.current_state] : [];
+          if (!legalFrom.includes(promotedState))
+            return {
+              ok: false,
+              reason: "STATE_MOVE_UNDECLARED",
+              code: "STATE_MOVE_UNDECLARED",
+              check: PROMOTED_TYPE_CHECKS.STATE_MOVE_UNDECLARED.check,
+              translation: PROMOTED_TYPE_CHECKS.STATE_MOVE_UNDECLARED.translation,
+              from: cur.current_state,
+              to: promotedState,
+              object_type: mt,
+              legal_from: legalFrom,
+              detail: `${String(bundleId).slice(0, 80)} stands at '${cur.current_state}' and this promotion names '${String(promotedState).slice(0, 40)}'. A ${mt} at '${cur.current_state}' moves to ${legalFrom.length ? legalFrom.join(" or ") : "no other state"}, and a revision that leaves it where it stands is always allowed. The table is the catalogue's. Nothing was written.`
+            };
+        }
+      }
       if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {
         const bf = [];
         checkBiasExtension({ fm: docFmW, files: /* @__PURE__ */ new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
@@ -63484,6 +63525,118 @@ ${words}`;
      base is no other row's bundle.md digest (`unanchored`) is listed as the trace an overwrite leaves in the chain.
      Manifest rows for a bundle id with no `bundles` row have no row_version to compare with and are counted apart.
      Bounded by `limit` bundles listed (the counts are always whole). */
+  /* D-546 (BOB #34, 2026-09-24 23:55Z; State Rules v1.5 §4, "Moves are fenced from now on"): THE CENSUS OF RECORDED
+     STATE MOVES — every move the record holds, per type, and each one whose edge the catalogue's CURRENT table does not
+     declare, listed with its date and read in `stateMoveOutsideRules`'s words: made by a path the current rules do not
+     allow, NEITHER VALID NOR INVALID. READ-ONLY and never a repair: ratified bytes are immutable, so a stored move is
+     never rewritten, reversed or "repaired" (the ruling), and the answer's `rewritten: 0` is that fact.
+     WHAT A MOVE IS HERE: two consecutive recorded versions of a bundle's `bundle.md` whose `current_state` differs.
+     The versions are the `history` snapshot each promotion took of the version BEFORE it (the manifest's
+     `snapshotted`), in WRITE order (`rowid`), and the head; a move is dated by the promotion that wrote the later
+     version. NOT REC-182's `created` order, which this census's own suite measured wrong for this question: `created`
+     is the writer's `last_updated` where it sent one — a caller's statement — so an amendment its writer dated
+     earlier than the move before it was paired out of order and read as a move nobody made. And the write order is
+     not trusted either: a pair is DETERMINED only when the later promotion's `base` is the `bundle.md` digest the
+     EARLIER promotion's manifest row says it wrote — the chain the compare-and-swap enforced when it was written. (Its
+     first spelling compared the later promotion's `base` with the digest of the snapshot that same promotion took,
+     which is equal by construction and joined nothing; the suite's `census-created-order` arm caught it.) A pair either side of which is unrecorded (a
+     promotion that snapshotted nothing, a blob-held or unparsable version), or whose chain does not join, is
+     UNDETERMINED and counted apart, never classified either way — so the finding is never larger or smaller than the
+     count. A version stating no `current_state` is undetermined too. The DATE is the writer's, and the answer says
+     so (`dated_by`).
+     THE TABLE IS READ FOR THE DECLARED SPELLING (the MAP RULE, `checkStateLegality`'s): a legacy `problem`'s
+     `surfaced -> elevated` was a declared move of the machine it was written under, and is counted as one. `promote`
+     reads the NORMALISED type for a move made NOW; the two answer different questions, and the comment at
+     `is-promote-state-edge` says why. A type with no table is counted apart (`no_table`). Bounded by `limit` moves
+     listed (the counts are always whole). The `state_history` a document carries in its own bytes is NOT read here:
+     that is a caller-written claim about moves, and the gate's C-4.2 is its reader. */
+  stateMoveCensus({ limit } = {}) {
+    const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const out = {
+      ok: true,
+      bundles: 0,
+      pairs: 0,
+      moves: 0,
+      revisions_in_place: 0,
+      undeclared: 0,
+      undetermined: 0,
+      no_table: 0,
+      per_type: {},
+      listed: [],
+      rewritten: 0
+    };
+    const tally = (t, k) => {
+      const row = out.per_type[t] || (out.per_type[t] = { moves: 0, undeclared: 0, revisions_in_place: 0, undetermined: 0 });
+      row[k]++;
+    };
+    const fmOf = (text) => {
+      if (typeof text !== "string") return null;
+      const fm = parseFrontmatter(text).data;
+      return fm && typeof fm === "object" && typeof fm.current_state === "string" ? fm : null;
+    };
+    for (const b of this.#rows(`SELECT bundle_id, object_type FROM bundles ORDER BY bundle_id`)) {
+      out.bundles++;
+      const t = normalizeType(b.object_type);
+      const man = this.#rows(
+        `SELECT snap_key, base, created, author, files_json FROM manifest WHERE bundle_id=? ORDER BY rowid`,
+        b.bundle_id
+      );
+      const snaps = new Map(this.#rows(
+        `SELECT snap_key, content, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`,
+        b.bundle_id
+      ).map((r) => [r.snap_key, r]));
+      const head = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, b.bundle_id);
+      const versionAfter = man.map((r, j) => j === man.length - 1 ? head ?? null : snaps.get(man[j + 1].snap_key) ?? null);
+      const wrote = (r) => {
+        const f2 = _Store.#manifestFiles(r.files_json).find((x) => x.name === "bundle.md");
+        return f2 && typeof f2.sha256 === "string" && f2.sha256 !== "" ? f2.sha256.toLowerCase() : null;
+      };
+      for (let j = 1; j < man.length; j++) {
+        out.pairs++;
+        const joined = wrote(man[j - 1]) !== null && wrote(man[j - 1]) === String(man[j].base ?? "").toLowerCase();
+        const a = joined ? fmOf(versionAfter[j - 1]?.content) : null, z = fmOf(versionAfter[j]?.content);
+        if (!a || !z) {
+          out.undetermined++;
+          tally(t, "undetermined");
+          continue;
+        }
+        if (a.current_state === z.current_state) {
+          out.revisions_in_place++;
+          tally(t, "revisions_in_place");
+          continue;
+        }
+        out.moves++;
+        tally(t, "moves");
+        const spec = vocabFor(STATES, typeof a.object_type === "string" ? a.object_type : b.object_type);
+        if (!spec) {
+          out.no_table++;
+          continue;
+        }
+        const edges = spec.edges;
+        const legal = Object.prototype.hasOwnProperty.call(edges, a.current_state) ? edges[a.current_state] : [];
+        if (legal.includes(z.current_state)) continue;
+        out.undeclared++;
+        tally(t, "undeclared");
+        const fence = stateMoveFencedSince(t);
+        if (out.listed.length < cap)
+          out.listed.push({
+            bundle_id: b.bundle_id,
+            object_type: t,
+            from: a.current_state,
+            to: z.current_state,
+            date: man[j].created ?? null,
+            snap_key: man[j].snap_key,
+            author: man[j].author ?? null,
+            fenced_since: fence,
+            reading: stateMoveOutsideRules(fence, man[j].created)
+          });
+      }
+    }
+    out.dated_by = "the manifest's created: the writer's last_updated where it sent one, else the plane's clock";
+    out.note = "read-only: a recorded move whose edge the current table does not declare is made by a path the current rules do not allow \u2014 neither valid nor invalid \u2014 and is never rewritten. A pair with a side unrecorded is undetermined and is not classified. The fence governs moves made from its date on (BOB #34, 2026-09-24).";
+    return out;
+  }
   snapKeyCensus({ limit } = {}) {
     const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
     const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
@@ -78030,6 +78183,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 3e5),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
         snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
+        statemovecensus: () => this.stateMoveCensus({ limit: url.searchParams.get("limit") }),
         /* D-256: every "changed from" sentence already written, checked against the version chain; read-only
            (see `changedFromAudit`). */
         changedfromaudit: () => this.changedFromAudit({
@@ -80230,6 +80384,11 @@ var OPS = {
      NEVER rewritten. The method a deployed instance runs to learn whether its own history lost a row. Admin and
      probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
   snapkeycensus: { classes: ["admin", "probe"], mutating: false },
+  /* D-546: the census of recorded state MOVES — per type, every move the history holds and each one whose edge the
+     catalogue's current table does not declare, dated and read as "made by a path the current rules do not allow",
+     NEVER rewritten (BOB #34, 2026-09-24 23:55Z). Admin and probe, `snapkeycensus`'s fence: an audit of the working
+     corpus that lists bundle ids. */
+  statemovecensus: { classes: ["admin", "probe"], mutating: false },
   /* D-256: every "changed from" sentence the pre-2026-08-08 `addGo` wrote, each resolved through the version chain
      (`op=versionchain`, PL-10) and classed wrong / right / undetermined with the three totals apart. WRITES NOTHING:
      BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as written and the correction is the read. Admin and

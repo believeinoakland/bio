@@ -872,6 +872,11 @@ const OPS = {
      NEVER rewritten. The method a deployed instance runs to learn whether its own history lost a row. Admin and
      probe, `registeraudit`'s fence: it is an audit of the working corpus, and it lists bundle ids. */
   snapkeycensus: { classes: ["admin", "probe"],                    mutating: false },
+  /* D-546: the census of recorded state MOVES — per type, every move the history holds and each one whose edge the
+     catalogue's current table does not declare, dated and read as "made by a path the current rules do not allow",
+     NEVER rewritten (BOB #34, 2026-09-24 23:55Z). Admin and probe, `snapkeycensus`'s fence: an audit of the working
+     corpus that lists bundle ids. */
+  statemovecensus: { classes: ["admin", "probe"],                  mutating: false },
   /* D-256: every "changed from" sentence the pre-2026-08-08 `addGo` wrote, each resolved through the version chain
      (`op=versionchain`, PL-10) and classed wrong / right / undetermined with the three totals apart. WRITES NOTHING:
      BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as written and the correction is the read. Admin and
