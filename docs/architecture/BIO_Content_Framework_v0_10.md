@@ -590,6 +590,11 @@ weekly**. The fallback therefore needs the contract as the tick last read it: th
 or contract from the tick (a derived value, cleared by `purge`) and falls back to the contract's default interval.
 NOT BUILT: `#monitorCadencePlan` reads only the authored frequency (D-65's worker, 2026-09-23; rowed).
 
+**BUILT 2026-09-25 — THE `unmonitorable` CONTRACT AT THE TICK (D-338; `node tools/status.mjs 10.assess`).** A tick on a
+shell answers the contract `unmonitorable` with no frequency and L1's `unwatchable`, and GRADES NO CHANGE: no status, no
+re-evaluation, the look logged LOOKED_INDETERMINATE — whether the shell's bytes moved or matched the capture. A gone
+shell address still reads `removed`.
+
 ## 7. Content types: what a document contains, and what its changes mean
 
 A content type is a recogniser (§4) plus three functions:
