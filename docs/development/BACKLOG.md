@@ -53,16 +53,6 @@ scope: one UPDATE through `Store#closeJoinRequests` in projectInvite, one suite 
 accepts-when: after an owner invites a member with an open request, the request reads granted by that owner (moves: a stale open request). NEGATIVE CONTROL: drop the UPDATE and the request reads open after the invite, by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs REC`; BOB #35 04:30Z).
 
-### D-557 · queued — **THE DECODE CENSUS NEVER CLASSIFIES TIER-3 TEXT, AND ITS READER LABEL SAYS IT DOES: `fw20-decode-census.mjs` labels the reader from the acquire reading's `text_tier` but judges the PLAIN `op=pdfstructure` text, which stops at tier 2, so 34 of 38 documents labelled "plane (text tier 3)" were judged on EMPTY text while their OCR text exists (M-152).** Found by D-536's worker. — owner CONTENT-PDF (the instrument).
-order: after D-561, with the corrections: M-143's "38 tier 3" states a reading that never reached `judge`, so the record claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
-milestone: M2
-interface: none.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with D-536's reading provenance and M-152.
-depends-on: D-536.
-scope: the census judges the text the acquire reading classified (its `text_units`), or calls `op=pdfstructure&ocr=1` for a document read at tier 3; the reader label comes from `structure_provenance.producers`, never `text_tier`; re-run the sample and record the moved figures in a new measurement.
-accepts-when: the 34 documents are judged on their tier-3 text, and no document is labelled tier 3 unless tier-3 text was judged (moves: 34 of 38 judged on empty text). NEGATIVE CONTROL: judge the plain answer again and the tier-3 arm reads empty, failing by name.
-added: 2026-09-25 · SCHEDULER #21 (id minted by D-536's worker).
-
 ### D-573 · queued — **A REVIEW COPY'S `last_change` PICKS SILENTLY BETWEEN TWO ACTS IN THE SAME SECOND when one carries a whole-second stamp from before D-543, so the one in-band date claims an order the record cannot support.** Found by D-543's worker. BOB #34 RULED (1) 2026-09-25 01:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): keep the instant-order pick as the ONE in-band date (DEC-31), and STATE the tie in `last_change.stated` ("which of <act A> and <act B> came later is undetermined: <act A> was recorded to the second"), naming the tied act in `last_change.undetermined_within`. — owner RECORD.
 order: after D-557, with the corrections: a date that claims an order it cannot know is the record claiming more than it holds (CLAUDE.md §2; BOB #33's D-516 band rule) (SCHEDULER #21, 2026-09-25)
 milestone: M10
@@ -112,6 +102,26 @@ depends-on: none.
 scope: descend into Form XObjects in the text walk the way CPDF-18's image walk does (/Matrix, /Resources, cycle and depth bounds); at the least, a counted page marker when a painted form carries unread text-show ops. Re-read M-166's 9 pages and record the moved counts; the 1,455 pages under 10% stay undiagnosed unless the re-read moves them.
 accepts-when: p38 reads its form text at tier 1 (moves: 9 pages reading as decoded while missing form text). NEGATIVE CONTROL: stop descending at `Do` and the form arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-515's worker).
+
+### D-606 · queued — **A SCANNED DOCUMENT IS OCR'D ONE PAGE PER ACQUIRE AND THE REST IS DROPPED: `index.mjs` `tier3Extend` (the only OCR_WORKER.fetch call site) calls the member once and never reads its answer's `deferred`, while `contract.mjs` `chooseChunk` takes the lowest page. MEASURED (M-165): on FW-20's walk rebuilt, 174 of 190 selected scanned pages were never transcribed; a per-page loop transcribes 183.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF (the plane seam).
+order: after D-608, with the reader corrections: most of a scanned civic record going unread is the silent under-read CLAUDE.md §2 ranks worst (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I6 — more pages transcribed per acquire; the member contract is unchanged; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with the OCR member's page contract (its own note asks the caller to loop).
+depends-on: none.
+scope: tier3Extend re-asks the member for each page in `deferred`, one invocation per page, sequential, each merged by mergeTier3Text; a refused page keeps its marker. MEASURE FIRST the per-acquire CPU and subrequest budget for a 58-page scan on the deployed runtime's limits (miniflare wall 80 s shipped vs 858 s per page over the 21); if it exceeds them, the tail goes to a deferred task, stated.
+accepts-when: the committed two-page fixture (bio-plane/test/fixtures/d460/) reads meeting_agenda through the op (moves: 174 of 190 pages untranscribed). NEGATIVE CONTROL: stop reading `deferred` and the fixture reads generic, 1/1 unread, by name (scripts/d460-perpage-ocr.mjs).
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
+
+### D-607 · queued — **`tier3Note` SAYS "the page that already had text kept it" ON A WHOLLY SCANNED DOCUMENT WHERE NO PAGE HAD TEXT (live: FINAL-2-6-PC-Agenda, 7 of 7 no_text_layer), so the record states a text layer that never existed.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF.
+order: directly after D-606, the same seam: a small overclaim in the tier-3 note (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: none (a note's wording).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
+depends-on: none.
+scope: emit that clause only when layerPages is non-empty.
+accepts-when: a wholly scanned document's note carries no kept-text clause, and a mixed one still does (moves: a stated text layer that never existed). NEGATIVE CONTROL: emit the clause unconditionally and the wholly-scanned arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
 
 ### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
 order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
@@ -1192,13 +1202,3 @@ depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch
 scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
 accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).
-
-### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push`** … (whole text: the cut archive)
-order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree … (whole text: the cut archive)
-depends-on: none — D-293 is on `main`.
-accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

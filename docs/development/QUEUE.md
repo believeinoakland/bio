@@ -128,7 +128,7 @@ accepts-when: three captures of one address give one due entry; two addresses sh
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
 ### D-455 · integrated — **A `changed` MONITOR TICK DISCARDS THE BYTES IT FETCHED: it points its result at the baseline because the new document is not captured, though the monitor already held those bytes to see the change.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *a `changed` tick CAPTURES the new bytes (a monitor capture with its own provenance, through the governor), and its result_ref points at the new capture's sha* — superseding `OBSERVATION-LOG-DESIGN.md` §4.1's reason. — owner RECORD.
-status: integrated — SCHEDULER #22 04:03Z: tip 3db50421 (CARRIES REC-191 cfcb33e3), GATE 54/54 GREEN (reuse over 7216de32's full run), tree f56fc97f; op=monitor answer gains capture; OWED: the §4.1 fold of BOB #34 03:05Z (interim STANDS) is NOT on the branch, worker re-asked
+status: integrated — SCHEDULER #22 04:34Z: tip 674850fe (docs-only over 3db50421, BOB #34 03:05Z folded into OBSERVATION-LOG §4.1; 115/115 GREEN on tree d3866f13), CARRIES REC-191 cfcb33e3; op=monitor answer gains capture
 order: after REC-191, the same monitor path; evidence in hand is being thrown away (SCHEDULER #17, 2026-09-23; D-65's worker finding (b))
 milestone: M3
 interface: I3/I5 — a monitor capture and the observation's reference; the integrator mints and classifies the IC.
@@ -480,6 +480,17 @@ accepts-when: a grant leaves the requester `invited` and NOT `joined`; a lapsed 
 added: 2026-09-19 · SCHEDULER (same entry, item 2).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
+### D-602 · integrated — **`project-discoverable.control.mjs` ARM `default-discoverable` HAD NOT ARMED SINCE D-497: the SAME defect as D-601, minted and fixed independently by REC-150's worker on its branch.** — owner RECORD.
+status: integrated — SCHEDULER #22 04:34Z: fixed in land/worker/REC-150 @ 1d02811f (367/367 GREEN); D-601 fixed the same anchor on REC-196 @ 82f604d2, so the union takes ONE fix; archive with REC-150.
+order: with REC-150, which carries its fix (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative control: break the subject, watch the suite fail at a NAMED assertion).
+depends-on: none.
+scope: re-anchor the arm; done in REC-150's landing (and in REC-196's as D-601).
+accepts-when: the arm reports ARMED and fails by name. NEGATIVE CONTROL: the arm itself.
+added: 2026-09-25 · SCHEDULER #22 (id minted by REC-150's worker; CONDUCT #21's relay).
+
 ### D-598 · integrated — **C-21.2's INHERITANCE RULE READS EVERY PUBLISHED BUNDLE AS A PUBLISHED CASE, EVIDENCE INCLUDED: a document or observation published as a case's EVIDENCE (D-431(b)) forces every later citation of it to be `grade_source: inherited`, though it carries no frozen strength and is not a published finding.** Found by MK-7's worker (02:47Z). — owner RECORD.
 status: integrated — SCHEDULER #22 04:08Z: tip af488f3b, GATE 366/366 GREEN FULLREUSE (21064 assertions); C-21.2 inquiry-only; its CATALOG bump (C-21.2 in changed:) is taken at CONDUCT's union AFTER M0-195 lands (BOB #35 04:00Z), not before
 order: after D-597, with the case-citation rows: a later finding refused its own grade on evidence is the record claiming less than it can support and a leg ungradeable for no reason; BOB #34 03:00Z: *"C-21.2's inheritance rule applies to published INQUIRIES only"* (SCHEDULER #22, 2026-09-25)
@@ -567,8 +578,8 @@ scope: correct each live site; re-check the agent-worker segment bound against t
 accepts-when: no live site divides by 128 or says "of 128"; the bound's re-check is recorded. NEGATIVE CONTROL: a grep arm over the live sites fails by name on a planted "of 128 MB".
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-460 · running — **DIAGNOSIS: SOME TIER-3 AGENDAS AND MINUTES READ AS GENERIC, AND NOBODY KNOWS WHY.** FW-20 observed it on its walk (M-121, on c18-batch8) without diagnosing it; one suspected cause is that the OCR member transcribes one page per invocation and the plane reads only the first. Its finder's session is archived and no CONTENT-PDF lane is live, so the diagnosis is rowed. — owner CONTENT-PDF.
-status: running — SCHEDULER #22 03:48Z spawns WORKER D-460 (depth 2)
+### D-460 · integrated — **DIAGNOSIS: SOME TIER-3 AGENDAS AND MINUTES READ AS GENERIC, AND NOBODY KNOWS WHY.** FW-20 observed it on its walk (M-121, on c18-batch8) without diagnosing it; one suspected cause is that the OCR member transcribes one page per invocation and the plane reads only the first. Its finder's session is archived and no CONTENT-PDF lane is live, so the diagnosis is rowed. — owner CONTENT-PDF.
+status: integrated — SCHEDULER #22 04:34Z: tip 72879f23, GATE 64/64 GREEN TARGETED (5037 assertions), tree bc48bc56; M-165: one page per OCR acquire (174 of 190 untranscribed) AND agendas generic for lack of a Legistar file line (breadth, no defect); minted D-606, D-607
 order: after D-312, with the M2 extraction measurements: a possible silent under-read of scanned civic records, the class CLAUDE.md §2 ranks worst if confirmed (SCHEDULER #17, 2026-09-23; CONDUCT #18 23:51Z)
 milestone: M0 (a diagnosis — a measurement)
 interface: none until the fix is named.
@@ -719,6 +730,16 @@ depends-on: D-549.
 scope: enumerate at the code every code the two ops mint to an anonymous caller that has no catalogue row (D-549 counted five), and mint each at one governed site with a DEC-49 row written for a member of the public.
 accepts-when: each of the enumerated codes reaches a stranger with its translation, driven through the op (moves: five untranslated public codes). NEGATIVE CONTROL: strip one translation and that code's arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-549's worker).
+
+### D-557 · queued — **THE DECODE CENSUS NEVER CLASSIFIES TIER-3 TEXT, AND ITS READER LABEL SAYS IT DOES: `fw20-decode-census.mjs` labels the reader from the acquire reading's `text_tier` but judges the PLAIN `op=pdfstructure` text, which stops at tier 2, so 34 of 38 documents labelled "plane (text tier 3)" were judged on EMPTY text while their OCR text exists (M-152).** Found by D-536's worker. — owner CONTENT-PDF (the instrument).
+order: after D-561, with the corrections: M-143's "38 tier 3" states a reading that never reached `judge`, so the record claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
+milestone: M2
+interface: none.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with D-536's reading provenance and M-152.
+depends-on: D-536.
+scope: the census judges the text the acquire reading classified (its `text_units`), or calls `op=pdfstructure&ocr=1` for a document read at tier 3; the reader label comes from `structure_provenance.producers`, never `text_tier`; re-run the sample and record the moved figures in a new measurement.
+accepts-when: the 34 documents are judged on their tier-3 text, and no document is labelled tier 3 unless tier-3 text was judged (moves: 34 of 38 judged on empty text). NEGATIVE CONTROL: judge the plain answer again and the tier-3 arm reads empty, failing by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-536's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
