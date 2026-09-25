@@ -1383,7 +1383,14 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    seeing row sources — the graded truncation roster still reads this method, and `projectDirectory:projects`
    ARRIVES in the in-memory truncation rosters below in the same edit, CUT GRADED at the published cap. A fall
    with no such arrival anywhere would be the shrunken measurement this pair of arms exists to refuse. */
-const SCANNING_MEASURED_2026_09_15 = 117;
+/* 117 -> 118, 2026-09-24 by D-552, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (`118 methods scanning
+   UNBOUNDED`) and diffed by name: ONE ARRIVAL, `#dispositionsByStage`, NO DEPARTURE. It reads
+   `proposal_dispositions WHERE progression_key=?` with no LIMIT, and a LIMIT would be wrong: the table's primary
+   key is (progression_key, stage_key), so its rows for one key are at most that progression's STAGES, a
+   declared roster, and a page that stopped short would publish a decided finding as undecided — the defect
+   this item closes. It is a per-key read (the `#groupIdentityHistory` / `projectVisibility` argument above),
+   called once per assembled instance, and it does NOT join the amplification class (26 is unchanged). */
+const SCANNING_MEASURED_2026_09_15 = 118;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
