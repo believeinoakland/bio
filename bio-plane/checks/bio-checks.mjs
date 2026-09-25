@@ -521,7 +521,12 @@ STATES.problem = STATES.focus;
  * School review of Rolling Stone identified a comment request made WITHOUT
  * SPECIFICS as the central failure, so "we contacted them" and "we put these
  * four claims to them" must be different rows in this record. */
-export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'request_for_comment', 'other'];
+/* REC-201 adds `records_request` as the NINTH kind (BOB #32, 2026-09-23 23:08Z; BIO_Case_Making_v0_1.md §2,
+ * *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*): `cpra_request` names one law in its KIND, and a sovereign
+ * group may sit outside California, so a records request made under any other law had no kind to be written as.
+ * The law-neutral kind carries the law it is made under in its own `law` field (recordsLawOf, below).
+ * `cpra_request` STAYS, readable exactly as written: no action is migrated and no read rewrites the kind. */
+export const ACTION_KINDS = ['cpra_request', 'records_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'request_for_comment', 'other'];
 
 /* D-182, RULED 2026-09-21 by BOB #21 (BIO_Case_Making_v0_1.md §2, "risk_tier"): the tier of an action is
  * the ONE field that carries legal exposure, and its words are Bob's own, from the mission of record
@@ -684,13 +689,62 @@ export function governingLawsOf(fm) {
              stated: `${laws.length} governing law${laws.length === 1 ? '' : 's'}, stated by a member` };
   }
   const kindNames = fm && fm.action_kind === 'cpra_request';
+  const lawNamed = recordsLawOf(fm)?.law ?? null;   /* REC-201: records_request's stated law, verbatim */
   return { state: 'undetermined', laws: [], by: null, at: null,
            stated: 'UNDETERMINED: no member has stated which laws govern this action. The record assumes none — '
                  + 'not federal law, not state law, not a local ordinance. Which laws apply follows the agency '
                  + 'asked, and a member states them, each by citation.'
                  + (kindNames ? ' This action\'s kind, cpra_request, is its member\'s statement that the '
                               + 'California Public Records Act governs it; nothing else is inferred from the '
-                              + 'kind.' : '') };
+                              + 'kind.' : '')
+                 + (lawNamed ? ` This action's kind, records_request, states the law it is made under — ${lawNamed} — `
+                             + 'as its author\'s statement; nothing else is inferred from it.' : '') };
+}
+
+/** REC-201: THE LAW A `records_request` IS MADE UNDER, AS ITS AUTHOR WROTE IT. The one reader: the action's read
+ *  (`op=projection`'s action block, `law`) and the suite read this function.
+ *
+ *  THE `law` FIELD IS THE KIND'S OWN STATEMENT, ONE LAYER OUT. `cpra_request` names its law in the kind;
+ *  `records_request` names it here, as a citation, returned VERBATIM — the plane encodes no law's rules and
+ *  matches no citation to a jurisdiction (D-149). It is NOT the governing-laws list: which laws govern the
+ *  agency asked is `governing_laws[]`, a member's authored act, and nothing here fills that list in.
+ *
+ *  FOUR ANSWERS, and `null` is one of them: a kind that is not a records request has no `law` to read.
+ *  `cpra_request` answers `kind` and is read AS WRITTEN — never rewritten into a records_request with a
+ *  synthesised citation, which would be the record stating a citation nobody wrote. A records_request with no
+ *  law reads UNDETERMINED in words, never a default. */
+export function recordsLawOf(fm) {
+  const kind = fm && fm.action_kind;
+  if (kind === 'cpra_request')
+    return { state: 'kind', law: null,
+             stated: 'This action\'s kind, cpra_request, names the California Public Records Act, read as written; '
+                   + 'no citation is synthesised from the kind.' };
+  if (kind !== 'records_request') return null;
+  const law = typeof fm.law === 'string' && fm.law.trim() ? fm.law : null;
+  if (law) return { state: 'stated', law,
+                    stated: `This records request is made under ${law}, as its author stated it; the record holds the `
+                          + 'citation as written and encodes none of that law\'s rules.' };
+  return { state: 'undetermined', law: null,
+           stated: 'UNDETERMINED: this records request states no law it is made under. The record assumes none — '
+                 + 'not the California Public Records Act, not federal law; its author states one, by citation, in '
+                 + 'the action\'s law field.' };
+}
+
+/** REC-201: C-2.10's `law` arm. Absent, null or empty is the honest undetermined and passes. A `law` on any kind
+ *  but records_request is refused: `cpra_request` already names its law, and on any other kind the field would
+ *  state a law no read shows. */
+function recordsLawFindings(fm, findings) {
+  if (!Object.prototype.hasOwnProperty.call(fm, 'law') || fm.law === null || fm.law === '') return;
+  if (fm.action_kind !== 'records_request') {
+    findings.push(f('C-2.10', 'error',
+      `law is carried by a records_request only; on a ${String(fm.action_kind).slice(0, 40)} it states a law no read shows (REC-201)`,
+      ['write the action as a records_request', 'or remove law']));
+    return;
+  }
+  if (typeof fm.law !== 'string')
+    findings.push(f('C-2.10', 'error', 'law is not a citation: a records request names the law it is made under as text (REC-201)'));
+  else if (fm.law.trim().length > CITATION_MAX)
+    findings.push(f('C-2.10', 'error', `law is longer than ${CITATION_MAX} characters: a citation names a law, it does not quote one`));
 }
 
 /** D-149: C-2.10's governing-law arm. Judges the SHAPE of `governing_laws[]` and the coherence of its
@@ -4874,6 +4928,7 @@ function checkActionExtension(ctx, findings) {
   if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
   checkCounterparty(fm, findings);
   governingLawsFindings(fm, findings);
+  recordsLawFindings(fm, findings);
   riskTierHistoryFindings(fm, findings);
   /* REC-39: the four words are RESOLUTIONS at module level (exported for
      op=affordances) so this finding, op=actionmove's own refusal and the

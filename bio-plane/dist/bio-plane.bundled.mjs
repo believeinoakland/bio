@@ -4616,6 +4616,7 @@ __export(bio_checks_exports, {
   quoteFindings: () => quoteFindings,
   quoteValue: () => quoteValue,
   rangeCorners: () => rangeCorners,
+  recordsLawOf: () => recordsLawOf,
   releaseMessage: () => releaseMessage,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
   riskTierHistoryOf: () => riskTierHistoryOf,
@@ -4965,7 +4966,7 @@ var STATES = {
   }
 };
 STATES.problem = STATES.focus;
-var ACTION_KINDS = ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"];
+var ACTION_KINDS = ["cpra_request", "records_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"];
 var RISK_TIERS = {
   1: "file freely",
   2: "file with caution",
@@ -5067,13 +5068,51 @@ function governingLawsOf(fm) {
     };
   }
   const kindNames = fm && fm.action_kind === "cpra_request";
+  const lawNamed = recordsLawOf(fm)?.law ?? null;
   return {
     state: "undetermined",
     laws: [],
     by: null,
     at: null,
-    stated: "UNDETERMINED: no member has stated which laws govern this action. The record assumes none \u2014 not federal law, not state law, not a local ordinance. Which laws apply follows the agency asked, and a member states them, each by citation." + (kindNames ? " This action's kind, cpra_request, is its member's statement that the California Public Records Act governs it; nothing else is inferred from the kind." : "")
+    stated: "UNDETERMINED: no member has stated which laws govern this action. The record assumes none \u2014 not federal law, not state law, not a local ordinance. Which laws apply follows the agency asked, and a member states them, each by citation." + (kindNames ? " This action's kind, cpra_request, is its member's statement that the California Public Records Act governs it; nothing else is inferred from the kind." : "") + (lawNamed ? ` This action's kind, records_request, states the law it is made under \u2014 ${lawNamed} \u2014 as its author's statement; nothing else is inferred from it.` : "")
   };
+}
+function recordsLawOf(fm) {
+  const kind = fm && fm.action_kind;
+  if (kind === "cpra_request")
+    return {
+      state: "kind",
+      law: null,
+      stated: "This action's kind, cpra_request, names the California Public Records Act, read as written; no citation is synthesised from the kind."
+    };
+  if (kind !== "records_request") return null;
+  const law = typeof fm.law === "string" && fm.law.trim() ? fm.law : null;
+  if (law) return {
+    state: "stated",
+    law,
+    stated: `This records request is made under ${law}, as its author stated it; the record holds the citation as written and encodes none of that law's rules.`
+  };
+  return {
+    state: "undetermined",
+    law: null,
+    stated: "UNDETERMINED: this records request states no law it is made under. The record assumes none \u2014 not the California Public Records Act, not federal law; its author states one, by citation, in the action's law field."
+  };
+}
+function recordsLawFindings(fm, findings) {
+  if (!Object.prototype.hasOwnProperty.call(fm, "law") || fm.law === null || fm.law === "") return;
+  if (fm.action_kind !== "records_request") {
+    findings.push(f(
+      "C-2.10",
+      "error",
+      `law is carried by a records_request only; on a ${String(fm.action_kind).slice(0, 40)} it states a law no read shows (REC-201)`,
+      ["write the action as a records_request", "or remove law"]
+    ));
+    return;
+  }
+  if (typeof fm.law !== "string")
+    findings.push(f("C-2.10", "error", "law is not a citation: a records request names the law it is made under as text (REC-201)"));
+  else if (fm.law.trim().length > CITATION_MAX)
+    findings.push(f("C-2.10", "error", `law is longer than ${CITATION_MAX} characters: a citation names a law, it does not quote one`));
 }
 function governingLawsFindings(fm, findings) {
   const has = Object.prototype.hasOwnProperty.call(fm, "governing_laws");
@@ -7688,6 +7727,7 @@ function checkActionExtension(ctx, findings) {
   if (riskTierState(fm.risk_tier) === null) findings.push(f("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(", ")}`));
   checkCounterparty(fm, findings);
   governingLawsFindings(fm, findings);
+  recordsLawFindings(fm, findings);
   riskTierHistoryFindings(fm, findings);
   if (fm.current_state === "resolved" && !RESOLUTIONS.includes(fm.resolution)) {
     findings.push(f("C-2.10", "error", `resolved state requires resolution in: ${RESOLUTIONS.join(", ")}`));
@@ -33153,6 +33193,9 @@ var Store = class _Store extends DurableObject {
          the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
          as governed by anything, federal law included. */
       governing_laws: governingLawsOf(fm),
+      /* REC-201: THE LAW A records_request IS MADE UNDER, verbatim from its bytes, or UNDETERMINED in words; a
+         cpra_request answers `kind` and is read as written; null for a kind that is not a records request. */
+      law: recordsLawOf(fm),
       /* REC-214: EVERY TIER THIS ACTION HAS HELD, oldest first — each revision's tier, the tier it replaced, who,
          when and why — and the intake tier with its author stated UNDETERMINED. Read by the catalogue's one reader
          from the same bytes `risk_tier` above is, so the history and the current tier cannot disagree. */
