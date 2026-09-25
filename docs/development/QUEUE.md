@@ -799,7 +799,8 @@ scope: chainKindFor answers `mixed` for a no-page unit whose covering steps diff
 accepts-when: the mixed fixture's whole-document unit reads `mixed`, and a one-kind document reads its kind (moves: a whole-document unit read as ocr). NEGATIVE CONTROL: the old last-step answer (`ocr`) fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:35Z ruling).
 
-### D-708 · running — **op=statementack's `listed` SENTENCE STATES AN EDITION AND A LISTING FOR A CASE THE RECORD HAS NOT CHOSEN: for a draft naming C1 AND asking for a new case, `#caseIdentitySentence(ident.caseId, ident.edition)` is called WITHOUT newCase and says "the completeness block of the next edition (N) of C1 lists this acknowledgement…", though publication refuses the pair.** Found by D-618's worker (minted on land/worker/D-618). — owner RECORD.
+### D-708 · integrated — **op=statementack's `listed` SENTENCE STATES AN EDITION AND A LISTING FOR A CASE THE RECORD HAS NOT CHOSEN: for a draft naming C1 AND asking for a new case, `#caseIdentitySentence(ident.caseId, ident.edition)` is called WITHOUT newCase and says "the completeness block of the next edition (N) of C1 lists this acknowledgement…", though publication refuses the pair.** Found by D-618's worker (minted on land/worker/D-618). — owner RECORD.
+status: integrated — SCHEDULER #24 11:25Z: tip 656b0817 (on D-618 dc4c41f9), GATE 409/409 GREEN FULLREUSE (22932 assertions; excludes 3 untallied), tree 5b637947; statementack listed sentence for a pair draft is its own branch (no edition, no listing promised); NEGATIVE CONTROL 30 arms as declared; minted D-721 (placed) and D-720 (needs design, with BOB #36)
 order: spawned directly after D-618, the same both-identity class one sentence over (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 — the listed sentence for the pair; the integrator classifies.
@@ -929,6 +930,17 @@ scope: (1) status.control.mjs removes `.status-harness/` on a clean run; (2) `.g
 accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup and the pen-gone arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
 scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): control drivers writing `${file}.pristine-<arm>` beside the source, an UNDECLARED pen BOB's ruling does not stand — battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor, and every `nc-*.mjs` harness (D-499 fixed nc-d64). Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`.
+
+### D-721 · running — **#caseIdentitySentence's PAIR BRANCH STILL STATES "the next edition (N) of C1 — but …" for a draft naming C1 AND asking for a new case, in op=casedraft, casedrafts, reviewcopy and reviewgrant (boundTo), beside D-618's `edition: null`: the sentence names an edition the record has not chosen.** Found by D-708's worker (minted on land/worker/D-708). — owner RECORD.
+order: spawned directly, stacked on D-708 (same sentence family): a sentence claiming more than the record holds is the "less narrative" defect (CLAUDE.md §2) and corrects just-landed work (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:25Z: spawned, stacked on land/worker/D-708 @ 656b0817
+milestone: M10
+interface: I3 — the pair sentence's wording on four ops; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 and §6A.4 (D-618: a pair draft states no edition).
+depends-on: none (stacked on land/worker/D-708 @ 656b0817, integrated, on D-618 @ dc4c41f9).
+scope: drop the edition number from the pair branch — name the case as the draft names it, then the refusal; re-read the civicos-ui suites that draw this sentence verbatim and correct them with a comment; publish's draft-mismatch detail (is-publish-draft-this-case) is in scope if it calls the pair branch.
+accepts-when: no op answering for a pair draft states an edition number (asserted in reviewcopy block 14 and at each of the four ops) (moves: an edition stated beside edition:null). NEGATIVE CONTROL: restore the numbered pair sentence and the no-edition arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-708's worker).
 
 ### D-677 · queued — **THE CONTENT FRAMEWORK'S STATUS BULLET FOR D-454 IS SPLICED MID-SENTENCE INTO D-517's: "that figure is CONFIRMED [D-454's bullet] as its valley's midpoint", so both statements read garbled in the front matter.** Found by D-625's worker (minted on land/worker/D-625). — owner RECORD (docs).
 order: after D-676, a docs-only correction to the same document; it may ride any Framework landing (SCHEDULER #23, 2026-09-25)
