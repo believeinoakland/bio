@@ -385,6 +385,11 @@ const CATALOG_CENSUS = {
      1.30.0 (REC-219, 2026-09-25): TWO ARRIVALS, NO DEPARTURES — C-41.14 `CASE_DOCUMENT_FAMILY.PENDING` and C-41.15
      `CITATIONS` (D-579(a)) (§3 rule 18, BOB #34), 466 -> 468 over origin/main 964da679;
      "1.30.0": { count: 468, digest: "ce0367d3116f97e0947d02029ae42648b93e613f0f92bcc098197243d9758706" } */
+  /* REC-203 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (REC-203, 2026-09-25): THREE ARRIVALS, NO DEPARTURES — C-91.1, C-91.2 and C-91.3, `op=idmatch`'s
+     IDSPACE_CHECKS, 466 -> 469 over origin/main 964da679;
+     "1.30.0": { count: 469, digest: "6da20e8de085e334d03f8d97e3211365179d5b427ec92d5e01e1a6d6e65d7f8c" } */
   /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
      rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
      KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
@@ -665,6 +670,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* D-134 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, the C-96 rows); ours is kept
    at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* REC-219 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-41.14/C-41.15); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* REC-203 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-91's three rows); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives

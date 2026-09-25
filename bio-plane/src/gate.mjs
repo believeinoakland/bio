@@ -160,6 +160,10 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    the version it rests on (BIO_Publication_v0_1.md §3 rule 18; D-579(a)) — so the catalogue moved 466 -> 468 checks, MINOR and additive on this constant's own rule: nothing that passed
    is refused, because /3, /2 and /1 documents are never asked the new question. Figures from the d470
    suite's own print; CONDUCT re-reads them on the union if another branch moves this constant too. */
+/* REC-203 side, kept as history — took 1.30.0 (REC-203, 2026-09-25, branch land/worker/REC-203): THREE ARRIVALS, NO DEPARTURES — C-91.1
+   IDSPACE_UNKNOWN, C-91.2 IDSPACE_VALUE_NOT_IN_SPACE and C-91.3 IDSPACE_CAPTURE_NOT_HELD, `op=idmatch`'s
+   refusals in the new IDSPACE_CHECKS family. MINOR and additive on this constant's own rule; CONDUCT
+   reconciles the number at integration if another branch takes 1.30.0 first. */
 export const CATALOG_VERSION = "1.30.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

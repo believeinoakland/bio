@@ -544,6 +544,9 @@ import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
 /* D-510: the one refusal of `promote`'s envelope-versus-document check, held in the catalogue with every
    other DEC-49 row so the code, its check number and its canned translation live in one place. */
 import { PROMOTED_TYPE_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-203 / C-91: op=idmatch's refusals, and the identifier spaces it judges under Framework §8.3. */
+import { IDSPACE_CHECKS } from "../checks/bio-checks.mjs";
+import { ID_SPACES, recognise as recogniseIdentifier, apnStanding, systemOfAddresses, judgePair } from "./idspaces.mjs";
 /* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
    is written into a document's bytes, which the suites judging a composer's bytes call too. */
 import { INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
@@ -22782,6 +22785,99 @@ export class Store extends DurableObject {
      published beside the answer — never a claim that no more exist. */
   static LAW_PROPOSALS_READ_MAX = 12;
   static THEME_READ_LIMIT_MAX = 2000;
+
+  /* REC-203 — op=idmatch: ONE identifier judged under `BIO_Content_Framework_v0_10.md` §8.3 "WHAT MAKES A
+   * SHARED IDENTIFIER COUNT", through `src/idspaces.mjs`, which holds the recognisers and the counting rule.
+   * With one value it RECOGNISES: the form, the normalised value, a C.M.S. number's reach against Legistar's
+   * floor, an APN's standing. With two, each named with the CAPTURE it was read in, it JUDGES the pair.
+   *
+   * THE SYSTEM OF EACH END IS READ FROM THE RECORD, never taken from the request: every address
+   * `captured_locators` holds for the capture, mapped through the measured system table. That is the whole
+   * point of the capture argument — a caller who could name the system could name two publications of one
+   * source as two systems, which is the one error rule 1 exists to refuse.
+   *
+   * THE REFERENT READING is the caller's, when it is given, and the answer says so: this plane reads no
+   * referent (every agreement M-119, M-132 and M-157 counted was read by hand). A fund's NAME is the one
+   * referent it compares itself. WRITES NOTHING. */
+  idMatch({ space = null, a = null, b = null, aCapture = null, bCapture = null, aName = null, bName = null,
+            referent = null, viewer = null } = {}) {
+    const sp = typeof space === "string" ? space.trim().toLowerCase() : "";
+    /* DEC-49 REGION is-idspace-unknown */
+    if (!Object.prototype.hasOwnProperty.call(ID_SPACES, sp)) {
+      const row = IDSPACE_CHECKS.IDSPACE_UNKNOWN;
+      return { ok: false, reason: "IDSPACE_UNKNOWN", code: "IDSPACE_UNKNOWN", check: row.check,
+               translation: row.translation, spaces: Object.keys(ID_SPACES),
+               detail: `space must be one of ${Object.keys(ID_SPACES).join(", ")}` };
+    }
+    /* END DEC-49 REGION is-idspace-unknown */
+    const pair = b != null && String(b).trim() !== "";
+    const ra = recogniseIdentifier(sp, a);
+    const rb = pair ? recogniseIdentifier(sp, b) : null;
+    /* DEC-49 REGION is-idspace-value-shape */
+    if (!ra || (pair && !rb)) {
+      const row = IDSPACE_CHECKS.IDSPACE_VALUE_NOT_IN_SPACE;
+      return { ok: false, reason: "IDSPACE_VALUE_NOT_IN_SPACE", code: "IDSPACE_VALUE_NOT_IN_SPACE",
+               check: row.check, translation: row.translation, space: sp,
+               forms: ID_SPACES[sp].forms.map((f) => f.form),
+               detail: `${!ra ? "a" : "b"} has the shape of no form of the ${ID_SPACES[sp].label}` };
+    }
+    /* END DEC-49 REGION is-idspace-value-shape */
+    const view = (r) => ({ value: r.value, form: r.form, normal: r.normal,
+                           ...(r.kind !== undefined ? { kind: r.kind } : {}),
+                           ...(r.reach ? { reach: r.reach } : {}),
+                           /* No assessor vintage is held in the record, so an APN's standing is judged over
+                              none, and reads UNDETERMINED saying so — never "no such parcel". */
+                           ...(sp === "apn" ? { standing: apnStanding(r.normal) } : {}) });
+    if (!pair) return { ok: true, space: sp, label: ID_SPACES[sp].label, evidence: false, a: view(ra) };
+    /* THE CAPTURES, read through the caller's own sight: a capture the viewer may not see is answered
+       exactly as one the record does not hold. Fails closed on an absent stamp (`viewerPredicate`). */
+    const g = viewerPredicate(viewer);
+    const held = (sha) => {
+      const k = typeof sha === "string" ? sha.trim().toLowerCase() : "";
+      if (!/^[0-9a-f]{64}$/.test(k)) return null;
+      const r = this.#one(
+        `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+          WHERE r.capture_sha = ? AND (${g.sql})`, k, ...g.args);
+      if (!r) return null;
+      /* BOUNDED, and the bound is PUBLISHED: one row past the cap is read so a cut is MEASURED, and a cut
+         capture's system is UNDETERMINED rather than judged off the addresses that happened to fit — an
+         unread address could be another system's. */
+      const cap = Store.IDMATCH_ADDRESS_LIMIT;
+      const rows = this.#rows(
+        `SELECT DISTINCT address FROM captured_locators WHERE capture_sha = ? ORDER BY address LIMIT ?`, k, cap + 1);
+      return { addresses: rows.slice(0, cap).map((x) => x.address), truncated: rows.length > cap };
+    };
+    const addrA = held(aCapture), addrB = held(bCapture);
+    /* DEC-49 REGION is-idspace-capture */
+    if (addrA === null || addrB === null) {
+      const row = IDSPACE_CHECKS.IDSPACE_CAPTURE_NOT_HELD;
+      return { ok: false, reason: "IDSPACE_CAPTURE_NOT_HELD", code: "IDSPACE_CAPTURE_NOT_HELD", check: row.check,
+               translation: row.translation, detail: `${addrA === null ? "a_capture" : "b_capture"} names no captured `
+               + `document this record holds that you can see` };
+    }
+    /* END DEC-49 REGION is-idspace-capture */
+    const reading = referent === "agrees" || referent === "disagrees" ? referent : null;
+    const systemOf = (h) => (h.truncated
+      ? { origin: null, why: `the record holds more than ${Store.IDMATCH_ADDRESS_LIMIT} addresses for these bytes, `
+          + `and a system is judged from EVERY address, so it is undetermined` }
+      : systemOfAddresses(h.addresses));
+    const endA = { rec: ra, system: systemOf(addrA), name: aName };
+    const endB = { rec: rb, system: systemOf(addrB), name: bName };
+    const j = judgePair(sp, endA, endB, reading);
+    const sys = (e) => (e.system.origin
+      ? { origin: e.system.origin, name: e.system.name, republication: e.system.republication,
+          provenance_stated: e.system.provenance_stated, basis: e.system.basis }
+      : { origin: null, why: e.system.why });
+    return { ok: true, space: sp, label: ID_SPACES[sp].label, evidence: false, ...j,
+             /* Each end's cut is published as the page measured it (one row past the cap), never combined. */
+             limit: Store.IDMATCH_ADDRESS_LIMIT, a_truncated: addrA.truncated, b_truncated: addrB.truncated,
+             a: { ...view(ra), capture: String(aCapture).trim().toLowerCase(), system: sys(endA),
+                  ...(sp === "fund" ? { name: aName ?? null } : {}) },
+             b: { ...view(rb), capture: String(bCapture).trim().toLowerCase(), system: sys(endB),
+                  ...(sp === "fund" ? { name: bName ?? null } : {}) } };
+  }
+  /* op=idmatch's bound: the most addresses read per capture to judge its system. */
+  static IDMATCH_ADDRESS_LIMIT = 32;
 
   /* ====================================================================== *
    * SK-8 REGION — THE EXTRACT RUN'S PRODUCTIONS, AND THE FIRST CALLER OF THE
@@ -52932,6 +53028,13 @@ export class Store extends DurableObject {
           viewer: url.searchParams.get("viewer"),
           administer: url.searchParams.get("administer"),
         }),
+        /* REC-203: the identifier-space judgement. `viewer` is the control plane's stamp; nothing else is. */
+        idmatch: () => this.idMatch({ space: url.searchParams.get("space"), a: url.searchParams.get("a"),
+                                      b: url.searchParams.get("b"), aCapture: url.searchParams.get("a_capture"),
+                                      bCapture: url.searchParams.get("b_capture"),
+                                      aName: url.searchParams.get("a_name"), bName: url.searchParams.get("b_name"),
+                                      referent: url.searchParams.get("referent"),
+                                      viewer: url.searchParams.get("viewer") }),
         themeread: () => this.themeRead({ id: url.searchParams.get("id"),
                                           q: url.searchParams.get("q"),
                                           limit: url.searchParams.get("limit"),

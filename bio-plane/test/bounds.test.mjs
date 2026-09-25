@@ -625,6 +625,11 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      declared BELOW the method, with `limit` and `truncated` published; carried in DRIVEN_ELSEWHERE for the reason
      there. The c22-batch29 union carries BOTH arrivals (driveshells, projectrequests); its figure is
      re-read from this arm's own failure output. */
+  /* REC-203 side, kept as history: MOVED 45 -> 46 on 2026-09-25 by REC-203 on its own branch, from THIS ARM'S OWN FAILURE OUTPUT (`want 45 / got 46`), never by adding
+     one: op=idmatch, which reads a capture's addresses under IDMATCH_ADDRESS_LIMIT (declared BELOW the method) with
+     `LIMIT ?` at cap + 1, `limit` and `truncated` published. Its bite is driven in `test/rec203-idspaces.test.mjs`'s
+     BOUND section (DRIVEN_ELSEWHERE) and its envelope in the map below. The c22-batch29 union carries THREE arrivals
+     (driveshells, projectrequests, idmatch); its figure is re-read from this arm's own failure output. */
   OPS.size, 46);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
@@ -1470,6 +1475,13 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      clamp and `truncated` both ways are driven in `test/theme.test.mjs`
                                      section 6; the envelope arm is below. */
                                   "themeread",
+                                  /* REC-203: op=idmatch reads a capture's ADDRESSES under
+                                     Store.IDMATCH_ADDRESS_LIMIT, one row past the cap. Its BITE needs one
+                                     capture located at more addresses than the bound, which needs a scripted
+                                     source; the bite (cut, `truncated` true, the system then UNDETERMINED)
+                                     and the uncut read (`truncated` false) are driven in
+                                     `test/rec203-idspaces.test.mjs`'s BOUND section; the envelope arm is below. */
+                                  "idmatch",
                                   /* REC-126 / IC-145: op=reviewcopy's comments and grants are read under
                                      REVIEW_LIST_MAX with a caller `limit` clamped to it. Its BITE needs a
                                      DRAFT with comments, which only a project OWNER in a session can write,
@@ -1977,6 +1989,8 @@ const answersByOp = new Map([
   ["leadread", await GET("op=leadread&token=mem-r57&id=LEAD-2026-0918-000000000000&limit=1")],
   /* D-162: the envelope of the theme list over a store holding none — an answer object, never an array. */
   ["themeread", await GET("op=themeread&token=mem-r57&limit=1")],
+  /* REC-203: the envelope of a RECOGNITION (one value, no capture to read) — an answer object, never an array. */
+  ["idmatch", await GET("op=idmatch&token=mem-r57&space=project&a=C329142")],
   /* REC-126: the envelope of the review copy's read with no draft to key on — the ONE dead answer, an
      object and never an array. The bite is driven in `test/reviewcopy.test.mjs` (DRIVEN_ELSEWHERE). */
   ["reviewcopy", await GET("op=reviewcopy&token=mem-r57&draft=DRAFT-2026-0000&limit=1")],
