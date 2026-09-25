@@ -1,0 +1,16 @@
+{
+ "unit": "plane:budget-sweep.test.mjs",
+ "inputHash": "ca9a3a0916f5474e2014e92a4e9f3aee017420c7cbe49e3fb5893198d4d483f3",
+ "verdict": "PASS",
+ "run": "6a0922e0b45f6afbd50f9895944aba7f56ab405d.1790294799885.29370.json",
+ "tree": "6a0922e0b45f6afbd50f9895944aba7f56ab405d",
+ "head": "73ba550855780c0f043368f0f56181b677237ddb",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 1360,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "28b58bb2-2f14-5321-b5b7-a6916d6f5ebe",
+ "at": "2026-09-25T00:06:39.895Z"
+}
