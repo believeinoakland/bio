@@ -175,7 +175,13 @@ Three consequences give the construct its shape. The record must be able to prov
     any container is built, as the VERIFYING value. The file's own sha256 is recorded beside it, labelled "this file's
     bytes", and is informative only. A check that fails honestly on another runtime is a check that gets switched off.
     NOT BUILT (rowed).
-17. **THE GATE STAMP'S CATALOGUE VERSION MOVES WHENEVER THE CATALOGUE DOES** (BOB #32, 2026-09-24, D-470). A case document's gate stamp names the check-catalogue version it was judged against, so one version names exactly one catalogue: any added, removed or changed check moves the version in the same landing. The per-version census pin enforces it and fails by name. A stamp whose version is ambiguous proves nothing about what judged it.
+17. **THE GATE STAMP'S CATALOGUE VERSION MOVES WHENEVER THE CATALOGUE DOES** (BOB #32, 2026-09-24, D-470). A case document's gate stamp names the check-catalogue version it was judged against, so one version names exactly one catalogue: any added, removed or changed check moves the version in the same landing. The per-version census pin enforces it and fails by name. A stamp whose version is ambiguous proves nothing about what judged it. **A CHANGED check is a change the census must see (BOB #35, 2026-09-25, on D-598's question):** the rule is
+NOT narrowed to the C-number set. A landing that changes what a check refuses or admits, adding and removing no number,
+takes a new version whose census row DECLARES `changed: [C-n.m, …]`, and the declared list is part of the version's
+identity for the census's distinct-digest arm. The backstop is mechanical: the census pins each version to the digest of
+the catalogue's comment-stripped source, and a moved digest under an unmoved version fails by name unless the landing
+records a new version or declares the edit `behaviour: unchanged` against the new digest — so the stamp never claims a
+precision nobody asserted.
 
 ## 4. What is built
 
@@ -349,6 +355,19 @@ DEC-31 asked *when does a persistent rendering someone acted on become a record?
    which is what the container carries) and the CASE SIGNATURE's delivery (`case_documents`).
    **RANKED BY INSTANT, AT ONE PRECISION (D-543, 2026-09-25).** The record spells an instant two ways — whole seconds, the convention `ISO_TS_RE` holds a document's own bytes to, and milliseconds, which a row stamped for ordering keeps — and as STRINGS `…:00Z` sorts after `…:00.123Z` though it is the earlier instant. The acknowledgement was the one act on the copy stamped to the second; it is now stamped at milliseconds like the other three, every stamping site in the store names its precision through one helper (`stampInstant`), and the last change is ranked by `instantOrder`, so an acknowledgement recorded before the change, still at whole seconds, orders by what it names. ONE RESIDUE IS PICKED, NOT STATED, and is said here rather than left to be found: such an older acknowledgement is read as the START of its second, so beside a millisecond act inside that same second the ranking chooses an order the record cannot support — the band BOB #33 ruled must read UNDETERMINED for `observation_log` (D-516). New acts cannot fall into it; whether the copy should say so for the old ones is a design question (D-573), reported by D-543 and not invented here.
 2. **THE SURFACE SAYS SO AT THE ACT.** A member exporting a review copy is told, in the same breath, that what leaves cannot be revoked and that the grant they hold is the thing that can. This is the *never pressure someone into inventing an attribution* rule pointed at privacy: a member who needs genuine confidentiality must be told what this act does and does not give them, rather than sold a revocable grant as control over a file they have already emailed.
+3. **WHAT THE EXPORTED FILE CARRIES, AND WHAT THE RECORD SAYS ABOUT IT** (ruled 2026-09-25 by BOB #35 on UI-69's three
+   questions; UI-69 BUILT the member door's export, `land/worker/UI-69` @ `0406203f`). **(a) The file carries the quartet
+   verbatim and NOT the grant roster or the comments** — the recipients' names and words are third parties' and leave by
+   no one's act but their own; the file's first page says so, and says the hash names the record's state and is checked
+   against the record, not re-computed from the file. Offline verification, if ever wanted, is a SEPARATE export-scoped
+   subject the plane hashes, never the served answer with third parties inside it. **(b) Only a MEMBER's door exports**:
+   point 2's statement speaks of *the grant they hold*, which a recipient does not hold, so the recipient's door offers
+   no export (reversing it means writing a recipient's own statement first). **(c) The record does NOT log that a copy left, and says why.** The export is
+   rendered in the member's browser from an ordinary read; the plane cannot observe a file leaving, so a "copy exported"
+   row would be the client's own report — a provenance hop a caller can hand us is one a caller can invent — and would
+   imply that copies it does not list did not leave, which a screenshot refutes. This differs from D-137's corpus export,
+   which the PLANE assembles and therefore logs. What the record can say — who was granted a read, and when each grant
+   was withdrawn — it already says.
 
 ### 6A.4 Completeness is already expressible and is REUSED, not invented
 

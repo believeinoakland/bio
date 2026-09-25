@@ -1012,6 +1012,15 @@ names the four measurements owed and what a match must show to count.
    system, however many documents carry the number (`CLAUDE.md` §5: several documents agreeing is usually one source
    copied). The same string naming different things is not a match, so each space carries the check that its referent
    agrees. **A fund code, for one, counts only when the fund NAME agrees too**, because the bare code collides with years.
+   **WHAT A SYSTEM IS, RULED 2026-09-25 by BOB #35 on REC-203:** a system is the ORIGIN that publishes the identifier, and
+   a HOST IS NOT AN ORIGIN. The plane derives an end's system from its capture's own `captured_locators` only where a
+   measured host names exactly one origin (Legistar, the open-data portal; a republication is judged as the system it
+   republishes). A host serving many offices' publications — `www.oaklandca.gov`, the `cao-94612` bucket — names NO
+   system, and a pair through it reads SYSTEM_UNDETERMINED, never counted, because that host is exactly where two
+   sources would be conflated. What settles it is a member's ATTRIBUTED act declaring a document's origin system (one
+   declaration per document, dated, append-only, latest wins), never a per-instance table a machine applies. **No
+   machine reads a referent:** REC-203's `idmatch` counts a pair on a referent reading the caller supplies and labels it the
+   caller's, and the fund NAME is the only referent the plane compares itself.
 2. **A space may run in SEVERAL FORMS AT ONCE — AMENDED 2026-09-24 by BOB #32 on M-132 (D-453).** A space's forms are
    told apart by their SHAPE, never by DATE: M-132 measured Oakland's project numbers over the whole Legistar corpus
    (32,976 matters) and found the `C######` form running 2000–2026 and the `100xxxx` form 2015–2026, ELEVEN YEARS
@@ -1028,8 +1037,11 @@ names the four measurements owed and what a match must show to count.
      REACH, never NOT FOUND (§2 of `CLAUDE.md`: say which).
    - **The project number**, under rule 2's concurrent forms.
    - **The fund code**, counted only when the fund NAME agrees (rule 1).
-   - **The APN** (assessor's parcel number): normalised to the roll's own canonical key (`apn_sort`), because Legistar
-     pads every part and the roll does not. A parcel absent from a roll is NEVER "no such parcel". It reads RETIRED
+   - **The APN** (assessor's parcel number): normalised to ONE key the plane computes from the printed APN — book, page,
+     parcel and sub parsed apart, each numeric part read as an INTEGER and a lettered part kept verbatim — because Legistar
+     pads every part and the roll does not. **AMENDED 2026-09-25 by BOB #35 on REC-203 and M-157:** this read the roll's
+     `apn_sort`; M-157 measured that column spelled three ways (`085A380000118`, `37A 278901101`, and 11- or 12-character
+     county rows) and trusted none, so the key is the parse, which removes padding and never folds a digit. A parcel absent from a roll is NEVER "no such parcel". It reads RETIRED
      (merged, split or taken) only where the assessor's own lineage records it, with a roll year and children
      (data.acgov.org). Otherwise it reads UNDETERMINED between retired-before-the-lineage and never-a-parcel, naming
      the vintages searched. AMENDED 2026-09-25 by BOB #34 on M-157 (D-504): the roll M-132 read (Oakland's
