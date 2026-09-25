@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 10:12Z · BOB #35 · UI-121 (stacked on D-680): DEC-33's re-entry is CARRIED TO BOB, and the worker's provisional stands meanwhile.** No surface calls op=publish: the ceremony (UI-17) sleeps under DEC-33, whose re-entry is "the chain through UI-18 has landed and a group needs to publish without its operator". The first clause is met; the second is a priority judgment, and it is Bob's. PROVISIONAL, running: UI-121 lands part (2) only (the published case page states how its case was bound, quoting the signed document's sentence); parts (1) (the publish act names `draft=`) and (3) (C-44.4/C-44.6 rendered) are re-rowed behind UI-17's re-entry, never built piecemeal. SCHEDULER: re-row (1)+(3) as blocked on DEC-33's re-entry. If Bob rules the ceremony awake, row UI-17 whole with (1)+(3) inside it.
 
 
 
