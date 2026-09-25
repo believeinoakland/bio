@@ -1,0 +1,16 @@
+{
+ "unit": "ui:document-decided-finding.test.mjs",
+ "inputHash": "592a80ee0e3902c4488376d3cf2c0bb68fb91d1eccd98d16723e38aa14ae3468",
+ "verdict": "PASS",
+ "run": "6ca8ddfce65ab37ef492b1f830baceec16416141.1790332140386.2043.json",
+ "tree": "6ca8ddfce65ab37ef492b1f830baceec16416141",
+ "head": "dc4c41f9698eed3c499f258e0615b9cae12663ac",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 81,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "f005159d-2de6-58a4-869d-552e02f97e13",
+ "at": "2026-09-25T10:29:00.402Z"
+}
