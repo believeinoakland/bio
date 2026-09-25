@@ -789,7 +789,8 @@ scope: emit that clause only when layerPages is non-empty.
 accepts-when: a wholly scanned document's note carries no kept-text clause, and a mixed one still does (moves: a stated text layer that never existed). NEGATIVE CONTROL: emit the clause unconditionally and the wholly-scanned arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
 
-### D-568 · queued — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
+### D-568 · running — **A DRAFT THAT NAMES NO CASE AND DOES NOT SET `newCase` STILL ANSWERS `edition: 1` on op=casedraft, casedrafts, reviewcopy and reviewgrant, the minted-case edition for a case publication will DERIVE (draft DD would be C1's next edition).** Found by D-538's worker (01:04Z). — owner RECORD, then UI.
+status: running — SCHEDULER #22 04:54Z spawns WORKER D-568 (depth 2)
 order: after D-573, with the review-copy corrections: an edition stated for a case the record has not chosen claims more than it holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M10
 interface: I3 — `edition` reads null on the wire for a derived draft; the integrator classifies.
