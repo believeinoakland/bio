@@ -383,7 +383,12 @@ export function walkRecords(text, delimiter) {
  *  then ASCII-clean exactly when every code unit is below 0x80. */
 const BYTE_TRANSPORT = new TextDecoder("latin1");
 
-async function csvParts(bytes) {
+/** The two SIGNATURES and nothing else — the encoding over the body, the
+ *  delimiter over the head window — shared by `csvParts` and by the entry's
+ *  `dialect` slot (REC-218), so the dialect a record keeps for a body read at
+ *  intake and the one a full reading emits are ONE computation and cannot
+ *  disagree. No record is walked here. */
+function csvSignatures(bytes) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   if (!b.length) {
     return { ok: false, why: "empty_body" };
@@ -404,7 +409,13 @@ async function csvParts(bytes) {
        substituted with another decoder's answer. */
     return { ok: false, why: `decoder_unavailable:${enc.encoding}`, encoding: enc };
   }
-  const delim = delimiterSignature(headText);
+  return { ok: true, b, enc, body, delim: delimiterSignature(headText) };
+}
+
+async function csvParts(bytes) {
+  const sig = csvSignatures(bytes);
+  if (!sig.ok) return sig;
+  const { b, enc, body, delim } = sig;
 
   /* THE BOUND, on the body's own length — the metric a CSV has (header §4). */
   const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES
@@ -427,17 +438,20 @@ async function csvParts(bytes) {
   };
 }
 
-/** The dialect AS RECORDED ON THE READING (BOB #32: "found by signature and
- *  RECORDED on the reading"). One builder, so `structure()` and `text()`
- *  cannot state two different dialects for one body.
+/** The dialect AS THE ENTRY STATES IT (BOB #32: "found by signature and
+ *  RECORDED on the reading"). One builder, so `structure()`, `text()` and the
+ *  `dialect` slot cannot state two different dialects for one body.
  *
- *  IC-283 (I2 2.8.0 proposed, MINOR ADDITIVE) is this key. READ ITS RESIDUE
- *  BEFORE BELIEVING THE KEY ARRIVES ANYWHERE: the acquire wire's
- *  `containerExtent` projection in `index.mjs` writes a NAMED key list and
- *  `dialect` is not in it, so today the dialect reaches a caller that invokes
- *  this entry and does NOT reach the record. COFF-11's finding one construct
- *  over, named here rather than left for somebody to discover from an empty
- *  column. The passthrough is another area's path and is rowed, not done. */
+ *  IC-283 (I2 2.8.0 proposed, MINOR ADDITIVE) is this key. ITS RESIDUE IS
+ *  CLOSED BY REC-218 (BOB #33, 2026-09-24 21:55Z, option (b)): the acquire
+ *  wire keeps it as `reading.dialect`, a key of its own, through the
+ *  registry's `readingDialect` projection (formats.mjs). REC-218 ALSO FOUND
+ *  THAT THE RESIDUE WAS STATED TOO NARROWLY: a `text/csv` body within the
+ *  intake bound (PROFILE_TEXT_MAX, 8 MiB) is read AS TEXT at intake and this
+ *  entry never ran at acquire at all, so nothing FOUND a dialect to discard
+ *  there. The `dialect` slot on the entry below is what the wire asks on that
+ *  path; that the reading's TEXT on that path is still the intake decode and
+ *  not this entry's is D-593, rowed rather than done. */
 function dialectOf(parts) {
   return {
     encoding: parts.encoding.encoding,
@@ -621,6 +635,16 @@ export const csvEntry = {
     return null;
   },
   parts: (bytes) => csvParts(bytes),
+  /* REC-218 — the registry's OPTIONAL `dialect` slot: the decoding choice this
+     entry makes over these bytes, from the signatures alone (no record walk),
+     in `dialectOf`'s shape. The acquire wire asks it for a body it read AS TEXT
+     at intake, where `text()` never runs; null when the body has no signature
+     to take (empty, or a decoder the runtime lacks — the same refusals
+     `parts()` states). */
+  dialect: (bytes) => {
+    const sig = csvSignatures(bytes);
+    return sig.ok ? dialectOf({ encoding: sig.enc, delimiter: sig.delim }) : null;
+  },
   /* Accept either parts() output or raw bytes, exactly as the office entries
      do, so detect->structure works uniformly at the registry seam while a
      caller that already paid for parts() does not pay twice. */

@@ -120,7 +120,7 @@ import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, renderAllowanceM
    consult detectFormat. A new format costs one registerFormat() in
    formats.mjs and NO edit here — the D-70 test, and formats.test.mjs holds
    the evidence. */
-import { detectFormat, getFormat } from "./formats.mjs";
+import { detectFormat, getFormat, readingDialect } from "./formats.mjs";
 /* CPDF-10: the transcription provenance CHAIN. Imported, never restated — the
    rules about what a derivation may claim live in ONE module so the wire that
    builds a chain and the act that attests to one cannot disagree about them.
@@ -8517,6 +8517,12 @@ export default {
          it on the conservative handler and the generic type rather than a guess.
          Even then the headers and the address still carry signal. */
       let profileText = "", profileBytes = null;
+      /* REC-218: the DIALECT the format entry decoded (or would decode) this body in
+         (`readingDialect`, formats.mjs), UNDEFINED until an entry that makes a decoding
+         choice answers — so the key stays ABSENT on every reading no such entry produced.
+         Declared here because BOTH paths fill it: the format wire from its own text answer,
+         the intake read from the entry's `dialect` slot. Written at one site, below. */
+      let readDialect;
       if (profilesAsText(ct, total, multipart)) {
         try {
           const pobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
@@ -9031,6 +9037,10 @@ export default {
                  list of container names, and the store reports a missing level
                  only against that. The KEY's presence is the notion; its
                  LENGTH is whether the record holds it. */
+              /* REC-218: kept from the entry's OWN text answer, at the one place the wire's
+                 final `i2text` is read for what the record keeps about its container. */
+              if (i2text && Object.prototype.hasOwnProperty.call(i2text, "dialect"))
+                readDialect = readingDialect(i2text.dialect);
               if (i2text) {
                 const has = (k) => Array.isArray(i2text[k]);
                 const held = (k) => (has(k) && i2text[k].length ? i2text[k] : null);
@@ -9313,6 +9323,36 @@ export default {
            * CAP-9's reasoning unchanged, on a table I5 assigns to FRAMEWORK. */
         reading.container_extent = containerExtent;
       }
+
+      /* REC-218 — THE DIALECT, CARRIED ONTO THE READING THE PLANE PERSISTS, a key of its
+         OWN (BOB #33, 2026-09-24 21:55Z, option (b)). THE SHARED SITE: the reading's
+         assembly after every branch above has settled it — the format wire's `page_count`
+         and `container_extent` just closed above, and D-536's `provenance` is composed at
+         this same seam — and the dialect sits BESIDE them, inside none, because it is none
+         of them: not an itemisation of the container, not who read which text, but the
+         decoding choice made before any text existed.
+         *
+         * TWO SOURCES, ONE BUILDER. The format wire kept the entry's own `dialect` from its
+         * text answer. A body read AS TEXT AT INTAKE never reached the wire (any `text/*`
+         * type within PROFILE_TEXT_MAX; a larger one is streamed in parts and read by
+         * neither path), so the entry's OPTIONAL `dialect` slot is asked over the same
+         * bytes: signatures only, no record walk, and the entry's one builder, so the two
+         * cannot disagree. That the intake path's TEXT is still the lossy utf-8 decode is
+         * D-593, not this row. This file names no format here: the registry dispatches.
+         *
+         * THREE STATES, the rule `container_extent` obeys. ABSENT: no entry with a decoding
+         * choice answered (a PDF, an office container, an HTML page — and a delimited-text
+         * reading acquired before REC-218, which its capture's format tells apart). PRESENT AND
+         * NULL: an entry answered and this record cannot state a dialect from it. AN
+         * OBJECT: `{delimiter, encoding}`, each a name or NULL, and a null carries the
+         * entry's own reason in `undetermined`. Nothing is guessed to fill a null. */
+      if (reading && readDialect === undefined && profileBytes) {
+        try {
+          const fe = getFormat(profile.format && profile.format.format);
+          if (fe && typeof fe.dialect === "function") readDialect = readingDialect(await fe.dialect(profileBytes));
+        } catch { /* a signature that throws must not fail the capture: the key stays absent */ }
+      }
+      if (reading && readDialect !== undefined) reading.dialect = readDialect;
 
       /* The shape C-18.1 requires, assembled here so the caller does not have to
          know it and cannot get it subtly wrong. */

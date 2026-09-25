@@ -24354,7 +24354,7 @@ function walkRecords(text, delimiter) {
   return records;
 }
 var BYTE_TRANSPORT = new TextDecoder("latin1");
-async function csvParts(bytes) {
+function csvSignatures(bytes) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   if (!b.length) {
     return { ok: false, why: "empty_body" };
@@ -24368,7 +24368,12 @@ async function csvParts(bytes) {
   } catch {
     return { ok: false, why: `decoder_unavailable:${enc2.encoding}`, encoding: enc2 };
   }
-  const delim = delimiterSignature(headText);
+  return { ok: true, b, enc: enc2, body, delim: delimiterSignature(headText) };
+}
+async function csvParts(bytes) {
+  const sig = csvSignatures(bytes);
+  if (!sig.ok) return sig;
+  const { b, enc: enc2, body, delim } = sig;
   const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES ? {
     ok: false,
     text: "undetermined",
@@ -24542,6 +24547,16 @@ var csvEntry = {
     return null;
   },
   parts: (bytes) => csvParts(bytes),
+  /* REC-218 — the registry's OPTIONAL `dialect` slot: the decoding choice this
+     entry makes over these bytes, from the signatures alone (no record walk),
+     in `dialectOf`'s shape. The acquire wire asks it for a body it read AS TEXT
+     at intake, where `text()` never runs; null when the body has no signature
+     to take (empty, or a decoder the runtime lacks — the same refusals
+     `parts()` states). */
+  dialect: (bytes) => {
+    const sig = csvSignatures(bytes);
+    return sig.ok ? dialectOf({ encoding: sig.enc, delimiter: sig.delim }) : null;
+  },
   /* Accept either parts() output or raw bytes, exactly as the office entries
      do, so detect->structure works uniformly at the registry seam while a
      caller that already paid for parts() does not pay twice. */
@@ -24668,6 +24683,18 @@ registerFormat(odtEntry);
 registerFormat(odsEntry);
 registerFormat(odpEntry);
 registerFormat(csvEntry);
+function readingDialect(emitted) {
+  if (!emitted || typeof emitted !== "object" || Array.isArray(emitted)) return null;
+  const str = (v) => typeof v === "string" && v ? v : null;
+  const strs = (v) => Array.isArray(v) ? v.filter((s) => typeof s === "string") : [];
+  return {
+    delimiter: str(emitted.delimiter),
+    encoding: str(emitted.encoding),
+    confidence: { delimiter: str(emitted.delimiterConfidence), encoding: str(emitted.encodingConfidence) },
+    signals: { delimiter: strs(emitted.delimiterSignals), encoding: strs(emitted.encodingSignals) },
+    undetermined: strs(emitted.undetermined)
+  };
+}
 
 // src/textchain.mjs
 var STEP_KINDS = {
@@ -82702,6 +82729,7 @@ var index_default = {
         }
       }
       let profileText = "", profileBytes = null;
+      let readDialect;
       if (profilesAsText(ct, total, multipart)) {
         try {
           const pobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
@@ -82893,6 +82921,8 @@ var index_default = {
                 if (t3.ocrNote != null) ocrNote = t3.ocrNote;
                 t3Wanting = t3.stillWanting;
               }
+              if (i2text && Object.prototype.hasOwnProperty.call(i2text, "dialect"))
+                readDialect = readingDialect(i2text.dialect);
               if (i2text) {
                 const has = (k) => Array.isArray(i2text[k]);
                 const held2 = (k) => has(k) && i2text[k].length ? i2text[k] : null;
@@ -83006,6 +83036,14 @@ var index_default = {
         reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
         reading.container_extent = containerExtent;
       }
+      if (reading && readDialect === void 0 && profileBytes) {
+        try {
+          const fe = getFormat(profile.format && profile.format.format);
+          if (fe && typeof fe.dialect === "function") readDialect = readingDialect(await fe.dialect(profileBytes));
+        } catch {
+        }
+      }
+      if (reading && readDialect !== void 0) reading.dialect = readDialect;
       return json({
         ok: true,
         existed,

@@ -33,6 +33,15 @@
  *               null when text rides structure()'s own output object (PDF:
  *               CPDF-4's Tier 1 text extends the same I2 object — the
  *               do-not-fork rule in pdfstructure.mjs).
+ *   dialect(bytes) -> the entry's decoding choice | null      OPTIONAL (REC-218)
+ *               Only an entry that DECODES text makes one (today `csv`): the
+ *               encoding and delimiter it would read these bytes in, from
+ *               signatures alone, in the same shape its text() emits as
+ *               `dialect`. The acquire wire asks it for a body read as text at
+ *               intake, where text() never runs, and keeps the answer as
+ *               `reading.dialect` through `readingDialect` below. An entry
+ *               without the slot makes no decoding choice and the reading
+ *               carries no dialect key.
  *
  * Doctrine carried from the axes already built (I7):
  *   - MAGIC BYTES FIRST, content type second. A source's declared Content-Type
@@ -248,3 +257,38 @@ registerFormat(odpEntry);
    order is therefore immaterial for this entry in pass 1, and in pass 2 no
    registered entry claims `text/csv`. */
 registerFormat(csvEntry);
+
+/* REC-218 — THE DIALECT AS THE RECORD KEEPS IT (BOB #33, 2026-09-24 21:55Z,
+   option (b)): a `reading.dialect` key of its OWN, `{delimiter, encoding}`,
+   persisted on the acquire document — NOT inside `container_extent`, which
+   says what a container ITEMISES, and not inside a reading's provenance,
+   which says WHO read which text. The dialect is a third fact: the decoding
+   choice the entry made before any text existed. It is written here, on the
+   registry, and not in `csv.mjs`, because the ruling suits ANY text format
+   with a decoding choice; the next such entry emits a `dialect` and the
+   record keeps it with no edit anywhere else.
+
+   A PROJECTION OF NAMED KEYS, never the entry's object verbatim: the record
+   holds exactly the notion the ruling names plus the reason when either half
+   could not be told, so a later key an entry adds does not reach the record
+   by accident. EACH HALF IS A STRING OR NULL, NEVER COERCED — a null is
+   UNDETERMINED, and `undetermined` carries the entry's own reason codes
+   (`encoding_undetermined`, `delimiter_undetermined_tied`, ...) beside the
+   signals that led there. Nothing is guessed to fill a null.
+
+   Returns null when the entry emitted something that is not a dialect object:
+   the key is then PRESENT AND NULL on the reading (an entry answered and this
+   record cannot state what), which is a different fact from ABSENT (no entry
+   with a decoding choice ever read this document). */
+export function readingDialect(emitted) {
+  if (!emitted || typeof emitted !== "object" || Array.isArray(emitted)) return null;
+  const str = (v) => (typeof v === "string" && v ? v : null);
+  const strs = (v) => (Array.isArray(v) ? v.filter((s) => typeof s === "string") : []);
+  return {
+    delimiter: str(emitted.delimiter),
+    encoding: str(emitted.encoding),
+    confidence: { delimiter: str(emitted.delimiterConfidence), encoding: str(emitted.encodingConfidence) },
+    signals: { delimiter: strs(emitted.delimiterSignals), encoding: strs(emitted.encodingSignals) },
+    undetermined: strs(emitted.undetermined),
+  };
+}
