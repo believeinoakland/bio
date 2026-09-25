@@ -975,8 +975,8 @@ accepts-when: against the real plane, the founder's and an enrolled administrato
 added: 2026-09-22 · SCHEDULER #13 (LED-7 batch S13-1; D-134's DEBT row of 2026-08-01, BOB #17's order and BOB #18's discharge; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-134» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### UI-76 · running — **NO SURFACE LETS A MEMBER DECLARE, TEST OR PLACE A THEME, OR SHOWS WHOSE LENS A THEME IS.** D-162's surface half, item 2 of BOB #23's entry. — owner UI.
-status: running — SCHEDULER #22 03:17Z spawns WORKER UI-76 (depth 2)
+### UI-76 · integrated — **NO SURFACE LETS A MEMBER DECLARE, TEST OR PLACE A THEME, OR SHOWS WHOSE LENS A THEME IS.** D-162's surface half, item 2 of BOB #23's entry. — owner UI.
+status: integrated — SCHEDULER #22 04:08Z: tip 37035a59, GATE 225/225 GREEN FULLREUSE (14867 assertions), tree 3e74bded; Themes screen; 6.themes surface BUILT; no floor moved; router count + boot chain union with D-134/UI-78/UI-69; minted D-609
 order: directly after D-162, which it consumes (BOB #23: *"UI (M8), after 1"*) (SCHEDULER #9, 2026-09-21)
 milestone: M8
 interface: I3 consumer (D-162's IC).
@@ -1118,7 +1118,8 @@ scope: commit one real scanned-agenda page image to the OCR fixtures; drive the 
 accepts-when: a real page's OCR yields a `reading_refs` hit. NEGATIVE CONTROL: switch the recogniser off, and the join reads empty by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-610 · queued — **THREE WRITERS CHANGE `members.status` WITHOUT `status_by` (measured at 964da679: the re-invitation ~34957, the revocation ~35008 and the enrolment ~35183 in `store.mjs`), so a row `memberset` stamped reads a later status under the WRONG actor: a live false attribution.** Measured by BOB #35 on D-134's question (04:00Z). — owner RECORD.
+### D-610 · running — **THREE WRITERS CHANGE `members.status` WITHOUT `status_by` (measured at 964da679: the re-invitation ~34957, the revocation ~35008 and the enrolment ~35183 in `store.mjs`), so a row `memberset` stamped reads a later status under the WRONG actor: a live false attribution.** Measured by BOB #35 on D-134's question (04:00Z). — owner RECORD.
+status: running — SCHEDULER #22 04:08Z spawns WORKER D-610 (depth 2)
 order: after D-586, with the authority and attribution corrections ahead of features: a status stated under an actor who did not cause it is the record claiming more than it supports (CLAUDE.md §2); BOB #35: *"(c) is a DEFECT"* (SCHEDULER #22, 2026-09-25)
 milestone: M8
 interface: I5 — `status_by` now written on every transition; the integrator classifies.
@@ -1127,6 +1128,16 @@ depends-on: none.
 scope: every writer of members.status writes status_by = the actor whose act caused that transition: enrolment the member; invitation and re-invitation the inviter; revocation its actor; a §4.7 vote the administrator whose vote completed it. Grep every writer by the column, not the three lines named. Rows written before read as they are; never back-fill.
 accepts-when: each transition read back names the actor that caused it (moves: 3 writers leaving a stale status_by). NEGATIVE CONTROL: drop the stamp from the enrolment writer and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 04:00Z).
+
+### M0-195 · queued — **A BEHAVIOUR-ONLY CHANGE TO A CHECK CANNOT TAKE A CATALOG_VERSION: the D-470 census counts C-numbers only, and its (A4) refuses two versions with the same census, so publication rule 17 ("a changed check moves the version") has no instrument when a check's body changes and its number does not.** Found by D-598's worker (03:37Z); ruled by BOB #35 04:00Z. — owner M0.
+order: at the head of the process rows, before M0-142: it unblocks a product landing (D-598 takes its version bump only after this lands) and a check changed silently is a record claiming the old rule (BOB #35 04:00Z: *"rule 17 STANDS and its instrument is short"*) (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none (the census's own grammar gains two fields).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 17, as BOB #35 folded it 04:00Z (land/bob/batch-0925c @ 2e9d4f4e; rides the next train).
+depends-on: none.
+scope: the census row may declare `changed: [C-n.m, …]`, counted in the version's identity by (A4); the census pins each version to the digest of bio-checks.mjs's comment-stripped source, so a moved digest under an unmoved version fails by name unless the landing takes a new version or declares `behaviour: unchanged` against the new digest. In `bio-plane/test/d470-catalog-census.test.mjs` and its control.
+accepts-when: a check's body edited with no census row fails by name, and one declared in `changed:` under a new version passes (moves: behaviour-only changes invisible to the version). NEGATIVE CONTROL: edit a check's body without a census row, and the new arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:00Z).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

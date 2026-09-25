@@ -254,6 +254,16 @@ scope: the published case page renders the frozen bias_manifest as the document 
 accepts-when: a /4 case with a pending adoption shows it; a /3 case shows its own statement and nothing invented (moves: no surface); a /4 citation shows its pin state.  NEGATIVE CONTROL: drop the block and the pending arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
+### D-609 · queued — **A MEMBER CAN PLACE A DOCUMENT OR PASSAGE IN A THEME ONLY FROM THE THEME'S PAGE, BY TYPING ITS BUNDLE ID OR CONTENT ID: the document page and the passage row offer no "place in a theme" entry.** Found by UI-76's worker (04:05Z). — owner UI.
+order: after UI-113, with the surface halves of landed rows: the act exists and is reachable only by an id a member must copy by hand (SCHEDULER #22, 2026-09-25)
+milestone: M8
+interface: none (I3 consumer of op=themeread and op=themeplace).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.4, fences 1-3, as UI-76 built the Themes screen.
+depends-on: UI-76 (land/worker/UI-76 @ 37035a59).
+scope: on openBundle's page and on the passage row, a "Place in a theme" control that lists themes through op=themeread (its limit named, the bound stated by thmBoundHtml) and sends op=themeplace with that bundle id or content id; nothing preselected; the plane's canned refusal on failure.
+accepts-when: against the real plane a member places a document and a passage from their own pages without typing an id (moves: placement by typed id only). NEGATIVE CONTROL: preselect a theme and the nothing-prefilled arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by UI-76's worker).
+
 ### D-576 · queued — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
 order: after UI-110, with the surface corrections: a receipt reading a cut set as whole claims more than the record holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M4
@@ -398,16 +408,6 @@ depends-on: REC-222, REC-223, UI-96.
 scope: where the member meets a reference, and in the queue, show "a newer version of this document exists", the grade in the plane's words, and ADOPT / KEEP; show nothing for A and B.
 accepts-when: an AFFECTED reference shows the notice and both acts, an A-graded one shows nothing (moves: no surface). NEGATIVE CONTROL: render for A and the silence arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
-
-### M0-195 · queued — **A BEHAVIOUR-ONLY CHANGE TO A CHECK CANNOT TAKE A CATALOG_VERSION: the D-470 census counts C-numbers only, and its (A4) refuses two versions with the same census, so publication rule 17 ("a changed check moves the version") has no instrument when a check's body changes and its number does not.** Found by D-598's worker (03:37Z); ruled by BOB #35 04:00Z. — owner M0.
-order: at the head of the process rows, before M0-142: it unblocks a product landing (D-598 takes its version bump only after this lands) and a check changed silently is a record claiming the old rule (BOB #35 04:00Z: *"rule 17 STANDS and its instrument is short"*) (SCHEDULER #22, 2026-09-25)
-milestone: M0
-interface: none (the census's own grammar gains two fields).
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 17, as BOB #35 folded it 04:00Z (land/bob/batch-0925c @ 2e9d4f4e; rides the next train).
-depends-on: none.
-scope: the census row may declare `changed: [C-n.m, …]`, counted in the version's identity by (A4); the census pins each version to the digest of bio-checks.mjs's comment-stripped source, so a moved digest under an unmoved version fails by name unless the landing takes a new version or declares `behaviour: unchanged` against the new digest. In `bio-plane/test/d470-catalog-census.test.mjs` and its control.
-accepts-when: a check's body edited with no census row fails by name, and one declared in `changed:` under a new version passes (moves: behaviour-only changes invisible to the version). NEGATIVE CONTROL: edit a check's body without a census row, and the new arm fails by name.
-added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:00Z).
 
 ### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
 order: (held behind c20-batch11fix, SCHEDULER #18 03:47Z) after D-484, with the rows that cut gate time: an over-strict instrument fails correct work (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
@@ -1182,3 +1182,13 @@ depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch
 scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
 accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).
+
+### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push`** … (whole text: the cut archive)
+order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree … (whole text: the cut archive)
+depends-on: none — D-293 is on `main`.
+accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
