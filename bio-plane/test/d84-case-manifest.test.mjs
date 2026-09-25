@@ -506,9 +506,13 @@ console.log("\n--- 5. REC-188: a published case reads /3, and the gate refuses a
                                                      body });
   const idsOf = (g) => g.findings.map((x) => x.check);
   const has41_13 = (g) => idsOf(g).filter((c) => c === "C-41.13");
-  t("PUBLISHED-READS-/3: every case this suite published and ratified is `bio-case-document/3` — "
+  /* CORRECTED 2026-09-25 (REC-219), never exempted: this row pinned `bio-case-document/3`, which was the token
+     op=publish authored until §3 rule 18 moved it to `/4` (BOB #34, 2026-09-24 23:08Z). /4 carries every /3
+     obligation this section asserts (`caseDocumentRequiresDisclosures` answers yes for both), so every
+     other row here stands as written; a /3 document keeps ratifying, which `rec219-case-document-v4` asserts. */
+  t("PUBLISHED-READS-/4: every case this suite published and ratified is `bio-case-document/4` — "
   + "with no lens, under one, and after it moved",
-    [FA.format, FB.format, FC.format], ["bio-case-document/3", "bio-case-document/3", "bio-case-document/3"]);
+    [FA.format, FB.format, FC.format], ["bio-case-document/4", "bio-case-document/4", "bio-case-document/4"]);
   t("REACH: each carries the two disclosures the row makes required — the manifest map, its bundle list, "
   + "the acknowledged count (ZERO: nobody acknowledged) and its EMPTY list",
     [typeof FB.bias_manifest, Array.isArray(FB.bias_manifest_bundles), FB.completeness?.acknowledged,

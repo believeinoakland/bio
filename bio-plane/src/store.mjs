@@ -8878,6 +8878,18 @@ export class Store extends DurableObject {
       stated: lens.in_force === true
         ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed`
         : lens.in_force === null ? String(lens.stated) : "no manifest was in force",
+      /* REC-219 / BIO_Publication_v0_1.md §3 rule 18 (BOB #34, 2026-09-24 23:08Z): EVERY ADOPTION OF
+         THIS SCOPE WHOSE PIN IS A PROPOSED REVISION, as op=biasmanifest answered it at this act — the
+         same answer the manifest above is stamped from, never a second read. `stated` stays exactly as
+         it is, because "no manifest was in force" is TRUE; this is the second fact beside it, so a
+         reader never takes a pending declaration for no declaration. Carried in all three lens states
+         (in force, not, undetermined), because op=biasmanifest carries it in all three (REC-210). The
+         rows name the bundle, the REVISION pinned, the scope and that revision's own state — and not
+         who adopted it: a member's name in a signed public document is that member's choice (§3 rule 7),
+         and the ruling asks for the revision's id. Nothing here says when or whether it takes effect. */
+      pins_proposed: (Array.isArray(lens.pins_proposed) ? lens.pins_proposed : [])
+        .map((x) => ({ bundle_id: x.bundle_id, revision: x.revision, scope: x.scope,
+                       pinned_state: x.pinned_state ?? null })),
     };
     /* D-150 / §3 rule 11 — WHO ACKNOWLEDGED THIS STATEMENT, read at the act that authors the
        document the owner signs, so the list is inside the signature. An acknowledgement by the
@@ -9081,7 +9093,16 @@ export class Store extends DurableObject {
     const lens = manifest && manifest.in_force === true ? manifest
       : { in_force: manifest && manifest.in_force === null ? null : false,
           scope: "project", scope_id: project, statements_sha: null, bundles: [], lock_violations: 0,
-          stated: manifest && manifest.in_force === null ? manifest.stated : "no manifest was in force" };
+          stated: manifest && manifest.in_force === null ? manifest.stated : "no manifest was in force",
+          pins_proposed: (manifest && manifest.pins_proposed) || [] };
+    /* REC-219: the adoptions pinning a proposed revision at signing, and the sentence saying what the
+       list is. It states the fact as it stood at this act and NOTHING about when or whether the revision
+       takes effect (BOB #34). An empty list is a statement, and says so. */
+    const pending = Array.isArray(lens.pins_proposed) ? lens.pins_proposed : [];
+    const pendingStated = pending.length === 0
+      ? "no adoption in this scope pinned a proposed revision when this case was signed"
+      : "each row is an adoption in this scope whose pinned revision the group had proposed and not "
+        + "accepted when this case was signed; that revision was not in force at signing";
     const frozenOf = (m) => (frozen && frozen.get(m)) || null;
     const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
     const fm = [
@@ -9104,11 +9125,21 @@ export class Store extends DurableObject {
       `  statements_sha: ${lens.statements_sha ?? "null"}`,
       `  lock_violations: ${lens.lock_violations}`,
       `  stated: "${Store.#fmSafe(lens.stated)}"`,
+      /* REC-219 / §3 rule 18: the count beside the list below, and its sentence (C-41.14). */
+      `  pins_proposed: ${pending.length}`,
+      `  pins_proposed_stated: "${Store.#fmSafe(pendingStated)}"`,
       "bias_manifest_bundles:",
       ...lens.bundles.flatMap((x) => [
         `  - bundle_id: ${x.bundle_id}`,
         `    revision: ${x.revision}`,
         `    scope: ${x.scope}`]),
+      /* REC-219: `bias_manifest_bundles`' shape, for the grammar's reason (no map holding an array). */
+      "bias_manifest_pins_proposed:",
+      ...pending.flatMap((x) => [
+        `  - bundle_id: ${x.bundle_id}`,
+        `    revision: ${x.revision}`,
+        `    scope: ${x.scope}`,
+        `    pinned_state: ${x.pinned_state ?? "null"}`]),
       `case_findings: [${roster.join(", ")}]`,
       "case_roles:",
       ...roster.flatMap((m) => [
@@ -9411,6 +9442,17 @@ export class Store extends DurableObject {
         : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood `
            + "adopted for this instance or this project. That is stated, not left blank — it is a different "
            + "fact from a lens with nothing in it."]),
+      /* REC-219 / §3 rule 18: the second fact, in prose, for the reason the manifest is — a member signs
+         THIS. Said when there is something to say; the frontmatter states the empty list either way. */
+      ...(pending.length
+        ? ["",
+           `AN ADOPTION PINNED A PROPOSED REVISION when this case was signed: ${pending.length === 1 ? "one adoption" : `${pending.length} adoptions`} `
+           + "in this scope pinned a revision the group had proposed and not accepted. It was not in force at "
+           + "signing, and it is not part of any lens this document names.",
+           "",
+           ...pending.map((x) => `- ${x.bundle_id} (${x.scope}) pinned revision ${x.revision}, `
+             + `standing at ${x.pinned_state ?? "an unrecorded state"}`)]
+        : []),
       "",
       "## Bias Acknowledgement",
       "",

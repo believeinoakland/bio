@@ -11642,22 +11642,42 @@ export const REEXTRACT_CHECKS = {
    whose author was obliged to carry both; C-41.13 refuses one that does not. /2 and /1 stay in the
    accepted set and keep ratifying exactly as written (rule 1: what already crossed stays crossed).
    op=publish authors /3 only. */
-export const CASE_DOCUMENT_FORMAT = 'bio-case-document/3';
-/* /2 (D-442, rule 12) states its members' frozen blocks exactly as /3 does and is not obliged to
-   carry the manifest or the acknowledgement list; /1 (legacy) carried the frozen blocks in its
-   members' own bytes. */
+/* REC-219 / BIO_Publication_v0_1.md §3 rule 18 (BOB #34, 2026-09-24 23:08Z): THE FORMAT MOVES TO /4,
+   FOR THE REASON /3 DID. REC-210 made op=biasmanifest SAY that an adoption pins a PROPOSED revision
+   (`pins_proposed`), but the frozen `bias_manifest` block of a /3 document has no field for it — so a
+   case published while its scope's only adoption pinned proposed bytes signed "no manifest was in
+   force" and nothing beside it, and a later reader takes "a declaration was pending" for "nobody
+   declared anything". A /4 document is one whose author was obliged to state BOTH facts as they stood
+   at signing; C-41.14 refuses one silent about the second. /3, /2 and /1 stay in the accepted set and
+   ratify exactly as written, never re-signed (rule 1). op=publish authors /4 only. */
+export const CASE_DOCUMENT_FORMAT = 'bio-case-document/4';
+/* /3 (REC-188) carries the manifest and the acknowledgement list and is not obliged to state an
+   adoption pinning a proposed revision; /2 (D-442, rule 12) states its members' frozen blocks exactly
+   as /3 and /4 do and is not obliged to carry the manifest or the acknowledgement list; /1 (legacy)
+   carried the frozen blocks in its members' own bytes. */
+export const CASE_DOCUMENT_FORMAT_V3 = 'bio-case-document/3';
 export const CASE_DOCUMENT_FORMAT_V2 = 'bio-case-document/2';
 export const CASE_DOCUMENT_FORMAT_LEGACY = 'bio-case-document/1';
-export const CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY];
+export const CASE_DOCUMENT_FORMATS_ACCEPTED = [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V3,
+                                               CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY];
 /* Does this case document state its members' frozen blocks itself (rule 12, /2 and /3), or were they
    carried in the members' own bytes (/1, legacy)? ONE predicate, read by the gate, the ratify
    committer and every per-case reader, so the two shapes cannot be told apart two ways. REC-188:
-   /3 is rule 12's shape plus two required disclosures, so it answers yes exactly as /2 does. */
+   /3 is rule 12's shape plus two required disclosures, so it answers yes exactly as /2 does; REC-219:
+   /4 is /3's shape plus one more, and answers yes too. */
 export const caseDocumentStatesMemberBlocks = (fm) =>
-  fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V2;
+  fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V3
+  || fm?.format === CASE_DOCUMENT_FORMAT_V2;
 /* REC-188: is this document obliged to carry the bias manifest and the statement's acknowledgement
-   list (C-41.13)? ONE predicate, so the obligation is a property of the token and nothing else. */
-export const caseDocumentRequiresDisclosures = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
+   list (C-41.13)? ONE predicate, so the obligation is a property of the token and nothing else.
+   REC-219: /4 carries every /3 obligation, so /3 and /4 both answer yes. */
+export const caseDocumentRequiresDisclosures = (fm) =>
+  fm?.format === CASE_DOCUMENT_FORMAT || fm?.format === CASE_DOCUMENT_FORMAT_V3;
+/* REC-219: is this document obliged to state, beside "no manifest was in force", every adoption of
+   its scope that pinned a PROPOSED revision at signing (C-41.14)? /4 and nothing older: a /3 document
+   was never obliged to, and is read as it is (BOB #34: *"/3 documents stay valid and are read as they
+   are, with no re-signing"*). */
+export const caseDocumentRequiresPendingAdoptions = (fm) => fm?.format === CASE_DOCUMENT_FORMAT;
 
 /* REC-96 / D-196 / IC-112 — WHERE A CASE'S `searched` SECTION GOT ITS SUBJECTS,
    AND THE VOCABULARY IS THE FENCE RATHER THAN A LABEL.
@@ -11729,7 +11749,10 @@ export const CASE_DOCUMENT_FAMILY = {
   COMPLETENESS: { check: 'C-41.10', what: 'the completeness block (REC-14)' },
   EXCLUDED:     { check: 'C-41.11', what: 'the exclusion list field (C-9)' },
   BAR:          { check: 'C-41.12', what: 'required_strength — the standard of evidence (DEC-17 as DEC-72 rehomes it)' },
-  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest, the statement\'s acknowledgement list and the statement\'s WRITER, required of a bio-case-document/3 (REC-188; the writer REC-212)' },
+  DISCLOSURES:  { check: 'C-41.13', what: 'bias_manifest, the statement\'s acknowledgement list and the statement\'s WRITER, required of a bio-case-document/3 or /4 (REC-188; the writer REC-212)' },
+  /* REC-219: BOB #34 named this check C-41.13, which /3's obligation above already holds, so it takes
+     the next free member of the family. */
+  PENDING:      { check: 'C-41.14', what: 'the adoptions pinning a PROPOSED revision at signing, stated beside bias_manifest, required of a bio-case-document/4 (REC-219)' },
 };
 const C41 = Object.fromEntries(
   Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check]));
@@ -11954,6 +11977,50 @@ export function checkCaseDocument(fm, ctx = {}) {
         || !(c.statement_by === null || (typeof c.statement_by === 'string' && c.statement_by.trim()))) {
       findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : undefined}${c && !Object.prototype.hasOwnProperty.call(c, 'statement_by') ? ', with no such key' : ''})`,
         ['re-publish through op=publish, which carries the draft\'s server-stamped statement_by onto the document']));
+    }
+  }
+  /* REC-219 — C-41.14, THE ADOPTION PENDING AT SIGNING, a /4 obligation and nothing older
+     (BIO_Publication_v0_1.md §3 rule 18; BOB #34, 2026-09-24 23:08Z). The frozen block states the
+     scope's bias position AS IT STOOD AT SIGNING, and "no manifest was in force" is TRUE of a scope whose
+     only adoption pins a PROPOSED revision — but alone it lets a later reader take "nobody declared
+     anything" for "a declaration was pending". So a /4 document states, beside the manifest:
+       - `bias_manifest.pins_proposed`, the COUNT of adoptions whose pinned revision stood at a state other
+         than `adopted` (ZERO is a statement and the common answer);
+       - `bias_manifest_pins_proposed`, one row per such adoption naming its bundle, the REVISION it
+         pinned (64 hex) and the scope — the list's length the count;
+       - `bias_manifest.pins_proposed_stated`, the sentence saying what the list is.
+     What is refused is SILENCE, never a value: an EMPTY list with a zero count passes, and so does a
+     long one. Nothing here reads WHICH revision is named, nor asks whether it will take effect — the
+     ruling is that the document SAYS NOTHING about when or whether it does. A document whose manifest
+     is absent or not a map is C-41.13's and is not asked twice.
+     WHAT THIS CANNOT SEE: the RECORD at signing. The gate is a function of the bytes a stranger hands it,
+     and the adoption table has moved since (a pin re-pins at promotion, REC-187), so "the record held
+     one and the list omits it" is enforced where the record IS read — op=publish, which authors this
+     list from the same op=biasmanifest answer the manifest is stamped from — and a document's own
+     disagreement with itself (a count that is not its list's length) is what is refused here. */
+  if (caseDocumentRequiresPendingAdoptions(fm)) {
+    const bm = fm?.bias_manifest;
+    if (bm && typeof bm === 'object' && !Array.isArray(bm)) {
+      const list = fm?.bias_manifest_pins_proposed;
+      const n = bm.pins_proposed;
+      if (!Number.isInteger(n) || n < 0 || !Array.isArray(list)) {
+        findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list) ? `of ${list.length}` : 'absent'}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication §3 rule 18)`,
+          ['re-publish through op=publish, which states every adoption of the scope pinning a proposed revision at signing']));
+      } else if (list.length !== n) {
+        findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
+          ['re-publish through op=publish']));
+      } else {
+        const bad = list.filter((x) => !(x && typeof x === 'object'
+          && typeof x.bundle_id === 'string' && x.bundle_id.trim()
+          && typeof x.revision === 'string' && /^[0-9a-f]{64}$/.test(x.revision)
+          && (x.scope === 'instance' || x.scope === 'project')));
+        if (bad.length > 0)
+          findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest_pins_proposed has ${bad.length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: ${JSON.stringify(bad[0])}): the ruling is that the document names the proposed revision the adoption pinned — its id — and a row without it says an adoption was pending without saying which`,
+            ['re-publish through op=publish']));
+        if (!(typeof bm.pins_proposed_stated === 'string' && bm.pins_proposed_stated.trim()))
+          findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
+            ['re-publish through op=publish']));
+      }
     }
   }
   /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM

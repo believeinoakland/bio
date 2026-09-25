@@ -328,6 +328,13 @@ const CATALOG_CENSUS = {
 
   /* 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27): D-463's rows over 1.28.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.29.0": { count: 466, digest: "82d13f0339c9228ff961949ec5e5f804d77c27a7e8aabd8d4f401bad4ba2e8e6" },
+  /* 1.30.0 (REC-219, 2026-09-25, WORKER REC-219 under SCHEDULER #21, branch land/worker/REC-219): ONE ARRIVAL,
+     NO DEPARTURES — C-41.14, `CASE_DOCUMENT_FAMILY.PENDING`: a `bio-case-document/4` must state the adoptions of
+     its scope pinning a PROPOSED revision at signing (§3 rule 18, BOB #34). 466 -> 467, count AND digest from
+     THIS SUITE'S OWN PRINT on this item's tree over origin/main 964da679, never arithmetic.
+     **IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S: CONDUCT takes the next
+     number and re-reads the census from this suite's print on the merged tree.** */
+  "1.30.0": { count: 467, digest: "31aac2e1a078b140d05ecfdf41b2d9d058c30167270c781842ba287d70f1c261" },
   /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
      rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
      KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
@@ -356,6 +363,9 @@ const RELAYS = {
      union. It is the thirteenth member of the SAME family as the twelve above,
      relayed the same way; nothing about the mechanism changed. */
   "C41.DISCLOSURES": "CASE_DOCUMENT_FAMILY",
+  /* REC-219 (2026-09-25): the fourteenth member, C-41.14 (a /4 document's adoptions pinning a proposed
+     revision), relayed the same way. */
+  "C41.PENDING": "CASE_DOCUMENT_FAMILY",
   "row.check": "BASIS_VERSION_CHECKS and SUGGEST_CHECKS (basisVersionFindings' two push helpers)",
   "checkId": "checkLegExtentGrammar's parameter — 'C-2.8' here, 'C-25.10' from src/store.mjs "
            + "(BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE)",
@@ -436,8 +446,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
+/* CORRECTED 2026-09-25 (REC-219): 1.29.0 -> 1.30.0, C-41.14's arrival; the pin stays a literal. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under

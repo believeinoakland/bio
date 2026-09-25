@@ -115,7 +115,12 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
-export const CATALOG_VERSION = "1.29.0";
+/* 1.30.0 (REC-219, 2026-09-25): C-41.14 joined CASE_DOCUMENT_FAMILY — a `bio-case-document/4` must state
+   the adoptions of its scope pinning a PROPOSED revision at signing (BIO_Publication_v0_1.md §3 rule 18) — so
+   the catalogue moved 466 -> 467 checks, MINOR and additive on this constant's own rule: nothing that passed
+   is refused, because /3, /2 and /1 documents are never asked the new question. Figures from the d470
+   suite's own print; CONDUCT re-reads them on the union if another branch moves this constant too. */
+export const CATALOG_VERSION = "1.30.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

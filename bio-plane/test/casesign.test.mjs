@@ -1035,6 +1035,9 @@ console.log("\n--- 7. C-41: every arm of the case document's gate, driven over a
     /* REC-188: the thirteenth member, driven on the manifest half; the acknowledgement half and the /2
        over-strictness arm are `d84-case-manifest.test.mjs` section 4's. */
     ["DISCLOSURES",  "C-41.13", (d) => { delete d.bias_manifest; return d; }],
+    /* REC-219: the fourteenth member, driven on the absent list; its count, row and /3 over-strictness
+       arms are `rec219-case-document-v4.test.mjs` section 2's and 3's. */
+    ["PENDING",      "C-41.14", (d) => { delete d.bias_manifest_pins_proposed; return d; }],
   ];
   /* ONE ASSERTION PER ARM, EACH NAMING ITS OWN C-NUMBER, because a bare count of
      twelve is satisfied by any twelve and a family graded as a whole hides the
@@ -1043,7 +1046,8 @@ console.log("\n--- 7. C-41: every arm of the case document's gate, driven over a
     t(`${num} is what the catalog declares for ${key}, and it FIRES on ${CASE_DOCUMENT_FAMILY[key].what}`,
       [CASE_DOCUMENT_FAMILY[key].check, fires(mutate, num)], [num, true]);
   }
-  t("and the thirteen arms cover the family EXACTLY — a member added to the catalog and not driven here "
+  /* CORRECTED 2026-09-25 (REC-219), never exempted: "thirteen" was the family's size until C-41.14 joined it. */
+  t("and the fourteen arms cover the family EXACTLY — a member added to the catalog and not driven here "
   + "fails this row rather than being silently unexercised",
     arms.map(([k]) => k).sort(), Object.keys(CASE_DOCUMENT_FAMILY).sort());
   /* C-21.1 AT CASE ALTITUDE, which moved here from checkCompletenessFreshness.
