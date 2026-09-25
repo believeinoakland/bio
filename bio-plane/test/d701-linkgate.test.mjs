@@ -226,4 +226,4 @@ console.log("\n--- fail closed: a store call with no viewer sees nothing ---");
 
 console.log(`\nd701-linkgate: ${pass} pass, ${fail} fail`);
 await mf.dispose();
-process.exitCode = fail ? 1 : 0;
+process.exit(fail ? 1 : 0);
