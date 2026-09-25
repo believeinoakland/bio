@@ -250,3 +250,4 @@ D-721	2026-09-25T10:41:59.515Z	WORKER D-708	#caseIdentitySentence's pair branch 
 D-722	2026-09-25T10:50:54.326Z	SCHEDULER #24	D-706's write half, BOB #36 10:50Z as corrected 10:58Z
 D-723	2026-09-25T10:52:14.144Z	SCHEDULER #24	D-710's shared-page gap, BOB #36 11:05Z
 D-724	2026-09-25T10:53:54.342Z	land/worker/D-685	
+D-725	2026-09-25T11:00:53.412Z	SCHEDULER #24	D-703's stated gap: the writer read ignores draft=
