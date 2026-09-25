@@ -2242,8 +2242,10 @@ const SURFACES = {
     acts: ["conclude", "reopen", "inquirydivide", "inquiryground", "publish"],
     /* UI-65: `basisversions` — the conclude dialog's reading picker (the
        accepted readings a no-project conclusion may adopt), read through the
-       version-review door so the bound the plane applied is stated with it. */
-    reads: ["image", "inquirystrength", "inquiryground", "resolutions", "basisversions"],
+       version-review door so the bound the plane applied is stated with it.
+       UI-120: `contentcrop` — a leg citing an image on a PDF page offers its crop,
+       asked when the member uses the control and never on load (D-419, C-99). */
+    reads: ["image", "inquirystrength", "inquiryground", "resolutions", "basisversions", "contentcrop"],
   },
   project: {
     routes: ["object:project", "hash:project"],
@@ -8194,7 +8196,7 @@ function basisLegRow(leg, ord, referent){
     <div class="kv"><span class="k">Leg ${ord+1}</span><span class="v plain">
       <a onclick="openBundle(${esc(JSON.stringify(target))})" class="mono">${esc(target)}</a>
       &middot; ${esc(role)}${axis?` &middot; graded on the ${esc(axis.toLowerCase())} axis`:""}</span></div>
-    <div style="margin-top:6px">${basisGradeBadge(leg||{})}</div>${legReferentHtml(referent)}${versionNoticeAskHtml(referent, ord)}
+    <div style="margin-top:6px">${basisGradeBadge(leg||{})}</div>${legReferentHtml(referent)}${contentCropAskHtml(referent, ord)}${versionNoticeAskHtml(referent, ord)}
     ${hunch?`<div class="teach" style="margin:8px 0 0"><b>HUNCH</b> &middot; declared by ${esc(leg.author||"an unnamed member")} on ${esc(leg.date||"an unrecorded date")}. A hunch is declared bias, recorded openly from the moment it is made rather than disclosed at publication, and it is temporary by construction: it is cleared by establishing the grade, or it stands and says so.</div>`:""}
     ${leg && leg.note?`<div class="subj-how" style="margin-top:6px">${esc(leg.note)}</div>`:""}
   </div>`;
@@ -8261,6 +8263,73 @@ function versionNoticeHtml(r){
   return `<div class="card${undet?" undet":""}" style="margin:8px 0 0" data-vn="${esc(String(n.state||""))}">
       ${undet?`<div class="subj-grade g-unconf">${n.state==="newer_capture_undetermined"?"undetermined":esc(String(n.state||"unstated"))}</div>`:""}
       ${line(undet?"basis":"a newer version", n.says || r.says)}${cands.map(cand).join("")}${scope}</div>`;
+}
+
+/* ---- UI-120 / D-419 (EXTRACTION-BREADTH-DESIGN.md §3.4) — THE PICTURE A LEG CITES ----
+   "The viewer shows the crop; the crop is not the evidence." D-419 built the read
+   (`op=contentcrop`, C-99): one content row by id, the image its `{page, rect}` names
+   cut out of the capture by the PDF member, handed back only when the bytes cropped
+   hash to the capture the row names. Nothing asked for it; this is where a member
+   meets an image citation, so this is where it is asked.
+
+   OFFERED ONLY WHERE IT CAN BE COMPLETED (UI-15, `legJumpHtml`'s rule): a leg whose
+   standing is an `image` extent carrying a RECTANGLE on a page. A passage, a page, a
+   whole document, a container `{part}` and a page-form image with no rectangle get
+   NO control — the plane would refuse every one of them (C-99.2, or C-99.3 with the
+   member's RECT_REQUIRED), and a control that can only ever refuse is present-and-
+   refused. The shape is read here only to decide whether to OFFER; whether the row IS
+   a page image stays the plane's verdict, and if it disagrees its refusal renders.
+
+   ASKED, NEVER ON LOAD (UI-96's rule, one control over): the crop is decoded out of a
+   PDF on the member's call, and a page that cut every cited picture on every visit —
+   for whoever opened it — would be spending the PDF reader on nobody's question.
+
+   EVERY SENTENCE ABOUT WHAT THE PICTURE IS IS THE RECORD'S. The label is the answer's
+   own `why` (it says DERIVED, and that the evidence is the capture plus the extent),
+   rendered verbatim, beside the capture the plane checked it against. A refusal is
+   C-99's translation and code (DEC-49) through `actRefusalHtml`; C-99.3 says "the
+   reason is given beside this message", so the member's own reason IS put beside it.
+   The one sentence composed here is the orientation's: the answer publishes
+   `upright: null` where it cannot say the picture is the right way up, and no
+   sentence with it — so that null is STATED as undetermined rather than a picture
+   quietly shown as if it were upright. */
+const CROP_MEDIA = new Set(["image/png", "image/jpeg"]);
+function contentCropAskHtml(r, ord){
+  if(!r || !r.content_id) return "";
+  const s = r.standing;
+  const e = s && s.extent && typeof s.extent === "object" ? s.extent : null;
+  if(!s || s.extent_kind !== "image" || !e || e.part != null || !Array.isArray(e.rect) || e.rect.length !== 4) return "";
+  return `<div class="subj-how" id="crop-${Number(ord)}" style="margin-top:6px"><a onclick="askContentCrop(${esc(JSON.stringify(String(r.content_id)))},${Number(ord)})">Show the cited image</a></div>`;
+}
+async function askContentCrop(contentId, ord){
+  const slot = $(`#crop-${Number(ord)}`);
+  let r;
+  try{ r = await recR("contentcrop", { id: String(contentId) }); }catch(e){ r = e; }
+  if(slot) slot.innerHTML = contentCropHtml(r);
+  return r;
+}
+function contentCropHtml(r){
+  if(!r || r.ok !== true || r.derived !== true){
+    const beside = r && (r.member_why || r.member_reason)
+      ? `<div class="subj-how" style="margin-top:4px" data-crop-member="1"><b>the PDF reader&rsquo;s reason</b> &middot; ${esc(String(r.member_why||""))}${r.member_reason?` <span class="mono">${esc(String(r.member_reason))}</span>`:""}</div>`
+      : "";
+    return actRefusalHtml(r || {}) + beside;
+  }
+  const b64 = typeof r.bytes_base64 === "string" && /^[A-Za-z0-9+/]+={0,2}$/.test(r.bytes_base64) ? r.bytes_base64 : null;
+  const media = CROP_MEDIA.has(r.mediaType) ? r.mediaType : null;
+  const of = r.of && typeof r.of === "object" ? r.of : {};
+  const cap = String(r.capture_sha || "");
+  const line = (k, v) => v ? `<div class="subj-how"><b>${k}</b> &middot; ${v}</div>` : "";
+  return `<div class="card" style="margin:8px 0 0" data-crop="1" data-capture="${esc(cap)}">`
+    + (b64 && media
+        ? `<img alt="The image this citation names, cut from its document" src="data:${media};base64,${b64}" style="display:block;max-width:100%;height:auto;margin:0 0 8px">`
+        : `<div class="subj-how" data-crop-unshown="1">The record returned a picture this page cannot display${r.mediaType?` (${esc(String(r.mediaType))})`:""}, so none is shown.</div>`)
+    + line("what this is", esc(String(r.why||"")))
+    + line("cut from", `the capture <span class="mono">${esc(cap.slice(0,12))}</span>${Number.isInteger(of.page)?` &middot; page ${of.page+1}`:""}${Number.isInteger(r.width)&&Number.isInteger(r.height)?` &middot; ${r.width} &times; ${r.height} pixels as the file stores it`:""}`)
+    + (r.upright === true ? ""
+        : `<div class="card undet" style="margin:8px 0 0" data-crop-upright="undetermined"><div class="subj-grade g-unconf">undetermined</div>`
+          + `<div class="subj-how"><b>basis</b> &middot; The record does not say this picture is the right way up: it is the image as the file stores it, and a turn or flip the page applies when it draws it is not applied here.</div></div>`)
+    + `</div>`;
 }
 
 /* ---- THE ONE SEAM: the plane's own axis objects, or nothing ---- */

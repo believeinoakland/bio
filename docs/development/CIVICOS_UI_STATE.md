@@ -50,6 +50,34 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, UI-120 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/UI-120`, STACKED on `land/worker/D-419` @ `914bb380` (integrated, not yet on `main`), in the commit
+that carries this entry; the version number is PROVISIONAL and CONDUCT renumbers at integration. SURFACE: **the
+inquiry page's leg row shows the image a leg cites.** D-419 built `op=contentcrop` (C-99, `EXTRACTION-BREADTH-DESIGN.md`
+§3.4) and no page asked for it.
+
+**WHAT LANDED**, in `app.html`: `contentCropAskHtml`, `askContentCrop` and `contentCropHtml` beside UI-96's version
+notice, one call added to `basisLegRow`, and `contentcrop` declared in `SURFACES.inquiry.reads`. No router, no act,
+no `DEC-49 REGION`, no other surface touched.
+
+**OFFERED ONLY WHERE IT CAN BE COMPLETED.** A leg whose standing is an `image` extent with a rectangle gets *Show
+the cited image*; a passage, a page, a whole document, a container `{part}` and a page-form image with no rectangle
+get nothing, because the plane could only refuse them. **ASKED, NEVER ON LOAD**, with a credential or without one.
+**THE RECORD'S WORDS:** the picture is the plane's bytes (PNG or JPEG only; anything else is stated and not drawn),
+labelled by the answer's own `why` (DERIVED; the evidence is the capture plus the extent) beside the capture the
+plane checked it against; each C-99 refusal in its catalogue translation and code, and C-99.3 with the PDF member's
+own reason beside it as the translation promises. One line is this surface's own: `upright` comes with no
+sentence, so where the answer does not say `true` the orientation is drawn UNDETERMINED in C-14's primitive.
+
+**MEASURED.** `civicos-ui/test/content-crop-surface.test.mjs`, 31/0, NEW, against the real plane with the real
+pdf-worker bundle bound (d419's two-worker shape), plus stub members for C-99.4/.5 and an unbound instance for
+C-99.1. Negative control `content-crop-surface.control.mjs`, seven arms, every arm as declared; the row's named arm
+(the read stubbed) fails `UI-120 the crop renders` by name. **The first orientation arm passed vacuously** (the
+fixture's two crops are both `upright: true`) and was replaced by a ground-truth guard plus a driven `null` arm.
+
+**WHAT IT CANNOT SEE, stated.** It drives `basisLegRow` and the ask, not the whole `openInquiry` page; it runs on
+Miniflare, not a deployed build; and a container `{part}` leg is asserted no-control on a synthetic referent only.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it

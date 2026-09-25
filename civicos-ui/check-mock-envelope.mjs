@@ -213,6 +213,12 @@ const FLAT_OPS = new Map(Object.entries({
      FOUR suites drive it against the real plane the moment the workspace does, and each of the four
      read as a mock of the wrong shape against a missing line rather than against a wrong answer. */
   casedrafts:     'index.mjs op==="casedrafts" — reviewAnswer\'s json({ ok: true, ...r }, 200) over the DO\'s result',
+  /* UI-120. D-419's crop has its own handler: `if (op === "contentcrop")` in index.mjs calls
+     `contentCrop`, whose success tail is `json({ ...out, ok: true, op, content_id, capture_sha, store })`
+     over the PDF member's answer, and every refusal is a flat literal too. This line arrives with the op's
+     first UI call site (the inquiry page's leg row); `content-crop-surface.test.mjs` drives the REAL plane
+     and was read as a mock of the wrong shape against the missing line, on the item's first harness run. */
+  contentcrop:    'index.mjs op==="contentcrop" — contentCrop\'s json({ ...out, ok: true, op, content_id, capture_sha, store })',
 }));
 const wireShapeOf = op => FLAT_OPS.has(op) ? "flat" : "wrapped";
 
