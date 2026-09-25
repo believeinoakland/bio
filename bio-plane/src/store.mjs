@@ -10694,12 +10694,27 @@ export class Store extends DurableObject {
      rehomes it). A draft naming an existing case stands at that case's next
      edition; a draft naming none stands at edition 1, the edition a MINTED case has — which is the case only
      when it asks for a new one or the derivation finds nothing (D-538: the identity SENTENCE says which; this
-     `edition` does not, and is kept because grants and acknowledgements are keyed on it). */
+     `edition` does not, and is kept because grants and acknowledgements are keyed on it — D-568: it is the
+     INTERNAL key, and every answer states it through `#statedEdition`, null for a derived draft). */
   #draftIdentity(row) {
     const named = String(row.case_id ?? "").trim() || null;
     if (!named) return { caseId: null, edition: 1 };
     const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, named);
     return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
+  }
+
+  /* D-568 (BIO_Publication_v0_1.md 6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE EDITION A
+     DRAFT'S ANSWERS STATE IS NULL WHERE ITS CASE IS DERIVED. `#draftIdentity`'s edition 1 for a draft naming no
+     case is the edition a MINTED case has, and it stays the INTERNAL key — `review_grants` rows and
+     `statement_acknowledgements` rows are written and matched at (case_id NULL, edition 1), so moving it would
+     orphan every grant and reading already given. But ON THE WIRE it claimed more than the record holds: a draft
+     that names no case and does not set `newCase` has its case DERIVED at publication (D-538's sentence), and
+     over findings a published case already serves that is C1's NEXT edition, not edition 1 (reviewcopy.test.mjs
+     block 12, draft DD). Which edition it becomes is UNDETERMINED until then, so the answer says `null`, never a
+     number. A draft naming a case keeps that case's next edition; one asking for a new case keeps 1, which is
+     true of it. `newCase` is read for truthiness, as `publishCase` reads it. */
+  static #statedEdition(ident, newCase) {
+    return ident.caseId || newCase ? ident.edition : null;
   }
 
   /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
@@ -10818,7 +10833,7 @@ export class Store extends DurableObject {
     }
     const ident = this.#draftIdentity({ case_id: named });
     return { ok: true, draftId: id, project: owning, edited: !!existing,
-             caseId: ident.caseId, edition: ident.edition,
+             caseId: ident.caseId, edition: Store.#statedEdition(ident, !!params.newCase),
              caseIdentity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
              read: `op=reviewcopy&draft=${id}` };
   }
@@ -10950,10 +10965,13 @@ export class Store extends DurableObject {
                       detail: "the plane could not find a free grant id; nothing was issued" };
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, a.who, when);
-    return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId, edition: ident.edition,
+    /* D-568: the ROW binds at the internal key; the ANSWER states the edition only where the record holds one. */
+    const newCase = !!JSON.parse(d.params).newCase;
+    return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId,
+             edition: Store.#statedEdition(ident, newCase),
              recipient: to, issuedBy: a.who, issuedAt: when,
              boundTo: `this grant reads ${Store.#caseIdentitySentence(ident.caseId, ident.edition,
-                                                                     !!JSON.parse(d.params).newCase)} and nothing `
+                                                                     newCase)} and nothing `
                     + `else. It ends when it is revoked, and when that edition is published and signed.` };
   }
 
@@ -11137,8 +11155,15 @@ export class Store extends DurableObject {
       const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,
                                            revoked_by, revoked_at FROM review_grants WHERE draft_id=?
                                     ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, cap + 1);
-      const grants = grantRows.slice(0, cap).map((g) => ({ ...g,
-        live: !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition }));
+      /* D-568: LIVENESS is decided at the stored key, and the row's `edition` is STATED only where the record holds
+         one. A grant bound to no case was given at (NULL, 1) for a draft that was either new or DERIVED, and the row
+         does not record which: a LIVE one reads the draft's own stated edition (it binds what the draft is now), a
+         dead one reads null — UNDETERMINED, never the minted-case edition it may never have been. */
+      const grants = grantRows.slice(0, cap).map((g) => {
+        const live = !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition;
+        return { ...g, live,
+                 edition: g.case_id ? g.edition : live ? Store.#statedEdition(ident, !!params.newCase) : null };
+      });
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
     /* D-150 / §3 rule 11: who has acknowledged the statement AS IT STANDS NOW — the same read
@@ -11221,7 +11246,9 @@ export class Store extends DurableObject {
          UNDETERMINED). THE IDENTITY SENTENCE BESIDE IT READS THE SAME FIELD (D-538): before it, with no
          case named, that sentence read *a new case* whether or not this field was set — REC-199's
          reported finding, fixed in `#caseIdentitySentence` for every answer that prints it. */
-      case: { case_id: ident.caseId, edition: ident.edition,
+      /* D-568: `edition` is null for a DERIVED draft — see `#statedEdition`; the grants' liveness above is
+         still decided at the internal key. */
+      case: { case_id: ident.caseId, edition: Store.#statedEdition(ident, !!params.newCase),
               identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
               newCase: !!params.newCase },
       authored: { scope: params.scope ?? null, statement: params.statement ?? null,
@@ -11336,6 +11363,9 @@ export class Store extends DurableObject {
   acknowledgeStatement({ draft = null, caseId = null, edition = null, secretSha = null, viewer = null,
                          bySecret = false } = {}) {
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
+    /* D-568: whether the draft read through either draft door asked for a new case — the answer states the
+       edition off it (`#statedEdition`); the row is still written and matched at the internal key. */
+    let draftNewCase = false;
     /* REC-193: whether the author was read from a DRAFT's `statement_by` — the column an older draft
        does not carry, and the one place UNDETERMINED is reachable. A case document states its author
        in its own bytes, so that door is not this one. */
@@ -11365,6 +11395,7 @@ export class Store extends DurableObject {
       if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();
       const d = live.draft;
       project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
+      draftNewCase = !!JSON.parse(d.params).newCase;
       /* REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES, stamped at the
          draft write that changed them — never `updated_by`, which is the last editor of any field. */
       statement = JSON.parse(d.params).statement; statementAuthor = d.statement_by ?? null;
@@ -11378,6 +11409,7 @@ export class Store extends DurableObject {
         const d = this.#draftForMember(draft, v);
         if (!d) return Store.#noReviewCopy();
         project = d.project_id; ident = this.#draftIdentity(d); draftId = d.draft_id;
+        draftNewCase = !!JSON.parse(d.params).newCase;
         /* REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES, stamped at the
          draft write that changed them — never `updated_by`, which is the last editor of any field. */
       statement = JSON.parse(d.params).statement; statementAuthor = d.statement_by ?? null;
@@ -11596,8 +11628,8 @@ export class Store extends DurableObject {
     const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return { ok: true, existed: !!same,
              acknowledgement: { kind, by, recipient, grant_id: grantId, at: when, project,
-                                case_id: ident.caseId ?? null, edition: ident.edition, draft_id: draftId,
-                                statement_sha: statementSha },
+                                case_id: ident.caseId ?? null, edition: Store.#statedEdition(ident, draftNewCase),
+                                draft_id: draftId, statement_sha: statementSha },
              /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
                 the one the owner signs (op=caseratify refuses the old one as stale). */
              case_documents: reauthored,
@@ -12075,7 +12107,8 @@ export class Store extends DurableObject {
     const drafts = rows.map((d) => {
       const ident = this.#draftIdentity(d);
       return { draft_id: d.draft_id,
-               case: { case_id: ident.caseId, edition: ident.edition,
+               /* D-568: null for a DERIVED draft (`#statedEdition`), as the single read states it. */
+               case: { case_id: ident.caseId, edition: Store.#statedEdition(ident, !!JSON.parse(d.params).newCase),
                        identity: Store.#caseIdentitySentence(ident.caseId, ident.edition,
                                                              !!JSON.parse(d.params).newCase) },
                created_by: d.created_by, created_at: d.created_at,

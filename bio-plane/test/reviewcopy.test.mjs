@@ -183,7 +183,48 @@
    e 86/2, f 87/1, g 80/8, h 87/1, i 82/6, j 85/3, k 88/0, l 85/3 (re-anchored), m 86/2, n 88/0 — EVERY failure count
    unchanged from REC-199's measurement, block 12's (then 11's) six arms landing whole in each tally's pass column. A FIRST RUN
    (87/0 baseline, the same counts) measured a sentence that NAMED the refusal's code; civicos-ui's DEC-49 guards
-   refused it on the page, it was reworded, the no-code arm was added, and this is the re-run. */
+   refused it on the page, it was reworded, the no-code arm was added, and this is the re-run.
+
+   D-568 (a derived draft's edition is UNDETERMINED on the wire, its internal (no case, 1) key kept; §6A.4 with BOB
+   #32's 2026-09-23 23:08Z ruling) ADDED BLOCK 13, CORRECTED block 2's two no-case edition arms (D2 and the editor's
+   DEr pinned edition 1 for a derived draft) and FOUR ARMS. DECLARED 2026-09-25 BEFORE ARMING:
+
+   (t) THE INTERNAL EDITION ANSWERED AGAIN — `#statedEdition` returns `ident.edition`, the plane before D-568. MUST
+   FAIL, by name: "D-568 ACCEPTS-WHEN: DRAFT DD'S EDITION IS UNDETERMINED", and block 2's two corrected arms (D2's
+   identity arm and "REC-133: A NON-OWNER EDITOR AUTHORS A DRAFT"). MUST NOT FAIL: the fixture, "AND ITS KEY STILL
+   BINDS", the new-case-keeps-1 arm (the constant is right about DN for free) and the names-C1 arm.
+
+   (u) THE LIAR'S NULL — every draft naming no case answers null, `newCase` ignored. It agrees for free about DD, so
+   MUST NOT FAIL either ACCEPTS-WHEN nor block 2's corrected arms. MUST FAIL "A DRAFT THAT ASKED FOR A NEW CASE KEEPS
+   `edition: 1`".
+
+   (v) THE WIRE EDITION USED AS THE KEY — `#liveReviewGrant` compares the grant's stored edition with the STATED
+   edition. MUST FAIL "AND ITS KEY STILL BINDS" (DD's grant reads nothing and its recipient's reading is refused)
+   and "D-568 ACCEPTS-WHEN: DRAFT DD'S EDITION IS UNDETERMINED" (the refused recipient reading carries no edition);
+   MAY fail earlier arms that read a derived draft through a grant (D2's G2) — measured, not declared away. MUST NOT
+   FAIL the new-case-keeps-1 or the names-C1 arm.
+   FIRST RUN 2026-09-25 -> 96 pass, 2 fail: "AND ITS KEY STILL BINDS" and block 5's "A RECIPIENT OF AN INCOMPLETE
+   DRAFT SEES WHAT IS MISSING" (D2's G2, the MAY above) — and ACCEPTS-WHEN GREEN, NOT AS DECLARED. A finding about
+   the ASSERTION: the refused reading carried no `edition`, and `t` compares by JSON, where an absent value in an
+   array reads as `null`, so an answer that DROPPED the key passed as one stating it undetermined. The arm now reads
+   each key through `stated` (an absent key is "ABSENT"), and the whole driver was re-run; figures at the foot.
+
+   (w) OVER-STRICTNESS — the same rule as two early returns. MUST PASS, every arm.
+
+   MEASURED 2026-09-25 by WORKER D-568 (cloud, SCHEDULER #22) with `node test/reviewcopy.control.mjs`, all
+   TWENTY-THREE arms ALONE in one driver run AFTER the `stated` hardening, the pen in the session scratchpad via
+   `BIO_NC_PEN`, 23 of 23 restores of `src/store.mjs` (3,474,606 B, sha256 65ec128a…) sha256 MATCH, content
+   IDENTICAL, size ok: (0) BASELINE -> **98 pass, 0 fail**. (t) -> **95 pass, 3 fail**: D2's identity arm, "REC-133:
+   A NON-OWNER EDITOR AUTHORS A DRAFT" and "D-568 ACCEPTS-WHEN: DRAFT DD'S EDITION IS UNDETERMINED", by name; the
+   binds, new-case and names-C1 arms GREEN. AS DECLARED, exactly. (u) -> **97 pass, 1 fail**: "A DRAFT THAT ASKED
+   FOR A NEW CASE KEEPS `edition: 1`"; both ACCEPTS-WHEN arms GREEN — the liar right about DD for free. AS DECLARED.
+   (v) -> **95 pass, 3 fail**: "AND ITS KEY STILL BINDS", "D-568 ACCEPTS-WHEN: DRAFT DD'S EDITION IS UNDETERMINED"
+   (the refused reading's edition reads ABSENT) and block 5's recipient-of-an-incomplete-draft arm (D2's G2, the
+   declared MAY). AS DECLARED. (w) -> **98 pass, 0 fail**. AS DECLARED. ARMS (a)-(s) RE-RUN: a 93/5, b 97/1, d 96/2,
+   e 96/2, f 97/1, g 90/8, h 97/1, i 92/6, j 95/3, k 98/0, l 95/3, m 96/2, n 98/0, o 96/2, p 98/0, q 96/2, r 95/3,
+   s 98/0 — every failure count unchanged from D-538's measurement — and **c 94/4, TWO MORE**, both block 13's
+   ACCEPTS-WHEN arms: a grant that demands passing gates is dead on DD, whose gates refuse, so DD's recipient reads
+   nothing and states no edition. More than declared, in (c)'s declared direction. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -469,13 +510,16 @@ t("a draft naming an existing case stands at THAT CASE'S NEXT EDITION — the ed
    pinned as the rule: `publishCase` DERIVES such a draft's case (a further edition of the one case its
    findings serve, a new case only if they serve none), so "a new case" claimed an answer only publication
    can give. D2's identity is stated as DERIVED and UNDETERMINED, never invented; block 11 drives all three
-   routes through every answer that prints the sentence. */
-t("a draft naming no case and not asking for a new one stands at edition 1 with no case id, and its identity "
+   routes through every answer that prints the sentence.
+   CORRECTED AGAIN 2026-09-25 by D-568: it still pinned `edition` at 1, the MINTED-case edition, for that same
+   derived draft — the number beside the sentence claiming what the sentence refuses to. The answer states null;
+   block 13 drives it through all four answers and shows the (no case, 1) key still binds. */
+t("a draft naming no case and not asking for a new one has no case id, and its identity "
 + "is STATED as derived at publication and UNDETERMINED here — never as a new case, which only publication "
-+ "could establish",
++ "could establish — and its edition is UNDETERMINED (null) with it (D-568)",
   [D2r.caseId, D2r.edition, typeof D2r.caseIdentity === "string" && /deriv/i.test(D2r.caseIdentity)
      && /undetermined/i.test(D2r.caseIdentity) && !/not yet allocated/i.test(D2r.caseIdentity)],
-  [null, 1, true]);
+  [null, null, true]);
 /* CORRECTED by REC-133: the first label said the authority was publish's (DEC-72).
    It is the project's EDIT permission now (§6A.2); VIC is still refused, because she
    holds no position in PROJ at all — the reason changed, the answer did not. */
@@ -487,9 +531,12 @@ t("and to an administrator who is not an owner — an administrator sees every p
 
 /* REC-133: AUTHORING IS THE EDITOR'S ACT (§6A.2). */
 const DEr = await draft(ELLA, withRoles({ ...args(1), targets: [LEAD5] }));
+/* CORRECTED 2026-09-25 by D-568, NOT EXEMPTED: the label said "standing as a new case" and pinned edition 1, for a
+   draft that names no case and sets no `newCase` — whose case publication DERIVES (D-538). The edition it
+   will stand at is UNDETERMINED and the answer says null. What this arm is about, who may author, is unchanged. */
 t("REC-133: A NON-OWNER EDITOR AUTHORS A DRAFT — a joined participant holding contribute, the draft "
-+ "attributed to her project and standing as a new case",
-  [DEr?.ok, DEr?.project, DEr?.edited, DEr?.edition], [true, PROJ, false, 1]);
++ "attributed to her project, its case derived at publication and its edition UNDETERMINED (null)",
+  [DEr?.ok, DEr?.project, DEr?.edited, DEr?.edition], [true, PROJ, false, null]);
 const D6r = await draft(IRIS, withRoles({ ...args(1), targets: [LEAD3] }));
 if (!D6r?.ok) bail("casedraft D6", D6r);
 const D6e = await draft(ELLA, { draft: D6r.draftId, ...withRoles({ ...args(1), targets: [LEAD3] }) });
@@ -1146,6 +1193,73 @@ console.log("\n--- 12. D-538: the identity sentence reads `newCase`, in every an
     [DNr, DDr, DBr].flatMap((r) => [r.caseIdentity, row(r.draftId)])
       .concat([cN, cD, c1, cB].map((c) => c?.case?.identity), [gN.boundTo, gD.boundTo])
       .filter((x) => typeof x !== "string" || /\b[A-Z]{2,}(?:_[A-Z]+)+\b/.test(x)), []);
+}
+
+/* =========================================================================== 13
+ * D-568 (`BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE
+ * EDITION BESIDE THE SENTENCE IS UNDETERMINED WHERE THE SENTENCE IS.
+ *
+ * THE MEASURED FAILURE IT MOVES is block 12's draft DD read once more: D-538 made its identity sentence
+ * say DERIVED and UNDETERMINED, and every answer that printed the sentence still stated `edition: 1` —
+ * the edition a MINTED case has — beside it, over findings C1 already serves, so publication would make
+ * it C1's NEXT edition. The number claimed what the sentence refused to. The internal (no case, 1) key
+ * is KEPT: `review_grants` and `statement_acknowledgements` rows are written and matched at it, and
+ * this block shows both still bind while all four answers (and the acknowledgement's) state null.
+ *   DD — nothing named or asked -> `edition: null` in casedraft, casedrafts, reviewcopy, reviewgrant,
+ *        the owner's grant row and the statement acknowledgement; its grant READS and its readings LIST;
+ *   DN — `newCase` set          -> `edition: 1`, true of a minted case (an arm that nulled every no-case
+ *        edition fails here);
+ *   D1 — names C1               -> C1's next edition, unchanged.
+ * ========================================================================= */
+console.log("\n--- 13. D-568: a derived draft's edition is UNDETERMINED on the wire, and its key still binds ---");
+{
+  const DDr = await draft(IRIS, withRoles({ ...args(13), targets: [LEAD] }));
+  const DNr = await draft(IRIS, withRoles({ ...args(13), targets: [LEAD], newCase: true }));
+  for (const [n, r] of [["DD", DDr], ["DN", DNr]]) if (!r?.ok) bail(`casedraft ${n} (block 13)`, r);
+  const gD = await grant(IRIS, { draft: DDr.draftId, recipient: "D-568 reader, derived case" });
+  const gN = await grant(IRIS, { draft: DNr.draftId, recipient: "D-568 reader, new case" });
+  for (const [n, r] of [["DD", gD], ["DN", gN]]) if (!r?.ok || !r.secret) bail(`reviewgrant ${n} (block 13)`, r);
+  const ackP = rP(await POST(`op=statementack&draft=${DDr.draftId}&token=${ELLA}`, {}));
+  const ackR = rP(await POST(`op=statementack&draft=${DDr.draftId}&secret=${encodeURIComponent(gD.secret)}`, {}));
+  /* The recipient's reading is ASSERTED below rather than bailed on: a key that stopped binding refuses it, and
+     that is the arm's subject, named, not a crash (arm (v)). */
+  if (!ackP?.ok) bail("statementack DD (block 13)", ackP);
+  const copy = async (id) => rP(await GET(`op=reviewcopy&draft=${id}&token=${IRIS}`));
+  const [cD, cN, c1] = [await copy(DDr.draftId), await copy(DNr.draftId), await copy(D1)];
+  const list = rP(await GET(`op=casedrafts&token=${IRIS}&project=${encodeURIComponent(PROJ)}`));
+  const row = (id) => (list?.drafts || []).find((d) => d.draft_id === id)?.case;
+  const gRow = (c, g) => (c?.grants || []).find((x) => x.grant_id === g.grantId);
+  const rRead = parsed(await recipientRead(gD.secret));
+  const listed = (cD?.statement_acknowledgements?.acknowledgements || []).map((a) => [a.kind, a.by]);
+
+  t("D-568: THE FIXTURE IS THE MEASURED FAILURE — DD's own gates derive C1 and refuse ALREADY_A_CASE_MEMBER "
+  + "(so edition 1 is not what it would become), DN's pass, and every row this block reads is present",
+    [cD?.gates, cD?.missing?.[0]?.reason, cN?.gates, list?.truncated,
+     !!row(DDr.draftId) && !!row(DNr.draftId) && !!gRow(cD, gD) && !!gRow(cN, gN)],
+    ["refused", "ALREADY_A_CASE_MEMBER", "passed", false, true]);
+  /* A STATED null, never an absent key: `t` compares by JSON, where `undefined` in an array reads as `null`, so an
+     answer that DROPPED `edition` would have passed as one that states it undetermined. Measured by arm (v)'s first
+     run, where the refused recipient reading carried no edition and this arm stayed green; hence `stated`. */
+  const stated = (o, k) => (o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : "ABSENT");
+  t("D-568 ACCEPTS-WHEN: DRAFT DD'S EDITION IS UNDETERMINED — `edition: null` in op=casedraft, op=casedrafts, "
+  + "op=reviewcopy and op=reviewgrant, and on the owner's grant row and the statement acknowledgement too",
+    [stated(DDr, "edition"), stated(row(DDr.draftId), "edition"), stated(cD?.case, "edition"), stated(gD, "edition"),
+     stated(gRow(cD, gD), "edition"), stated(ackP?.acknowledgement, "edition"),
+     stated(ackR?.acknowledgement, "edition")],
+    [null, null, null, null, null, null, null]);
+  t("D-568 ACCEPTS-WHEN: AND ITS KEY STILL BINDS — DD's grant is LIVE and its recipient reads DD's copy with no "
+  + "credential; both readings (a joined participant's and the recipient's) are LISTED on DD's copy",
+    [gRow(cD, gD)?.live, rRead?.draft, rRead?.reader, ackR?.ok,
+     listed.some(([k, b]) => k === "participant" && b === "ella"),
+     listed.some(([k, b]) => k === "recipient" && b === gD.grantId)],
+    [true, DDr.draftId, "recipient", true, true, true]);
+  t("D-568: A DRAFT THAT ASKED FOR A NEW CASE KEEPS `edition: 1`, which is true of a minted case — in the same "
+  + "four answers and its grant row (an arm that nulled every no-case edition fails here)",
+    [DNr.edition, row(DNr.draftId)?.edition, cN?.case?.edition, gN.edition, gRow(cN, gN)?.edition],
+    [1, 1, 1, 1, 1]);
+  t("D-568: A DRAFT NAMING C1 IS UNCHANGED — C1's next edition, a number, in its copy and its list row",
+    [c1?.case?.case_id, Number.isInteger(c1?.case?.edition) && c1.case.edition >= 2, row(D1)?.edition],
+    [C1, true, c1?.case?.edition]);
 }
 
 console.log(`\nreviewcopy: ${pass} pass, ${fail} fail`);
