@@ -21,7 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-25 06:45Z · BOB #35 · UI-106's gap (a draft holding BOTH caseId and newCase; Publication §6A.4), RULED: SURFACE it, never refuse to load, never drop silently.** The review-copy form loads such a draft and shows BOTH values exactly as stored, with one plain line: this draft names an existing case AND a new one, and it cannot be published until an owner keeps one (the plane refuses the pair, CASE_IDENTITY_AMBIGUOUS). Keeping one is the owner's own act — a save that clears the other field — and the form offers both choices with neither preselected (nothing prefilled, DEC-69). Refusing to load would hide what the record holds; dropping `newCase` on a round trip is the form rewriting the record, which is the defect. PLACE one UI row after D-618 (owner UI; NEGATIVE CONTROL: restore the silent drop, and the arm that round-trips a both-valued draft fails by name, reading `newCase` gone). Fold into Publication §6A.4 with its landing.
 
 
 
@@ -746,8 +745,8 @@ scope: when the two newest candidates fall in one second and one is whole-second
 accepts-when: a legacy whole-second ack and a millisecond comment in one second give the pick PLUS the statement; acts in different seconds give none (moves: a silent pick). NEGATIVE CONTROL: drop the statement and the tie arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-543's worker).
 
-### D-578 · running — **A PROMOTE REVISION WHOSE DOCUMENT AND ENVELOPE BOTH STATE NO TYPE LEAVES `promotedType` UNDEFINED, and the INSERT throws "NOT NULL constraint failed: bundles.object_type": the caller gets a raw error with a store.mjs stack instead of a named refusal (reproduced through op=promote on the D-547 tree; the transaction rolls back, nothing lands).** Found by D-547's worker (01:36Z). — owner RECORD.
-status: running — SCHEDULER #22 05:55Z spawns WORKER D-578 (depth 2), stacked on land/worker/D-563 @ 30cac9a6
+### D-578 · integrated — **A PROMOTE REVISION WHOSE DOCUMENT AND ENVELOPE BOTH STATE NO TYPE LEAVES `promotedType` UNDEFINED, and the INSERT throws "NOT NULL constraint failed: bundles.object_type": the caller gets a raw error with a store.mjs stack instead of a named refusal (reproduced through op=promote on the D-547 tree; the transaction rolls back, nothing lands).** Found by D-547's worker (01:36Z). — owner RECORD.
+status: integrated — SCHEDULER #23 06:55Z: tip 700a432d (stacked on D-563 30cac9a6), GATE 94/94 GREEN FULLREUSE (7680 assertions; 365 units reused from 64ad0306's 384/387, 3 shape pins corrected), tree 5468c228; C-86.5 PROMOTED_TYPE_UNSTATED, additive type_carried; M-177; CATALOG 1.31.0->1.32.0; minted D-628, D-629
 order: after D-563, with the promote corrections: a raw stack on a public op breaks DEC-49 and leaks internals (SCHEDULER #21, 2026-09-25)
 milestone: M7
 interface: I3 — a typeless revision carries the head's type forward, stated; the integrator classifies.
@@ -757,12 +756,13 @@ scope: a revision that states no type takes the head's `cur.object_type` (the on
 accepts-when: a typeless revision lands carrying the head's type and says so; no op=promote answer carries a stack (moves: a raw NOT NULL error). NEGATIVE CONTROL: drop the carry-forward and the typeless-revision arm reads the raw error, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-547's worker).
 
-### D-546 · queued — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
+### D-546 · running — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
+status: running — SCHEDULER #23 06:55Z: spawned, stacked on land/worker/D-578 @ 700a432d
 order: after D-547, with the promote corrections: a disallowed move lands in the record (CLAUDE.md §2); BOB #34 ruled it product order (SCHEDULER #21, 2026-09-24)
 milestone: M7
 interface: I3 — refusal codes on op=promote for types other than bias; the integrator classifies.
 design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4 (per-type schemas and state machines), with BOB #34's 23:55Z ruling, folded into §4 by this row.
-depends-on: D-468; D-578 (same promote function, one worker at a time; SCHEDULER #22).
+depends-on: none (D-468 done; stacked on land/worker/D-578 @ 700a432d, integrated — same promote function, D-578 first; read `promotedType`, now carried before 7.1's scan).
 scope: (1) MEASURE the corpus first: per type, the count of recorded moves whose edge is undeclared today, with dates, in `measurements/<id>.md`; (2) lift D-468's fence to every type with a head: promote refuses any move its type's table does not declare, for every caller by a named DEC-49 code; (3) never rewrite, reverse or repair a stored move; where a reader meets one it is stated "made by a path the current rules do not allow (before <fence date>)", neither valid nor invalid, and never larger or smaller than the count shows; (4) `STATES` keeps its valid-but-unreachable states for reading old records, unreachable by promote.
 accepts-when: an undeclared move on a non-bias type is refused by name, a stored undeclared move reads with the dated sentence and is unchanged, and the measurement states the per-type counts (moves: promote asks no table but bias). NEGATIVE CONTROL: drop the fence for one type and its undeclared-move arm lands, failing by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).

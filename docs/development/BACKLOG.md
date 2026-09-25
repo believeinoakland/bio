@@ -33,6 +33,16 @@ scope: distinguish `occurrence` absent from `occurrence` present and empty in th
 accepts-when: a fixture string read at two places, one unplaced, is chosen at its unplaced occurrence and the portion grade answers from it. NEGATIVE CONTROL: restore the `|| null` collapse and the unplaced-choice arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (from SCHEDULER #22's hand-over; fix named by UI-112's worker).
 
+### D-629 · queued — **THE STORE ANSWERS ANY THROWN ERROR WITH ITS STACK: `Store.fetch`'s catch (store.mjs, the outermost handler) returns `String(e.stack)` to the caller for ANY throw on ANY op, and `index.mjs` has the same shape — so file paths, line numbers and constraint text reach a caller, and a constraint error reads as a stack instead of a refusal.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
+order: near the head — a disclosure defect outranks features (SCHEDULER.md loop step 3), behind D-625 only because that corrects just-landed work (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — every op's unhandled-error answer becomes a named internal-error code with no stack; the integrator classifies (BREAKING-shaped for any caller reading the text).
+design: `docs/architecture/BIO_System_Design.md` §2 (trustworthiness of the record; DEC-49's named refusals), with CLAUDE.md §2 "less narrative binds us first".
+depends-on: none.
+scope: both outermost catches answer a named internal-error code and a correlation id, never the stack or message text; the stack is logged server-side; no op's named refusal changes.
+accepts-when: a forced throw on a public op and on a member op answers the named code with no stack, path or line text (moves: String(e.stack) to the caller). NEGATIVE CONTROL: return the stack again and the no-stack arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
+
 ### D-635 · queued — **A PAGE ROUTED TO OCR WHOSE FOLIO DECODED LOSES ITS DERIVATION-PART PLACEMENT: BOB #35 RULED 06:25Z APPEND — the page keeps its layer text, the transcription is appended, and the page is listed in BOTH derivation parts, because D-252's guarantee that layer text is never lost outranks the parts' partition.** Minted by D-627's worker (its full finding rides its report). — owner CONTENT-PDF.
 order: directly after D-627, which creates the routed-with-folio pages it concerns (SCHEDULER #22, 2026-09-25)
 milestone: M2
@@ -62,6 +72,16 @@ depends-on: D-546 (same promote function; SCHEDULER #22).
 scope: derive created and last_updated from the document as D-563 derives title and state; take a read-only census of live drifts FIRST (as M-172 did) before refusing a contradicting envelope; envelope as fallback only where the bytes state none.
 accepts-when: the projection shows the document's dates, and a contradicting envelope is refused by name or recorded per the census (moves: envelope dates over the document's). NEGATIVE CONTROL: project the envelope's dates again and the date arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-563's worker).
+
+### D-628 · queued — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
+order: after D-615 — the same promote function as D-546, D-578 and D-615: one worker at a time (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — a named DEC-49 refusal on op=promote for a creation missing a required field; the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4 (per-type schemas), with D-578's carry-or-refuse shape (C-86.5).
+depends-on: D-615 (same function).
+scope: a revision carries the head's value for each field; a creation missing one is refused by a named DEC-49 code BEFORE the first write; a string `meta` is read or refused by name, never thrown.
+accepts-when: each of the four fields absent on a creation is refused by name and on a revision is carried, with no stack in any answer (moves: a raw NOT NULL stack from promote). NEGATIVE CONTROL: remove the pre-write check and the creation arms fail by name, reading a stack.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
 
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
@@ -102,6 +122,16 @@ depends-on: D-568 (land/worker/D-568 @ d5da99bb).
 scope: #statedEdition answers null when caseId and newCase are both set, in the same five answers D-568 covers.
 accepts-when: a case-naming newCase draft answers edition null in all five (moves: an edition beside an undetermined case). NEGATIVE CONTROL: answer the named case's next edition again and the ambiguous-pair arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
+
+### UI-117 · queued — **A DRAFT HOLDING BOTH `caseId` AND `newCase` IS NOT SURFACED ON THE REVIEW-COPY FORM: BOB #35 RULED 2026-09-25 06:45Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded) — SURFACE it, never refuse to load, never drop `newCase` silently.** The form loads such a draft and shows BOTH values exactly as stored, with one plain line: this draft names an existing case AND a new one, and cannot be published until an owner keeps one (the plane refuses the pair, CASE_IDENTITY_AMBIGUOUS). Keeping one is the owner's own act — a save that clears the other field — offered with neither preselected (DEC-69). Found as UI-106's form gap. — owner UI.
+order: after D-618 — the same both-identity pair, its plane half first (BOB #35's placement, 06:45Z; SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: none expected (UI only; reads what the draft already carries).
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #35's 06:45Z ruling, folded into §6A.4 by this row.
+depends-on: UI-106 (integrated, land/worker/UI-106; rides batch30).
+scope: the review-copy form round-trips a both-valued draft unchanged, renders both values and the one line, and offers "keep the existing case" / "keep the new case" as saves that clear the other field; nothing prefilled.
+accepts-when: a both-valued draft loads, shows both, and a save without an owner's choice keeps both (moves: the form drops `newCase` silently). NEGATIVE CONTROL: restore the silent drop, and the arm that round-trips a both-valued draft fails by name, reading `newCase` gone.
+added: 2026-09-25 · SCHEDULER #23 (BOB #35's inbox entry of 06:45Z).
 
 ### REC-226 · queued — **AN OWNER'S `projectinvite` OF A MEMBER WHOSE REQUEST TO JOIN IS OPEN LEAVES THE REQUEST OPEN, so the record holds a stale request the owner has in fact answered.** BOB #35 RULED 04:30Z on REC-150's gap (a), CHANGING the provisional: the invite CLOSES the request as `granted`, by the inviting owner, at that act. — owner RECORD.
 order: after D-586, with the membership corrections: a request the owner answered still reading open is the record claiming less than happened (SCHEDULER #22, 2026-09-25)
@@ -1151,33 +1181,3 @@ depends-on: none.
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
-order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
-depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
-accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The … (whole text: the cut archive)
-order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget … (whole text: the cut archive)
-depends-on: none. Sequence after M0-81.
-accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
-added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-120 · queued — **`mintid --audit --base` DIFFS `main` ONLY, SO AN ID ALLOCATED ON `coord` IS INVISIBLE TO THE INTEGRATION-SIDE CHECK.** `audit()` (`tools/mintid.mjs`) reads `git diff <base>...HEAD`; since M0-110's cutover every DEBT row, plan heading and ledger archive — the allocation sites — lands on `coord`. Found by M0-110's worker (CONDUCT #14). — owner M0.
-order: first of the ledger tooling, before LED-8: an id collision check blind to where ids are now minted is the costs-nothing green, latent until two lanes mint the same id on `coord`; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-110's finding)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §1 (the state moves to `coord`; every reader follows it), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-110 is done.
-scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
-accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).
