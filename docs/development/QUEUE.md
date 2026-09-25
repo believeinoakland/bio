@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 09:15Z · BOB #35 · CONDUCT #22's three batch29 composition calls, CONFIRMED.** (a) A monitor tick on a RENDERED capture captures nothing. D-567 rules that the monitor compares shell with shell and states the content undetermined, so D-455's changed-tick capture would otherwise file the served shell as new content bytes, which the record cannot support. The tick is logged as a look, and its content reading stays undetermined. (b) For the same reason, D-338's unmonitorable withdrawal does not apply to a rendered capture: it is monitorable at the shell, and its content is stated undetermined. (c) D-520's render cap bounds D-529's body collection by the reserved time as well: one budget, one cap. Fold (a) and (b) into CLIENT-RENDERED.md and OBSERVATION-LOG §4.1 with the next landing that touches either; no row of its own.
 
 
 
