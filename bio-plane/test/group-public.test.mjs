@@ -69,8 +69,11 @@ const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 /* THE SILENT STORE — REC-52's instrument (`fixtures/do-fail-worker.mjs`), inlined rather than imported because that
    fixture wraps the REAL `src/`, and the control driver must be able to point this suite at an ARMED copy. A subclass
    of the shipped Store that answers named Durable Object paths with the store's OWN failure envelope; every other
-   path is the genuine store. The switch lives on the Durable Object instance that will be consulted. */
+   path is the genuine store. D-629 CORRECTED the envelope: it was a hand-written `{ ok:false, error:
+   "Error: …" }`, a copy of the old catch that answered the stack; that disclosure is closed, so the envelope is now
+   built by the store's own `storeInternalError` from a real Error, and cannot drift from what the store sends. The switch lives on the Durable Object instance that will be consulted. */
 const FAILING = `import worker, { Store as PlaneStore } from "./index.mjs";
+import { storeInternalError } from "./store.mjs";
 export class FailingStore extends PlaneStore {
   async fetch(req) {
     const u = new URL(req.url);
@@ -80,7 +83,7 @@ export class FailingStore extends PlaneStore {
       return Response.json({ ok: true, result: { failing: this.__fail } });
     }
     if ((this.__fail || []).includes(path))
-      return Response.json({ ok: false, error: "Error: REC-163 injected Durable Object failure at /" + path }, { status: 500 });
+      return Response.json(storeInternalError(new Error("REC-163 injected Durable Object failure at /" + path), path), { status: 500 });
     return super.fetch(req);
   }
 }

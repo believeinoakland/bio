@@ -11554,6 +11554,33 @@ export const DISPATCH_CHECKS = {
     translation: 'This copy has no operation by that name. A copy running an older or newer version can have '
       + 'a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
   },
+  /* D-629 (C-69.2, C-69.3) — AN OP THAT THREW. Before D-629 the Durable Object's outermost catch answered
+     `String(e.stack)` to the caller for ANY throw on ANY op — file paths, line numbers and constraint text to
+     whoever asked, public ops included — and the control plane relayed that envelope verbatim wherever it
+     passes the store's answer through. The stack is now logged server-side under a CORRELATION id and the
+     caller receives the code, this sentence and the id, nothing else.
+     TWO ROWS, because they are two conditions with two sites: the store (Durable Object) threw, or the
+     control plane in front of it did. One row holds one `where`.
+     THE TRANSLATION CLAIMS NOTHING ABOUT THE RECORD, and that is deliberate: a throw part-way through an op
+     may or may not have left a write behind, and this plane cannot say which from the catch, so "nothing was
+     changed" would be the record claiming more than it can support. It says what is known — the operation
+     failed inside this instance, the answer is not a statement about the record — and what to do. */
+  STORE_INTERNAL_ERROR: {
+    check: 'C-69.2',
+    where: 'src/store.mjs internalAnswer > is-store-internal-error',
+    translation: 'This copy failed inside its own record while carrying out the request, so no answer was produced. '
+      + 'That is a fault in this copy, not a statement about what the record holds or about your request; whether '
+      + 'any part of it took effect is not known from here. The administrator can find the details in this copy\'s '
+      + 'logs under the reference given with this answer.',
+  },
+  PLANE_INTERNAL_ERROR: {
+    check: 'C-69.3',
+    where: 'src/index.mjs planeInternalAnswer > is-plane-internal-error',
+    translation: 'This copy failed while handling the request, before it could produce an answer. That is a fault '
+      + 'in this copy, not a statement about what the record holds or about your request; whether any part of it '
+      + 'took effect is not known from here. The administrator can find the details in this copy\'s logs under the '
+      + 'reference given with this answer.',
+  },
 };
 
 /* ===========================================================================

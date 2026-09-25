@@ -524,6 +524,8 @@ import { REVIEW_COPY_CHECKS } from "../checks/bio-checks.mjs";
 /* D-508 / C-85: the doorbell's rate refusals — the one door open to the public, and the one
    refusal surface whose reader is guaranteed not to be a member. */
 import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
+/* D-629 / C-69.2: the one internal-error row the outermost catch answers with (see `storeInternalError`). */
+import { DISPATCH_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
@@ -52166,9 +52168,44 @@ export class Store extends DurableObject {
       if (!map[op]) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
       return Response.json({ ok: true, result: await map[op]() });
     } catch (e) {
-      return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 });
+      /* D-629: this answered `String(e.stack)` to the caller for any throw on any op. See `storeInternalError`. */
+      return Response.json(storeInternalError(e, op), { status: 500 });
     }
   }
+}
+
+/* D-629 / DEC-49 (C-69.2) — WHAT THE STORE ANSWERS WHEN AN OP THREW, and the ONLY place it is built.
+   THE DEFECT: `Store.fetch`'s outermost catch returned `String(e && e.stack || e)` as `error`, so every
+   unhandled throw on every op handed the caller this file's path, its line numbers and SQLite's constraint
+   text, and the control plane relays the store's envelope verbatim on its pass-through route. The stack is
+   a diagnostic for the operator, so it goes to the operator: logged server-side (`console.error`, which is
+   the Worker's log stream) under a CORRELATION id, and the id is the one thing the caller and the log share.
+   The caller receives the code, the canned translation and the id — no stack, no message, no path. The
+   message is withheld as well as the stack because a thrown message is written for a developer and routinely
+   carries the same material (a constraint's table and column, a value from the request).
+   `ok` stays false and the status stays 500, so every reader of the envelope (`doAnswer`: ok === true and
+   nothing else) keeps treating it as no answer; no named refusal passes through here, because a named refusal
+   is RETURNED, not thrown. It THROWS on a missing row for `dispatchRow`'s reason, which here would surface as
+   a Worker exception — loud in a test, and still no stack to the caller.
+   EXPORTED so REC-52's failing-store fixtures answer in THIS envelope rather than a hand-written copy of it. */
+export function storeInternalError(e, op) {
+  const correlation = crypto.randomUUID();
+  const row = DISPATCH_CHECKS.STORE_INTERNAL_ERROR;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("storeInternalError: STORE_INTERNAL_ERROR has no DISPATCH_CHECKS row with a canned translation (DEC-49).");
+  /* The log line names the code by READING the answer, never by a second literal: one code, one mint site (arm G). */
+  const answer = internalAnswer(row, correlation);
+  try {
+    console.error(JSON.stringify({ event: answer.reason, correlation, op: String(op || ""),
+                                   stack: String(e && e.stack || e) }));
+  } catch { /* a log that cannot be written never changes what the caller is told */ }
+  return answer;
+}
+function internalAnswer(row, correlation) {
+  /* DEC-49 REGION is-store-internal-error */
+  return { ok: false, error: "internal error", reason: "STORE_INTERNAL_ERROR", code: "STORE_INTERNAL_ERROR",
+           check: row.check, translation: row.translation, correlation };
+  /* END DEC-49 REGION is-store-internal-error */
 }
 
 export default {

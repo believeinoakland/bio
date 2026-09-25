@@ -516,7 +516,12 @@ t("D-240 (e) THE UNCLASSIFIED RESIDUAL IS NAMED AND CEILINGED, and CROSS-CHECKED
      hiding this detector's own subject. Verified by the printed site list, which names all 17
      individually; a raise that could not name its arrivals would be this ceiling becoming a place
      to hide, which is precisely what it exists to prevent. */
-  [A_CENSUS.unclassified.length <= 17, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
+  /* 17 -> 18, RAISED 2026-09-25 by D-629, its reason at the site: the one arrival is `planeInternalError`'s
+     `return json(answer, 500)` in `index.mjs` — the control plane's new outermost catch, handing `json()` the
+     envelope a governed DEC-49 helper (`planeInternalAnswer`) built, so the argument is NOT A LITERAL, the stated blind
+     spot above. It reads no store: it answers a THROW in the control plane, with `ok: false`. The cross-check below
+     stays gated at zero and the printed list names it (the last site). */
+  [A_CENSUS.unclassified.length <= 18, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
 /* (f) AND THE DECLARED REFUSALS THAT DO SPREAD ONE — outside this detector's
    subject by construction, so they are pinned BY SITE rather than left as a
    sentence. `{ ok: false, ...rec.result }` cannot report a success, but it is
