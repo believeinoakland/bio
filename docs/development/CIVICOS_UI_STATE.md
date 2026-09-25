@@ -50,6 +50,19 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v121, 2026-09-25 session, thread UI, D-617 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/D-617`, STACKED on `land/worker/UI-108` @ `80594009` (integrated, not yet on `main`), in the commit that
+carries this entry; the version number is PROVISIONAL and CONDUCT renumbers at integration. SURFACE: **the document
+page no longer shows a dismissed finding as an open question.** `docInstanceHtml` (the UI-9 block) painted each
+`op=captureprogressions` finding as its stage, required-ness and grade, while the plane (D-552, IC-290) published the
+member's decision on it and the progression page (UI-108, `v120`) already said so. Each finding, missing or overdue,
+now carries the SAME sentence beside it, through UI-108's `progFindingDecisionHtml`, so the two pages give one
+account of one decision; the finding stays listed and an overdue one keeps its overdue note; a plane that publishes
+no `disposition` key is said to be not known, never undecided. Suite `civicos-ui/test/document-decided-finding.test.mjs`
+(25/0, the real plane in miniflare, a signed-in member, the plane's clock pinned so both branches run); control
+`document-decided-finding.control.mjs` 4/4 AS DECLARED. Not stated on this page: an open count, which
+`op=captureprogressions` does not publish.
+
 v120, 2026-09-25 session, thread UI, UI-76 (a WORKER of SCHEDULER #22, cloud session). Landed on
 `land/worker/UI-76` (base `origin/main` @ `964da6790`), in the commit that carries this entry; the version number is
 PROVISIONAL — a concurrent UI worker may take v120 on `main` first, and CONDUCT renumbers at integration. SURFACE:
