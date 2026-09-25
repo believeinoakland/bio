@@ -684,6 +684,8 @@ const CHOOSERS = {
   /* D-126, 2026-09-23. */
   "queueSelBarHtml":       "the acts the record publishes (`set_acts`, weight per-item) over ONE held selection — `finderPaintSelection`'s shape on the queue; the per-item ticks that build the selection are `queueEntryControlsHtml`'s",
   "queueRetainedHtml":     "clears ONE retained item's note from this screen; it touches the record not at all (the item's own acts are still `queueEntryControlsHtml`'s)",
+  /* UI-70 (Membership v2 §7.14, DEC-69). */
+  "visibilityChoiceHtml":  "UI-70: two radios choosing the ONE setting (discoverable or hidden) a project's creation, its fork or its owner's act sends; neither is preselected and the act carries the one chosen",
 };
 /* SETS OF DECISIONS — a list where each item is decided independently, so both
    modes are owed. Every row states which modes exist TODAY and, where a mode is

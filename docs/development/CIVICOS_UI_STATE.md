@@ -50,6 +50,30 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, UI-70 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-70`, STACKED on `land/worker/REC-197` @ `e88ef9d1` (REC-196 and REC-197, integrated, not yet on
+`main`), in the commit that carries this entry; the version number is PROVISIONAL — UI-69, UI-75, UI-76, UI-78 and
+D-134 are live or integrated in the same file, and CONDUCT renumbers at integration. SURFACE: **the create and fork
+forms ask whether a project can be found, with neither answer preselected, and the project's owner can change it.**
+
+**What moved** (Membership v2 §7.14 step 3; DEC-69, forced at the act). The Add form's project arm and the fork
+dialog render two options, *Discoverable* and *Hidden*, neither `checked`; the Add button stays shut and both commit
+paths (`addGo`, `doRosterAct`) send NOTHING until one is chosen, because the plane's answer to a creation that carries
+no setting is HIDDEN — a form that let an unchosen project through would have chosen for the member in silence. The
+choice travels as REC-197's `visibility` on a project's creation ALONE. The workspace gained *Who can find this
+project*: the setting as `op=projectvisibility` reads it (an unrecorded project is shown as the record reads it,
+never as a default of ours), the OWNER's control (`op=projectvisibilityset`, neither option preselected, an optional
+reason), and for everyone else the setting read-only with no control. Every refusal is `actRefusalHtml`'s — the
+plane's canned translation — C-97.1 driven through the Add form, C-70.2 through the owner's commit path, C-97.2 over
+the plane's real answer. `projectvisibilityset` is struck from `ACTS_AWAITING_SURFACE`.
+
+**Evidence.** `project-visibility-surface.test.mjs` (real plane, 41/41) and its control (6/6 AS DECLARED, including
+the row's own — preselect HIDDEN — and the row's liar on both forms). Three suites CORRECTED, not exempted, each with
+the reason at the site: `project-id-surface` and `project-workspace` created and forked without choosing;
+`surface-registry`'s A3/A4d/A4e floors moved to the printed 35/31/31; `member-respect` classifies the new chooser.
+The fork arm of the control recorded a finding about itself: unguarded, the fork sends the string "null" and the
+plane refuses it C-70.3 — loud at the plane, where the Add form's liar is silent.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it

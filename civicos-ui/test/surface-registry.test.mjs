@@ -788,12 +788,14 @@ const ACTS_AWAITING_SURFACE = [
      named as the one thing the button does not carry, and which is asserted in the direction
      that fails. ARM A3's, A4d's and A4e's floors move in this same commit, from the figures
      those arms PRINTED. */
-  /* REC-149. Registered as a DEBT, never exempted, which is what ARM A4b asked for by name on the item's first
-     run. The act is `op=projectvisibilityset`: a project's OWNER chooses whether it is DISCOVERABLE or HIDDEN
-     (Membership Architecture v2 §7.14). THE SURFACE OWES ONE THING THE BUTTON DOES NOT: neither option is
-     preselected (§7.14: "each project chooses" is taken literally), and a project with no record reads HIDDEN in
-     the plane's own words (`op=projectvisibility`'s `recorded: false`), never as a default the surface picked. */
-  { id: "projectvisibilityset", published_by: "REC-149 (Membership v2 §7.14 step 1: the owner's setting)", owed_by: "UI — §7.14 step 3: the owner's setting control, with neither option preselected, and the create/fork forced choice", since: "2026-09-23" },
+  /* `projectvisibilityset` STOOD HERE AND WAS STRUCK 2026-09-25 BY UI-70, the item the row named as owing it
+     (Membership v2 §7.14 step 3). REC-149 registered it as a debt with the one thing the button does not carry:
+     neither option preselected, and an unrecorded project shown as the plane reads it (`recorded: false`),
+     never as a default the surface picked. ARM A4c fired naming the row on the item's first run. The act is
+     now hosted by `SURFACES["project"]` (`projectVisibilityHtml`, the owner's control; every other viewer
+     reads the setting), and `project-visibility-surface.test.mjs` drives it against the REAL plane, with the
+     create and fork forms' forced choice. ARM A3's, A4d's and A4e's floors move in this same commit, from
+     the figures those arms PRINTED. */
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls
@@ -884,8 +886,9 @@ await section("ARM A · acts come from the plane", () => {
      of an act the question's page also hosts) and `withdrawconclusion`. */
   /* CONDUCT #17 (c17-batch5, 2026-09-23): D-311 (seven roster acts) and UI-74 (four version transitions) each moved these floors from the same base; the union's figures are re-read from this arm's PRINT on the merged tree. */
   /* UI-90 (2026-09-24): `actionlaws` is struck from the register and hosted by the action surface, so all three move by exactly one, from the figures THIS ARM PRINTED with the floors raised out of reach (34, 30, 30) and not by adding one to the number in the file. A3 rises for the placement; A4d rises because the struck row moves that act OUT of the register and INTO the catalogue-outside-it this floor is measured over; A4e rises because a surface now hosts it. A register row being paid moves both halves of the partition, in opposite directions, and 33/29/29 would each have carried a whole act of slack the moment this landed. */
-  ok(G.placements >= 34,
-     `ARM A3: ${G.placements} act placements are described, floor 34 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED; 33 was measured 2026-09-23 by D-311 from the figure this arm PRINTED with the floor raised out of reach on a throwaway copy — the project surface's seven roster acts, published by the plane since D-311; was 22 under UI-65, 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
+  /* UI-70 (2026-09-25): `projectvisibilityset` is struck from the register and hosted by the project surface; all three floors move from the figures THIS ARM PRINTED with the floors raised out of reach on a throwaway copy (35, 31, 31), for UI-90's reasons exactly. */
+  ok(G.placements >= 35,
+     `ARM A3: ${G.placements} act placements are described, floor 35 (measured 2026-09-25 by UI-70 from the figure this arm PRINTED; 34 was measured 2026-09-24 by UI-90 from the figure this arm PRINTED; 33 was measured 2026-09-23 by D-311 from the figure this arm PRINTED with the floor raised out of reach on a throwaway copy — the project surface's seven roster acts, published by the plane since D-311; was 22 under UI-65, 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
 
   /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
      A surface naming an act the plane does not publish is the registry claiming
@@ -945,11 +948,11 @@ await section("ARM A · acts come from the plane", () => {
      into the catalogue-outside-it, and `inquiry-stance` now hosts it. 17 would
      have carried one act of slack in each. */
   /* CONDUCT #17 (c17-batch5, 2026-09-23): D-311 (seven roster acts) and UI-74 (four version transitions) each moved these floors from the same base; the union's figures are re-read from this arm's PRINT on the merged tree. */
-  ok(G.baseline.length >= 30,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 30 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED when actionlaws was struck; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the plane published no roster act; 18 was UI-65's, up from 17 when the register still named withdrawconclusion). `
+  ok(G.baseline.length >= 31,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 31 (measured 2026-09-25 by UI-70 from the figure this arm PRINTED when projectvisibilityset was struck; 30 was measured 2026-09-24 by UI-90 from the figure this arm PRINTED when actionlaws was struck; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the plane published no roster act; 18 was UI-65's, up from 17 when the register still named withdrawconclusion). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
-  ok(G.hostedSet.size >= 30,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 30 (measured 2026-09-24 by UI-90 from the figure this arm PRINTED when the action surface took actionlaws; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the project surface could name none of its seven roster acts; 18 was UI-65's, up from 17 when no surface hosted withdrawconclusion). `
+  ok(G.hostedSet.size >= 31,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 31 (measured 2026-09-25 by UI-70 from the figure this arm PRINTED when the project surface took projectvisibilityset; 30 was measured 2026-09-24 by UI-90 from the figure this arm PRINTED when the action surface took actionlaws; 29 was measured 2026-09-23 by D-311 from the figure this arm PRINTED, up from 18 when the project surface could name none of its seven roster acts; 18 was UI-65's, up from 17 when no surface hosted withdrawconclusion). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.

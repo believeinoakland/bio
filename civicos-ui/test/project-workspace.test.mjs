@@ -186,6 +186,12 @@ function mockFetch(u, opts){
     if(!sees) return W({ ok:false, reason:"NO_SUCH_PROJECT", detail: NO_SUCH_DETAIL });
     return W({ ok:true, projectId:params.projectId, participants: ROWS });
   }
+  /* UI-70: op=projectvisibility, in the store's shape (REC-149): the dead answer without sight, and a project
+     no owner has set read as the store reads it — `hidden`, `recorded: false`. */
+  if(op==="projectvisibility"){
+    if(!sees) return W({ ok:false, reason:"NO_SUCH_PROJECT", detail: NO_SUCH_DETAIL });
+    return W({ ok:true, projectId:params.projectId, setting:"hidden", recorded:false, history:[] });
+  }
   if(op==="projectownerarith")
     return W({ ok:true, projectId:params.projectId || null,
                table:[1,2,3,4,5,6,7,8,9].map(ownerMath),
@@ -371,10 +377,11 @@ const asOwner = await open("alice");
 }
 
 /* ============ (4) THE SEVEN ROSTER OPS, EACH DRIVEN FROM THE WORKSPACE ============ */
-async function drive(actId, fields){
+async function drive(actId, fields, checked){
   CALLS.length = 0;
   ctx.__openRoster(actId);
   for(const [k,v] of Object.entries(fields||{})) q("#ra-"+k).value = v;
+  for(const k of (checked||[])) q("#ra-"+k).checked = true;   /* UI-70: a choice the member ticks */
   const r = await ctx.__doRoster();
   return { r, call: CALLS.find(c=>c.op===ROSTER_OP[actId]) };
 }
@@ -410,9 +417,15 @@ const ROSTER_OP = { projectinvite:"projectinvite", projectjoin:"projectjoin", pr
      now refuses a named `newId` (C-59.3). The form carries no id field, so the fork is reached with the NAME
      alone and no `newId` key at all. The real-plane arm — the id shown is the id in the registered bytes — is
      `project-id-surface.test.mjs`; this mock cannot say anything about a minted id and does not pretend to. */
-  d = await drive("projectfork", { title:"The marina money, harbour half" });
+  /* CORRECTED 2026-09-25 (UI-70, on REC-197; Membership v2 §7.14): this drove the fork with the NAME alone.
+     A fork is a creation and its forker now CHOOSES discoverable or hidden, with neither preselected, and the
+     form sends nothing until they have — so a fork with the name alone is refused at the form, correctly, and
+     this arm now ticks the choice a member makes. The forced choice itself (nothing preselected, no submit
+     without it, the value reaching the plane) is `project-visibility-surface.test.mjs`'s, against the real plane. */
+  d = await drive("projectfork", { title:"The marina money, harbour half" }, ["vis-hidden"]);
   ok("op=projectfork is reached with the name and NO id (the plane mints the fork's id — UI-66)",
      !!d.call && !("newId" in d.call.params) && /harbour half/.test(d.call.params.title));
+  ok("and with the setting the member chose (UI-70)", !!d.call && d.call.params.visibility === "hidden");
 
   /* the receipt renders the record's own fields, and nothing composed */
   ok("the roster receipt renders the record's own fields", /Recorded\./.test(dlg()) && dlg().includes("projectfork"));

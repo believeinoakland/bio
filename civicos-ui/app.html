@@ -2254,12 +2254,16 @@ const SURFACES = {
        hosted all seven since UI-3 through `ROSTER_ACTS` below — the registry said `[]` only because
        ARM A's fiction check forbids naming an act the plane did not publish. It now names them. */
     acts: ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
-           "projectownerremove", "projectownerrescue"],
+           "projectownerremove", "projectownerrescue",
+           /* UI-70 (Membership v2 §7.14 step 3): the OWNER's setting, changed on the workspace
+              (`projectVisibilityHtml`); every other viewer with sight reads it and is offered nothing.
+              Struck from `ACTS_AWAITING_SURFACE` in the same landing. */
+           "projectvisibilityset"],
     /* UI-92: `casedrafts` (REC-198, IC-243) is read HERE and nowhere else — the list of the
        project's draft cases belongs to the workspace, and the review-copy surface keeps the
        DRAFT itself at its own address. So the read is declared on the surface that performs
        it; `review-copy`'s `reads` are unchanged. */
-    reads: ["projectparticipants", "projectownerarith", "projection", "casedrafts"],
+    reads: ["projectparticipants", "projectownerarith", "projection", "casedrafts", "projectvisibility"],
   },
   action: {
     routes: ["object:action", "hash:action"],
@@ -8904,6 +8908,44 @@ function openByType(id, type){
   return openBundle(id);
 }
 
+/* ============================================================
+   UI-70 · DISCOVERABLE OR HIDDEN — THE CREATOR CHOOSES, THE OWNER CHANGES IT.
+
+   DESIGN: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14, "The setting", with DEC-69
+   (forced, at the act). The plane half is REC-149 (the owner's act and its read) and REC-197 (a creation
+   and a fork carry one optional `visibility`; absent is HIDDEN; a machine's `discoverable` is C-97.1).
+
+   NEITHER OPTION IS PRESELECTED, AND THAT IS THE ITEM. §7.14: *"each project chooses" is taken literally,
+   and a preselection would be the surface choosing.* So the two options render with no `checked`, the
+   submit stays shut until one is picked, and the commit paths (`addGo`, `doRosterAct`) refuse to send
+   without one — because the plane's answer to a creation that carries none is HIDDEN, a surface that let
+   the member through unchosen would have chosen HIDDEN for them and said nothing. The choice is read off
+   the two inputs at the moment of the act and nowhere else: nothing is remembered between forms.
+
+   WHAT THE TWO WORDS MEAN is §7.14's boundary in a member's words: discoverable adds the project's
+   EXISTENCE and NAME for members outside it, and nothing of its contents; hidden is what every project
+   was before this. The request to join is NOT built (§7.14 step 2), so nothing here promises it. */
+const VISIBILITY_OPTIONS = [
+  ["discoverable", "Discoverable", "Members who are not in this project can see that it exists and what it is called. Nothing inside it is shown to them."],
+  ["hidden", "Hidden", "Members who are not in this project cannot tell that it exists."],
+];
+const VISIBILITY_UNCHOSEN = "Choose whether this project can be found: discoverable or hidden.";
+/* Each form re-reads its own readiness when the choice moves: the Add form's minimum, the fork's submit, the
+   owner's submit. One dispatcher, keyed on the form's prefix, so the markup carries a plain call. */
+const VISIBILITY_SYNC = { a: () => addValidate(), ra: () => rosterChoiceSync(), pv: () => projectVisibilitySync() };
+function visibilityChoiceChanged(prefix){ const f = VISIBILITY_SYNC[prefix]; if(f) f(); }
+function visibilityChoiceHtml(prefix){
+  return `<label class="fld">Can members outside this project find it?</label>
+    <p class="subj-note">Nothing is chosen for you. Its owners can change this later.</p>
+    ${VISIBILITY_OPTIONS.map(([v, label, what]) =>
+      `<label class="ckline"><input type="radio" name="${esc(prefix)}-vis" id="${esc(prefix)}-vis-${v}" value="${v}" onchange="visibilityChoiceChanged(${esc(JSON.stringify(prefix))})"> <b>${esc(label)}</b> &mdash; ${esc(what)}</label>`).join("")}`;
+}
+/* The choice as the two inputs hold it NOW: "discoverable", "hidden", or null when neither is checked. */
+function visibilityChosen(prefix){
+  for(const [v] of VISIBILITY_OPTIONS){ const e = $("#" + prefix + "-vis-" + v); if(e && e.checked) return v; }
+  return null;
+}
+
 /* ---- THE SEVEN ROSTER OPS AND THEIR CALL SITES ----
    One table, one dialog, one commit path. Each entry names the OP, the label,
    the fields the op takes, and the PLANE-PUBLISHED POSITION that makes the
@@ -8933,6 +8975,9 @@ const ROSTER_ACTS = {
   /* UI-66 (REC-141, IC-158): NO id field. A fork's id is minted by the plane, which refuses a named `newId`
      (C-59.3); the receipt below renders the `newId` the plane ANSWERS. The member names the fork, nothing else. */
   projectfork: { label:"Fork this project", op:"projectfork", fields:[["title","Its name","required"]],
+    /* UI-70: a fork is a CREATION (§7.12) and does not inherit the original's setting (§7.14), so its
+       forker chooses, with neither option preselected, and the act is not sent until they have. */
+    choice: "visibility",
     what:"A fork is a clone with a recorded origin. Participants are not copied.",
     where: p => p.joined && p.forks },
 };
@@ -8979,15 +9024,30 @@ function openRosterAct(actId){
      <p class="what">${esc(a.what)}</p>
      <div class="dz-what"><span class="dz-ttl">${esc(WORKSPACE.title||WORKSPACE.id)}</span><span class="id">${esc(WORKSPACE.id)}</span></div>
      ${flds}
+     ${a.choice === "visibility" ? visibilityChoiceHtml("ra") : ""}
      <div id="ra-err" class="teach hidden"></div>
      <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
-       <button class="btn" id="ra-go" onclick="doRosterAct()">${esc(a.label)}</button></div>`;
+       <button class="btn" id="ra-go"${a.choice === "visibility" ? " disabled" : ""} onclick="doRosterAct()">${esc(a.label)}</button></div>`;
   $("#dlg-wrap").classList.remove("hidden");
+}
+/* UI-70: the fork's submit opens only once a setting is chosen. */
+function rosterChoiceSync(){
+  const go = $("#ra-go"); if(go) go.disabled = !visibilityChosen("ra");
 }
 async function doRosterAct(){
   if(!ROSTER_CTX) return;
   const a = ROSTER_ACTS[ROSTER_CTX.actId];
   const params = { projectId: ROSTER_CTX.projectId };
+  /* UI-70: the forced choice, asked at the act as well as on the button (see `visibilityChoiceHtml`). */
+  if(a.choice === "visibility"){
+    const v = visibilityChosen("ra");
+    if(!v){
+      const err = $("#ra-err");
+      if(err){ err.innerHTML = `<p>${esc(VISIBILITY_UNCHOSEN)} Nothing was sent.</p>`; err.classList.remove("hidden"); }
+      return { refused:true, reason:null, unchosen:true };
+    }
+    params.visibility = v;
+  }
   for(const [name] of a.fields){
     const el = $("#ra-"+name);
     /* Sent as authored, including empty: the store decides what a missing
@@ -9013,6 +9073,70 @@ async function doRosterAct(){
        <div class="row-btns"><button class="btn" onclick="closeDialog();openProjectWorkspace(${esc(JSON.stringify(ROSTER_CTX.projectId))})">Done</button></div>
      </div>`;
   return res;
+}
+
+/* UI-70 · WHO CAN FIND THIS PROJECT — the setting as the record holds it, and the OWNER's control.
+   The setting, whether anyone chose it, who did and when are `op=projectvisibility`'s own fields, rendered
+   and never computed: a project with no record is shown as the record reads it (`recorded: false`, and the
+   `setting` it answers), never as a default this page picked. The control EXISTS for an owner only — the
+   store's `owner` flag on my own participation row, the same position fact every roster act reads — and it
+   is the same two options with neither preselected; everyone else with sight of the page reads the setting
+   and is offered nothing. A refusal is the plane's sentence through `actRefusalHtml`. */
+function visibilityWord(v){
+  const o = VISIBILITY_OPTIONS.find(([k]) => k === v);
+  return o ? o[1] : null;
+}
+function projectVisibilityHtml(ask, pos){
+  if(!ask) return "";
+  if(!ask.accepted) return actRefusalHtml(ask.refusal);
+  const r = (ask.result && typeof ask.result === "object") ? ask.result : {};
+  const setting = typeof r.setting === "string" ? r.setting : null;
+  const word = visibilityWord(setting);
+  const meaning = (VISIBILITY_OPTIONS.find(([k]) => k === setting) || [])[2] || "";
+  const hist = Array.isArray(r.history) ? r.history.filter(h => h && typeof h === "object") : [];
+  const last = hist.length ? hist[hist.length - 1] : null;
+  const now = setting === null
+    ? `<div class="empty">The record did not say whether this project can be found.</div>`
+    : `<div class="card" data-project-visibility="${esc(setting)}"><div class="kv"><span class="k">Right now</span><span class="v plain"><b>${esc(word || setting)}</b>${meaning ? ` &mdash; ${esc(meaning)}` : ""}</span></div>`
+      + (r.recorded === false
+          ? `<div class="kv"><span class="k">Chosen by</span><span class="v plain">No owner has chosen yet, and the record reads a project nobody chose for as ${esc(word || setting)}.</span></div>`
+          : last ? `<div class="kv"><span class="k">Chosen by</span><span class="v plain">${esc(String(last.set_by || "—"))}${last.at ? ` &middot; ${esc(fmtWhenFull(last.at))}` : ""}${last.reason ? ` &middot; ${esc(String(last.reason))}` : ""}</span></div>` : "")
+      + `</div>`;
+  if(!pos || !pos.owner)
+    return `${now}<p class="subj-note" data-project-visibility-readonly="1">Only an owner of this project can change this.</p>`;
+  return `${now}
+    <div class="card" id="pv-control">
+      ${visibilityChoiceHtml("pv")}
+      <label class="fld" for="pv-reason">Why, if you want to say</label>
+      <input class="txt" id="pv-reason" autocomplete="off">
+      <div id="pv-err" class="teach hidden"></div>
+      <div class="rv-bar" style="margin:8px 0 0"><button class="btn" id="pv-go" onclick="doProjectVisibility()">Record this choice</button></div>
+    </div>`;
+}
+/* The workspace greys nothing (a control is present or absent), so the owner's submit is never disabled: an
+   unchosen submit is answered at `doProjectVisibility` by the form's own sentence, and nothing is sent. */
+function projectVisibilitySync(){
+  const err = $("#pv-err"); if(err && visibilityChosen("pv")){ err.innerHTML = ""; err.classList.add("hidden"); }
+}
+async function doProjectVisibility(){
+  if(!WORKSPACE) return;
+  const setting = visibilityChosen("pv");
+  const err = $("#pv-err");
+  if(!setting){
+    if(err){ err.innerHTML = `<p>${esc(VISIBILITY_UNCHOSEN)} Nothing was sent.</p>`; err.classList.remove("hidden"); }
+    return { refused:true, reason:null, unchosen:true };
+  }
+  const reason = String((($("#pv-reason")||{}).value) || "").trim();
+  const go = $("#pv-go"); if(go){ go.disabled = true; go.textContent = "…"; }
+  const r = await actAsk("projectvisibilityset", { projectId: WORKSPACE.id, setting, ...(reason ? { reason } : {}) });
+  if(!r.accepted){
+    if(err){ err.innerHTML = actRefusalHtml(r.refusal); err.classList.remove("hidden"); }
+    if(go){ go.disabled = false; go.textContent = "Record this choice"; }
+    return { refused:true, reason: r.refusal && r.refusal.reason };
+  }
+  RECORD_CACHE = null;
+  await openProjectWorkspace(WORKSPACE.id, true);
+  return r.result || {};
 }
 
 let PROJ_HASH_LOCK = false;
@@ -9110,6 +9234,8 @@ async function openProjectWorkspace(id, fromNav){
     const ar = await actAsk("projectownerarith", { projectId:id });
     if(ar.accepted) arith = ar.result || null;
     if(WORKSPACE) WORKSPACE.arith = arith;
+    /* UI-70: the setting, asked after the visibility gate cleared like every read on this page. */
+    const vis = await actAsk("projectvisibility", { projectId:id });
 
     $("#content").innerHTML = `${header}
       <h2 class="sec">How ready the work product is</h2>
@@ -9126,6 +9252,8 @@ async function openProjectWorkspace(id, fromNav){
       <h2 class="sec">How ownership changes hands</h2>
       <p class="subj-note">Computed by the record for this project as it stands, and shown beside the act that uses it &mdash; a denominator with no act beside it teaches that governance is something you read.</p>
       ${projectOwnershipHtml(arith)}
+      <h2 class="sec">Who can find this project</h2>
+      ${projectVisibilityHtml(vis, pos)}
       ${controls}`;
   }catch(e){ $("#content").innerHTML = `${crumb}${errPane(e)}`; }
 }
@@ -18603,6 +18731,7 @@ async function renderAdd(){
       ${ADD_CAPTURE_TEACH}
     </div>
     ${addActionPaneHtml()}
+    <div id="a-vis" class="hidden">${visibilityChoiceHtml("a")}</div>
     <div id="a-err" class="teach hidden"></div>
     <div id="a-prog"></div>
     <div id="a-note"></div>
@@ -18616,6 +18745,7 @@ function addTypeSync(){
      describes a captured document, and a question or a project has none. */
   const box = $("#a-doc"); if(box) box.classList.toggle("hidden", t !== "information");
   const act = $("#a-act"); if(act) act.classList.toggle("hidden", t !== "action");
+  const vis = $("#a-vis"); if(vis) vis.classList.toggle("hidden", normalizeType(t) !== "project");
   addValidate();
 }
 /* THE ACTION'S OWN MINIMUM, and it is a statement about what this FORM has
@@ -18639,12 +18769,15 @@ function addValidate(){
   const loc = (($("#a-loc")||{}).value||"").trim();
   const auth = (($("#a-auth")||{}).value||"").trim();
   const act = t === "action" ? addActReady() : { ok:true };
+  /* UI-70: a project is not ready until its creator has CHOSEN (§7.14, DEC-69). */
+  const vis = normalizeType(t) === "project" ? visibilityChosen("a") : "n/a";
   let why = "";
   if(!title) why = "A title and a body are the minimum.";
   else if(!body) why = "Write something in the body: an empty record says nothing.";
   else if(t === "information" && loc && !/^https:\/\//i.test(loc)) why = "The address must be https on a public site.";
   else if(t === "information" && loc && !auth) why = "Say who issued the document as well as where it lives.";
   else if(!act.ok) why = act.why;
+  else if(!vis) why = VISIBILITY_UNCHOSEN;
   /* THE LETTER CAME OUT OF THIS LINE TOO (2026-08-04, UI-32), and it was the
      sharper of the two: the teach block at least described a rule, while this
      told a member what grade a capture that HAS NOT HAPPENED will carry. The
@@ -18654,7 +18787,7 @@ function addValidate(){
   else why = loc ? `It will be captured at ${vocabFor(FIRST_STATE, t)} and appear in the record for review.`
                  : `It will be written at ${vocabFor(FIRST_STATE, t)}, with no document attached.`;
   const go = $("#a-go"), n = $("#a-n");
-  const ready = !!(title && body && act.ok && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
+  const ready = !!(title && body && act.ok && vis && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
   if(go) go.disabled = !ready || ADD_BUSY;
   if(n) n.textContent = why;
 }
@@ -18748,6 +18881,17 @@ async function addGo(){
   const auth = (($("#a-auth")||{}).value||"").trim();
   const wantSubs = !!(($("#a-subs")||{}).checked);
   const wantArch = !!(($("#a-arch")||{}).checked);
+  /* UI-70 (§7.14, DEC-69: forced, at the act). A project is not written until its creator has CHOSEN
+     discoverable or hidden. This is the surface's own form minimum, the same kind as "a title and a body",
+     and it is asked HERE as well as on the button because the button is a courtesy: a submit that reached
+     the plane with no choice would be created HIDDEN by the plane's fail-closed default, silently — the
+     surface choosing in the member's place, which is exactly what the forced choice forbids. */
+  const visibility = normalizeType(type) === "project" ? visibilityChosen("a") : null;
+  if(normalizeType(type) === "project" && !visibility){
+    addErr(esc(VISIBILITY_UNCHOSEN) + " Nothing was written.");
+    ADD_BUSY = false; addValidate();   /* nothing was asked of the plane, so the form is handed straight back */
+    return;
+  }
   try{
     let doc = null, snap = null, partial = null;
     if(loc){
@@ -18856,6 +19000,9 @@ async function addGo(){
     }
     const res = await recPostR("promote", {
       ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: who,
+      /* UI-70 (REC-197): the creator's CHOICE, sent on a project's creation and on nothing else — the plane
+         refuses a `visibility` on anything that is not a project's creation (C-97.2). */
+      ...(visibility ? { visibility } : {}),
       /* UI-79: no `group` — the plane stamps the instance's recorded one (IC-172). */
       meta: { object_type: type, title,
               current_state: vocabFor(FIRST_STATE, type), created: now, last_updated: now },
