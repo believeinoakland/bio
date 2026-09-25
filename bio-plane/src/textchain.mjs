@@ -109,6 +109,7 @@
 
 import {
   TEXT_CHAIN_CHECKS, BASIS_GRADES, EARNED_CAPTURE_CEILING, isMachineIdentity,
+  extentSpace, EXTENT_USER_SPACE,
 } from "../checks/bio-checks.mjs";
 import { IMAGE_CONTENT_MAX_GLYPHS, IMAGE_CONTENT_MIN_SHARE, IMAGE_CONTENT_TEXT_GLYPHS } from "./pdfstructure.mjs";
 
@@ -1081,6 +1082,11 @@ export function extentCovers(extent, target) {
   const src = extent.source;
   if (!src || src.page !== target.page) return false;
   if (!Array.isArray(target.rect) || target.rect.length !== 4) return false;
+  /* D-670: A RECT IS FOUR NUMBERS IN A SPACE. An OCR anchor is in the pixels of
+     the frame that was read (`space: "image-px"`) and a leg's rect in PDF user
+     space, unstated reading as user; across two spaces "inside" is a numeric
+     accident, so the answer is the default one — no. */
+  if (extentSpace(src) !== extentSpace(target)) return false;
   const [ax0, ay0, ax1, ay1] = normRect(src.rect);
   const [bx0, by0, bx1, by1] = normRect(target.rect);
   return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;
@@ -1207,7 +1213,15 @@ export function readingSource(source) {
     const rect = Array.isArray(source.rect) && source.rect.length === 4
       && source.rect.every((n) => typeof n === "number" && Number.isFinite(n))
       ? source.rect.map(Number) : null;
-    return { kind, ref, page: source.page, rect };
+    /* D-670: THE RECT'S SPACE TRAVELS WITH IT. This rebuild dropped `space`, so
+       an OCR anchor's PIXEL rect reached the content checker as PDF user space
+       (and minted where it happened to fit the page). It is carried only beside
+       a rect — a page index has no space — and only when it is NOT user space,
+       so every position written before D-670 keeps its bytes and an explicit
+       `space: "user"` is the unstated spelling. */
+    const space = rect && extentSpace(source) !== EXTENT_USER_SPACE
+      ? extentSpace(source).slice(0, 40) : null;
+    return space ? { kind, ref, page: source.page, rect, space } : { kind, ref, page: source.page, rect };
   }
   if (kind === "doc-para") {
     if (!isIndex(source.para)) return null;
@@ -1295,6 +1309,8 @@ export function readingPositionInExtent(position, extentKind, extent) {
     /* A rect on the extent and none on the reading: NOT established to be
        inside it. The honest no. */
     if (!Array.isArray(p.rect) || p.rect.length !== 4) return false;
+    /* D-670: two rects in two spaces are not comparable — `extentCovers`' rule. */
+    if (extentSpace(p) !== extentSpace(e)) return false;
     const [ax0, ay0, ax1, ay1] = normRect(e.rect);
     const [bx0, by0, bx1, by1] = normRect(p.rect);
     return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;

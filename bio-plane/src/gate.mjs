@@ -221,6 +221,10 @@ export const CATALOG_VERSION = "1.31.0";
    C-73.6 RECORDS_LAW_REFUSED in GOVERNING_LAW_CHECKS, `promote`'s refusal of C-2.10's `law` arm at the act. MINOR and
    additive; C-2.10 itself does not change (the arm is REC-201's, now also run at the write). 1.31.0-1.34.0 and 2.0.0
    are held by other branches; CONDUCT takes the union's one number and re-reads the census from the d470 print.  (c23-batch30, 2026-09-25: D-695 said 1.35.0; number to re-read at the figures pass.) */
+/* D-670 side, kept as history — took 1.31.0 (D-670, 2026-09-25, branch land/worker/D-670): ONE ARRIVAL, NO DEPARTURES — C-45.13
+   CONTENT_EXTENT_NOT_USER_SPACE in CONTENT_EXTENT_CHECKS (a rect stated in a space other than PDF user space is
+   refused by name). MINOR and additive. If another branch in the same batch also moves this constant, CONDUCT takes
+   the next number and re-reads the census from the d470 suite's print on the merged tree.  (c23-batch30, 2026-09-25: D-670 said 1.31.0; number to re-read at the figures pass.) */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
