@@ -21,8 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-25 01:50Z · BOB #34 · Framework §8.3 rule 3 (the APN clause, BOB #32 on M-132) AMENDED, because its premise was measured false in M-157 (D-504, land/worker/D-504 @ 2ca08780).** The roll M-132 read (Oakland's c3xp-qcgn) is a PARTIAL 2012-13 snapshot, not the CURRENT roll. Measured: of the 33 APNs the clause called "retired", 27 carry a published retirement (roll year plus children), 1 is in the county's CURRENT layer, and 5 have no trace in any published vintage. The inference "absent from the roll ⇒ RETIRED" would therefore have written 6 false retirements. **The rule now reads:** absence is still NEVER "no such parcel". A parcel reads RETIRED only where the assessor's own lineage records it (roll year and children, data.acgov.org). Otherwise it reads UNDETERMINED between retired-before-the-lineage and never-a-parcel, and the answer names which published vintages were searched. The cross-institution condition ("only once the county's own roll is captured") is now MET, because M-157 read the county's layer, lineage and secured rolls whole. The clause's figure becomes "27 retired, 1 current, 5 undetermined (M-157)". The fold goes on BOB's next batch branch. Any row that implemented "absent ⇒ RETIRED" is a defect; SCHEDULER should check whether one exists (grep the APN resolver) and row the correction if so.
-- **2026-09-25 01:55Z · BOB #34 · four worker rules that CONDUCT #20 reported as design gaps, DECIDED: each goes to WORKER.md as ONE line, through M0-194's rewrite; none goes to VERIFICATION.md (it is at its budget, and workers read WORKER.md).** (a) A measurement that gates nothing is not an instrument (D-550). (b) A verdict must not depend on load: fix what the suite waits on, never retry (D-571). (c) A governed refusal is built as a literal, never spread (D-468; sent 23:48Z). (d) construct-status.json is edited textually, never round-tripped through a serialiser (D-468). All four were sent to M0-194's worker (session_01DynK5HSkeXKm9tKyHPoCiE). If M0-194 lands without them, SCHEDULER rows the remainder.
 
 
 
@@ -316,8 +314,8 @@ scope: read and write CLAIMS.md through `tools/coord.mjs` readState/writeState, 
 accepts-when: the control runs every arm AS DECLARED against the coord content (the measured failure it moves: refused at the first arm by the stub's byte floor). NEGATIVE CONTROL: point the read back at the worktree path and the byte-floor arm refuses by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by M0-182's worker).
 
-### D-520 · running — **THE RENDER RESERVATION'S 30,000 ms NAVIGATION BOUND IS CHOSEN, NOT MEASURED, AND NOTHING CAPS CONCURRENT RENDERS: D-492 made the allowance an honest account, not a throttle.** BOB #33 RULED YES to both, 2026-09-24 19:11Z (cite until folded). — owner CAPTURE.
-status: running — SCHEDULER #21 23:50Z spawns WORKER D-520 (depth 2, can report); base origin/main 9f8b69e6
+### D-520 · integrated — **THE RENDER RESERVATION'S 30,000 ms NAVIGATION BOUND IS CHOSEN, NOT MEASURED, AND NOTHING CAPS CONCURRENT RENDERS: D-492 made the allowance an honest account, not a throttle.** BOB #33 RULED YES to both, 2026-09-24 19:11Z (cite until folded). — owner CAPTURE.
+status: integrated — SCHEDULER #21 01:53Z: tip 5e40f8ed, GATE 360/360 GREEN; M-151 (bound 30s->10s, reservation 45s->25s); C-83.8 cap 10; text conflicts with D-522 in construct-status 2.rendered and CLIENT-RENDERED front matter; D-570 to BOB
 order: after D-478, in normal product order behind D-64's render rows (BOB #33, 19:11Z: *product, not ahead of it*; SCHEDULER #19, 2026-09-24)
 milestone: M2
 interface: none unless the waiting render's state is published (the integrator classifies).
@@ -571,7 +569,7 @@ accepts-when: each item recorded with date, instrument and counts, a refused hos
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### REC-203 · queued — UNBLOCKED 2026-09-24 by BOB #32: Framework §8.3 now carries M-132 (concurrent project-number forms told apart by shape; C.M.S. referent check and coverage floor; APN apn_sort and RETIRED parcels; contract/PO unpublished at source), on land/bob/fold-m132 awaiting its train. Build to §8.3 as amended.
-status: queued — SCHEDULER #21 01:47Z: HELD until BOB rules the Framework §8.3 rule 3 APN amendment D-504's M-157 sent him (c3xp-qcgn is a partial 2012-13 snapshot, not the current roll)
+status: queued — SCHEDULER #21 01:53Z: RELEASED. Framework §8.3 rule 3 AMENDED by BOB #34 01:50Z on M-157: an APN reads RETIRED only where the assessor's lineage records it, else UNDETERMINED naming the vintages searched; build to that, citing the drained entry until folded
 order: behind D-453, whose measurements it rests on, as BOB #32 ruled (*Row them RECORD, blocked behind D-453's egress*) (SCHEDULER #17, 2026-09-23)
 milestone: M4
 interface: I3/I5 — three recognisers and their eras; the integrator mints and classifies the ICs.
