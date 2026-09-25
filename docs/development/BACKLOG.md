@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-726 · queued — **A REVISION WHOSE BYTES RESTATE A DIFFERENT `group` LANDS, and bundles.group_id keeps the creation's (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured through op=promote in a local Miniflare: row group_id believe-in-oakland, head bytes `group: some-other-group`.** D-692's class, one column over. Live-corpus count UNDETERMINED. Found by D-692's worker. — owner RECORD.
+order: after D-707, the same promote function, one worker at a time (SCHEDULER #24, 2026-09-25)
+milestone: M7
+interface: I3 — a new named refusal on op=promote where a revision used to land; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5; D-692's C-86.9 shape), with State Rules v1.5 §4.7.
+depends-on: D-707 (same function; stack on its branch once integrated).
+scope: refuse a non-replay revision whose document's `group` differs from the head's group_id (REVISION_REGROUPS_BUNDLE), replay exempt, after CAS and before the first write, as C-86.9 does. Measure the live-corpus count if reachable, else state it undetermined. STATE, do not sweep further: other columns written only at creation.
+accepts-when: a revision restating a different group is refused by name and nothing is written; the same group respelt, and a revision stating none, still land (moves: a row and its head bytes disagreeing on group). NEGATIVE CONTROL: drop the refusal and the regroup arm lands, failing by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-692's worker).
+
 ### D-723 · queued — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
 order: directly behind D-710, which it completes: a correction to just-landed work outranks new work, and "less narrative" binds us first (SCHEDULER #24, 2026-09-25)
 milestone: M2
@@ -32,16 +42,6 @@ depends-on: D-710 (same function; stack on land/worker/D-710 once integrated).
 scope: `textchain.mjs` chainKindFor's page branch answers `mixed` for a page covered by two steps of different kinds; a page read one way keeps its one kind. Correct content-chain-kind.test.mjs 1b, 2b and 3 with a comment saying why the old assertion was wrong; move construct 4.unit-chain-kind-mixed to BUILT; fold the rule into the Content Framework's chain_kind section. Unchanged (CONFIRMED): content:ocr stays an equality and never names a mixed unit; content:mixed names it; capture_text.chain_kind stays the chain's LAST step and never reads mixed.
 accepts-when: a D-635 appended page reads `mixed` and a text-layer-only or OCR-only page keeps its one kind (moves: a shared page reading `ocr`). NEGATIVE CONTROL: restore the last-appended rule and the shared-page arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
-
-### D-707 · queued — **op=promote STILL RETURNS A RAW NOT NULL STACK for a missing snapKey (manifest.snap_key), a file with no path (files.path) and a blob file with no bytes (files.bytes)** — the three fields D-578/D-628 did not reach. Found by D-628's worker. — owner RECORD.
-order: after D-692, the same promote function, one worker at a time: a raw stack on a public op breaks DEC-49 and leaks internals (SCHEDULER #24, 2026-09-25)
-milestone: M7
-interface: I3 — three named refusal codes on op=promote; the integrator classifies.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5; the promote corrections D-578 and D-628 built as C-86.5 and C-86.8).
-depends-on: D-692 (same function).
-scope: refuse each of the three by a named DEC-49 code before the transaction, as C-86.8 does for unstated fields. STATE, do not decide: a null files entry, or a bundle.md whose text is a number, is refused GOVERNING_LAWS_REWRITTEN, which names the wrong cause (diagnosis undetermined; measure and report it).
-accepts-when: each of the three answers its named code and no op=promote answer carries a stack (moves: three raw NOT NULL errors). NEGATIVE CONTROL: drop one refusal and its arm reads the raw error, failing by name.
-added: 2026-09-25 · SCHEDULER #24 (id minted by D-628's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

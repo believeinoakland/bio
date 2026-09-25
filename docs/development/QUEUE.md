@@ -854,9 +854,9 @@ scope: every capture entry with no locator carries fetch {route: "unrecorded"}; 
 accepts-when: a no-locator capture's entry states route unrecorded and its leg reads authored-under-ceiling (moves: a silent entry). NEGATIVE CONTROL: omit the key again and the stated-route arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 10:05Z ruling).
 
-### D-692 · running — **A REVISION WHOSE BYTES RESTATE `created` LANDS, and bundles.created keeps the creation's value (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row still says 2026-07-24.** None live (M-181). Found by D-615's worker (minted on land/worker/D-615). — owner RECORD.
+### D-692 · integrated — **A REVISION WHOSE BYTES RESTATE `created` LANDS, and bundles.created keeps the creation's value (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row still says 2026-07-24.** None live (M-181). Found by D-615's worker (minted on land/worker/D-615). — owner RECORD.
+status: integrated — SCHEDULER #24 11:40Z: tip 332c594e (on D-628 db3b94a0), GATE 390/390 GREEN FULLREUSE (22031 assertions; excludes 3 untallied), tree 64e66f0a; REVISION_REDATES_CREATION C-86.9 (region is-promote-redates-creation), replay exempt; CATALOG 1.35.0->1.36.0; reproduced first; minted D-726
 order: after D-628, the same promote function, one worker at a time (SCHEDULER #23, 2026-09-25)
-status: running — SCHEDULER #24 11:00Z: spawned, stacked on land/worker/D-628 @ db3b94a0
 milestone: M7
 interface: I3 — a named refusal on op=promote; the integrator classifies.
 design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5 and D-615's derivation), with State Rules v1.5 §4.7's rule that a writer's timestamp never buys an earlier reading (BOB #35 09:05Z/08:00Z, D-673).
@@ -986,6 +986,17 @@ depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds thi
 scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
+### D-707 · running — **op=promote STILL RETURNS A RAW NOT NULL STACK for a missing snapKey (manifest.snap_key), a file with no path (files.path) and a blob file with no bytes (files.bytes)** — the three fields D-578/D-628 did not reach. Found by D-628's worker. — owner RECORD.
+order: after D-692, the same promote function, one worker at a time: a raw stack on a public op breaks DEC-49 and leaks internals (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:40Z: spawned, stacked on land/worker/D-692 @ 332c594e
+milestone: M7
+interface: I3 — three named refusal codes on op=promote; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5; the promote corrections D-578 and D-628 built as C-86.5 and C-86.8).
+depends-on: none (stacked on land/worker/D-692 @ 332c594e, integrated, on D-628 @ db3b94a0).
+scope: refuse each of the three by a named DEC-49 code before the transaction, as C-86.8 does for unstated fields. STATE, do not decide: a null files entry, or a bundle.md whose text is a number, is refused GOVERNING_LAWS_REWRITTEN, which names the wrong cause (diagnosis undetermined; measure and report it).
+accepts-when: each of the three answers its named code and no op=promote answer carries a stack (moves: three raw NOT NULL errors). NEGATIVE CONTROL: drop one refusal and its arm reads the raw error, failing by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-628's worker).
 
 ### D-632 · queued — **`aicredential.control` arms 3 and 5: ANCHOR DRIFT — arm 3 matches 0; arm 5 matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-631, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
