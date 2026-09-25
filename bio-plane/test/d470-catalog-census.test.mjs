@@ -417,6 +417,13 @@ const CATALOG_CENSUS = {
      the item's tree; no `changed` field (M0-195's grammar). IF ANOTHER BRANCH IN THE SAME BATCH ALSO MOVES THE VERSION,
      THIS ROW IS NOT THE UNION'S. */
   "1.33.0": { count: 506, digest: "02a020a3c1dfed20335d77579aed67824237032f3090f543b814071c0251b65b" },
+  /* 1.34.0 (D-673, 2026-09-25, WORKER D-673, branch land/worker/D-673 stacked on land/worker/D-546 b690552a): NO ARRIVALS,
+     NO DEPARTURES — ONE CHECK CHANGED. C-4.2 reads an undeclared in-bytes `state_history` edge the record's own history
+     corroborates before the fence in D-546's sentence, as stated, not as an error (BOB #35, 2026-09-25 08:00Z). Count and
+     digest from THIS SUITE'S OWN PRINT on the item's tree (unchanged ids, so 1.33.0's). IF ANOTHER BRANCH IN THE SAME
+     BATCH ALSO MOVES THE VERSION, THIS ROW IS NOT THE UNION'S: CONDUCT carries `changed: ["C-4.2"]` onto that entry. */
+  "1.34.0": { count: 506, digest: "02a020a3c1dfed20335d77579aed67824237032f3090f543b814071c0251b65b",
+              changed: ["C-4.2"] },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -525,8 +532,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED by D-563 (2026-09-25): 1.30.0 -> 1.31.0 — C-86.3 and C-86.4 joined the catalogue, so 1.30.0 names the old one. */
 /* CORRECTED by D-578 (2026-09-25): 1.31.0 -> 1.32.0 — C-86.5 joined the catalogue, so 1.31.0 names the old one. */
 /* CORRECTED by D-546 (2026-09-25): 1.32.0 -> 1.33.0 — C-86.6 joined the catalogue, so 1.32.0 names the old one. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.33.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.33.0)", "1.33.0"]);
+/* CORRECTED by D-673 (2026-09-25): 1.33.0 -> 1.34.0 — C-4.2 changed (rule 17), so 1.33.0 names the old rule. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.34.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.34.0)", "1.34.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under

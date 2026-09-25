@@ -146,7 +146,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.33.0";
+export const CATALOG_VERSION = "1.34.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -213,6 +213,11 @@ export const CATALOG_VERSION = "1.33.0";
    CHANGED — C-86.6 STATE_MOVE_UNDECLARED in PROMOTED_TYPE_CHECKS (op=promote asks every type's state-edge table). MINOR;
    505 -> 506, count and digest from the d470 suite's print on this tree. If another branch in the batch also moves the
    version, CONDUCT takes the next number at the union and re-reads the print on the merged tree. */
+/* 1.34.0 (D-673, 2026-09-25, branch land/worker/D-673, stacked on land/worker/D-546): NO ARRIVALS, NO DEPARTURES — ONE
+   CHECK CHANGED. C-4.2 reads an undeclared edge in a document's OWN `state_history` in D-546's sentence, as STATED
+   (info), where the record's own history holds the same move before the fence (BOB #35, 2026-09-25 08:00Z); otherwise
+   the ERROR is unchanged. Rule 17 moves the stamp for a changed check (D-450's precedent); the d470 census row names it
+   in `changed`. If another branch in the batch also moves the version, CONDUCT takes the next number at the union. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -254,7 +259,7 @@ export function runCaseGate({ caseId, edition, fm, priorCase, body = null, membe
 }
 
 export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry,
-                                publishedRegistry, publishedCaseRegistry, earnedRegistry }) {
+                                publishedRegistry, publishedCaseRegistry, earnedRegistry, recordedMoves }) {
   const files = new Map(), elided = new Set();
   for (const [path, v] of Object.entries(image || {})) {
     if (typeof v === "string") files.set(path, v);
@@ -291,6 +296,9 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        refuses the leg outright rather than waving it through, which is why the
        blinding is loud instead of silent. */
     earnedRegistry: earnedRegistry || null,
+    /* D-673: the record's own state moves for this bundle (the store's `recordedMovesFor`). C-4.2 reads it to
+       corroborate an undeclared edge in the document's own bytes; passing null leaves every such edge an ERROR. */
+    recordedMoves: recordedMoves || null,
   });
 
   const errors = findings

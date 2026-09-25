@@ -15697,6 +15697,7 @@ export class Store extends DurableObject {
        with no coded findings sees exactly what they saw before. */
     const tally = {}; const tallyDetail = {}; const offenders = [];
     let clean = 0, withErrors = 0;
+    const statedMoves = []; let statedMovesTotal = 0;
     for (const row of page) {
       const img = this.readImage(row.bundle_id) || {};
       const files = new Map(), elided = new Set();
@@ -15729,9 +15730,18 @@ export class Store extends DurableObject {
                unknown target. Always an object, never null: an empty registry here is a MEASURED answer (no
                target is published), where null would restate the blindness. */
             publishedRegistry: this.publishedRegistryFor(row.bundle_id, targets),
+            /* D-673: the record's own moves, the one fact C-4.2 needs to corroborate an undeclared edge in the
+               document's bytes. Without it every such edge is an ERROR, whatever the record holds. */
+            recordedMoves: this.recordedMovesFor(row.bundle_id),
           };
         })(),
       });
+      /* D-673: a corroborated reading is STATED, like `route` below — not an error, not counted in `tally`. */
+      for (const x of findings)
+        if (x.check === "C-4.2" && x.severity === "info") {
+          statedMovesTotal++;
+          if (statedMoves.length < 20) statedMoves.push({ bundleId: row.bundle_id, check: x.check, detail: x.message });
+        }
       const errs = findings.filter((f) => f.severity === "error");
       if (!errs.length) { clean++; continue; }
       withErrors++;
@@ -15811,6 +15821,14 @@ export class Store extends DurableObject {
       },
       ...(Object.keys(tallyDetail).length ? { tallyDetail } : {}),
       offenders,
+      /* D-673 (BOB #35, 2026-09-25 08:00Z; State Rules v1.5 §4.7): an undeclared edge in a document's OWN
+         `state_history` that the record's own history corroborates, before the fence, is read in D-546's sentence and
+         passes as STATED, not as legal. ALWAYS PRESENT, so "none on this page" and "this build does not say it" never
+         read alike; bounded at 20 like `offenders`, with the whole count beside it. */
+      stated_moves: { listed: statedMoves, total: statedMovesTotal,
+        note: "stated, not conformance errors: each is a move a document's own history records along an edge the "
+            + "current rules do not declare, which the record's own history also holds, dated before the fence. "
+            + "Neither valid nor invalid, and never rewritten (BOB #34, 2026-09-24; BOB #35, 2026-09-25)." },
       /* REC-57: `cursor` and `total` were already here and are UNTOUCHED — between
          them a caller can tell a full page from the whole corpus, so no second
          spelling of that fact is minted. What was missing is the bound that
@@ -35114,6 +35132,53 @@ export class Store extends DurableObject {
      `is-promote-state-edge` says why. A type with no table is counted apart (`no_table`). Bounded by `limit` moves
      listed (the counts are always whole). The `state_history` a document carries in its own bytes is NOT read here:
      that is a caller-written claim about moves, and the gate's C-4.2 is its reader. */
+  /* D-673: THE CENSUS'S PAIRING, FOR ONE BUNDLE — lifted out of `stateMoveCensus` unchanged so the gate's C-4.2 reads
+     the RECORD's moves by the same computation the census counts, never a second one (BOB #35, 2026-09-25 08:00Z: an
+     undeclared edge in a document's own bytes is read in D-546's sentence only where "the pair appears in D-546's
+     `statemovecensus`'s chain-joined record moves for that bundle"). One entry per consecutive pair of promotions in
+     WRITE order: `undetermined` (a side unrecorded, unparsable or stating no state, or a chain that does not join),
+     `in_place`, or `move` with `declared` true / false / null (no table), dated by the later promotion's `created` —
+     the WRITER's `last_updated` where it sent one (D-674 is the row about that word). */
+  #recordedStatePairs(bundleId, objectType) {
+    const fmOf = (text) => {
+      if (typeof text !== "string") return null;
+      const fm = parseFrontmatter(text).data;
+      return fm && typeof fm === "object" && typeof fm.current_state === "string" ? fm : null;
+    };
+    const man = this.#rows(`SELECT snap_key, base, created, author, files_json FROM manifest WHERE bundle_id=? ORDER BY rowid`,
+                           bundleId);
+    const snaps = new Map(this.#rows(`SELECT snap_key, content, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`,
+                                     bundleId).map((r) => [r.snap_key, r]));
+    const head = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+    const versionAfter = man.map((r, j) => (j === man.length - 1 ? head ?? null : snaps.get(man[j + 1].snap_key) ?? null));
+    /* The `bundle.md` digest a promotion's manifest row says it WROTE (null when it names none). */
+    const wrote = (r) => {
+      const f = Store.#manifestFiles(r.files_json).find((x) => x.name === "bundle.md");
+      return f && typeof f.sha256 === "string" && f.sha256 !== "" ? f.sha256.toLowerCase() : null;
+    };
+    const out = [];
+    for (let j = 1; j < man.length; j++) {
+      const joined = wrote(man[j - 1]) !== null && wrote(man[j - 1]) === String(man[j].base ?? "").toLowerCase();
+      const a = joined ? fmOf(versionAfter[j - 1]?.content) : null, z = fmOf(versionAfter[j]?.content);
+      if (!a || !z) { out.push({ kind: "undetermined" }); continue; }
+      if (a.current_state === z.current_state) { out.push({ kind: "in_place" }); continue; }
+      const spec = vocabFor(STATES, typeof a.object_type === "string" ? a.object_type : objectType);
+      const legal = !spec ? null
+        : Object.prototype.hasOwnProperty.call(spec.edges, a.current_state) ? spec.edges[a.current_state] : [];
+      out.push({ kind: "move", from: a.current_state, to: z.current_state, declared: legal === null ? null : legal.includes(z.current_state),
+                 date: man[j].created ?? null, snap_key: man[j].snap_key, author: man[j].author ?? null });
+    }
+    return out;
+  }
+  /* D-673: C-4.2's registry — every recorded MOVE of this bundle (declared or not, since C-4.2 judges the edge itself),
+     in the shape `checkBundle`'s `recordedMoves` reads. Always an object: an empty list is a MEASURED answer (the
+     record holds no move), which the catalogue treats exactly as it treats absence — nothing corroborated. */
+  recordedMovesFor(bundleId) {
+    const row = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!row) return { moves: [] };
+    return { moves: this.#recordedStatePairs(bundleId, row.object_type).filter((p) => p.kind === "move")
+      .map((p) => ({ from: p.from, to: p.to, date: p.date, snap_key: p.snap_key })) };
+  }
   stateMoveCensus({ limit } = {}) {
     const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
     const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
@@ -35123,43 +35188,22 @@ export class Store extends DurableObject {
       const row = out.per_type[t] || (out.per_type[t] = { moves: 0, undeclared: 0, revisions_in_place: 0, undetermined: 0 });
       row[k]++;
     };
-    const fmOf = (text) => {
-      if (typeof text !== "string") return null;
-      const fm = parseFrontmatter(text).data;
-      return fm && typeof fm === "object" && typeof fm.current_state === "string" ? fm : null;
-    };
     for (const b of this.#rows(`SELECT bundle_id, object_type FROM bundles ORDER BY bundle_id`)) {
       out.bundles++;
       const t = normalizeType(b.object_type);
-      const man = this.#rows(`SELECT snap_key, base, created, author, files_json FROM manifest WHERE bundle_id=? ORDER BY rowid`,
-                             b.bundle_id);
-      const snaps = new Map(this.#rows(`SELECT snap_key, content, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`,
-                                       b.bundle_id).map((r) => [r.snap_key, r]));
-      const head = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, b.bundle_id);
-      const versionAfter = man.map((r, j) => (j === man.length - 1 ? head ?? null : snaps.get(man[j + 1].snap_key) ?? null));
-      /* The `bundle.md` digest a promotion's manifest row says it WROTE (null when it names none). */
-      const wrote = (r) => {
-        const f = Store.#manifestFiles(r.files_json).find((x) => x.name === "bundle.md");
-        return f && typeof f.sha256 === "string" && f.sha256 !== "" ? f.sha256.toLowerCase() : null;
-      };
-      for (let j = 1; j < man.length; j++) {
+      for (const p of this.#recordedStatePairs(b.bundle_id, b.object_type)) {
         out.pairs++;
-        const joined = wrote(man[j - 1]) !== null && wrote(man[j - 1]) === String(man[j].base ?? "").toLowerCase();
-        const a = joined ? fmOf(versionAfter[j - 1]?.content) : null, z = fmOf(versionAfter[j]?.content);
-        if (!a || !z) { out.undetermined++; tally(t, "undetermined"); continue; }
-        if (a.current_state === z.current_state) { out.revisions_in_place++; tally(t, "revisions_in_place"); continue; }
+        if (p.kind === "undetermined") { out.undetermined++; tally(t, "undetermined"); continue; }
+        if (p.kind === "in_place") { out.revisions_in_place++; tally(t, "revisions_in_place"); continue; }
         out.moves++; tally(t, "moves");
-        const spec = vocabFor(STATES, typeof a.object_type === "string" ? a.object_type : b.object_type);
-        if (!spec) { out.no_table++; continue; }
-        const edges = spec.edges;
-        const legal = Object.prototype.hasOwnProperty.call(edges, a.current_state) ? edges[a.current_state] : [];
-        if (legal.includes(z.current_state)) continue;
+        if (p.declared === null) { out.no_table++; continue; }
+        if (p.declared) continue;
         out.undeclared++; tally(t, "undeclared");
         const fence = stateMoveFencedSince(t);
         if (out.listed.length < cap)
-          out.listed.push({ bundle_id: b.bundle_id, object_type: t, from: a.current_state, to: z.current_state,
-                            date: man[j].created ?? null, snap_key: man[j].snap_key, author: man[j].author ?? null,
-                            fenced_since: fence, reading: stateMoveOutsideRules(fence, man[j].created) });
+          out.listed.push({ bundle_id: b.bundle_id, object_type: t, from: p.from, to: p.to,
+                            date: p.date, snap_key: p.snap_key, author: p.author,
+                            fenced_since: fence, reading: stateMoveOutsideRules(fence, p.date) });
       }
     }
     out.dated_by = "the manifest's created: the writer's last_updated where it sent one, else the plane's clock";
@@ -36901,6 +36945,9 @@ export class Store extends DurableObject {
          bytes because the column has not been written yet. */
       earnedRegistry: this.earnedBasisRegistry(this.#subjectEntityOf(bundleId),
         this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, bundleId).map((r) => r.target_id)),
+      /* D-673: the record's own moves, so C-4.2 at the ratification gate reads a corroborated undeclared edge in the
+         document's bytes exactly as the audit sweep does. */
+      recordedMoves: this.recordedMovesFor(bundleId),
     };
   }
 

@@ -10794,6 +10794,8 @@ export default {
            cannot confirm one, and threading it here is what makes the gate and
            op=promote's write path judge an earned leg identically. */
         earnedRegistry: facts.earnedRegistry,
+        /* D-673: the record's own state moves, from the same facts, so C-4.2 corroborates at ratify as at the audit. */
+        recordedMoves: facts.recordedMoves,
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);

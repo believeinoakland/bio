@@ -1326,6 +1326,10 @@ function checkStateLegality(ctx, findings) {
     findings.push(f('C-4.1', 'error', `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(', ')})`));
   }
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+  /* D-673: the record's chain-joined moves for this bundle, or none — absent means the caller cannot see the record
+     (the cli, a filesystem), and then nothing is corroborated: the ERROR stands, never a softer reading. */
+  const corroborating = Array.isArray(ctx.recordedMoves?.moves)
+    ? ctx.recordedMoves.moves.filter((m) => m && typeof m.from === 'string' && typeof m.to === 'string') : [];
   let prevTs = null;
   for (let i = 0; i < hist.length; i++) {
     const e = hist[i];
@@ -1342,7 +1346,24 @@ function checkStateLegality(ctx, findings) {
     prevTs = e.timestamp || prevTs;
     const edges = spec.edges[e.from_state];
     if (edges && !edges.includes(e.to_state)) {
-      findings.push(f('C-4.2', 'error', `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge`));
+      /* D-673 (BOB #35, 2026-09-25 08:00Z, option (b); State Rules v1.5 §4.7): an undeclared edge in the document's
+         OWN bytes is read in D-546's sentence ONLY where the RECORD's own history holds the same move — a chain-joined
+         pair of recorded versions (`ctx.recordedMoves`, the census's own computation, injected by the store) from
+         `from_state` to `to_state`, dated before the fence. Anything else keeps the ERROR. The entry's own `timestamp`
+         is the writer's and is NOT read here: a writer could backdate it, so it never buys the reading alone. Each
+         recorded move corroborates at most ONE entry, so the reading is never larger than the record's count. The
+         reading is STATED (info), neither valid nor invalid, and the gate passes it as stated, not as legal. */
+      const fence = stateMoveFencedSince(ot);
+      const k = corroborating.findIndex((m) => m.from === e.from_state && m.to === e.to_state
+        && stateMoveBeforeFence(fence, m.date));
+      if (k >= 0) {
+        const m = corroborating.splice(k, 1)[0];
+        findings.push(f('C-4.2', 'info', `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge: `
+          + `${stateMoveOutsideRules(fence, m.date)}; the record's own history holds the same move`
+          + `${m.snap_key ? ` (promotion ${m.snap_key})` : ''}, dated by its writer ${m.date}`));
+      } else {
+        findings.push(f('C-4.2', 'error', `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge`));
+      }
     }
   }
   if (hist.length > 0) {
@@ -6775,6 +6796,10 @@ export async function checkBundle(input, opts = {}) {
        Absent means the caller cannot see the record (the cli, the migrate tool).
        Every path a real caller has injects it. */
     earnedRegistry: input.earnedRegistry || null,
+    /* D-673: the RECORD's chain-joined state moves for this bundle, `{ moves: [{from, to, date, snap_key}] }`, from
+       the same computation `op=statemovecensus` runs. C-4.2 reads it to corroborate an undeclared edge in the
+       document's own `state_history`; absent, nothing is corroborated and C-4.2's ERROR stands. */
+    recordedMoves: input.recordedMoves || null,
     sha512: input.sha512 || null,
     fm: null,
     body: ''
@@ -15467,8 +15492,13 @@ export const PROMOTED_TYPE_CHECKS = {
  * holds: a move dated on or after it is said to be so rather than placed "before" it. `bias` is D-468's. */
 export const STATE_MOVE_FENCED_SINCE = { bias: '2026-09-24', '*': '2026-09-25' };
 export const stateMoveFencedSince = (t) => STATE_MOVE_FENCED_SINCE[normalizeType(t)] ?? STATE_MOVE_FENCED_SINCE['*'];
+/* D-673: ONE predicate for "dated before the fence", read by the census's sentence below and by C-4.2's corroboration
+ * (`checkStateLegality`), so the gate can never place a move before the fence that the census would not. The date is
+ * the day part of a writer's `created`; a move dated ON the fence's day is NOT before it (the fence is a date, and
+ * which side of it that day's writes fell is not recorded). */
+export const stateMoveBeforeFence = (fence, date) => typeof date === 'string' && date.slice(0, 10) < fence;
 export const stateMoveOutsideRules = (fence, date) =>
-  typeof date === 'string' && date.slice(0, 10) < fence
+  stateMoveBeforeFence(fence, date)
     ? `made by a path the current rules do not allow (before ${fence})`
     : `made by a path the current rules do not allow (dated ${typeof date === 'string' ? date : 'undetermined'}, `
       + `not before the fence of ${fence}: which plane accepted it is not recorded)`;

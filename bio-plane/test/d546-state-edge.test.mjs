@@ -21,7 +21,7 @@
  * WHAT THIS CANNOT SEE: a deployed instance's history (M-179 reads it; the op is the method a sovereign instance runs);
  * a move whose date the writer misstated (the census dates a move by the manifest's `created`, which is the writer's
  * `last_updated` where it sent one — a caller's statement, said so on the answer); the in-bytes `state_history` a
- * document carries (the gate's C-4.2 reads it, and does not yet speak the ruling's sentence — reported, not built).
+ * document carries (the gate's C-4.2 reads it, in the ruling's sentence only where the record corroborates it — D-673's suite).
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */

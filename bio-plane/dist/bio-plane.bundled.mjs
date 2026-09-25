@@ -4625,6 +4625,7 @@ __export(bio_checks_exports, {
   sha256HexSync: () => sha256HexSync,
   signerKeysAt: () => signerKeysAt,
   sshsigSignedBlob: () => sshsigSignedBlob,
+  stateMoveBeforeFence: () => stateMoveBeforeFence,
   stateMoveFencedSince: () => stateMoveFencedSince,
   stateMoveOutsideRules: () => stateMoveOutsideRules,
   sufficiencyClaimState: () => sufficiencyClaimState,
@@ -5478,6 +5479,7 @@ function checkStateLegality(ctx, findings) {
     findings.push(f("C-4.1", "error", `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(", ")})`));
   }
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+  const corroborating = Array.isArray(ctx.recordedMoves?.moves) ? ctx.recordedMoves.moves.filter((m) => m && typeof m.from === "string" && typeof m.to === "string") : [];
   let prevTs = null;
   for (let i = 0; i < hist.length; i++) {
     const e = hist[i];
@@ -5497,7 +5499,14 @@ function checkStateLegality(ctx, findings) {
     prevTs = e.timestamp || prevTs;
     const edges = spec.edges[e.from_state];
     if (edges && !edges.includes(e.to_state)) {
-      findings.push(f("C-4.2", "error", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge`));
+      const fence = stateMoveFencedSince(ot);
+      const k = corroborating.findIndex((m) => m.from === e.from_state && m.to === e.to_state && stateMoveBeforeFence(fence, m.date));
+      if (k >= 0) {
+        const m = corroborating.splice(k, 1)[0];
+        findings.push(f("C-4.2", "info", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge: ${stateMoveOutsideRules(fence, m.date)}; the record's own history holds the same move${m.snap_key ? ` (promotion ${m.snap_key})` : ""}, dated by its writer ${m.date}`));
+      } else {
+        findings.push(f("C-4.2", "error", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge`));
+      }
     }
   }
   if (hist.length > 0) {
@@ -9516,6 +9525,10 @@ async function checkBundle(input, opts = {}) {
        Absent means the caller cannot see the record (the cli, the migrate tool).
        Every path a real caller has injects it. */
     earnedRegistry: input.earnedRegistry || null,
+    /* D-673: the RECORD's chain-joined state moves for this bundle, `{ moves: [{from, to, date, snap_key}] }`, from
+       the same computation `op=statemovecensus` runs. C-4.2 reads it to corroborate an undeclared edge in the
+       document's own `state_history`; absent, nothing is corroborated and C-4.2's ERROR stands. */
+    recordedMoves: input.recordedMoves || null,
     sha512: input.sha512 || null,
     fm: null,
     body: ""
@@ -14640,7 +14653,8 @@ var PROMOTED_TYPE_CHECKS = {
 };
 var STATE_MOVE_FENCED_SINCE = { bias: "2026-09-24", "*": "2026-09-25" };
 var stateMoveFencedSince = (t) => STATE_MOVE_FENCED_SINCE[normalizeType(t)] ?? STATE_MOVE_FENCED_SINCE["*"];
-var stateMoveOutsideRules = (fence, date) => typeof date === "string" && date.slice(0, 10) < fence ? `made by a path the current rules do not allow (before ${fence})` : `made by a path the current rules do not allow (dated ${typeof date === "string" ? date : "undetermined"}, not before the fence of ${fence}: which plane accepted it is not recorded)`;
+var stateMoveBeforeFence = (fence, date) => typeof date === "string" && date.slice(0, 10) < fence;
+var stateMoveOutsideRules = (fence, date) => stateMoveBeforeFence(fence, date) ? `made by a path the current rules do not allow (before ${fence})` : `made by a path the current rules do not allow (dated ${typeof date === "string" ? date : "undetermined"}, not before the fence of ${fence}: which plane accepted it is not recorded)`;
 var RISK_TIER_REVISION_CHECKS = {
   RISK_TIER_REWRITTEN: {
     check: "C-90.1",
@@ -16200,7 +16214,7 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.33.0";
+var CATALOG_VERSION = "1.34.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
@@ -16229,7 +16243,8 @@ async function runGate({
   releaseRegistry,
   publishedRegistry,
   publishedCaseRegistry,
-  earnedRegistry
+  earnedRegistry,
+  recordedMoves
 }) {
   const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
   for (const [path, v] of Object.entries(image || {})) {
@@ -16265,7 +16280,10 @@ async function runGate({
        rows are. Passing null here does not soften the gate either: checkEarnedLeg
        refuses the leg outright rather than waving it through, which is why the
        blinding is loud instead of silent. */
-    earnedRegistry: earnedRegistry || null
+    earnedRegistry: earnedRegistry || null,
+    /* D-673: the record's own state moves for this bundle (the store's `recordedMovesFor`). C-4.2 reads it to
+       corroborate an undeclared edge in the document's own bytes; passing null leaves every such edge an ERROR. */
+    recordedMoves: recordedMoves || null
   });
   const errors = findings.filter((f2) => f2.severity === "error").map((f2) => ({ check: f2.check, detail: f2.message, ...f2.repairs ? { repairs: f2.repairs } : {} }));
   for (const r of registers || []) {
@@ -45946,6 +45964,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const tallyDetail = {};
     const offenders = [];
     let clean = 0, withErrors = 0;
+    const statedMoves = [];
+    let statedMovesTotal = 0;
     for (const row of page) {
       const img = this.readImage(row.bundle_id) || {};
       const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
@@ -45983,10 +46003,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                — C-21.2's whole subject — was never looked at, because checkInheritedLeg returns early on an
                unknown target. Always an object, never null: an empty registry here is a MEASURED answer (no
                target is published), where null would restate the blindness. */
-            publishedRegistry: this.publishedRegistryFor(row.bundle_id, targets)
+            publishedRegistry: this.publishedRegistryFor(row.bundle_id, targets),
+            /* D-673: the record's own moves, the one fact C-4.2 needs to corroborate an undeclared edge in the
+               document's bytes. Without it every such edge is an ERROR, whatever the record holds. */
+            recordedMoves: this.recordedMovesFor(row.bundle_id)
           };
         })()
       });
+      for (const x of findings)
+        if (x.check === "C-4.2" && x.severity === "info") {
+          statedMovesTotal++;
+          if (statedMoves.length < 20) statedMoves.push({ bundleId: row.bundle_id, check: x.check, detail: x.message });
+        }
       const errs = findings.filter((f2) => f2.severity === "error");
       if (!errs.length) {
         clean++;
@@ -46054,6 +46082,15 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       },
       ...Object.keys(tallyDetail).length ? { tallyDetail } : {},
       offenders,
+      /* D-673 (BOB #35, 2026-09-25 08:00Z; State Rules v1.5 §4.7): an undeclared edge in a document's OWN
+         `state_history` that the record's own history corroborates, before the fence, is read in D-546's sentence and
+         passes as STATED, not as legal. ALWAYS PRESENT, so "none on this page" and "this build does not say it" never
+         read alike; bounded at 20 like `offenders`, with the whole count beside it. */
+      stated_moves: {
+        listed: statedMoves,
+        total: statedMovesTotal,
+        note: "stated, not conformance errors: each is a move a document's own history records along an edge the current rules do not declare, which the record's own history also holds, dated before the fence. Neither valid nor invalid, and never rewritten (BOB #34, 2026-09-24; BOB #35, 2026-09-25)."
+      },
       /* REC-57: `cursor` and `total` were already here and are UNTOUCHED — between
          them a caller can tell a full page from the whole corpus, so no second
          spelling of that fact is minted. What was missing is the bound that
@@ -63550,6 +63587,67 @@ ${words}`;
      `is-promote-state-edge` says why. A type with no table is counted apart (`no_table`). Bounded by `limit` moves
      listed (the counts are always whole). The `state_history` a document carries in its own bytes is NOT read here:
      that is a caller-written claim about moves, and the gate's C-4.2 is its reader. */
+  /* D-673: THE CENSUS'S PAIRING, FOR ONE BUNDLE — lifted out of `stateMoveCensus` unchanged so the gate's C-4.2 reads
+     the RECORD's moves by the same computation the census counts, never a second one (BOB #35, 2026-09-25 08:00Z: an
+     undeclared edge in a document's own bytes is read in D-546's sentence only where "the pair appears in D-546's
+     `statemovecensus`'s chain-joined record moves for that bundle"). One entry per consecutive pair of promotions in
+     WRITE order: `undetermined` (a side unrecorded, unparsable or stating no state, or a chain that does not join),
+     `in_place`, or `move` with `declared` true / false / null (no table), dated by the later promotion's `created` —
+     the WRITER's `last_updated` where it sent one (D-674 is the row about that word). */
+  #recordedStatePairs(bundleId, objectType) {
+    const fmOf = (text) => {
+      if (typeof text !== "string") return null;
+      const fm = parseFrontmatter(text).data;
+      return fm && typeof fm === "object" && typeof fm.current_state === "string" ? fm : null;
+    };
+    const man = this.#rows(
+      `SELECT snap_key, base, created, author, files_json FROM manifest WHERE bundle_id=? ORDER BY rowid`,
+      bundleId
+    );
+    const snaps = new Map(this.#rows(
+      `SELECT snap_key, content, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`,
+      bundleId
+    ).map((r) => [r.snap_key, r]));
+    const head = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+    const versionAfter = man.map((r, j) => j === man.length - 1 ? head ?? null : snaps.get(man[j + 1].snap_key) ?? null);
+    const wrote = (r) => {
+      const f2 = _Store.#manifestFiles(r.files_json).find((x) => x.name === "bundle.md");
+      return f2 && typeof f2.sha256 === "string" && f2.sha256 !== "" ? f2.sha256.toLowerCase() : null;
+    };
+    const out = [];
+    for (let j = 1; j < man.length; j++) {
+      const joined = wrote(man[j - 1]) !== null && wrote(man[j - 1]) === String(man[j].base ?? "").toLowerCase();
+      const a = joined ? fmOf(versionAfter[j - 1]?.content) : null, z = fmOf(versionAfter[j]?.content);
+      if (!a || !z) {
+        out.push({ kind: "undetermined" });
+        continue;
+      }
+      if (a.current_state === z.current_state) {
+        out.push({ kind: "in_place" });
+        continue;
+      }
+      const spec = vocabFor(STATES, typeof a.object_type === "string" ? a.object_type : objectType);
+      const legal = !spec ? null : Object.prototype.hasOwnProperty.call(spec.edges, a.current_state) ? spec.edges[a.current_state] : [];
+      out.push({
+        kind: "move",
+        from: a.current_state,
+        to: z.current_state,
+        declared: legal === null ? null : legal.includes(z.current_state),
+        date: man[j].created ?? null,
+        snap_key: man[j].snap_key,
+        author: man[j].author ?? null
+      });
+    }
+    return out;
+  }
+  /* D-673: C-4.2's registry — every recorded MOVE of this bundle (declared or not, since C-4.2 judges the edge itself),
+     in the shape `checkBundle`'s `recordedMoves` reads. Always an object: an empty list is a MEASURED answer (the
+     record holds no move), which the catalogue treats exactly as it treats absence — nothing corroborated. */
+  recordedMovesFor(bundleId) {
+    const row = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!row) return { moves: [] };
+    return { moves: this.#recordedStatePairs(bundleId, row.object_type).filter((p) => p.kind === "move").map((p) => ({ from: p.from, to: p.to, date: p.date, snap_key: p.snap_key })) };
+  }
   stateMoveCensus({ limit } = {}) {
     const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
     const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
@@ -63570,52 +63668,28 @@ ${words}`;
       const row = out.per_type[t] || (out.per_type[t] = { moves: 0, undeclared: 0, revisions_in_place: 0, undetermined: 0 });
       row[k]++;
     };
-    const fmOf = (text) => {
-      if (typeof text !== "string") return null;
-      const fm = parseFrontmatter(text).data;
-      return fm && typeof fm === "object" && typeof fm.current_state === "string" ? fm : null;
-    };
     for (const b of this.#rows(`SELECT bundle_id, object_type FROM bundles ORDER BY bundle_id`)) {
       out.bundles++;
       const t = normalizeType(b.object_type);
-      const man = this.#rows(
-        `SELECT snap_key, base, created, author, files_json FROM manifest WHERE bundle_id=? ORDER BY rowid`,
-        b.bundle_id
-      );
-      const snaps = new Map(this.#rows(
-        `SELECT snap_key, content, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`,
-        b.bundle_id
-      ).map((r) => [r.snap_key, r]));
-      const head = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, b.bundle_id);
-      const versionAfter = man.map((r, j) => j === man.length - 1 ? head ?? null : snaps.get(man[j + 1].snap_key) ?? null);
-      const wrote = (r) => {
-        const f2 = _Store.#manifestFiles(r.files_json).find((x) => x.name === "bundle.md");
-        return f2 && typeof f2.sha256 === "string" && f2.sha256 !== "" ? f2.sha256.toLowerCase() : null;
-      };
-      for (let j = 1; j < man.length; j++) {
+      for (const p of this.#recordedStatePairs(b.bundle_id, b.object_type)) {
         out.pairs++;
-        const joined = wrote(man[j - 1]) !== null && wrote(man[j - 1]) === String(man[j].base ?? "").toLowerCase();
-        const a = joined ? fmOf(versionAfter[j - 1]?.content) : null, z = fmOf(versionAfter[j]?.content);
-        if (!a || !z) {
+        if (p.kind === "undetermined") {
           out.undetermined++;
           tally(t, "undetermined");
           continue;
         }
-        if (a.current_state === z.current_state) {
+        if (p.kind === "in_place") {
           out.revisions_in_place++;
           tally(t, "revisions_in_place");
           continue;
         }
         out.moves++;
         tally(t, "moves");
-        const spec = vocabFor(STATES, typeof a.object_type === "string" ? a.object_type : b.object_type);
-        if (!spec) {
+        if (p.declared === null) {
           out.no_table++;
           continue;
         }
-        const edges = spec.edges;
-        const legal = Object.prototype.hasOwnProperty.call(edges, a.current_state) ? edges[a.current_state] : [];
-        if (legal.includes(z.current_state)) continue;
+        if (p.declared) continue;
         out.undeclared++;
         tally(t, "undeclared");
         const fence = stateMoveFencedSince(t);
@@ -63623,13 +63697,13 @@ ${words}`;
           out.listed.push({
             bundle_id: b.bundle_id,
             object_type: t,
-            from: a.current_state,
-            to: z.current_state,
-            date: man[j].created ?? null,
-            snap_key: man[j].snap_key,
-            author: man[j].author ?? null,
+            from: p.from,
+            to: p.to,
+            date: p.date,
+            snap_key: p.snap_key,
+            author: p.author,
             fenced_since: fence,
-            reading: stateMoveOutsideRules(fence, man[j].created)
+            reading: stateMoveOutsideRules(fence, p.date)
           });
       }
     }
@@ -65487,7 +65561,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       earnedRegistry: this.earnedBasisRegistry(
         this.#subjectEntityOf(bundleId),
         this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, bundleId).map((r) => r.target_id)
-      )
+      ),
+      /* D-673: the record's own moves, so C-4.2 at the ratification gate reads a corroborated undeclared edge in the
+         document's bytes exactly as the audit sweep does. */
+      recordedMoves: this.recordedMovesFor(bundleId)
     };
   }
   /* REC-14 / DEC-12: the committer APPENDS AN EDITION. It used to UPSERT on
@@ -86876,6 +86953,8 @@ var index_default = {
            cannot confirm one, and threading it here is what makes the gate and
            op=promote's write path judge an earned leg identically. */
         earnedRegistry: facts.earnedRegistry,
+        /* D-673: the record's own state moves, from the same facts, so C-4.2 corroborates at ratify as at the audit. */
+        recordedMoves: facts.recordedMoves,
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
