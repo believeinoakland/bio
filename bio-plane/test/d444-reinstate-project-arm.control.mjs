@@ -42,14 +42,15 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { controlPen } from "./pen.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
 const STORE = join(PLANE, "src/store.mjs");
 const AFF = join(PLANE, "src/affordances.mjs");
 const SUITE = join(HERE, "affordances.test.mjs");
-const SNAP = process.env.D444_CONTROL_SNAP
-  ? mkdtempSync(join(process.env.D444_CONTROL_SNAP, "d444-control-"))
-  : mkdtempSync(join(tmpdir(), "d444-control-"));
+/* M0-182's one spelling (moved at c20-batch27 by CONDUCT #20): both old branches were already outside the
+   worktree, but the env-var-first expression is one the pen sweep cannot resolve (UNCLASSIFIED). */
+const SNAP = controlPen("d444");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 const PROJ_ARM = `|| (ty === "project" && (f.cites_out.severed_reinstatable ?? 0) > 0\n`

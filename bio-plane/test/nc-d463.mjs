@@ -24,6 +24,11 @@ import { readFileSync, writeFileSync, copyFileSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { controlPen } from "./pen.mjs";
+/* THE PEN IS OUTSIDE THE WORKTREE (M0-182; moved at c20-batch27 by CONDUCT #20): this driver wrote its pristine
+   copy BESIDE src/index.mjs, an undeclared in-worktree pen the floored nc-* class refuses (pen-sweep). */
+const PEN = controlPen("d463");
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./d463-confined-credential.test.mjs", import.meta.url));
@@ -65,7 +70,7 @@ const ARMS = [
 
 const rows = [];
 for (const arm of ARMS) {
-  const aside = `${SRC}.nc-d463-${arm.id}.pristine`;
+  const aside = join(PEN, `index.mjs.${arm.id}.pristine`);
   copyFileSync(SRC, aside);
   let text = PRISTINE.toString("utf8"), armed = true;
   for (const [from, to] of arm.patch) {

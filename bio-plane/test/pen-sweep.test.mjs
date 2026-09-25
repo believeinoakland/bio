@@ -83,7 +83,13 @@ t("the CLI's verdict agrees (exit 0)", code, 0);
 /* CEILINGS on the rest of the estate, NOT targets: BOB #33 let a declared in-worktree pen stand, so these
    are held where M0-182 left them and cannot grow in silence. Measured on this tree, 2026-09-24. */
 t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (<= 55)", g("IN-WORKTREE/DIRTY").length <= 55, true);
-t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left (<= 14)", g("UNCLASSIFIED").length <= 14, true);
+/* CEILING RAISED 14 -> 15 at c20-batch27 (CONDUCT #20), with its reason, because a ceiling that rises owes one:
+   `d510-promoted-type.control.mjs` (D-510, landed c20-batch25, AFTER M0-182's base) pens correctly — mkdtemp
+   under tmpdir — but COPIES `join(REPO, "docprofile")` INTO it, and this walk reads a copy SOURCE as a path
+   expression it cannot resolve. That is the instrument's blind spot, not a pen defect (routed to SCHEDULER #21:
+   the sweep should tell a copy source from a destination). nc-d463/nc-d475/nc-d490/d444 were MOVED to controlPen
+   in the same landing rather than counted. */
+t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus D-510's copy source (<= 15)", g("UNCLASSIFIED").length <= 15, true);
 /* The named drivers this row moved FIRST, each by name rather than by a count. */
 t("the six drivers that owned those seven pens are all graded, and none is dirty",
   ["coord.control.mjs", "delegations.control.mjs", "entries.control.mjs", "m0107-budget.control.mjs",
