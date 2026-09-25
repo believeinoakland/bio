@@ -1,0 +1,16 @@
+{
+ "unit": "ui:passage-surface.test.mjs",
+ "inputHash": "0a6dc3fa499e41e100307fa4a7335019937752c7ee1d1dec859df3907c0e6795",
+ "verdict": "PASS",
+ "run": "38fbc39738e097a55bd5e95b2a8678318f934c1c.1790298132245.1333.json",
+ "tree": "38fbc39738e097a55bd5e95b2a8678318f934c1c",
+ "head": "5690f75f0f05d1d45748e0dbda34b0e1e2d8a48d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 85,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "80d125b1-3c05-5fc4-b768-8ea665616a51",
+ "at": "2026-09-25T01:02:12.258Z"
+}
