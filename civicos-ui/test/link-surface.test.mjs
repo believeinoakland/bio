@@ -19,12 +19,13 @@
  *   references are the ones the plane actually emits rather than ones invented
  *   here.
  *
- * NEGATIVE CONTROL (D-729, 2026-09-25, each arm alone on civicos-ui/app.html
- * linkRow, restored by sha256 + cmp): OLD LABEL (chrome=1 -> "site navigation")
- * fails "no-overclaim: containment alone is never called site navigation";
- * BASIS DROPPED (always "basis not recorded") fails "labelled as a page-furniture
- * region with its basis ..."; OVER-STRICTNESS (tooltip reworded, label kept)
- * stays green; BASELINE green.
+ * NEGATIVE CONTROL: RUN 2026-09-25 (D-729), each arm ALONE on civicos-ui/app.html
+ * linkRow, restored by sha256 + cmp against a per-arm pristine; BASELINE green.
+ *   (a) the old label restored (chrome=1 renders "site navigation") -> FAILS
+ *       "no-overclaim: containment alone is never called site navigation"
+ *   (b) the basis dropped (always "basis not recorded") -> FAILS "labelled as a
+ *       page-furniture region with its basis, reclassification possible"
+ *   (c) OVER-STRICTNESS, the tooltip reworded with the label kept -> stays GREEN
  *
  * The load-bearing assertions:
  *   1. All five partitions render distinguishably, and refused is its own
