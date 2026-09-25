@@ -150,7 +150,8 @@ const promote = async (id, text, type, docs = [], tok = "mem-r221") => {
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260925T${String(100000 + (++snap)).slice(-6)}Z_${sha(String(snap)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: this item was cut before D-563, whose C-86.3 refuses an envelope title the held document contradicts; the envelope title `Bundle <id>` is dropped as D-563 dropped it in its own fixtures, and promote derives it from the document. */
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
     files,
     register: docs.map((c) => ({ sha256: c.sha, path: `documents/${c.sha.slice(0, 8)}.${c.fmt}`,
