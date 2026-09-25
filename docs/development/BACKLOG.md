@@ -43,6 +43,16 @@ scope: `textchain.mjs` chainKindFor's page branch answers `mixed` for a page cov
 accepts-when: a D-635 appended page reads `mixed` and a text-layer-only or OCR-only page keeps its one kind (moves: a shared page reading `ocr`). NEGATIVE CONTROL: restore the last-appended rule and the shared-page arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
 
+### D-707 · queued — **op=promote STILL RETURNS A RAW NOT NULL STACK for a missing snapKey (manifest.snap_key), a file with no path (files.path) and a blob file with no bytes (files.bytes)** — the three fields D-578/D-628 did not reach. Found by D-628's worker. — owner RECORD.
+order: after D-692, the same promote function, one worker at a time: a raw stack on a public op breaks DEC-49 and leaks internals (SCHEDULER #24, 2026-09-25)
+milestone: M7
+interface: I3 — three named refusal codes on op=promote; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5; the promote corrections D-578 and D-628 built as C-86.5 and C-86.8).
+depends-on: D-692 (same function).
+scope: refuse each of the three by a named DEC-49 code before the transaction, as C-86.8 does for unstated fields. STATE, do not decide: a null files entry, or a bundle.md whose text is a number, is refused GOVERNING_LAWS_REWRITTEN, which names the wrong cause (diagnosis undetermined; measure and report it).
+accepts-when: each of the three answers its named code and no op=promote answer carries a stack (moves: three raw NOT NULL errors). NEGATIVE CONTROL: drop one refusal and its arm reads the raw error, failing by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-628's worker).
+
 ### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
 order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0
@@ -145,16 +155,6 @@ depends-on: D-685 (the same assembly; stacked on D-684).
 scope: lift the containerExtent projection out of the wire block into one function both paths call (as textUnitsFor was, CPDF-19); a CSV's sheet list is held; an out-of-range sheet citation is refused by name.
 accepts-when: a CSV citation naming a sheet it lacks is refused by name, and its version notice reads its sheet list (moves: an undetermined skip where a refusal is owed). NEGATIVE CONTROL: call the projection on the wire path only again and the CSV refusal arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-684's worker).
-
-### D-692 · queued — **A REVISION WHOSE BYTES RESTATE `created` LANDS, and bundles.created keeps the creation's value (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row still says 2026-07-24.** None live (M-181). Found by D-615's worker (minted on land/worker/D-615). — owner RECORD.
-order: after D-628, the same promote function, one worker at a time (SCHEDULER #23, 2026-09-25)
-milestone: M7
-interface: I3 — a named refusal on op=promote; the integrator classifies.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5 and D-615's derivation), with State Rules v1.5 §4.7's rule that a writer's timestamp never buys an earlier reading (BOB #35 09:05Z/08:00Z, D-673).
-depends-on: D-628 (same function).
-scope: refuse by name a non-replay revision whose document's `created` differs from the head's (C-86.2's shape, one field over); replay exempt as D-615 made it. Decided by SCHEDULER #23: refusal, not moving the row — moving it would let any writer backdate a creation, which the record's own rules already refuse elsewhere.
-accepts-when: a revision restating a different `created` is refused by name, and one restating the same lands (moves: row and bytes disagreeing). NEGATIVE CONTROL: drop the check and the backdated-revision arm lands, failing by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-615's worker).
 
 ### D-630 · queued — **`suggest.control` arm 7: ANCHOR DRIFT — `    if (prior) {` matches 2 since D-536, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-667, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
@@ -1091,4 +1091,14 @@ design: `docs/development/VERIFICATION.md` "The negative-control register".
 depends-on: none.
 scope: break only where `markerPositions` says a marker BEGINS (the phrase followed by one of MARKER_SEPARATORS); re-read the coverage floor from the print. ALSO (REC-199's worker, via CONDUCT #20 21:43Z): `declarationAt` ends a declaration at the first blank line whose next paragraph does not open with an ordinal; measured reviewcopy.test.mjs credited 5 arms of 14 + baseline (`arms: 5, lines: 38`, main and branch), REC-133's and REC-198's arms never counted. Cross a blank line when ANY later paragraph of the same comment opens a list item; reviewcopy 5 -> 15 is its negative control; re-read REGISTER_FLOOR from the print. ALSO (M0-176 F3, CONDUCT #20 22:40Z): only a suite's FIRST `NEGATIVE CONTROL:` block is read, so `gates.test.mjs`'s later blocks go uncounted; count every block.
 accepts-when: coverage --strict counts the full arms again, later blocks included. NEGATIVE CONTROL: a citation mid-declaration does not truncate it, and a real second marker still ends it — each arm by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-167 · queued — **`gates.control.mjs` NEVER ASSERTS THE ABSENCE OF UNDECLARED FAILURES: an arm measuring more than its subject is described, not caught — G2 fails 29 where 3 are declared, G17 fails 11 where 5 are.** Found by M0-157's worker. — owner M0.
+order: after M0-166, with the gate instruments (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:36Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` "The negative-control register" (break only the thing).
+depends-on: M0-157.
+scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
+accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

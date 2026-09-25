@@ -678,8 +678,8 @@ scope: C-4.2 passes an undeclared in-bytes edge with D-546's sentence only when 
 accepts-when: the corroborated twin passes with the sentence and the uncorroborated one fails (moves: no reading for an in-bytes undeclared edge). NEGATIVE CONTROL: a fixture carrying a backdated undeclared edge with no record corroboration must fail C-4.2 by name, and the corroborated twin must pass with the sentence.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-546's worker; placed on BOB #35's 08:00Z ruling).
 
-### D-628 · running — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
-status: running — SCHEDULER #23 10:00Z: spawned, stacked on land/worker/D-615 @ 8b3ab6ae
+### D-628 · integrated — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
+status: integrated — SCHEDULER #24 11:00Z: tip db3b94a0 (on D-615 8b3ab6ae), GATE 81/81 GREEN FULLREUSE (6534 assertions; 381 reused from 6885e0a2 389/390, its m025 red corrected), tree d3ae26e9; revision carries head state/dates (fields_carried), creation unstated refused PROMOTED_FIELD_UNSTATED C-86.8; CATALOG 1.34.0->1.35.0; minted D-707
 order: after D-615 — the same promote function as D-546, D-578 and D-615: one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — a named DEC-49 refusal on op=promote for a creation missing a required field; the integrator classifies.
@@ -733,8 +733,8 @@ scope: the export renders the tie statement beside its Date line in the plane's 
 accepts-when: an exported copy of a draft with a tie shows the statement by its Date line (moves: a single date beside a tie). NEGATIVE CONTROL: drop last_change from the export and the tie arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, CONDUCT #22's relay of D-573).
 
-### UI-121 · running — **NO SURFACE SENDS `draft=` OR SHOWS `draft_case`: D-680 made the signed block state how its case was bound (derived_at_publication, named_and_confirmed, new_case_asked_at_publication, named_by_draft, new_case_asked_by_draft) and refuses a named case that is not the derived one (C-44.6), and no page offers the draft binding or shows which way the case was bound.** From D-680's worker's report. — owner UI.
-status: running — SCHEDULER #23 10:58Z: narrowed by BOB #35 10:12Z to part (2) only (the case page states its draft_case); parts (1)+(3) are UI-122, blocked on DEC-33
+### UI-121 · integrated — **NO SURFACE SENDS `draft=` OR SHOWS `draft_case`: D-680 made the signed block state how its case was bound (derived_at_publication, named_and_confirmed, new_case_asked_at_publication, named_by_draft, new_case_asked_by_draft) and refuses a named case that is not the derived one (C-44.6), and no page offers the draft binding or shows which way the case was bound.** From D-680's worker's report. — owner UI.
+status: integrated — SCHEDULER #24 11:00Z: tip 6ceb9b9b (on D-680 0d17eb0e), GATE 318/318 GREEN FULLREUSE (18708 assertions; excludes 2 untallied), tree 1d682494; NARROWED to part 2: the published case page quotes the signed documents draft binding via op=casedocument; parts 1+3 are UI-122 (BLOCKED, DEC-33); CIVICOS_UI_STATE v120 provisional; union: APIQ_CALLERS 9, FLAT_OPS +casedocument; minted D-712
 order: after UI-118, with the review-copy and publication surfaces (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 consumer.
@@ -848,6 +848,28 @@ depends-on: none (stacked on land/worker/D-698 @ c0f7a56f, integrated, on D-693 
 scope: every capture entry with no locator carries fetch {route: "unrecorded"}; its leg grade reads authored-under-ceiling and says so; the ~30 suites that pin whole entries are CORRECTED with a comment saying why, never exempted.
 accepts-when: a no-locator capture's entry states route unrecorded and its leg reads authored-under-ceiling (moves: a silent entry). NEGATIVE CONTROL: omit the key again and the stated-route arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 10:05Z ruling).
+
+### D-692 · running — **A REVISION WHOSE BYTES RESTATE `created` LANDS, and bundles.created keeps the creation's value (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row still says 2026-07-24.** None live (M-181). Found by D-615's worker (minted on land/worker/D-615). — owner RECORD.
+order: after D-628, the same promote function, one worker at a time (SCHEDULER #23, 2026-09-25)
+status: running — SCHEDULER #24 11:00Z: spawned, stacked on land/worker/D-628 @ db3b94a0
+milestone: M7
+interface: I3 — a named refusal on op=promote; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5 and D-615's derivation), with State Rules v1.5 §4.7's rule that a writer's timestamp never buys an earlier reading (BOB #35 09:05Z/08:00Z, D-673).
+depends-on: none (stacked on land/worker/D-628 @ db3b94a0, integrated, on D-615 @ 8b3ab6ae).
+scope: refuse by name a non-replay revision whose document's `created` differs from the head's (C-86.2's shape, one field over); replay exempt as D-615 made it. Decided by SCHEDULER #23: refusal, not moving the row — moving it would let any writer backdate a creation, which the record's own rules already refuse elsewhere.
+accepts-when: a revision restating a different `created` is refused by name, and one restating the same lands (moves: row and bytes disagreeing). NEGATIVE CONTROL: drop the check and the backdated-revision arm lands, failing by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-615's worker).
+
+### D-712 · running — **THE PUBLISHED CASE PAGE TELLS EVERY STRANGER A SIGNED, RATIFIED CASE IS UNSIGNED: pubCaseHtml's "The case document · signed by …" line reads `c.document`, which op=publishedcase NEVER serves (Store.publishedCase builds state.document through #caseEditionState and its return omits it), so it prints "This case edition's own document has not been signed yet".** Measured by UI-121's worker: data-casedoc="none" on five cases each signed through op=caseratify. publishedcase.test.mjs's fixture carries a `document` key the live op does not (D-173's class). — owner RECORD.
+order: spawned directly, ahead of the backlog: the record claiming LESS than it holds on the one page strangers read is a trustworthiness defect (CLAUDE.md §2, "less narrative" binds us first) and a correction to just-landed work (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:00Z: spawned, stacked on land/worker/UI-121 @ 6ceb9b9b
+milestone: M10
+interface: I3 — additive `document` on op=publishedcase; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 (rule 13, the published case states its signed document) and §9.
+depends-on: none (stacked on land/worker/UI-121 @ 6ceb9b9b, integrated, on D-680 @ 0d17eb0e; its draft-binding fixtures sign through op=caseratify).
+scope: publishedCase() returns `document: state.document`; publishedcase.test.mjs's fixture is anchored to the live wire (correct it with a comment saying why the old fixture was wrong); the page's signed-document line then reads true. The UI-only alternative (read op=casedocument for that line) is the fallback only if the plane field cannot be served to a stranger.
+accepts-when: on each of the five draft-binding cases a stranger's published case page reads the signing line, never "not been signed yet" (moves: data-casedoc="none" on five signed cases). NEGATIVE CONTROL: drop `document` from the return and the stranger arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by UI-121's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
