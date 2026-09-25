@@ -535,6 +535,16 @@ scope: adopt D-548's block()/needs() recorder (D-564's text verbatim) in each su
 accepts-when: in each converted suite a broken fixture DIES by name with tally -1 while the other sections keep their baseline (moves: 65 suites silent past a throw). NEGATIVE CONTROL: the control's disarmed-recorder arm per suite, no foot and no section tally.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-667's worker).
 
+### D-705 · queued — **THE DEC-49 GUARD'S ARM G HOLDS NO CLOSURE'S SITE COUNT, and nothing fails a family row whose code no site mints any more: D-668's control arm A3 (TEXT_ATTEST_UNDATED respelt as TEXT_ATTEST_EXTENT) turned textchain 217/3 while the GUARD STAYED GREEN.** Found by D-668's worker. — owner M0.
+order: after D-711, with the test-trust rows: a guard that cannot fail when a closure's code moves is a control that cannot fail (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — the guard.
+design: `docs/development/VERIFICATION.md` (a negative control must be able to fail; admitted for M0 by name).
+depends-on: D-668 (the closures and arm G as it left them; stack on land/worker/D-668 until it lands).
+scope: MULTI_SITE_CLOSED records each closure's literal site count and arm G fails by name when the count differs; add an arm that fails any catalogue family row with zero literal sites unless declared. STATE, do not fix: the guard's matcher reads double-quoted codes only (D-668's arm A4 failed CLOSED on arm C's floors).
+accepts-when: re-running D-668's arm A3 turns the guard RED by name (moves: a green guard over a respelt closure). NEGATIVE CONTROL: drop the site-count check and A3 leaves the guard green, failing the new arm's declaration by name.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-668's worker).
+
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
 milestone: M8
@@ -1090,14 +1100,4 @@ design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a 
 depends-on: M0-158.
 scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
 accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
-order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
-depends-on: none.
-scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
-accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
