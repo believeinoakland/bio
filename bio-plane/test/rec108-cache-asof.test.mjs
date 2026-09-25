@@ -64,6 +64,14 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
@@ -151,7 +159,7 @@ const promote = async (id, text, type, { register = [], reading = null } = {}) =
     snapKey: `20260916T${String(500000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : "collected",
-            created: NOW, last_updated: LATER },
+            ...datesOf(text, NOW, LATER) },
     files, register });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
   HEAD.set(id, r.bundleSha);

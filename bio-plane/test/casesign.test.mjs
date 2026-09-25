@@ -174,6 +174,14 @@ import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { checkCaseDocument, CASE_DOCUMENT_FAMILY, CASE_DOCUMENT_FORMAT,
          parseFrontmatter } from "../checks/bio-checks.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- casesign ---");
@@ -301,7 +309,7 @@ const promote = async (id, text, objectType, state, base) => rP(await POST("op=p
   bundleId: id, base: base ?? null,
   snapKey: `20260910T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
   meta: { object_type: objectType, group: "believe-in-oakland",
-          current_state: state, created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" },
+          current_state: state, ...datesOf(text, "2026-07-01T00:00:00Z", "2026-07-02T00:00:00Z") },
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],
 }));

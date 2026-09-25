@@ -37,6 +37,14 @@ import { createHash } from "node:crypto";
 import { checkBundle, parseFrontmatter, LAW_LEVELS, MACHINE_FENCE_CHECKS, GOVERNING_LAW_CHECKS,
          governingLawsOf } from "../checks/bio-checks.mjs";
 import { VOCABULARIES } from "../src/affordances.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const NOW = "2026-07-01T00:00:00Z";
@@ -123,7 +131,7 @@ const promote = async (tok, id, text, base = null) =>
     files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }],
     register: [],
     meta: { object_type: "action", group: "believe-in-oakland",
-            current_state: "planned", created: NOW, last_updated: LATER },
+            current_state: "planned", ...datesOf(text, NOW, LATER) },
   }));
 const headOf = async (id) => rP(await GET(`op=projection&token=${NADIA}&id=${encodeURIComponent(id)}`))?.bundle_sha;
 

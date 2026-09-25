@@ -34,6 +34,14 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 /* The control driver points this at an armed COPY of the sources. */
 const SRC_DIR = process.env.D512_SRC || fileURLToPath(new URL("../src", import.meta.url));
@@ -90,7 +98,7 @@ const pkgOf = (id, base, md, { legacy = true, ...over } = {}) => ({
   bundleId: id, base, snapKey: `20260724T01${String(++seq).padStart(4, "0")}Z_d512aaaa`,
   author: "drive-migration",
   meta: { object_type: "information", group: "believe-in-oakland", title: `Fixture ${id}`,
-          current_state: "collected", created: NOW, last_updated: NOW },
+          current_state: "collected", ...datesOf(md, NOW, NOW) },
   files: [file("bundle.md", md), ...(legacy ? [file("data/gathering.json", LEGACY)] : [])],
   register: [], ...over,
 });

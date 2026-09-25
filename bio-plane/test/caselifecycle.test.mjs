@@ -98,6 +98,14 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { STATES } from "../checks/bio-checks.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- caselifecycle ---");
@@ -245,7 +253,7 @@ const promote = async (tok, id, md, type, state = "open", extra = {}) => rP(awai
   /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
      state, and is now refused; a project document here states no title, so the label stays its only name. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `t ${id}` } : {}),
-          current_state: state, created: NOW, last_updated: LATER },
+          current_state: state, ...datesOf(md, NOW, LATER) },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
   register: extra.register || [],
 }));

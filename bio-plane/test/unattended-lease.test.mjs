@@ -35,6 +35,14 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 let pass = 0, fail = 0;
@@ -82,7 +90,7 @@ const md0 = `---\nid: ${id}\nobject_type: information\ntitle: "Walked-away captu
    were fetched. */
 const cre = await POST(`op=promote&${S}`, {
   bundleId: id, base: null, snapKey: "20260731T000000Z_start001",
-  meta: { object_type: "information", group: "believe-in-oakland", title: "Walked-away capture", current_state: "collected", created: "2026-07-31T00:00:00Z", last_updated: "2026-07-31T00:00:00Z" },
+  meta: { object_type: "information", group: "believe-in-oakland", title: "Walked-away capture", current_state: "collected", ...datesOf(md0, "2026-07-31T00:00:00Z", "2026-07-31T00:00:00Z") },
   files: [{ path: "bundle.md", text: md0, bytes: md0.length, sha256: sha(md0) }], register: [] });
 t("the session creates the bundle", cre.result.ok, true);
 const startSha = cre.result.bundleSha;
@@ -103,7 +111,7 @@ t("the daemon stores the captured bytes", (await PUT(`op=capture&sha256=${capSha
 const md1 = md0.replace("evidence not yet captured", "evidence captured and hashed");
 const done = await POST(`op=promote&author=IMPOSTOR&token=t-member-1`, {
   bundleId: id, base: startSha, snapKey: "20260731T010000Z_finish01",
-  meta: { object_type: "information", group: "believe-in-oakland", title: "Walked-away capture", current_state: "collected", created: "2026-07-31T00:00:00Z", last_updated: "2026-07-31T01:00:00Z" },
+  meta: { object_type: "information", group: "believe-in-oakland", title: "Walked-away capture", current_state: "collected", ...datesOf(md1, "2026-07-31T00:00:00Z", "2026-07-31T01:00:00Z") },
   files: [
     { path: "bundle.md", text: md1, bytes: md1.length, sha256: sha(md1) },
     { path: "snapshots/doc.bin", blobSha: capSha, bytes: cap.length, sha256: capSha },
@@ -133,7 +141,7 @@ t("and the refusal names the machine as the holder", ruthTry.result.heldBy, "tok
    the integrity mechanism the decision was careful not to weaken. */
 const stale = await POST(`op=promote&token=t-member-1`, {
   bundleId: id, base: startSha, snapKey: "20260731T020000Z_stale001",
-  meta: { object_type: "information", group: "believe-in-oakland", title: "Walked-away capture", current_state: "collected", created: "2026-07-31T00:00:00Z", last_updated: "2026-07-31T02:00:00Z" },
+  meta: { object_type: "information", group: "believe-in-oakland", title: "Walked-away capture", current_state: "collected", ...datesOf(md1, "2026-07-31T00:00:00Z", "2026-07-31T02:00:00Z") },
   files: [{ path: "bundle.md", text: md1, bytes: md1.length, sha256: sha(md1) },
           { path: "snapshots/doc.bin", blobSha: capSha, bytes: cap.length, sha256: capSha }],
   register: [] });
@@ -162,7 +170,7 @@ const bid = "INFO-2026-0002-x";
 const bmd = `---\nid: ${bid}\nobject_type: information\ncurrent_state: collected\n---\n\n## Summary\n\nseed\n`;
 const seed = await call("/promote", {
   bundleId: bid, base: null, snapKey: "20260731T000000Z_seedseed", author: "seed",
-  meta: { object_type: "information", group: "believe-in-oakland", title: "seed", current_state: "collected", created: "2026-07-31T00:00:00Z", last_updated: "2026-07-31T00:00:00Z" },
+  meta: { object_type: "information", group: "believe-in-oakland", title: "seed", current_state: "collected", ...datesOf(bmd, "2026-07-31T00:00:00Z", "2026-07-31T00:00:00Z") },
   files: [{ path: "bundle.md", text: bmd, bytes: bmd.length, sha256: sha(bmd) }], register: [] });
 t("store seed created", seed.result.ok, true);
 

@@ -118,6 +118,14 @@ import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 /* D-431: the case document is signed BEFORE its finding is ratified — the ceremony's own order. */
 import { ratifyCase } from "./caseceremony.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -283,7 +291,7 @@ const promote = async (id, text, type, tok = RUTH, meta = {}, extraFiles = [], r
     register,
     meta: { object_type: type, group: GROUP,
             current_state: type === "inquiry" ? "open" : type === "project" ? "active" : "collected",
-            created: NOW, last_updated: LATER, ...meta } });
+            ...datesOf(text, NOW, LATER), ...meta } });
 const mustPromote = async (...a) => {
   const r = await promote(...a);
   if (!r.ok) throw new Error(`promote ${a[0]}: ${JSON.stringify(r).slice(0, 600)}`);
@@ -729,7 +737,7 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
       /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: the label said `published` over bytes whose state is their
          own; it is now refused, so the label names no state and the record takes the bytes'. */
       meta: { object_type: "inquiry", group: GROUP,
-              created: NOW, last_updated: LATER } });
+              ...datesOf(next, NOW, LATER) } });
     if (!r.ok) throw new Error(`revise to edition ${n}: ${JSON.stringify(r).slice(0, 400)}`);
     return r;
   };

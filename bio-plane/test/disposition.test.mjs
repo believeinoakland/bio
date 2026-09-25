@@ -25,6 +25,14 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle } from "../checks/bio-checks.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -143,7 +151,7 @@ const mk = (id, text, type) => call("/promote", {
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "problem" ? "surfaced" : type === "inquiry" ? "open" : "collected",
-          created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" } });
+          ...datesOf(text, "2026-07-01T00:00:00Z", "2026-07-02T00:00:00Z") } });
 
 const IDS = ["PROB-2026-0001-a", "PROB-2026-0002-b", "PROB-2026-0003-c"];
 for (const id of IDS) await mk(id, probMd(id), "problem");
@@ -398,8 +406,7 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
       snapKey: `${id}-verify`, author: "suite",
       files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
       meta: { object_type: "information", group: "believe-in-oakland",
-              current_state: "verified", created: "2026-07-01T00:00:00Z",
-              last_updated: "2026-07-03T00:00:00Z" } });
+              current_state: "verified", ...datesOf(doc, "2026-07-01T00:00:00Z", "2026-07-03T00:00:00Z") } });
   }
   t("a reason is required, as it is for disposition",
     (await call(`/retire?handle=${await select(infoIds)}&${STAMP}`)).reason, "NO_REASON");
@@ -421,7 +428,7 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
     files: [{ path: "bundle.md", text: pdoc, bytes: pdoc.length, sha256: sha(pdoc) }],
     /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", group: "believe-in-oakland", title: "Citing Project",
-            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+            current_state: "forming", ...datesOf(pdoc, "2026-07-01T00:00:00Z", "2026-07-01T00:00:00Z") } });
   const proj = created.bundleId;
   t("the citing Project is created at a plane-minted id", /^PROJ-\d{4}-\d{4}-/.test(String(proj)), true);
   {

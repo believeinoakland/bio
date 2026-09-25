@@ -82,6 +82,14 @@ import { checkBundle, STATES, parseFrontmatter } from "../checks/bio-checks.mjs"
 import { DIVIDE_PROMPT, ACTS } from "../src/affordances.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -238,7 +246,7 @@ const promote = async (id, md, type, state, tok = PILAR, base = null) =>
   rP(await POST(`op=promote&token=${tok}`, {
     bundleId: id, base, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland",
-            current_state: state, created: NOW, last_updated: LATER },
+            current_state: state, ...datesOf(md, NOW, LATER) },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [],
   }));

@@ -20,7 +20,9 @@
  * here — both are a one-token change beside the lines this suite drives, named in the report as D-546's shared sites.
  * A REPLAY's exemption from the refusal (not from the derivation) needs a verified replay creation (REC-173) and is
  * not driven. `created` and `last_updated` are NOT derived by this item: the documents state them (CORE_FIELDS), and
- * the projection still records the envelope's, which the report states.
+ * the projection still records the envelope's, which the report states. CORRECTED 2026-09-25 by D-615: that last clause
+ * was true when written and is no longer — D-615 derives both dates from the document (C-86.7), and this suite's labels
+ * already name its documents' dates, so nothing here moved.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */

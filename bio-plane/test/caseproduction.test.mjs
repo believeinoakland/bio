@@ -106,6 +106,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CASE_MEMBER_ROLES, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { SCHEMA } from "../src/schema.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- caseproduction ---");
@@ -337,7 +345,7 @@ let snapSeq = 0;
 const promote = async (id, md, type, state, tok = PILAR, base = null) => rP(await POST(`op=promote&token=${tok}`, {
   bundleId: id, base, snapKey: `20260810T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
   meta: { object_type: type, group: "believe-in-oakland",
-          current_state: state, created: NOW, last_updated: LATER },
+          current_state: state, ...datesOf(md, NOW, LATER) },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
@@ -350,7 +358,7 @@ const createProject = async (name, md, tok = PILAR) => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
     base: null, snapKey: `20260810T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: "project", group: "believe-in-oakland",
-            current_state: "investigating", created: NOW, last_updated: LATER },
+            current_state: "investigating", ...datesOf(md, NOW, LATER) },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));
   if (r.ok === false || !r.bundleId) throw new Error(`create project ${name}: ${JSON.stringify(r)}`);
   return r.bundleId;

@@ -56,6 +56,14 @@ import { join } from "path";
 import { appScript } from "./extract.mjs";
 import { ratifyCase } from "../../bio-plane/test/caseceremony.mjs";
 import { parseFrontmatter } from "../../bio-plane/checks/bio-checks.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -249,7 +257,7 @@ const promote = async (id, text, type, base = null) => POST(`op=promote&token=${
   /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
      state, and is now refused; a project document here states no title, so the label stays its only name. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
-          current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
+          current_state: type === "inquiry" ? "open" : "collected", ...datesOf(text, NOW, LATER) } });
 const createProject = async (label, text) => {
   const r = await POST(`op=promote&token=${IRIS}`, {
     base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,

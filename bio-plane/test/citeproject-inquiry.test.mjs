@@ -51,6 +51,14 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -150,7 +158,7 @@ const promote = async (id, text, type, state) => POST(`op=promote&token=${RUTH}`
   /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
      state, and is now refused; a project document here states no title, so the label stays its only name. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
-          current_state: state, created: NOW, last_updated: LATER } });
+          current_state: state, ...datesOf(text, NOW, LATER) } });
 const mustPromote = async (id, text, type, state) => {
   const r = await promote(id, text, type, state);
   if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
@@ -167,7 +175,7 @@ const createProject = async (name) => {
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
     /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
-            current_state: "forming", created: NOW, last_updated: LATER } });
+            current_state: "forming", ...datesOf(text, NOW, LATER) } });
   if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 700)}`);
   return r.bundleId;
 };

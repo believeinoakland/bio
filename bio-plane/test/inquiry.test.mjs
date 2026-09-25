@@ -33,6 +33,14 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, deriveInquiryTitle, withProducingGroup } from "../checks/bio-checks.mjs";
+/* CORRECTED 2026-09-25 (D-615, C-86.7), never exempted: this suite's promote labels named dates the documents they carried
+   do not state (a fixed NOW/LATER over bytes the plane had re-stamped, or bytes written with other dates), and a label
+   contradicting the document's `created`/`last_updated` is now refused by name. `datesOf` makes each label name the
+   document's own dates, and the old value only where the bytes state none — what the label always meant to say. */
+const datesOf = (md, created, lastUpdated) => {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(String(md ?? "")), get = (k) => fm && (new RegExp(`^${k}:[ \t]*"?([^"\n]*?)"?[ \t]*$`, "m").exec(fm[1]) || [])[1];
+  return { created: get("created") || created, last_updated: get("last_updated") || lastUpdated };
+};
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -163,7 +171,7 @@ const mkOn = (c) => (id, text, type, title) => c("/promote", {
      state, and is now refused; a project document here states no title, so the label stays its only name. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: title ?? `Bundle ${id}` } : {}),
           current_state: type === "inquiry" ? "open" : "surfaced",
-          created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" },
+          ...datesOf(text, "2026-07-01T00:00:00Z", "2026-07-02T00:00:00Z") },
 });
 const mk = mkOn(call);
 const errorsOf = async (id) => {
