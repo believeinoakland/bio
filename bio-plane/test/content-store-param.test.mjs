@@ -83,7 +83,10 @@ const seed = async (ns, id, shaDoc) => {
                  { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }];
   const pr = await post("promote", {
     bundleId: id, base: null, snapKey: `20260925T000001Z_${sha(ns).slice(0, 8)}`,
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${id}`,
+    /* CORRECTED at c22-batch30 (CONDUCT #22), never exempted: this item was cut before D-563, whose C-86.3 refuses an
+       envelope title the held document contradicts (`Bundle <id>` against the document's own `title:`); the envelope
+       title is dropped as D-563 dropped it in its own fixtures, and promote derives it from the document. */
+    meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files, register: [{ path: "snapshots/d.bin", sha256: shaDoc, encoding: "binary", bytes: 10 }] },
     RUTH, `&store=${ns}`);

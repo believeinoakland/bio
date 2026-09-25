@@ -41,7 +41,12 @@ function arm(file, find, replace) {
   writeFileSync(file, src.replace(find, replace));
   return { armed: true, matches: n };
 }
-const FORWARD = `if (k !== "token" && k !== "op" && k !== "store") inner.searchParams.set(k, v);`;
+/* RE-ANCHORED at c22-batch30 (CONDUCT #22), never exempted: D-419's `contentCrop` (landed beside this in the same
+   union) builds its own forward with the IDENTICAL strip line, so the bare line matched 2x and the `passthrough` and
+   `swallow` arms refused to arm. The anchor now carries the generic forward's own preceding text (D-675's comment
+   and the loop head), which names that ONE site; the replacement carries it back unchanged. */
+const FWD_HEAD = "drives it through the op. */\n    for (const [k, v] of url.searchParams) ";
+const FORWARD = FWD_HEAD + `if (k !== "token" && k !== "op" && k !== "store") inner.searchParams.set(k, v);`;
 const ARMS = {
   baseline: {
     files: [], why: "nothing armed — the row that tells every-arm-broken from every-arm-working",
@@ -59,7 +64,7 @@ const ARMS = {
                "a PREDICATE beside store=scratch is still refused, and ONLY the predicate is named"],
     mustPass: ["a namespace that does not exist is still refused at the front door",
                "no store= at all still addresses bio"],
-    patch: () => arm(INDEX, FORWARD, `if (k !== "token" && k !== "op") inner.searchParams.set(k, v);`),
+    patch: () => arm(INDEX, FORWARD, FWD_HEAD + `if (k !== "token" && k !== "op") inner.searchParams.set(k, v);`),
   },
   swallow: {
     files: [INDEX],
@@ -67,7 +72,7 @@ const ARMS = {
        + "answerable but silently discards a predicate the caller believes was applied",
     mustFail: ["a PREDICATE beside store=scratch is still refused, and ONLY the predicate is named"],
     mustPass: ["store=scratch answers THE SCRATCH ROW", "store=bio answers THE BIO ROW"],
-    patch: () => arm(INDEX, FORWARD, `if (k === "id") inner.searchParams.set(k, v);`),
+    patch: () => arm(INDEX, FORWARD, FWD_HEAD + `if (k === "id") inner.searchParams.set(k, v);`),
   },
   onestore: {
     files: [INDEX],

@@ -4544,6 +4544,10 @@ function storageAbsent(op, error) {
 async function contentCrop(env, url, storeName, viewer, op) {
   const stub = env.STORE.get(env.STORE.idFromName(storeName));
   const inner = new URL("http://do/content");
+  /* c22-batch30: D-675 now strips `store` on the GENERIC Durable Object forward too (PLANE.fetch's `DO_PATH` loop).
+     This strip is NOT made redundant by it and is kept: op=contentcrop returns before that forward and builds its
+     own inner URL here from the EDGE's parameters, so this loop is the only place `store` leaves a crop's request.
+     One rule — the edge consumes `token`, `op` and `store` — kept at both forwards. */
   for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op" && k !== "store") inner.searchParams.set(k, v);
   inner.searchParams.set("viewer", viewer);
   /* The member check comes FIRST: an instance with no PDF member answers the same whatever id is asked, so it
