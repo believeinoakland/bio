@@ -5,6 +5,7 @@ Read `CLAUDE.md`, `kickoffs/BOB.md` and `BIO_System_Design.md`, then this. Every
 ## 0. BOB'S STANDING DIRECTIONS (still in force)
 - Productivity first until the build plan in its CURRENT SCOPE is complete (Bob, 2026-09-24 22:30Z). RELEASES ARE HELD: no cut unless Bob types the ask in DIST's session.
 - 16 workers WORKING. Batch everything; trains ~2 h, never early. Report done and decided in plain words. Every ruling goes into the BOB INBOX in the same act as its message.
+- **SUPERSEDED 2026-09-25 ~12:50Z by Bob:** "Stop spawning new worker sessions and focus on batching up the changes for merging." No new worker spawns; running workers finish; CONDUCT batches and trains every ready branch. This replaces "16 workers WORKING" until Bob says otherwise.
 
 ## 1. THE SESSION TREE (11:26Z)
 Root FLEET #4 session_01YB9VgJtjiXwQ5vtx4fLvRB creates every lane. Lanes: SCHEDULER #24 session_01AFfq8GhbuuRpxUsjPtrigi (created 10:45Z; #23 archived) · CONDUCT #22 session_01NdCepFRW8KzaQMyVjyFTqM, REFRESHING: CONDUCT #23 requested from FLEET at 11:24Z (CONDUCT-NEXT on coord 9304ba3d) · DIST #7 session_01FQcUMZ2f34zhHzBkMEEdQ6. BOB #35 ARCHIVED 10:41Z (D-398 met; land/bob/claude-namespace @ ee8b2db7 handed to CONDUCT for the next train).
