@@ -86,6 +86,16 @@ scope: chainKindFor answers `mixed` for a no-page unit whose covering steps diff
 accepts-when: the mixed fixture's whole-document unit reads `mixed`, and a one-kind document reads its kind (moves: a whole-document unit read as ocr). NEGATIVE CONTROL: the old last-step answer (`ocr`) fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:35Z ruling).
 
+### D-713 · queued — **A PAGE D-635 APPENDED TO (folio kept + transcription) MAY BE SEEDED BY D-616's TAIL RE-READ AND GET ITS FOLIO APPENDED AGAIN, so the folio text appears twice in the record.** No suite drives the combination. Found at batch30's union (CONDUCT #22). — owner CONTENT-PDF.
+order: after D-710 with the PDF corrections — the record would claim text twice; it joins two just-landed rows (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: none expected; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (tier-3 re-read and BOB #35's 06:25Z APPEND ruling).
+depends-on: D-616, D-635 (both integrated; ride batch30 — build on main after it).
+scope: DRIVE it first; then seed from the transcription part only, OR make the append idempotent per page — state which and why.
+accepts-when: a D-635-appended page re-read by D-616's path holds its folio once (moves: a duplicated folio). NEGATIVE CONTROL: restore the double append and the once-only arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch30 finding).
+
 ### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
 order: at the backlog head after D-682 — a correction joining two just-landed rows (D-625, UI-112) (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -495,6 +505,36 @@ depends-on: none.
 scope: add `cited_as TEXT NOT NULL DEFAULT 'text'` to the probe's CREATE TABLE content; derive the probe's schema from schema.mjs if that is simpler and say which; re-run M-23 and record the figures with date.
 accepts-when: the probe runs to its final line and M-23's figures are re-recorded (moves: a crashed instrument). NEGATIVE CONTROL: drop the column again and the probe fails by name at the insert.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-686's worker).
+
+### D-714 · queued — **NO FIXTURE HAS A WORKBOOK WITH AN ENVELOPE ITEM, so REC-204 x D-672's ordering (textUnitsFor's bodyLen now counts i2text.sheets, envelope units follow sheet units) is unexercised.** Found at batch30's union (CONDUCT #22). — owner M0 (the suite).
+order: after D-699, with the test-coverage rows (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (a suite measures every arm it declares; admitted for M0 by name).
+depends-on: REC-204, D-672 (both integrated; ride batch30 — build on main after it).
+scope: an xlsx fixture carrying docProps/core.xml, driven through capture-text-index: sheet units first, envelope units after, no seq reused.
+accepts-when: the workbook's envelope units follow its sheet units with distinct seq (moves: an unexercised join). NEGATIVE CONTROL: drop sheets from bodyLen and the seq arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch30 finding).
+
+### D-715 · queued — **`reviewcopy-inband.control`'s PREFLIGHT ANCHOR HAS BEEN STALE ON MAIN SINCE D-543: its `for (const c of cand)` needle no longer matches, so the control does not reach its subject.** Found at batch30's union (CONDUCT #22). Related to D-656 (arm e of the same driver) — one worker may take both. — owner M0.
+order: after D-714, with the control-hygiene group (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name).
+depends-on: none.
+scope: re-anchor the preflight needle on the subject as it now reads (by region marker if one exists); re-run the driver AS DECLARED; clear its anchordrift allowance if M0-197's reader lists one.
+accepts-when: the preflight passes on main and each arm fails its subject by name (moves: a stale anchor). NEGATIVE CONTROL: this row is one.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch30 finding).
+
+### D-716 · queued — **`capturerequests.test` FAILED 2 ASSERTIONS UNDER LOAD in a parallel run and passes 139/0 alone — order- or load-dependent, the same shape as the earlier monitor-cadence report. "Flake" is not a root cause.** Found at batch30's union (CONDUCT #22). — owner M0 (the suite), CAPTURE (the subject).
+order: after D-715, with the test-trust rows — a suite whose verdict depends on load cannot fail honestly (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none expected.
+design: `docs/development/VERIFICATION.md` (measure; do not recall — admitted for M0 by name).
+depends-on: none.
+scope: reproduce under parallel load (name the instrument and the count of runs), find the shared state or timing the two assertions read (clock, store name, port, a module-level cache), fix at the cause, and record the measurement.
+accepts-when: N parallel runs pass with the cause named and removed (moves: a load-dependent verdict). NEGATIVE CONTROL: reintroduce the cause and the parallel trial fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch30 finding).
 
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
@@ -1072,43 +1112,3 @@ depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' s
 scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
 accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-150 · queued — **AN OP LEAVING THE BARE ROSTER INTO THE UNJUDGED BUCKET IS INVISIBLE TO THE FLOOR, which counts only what it still sees: `op=caseratify` was lost that way on `main`, found only by c20-batch11fix's RETURN-DELEGATE rule.** — owner M0.
-order: after M0-149, the same suite; the class behind a silent loss (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
-depends-on: land/conduct/c20-batch11fix on `main`.
-scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
-accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-156 · queued — **`check-refusal-codes` ARM C READS ONLY THE SPANS A `where` NAMES, so a code re-minted OUTSIDE every governed region is invisible, for all 170 governed sites.** Found by D-484's worker. — owner M0 (RECORD reviews).
-order: after M0-155, the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
-depends-on: D-484.
-scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plane/src` per region row, failing on any outside its claimed span.
-accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-161 · queued — **NO SWEEP FINDS A CONSTRUCT CLAIM THAT DESCRIBES A CAPPED READ WITHOUT SAYING IT IS CAPPED (D-498's class): D-498's heuristic (op = the lowercased method name, `store.mjs` only) left 17 of 27 capped methods UNCLASSIFIED and cannot see caps applied in `index.mjs`.** Found by D-498's worker. — owner M0 (RECORD reviews the claims it names).
-order: low in the M0 group: a sweep for further instances of a closed defect (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:13Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a claim states its bound).
-depends-on: D-498.
-scope: walk the OPS table's dispatch (not method names) to every capped read, then list each construct claim describing it without its cap; each hit is placed as a row.
-accepts-when: the sweep classifies all 27 capped methods and names every uncapped claim. NEGATIVE CONTROL: strip "at most" from D-498's claim and the sweep names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-175 · queued — **`tools/train.mjs` READS A FLAG AS A VALUE: `--trailer --full` takes `--full` as the trailer's text, and `--branch` does the same.** Found by M0-159's worker (optional, cosmetic). — owner M0.
-order: after M0-161, behind the product rows: cosmetic, no effect on gate time, gate verdicts or product (Bob's 17:41Z rule, via BOB #33: tracked and built, placed after product; SCHEDULER #19, 2026-09-24; via CONDUCT #20 17:46Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument refuses what it cannot read, never silently takes it).
-depends-on: M0-159.
-scope: `--branch` and `--trailer` refuse a value starting with `--` by name, with an escape for a literal one.
-accepts-when: `--trailer --full` is refused by name, and the escaped form is taken literally. NEGATIVE CONTROL: drop the check and the refusal arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
