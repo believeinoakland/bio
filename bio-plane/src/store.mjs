@@ -656,6 +656,24 @@ function actNoCitation(detail, extra = {}) {
   /* END DEC-49 REGION is-act-no-citation */
 }
 
+/* D-623 / DEC-49 — NO_PROJECT_SCOPE, the third multi-site act-shape code given ONE site on
+   D-484's shape above. `op=proposedispose` refuses a judgment-layer disposition that names no
+   project at two places — a `{finding}` with no `project`, and IC-60's bridge for a pre-IC-60
+   surface's `key` — and both now return through here. ADDITIVE ON THE WIRE (I3): `reason`,
+   `detail` and each site's own keys (`finding`, `kind`, `requires`) are unchanged; `code`,
+   `check` and `translation` are new beside them. */
+function actNoProjectScope(detail, extra = {}) {
+  /* DEC-49 REGION is-act-no-project-scope — D-623 / C-33.49. The ONE site at which the plane
+     says a disposition of a finding that is one project's own judgment names no project. */
+  const row = ACT_SHAPE_CHECKS.NO_PROJECT_SCOPE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("actNoProjectScope: NO_PROJECT_SCOPE has no ACT_SHAPE_CHECKS row with a canned "
+                  + "translation (DEC-49). A code with no sentence behind it must not reach a member.");
+  return { ok: false, reason: "NO_PROJECT_SCOPE", code: "NO_PROJECT_SCOPE", check: row.check,
+           translation: row.translation, detail, ...extra };
+  /* END DEC-49 REGION is-act-no-project-scope */
+}
+
 
 /* BIO store, plane layer, step 1.
  *
@@ -31940,14 +31958,16 @@ export class Store extends DurableObject {
       detail: "a project-scoped disposition names the FINDING it ages, by the queue item's own id "
             + "(op=queue publishes it as disposition.finding). A project with no finding names a "
             + "team and no decision." };
-    if (scoped && !proj) return { ok: false, reason: "NO_PROJECT_SCOPE", finding: find,
-      detail: "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, "
+    /* D-623: the code, check and member's sentence come from ONE helper (actNoProjectScope), shared
+       with IC-60's bridge below; the `detail` is this site's own. */
+    if (scoped && !proj) return actNoProjectScope(
+            "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, "
             + "and that act is scoped to ONE project's feed (D-266: a stance is expressly one "
             + "project's own property, §7/D-216, and R5 makes forks at the judgment layer "
             + "legitimate). Name the project you are acting for — op=queue publishes the candidates "
             + "as disposition.projects. It is not defaulted even when there is only one, because a "
             + "plane choosing whose judgment the record carries is the single shared stance §7 "
-            + "rejected, arriving through a defaulted parameter." };
+            + "rejected, arriving through a defaulted parameter.", { finding: find });
     /* THE BRIDGE FOR A SURFACE BUILT BEFORE IC-60, AND IT NAMES THE FIX RATHER THAN THE SYMPTOM.
        A page that learned this act before the second shape existed composes `key` from the queue
        item's own id, so a stance-scoped finding arrives here as key='<kind>::<rest>'. Read as the
@@ -31996,16 +32016,17 @@ export class Store extends DurableObject {
                      + "carrying this reason." };
     }
     /* END DEC-49 REGION is-dispose-class */
+    /* D-623: the same helper as the `{finding}`-with-no-project refusal above — one code, one sentence. */
     if (keyClass === "FINDING")
-      return { ok: false, reason: "NO_PROJECT_SCOPE",
-               finding: byId ? keyed : `FINDING::${pk}::${sk}`,
-               kind: keyKind,
-               requires: ["project", "finding"],
-               detail: "this names a FINDING that carries no progression stage, so this is the "
-                     + "project-scoped disposition and it needs the project you are acting for. "
-                     + "Send `project` (one of op=queue's disposition.projects for this item) and "
-                     + "`finding` (its disposition.finding) instead of `key`. Nothing was written "
-                     + "and no team's feed moved." };
+      return actNoProjectScope(
+               "this names a FINDING that carries no progression stage, so this is the "
+             + "project-scoped disposition and it needs the project you are acting for. "
+             + "Send `project` (one of op=queue's disposition.projects for this item) and "
+             + "`finding` (its disposition.finding) instead of `key`. Nothing was written "
+             + "and no team's feed moved.",
+               { finding: byId ? keyed : `FINDING::${pk}::${sk}`,
+                 kind: keyKind,
+                 requires: ["project", "finding"] });
     if (!scoped && !pk) return { ok: false, reason: "NO_KEY",
       detail: "a proposal disposition names its progression (progressionKey, or key='progression::stage')" };
     if (!scoped && !sk) return { ok: false, reason: "NO_STAGE",

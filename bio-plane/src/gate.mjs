@@ -276,6 +276,11 @@ export const CATALOG_VERSION = "1.31.0";
    CHANGED — C-86.7 ENVELOPE_DATES_DISAGREE in PROMOTED_TYPE_CHECKS (op=promote takes created and last_updated from the
    document). MINOR; 506 -> 507, count and digest from the d470 suite's print on this tree. If another branch in the batch
    also moves the version, CONDUCT takes the next number at the union and re-reads the print on the merged tree. */
+/* D-623 side, kept as history — took 1.31.0 on its own base (D-623, 2026-09-25, branch land/worker/D-623 over origin/main 5e8a65a8; renumbered C-33.48 -> C-33.49 at c22-d623-renumber); the union's 1.31.0 (c22-batch30) names a different catalogue: C-33.49 NO_PROJECT_SCOPE joins
+   ACT_SHAPE_CHECKS — op=proposedispose's judgment-layer disposition named with no project, at both of its sites
+   through one helper (actNoProjectScope). ONE arrival, no departure, nothing moved: MINOR. 502 -> 503, count and
+   digest from the d470 suite's print on this tree. If another branch also takes 1.31.0, the integrator takes the
+   next number at the union — one version names one catalogue. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

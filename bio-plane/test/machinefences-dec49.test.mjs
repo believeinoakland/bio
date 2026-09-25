@@ -473,6 +473,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        .44, because REC-205/REC-207's unmerged branches hold .44-.46. D-PIN-B failed naming exactly this
        row when it landed — the arm doing its job. */
     ["C-33.48", "LAST_OWNER_CANNOT_LEAVE"],
+    /* D-623, 2026-09-25: `op=proposedispose`'s judgment-layer disposition named with no project, minted at
+       two sites and consolidated behind one governed helper (`actNoProjectScope`) on D-484's shape. D-PIN-B
+       failed naming exactly this row when it landed, which is this pair of arms doing its job. */
+    ["C-33.49", "NO_PROJECT_SCOPE"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -599,6 +603,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* CONDUCT #22 at the c22-batch29 union: 67 -> 68, RE-READ from this suite's print on the merged tree ("corpus: 68
        rows across 2 families", "got 68"), never 67 + 1: REC-186's C-33.48 LAST_OWNER_CANNOT_LEAVE, renumbered off
        REC-207's C-33.47 at c22-rec186-renumber, the batch's one arrival in these two families. */
+    /* D-623 side, kept as history (c22-batch30): MOVED 67 -> 68 on 2026-09-25 (D-623), FROM THE FIGURE THIS INSTRUMENT
+       PRINTED ("got 68") on the item's tree over origin/main 5e8a65a8: ONE arrival, C-33.49 NO_PROJECT_SCOPE in
+       ACT_SHAPE_CHECKS (renumbered from C-33.48 at c22-d623-renumber). Ours' 68 kept; the union carries REC-186's
+       C-33.48 AND D-623's C-33.49 — NUMBER TO RE-READ from this suite's print on the union. */
     rowsSeen, 68);
 }
 
