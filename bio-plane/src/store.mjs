@@ -9965,19 +9965,22 @@ export class Store extends DurableObject {
      that can change before then, so which case it becomes is UNDETERMINED here and the sentence says the
      route instead of guessing its answer. And a draft that names a case AND asks for a new one is not
      "the next edition" of anything: publication refuses the pair together (CASE_IDENTITY_AMBIGUOUS).
-     `newCase` is read for truthiness, as `publishCase` reads it. */
+     `newCase` is read for truthiness, as `publishCase` reads it. THE SENTENCE IS A MEMBER'S AND A
+     RECIPIENT'S TO READ, so it carries no code: the surfaces draw it verbatim, and their DEC-49 guards
+     refuse a SHOUTY_CODE on the page (measured: civicos-ui review-copy and statement-ack went red on
+     this change's first spelling, which named the refusal's code). */
   static #caseIdentitySentence(caseId, edition, newCase) {
     if (caseId && newCase)
       return `the next edition (${edition}) of ${caseId} — but this draft also asks for a new case, and `
-           + `publication refuses the two together (CASE_IDENTITY_AMBIGUOUS), so which case it is stays `
-           + `UNDETERMINED until one of them is withdrawn`;
+           + `publication refuses those two instructions together, so which case it is stays UNDETERMINED `
+           + `until one of them is withdrawn`;
     if (caseId) return `the next edition (${edition}) of ${caseId}`;
     if (newCase) return "a new case, whose identity is not yet allocated — a case id is minted only by publication";
     return "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED "
-         + "here: the draft names no case and does not ask for a new one, so op=publish reads the record at "
-         + "that moment — a further edition of the one case its findings already serve, a refusal "
-         + "(CASE_IDENTITY_AMBIGUOUS) if they serve several, and a new case only if they serve none and no "
-         + "prepared, unsigned edition claims them";
+         + "here: the draft names no case and does not ask for a new one, so publication reads the record at "
+         + "that moment — a further edition of the one case its findings already serve, a refusal to choose "
+         + "if they serve several, and a new case only if they serve none and no prepared, unsigned edition "
+         + "claims them";
   }
 
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,

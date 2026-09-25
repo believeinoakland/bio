@@ -148,13 +148,15 @@
    two facts in words this suite did not write. MUST PASS, every arm.
 
    MEASURED 2026-09-24 by WORKER D-538 (cloud) with `node test/reviewcopy.control.mjs`, all SIXTEEN arms in one driver
-   run, every arm ALONE, the pen in the session scratchpad via `BIO_NC_PEN`, every restore of `src/store.mjs`
-   (3,330,923 B, sha256 14b7f5d1…) sha256 MATCH, content IDENTICAL, size ok (16 of 16): (0) BASELINE -> **87 pass,
-   0 fail**. (o) -> **84 pass, 3 fail**: block 2's corrected arm, "D-538 ACCEPTS-WHEN" and "A DRAFT THAT NAMES C1 AND
-   ASKS FOR A NEW CASE", by name; the fixture, new-case-kept and naming-a-case arms GREEN. AS DECLARED, exactly.
-   (p) -> **87 pass, 0 fail**. AS DECLARED. ARMS (a)-(n) RE-RUN: a 82/5, b 86/1, c 85/2, d 85/2, e 85/2, f 86/1,
-   g 79/8, h 86/1, i 81/6, j 84/3, k 87/0, l 84/3 (re-anchored), m 85/2, n 87/0 — EVERY failure count unchanged
-   from REC-199's measurement, the five new arms of block 11 landing whole in each tally's pass column. */
+   run against the FINAL store, every arm ALONE, the pen in the session scratchpad via `BIO_NC_PEN`, every restore of
+   `src/store.mjs` (3,331,204 B, sha256 918d6411…) sha256 MATCH, content IDENTICAL, size ok (16 of 16): (0) BASELINE
+   -> **88 pass, 0 fail**. (o) -> **85 pass, 3 fail**: block 2's corrected arm, "D-538 ACCEPTS-WHEN" and "A DRAFT THAT
+   NAMES C1 AND ASKS FOR A NEW CASE", by name; the fixture, new-case-kept, naming-a-case and no-code arms GREEN. AS
+   DECLARED, exactly. (p) -> **88 pass, 0 fail**. AS DECLARED. ARMS (a)-(n) RE-RUN: a 83/5, b 87/1, c 86/2, d 86/2,
+   e 86/2, f 87/1, g 80/8, h 87/1, i 82/6, j 85/3, k 88/0, l 85/3 (re-anchored), m 86/2, n 88/0 — EVERY failure count
+   unchanged from REC-199's measurement, block 11's six arms landing whole in each tally's pass column. A FIRST RUN
+   (87/0 baseline, the same counts) measured a sentence that NAMED the refusal's code; civicos-ui's DEC-49 guards
+   refused it on the page, it was reworded, the no-code arm was added, and this is the re-run. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -1032,10 +1034,16 @@ console.log("\n--- 11. D-538: the identity sentence reads `newCase`, in every an
     [c1?.case?.case_id, c1?.case?.edition >= 2, c1?.case?.identity, row(D1)],
     [C1, true, `the next edition (${c1?.case?.edition}) of ${C1}`, `the next edition (${c1?.case?.edition}) of ${C1}`]);
   t("D-538: A DRAFT THAT NAMES C1 AND ASKS FOR A NEW CASE is told publication refuses the pair "
-  + "(CASE_IDENTITY_AMBIGUOUS) and that its case is UNDETERMINED — its own gates' verdict, not \"the next edition\"",
-    [cB?.gates, cB?.missing?.[0]?.reason, /CASE_IDENTITY_AMBIGUOUS/.test(cB?.case?.identity ?? ""),
+  + "(its gates' CASE_IDENTITY_AMBIGUOUS, said in words: the sentence is a reader's and carries no code) and that "
+  + "its case is UNDETERMINED — not \"the next edition\"",
+    [cB?.gates, cB?.missing?.[0]?.reason, /refuses/.test(cB?.case?.identity ?? ""),
      /undetermined/i.test(DBr.caseIdentity ?? ""), /undetermined/i.test(row(DBr.draftId) ?? "")],
     ["refused", "CASE_IDENTITY_AMBIGUOUS", true, true, true]);
+  t("D-538: NO SENTENCE CARRIES A CODE — members and recipients read it verbatim (DEC-49), so none of the "
+  + "four drafts' sentences, in any answer, holds a SHOUTY_CODE",
+    [DNr, DDr, DBr].flatMap((r) => [r.caseIdentity, row(r.draftId)])
+      .concat([cN, cD, c1, cB].map((c) => c?.case?.identity), [gN.boundTo, gD.boundTo])
+      .filter((x) => typeof x !== "string" || /\b[A-Z]{2,}(?:_[A-Z]+)+\b/.test(x)), []);
 }
 
 console.log(`\nreviewcopy: ${pass} pass, ${fail} fail`);
