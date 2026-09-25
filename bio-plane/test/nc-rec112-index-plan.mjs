@@ -32,6 +32,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCHEMA_PATH = join(HERE, "..", "src", "schema.mjs");
@@ -53,14 +54,24 @@ const t = (name, got, want) => {
   if (!ok) console.log(`       got ${JSON.stringify(got)}\n       want ${JSON.stringify(want)}`);
 };
 
+/* M0-197: the anchors this driver quotes in schema.mjs, named once and exposed as data for tools/anchordrift.mjs
+   (a no-op outside its dry read) — the DDL arm C builds its database from, and the two arm D counts. */
+const TABLE_RE = /CREATE TABLE IF NOT EXISTS provenance_route_marks \([\s\S]*?\n\);/;
+const INDEX_RE = /CREATE INDEX IF NOT EXISTS provenance_route_marks_finding\n {2}ON provenance_route_marks\(finding, bundle_id\);/;
+const D_ANCHORS = [["insert-before anchor", "CREATE INDEX IF NOT EXISTS provenance_route_marks_finding\n"],
+  ["remove anchor", "CREATE INDEX IF NOT EXISTS provenance_route_marks_finding\n  ON provenance_route_marks(finding, bundle_id);\n"]];
+anchorTable([...["A", "B"].map((arm) => ({ arm, none: "reads query plans over the DDL arm C's rows extract; patches no source" })),
+  { arm: "C", file: SCHEMA_PATH, find: TABLE_RE }, { arm: "C", file: SCHEMA_PATH, find: INDEX_RE },
+  ...D_ANCHORS.map(([, find]) => ({ arm: "D", file: SCHEMA_PATH, find }))]);
+
 try { execFileSync("sqlite3", ["--version"], { stdio: "pipe" }); }
 catch { console.log("SKIP (NAMED, not green): sqlite3 binary absent — no arm ran"); process.exit(2); }
 const SQLITE_VERSION = execFileSync("sqlite3", ["--version"], { encoding: "utf8" }).trim().split(" ")[0];
 
 /* The DDL is EXTRACTED from the artifact, never retyped: a hand copy agrees
    with its author at zero cost and this repository has measured that. */
-const table = SRC.match(/CREATE TABLE IF NOT EXISTS provenance_route_marks \([\s\S]*?\n\);/);
-const index = SRC.match(/CREATE INDEX IF NOT EXISTS provenance_route_marks_finding\n {2}ON provenance_route_marks\(finding, bundle_id\);/);
+const table = SRC.match(TABLE_RE);
+const index = SRC.match(INDEX_RE);
 if (!table || !index) {
   console.log("ARM DID NOT ARM: could not extract the table and/or index DDL from schema.mjs");
   process.exit(2);
@@ -141,10 +152,7 @@ for (const [name, sql] of Object.entries(READERS))
   t(`ARM C (over-strictness): ${name} plan is BYTE-IDENTICAL without the index`, plan(sql), planA[name]);
 
 console.log("\n--- ARM D: the nc-rec69 patch anchors still ARM (arm-that-did-not-arm) ---");
-for (const [name, anchor] of [
-  ["insert-before anchor", "CREATE INDEX IF NOT EXISTS provenance_route_marks_finding\n"],
-  ["remove anchor", "CREATE INDEX IF NOT EXISTS provenance_route_marks_finding\n  ON provenance_route_marks(finding, bundle_id);\n"],
-]) t(`ARM D: ${name} occurs exactly once in schema.mjs`, SRC.split(anchor).length - 1, 1);
+for (const [name, anchor] of D_ANCHORS) t(`ARM D: ${name} occurs exactly once in schema.mjs`, SRC.split(anchor).length - 1, 1);
 t("ARM D POLARITY: a literal that is NOT in schema.mjs counts zero, so the two ones above are a "
 + "measurement rather than a matcher that matches anything",
   SRC.split("CREATE INDEX IF NOT EXISTS zzz_no_such_index\n").length - 1, 0);

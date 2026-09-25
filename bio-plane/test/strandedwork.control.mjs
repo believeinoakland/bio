@@ -105,6 +105,8 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const PEN = join(REPO, ".m048-harness");
@@ -120,16 +122,17 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under the dry read */
 const pristine = new Map();
 for (const [name, p] of [["predicate", PRED], ["plancheck", PLANCHECK]]) {
   const copy = join(PEN, `pristine.${name}`);
-  writeFileSync(copy, readFileSync(p));
+  if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(p));  /* M0-197: no pristine copy under the dry read */
   pristine.set(p, { copy, sha: sha(p), bytes: statSync(p).size });
   console.log(`  pristine ${name}: ${statSync(p).size} bytes, sha256 ${sha(p).slice(0, 8)}…`);
 }
 const MIN_BYTES = { [PRED]: 8000, [PLANCHECK]: 15000 };
 function restore(p) {
+  if (ANCHOR_DRY) return true;   /* M0-197 */
   const { copy, sha: want, bytes } = pristine.get(p);
   writeFileSync(p, readFileSync(copy));
   const got = sha(p), size = statSync(p).size;
@@ -142,7 +145,9 @@ function restore(p) {
 
 /* An arm that did not arm is a finding, so every patch reports its own match count and the
    arm asserts it before believing anything downstream. */
+let dryArms = 0;   /* M0-197 */
 function armPatch(file, from, to) {
+  if (ANCHOR_DRY) return (anchorRows([{ arm: `A${++dryArms}`, file, find: from, put: to }]), 1);   /* M0-197: read, never armed */
   const before = readFileSync(file, "utf8");
   const hits = before.split(from).length - 1;
   if (hits === 1) writeFileSync(file, before.replace(from, to));
@@ -150,6 +155,7 @@ function armPatch(file, from, to) {
 }
 
 const suiteRun = () => {
+  if (ANCHOR_DRY) return { out: "", pass: -1, fail: -1, reachedFoot: false, status: null, failed: [] };   /* M0-197: no suite */
   const r = spawnSync(process.execPath, [SUITE], { cwd: REPO, encoding: "utf8" });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   const tally = out.match(/strandedwork: (\d+) pass, (\d+) fail/);
@@ -340,6 +346,8 @@ console.log("\n--- ARM A9 · the carrier walk removed, so the remote is asked by
   t("A9 · ...and the failure is not collateral", collateral(s), false);
   t("A9 · RESTORED byte-identically", restore(PRED), true);
 }
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* --------------------------------------------------------------- CLOSING BASELINE */
 console.log("\n--- ARM BASELINE (closing) · every arm restored ---");

@@ -26,10 +26,11 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const ARM = (process.argv[2] || "").trim();
 const ARMS = ["none", "a", "b", "c", "d", "e"];
-if (!ARMS.includes(ARM)) {
+if (!ARMS.includes(ARM) && !ANCHOR_DRY) {   /* M0-197: the dry read names no arm; it reads them all below */
   console.log(`usage: node test/nc-rec119.mjs <${ARMS.join("|")}>`);
   process.exit(2);
 }
@@ -196,6 +197,9 @@ const PATCHES = {
           driver prints what phase B actually STORED rather than only whether it was refused. */
        to: "...legs.map((l, k) => `leg\\t${k}\\t${c(l.target_id)}\\t${c(l.target_type)}\\t${c(l.role)}\\t${c(Store.#GRADE_RANK[l.grade] > Store.#GRADE_RANK[\"C\"] ? \"C\" : l.grade)}\\t`" },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read; the snapshot above is in $TMPDIR). */
+anchorTable(Object.entries(PATCHES).map(([arm, p]) => ({ arm, file: STORE, find: p.from, put: p.to })));
 
 const arm = (name) => {
   const p = PATCHES[name];

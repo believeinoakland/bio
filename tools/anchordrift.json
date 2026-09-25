@@ -1,0 +1,518 @@
+{
+ "_about": "M0-197 (BOB #35, 2026-09-25): the dated debts tools/anchordrift.mjs forgives. `allowances`: a drifted arm already rowed, keyed on driver, arm AND the head of its anchor, so it forgives only that anchor; it prints ALLOWED every run and STALE once its row lands (drop it then). `unreadable`: drivers that could not expose their anchors as data the day this landed; each is NAMED every run, a new one FAILS, and one that becomes readable FAILS until it is dropped here. `inflight`: drivers an unlanded branch adds, written before the convention.",
+ "allowances": [
+  {
+   "driver": "bio-plane/test/aicredential.control.mjs",
+   "arm": "3",
+   "anchor": "  return !!spec && Array.isArray(spec.classes) &",
+   "row": "D-632",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/aicredential.control.mjs",
+   "arm": "5",
+   "anchor": "        : cls === \"ai\" ? aiCred.principal\n      ",
+   "row": "D-632",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 3 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/caseflip.control.mjs",
+   "arm": "c",
+   "anchor": "      if (!r) { awaiting.push(m.bundle_id); cont",
+   "row": "D-634",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/caseflip.control.mjs",
+   "arm": "f",
+   "anchor": "      if (!r) { awaiting.push(m.bundle_id); cont",
+   "row": "D-634",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/current.control.mjs",
+   "arm": "8",
+   "anchor": "      const q = this.#queueSharedInquiry(inq, vi",
+   "row": "M0-139",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — queued"
+  },
+  {
+   "driver": "bio-plane/test/d266scope.control.mjs",
+   "arm": "2",
+   "anchor": "      disposed.set(d.progression_key + \"::\" + d.",
+   "row": "D-636",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/d85-surface-run.control.mjs",
+   "arm": "no-lens-at-open",
+   "anchor": "        JSON.stringify(state == null ? {} : stat",
+   "row": "D-637",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/dec65-strength-reach.control.mjs",
+   "arm": "a2",
+   "anchor": "  #strengthWalk(bundleId, depth, bound, legsOver",
+   "row": "D-638",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/fence-e2e.control.mjs",
+   "arm": "(3)",
+   "anchor": "  return !!spec && Array.isArray(spec.classes) &",
+   "row": "D-639",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/m025-anchor-witness.control.mjs",
+   "arm": "T1",
+   "anchor": "/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms",
+   "row": "D-640",
+   "since": "2026-09-25",
+   "why": "bio-plane/test/casesign.control.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-cap12.mjs",
+   "arm": "dropslides",
+   "anchor": "                    slides: sl ? slideExtents(sl",
+   "row": "D-600",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — queued: re-anchor dropslides"
+  },
+  {
+   "driver": "bio-plane/test/nc-coff12.mjs",
+   "arm": "slidesbyposition",
+   "anchor": "                    slides: sl ? slideExtents(sl",
+   "row": "D-642",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-cpdf18.mjs",
+   "arm": "textpin",
+   "anchor": "        pieces.push(\"\\n\"); // a new text line",
+   "row": "D-643",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/pdfstructure.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-fw17.mjs",
+   "arm": "nullhonest",
+   "anchor": "          pos ? pos.kind : null, pos ? readingSo",
+   "row": "D-644",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-m038.mjs",
+   "arm": "15",
+   "anchor": "    const page = this.#frontierLatest(\"document\"",
+   "row": "D-467",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — queued"
+  },
+  {
+   "driver": "bio-plane/test/nc-mk4.mjs",
+   "arm": "machinewide",
+   "anchor": "    if (gate.scope === \"DENY\" || gate.member == ",
+   "row": "D-645",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-mk4.mjs",
+   "arm": "aiscope",
+   "anchor": "        : cls === \"ai\" ? aiCred.principal\n      ",
+   "row": "D-645",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 3 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-mk4.mjs",
+   "arm": "noshare",
+   "anchor": "    if (gate.member === row.author) return true;",
+   "row": "D-645",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-mk4.mjs",
+   "arm": "sharewide",
+   "anchor": "        WHERE s.lead_id = ? AND pp.member_id = ?",
+   "row": "D-645",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec113.mjs",
+   "arm": "blind",
+   "anchor": "  const named = resultRef != null && String(resu",
+   "row": "D-646",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/airun.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec114.mjs",
+   "arm": "b",
+   "anchor": "      return { ...r,\n               grade: res ?",
+   "row": "D-647",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec114.mjs",
+   "arm": "c",
+   "anchor": "    const bounded = (r) => !!r && r.grade_axis =",
+   "row": "D-647",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec114.mjs",
+   "arm": "e",
+   "anchor": "    return rows.map((r) => {\n      const res = b",
+   "row": "D-647",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec118.mjs",
+   "arm": "b",
+   "anchor": "                 target_edition: l.target_editio",
+   "row": "D-648",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec118.mjs",
+   "arm": "d",
+   "anchor": "      o.legs = (o.legs ?? []).map((l) => {\n     ",
+   "row": "D-648",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec64.mjs",
+   "arm": "1",
+   "anchor": "    if (!concl)\n      return { ok: false, reason",
+   "row": "D-649",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec82.mjs",
+   "arm": "oob",
+   "anchor": "if (Number.isInteger(ctx.pageCount) && ctx.pageC",
+   "row": "D-650",
+   "since": "2026-09-25",
+   "why": "bio-plane/checks/bio-checks.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec82.mjs",
+   "arm": "nochain",
+   "anchor": "if (e.kind !== 'document' && !(Array.isArray(ctx",
+   "row": "D-650",
+   "since": "2026-09-25",
+   "why": "bio-plane/checks/bio-checks.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec82.mjs",
+   "arm": "overstrict",
+   "anchor": "if (e.kind !== 'document' && !(Array.isArray(ctx",
+   "row": "D-650",
+   "since": "2026-09-25",
+   "why": "bio-plane/checks/bio-checks.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec94.mjs",
+   "arm": "writer",
+   "anchor": "      this.#observeExtraction(bundleId, sha, rea",
+   "row": "D-652",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec94.mjs",
+   "arm": "cause",
+   "anchor": "    if (cause === \"never_looked\")",
+   "row": "D-652",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/airun.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec97.mjs",
+   "arm": "overstrict",
+   "anchor": "    const authored = Object.keys(bag).filter((k)",
+   "row": "D-653",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/nc-rec99.mjs",
+   "arm": "7",
+   "anchor": "const SCANNING_MEASURED_2026_09_15 = 103;",
+   "row": "D-654",
+   "since": "2026-09-25",
+   "why": "bio-plane/test/derivation-bounds.test.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/rec168-capturerequest-principal.control.mjs",
+   "arm": "drop-gate",
+   "anchor": "    if (notPrincipal)\n      return { ok: false, ",
+   "row": "D-655",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/rec168-capturerequest-principal.control.mjs",
+   "arm": "gate-sessions-only",
+   "anchor": "    if (notPrincipal)\n      return { ok: false, ",
+   "row": "D-655",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/rec168-capturerequest-principal.control.mjs",
+   "arm": "gate-credentials-only",
+   "anchor": "    if (notPrincipal)\n      return { ok: false, ",
+   "row": "D-655",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/reviewcopy-inband.control.mjs",
+   "arm": "e",
+   "anchor": "    let last = null;\n    for (const c of cand) i",
+   "row": "D-656",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/scheduler.control.mjs",
+   "arm": "(6)",
+   "anchor": "  #aiRunWake(now) {\n    const iso = Store.#aiIso",
+   "row": "D-657",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/shadowed-refusals.control.mjs",
+   "arm": "7",
+   "anchor": "    if (!who)\n      return { ok: false, reason: ",
+   "row": "D-658",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/strandedwork.control.mjs",
+   "arm": "A7",
+   "anchor": "await import(\"./strandedwork.mjs\")",
+   "row": "D-659",
+   "since": "2026-09-25",
+   "why": "tools/plancheck.mjs: matches 2 times where the arm edits ONE site — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/strengthpair.control.mjs",
+   "arm": "2",
+   "anchor": "      pair: { capture: pair.capture, connection:",
+   "row": "D-660",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/strengthpair.control.mjs",
+   "arm": "2b",
+   "anchor": "      pair: { capture: pair.capture, connection:",
+   "row": "D-660",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
+  },
+  {
+   "driver": "bio-plane/test/suggest.control.mjs",
+   "arm": "7",
+   "anchor": "    if (prior) {",
+   "row": "D-630",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/store.mjs: matches 2 times where the arm edits ONE site — minted by M0-197: D-536 added a second `    if (prior) {` site"
+  },
+  {
+   "driver": "bio-plane/test/versionstate.control.mjs",
+   "arm": "1a",
+   "anchor": "        || DECLARATION_ACTIONS.includes(op) || S",
+   "row": "D-661",
+   "since": "2026-09-25",
+   "why": "bio-plane/src/index.mjs: matches 0 times — minted by M0-197's first read"
+  }
+ ],
+ "unreadable": {
+  "row": "D-663",
+  "since": "2026-09-25",
+  "why": "the arms' anchors are inline in imperative blocks behind side effects (a git worktree, baseline suites, chained helper replaces); exposing them needs more than a minimal change; nc-rec116 spawns `git merge-base` for a BASE binding scripts/pensweep.mjs must read literally, so it stays as it was",
+  "drivers": [
+   "bio-plane/test/fieldread.control.mjs",
+   "bio-plane/test/nc-rec116.mjs",
+   "bio-plane/test/pipeline-readers.control.mjs",
+   "bio-plane/test/verdict-excluder.control.mjs"
+  ],
+  "inflight": [
+   {
+    "driver": "bio-plane/test/nc-d585.mjs",
+    "branch": "land/worker/D-320 (also land/worker/D-585 for nc-d585)"
+   },
+   {
+    "driver": "bio-plane/test/d556partedpublish.control.mjs",
+    "branch": "land/worker/D-556"
+   },
+   {
+    "driver": "bio-plane/test/d563-promoted-title-state.control.mjs",
+    "branch": "land/worker/D-563"
+   },
+   {
+    "driver": "bio-plane/test/setup-signeradd.control.mjs",
+    "branch": "land/worker/D-605"
+   },
+   {
+    "driver": "bio-plane/test/m0193-surfacing-fixture.control.mjs",
+    "branch": "land/worker/M0-193"
+   },
+   {
+    "driver": "bio-plane/test/project-join-request.control.mjs",
+    "branch": "land/worker/REC-150"
+   },
+   {
+    "driver": "bio-plane/test/rec-186-leave-join.control.mjs",
+    "branch": "land/worker/REC-186"
+   },
+   {
+    "driver": "bio-plane/test/nc-rec203.mjs",
+    "branch": "land/worker/REC-203"
+   },
+   {
+    "driver": "bio-plane/test/nc-rec218.mjs",
+    "branch": "land/worker/REC-218"
+   },
+   {
+    "driver": "bio-plane/test/nc-rec220.mjs",
+    "branch": "land/worker/REC-220"
+   },
+   {
+    "driver": "civicos-ui/test/progression-decided-finding.control.mjs",
+    "branch": "land/worker/UI-108"
+   },
+   {
+    "driver": "civicos-ui/test/reopened-finding.control.mjs",
+    "branch": "land/worker/UI-109"
+   },
+   {
+    "driver": "civicos-ui/test/project-visibility-surface.control.mjs",
+    "branch": "land/worker/UI-70"
+   },
+   {
+    "driver": "civicos-ui/test/themes.control.mjs",
+    "branch": "land/worker/UI-76"
+   },
+   {
+    "driver": "civicos-ui/test/group-identity-surface.control.mjs",
+    "branch": "land/worker/UI-78"
+   },
+   {
+    "driver": "bio-plane/test/d546-state-edge.control.mjs",
+    "branch": "land/worker/D-546 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d564-block.control.mjs",
+    "branch": "land/worker/D-564 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d578-typeless-revision.control.mjs",
+    "branch": "land/worker/D-578 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d615-promoted-dates.control.mjs",
+    "branch": "land/worker/D-615 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d623.control.mjs",
+    "branch": "land/worker/D-623 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d629-internal-error.control.mjs",
+    "branch": "land/worker/D-629 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/d679-public-store-silence.control.mjs",
+    "branch": "land/worker/D-679 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d346.mjs",
+    "branch": "land/worker/D-346 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d374.mjs",
+    "branch": "land/worker/D-374 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d375.mjs",
+    "branch": "land/worker/D-375 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d557.mjs",
+    "branch": "land/worker/D-557 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d627.mjs",
+    "branch": "land/worker/D-627 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d633.mjs",
+    "branch": "land/worker/D-633 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d635.mjs",
+    "branch": "land/worker/D-635 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d665.mjs",
+    "branch": "land/worker/D-665 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d675.mjs",
+    "branch": "land/worker/D-675 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d686.mjs",
+    "branch": "land/worker/D-686 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-m0196.mjs",
+    "branch": "land/worker/M0-196 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "civicos-ui/test/document-decided-finding.control.mjs",
+    "branch": "land/worker/D-617 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "civicos-ui/test/queue-projectscope.control.mjs",
+    "branch": "land/worker/UI-110 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "civicos-ui/test/review-copy-newcase.control.mjs",
+    "branch": "land/worker/UI-106 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "civicos-ui/test/ui104-risk-tier.control.mjs",
+    "branch": "land/worker/UI-104 (c22-batch29/30 union; written before the M0-197 convention)"
+   }
+  ]
+ }
+}

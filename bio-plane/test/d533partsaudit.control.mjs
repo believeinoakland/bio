@@ -18,6 +18,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
@@ -77,6 +78,9 @@ const ARMS = {
                "and the fully held rows are still held in parts"],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([file, find, put]) => ({ arm, file: join(PLANE, "src", file), find, put }))));
 
 const run = (name) => {
   const arm = ARMS[name];

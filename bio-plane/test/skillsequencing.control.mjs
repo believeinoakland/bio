@@ -40,6 +40,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
@@ -169,6 +170,11 @@ const ARMS = [
        + "repository that has done exactly that.",
   },
 ];
+
+/* M0-197: under tools/anchordrift.mjs's dry read each arm's OWN edit is handed a recorder for the text (chained
+   `.replace` calls included), so every anchor is read from the arm; `replace` edits the first match of any. */
+if (ANCHOR_DRY) anchorTable(ARMS.flatMap((a) => { const rows = [];
+  const rec = { replace: (find, put) => (rows.push({ arm: a.id, file: a.file, find, put, sites: "any" }), rec) }; a.edit(rec); return rows; }));
 
 const only = process.argv[2];
 const selected = only ? ARMS.filter((a) => a.id === only) : ARMS;

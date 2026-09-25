@@ -35,6 +35,7 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
@@ -231,6 +232,9 @@ const ARMS = {
                "NO SCORES -> refused", "cap: null is LEGAL"],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => (a.patches || [[a.find, a.repl]]).map(([find, put]) => ({ arm, file: abs(a.file), find, put }))));
 
 /* ------------------------------------------------------------------ *
  * The runner

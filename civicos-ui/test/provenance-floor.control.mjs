@@ -17,8 +17,17 @@ import { writeFileSync, readFileSync, copyFileSync, rmSync, existsSync, mkdirSyn
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url)).replace(/\/$/, "");
+/* M0-197: arms 5's and 6's anchors, hoisted from their blocks (unchanged) so tools/anchordrift.mjs can read them as
+   data BEFORE the harness directory is made; a no-op outside its dry read. Arm 6 patches the SAME pristine text twice. */
+const IMP = 'import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";';
+const ANCHOR = "UI_REPRO.length >= 3 && S_REPRO.functions >= 200 && S_REPRO.sites >= 1";
+const VP = join(REPO, "civicos-ui/test/version-predecessor.test.mjs"), PHANTOM_ARM = { none: "writes an untracked phantom file whole; quotes nothing" };
+anchorTable([{ arm: "ARM 1", ...PHANTOM_ARM }, { arm: "ARM 2", ...PHANTOM_ARM }, { arm: "ARM 3", none: "a failing git shim on PATH; edits nothing" },
+  { arm: "ARM 4", none: "appends a function to app.html; quotes nothing" }, { arm: "ARM 5", file: VP, find: IMP },
+  { arm: "ARM 6", file: VP, find: ANCHOR }, { arm: "ARM 6", file: VP, find: ANCHOR }]);
 /* THE PRISTINE COPIES GO IN A mkdtemp INSIDE THIS WORKTREE AND ARE DELETED IN A
    `finally`, and that is not tidiness — it is a finding this harness paid for.
    They are copies of `app.html`, and `bio-plane/scripts/op-claims.mjs` walks the
@@ -182,7 +191,6 @@ declare("ARM 5 THE GUARD REMOVED",
   armSnapshot("a5");
   const f = join(REPO, "civicos-ui/test/version-predecessor.test.mjs");
   const src = readFileSync(f, "utf8");
-  const IMP = 'import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";';
   const hits = src.split(IMP).length - 1;
   if (hits !== 1) throw new Error(`ARM 5 ANCHOR appears ${hits} times, not once — an arm that cannot arm is a finding`);
   writeFileSync(f, src.replace(IMP, "/* ARM 5: import removed */"));
@@ -204,7 +212,6 @@ declare("ARM 6 THE FLOOR IS ACTUALLY GIT-BACKED — the decisive pair",
   writeFileSync(PHANTOM, phantomBody(false));
   const f = join(REPO, "civicos-ui/test/version-predecessor.test.mjs");
   const src = readFileSync(f, "utf8");
-  const ANCHOR = "UI_REPRO.length >= 3 && S_REPRO.functions >= 200 && S_REPRO.sites >= 1";
   const hits = src.split(ANCHOR).length - 1;
   if (hits !== 1) throw new Error(`ARM 6 ANCHOR appears ${hits} times, not once`);
   writeFileSync(f, src.replace(ANCHOR, "UI_REPRO.length >= 7 && S_REPRO.functions >= 200 && S_REPRO.sites >= 1"));

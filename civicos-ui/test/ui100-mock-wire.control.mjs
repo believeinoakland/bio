@@ -108,6 +108,7 @@ import os from "os";
 import crypto from "crypto";
 import { execFileSync } from "child_process";
 import path from "path";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const ROOT   = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const T      = (n) => path.join(ROOT, "civicos-ui/test", n + ".test.mjs");
@@ -219,6 +220,8 @@ const ARMS = [
     to:  [`    if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP",\n                             op }, 400);`],
     mustFail:SUITES.filter(s => s !== "refusal-translation-surface") },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.from.map((find, i) => ({ arm: a.id, file: a.files[i], find, put: a.to[i] }))));
 
 fs.mkdirSync(TMP, { recursive:true });
 console.log(`UI-100 NEGATIVE CONTROL — five arms, each ALONE, across ${SUITES.length} suites, against the FINAL tree`);

@@ -26,6 +26,7 @@ import os from "os";
 import path from "path";
 import { execFileSync } from "child_process";
 import { appScript } from "./extract.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../../bio-plane/scripts/anchortable.mjs";
 
 const SUITE = new URL("./version-notice-surface.test.mjs", import.meta.url).pathname;
 const BASE = appScript();
@@ -43,10 +44,14 @@ const ARMS = {
   overstrict: (s) => one(s, `const scope = line("whose chains", r.visible_to);`, `const scope = line("chains read", r.visible_to);`),
 };
 function one(s, from, to){
+  /* M0-197: read, never armed. The arms patch app.html's extracted script; the anchor is counted in app.html itself. */
+  if (ANCHOR_DRY) return (anchorPatch(new URL("../app.html", import.meta.url).pathname, from, to), s);
   const n = s.split(from).length - 1;
   if (n !== 1) throw new Error(`ARM DID NOT ARM: anchor occurs ${n} times: ${from.slice(0, 80)}`);
   return s.replace(from, to);
 }
+anchorEach(ARMS, (arm) => arm(BASE));   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
+
 const only = process.argv[2];
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ui96-ctl-"));
 const results = [];

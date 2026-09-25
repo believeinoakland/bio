@@ -66,6 +66,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FLOOR = join(HERE, "ocr-measure-probe.mjs");
@@ -162,6 +163,7 @@ const runGuards = () => GUARDS.map(([id, p]) => {
   return { id, status: r.status, stopLine };
 });
 const mutateArm = (id, what, from, to, mustName) => {
+  if (ANCHOR_DRY) return void anchorRows([{ arm: id, file: FLOOR, find: from, put: to, sites: "any" }]);   /* M0-197: read, never armed */
   arm(id, what, `BOTH guards exit 4, refusal naming ${mustName}; restore byte-identical (sha256 AND cmp)`, () => {
     const pristine = join(PRISTINE_DIR, `${id}.pristine.mjs`);
     copyFileSync(FLOOR, pristine);
@@ -202,6 +204,9 @@ mutateArm("nc3-expr", "ONE pinned expression altered in the real file (char-accu
 mutateArm("nc3-gt", "ONE DIGIT of the ground truth altered in the real file ($21,180,436.10 -> .19)",
   "$21,180,436.10", "$21,180,436.19", "the digest");
 
+/* M0-197: prints the nc3 arms read above and exits, under the dry read only. The nc1 arms replace inside GT_PAGE2,
+   grabbed in memory from the floor, so their anchors are counted in the floor's file (it holds GT_PAGE2). */
+anchorTable([{ arm: "nc1-subst", file: FLOOR, find: "$50,000", sites: "any" }, { arm: "nc1-overstrict", file: FLOOR, find: "transaction", sites: "any" }]);
 arm("post-restore", "both guards against the restored committed file",
   "both exit 0 — the additive edit itself moved nothing the guards pin", () => {
     const results = runGuards();

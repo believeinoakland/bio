@@ -74,6 +74,7 @@ import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SUITE = join(HERE, "tier2-wire.test.mjs");
@@ -147,6 +148,7 @@ function restoreAndVerify(armName, s) {
 const NAMES = /TWO tiers|per PAGE|SCOPED, mixed chain|kept at tier 1|decline reaches the caller|producer is still named|could not be read|manifest|corpus floor/;
 
 function sourceArm({ name, declared, subject = "wire", edits }) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([find, put]) => ({ arm: name, file: SUBJECTS[subject].path, find, put })));   /* M0-197: read, never armed */
   const s = SUBJECTS[subject];
   const copy = join(PEN, `${name}.pristine.mjs`);
   copyFileSync(s.path, copy);                  // uniquely-named, per-arm
@@ -180,7 +182,7 @@ function sourceArm({ name, declared, subject = "wire", edits }) {
 }
 
 /* ── BASELINE ─────────────────────────────────────────────────────────────── */
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite under the dry read */
   const r = runSuite();
   const actual = r.code === 0 ? "PASS" : "FAIL";
   const tally = r.out.match(/tier2-wire: (-?\d+) pass, (-?\d+) fail/);
@@ -255,7 +257,7 @@ sourceArm({
 });
 
 /* ── A7 · truncate the fixture ────────────────────────────────────────────── */
-{
+if (!ANCHOR_DRY) {   /* M0-197: it renames fixtures; under the dry read it is only named, below */
   const hidden = ["legistar-73550.pdf", "legistar-73618.pdf"];
   const stash = join(PEN, "A7-fixtures");
   mkdirSync(stash, { recursive: true });
@@ -297,6 +299,8 @@ sourceArm({
     ],
   ],
 });
+
+anchorTable([{ arm: "A7", none: "hides two fixture PDFs by rename; quotes no line" }]);   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ── the ledger ───────────────────────────────────────────────────────────── */
 console.log(`\n  arm       declared  actual  agree`);

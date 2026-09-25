@@ -107,6 +107,7 @@ import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SUITE = join(HERE, "tier3-layer-parts.test.mjs");
@@ -197,6 +198,7 @@ const D607_NONE  = /carries NO kept-text clause|had no text to keep/;
 const D607_MIXED = /a mixed document still says it|`tier3only` kept one/;
 
 function arm({ name, declared, subject = "wire", edits, mustName, mustNotName }) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([from, to]) => ({ arm: name, file: SUBJECTS[subject].path, find: from, put: to })));   /* M0-197: read, never armed */
   const s = SUBJECTS[subject];
   const copy = join(PEN, `${name}.pristine.mjs`);
   copyFileSync(s.path, copy);                  // uniquely-named, per-arm
@@ -233,7 +235,7 @@ function arm({ name, declared, subject = "wire", edits, mustName, mustNotName })
 }
 
 /* ── BASELINE ─────────────────────────────────────────────────────────────── */
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite runs under the dry read */
   const r = runSuite();
   const actual = r.code === 0 ? "PASS" : "FAIL";
   const tally = r.out.match(/tier3-layer-parts: (-?\d+) pass, (-?\d+) fail/);
@@ -382,6 +384,8 @@ arm({
 `           + (kept > 0 ? \`; the`,
   ]],
 });
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ── THE REPORT ───────────────────────────────────────────────────────────── */
 console.log("\n  arm       declared  actual");

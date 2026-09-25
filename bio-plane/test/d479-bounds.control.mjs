@@ -18,6 +18,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
@@ -93,6 +94,9 @@ const ARMS = [
     from: "    const page = truncated ? projects.slice(0, cap) : projects;\n    return { ok: true, projects: page, count: page.length,",
     to:   "    return { ok: true, projects: truncated ? projects.slice(0, cap) : projects,\n             count: truncated ? cap : projects.length," },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: SRC, find: a.from, put: a.to })));
 
 const PEN = mkdtempSync(join(tmpdir(), "d479-control-"));
 const ONLY = process.argv.slice(2);          /* re-run one arm by id fragment; no argument runs them all */

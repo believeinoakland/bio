@@ -44,6 +44,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { preflight } from "../scripts/armdecay.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -58,6 +59,7 @@ const FLOOR = 1000;
 
 let DRY = null;
 const edit = (file, needle, replacement) => {
+  if (ANCHOR_DRY) return void anchorPatch(file, needle, replacement);   /* M0-197: read, never armed */
   if (DRY) { DRY.push({ file, needle }); return; }
   /* BYTE-WISE: the catalog is large and CLAUDE.md §7 warns that a source in this tree can carry a stray byte. */
   const src = readFileSync(file);
@@ -180,7 +182,7 @@ const ARMS = {
   h: { files: [CATALOG, GATE, SUITE], label: `(H) ACCEPTS-WHEN — the same body edit under a NEW version ${BUMPED_VERSION} whose row declares changed: ["C-15.1"]`,
        apply: () => {
          BODY_EDIT();
-         const source = DRY ? "0".repeat(64) : printedSource();
+         const source = (DRY || ANCHOR_DRY) ? "0".repeat(64) : printedSource();   /* c22-batch30: never spawned under the anchor reader */
          edit(GATE, VERSION, `export const CATALOG_VERSION = "${BUMPED_VERSION}";`);
          edit(SUITE, A5_PIN, `${A5_LEAD}["plane-gate/1.0 (bio-checks ${BUMPED_VERSION})", "${BUMPED_VERSION}"]`);
          const cen = PRINTED_CENSUS || { count: 0, digest: "0".repeat(64) };
@@ -193,7 +195,7 @@ const ARMS = {
   j: { files: [CATALOG, SUITE], label: "(J) A CODE EDIT DECLARED `behaviour: \"unchanged\"` under the same version — `void 0;` before C-15.1, the print's digest declared",
        apply: () => {
          edit(CATALOG, EMIT_C151, "    void 0;\n" + EMIT_C151);
-         const source = DRY ? "0".repeat(64) : printedSource();
+         const source = (DRY || ANCHOR_DRY) ? "0".repeat(64) : printedSource();   /* c22-batch30: never spawned under the anchor reader */
          edit(SUITE, CURRENT_ENTRY,
            `${CURRENT_ENTRY} unchanged: [{ source: "${source}", behaviour: "unchanged", by: "M0-195 arm (j)" }],`);
        },
@@ -202,6 +204,8 @@ const ARMS = {
        apply: () => edit(SUITE, CENSUS_HEAD, CENSUS_HEAD + '  "1.30.1": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f", changed: ["C-41.12"], source: "' + "1".repeat(64) + '" },\n'),
        mustFail: [], mustNotFail: ALL, expectGreen: true },
 };
+
+anchorEach(ARMS, (a) => a.apply());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const want = process.argv[2];
 const order = want ? [want] : Object.keys(ARMS);

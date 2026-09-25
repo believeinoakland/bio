@@ -50,6 +50,7 @@ import { createHash } from "node:crypto";
 import { spawn, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const REL_TOOL = path.join("tools", "mintid.mjs");
@@ -95,14 +96,15 @@ for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"])
 const CHILD_ENV = Object.fromEntries(Object.entries(process.env)
   .filter(([k]) => k !== "BIO_IDALLOC_DIR" && !k.startsWith("GIT_")));
 
-execFileSync("git", ["clone", "-q", "--no-local", REPO, CLONE], { stdio: ["ignore", "ignore", "pipe"], env: CHILD_ENV });
-const COMMON = path.resolve(CLONE, execFileSync("git", ["rev-parse", "--git-common-dir"],
+/* M0-197: under tools/anchordrift.mjs's dry read no clone is made (the arms' table below is all it reads). */
+if (!ANCHOR_DRY) execFileSync("git", ["clone", "-q", "--no-local", REPO, CLONE], { stdio: ["ignore", "ignore", "pipe"], env: CHILD_ENV });
+const COMMON = ANCHOR_DRY ? path.join(CLONE, ".git") : path.resolve(CLONE, execFileSync("git", ["rev-parse", "--git-common-dir"],
   { cwd: CLONE, encoding: "utf8", env: CHILD_ENV }).trim());
 const LEDGER = path.join(COMMON, "bio-idalloc");
 fs.mkdirSync(PEN);
-for (const [rel, s] of SUBJECTS) fs.writeFileSync(path.join(CLONE, rel), s.pristine);
+if (!ANCHOR_DRY) for (const [rel, s] of SUBJECTS) fs.writeFileSync(path.join(CLONE, rel), s.pristine);
 console.log(`clone ${CLONE} · its git dir ${COMMON} · its ledger ${LEDGER}`);
-t(`the clone was made and holds the subjects (${[...SUBJECTS].map(([rel]) => rel).join(", ")})`,
+if (!ANCHOR_DRY) t(`the clone was made and holds the subjects (${[...SUBJECTS].map(([rel]) => rel).join(", ")})`,
   [...SUBJECTS].every(([rel, s]) => sha(fs.readFileSync(path.join(CLONE, rel))) === s.digest));
 t("a fresh clone carries NO id ledger — the state M-99 measured, asserted rather than assumed", !fs.existsSync(LEDGER));
 
@@ -157,6 +159,8 @@ const ARMS = [
     fails: [FRESH, FRESH_MADE, FRESH_BLOCK], livePasses: true,
     patches: [[REL_TOOL, DROP_FROM, DROP_TO]] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(([rel, find, put]) => ({ arm: a.id, file: path.join(REPO, rel), find, put }))));
 if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms in the table against ${DECLARED_ARMS} declared — the head is wrong`); process.exit(1); }
 const selected = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));
 const unknown = ONLY.filter((id) => !ARMS.some((a) => a.id === id));

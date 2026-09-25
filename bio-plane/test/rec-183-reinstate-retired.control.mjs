@@ -22,6 +22,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
@@ -53,6 +54,9 @@ const ARMS = {
     mustFail: ["§3 op=affordances"], mustHold: [...S1, ...S2],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: a.file, find: a.from, put: a.to })));
 
 function runSuite() {
   let out = "", code = 0;

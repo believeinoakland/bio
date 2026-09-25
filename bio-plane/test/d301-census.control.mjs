@@ -34,6 +34,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -226,6 +227,14 @@ const ARMS = [
     ok: (r) => r.hygiene.fail > 0 && r.walkfloor.fail > 0 && /0 walking file\(s\), floor [1-9]\d*/.test(r.hygiene.out),
   },
 ];
+
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs (a no-op outside its dry read). HAND-WRITTEN, because the
+   `patch` closures quote their anchors inline: these are those quotes, and the runner's `extraImport` anchor. Each
+   closure accepts ANY count (`includes`) and replaces the first. The three probe arms write a file WHOLE. */
+anchorTable([...["realwalk", "realinterp", "fixture"].map((arm) => ({ arm, none: "writes a new probe file whole; quotes no tree file" })),
+  { arm: "before", file: CENSUS, find: "const walks = (stripToCode(src).match(DISCOVERY) || []).length;", sites: "any" },
+  { arm: "before", file: CENSUS, find: "import { sweepWalkFloors, strip as stripSource, stripToCode } from \"../scripts/walkfloor.mjs\";", sites: "any" },
+  { arm: "neuter", file: LEXER, find: "export const stripToCode = (src) => strip(src, { keepInterpolations: true });", sites: "any" }]);
 
 /* --------------------------------------------------------------------- RUNNER */
 const wanted = process.argv.slice(2);

@@ -16,6 +16,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = dirname(PLANE.replace(/\/$/, ""));
@@ -85,6 +86,8 @@ const ARMS = {
     mustPass: ["is REFUSED", "NOTHING landed", "a document stating NO type is not a disagreement",
                "the replayed divergent package LANDS", "the record types it by the DOCUMENT"] },
 };
+/* M0-197: the arms' anchors as data (each patches a COPY of src/store.mjs; counted in the real file). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([find, put]) => ({ arm, file: join(PLANE, "src", "store.mjs"), find, put }))));
 
 const run = (name) => {
   const arm = ARMS[name];

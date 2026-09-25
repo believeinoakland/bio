@@ -26,6 +26,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 /* THE PEN IS OUTSIDE THE WORKTREE (M0-182; moved at c20-batch27 by CONDUCT #20): this driver wrote its pristine
    copy BESIDE src/index.mjs, an undeclared in-worktree pen the floored nc-* class refuses (pen-sweep). */
 const PEN = controlPen("d463");
@@ -67,6 +68,8 @@ const ARMS = [
      apart from six-arms-broken only by its baseline (WORKER.md's measured receipt). Nothing is patched. */
   { id: "0", declared: "GREEN", must: [], patch: [] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patch.map(([find, put]) => ({ arm: a.id, file: SRC, find, put }))));
 
 const rows = [];
 for (const arm of ARMS) {

@@ -34,6 +34,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const APP = fileURLToPath(new URL("../app.html", import.meta.url));
 const SUITE = fileURLToPath(new URL("./conclude-nofalsifier.test.mjs", import.meta.url));
@@ -102,6 +103,9 @@ const ARMS = [
     to:   "",
   },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: APP, find: a.from, put: a.to })));
 
 /* OVER-STRICTNESS IS ARM F AND IT TAKES NO EDIT, because it runs on every green
    pass rather than only under a control: sections 6 and 6b of the suite drive a

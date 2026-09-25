@@ -19,6 +19,11 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { anchorTable } from "../scripts/anchortable.mjs";
+
+/* M0-197: this file is a SCENARIO PHASE, not a driver — it quotes and patches no source. Its arm's anchor is in
+   nc-rec119.mjs, which arms between the phases; tools/anchordrift.mjs reads it there. A no-op outside the dry read. */
+anchorTable([{ arm: "b", none: "a scenario phase nc-rec119.mjs spawns; it patches nothing — arm (b)'s anchor is nc-rec119.mjs's" }]);
 
 const PHASE = process.argv[2], PERSIST = process.argv[3];
 if (!["a", "b"].includes(PHASE) || !PERSIST) {

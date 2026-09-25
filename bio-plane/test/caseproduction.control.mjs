@@ -45,6 +45,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 /* D-450 (2026-09-25): `checks` joins the restored set — arm (J) arms C-41.12 in the catalogue. */
@@ -64,9 +65,11 @@ for (const [k, v] of Object.entries(ORIGINAL)) {
 }
 
 const PEN = ROOT + "../.case2-harness";
+if (!ANCHOR_DRY) {   /* M0-197: the pen is the arms' business; the dry read never arms */
 rmSync(PEN, { recursive: true, force: true });
 mkdirSync(PEN, { recursive: true });
 for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+}
 
 let armsRun = 0, armsWrong = 0;
 
@@ -163,7 +166,7 @@ function runArm(id, title, edits, suites, expectGreen = false) {
 console.log("\nCASE-2 — negative controls. THE BASELINE FIRST, so every arm is a DELTA and so a run in\n"
           + "which every arm is broken is distinguishable from one in which every arm works.");
 const OWN = "caseproduction.test.mjs", PUB = "publish.test.mjs", D280 = "d280-strengthbar.test.mjs";
-if (!ONLY) {
+if (!ONLY && !ANCHOR_DRY) {   /* M0-197: no suite under the dry read */
   for (const n of [OWN, PUB, D280]) {
     const b = runSuite(n);
     console.log(`  BASELINE ${n}: ${b.pass} pass, ${b.fail} fail`);
@@ -420,6 +423,8 @@ arm("K", "THE UNSET AXIS WRITTEN 'not set' INSTEAD OF §3 rule 14's words. DECLA
    point — then the arms, in registration order. The refusal is scoped to the
    arms this invocation will actually run, so a stale arm cannot stop a healthy
    one being driven with `node test/caseproduction.control.mjs <id>`. */
+/* M0-197: the queued arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(QUEUE.flatMap((q) => q.edits.map(([k, find, put]) => ({ arm: q.id, file: F[k], find, put }))));
 const willRun = QUEUE.filter((q) => !ONLY || ONLY === q.id).map((q) => q.id);
 preflight("caseproduction.control.mjs",
   QUEUE.map((q) => ({ id: q.id, anchors: q.edits.map(([k, from]) => ({ file: F[k], needle: from })) })),

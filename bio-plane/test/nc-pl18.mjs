@@ -46,6 +46,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const P = (rel) => fileURLToPath(new URL(rel, import.meta.url));
 const STORE = P("../src/store.mjs");
@@ -194,6 +195,8 @@ const ARMS = [
     from: "    if (RUN_VERB_ACTIONS.includes(op)) {\n      inner.searchParams.delete(\"actor\");",
     to:   "    if (false) {\n      inner.searchParams.delete(\"actor\");" },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.filter((a) => a.file).map((a) => ({ arm: a.id, file: a.file, find: a.from, put: a.to })));
 
 const runSuite = () => {
   try {

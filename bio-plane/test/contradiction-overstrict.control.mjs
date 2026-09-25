@@ -25,6 +25,8 @@
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const SRC = { store: "src/store.mjs", judge: "test/contradiction-judge-baseline.mjs",
               gate: "test/contradiction-gate.mjs",
@@ -103,6 +105,10 @@ const ARMS = {
        + "line. MUST NOT fail: R1's gate, which an abstaining detector passes",
     must_fail: "R1: AND ITS RECALL IS REPORTED AND BEATS", must_pass: "R1: THE MACHINE JUDGEMENT PASSES" },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). SRC is cwd-relative
+   (the driver runs from bio-plane/); the row's file is resolved from this file instead. */
+anchorTable(Object.entries(ARMS).filter(([, a]) => a.file).map(([arm, a]) => ({ arm, file: fileURLToPath(new URL(`../${SRC[a.file]}`, import.meta.url)), find: a.find, put: a.to })));
 
 const run = () => {
   try {

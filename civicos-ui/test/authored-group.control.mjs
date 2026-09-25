@@ -25,6 +25,7 @@ import path from "path";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.join(HERE, "..", "app.html");
@@ -46,6 +47,8 @@ const ARMS = [
   { name: "(C) over-strictness: a comment in the meta", declared: "GREEN",
     edits: [[ADD_META, `      meta: { object_type: type, /* group: the plane writes it */ title,`]] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => (a.edits || []).map(([find, put]) => ({ arm: a.name, file: APP, find, put }))));
 
 fs.mkdirSync(SCRATCH, { recursive: true });
 const origSha = sha(APP);

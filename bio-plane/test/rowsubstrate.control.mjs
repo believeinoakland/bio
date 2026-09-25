@@ -20,6 +20,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const PEN = join(REPO, ".d404-harness");
@@ -34,9 +35,10 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-mkdirSync(PEN, { recursive: true });
+/* M0-197: under tools/anchordrift.mjs's dry read no pen is made and no suite runs; the arms below are READ. */
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });
 const copy = join(PEN, "pristine.rowsubstrate");
-writeFileSync(copy, readFileSync(PRED));
+if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(PRED));
 const PRISTINE = { sha: sha(PRED), bytes: statSync(PRED).size };
 const MIN_BYTES = 5000;
 console.log(`  pristine predicate: ${PRISTINE.bytes} bytes, sha256 ${PRISTINE.sha.slice(0, 8)}…`);
@@ -72,7 +74,7 @@ const broke = (s, frag) => s.failed.some((l) => l.includes(frag));
 const collateral = (s) => broke(s, "a CLOSED row is not judged at all");
 
 console.log("\n--- ARM BASELINE · nothing armed ---");
-{
+if (!ANCHOR_DRY) {
   const s = suiteRun();
   t("baseline · the suite reached its own FOOT", s.reachedFoot, true);
   t("baseline · the suite is GREEN", [s.pass > 20, s.fail, s.status], [true, 0, 0]);
@@ -127,6 +129,7 @@ const ARMS = [
     to:   '|§\\s*(?:"[^"]*"|(\\d+(?:\\.\\d+)*))/g;',
     mustBreak: "`§6A` reads as §6A, never as the §6 before it" },
 ];
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: PRED, find: a.from, put: a.to })));   /* M0-197: a no-op outside the dry read */
 
 for (const a of ARMS) {
   console.log(`\n--- ARM ${a.id} · ${a.title} (armed ALONE) ---`);

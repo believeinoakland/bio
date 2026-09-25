@@ -33,6 +33,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(HERE, "..");
@@ -121,6 +122,10 @@ let armsRun = 0, surprises = 0;
 let BASE = null;
 
 function arm(id, declared, files, mutate, judge) {
+  /* M0-197: under tools/anchordrift.mjs each file's mutation is handed a recorder for the text, so its anchor is read
+     FROM the arm; `replace` edits the first match and the arm arms on any, so any count above zero is live. */
+  if (ANCHOR_DRY) return void anchorRows(files.map((f) => { const r = { arm: id.split(" · ")[0], file: f, sites: "any" };
+    mutate({ replace: (find, put) => (Object.assign(r, { find, put }), "") }, f); return r; }));
   armsRun++;
   console.log(`\n=== ARM ${id} — ${declared.what}`);
   console.log(`    MUST FAIL:     ${declared.mustFail}`);
@@ -154,7 +159,7 @@ function arm(id, declared, files, mutate, judge) {
 }
 
 console.log("\n=== BASELINE — the row that distinguishes six-arms-broken from six-arms-working ===");
-{
+if (!ANCHOR_DRY) {   /* M0-197: no run under the dry read */
   const r = runSuite();
   BASE = r;
   console.log(`    BASELINE: ${r.pass} pass, ${r.fail} fail, exit ${r.code}, foot ${r.foot ? "reached" : "NOT REACHED"}`);
@@ -270,6 +275,7 @@ arm("f · OVER-STRICTNESS: a real but irrelevant field on the member's wire answ
   (r) => ({ ok: r.fail === 0 && r.code === 0 && r.pass === BASE.pass && r.foot,
             why: `${r.pass}/${r.fail} against a baseline of ${BASE.pass}/${BASE.fail}` }));
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log("\n=== POST-RESTORE — the tree is back where it started ===");
 {
   const r = runSuite();

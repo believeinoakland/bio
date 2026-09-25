@@ -32,6 +32,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -107,6 +108,9 @@ const ARMS = [
             + "touches reports six successful refutations.",
     mustFail: [], mustPass: ["(A1)", "(A2)", "(A3)", "(A4)", "(A5)", "(A6)", "(A7)", "(A8)"] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.filter((a) => a.file).map((a) => ({ arm: a.id, file: a.file, find: a.find, put: a.put })));
 
 function runSuite() {
   const r = spawnSync(process.execPath, ["test/m051-driver-census.test.mjs"],

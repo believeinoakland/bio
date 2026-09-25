@@ -39,6 +39,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = ROOT + "test/fence-e2e.test.mjs";
@@ -117,6 +118,8 @@ function restoreAll(armId) {
 }
 
 function arm(id, title, edits, mustFail, mustNotFail = [], { expectGreen = false } = {}) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return (anchorRows(edits.map(([k, find, put]) => ({ arm: id, file: F[k], find, put }))), { fail: 0 });
   armsRun++;
   console.log(`\n=== ${id} ${title}`);
   for (const [k] of edits.length ? edits : Object.keys(F).map((k) => [k]))
@@ -252,6 +255,7 @@ arm("(6)", "**OVER-STRICTNESS: A FENCE TIGHTER THAN ITS RULE IS NOT A SAFER FENC
    "5. direct capture (op=acquire)", "6. direct enqueue (op=capturerequestdrain)"]);
 
 /* ========================================================================= */
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${armsRun} arm(s) run, ${armsWrong} NOT as declared.`);
 console.log("Every file restored and verified by sha256 AND by content against a per-arm pristine copy.");
 process.exit(armsWrong ? 1 : 0);

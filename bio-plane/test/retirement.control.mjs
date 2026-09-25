@@ -33,6 +33,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));      // bio-plane/test
 const PLANE = join(HERE, "..");                            // bio-plane
@@ -121,6 +122,9 @@ const TARGETS = {
   },
 };
 const CALL_SITE = "    checkAppendOnly(ctx, findings);";
+const RETIREMENTS_HEAD = "export const CHECK_RETIREMENTS = {";
+const NEUTER_FROM = "const producersOf = (path, corpus) => corpus.filter((f) => f.text.includes(path))";
+const UNCOVERED_FROM = '  /* FW-15. Every branch C-7.1 refused, and the well-formed ledger it passed. */\n  "C-7.1": [';
 const eachTarget = (fn) => { for (const id of Object.keys(TARGETS)) fn(id, TARGETS[id]); };
 
 /* ------------------------------------------------------------------ arms */
@@ -139,7 +143,7 @@ const ARMS = {
       if (!src.includes(CALL_SITE)) { console.error("REFUSING: the call site is gone; arm cannot arm."); process.exit(2); }
       const planted = src
         .replace(CALL_SITE, `    ${tgt.fn}(ctx, findings);\n` + CALL_SITE)
-        .replace("export const CHECK_RETIREMENTS = {",
+        .replace(RETIREMENTS_HEAD,
           `function ${tgt.fn}(ctx, findings) {\n`
           + `  const raw = ctx.files.get('${tgt.path}');\n`
           + "  if (!raw) return;\n"
@@ -177,7 +181,7 @@ const ARMS = {
       "the corpus floor and the clean-estate arm — which is exactly why a green there proves nothing alone");
     const s = snapshot("arm-neuter", SUITE);
     const src = readFileSync(SUITE, "utf8");
-    const from = "const producersOf = (path, corpus) => corpus.filter((f) => f.text.includes(path))";
+    const from = NEUTER_FROM;
     if (!src.includes(from)) { console.error("REFUSING: the walk's definition moved; arm cannot arm."); process.exit(2); }
     writeFileSync(SUITE, src.replace(from,
       "const producersOf = (path, corpus) => corpus.filter((f) => f.text.includes(path) && false)"));
@@ -206,13 +210,20 @@ const ARMS = {
       "nothing else structural — but C-7.1's own behavioural arms DISAPPEAR from the tally, so the pass count FALLS as well as one arm failing");
     const s = snapshot("arm-uncovered", SUITE);
     const src = readFileSync(SUITE, "utf8");
-    const from = '  /* FW-15. Every branch C-7.1 refused, and the well-formed ledger it passed. */\n  "C-7.1": [';
+    const from = UNCOVERED_FROM;
     if (!src.includes(from)) { console.error("REFUSING: the C-7.1 shape list moved; arm cannot arm."); process.exit(2); }
     writeFileSync(SUITE, src.replace(from, '  "C-7.1__disabled": ['));
     report(runSuite());
     restore(s);
   },
 };
+
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs, from the constants the arms patch with (a no-op otherwise).
+   Every replace here is replace-first over an includes() or a changed-text guard, so each arms on >=1 match. */
+anchorTable([...Object.keys(TARGETS).flatMap((id) => [{ arm: `restore ${id}`, file: CHECKS, find: CALL_SITE, sites: "any" },
+    { arm: `restore ${id}`, file: CHECKS, find: RETIREMENTS_HEAD, sites: "any" }, { arm: `producer ${id}`, none: "appends a line to src/cdx.mjs; quotes nothing" }]),
+  { arm: "neuter", file: SUITE, find: NEUTER_FROM, sites: "any" }, { arm: "overstrict", none: "plants nothing; runs the suite whole" },
+  { arm: "uncovered", file: SUITE, find: UNCOVERED_FROM, sites: "any" }]);
 
 const ORDER = ["restore", "producer", "neuter", "overstrict", "uncovered"];
 const arm = process.argv[2] || "all";

@@ -94,12 +94,24 @@ import path from "path";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI = path.join(HERE, "..");
 const APP = path.join(UI, "app.html");
 const SUITE = path.join(HERE, "version-review.test.mjs");
 const PEN = path.join(UI, ".ui42-harness");
+/* M0-197: each arm's anchor (the `a` its patch requires exactly once) as data for tools/anchordrift.mjs, before the pen is
+   made (a no-op otherwise). Copied from ARMS below, which is built after the pristine-of-record is written. */
+anchorTable([["1-hide-deletes", APP, 'VREV.versions = Array.isArray(answer.versions) ? answer.versions.filter(v => v && typeof v === "object") : [];'],
+  ["2-leak-a-banned-word", APP, "    + '<div class=\"subj-how\">Rests on: ' + esc(vrevLegList(v)) + '</div>'"],
+  ["3-offer-drops-disclosure", APP, '  "Hiding takes this reading out of this display and does nothing else. It stays in the record, "\n+ "it can still be opened and asked for by name, every act already recorded on it stays recorded, "\n+ "and this act is recorded too. Nothing is deleted, and hiding can be undone.";'],
+  ["4-rotation-forgets", APP, "  VREV.against = VREV.focus || null;"],
+  ["5-guess-the-unstated", APP, '  if(rel !== "and" && rel !== "or") return VREV_COMPOSITION_UNSTATED;'],
+  ["6-over-strictness-diff", APP, '  add("Where it came from", vrevOrigin(a), vrevOrigin(b));\n  add("In this display", vrevShown(a), vrevShown(b));'],
+  ["6b-over-strictness-legname", APP, '  return String((l && (l.target_id || l.target)) || "an unnamed reason");'],
+  ["7-sweep-goes-blind", SUITE, "const keep = (where) => { const h = content(); PHASES.push([where, h]); return h; };"]]
+  .map(([arm, file, find]) => ({ arm, file, find })).concat([{ arm: "8-baseline", none: "nothing armed" }]));
 fs.mkdirSync(PEN, { recursive: true });
 
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");

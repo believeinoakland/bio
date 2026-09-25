@@ -34,6 +34,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = { affordances: ROOT + "src/affordances.mjs", store: ROOT + "src/store.mjs" };
@@ -48,9 +49,11 @@ for (const [k, v] of Object.entries(ORIGINAL)) {
   if (v.length < 5000) { console.log(`  ** ${k} is implausibly small; refusing to arm over it`); process.exit(1); }
 }
 const PEN = ROOT + "../.d311-harness";
+if (!ANCHOR_DRY) {   /* M0-197: no pen under tools/anchordrift.mjs's dry read */
 rmSync(PEN, { recursive: true, force: true });
 mkdirSync(PEN, { recursive: true });
 for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+}
 
 let armsRun = 0, armsWrong = 0;
 function runSuite() {
@@ -79,6 +82,7 @@ function restoreAll(armId) {
   }
 }
 function arm(id, title, edits, { mustFail = [], mustNotFail = [] }) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: id, file: F[k], find: from, put: to })));   /* M0-197: read, never armed */
   if (ONLY && ONLY !== id) return;
   armsRun++;
   console.log(`\n=== (${id}) ${title}`);
@@ -99,7 +103,7 @@ function arm(id, title, edits, { mustFail = [], mustNotFail = [] }) {
 }
 
 console.log("\nD-311 — negative controls. THE BASELINE FIRST, so every arm is a delta.");
-if (!ONLY) {
+if (!ONLY && !ANCHOR_DRY) {   /* M0-197: no baseline under the dry read */
   const b = runSuite();
   console.log(`  BASELINE ${SUITE}: ${b.pass} pass, ${b.fail} fail`);
   if (b.fail !== 0 || b.pass < 10) { console.log("  ** the tree is not whole; every arm below would measure the wrong thing"); process.exit(1); }
@@ -128,6 +132,7 @@ arm("4", "THE MAP WIDENED — `retire` declared machine-refused, which the store
                    `  release:            "MACHINE_CANNOT_RELEASE",\n  retire:             "MACHINE_CANNOT_RETIRE",`]],
   { mustFail: ["THE MACHINE MAP IS THE STORE'S"], mustNotFail: ["CROSS-PROJECT"] });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${armsRun} arm(s) run, ${armsWrong} came back other than declared.`);
 rmSync(PEN, { recursive: true, force: true });
 process.exit(armsWrong === 0 ? 0 : 1);

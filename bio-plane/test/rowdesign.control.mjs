@@ -32,6 +32,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const PEN = join(REPO, ".m030-harness");
@@ -48,6 +49,14 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs, before the pen (a no-op outside its dry read). HAND-WRITTEN
+   from the quotes in A3 and A4 below; A1/A2 edit QUEUE.md by LINE NUMBER and A2b edits nothing. */
+anchorTable([{ arm: "A1", none: "removes a design: line BY LINE NUMBER, derived from QUEUE.md's open rows" },
+  { arm: "A2", none: "replaces a design: line BY LINE NUMBER, derived from QUEUE.md's open rows" },
+  { arm: "A3", file: PLANCHECK, find: "7. A ROW NAMES THE DESIGN" },
+  { arm: "A3", file: PLANCHECK, find: "/* ------------------------------------------- 7. A ROW NAMES THE DESIGN", sites: "any" },
+  { arm: "A3", file: PLANCHECK, find: "/* ------------------------------------------------------------- report */", sites: "any" },
+  { arm: "A4", file: STANDARD, find: "| `docs/development/ASSISTANT-PILOT.md` |" }]);
 mkdirSync(PEN, { recursive: true });
 /* One uniquely-named pristine copy per armed file, taken ONCE, before anything is armed. */
 const pristine = new Map();

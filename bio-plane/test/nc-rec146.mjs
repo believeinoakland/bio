@@ -18,6 +18,8 @@
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const SRC = { store: "src/store.mjs", index: "src/index.mjs" };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
@@ -86,6 +88,11 @@ const ARMS = {
        + "fail: K1, K2 and K4, and the S0 walk",
     must_fail: "ALL FOUR KEYS FORM", must_pass: "S0 EMPTY STORE" },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). The driver's paths
+   are relative to bio-plane/, where it is run; the rows carry them absolute. */
+anchorTable(Object.entries(ARMS).filter(([, a]) => a.file)
+  .map(([arm, a]) => ({ arm, file: fileURLToPath(new URL(`../${SRC[a.file]}`, import.meta.url)), find: a.find, put: a.to })));
 
 const run = () => {
   try {

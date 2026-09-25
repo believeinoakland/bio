@@ -28,6 +28,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 /* THE PEN IS OUTSIDE THE WORKTREE (M0-182; moved at c20-batch27 by CONDUCT #20): this driver wrote its pristine
    copy BESIDE src/index.mjs, an undeclared in-worktree pen the floored nc-* class refuses (pen-sweep). */
 const PEN = controlPen("d475");
@@ -53,6 +54,9 @@ const ARMS = {
   D: { declared: "FAIL", mustFail: ["A2", "A3"],
        patch: [[STORE_LINE, `      const pageStore = url.searchParams.get("store") === "bio" ? "bio" : SCRATCH;`]] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patch.map(([find, put]) => ({ arm, file: SRC, find, put }))));
 
 const wanted = process.argv[2];
 if (wanted && !ARMS[wanted]) { console.error(`unknown arm ${wanted}; arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }

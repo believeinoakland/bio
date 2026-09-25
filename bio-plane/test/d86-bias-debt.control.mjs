@@ -18,6 +18,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
@@ -95,6 +96,9 @@ const ARMS = {
   /* OVER-STRICTNESS: the same read in a spelling the suite did not anticipate. Nothing may fail. */
   spelling: { patches: [["store.mjs", READ, READ_SPELLING, 1]], mustFail: [], mustPass: ["ARM A1 ", "ARM M1 "] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([file, find, put, sites]) => ({ arm, file: join(PLANE, "src", file), find, put, sites }))));
 
 const run = (name) => {
   const arm = ARMS[name];

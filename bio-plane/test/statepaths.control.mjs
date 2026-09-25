@@ -42,6 +42,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const SUITE = join(REPO, "bio-plane/test/statepaths.test.mjs");
@@ -119,6 +120,10 @@ const COST_OTHER_PROSE = "(CPDF-10's measurement, recorded in MEASUREMENTS under
 const REEXPORTED = "MOVED_FILES, MOVED_DIRS, NEXT_RE, isMovedPath, RETIRED_FILES, isRetiredPath";
 const COORD_BLOCK = `import { ${REEXPORTED} } from "./statepaths.mjs";\nexport { ${REEXPORTED} };`;
 const DEFS = FILES.statepaths.pristine.toString("utf8").slice(FILES.statepaths.pristine.toString("utf8").indexOf("export const MOVED_FILES"));
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs, before the baseline runs (a no-op otherwise). Arm b's
+   second act writes statepaths.mjs WHOLE and quotes nothing, so it has no anchor to drift. */
+anchorTable([{ arm: "a", file: FILES.opclaims.abs, find: IMPORT_LINE }, { arm: "b", file: FILES.coord.abs, find: COORD_BLOCK },
+  { arm: "c", file: FILES.opclaims.abs, find: IMPORT_LINE }, { arm: "d", file: FILES.textchain.abs, find: LABEL_WITHOUT_MD }]);
 
 console.log("\n=== ARM baseline · nothing armed ===");
 {

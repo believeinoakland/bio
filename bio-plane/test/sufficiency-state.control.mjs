@@ -133,6 +133,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const CHECKS = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
 const AFFORD = fileURLToPath(new URL("../src/affordances.mjs", import.meta.url));
@@ -197,6 +198,9 @@ const ARMS = [
     patches: [[CHECKS, "    if (!noClaim\n        && (typeof g.asserted_by !== 'string' || g.asserted_by.trim() === '' || isMachineIdentity(g.asserted_by))) {",
                "    if (!isSufficiencyClaimed(g.asserted_by)) {"]] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(([file, find, put]) => ({ arm: a.id, file, find, put }))));
 
 /* THE TALLY, READ FROM THE SUITE'S OWN FOOT. Absent means the module ended
    before its last line, and that is `-1` rather than `0`. */

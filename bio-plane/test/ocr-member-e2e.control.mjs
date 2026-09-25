@@ -28,6 +28,7 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
@@ -63,11 +64,12 @@ function runSuite() {
   return { code: r.status, pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, foot, failed, out };
 }
 
-if (existsSync(PEN)) rmSync(PEN, { recursive: true, force: true });
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY && existsSync(PEN)) rmSync(PEN, { recursive: true, force: true });   /* M0-197: no pen under the dry read */
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });
 const pristine = new Map();
 for (const p of TOUCHABLE) {
   const to = join(PEN, rel(p).replace(/\//g, "__"));
+  if (ANCHOR_DRY) continue;  /* M0-197: no pristine copy under the dry read */
   copyFileSync(p, to);
   pristine.set(p, to);
   const n = readFileSync(to).length;
@@ -94,6 +96,7 @@ function restore() {
 let armsRun = 0, surprises = 0, BASE = null;
 
 function arm(id, declared, edits, judge) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([file, from, to]) => ({ arm: id.split(" ")[0], file, find: from, put: to })));   /* M0-197: read, never armed */
   armsRun++;
   console.log(`\n=== ARM ${id} — ${declared.what}`);
   console.log(`    MUST FAIL:     ${declared.mustFail}`);
@@ -130,7 +133,7 @@ function arm(id, declared, edits, judge) {
 }
 
 console.log("\n=== BASELINE — without this row, three-arms-broken and three-arms-working read alike ===");
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite runs under the dry read */
   BASE = runSuite();
   console.log(`    BASELINE: ${BASE.pass} pass, ${BASE.fail} fail, exit ${BASE.code}, foot ${BASE.foot ? "reached" : "NOT REACHED"}`);
   if (BASE.code !== 0 || BASE.fail !== 0 || !BASE.foot) {
@@ -196,6 +199,7 @@ arm("4 · D-320: A NO-OP DCT DECODER (right dimensions, no picture)",
              why: `${r.fail} failure(s); digest arm failed by name: ${byName}; CCITT/ink arms spared: ${spared}` };
   });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log("\n=== POST-RESTORE — the tree is back where it started ===");
 {
   const r = runSuite();

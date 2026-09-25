@@ -53,6 +53,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
 const STORE = join(PLANE, "src/store.mjs");
@@ -117,6 +118,9 @@ const ARMS = {
   typed: { file: STORE, floor: 1_000_000, from: HELPER, to: HELPER_TYPED,
     mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: a.file, find: a.from, put: a.to })));
 
 function runSuite() {
   let out = "", code = 0;

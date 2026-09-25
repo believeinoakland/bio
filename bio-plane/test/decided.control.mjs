@@ -28,6 +28,7 @@ import { createHash } from "node:crypto";
 import { spawn, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const TOOL = path.join(REPO, "tools", "decided.mjs");
@@ -177,6 +178,8 @@ if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms in the 
 const selected = ARMS.filter((a) => !ONLY || a.id === ONLY);
 if (ONLY && !selected.length) { console.log(`** no arm ${ONLY}`); process.exit(1); }
 const fileOf = (patch) => patch[2] || TOOL;
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map((p) => ({ arm: a.id, file: fileOf(p), find: p[0], put: p[1] }))));
 const rows = preflight("decided.control", ARMS.map((a) => ({ id: a.id, anchors: a.patches.map((p) => ({ file: fileOf(p), needle: p[0] })) })),
   { fatalFor: selected.map((a) => a.id) });
 const dead = rows.filter((r) => r.n !== r.want && selected.some((a) => a.id === r.id));

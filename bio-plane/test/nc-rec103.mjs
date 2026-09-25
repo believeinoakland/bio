@@ -20,6 +20,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PEN = controlPen("rec103");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
@@ -59,6 +60,9 @@ const ARMS = {
     "    if (gate.scope === \"DENY\" && false) return () => false;",
     "DECLARED MUST FAIL I5 — see the run's own note if it does not"],
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read; the pen above is in $TMPDIR). */
+anchorTable(Object.entries(ARMS).map(([arm, [file, find, put]]) => ({ arm, file, find, put })));
 
 const run = () => {
   try {

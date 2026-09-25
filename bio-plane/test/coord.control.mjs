@@ -44,6 +44,7 @@ import { spawn, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const SUITE = path.join(REPO, "bio-plane", "test", "coord.test.mjs");
@@ -136,6 +137,8 @@ const ARMS = [
            "§11 ...because the ref resolved for ANOTHER repository is that repository's own origin/coord, while THIS repository honours the override"],
     patches: [[COORD, anchorScope, "export const coordRef = (repo = ROOT) => process.env.BIO_COORD_REF || DEFAULT_REF;"]] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(([file, find, put]) => ({ arm: a.id, file, find, put }))));
 if (ARMS.length !== DECLARED_ARMS) { console.log(`** ${ARMS.length} arms against ${DECLARED_ARMS} declared — the head is wrong`); process.exit(1); }
 const selected = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));
 if (!selected.length || ONLY.some((id) => !ARMS.some((a) => a.id === id))) { console.log(`** no arm ${ONLY.join(", ")}`); process.exit(1); }

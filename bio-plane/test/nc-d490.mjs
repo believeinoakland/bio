@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = `${ROOT}test/browser-render.test.mjs`;
@@ -75,6 +76,9 @@ const ARMS = {
     to:   `              const r0 = page.requests[i], r = { ...r0, type: String(r0.type || "").toLowerCase() }, id = "R" + i;`,
     must: [] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: `${ROOT}${a.file}`, find: a.from, put: a.to })));
 
 const run = () => {
   const r = spawnSync(process.execPath, [SUITE], { cwd: ROOT, encoding: "utf-8", timeout: 900000 });

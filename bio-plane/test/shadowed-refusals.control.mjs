@@ -34,6 +34,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -117,6 +118,8 @@ const PINS = {
 const othersHeldOpen = (code) => Object.entries(PINS).filter(([c]) => c !== code).map(([, v]) => v);
 
 function arm(title, edits, mustFail, mustNotFail = []) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find: from, put: to })));
   armsRun++; armNo++;
   console.log(`\n=== ${title}`);
   try {
@@ -140,7 +143,7 @@ function arm(title, edits, mustFail, mustNotFail = []) {
 }
 
 console.log("REC-78 / D-230 — negative controls. Whole-tree baseline first, so every arm is a DELTA.");
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite runs under the dry read */
   const base = runSuite();
   console.log(`  BASELINE ${SUITE}: ${base.pass} pass, ${base.fail} fail`);
   /* THE BASELINE ROW EXISTS BECAUSE A HARNESS ONCE REPORTED `null` FOR EVERY
@@ -236,6 +239,8 @@ arm("(10) **THE WALK MUST BE ABLE TO GO BLIND AND SAY SO.** Make the refusal-sit
   ["(the walk reached a real corpus before anything is claimed over it",
    "every one of the eight is a refusal THIS PLANE STILL MINTS"],
   [...Object.values(PINS)]);
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ===================== OVER-STRICTNESS =================================== */
 

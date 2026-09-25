@@ -54,6 +54,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const RESIDUE = join(DIR, "..", "scripts", "residue.mjs");
@@ -86,6 +87,8 @@ const runSuite = () => {
 };
 
 const arm = ({ name, file, edit, mustFail, mustNotFail, floor }) => {
+  /* M0-197: read, never armed — the edit is handed a stand-in whose replace() records its anchor (String.replace: >=1 site arms) */
+  if (ANCHOR_DRY) return void edit({ replace: (find, put) => anchorRows([{ arm: name, file, find, put, sites: "any" }]) });
   if (only && only !== name) return;
   armsRun++;
   const pristine = `${file}.pristine-${name}`;
@@ -164,6 +167,7 @@ arm({
     '    /* strict arm: summarisation removed */'),
 });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${armsRun} arm(s) run, ${armsAsDeclared} behaved exactly as declared.`);
 console.log(`Every arm above was armed ALONE, with the others held open, and every restore was`);
 console.log(`verified by sha256 AND by cmp against a uniquely-named per-arm pristine copy.`);

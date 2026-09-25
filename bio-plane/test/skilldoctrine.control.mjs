@@ -31,6 +31,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const DOCS = fileURLToPath(new URL("../../docs/", import.meta.url));
@@ -88,6 +89,8 @@ function restoreAll() {
  *  suite is sensitive to something; an arm that fails AT ITS OWN ASSERTION
  *  proves that assertion is doing the work. */
 function arm(title, edits, mustFail, mustNotFail = [], suite = undefined) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find: from, put: to })));
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -111,7 +114,7 @@ function arm(title, edits, mustFail, mustNotFail = [], suite = undefined) {
 }
 
 console.log("SK-2 — negative controls. Whole-tree baseline first, so every arm is a DELTA.");
-const base = runSuite();
+const base = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite();   /* M0-197: no suite under the dry read */
 console.log(`  BASELINE: ${base.pass} pass, ${base.fail} fail`);
 if (base.fail !== 0) { console.log("  ** the tree is not whole; arms below would measure the wrong thing"); process.exit(1); }
 
@@ -225,5 +228,6 @@ arm("(9) OVER-STRICTNESS, ARMED FROM THE OTHER SIDE. Widen the termination-decis
     `    re: /\\b(?:decide|judge|choose|determine|work out)\\s+(?:when|whether|how many)\\b/i },`]],
   ["ARM C1", "ARM C4"]);
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n${armsRun} arm(s) run, ${armsWrong} WRONG.`);
 if (armsWrong) process.exitCode = 1;

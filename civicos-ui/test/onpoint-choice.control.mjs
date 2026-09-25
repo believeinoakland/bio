@@ -16,6 +16,7 @@ import os from "os";
 import path from "path";
 import { execFileSync } from "child_process";
 import { appScript } from "./extract.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../../bio-plane/scripts/anchortable.mjs";
 
 const SUITE = new URL("./onpoint-choice.test.mjs", import.meta.url).pathname;
 const BASE = appScript();
@@ -41,10 +42,14 @@ const ARMS = {
     fails: [] },
 };
 function one(s, from, to){
+  /* M0-197: read, never armed — the script is extracted from app.html, so the anchor is counted there. */
+  if (ANCHOR_DRY) return (anchorPatch(new URL("../app.html", import.meta.url).pathname, from, to), s);
   const n = s.split(from).length - 1;
   if (n !== 1) throw new Error(`ARM DID NOT ARM: anchor occurs ${n} times: ${from.slice(0, 90)}`);
   return s.replace(from, to);
 }
+
+anchorEach(ARMS, (a) => a.arm(BASE));   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const only = process.argv[2];
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ui91-onpoint-ctl-"));

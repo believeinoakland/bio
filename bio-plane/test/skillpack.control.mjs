@@ -28,6 +28,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -83,6 +84,8 @@ function restoreAll() {
  *  suite is sensitive to something; an arm that fails AT ITS OWN ASSERTION
  *  proves that assertion is doing the work. */
 function arm(title, edits, mustFail, mustNotFail = []) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find: from, put: to })));
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -106,7 +109,7 @@ function arm(title, edits, mustFail, mustNotFail = []) {
 }
 
 console.log("SK-1 — negative controls. Whole-tree baseline first, so every arm is a DELTA.");
-const base = runSuite();
+const base = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite();   /* M0-197: no suite under the dry read */
 console.log(`  BASELINE: ${base.pass} pass, ${base.fail} fail`);
 if (base.fail !== 0) { console.log("  ** the tree is not whole; arms below would measure the wrong thing"); process.exit(1); }
 
@@ -192,6 +195,10 @@ arm("(8) THE INSTRUMENT ITSELF — NEUTER THE SOURCING SCANNER. Make the comment
             `function stripComments(src) {\n  if (src) return "";\n  let out = "", i = 0;`]],
   ["ARM B0", "ARM B3"],
   ["ARM B2a", "ARM B2b"]);
+
+/* M0-197: prints the arms read above and exits, under the dry read only. (4b) is a demonstration over arm (4)'s own
+   anchors, not an arm, so it is not listed. */
+anchorTable();
 
 /* ------------------------------------------------------------------ (4b) */
 /* A DEMONSTRATION RATHER THAN AN ARM, because the thing worth showing is what

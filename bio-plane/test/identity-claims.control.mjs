@@ -19,6 +19,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const P = (f) => join(DIR, "..", f);
@@ -111,6 +112,15 @@ arm("5-strip-the-machine-principal", "src/index.mjs",
     '        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* FW-7',
     '        b.declaredBy = viaSession ? sessMember : "";\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* FW-7'),
   (out) => ({ tally: tally(out), namedPrincipal: named(out, "names the machine principal"), failed: failed(out) }));
+
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs, before the baseline (a no-op otherwise). Each arm arms
+   when its replace/indexOf finds >= 1 site. Arm 2's `class:<cls>` is sought inside the FW-6 block; counted file-wide here. */
+anchorTable([{ arm: "1-plant-a-false-fence", file: P("src/index.mjs"), find: "       IDENTITY-CLAIM: RULED DEC-52 — a machine credential may declare a relation, and\n       the record names it.\n\n", sites: "any" },
+  { arm: "2-marker-without-the-naming", file: P("src/index.mjs"), find: "FW-6: the SUBJECT REGISTRY", sites: "any" },
+  { arm: "2-marker-without-the-naming", file: P("src/index.mjs"), find: "class:<cls>", sites: "any" },
+  { arm: "3-blind-the-sweep", file: P("scripts/identity-claims.mjs"), find: "const STAMP = /MACHINE_(?:CLASS|AUTHOR)_PREFIX/;", sites: "any" },
+  { arm: "4-over-strictness", none: "no edit: an assertion inside the suite" },
+  { arm: "5-strip-the-machine-principal", file: P("src/index.mjs"), find: '        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* FW-7', sites: "any" }]);
 
 /* ------------------------------------------------------------------- runner */
 

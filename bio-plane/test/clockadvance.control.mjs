@@ -22,6 +22,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = "test/action-loop.test.mjs";
@@ -42,6 +43,7 @@ const say = (ok, label, detail) => {
    The exit code is taken from spawnSync's status DIRECTLY — nothing is piped, so
    nothing else's status can be mistaken for the suite's (REC-49). */
 const runSuite = (shiftMs = 0) => {
+  if (ANCHOR_DRY) return { code: 0, pass: 0, fail: 0, failed: [] };   /* M0-197: no suite under the dry read */
   const r = spawnSync(process.execPath,
     shiftMs ? ["--import", PRELOAD, SUITE] : [SUITE],
     { cwd: PLANE, encoding: "utf8",
@@ -54,6 +56,8 @@ const runSuite = (shiftMs = 0) => {
 /* Arm a file by substitution, run a probe, restore, and VERIFY the restore two
    ways before letting the process continue. */
 const armed = (rel, from, to, probe) => {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed ("any": it arms on >= 1 match, edits the first). */
+  if (ANCHOR_DRY) return (anchorRows([{ arm: `${rel} ${from.slice(0, 40)}`, file: PLANE + rel, find: from, put: to, sites: "any" }]), probe());
   const path = PLANE + rel;
   const original = readFileSync(path, "utf8");
   const originalSha = sha(original);
@@ -112,7 +116,8 @@ for (const [label, yrs] of [["+1 year", 1], ["+5 years", 5], ["+20 years", 20]])
    "one-line edit" is the whole instrument and has simply been rescheduled.
    `2026-09-19` below is the most generous such date that exists. ---- */
 {
-  const suiteSrc = read(SUITE);
+  const suiteSrc = !ANCHOR_DRY ? read(SUITE)   /* M0-197: under the dry read, a recorder reads the (1b) chain's anchors */
+    : { replace(find, put) { anchorRows([{ arm: "(1b)", file: PLANE + SUITE, find, put, sites: "any" }]); return this; } };
   const dateMoved = suiteSrc
     /* the LAST date that is green today: above the wall, still below AFTER_MS. */
     .replace('const DUE = "2026-09-10";', 'const DUE = "2026-09-19";')
@@ -127,11 +132,11 @@ for (const [label, yrs] of [["+1 year", 1], ["+5 years", 5], ["+20 years", 20]])
   if (dateMoved === original) throw new Error("(1b) arm was a no-op — the harness is stale");
   let today, later;
   try {
-    writeFileSync(path, dateMoved);
+    if (!ANCHOR_DRY) writeFileSync(path, dateMoved);
     today = runSuite(0);
     later = runSuite(1 * YEAR_MS);
   } finally {
-    writeFileSync(path, original);
+    if (!ANCHOR_DRY) writeFileSync(path, original);
     const back = readFileSync(path, "utf8");
     if (back !== original || sha(back) !== originalSha) {
       throw new Error(`RESTORE FAILED for ${SUITE}. STOPPING.`);
@@ -190,4 +195,5 @@ for (const [label, yrs] of [["+1 year", 1], ["+5 years", 5], ["+20 years", 20]])
 /* ---- FINAL: the tree is as it was. Stated as a hash, not as a belief. ---- */
 console.log(`\nrestored: ${SUITE} ${sha(read(SUITE)).slice(0, 16)} · ${CHECKS} ${sha(read(CHECKS)).slice(0, 16)}`);
 console.log(`\nclockadvance: ${armsOk}/${armsRun} arms as expected`);
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 process.exit(armsOk === armsRun ? 0 : 1);

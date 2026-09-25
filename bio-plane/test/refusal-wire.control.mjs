@@ -74,6 +74,7 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -90,7 +91,7 @@ const bytes = (p) => readFileSync(p).length;
    compared against it as well, so an arm that restores from a copy taken AFTER
    a previous arm leaked cannot pass unnoticed. */
 const OF_RECORD = {};
-for (const p of [INDEX, STORE, SUITE]) {
+for (const p of ANCHOR_DRY ? [] : [INDEX, STORE, SUITE]) {   /* M0-197: no copy under the dry read */
   const dst = `${p}.d262-of-record`;
   copyFileSync(p, dst);
   OF_RECORD[p] = { sha: sha(p), bytes: bytes(p), copy: dst };
@@ -113,6 +114,10 @@ const runSuite = () => {
 
 const results = [];
 const arm = (id, label, file, patch, declared) => {
+  /* M0-197: under tools/anchordrift.mjs the patch is handed a RECORDER, not the source: each `.replace(find, put)` it
+     makes is recorded as an anchor (first-match replace, armed on any count >= 1) and the arm is never armed. */
+  const rec = () => ({ replace: (find, put) => (anchorRows([{ arm: id, file, find, put, sites: "any" }]), rec()) });
+  if (ANCHOR_DRY) return void (file ? patch(rec()) : anchorRows([{ arm: id, none: "the baseline arms nothing" }]));
   const pristine = file ? `${file}.d262-arm-${id}` : null;
   if (file) copyFileSync(file, pristine);
   try {
@@ -360,6 +365,8 @@ arm("m", "the same ADMIN-ONLY refusal in an UNANTICIPATED spelling \u2014 src/st
         sigil: 7,
         detail: "Nope \u2014 that slug is not in the installer's grammar. Nothing was recorded." };`),
   "GREEN");
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ------------------------------------------------------------------ FOOT */
 console.log("\n================================================== D-262 CONTROL SUMMARY");

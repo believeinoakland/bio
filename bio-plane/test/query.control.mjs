@@ -24,10 +24,11 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const SNAP = fileURLToPath(new URL("./.query-control-pristine/", import.meta.url));
-if (!existsSync(SNAP)) mkdirSync(SNAP, { recursive: true });
+if (!ANCHOR_DRY && !existsSync(SNAP)) mkdirSync(SNAP, { recursive: true });   /* M0-197: no pen under the dry read */
 
 const SUBJECTS = {
   query: "bio-plane/src/query.mjs",
@@ -40,7 +41,7 @@ const pristine = {};
 for (const [k, rel] of Object.entries(SUBJECTS)) {
   const buf = readFileSync(ROOT + rel);
   pristine[k] = { rel, buf, sha: sha(buf) };
-  writeFileSync(SNAP + `PRISTINE__${k}__${rel.split("/").pop()}`, buf);
+  if (!ANCHOR_DRY) writeFileSync(SNAP + `PRISTINE__${k}__${rel.split("/").pop()}`, buf);
   console.log(`pristine  ${rel}  sha256 ${pristine[k].sha.slice(0, 12)}…  ${buf.length} bytes`);
 }
 
@@ -53,13 +54,20 @@ for (const [k, rel] of Object.entries(SUBJECTS)) {
    Every anchor is now COUNTED, and an arm whose anchor is not unique refuses
    rather than guessing which one the author meant. PL-10's harness reached the
    same rule from the same direction, one component over. */
+/* M0-197: under tools/anchordrift.mjs an arm's edit is handed a RECORDER over the pristine text: each replace() is a row,
+   its sites what uniq()/count() demand of it (an unguarded replace arms on >=1 match); a put rides only a one-site row. */
+const DRYSITES = new Map();
+const dryText = (arm, file, t) => Object.assign(new String(t), { replace: (find, put) => { const sites = DRYSITES.get(find) ?? "any";
+  anchorRows([{ arm, file, find, sites, ...(sites === 1 ? { put } : {}) }]); return dryText(arm, file, t.replace(find, put)); } });
 const uniq = (src, needle) => {
+  if (ANCHOR_DRY) return (DRYSITES.set(needle, 1), needle);
   const n = src.split(needle).length - 1;
   if (n !== 1) { console.log(`!! ANCHOR IS NOT UNIQUE (${n} occurrence(s)): ${JSON.stringify(needle.slice(0, 70))}`); process.exit(3); }
   return needle;
 };
 
 const count = (src, needle, want) => {
+  if (ANCHOR_DRY) return (DRYSITES.set(needle, want), needle);
   const n = src.split(needle).length - 1;
   if (n !== want) { console.log(`!! ANCHOR COUNT ${n}, EXPECTED ${want}: ${JSON.stringify(needle.slice(0, 70))}`); process.exit(3); }
   return needle;
@@ -79,6 +87,7 @@ const firstFails = (out, n = 3) => out.split("\n").filter((l) => l.includes("FAI
 
 let armsRun = 0, wrong = 0;
 const arm = ({ id, what, subject, edit, mustFail, mustNotFail, suites }) => {
+  if (ANCHOR_DRY) return void edit(dryText(id, ROOT + pristine[subject].rel, pristine[subject].buf.toString("utf8")));
   console.log(`\n================ ARM ${id} ================`);
   console.log(`WHAT:          ${what}`);
   console.log(`MUST FAIL:     ${mustFail}`);
@@ -212,6 +221,7 @@ arm({
    against them. They exist to be compared, not to be kept, and a control
    that leaves working files behind is one the next session has to clean up
    before it can read `git status`. */
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 rmSync(SNAP, { recursive: true, force: true });
 
 console.log(`\n\n================ SUMMARY ================`);

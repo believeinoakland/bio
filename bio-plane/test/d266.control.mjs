@@ -33,6 +33,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = { store: ROOT + "src/store.mjs" };
@@ -51,9 +52,11 @@ for (const [k, v] of Object.entries(ORIGINAL)) {
 }
 
 const PEN = ROOT + "../.d266-harness/pen";
+if (!ANCHOR_DRY) {   /* M0-197: no pen under tools/anchordrift.mjs's dry read */
 rmSync(PEN, { recursive: true, force: true });
 mkdirSync(PEN, { recursive: true });
 for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+}
 
 let armsRun = 0, armsWrong = 0;
 
@@ -94,6 +97,8 @@ function restoreAll(armId) {
 }
 
 function arm(id, title, edits, mustFail, mustNotFail = [], expectGreen = false) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: id, file: F[k], find, put })));
   armsRun++;
   console.log(`\n=== (${id}) ${title}`);
   for (const k of Object.keys(F)) copyFileSync(F[k], join(PEN, `arm${id}.${k}`));
@@ -128,7 +133,7 @@ function arm(id, title, edits, mustFail, mustNotFail = [], expectGreen = false) 
 
 console.log("\nD-266 — negative controls. THE BASELINE FIRST, so every arm is a DELTA and a run in which\n"
           + "every arm is broken is distinguishable from one in which every arm works.");
-const base = runAll();
+const base = ANCHOR_DRY ? [] : runAll();   /* M0-197: no suite under the dry read */
 for (const r of base) console.log(`  BASELINE ${r.name}: ${r.pass} pass, ${r.fail} fail`);
 if (base.some((r) => r.fail !== 0)) {
   console.log("  ** the tree is not whole; every arm below would measure the wrong thing");
@@ -248,6 +253,7 @@ arm("6", "OVER-STRICTNESS, AND IT MUST STAY GREEN. `#findingsStanceDiverged` is 
     items.push(...stanceItems);`]],
   [], [], true);
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n=== D-266 controls: ${armsRun} arm(s) run, ${armsWrong} NOT as declared.`);
 if (armsWrong === 0) rmSync(ROOT + "../.d266-harness/pen", { recursive: true, force: true });
 process.exit(armsWrong ? 1 : 0);

@@ -68,6 +68,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(HERE, "..");
@@ -149,6 +150,7 @@ function patch(file, find, replace) {
 }
 
 function arm({ id, subject, what, mustFail, mustNot, file, find, replace, run }) {
+  if (ANCHOR_DRY) return void anchorRows(file ? [{ arm: id, file, find, put: replace }] : []);   /* M0-197: read, never armed */
   if (only.length && !only.includes(id)) return;
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
@@ -418,6 +420,7 @@ arm({
  * SECTION O — OVER-STRICTNESS. Correct work in a spelling nobody anticipated
  * must PASS, and the claim is measured on a clean tree rather than asserted.
  * ========================================================================== */
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 if (!only.length || only.includes("F9")) {
   armsRun++;
   console.log(`\n=== ARM F9 · OVER-STRICTNESS (nothing is broken)`);

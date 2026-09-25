@@ -43,6 +43,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const HOLD = join(process.env.NC_HOLD || tmpdir(), `nc-d536-pristine-${process.pid}`);
@@ -88,6 +89,8 @@ const ARMS = {
     mustPass: [ATTRIB],
   },
 };
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([file, find, put]) => ({ arm, file, find, put }))));
 
 function runSuite() {
   const r = spawnSync(process.execPath, ["test/d536-reading-provenance.test.mjs"], { cwd: ROOT, encoding: "utf8", maxBuffer: 64 << 20 });

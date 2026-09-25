@@ -36,6 +36,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -84,6 +85,8 @@ function restoreAll() {
 }
 
 function arm(title, edits, mustFail, mustNotFail = [], suite = "aicredential.test.mjs") {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find: from, put: to })));
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -107,9 +110,9 @@ function arm(title, edits, mustFail, mustNotFail = [], suite = "aicredential.tes
 }
 
 console.log("PL-11 / IS-5 — negative controls. Whole-tree baseline first, so every arm is a DELTA.");
-const base = runSuite("aicredential.test.mjs");
+const base = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite("aicredential.test.mjs");   /* M0-197: no suite under the dry read */
 console.log(`  BASELINE aicredential.test.mjs: ${base.pass} pass, ${base.fail} fail`);
-const baseHyg = runSuite("hygiene.test.mjs");
+const baseHyg = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite("hygiene.test.mjs");
 console.log(`  BASELINE hygiene.test.mjs: ${baseHyg.pass} pass, ${baseHyg.fail} fail`);
 if (base.fail !== 0 || baseHyg.fail !== 0) {
   console.log("  ** the tree is not whole; arms below would measure the wrong thing");
@@ -220,6 +223,8 @@ arm("(5) D-199 (4) IS A MEASUREMENT, NOT A LABEL. Stamp `class:ai` for every age
   ["and NOT to a credential whose principal is ANNA, who was never invited"],
   ["Ruth's project is visible to the ORGANISATION-scoped credential",
    "while the shared evidence corpus is visible to all three"]);
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ============ (6) OVER-STRICTNESS — THESE MUST STAY GREEN ============== */
 

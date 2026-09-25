@@ -39,6 +39,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUITE = join(ROOT, "test", "d525-driveshells.test.mjs");
@@ -66,6 +67,10 @@ const ARMS = {
        patches: [[DRIVE, "(declared !== null && HTML_TYPE.test(declared))",
                          '(declared !== null && ["text/html", "application/xhtml+xml"].includes(declared.split(";")[0].trim().toLowerCase()))']] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.env ? [{ arm, none: `an environment switch (${Object.keys(a.env).join(", ")}); no source is patched` }]
+  : a.patches.map(([file, find, put]) => ({ arm, file, find, put }))));
 
 function runSuite(arm, env = {}) {
   const out = join(PEN, `d525-arm-${arm}.log`);

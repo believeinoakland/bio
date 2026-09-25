@@ -126,6 +126,7 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const PEN = join(REPO, ".d293-harness");
@@ -143,10 +144,10 @@ const t = (label, got, want) => {
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 /* ---------------------------------------------------------------- pristine copies, and the exit hook */
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under the dry read */
 const SUBJECTS = [GATES, GUARD].map((file) => {
   const copy = join(PEN, `pristine.${file.split("/").pop()}`);
-  writeFileSync(copy, readFileSync(file));
+  if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(file));  /* M0-197: no pristine copy under the dry read */
   return { file, copy, sha: sha(file), bytes: statSync(file).size };
 });
 const MIN_BYTES = 20000;
@@ -173,7 +174,7 @@ function onExit() {
   /* Only the copies this driver wrote, by name, and only after the subjects verify. */
   if (SUBJECTS.every((s) => sha(s.file) === s.sha)) for (const s of SUBJECTS) { try { unlinkSync(s.copy); } catch { /* gone */ } }
 }
-process.on("exit", onExit);
+if (!ANCHOR_DRY) process.on("exit", onExit);   /* M0-197: the dry read writes no pen copy to remove */
 for (const [sig, code] of [["SIGINT", 130], ["SIGTERM", 143], ["SIGHUP", 129]]) process.on(sig, () => { onExit(); process.exit(code); });
 
 function armPatches(patches) {
@@ -486,6 +487,9 @@ const ARMS = [
                    "a doc-facing suite that names NO path and NO directory keeps the whole tree",
                    "the doc-facing set is EXACTLY this, and it is NOT EMPTY"] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(({ file, from, to }) => ({ arm: a.id, file, find: from, put: to }))));
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */
 const RUN = ARMS.filter((a) => !ONLY.length || ONLY.includes(a.id));

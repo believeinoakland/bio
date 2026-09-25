@@ -49,6 +49,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
@@ -108,6 +109,12 @@ const t = (label, got, want) => {
 };
 
 /* --------------------------------------------------------------- arm plumbing */
+
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs, before the scratch dir is made (a no-op otherwise). Only arm D
+   quotes the tree (by indexOf, so the first of any number arms); the others APPEND composed text and quote nothing. */
+const APPENDS = "appends composed text to the end of the file; quotes no line of the tree";
+anchorTable([{ arm: "0", none: "the baseline edits no file" }, ...["A", "B", "C", "E", "F"].map((arm) => ({ arm, none: APPENDS })),
+  { arm: "D", file: FIRING, find: `await proves("${ARM_D_ID}"`, sites: "any" }, { arm: "D", file: FIRING, find: `Bad_Slug")]]));`, sites: "any" }]);
 
 mkdirSync(SCRATCH, { recursive: true });
 

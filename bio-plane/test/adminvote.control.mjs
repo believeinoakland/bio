@@ -37,6 +37,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
@@ -418,6 +419,9 @@ const ARMS = {
     mustFail: [],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.edits.map(([find, put]) => ({ arm, file: a.file, find, put }))));
 
 const count = (hay, needle) => hay.split(needle).length - 1;
 const work = mkdtempSync(join(tmpdir(), "d136-control-"));

@@ -35,6 +35,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable, ANCHOR_DRY } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -282,6 +283,12 @@ if (wanted.length && arms.length !== wanted.length) {
   console.error(`unknown arm(s): ${wanted.filter((w) => !ARMS.some((a) => a.id === w)).join(", ")}`);
   process.exit(2);
 }
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). Each patch() is handed a
+   recorder, so the replace() it would make is READ from the arm itself; a probe-file arm writes a whole file. */
+if (ANCHOR_DRY) anchorTable(ARMS.flatMap((a) => { if (!a.file) return a.newFile ? [{ arm: a.id, none: "writes a probe file whole; quotes no anchor" }] : [];
+  const rows = [], rec = (find, put) => (rows.push({ arm: a.id, file: a.file, find, put, sites: "any" }), "");
+  a.patch({ includes: () => true, replace: rec, replaceAll: rec }); return rows; }));
 
 console.log(`walkfloor.control — ${arms.length} arm(s), each armed ALONE\n`);
 const results = [];

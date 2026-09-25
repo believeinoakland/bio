@@ -17,6 +17,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -157,6 +158,9 @@ const ARMS = [
        keeps the suite alive, and this predicate accepts either shape. */
     expect: (r) => (r.bias.code !== 0) && named(r.bias, /OVER-STRICTNESS/) },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: String(a.n), file: join(PLANE, a.file), find: a.from, put: a.to, sites: a.all ? "any" : 1 })));
 
 const want = process.argv.slice(2);
 const selected = want.length ? ARMS.filter((a) => want.includes(String(a.n))) : ARMS;

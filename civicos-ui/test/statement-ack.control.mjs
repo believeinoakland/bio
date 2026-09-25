@@ -35,6 +35,7 @@ import path from "path";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, "..", "..");
@@ -86,6 +87,10 @@ const ARMS = [
             ["app", "An acknowledgement is a second person saying they read what this case ",
                     "A second reader saying, on the record, that they read what this case "]] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => (a.edits || [[null, null, "nothing armed"]]).map(([f, find, put]) => (find === null
+  ? { arm: a.name.split(" ")[0], none: f ? `writes ${put} whole from 4355bfda` : put } : { arm: a.name.split(" ")[0], file: FILES[f], find, put }))));
 
 fs.mkdirSync(SCRATCH, { recursive: true });
 const orig = {};

@@ -35,6 +35,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -63,6 +64,7 @@ function runSuite(key) {
            failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim()) };
 }
 function arm(file, find, replace) {
+  if (ANCHOR_DRY) return (anchorPatch(file, find, replace), { armed: true, matches: 1 });   /* M0-197: read, never armed */
   const src = readFileSync(file, "utf8");
   const n = src.split(find).length - 1;
   if (n !== 1) return { armed: false, matches: n };
@@ -162,6 +164,9 @@ Object.assign(ARMS, {
     mustFail: [D415_NAME, D415_TABLE, D415_ODS, D415_OP],
     mustNotFail: [RANGE_REFUSED, TABLE_REFUSED, IMAGE_REFUSED, PIN, PARITY],
     patch: () => {
+      /* c22-batch30 (M0-197 x D-415): this arm restores WHOLE files from git and quotes no line; under the anchor
+         reader it must neither spawn nor write (anchordry traps both), so it reports armed and records nothing. */
+      if (ANCHOR_DRY) return { armed: true, matches: 2 };
       for (const [file, rel, mark] of [[XLSXSRC, "bio-plane/src/formats-xlsx.mjs", "xlsxRangeUnits"],
                                        [ODFSRC, "bio-plane/src/odf.mjs", "odsRangeUnits"]]) {
         const r = spawnSync("git", ["show", `${D415_BASE}:${rel}`],
@@ -208,6 +213,8 @@ Object.assign(ARMS, {
     patch: () => arm(ODFSRC, "  for (const { el, scope } of found) {", "  for (const { el, scope } of []) {"),
   },
 });
+
+anchorEach(ARMS, (a) => a.patch());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);

@@ -24,6 +24,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const PEN = join(REPO, ".d408-harness");
@@ -38,9 +39,9 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: no pen, no baseline, under the dry read */
 const copy = join(PEN, "pristine.undesignedclaims");
-writeFileSync(copy, readFileSync(PRED));
+if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(PRED));
 const PRISTINE = { sha: sha(PRED), bytes: statSync(PRED).size };
 const MIN_BYTES = 4000;
 console.log(`  pristine predicate: ${PRISTINE.bytes} bytes, sha256 ${PRISTINE.sha.slice(0, 8)}…`);
@@ -73,7 +74,7 @@ const broke = (s, frag) => s.failed.some((l) => l.includes(frag));
 const collateral = (s) => broke(s, "the patterns are declared once");
 
 console.log("\n--- ARM BASELINE · nothing armed ---");
-{
+if (!ANCHOR_DRY) {
   const s = suiteRun();
   t("baseline · the suite reached its own FOOT", s.reachedFoot, true);
   t("baseline · the suite is GREEN", [s.pass > 20, s.fail, s.status], [true, 0, 0]);
@@ -113,6 +114,9 @@ const ARMS = [
     to:   "    for (const m of [{ index: 0, 0: lines[i] }]) {",
     mustBreak: "the innocent line is not one of them" },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: PRED, find: a.from, put: a.to })));
 
 for (const a of ARMS) {
   console.log(`\n--- ARM ${a.id} · ${a.title} (armed ALONE) ---`);

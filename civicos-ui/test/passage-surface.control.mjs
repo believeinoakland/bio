@@ -36,6 +36,7 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
 import fs from "fs";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const ROOT = new URL("../../", import.meta.url).pathname;
 const APP = ROOT + "civicos-ui/app.html";
@@ -187,6 +188,9 @@ const ARMS = {
     mustNot: "n/a — this arm must take NOTHING down",
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => (a.file ? { arm, file: a.file, find: a.from, put: a.to } : { arm, none: "nothing armed" })));
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);

@@ -19,6 +19,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
@@ -51,6 +52,9 @@ function runSuite() {
   const failed = [...out.matchAll(/^ {2}FAIL {2}(.*)$/gm)].map((m) => m[1]);
   return { code, foot: foot ? { pass: +foot[1], fail: +foot[2] } : null, failed };
 }
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: STORE, find: a.from, put: a.to })));
 
 let bad = 0;
 const base = runSuite();

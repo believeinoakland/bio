@@ -9,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STORE = join(ROOT, "src", "store.mjs");
@@ -43,6 +44,8 @@ const ARMS = [
     mustFail: ["ARM H1", "ARM H3", "ARM H4", "ARM H5"],
     mustPass: ["ARM H0", "ARM H2", "ARM H6", "ARM H7", "ARM H8", "ARM D1", "ARM D2", "ARM E1"] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.name, file: STORE, find: a.from, put: a.to })));
 
 const rows = [];
 const base0 = run();

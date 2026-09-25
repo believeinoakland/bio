@@ -111,6 +111,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("../", import.meta.url));
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
@@ -223,6 +224,11 @@ const ARMS = {
     suiteMustFail: [],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). The arms match LATIN1 text,
+   the reader counts UTF-8, so each quote goes back through `lat1`'s inverse (a no-op on ASCII). */
+const utf8 = (x) => Buffer.from(x, "latin1").toString("utf8");
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.edits.map((e) => ({ arm, file: e.file, find: utf8(e.anchor), put: utf8(e.patch) }))));
 
 function runGuard(tag) {
   const r = spawnSync(process.execPath, [GUARD, "--strict"], { cwd: REPO, encoding: "utf8" });

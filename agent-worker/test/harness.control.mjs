@@ -190,6 +190,7 @@
 
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -217,6 +218,7 @@ const findings = [];
 /* A suite that DIED mid-run reports no tail line at all, and reading that as
    "0 failures" is how a control once read a whole file as "stayed GREEN". */
 function runNamed(file, label) {
+  if (ANCHOR_DRY) return { ran: false, pass: 0, fail: -1, failed: [], out: "" };   /* M0-197: no suite under the dry read */
   const r = spawnSync(process.execPath, [join(HERE, file)], { cwd: MEMBER, encoding: "utf8" });
   const out = (r.stdout || "") + (r.stderr || "");
   const m = out.match(new RegExp(`${label}:\\s*(\\d+) passed,\\s*(\\d+) failed`));
@@ -237,6 +239,7 @@ const runMember = () => runNamed("agent-worker.test.mjs", "agent-worker");
    loosened into one regex that would quietly match neither on a rename. A suite
    that DIED still reports `fail: -1`, the same rule as above. */
 function runPlane(file, label) {
+  if (ANCHOR_DRY) return { ran: false, pass: 0, fail: -1, failed: [], out: "" };   /* M0-197: no suite under the dry read */
   const r = spawnSync(process.execPath, [join(PLANE, "test", file)], { cwd: PLANE, encoding: "utf8" });
   const out = (r.stdout || "") + (r.stderr || "");
   const m = out.match(new RegExp(`${label}:\\s*(\\d+) pass,\\s*(\\d+) fail`));
@@ -277,6 +280,7 @@ function takeOriginal(file) {
 }
 
 function restore(orig) {
+  if (ANCHOR_DRY) return "M0-197 dry read: nothing was patched";
   writeFileSync(orig.file, orig.bytes);
   const hashOk = sha(readFileSync(orig.file)) === orig.sha;
   /* THE SECOND INSTRUMENT. A harness that trusted its own hash reported a
@@ -290,7 +294,9 @@ function restore(orig) {
   return "restore verified (sha256 + cmp)";
 }
 
+let DRY_ARM = null;   /* M0-197: the arm whose anchors the dry read is recording */
 function patch(file, find, replace) {
+  if (ANCHOR_DRY) return (anchorRows([{ arm: DRY_ARM, file, find, put: replace }]), { armed: true, hits: 1 });
   const src = readFileSync(file, "utf8");
   const n = src.split(find).length - 1;
   if (n !== 1) return { armed: false, hits: n };
@@ -299,6 +305,8 @@ function patch(file, find, replace) {
 }
 
 function arm({ id, subject, what, mustFail, mustNot, file, find, replace, run }) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its run() too, for H1's second patch. */
+  if (ANCHOR_DRY) { DRY_ARM = id; patch(file, find, replace); try { run(); } catch { /* dummy results */ } return; }
   if (only.length && !only.includes(id)) return;
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
@@ -1016,6 +1024,7 @@ arm({
  * subject, and this section exists to record that they were RUN on a clean tree
  * and were green — an over-strictness claim nobody measured is a claim.
  * ========================================================================== */
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only (H10 patches nothing) */
 if (!only.length || only.includes("H10")) {
   armsRun++;
   console.log(`\n=== ARM H10 · OVER-STRICTNESS (nothing is broken)`);

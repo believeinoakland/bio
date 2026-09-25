@@ -51,6 +51,7 @@ import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../../bio-plane/scripts/armdecay.mjs";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
@@ -290,7 +291,7 @@ console.log("REC-79 · NEGATIVE CONTROLS — each arm ALONE, others held open\n"
    ANCHOR BEFORE IT ARMS ANYTHING AND PRINTS THE WHOLE TABLE. It did not until D-355, and the cost was
    measured on 2026-09-21: one ambiguous anchor at arm 2 threw, and arms 3 through 9 — every one of them
    healthy — went unmeasured AND unreported. The throw is kept: a half-armed tree is never measured. */
-preflight("refusal-partition.control.mjs", [
+const PREFLIGHT = [
   { id: "1",  anchors: [{ file: CHECKS, needle: C38_1_SENTENCE }] },
   { id: "2",  anchors: [{ file: INDEX, needle: ADMISSION_ROW }, { file: INDEX, needle: BACKFILL }] },
   { id: "3",  anchors: [{ file: INDEX, needle: NOT_CAPABLE_SITE2 }] },
@@ -302,7 +303,10 @@ preflight("refusal-partition.control.mjs", [
   { id: "9",  anchors: [{ file: INDEX, needle: STORE_NAME_LINE }, { file: INDEX, needle: ADMISSION_END },
                         { file: GUARD, needle: FLOOR_TABLE }] },
   { id: "10", anchors: [{ file: INDEX, needle: ADMISSION_ROW }] },
-]);
+];
+/* M0-197: the same table, as data for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(PREFLIGHT.flatMap((a) => a.anchors.map((x) => ({ arm: a.id, file: x.file, find: x.needle, sites: x.want ?? 1 }))));
+preflight("refusal-partition.control.mjs", PREFLIGHT);
 console.log("");
 
 /* ============================== ARM 0 — THE BASELINE ============================== */

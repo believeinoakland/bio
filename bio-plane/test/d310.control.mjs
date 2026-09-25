@@ -48,6 +48,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = { affordances: ROOT + "src/affordances.mjs", store: ROOT + "src/store.mjs" };
@@ -66,9 +67,12 @@ for (const [k, v] of Object.entries(ORIGINAL)) {
 }
 
 const PEN = ROOT + "../.d310-harness";
-rmSync(PEN, { recursive: true, force: true });
-mkdirSync(PEN, { recursive: true });
-for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+/* M0-197: under tools/anchordrift.mjs's dry read no pen is made and no suite runs; the arms are READ. */
+if (!ANCHOR_DRY) {
+  rmSync(PEN, { recursive: true, force: true });
+  mkdirSync(PEN, { recursive: true });
+  for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+}
 
 let armsRun = 0, armsWrong = 0;
 
@@ -115,6 +119,7 @@ let BASELINE_MACHINE = null;
 /* `machine` is one of "same" (must be byte-identical to the baseline's line),
    "differs" (must NOT be), or undefined (not asked of this arm). */
 function arm(id, title, edits, suites, { machine } = {}) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: id, file: F[k], find: from, put: to })));   /* M0-197: read, never armed */
   if (ONLY && ONLY !== id) return;
   armsRun++;
   console.log(`\n=== (${id}) ${title}`);
@@ -157,7 +162,7 @@ function arm(id, title, edits, suites, { machine } = {}) {
 
 console.log("\nD-310 — negative controls. THE BASELINE FIRST, so every arm is a DELTA and so a run in\n"
           + "which every arm is broken is distinguishable from one in which every arm works.");
-if (!ONLY) {
+if (!ONLY && !ANCHOR_DRY) {
   for (const n of [OWN, AFF]) {
     const b = runSuite(n);
     console.log(`  BASELINE ${n}: ${b.pass} pass, ${b.fail} fail`);
@@ -279,6 +284,7 @@ arm("4", "D-311's MACHINE RULE DROPPED — `deriveActs` stops withholding MACHIN
      mustFail: ["D-311: a MACHINE credential is withheld `publish` by the MACHINE rule"],
      mustNotFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY"] }],
   { machine: "differs" });
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 console.log(`\n${armsRun} arm(s) run, ${armsWrong} came back other than declared.`);
 rmSync(PEN, { recursive: true, force: true });

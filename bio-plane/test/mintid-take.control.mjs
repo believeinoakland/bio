@@ -20,6 +20,7 @@ import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const SUBJECT = join(REPO, "tools/mintid.mjs");
@@ -43,6 +44,8 @@ const ARMS = [
     patches: [["      if (!RACE_RE.test(out))\n", "      if (false)\n"]],
     mustFail: ["a push refused for a reason OTHER than a race hands out NOTHING"] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(([find, put]) => ({ arm: a.id, file: SUBJECT, find, put }))));
 
 const run = () => {
   const r = spawnSync(process.execPath, [SUITE], { cwd: REPO, encoding: "utf8", maxBuffer: 1 << 26 });

@@ -36,6 +36,7 @@ import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
 import crypto from "crypto";
 import { execFileSync } from "child_process";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const APP   = new URL("../app.html", import.meta.url).pathname;
 const SWEEP = new URL("./member-respect.test.mjs", import.meta.url).pathname;
@@ -46,10 +47,11 @@ const PRISTINE_SHA = sha(PRISTINE);
 /* A SECOND, INDEPENDENT PRISTINE COPY ON DISK inside this worktree, so a restore is
    checked against something that is not the same variable that wrote the patch. */
 const SAFE = APP + ".ui55-pristine";
-fs.writeFileSync(SAFE, PRISTINE);
+if (!ANCHOR_DRY) fs.writeFileSync(SAFE, PRISTINE);   /* M0-197: no pristine copy under the dry read */
 
 let armed = 0, correct = 0;
 function run(){
+  if (ANCHOR_DRY) return { exit: 0, out: "" };   /* M0-197: no sweep under the dry read */
   try { return { exit: 0, out: String(execFileSync("node", [SWEEP], { encoding: "utf8", stdio: "pipe" })) }; }
   catch(e){ return { exit: e.status == null ? 1 : e.status, out: String(e.stdout || "") + String(e.stderr || "") }; }
 }
@@ -61,6 +63,9 @@ function restore(){
   if(back !== disk)              throw new Error("RESTORE FAILED by content — hash agreed and content did not, which is the case UI-38 met");
 }
 function arm(name, patch, mustSay){
+  /* M0-197: the patch is handed a recorder, so its anchor is read FROM the arm; String#replace edits the first
+     match and the arm arms on any change, so any count >= 1 arms ("any"). */
+  if (ANCHOR_DRY) return void patch({ replace: (find, put) => anchorRows([{ arm: name.split(" ")[0], file: APP, find, put, sites: "any" }]) });
   armed++;
   const patched = patch(PRISTINE);
   if(patched === PRISTINE) throw new Error(`ARM ${name}: the patch changed NOTHING — an arm that does not arm proves nothing, and this is the failure mode a control harness is most likely to have`);
@@ -128,6 +133,7 @@ arm("2c · DEC-49's guard removed from disk is not patchable here, so the SURFAC
 arm("3 · the set of decisions offered in BULK ONLY (per-kind mute removed)",
   (s) => s.replace(/const each = kinds\.length > 1[\s\S]*?: "";/, 'const each = "";'),
   ["ARM 4d", "data-mute1"]);
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ---- ARM 4 · D-588: DEC-68's PROSE STILL FAILS. The word "unread" planted in text
         a member is shown must turn ARM 3b red naming the stem. ---- */

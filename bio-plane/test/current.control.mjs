@@ -34,6 +34,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -54,10 +55,12 @@ for (const [k, v] of Object.entries(ORIGINAL)) {
 }
 
 const PEN = ROOT + "../.pl13-harness";
+if (!ANCHOR_DRY) {   /* M0-197: no pen under the dry read */
 rmSync(PEN, { recursive: true, force: true });
 mkdirSync(PEN, { recursive: true });
 /* THE PRISTINE OF RECORD, taken once, before any arm. */
 for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+}
 
 let armsRun = 0, armsWrong = 0;
 
@@ -103,6 +106,7 @@ function restoreAll(armId) {
 }
 
 function arm(id, title, edits, mustFail, mustNotFail = [], expectGreen = false) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: id, file: F[k], find, put })));   /* M0-197: read, never armed */
   armsRun++;
   console.log(`\n=== (${id}) ${title}`);
   for (const [k] of edits) copyFileSync(F[k], join(PEN, `arm${id}.${k}`));
@@ -138,7 +142,7 @@ function arm(id, title, edits, mustFail, mustNotFail = [], expectGreen = false) 
 
 console.log("\nPL-13 / IS-3 — negative controls. THE BASELINE FIRST, so every arm is a DELTA and so a\n"
           + "run in which every arm is broken is distinguishable from one in which every arm works.");
-const base = runSuite("current.test.mjs");
+const base = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite("current.test.mjs");   /* M0-197: no suite under the dry read */
 console.log(`  BASELINE current.test.mjs: ${base.pass} pass, ${base.fail} fail`);
 if (base.fail !== 0) {
   console.log("  ** the tree is not whole; every arm below would measure the wrong thing");
@@ -369,6 +373,7 @@ arm("9", "OVER-STRICTNESS. A NEW FINDING KIND arrives in the catalogue that this
   "x-control-arm-unanticipated-kind": "a kind minted by a later item that this one never saw",`]],
   [], [], true);
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n=== ${armsRun} arms run · ${armsWrong} NOT as declared`);
 console.log("Every arm was armed ALONE with every other defence held open; every restore verified by");
 console.log("sha256, by content, and by cmp against BOTH a per-arm pristine copy and the pristine of");

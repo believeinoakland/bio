@@ -39,6 +39,7 @@ import path from "path";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.join(HERE, "..", "app.html");
@@ -75,6 +76,9 @@ const ARMS = [
       { surface: "inquiry", op: "inquiryground",
         why: "Then say which of the question's reasons carry its answer on their own. The member performs the act; this step navigates to it." },` },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => (a.from ? { arm: a.name.split(" ")[0], file: APP, find: a.from, put: a.to } : { arm: a.name.split(" ")[0], none: "nothing armed" })));
 
 fs.mkdirSync(PEN, { recursive: true });
 const origSha = sha(APP);

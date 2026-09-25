@@ -77,6 +77,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLANE = path.join(HERE, "..");
@@ -203,6 +204,17 @@ function arm(name, { edits = [], writes = [], aside = [], run }) {
     report(`${name} · returned ${path.relative(REPO, f)}`, fs.existsSync(f) && !fs.existsSync(f + ".m0-18-aside"), "not returned");
   return result;
 }
+
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs, before the first git call (a no-op otherwise). The quotes are
+   the `edits` of arms 2a/2b, 4, 6b, 7 and 8b below, copied: those arms are reached only after side effects. */
+const NO_EDIT = "writes a phantom, moves a file aside, shims git, or arms nothing: quotes no line";
+anchorTable([...["0", "1", "3", "5", "6-stage-1", "6a", "8a"].map((arm) => ({ arm, none: NO_EDIT })),
+  ...["2a", "2b"].map((arm) => ({ arm, file: F.identity, find: "FILES_REPRO.length >= 24, true);" })),
+  { arm: "4", file: path.join(PLANE, "src", "skillpack.mjs"), find: "export function machineFences" },
+  { arm: "6b", file: F.fences, find: "const pinned = (code) => TESTS_HEAD.some((s) => s.includes(`\"${code}\"`));" },
+  { arm: "7", file: F.bounds, find: 'import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";' },
+  { arm: "8b", file: F.opclaimsS, find: 'const SKIP_DIR = new Set(["node_modules", "dist", "coverage"]);' },
+  { arm: "8b", file: F.opclaimsS, find: "const skipSegment = (name) => SKIP_DIR.has(name) || name.startsWith(\".\");" }]);
 
 /* =========================================================================== */
 console.log("M0-18 · provenance floors — negative controls\n"

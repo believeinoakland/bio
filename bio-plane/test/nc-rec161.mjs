@@ -9,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STORE = join(ROOT, "src", "store.mjs");
@@ -58,6 +59,8 @@ const ARMS = [
     to: "      if (false)\n        return refusal(\"PARTITION_INDEPENDENCE_NOT_TOTAL\",",
     mustFail: ["ARM F4"], mustPass: ["ARM A1", "ARM B1", "ARM C1", "ARM D1", "ARM D2", "ARM E1", "ARM F5", "ARM F6"] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.name, file: STORE, find: a.from, put: a.to })));
 
 const rows = [];
 const base0 = run();

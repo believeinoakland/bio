@@ -23,6 +23,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
@@ -81,6 +82,9 @@ const ARMS = {
      coupled to behaviour, not to an expression, and arm (ζ) pins the delete's shape and not its guard. */
   "respelled": { patch: ['if (!(!viaSession && cls === "admin")) delete b.replay;'], mustFail: [] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).filter(([, a]) => a.patch).map(([arm, a]) => ({ arm, file: join(PLANE, "src", "index.mjs"), find: FENCE, put: a.patch[0] })));
 
 const run = (name) => {
   const arm = ARMS[name];

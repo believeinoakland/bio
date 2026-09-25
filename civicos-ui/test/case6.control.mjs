@@ -36,6 +36,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
@@ -71,6 +72,7 @@ function restore(file, p, tag) {
 /* A PATCH THAT MATCHES ZERO TIMES IS AN ARM THAT NEVER ARMED, and an arm that
    never armed is a finding. Every substitution asserts its own match count. */
 function patch(file, from, to, expect = 1) {
+  if (ANCHOR_DRY) return void anchorPatch(file, from, to, expect);   /* M0-197: read, never armed */
   const s = readFileSync(file, "utf8");
   const n = s.split(from).length - 1;
   if (n !== expect) throw new Error(`ARM DID NOT ARM: anchor matched ${n} time(s), expected ${expect}\n  anchor: ${from.slice(0, 90)}…`);
@@ -314,6 +316,8 @@ const ARMS = {
 };
 MIN[join(ROOT, "civicos-ui", "test", "publishedcase.test.mjs")] = 80000;
 MIN[join(ROOT, "civicos-ui", "test", "publication-entry.test.mjs")] = 20000;
+/* M0-197: tools/anchordrift.mjs reads the LIVE arms' anchors (a no-op otherwise); a RETIRED arm is never armed, so not read. */
+anchorEach(Object.fromEntries(Object.entries(ARMS).filter(([, a]) => !a.retired)), (a) => a.arm());
 
 const want = process.argv[2] ? [process.argv[2]] : ["baseline", "a", "b", "c", "d", "e", "f", "g", "h"];
 let notAsDeclared = 0;

@@ -71,6 +71,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const PEN = join(REPO, ".led2-harness");
@@ -89,11 +90,11 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under the dry read */
 const pristine = new Map();
 for (const [name, p] of [["ledger", LEDGER], ["owed", OWED], ["mintid", MINTID], ["coord", COORD]]) {
   const copy = join(PEN, `pristine.${name}.mjs`);
-  writeFileSync(copy, readFileSync(p));
+  if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(p));  /* M0-197: no pristine copy under the dry read */
   pristine.set(p, { copy, sha: sha(p), bytes: statSync(p).size });
   console.log(`  pristine ${name}: ${statSync(p).size} bytes, sha256 ${sha(p).slice(0, 8)}…`);
 }
@@ -123,7 +124,7 @@ const suite = (path = SUITE) => {
 const failed = (out, label) => out.split("\n").some((l) => l.startsWith(`  FAIL  ${label}`));
 
 console.log("\n--- BASELINE · nothing armed ---");
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite runs under the dry read */
   const s = suite();
   t("baseline · the suite reached its tally and is GREEN", [s.pass > 50, s.fail, s.status], [true, 0, 0]);
   const so = suite(OWED_SUITE);
@@ -305,6 +306,9 @@ const ARMS = [
     patches: [[LEDGER, "return t === null && l.optional ? { text: \"\", absent: true }", "return false ? { text: \"\", absent: true }"]],
     mustFail: ["an ABSENT tail is NAMED absent by the audit, never unreadable, and scored as empty"] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(([file, find, put]) => ({ arm: a.id, file, find, put }))));
 
 for (const a of ARMS) {
   console.log(`\n--- ARM ${a.id} · ${a.title} (armed ALONE) ---`);

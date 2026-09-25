@@ -148,6 +148,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const STORE = join(ROOT, "src", "store.mjs");
@@ -161,7 +162,9 @@ const bytes = (p) => readFileSync(p).length;
 let problems = 0;
 const say = (s) => console.log(s);
 
+let DRY_ARM = null;   /* M0-197: under tools/anchordrift.mjs each arm block is READ — pristine() names it, patch() records */
 function pristine(arm, file) {
+  if (ANCHOR_DRY) return void (DRY_ARM = arm);
   const copy = `${file}.pristine-${arm}`;
   if (existsSync(copy)) throw new Error(`a pristine copy for arm ${arm} already exists: ${copy}`);
   copyFileSync(file, copy);
@@ -172,6 +175,7 @@ function pristine(arm, file) {
   return { copy, d, n };
 }
 function restore(arm, file, p) {
+  if (ANCHOR_DRY) return;
   copyFileSync(p.copy, file);
   const d = sha(file), n = bytes(file);
   let cmpOk = true;
@@ -185,12 +189,14 @@ function restore(arm, file, p) {
    asserts it matched EXACTLY ONCE — an anchor occurring twice has silently
    armed two places, which is a different experiment from the one declared. */
 function patch(file, from, to) {
+  if (ANCHOR_DRY) return void anchorRows([{ arm: DRY_ARM, file, find: from, put: to }]);
   const src = readFileSync(file, "utf8");
   const n = src.split(from).length - 1;
   if (n !== 1) throw new Error(`ARM DID NOT ARM: anchor matched ${n} times in ${file}\n  ${from.slice(0, 120)}`);
   writeFileSync(file, src.split(from).join(to));
 }
 function runSuite(dir = ROOT, file = "test/dec65-strength-reach.test.mjs") {
+  if (ANCHOR_DRY) return { tally: { pass: 0, fail: 0 }, failed: [], out: "" };   /* M0-197: no suite under the dry read */
   let out = "";
   try {
     out = execFileSync(process.execPath, [file], { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -392,5 +398,6 @@ say("    that only recognises the names its author happened to type is not measu
   restore("a6", SUITE, p);
 }
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 say(`\n${problems ? `*** ${problems} PROBLEM(S) — read every line above ***` : "every arm as declared; every restore verified by sha256 AND by cmp"}`);
 process.exit(problems ? 1 : 0);

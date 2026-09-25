@@ -61,6 +61,7 @@ import os from "os";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, "..", "..");
@@ -145,6 +146,8 @@ const ARMS = [
     edits: [["'<h2 class=\"sec\">A file of this copy</h2>'", "'<h2 class=\"sec\">Taking this copy out of the record</h2>'"],
             [">Export this copy to a file</button></div>'", ">Make a file of this copy</button></div>'"]] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read; SCRATCH is in $TMPDIR). */
+anchorTable(ARMS.flatMap((a) => a.edits.map(([find, put]) => ({ arm: a.name.split(" ")[0], file: APP, find, put }))));
 
 fs.mkdirSync(SCRATCH, { recursive: true });
 const orig = { sha: sha(APP), bytes: fs.statSync(APP).size };

@@ -36,6 +36,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -81,6 +82,8 @@ function restoreAll() {
 }
 
 function arm(title, edits, mustFail, mustNotFail = [], suite = "capturerequests.test.mjs") {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find: from, put: to })));
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -103,9 +106,9 @@ function arm(title, edits, mustFail, mustNotFail = [], suite = "capturerequests.
 }
 
 console.log("PL-4 / IS-4 — negative controls. Whole-tree baseline first, so every arm is a DELTA.");
-const base = runSuite("capturerequests.test.mjs");
+const base = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite("capturerequests.test.mjs");   /* M0-197: no suite under the dry read */
 console.log(`  BASELINE capturerequests.test.mjs: ${base.pass} pass, ${base.fail} fail`);
-const baseHyg = runSuite("hygiene.test.mjs");
+const baseHyg = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite("hygiene.test.mjs");
 console.log(`  BASELINE hygiene.test.mjs: ${baseHyg.pass} pass, ${baseHyg.fail} fail`);
 if (base.fail !== 0 || baseHyg.fail !== 0) {
   console.log("  ** the tree is not whole; arms below would measure the wrong thing");
@@ -386,6 +389,7 @@ arm("(20) TIGHTER THAN THE RULE — the item shows a held render only under a C-
 
 /* ====================== the report ======================================= */
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log(`\n=== ${armsRun} arms run, ${armsWrong} behaved differently from their declaration`);
 restoreAll();
 console.log("final restore: every file verified by sha256 AND by content");

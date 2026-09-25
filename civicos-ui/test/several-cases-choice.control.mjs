@@ -43,6 +43,7 @@ import path from "path";
 import { execFileSync, spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, "..", "..");
@@ -127,6 +128,11 @@ const ARMS = [
             ["app", `They are listed by their names, not ranked, and this page does not choose between them.`,
                     `Pick the one you came for; none of them is preferred here.`]] },
 ];
+
+/* M0-197: the arms' anchors as data for tools/anchordrift.mjs, before the scratch dir is made (a no-op otherwise). An edit with
+   no anchor (`from === null`) writes the file WHOLE from 4355bfda. */
+anchorTable(ARMS.flatMap((a) => (a.edits || []).map(([f, find, put]) => find === null
+  ? { arm: a.name, none: `writes ${put} WHOLE from 4355bfda` } : { arm: a.name, file: FILES[f], find, put })));
 
 fs.mkdirSync(SCRATCH, { recursive: true });
 const orig = {};

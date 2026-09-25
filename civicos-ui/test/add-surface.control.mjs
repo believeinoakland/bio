@@ -110,13 +110,14 @@ import { fileURLToPath } from "url";
    a grade letter or a doctrine sentence; the patches are composed from these. */
 import { ACQUIRE_GRADE_NOTE } from "../../bio-plane/src/affordances.mjs";
 import { EARNED_CAPTURE_CEILING, RISK_TIERS } from "../../bio-plane/checks/bio-checks.mjs";
+import { ANCHOR_DRY, anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI = path.join(HERE, "..");
 const APP = path.join(UI, "app.html");
 const MINE = path.join(HERE, "add-surface.test.mjs");
 const PEN = path.join(UI, ".ui54-harness");
-fs.mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) fs.mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under the dry read */
 
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 const same = (a, b) => { try { execFileSync("cmp", ["-s", a, b]); return true; } catch (_) { return false; } };
@@ -127,7 +128,7 @@ const same = (a, b) => { try { execFileSync("cmp", ["-s", a, b]); return true; }
    digest read `e3b0c442…`, the sha256 of the empty string. */
 const WATCHED = { app: APP, mine: MINE };
 const RECORD = {};
-for (const [k, p] of Object.entries(WATCHED)) {
+for (const [k, p] of ANCHOR_DRY ? [] : Object.entries(WATCHED)) {
   RECORD[k] = path.join(PEN, `record.${path.basename(p)}`);
   fs.copyFileSync(p, RECORD[k]);
   const bytes = fs.statSync(RECORD[k]).size;
@@ -234,6 +235,10 @@ const ARMS = [
     what: "BASELINE — no patch at all. Without this row, every arm failing for the wrong reason looks like every arm working",
     patch: (t) => t },
 ];
+/* M0-197: each arm's patch is handed a RECORDER instead of the source (its `split` reads one match, its `replace` is
+   recorded as the arm's anchor), so the anchors come from the arms themselves; a no-op outside the dry read. */
+if (ANCHOR_DRY) anchorTable(ARMS.flatMap((arm) => { const rows = []; arm.patch({ split: () => ["", ""], replace: (find, put) => rows.push({ arm: arm.id, file: arm.file, find, put }) });
+  return rows.length ? rows : [{ arm: arm.id, none: "the baseline patches nothing" }]; }));
 
 const runSuite = (s) => {
   try { return { code: 0, out: execFileSync("node", [s], { encoding: "utf8", stdio: "pipe" }) }; }

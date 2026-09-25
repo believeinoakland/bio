@@ -23,6 +23,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
@@ -101,6 +102,10 @@ const ARMS = {
   "clock-read-restored-no-pin": { pin: false, patches: [],
     suite: [["YEAR = /^PROJ-(\\d{4})-/.exec(String(PROJ ?? \"\"))?.[1] ?? null;\n", "YEAR = new Date().toISOString().slice(0, 4);\n"]], mustFail: [] },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). The arms patch a COPY;
+   the anchor is counted in the tree file the copy is taken from. */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([file, find, put]) => ({ arm, file: join(PLANE, "src", file), find, put }))));
 
 const run = (name) => {
   const arm = ARMS[name];

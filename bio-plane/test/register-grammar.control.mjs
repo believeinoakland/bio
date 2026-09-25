@@ -21,6 +21,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -219,6 +220,9 @@ const ARMS = [
     put:  "is the instrument this project needs",
     mustFail: ["C7b"], mustPass: ["C1", "C2", "C3", "C5a", "C5c", "C5d", "C6", "C7a"] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => (a.file ? { arm: a.id, file: a.file, find: a.re || a.find, put: a.put } : { arm: a.id, none: "nothing armed" })));
 
 
 /* --------------------------------------------------------------- the driver */

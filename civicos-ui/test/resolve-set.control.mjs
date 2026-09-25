@@ -25,6 +25,7 @@ import os from "os";
 import path from "path";
 import { execFileSync } from "child_process";
 import { appScript } from "./extract.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../../bio-plane/scripts/anchortable.mjs";
 
 const SUITE = new URL("./resolve-set.test.mjs", import.meta.url).pathname;
 const BASE = appScript();
@@ -43,10 +44,13 @@ const ARMS = {
     `  return acts.find(a => a && a.id === "resolve" && a.weight === "per-item") || { id: "resolve", weight: "per-item", label: "Resolve the selected documents' references" };`),
 };
 function one(s, from, to){
+  /* M0-197: read, never armed — counted in app.html, the file appScript() extracts the patched script from. */
+  if (ANCHOR_DRY) return (anchorPatch(new URL("../app.html", import.meta.url).pathname, from, to), s);
   const n = s.split(from).length - 1;
   if (n !== 1) throw new Error(`ARM DID NOT ARM: anchor occurs ${n} times: ${from.slice(0, 80)}`);
   return s.replace(from, to);
 }
+anchorEach(ARMS, (arm) => arm(BASE));   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 const only = process.argv[2];
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "d291-ctl-"));
 const results = [];

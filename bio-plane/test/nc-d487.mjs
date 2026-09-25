@@ -46,6 +46,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const SUITE = fileURLToPath(new URL("./doorbell.test.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -200,6 +201,9 @@ const ARMS = {
     anchor: PINEXPR, patch: pinnedAt("1"), mustFail: [],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read; the pen above is in $TMPDIR). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: a.file, find: a.anchor, put: a.patch })));
 
 function runSuite(tag) {
   const started = Date.now();

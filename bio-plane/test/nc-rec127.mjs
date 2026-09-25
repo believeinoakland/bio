@@ -30,6 +30,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach, anchorRows } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -66,6 +67,7 @@ const SUITES = ["test/content-arm.test.mjs", "test/rec127-cap-bytes.test.mjs",
                 "test/rec121-chain-bytes.test.mjs"];
 
 function arm(file, find, replace) {
+  if (ANCHOR_DRY) return (anchorPatch(file, find, replace), { armed: true, matches: 1 });   /* M0-197: read, never armed */
   const src = readFileSync(file, "utf8");
   const n = src.split(find).length - 1;
   if (n !== 1) return { armed: false, matches: n };
@@ -138,6 +140,10 @@ const ARMS = {
     },
   },
 };
+
+/* M0-197: tools/anchordrift.mjs reads the arms' anchors (a no-op otherwise); `preitem` writes query.mjs WHOLE, so it is not invoked. */
+anchorRows([{ arm: "preitem", none: `writes src/query.mjs WHOLE from git show ${PRE_ITEM}; quotes no line` }]);
+anchorEach(ARMS, (a, name) => name !== "preitem" && a.patch());
 
 
 const want = process.argv[2];

@@ -33,6 +33,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join, basename } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -100,6 +101,17 @@ function arm({ id, what, mustFail, mustNot, file, patch, move }) {
   rows.push({ id, code: r.code, ...f, named });
   return { code: r.code, out: r.out, f, named };
 }
+
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs, before the baseline (a no-op otherwise). Copied from the
+   arms' patch closures below; every one arms on >= 1 site (indexOf / replace / replaceAll). */
+anchorTable([{ arm: "1", file: P("agent-worker/test/harness.test.mjs"), find: "NEGATIVE CONTROL", sites: "any" },
+  { arm: "2", file: P("agent-worker/test/harness.test.mjs"), find: "(H1)", sites: "any" },
+  ...["3", "4"].map((arm) => ({ arm, none: "moves a suite aside; quotes nothing" })),
+  { arm: "5", file: P("bio-plane/test/strengthpair.test.mjs"), find: "NEGATIVE CONTROL", sites: "any" },
+  ...[`  { n: 5, item: "PL-16"`, `  { n: 6, item: "PL-3"`].map((find) => ({ arm: "6", file: P("bio-plane/scripts/coverage.mjs"), find, sites: "any" })),
+  { arm: "7a", file: P("pdf-worker/test/pdf-worker.test.mjs"), find: "NEGATIVE CONTROL:", sites: "any" },
+  { arm: "7b", file: P("agent-worker/test/agent-worker.test.mjs"), find: "NEGATIVE CONTROL:", sites: "any" },
+  { arm: "8", file: P("bio-plane/scripts/coverage.mjs"), find: "    || owedProblems.length\n", sites: "any" }]);
 
 /* ---- BASELINE. Arms nothing. Nine arms broken and nine arms working must not
    read the same, and only this row can tell them apart. (`Six` until 2026-09-14

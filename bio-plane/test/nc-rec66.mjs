@@ -21,6 +21,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const STORE = HERE + "../src/store.mjs";
@@ -87,6 +88,8 @@ const ARMS = [
 ];
 /* Arm 5 is the OVER-STRICTNESS block and is armed by construction: it passes on the clean
    tree and goes red under arm 4, which is what proves it is armed rather than decorative. */
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.edits.map(([find, put]) => ({ arm: String(a.n), file: a.file, find, put }))));
 
 const want = process.argv.slice(2).map(Number).filter(Boolean);
 const arms = want.length ? ARMS.filter((a) => want.includes(a.n)) : ARMS;

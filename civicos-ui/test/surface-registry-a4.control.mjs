@@ -47,6 +47,7 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
 import fs from "fs";
 import crypto from "crypto";
 import { spawnSync } from "child_process";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const ROOT = new URL("../..", import.meta.url).pathname;
 const APP = "civicos-ui/app.html";
@@ -102,11 +103,11 @@ const pl2Edits = argPl2 ? [
 const INQ_ROUTES = `routes: ["object:inquiry", "hash:inquiry"],`;
 const INQ_ACTS = `acts: ["conclude", "reopen", "inquirydivide", "inquiryground", "publish"],`;
 
-const once = (needle, replacement) => (src) => {
+const once = (needle, replacement) => Object.assign((src) => {
   const n = src.split(needle).length - 1;
   if(n !== 1) throw new Error(`anchor matched ${n} times, expected exactly 1: ${needle.slice(0, 60)}`);
   return src.replace(needle, replacement);
-};
+}, { anchors: [{ find: needle, put: replacement }] });   /* M0-197: the anchor, readable as data */
 
 /* Neuter the plane's act catalogue WITHOUT deleting it — the arrays still parse,
    they are simply no longer what is exported, which is how a walk goes blind in
@@ -114,6 +115,7 @@ const once = (needle, replacement) => (src) => {
 const neuterCatalogue = (src) =>
   src.replace("export const ACTS = [", "export const ACTS = []; const __DEAD_ACTS = [")
      .replace("export const CAPTURE_ACTS = [", "export const CAPTURE_ACTS = []; const __DEAD_CAPTURE = [");
+neuterCatalogue.anchors = [{ find: "export const ACTS = [", sites: "any" }, { find: "export const CAPTURE_ACTS = [", sites: "any" }];   /* M0-197 */
 
 /* Neuter the registry walk: every surface keeps its entry, its routes, its
    levels and its purpose, and simply describes no acts. */
@@ -122,6 +124,8 @@ const neuterWalk = (src) => {
   if(a < 0 || b < 0) throw new Error("SURFACES markers not found");
   return src.slice(0, a) + src.slice(a, b).replace(/acts:\s*\[[^\]]*\]/g, "acts: []") + src.slice(b);
 };
+/* M0-197: its markers, and the placements it empties (counted over the whole file, the walk counts between the markers). */
+neuterWalk.anchors = [{ find: "/*__SURFACES_START__*/" }, { find: "/*__SURFACES_END__*/" }, { find: /acts:\s*\[[^\]]*\]/g, sites: "any" }];
 
 const SEVENTH = `export const ACTS = [
   { id: "versionseventhcontrol", label: "A seventh unsurfaced act, added by the CEILING control", weight: "single", types: ["inquiry"],
@@ -160,6 +164,8 @@ const ARMS = [
     needsRegisterAct: true,
     edits: [[APP, once(INQ_ACTS, `acts: ["conclude", "reopen", "inquirydivide", "inquiryground", "publish", "versionhide"],`)]] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.edits.flatMap(([p, fn]) => (fn.anchors || []).map((x) => ({ arm: a.id, file: ROOT + p, ...x })))));
 
 /* ------------------------------------------------------- POLARITY, FIRST
    GREEN with the tree intact, and every arm's expected message ABSENT — before

@@ -29,6 +29,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
@@ -100,6 +101,8 @@ const ARMS = {
              "       WHERE case_id IN (SELECT j.value FROM json_each(?) AS j) AND ratified_at IS NOT NULL"]],
     mustFail: [], mayFail: [] },
 };
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.edits.map(([find, put]) => ({ arm, file: STORE, find, put }))));
 
 const run = () => {
   let out = "", code = 0;

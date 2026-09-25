@@ -42,6 +42,7 @@ import "../../bio-plane/test/stdio.mjs";
 import fs from "fs";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const APP = new URL("../app.html", import.meta.url);
 const SUITE = new URL("./agent-surfaced-inquiry.test.mjs", import.meta.url).pathname;
@@ -83,6 +84,9 @@ const ARMS = [
     to:   `  return "";`,
     must: ["UNDETERMINED · and SAYS so once"], mustNot: [...AGENT_ARMS, ...MEMBER_ARMS], expectFail: 1 },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => (a.from !== undefined ? { arm: a.id, file: APP.pathname, find: a.from, put: a.to } : { arm: a.id, none: "nothing armed" })));
 
 let armsWrong = 0;
 for (const arm of ARMS) {

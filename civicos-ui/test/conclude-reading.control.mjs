@@ -31,6 +31,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const APP = fileURLToPath(new URL("../app.html", import.meta.url));
 const SUITE = fileURLToPath(new URL("./conclude-reading.test.mjs", import.meta.url));
@@ -82,6 +83,9 @@ const ARMS = [
     to:   '  const c = { state: "adopted", text: (npc.claim && npc.claim.text) || npc.conclusion, version: (npc.claim && npc.claim.version) || "" };\n',
   },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: a.id, file: APP, find: a.from, put: a.to })));
 
 /* ==================================================================== */
 function runSuite() {

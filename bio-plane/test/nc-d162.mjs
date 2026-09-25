@@ -25,12 +25,13 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
 const SAFE = process.env.D162_PEN || "/tmp/d162-theme/pen";
-mkdirSync(SAFE, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(SAFE, { recursive: true });   /* M0-197: no pen under the dry read of tools/anchordrift.mjs */
 const STORE = join(PLANE, "src/store.mjs");
 const INDEX = join(PLANE, "src/index.mjs");
 const AFF = join(PLANE, "src/affordances.mjs");
@@ -50,6 +51,7 @@ const runSuite = () => {
 /* Every patch in an arm must match EXACTLY the declared number of times, or the
    arm did not arm — and nothing is written. */
 function arm(patches) {
+  if (ANCHOR_DRY) return (patches.forEach(([file, find, replace, expect = 1]) => anchorPatch(file, find, replace, expect)), { armed: true, matches: "dry" });   /* M0-197: read, never armed */
   const byFile = new Map();
   for (const [file, find, replace, expect = 1] of patches) {
     const src = byFile.get(file) ?? readFileSync(file, "utf8");
@@ -185,6 +187,7 @@ const ARMS = {
                               "    if (false)\n      inner.searchParams.set(\"administer\","]]),
   },
 };
+anchorEach(ARMS, (a) => a.patch());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 const want = process.argv[2] || null;
 const names = want ? [want] : Object.keys(ARMS);
 if (want && !ARMS[want]) { console.error(`unknown arm '${want}'. arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }

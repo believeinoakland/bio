@@ -15,6 +15,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./d461-pinned-namespace.test.mjs", import.meta.url));
@@ -40,6 +41,8 @@ const ARMS = [
   { id: "D", declared: "FAIL", must: [/FAIL  exempt · op=instancegroup · store=scratch -> answered from scratch/],
     patch: [[EXEMPT, `const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze([]);`]] },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patch.map(([find, put]) => ({ arm: a.id, file: SRC, find, put }))));
 
 const rows = [];
 for (const arm of ARMS) {

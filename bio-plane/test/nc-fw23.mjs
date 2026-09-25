@@ -44,12 +44,13 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const PEN = process.env.FW23_PEN
   || "/tmp/claude-0/-home-user-bio/ab5589a3-734d-55b0-a53d-b85456578d6c/scratchpad/fw23/nc-pristine";
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: the pen is the arms' business; the dry read never arms */
 
 const CSV = join(PLANE, "src/csv.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
@@ -148,6 +149,9 @@ const ARMS = {
     mustNotFail: SIBLINGS,
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(Object.entries(ARMS).map(([arm, a]) => ({ arm, file: CSV, find: a.patch[0], put: a.patch[1] })));
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);

@@ -40,6 +40,7 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");            /* the repo root: test/ -> bio-plane/ -> . */
@@ -60,6 +61,7 @@ const tally = (o) => (o.match(/^\d+ pass, \d+ fail$/m) || ["(no tally — a suit
 const failLines = (o) => o.split("\n").filter((l) => /^\s+FAIL/.test(l)).map((l) => l.trim());
 
 function arm(name, file, from, to, act) {
+  if (ANCHOR_DRY) return void anchorRows([{ arm: name, file: join(ROOT, file), find: from, put: to }]);   /* M0-197: read, never armed */
   if (ONLY && ONLY !== name) return;
   const abs = join(ROOT, file);
   const src = readFileSync(abs, "utf8");
@@ -81,7 +83,7 @@ function arm(name, file, from, to, act) {
   }
 }
 
-if (!ONLY || ONLY === "BASE") {
+if (!ANCHOR_DRY && (!ONLY || ONLY === "BASE")) {   /* M0-197: no run under the dry read */
   console.log("=== BASE  nothing armed");
   const c = corpuscheck(); console.log(`  corpuscheck exit ${c.code} · ${headline(c.out)}`);
   const s = suite(); console.log(`  suite exit ${s.code} · ${tally(s.out)}`);
@@ -114,7 +116,7 @@ arm("A3", "docs/development/UI-KICKOFF.md",
     for (const l of failLines(c.out)) console.log(`  UNEXPECTED ${l}`);
   });
 
-if (!ONLY || ONLY === "A4") {
+if (!ANCHOR_DRY && (!ONLY || ONLY === "A4")) {   /* M0-197: no run under the dry read */
   console.log("\n=== A4  over-strictness over the REAL CORPUS (one `as of` per governed Status)");
   const { governed, parseFront, ROOT: CROOT } = await import(join(ROOT, "tools/corpuscheck.mjs"));
   const g = governed();
@@ -143,4 +145,5 @@ arm("A5", "tools/corpuscheck.mjs",
     console.log(`  and corpuscheck itself still reads clean with the arm gone: exit ${c.code} · ${headline(c.out)}`);
   });
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 console.log("\n=== driver done");

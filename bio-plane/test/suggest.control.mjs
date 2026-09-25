@@ -31,6 +31,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
@@ -75,6 +76,8 @@ function restoreAll() {
 }
 
 function arm(title, edits, mustFail, mustNotFail = []) {
+  /* M0-197: under tools/anchordrift.mjs an arm is READ, never armed — its edits are its anchors. */
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, from, to]) => ({ arm: (/^\(([^)]+)\)/.exec(title) || [, title.slice(0, 40)])[1], file: F[k], find: from, put: to })));
   armsRun++;
   console.log(`\n=== ${title}`);
   try {
@@ -97,7 +100,7 @@ function arm(title, edits, mustFail, mustNotFail = []) {
 }
 
 console.log("PL-3 / IS-4 — negative controls. Whole-tree baseline first, so every arm is a DELTA.");
-const base = runSuite("suggest.test.mjs");
+const base = ANCHOR_DRY ? { pass: 0, fail: 0 } : runSuite("suggest.test.mjs");   /* M0-197: no suite under the dry read */
 console.log(`  BASELINE: ${base.pass} pass, ${base.fail} fail`);
 if (base.fail !== 0) { console.log("  ** the tree is not whole; arms below would measure the wrong thing"); process.exit(1); }
 
@@ -517,4 +520,5 @@ arm("(D-235g) `kind` DROPPED FROM `op=basisversions`' ANSWER — the row's own c
 console.log(`\n=================================================================`);
 console.log(`arms run: ${armsRun} · arms that did NOT behave as declared: ${armsWrong}`);
 console.log(`every arm restored; every file verified by sha256 AND by content`);
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 process.exit(armsWrong ? 1 : 0);

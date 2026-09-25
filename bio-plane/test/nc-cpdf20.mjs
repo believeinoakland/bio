@@ -63,6 +63,7 @@ import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SUBJECT = join(HERE, "..", "src", "textchain.mjs");
@@ -119,6 +120,7 @@ function restoreAndVerify(armName) {
 }
 
 function sourceArm({ name, declared, from, to }) {
+  if (ANCHOR_DRY) return void anchorRows([{ arm: name, file: SUBJECT, find: from, put: to }]);   /* M0-197: read, never armed */
   const copy = join(PEN, `${name}.pristine.mjs`);
   copyFileSync(SUBJECT, copy);                 // uniquely-named, per-arm
   const p = patch(PRISTINE_TEXT, from, to);
@@ -147,7 +149,7 @@ function sourceArm({ name, declared, from, to }) {
 }
 
 /* ── BASELINE ─────────────────────────────────────────────────────────────── */
-{
+if (!ANCHOR_DRY) {   /* M0-197: no suite under the dry read */
   const r = runSuite();
   const actual = r.code === 0 ? "PASS" : "FAIL";
   const tally = (r.out.match(/tier-pagewise: (\d+) pass, (\d+) fail/) || []);
@@ -187,7 +189,8 @@ sourceArm({
 });
 
 /* ── A5 · truncate the fixture ────────────────────────────────────────────── */
-{
+if (ANCHOR_DRY) anchorRows([{ arm: "A5", none: "hides three fixture PDFs by rename; quotes no source line" }]);   /* M0-197 */
+else {
   const hidden = ["legistar-73545.pdf", "legistar-73550.pdf", "legistar-73618.pdf"];
   const stash = join(PEN, "A5-fixtures");
   mkdirSync(stash, { recursive: true });
@@ -241,6 +244,8 @@ sourceArm({
   to:   `const decodedChars = (page) =>
   (page && typeof page.text === "string") ? page.text.length : 0;   /* NC A7: the D-501 defect — whitespace counted as decoded */`,
 });
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ── the ledger ───────────────────────────────────────────────────────────── */
 console.log(`\n  arm       declared  actual  agree`);

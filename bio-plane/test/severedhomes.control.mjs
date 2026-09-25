@@ -35,6 +35,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = { store: ROOT + "src/store.mjs" };
@@ -52,9 +53,11 @@ for (const [k, v] of Object.entries(ORIGINAL)) {
 }
 
 const PEN = ROOT + "../.d267-harness";
+if (!ANCHOR_DRY) {   /* M0-197: no pen under the dry read */
 rmSync(PEN, { recursive: true, force: true });
 mkdirSync(PEN, { recursive: true });
 for (const [k, p] of Object.entries(F)) copyFileSync(p, join(PEN, `record.${k}`));
+}
 
 let armsRun = 0, armsWrong = 0;
 
@@ -98,6 +101,7 @@ function restoreAll(armId) {
    PER SUITE, because this item's whole point is that one defect shows up in two
    places and correcting the pins in the second is half the work. */
 function arm(id, title, edits, suites, expectGreen = false) {
+  if (ANCHOR_DRY) return void anchorRows(edits.map(([k, find, put]) => ({ arm: id, file: F[k], find, put })));   /* M0-197: read, never armed */
   armsRun++;
   console.log(`\n=== (${id}) ${title}`);
   for (const [k] of edits) copyFileSync(F[k], join(PEN, `arm${id}.${k}`));
@@ -137,7 +141,7 @@ function arm(id, title, edits, suites, expectGreen = false) {
 
 console.log("\nD-267 — negative controls. THE BASELINE FIRST, so every arm is a DELTA and so a run in\n"
           + "which every arm is broken is distinguishable from one in which every arm works.");
-for (const n of ["severedhomes.test.mjs", "current.test.mjs"]) {
+for (const n of ANCHOR_DRY ? [] : ["severedhomes.test.mjs", "current.test.mjs"]) {   /* M0-197: no suite under the dry read */
   const b = runSuite(n);
   console.log(`  BASELINE ${n}: ${b.pass} pass, ${b.fail} fail`);
   if (b.fail !== 0) {
@@ -272,6 +276,8 @@ arm("E", "A FAITHFUL COPY. `#citesInto` stops calling the shared predicate and r
    { name: PL13, mustFail: [],
      mustNotFail: ["and it is filed under BOTH projects drawing on the question",
                    "A's reading is NOT filed under A"] }]);
+
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 
 /* ===================== (F) THE BASELINE, RESTORED ========================= */
 

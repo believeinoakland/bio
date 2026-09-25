@@ -28,6 +28,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PLANE = join(ROOT, "bio-plane");
@@ -46,6 +47,8 @@ const ARMS = [
       "statussweep": ["as wrapped in the corpus: docs/development/research/RECONCILED.md", "genuine soft-wrapped introduction"] } },
   { name: "D baseline, nothing armed", file: null, want: { "corpuscheck": [], "statussweep": [] } },
 ];
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read); includes + replace arms on >=1. */
+anchorTable(ARMS.filter((a) => a.file).map((a) => ({ arm: a.name, file: join(ROOT, a.file), find: a.from, put: a.to, sites: "any" })));
 
 let asDeclared = 0;
 for (const arm of ARMS) {

@@ -32,6 +32,7 @@ import path from "path";
 import crypto from "crypto";
 import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
+import { anchorTable } from "../../bio-plane/scripts/anchortable.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const REPO = path.resolve(HERE, "../..");
@@ -140,6 +141,7 @@ if (!/stdio:\s*"pipe"/.test(RUNNER_SRC) || !/maxBuffer:\s*256 \* 1024 \* 1024/.t
   throw new Error("nc-m036 DID NOT ARM: run.mjs's child spawn options are not the ones this driver pins. "
     + "Re-read run.mjs and re-judge every rate below rather than adjusting this line.");
 const CHILD = { stdio: "pipe", maxBuffer: 256 * 1024 * 1024 };
+const MAXBUF_RE = /maxBuffer: 256 \* 1024 \* 1024/;   /* ARM 5's anchor in run.mjs */
 const fastDrive = (withImport, lines, n) => {
   fs.writeFileSync(ARMED, armedSource(withImport, lines));
   let present = 0; const sizes = [];
@@ -152,6 +154,13 @@ const fastDrive = (withImport, lines, n) => {
   }
   return { present, missing: n - present, n, min: Math.min(...sizes), max: Math.max(...sizes) };
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). ARM 1's rows are the
+   run.mjs spawn options it pins; 1F and 2 write their armed suite whole; 3 and 4 strip the ONE import construct. */
+anchorTable([{ arm: "1", file: RUNNER, find: /stdio:\s*"pipe"/, sites: "any" }, { arm: "1", file: RUNNER, find: /maxBuffer:\s*256 \* 1024 \* 1024/, sites: "any" },
+  ...["1F", "2", "0"].map((arm) => ({ arm, none: "writes (or checks for) the armed suite whole; patches no tree file" })),
+  { arm: "5", file: RUNNER, find: MAXBUF_RE, put: "", sites: "any" },
+  { arm: "3", file: path.join(HERE, "finder.test.mjs"), find: IMPORT }, { arm: "4", file: path.join(HERE, "docprofile.test.mjs"), find: IMPORT }]);
 
 try {
   /* ---- ARM 1 — THE RATE, AND THE ARM THAT TWO DECLARATIONS GOT WRONG ---------
@@ -244,7 +253,7 @@ try {
     let fixed = "", unfixed = "";
     try {
       fixed = driveRunner().text;
-      const stripped = pristine.toString().replace(/maxBuffer: 256 \* 1024 \* 1024/, "");
+      const stripped = pristine.toString().replace(MAXBUF_RE, "");
       if (stripped === pristine.toString())
         throw new Error("ARM 5 DID NOT ARM: run.mjs's maxBuffer line was not found");
       fs.writeFileSync(RUNNER, stripped);

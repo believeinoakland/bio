@@ -22,6 +22,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -97,6 +98,12 @@ const record = (name, declared, r, verdict) => {
   if (r.failed.length) for (const f of r.failed) console.log(`    FAILED: ${f}`);
   console.log(`    VERDICT: ${verdict}\n`);
 };
+
+/* M0-197: each arm's anchor as data for tools/anchordrift.mjs (a no-op otherwise). Every arm arms on >=1 match. */
+anchorTable([{ arm: "plant", file: VICTIM, find: "  defaultPersistRoot: PERSIST,", sites: "any" },
+  ...["neuter", "widen"].map((arm) => ({ arm, file: HYG, find: /const PORT_PIN = \/.*\/g;/, sites: "any" })),
+  { arm: "zero", file: HYG, find: '    if (n !== "0") pinnedPort.push(`${f}: ${n}`);', sites: "any" },
+  { arm: "zero", file: HYG, find: '.map((m) => m[1] ?? m[2] ?? m[3]).filter((n) => n !== "0");', sites: "any" }]);
 
 /* ---------------- baseline ---------------- */
 if (arm === "all" || arm === "baseline") {

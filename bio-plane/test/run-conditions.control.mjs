@@ -37,6 +37,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -205,6 +206,9 @@ const ARMS = [
     expect: (r) => r["run-conditions"].fail > 0
       && named(r["run-conditions"], /ARM A4/) && named(r["run-conditions"], /ARM A7|ARM A9/) },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.map((a) => ({ arm: String(a.n), file: join(PLANE, a.file), find: a.from, put: a.to })));
 
 const want = process.argv.slice(2).map(Number).filter((n) => Number.isFinite(n));
 const chosen = want.length ? ARMS.filter((a) => want.includes(a.n)) : ARMS;

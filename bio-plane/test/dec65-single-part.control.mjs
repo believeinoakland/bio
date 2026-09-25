@@ -124,6 +124,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const CHECKS = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -156,6 +157,9 @@ const ARMS = [
     patches: [[CHECKS, "export const SUFFICIENCY_UNCLAIMED = 'none:independent-sufficiency';",
                "export const SUFFICIENCY_UNCLAIMED = 'none:no-independent-sufficiency-claim';"]] },
 ];
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
+anchorTable(ARMS.flatMap((a) => a.patches.map(([file, find, put]) => ({ arm: a.id, file, find, put }))));
 
 /* THE TALLY, READ FROM THE SUITE'S OWN FOOT. Absent means the module ended
    before its last line — a `TypeError` inside an assertion goes through no

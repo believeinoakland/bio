@@ -85,6 +85,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FLOOR = join(HERE, "ocr-measure-probe.mjs");
@@ -114,6 +115,7 @@ const runGuards = () => GUARDS.map(([id, p]) => {
 });
 
 const arm = (id, what, declared, fn) => {
+  if (ANCHOR_DRY) return;   /* M0-197: under tools/anchordrift.mjs no arm runs (the baseline spawns the guards) */
   armsRun++;
   console.log(`\n[${id}] ${what}`);
   console.log(`  DECLARED: ${declared}`);
@@ -128,6 +130,10 @@ const arm = (id, what, declared, fn) => {
  *  `mustSay` is a predicate over the refusal line, so an arm asserts WHAT the
  *  guard named and not merely that it exited non-zero. */
 const mutateArm = (id, what, declared, edit, mustSay) => {
+  /* M0-197: under the dry read the arm's OWN edit is handed a recorder for the text, so its anchor is read from it;
+     an edit that counts with split() demands exactly one site, one that only tests includes() accepts any. */
+  if (ANCHOR_DRY) { const r = { sites: "any" }; edit({ includes: () => true, split: () => (r.sites = 1, ["", ""]), replace: (find, put) => (Object.assign(r, { find, put }), "") });
+    return void anchorRows([{ arm: id, file: FLOOR, ...r }]); }
   arm(id, what, declared, () => {
     const pristine = join(PRISTINE_DIR, `${id}.pristine.mjs`);
     copyFileSync(FLOOR, pristine);
@@ -233,6 +239,7 @@ mutateArm("nc6-norm", "norm() extended with a replace PIN_GT cannot see (the gro
   },
   (l) => /norm\(\) NORMALISER has moved/.test(l));
 
+anchorTable();   /* M0-197: prints the arms read above and exits, under the dry read only */
 /* -- the foot: the file, and both guards, back where they started ------------ */
 arm("post-restore", "both guards against the restored committed file",
   "both exit 0, and the floor's sha256 is the one measured before the first arm armed", () => {

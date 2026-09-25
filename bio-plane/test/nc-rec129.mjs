@@ -26,6 +26,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { controlPen } from "./pen.mjs";
+import { ANCHOR_DRY, anchorPatch, anchorEach } from "../scripts/anchortable.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -46,6 +47,7 @@ const runSuite = (suite = "frontier-internet") => {
            failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim().slice(0, 300)) };
 };
 function arm(patches) {
+  if (ANCHOR_DRY) return (patches.forEach(([f, find, rep, expect = 1]) => anchorPatch(f, find, rep, expect)), { armed: true, matches: "dry" });   /* M0-197 */
   const byFile = new Map();
   for (const [file, find, replace, expect = 1] of patches) {
     const src = byFile.get(file) ?? readFileSync(file, "utf8");
@@ -252,6 +254,7 @@ Object.assign(ARMS, {
       "...(runRows ? runRows.args : [])).c, get observations() { return this.observationsNonLead; } }),"]]),
   },
 });
+anchorEach(ARMS, (a) => a.patch());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 const want = process.argv[2] || null;
 const names = want ? [want] : Object.keys(ARMS);
 if (want && !ARMS[want]) { console.error(`unknown arm '${want}'. arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }

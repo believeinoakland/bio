@@ -21,6 +21,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { anchorTable } from "../scripts/anchortable.mjs";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
@@ -168,6 +169,9 @@ const ARMS = {
     mustPass: ["ARM O1 ", "ARM O2 ", "ARM R3 ", "ARM R4 "],
   },
 };
+
+/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read); each arm patches a copy of src/. */
+anchorTable(Object.entries(ARMS).flatMap(([arm, a]) => a.patches.map(([file, find, put, sites]) => ({ arm, file: join(PLANE, "src", file), find, put, sites }))));
 
 const run = (name) => {
   const arm = ARMS[name];
