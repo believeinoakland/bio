@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d57selflink.test.mjs",
+ "inputHash": "4df725bfd4a7ecc232ae2ec4f2f33597ab0a782fa95c4957406a74db0cbc4b3c",
+ "verdict": "PASS",
+ "run": "e08ee68f9b67b319f000a8e4a4b981321f2a0514.1790314663852.2274.json",
+ "tree": "e08ee68f9b67b319f000a8e4a4b981321f2a0514",
+ "head": "f1d61bbbaebce12a01180355b3e7af024224d151",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d6182014-7bfa-5b9e-a81f-e21f0998ca19",
+ "at": "2026-09-25T05:37:43.874Z"
+}
