@@ -24662,9 +24662,15 @@ function rvcDraftBody(f, draftId){
   else if(f.nothingLeftOut) body.excluded = [];
   return body;
 }
-/* Editing starts from what the draft HOLDS, read back from `op=reviewcopy`. The
-   one thing the answer does not say back is whether a draft naming no case was
-   marked as a new one, so that choice starts unmade rather than guessed. */
+/* Editing starts from what the draft HOLDS, read back from `op=reviewcopy`.
+   CORRECTED 2026-09-25 (UI-106, REC-199's delegation): this comment said the answer
+   does not say back whether a draft naming no case was marked as a new one. Since
+   REC-199 (IC-285) it does — `case.newCase` — and a form that did not read it wrote
+   the draft back WITHOUT it, turning a draft that asked for a new case into one whose
+   case publication DERIVES (the D-309 override the field exists to refuse). So the
+   choice is read back as the draft holds it: a named case is the next-edition choice
+   and keeps precedence (publication refuses the two together); `newCase` is the
+   new-case choice; neither leaves the choice unmade, which is what the draft holds. */
 function rvcFormFromCopy(c){
   const f = rvcEmptyForm();
   f.project = rvcStr(c && c.project);
@@ -24674,6 +24680,7 @@ function rvcFormFromCopy(c){
   f.undesignated = fs.filter(x => x && x.role !== "load_bearing" && x.role !== "supporting").map(x => x.target).join("\n");
   const cid = c && c.case && c.case.case_id;
   if(cid){ f.caseMode = "next"; f.caseId = String(cid); }
+  else if(c && c.case && c.case.newCase === true) f.caseMode = "new";
   const a = (c && c.authored) || {};
   for(const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"]) f[k] = rvcStr(a[k]);
   if(Array.isArray(a.excluded)){
@@ -24954,7 +24961,13 @@ const RVC_AT_THE_ACT = "This gives one named person a link to read this draft an
 function rvcGrantsHtml(c){
   const gs = Array.isArray(c.grants) ? c.grants : [];
   const rows = gs.map(g => {
-    const bound = g.case_id ? "edition " + esc(g.edition) + " of <span class=\"mono\">" + esc(g.case_id) + "</span>" : "a new case";
+    /* D-619: a grant bound to no case was given for a draft that NAMED NO CASE — and that is all the row
+       says. It was never "a new case": the draft may have been one whose case publication DERIVES (D-538),
+       and the grant row does not record which. Its `edition` is null where the plane does not state one
+       (D-568), and a null is said as nothing, never as a number. */
+    const bound = g.case_id
+      ? (g.edition != null ? "edition " + esc(g.edition) + " of " : "") + "<span class=\"mono\">" + esc(g.case_id) + "</span>"
+      : "a draft that named no case";
     const state = g.live
       ? 'Can read this draft now. <button class="btn ghost" onclick="rvcRevoke(\'' + esc(g.grant_id) + '\')">Withdraw this grant</button>'
       : g.revoked_at
