@@ -600,8 +600,8 @@ scope: (1) SWEEP every site that orders or compares `at` values of different act
 accepts-when: an acknowledgement stamped `…:00Z` and a comment stamped `…:00.123Z` in one copy order by instant, and REC-200's last-change date names the later one (the measured failure it moves: the whole-second stamp sorting last). NEGATIVE CONTROL: restore the string compare, and the mixed-precision arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs D`).
 
-### D-531 · running — **A WHITESPACE-ONLY CONTENT UNIT IS STILL EMITTED AND INDEXED AS CONTENT at two emission sites: `index.mjs`'s `arm` helper and `store.mjs`'s `capture_text` ordering filter on `u.text.length`, though §16's comment at that site says a unit with no text is not emitted.** D-514's class surviving at emission; found by D-514's worker (id minted by it). — owner CONTENT-PDF, then RECORD.
-status: running — SCHEDULER #21 00:13Z spawns WORKER D-531 (depth 2)
+### D-531 · integrated — **A WHITESPACE-ONLY CONTENT UNIT IS STILL EMITTED AND INDEXED AS CONTENT at two emission sites: `index.mjs`'s `arm` helper and `store.mjs`'s `capture_text` ordering filter on `u.text.length`, though §16's comment at that site says a unit with no text is not emitted.** D-514's class surviving at emission; found by D-514's worker (id minted by it). — owner CONTENT-PDF, then RECORD.
+status: integrated — SCHEDULER #21 01:08Z: tip 478066df, GATE 112/112 GREEN; M-154; units written before D-531 stay until re-promoted (live count UNDETERMINED, no row)
 order: after UI-106, with the corrections: the record indexing blank units as content (CLAUDE.md §2) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 21:46Z)
 milestone: M2
 interface: I5 — content-unit counts move; the integrator classifies.
@@ -775,6 +775,16 @@ depends-on: D-453.
 scope: measure (1)–(4) with a fresh network session (www.oaklandca.gov's 403 is Akamai's; `cao-94612.s3` is the working route); reconcile (5) by stating which file M-119 read; send (6) to OCR or state it unread.
 accepts-when: each item recorded with date, instrument and counts, a refused host named as refused. NEGATIVE CONTROL: `tools/m132-negative-control.py`'s planted join counts exactly one.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
+
+### REC-203 · queued — UNBLOCKED 2026-09-24 by BOB #32: Framework §8.3 now carries M-132 (concurrent project-number forms told apart by shape; C.M.S. referent check and coverage floor; APN apn_sort and RETIRED parcels; contract/PO unpublished at source), on land/bob/fold-m132 awaiting its train. Build to §8.3 as amended.
+order: behind D-453, whose measurements it rests on, as BOB #32 ruled (*Row them RECORD, blocked behind D-453's egress*) (SCHEDULER #17, 2026-09-23)
+milestone: M4
+interface: I3/I5 — three recognisers and their eras; the integrator mints and classifies the ICs.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.3 "WHAT MAKES A SHARED IDENTIFIER COUNT" (on `land/bob/rulings-0923b` @ fd93bf1d, riding the next train): a match counts when the REFERENT agrees in two INDEPENDENT systems; two publications of one source are one system; a space whose format changes is one space with dated ERAS, joined across eras only through a captured crosswalk.
+depends-on: D-453 (egress), D-74 (`integrated`).
+scope: a recogniser per space under §8.3's counting rule, eras for the project-number format change (C###### → 100xxxx).
+accepts-when: a budget line and its Legistar award join by project number only when the referent agrees; a fund code alone never counts. NEGATIVE CONTROL: count two publications of one source as two systems, and the independence arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
