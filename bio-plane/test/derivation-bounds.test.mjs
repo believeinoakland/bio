@@ -590,8 +590,9 @@ const D384_LEAVES = [
       + "that was the header credit, and it is gone" },
   /* CORRECTED 2026-09-23 by D-178: the per-row list gained publishedRegistryFor (C-21.2's registry,
      one json_each-bound read). The verdict is unchanged; the list is what a reader checks it against. */
+  /* CORRECTED 2026-09-25 by D-673: and recordedMovesFor (C-4.2's registry: one bundle's manifest and history). */
   { name: "auditPass", why: "its per-row work (readImage, checkBundle, an inquiry_basis read, "
-      + "earnedBasisRegistry and publishedRegistryFor per bundle) iterates a LIMIT-bounded page (cap <= 1000, published); the "
+      + "earnedBasisRegistry, publishedRegistryFor and D-673's recordedMovesFor per bundle) iterates a LIMIT-bounded page (cap <= 1000, published); the "
       + "unbounded `known` set is built once and used as a lookup, and the route-mark scan is read once" },
   /* CORRECTED 2026-09-19 by D-414, never exempted, and the OLD TEXT WAS RIGHT WHEN IT WAS WRITTEN:
      it read "`*eachImage` is a generator the segmenter's signature regex cannot see, so its header
@@ -1405,7 +1406,13 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
 /* 118 -> 119, 2026-09-25 by D-546, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (`119 methods scanning UNBOUNDED`):
    ONE ARRIVAL, `stateMoveCensus`, NO DEPARTURE — the amplification-class arrival named at the CLASS ratchet above (26 ->
    27), counted over every recorded move by BOB #34's ruling. */
-const SCANNING_MEASURED_2026_09_15 = 119;
+/* 119 -> 120, 2026-09-25 by D-673, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (`120 methods scanning UNBOUNDED`):
+   ONE ARRIVAL, `#recordedStatePairs`, NO DEPARTURE. It is `stateMoveCensus`'s own per-bundle pairing lifted into a
+   method so C-4.2 reads the record's moves by the same computation (BOB #35, 2026-09-25 08:00Z): a per-KEY read of
+   one bundle's manifest and `bundle.md` history, whose rows are that bundle's promotions, and a LIMIT would drop moves
+   the ruling says are counted whole. `stateMoveCensus` stays (it still scans `bundles`); the amplification class is
+   unchanged. `recordedMovesFor` calls it once per bundle from gateFacts (one bundle) and auditPass (a bounded page). */
+const SCANNING_MEASURED_2026_09_15 = 120;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
