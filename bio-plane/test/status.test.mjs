@@ -107,6 +107,14 @@
  *   "A FILE CARRYING MERGE MARKERS REFUSES THE PUSH" FAILS; restored by `cp`, byte-identical.
  *   (A2 was RE-AIMED after its first run: forcing the op probe's CONDITION true also dereferenced a
  *   null match, so the suite CRASHED instead of failing the named assertion — a second variable.)
+ * NEGATIVE CONTROL: RAN 2026-09-25 by the D-566 worker, by a scratch driver, over sections 7's and the ambiguity arm's
+ *   DERIVED copy of `status.mjs`'s closure. Each arm ALONE, restored by `cp`, `cmp`, sha256 and byte count
+ *   (`tools/status.mjs` 3920a8b3… 33,690 B), the probe deleted after each. BASELINE 105 / 0. (A1) ACCEPTS-WHEN —
+ *   `tools/d566probe.mjs` imported STATICALLY by `tools/status.mjs`: MUST NOT fail; 105 / 0. (A3) THE ROW'S CONTROL — A1
+ *   armed and both HAND lists `["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"]` restored: MUST fail; 101 / 4, exit 1,
+ *   at "an AGREEING source of truth passes the push", "...and the refusal carries the tool's own account, naming the
+ *   claim", "THE CLI PRINTS THE COUNT: an ambiguous probe reads `1 ambiguous`…" and "...and a uniquely pinned one reads
+ *   `0 ambiguous`…". (A4) OVER-STRICTNESS — hand lists restored, no import: MUST pass; 105 / 0.
  * AND ONE ARM ON THE PUSH GUARD, run by hand because it arms a different file: `statusCheck`'s
  *   drift verdict flipped to ok -> section 7's "A DRIFTED SOURCE OF TRUTH REFUSES THE PUSH" FAILS
  *   (40/1); `tools/pushguard.mjs` restored by `cp` and verified byte-identical (sha256 fa088ea3…).
@@ -122,12 +130,13 @@ import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, firstSentence, tableSites, CELL_CAP, CODE_EXT, UI_HELPERS, ROOT, STATES }
   from "../../tools/status.mjs";
 import { BUDGET, MAP as BUDGET_MAP } from "../../tools/readbudget.mjs";
 import { statusCheck, corpusCheck, markerCheck } from "../../tools/pushguard.mjs";
 import { copyFileSync } from "node:fs";
+import { moduleClosure } from "./moduleclosure.mjs";   /* D-566: a fixture derives what it carries */
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -367,9 +376,13 @@ section("7 — THE PUSH IS WHERE IT CANNOT BE SKIPPED: the guard REFUSES a drift
        walkfloor and the two modules it imports, which makes the arm STRONGER than it was: the guard
        is now driven over the real lexer rather than over a tool that had none. Found by this arm
        going red on the static import, which is the arm doing its job. */
-    mkdirSync(join(r, "bio-plane/scripts"), { recursive: true });
-    for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
-      copyFileSync(join(ROOT, "bio-plane/scripts", f), join(r, "bio-plane/scripts", f));
+    /* CORRECTED 2026-09-25 by D-566: the lexer's modules were a HAND LIST (`["walkfloor.mjs", "provenance.mjs",
+       "walkfigure.mjs"]`), silent the day `status.mjs` or `walkfloor.mjs` gains an import: the copied tool would not
+       load and this arm would fail for the FIXTURE's reason. Derived now by `moduleClosure`'s STATIC mode (M0-169). */
+    for (const rel of moduleClosure({ repo: ROOT, roots: ["tools/status.mjs"], dynamic: false })) {
+      mkdirSync(dirname(join(r, rel)), { recursive: true });
+      copyFileSync(join(ROOT, rel), join(r, rel));
+    }
     w("bio-plane/src/index.mjs", "const OPS = {\n  cite:       { classes: [\"member\"], mutating: true },\n};\n");
     const data = { sets: {}, constructs: [{ n: 1, name: "X", claims: [
       { id: "1.a", state: "BUILT", text: "the op", probes: [{ op: claimOp }] }] }] };
@@ -589,9 +602,11 @@ section("12 — A `hit` PINS EXACTLY ONE SITE, OR IT PINS NOTHING (M0-160)");
     const w = (rel, text) => { mkdirSync(join(r, rel, ".."), { recursive: true }); writeFileSync(join(r, rel), text); };
     mkdirSync(join(r, "tools"), { recursive: true });
     copyFileSync(join(ROOT, "tools/status.mjs"), join(r, "tools/status.mjs"));
-    mkdirSync(join(r, "bio-plane/scripts"), { recursive: true });
-    for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
-      copyFileSync(join(ROOT, "bio-plane/scripts", f), join(r, "bio-plane/scripts", f));
+    /* D-566: status.mjs's closure, derived as in section 7 — never a hand list. */
+    for (const rel of moduleClosure({ repo: ROOT, roots: ["tools/status.mjs"], dynamic: false })) {
+      mkdirSync(dirname(join(r, rel)), { recursive: true });
+      copyFileSync(join(ROOT, rel), join(r, rel));
+    }
     w("bio-plane/src/pins.mjs", "export const twoSites = 1;\nexport const second = twoSites;\n");
     w("docs/architecture/construct-status.json", JSON.stringify({ sets: {}, constructs: [{ n: 1, name: "X",
       claims: [{ id: "1.a", state: "BUILT", text: "the pin", probes: [{ hit, in: ["bio-plane/src/pins.mjs"] }] }] }] }));

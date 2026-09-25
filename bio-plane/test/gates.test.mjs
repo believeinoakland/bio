@@ -205,6 +205,19 @@
  *        (a stale exclusion cannot outlive its import); a missing root THROWS; `const IMPORT_RE` renamed in
  *        a scratch copy of `tools/gates.mjs` THROWS naming the line. All three as declared.
  */
+/* NEGATIVE CONTROL: RAN 2026-09-25 by the D-566 worker, by a scratch driver, over the coord layer's DERIVED copy list
+ * (section "M0-173 · THE COORD SNAPSHOT"). Declared before arming; each arm ALONE; every restore by `cp` from a
+ * uniquely-named pristine copy, verified by `cmp`, sha256 and byte count (`tools/coord.mjs` 75bda677… 65,647 B), the probe
+ * module deleted after every arm. BASELINE 124 pass / 0 fail.
+ *   (A1) ACCEPTS-WHEN — `tools/d566probe.mjs` added and imported STATICALLY by `tools/coord.mjs`. MUST NOT fail.
+ *        ACTUAL: 124 / 0.
+ *   (A2) THE ROW'S CONTROL — A1 armed, and this suite's HAND list `["coord.mjs", "statepaths.mjs"]` restored (origin/main's
+ *        file whole). MUST fail. ACTUAL: exit 1 — the suite DIES in that section with `ERR_MODULE_NOT_FOUND … coord-fx/
+ *        tools/d566probe.mjs imported from … coord-fx/tools/coord.mjs`, naming the missing module, after "a checkout where
+ *        origin/coord does not resolve says NOT PINNED" and before the FOOT: a crash, not a named assertion — recorded as
+ *        what it is. Its loudness is the FOOT line's (no tally, never a green count).
+ *   (A4) OVER-STRICTNESS — the hand list restored with NO import. MUST pass (the list was right on its day): 124 / 0.
+ */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, existsSync, unlinkSync } from "node:fs";
@@ -214,6 +227,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { install, hooksDir, readRuns, effectiveVerdict, recordDir } from "../../tools/pushguard.mjs";
 import { gateDeps } from "./gatedeps.mjs";     /* M0-154: the fixture's copy list is DERIVED, never kept by hand */
+import { moduleClosure } from "./moduleclosure.mjs";   /* D-566: the coord layer's copy list, likewise */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
@@ -1065,7 +1079,12 @@ section("M0-173 · THE COORD SNAPSHOT — ONE commit for the whole run, whatever
 
   /* The real reading layer, so a unit's read is the estate's own read and not a model of it; and THE SWITCH — the
      state file on disk is the one-line pointer, so `readState` answers from the ref (M0-110). */
-  for (const f of ["coord.mjs", "statepaths.mjs"]) put(CX.root, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
+  /* CORRECTED 2026-09-25 by D-566: the reading layer was a HAND LIST (`["coord.mjs", "statepaths.mjs"]`), right on the
+     day and silent the day `coord.mjs` gains a static import: the copied module would not load and this section would go
+     red for the FIXTURE's reason. It is now derived by `moduleClosure`'s STATIC mode (M0-169, as M0-170 did) from the
+     module itself; its `await import("./ledger.mjs")` and kin are lazy branches this section never reaches. */
+  for (const rel of moduleClosure({ repo: REPO, roots: ["tools/coord.mjs"], dynamic: false }))
+    put(CX.root, rel, readFileSync(join(REPO, rel)));
   const { pointerText } = await import(`file://${MOD}`);
   put(CX.root, STATE, pointerText(STATE));
   commitAll(CX.root, "coord-fx: the real coord layer, and a switched state file");
