@@ -15483,6 +15483,40 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'what may be done with a thing by where it stands, so it will not guess. Nothing was written. Say it in the '
       + 'document, and send it again.',
   },
+  /* D-707 (2026-09-25) — C-86.8's rule for the NOT NULL columns a promotion writes from the REQUEST rather than the
+   * document: the snap key that names the revision in the history (`manifest.snap_key`, `history.snap_key`) and, for
+   * each file, its path (`files.path`), what it holds (`files.sha256`, from inline text or a blob's content address)
+   * and, for a blob, its size (`files.bytes`). Each one a request left out was refused by a raw constraint error
+   * carrying a stack (a null entry, by a TypeError). A blank or non-string value is no statement (D-578's
+   * `textStated`); a size is a whole number of bytes. Nothing is defaulted: the record does not name a revision, a
+   * file or a size the writer did not. Replay is NOT exempt: the columns are NOT NULL for the past too. */
+  PROMOTE_SNAP_KEY_UNSTATED: {
+    check: 'C-86.10',
+    where: 'src/store.mjs promote > is-promote-snap-key-unstated',
+    translation: 'This change does not say what to call it in the item\'s history: the request carries no snapshot '
+      + 'key. Every change is kept under its own name so it can be found and compared later, and the record will not '
+      + 'make one up. Nothing was written. Send it again with a snapshot key.',
+  },
+  PROMOTED_FILE_PATH_UNSTATED: {
+    check: 'C-86.11',
+    where: 'src/store.mjs promote > is-promote-file-path-unstated',
+    translation: 'A file in this change has no name: it gives no path, or it is not a file at all. The record keeps '
+      + 'every file under its name and will not guess one. Nothing was written. Name each file, and send it again.',
+  },
+  PROMOTED_FILE_CONTENT_UNSTATED: {
+    check: 'C-86.12',
+    where: 'src/store.mjs promote > is-promote-file-content-unstated',
+    translation: 'A file in this change holds nothing the record can keep: it carries neither its text nor the '
+      + 'address of stored bytes. The record keeps only what it can check, so nothing was written. Give each file its '
+      + 'text or the address its bytes are stored under, and send it again.',
+  },
+  PROMOTED_FILE_BYTES_UNSTATED: {
+    check: 'C-86.13',
+    where: 'src/store.mjs promote > is-promote-file-bytes-unstated',
+    translation: 'A stored file in this change does not say how large it is. The record keeps that size beside the '
+      + 'file and checks it against the bytes it holds, and it will not guess one. Nothing was written. Give each '
+      + 'stored file its size in bytes, and send it again.',
+  },
   /* D-546 (2026-09-25; BOB #34, 2026-09-24 23:55Z; State Rules v1.5 §4, "Moves are fenced from now on") — D-468's
    * fence, LIFTED TO EVERY TYPE WITH A HEAD. `op=promote` asked a state-edge table for a bias set alone, so every other
    * machine could be moved along an edge its table does not declare (a verified item back to `collected`, a closed

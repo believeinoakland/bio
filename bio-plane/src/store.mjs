@@ -17449,6 +17449,61 @@ export class Store extends DurableObject {
     }
     /* ===== END REC-141 (the mint itself is the first act inside the transaction) ===== */
     if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    /* ===== D-707 (`BIO_Case_Making_v0_1.md` §2; C-86.8's shape for the columns the REQUEST states; C-86.10..13) — WHAT
+       THE REQUEST MUST NAME, ASKED BEFORE THE TRANSACTION. `manifest.snap_key` / `history.snap_key`, `files.path`,
+       `files.sha256` and `files.bytes` are NOT NULL, and a request that left one out reached the INSERT: the caller met
+       "NOT NULL constraint failed: <column>" with a store.mjs stack, and a null `files` entry met a TypeError from the
+       first `f.path` read inside the transaction (measured through op=promote on land/worker/D-692 332c594e, for a
+       creation and a revision of each). A blank or non-string snap key or path is no statement (D-578's `textStated`;
+       a number stays a snap key, as REC-176's `heldAtKey` already reads one); a file holds something only as inline
+       text or a blob's content address (the two `#fileDigestOf` digests); a blob's size is a whole, non-negative number
+       of bytes — an inline file's is computed below (REC-178). Refused here, in this order, each naming every entry it
+       fails, so no fence below ever reads a malformed entry. Replay is not exempt: the columns are NOT NULL for the past
+       too. ===== */
+    /* DEC-49 REGION is-promote-snap-key-unstated */
+    if (!((typeof snapKey === "string" && snapKey.trim() !== "") || (typeof snapKey === "number" && Number.isFinite(snapKey)))) {
+      const skRow = PROMOTED_TYPE_CHECKS.PROMOTE_SNAP_KEY_UNSTATED;
+      return { ok: false, reason: "PROMOTE_SNAP_KEY_UNSTATED", code: "PROMOTE_SNAP_KEY_UNSTATED",
+               check: skRow.check, translation: skRow.translation,
+               detail: "this request names no snapKey (a non-blank string), so the revision has no name in the history. "
+                     + "Nothing was written." };
+    }
+    /* END DEC-49 REGION is-promote-snap-key-unstated */
+    const fileEntry = (f) => !!f && typeof f === "object" && !Array.isArray(f);
+    /* DEC-49 REGION is-promote-file-path-unstated */
+    const pathless = files.map((f, i) => (fileEntry(f) && typeof f.path === "string" && f.path.trim() !== "" ? -1 : i))
+                          .filter((i) => i >= 0);
+    if (pathless.length) {
+      const fpRow = PROMOTED_TYPE_CHECKS.PROMOTED_FILE_PATH_UNSTATED;
+      return { ok: false, reason: "PROMOTED_FILE_PATH_UNSTATED", code: "PROMOTED_FILE_PATH_UNSTATED",
+               check: fpRow.check, translation: fpRow.translation, entries: pathless,
+               detail: `files entr${pathless.length > 1 ? "ies" : "y"} ${pathless.join(", ")} (counting from 0) `
+                     + `${pathless.length > 1 ? "name" : "names"} no path (a non-blank string), or ${pathless.length > 1 ? "are" : "is"} `
+                     + "not a file object. Nothing was written." };
+    }
+    /* END DEC-49 REGION is-promote-file-path-unstated */
+    const blobHeld = (f) => typeof f.text !== "string" && typeof f.blobSha === "string" && f.blobSha !== "";
+    /* DEC-49 REGION is-promote-file-content-unstated */
+    const empty = files.filter((f) => typeof f.text !== "string" && !blobHeld(f)).map((f) => f.path);
+    if (empty.length) {
+      const fcRow = PROMOTED_TYPE_CHECKS.PROMOTED_FILE_CONTENT_UNSTATED;
+      return { ok: false, reason: "PROMOTED_FILE_CONTENT_UNSTATED", code: "PROMOTED_FILE_CONTENT_UNSTATED",
+               check: fcRow.check, translation: fcRow.translation, paths: empty,
+               detail: `${empty.join(", ")} carr${empty.length > 1 ? "y" : "ies"} neither text (a string) nor a blobSha, `
+                     + "so the record holds nothing it could digest. Nothing was written." };
+    }
+    /* END DEC-49 REGION is-promote-file-content-unstated */
+    /* DEC-49 REGION is-promote-file-bytes-unstated */
+    const sizeless = files.filter((f) => blobHeld(f) && !(Number.isInteger(f.bytes) && f.bytes >= 0)).map((f) => f.path);
+    if (sizeless.length) {
+      const fbRow = PROMOTED_TYPE_CHECKS.PROMOTED_FILE_BYTES_UNSTATED;
+      return { ok: false, reason: "PROMOTED_FILE_BYTES_UNSTATED", code: "PROMOTED_FILE_BYTES_UNSTATED",
+               check: fbRow.check, translation: fbRow.translation, paths: sizeless,
+               detail: `${sizeless.join(", ")} ${sizeless.length > 1 ? "are" : "is"} held as a blob and state${sizeless.length > 1 ? "" : "s"} `
+                     + "no size (bytes, a whole number from 0). Nothing was written." };
+    }
+    /* END DEC-49 REGION is-promote-file-bytes-unstated */
+    /* ===== END D-707 ===== */
     /* ===== REC-175 — A STORED DIGEST IS OF THE STORED BYTES (the Mechanical Verification Law,
        `BIO_State_Rules_Consistency_v1_5.md` §8; CLAUDE.md §5, *an equality that costs nothing to produce is
        not evidence*). `files.sha256` and the bundle's head (`newSha`, read from bundle.md's row below) were

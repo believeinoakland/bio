@@ -146,7 +146,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.36.0";
+export const CATALOG_VERSION = "1.37.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -227,6 +227,12 @@ export const CATALOG_VERSION = "1.36.0";
    `created` is refused by name). MINOR; 508 -> 509, count and digest from the d470 suite's print on this tree. If another
    branch in the batch also moves the version, CONDUCT takes the next number at the union and re-reads the print on the
    merged tree. */
+/* 1.37.0 (D-707, 2026-09-25, branch land/worker/D-707, stacked on land/worker/D-692): FOUR ARRIVALS, NO DEPARTURES, NONE
+   CHANGED — C-86.10 PROMOTE_SNAP_KEY_UNSTATED, C-86.11 PROMOTED_FILE_PATH_UNSTATED, C-86.12 PROMOTED_FILE_CONTENT_UNSTATED
+   and C-86.13 PROMOTED_FILE_BYTES_UNSTATED in PROMOTED_TYPE_CHECKS (op=promote refuses a request naming no snap key, a
+   file with no path, a file holding nothing and a blob with no size, by name, before the transaction). MINOR; 509 -> 513,
+   count and digest from the d470 suite's print on this tree. If another branch in the batch also moves the version,
+   CONDUCT takes the next number at the union and re-reads the print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
