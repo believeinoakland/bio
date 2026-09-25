@@ -44,6 +44,10 @@ REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `s
 
 Everything through 0.79.0 SHIPPED (its pointer landed at `5f116f33`). The next cut adds DIST-11 (the BROWSER binding) and
 DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the trains carry. **Live checks owed at that deploy:**
+- **DIST-14 — the CSV 20 MiB bound, BLOCKED on this deploy** (its worker's report 04:21Z 2026-09-25; verified by DIST #7:
+  `bio-plane/src/csv.mjs` on main, absent at 0.79.0's cut `dd324152`). After the plane serves: in `store=scratch`, read a
+  synthetic CSV just OVER 20 MiB (record the memory outcome and the time) and one just UNDER as the negative control, `bio`'s
+  counters witnessed before and after; record an M id, or tell SCHEDULER to re-spawn DIST-14's worker.
 - **D-512 — an AUTHORITY closing, on main since `5e8a65a8` (c21-batch28; CONDUCT #21's 2b notice 04:06Z 2026-09-25).** An admin-class
   caller could assert `replay` on op=promote and skip the fences; now a replay is honoured only over a drive-provenance capture
   the plane verifies, else `REPLAY_UNVERIFIED` (C-66.6, IC-300 MAJOR). Under CUT NOW this would force a cut; CUT NOW is SUSPENDED
