@@ -31,7 +31,7 @@ from the old text's rules to these tags is `measurements/M-147.md`, checked by `
 - **W14** · Never `git stash` — `refs/stash` is shared by every checkout; need a clean tree, `git worktree add` one (id undetermined).
 - **W15** · Files YOU make — logs, baselines, copies of files, a clone of the repo — go in your session scratchpad, never the worktree (BOB #32, 2026-09-24).
 - **W16** · A control driver's or tool's own pen, GITIGNORED and ITEM-NAMED, stays in the worktree: it is not scratch (BOB #33, 2026-09-24 17:12Z).
-- **W17** · The scratchpad is neither isolated between sessions nor DURABLE: name every file there for YOUR item, never generically; it can vanish mid-session, so print each figure as you take it and COMMIT what a claim rests on (`measurements/<id>.md`) (BOB #32, 2026-09-24; REC-194 F6, M0-183).
+- **W17** · The scratchpad is neither isolated nor durable: name files for YOUR item; COMMIT what a claim rests on (BOB #32; REC-194 F6).
 - **W18** · PUSH your own branch: `git push origin HEAD:refs/heads/land/worker/<row id>`; never to `main`, never force, never merge (D-288, BOB #12; M0-111).
 - **W19** · A branch the train RETURNS comes back by name: rebase it on `origin/main` and push the same ref (M0-111, TREE-SHARING §2).
 - **W20** · Name `store=scratch` on every live call. A confined credential makes the naming REDUNDANT, not OPTIONAL (BOB #34, 2026-09-24 22:22Z; D-463).
