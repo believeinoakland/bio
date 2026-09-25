@@ -66,8 +66,9 @@ const HAND = "    const handOf = (handedSha) => (!atOpen ? null : handedSha === 
 const HAND_BY_NOW = "    const handOf = (handedSha) => (!atOpen ? null : handedSha === nowSha ? \"in_force\" : \"stale\");\n";
 const MOVED = "             moved: atOpen\n               ? openSha !== nowSha\n";
 const MOVED_BY_HAND = "             moved: atOpen\n               ? recordedSha !== nowSha\n";
-const LENS_WRITE = "        JSON.stringify(state == null ? {} : state), lensAtOpen);\n";
-const LENS_WRITE_OFF = "        JSON.stringify(state == null ? {} : state), null);\n";
+/* D-637: re-anchored — REC-207 appended `rerun_of` after the lens, so the line now ends `lensAtOpen,` not `);`. */
+const LENS_WRITE = "        JSON.stringify(state == null ? {} : state), lensAtOpen,\n";
+const LENS_WRITE_OFF = "        JSON.stringify(state == null ? {} : state), null,\n";
 
 /* The arms that rest on a refusal of ANOTHER principal. CORRECTED AT THE FIRST RUN (2026-09-23), THE ARMS RIGHT
    AND THE DECLARATION WRONG: L1 and L7 fail too wherever a refusal becomes a landing, because cora's credential then
