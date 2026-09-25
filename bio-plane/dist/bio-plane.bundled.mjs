@@ -22141,6 +22141,7 @@ var RENDER_DEFAULTS = Object.freeze({
   wait: Object.freeze({ until: "networkidle", timeout_ms: 15e3 })
 });
 var RENDERED_METHOD = "rendered";
+var RENDER_TICK_UNDETERMINED = "content undetermined \u2014 not watched: this source renders its content in the browser";
 var TIMEOUT_WORD = /timed?[ _-]?out|timeout/;
 function waitFiredClass(fired, askedWait) {
   if (!isStr(fired)) return "undetermined";
@@ -72873,12 +72874,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  so the tick and the suite read the same rule.
    *
    *  `actorClass`/`actor` come from the QUERY STRING, where the control plane stamped them. */
-  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null } = {}) {
+  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null, scope = null } = {}) {
     const cap = typeof baseline === "string" && /^[0-9a-f]{64}$/.test(baseline) ? baseline : null;
+    const frame = scope === "frame" ? "frame " : "";
+    const tail = scope === "frame" ? "; content undetermined" : "";
     switch (outcome) {
       /* The zero-payload revisit: the record's own capture, confirmed at a date. */
       case "unchanged":
-        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: "unchanged" } : null;
+        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: `${frame}unchanged${tail}` } : null;
       /* The substance moved. §4.1 says `result_ref` = the NEW sha — but a tick does not
          capture the new version, so the record does not hold it, and naming it as a
          `capture` would be the log claiming a document the record lacks. The referent is
@@ -72889,7 +72892,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           state: "PRESENT",
           resultKind: "capture",
           resultRef: cap,
-          detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}`
+          detail: `${frame}changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}${tail}`
         } : null;
       case "removed":
         return { state: "LOOKED_ABSENT", detail: `gone; the source answered ${httpStatus ?? "unknown"}` };
@@ -72920,11 +72923,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     seen = null,
     httpStatus = null,
     reason = null,
+    scope = null,
     actorClass = "plane",
     actor = null
   } = {}) {
     if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
-    const row = _Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason });
+    const row = _Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason, scope });
     if (!row) return {
       ok: true,
       written: false,
@@ -78882,7 +78886,8 @@ async function monitorRecordLook(stub, o) {
       baseline: o.baseline,
       seen: o.seen,
       httpStatus: o.httpStatus,
-      reason: o.reason
+      reason: o.reason,
+      ...o.scope ? { scope: o.scope } : {}
     })
   })));
   return out.answered ? out.result : { ok: false, written: false, why: "the store did not answer the observation write" };
@@ -82695,18 +82700,22 @@ var index_default = {
           detail: driveTick.why + " A shape this instance cannot read is a shape it cannot promise to be watching."
         }, 422);
       const tickAddress = driveTick && driveTick.harvestable ? driveTick.exportAddress : locator;
-      let baseline = null, baselineProfile = null, baselineAt = null;
+      let baseline = null, baselineProfile = null, baselineAt = null, renderTick = false;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
         const rows = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
         const match = (driveTick && driveTick.harvestable ? rows.find((d) => d.locator === driveTick.exportAddress) : null) || rows.find((d) => d.locator === locator);
-        baseline = match?.capture?.sha256 || null;
+        renderTick = !!match && (match.pair && typeof match.pair === "object" && match.pair.primary === "rendered" || match.capture && match.capture.method === RENDERED_METHOD);
+        if (renderTick) {
+          const shellSha = match.pair && match.pair.shell && match.pair.shell.sha256;
+          baseline = typeof shellSha === "string" && /^[0-9a-f]{64}$/.test(shellSha) ? shellSha : null;
+        } else baseline = match?.capture?.sha256 || null;
         baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
-        baselineProfile = match && match.profile && typeof match.profile === "object" ? match.profile : null;
+        baselineProfile = !renderTick && match && match.profile && typeof match.profile === "object" ? match.profile : null;
       } catch {
       }
       const checked = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
-      let status = null, note = null, seen = null, compared = null, comparedBasis = null;
+      let status = null, note = null, seen = null, compared = null, comparedBasis = null, frame = null;
       let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
       const monitorLook = (o) => monitorRecordLook(stub0, {
         bundleId,
@@ -82714,6 +82723,7 @@ var index_default = {
         baseline,
         seen,
         httpStatus,
+        ...renderTick ? { scope: "frame" } : {},
         ...o,
         actorClass: viaSession ? "member" : "machine",
         actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -82820,7 +82830,22 @@ var index_default = {
             for (const [hk, hv] of res2.headers) hh[hk.toLowerCase()] = hv;
             fetchedCtx = { headers: hh, locator, content_type: res2.headers.get("content-type") || null };
           }
-          if (!baseline) note = "no captured baseline to compare against; recorded the check only";
+          if (renderTick) {
+            if (!baseline)
+              note = "the capture is rendered and its register row names no shell digest (pair.shell.sha256), so nothing was compared; " + RENDER_TICK_UNDETERMINED;
+            else {
+              compared = "shell";
+              comparedBasis = "the served shell was compared with the pair's shell digest (pair.shell.sha256), never with the rendered primary's; this tick cannot render";
+              if (seen === baseline) {
+                frame = "unchanged";
+                note = "frame unchanged; " + RENDER_TICK_UNDETERMINED;
+              } else {
+                frame = "changed";
+                status = "modified";
+                note = "modified (frame): the source no longer serves the captured shell; " + RENDER_TICK_UNDETERMINED;
+              }
+            }
+          } else if (!baseline) note = "no captured baseline to compare against; recorded the check only";
           else {
             const bd = baselineProfile && baselineProfile.digests;
             if (!bd || bd.determined !== true || typeof bd.evidentiary !== "string" || !bd.evidentiary)
@@ -82893,7 +82918,7 @@ var index_default = {
       });
       const cadence = monitorCadence(fm.monitoring.frequency, graded.content);
       const observation = await monitorLook({
-        outcome: status === "unchanged" ? "unchanged" : status === "modified" ? "changed" : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
+        outcome: status === "unchanged" || frame === "unchanged" ? "unchanged" : status === "modified" ? "changed" : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
         reason: unreachable
       });
       const settledQuiet = !!graded.assessment && ["identical", "unchanged", "restyled", "routine"].includes(graded.assessment.verdict);
@@ -83008,6 +83033,9 @@ var index_default = {
            when none was made (no baseline, or the source did not answer) — and why. */
         compared,
         compared_basis: comparedBasis,
+        /* D-567: on a rendered capture the verdict is about the FRAME, and the content is
+           UNDETERMINED on every tick — stated in those words, never inferred from a match. */
+        ...renderTick ? { frame, content: "undetermined", undetermined: [RENDER_TICK_UNDETERMINED] } : {},
         /* D-65: the layered verdict (`stopped_at`, `trail`, graded `events`), or null with
            `assessment_basis` saying why none was made; the cadence and which source set it;
            and the look as the observation log recorded it. */
