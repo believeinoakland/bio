@@ -11,7 +11,7 @@
  * pristine copy by sha256 AND by content, with the byte count printed and floored. The pen is
  * `.rec220-control-pristine/` at the repository root, gitignored and item-named.
  */
-import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync, rmdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -97,5 +97,7 @@ for (const [name, arm] of Object.entries(ARMS)) {
             + `restored by sha256+cmp (${bytes} bytes, ${before.slice(0, 12)})`);
   for (const f of r.failing) console.log(`     FAIL ${f}`);
 }
-if (!readdirSync(SAFE).length) rmSync(SAFE, { recursive: true });
+/* The pen is removed only if EMPTY: rmdir refuses a non-empty directory, which is the guard (a pristine
+   copy left behind by a failed restore stays for a person to see). */
+try { rmdirSync(SAFE); } catch { console.log(`pen kept: ${SAFE} is not empty`); }
 console.log(`arms run: ${rows.join(", ")}`);

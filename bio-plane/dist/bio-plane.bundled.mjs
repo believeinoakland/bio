@@ -64051,32 +64051,36 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *
    *  A leg onto a question (no bytes, DEC-21) or one whose document the record holds no capture of gets
    *  no `version`; its `null_case` already says which. TWO set-based reads, never one per leg (the
-   *  derivation-bounds class): the document's bytes once, and one grouped count over the targets. */
+   *  derivation-bounds class): the document's bytes once, one grouped count per CHUNK of targets, one content read per chunk of ids. */
   #legVersions(id, legs) {
     const docs = legs.filter((l) => normalizeType(l.target_type) === "information");
     if (!docs.length) return;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-    let bytesLegs = [];
-    try {
-      bytesLegs = md && md.content !== null ? parseFrontmatter(md.content).data?.basis || [] : [];
-    } catch {
-      bytesLegs = [];
-    }
+    const bytesLegs = md && md.content !== null ? parseFrontmatter(md.content).data?.basis || [] : [];
     const targets = [...new Set(docs.map((l) => l.target))];
-    const held = new Map(this.#rows(
-      `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n FROM (
-         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${targets.map(() => "?").join(",")})
-         UNION ALL
-         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${targets.map(() => "?").join(",")}))
-       GROUP BY bundle_id`,
-      ...targets,
-      ...targets
-    ).map((r) => [r.t, r.n]));
+    const held = /* @__PURE__ */ new Map();
+    const half = Math.floor(_Store.SELECTION_ID_CHUNK / 2);
+    for (let i = 0; i < targets.length; i += half) {
+      const part = targets.slice(i, i + half), qs = part.map(() => "?").join(",");
+      for (const r of this.#rows(
+        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n FROM (
+           SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${qs})
+           UNION ALL
+           SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${qs}))
+         GROUP BY bundle_id`,
+        ...part,
+        ...part
+      )) held.set(r.t, r.n);
+    }
     const cids = [...new Set(docs.map((l) => l.content_id).filter(Boolean))];
-    const capOf = new Map(cids.length ? this.#rows(
-      `SELECT content_id, capture_sha FROM content WHERE content_id IN (${cids.map(() => "?").join(",")})`,
-      ...cids
-    ).map((r) => [r.content_id, r.capture_sha]) : []);
+    const capOf = /* @__PURE__ */ new Map();
+    for (let i = 0; i < cids.length; i += _Store.SELECTION_ID_CHUNK) {
+      const part = cids.slice(i, i + _Store.SELECTION_ID_CHUNK);
+      for (const r of this.#rows(
+        `SELECT content_id, capture_sha FROM content WHERE content_id IN (${part.map(() => "?").join(",")})`,
+        ...part
+      )) capOf.set(r.content_id, r.capture_sha);
+    }
     for (const l of docs) {
       const n = held.get(l.target) || 0;
       if (!n) continue;
