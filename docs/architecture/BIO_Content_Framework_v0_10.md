@@ -990,7 +990,7 @@ names the four measurements owed and what a match must show to count.
    system, and a pair through it reads SYSTEM_UNDETERMINED, never counted, because that host is exactly where two
    sources would be conflated. What settles it is a member's ATTRIBUTED act declaring a document's origin system (one
    declaration per document, dated, append-only, latest wins), never a per-instance table a machine applies. **No
-   machine reads a referent:** `op=idmatch` counts a pair on a referent reading the caller supplies and labels it the
+   machine reads a referent:** REC-203's `idmatch` counts a pair on a referent reading the caller supplies and labels it the
    caller's, and the fund NAME is the only referent the plane compares itself.
 2. **A space may run in SEVERAL FORMS AT ONCE — AMENDED 2026-09-24 by BOB #32 on M-132 (D-453).** A space's forms are
    told apart by their SHAPE, never by DATE: M-132 measured Oakland's project numbers over the whole Legistar corpus
