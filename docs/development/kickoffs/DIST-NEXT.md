@@ -44,6 +44,11 @@ REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `s
 
 Everything through 0.79.0 SHIPPED (its pointer landed at `5f116f33`). The next cut adds DIST-11 (the BROWSER binding) and
 DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the trains carry. **Live checks owed at that deploy:**
+- **D-605 — the setup page's key form** (worker report 05:57Z 2026-09-25; `land/worker/D-605` @ `8dcf0f2b`, stacked on D-596, NOT on
+  main at writing — CONDUCT's train). Shipped 0.79.0 and newgroup's embed post the whole key line, so registering a signing key
+  from the setup page reads BAD_KEY; fixed only by a cut from a main carrying D-605. Confirm it is an ancestor at the cut. Its live
+  arm is UNDETERMINED: the setup page acts on the REAL record (it cannot name scratch), so verify by the bundle carrying
+  `signerAddBody`, not by a live registration.
 - **DIST-14 — the CSV 20 MiB bound, BLOCKED on this deploy** (its worker's report 04:21Z 2026-09-25; verified by DIST #7:
   `bio-plane/src/csv.mjs` on main, absent at 0.79.0's cut `dd324152`). After the plane serves: in `store=scratch`, read a
   synthetic CSV just OVER 20 MiB (record the memory outcome and the time) and one just UNDER as the negative control, `bio`'s
