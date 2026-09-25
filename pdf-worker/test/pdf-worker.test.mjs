@@ -369,5 +369,100 @@ console.log("\n--- D-478: *not found* is not *absent* — the namespace this mem
   await mf.dispose();
 }
 
+/* D-419 (2026-09-25) ADDED 15 ASSERTIONS BELOW, so this suite's baseline is now 82 pass / 0 fail, measured; the 67
+   in the header above is D-478's figure on its own tree and is superseded here rather than edited in place. The
+   row's negative control for the route (answer the whole page, and the crop-dimensions arm fails by name) is run
+   through the plane in `bio-plane/test/d419-content-crop.test.mjs`, whose header holds its figures; it was not run
+   against this suite. */
+/* ---- D-419: POST /crop — the crop of a cited image, asked for over the member's surface ----
+ *
+ * `cropImage` (CPDF-18) is driven by name in `bio-plane/test/cpdf18-pdf-images.test.mjs`; what was never driven,
+ * because it did not exist, is a ROUTE to it. These arms are the route's: the capture read from R2 as `/structure`
+ * reads it, the extent handed to the module unchanged, the crop's bytes carried back as base64, the module's named
+ * refusal at 422, and nothing written. The plane's half (op=contentcrop) is `bio-plane/test/d419-content-crop.test.mjs`.
+ *
+ * THE FIXTURE PAINTS TWO IMAGES ON ONE PAGE, and that is what makes the dimensions arm cost something: a DCT image
+ * declared 40x30 and a 2x2 DeviceGray one. A route that answered the WHOLE PAGE (the row's negative control)
+ * cannot hand back the 2x2 at its rectangle — the page is neither 2x2 nor one image. */
+function imgPdf(objs) {
+  const chunks = [Buffer.from("%PDF-1.7\n", "latin1")];
+  for (const o of objs) {
+    chunks.push(Buffer.from(`${o.num} 0 obj\n`, "latin1"));
+    if (o.stream) {
+      chunks.push(Buffer.from(`<< ${o.dict} /Length ${o.stream.length} >>\nstream\n`, "latin1"), o.stream,
+                  Buffer.from("\nendstream\n", "latin1"));
+    } else chunks.push(Buffer.from(o.body + "\n", "latin1"));
+    chunks.push(Buffer.from("endobj\n", "latin1"));
+  }
+  chunks.push(Buffer.from("%%EOF\n", "latin1"));
+  return new Uint8Array(Buffer.concat(chunks));
+}
+const CROP_JPG = Buffer.from("\xff\xd8\xff\xe0D-419 fixture: a site plan\xff\xd9", "latin1");
+const CROP_GREY = Buffer.from([0x00, 0x40, 0x80, 0xff]);
+const CROP_PDF = imgPdf([
+  { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+  { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+  { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Im1 4 0 R /Im2 5 0 R >> >> /Contents 6 0 R >>" },
+  { num: 4, dict: "/Type /XObject /Subtype /Image /Width 40 /Height 30 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", stream: CROP_JPG },
+  { num: 5, dict: "/Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceGray /BitsPerComponent 8", stream: CROP_GREY },
+  { num: 6, dict: "", stream: Buffer.from("q 200 0 0 100 50 600 cm /Im1 Do Q\nq 100 0 0 100 300 100 cm /Im2 Do Q", "latin1") },
+]);
+const CROP_SHA = hex(CROP_PDF);
+const cropCall = (mf, body) => mf.dispatchFetch("http://pdf-worker/crop", { method: "POST", body: JSON.stringify(body) });
+console.log("\n--- D-419: POST /crop hands back the cited image, derived, and refuses by name ---");
+{
+  const mf = newMf();
+  const bucket = await mf.getR2Bucket("CAPTURES");
+  await bucket.put(`${STORE}/captures/${CROP_SHA}`, CROP_PDF);
+  const before = (await bucket.list()).objects.map((o) => o.key).sort();
+
+  const gr = await cropCall(mf, { capture_sha: CROP_SHA, store: STORE, extent: { kind: "image", page: 0, rect: [300, 100, 400, 200] } });
+  const g = await gr.json();
+  t("POST /crop of the grey image's rectangle is 200 and says it is a DERIVED crop of that extent",
+    [gr.status, g.ok, g.derived, g.rendition, g.of], [200, true, true, "crop", { kind: "image", page: 0, rect: [300, 100, 400, 200] }]);
+  t("D-419 crop dimensions: the grey image's own 2x2, not the page and not the other image", [g.width, g.height], [2, 2]);
+  t("  and it names the bytes it cropped FROM — the capture's sha256", g.capture_sha256, CROP_SHA);
+  const gBytes = Buffer.from(g.bytes_base64 || "", "base64");
+  t("  the base64 decodes to exactly the bytes its file_sha256 names, and byte_length counts them",
+    [hex(gBytes), gBytes.length], [g.file_sha256, g.byte_length]);
+
+  const jr = await (await cropCall(mf, { capture_sha: CROP_SHA, store: STORE, extent: { kind: "image", page: 0, rect: [50, 600, 250, 700] } })).json();
+  t("a DCT image's crop is the publisher's JPEG byte for byte, through the wire",
+    [jr.route, jr.mediaType, Buffer.from(jr.bytes_base64 || "", "base64").equals(CROP_JPG), [jr.width, jr.height]],
+    ["passthrough-dct", "image/jpeg", true, [40, 30]]);
+  /* OVER-STRICTNESS: an extent carrying fields the module does not read (the row's `cited_as`, a null `part`) and a
+     rectangle written corner-reversed is the same citation, and must crop. */
+  const loose = await (await cropCall(mf, { capture_sha: CROP_SHA, store: STORE,
+    extent: { kind: "image", cited_as: "bytes", part: null, page: 0, rect: [400, 200, 300, 100] } })).json();
+  t("an extent as a content row stores it (cited_as, part: null), rect corner-reversed, still crops the same image",
+    [loose.ok, loose.width, loose.height, loose.file_sha256], [true, 2, 2, g.file_sha256]);
+
+  const noRect = await cropCall(mf, { capture_sha: CROP_SHA, store: STORE, extent: { kind: "image", page: 0 } });
+  t("the rect DROPPED -> 422 RECT_REQUIRED, the module's own named refusal", [noRect.status, (await noRect.json()).reason], [422, "RECT_REQUIRED"]);
+  const nowhere = await cropCall(mf, { capture_sha: CROP_SHA, store: STORE, extent: { kind: "image", page: 0, rect: [0, 0, 10, 10] } });
+  t("a rectangle the page paints no image at -> 422 NO_IMAGE_AT_RECT", [nowhere.status, (await nowhere.json()).reason], [422, "NO_IMAGE_AT_RECT"]);
+  const noExt = await cropCall(mf, { capture_sha: CROP_SHA, store: STORE });
+  t("no extent at all -> 422 NOT_AN_IMAGE_EXTENT", [noExt.status, (await noExt.json()).reason], [422, "NOT_AN_IMAGE_EXTENT"]);
+  const notPdf = await cropCall(mf, { capture_sha: CID_SHA, store: STORE, extent: { kind: "image", page: 0, rect: [0, 0, 1, 1] } });
+  t("a capture absent from the namespace -> 404 NOT_FOUND, the same read /structure makes", [notPdf.status, (await notPdf.json()).reason], [404, "NOT_FOUND"]);
+  const badNs = await cropCall(mf, { capture_sha: CROP_SHA, store: "biosmoke", extent: { kind: "image", page: 0, rect: [300, 100, 400, 200] } });
+  t("the namespace fence holds on /crop too -> 400 NAMESPACE_UNKNOWN", [badNs.status, (await badNs.json()).reason], [400, "NAMESPACE_UNKNOWN"]);
+  const getCrop = await mf.dispatchFetch("http://pdf-worker/crop", { method: "GET" });
+  t("GET /crop is not the route (404)", getCrop.status, 404);
+  const src = strip(readFileSync(WORKER_SRC, "utf8"));
+  t("the SURFACE table declares crop as a non-mutating POST", /crop\s*:\s*\{[^}]*method:\s*"POST",\s*mutating:\s*false/.test(src), true);
+  t("WRITES NOTHING: the CAPTURES key set is unchanged across every /crop call", (await bucket.list()).objects.map((o) => o.key).sort(), before);
+  await mf.dispose();
+}
+{
+  const mf = newMf({ MAX_PDF_BYTES: "100" });
+  const bucket = await mf.getR2Bucket("CAPTURES");
+  await bucket.put(`${STORE}/captures/${CROP_SHA}`, CROP_PDF);
+  const over = await cropCall(mf, { capture_sha: CROP_SHA, store: STORE, extent: { kind: "image", page: 0, rect: [300, 100, 400, 200] } });
+  const o = await over.json();
+  t("a document over the envelope -> 413 OVER_ENVELOPE, declined by name rather than loaded", [over.status, o.reason, o.limit], [413, "OVER_ENVELOPE", 100]);
+  await mf.dispose();
+}
+
 console.log(`\npdf-worker: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

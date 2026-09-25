@@ -2135,6 +2135,9 @@ export const NON_ACTS = {
      bundle; UI-61 reads it to show a leg's `ref` and jump the viewer to the
      page. */
   content: "read: one content row by content_id — the extent a citation points at, its chain and cap, whether the transcription has moved, and the attestations covering it; the referent a leg resolves through, never an act on an object",
+  /* D-419. A READ keyed by CONTENT ID, op=content's classification one step on: it renders the image an `image`
+     row names, which is what a viewer does before showing a citation, never an act on an object. */
+  contentcrop: "read: the crop of the PDF image one content row cites — a derived rendition for display, the evidence being the capture plus the extent; never an act on an object",
   /* REC-36. Keyed by ENTITY, like the registry writes above it: the question is
      "which captured documents name this subject", not "what may be done to this
      bundle". It offers candidates a member picks a resolve out of; the ACT is

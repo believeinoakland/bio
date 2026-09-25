@@ -11931,6 +11931,61 @@ export const REEXTRACT_CHECKS = {
 };
 
 /* ===========================================================================
+   D-419 — THE CROP OF A CITED PDF IMAGE, ASKED FOR (C-99).
+   `EXTRACTION-BREADTH-DESIGN.md` §3.4: "The viewer shows the crop; the crop is not the evidence."
+
+   `op=contentcrop` resolves ONE content row by id (the same fixed-key, viewer-gated read `op=content` makes) and
+   asks the PDF member's `POST /crop` for the image that row's `{page, rect}` names. It writes nothing. Each way it
+   cannot hand back a crop is refused BY NAME here, because a viewer that showed an empty frame, or the whole page,
+   in place of the cited image would be showing more — or other — than the citation names.
+
+   DEC-49's shape, on REEXTRACT_CHECKS' precedent above: the C-number, the wire code and the CANNED TRANSLATION are
+   one row, read at the site through a helper that throws on a code with no sentence behind it.
+   =========================================================================== */
+export const CONTENT_CROP_CHECKS = {
+  /* No PDF member is bound to this instance, so nothing can decode the image. Refused before the row is read. */
+  CROP_NO_PDF_MEMBER: {
+    check: 'C-99.1',
+    where: 'src/index.mjs contentCropMemberAbsent > is-crop-member-absent',
+    translation: 'This instance has no PDF reader installed, so it cannot cut a cited image out of its document. '
+      + 'The citation and the document are unchanged; only the picture cannot be shown here.',
+  },
+  /* The row exists and is not a PDF page image: a document, page or passage row, or an office container's `{part}`
+     image, which is its own bytes rather than a rectangle of a page. */
+  CROP_NOT_A_PAGE_IMAGE: {
+    check: 'C-99.2',
+    where: 'src/index.mjs contentCrop > is-content-crop',
+    translation: 'That citation does not point at an image on a page of a PDF, so there is no picture to cut out '
+      + 'of it. Open the document at the citation instead.',
+  },
+  /* The member looked and could not crop what the extent names — no rectangle, no image at that rectangle, two
+     images at it, an inline image, a sample format it cannot decode, a document too large to load. Its own named
+     reason travels beside this code. */
+  CROP_NOT_DERIVABLE: {
+    check: 'C-99.3',
+    where: 'src/index.mjs contentCrop > is-content-crop',
+    translation: 'The image this citation names could not be cut out of its document. The reason is given beside '
+      + 'this message. The citation still points at the document, and the document is unchanged.',
+  },
+  /* The member did not give an answer: unreachable, or a body that is not JSON. A silence is not a finding about
+     the image. */
+  CROP_MEMBER_SILENT: {
+    check: 'C-99.4',
+    where: 'src/index.mjs contentCrop > is-content-crop',
+    translation: 'The PDF reader did not answer, so no picture was made. This says nothing about the image or the '
+      + 'citation; try again.',
+  },
+  /* The member answered a crop taken from bytes whose hash is not the capture the row names. The crop is not
+     shown: a picture from some other file, labelled as this citation's, is the over-claim §3.4 exists to prevent. */
+  CROP_CAPTURE_MISMATCH: {
+    check: 'C-99.5',
+    where: 'src/index.mjs contentCrop > is-content-crop',
+    translation: 'The picture the PDF reader made came from a different file than the one this citation names, '
+      + 'so it is not shown. The stored document may be damaged; tell an administrator.',
+  },
+};
+
+/* ===========================================================================
    CASE-5b / DEC-72 — THE CASE DOCUMENT'S GATE (C-41).
 
    WHAT THIS GATES, AND WHY IT IS A SEPARATE FUNCTION RATHER THAN A BRANCH OF

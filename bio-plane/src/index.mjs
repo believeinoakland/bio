@@ -55,6 +55,8 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          DRIVE_CAPTURE_CHECKS,
          /* CPDF-19 / C-51: the read-time re-extraction's DEC-49 rows (D-319). */
          REEXTRACT_CHECKS,
+         /* D-419 / C-99: the cited image's crop, its DEC-49 rows. */
+         CONTENT_CROP_CHECKS,
          /* D-64 / C-83: the render arm's DEC-49 rows. */
          RENDER_CAPTURE_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
@@ -788,6 +790,18 @@ const OPS = {
      passage exists in a project they were never invited to by guessing its
      address. NEEDS entry of null with a NON_ACTS row, op=earnedbasis' shape. */
   content:     { classes: ["admin", "member", "probe"],          mutating: false },
+  /* D-419 / EXTRACTION-BREADTH §3.4: THE CROP OF A CITED PDF IMAGE. `cropImage` (CPDF-18) was built and driven and
+     nothing could ask for it. This op resolves ONE content row by id — through op=content's own fixed-key read and
+     its server-stamped viewer, so a row the caller may not see answers exactly as one that does not exist — and asks
+     the PDF member's `POST /crop` for the image the row's `{page, rect}` names.
+
+     MEMBER CLASS AND ABOVE, on op=content's reasoning exactly: the crop is what a viewer SHOWS for a citation, and a
+     view-only member weighing a case needs to see what an image citation points at as much as a contributor does.
+
+     `mutating: false` AND IT WRITES NOTHING: the member holds no store binding and never writes R2, and this op
+     writes no row, no observation and no cache. The crop is a DERIVED rendition — the evidence is the capture's
+     bytes plus the extent — and every answer says so. NEEDS null with a NON_ACTS row, op=content's shape. */
+  contentcrop: { classes: ["admin", "member", "probe"],          mutating: false },
   /* SK-7 / framework Part II §14.4 (Bob's 5.7): MARKING A PASSAGE AS CITABLE.
      *"The assistant may mark passages as citable on its own, every such row
      labelled as machine work, never attested by it, and part of a finding only
@@ -2627,6 +2641,9 @@ const NEEDS = {
      rather than absent so REC-19's totality guard SEES it, and named in
      NON_ACTS with its reason. */
   content:          null,
+  /* D-419: NO CAPABILITY, on op=content's reasoning exactly — showing the picture a citation names is reading
+     the record. Present rather than absent so REC-19's totality guard SEES it; named in NON_ACTS with its reason. */
+  contentcrop:      null,
   /* REC-36: NO CAPABILITY, on op=earnedbasis' reasoning exactly. Asking which
      documents NAME a subject is reading the record; the write that acts on the
      answer is op=resolve, which carries its own gate and is where the capability
@@ -4011,6 +4028,15 @@ const reextractRow = (code) => {
   return { code, check: row.check, translation: row.translation };
 };
 
+/* D-419 / C-99: the crop's row reader, `driveRow`'s shape. */
+const contentCropRow = (code) => {
+  const row = CONTENT_CROP_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`contentCropRow: ${code} has no CONTENT_CROP_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
 /* REC-123: the C-32 row for a machine fence that lives in THIS file (op=ratify,
    op=caseratify). Same shape and same refusal-to-invent as `reextractRow`. */
 /* MK-1 (A): the publication fence's catalogue rows (C-53.10–.12), on
@@ -4310,6 +4336,92 @@ function storageAbsent(op, error) {
   return json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
                 ...installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"), error, op }, 503);
   /* END DEC-49 REGION is-storage-absent */
+}
+
+/* D-419 — op=contentcrop: THE CROP OF A CITED PDF IMAGE (`EXTRACTION-BREADTH-DESIGN.md` §3.4, C-99).
+ *
+ * ONE CONTENT ROW BY ID, THEN ONE CALL TO THE PDF MEMBER. The row is read through op=content's own store route with
+ * the viewer the control plane stamped, and every parameter the caller sent is handed to that route too, so the
+ * fixed-key grammar (D-222: FIXED_KEY_ONLY, NO_ID) and the D-15 gate (NO_SUCH_CONTENT for hidden and absent alike)
+ * are the store's, answered in its words, and not a second copy here. The member gets the row's capture sha, the
+ * namespace, and the row's extent AS STORED; `cropImage` decides what that extent names.
+ *
+ * WHAT THE PLANE ADDS IS ONE CHECK, and it is §3.4's "verified as the capture is": the member reports the sha256 of
+ * the bytes it cropped, and a crop from any bytes other than the capture the row names is refused rather than shown
+ * (CROP_CAPTURE_MISMATCH). The R2 key is content-addressed, so this can only fire on a damaged store or a member
+ * that read the wrong key — both of which a viewer must not paper over with a picture.
+ *
+ * Named, like `captureRequestArm`, so the DEC-49 `where` resolves to a function the guard can find. The store's
+ * silence is answered OUTSIDE the region for REC-52's reason: it is the plane failing to ask, not a refusal. */
+async function contentCrop(env, url, storeName, viewer, op) {
+  const stub = env.STORE.get(env.STORE.idFromName(storeName));
+  const inner = new URL("http://do/content");
+  for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op" && k !== "store") inner.searchParams.set(k, v);
+  inner.searchParams.set("viewer", viewer);
+  /* The member check comes FIRST: an instance with no PDF member answers the same whatever id is asked, so it
+     reads nothing. Its own function because the store's silence below must sit OUTSIDE a governed region. */
+  const absent = contentCropMemberAbsent(env, op);
+  if (absent) return absent;
+  const rAns = await doAnswer(stub.fetch(inner.toString()));
+  if (!rAns.answered) return { silent: true };
+  const row = rAns.result;
+  /* The store's own refusal — NO_SUCH_CONTENT, NO_ID, FIXED_KEY_ONLY — relayed in its own words, because it is the
+     content read's grammar and this op adds nothing to it. OUTSIDE the region: these are op=content's codes,
+     not C-99's, and a relay carries the store's verdict rather than minting one here. */
+  if (!row || row.ok !== true)
+    return json({ ...(row || {}), ok: false, op, store: storeName },
+                row && row.reason === "NO_SUCH_CONTENT" ? 404 : 400);
+  /* DEC-49 REGION is-content-crop
+   *
+   * THE SPAN C-99.2..C-99.5 name. Helper `contentCropRow`, every code a STRING LITERAL at its site. */
+  const extent = row.extent || null;
+  if (row.extent_kind !== "image" || !extent || extent.part != null)
+    return json({ ok: false, reason: "CROP_NOT_A_PAGE_IMAGE", ...contentCropRow("CROP_NOT_A_PAGE_IMAGE"), op,
+      content_id: row.content_id, extent_kind: row.extent_kind ?? null,
+      detail: row.extent_kind !== "image"
+        ? `this row cites a ${row.extent_kind} extent, and only an image on a PDF page has a crop`
+        : `this row cites an image that is a member of a container ({part}), whose bytes are the image itself `
+          + `rather than a rectangle of a page; there is nothing to cut out of it` }, 422);
+  let res = null, out = null;
+  try {
+    res = await env.PDF_WORKER.fetch("https://pdf-worker/crop", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ capture_sha: row.capture_sha, store: storeName, extent }) });
+    out = await res.json();
+  } catch { out = null; }
+  if (!out || typeof out !== "object" || typeof out.ok !== "boolean")
+    return json({ ok: false, reason: "CROP_MEMBER_SILENT", ...contentCropRow("CROP_MEMBER_SILENT"), op,
+      content_id: row.content_id, member_status: res ? res.status : null,
+      detail: "the PDF member gave no answer this plane could read, so no crop was made. That is a fact about "
+            + "the call, not about the image." }, 502);
+  if (out.ok !== true)
+    return json({ ok: false, reason: "CROP_NOT_DERIVABLE", ...contentCropRow("CROP_NOT_DERIVABLE"), op,
+      content_id: row.content_id, of: extent,
+      member_reason: typeof out.reason === "string" ? out.reason : null,
+      member_why: typeof out.why === "string" ? out.why : (typeof out.detail === "string" ? out.detail : null),
+      detail: "the PDF member read the capture and could not crop what this row's extent names; its own "
+            + "reason is beside this one" }, 422);
+  if (out.capture_sha256 !== row.capture_sha)
+    return json({ ok: false, reason: "CROP_CAPTURE_MISMATCH", ...contentCropRow("CROP_CAPTURE_MISMATCH"), op,
+      content_id: row.content_id, capture_sha: row.capture_sha,
+      cropped_from: typeof out.capture_sha256 === "string" ? out.capture_sha256 : null,
+      detail: "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not "
+            + "handed back" }, 502);
+  /* END DEC-49 REGION is-content-crop */
+  return json({ ...out, ok: true, op, content_id: row.content_id, capture_sha: row.capture_sha,
+                store: storeName });
+}
+
+/* D-419 / C-99.1: no PDF member bound, so no crop can be made. Returns null when one is bound. */
+function contentCropMemberAbsent(env, op) {
+  /* DEC-49 REGION is-crop-member-absent
+   * THE SPAN C-99.1 names: its one condition and its one mint, the code a STRING LITERAL at its site. */
+  if (!env.PDF_WORKER)
+    return json({ ok: false, reason: "CROP_NO_PDF_MEMBER", ...contentCropRow("CROP_NO_PDF_MEMBER"), op,
+      detail: "no PDF member is bound to this instance (the PDF_WORKER service binding is absent), so nothing "
+            + "here can decode an image out of a PDF. No row was read and nothing was written." }, 501);
+  /* END DEC-49 REGION is-crop-member-absent */
+  return null;
 }
 
 /* THE PUBLISHED-STORE COMPLAINT (C-68.5, D-549). A copy installed with no store
@@ -7253,6 +7365,13 @@ export default {
                    "access-control-allow-origin": "*", "x-capture-sha256": sha,
                    ...(dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}) },
       });
+    }
+
+    /* D-419: the cited image's crop. Its viewer is stamped exactly as the forwarded reads' is below. */
+    if (op === "contentcrop") {
+      const cropped = await contentCrop(env, url, storeName,
+        viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`, op);
+      return cropped.silent ? storeSilent(op) : cropped;
     }
 
     /* D-91 delegation (CONTENT-PDF → CAPTURE): read a captured PDF's outbound-
