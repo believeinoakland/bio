@@ -590,8 +590,8 @@ scope: one function computing a unit's chain kind from the last step covering it
 accepts-when: on a mixed fixture a text-layer page's unit reads its layer kind and an OCR'd page's reads 'ocr' (moves: every unit 'ocr'). NEGATIVE CONTROL: revert to the generated whole-chain column and the text-layer arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-635's worker).
 
-### D-674 · running — **`manifest.created` IS THE WRITER'S `meta.last_updated`, NOT THE PLANE'S CLOCK: D-546's suite landed an amendment dated BEFORE the move preceding it, so every reader ordering by REC-182's `created` (op=export's promotions, the gate facts) can be steered out of write order by the caller.** Found by D-546's worker (minted on land/worker/D-546). — owner RECORD.
-status: running — SCHEDULER #23 09:20Z: spawned from main
+### D-674 · integrated — **`manifest.created` IS THE WRITER'S `meta.last_updated`, NOT THE PLANE'S CLOCK: D-546's suite landed an amendment dated BEFORE the move preceding it, so every reader ordering by REC-182's `created` (op=export's promotions, the gate facts) can be steered out of write order by the caller.** Found by D-546's worker (minted on land/worker/D-546). — owner RECORD.
+status: integrated — SCHEDULER #23 10:55Z: tip 96a7802f on 5e8a65a8, GATE 87/87 GREEN FULLREUSE (6654 assertions) on tree 8815078a, full 383/386 on 6f795f5f with its 3 reds fixed; every reader orders by rowid (export promotions, gateFacts, #revisionKind, capture-completed-unattended); created stays the writer s date; State Rules I-20; construct 3.write-order BUILT; union with D-546 on the State Rules Status line (keep both); minted D-700
 order: after D-673, with the promote corrections — a caller-supplied date that orders the record is a provenance hop a caller can invent (CLAUDE.md §5) (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — the order op=export states for promotions; the integrator classifies.
@@ -773,6 +773,16 @@ depends-on: none (stacked on land/worker/D-689 @ 4ef3d303, integrated, on REC-20
 scope: in promote's action block, run recordsLawFindings beside actionBasisFindings and refuse under a named reason carrying findings[].detail (a new DEC-49 region); sweep other catalogue arms that run only in checkBundle and list each; correct ui119's "D-695 PINNED" arm into a driven refusal.
 accepts-when: a 250-character law and a law on another kind are refused by name at op=promote (moves: a forbidden value landing). NEGATIVE CONTROL: remove the call and the over-long-law arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by UI-119's worker).
+
+### D-700 · running — **THE GATE'S C-20.1 AUDIT STILL WALKS A BUNDLE'S `_history/manifest.json` IN SNAP-KEY ORDER, not write order: readImage sorts by key and bio-checks.mjs sorts entries by key, so the gate's "prior" can differ from the plane's since D-674 ordered every plane reader by rowid.** State Rules §6 already said "sent to SCHEDULER" (REC-182) and no plan row existed. Found by D-674's worker (minted on land/worker/D-674). — owner RECORD, CHECKS.
+order: spawned directly after D-674, which it completes (the plane and its gate read one order) (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I1/I3 — the image carries write order; the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, as D-674 amended it: "prior" is write order).
+depends-on: none (stacked on land/worker/D-674 @ 96a7802f, integrated).
+scope: the image carries write order (rowid or a seq) for each manifest entry; C-20.1 walks it instead of the snap key; images without it read the key order and say so.
+accepts-when: a bundle whose snap-key order differs from its write order is audited in write order by C-20.1 (moves: gate and plane disagreeing on "prior"). NEGATIVE CONTROL: sort by key again and the divergent-order arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-674's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
