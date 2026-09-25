@@ -888,8 +888,8 @@ scope: the set act sends each project-scoped item's own project; where an item h
 accepts-when: a project-scoped finding joins a selection and the set act carries its project; an item with two homes is not sent until the member names one (the measured failure it moves: null for scope=project). NEGATIVE CONTROL: return null again and the selection arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
-### D-576 · running — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
-status: running — SCHEDULER #22 05:30Z spawns WORKER D-576 (depth 2)
+### D-576 · integrated — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
+status: integrated — SCHEDULER #22 06:00Z: tip ae998dd8, GATE 102/102 GREEN FULLREUSE (7565 assertions), tree 7dfa9679; the connect receipt states a cut derivation; CIVICOS_UI_STATE v120 provisional
 order: after UI-110, with the surface corrections: a receipt reading a cut set as whole claims more than the record holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: none (reads op=connect's existing `truncated` and `documents`).
@@ -954,6 +954,26 @@ depends-on: none.
 scope: a pure reader that loads every `*.control.mjs` driver's arm table, dry-applies each arm's anchor by COUNTING matches (never editing), and fails naming driver and arm when an anchor matches 0 times, or more than once where the arm edits one site; it runs in EVERY gate profile; a driver whose arms cannot be loaded as data is named UNREADABLE, never skipped. D-600's arm is its first expected failure.
 accepts-when: the reader runs in every profile and names each drifted or UNREADABLE driver (moves: drifts found a worker round late). NEGATIVE CONTROL: reword one anchored line in a fixture copy and the arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:25Z).
+
+### M0-196 · queued — **`bio-plane/scripts/pensweep.mjs`'s walk cannot resolve `fileURLToPath(new URL("..", import.meta.url))` as a tree read, so every copy-source control driver that reads its tree that way reads UNCLASSIFIED; batch28 raised the ceiling 15 -> 18 by name for D-526's, D-547's and D-548's drivers.** Found by CONDUCT #21 at batch28's integration (04:06Z). — owner M0.
+order: after M0-142, with the gate-instrument rows behind the product rows: a ceiling raised by name is loud, not false, and every new driver of that shape raises it again (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a guard's ceiling moves only to a printed figure; the pen rule for control drivers).
+depends-on: none.
+scope: resolve that expression (and its `new URL("../..", …)` siblings) as a TREE root read in pensweep.mjs; then lower the UNCLASSIFIED ceiling to the printed figure (18 -> 15 or less).
+accepts-when: D-526's, D-547's and D-548's drivers read classified and the ceiling falls by name (moves: 3 drivers UNCLASSIFIED). NEGATIVE CONTROL: drop the new resolution and those three read UNCLASSIFIED over the lowered ceiling, failing by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; CONDUCT #21's batch28 finding).
+
+### D-620 · queued — **363 OF 376 bio-plane SUITES COMPARE WITH `JSON.stringify` EQUALITY, WHICH READS AN ABSENT VALUE IN AN ARRAY AS `null`, so any arm asserting a STATED null cannot tell it from a dropped key (measured in reviewcopy.control arm v, which stayed green until hardened).** Found by D-568's worker (05:36Z). — owner M0.
+order: after M0-196, with the gate-instrument rows: an arm that cannot fail on a dropped key is a control that refutes nothing (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an equality that costs nothing to produce is not evidence).
+depends-on: none.
+scope: a shared comparator whose serialiser maps undefined to a distinct sentinel; adopt it in every suite that asserts a null (grep assertions naming null), not all 363.
+accepts-when: each null-asserting suite uses the comparator and fails on a dropped key (moves: stated-null arms blind to a dropped key). NEGATIVE CONTROL: drop a stated-null key in one fixture and its arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
