@@ -253,9 +253,15 @@ const graded = (b) => ({ code: b?.code, check: b?.check, translation: b?.transla
    hashes to EXACTLY the two literals it replaces (scan 335b802e…ecc3a, layer 26c35ac5…e176b7), so
    D-536's key is the whole difference and CPDF-19's default path is still untouched. The new literals
    are the printout on D-536's tree. */
+/* RE-TAKEN 2026-09-25 by D-374, AS THIS COMMENT PRESCRIBES — a later item moved the plain read ON
+   PURPOSE: `op=pdfstructure` now serves `pageBoxes` (each page's MediaBox, the bound a `pdf-page` rect
+   is checked against). PROVED rather than assumed before re-pinning: the new plain answer with ONLY its
+   `,\n "pageBoxes": …` member cut from the RAW TEXT hashes to EXACTLY the two literals it replaces
+   (scan c5d019ae…61ad8, layer 2a04e765…d64b1), so D-374's key is the whole difference and CPDF-19's
+   default path is still untouched. The new literals are the printout on D-374's tree. */
 const PRE_ITEM_DIGEST = {
-  scan: "c5d019aedaa9afc682fdd20cc82054b7bee493a7955e09490e170bfea3861ad8",
-  layer: "2a04e765d906eeabe38cb143d8dd1dd92a4a8aa4cafc178ffe4ea7f33bdd64b1",
+  scan: "9c2500fc0bade979aee8e85a203fe97ed581b5a7174e0291f5a83301c5dd1318",
+  layer: "d167a73e91f333b56e84f968c01da4a5ebe76e1711e1f0c44cf9ba0362d65abb",
 };
 
 try {
