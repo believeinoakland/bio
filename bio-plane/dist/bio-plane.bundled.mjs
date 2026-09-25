@@ -12115,6 +12115,17 @@ var INSTALLATION_CHECKS = {
     check: "C-68.4",
     where: "src/index.mjs fetch > is-bootstrap-claim",
     translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
+  },
+  /* D-549. The one row in this family whose reader is most likely NOT whoever installed the copy:
+     `publishedbytes` and `publishedcase` are PUBLIC, so the sentence is written for a member of the
+     public holding no credential, and says what they can rely on (the document IS published, and
+     nothing about it changed) before who can cure it. It names no binding and no mechanism. It is
+     true at both sites: at `publishedbytes` the hash has already been verified as published, and at
+     `publishedcase` the finding is a member of a published case. */
+  NO_PUBLISHED_STORE: {
+    check: "C-68.5",
+    where: "src/index.mjs publishedStoreAbsent > is-published-store-absent",
+    translation: "This copy of the record was set up without the storage it keeps its published documents in, so it cannot hand over the published document's contents. The document is published; this is a fact about how this copy was set up, not about the document or this request, and nothing was changed. Whoever runs this copy can connect that storage."
   }
 };
 var RENDER_CAPTURE_CHECKS = {
@@ -80797,6 +80808,11 @@ function storageAbsent(op, error) {
     op
   }, 503);
 }
+function publishedStoreAbsent(env) {
+  if (typeof env.PUBLISHED?.get === "function") return null;
+  const row = installationRow("NO_PUBLISHED_STORE");
+  return { ok: false, reason: "NO_PUBLISHED_STORE", code: row.code, check: row.check, translation: row.translation };
+}
 var StoreSilent = class extends Error {
   constructor(op) {
     super(`the store did not answer ${op}`);
@@ -81759,10 +81775,11 @@ var index_default = {
             detail: "no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately."
           }, 404);
           if (!v || !v.published) return notFound();
-          if (typeof env.PUBLISHED?.get !== "function")
+          const storeAbsent = publishedStoreAbsent(env);
+          if (storeAbsent)
             return json({
               ok: false,
-              reason: "NO_PUBLISHED_STORE",
+              ...storeAbsent,
               detail: "this instance has no published object store configured, so its published bytes are not servable. The hash is genuine and this instance cannot hand over the bytes."
             }, 503);
           const wantZip = (url.searchParams.get("format") || "") === "zip";
@@ -81833,6 +81850,7 @@ var index_default = {
           const md = await pubBytes(fnd.bundle_sha);
           const text = md ? new TextDecoder().decode(md) : null;
           const fm = text ? parseFrontmatter(text).data || {} : null;
+          const { ok: _refused, ...whyUnavailable } = text ? {} : publishedStoreAbsent(env) ?? { reason: "OBJECT_MISSING" };
           const body2 = text ? {
             state: "published",
             from_sha: fnd.bundle_sha,
@@ -81873,7 +81891,7 @@ var index_default = {
           } : {
             state: "unavailable",
             from_sha: fnd.bundle_sha,
-            reason: typeof env.PUBLISHED?.get === "function" ? "OBJECT_MISSING" : "NO_PUBLISHED_STORE",
+            ...whyUnavailable,
             detail: "this instance cannot hand over the bytes of that edition, so its conclusion is not rendered here. It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes."
           };
           const legs = Array.isArray(fm?.basis) ? fm.basis.filter((l) => l && typeof l.target === "string") : [];

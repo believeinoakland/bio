@@ -418,8 +418,11 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
      same KIND of forward as the one beside it: a `{ error: { reason, code, check, translation, detail } }`
      built by a named declaration judge and spread at the mint edge with the op and the class added. The old
      set was right for the tree it was written on. */
+  /* CORRECTED by D-549, LOOKED AT as this assertion asks: `storeAbsent` is op=publishedbytes forwarding
+     publishedStoreAbsent's answer, the ONE governed site of the published-store complaint (C-68.5), whose code,
+     check and canned translation are minted inside its DEC-49 region and graded in publishedcase.test.mjs. */
   ["arm.refusal", "built", "c", "confinement.error", "declared.error", "facts", "r", "rec.result",
-   "scoped.error", "zip"]);
+   "scoped.error", "storeAbsent", "zip"]);
 
 /* ====================================================================== 3
  * THE TWELVE — HARVESTED FROM `store.mjs`, SO A THIRTEENTH CANNOT ARRIVE

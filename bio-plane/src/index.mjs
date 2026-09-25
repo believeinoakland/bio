@@ -4260,6 +4260,28 @@ function storageAbsent(op, error) {
   /* END DEC-49 REGION is-storage-absent */
 }
 
+/* THE PUBLISHED-STORE COMPLAINT (C-68.5, D-549). A copy installed with no store
+ * for its published documents cannot hand over a published document's bytes, at
+ * `publishedbytes` (a refusal) or at `publishedcase` (a finding's body stated
+ * `unavailable`). BOTH OPS ARE PUBLIC, so the reader of this code is most likely a
+ * member of the public holding no credential at all, and until D-549 the code
+ * reached them bare from two sites with no sentence behind it.
+ *
+ * ONE CONDITION, AND IT IS DECIDED HERE: no published store is bound. Returns
+ * null when one is, so no call site restates the test and none can mint this
+ * code for a different fact — `OBJECT_MISSING` (a store bound and no object at
+ * that hash) is the other condition and stays its own code at its own site.
+ * Minted here rather than at two sites for the reason `storageAbsent` is: a
+ * DEC-49 row holds one `where`. */
+function publishedStoreAbsent(env) {
+  /* DEC-49 REGION is-published-store-absent
+   * THE SPAN C-68.5 names: its one condition and its one mint, the code a STRING LITERAL at its site. */
+  if (typeof env.PUBLISHED?.get === "function") return null;
+  const row = installationRow("NO_PUBLISHED_STORE");
+  return { ok: false, reason: "NO_PUBLISHED_STORE", code: row.code, check: row.check, translation: row.translation };
+  /* END DEC-49 REGION is-published-store-absent */
+}
+
 /* Some of these reads happen INSIDE a per-item renderer that returns a rendered
    object rather than a Response, so it has no way to refuse on its own behalf.
    Rather than let it fabricate a rendering from an answer it never got, it
@@ -6067,8 +6089,11 @@ export default {
             detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
                   + "never existed are the same answer here, deliberately." }, 404);
           if (!v || !v.published) return notFound();
-          if (typeof env.PUBLISHED?.get !== "function")
-            return json({ ok: false, reason: "NO_PUBLISHED_STORE",
+          /* D-549: the code, its check and its canned translation come from the ONE governed site;
+             `detail` is this site's own sentence, byte-identical to what it said before. */
+          const storeAbsent = publishedStoreAbsent(env);
+          if (storeAbsent)
+            return json({ ok: false, ...storeAbsent,
               detail: "this instance has no published object store configured, so its published bytes are "
                     + "not servable. The hash is genuine and this instance cannot hand over the bytes." }, 503);
 
@@ -6177,6 +6202,14 @@ export default {
           const md = await pubBytes(fnd.bundle_sha);
           const text = md ? new TextDecoder().decode(md) : null;
           const fm = text ? (parseFrontmatter(text).data || {}) : null;
+          /* D-549: WHICH CODE UNDER WHICH CONDITION, when the bytes are unavailable. No published store
+             bound -> NO_PUBLISHED_STORE, with its check and canned translation, from its one governed
+             site. A store bound and no object at this finding's hash -> OBJECT_MISSING, a bare code as
+             before (untranslated, and counted so by check-refusal-codes). The two never share a site
+             again. The helper's `ok: false` is dropped here: this is one finding's body stated
+             unavailable inside a case that answered, not a refusal of the request. */
+          const { ok: _refused, ...whyUnavailable } = text ? {}
+            : (publishedStoreAbsent(env) ?? { reason: "OBJECT_MISSING" });
           const body = text
             ? { state: "published", from_sha: fnd.bundle_sha,
                 question: sectionText(text, "## Question"),
@@ -6220,8 +6253,7 @@ export default {
                       + "the finding to; the section fields are the prose printed beside it in the signed "
                       + "bytes. `falsifier_override`, when it is not null, is the member who recorded that "
                       + "NO falsifier could be stated for this finding, and when they did so." }
-            : { state: "unavailable", from_sha: fnd.bundle_sha,
-                reason: typeof env.PUBLISHED?.get === "function" ? "OBJECT_MISSING" : "NO_PUBLISHED_STORE",
+            : { state: "unavailable", from_sha: fnd.bundle_sha, ...whyUnavailable,
                 detail: "this instance cannot hand over the bytes of that edition, so its conclusion is not "
                       + "rendered here. It is NOT read from the working record instead: the frozen strength "
                       + "and the rendered body must come from the same bytes." };

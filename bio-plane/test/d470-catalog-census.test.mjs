@@ -361,6 +361,7 @@ const CATALOG_CENSUS = {
      RISK_TIER_REVISION_CHECKS family (`op=actionrisktier` and promote's RISK_TIER_REWRITTEN). 461 -> 466, count AND
      digest from THIS SUITE'S OWN PRINT on the item's tree over origin/main 9f8b69e6, never arithmetic. If another
      branch in the batch also adds rows, CONDUCT takes the next number and re-reads the census on the merged tree. */
+  /* 1.29.0 (D-549): C-68.5 over 1.28.0; count and digest are THIS SUITE'S PRINT on base 9f8b69e6 plus D-549. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -479,6 +480,7 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
    which is the second reader of the same constant inside this suite's own file — the rule that a fix
    verified only where you changed it is not verified (CLAUDE.md §5), paid for once more here. */
 /* CORRECTED 2026-09-24 by REC-214: 1.28.0 -> 1.29.0, C-90.1..5 under the stamp; the arm working as the note says. */
+/* CORRECTED by D-549: 1.28.0 -> 1.29.0 — C-68.5 joined the catalogue, and the old literal names one that no longer runs. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

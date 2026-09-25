@@ -11205,7 +11205,8 @@ export const REQUIRED_ARGUMENT_CHECKS = {
        the token it failed to match.
 
    The translations are addressed to WHOEVER INSTALLED THE COPY, because that is
-   the only person who can act on them. `error` is kept beside every code
+   the only person who can act on them — all but C-68.5 (D-549), whose ops are
+   public and whose sentence is therefore written for a member of the public. `error` is kept beside every code
    byte-identical (D-270's pattern), so no consumer reading it moves.
    =========================================================================== */
 export const INSTALLATION_CHECKS = {
@@ -11235,6 +11236,20 @@ export const INSTALLATION_CHECKS = {
     where: 'src/index.mjs fetch > is-bootstrap-claim',
     translation: 'The administrator token given does not match the one this copy holds, so the copy was not '
       + 'claimed. Nothing was changed.',
+  },
+  /* D-549. The one row in this family whose reader is most likely NOT whoever installed the copy:
+     `publishedbytes` and `publishedcase` are PUBLIC, so the sentence is written for a member of the
+     public holding no credential, and says what they can rely on (the document IS published, and
+     nothing about it changed) before who can cure it. It names no binding and no mechanism. It is
+     true at both sites: at `publishedbytes` the hash has already been verified as published, and at
+     `publishedcase` the finding is a member of a published case. */
+  NO_PUBLISHED_STORE: {
+    check: 'C-68.5',
+    where: 'src/index.mjs publishedStoreAbsent > is-published-store-absent',
+    translation: 'This copy of the record was set up without the storage it keeps its published documents in, '
+      + 'so it cannot hand over the published document\'s contents. The document is published; this is a fact '
+      + 'about how this copy was set up, not about the document or this request, and nothing was changed. '
+      + 'Whoever runs this copy can connect that storage.',
   },
 };
 
