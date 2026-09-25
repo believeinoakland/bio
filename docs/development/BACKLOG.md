@@ -43,16 +43,6 @@ scope: `aiReachesAsMember` returns false for ops fenced to sessions, expressed a
 accepts-when: a machine-attest arm minting each of the five is refused by name, and a member op still mints (moves: a mint that records the impossible). NEGATIVE CONTROL: drop the session-fence test and the five arms mint, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by REC-162's worker).
 
-### D-546 · queued — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
-order: after D-547, with the promote corrections: a disallowed move lands in the record (CLAUDE.md §2); BOB #34 ruled it product order (SCHEDULER #21, 2026-09-24)
-milestone: M7
-interface: I3 — refusal codes on op=promote for types other than bias; the integrator classifies.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4 (per-type schemas and state machines), with BOB #34's 23:55Z ruling, folded into §4 by this row.
-depends-on: D-468.
-scope: (1) MEASURE the corpus first: per type, the count of recorded moves whose edge is undeclared today, with dates, in `measurements/<id>.md`; (2) lift D-468's fence to every type with a head: promote refuses any move its type's table does not declare, for every caller by a named DEC-49 code; (3) never rewrite, reverse or repair a stored move; where a reader meets one it is stated "made by a path the current rules do not allow (before <fence date>)", neither valid nor invalid, and never larger or smaller than the count shows; (4) `STATES` keeps its valid-but-unreachable states for reading old records, unreachable by promote.
-accepts-when: an undeclared move on a non-bias type is refused by name, a stored undeclared move reads with the dated sentence and is unchanged, and the measurement states the per-type counts (moves: promote asks no table but bias). NEGATIVE CONTROL: drop the fence for one type and its undeclared-move arm lands, failing by name.
-added: 2026-09-24 · SCHEDULER #21 (id minted by D-468's worker).
-
 ### D-556 · queued — **A WHOLE-HASH REGISTER ROW HELD IN PARTS CANNOT RATIFY: the gate refuses it PLANE_HELD_IN_PARTS (D-530) because publication copies a capture by its whole hash, while the audit calls the same bytes SOUND (D-533).** Found by D-533's worker (M-150). BOB #34 RULED YES 2026-09-25 00:00Z (drained to `BOB-INBOX-drained.md`; cite until folded): BOTH halves in ONE landing, never the gate alone. — owner RECORD.
 order: after D-546, with the corrections: a gate that treats sound bytes as missing contradicts the record, but D-530's refusal is honest until both halves land (BOB #34 00:00Z) (SCHEDULER #21, 2026-09-25)
 milestone: M10
@@ -122,6 +112,16 @@ depends-on: D-585.
 scope: (1) Tier 1 inflate tolerates bytes after the compressed stream's end (keep the decoded output, record the trailing count); (2) a page whose content stream Tier 1 could not decode carries a page marker so it cannot read as empty.
 accepts-when: CAFR-2002's pages read with text where their streams decode, and no page reads 0 chars without a marker (measured into a measurements/ file). NEGATIVE CONTROL: restore the strict inflate and the trailing-bytes arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-585's worker).
+
+### D-608 · queued — **TIER 1's TEXT WALK (`pdfstructure.mjs` `extractPageText`) INTERPRETS NO `Do`, so text inside Form XObjects goes unread and no page marker says so: the page reads as fully decoded while missing text.** MEASURED (M-166): ACFR FY2023-24 (biosmoke7 INFO-2026-0103) p38 tier 1 80 glyphs, tier 2 546, 34 of 40 text-show ops inside forms; all 9 held pages where tier 2 reads 10% or more beyond an unflagged tier 1 carry Form XObject text. Found by D-515's worker (04:14Z). — owner CONTENT-PDF.
+order: after D-591, with the reader corrections: a page stated as read while its text is unread claims more than the record holds (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I6 if a page's tier or grade changes on the wire (the integrator classifies).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with CPDF-18's image walk (it already descends into forms).
+depends-on: none.
+scope: descend into Form XObjects in the text walk the way CPDF-18's image walk does (/Matrix, /Resources, cycle and depth bounds); at the least, a counted page marker when a painted form carries unread text-show ops. Re-read M-166's 9 pages and record the moved counts; the 1,455 pages under 10% stay undiagnosed unless the re-read moves them.
+accepts-when: p38 reads its form text at tier 1 (moves: 9 pages reading as decoded while missing form text). NEGATIVE CONTROL: stop descending at `Do` and the form arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-515's worker).
 
 ### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
 order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
